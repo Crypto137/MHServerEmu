@@ -10,6 +10,8 @@ namespace MHServerEmu
 {
     public class FrontendServer
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         private Socket _socket;
         private List<FrontendClient> _clientList = new();
 
@@ -18,6 +20,8 @@ namespace MHServerEmu
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             _socket.Bind(new IPEndPoint(IPAddress.Loopback, port));
             _socket.Listen(10);
+
+            Logger.Info($"FrontendServer is listening on localhost:{port}...");
 
             BeginAccept();
         }
