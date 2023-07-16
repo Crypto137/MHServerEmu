@@ -20,5 +20,10 @@ namespace MHServerEmu
 
             Console.WriteLine();
         }
+
+        public static string ToHexString(this byte[] byteArray)
+        {
+            return byteArray.Aggregate("", (current, b) => current + b.ToString("X2"));
+        }
     }
 }
