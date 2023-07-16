@@ -10,13 +10,12 @@ namespace MHServerEmu.Services.Implementations
 {
     public class PlayerMgrServerFrontendService : GameService
     {
-        // DateTime is a regular unix timestamp in microseconds, ClientTime is unknown
-        // The difference between GameTime and DateTime seems to be consistent, so we can probably estimate GameTime by adding median difference to DateTime
-        private const long MedianGameDateTimeDifference = 11644473599999473;
+        private long _startTime;    // Used for calculating game time
 
         public PlayerMgrServerFrontendService()
         {
             ServerType = Gazillion.PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND;
+            _startTime = GetDateTime();
         }
 
         public override void Handle(FrontendClient client, byte messageId, byte[] message)
@@ -41,17 +40,17 @@ namespace MHServerEmu.Services.Implementations
                 client.SendGameServiceMessage(ServerType, (byte)GameServerToClientMessage.NetMessageReadyAndLoggedIn, response);
                 */
 
-                /*
                 Console.WriteLine("[PlayerMgrServerFrontendService] Responding with NetMessageReadyForTimeSync message");
                 byte[] response = NetMessageReadyForTimeSync.CreateBuilder()
                     .Build().ToByteArray();
 
                 client.SendGameServiceMessage(ServerType, (byte)GameServerToClientMessage.NetMessageReadyForTimeSync, response);
-                */
 
+                /*
                 byte[] response = NetMessageSelectStartingAvatarForNewPlayer.CreateBuilder()
                     .Build().ToByteArray();
                 client.SendGameServiceMessage(ServerType, (byte)GameServerToClientMessage.NetMessageSelectStartingAvatarForNewPlayer, response, GetGameTime());
+                */
                 
             }
             else if (messageId == (byte)ClientToGameServerMessage.NetMessageSyncTimeRequest)
@@ -64,28 +63,28 @@ namespace MHServerEmu.Services.Implementations
 
                 byte[] response = NetMessageSyncTimeReply.CreateBuilder()
                     .SetGameTimeClientSent(parsedMessage.GameTimeClientSent)
-                    .SetGameTimeServerReceived(GetDateTime() + MedianGameDateTimeDifference)
-                    .SetGameTimeServerSent(GetDateTime() + MedianGameDateTimeDifference)
+                    .SetGameTimeServerReceived(GetGameTime())
+                    .SetGameTimeServerSent(GetGameTime())
 
                     .SetDateTimeClientSent(parsedMessage.DateTimeClientSent)
                     .SetDateTimeServerReceived(GetDateTime())
                     .SetDateTimeServerSent(GetDateTime())
 
                     .SetDialation(0.0f)
-                    .SetGametimeDialationStarted(parsedMessage.GameTimeClientSent)
-                    .SetDatetimeDialationStarted(parsedMessage.DateTimeClientSent)
+                    .SetGametimeDialationStarted(GetGameTime())
+                    .SetDatetimeDialationStarted(GetDateTime())
                     .Build().ToByteArray();
 
-                //client.SendGameServiceMessage(ServerType, (byte)GameServerToClientMessage.NetMessageSyncTimeReply, response);
+                client.SendGameServiceMessage(ServerType, (byte)GameServerToClientMessage.NetMessageSyncTimeReply, response);
             }
             else if (messageId == (byte)ClientToGameServerMessage.NetMessagePing)
             {
                 Console.WriteLine($"[PlayerMgrServerFrontendService] Received NetMessagePing message");
 
-                /*
                 var parsedMessage = NetMessagePing.ParseFrom(message);
                 Console.Write(parsedMessage.ToString());
 
+                /*
                 byte[] response = NetMessagePingResponse.CreateBuilder()
                     .SetDisplayOutput(false)
                     .SetRequestSentClientTime(parsedMessage.SendClientTime)
@@ -108,7 +107,7 @@ namespace MHServerEmu.Services.Implementations
 
         private long GetGameTime()
         {
-            return GetDateTime() + MedianGameDateTimeDifference;
+            return GetDateTime() - _startTime;
         }
     }
 }
