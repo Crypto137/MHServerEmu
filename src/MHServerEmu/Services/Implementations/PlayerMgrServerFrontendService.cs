@@ -10,6 +10,8 @@ namespace MHServerEmu.Services.Implementations
 {
     public class PlayerMgrServerFrontendService : GameService
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         private long _startTime;    // Used for calculating game time
 
         public PlayerMgrServerFrontendService()
@@ -22,44 +24,45 @@ namespace MHServerEmu.Services.Implementations
         {
             if (messageId == (byte)ClientToGameServerMessage.NetMessageReadyForGameJoin)
             {
-                Console.WriteLine($"[PlayerMgrServerFrontendService] Received NetMessageReadyForGameJoin message");
+                Logger.Info($"Received NetMessageReadyForGameJoin message");
                 try
                 {
                     var parsedMessage = NetMessageReadyForGameJoin.ParseFrom(message);
-                    Console.Write(parsedMessage.ToString());
+                    Logger.Trace(parsedMessage.ToString());
                 }
                 catch (InvalidProtocolBufferException e)
                 {
-                    Console.WriteLine($"[PlayerMgrServerFrontendService] Failed to parse NetMessageReadyForGameJoin message: {e.Message}");
+                    Logger.Warn($"Failed to parse NetMessageReadyForGameJoin message: {e.Message}");
                 }
 
                 /*
-                Console.WriteLine("[PlayerMgrServerFrontendService] Responding with NetMessageReadyAndLoggedIn message");
+                Logger.Info("Responding with NetMessageReadyAndLoggedIn message");
                 byte[] response = NetMessageReadyAndLoggedIn.CreateBuilder()
                     .Build().ToByteArray();
                 client.SendGameServiceMessage(ServerType, (byte)GameServerToClientMessage.NetMessageReadyAndLoggedIn, response);
                 */
 
-                Console.WriteLine("[PlayerMgrServerFrontendService] Responding with NetMessageReadyForTimeSync message");
+                Logger.Info("Responding with NetMessageReadyForTimeSync message");
                 byte[] response = NetMessageReadyForTimeSync.CreateBuilder()
                     .Build().ToByteArray();
 
                 client.SendGameServiceMessage(ServerType, (byte)GameServerToClientMessage.NetMessageReadyForTimeSync, response);
 
                 /*
+                Logger.Info("Responding with NetMessageSelectStartingAvatarForNewPlayer message");
                 byte[] response = NetMessageSelectStartingAvatarForNewPlayer.CreateBuilder()
                     .Build().ToByteArray();
                 client.SendGameServiceMessage(ServerType, (byte)GameServerToClientMessage.NetMessageSelectStartingAvatarForNewPlayer, response, GetGameTime());
                 */
-                
+
             }
             else if (messageId == (byte)ClientToGameServerMessage.NetMessageSyncTimeRequest)
             {
-                Console.WriteLine($"[PlayerMgrServerFrontendService] Received NetMessageSyncTimeRequest message");
+                Logger.Info($"Received NetMessageSyncTimeRequest message");
                 var parsedMessage = NetMessageSyncTimeRequest.ParseFrom(message);
-                Console.Write(parsedMessage.ToString());
+                Logger.Trace(parsedMessage.ToString());
 
-                Console.WriteLine("[PlayerMgrServerFrontendService] Responding with NetMessageSyncTimeReply");
+                Logger.Info("Responding with NetMessageSyncTimeReply");
 
                 byte[] response = NetMessageSyncTimeReply.CreateBuilder()
                     .SetGameTimeClientSent(parsedMessage.GameTimeClientSent)
@@ -79,10 +82,10 @@ namespace MHServerEmu.Services.Implementations
             }
             else if (messageId == (byte)ClientToGameServerMessage.NetMessagePing)
             {
-                Console.WriteLine($"[PlayerMgrServerFrontendService] Received NetMessagePing message");
+                Logger.Info($"Received NetMessagePing message");
 
                 var parsedMessage = NetMessagePing.ParseFrom(message);
-                Console.Write(parsedMessage.ToString());
+                Logger.Trace(parsedMessage.ToString());
 
                 /*
                 byte[] response = NetMessagePingResponse.CreateBuilder()
@@ -96,7 +99,7 @@ namespace MHServerEmu.Services.Implementations
             }
             else
             {
-                Console.WriteLine($"[PlayerMgrServerFrontendService] Received unknown message id {messageId}");
+                Logger.Warn($"Received unknown message id {messageId}");
             }
         }
 

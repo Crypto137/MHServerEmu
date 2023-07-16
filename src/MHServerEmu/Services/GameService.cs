@@ -9,11 +9,13 @@ namespace MHServerEmu.Services
 {
     public partial class GameService
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public PubSubServerTypes ServerType { get; protected set; }
 
         public virtual void Handle(FrontendClient client, byte messageId, byte[] message)
         {
-            Console.WriteLine($"[{ServerType}] Received message id {messageId}");
+            Logger.Warn($"Unimplemented server type {ServerType} received message id {messageId}");
         }
     }
 }

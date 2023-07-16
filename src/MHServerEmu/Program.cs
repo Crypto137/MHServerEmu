@@ -11,13 +11,14 @@ namespace MHServerEmu
 {
     class Program
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public static AuthServer _authServer;
         public static FrontendServer _frontendServer;
 
         static void Main(string[] args)
         {
-            Console.WriteLine("MHServerEmu starting...");
-            Console.WriteLine();
+            Logger.Info("MHServerEmu starting...");
 
             _authServer = new AuthServer(8080);
             new Thread(() => _authServer.HandleIncomingConnections()).Start();

@@ -15,6 +15,8 @@ namespace MHServerEmu
 {
     public class FrontendClient
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         private readonly Socket socket;
         private readonly NetworkStream stream;
 
@@ -55,11 +57,11 @@ namespace MHServerEmu
                 {
                     Handle(stream);
                 }
-                Console.WriteLine("[Frontend] Client disconnected");
+                Logger.Info("Client disconnected");
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Logger.Error(e.ToString());
             }
         }
 
@@ -78,6 +80,7 @@ namespace MHServerEmu
         private void Handle(CodedInputStream stream)
         {
             ClientPacket packet = new(stream);
+            Logger.Trace($"IN: {packet.RawData.ToHexString()}");
 
             // Respond
             ServerPacket response = null;
@@ -86,31 +89,26 @@ namespace MHServerEmu
             switch (packet.Command)
             {
                 case MuxCommand.Connect:
-                    Console.WriteLine($"[Frontend] Received connect for MuxId {packet.MuxId}");
-                    packet.RawData.PrintHex();
-                    Console.WriteLine($"[Frontend] Sending accept for MuxId {packet.MuxId}");
+                    Logger.Info($"Received connect for MuxId {packet.MuxId}");
+                    Logger.Info($"Sending accept for MuxId {packet.MuxId}");
                     response = new(packet.MuxId, MuxCommand.Accept);
                     Send(response);
                     break;
 
                 case MuxCommand.Accept:
-                    Console.WriteLine($"[Frontend] Received accept for MuxId {packet.MuxId}");
-                    packet.RawData.PrintHex();
+                    Logger.Info($"Received accept for MuxId {packet.MuxId}");
                     break;
 
                 case MuxCommand.Disconnect:
-                    Console.WriteLine($"[Frontend] Received disconnect for MuxId {packet.MuxId}");
-                    packet.RawData.PrintHex();
+                    Logger.Info($"Received disconnect for MuxId {packet.MuxId}");
                     break;
 
                 case MuxCommand.Insert:
-                    Console.WriteLine($"[Frontend] Received insert for MuxId {packet.MuxId}");
-                    packet.RawData.PrintHex();
+                    Logger.Info($"Received insert for MuxId {packet.MuxId}");
                     break;
 
                 case MuxCommand.Message:
-                    Console.WriteLine($"[Frontend] Received message on MuxId {packet.MuxId} ({packet.BodyLength} bytes)");
-                    packet.RawData.PrintHex();
+                    Logger.Info($"Received message on MuxId {packet.MuxId} ({packet.BodyLength} bytes)");
 
                     // First byte is message id, second byte is protobuf size as uint8
                     byte[] message = new byte[packet.Body[1]];
@@ -121,27 +119,26 @@ namespace MHServerEmu
 
                     if (MuxIdServerDict.ContainsKey(packet.MuxId))
                     {
-                        Console.WriteLine($"[Frontend] Routing message to {MuxIdServerDict[packet.MuxId]}");
+                        Logger.Info($"Routing message to {MuxIdServerDict[packet.MuxId]}");
                         ServiceDict[MuxIdServerDict[packet.MuxId]].Handle(this, packet.Body[0], message);
                     }
                     else
                     {
-                        //Console.WriteLine($"[Frontend] MuxId is not assigned to a server, handling on frontend");
+                        //Logger.Info($"[Frontend] MuxId is not assigned to a server, handling on frontend");
                         switch ((FrontendProtocolMessage)packet.Body[0])
                         {
                             case FrontendProtocolMessage.ClientCredentials:
-                                Console.WriteLine($"[Frontend] Received ClientCredentials message:");
+                                Logger.Info($"Received ClientCredentials message:");
                                 Gazillion.ClientCredentials clientCredentials = Gazillion.ClientCredentials.ParseFrom(message);
-                                Console.Write(clientCredentials.ToString());
-                                Console.Write($"[Frontend] Decrypted token: ");
+                                Logger.Trace(clientCredentials.ToString());
                                 Cryptography.SetIV(clientCredentials.Iv.ToByteArray());
                                 byte[] decryptedToken = Cryptography.DecryptSessionToken(clientCredentials);
-                                decryptedToken.PrintHex();
+                                Logger.Trace($"Decrypted token: {decryptedToken.ToHexString()}");
 
                                 // Generate response
                                 if (SimulateQueue)
                                 {
-                                    Console.WriteLine("[Frontend] Responding with LoginQueueStatus message");
+                                    Logger.Info("Responding with LoginQueueStatus message");
 
                                     responseMessage = Gazillion.LoginQueueStatus.CreateBuilder()
                                         .SetPlaceInLine(1337)
@@ -154,7 +151,7 @@ namespace MHServerEmu
                                 }
                                 else
                                 {
-                                    Console.WriteLine("[Frontend] Responding with SessionEncryptionChanged message");
+                                    Logger.Info("Responding with SessionEncryptionChanged message");
 
                                     responseMessage = Gazillion.SessionEncryptionChanged.CreateBuilder()
                                         .SetRandomNumberIndex(1)
@@ -169,9 +166,9 @@ namespace MHServerEmu
                                 break;
 
                             case FrontendProtocolMessage.InitialClientHandshake:
-                                Console.WriteLine($"[Frontend] Received InitialClientHandshake message:");
+                                Logger.Info($"Received InitialClientHandshake message:");
                                 Gazillion.InitialClientHandshake initialClientHandshake = Gazillion.InitialClientHandshake.ParseFrom(message);
-                                Console.Write(initialClientHandshake.ToString());
+                                Logger.Trace(initialClientHandshake.ToString());
 
                                 MuxIdServerDict[packet.MuxId] = initialClientHandshake.ServerType;
                                 ServerMuxIdDict[initialClientHandshake.ServerType] = packet.MuxId;
@@ -191,7 +188,7 @@ namespace MHServerEmu
                                 break;
 
                             default:
-                                Console.WriteLine($"[Frontend] Received unknown message id {packet.Body[0]}");
+                                Logger.Warn($"Received unknown message id {packet.Body[0]}");
                                 break;
                         }
                     }
@@ -204,10 +201,7 @@ namespace MHServerEmu
         private void Send(ServerPacket packet)
         {
             byte[] data = packet.Data;
-
-            Console.WriteLine("[Frontend] Sending server response:");
-            data.PrintHex();
-
+            Logger.Trace($"OUT: {data.ToHexString()}");
             this.stream.Write(data, 0, data.Length);
         }
     }

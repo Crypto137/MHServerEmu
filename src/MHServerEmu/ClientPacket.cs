@@ -19,6 +19,8 @@ namespace MHServerEmu
 
     public class ClientPacket
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         private readonly CodedInputStream _stream;
 
         public ushort MuxId { get;  }
@@ -64,8 +66,8 @@ namespace MHServerEmu
             Body = stream.ReadRawBytes(BodyLength);
 
             // Check bytes 3 and 4
-            if (Byte3 != 0x00) Console.WriteLine("[Frontend] Mux packet byte3 is NOT 0");
-            if (Byte4 != 0x00) Console.WriteLine("[Frontend] Mux packet byte4 is NOT 0");
+            if (Byte3 != 0x00) Logger.Warn("Mux packet byte3 is NOT 0");
+            if (Byte4 != 0x00) Logger.Warn("Mux packet byte4 is NOT 0");
         }
 
     }

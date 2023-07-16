@@ -11,6 +11,8 @@ namespace MHServerEmu
 {
     public class AuthServer
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         private const string ServerHost = "localhost";
 
         private HttpListener _listener;
@@ -24,7 +26,7 @@ namespace MHServerEmu
             _listener = new HttpListener();
             _listener.Prefixes.Add($"http://{ServerHost}:{port}/");
             _listener.Start();
-            Console.WriteLine($"[AuthServer] Listening for connections on {url}");
+            Logger.Info($"AuthServer is listening on {url}...");
         }
 
         public async void HandleIncomingConnections()
@@ -39,9 +41,9 @@ namespace MHServerEmu
                 HttpListenerResponse resp = ctx.Response;
 
                 // Print request info
-                Console.WriteLine($"[AuthServer] Received request #: {++_requestCount}");
-                Console.WriteLine($"[AuthServer] Request user agent: {req.UserAgent}");
-                Console.WriteLine($"[AuthServer] Sending AuthTicket message");
+                Logger.Info($"Received request #: {++_requestCount}");
+                Logger.Trace($"Request user agent: {req.UserAgent}");
+                Logger.Info($"Sending AuthTicket message");
 
                 // Prepare data
                 byte[] authTicket = Gazillion.AuthTicket.CreateBuilder()

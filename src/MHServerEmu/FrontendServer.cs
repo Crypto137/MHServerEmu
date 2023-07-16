@@ -28,13 +28,13 @@ namespace MHServerEmu
 
         private void BeginAccept()
         {
-            Console.WriteLine("[Frontend] Waiting for connections");
+            Logger.Info("Waiting for connections...");
             _socket.BeginAccept(new AsyncCallback(AcceptCallback), null);
         }
 
         private void AcceptCallback(IAsyncResult result)
         {
-            Console.WriteLine("[Frontend] Client connected");
+            Logger.Info("Client connected");
             Socket clientSocket = _socket.EndAccept(result);
             FrontendClient client = new FrontendClient(clientSocket);
             _clientList.Add(client);
