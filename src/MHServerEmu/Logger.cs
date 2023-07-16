@@ -57,7 +57,7 @@ namespace MHServerEmu
             SetForegroundColor(level);
             string timestamp = (_enableTimestamps) ? $"[{DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss.fff")}] " : "";
             Console.WriteLine($"{timestamp}[{level.ToString().PadLeft(5)}] [{Name}] {message}");
-            ResetForegroundColor();
+            Console.ResetColor();
         }
 
         private static void SetForegroundColor(Level level)

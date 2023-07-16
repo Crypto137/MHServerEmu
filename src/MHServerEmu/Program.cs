@@ -18,6 +18,10 @@ namespace MHServerEmu
 
         static void Main(string[] args)
         {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            PrintBanner();
+            Console.ResetColor();
+
             Logger.Info("MHServerEmu starting...");
 
             _authServer = new AuthServer(8080);
@@ -35,6 +39,18 @@ namespace MHServerEmu
             }
 
             _frontendServer.Shutdown();
+        }
+
+        private static void PrintBanner()
+        {
+
+            Console.WriteLine(@"  __  __ _    _  _____                          ______                 ");
+            Console.WriteLine(@" |  \/  | |  | |/ ____|                        |  ____|                ");
+            Console.WriteLine(@" | \  / | |__| | (___   ___ _ ____   _____ _ __| |__   _ __ ___  _   _ ");
+            Console.WriteLine(@" | |\/| |  __  |\___ \ / _ \ '__\ \ / / _ \ '__|  __| | '_ ` _ \| | | |");
+            Console.WriteLine(@" | |  | | |  | |____) |  __/ |   \ V /  __/ |  | |____| | | | | | |_| |");
+            Console.WriteLine(@" |_|  |_|_|  |_|_____/ \___|_|    \_/ \___|_|  |______|_| |_| |_|\__,_|");
+            Console.WriteLine();
         }
     }
 }
