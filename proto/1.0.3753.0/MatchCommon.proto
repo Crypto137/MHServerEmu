@@ -1,0 +1,73 @@
+syntax = "proto2";
+
+package Gazillion;
+
+enum MatchPhase {
+	MP_Created	= 0;
+	MP_Initialized	= 1;
+	MP_Started	= 2;
+	MP_Finished	= 3;
+	MP_Shutdown	= 4;
+}
+
+enum MatchPlayerEventType {
+	MPET_Left	= 0;
+	MPET_Joined	= 1;
+}
+
+enum MatchBalanceMethod {
+	MBM_None	= 0;
+	MBM_PlayerRating	= 1;
+	MBM_FixedTeam	= 2;
+}
+
+enum MatchCheatRequestType {
+	MCRT_None	= 0;
+	MCRT_ForceMatchStart	= 1;
+	MCRT_ForceMatchEnd	= 2;
+	MCRT_SwitchTeams	= 3;
+}
+
+enum MatchControlEventType {
+	MCET_None	= 0;
+	MCET_ForceStart	= 1;
+	MCET_ForceEnd	= 2;
+}
+
+message MatchTeamDescription {
+	required uint64	teamPrototypeGuid	= 1;
+	required uint32	minPlayers	= 2;
+	required uint32	maxPlayers	= 3;
+}
+
+message MatchGameDescription {
+	required uint64	queuePrototypeGuid	= 1;
+	required uint64	gamePrototypeGuid	= 2;
+	required uint64	regionPrototypeId	= 3;
+	repeated MatchTeamDescription	teams	= 4;
+}
+
+message MatchQueueDescription {
+	required uint64	queuePrototypeGuid	= 1;
+	required MatchBalanceMethod	balanceMethod	= 2;
+	required uint32	regionLevel	= 3;
+	repeated MatchGameDescription	games	= 4;
+}
+
+message MatchTeamResultData {
+	required uint64	teamPrototypeGuid	= 1;
+	required bool	creditWithWin	= 2;
+}
+
+message MatchResultData {
+	repeated MatchTeamResultData	teams	= 1;
+}
+
+message MatchPlayerStatisticsSummary {
+	required uint64	queuePrototypeGuid	= 1;
+	required uint64	gamePrototypeGuid	= 2;
+	required uint32	gamesPlayed	= 3;
+	required uint32	gamesWon	= 4;
+	required uint32	ratingSummary	= 5;
+}
+

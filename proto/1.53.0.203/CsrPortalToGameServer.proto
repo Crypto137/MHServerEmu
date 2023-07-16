@@ -1,0 +1,13 @@
+syntax = "proto2";
+
+package Gazillion;
+
+message CsrAchievementsUpdate {
+	required int32	achievementId	= 1;
+	required bool	published	= 2;
+}
+
+message CsrAchievementsBatchUpdate {
+	repeated CsrAchievementsUpdate	updates	= 1;
+}
+

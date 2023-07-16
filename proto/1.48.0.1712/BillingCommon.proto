@@ -1,0 +1,136 @@
+syntax = "proto2";
+
+package Gazillion;
+
+enum BuyItemResultErrorCodes {
+	BUY_RESULT_ERROR_SUCCESS	= 0;
+	BUY_RESULT_ERROR_ALREADY_HAVE_AVATAR	= 1;
+	BUY_RESULT_ERROR_ALREADY_HAVE_STASH_INV	= 2;
+	BUY_RESULT_ERROR_ALREADY_HAVE_PERMABUFF	= 3;
+	BUY_RESULT_ERROR_INSUFFICIENT_BALANCE	= 4;
+	BUY_RESULT_ERROR_IS_GIFT	= 5;
+	BUY_RESULT_ERROR_UNKNOWN_RECIPIENT	= 6;
+	BUY_RESULT_ERROR_PRICE_MISMATCH	= 7;
+	BUY_RESULT_ERROR_GIFTING_UNAVAILABLE	= 8;
+	BUY_RESULT_ERROR_UNKNOWN	= 9;
+	BUY_RESULT_ERROR_GIFT_MESSAGE_TOO_LONG	= 10;
+	BUY_RESULT_ERROR_SOLD_OUT	= 11;
+	BUY_RESULT_ERROR_TEMPORARILY_UNAVAILABLE_RETRY_POSSIBLE	= 12;
+	BUY_RESULT_ERROR_PREPURCHASE_ALREADY_OWNED	= 13;
+}
+
+enum RedeemCodeResultErrorCodes {
+	REDEEM_CODE_RESULT_ERROR_SUCCESS	= 0;
+	REDEEM_CODE_RESULT_ERROR_ALREADY_REDEEMED	= 1;
+	REDEEM_CODE_RESULT_ERROR_INVALID_KEY	= 2;
+	REDEEM_CODE_RESULT_ERROR_UNKNOWN	= 3;
+}
+
+message MHCatalogEntryType {
+	required string	name	= 1;
+	required int32	order	= 2;
+}
+
+message MHCatalogEntryTypeModifier {
+	required string	name	= 1;
+	required int32	order	= 2;
+}
+
+message MHBannerUrl {
+	required string	type	= 1;
+	required string	url	= 2;
+}
+
+message MHLocalizedCatalogUrls {
+	required string	localeId	= 1;
+	optional string	storeHomePageUrl	= 2;
+	repeated MHBannerUrl	storeBannerPageUrls	= 3;
+	optional string	storeRealMoneyUrl	= 4;
+}
+
+message MHLocalizedCatalogEntry {
+	required string	language_id	= 1;
+	optional string	description	= 2;
+	optional string	title	= 3;
+	optional string	releaseDate	= 5;
+	required int64	itemPrice	= 6;
+}
+
+message MHLocalizedCatalogEntryUrlOrData {
+	required string	language_id	= 1;
+	optional string	url	= 2;
+	optional bytes	imagedata	= 3;
+}
+
+message MHCatalogGuidEntry {
+	optional uint64	prototypeGuid	= 1;
+	optional uint64	itemPrototypeRuntimeIdForClient	= 2;
+	optional int32	quantity	= 3 [default = 1];
+}
+
+message MarvelHeroesCatalogEntry {
+	required int64	skuId	= 1;
+	repeated MHCatalogGuidEntry	guidItems	= 9;
+	repeated MHCatalogGuidEntry	additionalGuidItems	= 10;
+	repeated MHLocalizedCatalogEntry	localizedEntries	= 5;
+	repeated MHLocalizedCatalogEntryUrlOrData	infourls	= 2;
+	repeated MHLocalizedCatalogEntryUrlOrData	contentdata	= 3;
+	optional MHCatalogEntryType	type	= 6;
+	repeated MHCatalogEntryTypeModifier	typeModifier	= 7;
+}
+
+message GiftHistoryEntry {
+	optional int64	transactionId	= 1;
+	required int64	skuId	= 2;
+	required int64	timestamp	= 3;
+	optional string	message	= 4;
+}
+
+message GiftHistoryForPlayerEntry {
+	optional int64	platformAccountId	= 1;
+	required string	name	= 2;
+	repeated GiftHistoryEntry	historyEntries	= 3;
+}
+
+message AwardItem {
+	required string	awardId	= 1;
+	required int64	skuId	= 2;
+	required int64	quantity	= 3;
+}
+
+message AwardCouponDescription {
+	required string	localeId	= 1;
+	required string	description	= 2;
+}
+
+message AwardCoupon {
+	required string	couponId	= 1;
+	required float	discount	= 2;
+	required string	couponState	= 3;
+	required int64	expirationDateUtc	= 4;
+	repeated AwardCouponDescription	descriptions	= 5;
+	required int64	wsec	= 6;
+}
+
+message AwardEntry {
+	required string	awardType	= 1;
+	optional AwardItem	item	= 2;
+	optional AwardCoupon	coupon	= 3;
+}
+
+message BillingPlayStationUpdateEntitlementStatus {
+	required string	EntitlementId	= 1;
+	required int32	UseCount	= 2;
+	required int32	UseLimit	= 3;
+}
+
+message BillingPlayStationUpdateEntitlementStatusResponse {
+	required string	EntitlementId	= 1;
+	required int32	UseCount	= 2;
+	required int32	UseLimit	= 3;
+	required bool	Consumed	= 4;
+}
+
+message BillingPlayStationProcessPendingEntitlementTransactions {
+}
+

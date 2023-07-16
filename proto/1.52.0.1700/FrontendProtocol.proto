@@ -1,0 +1,108 @@
+syntax = "proto2";
+
+package Gazillion;
+
+import "PubSubProtocol.proto";
+
+enum FrontendProtocolVersion {
+	CURRENT_VERSION	= 1;
+}
+
+enum ExtendedLoginErrors {
+	NO_LOGIN_ERROR	= 0;
+	CLIENT_MANAGER_NOT_AVAILABLE	= 1;
+}
+
+message LoginDataPB {
+	required string	emailAddress	= 1;
+	required string	password	= 2;
+	optional string	version	= 3;
+	optional string	dbservername	= 4;
+	optional string	token	= 5;
+	optional bool	loginAsAnotherPlayer	= 6;
+	optional bool	noPersistenceThisSession	= 7;
+	optional string	loginAsPlayer	= 8;
+	optional string	clientDownloader	= 9;
+	optional string	machineId	= 10;
+	optional string	machineIdDebugInfo	= 18;
+	optional int32	timezoneutcbias	= 11;
+	optional int32	platform	= 12;
+	optional string	platformString	= 13;
+	optional string	locale	= 14;
+	optional string	twofactorcode	= 15;
+	optional string	twofactorname	= 16;
+	optional string	twofactortrustmachine	= 17;
+	optional bool	streamingclient	= 19;
+}
+
+message ConsoleServiceEntitlement {
+	required string	EntitlementId	= 1;
+	required int32	UseCount	= 2;
+	required int32	UseLimit	= 3;
+	required bool	IsConsumable	= 4;
+}
+
+message LoginDataConsole {
+	required string	token	= 1;
+	optional string	version	= 2;
+	optional bool	noPersistenceThisSession	= 3;
+	repeated ConsoleServiceEntitlement	serviceEntitlements	= 4;
+	optional string	titleid	= 5;
+}
+
+message CreateAccountConsole {
+	required string	token	= 1;
+	optional string	version	= 2;
+	required string	playername	= 3;
+}
+
+message AcceptDocuments {
+	required string	token	= 1;
+	optional string	version	= 2;
+	repeated string	documents	= 3;
+}
+
+message SelectPlayerName {
+	required string	token	= 1;
+	optional string	version	= 2;
+	required string	playername	= 3;
+}
+
+message InitialClientHandshake {
+	required FrontendProtocolVersion	protocolVersion	= 1 [default = CURRENT_VERSION];
+	required PubSubServerTypes	serverType	= 2;
+}
+
+message ClientCredentials {
+	required uint64	sessionid	= 1;
+	required bytes	iv	= 2;
+	required bytes	encryptedToken	= 3;
+}
+
+message LoginQueueStatus {
+	required uint64	placeInLine	= 1;
+	required uint64	numberOfPlayersInLine	= 2;
+}
+
+message SessionEncryptionChanged {
+	required uint32	randomNumberIndex	= 1 [default = 1];
+	required bytes	encryptedRandomNumber	= 2;
+}
+
+message ExtendedLoginError {
+	optional ExtendedLoginErrors	error	= 1;
+}
+
+message EncryptedTrafficHeader {
+	required uint32	randomNumberIndex	= 1;
+	required bytes	encryptedTraffic	= 2;
+}
+
+message PrecacheHeaders {
+	required string	locale	= 1;
+}
+
+message NewsRequest {
+	required string	locale	= 1;
+}
+

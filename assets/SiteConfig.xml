@@ -1,0 +1,31 @@
+<config>
+	<str name="AuthServerAddress" value="localhost" />
+	<str name="AuthServerUrl" value="/marvelheroes/AuthServer/Login/IndexPB" />
+	<str name="AuthServerTicketUrl" value="" />
+	<str name="AuthServerPort" value="80" />
+	<str name="CrashReportHost" value="hq-gar-dev01" />
+	<str name="CrashReportUrl" value="/MinidumpWebService/Home/ProcessPostedDump" />
+	<str name="CrashReportPort" value="" />
+	<str name="VerifyFailureHost" value="localhost" />
+	<str name="VerifyFailureUrl" value="" />
+	<str name="VerifyFailurePort" value="" />
+	<str name="ReportDefectHost" value="" />
+	<str name="ReportDefectUrl" value="/BugAndFeatureWebService/NewDefect" />
+	<str name="ReportDefectPort" value="" />
+	<str name="ReportSuggestionHost" value="" />
+	<str name="ReportSuggestionUrl" value="/BugAndFeatureWebService/NewSuggestion" />
+	<str name="ReportSuggestionPort" value="" />
+	<bool name="UsePlaytestOnlyCommands" value="false" />
+	<str name="OnCloseUrl" value="" />
+	<str name="OnCloseUrlSteam" value="" />
+	<str name="AccountWebsiteUrl" value="https://www.marvelheroes.com" />
+	<str name="AccountRegistrationUrl" value="https://login.marvelheroes.com/registration.php?pcode=" />
+	<str name="SteamAccountRegistrationUrl" value="https://login.marvelheroes.com/registration.php?pcode=steam" />
+	<str name="BitRaiderAccountRegistrationUrl" value="" />
+	<str name="SteamMicroTransactionCompleteHost" value="partner.marvelheroes.com" />
+	<str name="SteamMicroTransactionCompletePort" value="" />
+	<str name="SteamMicroTransactionCompleteUrl" value="/steam/finalize" />
+	<bool name="SteamMicroTransactionCompleteUseSsl" value="false" />
+	<str name="DriverUpdateURL" value="https://marvelheroes.com/support/drivers" />
+	<bool name="AllowNonSteamStoreInSteamBuild" value="true" />
+</config>

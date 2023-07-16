@@ -1,0 +1,997 @@
+syntax = "proto2";
+
+package Gazillion;
+
+import "GazillionCommon.proto";
+import "CommonMessages.proto";
+import "ChatCommon.proto";
+import "Guild.proto";
+import "GlobalEventsCommon.proto";
+
+message NetMessageReadyForGameJoin {
+	required int32	wipesDataIfMismatchedInDb	= 1 [default = 0];
+	optional bool	wipePlayerRecordsOnLogin	= 2 [default = false];
+	optional string	domainLoginName	= 3;
+	optional bytes	playerImportData	= 4;
+	required string	localeName	= 5;
+	optional int32	clientOperatingSystem	= 6;
+	required bool	streamingSession	= 7 [default = false];
+	required bool	consolePlayer	= 8;
+	optional string	psnSessionId	= 9;
+	optional bool	consoleUI	= 10;
+	required int32	platformType	= 11;
+}
+
+message NetMessagePlayerSystemMetrics {
+	required int32	compatLevelCpu	= 1 [default = -1];
+	required int32	compatLevelGpu	= 2 [default = -1];
+	required int32	compatLevelComposite	= 3 [default = -1];
+	optional string	osName	= 4;
+	optional string	cpuName	= 5;
+	optional string	ramName	= 6;
+	optional string	displayDeviceName	= 7;
+	optional bool	displayDeviceDualGPU	= 8;
+	optional string	displayDeviceDriverDate	= 9;
+	optional string	userLanguage	= 10;
+}
+
+message NetMessagePlayerSteamInfo {
+	required uint64	steamUserId	= 1;
+	optional int32	updateSteamSeqNum	= 2;
+}
+
+message NetMessageSyncTimeRequest {
+	required int64	gameTimeClientSent	= 1;
+	required int64	dateTimeClientSent	= 2;
+}
+
+message NetMessageSetTimeDialation {
+	required int64	gameTimeDialationStarted	= 1;
+	required int64	dateTimeDialationStarted	= 2;
+	required float	dialation	= 3;
+}
+
+message NetMessageIsRegionAvailable {
+	required uint64	regionPrototype	= 1;
+	required bool	isAvailable	= 2;
+}
+
+message NetMessageUpdateAvatarState {
+	required bytes	archiveData	= 1;
+}
+
+message NetMessageCellLoaded {
+	required uint32	cellId	= 1;
+	required uint64	regionId	= 2;
+}
+
+message NetMessageTeleportAckResponse {
+	required uint32	ackseq	= 1;
+}
+
+message NetMessageAdminCommand {
+	required string	command	= 1;
+}
+
+message NetMessageUpdateCostumeSpecialEffectPreference {
+	required uint64	avatarPrototypeId	= 1;
+	required uint64	specialEffectPrototypeId	= 2;
+}
+
+message NetMessageTryActivatePower {
+	required uint64	idUserEntity	= 1;
+	required uint64	powerPrototypeId	= 2;
+	optional uint64	idTargetEntity	= 3;
+	optional NetStructPoint3	targetPosition	= 4;
+	optional float	movementSpeed	= 5;
+	optional uint64	movementTimeMS	= 6;
+	optional uint32	powerRandomSeed	= 7;
+	optional uint64	itemSourceId	= 8;
+	required uint32	fxRandomSeed	= 9;
+	optional uint64	triggeringPowerPrototypeId	= 10;
+}
+
+message NetMessagePowerRelease {
+	required uint64	idUserEntity	= 1;
+	required uint64	powerPrototypeId	= 2;
+	optional uint64	idTargetEntity	= 3;
+	optional NetStructPoint3	targetPosition	= 4;
+}
+
+message NetMessageTryCancelPower {
+	required uint64	idUserEntity	= 1;
+	required uint64	powerPrototypeId	= 2;
+	required uint32	endPowerFlags	= 3;
+}
+
+message NetMessageTryCancelActivePower {
+	required uint64	idUserEntity	= 1;
+}
+
+message NetMessageContinuousPowerUpdateToServer {
+	required uint64	powerPrototypeId	= 1;
+	required int32	avatarIndex	= 2;
+	optional uint64	idTargetEntity	= 3;
+	optional NetStructPoint3	targetPosition	= 4;
+	optional uint32	randomSeed	= 5;
+}
+
+message NetMessageCancelPendingAction {
+	required int32	avatarIndex	= 1;
+}
+
+message NetMessageStartAIDebugUI {
+	required uint64	idTargetNPC	= 1;
+}
+
+message NetMessageStopAIDebugUI {
+	required uint64	idTargetNPC	= 1;
+}
+
+message NetMessageStartAIPerformanceUI {
+}
+
+message NetMessageStopAIPerformanceUI {
+}
+
+message NetMessageStartMissionDebugUI {
+	required uint64	idTargetAgent	= 1;
+	required uint64	missionPrototypeRefId	= 2;
+	required string	missionListMatchPattern	= 3;
+}
+
+message NetMessageStopMissionDebugUI {
+	required uint64	idTargetAgent	= 1;
+}
+
+message NetMessageStartPropertiesDebugUI {
+	required uint64	idTargetEntity	= 1;
+}
+
+message NetMessageStopPropertiesDebugUI {
+	required uint64	idTargetEntity	= 1;
+}
+
+message NetMessageStartConditionsDebugUI {
+	required uint64	idTargetEntity	= 1;
+}
+
+message NetMessageStopConditionsDebugUI {
+	required uint64	idTargetEntity	= 1;
+}
+
+message NetMessageStartPowersDebugUI {
+	required uint64	idTargetEntity	= 1;
+}
+
+message NetMessageStopPowersDebugUI {
+	required uint64	idTargetEntity	= 1;
+}
+
+message NetStructMessageStoreMetric {
+	required AvailableStoreActions	storeActionEnum	= 1;
+	required uint64	unixTimestamp	= 2;
+	optional uint64	targetPrototypeId	= 3;
+}
+
+message NetMessagePing {
+	required bool	displayOutput	= 1;
+	required uint64	sendClientTime	= 2;
+	optional uint64	sendGameTime	= 3;
+	optional uint64	requestNetReceivedGameTime	= 4;
+	optional uint64	lastClientLatency	= 5;
+	optional float	lastFps	= 6;
+	optional uint64	regionPrototype	= 7;
+	optional uint32	cpulevel	= 8;
+	optional uint32	gpulevel	= 9;
+	optional uint32	compositelevel	= 10;
+	optional string	countrycode	= 11;
+	optional float	minFps	= 12;
+	optional NetStructPoint3	minFpsPos	= 13;
+	repeated NetStructMessageStoreMetric	storeMetrics	= 14;
+	optional bool	streamingclient	= 15 [default = false];
+}
+
+message NetMessageFPS {
+	required float	avgFps	= 1;
+	required float	minFps	= 2;
+	required uint32	numHitches	= 3;
+	required uint64	regionPrototype	= 4;
+	required uint32	cpulevel	= 5;
+	required uint32	gpulevel	= 6;
+	required uint32	compositelevel	= 7;
+	optional bool	streamingclient	= 8 [default = false];
+}
+
+message NetMessageConsoleStorePurchaseCompleteMetrics {
+	required string	sellableobject	= 1;
+	required int32	seconds	= 2;
+	required int32	inventoryfilled	= 3;
+	required int32	inventoryunlocked	= 4;
+	required int32	inventorysoftcap	= 5;
+	required int32	stashfilled	= 6;
+	required int32	stashunlocked	= 7;
+	required int32	stashsoftcap	= 8;
+	required int32	startbalanceg	= 9;
+	required int32	startbalancees	= 10;
+	required bool	currencyisg	= 11;
+	required bool	currencyises	= 12;
+	required int32	price	= 13;
+	required int32	endbalanceg	= 14;
+	required int32	endbalancees	= 15;
+	required bool	addgstart	= 16;
+	required bool	addgsuccess	= 17;
+	required string	entrypoint	= 18;
+	required int32	startbalancemd	= 19;
+	required bool	currencyismd	= 20;
+	required int32	endbalancemd	= 21;
+}
+
+message NetMessageConsoleStorePurchaseAbandonMetrics {
+	required string	sellableobject	= 1;
+	required int32	seconds	= 2;
+	required int32	inventoryfilled	= 3;
+	required int32	inventoryunlocked	= 4;
+	required int32	inventorysoftcap	= 5;
+	required int32	stashfilled	= 6;
+	required int32	stashunlocked	= 7;
+	required int32	stashsoftcap	= 8;
+	required int32	startbalanceg	= 9;
+	required int32	startbalancees	= 10;
+	required bool	addgstart	= 11;
+	required bool	addgsuccess	= 12;
+	required string	entrypoint	= 13;
+	required int32	startbalancemd	= 14;
+}
+
+message NetMessageGamepadMetric {
+	required bool	IsDualShock	= 1;
+	required int32	PlayerSlotNumber	= 2;
+	required bool	IsDefaultBinding	= 3;
+}
+
+message NetMessagePickupInteraction {
+	required uint64	idTarget	= 1;
+	required int32	avatarIndex	= 2;
+	optional bool	useInteractFallbackRange	= 3;
+}
+
+message NetMessageTryInventoryMove {
+	required uint64	itemId	= 1;
+	required uint64	toInventoryOwnerId	= 2;
+	required uint64	toInventoryPrototype	= 3;
+	required uint32	toSlot	= 4;
+	required int32	stackSplitSize	= 5;
+}
+
+message NetMessageTryMoveCraftingResultsToGeneral {
+}
+
+message NetMessageInventoryTrashItem {
+	required uint64	itemId	= 1;
+}
+
+message NetMessageThrowInteraction {
+	required uint64	idTarget	= 1;
+	required int32	avatarIndex	= 2;
+}
+
+message NetMessagePerformPreInteractPower {
+	required uint64	idTarget	= 1;
+	required int32	avatarIndex	= 2;
+	required bool	hasDialog	= 3;
+}
+
+message NetMessageUseInteractableObject {
+	required uint64	idTarget	= 1;
+	required int32	avatarIndex	= 2;
+	optional uint64	missionPrototypeRef	= 3;
+}
+
+message NetMessageTryCraft {
+	required uint64	idRecipe	= 1;
+	required uint64	idVendor	= 2;
+	repeated uint64	idIngredients	= 3;
+	required bool	isRecraft	= 4;
+	required int32	avatarIndex	= 5;
+}
+
+message NetMessageUseWaypoint {
+	required int32	avatarIndex	= 1;
+	required uint64	idTransitionEntity	= 2;
+	required uint64	waypointDataRef	= 3;
+	required uint64	regionProtoId	= 4;
+	required uint64	difficultyProtoId	= 5;
+}
+
+message NetMessageDebugAcquireAndSwitchToAvatar {
+	required uint64	avatarPrototypeId	= 1;
+}
+
+message NetMessageSwitchAvatar {
+	required uint64	avatarPrototypeId	= 1;
+	required uint32	avatarModeEnum	= 2;
+	required uint32	avatarIndex	= 3;
+}
+
+message NetMessageChangeDifficulty {
+	required uint64	difficultyTierProtoId	= 1;
+}
+
+message NetMessageSelectPublicEventTeam {
+	required uint64	teamPrototypeId	= 1;
+}
+
+message NetMessageRefreshAbilityKeyMapping {
+	required uint64	avatarId	= 1;
+}
+
+message NetMessageAbilitySlotToAbilityBar {
+	required uint64	avatarId	= 1;
+	required uint64	prototypeRefId	= 2;
+	required uint32	slotNumber	= 3;
+}
+
+message NetMessageAbilityUnslotFromAbilityBar {
+	required uint64	avatarId	= 1;
+	required uint32	slotNumber	= 2;
+}
+
+message NetMessageAbilitySwapInAbilityBar {
+	required uint64	avatarId	= 1;
+	required uint32	slotNumberA	= 2;
+	required uint32	slotNumberB	= 3;
+}
+
+message NetMessageModCommitTemporary {
+	required uint64	avatarRef	= 1;
+	required uint64	modTypeRef	= 2;
+	repeated NetStructModChangeObject	changes	= 3;
+}
+
+message NetMessageModReset {
+	required uint64	avatarId	= 1;
+	required uint64	modTypeRef	= 2;
+}
+
+message NetMessagePowerRecentlyUnlocked {
+	required uint64	powerPrototypeId	= 1;
+	required uint64	avatarEntityId	= 2;
+	required bool	isRecentlyUnlocked	= 3;
+}
+
+message NetMessageRequestDeathRelease {
+	required uint32	avatarIndex	= 1;
+	required uint32	requestType	= 2;
+}
+
+message NetMessageRequestResurrectDecline {
+	required uint32	avatarIndex	= 1;
+}
+
+message NetMessageRequestResurrectAvatar {
+	required uint32	avatarIndex	= 1;
+	required uint64	targetId	= 2;
+}
+
+message NetMessageReturnToHub {
+	required uint32	avatarIndex	= 1;
+}
+
+message NetMessageRequestMissionRewards {
+	required uint64	missionPrototypeId	= 1;
+	optional uint32	conditionIndex	= 2;
+	optional uint64	entityId	= 3;
+}
+
+message NetMessageRequestRemoveAndKillControlledAgent {
+	required uint64	avatarId	= 1;
+}
+
+message NetMessageDamageMeter {
+	required uint64	encounterguid	= 1;
+	required uint64	avatarguid	= 2;
+	required float	dps	= 3;
+	required float	damagescore	= 4;
+	required int32	numdeaths	= 5;
+}
+
+message NetMessageDuelInvite {
+	required uint64	challengerEntityId	= 1;
+	optional string	challengerName	= 2;
+	optional uint64	opponentEntityId	= 3;
+	required string	opponentName	= 4;
+}
+
+message NetMessageDuelAccept {
+	required uint64	challengedEntityId	= 1;
+	optional string	challengedName	= 2;
+}
+
+message NetMessageDuelCancel {
+	required uint64	cancellingEntityId	= 1;
+	optional string	cancellingName	= 2;
+}
+
+message NetMessageMetaGameUpdateNotification {
+	required uint64	metaGameEntityId	= 1;
+}
+
+message NetMessageChat {
+	required ChatRoomTypes	roomType	= 1;
+	required ChatMessage	theMessage	= 2;
+}
+
+message NetMessageTell {
+	required string	targetPlayerName	= 1;
+	required ChatMessage	theMessage	= 2;
+}
+
+message NetMessageReportPlayer {
+	required string	targetPlayerName	= 1;
+	required string	reason	= 2;
+}
+
+message NetMessageChatBanVote {
+	required string	targetPlayerName	= 1;
+	optional string	reason	= 2;
+}
+
+message NetMessageGetCatalog {
+	optional uint64	itemPrototypeRuntimeId	= 1 [default = 0];
+	optional int64	timestamp_seconds	= 3 [default = 0];
+	optional int64	timestamp_microseconds	= 5 [default = 0];
+	optional string	localeid	= 4 [default = "en_us"];
+	optional string	catalog_version_string	= 6;
+}
+
+message NetMessageGetCurrencyBalance {
+}
+
+message NetMessageBuyItemFromCatalog {
+	optional int64	skuId	= 1;
+	required int64	itemUnitPrice	= 2;
+	optional int32	numUnits	= 3 [default = 1];
+	optional StoreCurrencyType	currencyType	= 4 [default = StoreCurrency_G];
+	optional string	so	= 5;
+}
+
+message NetMessageBuyGiftForOtherPlayer {
+	optional int64	skuId	= 1;
+	required int64	itemUnitPrice	= 2;
+	required string	recipientName	= 3;
+	optional int32	numUnits	= 4 [default = 1];
+	optional string	giftMessage	= 5;
+	optional StoreCurrencyType	currencyType	= 6 [default = StoreCurrency_G];
+	optional string	so	= 7;
+}
+
+message NetMessagePurchaseUnlock {
+	required int64	agentPrototypeId	= 1;
+}
+
+message NetMessageGetGiftHistory {
+}
+
+message EntityPreviewerEnum {
+	enum Alliance {
+		Ally	= 0;
+		Enemy	= 1;
+		Total	= 2;
+	}
+
+}
+
+message NetMessageEntityPreviewerNewTargets {
+	required EntityPreviewerEnum.Alliance	alliance	= 1;
+	optional uint32	numNewTargets	= 2;
+}
+
+message NetMessageEntityPreviewerClearTargets {
+}
+
+message NetMessageEntityPreviewerSetTargetRef {
+	required uint64	targetRefId	= 1;
+}
+
+message NetMessageEntityPreviewerActivatePower {
+	required uint64	casterId	= 1;
+	required uint64	powerRefId	= 2;
+	required bool	createTarget	= 3;
+	required bool	randomTargetPos	= 4;
+}
+
+message NetMessageEntityPreviewerAddTarget {
+	required uint64	targetId	= 1;
+}
+
+message NetMessageEntityPreviewerSetEntityState {
+	required uint64	targetId	= 1;
+	required uint64	stateRefId	= 2;
+}
+
+message NetMessageEntityPreviewerApplyConditions {
+	required uint64	targetId	= 1;
+	required uint64	powerRefId	= 2;
+}
+
+message NetMessageCreateNewPlayerWithSelectedStartingAvatar {
+	required uint64	startingAvatarPrototypeId	= 1;
+	required uint32	totalTime	= 2;
+}
+
+message NetMessageOnKioskStartButtonPressed {
+}
+
+message NetMessageNotifyFullscreenMovieStarted {
+	required uint64	moviePrototypeId	= 1;
+}
+
+message NetMessageNotifyFullscreenMovieFinished {
+	required uint64	moviePrototypeId	= 1;
+	required bool	userCancelled	= 2;
+	required uint32	syncRequestId	= 3;
+}
+
+message NetMessageNotifyLoadingScreenFinished {
+}
+
+message NetMessageBotSetLevel {
+	required int32	level	= 1;
+}
+
+message NetMessageBotGodMode {
+}
+
+message NetMessageBotPickAvatar {
+	required uint64	avatarBotDataId	= 1;
+	optional int32	level	= 2;
+	optional uint64	lootPrototype	= 3;
+	optional uint32	lootTableRoll	= 4;
+}
+
+message NetMessageBotRegionChange {
+	required uint64	regionDataId	= 1;
+}
+
+message NetMessageBotWarpAreaNext {
+}
+
+message NetMessageBotLootGive {
+	required uint64	lootPrototype	= 1;
+	required uint32	lootTableRoll	= 2;
+}
+
+message NetMessageBotSetPvPFaction {
+	required uint64	factionSetPrototype	= 1;
+}
+
+message NetMessageBotPvPQueue {
+	required uint64	pvpQueueId	= 1;
+}
+
+message NetMessageGetTrackerReport {
+	required uint32	messageSource	= 1;
+	required uint32	messageDirection	= 2;
+}
+
+message NetMessageRequestPlayCinematics {
+	repeated uint64	cinematicProtoIds	= 1;
+}
+
+message NetMessagePlayKismetSeqDone {
+	required uint64	kismetSeqPrototypeId	= 1;
+	required uint32	syncRequestId	= 2;
+}
+
+message NetMessageVerifyFailedForRepId {
+	required uint64	repid1	= 1;
+	required string	file	= 2;
+	required uint32	line	= 3;
+	required string	debugmsg	= 4;
+	optional uint64	repid2	= 5;
+}
+
+message NetMessageGracefulDisconnect {
+}
+
+message NetMessageRequestStartNewGame {
+}
+
+message NetMessageUpdateLastStoreTimestamp {
+	required uint32	timestamp	= 1;
+}
+
+message NetMessageSetDialogTarget {
+	required uint64	targetId	= 1;
+	required uint64	interactorId	= 2;
+}
+
+message NetMessageDialogResult {
+	required uint64	serverId	= 1;
+	required uint64	playerGuid	= 2;
+	required GameDialogResultEnum	buttonIndex	= 3;
+	required bool	checkboxClicked	= 4;
+}
+
+message NetMessageVendorRequestBuyItemFrom {
+	required int32	avatarIndex	= 1;
+	required uint64	itemId	= 2;
+	required uint64	vendorId	= 3;
+	required uint32	inventorySlot	= 4;
+}
+
+message NetMessageVendorRequestSellItemTo {
+	required int32	avatarIndex	= 1;
+	required uint64	itemId	= 2;
+	required uint64	vendorId	= 3;
+}
+
+message NetMessageVendorRequestSellItemsTo {
+	required int32	avatarIndex	= 1;
+	required uint64	vendorId	= 2;
+	repeated uint64	itemIds	= 3;
+}
+
+message NetMessageVendorRequestDonateItemTo {
+	required int32	avatarIndex	= 1;
+	required uint64	itemId	= 2;
+	required uint64	vendorId	= 3;
+}
+
+message NetMessageVendorRequestDonateItemsTo {
+	required int32	avatarIndex	= 1;
+	required uint64	vendorId	= 2;
+	repeated uint64	itemIds	= 3;
+}
+
+message NetMessageVendorRequestRefresh {
+	required int32	avatarIndex	= 1;
+	required uint64	vendorId	= 2;
+}
+
+message LFGCommandClient {
+	required LFGOperation	operation	= 1;
+	optional NetStructLFGMember	payload	= 2;
+}
+
+message NetMessageTryModifyCommunityMemberCircle {
+	required uint64	circleId	= 1;
+	required ModifyCircleOperation	operation	= 2;
+	required string	playerName	= 3;
+}
+
+message NetMessagePullCommunityStatus {
+}
+
+message NetMessageGuildMessageToPlayerManager {
+	required GuildMessageSetToPlayerManager	messages	= 1;
+}
+
+message NetMessageAkEvent {
+	required uint32	akEventId	= 1;
+	required bool	isVO	= 2;
+	required uint32	eventType	= 3;
+	optional uint32	cooldownMS	= 4 [default = 0];
+	optional uint32	avatarIndex	= 5 [default = 0];
+}
+
+message NetMessageSetTipSeen {
+	required uint64	tipDataRefId	= 1;
+}
+
+message NetMessageHUDTutorialDismissed {
+	required uint64	hudTutorialProtoId	= 1;
+}
+
+message NetMessageTryMoveInventoryContents {
+	required uint64	sourceInventoryPrototype	= 1;
+	required uint64	destInventoryPrototype	= 2;
+}
+
+message NetMessageTryMoveItemsToInventory {
+	repeated uint64	itemIds	= 1;
+	required uint64	destInventoryPrototype	= 2;
+}
+
+message NetMessageSetPlayerGameplayOptions {
+	required NetStructGameplayOptions	optionsData	= 1;
+}
+
+message NetMessageTeleportToPartyMember {
+	required string	playerName	= 1;
+}
+
+message NetMessageRegionRequestQueueCommandClient {
+	required uint64	regionProtoId	= 1;
+	required uint64	difficultyTierProtoId	= 2;
+	optional uint64	regionRequestGroupId	= 3;
+	required RegionRequestQueueCommandVar	command	= 4;
+}
+
+message NetMessageSelectAvatarSynergies {
+	required uint64	avatarId	= 1;
+	repeated uint64	avatarPrototypes	= 2;
+}
+
+message NetMessageRequestLegendaryMissionReroll {
+}
+
+message NetMessageAttemptShareLegendaryMission {
+	required uint64	playerDbId	= 1;
+	optional string	playerDisplayName	= 2;
+}
+
+message NetMessageAttemptShareLegendaryMissionResponse {
+	required bool	missionAccepted	= 1;
+}
+
+message NetMessageRequestPlayerOwnsItemStatus {
+	required uint64	itemProtoId	= 1;
+}
+
+message NetMessageRequestInterestInInventory {
+	required uint64	inventoryProtoId	= 1;
+	required InventoryLoadStateEnum	loadState	= 2;
+}
+
+message NetMessageRequestLoadInventorySlots {
+	required uint64	inventoryOwnerId	= 1;
+	required uint64	inventoryProtoId	= 2;
+	repeated uint32	slots	= 3;
+}
+
+message NetMessageRequestInterestInAvatarEquipment {
+	required uint64	avatarProtoId	= 1;
+	required uint32	avatarModeEnum	= 2;
+}
+
+message NetMessageRequestInterestInTeamUpEquipment {
+	required uint64	teamUpProtoId	= 1;
+}
+
+message NetMessageTryTeamUpSelect {
+	required uint64	teamUpPrototypeId	= 1;
+}
+
+message NetMessageRequestTeamUpDismiss {
+}
+
+message NetMessageTryTeamUpStyleSelect {
+	required uint32	styleIndex	= 1;
+}
+
+message NetMessageSelectInfinityGemBonus {
+	required uint64	gemBonusProtoRefID	= 1;
+	required int64	points	= 2;
+}
+
+message NetMessageInfinityPointAllocationCommit {
+	required uint64	avatarId	= 1;
+	repeated NetMessageSelectInfinityGemBonus	allocations	= 2;
+}
+
+message NetMessageRespecInfinity {
+	required uint64	avatarId	= 1;
+	optional int32	gem	= 2;
+}
+
+message NetMessageRespecOmegaBonus {
+	required uint64	avatarId	= 1;
+}
+
+message NetMessageRespecPowerSpec {
+	required uint64	characterId	= 1;
+	required int32	powerSpecIndex	= 2;
+}
+
+message NetMessageNewItemGlintPlayed {
+	required uint64	playerId	= 1;
+	repeated uint64	itemIds	= 2;
+}
+
+message NetMessageNewItemHighlightCleared {
+	required uint64	playerId	= 1;
+	required uint64	itemId	= 2;
+}
+
+message NetMessageNewSynergyCleared {
+	required uint64	playerId	= 1;
+	required uint64	avatarPrototypeId	= 2;
+}
+
+message NetMessageUnassignMappedPower {
+	required uint64	avatarId	= 1;
+	required uint64	mappedPowerProtoId	= 2;
+}
+
+message NetMessageAssignStolenPower {
+	required uint64	avatarId	= 1;
+	required uint64	stealingPowerProtoId	= 2;
+	required uint64	stolenPowerProtoId	= 3;
+}
+
+message NetMessageVanityTitleSelect {
+	required int32	avatarIndex	= 1;
+	required uint64	vanityTitlePrototypeId	= 2;
+}
+
+message NetMessageRequestGlobalEventUpdate {
+	required uint64	eventId	= 1;
+	required GlobalEventUpdateType	updateType	= 2;
+}
+
+message NetMessageHasPendingGift {
+	optional bool	hasPendingGift	= 1;
+}
+
+message NetMessagePlayerTradeStart {
+	required string	partnerPlayerName	= 1;
+}
+
+message NetMessagePlayerTradeCancel {
+}
+
+message NetMessagePlayerTradeSetConfirmFlag {
+	required bool	confirmFlag	= 1;
+	required uint32	sequenceNumber	= 2;
+}
+
+message NetMessageRequestPetTechDonate {
+	required uint64	itemId	= 1;
+	required uint64	avatarId	= 2;
+}
+
+message NetMessageSetActivePowerSpec {
+	required uint64	avatarId	= 1;
+	required uint32	activeSpec	= 2;
+}
+
+message NetMessageChangeCameraSettings {
+	required uint64	cameraSettings	= 1;
+}
+
+message NetMessageRequestSocketAffix {
+	required uint64	destItemId	= 1;
+	required uint64	gemAffixItemId	= 2;
+}
+
+message NetMessageUISystemLockState {
+	required uint64	prototypeId	= 1;
+	required uint32	state	= 2;
+	required int32	avatarIndex	= 3;
+}
+
+message NetMessageEnableTalentPower {
+	required uint64	avatarId	= 1;
+	required uint64	prototypeId	= 2;
+	required bool	enable	= 3;
+	required uint32	spec	= 4;
+}
+
+message NetMessageStashInventoryViewed {
+	required uint64	prototypeId	= 1;
+}
+
+message NetMessageStashCurrentlyOpen {
+	required uint64	prototypeId	= 1;
+}
+
+message NetMessageWidgetButtonResult {
+	required uint64	widgetRefId	= 1;
+	required uint64	widgetContextRefId	= 2;
+	required uint64	playerGuid	= 3;
+	required bool	result	= 4;
+}
+
+message NetMessageStashTabInsert {
+	required uint64	invId	= 1;
+	required uint64	insertIndex	= 2;
+}
+
+message NetMessageStashTabOptions {
+	required uint64	inventoryRefId	= 1;
+	optional string	displayName	= 2;
+	optional uint64	iconPathAssetId	= 3;
+	optional uint32	color	= 4;
+}
+
+message NetMessageLeaderboardRequest {
+	optional LeaderboardPlayerScoreQuery	playerScoreQuery	= 1;
+	optional LeaderboardGuildScoreQuery	guildScoreQuery	= 2;
+	optional LeaderboardMetaScoreQuery	metaScoreQuery	= 3;
+	optional LeaderboardDataQuery	dataQuery	= 4;
+}
+
+message NetMessageLeaderboardArchivedInstanceListRequest {
+	repeated uint64	leaderboardIds	= 1;
+}
+
+message NetMessageLeaderboardInitializeRequest {
+	repeated uint64	leaderboardIds	= 1;
+}
+
+message NetMessageCoopOpRequest {
+	required uint32	slot	= 1;
+	required CoopOp	operation	= 2;
+	optional uint64	avatarPrototypeId	= 3;
+	optional uint64	consoleAccountId	= 4;
+	optional string	consoleOnlineId	= 5;
+}
+
+message NetMessageCouponAwardPresented {
+}
+
+message NetMessagePartyOperationRequest {
+	required PartyOperationPayload	payload	= 1;
+}
+
+message NetMessagePSNNotification {
+	required PSNNotification	payload	= 1;
+}
+
+message NetMessageSuggestPlayerToPartyLeader {
+	required uint64	suggestedPlayerConsoleAccountId	= 1;
+}
+
+message NetMessageMissionTrackerFilterChange {
+	required uint64	filterPrototypeId	= 1;
+	required bool	isFiltered	= 2;
+}
+
+message NetMessageMissionTrackerFiltersUpdate {
+	repeated NetMessageMissionTrackerFilterChange	missionTrackerFilterChanges	= 1;
+}
+
+message NetMessageAchievementMissionTrackerFilterChange {
+	required uint32	achievementId	= 1;
+	required bool	isFiltered	= 2;
+}
+
+message NetMessageAchievementUnlockConfirmed {
+	required uint32	achievementId	= 1;
+}
+
+message NetMessageBillingRoutedClientMessage {
+	required bytes	payload	= 1;
+}
+
+message NetMessagePlayerLookupByNameClientRequest {
+	required string	playerName	= 1;
+}
+
+message NetMessageCostumeChange {
+	required uint64	avatarId	= 1;
+	required uint64	costumePrototypeId	= 2;
+}
+
+message NetMessageInactiveAvatarCostumeChange {
+	required uint64	avatarPrototypeId	= 1;
+	required uint32	avatarModeEnum	= 2;
+	required uint64	costumePrototypeId	= 3;
+}
+
+message NetMessageLookForParty {
+	required uint32	lookForPartyType	= 1;
+}
+
+message NetMessageUICaptureInputChanged {
+	required bool	inputCaptured	= 1;
+}
+
+message NetMessageVoiceChatSetMovieState {
+	required bool	inMovie	= 1;
+}
+
+message NetMessageTryAvatarPrestige {
+	required int32	avatarIndex	= 1;
+}
+
+message NetMessageTryAvatarOmegaPrestige {
+	required int32	avatarIndex	= 1;
+}
+
+message NetMessageTryAvatarOmegaPrestigeUnlock {
+	required int32	avatarIndex	= 1;
+}
+
