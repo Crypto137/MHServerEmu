@@ -10,8 +10,6 @@ namespace MHServerEmu
     {
         // Set ClientPacket for information on the structure
         private ushort _muxId;
-        private byte _byte3 = 0x00;
-        private byte _byte4 = 0x00;
         private MuxCommand _muxCommand;
 
         private byte[] _body = new byte[] { };
@@ -25,9 +23,7 @@ namespace MHServerEmu
                     using (BinaryWriter binaryWriter = new(memoryStream))
                     {
                         binaryWriter.Write(_muxId);
-                        binaryWriter.Write(Convert.ToByte(_body.Length));
-                        binaryWriter.Write(_byte3);
-                        binaryWriter.Write(_byte4);
+                        binaryWriter.Write(_body.Length.ToUInt24ByteArray());
                         binaryWriter.Write((byte)_muxCommand);
                         binaryWriter.Write(_body);
                         return memoryStream.ToArray();

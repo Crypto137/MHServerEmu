@@ -15,10 +15,8 @@ When a player tries to log in, the client first requests an AuthTicket protobuf 
 The frontend server routes messages to various services using what is called mux. Communication with the frontend server requires a 6 byte header with the following structure:
 
 ```
-ushort MuxId
-byte BodySize
-byte UnknownByte3
-byte UnknownByte4
+ushort MuxId        // used to determine where to route the message on the backend
+UInt24 BodySize     // in bytes
 byte Command
 ```
 

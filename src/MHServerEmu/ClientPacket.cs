@@ -24,9 +24,7 @@ namespace MHServerEmu
         private readonly CodedInputStream _stream;
 
         public ushort MuxId { get;  }
-        public byte BodyLength { get; }
-        public byte Byte3 { get; }          // This might be a continuation of BodyLength if it's actually a ushort as well
-        public byte Byte4 { get; }          // international byte of mystery
+        public int BodyLength { get; }
         public MuxCommand Command { get; }
 
         public byte[] Body { get; }
@@ -40,9 +38,7 @@ namespace MHServerEmu
                     using (BinaryWriter binaryWriter = new(memoryStream))
                     {
                         binaryWriter.Write(MuxId);
-                        binaryWriter.Write(BodyLength);
-                        binaryWriter.Write(Byte3);
-                        binaryWriter.Write(Byte4);
+                        binaryWriter.Write(BodyLength.ToUInt24ByteArray());
                         binaryWriter.Write((byte)Command);
                         binaryWriter.Write(Body);
                         return memoryStream.ToArray();
@@ -57,18 +53,18 @@ namespace MHServerEmu
 
             // Read header (6 bytes)
             MuxId = BitConverter.ToUInt16(stream.ReadRawBytes(2));
-            BodyLength = stream.ReadRawByte();
-            Byte3 = stream.ReadRawByte();
-            Byte4 = stream.ReadRawByte();
+
+            // Body length is stored as uint24
+            byte[] lengthArray = stream.ReadRawBytes(3);
+            byte[] bodyLengthArray = (BitConverter.IsLittleEndian)
+                ? new byte[] { lengthArray[0], lengthArray[1], lengthArray[2], 0 }
+                : new byte[] { 0, lengthArray[2], lengthArray[1], lengthArray[0] };
+
+            BodyLength = BitConverter.ToInt32(bodyLengthArray);
             Command = (MuxCommand)stream.ReadRawByte();
 
             // Read body
             Body = stream.ReadRawBytes(BodyLength);
-
-            // Check bytes 3 and 4
-            if (Byte3 != 0x00) Logger.Warn("Mux packet byte3 is NOT 0");
-            if (Byte4 != 0x00) Logger.Warn("Mux packet byte4 is NOT 0");
         }
-
     }
 }
