@@ -1,0 +1,91 @@
+syntax = "proto2";
+
+package Gazillion;
+
+enum AuthServerErrorCode {
+	AUTH_ERROR_UNKNOWN	= 0;
+	AUTH_ERROR_SUCCESS	= 1;
+	AUTH_ERROR_ACCOUNT_EXISTS	= 2;
+	AUTH_ERROR_PLAYERNAME_INUSE	= 3;
+}
+
+message AuthRequiredDoc {
+	optional string	key	= 1;
+	optional string	title	= 2;
+	optional string	body	= 3;
+}
+
+message AuthTicket {
+	optional bytes	sessionKey	= 1;
+	optional bytes	sessionToken	= 2;
+	required uint64	sessionId	= 3;
+	optional string	errorMessage	= 4;
+	optional string	frontendServer	= 5;
+	optional string	frontendPort	= 6;
+	optional string	platformTicket	= 7;
+	optional bool	presalePurchase	= 8;
+	optional string	tosurl	= 9;
+	optional bool	success	= 10;
+	optional bool	hasnews	= 12;
+	optional string	newsurl	= 13;
+	optional bool	hasPendingGift	= 14;
+	optional string	pendingGiftUrl	= 15;
+	optional bool	hasVerifiedEmail	= 16;
+	optional bool	isAllowedToChat	= 17 [default = true];
+	optional bool	isAgeRestrictionEnabled	= 18 [default = false];
+	optional int64	ageRestrictionEndTimeUtc	= 19;
+	optional int64	ageRestrictionWarningTimeUtc1	= 20;
+	optional string	ageRestrictionType	= 21;
+	optional int64	ageRestrictionWarningTimeUtc2	= 22;
+	optional int64	ageRestrictionWarningTimeUtc3	= 23;
+	optional string	countryCode	= 24;
+	optional string	continentCode	= 25;
+	optional bool	preReqCreateAccount	= 26;
+	optional bool	preReqRenamePlayer	= 27;
+	repeated AuthRequiredDoc	preReqAcceptDocs	= 28;
+	optional int64	showStoreHighlight	= 34 [default = 0];
+	optional int32	accountRank	= 32 [default = 0];
+	optional int64	accountRankScore	= 33 [default = 0];
+	optional bool	voiceChatIsEncrypted	= 29;
+	optional bool	gameDataIsEncrypted	= 30;
+	optional int32	httpResult	= 31;
+}
+
+message ConsoleCreateAccountMessageResponse {
+	optional AuthServerErrorCode	errorCode	= 1;
+	optional string	errorMsg	= 2;
+	repeated string	nameSuggestions	= 3;
+	repeated AuthRequiredDoc	preReqAcceptDocs	= 4;
+	optional int32	httpResult	= 5;
+}
+
+message PrecacheHeadersMessageResponse {
+	repeated string	precacheUrl	= 1;
+}
+
+message NewsMessageResponse {
+	required MHLocalizedNewsLayout	newsLayout	= 1;
+	repeated MHLocalizedNewsEntry	newsEntries	= 2;
+}
+
+message MHLocalizedNewsLayout {
+	required int32	layoutHeight	= 1;
+	required int32	layoutWidth	= 2;
+}
+
+message MHLocalizedNewsEntry {
+	optional string	itemDisplayUrl	= 1;
+	required int32	itemOrder	= 2;
+	optional string	actionLinkSaleableObjectSku	= 3;
+	optional string	actionLinkCategory	= 4;
+	optional int32	itemHeight	= 5;
+	optional int32	itemWidth	= 6;
+	optional string	actionLinkUrl	= 7;
+	optional string	externalStoreLinkMode	= 8;
+	optional string	externalStoreLinkTarget	= 9;
+}
+
+message AcceptDocumentsResponse {
+	optional int32	httpResult	= 1;
+}
+
