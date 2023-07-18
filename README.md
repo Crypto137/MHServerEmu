@@ -6,7 +6,7 @@ The only currently supported version of the game client is **1.52.0.1700**.
 
 Please see [Overview.md](https://github.com/Crypto137/MHServerEmu/blob/master/docs/Overview.md) to find out how everything works.
 
-If you want to ask questions about the server emulator or help with the development, feel free to join our Discord: https://discord.gg/wBNcay25be
+If you want to ask questions about the server emulator or help with the development, feel free to join our Discord: https://discord.gg/hjR8Bj52t3
 
 ## Features
 
