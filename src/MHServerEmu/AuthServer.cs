@@ -49,9 +49,9 @@ namespace MHServerEmu
                 byte[] authTicket = Gazillion.AuthTicket.CreateBuilder()
                     .SetSessionKey(ByteString.CopyFrom(Cryptography.AuthEncryptionKey))
                     .SetSessionToken(ByteString.CopyFrom(new byte[] { 0x00, 0x01, 0x02, 0x03 }))
-                    .SetSessionId(12345678)
+                    .SetSessionId(17323122570962387736)
                     .SetFrontendServer("localhost")
-                    .SetFrontendPort("8081")
+                    .SetFrontendPort("4306")
                     .SetSuccess(true)
                     .Build().ToByteArray();
 

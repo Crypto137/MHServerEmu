@@ -27,7 +27,7 @@ namespace MHServerEmu
             _authServer = new AuthServer(8080);
             new Thread(() => _authServer.HandleIncomingConnections()).Start();
 
-            _frontendServer = new FrontendServer(8081);
+            _frontendServer = new FrontendServer(4306);
 
             while (true)
             {
