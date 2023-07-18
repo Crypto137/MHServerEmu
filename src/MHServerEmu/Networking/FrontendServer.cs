@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using MHServerEmu.Common;
+using MHServerEmu.GameServer;
 
 namespace MHServerEmu.Networking
 {
     public class FrontendServer
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private GameServerManager _gameServerManager = new();
 
         private Socket _socket;
         private List<FrontendClient> _clientList = new();
@@ -34,7 +37,7 @@ namespace MHServerEmu.Networking
         {
             Logger.Info("Client connected");
             Socket clientSocket = _socket.EndAccept(result);
-            FrontendClient client = new FrontendClient(clientSocket);
+            FrontendClient client = new FrontendClient(clientSocket, _gameServerManager);
             _clientList.Add(client);
             new Thread(() => client.Run()).Start();
             BeginAccept();

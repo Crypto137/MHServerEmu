@@ -2,8 +2,7 @@
 using Google.ProtocolBuffers;
 using Gazillion;
 using MHServerEmu.Common;
-using MHServerEmu.Services;
-using MHServerEmu.Services.Implementations;
+using MHServerEmu.GameServer;
 
 namespace MHServerEmu.Networking
 {
@@ -14,31 +13,17 @@ namespace MHServerEmu.Networking
         private readonly Socket socket;
         private readonly NetworkStream stream;
 
-        private readonly bool SimulateQueue = true;
+        private readonly GameServerManager _gameServerManager;
 
-        private static Dictionary<PubSubServerTypes, GameService> ServiceDict = new()
-        {
-            { PubSubServerTypes.FRONTEND_SERVER, new FrontendServerService() },
-            { PubSubServerTypes.GAME_INSTANCE_SERVER_USER, new GameInstanceServerUserService() },
-            { PubSubServerTypes.GAME_INSTANCE_SERVER_PLAYERMGR, new GameInstanceServerPlayerMgrService() },
-            { PubSubServerTypes.GAME_INSTANCE_SERVER_GROUPING, new GameInstanceServerGroupingService() },
-            { PubSubServerTypes.GAME_INSTANCE_SERVER_METRICS, new GameInstanceServerMetricsService() },
-            { PubSubServerTypes.GAME_INSTANCE_SERVER_BILLING, new GameInstanceServerBillingService() },
-            { PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND, new PlayerMgrServerFrontendService() },
-            { PubSubServerTypes.PLAYERMGR_SERVER_SITEMGR_CONTROL, new PlayerMgrServerSiteMgrControlService() },
-            { PubSubServerTypes.PLAYERMGR_SERVER_SOCIAL_COMMON, new PlayerMgrServerSocialCommonService() },
-            //{ PubSubServerTypes.PLAYERMGR_SERVER_MATCH, new PlayerMgrServerMatchService() },
-            { PubSubServerTypes.GROUPING_MANAGER_FRONTEND, new GroupingManagerFrontendService() },
-            { PubSubServerTypes.FAKE_CHAT_LOAD_TESTER, new FakeChatLoadTesterService() }
-        };
+        public bool FinishedPlayerMgrServerFrontendHandshake { get; set; } = false;
+        public bool FinishedGroupingManagerFrontendHandshake { get; set; } = false;
 
-        private Dictionary<ushort, PubSubServerTypes> MuxIdServerDict = new();
-        private Dictionary<PubSubServerTypes, ushort> ServerMuxIdDict = new();
-
-        public FrontendClient(Socket socket)
+        public FrontendClient(Socket socket, GameServerManager gameServerManager)
         {
             this.socket = socket;
             stream = new NetworkStream(socket);
+
+            _gameServerManager = gameServerManager;
         }
 
         public void Run()
@@ -64,9 +49,9 @@ namespace MHServerEmu.Networking
             socket.Disconnect(false);
         }
 
-        public void SendGameServiceMessage(PubSubServerTypes serverType, byte messageId, byte[] message, long timestamp = 0)
+        public void SendGameMessage(ushort muxId, byte messageId, byte[] message, long timestamp = 0)
         {
-            ServerPacket packet = new(ServerMuxIdDict[serverType], MuxCommand.Message);
+            ServerPacket packet = new(muxId, MuxCommand.Message);
             packet.WriteMessage(messageId, message, timestamp);
             Send(packet);
         }
@@ -91,17 +76,12 @@ namespace MHServerEmu.Networking
             ClientPacket packet = new(stream);
             Logger.Trace($"IN: {packet.RawData.ToHexString()}");
 
-            // Respond
-            ServerPacket response = null;
-            byte[] responseMessage = Array.Empty<byte>();
-
             switch (packet.Command)
             {
                 case MuxCommand.Connect:
                     Logger.Info($"Received connect for MuxId {packet.MuxId}");
                     Logger.Info($"Sending accept for MuxId {packet.MuxId}");
-                    response = new(packet.MuxId, MuxCommand.Accept);
-                    Send(response);
+                    Send(new(packet.MuxId, MuxCommand.Accept));
                     break;
 
                 case MuxCommand.Accept:
@@ -119,91 +99,14 @@ namespace MHServerEmu.Networking
                 case MuxCommand.Message:
                     Logger.Info($"Received message on MuxId {packet.MuxId} ({packet.BodyLength} bytes)");
 
-                    // First byte is message id, second byte is protobuf size as uint8
+                    // First byte is message id, second byte is generally protobuf size as uint8
+                    // Some messages have weird structure, need to figure this out
                     byte[] message = new byte[packet.Body[1]];
-                    for (int i = 0; i < message.Length; i++)
-                    {
-                        message[i] = packet.Body[i + 2];
-                    }
+                    for (int i = 0; i < message.Length; i++) message[i] = packet.Body[i + 2];
 
-                    if (MuxIdServerDict.ContainsKey(packet.MuxId))
-                    {
-                        Logger.Info($"Routing message to {MuxIdServerDict[packet.MuxId]}");
-                        ServiceDict[MuxIdServerDict[packet.MuxId]].Handle(this, packet.Body[0], message);
-                    }
-                    else
-                    {
-                        //Logger.Info($"[Frontend] MuxId is not assigned to a server, handling on frontend");
-                        switch ((FrontendProtocolMessage)packet.Body[0])
-                        {
-                            case FrontendProtocolMessage.ClientCredentials:
-                                Logger.Info($"Received ClientCredentials message:");
-                                ClientCredentials clientCredentials = ClientCredentials.ParseFrom(message);
-                                Logger.Trace(clientCredentials.ToString());
-                                Cryptography.SetIV(clientCredentials.Iv.ToByteArray());
-                                byte[] decryptedToken = Cryptography.DecryptSessionToken(clientCredentials);
-                                Logger.Trace($"Decrypted token: {decryptedToken.ToHexString()}");
-
-                                // Generate response
-                                if (SimulateQueue)
-                                {
-                                    Logger.Info("Responding with LoginQueueStatus message");
-
-                                    responseMessage = LoginQueueStatus.CreateBuilder()
-                                        .SetPlaceInLine(1337)
-                                        .SetNumberOfPlayersInLine(9001)
-                                        .Build().ToByteArray();
-
-                                    response = new(packet.MuxId, MuxCommand.Message);
-                                    response.WriteMessage((byte)FrontendProtocolMessage.LoginQueueStatus, responseMessage);
-                                    Send(response);
-                                }
-                                else
-                                {
-                                    Logger.Info("Responding with SessionEncryptionChanged message");
-
-                                    responseMessage = SessionEncryptionChanged.CreateBuilder()
-                                        .SetRandomNumberIndex(1)
-                                        .SetEncryptedRandomNumber(ByteString.Empty)
-                                        .Build().ToByteArray();
-
-                                    response = new(packet.MuxId, MuxCommand.Message);
-                                    response.WriteMessage((byte)FrontendProtocolMessage.SessionEncryptionChanged, responseMessage);
-                                    Send(response);
-                                }
-
-                                break;
-
-                            case FrontendProtocolMessage.InitialClientHandshake:
-                                Logger.Info($"Received InitialClientHandshake message:");
-                                InitialClientHandshake initialClientHandshake = InitialClientHandshake.ParseFrom(message);
-                                Logger.Trace(initialClientHandshake.ToString());
-
-                                MuxIdServerDict[packet.MuxId] = initialClientHandshake.ServerType;
-                                ServerMuxIdDict[initialClientHandshake.ServerType] = packet.MuxId;
-
-                                /*
-                                if (initialClientHandshake.ServerType == PubSubServerTypes.GROUPING_MANAGER_FRONTEND)
-                                {
-                                    responseMessage = NetMessageSelectStartingAvatarForNewPlayer.CreateBuilder()
-                                        .Build().ToByteArray();
-
-                                    response = new(1, MuxCommand.Message);
-                                    response.WriteMessage((byte)GameServerToClientMessage.NetMessageSelectStartingAvatarForNewPlayer, responseMessage, true);
-                                    Send(response);
-                                }
-                                */
-
-                                break;
-
-                            default:
-                                Logger.Warn($"Received unknown message id {packet.Body[0]}");
-                                break;
-                        }
-                    }
+                    _gameServerManager.Handle(this, packet.MuxId, packet.Body[0], message);        
 
                     break;
-
             }
         }
 

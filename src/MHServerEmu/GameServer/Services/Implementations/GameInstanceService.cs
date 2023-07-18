@@ -3,21 +3,17 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Common;
 using MHServerEmu.Networking;
 
-namespace MHServerEmu.Services.Implementations
+namespace MHServerEmu.GameServer.Services.Implementations
 {
-    public class PlayerMgrServerFrontendService : GameService
+    public class GameInstanceService : GameService
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private long _startTime;    // Used for calculating game time
-
-        public PlayerMgrServerFrontendService()
+        public GameInstanceService(GameServerManager gameServerManager) : base(gameServerManager)
         {
-            ServerType = Gazillion.PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND;
-            _startTime = GetDateTime();
         }
 
-        public override void Handle(FrontendClient client, byte messageId, byte[] message)
+        public override void Handle(FrontendClient client, ushort muxId, byte messageId, byte[] message)
         {
             if (messageId == (byte)ClientToGameServerMessage.NetMessageReadyForGameJoin)
             {
@@ -43,7 +39,7 @@ namespace MHServerEmu.Services.Implementations
                 byte[] response = NetMessageReadyForTimeSync.CreateBuilder()
                     .Build().ToByteArray();
 
-                client.SendGameServiceMessage(ServerType, (byte)GameServerToClientMessage.NetMessageReadyForTimeSync, response);
+                client.SendGameMessage(muxId, (byte)GameServerToClientMessage.NetMessageReadyForTimeSync, response);
 
                 /*
                 Logger.Info("Responding with NetMessageSelectStartingAvatarForNewPlayer message");
@@ -63,19 +59,19 @@ namespace MHServerEmu.Services.Implementations
 
                 byte[] response = NetMessageSyncTimeReply.CreateBuilder()
                     .SetGameTimeClientSent(parsedMessage.GameTimeClientSent)
-                    .SetGameTimeServerReceived(GetGameTime())
-                    .SetGameTimeServerSent(GetGameTime())
+                    .SetGameTimeServerReceived(_gameServerManager.GetGameTime())
+                    .SetGameTimeServerSent(_gameServerManager.GetGameTime())
 
                     .SetDateTimeClientSent(parsedMessage.DateTimeClientSent)
-                    .SetDateTimeServerReceived(GetDateTime())
-                    .SetDateTimeServerSent(GetDateTime())
+                    .SetDateTimeServerReceived(_gameServerManager.GetDateTime())
+                    .SetDateTimeServerSent(_gameServerManager.GetDateTime())
 
                     .SetDialation(0.0f)
-                    .SetGametimeDialationStarted(GetGameTime())
-                    .SetDatetimeDialationStarted(GetDateTime())
+                    .SetGametimeDialationStarted(_gameServerManager.GetGameTime())
+                    .SetDatetimeDialationStarted(_gameServerManager.GetDateTime())
                     .Build().ToByteArray();
 
-                client.SendGameServiceMessage(ServerType, (byte)GameServerToClientMessage.NetMessageSyncTimeReply, response);
+                client.SendGameMessage(muxId, (byte)GameServerToClientMessage.NetMessageSyncTimeReply, response);
             }
             else if (messageId == (byte)ClientToGameServerMessage.NetMessagePing)
             {
@@ -96,18 +92,8 @@ namespace MHServerEmu.Services.Implementations
             }
             else
             {
-                Logger.Warn($"Received unknown message id {messageId}");
+                Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)messageId} (id {messageId})");
             }
-        }
-
-        private long GetDateTime()
-        {
-            return ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeMilliseconds() * 1000;
-        }
-
-        private long GetGameTime()
-        {
-            return GetDateTime() - _startTime;
         }
     }
 }
