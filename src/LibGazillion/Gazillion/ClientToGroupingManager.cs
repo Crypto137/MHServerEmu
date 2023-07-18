@@ -16,8 +16,8 @@ namespace Gazillion {
     }
     #endregion
     #region Static variables
-    internal static pbd::MessageDescriptor internal__static_Gazillion_ClientIgnoredInvite__Descriptor;
-    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.ClientIgnoredInvite, global::Gazillion.ClientIgnoredInvite.Builder> internal__static_Gazillion_ClientIgnoredInvite__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_GetPlayerInfoByName__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.GetPlayerInfoByName, global::Gazillion.GetPlayerInfoByName.Builder> internal__static_Gazillion_GetPlayerInfoByName__FieldAccessorTable;
     #endregion
     #region Descriptor
     public static pbd::FileDescriptor Descriptor {
@@ -28,15 +28,15 @@ namespace Gazillion {
     static ClientToGroupingManager() {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
-            "Ch1DbGllbnRUb0dyb3VwaW5nTWFuYWdlci5wcm90bxIJR2F6aWxsaW9uIkMK", 
-            "E0NsaWVudElnbm9yZWRJbnZpdGUSLAoRZGVjbGluaW5nUGxheWVySWQYASAC", 
-          "KARSEWRlY2xpbmluZ1BsYXllcklk"));
+            "Ch1DbGllbnRUb0dyb3VwaW5nTWFuYWdlci5wcm90bxIJR2F6aWxsaW9uIjUK", 
+            "E0dldFBsYXllckluZm9CeU5hbWUSHgoKcGxheWVyTmFtZRgBIAIoCVIKcGxh", 
+          "eWVyTmFtZQ=="));
       pbd::FileDescriptor.InternalDescriptorAssigner assigner = delegate(pbd::FileDescriptor root) {
         descriptor = root;
-        internal__static_Gazillion_ClientIgnoredInvite__Descriptor = Descriptor.MessageTypes[0];
-        internal__static_Gazillion_ClientIgnoredInvite__FieldAccessorTable = 
-            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.ClientIgnoredInvite, global::Gazillion.ClientIgnoredInvite.Builder>(internal__static_Gazillion_ClientIgnoredInvite__Descriptor,
-                new string[] { "DecliningPlayerId", });
+        internal__static_Gazillion_GetPlayerInfoByName__Descriptor = Descriptor.MessageTypes[0];
+        internal__static_Gazillion_GetPlayerInfoByName__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GetPlayerInfoByName, global::Gazillion.GetPlayerInfoByName.Builder>(internal__static_Gazillion_GetPlayerInfoByName__Descriptor,
+                new string[] { "PlayerName", });
         pb::ExtensionRegistry registry = pb::ExtensionRegistry.CreateInstance();
         RegisterAllExtensions(registry);
         return registry;
@@ -50,53 +50,53 @@ namespace Gazillion {
   }
   #region Messages
   [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-  public sealed partial class ClientIgnoredInvite : pb::GeneratedMessage<ClientIgnoredInvite, ClientIgnoredInvite.Builder> {
-    private ClientIgnoredInvite() { }
-    private static readonly ClientIgnoredInvite defaultInstance = new ClientIgnoredInvite().MakeReadOnly();
-    private static readonly string[] _clientIgnoredInviteFieldNames = new string[] { "decliningPlayerId" };
-    private static readonly uint[] _clientIgnoredInviteFieldTags = new uint[] { 8 };
-    public static ClientIgnoredInvite DefaultInstance {
+  public sealed partial class GetPlayerInfoByName : pb::GeneratedMessage<GetPlayerInfoByName, GetPlayerInfoByName.Builder> {
+    private GetPlayerInfoByName() { }
+    private static readonly GetPlayerInfoByName defaultInstance = new GetPlayerInfoByName().MakeReadOnly();
+    private static readonly string[] _getPlayerInfoByNameFieldNames = new string[] { "playerName" };
+    private static readonly uint[] _getPlayerInfoByNameFieldTags = new uint[] { 10 };
+    public static GetPlayerInfoByName DefaultInstance {
       get { return defaultInstance; }
     }
     
-    public override ClientIgnoredInvite DefaultInstanceForType {
+    public override GetPlayerInfoByName DefaultInstanceForType {
       get { return DefaultInstance; }
     }
     
-    protected override ClientIgnoredInvite ThisMessage {
+    protected override GetPlayerInfoByName ThisMessage {
       get { return this; }
     }
     
     public static pbd::MessageDescriptor Descriptor {
-      get { return global::Gazillion.ClientToGroupingManager.internal__static_Gazillion_ClientIgnoredInvite__Descriptor; }
+      get { return global::Gazillion.ClientToGroupingManager.internal__static_Gazillion_GetPlayerInfoByName__Descriptor; }
     }
     
-    protected override pb::FieldAccess.FieldAccessorTable<ClientIgnoredInvite, ClientIgnoredInvite.Builder> InternalFieldAccessors {
-      get { return global::Gazillion.ClientToGroupingManager.internal__static_Gazillion_ClientIgnoredInvite__FieldAccessorTable; }
+    protected override pb::FieldAccess.FieldAccessorTable<GetPlayerInfoByName, GetPlayerInfoByName.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.ClientToGroupingManager.internal__static_Gazillion_GetPlayerInfoByName__FieldAccessorTable; }
     }
     
-    public const int DecliningPlayerIdFieldNumber = 1;
-    private bool hasDecliningPlayerId;
-    private ulong decliningPlayerId_;
-    public bool HasDecliningPlayerId {
-      get { return hasDecliningPlayerId; }
+    public const int PlayerNameFieldNumber = 1;
+    private bool hasPlayerName;
+    private string playerName_ = "";
+    public bool HasPlayerName {
+      get { return hasPlayerName; }
     }
-    public ulong DecliningPlayerId {
-      get { return decliningPlayerId_; }
+    public string PlayerName {
+      get { return playerName_; }
     }
     
     public override bool IsInitialized {
       get {
-        if (!hasDecliningPlayerId) return false;
+        if (!hasPlayerName) return false;
         return true;
       }
     }
     
     public override void WriteTo(pb::ICodedOutputStream output) {
       CalcSerializedSize();
-      string[] field_names = _clientIgnoredInviteFieldNames;
-      if (hasDecliningPlayerId) {
-        output.WriteUInt64(1, field_names[0], DecliningPlayerId);
+      string[] field_names = _getPlayerInfoByNameFieldNames;
+      if (hasPlayerName) {
+        output.WriteString(1, field_names[0], PlayerName);
       }
       UnknownFields.WriteTo(output);
     }
@@ -115,56 +115,56 @@ namespace Gazillion {
       if (size != -1) return size;
       
       size = 0;
-      if (hasDecliningPlayerId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(1, DecliningPlayerId);
+      if (hasPlayerName) {
+        size += pb::CodedOutputStream.ComputeStringSize(1, PlayerName);
       }
       size += UnknownFields.SerializedSize;
       memoizedSerializedSize = size;
       return size;
     }
-    public static ClientIgnoredInvite ParseFrom(pb::ByteString data) {
+    public static GetPlayerInfoByName ParseFrom(pb::ByteString data) {
       return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
     }
-    public static ClientIgnoredInvite ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+    public static GetPlayerInfoByName ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
       return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
     }
-    public static ClientIgnoredInvite ParseFrom(byte[] data) {
+    public static GetPlayerInfoByName ParseFrom(byte[] data) {
       return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
     }
-    public static ClientIgnoredInvite ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+    public static GetPlayerInfoByName ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
       return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
     }
-    public static ClientIgnoredInvite ParseFrom(global::System.IO.Stream input) {
+    public static GetPlayerInfoByName ParseFrom(global::System.IO.Stream input) {
       return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
     }
-    public static ClientIgnoredInvite ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+    public static GetPlayerInfoByName ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
       return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
     }
-    public static ClientIgnoredInvite ParseDelimitedFrom(global::System.IO.Stream input) {
+    public static GetPlayerInfoByName ParseDelimitedFrom(global::System.IO.Stream input) {
       return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
     }
-    public static ClientIgnoredInvite ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+    public static GetPlayerInfoByName ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
       return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
     }
-    public static ClientIgnoredInvite ParseFrom(pb::ICodedInputStream input) {
+    public static GetPlayerInfoByName ParseFrom(pb::ICodedInputStream input) {
       return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
     }
-    public static ClientIgnoredInvite ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+    public static GetPlayerInfoByName ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
       return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
     }
-    private ClientIgnoredInvite MakeReadOnly() {
+    private GetPlayerInfoByName MakeReadOnly() {
       return this;
     }
     
     public static Builder CreateBuilder() { return new Builder(); }
     public override Builder ToBuilder() { return CreateBuilder(this); }
     public override Builder CreateBuilderForType() { return new Builder(); }
-    public static Builder CreateBuilder(ClientIgnoredInvite prototype) {
+    public static Builder CreateBuilder(GetPlayerInfoByName prototype) {
       return new Builder(prototype);
     }
     
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-    public sealed partial class Builder : pb::GeneratedBuilder<ClientIgnoredInvite, Builder> {
+    public sealed partial class Builder : pb::GeneratedBuilder<GetPlayerInfoByName, Builder> {
       protected override Builder ThisBuilder {
         get { return this; }
       }
@@ -172,18 +172,18 @@ namespace Gazillion {
         result = DefaultInstance;
         resultIsReadOnly = true;
       }
-      internal Builder(ClientIgnoredInvite cloneFrom) {
+      internal Builder(GetPlayerInfoByName cloneFrom) {
         result = cloneFrom;
         resultIsReadOnly = true;
       }
       
       private bool resultIsReadOnly;
-      private ClientIgnoredInvite result;
+      private GetPlayerInfoByName result;
       
-      private ClientIgnoredInvite PrepareBuilder() {
+      private GetPlayerInfoByName PrepareBuilder() {
         if (resultIsReadOnly) {
-          ClientIgnoredInvite original = result;
-          result = new ClientIgnoredInvite();
+          GetPlayerInfoByName original = result;
+          result = new GetPlayerInfoByName();
           resultIsReadOnly = false;
           MergeFrom(original);
         }
@@ -194,7 +194,7 @@ namespace Gazillion {
         get { return result.IsInitialized; }
       }
       
-      protected override ClientIgnoredInvite MessageBeingBuilt {
+      protected override GetPlayerInfoByName MessageBeingBuilt {
         get { return PrepareBuilder(); }
       }
       
@@ -213,14 +213,14 @@ namespace Gazillion {
       }
       
       public override pbd::MessageDescriptor DescriptorForType {
-        get { return global::Gazillion.ClientIgnoredInvite.Descriptor; }
+        get { return global::Gazillion.GetPlayerInfoByName.Descriptor; }
       }
       
-      public override ClientIgnoredInvite DefaultInstanceForType {
-        get { return global::Gazillion.ClientIgnoredInvite.DefaultInstance; }
+      public override GetPlayerInfoByName DefaultInstanceForType {
+        get { return global::Gazillion.GetPlayerInfoByName.DefaultInstance; }
       }
       
-      public override ClientIgnoredInvite BuildPartial() {
+      public override GetPlayerInfoByName BuildPartial() {
         if (resultIsReadOnly) {
           return result;
         }
@@ -229,19 +229,19 @@ namespace Gazillion {
       }
       
       public override Builder MergeFrom(pb::IMessage other) {
-        if (other is ClientIgnoredInvite) {
-          return MergeFrom((ClientIgnoredInvite) other);
+        if (other is GetPlayerInfoByName) {
+          return MergeFrom((GetPlayerInfoByName) other);
         } else {
           base.MergeFrom(other);
           return this;
         }
       }
       
-      public override Builder MergeFrom(ClientIgnoredInvite other) {
-        if (other == global::Gazillion.ClientIgnoredInvite.DefaultInstance) return this;
+      public override Builder MergeFrom(GetPlayerInfoByName other) {
+        if (other == global::Gazillion.GetPlayerInfoByName.DefaultInstance) return this;
         PrepareBuilder();
-        if (other.HasDecliningPlayerId) {
-          DecliningPlayerId = other.DecliningPlayerId;
+        if (other.HasPlayerName) {
+          PlayerName = other.PlayerName;
         }
         this.MergeUnknownFields(other.UnknownFields);
         return this;
@@ -258,9 +258,9 @@ namespace Gazillion {
         string field_name;
         while (input.ReadTag(out tag, out field_name)) {
           if(tag == 0 && field_name != null) {
-            int field_ordinal = global::System.Array.BinarySearch(_clientIgnoredInviteFieldNames, field_name, global::System.StringComparer.Ordinal);
+            int field_ordinal = global::System.Array.BinarySearch(_getPlayerInfoByNameFieldNames, field_name, global::System.StringComparer.Ordinal);
             if(field_ordinal >= 0)
-              tag = _clientIgnoredInviteFieldTags[field_ordinal];
+              tag = _getPlayerInfoByNameFieldTags[field_ordinal];
             else {
               if (unknownFields == null) {
                 unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
@@ -286,8 +286,8 @@ namespace Gazillion {
               ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
               break;
             }
-            case 8: {
-              result.hasDecliningPlayerId = input.ReadUInt64(ref result.decliningPlayerId_);
+            case 10: {
+              result.hasPlayerName = input.ReadString(ref result.playerName_);
               break;
             }
           }
@@ -300,27 +300,28 @@ namespace Gazillion {
       }
       
       
-      public bool HasDecliningPlayerId {
-        get { return result.hasDecliningPlayerId; }
+      public bool HasPlayerName {
+        get { return result.hasPlayerName; }
       }
-      public ulong DecliningPlayerId {
-        get { return result.DecliningPlayerId; }
-        set { SetDecliningPlayerId(value); }
+      public string PlayerName {
+        get { return result.PlayerName; }
+        set { SetPlayerName(value); }
       }
-      public Builder SetDecliningPlayerId(ulong value) {
+      public Builder SetPlayerName(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
         PrepareBuilder();
-        result.hasDecliningPlayerId = true;
-        result.decliningPlayerId_ = value;
+        result.hasPlayerName = true;
+        result.playerName_ = value;
         return this;
       }
-      public Builder ClearDecliningPlayerId() {
+      public Builder ClearPlayerName() {
         PrepareBuilder();
-        result.hasDecliningPlayerId = false;
-        result.decliningPlayerId_ = 0UL;
+        result.hasPlayerName = false;
+        result.playerName_ = "";
         return this;
       }
     }
-    static ClientIgnoredInvite() {
+    static GetPlayerInfoByName() {
       object.ReferenceEquals(global::Gazillion.ClientToGroupingManager.Descriptor, null);
     }
   }

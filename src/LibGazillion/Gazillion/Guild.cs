@@ -28,6 +28,14 @@ namespace Gazillion {
     internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildChangeNameResult, global::Gazillion.GuildChangeNameResult.Builder> internal__static_Gazillion_GuildChangeNameResult__FieldAccessorTable;
     internal static pbd::MessageDescriptor internal__static_Gazillion_GuildNameChanged__Descriptor;
     internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildNameChanged, global::Gazillion.GuildNameChanged.Builder> internal__static_Gazillion_GuildNameChanged__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_GuildChangeMotd__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildChangeMotd, global::Gazillion.GuildChangeMotd.Builder> internal__static_Gazillion_GuildChangeMotd__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_GuildChangeMotdResult__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildChangeMotdResult, global::Gazillion.GuildChangeMotdResult.Builder> internal__static_Gazillion_GuildChangeMotdResult__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_GuildMotdChanged__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildMotdChanged, global::Gazillion.GuildMotdChanged.Builder> internal__static_Gazillion_GuildMotdChanged__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_GuildMemberNameChanged__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildMemberNameChanged, global::Gazillion.GuildMemberNameChanged.Builder> internal__static_Gazillion_GuildMemberNameChanged__FieldAccessorTable;
     internal static pbd::MessageDescriptor internal__static_Gazillion_GuildInvite__Descriptor;
     internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildInvite, global::Gazillion.GuildInvite.Builder> internal__static_Gazillion_GuildInvite__FieldAccessorTable;
     internal static pbd::MessageDescriptor internal__static_Gazillion_GuildInviteResult__Descriptor;
@@ -64,133 +72,168 @@ namespace Gazillion {
     static Guild() {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
-            "CgtHdWlsZC5wcm90bxIJR2F6aWxsaW9uIkUKCUd1aWxkRm9ybRIaCghwbGF5", 
+            "CgtHdWlsZC5wcm90bxIJR2F6aWxsaW9uImAKCUd1aWxkRm9ybRIaCghwbGF5", 
             "ZXJJZBgBIAIoBFIIcGxheWVySWQSHAoJZ3VpbGROYW1lGAIgAigJUglndWls", 
-            "ZE5hbWUibwoPR3VpbGRGb3JtUmVzdWx0EhwKCWd1aWxkTmFtZRgBIAIoCVIJ", 
-            "Z3VpbGROYW1lEj4KCnJlc3VsdENvZGUYAiACKA4yHi5HYXppbGxpb24uR3Vp", 
-            "bGRGb3JtUmVzdWx0Q29kZVIKcmVzdWx0Q29kZSJeCg5HdWlsZERpc2JhbmRl", 
-            "ZBIYCgdndWlsZElkGAEgAigEUgdndWlsZElkEjIKFGRpc2JhbmRpbmdQbGF5", 
-            "ZXJOYW1lGAIgAigJUhRkaXNiYW5kaW5nUGxheWVyTmFtZSJLCg9HdWlsZENo", 
-            "YW5nZU5hbWUSGgoIcGxheWVySWQYASACKARSCHBsYXllcklkEhwKCWd1aWxk", 
-            "TmFtZRgCIAIoCVIJZ3VpbGROYW1lIoMBChVHdWlsZENoYW5nZU5hbWVSZXN1", 
-            "bHQSJAoNc3VibWl0dGVkTmFtZRgBIAIoCVINc3VibWl0dGVkTmFtZRJECgpy", 
-            "ZXN1bHRDb2RlGAIgAigOMiQuR2F6aWxsaW9uLkd1aWxkQ2hhbmdlTmFtZVJl", 
-            "c3VsdENvZGVSCnJlc3VsdENvZGUiggEKEEd1aWxkTmFtZUNoYW5nZWQSGAoH", 
-            "Z3VpbGRJZBgBIAIoBFIHZ3VpbGRJZBIiCgxuZXdHdWlsZE5hbWUYAiACKAlS", 
-            "DG5ld0d1aWxkTmFtZRIwChNjaGFuZ2VkQnlQbGF5ZXJOYW1lGAMgASgJUhNj", 
-            "aGFuZ2VkQnlQbGF5ZXJOYW1lImsKC0d1aWxkSW52aXRlEi4KEnRvSW52aXRl", 
-            "UGxheWVyTmFtZRgBIAIoCVISdG9JbnZpdGVQbGF5ZXJOYW1lEiwKEWludml0", 
-            "ZWRCeVBsYXllcklkGAIgAigEUhFpbnZpdGVkQnlQbGF5ZXJJZCKFAQoRR3Vp", 
-            "bGRJbnZpdGVSZXN1bHQSLgoGaW52aXRlGAEgAigLMhYuR2F6aWxsaW9uLkd1", 
-            "aWxkSW52aXRlUgZpbnZpdGUSQAoKcmVzdWx0Q29kZRgCIAIoDjIgLkdhemls", 
-            "bGlvbi5HdWlsZEludml0ZVJlc3VsdENvZGVSCnJlc3VsdENvZGUifgoSR3Vp", 
-            "bGRJbnZpdGVkVG9Kb2luEhgKB2d1aWxkSWQYASACKARSB2d1aWxkSWQSHAoJ", 
-            "Z3VpbGROYW1lGAIgAigJUglndWlsZE5hbWUSMAoTaW52aXRlZEJ5UGxheWVy", 
-            "TmFtZRgDIAIoCVITaW52aXRlZEJ5UGxheWVyTmFtZSKTAQoUR3VpbGRSZXNw", 
-            "b25kVG9JbnZpdGUSGgoIcGxheWVySWQYASACKARSCHBsYXllcklkEhgKB2d1", 
-            "aWxkSWQYAiACKARSB2d1aWxkSWQSRQoLcmVzcG9uZENvZGUYAyACKA4yIy5H", 
-            "YXppbGxpb24uR3VpbGRSZXNwb25kVG9JbnZpdGVDb2RlUgtyZXNwb25kQ29k", 
-            "ZSKFAQoaR3VpbGRSZXNwb25kVG9JbnZpdGVSZXN1bHQSSQoKcmVzdWx0Q29k", 
-            "ZRgBIAIoDjIpLkdhemlsbGlvbi5HdWlsZFJlc3BvbmRUb0ludml0ZVJlc3Vs", 
-            "dENvZGVSCnJlc3VsdENvZGUSHAoJZ3VpbGROYW1lGAIgAigJUglndWlsZE5h", 
-            "bWUiiQEKD0d1aWxkTWVtYmVySW5mbxIaCghwbGF5ZXJJZBgBIAIoBFIIcGxh", 
-            "eWVySWQSHgoKcGxheWVyTmFtZRgCIAIoCVIKcGxheWVyTmFtZRI6CgptZW1i", 
-            "ZXJzaGlwGAMgAigOMhouR2F6aWxsaW9uLkd1aWxkTWVtYmVyc2hpcFIKbWVt", 
-            "YmVyc2hpcCK1AQoRR3VpbGRDaGFuZ2VNZW1iZXISJgoOc291cmNlUGxheWVy", 
-            "SWQYASACKARSDnNvdXJjZVBsYXllcklkEioKEHRhcmdldFBsYXllck5hbWUY", 
-            "AiACKAlSEHRhcmdldFBsYXllck5hbWUSTAoTdGFyZ2V0TmV3TWVtYmVyc2hp", 
-            "cBgDIAIoDjIaLkdhemlsbGlvbi5HdWlsZE1lbWJlcnNoaXBSE3RhcmdldE5l", 
-            "d01lbWJlcnNoaXAijQEKF0d1aWxkQ2hhbmdlTWVtYmVyUmVzdWx0EioKEHRh", 
-            "cmdldFBsYXllck5hbWUYASACKAlSEHRhcmdldFBsYXllck5hbWUSRgoKcmVz", 
-            "dWx0Q29kZRgCIAIoDjImLkdhemlsbGlvbi5HdWlsZENoYW5nZU1lbWJlclJl", 
-            "c3VsdENvZGVSCnJlc3VsdENvZGUiwgEKF0d1aWxkTWVtYmVyc0luZm9DaGFu", 
-            "Z2VkEhgKB2d1aWxkSWQYASACKARSB2d1aWxkSWQSNAoHbWVtYmVycxgCIAMo", 
-            "CzIaLkdhemlsbGlvbi5HdWlsZE1lbWJlckluZm9SB21lbWJlcnMSMgoUaW5p", 
-            "dGlhdGluZ01lbWJlck5hbWUYAyACKAlSFGluaXRpYXRpbmdNZW1iZXJOYW1l", 
-            "EiMKCW5ld01lbWJlchgEIAEoCDoFZmFsc2VSCW5ld01lbWJlciKBAQoRR3Vp", 
-            "bGRDb21wbGV0ZUluZm8SGAoHZ3VpbGRJZBgBIAIoBFIHZ3VpbGRJZBIcCgln", 
-            "dWlsZE5hbWUYAiACKAlSCWd1aWxkTmFtZRI0CgdtZW1iZXJzGAMgAygLMhou", 
-            "R2F6aWxsaW9uLkd1aWxkTWVtYmVySW5mb1IHbWVtYmVycyLPAgoXR3VpbGRN", 
-            "ZXNzYWdlU2V0VG9TZXJ2ZXISRwoQZ3VpbGROYW1lQ2hhbmdlZBgBIAEoCzIb", 
-            "LkdhemlsbGlvbi5HdWlsZE5hbWVDaGFuZ2VkUhBndWlsZE5hbWVDaGFuZ2Vk", 
-            "ElwKF2d1aWxkTWVtYmVyc0luZm9DaGFuZ2VkGAIgASgLMiIuR2F6aWxsaW9u", 
-            "Lkd1aWxkTWVtYmVyc0luZm9DaGFuZ2VkUhdndWlsZE1lbWJlcnNJbmZvQ2hh", 
-            "bmdlZBJKChFndWlsZENvbXBsZXRlSW5mbxgDIAEoCzIcLkdhemlsbGlvbi5H", 
-            "dWlsZENvbXBsZXRlSW5mb1IRZ3VpbGRDb21wbGV0ZUluZm8SQQoOZ3VpbGRE", 
-            "aXNiYW5kZWQYBCABKAsyGS5HYXppbGxpb24uR3VpbGREaXNiYW5kZWRSDmd1", 
-            "aWxkRGlzYmFuZGVkIs0GChdHdWlsZE1lc3NhZ2VTZXRUb0NsaWVudBJECg9n", 
-            "dWlsZEZvcm1SZXN1bHQYASABKAsyGi5HYXppbGxpb24uR3VpbGRGb3JtUmVz", 
-            "dWx0Ug9ndWlsZEZvcm1SZXN1bHQSVgoVZ3VpbGRDaGFuZ2VOYW1lUmVzdWx0", 
-            "GAIgASgLMiAuR2F6aWxsaW9uLkd1aWxkQ2hhbmdlTmFtZVJlc3VsdFIVZ3Vp", 
-            "bGRDaGFuZ2VOYW1lUmVzdWx0EkoKEWd1aWxkSW52aXRlUmVzdWx0GAMgASgL", 
-            "MhwuR2F6aWxsaW9uLkd1aWxkSW52aXRlUmVzdWx0UhFndWlsZEludml0ZVJl", 
-            "c3VsdBJlChpndWlsZFJlc3BvbmRUb0ludml0ZVJlc3VsdBgEIAEoCzIlLkdh", 
-            "emlsbGlvbi5HdWlsZFJlc3BvbmRUb0ludml0ZVJlc3VsdFIaZ3VpbGRSZXNw", 
-            "b25kVG9JbnZpdGVSZXN1bHQSXAoXZ3VpbGRDaGFuZ2VNZW1iZXJSZXN1bHQY", 
-            "BSABKAsyIi5HYXppbGxpb24uR3VpbGRDaGFuZ2VNZW1iZXJSZXN1bHRSF2d1", 
-            "aWxkQ2hhbmdlTWVtYmVyUmVzdWx0Ek0KEmd1aWxkSW52aXRlZFRvSm9pbhgG", 
-            "IAEoCzIdLkdhemlsbGlvbi5HdWlsZEludml0ZWRUb0pvaW5SEmd1aWxkSW52", 
-            "aXRlZFRvSm9pbhJHChBndWlsZE5hbWVDaGFuZ2VkGAcgASgLMhsuR2F6aWxs", 
-            "aW9uLkd1aWxkTmFtZUNoYW5nZWRSEGd1aWxkTmFtZUNoYW5nZWQSXAoXZ3Vp", 
-            "bGRNZW1iZXJzSW5mb0NoYW5nZWQYCCABKAsyIi5HYXppbGxpb24uR3VpbGRN", 
-            "ZW1iZXJzSW5mb0NoYW5nZWRSF2d1aWxkTWVtYmVyc0luZm9DaGFuZ2VkEkoK", 
-            "EWd1aWxkQ29tcGxldGVJbmZvGAkgASgLMhwuR2F6aWxsaW9uLkd1aWxkQ29t", 
-            "cGxldGVJbmZvUhFndWlsZENvbXBsZXRlSW5mbxJBCg5ndWlsZERpc2JhbmRl", 
-            "ZBgKIAEoCzIZLkdhemlsbGlvbi5HdWlsZERpc2JhbmRlZFIOZ3VpbGREaXNi", 
-            "YW5kZWQi9QIKHkd1aWxkTWVzc2FnZVNldFRvUGxheWVyTWFuYWdlchIyCgln", 
-            "dWlsZEZvcm0YASABKAsyFC5HYXppbGxpb24uR3VpbGRGb3JtUglndWlsZEZv", 
-            "cm0SRAoPZ3VpbGRDaGFuZ2VOYW1lGAIgASgLMhouR2F6aWxsaW9uLkd1aWxk", 
-            "Q2hhbmdlTmFtZVIPZ3VpbGRDaGFuZ2VOYW1lEjgKC2d1aWxkSW52aXRlGAMg", 
-            "ASgLMhYuR2F6aWxsaW9uLkd1aWxkSW52aXRlUgtndWlsZEludml0ZRJTChRn", 
-            "dWlsZFJlc3BvbmRUb0ludml0ZRgEIAEoCzIfLkdhemlsbGlvbi5HdWlsZFJl", 
-            "c3BvbmRUb0ludml0ZVIUZ3VpbGRSZXNwb25kVG9JbnZpdGUSSgoRZ3VpbGRD", 
-            "aGFuZ2VNZW1iZXIYBSABKAsyHC5HYXppbGxpb24uR3VpbGRDaGFuZ2VNZW1i", 
-            "ZXJSEWd1aWxkQ2hhbmdlTWVtYmVyKs4BChNHdWlsZEZvcm1SZXN1bHRDb2Rl", 
-            "EhUKEWVHRkNJbnRlcm5hbEVycm9yEAASGQoVZUdGQ0d1aWxkSW5FcnJvclN0", 
-            "YXRlEAESEQoNZUdGQ05vdE9ubGluZRACEhYKEmVHRkNSZXN0cmljdGVkTmFt", 
-            "ZRADEhUKEWVHRkNEdXBsaWNhdGVOYW1lEAQSFgoSZUdGQ0FscmVhZHlJbkd1", 
-            "aWxkEAUSGgoWZUdGQ1dhaXRpbmdGb3JEYXRhYmFzZRAGEg8KC2VHRkNTdWNj", 
-            "ZXNzEAcqkAIKGUd1aWxkQ2hhbmdlTmFtZVJlc3VsdENvZGUSFwoTZUdDTlJD", 
-            "SW50ZXJuYWxFcnJvchAAEhsKF2VHQ05SQ0d1aWxkSW5FcnJvclN0YXRlEAES", 
-            "EwoPZUdDTlJDTm90T25saW5lEAISFgoSZUdDTlJDSW52YWxpZEd1aWxkEAMS", 
-            "FAoQZUdDTlJDTm90SW5HdWlsZBAEEhgKFGVHQ05SQ1Jlc3RyaWN0ZWROYW1l", 
-            "EAUSFwoTZUdDTlJDRHVwbGljYXRlTmFtZRAGEhYKEmVHQ05SQ05vUGVybWlz", 
-            "c2lvbhAHEhwKGGVHQ05SQ1dhaXRpbmdGb3JEYXRhYmFzZRAIEhEKDWVHQ05S", 
-            "Q1N1Y2Nlc3MQCSqbAgoVR3VpbGRJbnZpdGVSZXN1bHRDb2RlEhYKEmVHSVJD", 
-            "SW50ZXJuYWxFcnJvchAAEhoKFmVHSVJDR3VpbGRJbkVycm9yU3RhdGUQARIZ", 
-            "ChVlR0lSQ0ludml0ZXJOb3RPbmxpbmUQAhISCg5lR0lSQ0d1aWxkRnVsbBAD", 
-            "EhcKE2VHSVJDSW52aXRlZEluR3VpbGQQBBIcChhlR0lSQ0ludml0ZWRJbk90", 
-            "aGVyR3VpbGQQBRIcChhlR0lSQ0ludml0ZWRVbmtvd25QbGF5ZXIQBhIaChZl", 
-            "R0lSQ0ludml0ZXJOb3RJbkd1aWxkEAcSHAoYZUdJUkNJbnZpdGVyTm9QZXJt", 
-            "aXNzaW9uEAgSEAoMZUdJUkNTdWNjZXNzEAkqVgoYR3VpbGRSZXNwb25kVG9J", 
-            "bnZpdGVDb2RlEhEKDWVHUklDUmVqZWN0ZWQQABIRCg1lR1JJQ0FjY2VwdGVk", 
-            "EAESFAoQZUdSSUNBdXRvSWdub3JlZBACKu4BCh5HdWlsZFJlc3BvbmRUb0lu", 
-            "dml0ZVJlc3VsdENvZGUSFwoTZUdSSVJDSW50ZXJuYWxFcnJvchAAEhsKF2VH", 
-            "UklSQ0d1aWxkSW5FcnJvclN0YXRlEAESEwoPZUdSSVJDTm90T25saW5lEAIS", 
-            "FgoSZUdSSVJDSW52YWxpZEd1aWxkEAMSGAoUZUdSSVJDQWxyZWFkeUluR3Vp", 
-            "bGQQBBITCg9lR1JJUkNHdWlsZEZ1bGwQBRIUChBlR1JJUkNOb3RJbnZpdGVk", 
-            "EAYSEAoMZUdSSVJDSm9pbmVkEAcSEgoOZUdSSVJDUmVqZWN0ZWQQCCpMCg9H", 
-            "dWlsZE1lbWJlcnNoaXASCwoHZUdNTm9uZRAAEg0KCWVHTU1lbWJlchABEg4K", 
-            "CmVHTU9mZmljZXIQAhINCgllR01MZWFkZXIQAyr4AgobR3VpbGRDaGFuZ2VN", 
-            "ZW1iZXJSZXN1bHRDb2RlEhcKE2VHQ01SQ0ludGVybmFsRXJyb3IQABIbChdl", 
-            "R0NNUkNHdWlsZEluRXJyb3JTdGF0ZRABEhMKD2VHQ01SQ05vdE9ubGluZRAC", 
-            "Eh0KGWVHQ01SQ0luaXRpYXRvck5vdEluR3VpbGQQAxIfChtlR0NNUkNJbml0", 
-            "aWF0b3JOb1Blcm1pc3Npb24QBBIXChNlR0NNUkNVbmtub3duTWVtYmVyEAUS", 
-            "EgoOZUdDTVJDTm9DaGFuZ2UQBhIaChZlR0NNUkNDYW50TW9kaWZ5TGVhZGVy", 
-            "EAcSFwoTZUdDTVJDUmVxdWlyZXNTdGFmZhAIEhgKFGVHQ01SQ1JlcXVpcmVz", 
-            "TGVhZGVyEAkSHgoaZUdDTVJDTm9UcmFuc2ZlckxlYWRlcnNoaXAQChIRCg1l", 
-            "R0NNUkNTdWNjZXNzEAsSHwobZUdDTVJDU3VjY2Vzc0d1aWxkRGlzc29sdmVk", 
-          "EAw="));
+            "ZE5hbWUSGQoGaXRlbUlkGAMgAigEOgEwUgZpdGVtSWQiowEKD0d1aWxkRm9y", 
+            "bVJlc3VsdBIcCglndWlsZE5hbWUYASACKAlSCWd1aWxkTmFtZRI+CgpyZXN1", 
+            "bHRDb2RlGAIgAigOMh4uR2F6aWxsaW9uLkd1aWxkRm9ybVJlc3VsdENvZGVS", 
+            "CnJlc3VsdENvZGUSGgoIcGxheWVySWQYAyACKARSCHBsYXllcklkEhYKBml0", 
+            "ZW1JZBgEIAEoBFIGaXRlbUlkIl4KDkd1aWxkRGlzYmFuZGVkEhgKB2d1aWxk", 
+            "SWQYASACKARSB2d1aWxkSWQSMgoUZGlzYmFuZGluZ1BsYXllck5hbWUYAiAC", 
+            "KAlSFGRpc2JhbmRpbmdQbGF5ZXJOYW1lIksKD0d1aWxkQ2hhbmdlTmFtZRIa", 
+            "CghwbGF5ZXJJZBgBIAIoBFIIcGxheWVySWQSHAoJZ3VpbGROYW1lGAIgAigJ", 
+            "UglndWlsZE5hbWUigwEKFUd1aWxkQ2hhbmdlTmFtZVJlc3VsdBIkCg1zdWJt", 
+            "aXR0ZWROYW1lGAEgAigJUg1zdWJtaXR0ZWROYW1lEkQKCnJlc3VsdENvZGUY", 
+            "AiACKA4yJC5HYXppbGxpb24uR3VpbGRDaGFuZ2VOYW1lUmVzdWx0Q29kZVIK", 
+            "cmVzdWx0Q29kZSKCAQoQR3VpbGROYW1lQ2hhbmdlZBIYCgdndWlsZElkGAEg", 
+            "AigEUgdndWlsZElkEiIKDG5ld0d1aWxkTmFtZRgCIAIoCVIMbmV3R3VpbGRO", 
+            "YW1lEjAKE2NoYW5nZWRCeVBsYXllck5hbWUYAyABKAlSE2NoYW5nZWRCeVBs", 
+            "YXllck5hbWUiSwoPR3VpbGRDaGFuZ2VNb3RkEhoKCHBsYXllcklkGAEgAigE", 
+            "UghwbGF5ZXJJZBIcCglndWlsZE1vdGQYAiACKAlSCWd1aWxkTW90ZCKDAQoV", 
+            "R3VpbGRDaGFuZ2VNb3RkUmVzdWx0EiQKDXN1Ym1pdHRlZE1vdGQYASACKAlS", 
+            "DXN1Ym1pdHRlZE1vdGQSRAoKcmVzdWx0Q29kZRgCIAIoDjIkLkdhemlsbGlv", 
+            "bi5HdWlsZENoYW5nZU1vdGRSZXN1bHRDb2RlUgpyZXN1bHRDb2RlIoIBChBH", 
+            "dWlsZE1vdGRDaGFuZ2VkEhgKB2d1aWxkSWQYASACKARSB2d1aWxkSWQSIgoM", 
+            "bmV3R3VpbGRNb3RkGAIgAigJUgxuZXdHdWlsZE1vdGQSMAoTY2hhbmdlZEJ5", 
+            "UGxheWVyTmFtZRgDIAEoCVITY2hhbmdlZEJ5UGxheWVyTmFtZSJ0ChZHdWls", 
+            "ZE1lbWJlck5hbWVDaGFuZ2VkEhgKB2d1aWxkSWQYASACKARSB2d1aWxkSWQS", 
+            "GgoIcGxheWVySWQYAiACKARSCHBsYXllcklkEiQKDW5ld01lbWJlck5hbWUY", 
+            "AyACKAlSDW5ld01lbWJlck5hbWUilwEKC0d1aWxkSW52aXRlEi4KEnRvSW52", 
+            "aXRlUGxheWVyTmFtZRgBIAIoCVISdG9JbnZpdGVQbGF5ZXJOYW1lEioKEHRv", 
+            "SW52aXRlUGxheWVySWQYAiABKARSEHRvSW52aXRlUGxheWVySWQSLAoRaW52", 
+            "aXRlZEJ5UGxheWVySWQYAyACKARSEWludml0ZWRCeVBsYXllcklkIoUBChFH", 
+            "dWlsZEludml0ZVJlc3VsdBIuCgZpbnZpdGUYASACKAsyFi5HYXppbGxpb24u", 
+            "R3VpbGRJbnZpdGVSBmludml0ZRJACgpyZXN1bHRDb2RlGAIgAigOMiAuR2F6", 
+            "aWxsaW9uLkd1aWxkSW52aXRlUmVzdWx0Q29kZVIKcmVzdWx0Q29kZSLIAQoS", 
+            "R3VpbGRJbnZpdGVkVG9Kb2luEhgKB2d1aWxkSWQYASACKARSB2d1aWxkSWQS", 
+            "HAoJZ3VpbGROYW1lGAIgAigJUglndWlsZE5hbWUSMAoTaW52aXRlZEJ5UGxh", 
+            "eWVyTmFtZRgDIAIoCVITaW52aXRlZEJ5UGxheWVyTmFtZRJICh9pbnZpdGVk", 
+            "QnlQbGF5ZXJDb25zb2xlQWNjb3VudElkGAQgASgEUh9pbnZpdGVkQnlQbGF5", 
+            "ZXJDb25zb2xlQWNjb3VudElkIpMBChRHdWlsZFJlc3BvbmRUb0ludml0ZRIa", 
+            "CghwbGF5ZXJJZBgBIAIoBFIIcGxheWVySWQSGAoHZ3VpbGRJZBgCIAIoBFIH", 
+            "Z3VpbGRJZBJFCgtyZXNwb25kQ29kZRgDIAIoDjIjLkdhemlsbGlvbi5HdWls", 
+            "ZFJlc3BvbmRUb0ludml0ZUNvZGVSC3Jlc3BvbmRDb2RlIoUBChpHdWlsZFJl", 
+            "c3BvbmRUb0ludml0ZVJlc3VsdBJJCgpyZXN1bHRDb2RlGAEgAigOMikuR2F6", 
+            "aWxsaW9uLkd1aWxkUmVzcG9uZFRvSW52aXRlUmVzdWx0Q29kZVIKcmVzdWx0", 
+            "Q29kZRIcCglndWlsZE5hbWUYAiACKAlSCWd1aWxkTmFtZSK1AQoPR3VpbGRN", 
+            "ZW1iZXJJbmZvEhoKCHBsYXllcklkGAEgAigEUghwbGF5ZXJJZBIeCgpwbGF5", 
+            "ZXJOYW1lGAIgAigJUgpwbGF5ZXJOYW1lEjoKCm1lbWJlcnNoaXAYAyACKA4y", 
+            "Gi5HYXppbGxpb24uR3VpbGRNZW1iZXJzaGlwUgptZW1iZXJzaGlwEioKEGNv", 
+            "bnNvbGVBY2NvdW50SWQYBCABKARSEGNvbnNvbGVBY2NvdW50SWQi3QEKEUd1", 
+            "aWxkQ2hhbmdlTWVtYmVyEiYKDnNvdXJjZVBsYXllcklkGAEgAigEUg5zb3Vy", 
+            "Y2VQbGF5ZXJJZBIqChB0YXJnZXRQbGF5ZXJOYW1lGAIgAigJUhB0YXJnZXRQ", 
+            "bGF5ZXJOYW1lEiYKDnRhcmdldFBsYXllcklkGAMgAigEUg50YXJnZXRQbGF5", 
+            "ZXJJZBJMChN0YXJnZXROZXdNZW1iZXJzaGlwGAQgAigOMhouR2F6aWxsaW9u", 
+            "Lkd1aWxkTWVtYmVyc2hpcFITdGFyZ2V0TmV3TWVtYmVyc2hpcCKNAQoXR3Vp", 
+            "bGRDaGFuZ2VNZW1iZXJSZXN1bHQSKgoQdGFyZ2V0UGxheWVyTmFtZRgBIAIo", 
+            "CVIQdGFyZ2V0UGxheWVyTmFtZRJGCgpyZXN1bHRDb2RlGAIgAigOMiYuR2F6", 
+            "aWxsaW9uLkd1aWxkQ2hhbmdlTWVtYmVyUmVzdWx0Q29kZVIKcmVzdWx0Q29k", 
+            "ZSLCAQoXR3VpbGRNZW1iZXJzSW5mb0NoYW5nZWQSGAoHZ3VpbGRJZBgBIAIo", 
+            "BFIHZ3VpbGRJZBI0CgdtZW1iZXJzGAIgAygLMhouR2F6aWxsaW9uLkd1aWxk", 
+            "TWVtYmVySW5mb1IHbWVtYmVycxIyChRpbml0aWF0aW5nTWVtYmVyTmFtZRgD", 
+            "IAIoCVIUaW5pdGlhdGluZ01lbWJlck5hbWUSIwoJbmV3TWVtYmVyGAQgASgI", 
+            "OgVmYWxzZVIJbmV3TWVtYmVyIp8BChFHdWlsZENvbXBsZXRlSW5mbxIYCgdn", 
+            "dWlsZElkGAEgAigEUgdndWlsZElkEhwKCWd1aWxkTmFtZRgCIAIoCVIJZ3Vp", 
+            "bGROYW1lEjQKB21lbWJlcnMYAyADKAsyGi5HYXppbGxpb24uR3VpbGRNZW1i", 
+            "ZXJJbmZvUgdtZW1iZXJzEhwKCWd1aWxkTW90ZBgEIAEoCVIJZ3VpbGRNb3Rk", 
+            "IrkEChdHdWlsZE1lc3NhZ2VTZXRUb1NlcnZlchJHChBndWlsZE5hbWVDaGFu", 
+            "Z2VkGAEgASgLMhsuR2F6aWxsaW9uLkd1aWxkTmFtZUNoYW5nZWRSEGd1aWxk", 
+            "TmFtZUNoYW5nZWQSXAoXZ3VpbGRNZW1iZXJzSW5mb0NoYW5nZWQYAiABKAsy", 
+            "Ii5HYXppbGxpb24uR3VpbGRNZW1iZXJzSW5mb0NoYW5nZWRSF2d1aWxkTWVt", 
+            "YmVyc0luZm9DaGFuZ2VkEkoKEWd1aWxkQ29tcGxldGVJbmZvGAMgASgLMhwu", 
+            "R2F6aWxsaW9uLkd1aWxkQ29tcGxldGVJbmZvUhFndWlsZENvbXBsZXRlSW5m", 
+            "bxJBCg5ndWlsZERpc2JhbmRlZBgEIAEoCzIZLkdhemlsbGlvbi5HdWlsZERp", 
+            "c2JhbmRlZFIOZ3VpbGREaXNiYW5kZWQSRAoPZ3VpbGRGb3JtUmVzdWx0GAUg", 
+            "ASgLMhouR2F6aWxsaW9uLkd1aWxkRm9ybVJlc3VsdFIPZ3VpbGRGb3JtUmVz", 
+            "dWx0EkcKEGd1aWxkTW90ZENoYW5nZWQYBiABKAsyGy5HYXppbGxpb24uR3Vp", 
+            "bGRNb3RkQ2hhbmdlZFIQZ3VpbGRNb3RkQ2hhbmdlZBJZChZndWlsZE1lbWJl", 
+            "ck5hbWVDaGFuZ2VkGAcgASgLMiEuR2F6aWxsaW9uLkd1aWxkTWVtYmVyTmFt", 
+            "ZUNoYW5nZWRSFmd1aWxkTWVtYmVyTmFtZUNoYW5nZWQiyQgKF0d1aWxkTWVz", 
+            "c2FnZVNldFRvQ2xpZW50ElYKFWd1aWxkQ2hhbmdlTmFtZVJlc3VsdBgCIAEo", 
+            "CzIgLkdhemlsbGlvbi5HdWlsZENoYW5nZU5hbWVSZXN1bHRSFWd1aWxkQ2hh", 
+            "bmdlTmFtZVJlc3VsdBJKChFndWlsZEludml0ZVJlc3VsdBgDIAEoCzIcLkdh", 
+            "emlsbGlvbi5HdWlsZEludml0ZVJlc3VsdFIRZ3VpbGRJbnZpdGVSZXN1bHQS", 
+            "ZQoaZ3VpbGRSZXNwb25kVG9JbnZpdGVSZXN1bHQYBCABKAsyJS5HYXppbGxp", 
+            "b24uR3VpbGRSZXNwb25kVG9JbnZpdGVSZXN1bHRSGmd1aWxkUmVzcG9uZFRv", 
+            "SW52aXRlUmVzdWx0ElwKF2d1aWxkQ2hhbmdlTWVtYmVyUmVzdWx0GAUgASgL", 
+            "MiIuR2F6aWxsaW9uLkd1aWxkQ2hhbmdlTWVtYmVyUmVzdWx0UhdndWlsZENo", 
+            "YW5nZU1lbWJlclJlc3VsdBJNChJndWlsZEludml0ZWRUb0pvaW4YBiABKAsy", 
+            "HS5HYXppbGxpb24uR3VpbGRJbnZpdGVkVG9Kb2luUhJndWlsZEludml0ZWRU", 
+            "b0pvaW4SVgoVZ3VpbGRDaGFuZ2VNb3RkUmVzdWx0GAsgASgLMiAuR2F6aWxs", 
+            "aW9uLkd1aWxkQ2hhbmdlTW90ZFJlc3VsdFIVZ3VpbGRDaGFuZ2VNb3RkUmVz", 
+            "dWx0EkcKEGd1aWxkTmFtZUNoYW5nZWQYByABKAsyGy5HYXppbGxpb24uR3Vp", 
+            "bGROYW1lQ2hhbmdlZFIQZ3VpbGROYW1lQ2hhbmdlZBJcChdndWlsZE1lbWJl", 
+            "cnNJbmZvQ2hhbmdlZBgIIAEoCzIiLkdhemlsbGlvbi5HdWlsZE1lbWJlcnNJ", 
+            "bmZvQ2hhbmdlZFIXZ3VpbGRNZW1iZXJzSW5mb0NoYW5nZWQSSgoRZ3VpbGRD", 
+            "b21wbGV0ZUluZm8YCSABKAsyHC5HYXppbGxpb24uR3VpbGRDb21wbGV0ZUlu", 
+            "Zm9SEWd1aWxkQ29tcGxldGVJbmZvEkEKDmd1aWxkRGlzYmFuZGVkGAogASgL", 
+            "MhkuR2F6aWxsaW9uLkd1aWxkRGlzYmFuZGVkUg5ndWlsZERpc2JhbmRlZBJE", 
+            "Cg9ndWlsZEZvcm1SZXN1bHQYASABKAsyGi5HYXppbGxpb24uR3VpbGRGb3Jt", 
+            "UmVzdWx0Ug9ndWlsZEZvcm1SZXN1bHQSRwoQZ3VpbGRNb3RkQ2hhbmdlZBgM", 
+            "IAEoCzIbLkdhemlsbGlvbi5HdWlsZE1vdGRDaGFuZ2VkUhBndWlsZE1vdGRD", 
+            "aGFuZ2VkElkKFmd1aWxkTWVtYmVyTmFtZUNoYW5nZWQYDSABKAsyIS5HYXpp", 
+            "bGxpb24uR3VpbGRNZW1iZXJOYW1lQ2hhbmdlZFIWZ3VpbGRNZW1iZXJOYW1l", 
+            "Q2hhbmdlZCK7AwoeR3VpbGRNZXNzYWdlU2V0VG9QbGF5ZXJNYW5hZ2VyEjIK", 
+            "CWd1aWxkRm9ybRgBIAEoCzIULkdhemlsbGlvbi5HdWlsZEZvcm1SCWd1aWxk", 
+            "Rm9ybRJECg9ndWlsZENoYW5nZU5hbWUYAiABKAsyGi5HYXppbGxpb24uR3Vp", 
+            "bGRDaGFuZ2VOYW1lUg9ndWlsZENoYW5nZU5hbWUSOAoLZ3VpbGRJbnZpdGUY", 
+            "AyABKAsyFi5HYXppbGxpb24uR3VpbGRJbnZpdGVSC2d1aWxkSW52aXRlElMK", 
+            "FGd1aWxkUmVzcG9uZFRvSW52aXRlGAQgASgLMh8uR2F6aWxsaW9uLkd1aWxk", 
+            "UmVzcG9uZFRvSW52aXRlUhRndWlsZFJlc3BvbmRUb0ludml0ZRJKChFndWls", 
+            "ZENoYW5nZU1lbWJlchgFIAEoCzIcLkdhemlsbGlvbi5HdWlsZENoYW5nZU1l", 
+            "bWJlclIRZ3VpbGRDaGFuZ2VNZW1iZXISRAoPZ3VpbGRDaGFuZ2VNb3RkGAYg", 
+            "ASgLMhouR2F6aWxsaW9uLkd1aWxkQ2hhbmdlTW90ZFIPZ3VpbGRDaGFuZ2VN", 
+            "b3RkKs4BChNHdWlsZEZvcm1SZXN1bHRDb2RlEhUKEWVHRkNJbnRlcm5hbEVy", 
+            "cm9yEAASGQoVZUdGQ0d1aWxkSW5FcnJvclN0YXRlEAESEQoNZUdGQ05vdE9u", 
+            "bGluZRACEhYKEmVHRkNSZXN0cmljdGVkTmFtZRADEhUKEWVHRkNEdXBsaWNh", 
+            "dGVOYW1lEAQSFgoSZUdGQ0FscmVhZHlJbkd1aWxkEAUSGgoWZUdGQ1dhaXRp", 
+            "bmdGb3JEYXRhYmFzZRAGEg8KC2VHRkNTdWNjZXNzEAcqkAIKGUd1aWxkQ2hh", 
+            "bmdlTmFtZVJlc3VsdENvZGUSFwoTZUdDTlJDSW50ZXJuYWxFcnJvchAAEhsK", 
+            "F2VHQ05SQ0d1aWxkSW5FcnJvclN0YXRlEAESEwoPZUdDTlJDTm90T25saW5l", 
+            "EAISFgoSZUdDTlJDSW52YWxpZEd1aWxkEAMSFAoQZUdDTlJDTm90SW5HdWls", 
+            "ZBAEEhgKFGVHQ05SQ1Jlc3RyaWN0ZWROYW1lEAUSFwoTZUdDTlJDRHVwbGlj", 
+            "YXRlTmFtZRAGEhYKEmVHQ05SQ05vUGVybWlzc2lvbhAHEhwKGGVHQ05SQ1dh", 
+            "aXRpbmdGb3JEYXRhYmFzZRAIEhEKDWVHQ05SQ1N1Y2Nlc3MQCSr1AQoZR3Vp", 
+            "bGRDaGFuZ2VNb3RkUmVzdWx0Q29kZRIaChZlR0NNb3RkUkNJbnRlcm5hbEVy", 
+            "cm9yEAASHgoaZUdDTW90ZFJDR3VpbGRJbkVycm9yU3RhdGUQARIWChJlR0NN", 
+            "b3RkUkNOb3RPbmxpbmUQAhIZChVlR0NNb3RkUkNJbnZhbGlkR3VpbGQQAxIX", 
+            "ChNlR0NNb3RkUkNOb3RJbkd1aWxkEAQSGQoVZUdDTW90ZFJDTm9QZXJtaXNz", 
+            "aW9uEAUSHwobZUdDTW90ZFJDV2FpdGluZ0ZvckRhdGFiYXNlEAYSFAoQZUdD", 
+            "TW90ZFJDU3VjY2VzcxAHKoACChVHdWlsZEludml0ZVJlc3VsdENvZGUSFgoS", 
+            "ZUdJUkNJbnRlcm5hbEVycm9yEAASGgoWZUdJUkNHdWlsZEluRXJyb3JTdGF0", 
+            "ZRABEhIKDmVHSVJDR3VpbGRGdWxsEAMSFwoTZUdJUkNJbnZpdGVkSW5HdWls", 
+            "ZBAEEhwKGGVHSVJDSW52aXRlZEluT3RoZXJHdWlsZBAFEhwKGGVHSVJDSW52", 
+            "aXRlZFVua293blBsYXllchAGEhoKFmVHSVJDSW52aXRlck5vdEluR3VpbGQQ", 
+            "BxIcChhlR0lSQ0ludml0ZXJOb1Blcm1pc3Npb24QCBIQCgxlR0lSQ1N1Y2Nl", 
+            "c3MQCipWChhHdWlsZFJlc3BvbmRUb0ludml0ZUNvZGUSEQoNZUdSSUNSZWpl", 
+            "Y3RlZBAAEhEKDWVHUklDQWNjZXB0ZWQQARIUChBlR1JJQ0F1dG9JZ25vcmVk", 
+            "EAIqjAIKHkd1aWxkUmVzcG9uZFRvSW52aXRlUmVzdWx0Q29kZRIXChNlR1JJ", 
+            "UkNJbnRlcm5hbEVycm9yEAASGwoXZUdSSVJDR3VpbGRJbkVycm9yU3RhdGUQ", 
+            "ARITCg9lR1JJUkNOb3RPbmxpbmUQAhIWChJlR1JJUkNJbnZhbGlkR3VpbGQQ", 
+            "AxIYChRlR1JJUkNBbHJlYWR5SW5HdWlsZBAEEhMKD2VHUklSQ0d1aWxkRnVs", 
+            "bBAFEhQKEGVHUklSQ05vdEludml0ZWQQBhIQCgxlR1JJUkNKb2luZWQQBxIS", 
+            "Cg5lR1JJUkNSZWplY3RlZBAIEhwKGGVHUklSQWxyZWFkeUluT3RoZXJHdWls", 
+            "ZBAJKkwKD0d1aWxkTWVtYmVyc2hpcBILCgdlR01Ob25lEAASDQoJZUdNTWVt", 
+            "YmVyEAESDgoKZUdNT2ZmaWNlchACEg0KCWVHTUxlYWRlchADKvgCChtHdWls", 
+            "ZENoYW5nZU1lbWJlclJlc3VsdENvZGUSFwoTZUdDTVJDSW50ZXJuYWxFcnJv", 
+            "chAAEhsKF2VHQ01SQ0d1aWxkSW5FcnJvclN0YXRlEAESEwoPZUdDTVJDTm90", 
+            "T25saW5lEAISHQoZZUdDTVJDSW5pdGlhdG9yTm90SW5HdWlsZBADEh8KG2VH", 
+            "Q01SQ0luaXRpYXRvck5vUGVybWlzc2lvbhAEEhcKE2VHQ01SQ1Vua25vd25N", 
+            "ZW1iZXIQBRISCg5lR0NNUkNOb0NoYW5nZRAGEhoKFmVHQ01SQ0NhbnRNb2Rp", 
+            "ZnlMZWFkZXIQBxIXChNlR0NNUkNSZXF1aXJlc1N0YWZmEAgSGAoUZUdDTVJD", 
+            "UmVxdWlyZXNMZWFkZXIQCRIeChplR0NNUkNOb1RyYW5zZmVyTGVhZGVyc2hp", 
+            "cBAKEhEKDWVHQ01SQ1N1Y2Nlc3MQCxIfChtlR0NNUkNTdWNjZXNzR3VpbGRE", 
+          "aXNzb2x2ZWQQDA=="));
       pbd::FileDescriptor.InternalDescriptorAssigner assigner = delegate(pbd::FileDescriptor root) {
         descriptor = root;
         internal__static_Gazillion_GuildForm__Descriptor = Descriptor.MessageTypes[0];
         internal__static_Gazillion_GuildForm__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildForm, global::Gazillion.GuildForm.Builder>(internal__static_Gazillion_GuildForm__Descriptor,
-                new string[] { "PlayerId", "GuildName", });
+                new string[] { "PlayerId", "GuildName", "ItemId", });
         internal__static_Gazillion_GuildFormResult__Descriptor = Descriptor.MessageTypes[1];
         internal__static_Gazillion_GuildFormResult__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildFormResult, global::Gazillion.GuildFormResult.Builder>(internal__static_Gazillion_GuildFormResult__Descriptor,
-                new string[] { "GuildName", "ResultCode", });
+                new string[] { "GuildName", "ResultCode", "PlayerId", "ItemId", });
         internal__static_Gazillion_GuildDisbanded__Descriptor = Descriptor.MessageTypes[2];
         internal__static_Gazillion_GuildDisbanded__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildDisbanded, global::Gazillion.GuildDisbanded.Builder>(internal__static_Gazillion_GuildDisbanded__Descriptor,
@@ -207,58 +250,74 @@ namespace Gazillion {
         internal__static_Gazillion_GuildNameChanged__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildNameChanged, global::Gazillion.GuildNameChanged.Builder>(internal__static_Gazillion_GuildNameChanged__Descriptor,
                 new string[] { "GuildId", "NewGuildName", "ChangedByPlayerName", });
-        internal__static_Gazillion_GuildInvite__Descriptor = Descriptor.MessageTypes[6];
+        internal__static_Gazillion_GuildChangeMotd__Descriptor = Descriptor.MessageTypes[6];
+        internal__static_Gazillion_GuildChangeMotd__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildChangeMotd, global::Gazillion.GuildChangeMotd.Builder>(internal__static_Gazillion_GuildChangeMotd__Descriptor,
+                new string[] { "PlayerId", "GuildMotd", });
+        internal__static_Gazillion_GuildChangeMotdResult__Descriptor = Descriptor.MessageTypes[7];
+        internal__static_Gazillion_GuildChangeMotdResult__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildChangeMotdResult, global::Gazillion.GuildChangeMotdResult.Builder>(internal__static_Gazillion_GuildChangeMotdResult__Descriptor,
+                new string[] { "SubmittedMotd", "ResultCode", });
+        internal__static_Gazillion_GuildMotdChanged__Descriptor = Descriptor.MessageTypes[8];
+        internal__static_Gazillion_GuildMotdChanged__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildMotdChanged, global::Gazillion.GuildMotdChanged.Builder>(internal__static_Gazillion_GuildMotdChanged__Descriptor,
+                new string[] { "GuildId", "NewGuildMotd", "ChangedByPlayerName", });
+        internal__static_Gazillion_GuildMemberNameChanged__Descriptor = Descriptor.MessageTypes[9];
+        internal__static_Gazillion_GuildMemberNameChanged__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildMemberNameChanged, global::Gazillion.GuildMemberNameChanged.Builder>(internal__static_Gazillion_GuildMemberNameChanged__Descriptor,
+                new string[] { "GuildId", "PlayerId", "NewMemberName", });
+        internal__static_Gazillion_GuildInvite__Descriptor = Descriptor.MessageTypes[10];
         internal__static_Gazillion_GuildInvite__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildInvite, global::Gazillion.GuildInvite.Builder>(internal__static_Gazillion_GuildInvite__Descriptor,
-                new string[] { "ToInvitePlayerName", "InvitedByPlayerId", });
-        internal__static_Gazillion_GuildInviteResult__Descriptor = Descriptor.MessageTypes[7];
+                new string[] { "ToInvitePlayerName", "ToInvitePlayerId", "InvitedByPlayerId", });
+        internal__static_Gazillion_GuildInviteResult__Descriptor = Descriptor.MessageTypes[11];
         internal__static_Gazillion_GuildInviteResult__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildInviteResult, global::Gazillion.GuildInviteResult.Builder>(internal__static_Gazillion_GuildInviteResult__Descriptor,
                 new string[] { "Invite", "ResultCode", });
-        internal__static_Gazillion_GuildInvitedToJoin__Descriptor = Descriptor.MessageTypes[8];
+        internal__static_Gazillion_GuildInvitedToJoin__Descriptor = Descriptor.MessageTypes[12];
         internal__static_Gazillion_GuildInvitedToJoin__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildInvitedToJoin, global::Gazillion.GuildInvitedToJoin.Builder>(internal__static_Gazillion_GuildInvitedToJoin__Descriptor,
-                new string[] { "GuildId", "GuildName", "InvitedByPlayerName", });
-        internal__static_Gazillion_GuildRespondToInvite__Descriptor = Descriptor.MessageTypes[9];
+                new string[] { "GuildId", "GuildName", "InvitedByPlayerName", "InvitedByPlayerConsoleAccountId", });
+        internal__static_Gazillion_GuildRespondToInvite__Descriptor = Descriptor.MessageTypes[13];
         internal__static_Gazillion_GuildRespondToInvite__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildRespondToInvite, global::Gazillion.GuildRespondToInvite.Builder>(internal__static_Gazillion_GuildRespondToInvite__Descriptor,
                 new string[] { "PlayerId", "GuildId", "RespondCode", });
-        internal__static_Gazillion_GuildRespondToInviteResult__Descriptor = Descriptor.MessageTypes[10];
+        internal__static_Gazillion_GuildRespondToInviteResult__Descriptor = Descriptor.MessageTypes[14];
         internal__static_Gazillion_GuildRespondToInviteResult__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildRespondToInviteResult, global::Gazillion.GuildRespondToInviteResult.Builder>(internal__static_Gazillion_GuildRespondToInviteResult__Descriptor,
                 new string[] { "ResultCode", "GuildName", });
-        internal__static_Gazillion_GuildMemberInfo__Descriptor = Descriptor.MessageTypes[11];
+        internal__static_Gazillion_GuildMemberInfo__Descriptor = Descriptor.MessageTypes[15];
         internal__static_Gazillion_GuildMemberInfo__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildMemberInfo, global::Gazillion.GuildMemberInfo.Builder>(internal__static_Gazillion_GuildMemberInfo__Descriptor,
-                new string[] { "PlayerId", "PlayerName", "Membership", });
-        internal__static_Gazillion_GuildChangeMember__Descriptor = Descriptor.MessageTypes[12];
+                new string[] { "PlayerId", "PlayerName", "Membership", "ConsoleAccountId", });
+        internal__static_Gazillion_GuildChangeMember__Descriptor = Descriptor.MessageTypes[16];
         internal__static_Gazillion_GuildChangeMember__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildChangeMember, global::Gazillion.GuildChangeMember.Builder>(internal__static_Gazillion_GuildChangeMember__Descriptor,
-                new string[] { "SourcePlayerId", "TargetPlayerName", "TargetNewMembership", });
-        internal__static_Gazillion_GuildChangeMemberResult__Descriptor = Descriptor.MessageTypes[13];
+                new string[] { "SourcePlayerId", "TargetPlayerName", "TargetPlayerId", "TargetNewMembership", });
+        internal__static_Gazillion_GuildChangeMemberResult__Descriptor = Descriptor.MessageTypes[17];
         internal__static_Gazillion_GuildChangeMemberResult__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildChangeMemberResult, global::Gazillion.GuildChangeMemberResult.Builder>(internal__static_Gazillion_GuildChangeMemberResult__Descriptor,
                 new string[] { "TargetPlayerName", "ResultCode", });
-        internal__static_Gazillion_GuildMembersInfoChanged__Descriptor = Descriptor.MessageTypes[14];
+        internal__static_Gazillion_GuildMembersInfoChanged__Descriptor = Descriptor.MessageTypes[18];
         internal__static_Gazillion_GuildMembersInfoChanged__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildMembersInfoChanged, global::Gazillion.GuildMembersInfoChanged.Builder>(internal__static_Gazillion_GuildMembersInfoChanged__Descriptor,
                 new string[] { "GuildId", "Members", "InitiatingMemberName", "NewMember", });
-        internal__static_Gazillion_GuildCompleteInfo__Descriptor = Descriptor.MessageTypes[15];
+        internal__static_Gazillion_GuildCompleteInfo__Descriptor = Descriptor.MessageTypes[19];
         internal__static_Gazillion_GuildCompleteInfo__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildCompleteInfo, global::Gazillion.GuildCompleteInfo.Builder>(internal__static_Gazillion_GuildCompleteInfo__Descriptor,
-                new string[] { "GuildId", "GuildName", "Members", });
-        internal__static_Gazillion_GuildMessageSetToServer__Descriptor = Descriptor.MessageTypes[16];
+                new string[] { "GuildId", "GuildName", "Members", "GuildMotd", });
+        internal__static_Gazillion_GuildMessageSetToServer__Descriptor = Descriptor.MessageTypes[20];
         internal__static_Gazillion_GuildMessageSetToServer__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildMessageSetToServer, global::Gazillion.GuildMessageSetToServer.Builder>(internal__static_Gazillion_GuildMessageSetToServer__Descriptor,
-                new string[] { "GuildNameChanged", "GuildMembersInfoChanged", "GuildCompleteInfo", "GuildDisbanded", });
-        internal__static_Gazillion_GuildMessageSetToClient__Descriptor = Descriptor.MessageTypes[17];
+                new string[] { "GuildNameChanged", "GuildMembersInfoChanged", "GuildCompleteInfo", "GuildDisbanded", "GuildFormResult", "GuildMotdChanged", "GuildMemberNameChanged", });
+        internal__static_Gazillion_GuildMessageSetToClient__Descriptor = Descriptor.MessageTypes[21];
         internal__static_Gazillion_GuildMessageSetToClient__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildMessageSetToClient, global::Gazillion.GuildMessageSetToClient.Builder>(internal__static_Gazillion_GuildMessageSetToClient__Descriptor,
-                new string[] { "GuildFormResult", "GuildChangeNameResult", "GuildInviteResult", "GuildRespondToInviteResult", "GuildChangeMemberResult", "GuildInvitedToJoin", "GuildNameChanged", "GuildMembersInfoChanged", "GuildCompleteInfo", "GuildDisbanded", });
-        internal__static_Gazillion_GuildMessageSetToPlayerManager__Descriptor = Descriptor.MessageTypes[18];
+                new string[] { "GuildChangeNameResult", "GuildInviteResult", "GuildRespondToInviteResult", "GuildChangeMemberResult", "GuildInvitedToJoin", "GuildChangeMotdResult", "GuildNameChanged", "GuildMembersInfoChanged", "GuildCompleteInfo", "GuildDisbanded", "GuildFormResult", "GuildMotdChanged", "GuildMemberNameChanged", });
+        internal__static_Gazillion_GuildMessageSetToPlayerManager__Descriptor = Descriptor.MessageTypes[22];
         internal__static_Gazillion_GuildMessageSetToPlayerManager__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GuildMessageSetToPlayerManager, global::Gazillion.GuildMessageSetToPlayerManager.Builder>(internal__static_Gazillion_GuildMessageSetToPlayerManager__Descriptor,
-                new string[] { "GuildForm", "GuildChangeName", "GuildInvite", "GuildRespondToInvite", "GuildChangeMember", });
+                new string[] { "GuildForm", "GuildChangeName", "GuildInvite", "GuildRespondToInvite", "GuildChangeMember", "GuildChangeMotd", });
         pb::ExtensionRegistry registry = pb::ExtensionRegistry.CreateInstance();
         RegisterAllExtensions(registry);
         return registry;
@@ -295,17 +354,27 @@ namespace Gazillion {
     eGCNRCSuccess = 9,
   }
   
+  public enum GuildChangeMotdResultCode {
+    eGCMotdRCInternalError = 0,
+    eGCMotdRCGuildInErrorState = 1,
+    eGCMotdRCNotOnline = 2,
+    eGCMotdRCInvalidGuild = 3,
+    eGCMotdRCNotInGuild = 4,
+    eGCMotdRCNoPermission = 5,
+    eGCMotdRCWaitingForDatabase = 6,
+    eGCMotdRCSuccess = 7,
+  }
+  
   public enum GuildInviteResultCode {
     eGIRCInternalError = 0,
     eGIRCGuildInErrorState = 1,
-    eGIRCInviterNotOnline = 2,
     eGIRCGuildFull = 3,
     eGIRCInvitedInGuild = 4,
     eGIRCInvitedInOtherGuild = 5,
     eGIRCInvitedUnkownPlayer = 6,
     eGIRCInviterNotInGuild = 7,
     eGIRCInviterNoPermission = 8,
-    eGIRCSuccess = 9,
+    eGIRCSuccess = 10,
   }
   
   public enum GuildRespondToInviteCode {
@@ -324,6 +393,7 @@ namespace Gazillion {
     eGRIRCNotInvited = 6,
     eGRIRCJoined = 7,
     eGRIRCRejected = 8,
+    eGRIRAlreadyInOtherGuild = 9,
   }
   
   public enum GuildMembership {
@@ -356,8 +426,8 @@ namespace Gazillion {
   public sealed partial class GuildForm : pb::GeneratedMessage<GuildForm, GuildForm.Builder> {
     private GuildForm() { }
     private static readonly GuildForm defaultInstance = new GuildForm().MakeReadOnly();
-    private static readonly string[] _guildFormFieldNames = new string[] { "guildName", "playerId" };
-    private static readonly uint[] _guildFormFieldTags = new uint[] { 18, 8 };
+    private static readonly string[] _guildFormFieldNames = new string[] { "guildName", "itemId", "playerId" };
+    private static readonly uint[] _guildFormFieldTags = new uint[] { 18, 24, 8 };
     public static GuildForm DefaultInstance {
       get { return defaultInstance; }
     }
@@ -398,10 +468,21 @@ namespace Gazillion {
       get { return guildName_; }
     }
     
+    public const int ItemIdFieldNumber = 3;
+    private bool hasItemId;
+    private ulong itemId_;
+    public bool HasItemId {
+      get { return hasItemId; }
+    }
+    public ulong ItemId {
+      get { return itemId_; }
+    }
+    
     public override bool IsInitialized {
       get {
         if (!hasPlayerId) return false;
         if (!hasGuildName) return false;
+        if (!hasItemId) return false;
         return true;
       }
     }
@@ -410,10 +491,13 @@ namespace Gazillion {
       CalcSerializedSize();
       string[] field_names = _guildFormFieldNames;
       if (hasPlayerId) {
-        output.WriteUInt64(1, field_names[1], PlayerId);
+        output.WriteUInt64(1, field_names[2], PlayerId);
       }
       if (hasGuildName) {
         output.WriteString(2, field_names[0], GuildName);
+      }
+      if (hasItemId) {
+        output.WriteUInt64(3, field_names[1], ItemId);
       }
       UnknownFields.WriteTo(output);
     }
@@ -437,6 +521,9 @@ namespace Gazillion {
       }
       if (hasGuildName) {
         size += pb::CodedOutputStream.ComputeStringSize(2, GuildName);
+      }
+      if (hasItemId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(3, ItemId);
       }
       size += UnknownFields.SerializedSize;
       memoizedSerializedSize = size;
@@ -566,6 +653,9 @@ namespace Gazillion {
         if (other.HasGuildName) {
           GuildName = other.GuildName;
         }
+        if (other.HasItemId) {
+          ItemId = other.ItemId;
+        }
         this.MergeUnknownFields(other.UnknownFields);
         return this;
       }
@@ -615,6 +705,10 @@ namespace Gazillion {
             }
             case 18: {
               result.hasGuildName = input.ReadString(ref result.guildName_);
+              break;
+            }
+            case 24: {
+              result.hasItemId = input.ReadUInt64(ref result.itemId_);
               break;
             }
           }
@@ -667,6 +761,26 @@ namespace Gazillion {
         result.guildName_ = "";
         return this;
       }
+      
+      public bool HasItemId {
+        get { return result.hasItemId; }
+      }
+      public ulong ItemId {
+        get { return result.ItemId; }
+        set { SetItemId(value); }
+      }
+      public Builder SetItemId(ulong value) {
+        PrepareBuilder();
+        result.hasItemId = true;
+        result.itemId_ = value;
+        return this;
+      }
+      public Builder ClearItemId() {
+        PrepareBuilder();
+        result.hasItemId = false;
+        result.itemId_ = 0UL;
+        return this;
+      }
     }
     static GuildForm() {
       object.ReferenceEquals(global::Gazillion.Guild.Descriptor, null);
@@ -677,8 +791,8 @@ namespace Gazillion {
   public sealed partial class GuildFormResult : pb::GeneratedMessage<GuildFormResult, GuildFormResult.Builder> {
     private GuildFormResult() { }
     private static readonly GuildFormResult defaultInstance = new GuildFormResult().MakeReadOnly();
-    private static readonly string[] _guildFormResultFieldNames = new string[] { "guildName", "resultCode" };
-    private static readonly uint[] _guildFormResultFieldTags = new uint[] { 10, 16 };
+    private static readonly string[] _guildFormResultFieldNames = new string[] { "guildName", "itemId", "playerId", "resultCode" };
+    private static readonly uint[] _guildFormResultFieldTags = new uint[] { 10, 32, 24, 16 };
     public static GuildFormResult DefaultInstance {
       get { return defaultInstance; }
     }
@@ -719,10 +833,31 @@ namespace Gazillion {
       get { return resultCode_; }
     }
     
+    public const int PlayerIdFieldNumber = 3;
+    private bool hasPlayerId;
+    private ulong playerId_;
+    public bool HasPlayerId {
+      get { return hasPlayerId; }
+    }
+    public ulong PlayerId {
+      get { return playerId_; }
+    }
+    
+    public const int ItemIdFieldNumber = 4;
+    private bool hasItemId;
+    private ulong itemId_;
+    public bool HasItemId {
+      get { return hasItemId; }
+    }
+    public ulong ItemId {
+      get { return itemId_; }
+    }
+    
     public override bool IsInitialized {
       get {
         if (!hasGuildName) return false;
         if (!hasResultCode) return false;
+        if (!hasPlayerId) return false;
         return true;
       }
     }
@@ -734,7 +869,13 @@ namespace Gazillion {
         output.WriteString(1, field_names[0], GuildName);
       }
       if (hasResultCode) {
-        output.WriteEnum(2, field_names[1], (int) ResultCode, ResultCode);
+        output.WriteEnum(2, field_names[3], (int) ResultCode, ResultCode);
+      }
+      if (hasPlayerId) {
+        output.WriteUInt64(3, field_names[2], PlayerId);
+      }
+      if (hasItemId) {
+        output.WriteUInt64(4, field_names[1], ItemId);
       }
       UnknownFields.WriteTo(output);
     }
@@ -758,6 +899,12 @@ namespace Gazillion {
       }
       if (hasResultCode) {
         size += pb::CodedOutputStream.ComputeEnumSize(2, (int) ResultCode);
+      }
+      if (hasPlayerId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(3, PlayerId);
+      }
+      if (hasItemId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(4, ItemId);
       }
       size += UnknownFields.SerializedSize;
       memoizedSerializedSize = size;
@@ -887,6 +1034,12 @@ namespace Gazillion {
         if (other.HasResultCode) {
           ResultCode = other.ResultCode;
         }
+        if (other.HasPlayerId) {
+          PlayerId = other.PlayerId;
+        }
+        if (other.HasItemId) {
+          ItemId = other.ItemId;
+        }
         this.MergeUnknownFields(other.UnknownFields);
         return this;
       }
@@ -946,6 +1099,14 @@ namespace Gazillion {
               }
               break;
             }
+            case 24: {
+              result.hasPlayerId = input.ReadUInt64(ref result.playerId_);
+              break;
+            }
+            case 32: {
+              result.hasItemId = input.ReadUInt64(ref result.itemId_);
+              break;
+            }
           }
         }
         
@@ -994,6 +1155,46 @@ namespace Gazillion {
         PrepareBuilder();
         result.hasResultCode = false;
         result.resultCode_ = global::Gazillion.GuildFormResultCode.eGFCInternalError;
+        return this;
+      }
+      
+      public bool HasPlayerId {
+        get { return result.hasPlayerId; }
+      }
+      public ulong PlayerId {
+        get { return result.PlayerId; }
+        set { SetPlayerId(value); }
+      }
+      public Builder SetPlayerId(ulong value) {
+        PrepareBuilder();
+        result.hasPlayerId = true;
+        result.playerId_ = value;
+        return this;
+      }
+      public Builder ClearPlayerId() {
+        PrepareBuilder();
+        result.hasPlayerId = false;
+        result.playerId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasItemId {
+        get { return result.hasItemId; }
+      }
+      public ulong ItemId {
+        get { return result.ItemId; }
+        set { SetItemId(value); }
+      }
+      public Builder SetItemId(ulong value) {
+        PrepareBuilder();
+        result.hasItemId = true;
+        result.itemId_ = value;
+        return this;
+      }
+      public Builder ClearItemId() {
+        PrepareBuilder();
+        result.hasItemId = false;
+        result.itemId_ = 0UL;
         return this;
       }
     }
@@ -2339,11 +2540,1391 @@ namespace Gazillion {
   }
   
   [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class GuildChangeMotd : pb::GeneratedMessage<GuildChangeMotd, GuildChangeMotd.Builder> {
+    private GuildChangeMotd() { }
+    private static readonly GuildChangeMotd defaultInstance = new GuildChangeMotd().MakeReadOnly();
+    private static readonly string[] _guildChangeMotdFieldNames = new string[] { "guildMotd", "playerId" };
+    private static readonly uint[] _guildChangeMotdFieldTags = new uint[] { 18, 8 };
+    public static GuildChangeMotd DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override GuildChangeMotd DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override GuildChangeMotd ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.Guild.internal__static_Gazillion_GuildChangeMotd__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<GuildChangeMotd, GuildChangeMotd.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.Guild.internal__static_Gazillion_GuildChangeMotd__FieldAccessorTable; }
+    }
+    
+    public const int PlayerIdFieldNumber = 1;
+    private bool hasPlayerId;
+    private ulong playerId_;
+    public bool HasPlayerId {
+      get { return hasPlayerId; }
+    }
+    public ulong PlayerId {
+      get { return playerId_; }
+    }
+    
+    public const int GuildMotdFieldNumber = 2;
+    private bool hasGuildMotd;
+    private string guildMotd_ = "";
+    public bool HasGuildMotd {
+      get { return hasGuildMotd; }
+    }
+    public string GuildMotd {
+      get { return guildMotd_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasPlayerId) return false;
+        if (!hasGuildMotd) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _guildChangeMotdFieldNames;
+      if (hasPlayerId) {
+        output.WriteUInt64(1, field_names[1], PlayerId);
+      }
+      if (hasGuildMotd) {
+        output.WriteString(2, field_names[0], GuildMotd);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasPlayerId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(1, PlayerId);
+      }
+      if (hasGuildMotd) {
+        size += pb::CodedOutputStream.ComputeStringSize(2, GuildMotd);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static GuildChangeMotd ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GuildChangeMotd ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GuildChangeMotd ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GuildChangeMotd ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GuildChangeMotd ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GuildChangeMotd ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static GuildChangeMotd ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static GuildChangeMotd ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static GuildChangeMotd ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GuildChangeMotd ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private GuildChangeMotd MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(GuildChangeMotd prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<GuildChangeMotd, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(GuildChangeMotd cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private GuildChangeMotd result;
+      
+      private GuildChangeMotd PrepareBuilder() {
+        if (resultIsReadOnly) {
+          GuildChangeMotd original = result;
+          result = new GuildChangeMotd();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override GuildChangeMotd MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.GuildChangeMotd.Descriptor; }
+      }
+      
+      public override GuildChangeMotd DefaultInstanceForType {
+        get { return global::Gazillion.GuildChangeMotd.DefaultInstance; }
+      }
+      
+      public override GuildChangeMotd BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is GuildChangeMotd) {
+          return MergeFrom((GuildChangeMotd) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(GuildChangeMotd other) {
+        if (other == global::Gazillion.GuildChangeMotd.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasPlayerId) {
+          PlayerId = other.PlayerId;
+        }
+        if (other.HasGuildMotd) {
+          GuildMotd = other.GuildMotd;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_guildChangeMotdFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _guildChangeMotdFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 8: {
+              result.hasPlayerId = input.ReadUInt64(ref result.playerId_);
+              break;
+            }
+            case 18: {
+              result.hasGuildMotd = input.ReadString(ref result.guildMotd_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasPlayerId {
+        get { return result.hasPlayerId; }
+      }
+      public ulong PlayerId {
+        get { return result.PlayerId; }
+        set { SetPlayerId(value); }
+      }
+      public Builder SetPlayerId(ulong value) {
+        PrepareBuilder();
+        result.hasPlayerId = true;
+        result.playerId_ = value;
+        return this;
+      }
+      public Builder ClearPlayerId() {
+        PrepareBuilder();
+        result.hasPlayerId = false;
+        result.playerId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasGuildMotd {
+        get { return result.hasGuildMotd; }
+      }
+      public string GuildMotd {
+        get { return result.GuildMotd; }
+        set { SetGuildMotd(value); }
+      }
+      public Builder SetGuildMotd(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasGuildMotd = true;
+        result.guildMotd_ = value;
+        return this;
+      }
+      public Builder ClearGuildMotd() {
+        PrepareBuilder();
+        result.hasGuildMotd = false;
+        result.guildMotd_ = "";
+        return this;
+      }
+    }
+    static GuildChangeMotd() {
+      object.ReferenceEquals(global::Gazillion.Guild.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class GuildChangeMotdResult : pb::GeneratedMessage<GuildChangeMotdResult, GuildChangeMotdResult.Builder> {
+    private GuildChangeMotdResult() { }
+    private static readonly GuildChangeMotdResult defaultInstance = new GuildChangeMotdResult().MakeReadOnly();
+    private static readonly string[] _guildChangeMotdResultFieldNames = new string[] { "resultCode", "submittedMotd" };
+    private static readonly uint[] _guildChangeMotdResultFieldTags = new uint[] { 16, 10 };
+    public static GuildChangeMotdResult DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override GuildChangeMotdResult DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override GuildChangeMotdResult ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.Guild.internal__static_Gazillion_GuildChangeMotdResult__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<GuildChangeMotdResult, GuildChangeMotdResult.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.Guild.internal__static_Gazillion_GuildChangeMotdResult__FieldAccessorTable; }
+    }
+    
+    public const int SubmittedMotdFieldNumber = 1;
+    private bool hasSubmittedMotd;
+    private string submittedMotd_ = "";
+    public bool HasSubmittedMotd {
+      get { return hasSubmittedMotd; }
+    }
+    public string SubmittedMotd {
+      get { return submittedMotd_; }
+    }
+    
+    public const int ResultCodeFieldNumber = 2;
+    private bool hasResultCode;
+    private global::Gazillion.GuildChangeMotdResultCode resultCode_ = global::Gazillion.GuildChangeMotdResultCode.eGCMotdRCInternalError;
+    public bool HasResultCode {
+      get { return hasResultCode; }
+    }
+    public global::Gazillion.GuildChangeMotdResultCode ResultCode {
+      get { return resultCode_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasSubmittedMotd) return false;
+        if (!hasResultCode) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _guildChangeMotdResultFieldNames;
+      if (hasSubmittedMotd) {
+        output.WriteString(1, field_names[1], SubmittedMotd);
+      }
+      if (hasResultCode) {
+        output.WriteEnum(2, field_names[0], (int) ResultCode, ResultCode);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasSubmittedMotd) {
+        size += pb::CodedOutputStream.ComputeStringSize(1, SubmittedMotd);
+      }
+      if (hasResultCode) {
+        size += pb::CodedOutputStream.ComputeEnumSize(2, (int) ResultCode);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static GuildChangeMotdResult ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GuildChangeMotdResult ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GuildChangeMotdResult ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GuildChangeMotdResult ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GuildChangeMotdResult ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GuildChangeMotdResult ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static GuildChangeMotdResult ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static GuildChangeMotdResult ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static GuildChangeMotdResult ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GuildChangeMotdResult ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private GuildChangeMotdResult MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(GuildChangeMotdResult prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<GuildChangeMotdResult, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(GuildChangeMotdResult cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private GuildChangeMotdResult result;
+      
+      private GuildChangeMotdResult PrepareBuilder() {
+        if (resultIsReadOnly) {
+          GuildChangeMotdResult original = result;
+          result = new GuildChangeMotdResult();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override GuildChangeMotdResult MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.GuildChangeMotdResult.Descriptor; }
+      }
+      
+      public override GuildChangeMotdResult DefaultInstanceForType {
+        get { return global::Gazillion.GuildChangeMotdResult.DefaultInstance; }
+      }
+      
+      public override GuildChangeMotdResult BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is GuildChangeMotdResult) {
+          return MergeFrom((GuildChangeMotdResult) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(GuildChangeMotdResult other) {
+        if (other == global::Gazillion.GuildChangeMotdResult.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasSubmittedMotd) {
+          SubmittedMotd = other.SubmittedMotd;
+        }
+        if (other.HasResultCode) {
+          ResultCode = other.ResultCode;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_guildChangeMotdResultFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _guildChangeMotdResultFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 10: {
+              result.hasSubmittedMotd = input.ReadString(ref result.submittedMotd_);
+              break;
+            }
+            case 16: {
+              object unknown;
+              if(input.ReadEnum(ref result.resultCode_, out unknown)) {
+                result.hasResultCode = true;
+              } else if(unknown is int) {
+                if (unknownFields == null) {
+                  unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+                }
+                unknownFields.MergeVarintField(2, (ulong)(int)unknown);
+              }
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasSubmittedMotd {
+        get { return result.hasSubmittedMotd; }
+      }
+      public string SubmittedMotd {
+        get { return result.SubmittedMotd; }
+        set { SetSubmittedMotd(value); }
+      }
+      public Builder SetSubmittedMotd(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasSubmittedMotd = true;
+        result.submittedMotd_ = value;
+        return this;
+      }
+      public Builder ClearSubmittedMotd() {
+        PrepareBuilder();
+        result.hasSubmittedMotd = false;
+        result.submittedMotd_ = "";
+        return this;
+      }
+      
+      public bool HasResultCode {
+       get { return result.hasResultCode; }
+      }
+      public global::Gazillion.GuildChangeMotdResultCode ResultCode {
+        get { return result.ResultCode; }
+        set { SetResultCode(value); }
+      }
+      public Builder SetResultCode(global::Gazillion.GuildChangeMotdResultCode value) {
+        PrepareBuilder();
+        result.hasResultCode = true;
+        result.resultCode_ = value;
+        return this;
+      }
+      public Builder ClearResultCode() {
+        PrepareBuilder();
+        result.hasResultCode = false;
+        result.resultCode_ = global::Gazillion.GuildChangeMotdResultCode.eGCMotdRCInternalError;
+        return this;
+      }
+    }
+    static GuildChangeMotdResult() {
+      object.ReferenceEquals(global::Gazillion.Guild.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class GuildMotdChanged : pb::GeneratedMessage<GuildMotdChanged, GuildMotdChanged.Builder> {
+    private GuildMotdChanged() { }
+    private static readonly GuildMotdChanged defaultInstance = new GuildMotdChanged().MakeReadOnly();
+    private static readonly string[] _guildMotdChangedFieldNames = new string[] { "changedByPlayerName", "guildId", "newGuildMotd" };
+    private static readonly uint[] _guildMotdChangedFieldTags = new uint[] { 26, 8, 18 };
+    public static GuildMotdChanged DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override GuildMotdChanged DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override GuildMotdChanged ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.Guild.internal__static_Gazillion_GuildMotdChanged__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<GuildMotdChanged, GuildMotdChanged.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.Guild.internal__static_Gazillion_GuildMotdChanged__FieldAccessorTable; }
+    }
+    
+    public const int GuildIdFieldNumber = 1;
+    private bool hasGuildId;
+    private ulong guildId_;
+    public bool HasGuildId {
+      get { return hasGuildId; }
+    }
+    public ulong GuildId {
+      get { return guildId_; }
+    }
+    
+    public const int NewGuildMotdFieldNumber = 2;
+    private bool hasNewGuildMotd;
+    private string newGuildMotd_ = "";
+    public bool HasNewGuildMotd {
+      get { return hasNewGuildMotd; }
+    }
+    public string NewGuildMotd {
+      get { return newGuildMotd_; }
+    }
+    
+    public const int ChangedByPlayerNameFieldNumber = 3;
+    private bool hasChangedByPlayerName;
+    private string changedByPlayerName_ = "";
+    public bool HasChangedByPlayerName {
+      get { return hasChangedByPlayerName; }
+    }
+    public string ChangedByPlayerName {
+      get { return changedByPlayerName_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasGuildId) return false;
+        if (!hasNewGuildMotd) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _guildMotdChangedFieldNames;
+      if (hasGuildId) {
+        output.WriteUInt64(1, field_names[1], GuildId);
+      }
+      if (hasNewGuildMotd) {
+        output.WriteString(2, field_names[2], NewGuildMotd);
+      }
+      if (hasChangedByPlayerName) {
+        output.WriteString(3, field_names[0], ChangedByPlayerName);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasGuildId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(1, GuildId);
+      }
+      if (hasNewGuildMotd) {
+        size += pb::CodedOutputStream.ComputeStringSize(2, NewGuildMotd);
+      }
+      if (hasChangedByPlayerName) {
+        size += pb::CodedOutputStream.ComputeStringSize(3, ChangedByPlayerName);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static GuildMotdChanged ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GuildMotdChanged ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GuildMotdChanged ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GuildMotdChanged ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GuildMotdChanged ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GuildMotdChanged ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static GuildMotdChanged ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static GuildMotdChanged ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static GuildMotdChanged ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GuildMotdChanged ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private GuildMotdChanged MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(GuildMotdChanged prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<GuildMotdChanged, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(GuildMotdChanged cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private GuildMotdChanged result;
+      
+      private GuildMotdChanged PrepareBuilder() {
+        if (resultIsReadOnly) {
+          GuildMotdChanged original = result;
+          result = new GuildMotdChanged();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override GuildMotdChanged MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.GuildMotdChanged.Descriptor; }
+      }
+      
+      public override GuildMotdChanged DefaultInstanceForType {
+        get { return global::Gazillion.GuildMotdChanged.DefaultInstance; }
+      }
+      
+      public override GuildMotdChanged BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is GuildMotdChanged) {
+          return MergeFrom((GuildMotdChanged) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(GuildMotdChanged other) {
+        if (other == global::Gazillion.GuildMotdChanged.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasGuildId) {
+          GuildId = other.GuildId;
+        }
+        if (other.HasNewGuildMotd) {
+          NewGuildMotd = other.NewGuildMotd;
+        }
+        if (other.HasChangedByPlayerName) {
+          ChangedByPlayerName = other.ChangedByPlayerName;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_guildMotdChangedFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _guildMotdChangedFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 8: {
+              result.hasGuildId = input.ReadUInt64(ref result.guildId_);
+              break;
+            }
+            case 18: {
+              result.hasNewGuildMotd = input.ReadString(ref result.newGuildMotd_);
+              break;
+            }
+            case 26: {
+              result.hasChangedByPlayerName = input.ReadString(ref result.changedByPlayerName_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasGuildId {
+        get { return result.hasGuildId; }
+      }
+      public ulong GuildId {
+        get { return result.GuildId; }
+        set { SetGuildId(value); }
+      }
+      public Builder SetGuildId(ulong value) {
+        PrepareBuilder();
+        result.hasGuildId = true;
+        result.guildId_ = value;
+        return this;
+      }
+      public Builder ClearGuildId() {
+        PrepareBuilder();
+        result.hasGuildId = false;
+        result.guildId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasNewGuildMotd {
+        get { return result.hasNewGuildMotd; }
+      }
+      public string NewGuildMotd {
+        get { return result.NewGuildMotd; }
+        set { SetNewGuildMotd(value); }
+      }
+      public Builder SetNewGuildMotd(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasNewGuildMotd = true;
+        result.newGuildMotd_ = value;
+        return this;
+      }
+      public Builder ClearNewGuildMotd() {
+        PrepareBuilder();
+        result.hasNewGuildMotd = false;
+        result.newGuildMotd_ = "";
+        return this;
+      }
+      
+      public bool HasChangedByPlayerName {
+        get { return result.hasChangedByPlayerName; }
+      }
+      public string ChangedByPlayerName {
+        get { return result.ChangedByPlayerName; }
+        set { SetChangedByPlayerName(value); }
+      }
+      public Builder SetChangedByPlayerName(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasChangedByPlayerName = true;
+        result.changedByPlayerName_ = value;
+        return this;
+      }
+      public Builder ClearChangedByPlayerName() {
+        PrepareBuilder();
+        result.hasChangedByPlayerName = false;
+        result.changedByPlayerName_ = "";
+        return this;
+      }
+    }
+    static GuildMotdChanged() {
+      object.ReferenceEquals(global::Gazillion.Guild.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class GuildMemberNameChanged : pb::GeneratedMessage<GuildMemberNameChanged, GuildMemberNameChanged.Builder> {
+    private GuildMemberNameChanged() { }
+    private static readonly GuildMemberNameChanged defaultInstance = new GuildMemberNameChanged().MakeReadOnly();
+    private static readonly string[] _guildMemberNameChangedFieldNames = new string[] { "guildId", "newMemberName", "playerId" };
+    private static readonly uint[] _guildMemberNameChangedFieldTags = new uint[] { 8, 26, 16 };
+    public static GuildMemberNameChanged DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override GuildMemberNameChanged DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override GuildMemberNameChanged ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.Guild.internal__static_Gazillion_GuildMemberNameChanged__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<GuildMemberNameChanged, GuildMemberNameChanged.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.Guild.internal__static_Gazillion_GuildMemberNameChanged__FieldAccessorTable; }
+    }
+    
+    public const int GuildIdFieldNumber = 1;
+    private bool hasGuildId;
+    private ulong guildId_;
+    public bool HasGuildId {
+      get { return hasGuildId; }
+    }
+    public ulong GuildId {
+      get { return guildId_; }
+    }
+    
+    public const int PlayerIdFieldNumber = 2;
+    private bool hasPlayerId;
+    private ulong playerId_;
+    public bool HasPlayerId {
+      get { return hasPlayerId; }
+    }
+    public ulong PlayerId {
+      get { return playerId_; }
+    }
+    
+    public const int NewMemberNameFieldNumber = 3;
+    private bool hasNewMemberName;
+    private string newMemberName_ = "";
+    public bool HasNewMemberName {
+      get { return hasNewMemberName; }
+    }
+    public string NewMemberName {
+      get { return newMemberName_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasGuildId) return false;
+        if (!hasPlayerId) return false;
+        if (!hasNewMemberName) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _guildMemberNameChangedFieldNames;
+      if (hasGuildId) {
+        output.WriteUInt64(1, field_names[0], GuildId);
+      }
+      if (hasPlayerId) {
+        output.WriteUInt64(2, field_names[2], PlayerId);
+      }
+      if (hasNewMemberName) {
+        output.WriteString(3, field_names[1], NewMemberName);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasGuildId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(1, GuildId);
+      }
+      if (hasPlayerId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(2, PlayerId);
+      }
+      if (hasNewMemberName) {
+        size += pb::CodedOutputStream.ComputeStringSize(3, NewMemberName);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static GuildMemberNameChanged ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GuildMemberNameChanged ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GuildMemberNameChanged ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GuildMemberNameChanged ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GuildMemberNameChanged ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GuildMemberNameChanged ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static GuildMemberNameChanged ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static GuildMemberNameChanged ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static GuildMemberNameChanged ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GuildMemberNameChanged ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private GuildMemberNameChanged MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(GuildMemberNameChanged prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<GuildMemberNameChanged, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(GuildMemberNameChanged cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private GuildMemberNameChanged result;
+      
+      private GuildMemberNameChanged PrepareBuilder() {
+        if (resultIsReadOnly) {
+          GuildMemberNameChanged original = result;
+          result = new GuildMemberNameChanged();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override GuildMemberNameChanged MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.GuildMemberNameChanged.Descriptor; }
+      }
+      
+      public override GuildMemberNameChanged DefaultInstanceForType {
+        get { return global::Gazillion.GuildMemberNameChanged.DefaultInstance; }
+      }
+      
+      public override GuildMemberNameChanged BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is GuildMemberNameChanged) {
+          return MergeFrom((GuildMemberNameChanged) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(GuildMemberNameChanged other) {
+        if (other == global::Gazillion.GuildMemberNameChanged.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasGuildId) {
+          GuildId = other.GuildId;
+        }
+        if (other.HasPlayerId) {
+          PlayerId = other.PlayerId;
+        }
+        if (other.HasNewMemberName) {
+          NewMemberName = other.NewMemberName;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_guildMemberNameChangedFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _guildMemberNameChangedFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 8: {
+              result.hasGuildId = input.ReadUInt64(ref result.guildId_);
+              break;
+            }
+            case 16: {
+              result.hasPlayerId = input.ReadUInt64(ref result.playerId_);
+              break;
+            }
+            case 26: {
+              result.hasNewMemberName = input.ReadString(ref result.newMemberName_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasGuildId {
+        get { return result.hasGuildId; }
+      }
+      public ulong GuildId {
+        get { return result.GuildId; }
+        set { SetGuildId(value); }
+      }
+      public Builder SetGuildId(ulong value) {
+        PrepareBuilder();
+        result.hasGuildId = true;
+        result.guildId_ = value;
+        return this;
+      }
+      public Builder ClearGuildId() {
+        PrepareBuilder();
+        result.hasGuildId = false;
+        result.guildId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasPlayerId {
+        get { return result.hasPlayerId; }
+      }
+      public ulong PlayerId {
+        get { return result.PlayerId; }
+        set { SetPlayerId(value); }
+      }
+      public Builder SetPlayerId(ulong value) {
+        PrepareBuilder();
+        result.hasPlayerId = true;
+        result.playerId_ = value;
+        return this;
+      }
+      public Builder ClearPlayerId() {
+        PrepareBuilder();
+        result.hasPlayerId = false;
+        result.playerId_ = 0UL;
+        return this;
+      }
+      
+      public bool HasNewMemberName {
+        get { return result.hasNewMemberName; }
+      }
+      public string NewMemberName {
+        get { return result.NewMemberName; }
+        set { SetNewMemberName(value); }
+      }
+      public Builder SetNewMemberName(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasNewMemberName = true;
+        result.newMemberName_ = value;
+        return this;
+      }
+      public Builder ClearNewMemberName() {
+        PrepareBuilder();
+        result.hasNewMemberName = false;
+        result.newMemberName_ = "";
+        return this;
+      }
+    }
+    static GuildMemberNameChanged() {
+      object.ReferenceEquals(global::Gazillion.Guild.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
   public sealed partial class GuildInvite : pb::GeneratedMessage<GuildInvite, GuildInvite.Builder> {
     private GuildInvite() { }
     private static readonly GuildInvite defaultInstance = new GuildInvite().MakeReadOnly();
-    private static readonly string[] _guildInviteFieldNames = new string[] { "invitedByPlayerId", "toInvitePlayerName" };
-    private static readonly uint[] _guildInviteFieldTags = new uint[] { 16, 10 };
+    private static readonly string[] _guildInviteFieldNames = new string[] { "invitedByPlayerId", "toInvitePlayerId", "toInvitePlayerName" };
+    private static readonly uint[] _guildInviteFieldTags = new uint[] { 24, 16, 10 };
     public static GuildInvite DefaultInstance {
       get { return defaultInstance; }
     }
@@ -2374,7 +3955,17 @@ namespace Gazillion {
       get { return toInvitePlayerName_; }
     }
     
-    public const int InvitedByPlayerIdFieldNumber = 2;
+    public const int ToInvitePlayerIdFieldNumber = 2;
+    private bool hasToInvitePlayerId;
+    private ulong toInvitePlayerId_;
+    public bool HasToInvitePlayerId {
+      get { return hasToInvitePlayerId; }
+    }
+    public ulong ToInvitePlayerId {
+      get { return toInvitePlayerId_; }
+    }
+    
+    public const int InvitedByPlayerIdFieldNumber = 3;
     private bool hasInvitedByPlayerId;
     private ulong invitedByPlayerId_;
     public bool HasInvitedByPlayerId {
@@ -2396,10 +3987,13 @@ namespace Gazillion {
       CalcSerializedSize();
       string[] field_names = _guildInviteFieldNames;
       if (hasToInvitePlayerName) {
-        output.WriteString(1, field_names[1], ToInvitePlayerName);
+        output.WriteString(1, field_names[2], ToInvitePlayerName);
+      }
+      if (hasToInvitePlayerId) {
+        output.WriteUInt64(2, field_names[1], ToInvitePlayerId);
       }
       if (hasInvitedByPlayerId) {
-        output.WriteUInt64(2, field_names[0], InvitedByPlayerId);
+        output.WriteUInt64(3, field_names[0], InvitedByPlayerId);
       }
       UnknownFields.WriteTo(output);
     }
@@ -2421,8 +4015,11 @@ namespace Gazillion {
       if (hasToInvitePlayerName) {
         size += pb::CodedOutputStream.ComputeStringSize(1, ToInvitePlayerName);
       }
+      if (hasToInvitePlayerId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(2, ToInvitePlayerId);
+      }
       if (hasInvitedByPlayerId) {
-        size += pb::CodedOutputStream.ComputeUInt64Size(2, InvitedByPlayerId);
+        size += pb::CodedOutputStream.ComputeUInt64Size(3, InvitedByPlayerId);
       }
       size += UnknownFields.SerializedSize;
       memoizedSerializedSize = size;
@@ -2549,6 +4146,9 @@ namespace Gazillion {
         if (other.HasToInvitePlayerName) {
           ToInvitePlayerName = other.ToInvitePlayerName;
         }
+        if (other.HasToInvitePlayerId) {
+          ToInvitePlayerId = other.ToInvitePlayerId;
+        }
         if (other.HasInvitedByPlayerId) {
           InvitedByPlayerId = other.InvitedByPlayerId;
         }
@@ -2600,6 +4200,10 @@ namespace Gazillion {
               break;
             }
             case 16: {
+              result.hasToInvitePlayerId = input.ReadUInt64(ref result.toInvitePlayerId_);
+              break;
+            }
+            case 24: {
               result.hasInvitedByPlayerId = input.ReadUInt64(ref result.invitedByPlayerId_);
               break;
             }
@@ -2631,6 +4235,26 @@ namespace Gazillion {
         PrepareBuilder();
         result.hasToInvitePlayerName = false;
         result.toInvitePlayerName_ = "";
+        return this;
+      }
+      
+      public bool HasToInvitePlayerId {
+        get { return result.hasToInvitePlayerId; }
+      }
+      public ulong ToInvitePlayerId {
+        get { return result.ToInvitePlayerId; }
+        set { SetToInvitePlayerId(value); }
+      }
+      public Builder SetToInvitePlayerId(ulong value) {
+        PrepareBuilder();
+        result.hasToInvitePlayerId = true;
+        result.toInvitePlayerId_ = value;
+        return this;
+      }
+      public Builder ClearToInvitePlayerId() {
+        PrepareBuilder();
+        result.hasToInvitePlayerId = false;
+        result.toInvitePlayerId_ = 0UL;
         return this;
       }
       
@@ -3017,8 +4641,8 @@ namespace Gazillion {
   public sealed partial class GuildInvitedToJoin : pb::GeneratedMessage<GuildInvitedToJoin, GuildInvitedToJoin.Builder> {
     private GuildInvitedToJoin() { }
     private static readonly GuildInvitedToJoin defaultInstance = new GuildInvitedToJoin().MakeReadOnly();
-    private static readonly string[] _guildInvitedToJoinFieldNames = new string[] { "guildId", "guildName", "invitedByPlayerName" };
-    private static readonly uint[] _guildInvitedToJoinFieldTags = new uint[] { 8, 18, 26 };
+    private static readonly string[] _guildInvitedToJoinFieldNames = new string[] { "guildId", "guildName", "invitedByPlayerConsoleAccountId", "invitedByPlayerName" };
+    private static readonly uint[] _guildInvitedToJoinFieldTags = new uint[] { 8, 18, 32, 26 };
     public static GuildInvitedToJoin DefaultInstance {
       get { return defaultInstance; }
     }
@@ -3069,6 +4693,16 @@ namespace Gazillion {
       get { return invitedByPlayerName_; }
     }
     
+    public const int InvitedByPlayerConsoleAccountIdFieldNumber = 4;
+    private bool hasInvitedByPlayerConsoleAccountId;
+    private ulong invitedByPlayerConsoleAccountId_;
+    public bool HasInvitedByPlayerConsoleAccountId {
+      get { return hasInvitedByPlayerConsoleAccountId; }
+    }
+    public ulong InvitedByPlayerConsoleAccountId {
+      get { return invitedByPlayerConsoleAccountId_; }
+    }
+    
     public override bool IsInitialized {
       get {
         if (!hasGuildId) return false;
@@ -3088,7 +4722,10 @@ namespace Gazillion {
         output.WriteString(2, field_names[1], GuildName);
       }
       if (hasInvitedByPlayerName) {
-        output.WriteString(3, field_names[2], InvitedByPlayerName);
+        output.WriteString(3, field_names[3], InvitedByPlayerName);
+      }
+      if (hasInvitedByPlayerConsoleAccountId) {
+        output.WriteUInt64(4, field_names[2], InvitedByPlayerConsoleAccountId);
       }
       UnknownFields.WriteTo(output);
     }
@@ -3115,6 +4752,9 @@ namespace Gazillion {
       }
       if (hasInvitedByPlayerName) {
         size += pb::CodedOutputStream.ComputeStringSize(3, InvitedByPlayerName);
+      }
+      if (hasInvitedByPlayerConsoleAccountId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(4, InvitedByPlayerConsoleAccountId);
       }
       size += UnknownFields.SerializedSize;
       memoizedSerializedSize = size;
@@ -3247,6 +4887,9 @@ namespace Gazillion {
         if (other.HasInvitedByPlayerName) {
           InvitedByPlayerName = other.InvitedByPlayerName;
         }
+        if (other.HasInvitedByPlayerConsoleAccountId) {
+          InvitedByPlayerConsoleAccountId = other.InvitedByPlayerConsoleAccountId;
+        }
         this.MergeUnknownFields(other.UnknownFields);
         return this;
       }
@@ -3300,6 +4943,10 @@ namespace Gazillion {
             }
             case 26: {
               result.hasInvitedByPlayerName = input.ReadString(ref result.invitedByPlayerName_);
+              break;
+            }
+            case 32: {
+              result.hasInvitedByPlayerConsoleAccountId = input.ReadUInt64(ref result.invitedByPlayerConsoleAccountId_);
               break;
             }
           }
@@ -3371,6 +5018,26 @@ namespace Gazillion {
         PrepareBuilder();
         result.hasInvitedByPlayerName = false;
         result.invitedByPlayerName_ = "";
+        return this;
+      }
+      
+      public bool HasInvitedByPlayerConsoleAccountId {
+        get { return result.hasInvitedByPlayerConsoleAccountId; }
+      }
+      public ulong InvitedByPlayerConsoleAccountId {
+        get { return result.InvitedByPlayerConsoleAccountId; }
+        set { SetInvitedByPlayerConsoleAccountId(value); }
+      }
+      public Builder SetInvitedByPlayerConsoleAccountId(ulong value) {
+        PrepareBuilder();
+        result.hasInvitedByPlayerConsoleAccountId = true;
+        result.invitedByPlayerConsoleAccountId_ = value;
+        return this;
+      }
+      public Builder ClearInvitedByPlayerConsoleAccountId() {
+        PrepareBuilder();
+        result.hasInvitedByPlayerConsoleAccountId = false;
+        result.invitedByPlayerConsoleAccountId_ = 0UL;
         return this;
       }
     }
@@ -4084,8 +5751,8 @@ namespace Gazillion {
   public sealed partial class GuildMemberInfo : pb::GeneratedMessage<GuildMemberInfo, GuildMemberInfo.Builder> {
     private GuildMemberInfo() { }
     private static readonly GuildMemberInfo defaultInstance = new GuildMemberInfo().MakeReadOnly();
-    private static readonly string[] _guildMemberInfoFieldNames = new string[] { "membership", "playerId", "playerName" };
-    private static readonly uint[] _guildMemberInfoFieldTags = new uint[] { 24, 8, 18 };
+    private static readonly string[] _guildMemberInfoFieldNames = new string[] { "consoleAccountId", "membership", "playerId", "playerName" };
+    private static readonly uint[] _guildMemberInfoFieldTags = new uint[] { 32, 24, 8, 18 };
     public static GuildMemberInfo DefaultInstance {
       get { return defaultInstance; }
     }
@@ -4136,6 +5803,16 @@ namespace Gazillion {
       get { return membership_; }
     }
     
+    public const int ConsoleAccountIdFieldNumber = 4;
+    private bool hasConsoleAccountId;
+    private ulong consoleAccountId_;
+    public bool HasConsoleAccountId {
+      get { return hasConsoleAccountId; }
+    }
+    public ulong ConsoleAccountId {
+      get { return consoleAccountId_; }
+    }
+    
     public override bool IsInitialized {
       get {
         if (!hasPlayerId) return false;
@@ -4149,13 +5826,16 @@ namespace Gazillion {
       CalcSerializedSize();
       string[] field_names = _guildMemberInfoFieldNames;
       if (hasPlayerId) {
-        output.WriteUInt64(1, field_names[1], PlayerId);
+        output.WriteUInt64(1, field_names[2], PlayerId);
       }
       if (hasPlayerName) {
-        output.WriteString(2, field_names[2], PlayerName);
+        output.WriteString(2, field_names[3], PlayerName);
       }
       if (hasMembership) {
-        output.WriteEnum(3, field_names[0], (int) Membership, Membership);
+        output.WriteEnum(3, field_names[1], (int) Membership, Membership);
+      }
+      if (hasConsoleAccountId) {
+        output.WriteUInt64(4, field_names[0], ConsoleAccountId);
       }
       UnknownFields.WriteTo(output);
     }
@@ -4182,6 +5862,9 @@ namespace Gazillion {
       }
       if (hasMembership) {
         size += pb::CodedOutputStream.ComputeEnumSize(3, (int) Membership);
+      }
+      if (hasConsoleAccountId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(4, ConsoleAccountId);
       }
       size += UnknownFields.SerializedSize;
       memoizedSerializedSize = size;
@@ -4314,6 +5997,9 @@ namespace Gazillion {
         if (other.HasMembership) {
           Membership = other.Membership;
         }
+        if (other.HasConsoleAccountId) {
+          ConsoleAccountId = other.ConsoleAccountId;
+        }
         this.MergeUnknownFields(other.UnknownFields);
         return this;
       }
@@ -4375,6 +6061,10 @@ namespace Gazillion {
                 }
                 unknownFields.MergeVarintField(3, (ulong)(int)unknown);
               }
+              break;
+            }
+            case 32: {
+              result.hasConsoleAccountId = input.ReadUInt64(ref result.consoleAccountId_);
               break;
             }
           }
@@ -4447,6 +6137,26 @@ namespace Gazillion {
         result.membership_ = global::Gazillion.GuildMembership.eGMNone;
         return this;
       }
+      
+      public bool HasConsoleAccountId {
+        get { return result.hasConsoleAccountId; }
+      }
+      public ulong ConsoleAccountId {
+        get { return result.ConsoleAccountId; }
+        set { SetConsoleAccountId(value); }
+      }
+      public Builder SetConsoleAccountId(ulong value) {
+        PrepareBuilder();
+        result.hasConsoleAccountId = true;
+        result.consoleAccountId_ = value;
+        return this;
+      }
+      public Builder ClearConsoleAccountId() {
+        PrepareBuilder();
+        result.hasConsoleAccountId = false;
+        result.consoleAccountId_ = 0UL;
+        return this;
+      }
     }
     static GuildMemberInfo() {
       object.ReferenceEquals(global::Gazillion.Guild.Descriptor, null);
@@ -4457,8 +6167,8 @@ namespace Gazillion {
   public sealed partial class GuildChangeMember : pb::GeneratedMessage<GuildChangeMember, GuildChangeMember.Builder> {
     private GuildChangeMember() { }
     private static readonly GuildChangeMember defaultInstance = new GuildChangeMember().MakeReadOnly();
-    private static readonly string[] _guildChangeMemberFieldNames = new string[] { "sourcePlayerId", "targetNewMembership", "targetPlayerName" };
-    private static readonly uint[] _guildChangeMemberFieldTags = new uint[] { 8, 24, 18 };
+    private static readonly string[] _guildChangeMemberFieldNames = new string[] { "sourcePlayerId", "targetNewMembership", "targetPlayerId", "targetPlayerName" };
+    private static readonly uint[] _guildChangeMemberFieldTags = new uint[] { 8, 32, 24, 18 };
     public static GuildChangeMember DefaultInstance {
       get { return defaultInstance; }
     }
@@ -4499,7 +6209,17 @@ namespace Gazillion {
       get { return targetPlayerName_; }
     }
     
-    public const int TargetNewMembershipFieldNumber = 3;
+    public const int TargetPlayerIdFieldNumber = 3;
+    private bool hasTargetPlayerId;
+    private ulong targetPlayerId_;
+    public bool HasTargetPlayerId {
+      get { return hasTargetPlayerId; }
+    }
+    public ulong TargetPlayerId {
+      get { return targetPlayerId_; }
+    }
+    
+    public const int TargetNewMembershipFieldNumber = 4;
     private bool hasTargetNewMembership;
     private global::Gazillion.GuildMembership targetNewMembership_ = global::Gazillion.GuildMembership.eGMNone;
     public bool HasTargetNewMembership {
@@ -4513,6 +6233,7 @@ namespace Gazillion {
       get {
         if (!hasSourcePlayerId) return false;
         if (!hasTargetPlayerName) return false;
+        if (!hasTargetPlayerId) return false;
         if (!hasTargetNewMembership) return false;
         return true;
       }
@@ -4525,10 +6246,13 @@ namespace Gazillion {
         output.WriteUInt64(1, field_names[0], SourcePlayerId);
       }
       if (hasTargetPlayerName) {
-        output.WriteString(2, field_names[2], TargetPlayerName);
+        output.WriteString(2, field_names[3], TargetPlayerName);
+      }
+      if (hasTargetPlayerId) {
+        output.WriteUInt64(3, field_names[2], TargetPlayerId);
       }
       if (hasTargetNewMembership) {
-        output.WriteEnum(3, field_names[1], (int) TargetNewMembership, TargetNewMembership);
+        output.WriteEnum(4, field_names[1], (int) TargetNewMembership, TargetNewMembership);
       }
       UnknownFields.WriteTo(output);
     }
@@ -4553,8 +6277,11 @@ namespace Gazillion {
       if (hasTargetPlayerName) {
         size += pb::CodedOutputStream.ComputeStringSize(2, TargetPlayerName);
       }
+      if (hasTargetPlayerId) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(3, TargetPlayerId);
+      }
       if (hasTargetNewMembership) {
-        size += pb::CodedOutputStream.ComputeEnumSize(3, (int) TargetNewMembership);
+        size += pb::CodedOutputStream.ComputeEnumSize(4, (int) TargetNewMembership);
       }
       size += UnknownFields.SerializedSize;
       memoizedSerializedSize = size;
@@ -4684,6 +6411,9 @@ namespace Gazillion {
         if (other.HasTargetPlayerName) {
           TargetPlayerName = other.TargetPlayerName;
         }
+        if (other.HasTargetPlayerId) {
+          TargetPlayerId = other.TargetPlayerId;
+        }
         if (other.HasTargetNewMembership) {
           TargetNewMembership = other.TargetNewMembership;
         }
@@ -4739,6 +6469,10 @@ namespace Gazillion {
               break;
             }
             case 24: {
+              result.hasTargetPlayerId = input.ReadUInt64(ref result.targetPlayerId_);
+              break;
+            }
+            case 32: {
               object unknown;
               if(input.ReadEnum(ref result.targetNewMembership_, out unknown)) {
                 result.hasTargetNewMembership = true;
@@ -4746,7 +6480,7 @@ namespace Gazillion {
                 if (unknownFields == null) {
                   unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
                 }
-                unknownFields.MergeVarintField(3, (ulong)(int)unknown);
+                unknownFields.MergeVarintField(4, (ulong)(int)unknown);
               }
               break;
             }
@@ -4798,6 +6532,26 @@ namespace Gazillion {
         PrepareBuilder();
         result.hasTargetPlayerName = false;
         result.targetPlayerName_ = "";
+        return this;
+      }
+      
+      public bool HasTargetPlayerId {
+        get { return result.hasTargetPlayerId; }
+      }
+      public ulong TargetPlayerId {
+        get { return result.TargetPlayerId; }
+        set { SetTargetPlayerId(value); }
+      }
+      public Builder SetTargetPlayerId(ulong value) {
+        PrepareBuilder();
+        result.hasTargetPlayerId = true;
+        result.targetPlayerId_ = value;
+        return this;
+      }
+      public Builder ClearTargetPlayerId() {
+        PrepareBuilder();
+        result.hasTargetPlayerId = false;
+        result.targetPlayerId_ = 0UL;
         return this;
       }
       
@@ -5596,8 +7350,8 @@ namespace Gazillion {
   public sealed partial class GuildCompleteInfo : pb::GeneratedMessage<GuildCompleteInfo, GuildCompleteInfo.Builder> {
     private GuildCompleteInfo() { }
     private static readonly GuildCompleteInfo defaultInstance = new GuildCompleteInfo().MakeReadOnly();
-    private static readonly string[] _guildCompleteInfoFieldNames = new string[] { "guildId", "guildName", "members" };
-    private static readonly uint[] _guildCompleteInfoFieldTags = new uint[] { 8, 18, 26 };
+    private static readonly string[] _guildCompleteInfoFieldNames = new string[] { "guildId", "guildMotd", "guildName", "members" };
+    private static readonly uint[] _guildCompleteInfoFieldTags = new uint[] { 8, 34, 18, 26 };
     public static GuildCompleteInfo DefaultInstance {
       get { return defaultInstance; }
     }
@@ -5650,6 +7404,16 @@ namespace Gazillion {
       return members_[index];
     }
     
+    public const int GuildMotdFieldNumber = 4;
+    private bool hasGuildMotd;
+    private string guildMotd_ = "";
+    public bool HasGuildMotd {
+      get { return hasGuildMotd; }
+    }
+    public string GuildMotd {
+      get { return guildMotd_; }
+    }
+    
     public override bool IsInitialized {
       get {
         if (!hasGuildId) return false;
@@ -5668,10 +7432,13 @@ namespace Gazillion {
         output.WriteUInt64(1, field_names[0], GuildId);
       }
       if (hasGuildName) {
-        output.WriteString(2, field_names[1], GuildName);
+        output.WriteString(2, field_names[2], GuildName);
       }
       if (members_.Count > 0) {
-        output.WriteMessageArray(3, field_names[2], members_);
+        output.WriteMessageArray(3, field_names[3], members_);
+      }
+      if (hasGuildMotd) {
+        output.WriteString(4, field_names[1], GuildMotd);
       }
       UnknownFields.WriteTo(output);
     }
@@ -5698,6 +7465,9 @@ namespace Gazillion {
       }
       foreach (global::Gazillion.GuildMemberInfo element in MembersList) {
         size += pb::CodedOutputStream.ComputeMessageSize(3, element);
+      }
+      if (hasGuildMotd) {
+        size += pb::CodedOutputStream.ComputeStringSize(4, GuildMotd);
       }
       size += UnknownFields.SerializedSize;
       memoizedSerializedSize = size;
@@ -5831,6 +7601,9 @@ namespace Gazillion {
         if (other.members_.Count != 0) {
           result.members_.Add(other.members_);
         }
+        if (other.HasGuildMotd) {
+          GuildMotd = other.GuildMotd;
+        }
         this.MergeUnknownFields(other.UnknownFields);
         return this;
       }
@@ -5884,6 +7657,10 @@ namespace Gazillion {
             }
             case 26: {
               input.ReadMessageArray(tag, field_name, result.members_, global::Gazillion.GuildMemberInfo.DefaultInstance, extensionRegistry);
+              break;
+            }
+            case 34: {
+              result.hasGuildMotd = input.ReadString(ref result.guildMotd_);
               break;
             }
           }
@@ -5980,6 +7757,27 @@ namespace Gazillion {
         result.members_.Clear();
         return this;
       }
+      
+      public bool HasGuildMotd {
+        get { return result.hasGuildMotd; }
+      }
+      public string GuildMotd {
+        get { return result.GuildMotd; }
+        set { SetGuildMotd(value); }
+      }
+      public Builder SetGuildMotd(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasGuildMotd = true;
+        result.guildMotd_ = value;
+        return this;
+      }
+      public Builder ClearGuildMotd() {
+        PrepareBuilder();
+        result.hasGuildMotd = false;
+        result.guildMotd_ = "";
+        return this;
+      }
     }
     static GuildCompleteInfo() {
       object.ReferenceEquals(global::Gazillion.Guild.Descriptor, null);
@@ -5990,8 +7788,8 @@ namespace Gazillion {
   public sealed partial class GuildMessageSetToServer : pb::GeneratedMessage<GuildMessageSetToServer, GuildMessageSetToServer.Builder> {
     private GuildMessageSetToServer() { }
     private static readonly GuildMessageSetToServer defaultInstance = new GuildMessageSetToServer().MakeReadOnly();
-    private static readonly string[] _guildMessageSetToServerFieldNames = new string[] { "guildCompleteInfo", "guildDisbanded", "guildMembersInfoChanged", "guildNameChanged" };
-    private static readonly uint[] _guildMessageSetToServerFieldTags = new uint[] { 26, 34, 18, 10 };
+    private static readonly string[] _guildMessageSetToServerFieldNames = new string[] { "guildCompleteInfo", "guildDisbanded", "guildFormResult", "guildMemberNameChanged", "guildMembersInfoChanged", "guildMotdChanged", "guildNameChanged" };
+    private static readonly uint[] _guildMessageSetToServerFieldTags = new uint[] { 26, 34, 42, 58, 18, 50, 10 };
     public static GuildMessageSetToServer DefaultInstance {
       get { return defaultInstance; }
     }
@@ -6052,6 +7850,36 @@ namespace Gazillion {
       get { return guildDisbanded_ ?? global::Gazillion.GuildDisbanded.DefaultInstance; }
     }
     
+    public const int GuildFormResultFieldNumber = 5;
+    private bool hasGuildFormResult;
+    private global::Gazillion.GuildFormResult guildFormResult_;
+    public bool HasGuildFormResult {
+      get { return hasGuildFormResult; }
+    }
+    public global::Gazillion.GuildFormResult GuildFormResult {
+      get { return guildFormResult_ ?? global::Gazillion.GuildFormResult.DefaultInstance; }
+    }
+    
+    public const int GuildMotdChangedFieldNumber = 6;
+    private bool hasGuildMotdChanged;
+    private global::Gazillion.GuildMotdChanged guildMotdChanged_;
+    public bool HasGuildMotdChanged {
+      get { return hasGuildMotdChanged; }
+    }
+    public global::Gazillion.GuildMotdChanged GuildMotdChanged {
+      get { return guildMotdChanged_ ?? global::Gazillion.GuildMotdChanged.DefaultInstance; }
+    }
+    
+    public const int GuildMemberNameChangedFieldNumber = 7;
+    private bool hasGuildMemberNameChanged;
+    private global::Gazillion.GuildMemberNameChanged guildMemberNameChanged_;
+    public bool HasGuildMemberNameChanged {
+      get { return hasGuildMemberNameChanged; }
+    }
+    public global::Gazillion.GuildMemberNameChanged GuildMemberNameChanged {
+      get { return guildMemberNameChanged_ ?? global::Gazillion.GuildMemberNameChanged.DefaultInstance; }
+    }
+    
     public override bool IsInitialized {
       get {
         if (HasGuildNameChanged) {
@@ -6066,6 +7894,15 @@ namespace Gazillion {
         if (HasGuildDisbanded) {
           if (!GuildDisbanded.IsInitialized) return false;
         }
+        if (HasGuildFormResult) {
+          if (!GuildFormResult.IsInitialized) return false;
+        }
+        if (HasGuildMotdChanged) {
+          if (!GuildMotdChanged.IsInitialized) return false;
+        }
+        if (HasGuildMemberNameChanged) {
+          if (!GuildMemberNameChanged.IsInitialized) return false;
+        }
         return true;
       }
     }
@@ -6074,16 +7911,25 @@ namespace Gazillion {
       CalcSerializedSize();
       string[] field_names = _guildMessageSetToServerFieldNames;
       if (hasGuildNameChanged) {
-        output.WriteMessage(1, field_names[3], GuildNameChanged);
+        output.WriteMessage(1, field_names[6], GuildNameChanged);
       }
       if (hasGuildMembersInfoChanged) {
-        output.WriteMessage(2, field_names[2], GuildMembersInfoChanged);
+        output.WriteMessage(2, field_names[4], GuildMembersInfoChanged);
       }
       if (hasGuildCompleteInfo) {
         output.WriteMessage(3, field_names[0], GuildCompleteInfo);
       }
       if (hasGuildDisbanded) {
         output.WriteMessage(4, field_names[1], GuildDisbanded);
+      }
+      if (hasGuildFormResult) {
+        output.WriteMessage(5, field_names[2], GuildFormResult);
+      }
+      if (hasGuildMotdChanged) {
+        output.WriteMessage(6, field_names[5], GuildMotdChanged);
+      }
+      if (hasGuildMemberNameChanged) {
+        output.WriteMessage(7, field_names[3], GuildMemberNameChanged);
       }
       UnknownFields.WriteTo(output);
     }
@@ -6113,6 +7959,15 @@ namespace Gazillion {
       }
       if (hasGuildDisbanded) {
         size += pb::CodedOutputStream.ComputeMessageSize(4, GuildDisbanded);
+      }
+      if (hasGuildFormResult) {
+        size += pb::CodedOutputStream.ComputeMessageSize(5, GuildFormResult);
+      }
+      if (hasGuildMotdChanged) {
+        size += pb::CodedOutputStream.ComputeMessageSize(6, GuildMotdChanged);
+      }
+      if (hasGuildMemberNameChanged) {
+        size += pb::CodedOutputStream.ComputeMessageSize(7, GuildMemberNameChanged);
       }
       size += UnknownFields.SerializedSize;
       memoizedSerializedSize = size;
@@ -6248,6 +8103,15 @@ namespace Gazillion {
         if (other.HasGuildDisbanded) {
           MergeGuildDisbanded(other.GuildDisbanded);
         }
+        if (other.HasGuildFormResult) {
+          MergeGuildFormResult(other.GuildFormResult);
+        }
+        if (other.HasGuildMotdChanged) {
+          MergeGuildMotdChanged(other.GuildMotdChanged);
+        }
+        if (other.HasGuildMemberNameChanged) {
+          MergeGuildMemberNameChanged(other.GuildMemberNameChanged);
+        }
         this.MergeUnknownFields(other.UnknownFields);
         return this;
       }
@@ -6325,6 +8189,33 @@ namespace Gazillion {
               }
               input.ReadMessage(subBuilder, extensionRegistry);
               GuildDisbanded = subBuilder.BuildPartial();
+              break;
+            }
+            case 42: {
+              global::Gazillion.GuildFormResult.Builder subBuilder = global::Gazillion.GuildFormResult.CreateBuilder();
+              if (result.hasGuildFormResult) {
+                subBuilder.MergeFrom(GuildFormResult);
+              }
+              input.ReadMessage(subBuilder, extensionRegistry);
+              GuildFormResult = subBuilder.BuildPartial();
+              break;
+            }
+            case 50: {
+              global::Gazillion.GuildMotdChanged.Builder subBuilder = global::Gazillion.GuildMotdChanged.CreateBuilder();
+              if (result.hasGuildMotdChanged) {
+                subBuilder.MergeFrom(GuildMotdChanged);
+              }
+              input.ReadMessage(subBuilder, extensionRegistry);
+              GuildMotdChanged = subBuilder.BuildPartial();
+              break;
+            }
+            case 58: {
+              global::Gazillion.GuildMemberNameChanged.Builder subBuilder = global::Gazillion.GuildMemberNameChanged.CreateBuilder();
+              if (result.hasGuildMemberNameChanged) {
+                subBuilder.MergeFrom(GuildMemberNameChanged);
+              }
+              input.ReadMessage(subBuilder, extensionRegistry);
+              GuildMemberNameChanged = subBuilder.BuildPartial();
               break;
             }
           }
@@ -6496,6 +8387,126 @@ namespace Gazillion {
         result.guildDisbanded_ = null;
         return this;
       }
+      
+      public bool HasGuildFormResult {
+       get { return result.hasGuildFormResult; }
+      }
+      public global::Gazillion.GuildFormResult GuildFormResult {
+        get { return result.GuildFormResult; }
+        set { SetGuildFormResult(value); }
+      }
+      public Builder SetGuildFormResult(global::Gazillion.GuildFormResult value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasGuildFormResult = true;
+        result.guildFormResult_ = value;
+        return this;
+      }
+      public Builder SetGuildFormResult(global::Gazillion.GuildFormResult.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.hasGuildFormResult = true;
+        result.guildFormResult_ = builderForValue.Build();
+        return this;
+      }
+      public Builder MergeGuildFormResult(global::Gazillion.GuildFormResult value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        if (result.hasGuildFormResult &&
+            result.guildFormResult_ != global::Gazillion.GuildFormResult.DefaultInstance) {
+            result.guildFormResult_ = global::Gazillion.GuildFormResult.CreateBuilder(result.guildFormResult_).MergeFrom(value).BuildPartial();
+        } else {
+          result.guildFormResult_ = value;
+        }
+        result.hasGuildFormResult = true;
+        return this;
+      }
+      public Builder ClearGuildFormResult() {
+        PrepareBuilder();
+        result.hasGuildFormResult = false;
+        result.guildFormResult_ = null;
+        return this;
+      }
+      
+      public bool HasGuildMotdChanged {
+       get { return result.hasGuildMotdChanged; }
+      }
+      public global::Gazillion.GuildMotdChanged GuildMotdChanged {
+        get { return result.GuildMotdChanged; }
+        set { SetGuildMotdChanged(value); }
+      }
+      public Builder SetGuildMotdChanged(global::Gazillion.GuildMotdChanged value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasGuildMotdChanged = true;
+        result.guildMotdChanged_ = value;
+        return this;
+      }
+      public Builder SetGuildMotdChanged(global::Gazillion.GuildMotdChanged.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.hasGuildMotdChanged = true;
+        result.guildMotdChanged_ = builderForValue.Build();
+        return this;
+      }
+      public Builder MergeGuildMotdChanged(global::Gazillion.GuildMotdChanged value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        if (result.hasGuildMotdChanged &&
+            result.guildMotdChanged_ != global::Gazillion.GuildMotdChanged.DefaultInstance) {
+            result.guildMotdChanged_ = global::Gazillion.GuildMotdChanged.CreateBuilder(result.guildMotdChanged_).MergeFrom(value).BuildPartial();
+        } else {
+          result.guildMotdChanged_ = value;
+        }
+        result.hasGuildMotdChanged = true;
+        return this;
+      }
+      public Builder ClearGuildMotdChanged() {
+        PrepareBuilder();
+        result.hasGuildMotdChanged = false;
+        result.guildMotdChanged_ = null;
+        return this;
+      }
+      
+      public bool HasGuildMemberNameChanged {
+       get { return result.hasGuildMemberNameChanged; }
+      }
+      public global::Gazillion.GuildMemberNameChanged GuildMemberNameChanged {
+        get { return result.GuildMemberNameChanged; }
+        set { SetGuildMemberNameChanged(value); }
+      }
+      public Builder SetGuildMemberNameChanged(global::Gazillion.GuildMemberNameChanged value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasGuildMemberNameChanged = true;
+        result.guildMemberNameChanged_ = value;
+        return this;
+      }
+      public Builder SetGuildMemberNameChanged(global::Gazillion.GuildMemberNameChanged.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.hasGuildMemberNameChanged = true;
+        result.guildMemberNameChanged_ = builderForValue.Build();
+        return this;
+      }
+      public Builder MergeGuildMemberNameChanged(global::Gazillion.GuildMemberNameChanged value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        if (result.hasGuildMemberNameChanged &&
+            result.guildMemberNameChanged_ != global::Gazillion.GuildMemberNameChanged.DefaultInstance) {
+            result.guildMemberNameChanged_ = global::Gazillion.GuildMemberNameChanged.CreateBuilder(result.guildMemberNameChanged_).MergeFrom(value).BuildPartial();
+        } else {
+          result.guildMemberNameChanged_ = value;
+        }
+        result.hasGuildMemberNameChanged = true;
+        return this;
+      }
+      public Builder ClearGuildMemberNameChanged() {
+        PrepareBuilder();
+        result.hasGuildMemberNameChanged = false;
+        result.guildMemberNameChanged_ = null;
+        return this;
+      }
     }
     static GuildMessageSetToServer() {
       object.ReferenceEquals(global::Gazillion.Guild.Descriptor, null);
@@ -6506,8 +8517,8 @@ namespace Gazillion {
   public sealed partial class GuildMessageSetToClient : pb::GeneratedMessage<GuildMessageSetToClient, GuildMessageSetToClient.Builder> {
     private GuildMessageSetToClient() { }
     private static readonly GuildMessageSetToClient defaultInstance = new GuildMessageSetToClient().MakeReadOnly();
-    private static readonly string[] _guildMessageSetToClientFieldNames = new string[] { "guildChangeMemberResult", "guildChangeNameResult", "guildCompleteInfo", "guildDisbanded", "guildFormResult", "guildInviteResult", "guildInvitedToJoin", "guildMembersInfoChanged", "guildNameChanged", "guildRespondToInviteResult" };
-    private static readonly uint[] _guildMessageSetToClientFieldTags = new uint[] { 42, 18, 74, 82, 10, 26, 50, 66, 58, 34 };
+    private static readonly string[] _guildMessageSetToClientFieldNames = new string[] { "guildChangeMemberResult", "guildChangeMotdResult", "guildChangeNameResult", "guildCompleteInfo", "guildDisbanded", "guildFormResult", "guildInviteResult", "guildInvitedToJoin", "guildMemberNameChanged", "guildMembersInfoChanged", "guildMotdChanged", "guildNameChanged", "guildRespondToInviteResult" };
+    private static readonly uint[] _guildMessageSetToClientFieldTags = new uint[] { 42, 90, 18, 74, 82, 10, 26, 50, 106, 66, 98, 58, 34 };
     public static GuildMessageSetToClient DefaultInstance {
       get { return defaultInstance; }
     }
@@ -6526,16 +8537,6 @@ namespace Gazillion {
     
     protected override pb::FieldAccess.FieldAccessorTable<GuildMessageSetToClient, GuildMessageSetToClient.Builder> InternalFieldAccessors {
       get { return global::Gazillion.Guild.internal__static_Gazillion_GuildMessageSetToClient__FieldAccessorTable; }
-    }
-    
-    public const int GuildFormResultFieldNumber = 1;
-    private bool hasGuildFormResult;
-    private global::Gazillion.GuildFormResult guildFormResult_;
-    public bool HasGuildFormResult {
-      get { return hasGuildFormResult; }
-    }
-    public global::Gazillion.GuildFormResult GuildFormResult {
-      get { return guildFormResult_ ?? global::Gazillion.GuildFormResult.DefaultInstance; }
     }
     
     public const int GuildChangeNameResultFieldNumber = 2;
@@ -6588,6 +8589,16 @@ namespace Gazillion {
       get { return guildInvitedToJoin_ ?? global::Gazillion.GuildInvitedToJoin.DefaultInstance; }
     }
     
+    public const int GuildChangeMotdResultFieldNumber = 11;
+    private bool hasGuildChangeMotdResult;
+    private global::Gazillion.GuildChangeMotdResult guildChangeMotdResult_;
+    public bool HasGuildChangeMotdResult {
+      get { return hasGuildChangeMotdResult; }
+    }
+    public global::Gazillion.GuildChangeMotdResult GuildChangeMotdResult {
+      get { return guildChangeMotdResult_ ?? global::Gazillion.GuildChangeMotdResult.DefaultInstance; }
+    }
+    
     public const int GuildNameChangedFieldNumber = 7;
     private bool hasGuildNameChanged;
     private global::Gazillion.GuildNameChanged guildNameChanged_;
@@ -6628,11 +8639,38 @@ namespace Gazillion {
       get { return guildDisbanded_ ?? global::Gazillion.GuildDisbanded.DefaultInstance; }
     }
     
+    public const int GuildFormResultFieldNumber = 1;
+    private bool hasGuildFormResult;
+    private global::Gazillion.GuildFormResult guildFormResult_;
+    public bool HasGuildFormResult {
+      get { return hasGuildFormResult; }
+    }
+    public global::Gazillion.GuildFormResult GuildFormResult {
+      get { return guildFormResult_ ?? global::Gazillion.GuildFormResult.DefaultInstance; }
+    }
+    
+    public const int GuildMotdChangedFieldNumber = 12;
+    private bool hasGuildMotdChanged;
+    private global::Gazillion.GuildMotdChanged guildMotdChanged_;
+    public bool HasGuildMotdChanged {
+      get { return hasGuildMotdChanged; }
+    }
+    public global::Gazillion.GuildMotdChanged GuildMotdChanged {
+      get { return guildMotdChanged_ ?? global::Gazillion.GuildMotdChanged.DefaultInstance; }
+    }
+    
+    public const int GuildMemberNameChangedFieldNumber = 13;
+    private bool hasGuildMemberNameChanged;
+    private global::Gazillion.GuildMemberNameChanged guildMemberNameChanged_;
+    public bool HasGuildMemberNameChanged {
+      get { return hasGuildMemberNameChanged; }
+    }
+    public global::Gazillion.GuildMemberNameChanged GuildMemberNameChanged {
+      get { return guildMemberNameChanged_ ?? global::Gazillion.GuildMemberNameChanged.DefaultInstance; }
+    }
+    
     public override bool IsInitialized {
       get {
-        if (HasGuildFormResult) {
-          if (!GuildFormResult.IsInitialized) return false;
-        }
         if (HasGuildChangeNameResult) {
           if (!GuildChangeNameResult.IsInitialized) return false;
         }
@@ -6648,6 +8686,9 @@ namespace Gazillion {
         if (HasGuildInvitedToJoin) {
           if (!GuildInvitedToJoin.IsInitialized) return false;
         }
+        if (HasGuildChangeMotdResult) {
+          if (!GuildChangeMotdResult.IsInitialized) return false;
+        }
         if (HasGuildNameChanged) {
           if (!GuildNameChanged.IsInitialized) return false;
         }
@@ -6660,6 +8701,15 @@ namespace Gazillion {
         if (HasGuildDisbanded) {
           if (!GuildDisbanded.IsInitialized) return false;
         }
+        if (HasGuildFormResult) {
+          if (!GuildFormResult.IsInitialized) return false;
+        }
+        if (HasGuildMotdChanged) {
+          if (!GuildMotdChanged.IsInitialized) return false;
+        }
+        if (HasGuildMemberNameChanged) {
+          if (!GuildMemberNameChanged.IsInitialized) return false;
+        }
         return true;
       }
     }
@@ -6668,34 +8718,43 @@ namespace Gazillion {
       CalcSerializedSize();
       string[] field_names = _guildMessageSetToClientFieldNames;
       if (hasGuildFormResult) {
-        output.WriteMessage(1, field_names[4], GuildFormResult);
+        output.WriteMessage(1, field_names[5], GuildFormResult);
       }
       if (hasGuildChangeNameResult) {
-        output.WriteMessage(2, field_names[1], GuildChangeNameResult);
+        output.WriteMessage(2, field_names[2], GuildChangeNameResult);
       }
       if (hasGuildInviteResult) {
-        output.WriteMessage(3, field_names[5], GuildInviteResult);
+        output.WriteMessage(3, field_names[6], GuildInviteResult);
       }
       if (hasGuildRespondToInviteResult) {
-        output.WriteMessage(4, field_names[9], GuildRespondToInviteResult);
+        output.WriteMessage(4, field_names[12], GuildRespondToInviteResult);
       }
       if (hasGuildChangeMemberResult) {
         output.WriteMessage(5, field_names[0], GuildChangeMemberResult);
       }
       if (hasGuildInvitedToJoin) {
-        output.WriteMessage(6, field_names[6], GuildInvitedToJoin);
+        output.WriteMessage(6, field_names[7], GuildInvitedToJoin);
       }
       if (hasGuildNameChanged) {
-        output.WriteMessage(7, field_names[8], GuildNameChanged);
+        output.WriteMessage(7, field_names[11], GuildNameChanged);
       }
       if (hasGuildMembersInfoChanged) {
-        output.WriteMessage(8, field_names[7], GuildMembersInfoChanged);
+        output.WriteMessage(8, field_names[9], GuildMembersInfoChanged);
       }
       if (hasGuildCompleteInfo) {
-        output.WriteMessage(9, field_names[2], GuildCompleteInfo);
+        output.WriteMessage(9, field_names[3], GuildCompleteInfo);
       }
       if (hasGuildDisbanded) {
-        output.WriteMessage(10, field_names[3], GuildDisbanded);
+        output.WriteMessage(10, field_names[4], GuildDisbanded);
+      }
+      if (hasGuildChangeMotdResult) {
+        output.WriteMessage(11, field_names[1], GuildChangeMotdResult);
+      }
+      if (hasGuildMotdChanged) {
+        output.WriteMessage(12, field_names[10], GuildMotdChanged);
+      }
+      if (hasGuildMemberNameChanged) {
+        output.WriteMessage(13, field_names[8], GuildMemberNameChanged);
       }
       UnknownFields.WriteTo(output);
     }
@@ -6714,9 +8773,6 @@ namespace Gazillion {
       if (size != -1) return size;
       
       size = 0;
-      if (hasGuildFormResult) {
-        size += pb::CodedOutputStream.ComputeMessageSize(1, GuildFormResult);
-      }
       if (hasGuildChangeNameResult) {
         size += pb::CodedOutputStream.ComputeMessageSize(2, GuildChangeNameResult);
       }
@@ -6732,6 +8788,9 @@ namespace Gazillion {
       if (hasGuildInvitedToJoin) {
         size += pb::CodedOutputStream.ComputeMessageSize(6, GuildInvitedToJoin);
       }
+      if (hasGuildChangeMotdResult) {
+        size += pb::CodedOutputStream.ComputeMessageSize(11, GuildChangeMotdResult);
+      }
       if (hasGuildNameChanged) {
         size += pb::CodedOutputStream.ComputeMessageSize(7, GuildNameChanged);
       }
@@ -6743,6 +8802,15 @@ namespace Gazillion {
       }
       if (hasGuildDisbanded) {
         size += pb::CodedOutputStream.ComputeMessageSize(10, GuildDisbanded);
+      }
+      if (hasGuildFormResult) {
+        size += pb::CodedOutputStream.ComputeMessageSize(1, GuildFormResult);
+      }
+      if (hasGuildMotdChanged) {
+        size += pb::CodedOutputStream.ComputeMessageSize(12, GuildMotdChanged);
+      }
+      if (hasGuildMemberNameChanged) {
+        size += pb::CodedOutputStream.ComputeMessageSize(13, GuildMemberNameChanged);
       }
       size += UnknownFields.SerializedSize;
       memoizedSerializedSize = size;
@@ -6866,9 +8934,6 @@ namespace Gazillion {
       public override Builder MergeFrom(GuildMessageSetToClient other) {
         if (other == global::Gazillion.GuildMessageSetToClient.DefaultInstance) return this;
         PrepareBuilder();
-        if (other.HasGuildFormResult) {
-          MergeGuildFormResult(other.GuildFormResult);
-        }
         if (other.HasGuildChangeNameResult) {
           MergeGuildChangeNameResult(other.GuildChangeNameResult);
         }
@@ -6884,6 +8949,9 @@ namespace Gazillion {
         if (other.HasGuildInvitedToJoin) {
           MergeGuildInvitedToJoin(other.GuildInvitedToJoin);
         }
+        if (other.HasGuildChangeMotdResult) {
+          MergeGuildChangeMotdResult(other.GuildChangeMotdResult);
+        }
         if (other.HasGuildNameChanged) {
           MergeGuildNameChanged(other.GuildNameChanged);
         }
@@ -6895,6 +8963,15 @@ namespace Gazillion {
         }
         if (other.HasGuildDisbanded) {
           MergeGuildDisbanded(other.GuildDisbanded);
+        }
+        if (other.HasGuildFormResult) {
+          MergeGuildFormResult(other.GuildFormResult);
+        }
+        if (other.HasGuildMotdChanged) {
+          MergeGuildMotdChanged(other.GuildMotdChanged);
+        }
+        if (other.HasGuildMemberNameChanged) {
+          MergeGuildMemberNameChanged(other.GuildMemberNameChanged);
         }
         this.MergeUnknownFields(other.UnknownFields);
         return this;
@@ -7029,6 +9106,33 @@ namespace Gazillion {
               GuildDisbanded = subBuilder.BuildPartial();
               break;
             }
+            case 90: {
+              global::Gazillion.GuildChangeMotdResult.Builder subBuilder = global::Gazillion.GuildChangeMotdResult.CreateBuilder();
+              if (result.hasGuildChangeMotdResult) {
+                subBuilder.MergeFrom(GuildChangeMotdResult);
+              }
+              input.ReadMessage(subBuilder, extensionRegistry);
+              GuildChangeMotdResult = subBuilder.BuildPartial();
+              break;
+            }
+            case 98: {
+              global::Gazillion.GuildMotdChanged.Builder subBuilder = global::Gazillion.GuildMotdChanged.CreateBuilder();
+              if (result.hasGuildMotdChanged) {
+                subBuilder.MergeFrom(GuildMotdChanged);
+              }
+              input.ReadMessage(subBuilder, extensionRegistry);
+              GuildMotdChanged = subBuilder.BuildPartial();
+              break;
+            }
+            case 106: {
+              global::Gazillion.GuildMemberNameChanged.Builder subBuilder = global::Gazillion.GuildMemberNameChanged.CreateBuilder();
+              if (result.hasGuildMemberNameChanged) {
+                subBuilder.MergeFrom(GuildMemberNameChanged);
+              }
+              input.ReadMessage(subBuilder, extensionRegistry);
+              GuildMemberNameChanged = subBuilder.BuildPartial();
+              break;
+            }
           }
         }
         
@@ -7038,46 +9142,6 @@ namespace Gazillion {
         return this;
       }
       
-      
-      public bool HasGuildFormResult {
-       get { return result.hasGuildFormResult; }
-      }
-      public global::Gazillion.GuildFormResult GuildFormResult {
-        get { return result.GuildFormResult; }
-        set { SetGuildFormResult(value); }
-      }
-      public Builder SetGuildFormResult(global::Gazillion.GuildFormResult value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
-        PrepareBuilder();
-        result.hasGuildFormResult = true;
-        result.guildFormResult_ = value;
-        return this;
-      }
-      public Builder SetGuildFormResult(global::Gazillion.GuildFormResult.Builder builderForValue) {
-        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
-        PrepareBuilder();
-        result.hasGuildFormResult = true;
-        result.guildFormResult_ = builderForValue.Build();
-        return this;
-      }
-      public Builder MergeGuildFormResult(global::Gazillion.GuildFormResult value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
-        PrepareBuilder();
-        if (result.hasGuildFormResult &&
-            result.guildFormResult_ != global::Gazillion.GuildFormResult.DefaultInstance) {
-            result.guildFormResult_ = global::Gazillion.GuildFormResult.CreateBuilder(result.guildFormResult_).MergeFrom(value).BuildPartial();
-        } else {
-          result.guildFormResult_ = value;
-        }
-        result.hasGuildFormResult = true;
-        return this;
-      }
-      public Builder ClearGuildFormResult() {
-        PrepareBuilder();
-        result.hasGuildFormResult = false;
-        result.guildFormResult_ = null;
-        return this;
-      }
       
       public bool HasGuildChangeNameResult {
        get { return result.hasGuildChangeNameResult; }
@@ -7279,6 +9343,46 @@ namespace Gazillion {
         return this;
       }
       
+      public bool HasGuildChangeMotdResult {
+       get { return result.hasGuildChangeMotdResult; }
+      }
+      public global::Gazillion.GuildChangeMotdResult GuildChangeMotdResult {
+        get { return result.GuildChangeMotdResult; }
+        set { SetGuildChangeMotdResult(value); }
+      }
+      public Builder SetGuildChangeMotdResult(global::Gazillion.GuildChangeMotdResult value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasGuildChangeMotdResult = true;
+        result.guildChangeMotdResult_ = value;
+        return this;
+      }
+      public Builder SetGuildChangeMotdResult(global::Gazillion.GuildChangeMotdResult.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.hasGuildChangeMotdResult = true;
+        result.guildChangeMotdResult_ = builderForValue.Build();
+        return this;
+      }
+      public Builder MergeGuildChangeMotdResult(global::Gazillion.GuildChangeMotdResult value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        if (result.hasGuildChangeMotdResult &&
+            result.guildChangeMotdResult_ != global::Gazillion.GuildChangeMotdResult.DefaultInstance) {
+            result.guildChangeMotdResult_ = global::Gazillion.GuildChangeMotdResult.CreateBuilder(result.guildChangeMotdResult_).MergeFrom(value).BuildPartial();
+        } else {
+          result.guildChangeMotdResult_ = value;
+        }
+        result.hasGuildChangeMotdResult = true;
+        return this;
+      }
+      public Builder ClearGuildChangeMotdResult() {
+        PrepareBuilder();
+        result.hasGuildChangeMotdResult = false;
+        result.guildChangeMotdResult_ = null;
+        return this;
+      }
+      
       public bool HasGuildNameChanged {
        get { return result.hasGuildNameChanged; }
       }
@@ -7438,6 +9542,126 @@ namespace Gazillion {
         result.guildDisbanded_ = null;
         return this;
       }
+      
+      public bool HasGuildFormResult {
+       get { return result.hasGuildFormResult; }
+      }
+      public global::Gazillion.GuildFormResult GuildFormResult {
+        get { return result.GuildFormResult; }
+        set { SetGuildFormResult(value); }
+      }
+      public Builder SetGuildFormResult(global::Gazillion.GuildFormResult value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasGuildFormResult = true;
+        result.guildFormResult_ = value;
+        return this;
+      }
+      public Builder SetGuildFormResult(global::Gazillion.GuildFormResult.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.hasGuildFormResult = true;
+        result.guildFormResult_ = builderForValue.Build();
+        return this;
+      }
+      public Builder MergeGuildFormResult(global::Gazillion.GuildFormResult value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        if (result.hasGuildFormResult &&
+            result.guildFormResult_ != global::Gazillion.GuildFormResult.DefaultInstance) {
+            result.guildFormResult_ = global::Gazillion.GuildFormResult.CreateBuilder(result.guildFormResult_).MergeFrom(value).BuildPartial();
+        } else {
+          result.guildFormResult_ = value;
+        }
+        result.hasGuildFormResult = true;
+        return this;
+      }
+      public Builder ClearGuildFormResult() {
+        PrepareBuilder();
+        result.hasGuildFormResult = false;
+        result.guildFormResult_ = null;
+        return this;
+      }
+      
+      public bool HasGuildMotdChanged {
+       get { return result.hasGuildMotdChanged; }
+      }
+      public global::Gazillion.GuildMotdChanged GuildMotdChanged {
+        get { return result.GuildMotdChanged; }
+        set { SetGuildMotdChanged(value); }
+      }
+      public Builder SetGuildMotdChanged(global::Gazillion.GuildMotdChanged value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasGuildMotdChanged = true;
+        result.guildMotdChanged_ = value;
+        return this;
+      }
+      public Builder SetGuildMotdChanged(global::Gazillion.GuildMotdChanged.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.hasGuildMotdChanged = true;
+        result.guildMotdChanged_ = builderForValue.Build();
+        return this;
+      }
+      public Builder MergeGuildMotdChanged(global::Gazillion.GuildMotdChanged value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        if (result.hasGuildMotdChanged &&
+            result.guildMotdChanged_ != global::Gazillion.GuildMotdChanged.DefaultInstance) {
+            result.guildMotdChanged_ = global::Gazillion.GuildMotdChanged.CreateBuilder(result.guildMotdChanged_).MergeFrom(value).BuildPartial();
+        } else {
+          result.guildMotdChanged_ = value;
+        }
+        result.hasGuildMotdChanged = true;
+        return this;
+      }
+      public Builder ClearGuildMotdChanged() {
+        PrepareBuilder();
+        result.hasGuildMotdChanged = false;
+        result.guildMotdChanged_ = null;
+        return this;
+      }
+      
+      public bool HasGuildMemberNameChanged {
+       get { return result.hasGuildMemberNameChanged; }
+      }
+      public global::Gazillion.GuildMemberNameChanged GuildMemberNameChanged {
+        get { return result.GuildMemberNameChanged; }
+        set { SetGuildMemberNameChanged(value); }
+      }
+      public Builder SetGuildMemberNameChanged(global::Gazillion.GuildMemberNameChanged value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasGuildMemberNameChanged = true;
+        result.guildMemberNameChanged_ = value;
+        return this;
+      }
+      public Builder SetGuildMemberNameChanged(global::Gazillion.GuildMemberNameChanged.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.hasGuildMemberNameChanged = true;
+        result.guildMemberNameChanged_ = builderForValue.Build();
+        return this;
+      }
+      public Builder MergeGuildMemberNameChanged(global::Gazillion.GuildMemberNameChanged value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        if (result.hasGuildMemberNameChanged &&
+            result.guildMemberNameChanged_ != global::Gazillion.GuildMemberNameChanged.DefaultInstance) {
+            result.guildMemberNameChanged_ = global::Gazillion.GuildMemberNameChanged.CreateBuilder(result.guildMemberNameChanged_).MergeFrom(value).BuildPartial();
+        } else {
+          result.guildMemberNameChanged_ = value;
+        }
+        result.hasGuildMemberNameChanged = true;
+        return this;
+      }
+      public Builder ClearGuildMemberNameChanged() {
+        PrepareBuilder();
+        result.hasGuildMemberNameChanged = false;
+        result.guildMemberNameChanged_ = null;
+        return this;
+      }
     }
     static GuildMessageSetToClient() {
       object.ReferenceEquals(global::Gazillion.Guild.Descriptor, null);
@@ -7448,8 +9672,8 @@ namespace Gazillion {
   public sealed partial class GuildMessageSetToPlayerManager : pb::GeneratedMessage<GuildMessageSetToPlayerManager, GuildMessageSetToPlayerManager.Builder> {
     private GuildMessageSetToPlayerManager() { }
     private static readonly GuildMessageSetToPlayerManager defaultInstance = new GuildMessageSetToPlayerManager().MakeReadOnly();
-    private static readonly string[] _guildMessageSetToPlayerManagerFieldNames = new string[] { "guildChangeMember", "guildChangeName", "guildForm", "guildInvite", "guildRespondToInvite" };
-    private static readonly uint[] _guildMessageSetToPlayerManagerFieldTags = new uint[] { 42, 18, 10, 26, 34 };
+    private static readonly string[] _guildMessageSetToPlayerManagerFieldNames = new string[] { "guildChangeMember", "guildChangeMotd", "guildChangeName", "guildForm", "guildInvite", "guildRespondToInvite" };
+    private static readonly uint[] _guildMessageSetToPlayerManagerFieldTags = new uint[] { 42, 50, 18, 10, 26, 34 };
     public static GuildMessageSetToPlayerManager DefaultInstance {
       get { return defaultInstance; }
     }
@@ -7520,6 +9744,16 @@ namespace Gazillion {
       get { return guildChangeMember_ ?? global::Gazillion.GuildChangeMember.DefaultInstance; }
     }
     
+    public const int GuildChangeMotdFieldNumber = 6;
+    private bool hasGuildChangeMotd;
+    private global::Gazillion.GuildChangeMotd guildChangeMotd_;
+    public bool HasGuildChangeMotd {
+      get { return hasGuildChangeMotd; }
+    }
+    public global::Gazillion.GuildChangeMotd GuildChangeMotd {
+      get { return guildChangeMotd_ ?? global::Gazillion.GuildChangeMotd.DefaultInstance; }
+    }
+    
     public override bool IsInitialized {
       get {
         if (HasGuildForm) {
@@ -7537,6 +9771,9 @@ namespace Gazillion {
         if (HasGuildChangeMember) {
           if (!GuildChangeMember.IsInitialized) return false;
         }
+        if (HasGuildChangeMotd) {
+          if (!GuildChangeMotd.IsInitialized) return false;
+        }
         return true;
       }
     }
@@ -7545,19 +9782,22 @@ namespace Gazillion {
       CalcSerializedSize();
       string[] field_names = _guildMessageSetToPlayerManagerFieldNames;
       if (hasGuildForm) {
-        output.WriteMessage(1, field_names[2], GuildForm);
+        output.WriteMessage(1, field_names[3], GuildForm);
       }
       if (hasGuildChangeName) {
-        output.WriteMessage(2, field_names[1], GuildChangeName);
+        output.WriteMessage(2, field_names[2], GuildChangeName);
       }
       if (hasGuildInvite) {
-        output.WriteMessage(3, field_names[3], GuildInvite);
+        output.WriteMessage(3, field_names[4], GuildInvite);
       }
       if (hasGuildRespondToInvite) {
-        output.WriteMessage(4, field_names[4], GuildRespondToInvite);
+        output.WriteMessage(4, field_names[5], GuildRespondToInvite);
       }
       if (hasGuildChangeMember) {
         output.WriteMessage(5, field_names[0], GuildChangeMember);
+      }
+      if (hasGuildChangeMotd) {
+        output.WriteMessage(6, field_names[1], GuildChangeMotd);
       }
       UnknownFields.WriteTo(output);
     }
@@ -7590,6 +9830,9 @@ namespace Gazillion {
       }
       if (hasGuildChangeMember) {
         size += pb::CodedOutputStream.ComputeMessageSize(5, GuildChangeMember);
+      }
+      if (hasGuildChangeMotd) {
+        size += pb::CodedOutputStream.ComputeMessageSize(6, GuildChangeMotd);
       }
       size += UnknownFields.SerializedSize;
       memoizedSerializedSize = size;
@@ -7728,6 +9971,9 @@ namespace Gazillion {
         if (other.HasGuildChangeMember) {
           MergeGuildChangeMember(other.GuildChangeMember);
         }
+        if (other.HasGuildChangeMotd) {
+          MergeGuildChangeMotd(other.GuildChangeMotd);
+        }
         this.MergeUnknownFields(other.UnknownFields);
         return this;
       }
@@ -7814,6 +10060,15 @@ namespace Gazillion {
               }
               input.ReadMessage(subBuilder, extensionRegistry);
               GuildChangeMember = subBuilder.BuildPartial();
+              break;
+            }
+            case 50: {
+              global::Gazillion.GuildChangeMotd.Builder subBuilder = global::Gazillion.GuildChangeMotd.CreateBuilder();
+              if (result.hasGuildChangeMotd) {
+                subBuilder.MergeFrom(GuildChangeMotd);
+              }
+              input.ReadMessage(subBuilder, extensionRegistry);
+              GuildChangeMotd = subBuilder.BuildPartial();
               break;
             }
           }
@@ -8023,6 +10278,46 @@ namespace Gazillion {
         PrepareBuilder();
         result.hasGuildChangeMember = false;
         result.guildChangeMember_ = null;
+        return this;
+      }
+      
+      public bool HasGuildChangeMotd {
+       get { return result.hasGuildChangeMotd; }
+      }
+      public global::Gazillion.GuildChangeMotd GuildChangeMotd {
+        get { return result.GuildChangeMotd; }
+        set { SetGuildChangeMotd(value); }
+      }
+      public Builder SetGuildChangeMotd(global::Gazillion.GuildChangeMotd value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasGuildChangeMotd = true;
+        result.guildChangeMotd_ = value;
+        return this;
+      }
+      public Builder SetGuildChangeMotd(global::Gazillion.GuildChangeMotd.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.hasGuildChangeMotd = true;
+        result.guildChangeMotd_ = builderForValue.Build();
+        return this;
+      }
+      public Builder MergeGuildChangeMotd(global::Gazillion.GuildChangeMotd value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        if (result.hasGuildChangeMotd &&
+            result.guildChangeMotd_ != global::Gazillion.GuildChangeMotd.DefaultInstance) {
+            result.guildChangeMotd_ = global::Gazillion.GuildChangeMotd.CreateBuilder(result.guildChangeMotd_).MergeFrom(value).BuildPartial();
+        } else {
+          result.guildChangeMotd_ = value;
+        }
+        result.hasGuildChangeMotd = true;
+        return this;
+      }
+      public Builder ClearGuildChangeMotd() {
+        PrepareBuilder();
+        result.hasGuildChangeMotd = false;
+        result.guildChangeMotd_ = null;
         return this;
       }
     }

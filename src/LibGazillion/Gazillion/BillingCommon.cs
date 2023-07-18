@@ -26,8 +26,58 @@ namespace Gazillion {
     internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHLocalizedCatalogUrls, global::Gazillion.MHLocalizedCatalogUrls.Builder> internal__static_Gazillion_MHLocalizedCatalogUrls__FieldAccessorTable;
     internal static pbd::MessageDescriptor internal__static_Gazillion_MHLocalizedCatalogEntry__Descriptor;
     internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHLocalizedCatalogEntry, global::Gazillion.MHLocalizedCatalogEntry.Builder> internal__static_Gazillion_MHLocalizedCatalogEntry__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_MHLocalizedCatalogEntryUrlOrData__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHLocalizedCatalogEntryUrlOrData, global::Gazillion.MHLocalizedCatalogEntryUrlOrData.Builder> internal__static_Gazillion_MHLocalizedCatalogEntryUrlOrData__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_MHCatalogGuidEntry__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHCatalogGuidEntry, global::Gazillion.MHCatalogGuidEntry.Builder> internal__static_Gazillion_MHCatalogGuidEntry__FieldAccessorTable;
     internal static pbd::MessageDescriptor internal__static_Gazillion_MarvelHeroesCatalogEntry__Descriptor;
     internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.MarvelHeroesCatalogEntry, global::Gazillion.MarvelHeroesCatalogEntry.Builder> internal__static_Gazillion_MarvelHeroesCatalogEntry__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_MHLocalizedStringCollection__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHLocalizedStringCollection, global::Gazillion.MHLocalizedStringCollection.Builder> internal__static_Gazillion_MHLocalizedStringCollection__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_MHStringValue__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHStringValue, global::Gazillion.MHStringValue.Builder> internal__static_Gazillion_MHStringValue__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_MHConsolePresentationEntry__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHConsolePresentationEntry, global::Gazillion.MHConsolePresentationEntry.Builder> internal__static_Gazillion_MHConsolePresentationEntry__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_MHConsoleItemPrice__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHConsoleItemPrice, global::Gazillion.MHConsoleItemPrice.Builder> internal__static_Gazillion_MHConsoleItemPrice__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_MHConsoleDiscount__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHConsoleDiscount, global::Gazillion.MHConsoleDiscount.Builder> internal__static_Gazillion_MHConsoleDiscount__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_MHConsoleUpsell__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHConsoleUpsell, global::Gazillion.MHConsoleUpsell.Builder> internal__static_Gazillion_MHConsoleUpsell__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_MarvelHeroesConsoleCatalogEntry__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.MarvelHeroesConsoleCatalogEntry, global::Gazillion.MarvelHeroesConsoleCatalogEntry.Builder> internal__static_Gazillion_MarvelHeroesConsoleCatalogEntry__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_MHConsoleCatalogCategoryEntry__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHConsoleCatalogCategoryEntry, global::Gazillion.MHConsoleCatalogCategoryEntry.Builder> internal__static_Gazillion_MHConsoleCatalogCategoryEntry__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_MHConsoleCatalogTagEntry__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHConsoleCatalogTagEntry, global::Gazillion.MHConsoleCatalogTagEntry.Builder> internal__static_Gazillion_MHConsoleCatalogTagEntry__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_MHConsoleCatalogFeaturedEntry__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHConsoleCatalogFeaturedEntry, global::Gazillion.MHConsoleCatalogFeaturedEntry.Builder> internal__static_Gazillion_MHConsoleCatalogFeaturedEntry__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_MHConsoleCatalogFeatureLayout__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHConsoleCatalogFeatureLayout, global::Gazillion.MHConsoleCatalogFeatureLayout.Builder> internal__static_Gazillion_MHConsoleCatalogFeatureLayout__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_MHConsoleCatalogFeatured__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHConsoleCatalogFeatured, global::Gazillion.MHConsoleCatalogFeatured.Builder> internal__static_Gazillion_MHConsoleCatalogFeatured__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_GiftHistoryEntry__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.GiftHistoryEntry, global::Gazillion.GiftHistoryEntry.Builder> internal__static_Gazillion_GiftHistoryEntry__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_GiftHistoryForPlayerEntry__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.GiftHistoryForPlayerEntry, global::Gazillion.GiftHistoryForPlayerEntry.Builder> internal__static_Gazillion_GiftHistoryForPlayerEntry__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_AwardItem__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.AwardItem, global::Gazillion.AwardItem.Builder> internal__static_Gazillion_AwardItem__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_AwardCouponDescription__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.AwardCouponDescription, global::Gazillion.AwardCouponDescription.Builder> internal__static_Gazillion_AwardCouponDescription__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_AwardCoupon__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.AwardCoupon, global::Gazillion.AwardCoupon.Builder> internal__static_Gazillion_AwardCoupon__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_AwardEntry__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.AwardEntry, global::Gazillion.AwardEntry.Builder> internal__static_Gazillion_AwardEntry__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_MessageEntitlementStatus__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.MessageEntitlementStatus, global::Gazillion.MessageEntitlementStatus.Builder> internal__static_Gazillion_MessageEntitlementStatus__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_BillingPlayStationUpdateEntitlementStatus__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.BillingPlayStationUpdateEntitlementStatus, global::Gazillion.BillingPlayStationUpdateEntitlementStatus.Builder> internal__static_Gazillion_BillingPlayStationUpdateEntitlementStatus__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_MessageEntitlementStatusResponse__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.MessageEntitlementStatusResponse, global::Gazillion.MessageEntitlementStatusResponse.Builder> internal__static_Gazillion_MessageEntitlementStatusResponse__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_BillingPlayStationUpdateEntitlementStatusResponse__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.BillingPlayStationUpdateEntitlementStatusResponse, global::Gazillion.BillingPlayStationUpdateEntitlementStatusResponse.Builder> internal__static_Gazillion_BillingPlayStationUpdateEntitlementStatusResponse__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_BillingAcquireUnfulfilledOrders__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.BillingAcquireUnfulfilledOrders, global::Gazillion.BillingAcquireUnfulfilledOrders.Builder> internal__static_Gazillion_BillingAcquireUnfulfilledOrders__FieldAccessorTable;
     #endregion
     #region Descriptor
     public static pbd::FileDescriptor Descriptor {
@@ -47,26 +97,139 @@ namespace Gazillion {
             "Y2FsZUlkEioKEHN0b3JlSG9tZVBhZ2VVcmwYAiABKAlSEHN0b3JlSG9tZVBh", 
             "Z2VVcmwSSAoTc3RvcmVCYW5uZXJQYWdlVXJscxgDIAMoCzIWLkdhemlsbGlv", 
             "bi5NSEJhbm5lclVybFITc3RvcmVCYW5uZXJQYWdlVXJscxIsChFzdG9yZVJl", 
-            "YWxNb25leVVybBgEIAEoCVIRc3RvcmVSZWFsTW9uZXlVcmwi0AEKF01ITG9j", 
+            "YWxNb25leVVybBgEIAEoCVIRc3RvcmVSZWFsTW9uZXlVcmwisgEKF01ITG9j", 
             "YWxpemVkQ2F0YWxvZ0VudHJ5Eh8KC2xhbmd1YWdlX2lkGAEgAigJUgpsYW5n", 
             "dWFnZUlkEiAKC2Rlc2NyaXB0aW9uGAIgASgJUgtkZXNjcmlwdGlvbhIUCgV0", 
-            "aXRsZRgDIAEoCVIFdGl0bGUSHAoJaW1hZ2VkYXRhGAQgASgMUglpbWFnZWRh", 
-            "dGESIAoLcmVsZWFzZURhdGUYBSABKAlSC3JlbGVhc2VEYXRlEhwKCWl0ZW1Q", 
-            "cmljZRgGIAIoA1IJaXRlbVByaWNlIvoCChhNYXJ2ZWxIZXJvZXNDYXRhbG9n", 
-            "RW50cnkSFAoFc2t1SWQYASACKANSBXNrdUlkEi4KEml0ZW1Qcm90b3R5cGVH", 
-            "dWlkcxgDIAMoBFISaXRlbVByb3RvdHlwZUd1aWRzEkoKIGl0ZW1Qcm90b3R5", 
-            "cGVSdW50aW1lSWRzRm9yQ2xpZW50GAggAygEUiBpdGVtUHJvdG90eXBlUnVu", 
-            "dGltZUlkc0ZvckNsaWVudBJOChBsb2NhbGl6ZWRFbnRyaWVzGAUgAygLMiIu", 
-            "R2F6aWxsaW9uLk1ITG9jYWxpemVkQ2F0YWxvZ0VudHJ5UhBsb2NhbGl6ZWRF", 
-            "bnRyaWVzEjEKBHR5cGUYBiABKAsyHS5HYXppbGxpb24uTUhDYXRhbG9nRW50", 
-            "cnlUeXBlUgR0eXBlEkkKDHR5cGVNb2RpZmllchgHIAMoCzIlLkdhemlsbGlv", 
-            "bi5NSENhdGFsb2dFbnRyeVR5cGVNb2RpZmllclIMdHlwZU1vZGlmaWVyKoQC", 
-            "ChdCdXlJdGVtUmVzdWx0RXJyb3JDb2RlcxIcChhCVVlfUkVTVUxUX0VSUk9S", 
-            "X1NVQ0NFU1MQABIoCiRCVVlfUkVTVUxUX0VSUk9SX0FMUkVBRFlfSEFWRV9B", 
-            "VkFUQVIQARIrCidCVVlfUkVTVUxUX0VSUk9SX0FMUkVBRFlfSEFWRV9TVEFT", 
-            "SF9JTlYQAhIrCidCVVlfUkVTVUxUX0VSUk9SX0FMUkVBRFlfSEFWRV9QRVJN", 
-            "QUJVRkYQAxIpCiVCVVlfUkVTVUxUX0VSUk9SX0lOU1VGRklDSUVOVF9CQUxB", 
-          "TkNFEAQSHAoYQlVZX1JFU1VMVF9FUlJPUl9VTktOT1dOEAU="));
+            "aXRsZRgDIAEoCVIFdGl0bGUSIAoLcmVsZWFzZURhdGUYBSABKAlSC3JlbGVh", 
+            "c2VEYXRlEhwKCWl0ZW1QcmljZRgGIAEoA1IJaXRlbVByaWNlInMKIE1ITG9j", 
+            "YWxpemVkQ2F0YWxvZ0VudHJ5VXJsT3JEYXRhEh8KC2xhbmd1YWdlX2lkGAEg", 
+            "AigJUgpsYW5ndWFnZUlkEhAKA3VybBgCIAEoCVIDdXJsEhwKCWltYWdlZGF0", 
+            "YRgDIAEoDFIJaW1hZ2VkYXRhIqMBChJNSENhdGFsb2dHdWlkRW50cnkSJAoN", 
+            "cHJvdG90eXBlR3VpZBgBIAEoBFINcHJvdG90eXBlR3VpZBJICh9pdGVtUHJv", 
+            "dG90eXBlUnVudGltZUlkRm9yQ2xpZW50GAIgASgEUh9pdGVtUHJvdG90eXBl", 
+            "UnVudGltZUlkRm9yQ2xpZW50Eh0KCHF1YW50aXR5GAMgASgFOgExUghxdWFu", 
+            "dGl0eSKkBAoYTWFydmVsSGVyb2VzQ2F0YWxvZ0VudHJ5EhQKBXNrdUlkGAEg", 
+            "AigDUgVza3VJZBI7CglndWlkSXRlbXMYCSADKAsyHS5HYXppbGxpb24uTUhD", 
+            "YXRhbG9nR3VpZEVudHJ5UglndWlkSXRlbXMSTwoTYWRkaXRpb25hbEd1aWRJ", 
+            "dGVtcxgKIAMoCzIdLkdhemlsbGlvbi5NSENhdGFsb2dHdWlkRW50cnlSE2Fk", 
+            "ZGl0aW9uYWxHdWlkSXRlbXMSTgoQbG9jYWxpemVkRW50cmllcxgFIAMoCzIi", 
+            "LkdhemlsbGlvbi5NSExvY2FsaXplZENhdGFsb2dFbnRyeVIQbG9jYWxpemVk", 
+            "RW50cmllcxJHCghpbmZvdXJscxgCIAMoCzIrLkdhemlsbGlvbi5NSExvY2Fs", 
+            "aXplZENhdGFsb2dFbnRyeVVybE9yRGF0YVIIaW5mb3VybHMSTQoLY29udGVu", 
+            "dGRhdGEYAyADKAsyKy5HYXppbGxpb24uTUhMb2NhbGl6ZWRDYXRhbG9nRW50", 
+            "cnlVcmxPckRhdGFSC2NvbnRlbnRkYXRhEjEKBHR5cGUYBiABKAsyHS5HYXpp", 
+            "bGxpb24uTUhDYXRhbG9nRW50cnlUeXBlUgR0eXBlEkkKDHR5cGVNb2RpZmll", 
+            "chgHIAMoCzIlLkdhemlsbGlvbi5NSENhdGFsb2dFbnRyeVR5cGVNb2RpZmll", 
+            "clIMdHlwZU1vZGlmaWVyInwKG01ITG9jYWxpemVkU3RyaW5nQ29sbGVjdGlv", 
+            "bhIfCgtsYW5ndWFnZV9pZBgBIAIoCVIKbGFuZ3VhZ2VJZBI8Cgx0cmFuc2xh", 
+            "dGlvbnMYAiADKAsyGC5HYXppbGxpb24uTUhTdHJpbmdWYWx1ZVIMdHJhbnNs", 
+            "YXRpb25zIjUKDU1IU3RyaW5nVmFsdWUSEAoDa2V5GAEgASgJUgNrZXkSEgoE", 
+            "dGV4dBgCIAEoCVIEdGV4dCLYAQoaTUhDb25zb2xlUHJlc2VudGF0aW9uRW50", 
+            "cnkSEgoEdHlwZRgBIAIoCVIEdHlwZRIcCgl0eXBlT3JkZXIYAiACKANSCXR5", 
+            "cGVPcmRlchJSChBsb2NhbGl6ZWRFbnRyaWVzGAMgAygLMiYuR2F6aWxsaW9u", 
+            "Lk1ITG9jYWxpemVkU3RyaW5nQ29sbGVjdGlvblIQbG9jYWxpemVkRW50cmll", 
+            "cxI0CghkZWZhdWx0cxgEIAMoCzIYLkdhemlsbGlvbi5NSFN0cmluZ1ZhbHVl", 
+            "UghkZWZhdWx0cyJMChJNSENvbnNvbGVJdGVtUHJpY2USFwoHcHJpY2VfRxgB", 
+            "IAIoA1IGcHJpY2VHEh0KCHByaWNlX0VTGAIgASgDOgItMVIHcHJpY2VFUyJv", 
+            "ChFNSENvbnNvbGVEaXNjb3VudBIrChFkaXNjb3VudFBlcmNlbnRfRxgBIAEo", 
+            "AlIQZGlzY291bnRQZXJjZW50RxItChJkaXNjb3VudFBlcmNlbnRfRVMYAiAB", 
+            "KAJSEWRpc2NvdW50UGVyY2VudEVTIqsBCg9NSENvbnNvbGVVcHNlbGwSDgoC", 
+            "c28YASACKAlSAnNvElIKEGxvY2FsaXplZEVudHJpZXMYAiADKAsyJi5HYXpp", 
+            "bGxpb24uTUhMb2NhbGl6ZWRTdHJpbmdDb2xsZWN0aW9uUhBsb2NhbGl6ZWRF", 
+            "bnRyaWVzEjQKCGRlZmF1bHRzGAMgAygLMhguR2F6aWxsaW9uLk1IU3RyaW5n", 
+            "VmFsdWVSCGRlZmF1bHRzIukECh9NYXJ2ZWxIZXJvZXNDb25zb2xlQ2F0YWxv", 
+            "Z0VudHJ5EiwKEWRlbGl2ZXJhYmxlT2JqZWN0GAEgAigJUhFkZWxpdmVyYWJs", 
+            "ZU9iamVjdBI7CglndWlkSXRlbXMYAiADKAsyHS5HYXppbGxpb24uTUhDYXRh", 
+            "bG9nR3VpZEVudHJ5UglndWlkSXRlbXMSOwoJaXRlbVByaWNlGAMgAigLMh0u", 
+            "R2F6aWxsaW9uLk1IQ29uc29sZUl0ZW1QcmljZVIJaXRlbVByaWNlEkMKDW9y", 
+            "aWdpbmFsUHJpY2UYBCABKAsyHS5HYXppbGxpb24uTUhDb25zb2xlSXRlbVBy", 
+            "aWNlUg1vcmlnaW5hbFByaWNlEjgKCGRpc2NvdW50GAUgASgLMhwuR2F6aWxs", 
+            "aW9uLk1IQ29uc29sZURpc2NvdW50UghkaXNjb3VudBISCgR0YWdzGAYgAygJ", 
+            "UgR0YWdzEksKDXByZXNlbnRhdGlvbnMYByADKAsyJS5HYXppbGxpb24uTUhD", 
+            "b25zb2xlUHJlc2VudGF0aW9uRW50cnlSDXByZXNlbnRhdGlvbnMSJgoOc2Vs", 
+            "bGFibGVPYmplY3QYCCACKAlSDnNlbGxhYmxlT2JqZWN0Eh4KCmNhdGVnb3Jp", 
+            "ZXMYCSADKAlSCmNhdGVnb3JpZXMSPAoLdXBzZWxsSXRlbXMYCiADKAsyGi5H", 
+            "YXppbGxpb24uTUhDb25zb2xlVXBzZWxsUgt1cHNlbGxJdGVtcxIaCghmaWx0", 
+            "ZXJTTxgLIAEoCVIIZmlsdGVyU08SHAoJbW9kZWxHdWlkGAwgASgDUgltb2Rl", 
+            "bEd1aWQiwwEKHU1IQ29uc29sZUNhdGFsb2dDYXRlZ29yeUVudHJ5Eg4KAmlk", 
+            "GAEgAigJUgJpZBIYCgd2aXNpYmxlGAIgAigIUgd2aXNpYmxlElIKEGxvY2Fs", 
+            "aXplZEVudHJpZXMYAyADKAsyJi5HYXppbGxpb24uTUhMb2NhbGl6ZWRTdHJp", 
+            "bmdDb2xsZWN0aW9uUhBsb2NhbGl6ZWRFbnRyaWVzEhAKA3RpZBgEIAIoCVID", 
+            "dGlkEhIKBHRhZ3MYBSADKAlSBHRhZ3MiugEKGE1IQ29uc29sZUNhdGFsb2dU", 
+            "YWdFbnRyeRIOCgJpZBgBIAIoCVICaWQSGAoHc29ydEtleRgCIAIoCFIHc29y", 
+            "dEtleRIgCgtkaXNwbGF5TmFtZRgDIAIoCVILZGlzcGxheU5hbWUSUgoQbG9j", 
+            "YWxpemVkRW50cmllcxgEIAMoCzImLkdhemlsbGlvbi5NSExvY2FsaXplZFN0", 
+            "cmluZ0NvbGxlY3Rpb25SEGxvY2FsaXplZEVudHJpZXMi+QIKHU1IQ29uc29s", 
+            "ZUNhdGFsb2dGZWF0dXJlZEVudHJ5EhIKBHR5cGUYASACKAlSBHR5cGUSGgoI", 
+            "cG9zaXRpb24YAiACKAVSCHBvc2l0aW9uEhQKBXdpZHRoGAMgASgFUgV3aWR0", 
+            "aBIWCgZoZWlnaHQYBCABKAVSBmhlaWdodBJSChBsb2NhbGl6ZWRFbnRyaWVz", 
+            "GAUgAygLMiYuR2F6aWxsaW9uLk1ITG9jYWxpemVkU3RyaW5nQ29sbGVjdGlv", 
+            "blIQbG9jYWxpemVkRW50cmllcxI0CghkZWZhdWx0cxgGIAMoCzIYLkdhemls", 
+            "bGlvbi5NSFN0cmluZ1ZhbHVlUghkZWZhdWx0cxJAChthY3Rpb25MaW5rU2Fs", 
+            "ZWFibGVPYmplY3RTa3UYByABKAlSG2FjdGlvbkxpbmtTYWxlYWJsZU9iamVj", 
+            "dFNrdRIuChJhY3Rpb25MaW5rQ2F0ZWdvcnkYCCABKAlSEmFjdGlvbkxpbmtD", 
+            "YXRlZ29yeSI7Ch1NSENvbnNvbGVDYXRhbG9nRmVhdHVyZUxheW91dBIMCgFo", 
+            "GAEgAigFUgFoEgwKAXcYAiACKAVSAXci+gEKGE1IQ29uc29sZUNhdGFsb2dG", 
+            "ZWF0dXJlZBJSCg9mZWF0dXJlZEVudHJpZXMYASADKAsyKC5HYXppbGxpb24u", 
+            "TUhDb25zb2xlQ2F0YWxvZ0ZlYXR1cmVkRW50cnlSD2ZlYXR1cmVkRW50cmll", 
+            "cxIYCgdkZWxldGVkGAIgAigIUgdkZWxldGVkEg4KAmlkGAMgASgJUgJpZBIe", 
+            "CgpsYXlvdXROYW1lGAQgASgJUgpsYXlvdXROYW1lEkAKBmxheW91dBgFIAIo", 
+            "CzIoLkdhemlsbGlvbi5NSENvbnNvbGVDYXRhbG9nRmVhdHVyZUxheW91dFIG", 
+            "bGF5b3V0IoYBChBHaWZ0SGlzdG9yeUVudHJ5EiQKDXRyYW5zYWN0aW9uSWQY", 
+            "ASABKANSDXRyYW5zYWN0aW9uSWQSFAoFc2t1SWQYAiACKANSBXNrdUlkEhwK", 
+            "CXRpbWVzdGFtcBgDIAIoA1IJdGltZXN0YW1wEhgKB21lc3NhZ2UYBCABKAlS", 
+            "B21lc3NhZ2UiogEKGUdpZnRIaXN0b3J5Rm9yUGxheWVyRW50cnkSLAoRcGxh", 
+            "dGZvcm1BY2NvdW50SWQYASABKANSEXBsYXRmb3JtQWNjb3VudElkEhIKBG5h", 
+            "bWUYAiACKAlSBG5hbWUSQwoOaGlzdG9yeUVudHJpZXMYAyADKAsyGy5HYXpp", 
+            "bGxpb24uR2lmdEhpc3RvcnlFbnRyeVIOaGlzdG9yeUVudHJpZXMiVwoJQXdh", 
+            "cmRJdGVtEhgKB2F3YXJkSWQYASACKAlSB2F3YXJkSWQSFAoFc2t1SWQYAiAC", 
+            "KANSBXNrdUlkEhoKCHF1YW50aXR5GAMgAigDUghxdWFudGl0eSJWChZBd2Fy", 
+            "ZENvdXBvbkRlc2NyaXB0aW9uEhoKCGxvY2FsZUlkGAEgAigJUghsb2NhbGVJ", 
+            "ZBIgCgtkZXNjcmlwdGlvbhgCIAIoCVILZGVzY3JpcHRpb24i8AEKC0F3YXJk", 
+            "Q291cG9uEhoKCGNvdXBvbklkGAEgAigJUghjb3Vwb25JZBIaCghkaXNjb3Vu", 
+            "dBgCIAIoAlIIZGlzY291bnQSIAoLY291cG9uU3RhdGUYAyACKAlSC2NvdXBv", 
+            "blN0YXRlEiwKEWV4cGlyYXRpb25EYXRlVXRjGAQgAigDUhFleHBpcmF0aW9u", 
+            "RGF0ZVV0YxJFCgxkZXNjcmlwdGlvbnMYBSADKAsyIS5HYXppbGxpb24uQXdh", 
+            "cmRDb3Vwb25EZXNjcmlwdGlvblIMZGVzY3JpcHRpb25zEhIKBHdzZWMYBiAC", 
+            "KANSBHdzZWMihAEKCkF3YXJkRW50cnkSHAoJYXdhcmRUeXBlGAEgAigJUglh", 
+            "d2FyZFR5cGUSKAoEaXRlbRgCIAEoCzIULkdhemlsbGlvbi5Bd2FyZEl0ZW1S", 
+            "BGl0ZW0SLgoGY291cG9uGAMgASgLMhYuR2F6aWxsaW9uLkF3YXJkQ291cG9u", 
+            "UgZjb3Vwb24ilAEKGE1lc3NhZ2VFbnRpdGxlbWVudFN0YXR1cxIkCg1FbnRp", 
+            "dGxlbWVudElkGAEgAigJUg1FbnRpdGxlbWVudElkEhoKCFVzZUNvdW50GAIg", 
+            "AigFUghVc2VDb3VudBIaCghVc2VMaW1pdBgDIAIoBVIIVXNlTGltaXQSGgoI", 
+            "SXNBY3RpdmUYBCACKAhSCElzQWN0aXZlIqYBCilCaWxsaW5nUGxheVN0YXRp", 
+            "b25VcGRhdGVFbnRpdGxlbWVudFN0YXR1cxJPChBDb25zdW1hYmxlU3RhdHVz", 
+            "GAEgAygLMiMuR2F6aWxsaW9uLk1lc3NhZ2VFbnRpdGxlbWVudFN0YXR1c1IQ", 
+            "Q29uc3VtYWJsZVN0YXR1cxIoCg9VbmxpbWl0ZWRTdGF0dXMYAiADKAlSD1Vu", 
+            "bGltaXRlZFN0YXR1cyKcAQogTWVzc2FnZUVudGl0bGVtZW50U3RhdHVzUmVz", 
+            "cG9uc2USJAoNRW50aXRsZW1lbnRJZBgBIAIoCVINRW50aXRsZW1lbnRJZBIa", 
+            "CghVc2VDb3VudBgCIAIoBVIIVXNlQ291bnQSGgoIVXNlTGltaXQYAyACKAVS", 
+            "CFVzZUxpbWl0EhoKCENvbnN1bWVkGAQgAigIUghDb25zdW1lZCJ+CjFCaWxs", 
+            "aW5nUGxheVN0YXRpb25VcGRhdGVFbnRpdGxlbWVudFN0YXR1c1Jlc3BvbnNl", 
+            "EkkKCXJlc3BvbnNlcxgBIAMoCzIrLkdhemlsbGlvbi5NZXNzYWdlRW50aXRs", 
+            "ZW1lbnRTdGF0dXNSZXNwb25zZVIJcmVzcG9uc2VzIiEKH0JpbGxpbmdBY3F1", 
+            "aXJlVW5mdWxmaWxsZWRPcmRlcnMq/wQKF0J1eUl0ZW1SZXN1bHRFcnJvckNv", 
+            "ZGVzEhwKGEJVWV9SRVNVTFRfRVJST1JfU1VDQ0VTUxAAEigKJEJVWV9SRVNV", 
+            "TFRfRVJST1JfQUxSRUFEWV9IQVZFX0FWQVRBUhABEisKJ0JVWV9SRVNVTFRf", 
+            "RVJST1JfQUxSRUFEWV9IQVZFX1NUQVNIX0lOVhACEisKJ0JVWV9SRVNVTFRf", 
+            "RVJST1JfQUxSRUFEWV9IQVZFX1BFUk1BQlVGRhADEikKJUJVWV9SRVNVTFRf", 
+            "RVJST1JfSU5TVUZGSUNJRU5UX0JBTEFOQ0UQBBIcChhCVVlfUkVTVUxUX0VS", 
+            "Uk9SX0lTX0dJRlQQBRImCiJCVVlfUkVTVUxUX0VSUk9SX1VOS05PV05fUkVD", 
+            "SVBJRU5UEAYSIwofQlVZX1JFU1VMVF9FUlJPUl9QUklDRV9NSVNNQVRDSBAH", 
+            "EigKJEJVWV9SRVNVTFRfRVJST1JfR0lGVElOR19VTkFWQUlMQUJMRRAIEhwK", 
+            "GEJVWV9SRVNVTFRfRVJST1JfVU5LTk9XThAJEioKJkJVWV9SRVNVTFRfRVJS", 
+            "T1JfR0lGVF9NRVNTQUdFX1RPT19MT05HEAoSHQoZQlVZX1JFU1VMVF9FUlJP", 
+            "Ul9TT0xEX09VVBALEjsKN0JVWV9SRVNVTFRfRVJST1JfVEVNUE9SQVJJTFlf", 
+            "VU5BVkFJTEFCTEVfUkVUUllfUE9TU0lCTEUQDBIuCipCVVlfUkVTVUxUX0VS", 
+            "Uk9SX1BSRVBVUkNIQVNFX0FMUkVBRFlfT1dORUQQDRIsCihCVVlfUkVTVUxU", 
+            "X0VSUk9SX0lOU1VGRklDSUVOVF9FU19CQUxBTkNFEA4qwQEKGlJlZGVlbUNv", 
+            "ZGVSZXN1bHRFcnJvckNvZGVzEiQKIFJFREVFTV9DT0RFX1JFU1VMVF9FUlJP", 
+            "Ul9TVUNDRVNTEAASLQopUkVERUVNX0NPREVfUkVTVUxUX0VSUk9SX0FMUkVB", 
+            "RFlfUkVERUVNRUQQARIoCiRSRURFRU1fQ09ERV9SRVNVTFRfRVJST1JfSU5W", 
+            "QUxJRF9LRVkQAhIkCiBSRURFRU1fQ09ERV9SRVNVTFRfRVJST1JfVU5LTk9X", 
+            "ThADKnwKFVJhbXBhZ2VDYXRhbG9nVmVyc2lvbhIhCh1SYW1wYWdlQ2F0YWxv", 
+            "Z1ZlcnNpb25fRGVza3RvcBAAEiEKHVJhbXBhZ2VDYXRhbG9nVmVyc2lvbl9D", 
+          "b25zb2xlEAESHQoZUmFtcGFnZUNhdGFsb2dWZXJzaW9uX051bRAC"));
       pbd::FileDescriptor.InternalDescriptorAssigner assigner = delegate(pbd::FileDescriptor root) {
         descriptor = root;
         internal__static_Gazillion_MHCatalogEntryType__Descriptor = Descriptor.MessageTypes[0];
@@ -88,11 +251,111 @@ namespace Gazillion {
         internal__static_Gazillion_MHLocalizedCatalogEntry__Descriptor = Descriptor.MessageTypes[4];
         internal__static_Gazillion_MHLocalizedCatalogEntry__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHLocalizedCatalogEntry, global::Gazillion.MHLocalizedCatalogEntry.Builder>(internal__static_Gazillion_MHLocalizedCatalogEntry__Descriptor,
-                new string[] { "LanguageId", "Description", "Title", "Imagedata", "ReleaseDate", "ItemPrice", });
-        internal__static_Gazillion_MarvelHeroesCatalogEntry__Descriptor = Descriptor.MessageTypes[5];
+                new string[] { "LanguageId", "Description", "Title", "ReleaseDate", "ItemPrice", });
+        internal__static_Gazillion_MHLocalizedCatalogEntryUrlOrData__Descriptor = Descriptor.MessageTypes[5];
+        internal__static_Gazillion_MHLocalizedCatalogEntryUrlOrData__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHLocalizedCatalogEntryUrlOrData, global::Gazillion.MHLocalizedCatalogEntryUrlOrData.Builder>(internal__static_Gazillion_MHLocalizedCatalogEntryUrlOrData__Descriptor,
+                new string[] { "LanguageId", "Url", "Imagedata", });
+        internal__static_Gazillion_MHCatalogGuidEntry__Descriptor = Descriptor.MessageTypes[6];
+        internal__static_Gazillion_MHCatalogGuidEntry__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHCatalogGuidEntry, global::Gazillion.MHCatalogGuidEntry.Builder>(internal__static_Gazillion_MHCatalogGuidEntry__Descriptor,
+                new string[] { "PrototypeGuid", "ItemPrototypeRuntimeIdForClient", "Quantity", });
+        internal__static_Gazillion_MarvelHeroesCatalogEntry__Descriptor = Descriptor.MessageTypes[7];
         internal__static_Gazillion_MarvelHeroesCatalogEntry__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.MarvelHeroesCatalogEntry, global::Gazillion.MarvelHeroesCatalogEntry.Builder>(internal__static_Gazillion_MarvelHeroesCatalogEntry__Descriptor,
-                new string[] { "SkuId", "ItemPrototypeGuids", "ItemPrototypeRuntimeIdsForClient", "LocalizedEntries", "Type", "TypeModifier", });
+                new string[] { "SkuId", "GuidItems", "AdditionalGuidItems", "LocalizedEntries", "Infourls", "Contentdata", "Type", "TypeModifier", });
+        internal__static_Gazillion_MHLocalizedStringCollection__Descriptor = Descriptor.MessageTypes[8];
+        internal__static_Gazillion_MHLocalizedStringCollection__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHLocalizedStringCollection, global::Gazillion.MHLocalizedStringCollection.Builder>(internal__static_Gazillion_MHLocalizedStringCollection__Descriptor,
+                new string[] { "LanguageId", "Translations", });
+        internal__static_Gazillion_MHStringValue__Descriptor = Descriptor.MessageTypes[9];
+        internal__static_Gazillion_MHStringValue__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHStringValue, global::Gazillion.MHStringValue.Builder>(internal__static_Gazillion_MHStringValue__Descriptor,
+                new string[] { "Key", "Text", });
+        internal__static_Gazillion_MHConsolePresentationEntry__Descriptor = Descriptor.MessageTypes[10];
+        internal__static_Gazillion_MHConsolePresentationEntry__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHConsolePresentationEntry, global::Gazillion.MHConsolePresentationEntry.Builder>(internal__static_Gazillion_MHConsolePresentationEntry__Descriptor,
+                new string[] { "Type", "TypeOrder", "LocalizedEntries", "Defaults", });
+        internal__static_Gazillion_MHConsoleItemPrice__Descriptor = Descriptor.MessageTypes[11];
+        internal__static_Gazillion_MHConsoleItemPrice__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHConsoleItemPrice, global::Gazillion.MHConsoleItemPrice.Builder>(internal__static_Gazillion_MHConsoleItemPrice__Descriptor,
+                new string[] { "PriceG", "PriceES", });
+        internal__static_Gazillion_MHConsoleDiscount__Descriptor = Descriptor.MessageTypes[12];
+        internal__static_Gazillion_MHConsoleDiscount__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHConsoleDiscount, global::Gazillion.MHConsoleDiscount.Builder>(internal__static_Gazillion_MHConsoleDiscount__Descriptor,
+                new string[] { "DiscountPercentG", "DiscountPercentES", });
+        internal__static_Gazillion_MHConsoleUpsell__Descriptor = Descriptor.MessageTypes[13];
+        internal__static_Gazillion_MHConsoleUpsell__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHConsoleUpsell, global::Gazillion.MHConsoleUpsell.Builder>(internal__static_Gazillion_MHConsoleUpsell__Descriptor,
+                new string[] { "So", "LocalizedEntries", "Defaults", });
+        internal__static_Gazillion_MarvelHeroesConsoleCatalogEntry__Descriptor = Descriptor.MessageTypes[14];
+        internal__static_Gazillion_MarvelHeroesConsoleCatalogEntry__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.MarvelHeroesConsoleCatalogEntry, global::Gazillion.MarvelHeroesConsoleCatalogEntry.Builder>(internal__static_Gazillion_MarvelHeroesConsoleCatalogEntry__Descriptor,
+                new string[] { "DeliverableObject", "GuidItems", "ItemPrice", "OriginalPrice", "Discount", "Tags", "Presentations", "SellableObject", "Categories", "UpsellItems", "FilterSO", "ModelGuid", });
+        internal__static_Gazillion_MHConsoleCatalogCategoryEntry__Descriptor = Descriptor.MessageTypes[15];
+        internal__static_Gazillion_MHConsoleCatalogCategoryEntry__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHConsoleCatalogCategoryEntry, global::Gazillion.MHConsoleCatalogCategoryEntry.Builder>(internal__static_Gazillion_MHConsoleCatalogCategoryEntry__Descriptor,
+                new string[] { "Id", "Visible", "LocalizedEntries", "Tid", "Tags", });
+        internal__static_Gazillion_MHConsoleCatalogTagEntry__Descriptor = Descriptor.MessageTypes[16];
+        internal__static_Gazillion_MHConsoleCatalogTagEntry__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHConsoleCatalogTagEntry, global::Gazillion.MHConsoleCatalogTagEntry.Builder>(internal__static_Gazillion_MHConsoleCatalogTagEntry__Descriptor,
+                new string[] { "Id", "SortKey", "DisplayName", "LocalizedEntries", });
+        internal__static_Gazillion_MHConsoleCatalogFeaturedEntry__Descriptor = Descriptor.MessageTypes[17];
+        internal__static_Gazillion_MHConsoleCatalogFeaturedEntry__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHConsoleCatalogFeaturedEntry, global::Gazillion.MHConsoleCatalogFeaturedEntry.Builder>(internal__static_Gazillion_MHConsoleCatalogFeaturedEntry__Descriptor,
+                new string[] { "Type", "Position", "Width", "Height", "LocalizedEntries", "Defaults", "ActionLinkSaleableObjectSku", "ActionLinkCategory", });
+        internal__static_Gazillion_MHConsoleCatalogFeatureLayout__Descriptor = Descriptor.MessageTypes[18];
+        internal__static_Gazillion_MHConsoleCatalogFeatureLayout__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHConsoleCatalogFeatureLayout, global::Gazillion.MHConsoleCatalogFeatureLayout.Builder>(internal__static_Gazillion_MHConsoleCatalogFeatureLayout__Descriptor,
+                new string[] { "H", "W", });
+        internal__static_Gazillion_MHConsoleCatalogFeatured__Descriptor = Descriptor.MessageTypes[19];
+        internal__static_Gazillion_MHConsoleCatalogFeatured__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.MHConsoleCatalogFeatured, global::Gazillion.MHConsoleCatalogFeatured.Builder>(internal__static_Gazillion_MHConsoleCatalogFeatured__Descriptor,
+                new string[] { "FeaturedEntries", "Deleted", "Id", "LayoutName", "Layout", });
+        internal__static_Gazillion_GiftHistoryEntry__Descriptor = Descriptor.MessageTypes[20];
+        internal__static_Gazillion_GiftHistoryEntry__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GiftHistoryEntry, global::Gazillion.GiftHistoryEntry.Builder>(internal__static_Gazillion_GiftHistoryEntry__Descriptor,
+                new string[] { "TransactionId", "SkuId", "Timestamp", "Message", });
+        internal__static_Gazillion_GiftHistoryForPlayerEntry__Descriptor = Descriptor.MessageTypes[21];
+        internal__static_Gazillion_GiftHistoryForPlayerEntry__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.GiftHistoryForPlayerEntry, global::Gazillion.GiftHistoryForPlayerEntry.Builder>(internal__static_Gazillion_GiftHistoryForPlayerEntry__Descriptor,
+                new string[] { "PlatformAccountId", "Name", "HistoryEntries", });
+        internal__static_Gazillion_AwardItem__Descriptor = Descriptor.MessageTypes[22];
+        internal__static_Gazillion_AwardItem__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.AwardItem, global::Gazillion.AwardItem.Builder>(internal__static_Gazillion_AwardItem__Descriptor,
+                new string[] { "AwardId", "SkuId", "Quantity", });
+        internal__static_Gazillion_AwardCouponDescription__Descriptor = Descriptor.MessageTypes[23];
+        internal__static_Gazillion_AwardCouponDescription__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.AwardCouponDescription, global::Gazillion.AwardCouponDescription.Builder>(internal__static_Gazillion_AwardCouponDescription__Descriptor,
+                new string[] { "LocaleId", "Description", });
+        internal__static_Gazillion_AwardCoupon__Descriptor = Descriptor.MessageTypes[24];
+        internal__static_Gazillion_AwardCoupon__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.AwardCoupon, global::Gazillion.AwardCoupon.Builder>(internal__static_Gazillion_AwardCoupon__Descriptor,
+                new string[] { "CouponId", "Discount", "CouponState", "ExpirationDateUtc", "Descriptions", "Wsec", });
+        internal__static_Gazillion_AwardEntry__Descriptor = Descriptor.MessageTypes[25];
+        internal__static_Gazillion_AwardEntry__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.AwardEntry, global::Gazillion.AwardEntry.Builder>(internal__static_Gazillion_AwardEntry__Descriptor,
+                new string[] { "AwardType", "Item", "Coupon", });
+        internal__static_Gazillion_MessageEntitlementStatus__Descriptor = Descriptor.MessageTypes[26];
+        internal__static_Gazillion_MessageEntitlementStatus__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.MessageEntitlementStatus, global::Gazillion.MessageEntitlementStatus.Builder>(internal__static_Gazillion_MessageEntitlementStatus__Descriptor,
+                new string[] { "EntitlementId", "UseCount", "UseLimit", "IsActive", });
+        internal__static_Gazillion_BillingPlayStationUpdateEntitlementStatus__Descriptor = Descriptor.MessageTypes[27];
+        internal__static_Gazillion_BillingPlayStationUpdateEntitlementStatus__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.BillingPlayStationUpdateEntitlementStatus, global::Gazillion.BillingPlayStationUpdateEntitlementStatus.Builder>(internal__static_Gazillion_BillingPlayStationUpdateEntitlementStatus__Descriptor,
+                new string[] { "ConsumableStatus", "UnlimitedStatus", });
+        internal__static_Gazillion_MessageEntitlementStatusResponse__Descriptor = Descriptor.MessageTypes[28];
+        internal__static_Gazillion_MessageEntitlementStatusResponse__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.MessageEntitlementStatusResponse, global::Gazillion.MessageEntitlementStatusResponse.Builder>(internal__static_Gazillion_MessageEntitlementStatusResponse__Descriptor,
+                new string[] { "EntitlementId", "UseCount", "UseLimit", "Consumed", });
+        internal__static_Gazillion_BillingPlayStationUpdateEntitlementStatusResponse__Descriptor = Descriptor.MessageTypes[29];
+        internal__static_Gazillion_BillingPlayStationUpdateEntitlementStatusResponse__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.BillingPlayStationUpdateEntitlementStatusResponse, global::Gazillion.BillingPlayStationUpdateEntitlementStatusResponse.Builder>(internal__static_Gazillion_BillingPlayStationUpdateEntitlementStatusResponse__Descriptor,
+                new string[] { "Responses", });
+        internal__static_Gazillion_BillingAcquireUnfulfilledOrders__Descriptor = Descriptor.MessageTypes[30];
+        internal__static_Gazillion_BillingAcquireUnfulfilledOrders__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.BillingAcquireUnfulfilledOrders, global::Gazillion.BillingAcquireUnfulfilledOrders.Builder>(internal__static_Gazillion_BillingAcquireUnfulfilledOrders__Descriptor,
+                new string[] { });
         pb::ExtensionRegistry registry = pb::ExtensionRegistry.CreateInstance();
         RegisterAllExtensions(registry);
         return registry;
@@ -111,7 +374,29 @@ namespace Gazillion {
     BUY_RESULT_ERROR_ALREADY_HAVE_STASH_INV = 2,
     BUY_RESULT_ERROR_ALREADY_HAVE_PERMABUFF = 3,
     BUY_RESULT_ERROR_INSUFFICIENT_BALANCE = 4,
-    BUY_RESULT_ERROR_UNKNOWN = 5,
+    BUY_RESULT_ERROR_IS_GIFT = 5,
+    BUY_RESULT_ERROR_UNKNOWN_RECIPIENT = 6,
+    BUY_RESULT_ERROR_PRICE_MISMATCH = 7,
+    BUY_RESULT_ERROR_GIFTING_UNAVAILABLE = 8,
+    BUY_RESULT_ERROR_UNKNOWN = 9,
+    BUY_RESULT_ERROR_GIFT_MESSAGE_TOO_LONG = 10,
+    BUY_RESULT_ERROR_SOLD_OUT = 11,
+    BUY_RESULT_ERROR_TEMPORARILY_UNAVAILABLE_RETRY_POSSIBLE = 12,
+    BUY_RESULT_ERROR_PREPURCHASE_ALREADY_OWNED = 13,
+    BUY_RESULT_ERROR_INSUFFICIENT_ES_BALANCE = 14,
+  }
+  
+  public enum RedeemCodeResultErrorCodes {
+    REDEEM_CODE_RESULT_ERROR_SUCCESS = 0,
+    REDEEM_CODE_RESULT_ERROR_ALREADY_REDEEMED = 1,
+    REDEEM_CODE_RESULT_ERROR_INVALID_KEY = 2,
+    REDEEM_CODE_RESULT_ERROR_UNKNOWN = 3,
+  }
+  
+  public enum RampageCatalogVersion {
+    RampageCatalogVersion_Desktop = 0,
+    RampageCatalogVersion_Console = 1,
+    RampageCatalogVersion_Num = 2,
   }
   
   #endregion
@@ -1523,8 +1808,8 @@ namespace Gazillion {
   public sealed partial class MHLocalizedCatalogEntry : pb::GeneratedMessage<MHLocalizedCatalogEntry, MHLocalizedCatalogEntry.Builder> {
     private MHLocalizedCatalogEntry() { }
     private static readonly MHLocalizedCatalogEntry defaultInstance = new MHLocalizedCatalogEntry().MakeReadOnly();
-    private static readonly string[] _mHLocalizedCatalogEntryFieldNames = new string[] { "description", "imagedata", "itemPrice", "language_id", "releaseDate", "title" };
-    private static readonly uint[] _mHLocalizedCatalogEntryFieldTags = new uint[] { 18, 34, 48, 10, 42, 26 };
+    private static readonly string[] _mHLocalizedCatalogEntryFieldNames = new string[] { "description", "itemPrice", "language_id", "releaseDate", "title" };
+    private static readonly uint[] _mHLocalizedCatalogEntryFieldTags = new uint[] { 18, 48, 10, 42, 26 };
     public static MHLocalizedCatalogEntry DefaultInstance {
       get { return defaultInstance; }
     }
@@ -1575,16 +1860,6 @@ namespace Gazillion {
       get { return title_; }
     }
     
-    public const int ImagedataFieldNumber = 4;
-    private bool hasImagedata;
-    private pb::ByteString imagedata_ = pb::ByteString.Empty;
-    public bool HasImagedata {
-      get { return hasImagedata; }
-    }
-    public pb::ByteString Imagedata {
-      get { return imagedata_; }
-    }
-    
     public const int ReleaseDateFieldNumber = 5;
     private bool hasReleaseDate;
     private string releaseDate_ = "";
@@ -1608,7 +1883,6 @@ namespace Gazillion {
     public override bool IsInitialized {
       get {
         if (!hasLanguageId) return false;
-        if (!hasItemPrice) return false;
         return true;
       }
     }
@@ -1617,22 +1891,19 @@ namespace Gazillion {
       CalcSerializedSize();
       string[] field_names = _mHLocalizedCatalogEntryFieldNames;
       if (hasLanguageId) {
-        output.WriteString(1, field_names[3], LanguageId);
+        output.WriteString(1, field_names[2], LanguageId);
       }
       if (hasDescription) {
         output.WriteString(2, field_names[0], Description);
       }
       if (hasTitle) {
-        output.WriteString(3, field_names[5], Title);
-      }
-      if (hasImagedata) {
-        output.WriteBytes(4, field_names[1], Imagedata);
+        output.WriteString(3, field_names[4], Title);
       }
       if (hasReleaseDate) {
-        output.WriteString(5, field_names[4], ReleaseDate);
+        output.WriteString(5, field_names[3], ReleaseDate);
       }
       if (hasItemPrice) {
-        output.WriteInt64(6, field_names[2], ItemPrice);
+        output.WriteInt64(6, field_names[1], ItemPrice);
       }
       UnknownFields.WriteTo(output);
     }
@@ -1659,9 +1930,6 @@ namespace Gazillion {
       }
       if (hasTitle) {
         size += pb::CodedOutputStream.ComputeStringSize(3, Title);
-      }
-      if (hasImagedata) {
-        size += pb::CodedOutputStream.ComputeBytesSize(4, Imagedata);
       }
       if (hasReleaseDate) {
         size += pb::CodedOutputStream.ComputeStringSize(5, ReleaseDate);
@@ -1800,9 +2068,6 @@ namespace Gazillion {
         if (other.HasTitle) {
           Title = other.Title;
         }
-        if (other.HasImagedata) {
-          Imagedata = other.Imagedata;
-        }
         if (other.HasReleaseDate) {
           ReleaseDate = other.ReleaseDate;
         }
@@ -1862,10 +2127,6 @@ namespace Gazillion {
             }
             case 26: {
               result.hasTitle = input.ReadString(ref result.title_);
-              break;
-            }
-            case 34: {
-              result.hasImagedata = input.ReadBytes(ref result.imagedata_);
               break;
             }
             case 42: {
@@ -1949,27 +2210,6 @@ namespace Gazillion {
         return this;
       }
       
-      public bool HasImagedata {
-        get { return result.hasImagedata; }
-      }
-      public pb::ByteString Imagedata {
-        get { return result.Imagedata; }
-        set { SetImagedata(value); }
-      }
-      public Builder SetImagedata(pb::ByteString value) {
-        pb::ThrowHelper.ThrowIfNull(value, "value");
-        PrepareBuilder();
-        result.hasImagedata = true;
-        result.imagedata_ = value;
-        return this;
-      }
-      public Builder ClearImagedata() {
-        PrepareBuilder();
-        result.hasImagedata = false;
-        result.imagedata_ = pb::ByteString.Empty;
-        return this;
-      }
-      
       public bool HasReleaseDate {
         get { return result.hasReleaseDate; }
       }
@@ -2017,11 +2257,737 @@ namespace Gazillion {
   }
   
   [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class MHLocalizedCatalogEntryUrlOrData : pb::GeneratedMessage<MHLocalizedCatalogEntryUrlOrData, MHLocalizedCatalogEntryUrlOrData.Builder> {
+    private MHLocalizedCatalogEntryUrlOrData() { }
+    private static readonly MHLocalizedCatalogEntryUrlOrData defaultInstance = new MHLocalizedCatalogEntryUrlOrData().MakeReadOnly();
+    private static readonly string[] _mHLocalizedCatalogEntryUrlOrDataFieldNames = new string[] { "imagedata", "language_id", "url" };
+    private static readonly uint[] _mHLocalizedCatalogEntryUrlOrDataFieldTags = new uint[] { 26, 10, 18 };
+    public static MHLocalizedCatalogEntryUrlOrData DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override MHLocalizedCatalogEntryUrlOrData DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override MHLocalizedCatalogEntryUrlOrData ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHLocalizedCatalogEntryUrlOrData__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<MHLocalizedCatalogEntryUrlOrData, MHLocalizedCatalogEntryUrlOrData.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHLocalizedCatalogEntryUrlOrData__FieldAccessorTable; }
+    }
+    
+    public const int LanguageIdFieldNumber = 1;
+    private bool hasLanguageId;
+    private string languageId_ = "";
+    public bool HasLanguageId {
+      get { return hasLanguageId; }
+    }
+    public string LanguageId {
+      get { return languageId_; }
+    }
+    
+    public const int UrlFieldNumber = 2;
+    private bool hasUrl;
+    private string url_ = "";
+    public bool HasUrl {
+      get { return hasUrl; }
+    }
+    public string Url {
+      get { return url_; }
+    }
+    
+    public const int ImagedataFieldNumber = 3;
+    private bool hasImagedata;
+    private pb::ByteString imagedata_ = pb::ByteString.Empty;
+    public bool HasImagedata {
+      get { return hasImagedata; }
+    }
+    public pb::ByteString Imagedata {
+      get { return imagedata_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasLanguageId) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _mHLocalizedCatalogEntryUrlOrDataFieldNames;
+      if (hasLanguageId) {
+        output.WriteString(1, field_names[1], LanguageId);
+      }
+      if (hasUrl) {
+        output.WriteString(2, field_names[2], Url);
+      }
+      if (hasImagedata) {
+        output.WriteBytes(3, field_names[0], Imagedata);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasLanguageId) {
+        size += pb::CodedOutputStream.ComputeStringSize(1, LanguageId);
+      }
+      if (hasUrl) {
+        size += pb::CodedOutputStream.ComputeStringSize(2, Url);
+      }
+      if (hasImagedata) {
+        size += pb::CodedOutputStream.ComputeBytesSize(3, Imagedata);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static MHLocalizedCatalogEntryUrlOrData ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHLocalizedCatalogEntryUrlOrData ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHLocalizedCatalogEntryUrlOrData ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHLocalizedCatalogEntryUrlOrData ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHLocalizedCatalogEntryUrlOrData ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHLocalizedCatalogEntryUrlOrData ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static MHLocalizedCatalogEntryUrlOrData ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static MHLocalizedCatalogEntryUrlOrData ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static MHLocalizedCatalogEntryUrlOrData ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHLocalizedCatalogEntryUrlOrData ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private MHLocalizedCatalogEntryUrlOrData MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(MHLocalizedCatalogEntryUrlOrData prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<MHLocalizedCatalogEntryUrlOrData, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(MHLocalizedCatalogEntryUrlOrData cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private MHLocalizedCatalogEntryUrlOrData result;
+      
+      private MHLocalizedCatalogEntryUrlOrData PrepareBuilder() {
+        if (resultIsReadOnly) {
+          MHLocalizedCatalogEntryUrlOrData original = result;
+          result = new MHLocalizedCatalogEntryUrlOrData();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override MHLocalizedCatalogEntryUrlOrData MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.MHLocalizedCatalogEntryUrlOrData.Descriptor; }
+      }
+      
+      public override MHLocalizedCatalogEntryUrlOrData DefaultInstanceForType {
+        get { return global::Gazillion.MHLocalizedCatalogEntryUrlOrData.DefaultInstance; }
+      }
+      
+      public override MHLocalizedCatalogEntryUrlOrData BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is MHLocalizedCatalogEntryUrlOrData) {
+          return MergeFrom((MHLocalizedCatalogEntryUrlOrData) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(MHLocalizedCatalogEntryUrlOrData other) {
+        if (other == global::Gazillion.MHLocalizedCatalogEntryUrlOrData.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasLanguageId) {
+          LanguageId = other.LanguageId;
+        }
+        if (other.HasUrl) {
+          Url = other.Url;
+        }
+        if (other.HasImagedata) {
+          Imagedata = other.Imagedata;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_mHLocalizedCatalogEntryUrlOrDataFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _mHLocalizedCatalogEntryUrlOrDataFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 10: {
+              result.hasLanguageId = input.ReadString(ref result.languageId_);
+              break;
+            }
+            case 18: {
+              result.hasUrl = input.ReadString(ref result.url_);
+              break;
+            }
+            case 26: {
+              result.hasImagedata = input.ReadBytes(ref result.imagedata_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasLanguageId {
+        get { return result.hasLanguageId; }
+      }
+      public string LanguageId {
+        get { return result.LanguageId; }
+        set { SetLanguageId(value); }
+      }
+      public Builder SetLanguageId(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasLanguageId = true;
+        result.languageId_ = value;
+        return this;
+      }
+      public Builder ClearLanguageId() {
+        PrepareBuilder();
+        result.hasLanguageId = false;
+        result.languageId_ = "";
+        return this;
+      }
+      
+      public bool HasUrl {
+        get { return result.hasUrl; }
+      }
+      public string Url {
+        get { return result.Url; }
+        set { SetUrl(value); }
+      }
+      public Builder SetUrl(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasUrl = true;
+        result.url_ = value;
+        return this;
+      }
+      public Builder ClearUrl() {
+        PrepareBuilder();
+        result.hasUrl = false;
+        result.url_ = "";
+        return this;
+      }
+      
+      public bool HasImagedata {
+        get { return result.hasImagedata; }
+      }
+      public pb::ByteString Imagedata {
+        get { return result.Imagedata; }
+        set { SetImagedata(value); }
+      }
+      public Builder SetImagedata(pb::ByteString value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasImagedata = true;
+        result.imagedata_ = value;
+        return this;
+      }
+      public Builder ClearImagedata() {
+        PrepareBuilder();
+        result.hasImagedata = false;
+        result.imagedata_ = pb::ByteString.Empty;
+        return this;
+      }
+    }
+    static MHLocalizedCatalogEntryUrlOrData() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class MHCatalogGuidEntry : pb::GeneratedMessage<MHCatalogGuidEntry, MHCatalogGuidEntry.Builder> {
+    private MHCatalogGuidEntry() { }
+    private static readonly MHCatalogGuidEntry defaultInstance = new MHCatalogGuidEntry().MakeReadOnly();
+    private static readonly string[] _mHCatalogGuidEntryFieldNames = new string[] { "itemPrototypeRuntimeIdForClient", "prototypeGuid", "quantity" };
+    private static readonly uint[] _mHCatalogGuidEntryFieldTags = new uint[] { 16, 8, 24 };
+    public static MHCatalogGuidEntry DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override MHCatalogGuidEntry DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override MHCatalogGuidEntry ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHCatalogGuidEntry__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<MHCatalogGuidEntry, MHCatalogGuidEntry.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHCatalogGuidEntry__FieldAccessorTable; }
+    }
+    
+    public const int PrototypeGuidFieldNumber = 1;
+    private bool hasPrototypeGuid;
+    private ulong prototypeGuid_;
+    public bool HasPrototypeGuid {
+      get { return hasPrototypeGuid; }
+    }
+    public ulong PrototypeGuid {
+      get { return prototypeGuid_; }
+    }
+    
+    public const int ItemPrototypeRuntimeIdForClientFieldNumber = 2;
+    private bool hasItemPrototypeRuntimeIdForClient;
+    private ulong itemPrototypeRuntimeIdForClient_;
+    public bool HasItemPrototypeRuntimeIdForClient {
+      get { return hasItemPrototypeRuntimeIdForClient; }
+    }
+    public ulong ItemPrototypeRuntimeIdForClient {
+      get { return itemPrototypeRuntimeIdForClient_; }
+    }
+    
+    public const int QuantityFieldNumber = 3;
+    private bool hasQuantity;
+    private int quantity_ = 1;
+    public bool HasQuantity {
+      get { return hasQuantity; }
+    }
+    public int Quantity {
+      get { return quantity_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _mHCatalogGuidEntryFieldNames;
+      if (hasPrototypeGuid) {
+        output.WriteUInt64(1, field_names[1], PrototypeGuid);
+      }
+      if (hasItemPrototypeRuntimeIdForClient) {
+        output.WriteUInt64(2, field_names[0], ItemPrototypeRuntimeIdForClient);
+      }
+      if (hasQuantity) {
+        output.WriteInt32(3, field_names[2], Quantity);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasPrototypeGuid) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(1, PrototypeGuid);
+      }
+      if (hasItemPrototypeRuntimeIdForClient) {
+        size += pb::CodedOutputStream.ComputeUInt64Size(2, ItemPrototypeRuntimeIdForClient);
+      }
+      if (hasQuantity) {
+        size += pb::CodedOutputStream.ComputeInt32Size(3, Quantity);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static MHCatalogGuidEntry ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHCatalogGuidEntry ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHCatalogGuidEntry ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHCatalogGuidEntry ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHCatalogGuidEntry ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHCatalogGuidEntry ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static MHCatalogGuidEntry ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static MHCatalogGuidEntry ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static MHCatalogGuidEntry ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHCatalogGuidEntry ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private MHCatalogGuidEntry MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(MHCatalogGuidEntry prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<MHCatalogGuidEntry, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(MHCatalogGuidEntry cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private MHCatalogGuidEntry result;
+      
+      private MHCatalogGuidEntry PrepareBuilder() {
+        if (resultIsReadOnly) {
+          MHCatalogGuidEntry original = result;
+          result = new MHCatalogGuidEntry();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override MHCatalogGuidEntry MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.MHCatalogGuidEntry.Descriptor; }
+      }
+      
+      public override MHCatalogGuidEntry DefaultInstanceForType {
+        get { return global::Gazillion.MHCatalogGuidEntry.DefaultInstance; }
+      }
+      
+      public override MHCatalogGuidEntry BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is MHCatalogGuidEntry) {
+          return MergeFrom((MHCatalogGuidEntry) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(MHCatalogGuidEntry other) {
+        if (other == global::Gazillion.MHCatalogGuidEntry.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasPrototypeGuid) {
+          PrototypeGuid = other.PrototypeGuid;
+        }
+        if (other.HasItemPrototypeRuntimeIdForClient) {
+          ItemPrototypeRuntimeIdForClient = other.ItemPrototypeRuntimeIdForClient;
+        }
+        if (other.HasQuantity) {
+          Quantity = other.Quantity;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_mHCatalogGuidEntryFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _mHCatalogGuidEntryFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 8: {
+              result.hasPrototypeGuid = input.ReadUInt64(ref result.prototypeGuid_);
+              break;
+            }
+            case 16: {
+              result.hasItemPrototypeRuntimeIdForClient = input.ReadUInt64(ref result.itemPrototypeRuntimeIdForClient_);
+              break;
+            }
+            case 24: {
+              result.hasQuantity = input.ReadInt32(ref result.quantity_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasPrototypeGuid {
+        get { return result.hasPrototypeGuid; }
+      }
+      public ulong PrototypeGuid {
+        get { return result.PrototypeGuid; }
+        set { SetPrototypeGuid(value); }
+      }
+      public Builder SetPrototypeGuid(ulong value) {
+        PrepareBuilder();
+        result.hasPrototypeGuid = true;
+        result.prototypeGuid_ = value;
+        return this;
+      }
+      public Builder ClearPrototypeGuid() {
+        PrepareBuilder();
+        result.hasPrototypeGuid = false;
+        result.prototypeGuid_ = 0UL;
+        return this;
+      }
+      
+      public bool HasItemPrototypeRuntimeIdForClient {
+        get { return result.hasItemPrototypeRuntimeIdForClient; }
+      }
+      public ulong ItemPrototypeRuntimeIdForClient {
+        get { return result.ItemPrototypeRuntimeIdForClient; }
+        set { SetItemPrototypeRuntimeIdForClient(value); }
+      }
+      public Builder SetItemPrototypeRuntimeIdForClient(ulong value) {
+        PrepareBuilder();
+        result.hasItemPrototypeRuntimeIdForClient = true;
+        result.itemPrototypeRuntimeIdForClient_ = value;
+        return this;
+      }
+      public Builder ClearItemPrototypeRuntimeIdForClient() {
+        PrepareBuilder();
+        result.hasItemPrototypeRuntimeIdForClient = false;
+        result.itemPrototypeRuntimeIdForClient_ = 0UL;
+        return this;
+      }
+      
+      public bool HasQuantity {
+        get { return result.hasQuantity; }
+      }
+      public int Quantity {
+        get { return result.Quantity; }
+        set { SetQuantity(value); }
+      }
+      public Builder SetQuantity(int value) {
+        PrepareBuilder();
+        result.hasQuantity = true;
+        result.quantity_ = value;
+        return this;
+      }
+      public Builder ClearQuantity() {
+        PrepareBuilder();
+        result.hasQuantity = false;
+        result.quantity_ = 1;
+        return this;
+      }
+    }
+    static MHCatalogGuidEntry() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
   public sealed partial class MarvelHeroesCatalogEntry : pb::GeneratedMessage<MarvelHeroesCatalogEntry, MarvelHeroesCatalogEntry.Builder> {
     private MarvelHeroesCatalogEntry() { }
     private static readonly MarvelHeroesCatalogEntry defaultInstance = new MarvelHeroesCatalogEntry().MakeReadOnly();
-    private static readonly string[] _marvelHeroesCatalogEntryFieldNames = new string[] { "itemPrototypeGuids", "itemPrototypeRuntimeIdsForClient", "localizedEntries", "skuId", "type", "typeModifier" };
-    private static readonly uint[] _marvelHeroesCatalogEntryFieldTags = new uint[] { 24, 64, 42, 8, 50, 58 };
+    private static readonly string[] _marvelHeroesCatalogEntryFieldNames = new string[] { "additionalGuidItems", "contentdata", "guidItems", "infourls", "localizedEntries", "skuId", "type", "typeModifier" };
+    private static readonly uint[] _marvelHeroesCatalogEntryFieldTags = new uint[] { 82, 26, 74, 18, 42, 8, 50, 58 };
     public static MarvelHeroesCatalogEntry DefaultInstance {
       get { return defaultInstance; }
     }
@@ -2052,28 +3018,28 @@ namespace Gazillion {
       get { return skuId_; }
     }
     
-    public const int ItemPrototypeGuidsFieldNumber = 3;
-    private pbc::PopsicleList<ulong> itemPrototypeGuids_ = new pbc::PopsicleList<ulong>();
-    public scg::IList<ulong> ItemPrototypeGuidsList {
-      get { return pbc::Lists.AsReadOnly(itemPrototypeGuids_); }
+    public const int GuidItemsFieldNumber = 9;
+    private pbc::PopsicleList<global::Gazillion.MHCatalogGuidEntry> guidItems_ = new pbc::PopsicleList<global::Gazillion.MHCatalogGuidEntry>();
+    public scg::IList<global::Gazillion.MHCatalogGuidEntry> GuidItemsList {
+      get { return guidItems_; }
     }
-    public int ItemPrototypeGuidsCount {
-      get { return itemPrototypeGuids_.Count; }
+    public int GuidItemsCount {
+      get { return guidItems_.Count; }
     }
-    public ulong GetItemPrototypeGuids(int index) {
-      return itemPrototypeGuids_[index];
+    public global::Gazillion.MHCatalogGuidEntry GetGuidItems(int index) {
+      return guidItems_[index];
     }
     
-    public const int ItemPrototypeRuntimeIdsForClientFieldNumber = 8;
-    private pbc::PopsicleList<ulong> itemPrototypeRuntimeIdsForClient_ = new pbc::PopsicleList<ulong>();
-    public scg::IList<ulong> ItemPrototypeRuntimeIdsForClientList {
-      get { return pbc::Lists.AsReadOnly(itemPrototypeRuntimeIdsForClient_); }
+    public const int AdditionalGuidItemsFieldNumber = 10;
+    private pbc::PopsicleList<global::Gazillion.MHCatalogGuidEntry> additionalGuidItems_ = new pbc::PopsicleList<global::Gazillion.MHCatalogGuidEntry>();
+    public scg::IList<global::Gazillion.MHCatalogGuidEntry> AdditionalGuidItemsList {
+      get { return additionalGuidItems_; }
     }
-    public int ItemPrototypeRuntimeIdsForClientCount {
-      get { return itemPrototypeRuntimeIdsForClient_.Count; }
+    public int AdditionalGuidItemsCount {
+      get { return additionalGuidItems_.Count; }
     }
-    public ulong GetItemPrototypeRuntimeIdsForClient(int index) {
-      return itemPrototypeRuntimeIdsForClient_[index];
+    public global::Gazillion.MHCatalogGuidEntry GetAdditionalGuidItems(int index) {
+      return additionalGuidItems_[index];
     }
     
     public const int LocalizedEntriesFieldNumber = 5;
@@ -2086,6 +3052,30 @@ namespace Gazillion {
     }
     public global::Gazillion.MHLocalizedCatalogEntry GetLocalizedEntries(int index) {
       return localizedEntries_[index];
+    }
+    
+    public const int InfourlsFieldNumber = 2;
+    private pbc::PopsicleList<global::Gazillion.MHLocalizedCatalogEntryUrlOrData> infourls_ = new pbc::PopsicleList<global::Gazillion.MHLocalizedCatalogEntryUrlOrData>();
+    public scg::IList<global::Gazillion.MHLocalizedCatalogEntryUrlOrData> InfourlsList {
+      get { return infourls_; }
+    }
+    public int InfourlsCount {
+      get { return infourls_.Count; }
+    }
+    public global::Gazillion.MHLocalizedCatalogEntryUrlOrData GetInfourls(int index) {
+      return infourls_[index];
+    }
+    
+    public const int ContentdataFieldNumber = 3;
+    private pbc::PopsicleList<global::Gazillion.MHLocalizedCatalogEntryUrlOrData> contentdata_ = new pbc::PopsicleList<global::Gazillion.MHLocalizedCatalogEntryUrlOrData>();
+    public scg::IList<global::Gazillion.MHLocalizedCatalogEntryUrlOrData> ContentdataList {
+      get { return contentdata_; }
+    }
+    public int ContentdataCount {
+      get { return contentdata_.Count; }
+    }
+    public global::Gazillion.MHLocalizedCatalogEntryUrlOrData GetContentdata(int index) {
+      return contentdata_[index];
     }
     
     public const int TypeFieldNumber = 6;
@@ -2116,6 +3106,12 @@ namespace Gazillion {
         foreach (global::Gazillion.MHLocalizedCatalogEntry element in LocalizedEntriesList) {
           if (!element.IsInitialized) return false;
         }
+        foreach (global::Gazillion.MHLocalizedCatalogEntryUrlOrData element in InfourlsList) {
+          if (!element.IsInitialized) return false;
+        }
+        foreach (global::Gazillion.MHLocalizedCatalogEntryUrlOrData element in ContentdataList) {
+          if (!element.IsInitialized) return false;
+        }
         if (HasType) {
           if (!Type.IsInitialized) return false;
         }
@@ -2130,22 +3126,28 @@ namespace Gazillion {
       CalcSerializedSize();
       string[] field_names = _marvelHeroesCatalogEntryFieldNames;
       if (hasSkuId) {
-        output.WriteInt64(1, field_names[3], SkuId);
+        output.WriteInt64(1, field_names[5], SkuId);
       }
-      if (itemPrototypeGuids_.Count > 0) {
-        output.WriteUInt64Array(3, field_names[0], itemPrototypeGuids_);
+      if (infourls_.Count > 0) {
+        output.WriteMessageArray(2, field_names[3], infourls_);
+      }
+      if (contentdata_.Count > 0) {
+        output.WriteMessageArray(3, field_names[1], contentdata_);
       }
       if (localizedEntries_.Count > 0) {
-        output.WriteMessageArray(5, field_names[2], localizedEntries_);
+        output.WriteMessageArray(5, field_names[4], localizedEntries_);
       }
       if (hasType) {
-        output.WriteMessage(6, field_names[4], Type);
+        output.WriteMessage(6, field_names[6], Type);
       }
       if (typeModifier_.Count > 0) {
-        output.WriteMessageArray(7, field_names[5], typeModifier_);
+        output.WriteMessageArray(7, field_names[7], typeModifier_);
       }
-      if (itemPrototypeRuntimeIdsForClient_.Count > 0) {
-        output.WriteUInt64Array(8, field_names[1], itemPrototypeRuntimeIdsForClient_);
+      if (guidItems_.Count > 0) {
+        output.WriteMessageArray(9, field_names[2], guidItems_);
+      }
+      if (additionalGuidItems_.Count > 0) {
+        output.WriteMessageArray(10, field_names[0], additionalGuidItems_);
       }
       UnknownFields.WriteTo(output);
     }
@@ -2167,24 +3169,20 @@ namespace Gazillion {
       if (hasSkuId) {
         size += pb::CodedOutputStream.ComputeInt64Size(1, SkuId);
       }
-      {
-        int dataSize = 0;
-        foreach (ulong element in ItemPrototypeGuidsList) {
-          dataSize += pb::CodedOutputStream.ComputeUInt64SizeNoTag(element);
-        }
-        size += dataSize;
-        size += 1 * itemPrototypeGuids_.Count;
+      foreach (global::Gazillion.MHCatalogGuidEntry element in GuidItemsList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(9, element);
       }
-      {
-        int dataSize = 0;
-        foreach (ulong element in ItemPrototypeRuntimeIdsForClientList) {
-          dataSize += pb::CodedOutputStream.ComputeUInt64SizeNoTag(element);
-        }
-        size += dataSize;
-        size += 1 * itemPrototypeRuntimeIdsForClient_.Count;
+      foreach (global::Gazillion.MHCatalogGuidEntry element in AdditionalGuidItemsList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(10, element);
       }
       foreach (global::Gazillion.MHLocalizedCatalogEntry element in LocalizedEntriesList) {
         size += pb::CodedOutputStream.ComputeMessageSize(5, element);
+      }
+      foreach (global::Gazillion.MHLocalizedCatalogEntryUrlOrData element in InfourlsList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(2, element);
+      }
+      foreach (global::Gazillion.MHLocalizedCatalogEntryUrlOrData element in ContentdataList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(3, element);
       }
       if (hasType) {
         size += pb::CodedOutputStream.ComputeMessageSize(6, Type);
@@ -2227,9 +3225,11 @@ namespace Gazillion {
       return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
     }
     private MarvelHeroesCatalogEntry MakeReadOnly() {
-      itemPrototypeGuids_.MakeReadOnly();
-      itemPrototypeRuntimeIdsForClient_.MakeReadOnly();
+      guidItems_.MakeReadOnly();
+      additionalGuidItems_.MakeReadOnly();
       localizedEntries_.MakeReadOnly();
+      infourls_.MakeReadOnly();
+      contentdata_.MakeReadOnly();
       typeModifier_.MakeReadOnly();
       return this;
     }
@@ -2321,14 +3321,20 @@ namespace Gazillion {
         if (other.HasSkuId) {
           SkuId = other.SkuId;
         }
-        if (other.itemPrototypeGuids_.Count != 0) {
-          result.itemPrototypeGuids_.Add(other.itemPrototypeGuids_);
+        if (other.guidItems_.Count != 0) {
+          result.guidItems_.Add(other.guidItems_);
         }
-        if (other.itemPrototypeRuntimeIdsForClient_.Count != 0) {
-          result.itemPrototypeRuntimeIdsForClient_.Add(other.itemPrototypeRuntimeIdsForClient_);
+        if (other.additionalGuidItems_.Count != 0) {
+          result.additionalGuidItems_.Add(other.additionalGuidItems_);
         }
         if (other.localizedEntries_.Count != 0) {
           result.localizedEntries_.Add(other.localizedEntries_);
+        }
+        if (other.infourls_.Count != 0) {
+          result.infourls_.Add(other.infourls_);
+        }
+        if (other.contentdata_.Count != 0) {
+          result.contentdata_.Add(other.contentdata_);
         }
         if (other.HasType) {
           MergeType(other.Type);
@@ -2383,9 +3389,12 @@ namespace Gazillion {
               result.hasSkuId = input.ReadInt64(ref result.skuId_);
               break;
             }
-            case 26:
-            case 24: {
-              input.ReadUInt64Array(tag, field_name, result.itemPrototypeGuids_);
+            case 18: {
+              input.ReadMessageArray(tag, field_name, result.infourls_, global::Gazillion.MHLocalizedCatalogEntryUrlOrData.DefaultInstance, extensionRegistry);
+              break;
+            }
+            case 26: {
+              input.ReadMessageArray(tag, field_name, result.contentdata_, global::Gazillion.MHLocalizedCatalogEntryUrlOrData.DefaultInstance, extensionRegistry);
               break;
             }
             case 42: {
@@ -2405,9 +3414,12 @@ namespace Gazillion {
               input.ReadMessageArray(tag, field_name, result.typeModifier_, global::Gazillion.MHCatalogEntryTypeModifier.DefaultInstance, extensionRegistry);
               break;
             }
-            case 66:
-            case 64: {
-              input.ReadUInt64Array(tag, field_name, result.itemPrototypeRuntimeIdsForClient_);
+            case 74: {
+              input.ReadMessageArray(tag, field_name, result.guidItems_, global::Gazillion.MHCatalogGuidEntry.DefaultInstance, extensionRegistry);
+              break;
+            }
+            case 82: {
+              input.ReadMessageArray(tag, field_name, result.additionalGuidItems_, global::Gazillion.MHCatalogGuidEntry.DefaultInstance, extensionRegistry);
               break;
             }
           }
@@ -2440,63 +3452,91 @@ namespace Gazillion {
         return this;
       }
       
-      public pbc::IPopsicleList<ulong> ItemPrototypeGuidsList {
-        get { return PrepareBuilder().itemPrototypeGuids_; }
+      public pbc::IPopsicleList<global::Gazillion.MHCatalogGuidEntry> GuidItemsList {
+        get { return PrepareBuilder().guidItems_; }
       }
-      public int ItemPrototypeGuidsCount {
-        get { return result.ItemPrototypeGuidsCount; }
+      public int GuidItemsCount {
+        get { return result.GuidItemsCount; }
       }
-      public ulong GetItemPrototypeGuids(int index) {
-        return result.GetItemPrototypeGuids(index);
+      public global::Gazillion.MHCatalogGuidEntry GetGuidItems(int index) {
+        return result.GetGuidItems(index);
       }
-      public Builder SetItemPrototypeGuids(int index, ulong value) {
+      public Builder SetGuidItems(int index, global::Gazillion.MHCatalogGuidEntry value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
         PrepareBuilder();
-        result.itemPrototypeGuids_[index] = value;
+        result.guidItems_[index] = value;
         return this;
       }
-      public Builder AddItemPrototypeGuids(ulong value) {
+      public Builder SetGuidItems(int index, global::Gazillion.MHCatalogGuidEntry.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
         PrepareBuilder();
-        result.itemPrototypeGuids_.Add(value);
+        result.guidItems_[index] = builderForValue.Build();
         return this;
       }
-      public Builder AddRangeItemPrototypeGuids(scg::IEnumerable<ulong> values) {
+      public Builder AddGuidItems(global::Gazillion.MHCatalogGuidEntry value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
         PrepareBuilder();
-        result.itemPrototypeGuids_.Add(values);
+        result.guidItems_.Add(value);
         return this;
       }
-      public Builder ClearItemPrototypeGuids() {
+      public Builder AddGuidItems(global::Gazillion.MHCatalogGuidEntry.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
         PrepareBuilder();
-        result.itemPrototypeGuids_.Clear();
+        result.guidItems_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangeGuidItems(scg::IEnumerable<global::Gazillion.MHCatalogGuidEntry> values) {
+        PrepareBuilder();
+        result.guidItems_.Add(values);
+        return this;
+      }
+      public Builder ClearGuidItems() {
+        PrepareBuilder();
+        result.guidItems_.Clear();
         return this;
       }
       
-      public pbc::IPopsicleList<ulong> ItemPrototypeRuntimeIdsForClientList {
-        get { return PrepareBuilder().itemPrototypeRuntimeIdsForClient_; }
+      public pbc::IPopsicleList<global::Gazillion.MHCatalogGuidEntry> AdditionalGuidItemsList {
+        get { return PrepareBuilder().additionalGuidItems_; }
       }
-      public int ItemPrototypeRuntimeIdsForClientCount {
-        get { return result.ItemPrototypeRuntimeIdsForClientCount; }
+      public int AdditionalGuidItemsCount {
+        get { return result.AdditionalGuidItemsCount; }
       }
-      public ulong GetItemPrototypeRuntimeIdsForClient(int index) {
-        return result.GetItemPrototypeRuntimeIdsForClient(index);
+      public global::Gazillion.MHCatalogGuidEntry GetAdditionalGuidItems(int index) {
+        return result.GetAdditionalGuidItems(index);
       }
-      public Builder SetItemPrototypeRuntimeIdsForClient(int index, ulong value) {
+      public Builder SetAdditionalGuidItems(int index, global::Gazillion.MHCatalogGuidEntry value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
         PrepareBuilder();
-        result.itemPrototypeRuntimeIdsForClient_[index] = value;
+        result.additionalGuidItems_[index] = value;
         return this;
       }
-      public Builder AddItemPrototypeRuntimeIdsForClient(ulong value) {
+      public Builder SetAdditionalGuidItems(int index, global::Gazillion.MHCatalogGuidEntry.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
         PrepareBuilder();
-        result.itemPrototypeRuntimeIdsForClient_.Add(value);
+        result.additionalGuidItems_[index] = builderForValue.Build();
         return this;
       }
-      public Builder AddRangeItemPrototypeRuntimeIdsForClient(scg::IEnumerable<ulong> values) {
+      public Builder AddAdditionalGuidItems(global::Gazillion.MHCatalogGuidEntry value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
         PrepareBuilder();
-        result.itemPrototypeRuntimeIdsForClient_.Add(values);
+        result.additionalGuidItems_.Add(value);
         return this;
       }
-      public Builder ClearItemPrototypeRuntimeIdsForClient() {
+      public Builder AddAdditionalGuidItems(global::Gazillion.MHCatalogGuidEntry.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
         PrepareBuilder();
-        result.itemPrototypeRuntimeIdsForClient_.Clear();
+        result.additionalGuidItems_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangeAdditionalGuidItems(scg::IEnumerable<global::Gazillion.MHCatalogGuidEntry> values) {
+        PrepareBuilder();
+        result.additionalGuidItems_.Add(values);
+        return this;
+      }
+      public Builder ClearAdditionalGuidItems() {
+        PrepareBuilder();
+        result.additionalGuidItems_.Clear();
         return this;
       }
       
@@ -2541,6 +3581,94 @@ namespace Gazillion {
       public Builder ClearLocalizedEntries() {
         PrepareBuilder();
         result.localizedEntries_.Clear();
+        return this;
+      }
+      
+      public pbc::IPopsicleList<global::Gazillion.MHLocalizedCatalogEntryUrlOrData> InfourlsList {
+        get { return PrepareBuilder().infourls_; }
+      }
+      public int InfourlsCount {
+        get { return result.InfourlsCount; }
+      }
+      public global::Gazillion.MHLocalizedCatalogEntryUrlOrData GetInfourls(int index) {
+        return result.GetInfourls(index);
+      }
+      public Builder SetInfourls(int index, global::Gazillion.MHLocalizedCatalogEntryUrlOrData value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.infourls_[index] = value;
+        return this;
+      }
+      public Builder SetInfourls(int index, global::Gazillion.MHLocalizedCatalogEntryUrlOrData.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.infourls_[index] = builderForValue.Build();
+        return this;
+      }
+      public Builder AddInfourls(global::Gazillion.MHLocalizedCatalogEntryUrlOrData value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.infourls_.Add(value);
+        return this;
+      }
+      public Builder AddInfourls(global::Gazillion.MHLocalizedCatalogEntryUrlOrData.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.infourls_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangeInfourls(scg::IEnumerable<global::Gazillion.MHLocalizedCatalogEntryUrlOrData> values) {
+        PrepareBuilder();
+        result.infourls_.Add(values);
+        return this;
+      }
+      public Builder ClearInfourls() {
+        PrepareBuilder();
+        result.infourls_.Clear();
+        return this;
+      }
+      
+      public pbc::IPopsicleList<global::Gazillion.MHLocalizedCatalogEntryUrlOrData> ContentdataList {
+        get { return PrepareBuilder().contentdata_; }
+      }
+      public int ContentdataCount {
+        get { return result.ContentdataCount; }
+      }
+      public global::Gazillion.MHLocalizedCatalogEntryUrlOrData GetContentdata(int index) {
+        return result.GetContentdata(index);
+      }
+      public Builder SetContentdata(int index, global::Gazillion.MHLocalizedCatalogEntryUrlOrData value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.contentdata_[index] = value;
+        return this;
+      }
+      public Builder SetContentdata(int index, global::Gazillion.MHLocalizedCatalogEntryUrlOrData.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.contentdata_[index] = builderForValue.Build();
+        return this;
+      }
+      public Builder AddContentdata(global::Gazillion.MHLocalizedCatalogEntryUrlOrData value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.contentdata_.Add(value);
+        return this;
+      }
+      public Builder AddContentdata(global::Gazillion.MHLocalizedCatalogEntryUrlOrData.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.contentdata_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangeContentdata(scg::IEnumerable<global::Gazillion.MHLocalizedCatalogEntryUrlOrData> values) {
+        PrepareBuilder();
+        result.contentdata_.Add(values);
+        return this;
+      }
+      public Builder ClearContentdata() {
+        PrepareBuilder();
+        result.contentdata_.Clear();
         return this;
       }
       
@@ -2629,6 +3757,9716 @@ namespace Gazillion {
       }
     }
     static MarvelHeroesCatalogEntry() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class MHLocalizedStringCollection : pb::GeneratedMessage<MHLocalizedStringCollection, MHLocalizedStringCollection.Builder> {
+    private MHLocalizedStringCollection() { }
+    private static readonly MHLocalizedStringCollection defaultInstance = new MHLocalizedStringCollection().MakeReadOnly();
+    private static readonly string[] _mHLocalizedStringCollectionFieldNames = new string[] { "language_id", "translations" };
+    private static readonly uint[] _mHLocalizedStringCollectionFieldTags = new uint[] { 10, 18 };
+    public static MHLocalizedStringCollection DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override MHLocalizedStringCollection DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override MHLocalizedStringCollection ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHLocalizedStringCollection__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<MHLocalizedStringCollection, MHLocalizedStringCollection.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHLocalizedStringCollection__FieldAccessorTable; }
+    }
+    
+    public const int LanguageIdFieldNumber = 1;
+    private bool hasLanguageId;
+    private string languageId_ = "";
+    public bool HasLanguageId {
+      get { return hasLanguageId; }
+    }
+    public string LanguageId {
+      get { return languageId_; }
+    }
+    
+    public const int TranslationsFieldNumber = 2;
+    private pbc::PopsicleList<global::Gazillion.MHStringValue> translations_ = new pbc::PopsicleList<global::Gazillion.MHStringValue>();
+    public scg::IList<global::Gazillion.MHStringValue> TranslationsList {
+      get { return translations_; }
+    }
+    public int TranslationsCount {
+      get { return translations_.Count; }
+    }
+    public global::Gazillion.MHStringValue GetTranslations(int index) {
+      return translations_[index];
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasLanguageId) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _mHLocalizedStringCollectionFieldNames;
+      if (hasLanguageId) {
+        output.WriteString(1, field_names[0], LanguageId);
+      }
+      if (translations_.Count > 0) {
+        output.WriteMessageArray(2, field_names[1], translations_);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasLanguageId) {
+        size += pb::CodedOutputStream.ComputeStringSize(1, LanguageId);
+      }
+      foreach (global::Gazillion.MHStringValue element in TranslationsList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(2, element);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static MHLocalizedStringCollection ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHLocalizedStringCollection ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHLocalizedStringCollection ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHLocalizedStringCollection ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHLocalizedStringCollection ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHLocalizedStringCollection ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static MHLocalizedStringCollection ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static MHLocalizedStringCollection ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static MHLocalizedStringCollection ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHLocalizedStringCollection ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private MHLocalizedStringCollection MakeReadOnly() {
+      translations_.MakeReadOnly();
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(MHLocalizedStringCollection prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<MHLocalizedStringCollection, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(MHLocalizedStringCollection cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private MHLocalizedStringCollection result;
+      
+      private MHLocalizedStringCollection PrepareBuilder() {
+        if (resultIsReadOnly) {
+          MHLocalizedStringCollection original = result;
+          result = new MHLocalizedStringCollection();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override MHLocalizedStringCollection MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.MHLocalizedStringCollection.Descriptor; }
+      }
+      
+      public override MHLocalizedStringCollection DefaultInstanceForType {
+        get { return global::Gazillion.MHLocalizedStringCollection.DefaultInstance; }
+      }
+      
+      public override MHLocalizedStringCollection BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is MHLocalizedStringCollection) {
+          return MergeFrom((MHLocalizedStringCollection) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(MHLocalizedStringCollection other) {
+        if (other == global::Gazillion.MHLocalizedStringCollection.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasLanguageId) {
+          LanguageId = other.LanguageId;
+        }
+        if (other.translations_.Count != 0) {
+          result.translations_.Add(other.translations_);
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_mHLocalizedStringCollectionFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _mHLocalizedStringCollectionFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 10: {
+              result.hasLanguageId = input.ReadString(ref result.languageId_);
+              break;
+            }
+            case 18: {
+              input.ReadMessageArray(tag, field_name, result.translations_, global::Gazillion.MHStringValue.DefaultInstance, extensionRegistry);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasLanguageId {
+        get { return result.hasLanguageId; }
+      }
+      public string LanguageId {
+        get { return result.LanguageId; }
+        set { SetLanguageId(value); }
+      }
+      public Builder SetLanguageId(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasLanguageId = true;
+        result.languageId_ = value;
+        return this;
+      }
+      public Builder ClearLanguageId() {
+        PrepareBuilder();
+        result.hasLanguageId = false;
+        result.languageId_ = "";
+        return this;
+      }
+      
+      public pbc::IPopsicleList<global::Gazillion.MHStringValue> TranslationsList {
+        get { return PrepareBuilder().translations_; }
+      }
+      public int TranslationsCount {
+        get { return result.TranslationsCount; }
+      }
+      public global::Gazillion.MHStringValue GetTranslations(int index) {
+        return result.GetTranslations(index);
+      }
+      public Builder SetTranslations(int index, global::Gazillion.MHStringValue value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.translations_[index] = value;
+        return this;
+      }
+      public Builder SetTranslations(int index, global::Gazillion.MHStringValue.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.translations_[index] = builderForValue.Build();
+        return this;
+      }
+      public Builder AddTranslations(global::Gazillion.MHStringValue value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.translations_.Add(value);
+        return this;
+      }
+      public Builder AddTranslations(global::Gazillion.MHStringValue.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.translations_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangeTranslations(scg::IEnumerable<global::Gazillion.MHStringValue> values) {
+        PrepareBuilder();
+        result.translations_.Add(values);
+        return this;
+      }
+      public Builder ClearTranslations() {
+        PrepareBuilder();
+        result.translations_.Clear();
+        return this;
+      }
+    }
+    static MHLocalizedStringCollection() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class MHStringValue : pb::GeneratedMessage<MHStringValue, MHStringValue.Builder> {
+    private MHStringValue() { }
+    private static readonly MHStringValue defaultInstance = new MHStringValue().MakeReadOnly();
+    private static readonly string[] _mHStringValueFieldNames = new string[] { "key", "text" };
+    private static readonly uint[] _mHStringValueFieldTags = new uint[] { 10, 18 };
+    public static MHStringValue DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override MHStringValue DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override MHStringValue ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHStringValue__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<MHStringValue, MHStringValue.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHStringValue__FieldAccessorTable; }
+    }
+    
+    public const int KeyFieldNumber = 1;
+    private bool hasKey;
+    private string key_ = "";
+    public bool HasKey {
+      get { return hasKey; }
+    }
+    public string Key {
+      get { return key_; }
+    }
+    
+    public const int TextFieldNumber = 2;
+    private bool hasText;
+    private string text_ = "";
+    public bool HasText {
+      get { return hasText; }
+    }
+    public string Text {
+      get { return text_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _mHStringValueFieldNames;
+      if (hasKey) {
+        output.WriteString(1, field_names[0], Key);
+      }
+      if (hasText) {
+        output.WriteString(2, field_names[1], Text);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasKey) {
+        size += pb::CodedOutputStream.ComputeStringSize(1, Key);
+      }
+      if (hasText) {
+        size += pb::CodedOutputStream.ComputeStringSize(2, Text);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static MHStringValue ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHStringValue ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHStringValue ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHStringValue ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHStringValue ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHStringValue ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static MHStringValue ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static MHStringValue ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static MHStringValue ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHStringValue ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private MHStringValue MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(MHStringValue prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<MHStringValue, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(MHStringValue cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private MHStringValue result;
+      
+      private MHStringValue PrepareBuilder() {
+        if (resultIsReadOnly) {
+          MHStringValue original = result;
+          result = new MHStringValue();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override MHStringValue MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.MHStringValue.Descriptor; }
+      }
+      
+      public override MHStringValue DefaultInstanceForType {
+        get { return global::Gazillion.MHStringValue.DefaultInstance; }
+      }
+      
+      public override MHStringValue BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is MHStringValue) {
+          return MergeFrom((MHStringValue) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(MHStringValue other) {
+        if (other == global::Gazillion.MHStringValue.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasKey) {
+          Key = other.Key;
+        }
+        if (other.HasText) {
+          Text = other.Text;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_mHStringValueFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _mHStringValueFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 10: {
+              result.hasKey = input.ReadString(ref result.key_);
+              break;
+            }
+            case 18: {
+              result.hasText = input.ReadString(ref result.text_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasKey {
+        get { return result.hasKey; }
+      }
+      public string Key {
+        get { return result.Key; }
+        set { SetKey(value); }
+      }
+      public Builder SetKey(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasKey = true;
+        result.key_ = value;
+        return this;
+      }
+      public Builder ClearKey() {
+        PrepareBuilder();
+        result.hasKey = false;
+        result.key_ = "";
+        return this;
+      }
+      
+      public bool HasText {
+        get { return result.hasText; }
+      }
+      public string Text {
+        get { return result.Text; }
+        set { SetText(value); }
+      }
+      public Builder SetText(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasText = true;
+        result.text_ = value;
+        return this;
+      }
+      public Builder ClearText() {
+        PrepareBuilder();
+        result.hasText = false;
+        result.text_ = "";
+        return this;
+      }
+    }
+    static MHStringValue() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class MHConsolePresentationEntry : pb::GeneratedMessage<MHConsolePresentationEntry, MHConsolePresentationEntry.Builder> {
+    private MHConsolePresentationEntry() { }
+    private static readonly MHConsolePresentationEntry defaultInstance = new MHConsolePresentationEntry().MakeReadOnly();
+    private static readonly string[] _mHConsolePresentationEntryFieldNames = new string[] { "defaults", "localizedEntries", "type", "typeOrder" };
+    private static readonly uint[] _mHConsolePresentationEntryFieldTags = new uint[] { 34, 26, 10, 16 };
+    public static MHConsolePresentationEntry DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override MHConsolePresentationEntry DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override MHConsolePresentationEntry ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHConsolePresentationEntry__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<MHConsolePresentationEntry, MHConsolePresentationEntry.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHConsolePresentationEntry__FieldAccessorTable; }
+    }
+    
+    public const int TypeFieldNumber = 1;
+    private bool hasType;
+    private string type_ = "";
+    public bool HasType {
+      get { return hasType; }
+    }
+    public string Type {
+      get { return type_; }
+    }
+    
+    public const int TypeOrderFieldNumber = 2;
+    private bool hasTypeOrder;
+    private long typeOrder_;
+    public bool HasTypeOrder {
+      get { return hasTypeOrder; }
+    }
+    public long TypeOrder {
+      get { return typeOrder_; }
+    }
+    
+    public const int LocalizedEntriesFieldNumber = 3;
+    private pbc::PopsicleList<global::Gazillion.MHLocalizedStringCollection> localizedEntries_ = new pbc::PopsicleList<global::Gazillion.MHLocalizedStringCollection>();
+    public scg::IList<global::Gazillion.MHLocalizedStringCollection> LocalizedEntriesList {
+      get { return localizedEntries_; }
+    }
+    public int LocalizedEntriesCount {
+      get { return localizedEntries_.Count; }
+    }
+    public global::Gazillion.MHLocalizedStringCollection GetLocalizedEntries(int index) {
+      return localizedEntries_[index];
+    }
+    
+    public const int DefaultsFieldNumber = 4;
+    private pbc::PopsicleList<global::Gazillion.MHStringValue> defaults_ = new pbc::PopsicleList<global::Gazillion.MHStringValue>();
+    public scg::IList<global::Gazillion.MHStringValue> DefaultsList {
+      get { return defaults_; }
+    }
+    public int DefaultsCount {
+      get { return defaults_.Count; }
+    }
+    public global::Gazillion.MHStringValue GetDefaults(int index) {
+      return defaults_[index];
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasType) return false;
+        if (!hasTypeOrder) return false;
+        foreach (global::Gazillion.MHLocalizedStringCollection element in LocalizedEntriesList) {
+          if (!element.IsInitialized) return false;
+        }
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _mHConsolePresentationEntryFieldNames;
+      if (hasType) {
+        output.WriteString(1, field_names[2], Type);
+      }
+      if (hasTypeOrder) {
+        output.WriteInt64(2, field_names[3], TypeOrder);
+      }
+      if (localizedEntries_.Count > 0) {
+        output.WriteMessageArray(3, field_names[1], localizedEntries_);
+      }
+      if (defaults_.Count > 0) {
+        output.WriteMessageArray(4, field_names[0], defaults_);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasType) {
+        size += pb::CodedOutputStream.ComputeStringSize(1, Type);
+      }
+      if (hasTypeOrder) {
+        size += pb::CodedOutputStream.ComputeInt64Size(2, TypeOrder);
+      }
+      foreach (global::Gazillion.MHLocalizedStringCollection element in LocalizedEntriesList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(3, element);
+      }
+      foreach (global::Gazillion.MHStringValue element in DefaultsList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(4, element);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static MHConsolePresentationEntry ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHConsolePresentationEntry ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsolePresentationEntry ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHConsolePresentationEntry ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsolePresentationEntry ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHConsolePresentationEntry ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsolePresentationEntry ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static MHConsolePresentationEntry ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static MHConsolePresentationEntry ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHConsolePresentationEntry ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private MHConsolePresentationEntry MakeReadOnly() {
+      localizedEntries_.MakeReadOnly();
+      defaults_.MakeReadOnly();
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(MHConsolePresentationEntry prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<MHConsolePresentationEntry, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(MHConsolePresentationEntry cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private MHConsolePresentationEntry result;
+      
+      private MHConsolePresentationEntry PrepareBuilder() {
+        if (resultIsReadOnly) {
+          MHConsolePresentationEntry original = result;
+          result = new MHConsolePresentationEntry();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override MHConsolePresentationEntry MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.MHConsolePresentationEntry.Descriptor; }
+      }
+      
+      public override MHConsolePresentationEntry DefaultInstanceForType {
+        get { return global::Gazillion.MHConsolePresentationEntry.DefaultInstance; }
+      }
+      
+      public override MHConsolePresentationEntry BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is MHConsolePresentationEntry) {
+          return MergeFrom((MHConsolePresentationEntry) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(MHConsolePresentationEntry other) {
+        if (other == global::Gazillion.MHConsolePresentationEntry.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasType) {
+          Type = other.Type;
+        }
+        if (other.HasTypeOrder) {
+          TypeOrder = other.TypeOrder;
+        }
+        if (other.localizedEntries_.Count != 0) {
+          result.localizedEntries_.Add(other.localizedEntries_);
+        }
+        if (other.defaults_.Count != 0) {
+          result.defaults_.Add(other.defaults_);
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_mHConsolePresentationEntryFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _mHConsolePresentationEntryFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 10: {
+              result.hasType = input.ReadString(ref result.type_);
+              break;
+            }
+            case 16: {
+              result.hasTypeOrder = input.ReadInt64(ref result.typeOrder_);
+              break;
+            }
+            case 26: {
+              input.ReadMessageArray(tag, field_name, result.localizedEntries_, global::Gazillion.MHLocalizedStringCollection.DefaultInstance, extensionRegistry);
+              break;
+            }
+            case 34: {
+              input.ReadMessageArray(tag, field_name, result.defaults_, global::Gazillion.MHStringValue.DefaultInstance, extensionRegistry);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasType {
+        get { return result.hasType; }
+      }
+      public string Type {
+        get { return result.Type; }
+        set { SetType(value); }
+      }
+      public Builder SetType(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasType = true;
+        result.type_ = value;
+        return this;
+      }
+      public Builder ClearType() {
+        PrepareBuilder();
+        result.hasType = false;
+        result.type_ = "";
+        return this;
+      }
+      
+      public bool HasTypeOrder {
+        get { return result.hasTypeOrder; }
+      }
+      public long TypeOrder {
+        get { return result.TypeOrder; }
+        set { SetTypeOrder(value); }
+      }
+      public Builder SetTypeOrder(long value) {
+        PrepareBuilder();
+        result.hasTypeOrder = true;
+        result.typeOrder_ = value;
+        return this;
+      }
+      public Builder ClearTypeOrder() {
+        PrepareBuilder();
+        result.hasTypeOrder = false;
+        result.typeOrder_ = 0L;
+        return this;
+      }
+      
+      public pbc::IPopsicleList<global::Gazillion.MHLocalizedStringCollection> LocalizedEntriesList {
+        get { return PrepareBuilder().localizedEntries_; }
+      }
+      public int LocalizedEntriesCount {
+        get { return result.LocalizedEntriesCount; }
+      }
+      public global::Gazillion.MHLocalizedStringCollection GetLocalizedEntries(int index) {
+        return result.GetLocalizedEntries(index);
+      }
+      public Builder SetLocalizedEntries(int index, global::Gazillion.MHLocalizedStringCollection value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.localizedEntries_[index] = value;
+        return this;
+      }
+      public Builder SetLocalizedEntries(int index, global::Gazillion.MHLocalizedStringCollection.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.localizedEntries_[index] = builderForValue.Build();
+        return this;
+      }
+      public Builder AddLocalizedEntries(global::Gazillion.MHLocalizedStringCollection value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.localizedEntries_.Add(value);
+        return this;
+      }
+      public Builder AddLocalizedEntries(global::Gazillion.MHLocalizedStringCollection.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.localizedEntries_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangeLocalizedEntries(scg::IEnumerable<global::Gazillion.MHLocalizedStringCollection> values) {
+        PrepareBuilder();
+        result.localizedEntries_.Add(values);
+        return this;
+      }
+      public Builder ClearLocalizedEntries() {
+        PrepareBuilder();
+        result.localizedEntries_.Clear();
+        return this;
+      }
+      
+      public pbc::IPopsicleList<global::Gazillion.MHStringValue> DefaultsList {
+        get { return PrepareBuilder().defaults_; }
+      }
+      public int DefaultsCount {
+        get { return result.DefaultsCount; }
+      }
+      public global::Gazillion.MHStringValue GetDefaults(int index) {
+        return result.GetDefaults(index);
+      }
+      public Builder SetDefaults(int index, global::Gazillion.MHStringValue value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.defaults_[index] = value;
+        return this;
+      }
+      public Builder SetDefaults(int index, global::Gazillion.MHStringValue.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.defaults_[index] = builderForValue.Build();
+        return this;
+      }
+      public Builder AddDefaults(global::Gazillion.MHStringValue value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.defaults_.Add(value);
+        return this;
+      }
+      public Builder AddDefaults(global::Gazillion.MHStringValue.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.defaults_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangeDefaults(scg::IEnumerable<global::Gazillion.MHStringValue> values) {
+        PrepareBuilder();
+        result.defaults_.Add(values);
+        return this;
+      }
+      public Builder ClearDefaults() {
+        PrepareBuilder();
+        result.defaults_.Clear();
+        return this;
+      }
+    }
+    static MHConsolePresentationEntry() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class MHConsoleItemPrice : pb::GeneratedMessage<MHConsoleItemPrice, MHConsoleItemPrice.Builder> {
+    private MHConsoleItemPrice() { }
+    private static readonly MHConsoleItemPrice defaultInstance = new MHConsoleItemPrice().MakeReadOnly();
+    private static readonly string[] _mHConsoleItemPriceFieldNames = new string[] { "price_ES", "price_G" };
+    private static readonly uint[] _mHConsoleItemPriceFieldTags = new uint[] { 16, 8 };
+    public static MHConsoleItemPrice DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override MHConsoleItemPrice DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override MHConsoleItemPrice ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHConsoleItemPrice__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<MHConsoleItemPrice, MHConsoleItemPrice.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHConsoleItemPrice__FieldAccessorTable; }
+    }
+    
+    public const int PriceGFieldNumber = 1;
+    private bool hasPriceG;
+    private long priceG_;
+    public bool HasPriceG {
+      get { return hasPriceG; }
+    }
+    public long PriceG {
+      get { return priceG_; }
+    }
+    
+    public const int PriceESFieldNumber = 2;
+    private bool hasPriceES;
+    private long priceES_ = -1L;
+    public bool HasPriceES {
+      get { return hasPriceES; }
+    }
+    public long PriceES {
+      get { return priceES_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasPriceG) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _mHConsoleItemPriceFieldNames;
+      if (hasPriceG) {
+        output.WriteInt64(1, field_names[1], PriceG);
+      }
+      if (hasPriceES) {
+        output.WriteInt64(2, field_names[0], PriceES);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasPriceG) {
+        size += pb::CodedOutputStream.ComputeInt64Size(1, PriceG);
+      }
+      if (hasPriceES) {
+        size += pb::CodedOutputStream.ComputeInt64Size(2, PriceES);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static MHConsoleItemPrice ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHConsoleItemPrice ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsoleItemPrice ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHConsoleItemPrice ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsoleItemPrice ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHConsoleItemPrice ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsoleItemPrice ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static MHConsoleItemPrice ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static MHConsoleItemPrice ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHConsoleItemPrice ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private MHConsoleItemPrice MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(MHConsoleItemPrice prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<MHConsoleItemPrice, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(MHConsoleItemPrice cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private MHConsoleItemPrice result;
+      
+      private MHConsoleItemPrice PrepareBuilder() {
+        if (resultIsReadOnly) {
+          MHConsoleItemPrice original = result;
+          result = new MHConsoleItemPrice();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override MHConsoleItemPrice MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.MHConsoleItemPrice.Descriptor; }
+      }
+      
+      public override MHConsoleItemPrice DefaultInstanceForType {
+        get { return global::Gazillion.MHConsoleItemPrice.DefaultInstance; }
+      }
+      
+      public override MHConsoleItemPrice BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is MHConsoleItemPrice) {
+          return MergeFrom((MHConsoleItemPrice) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(MHConsoleItemPrice other) {
+        if (other == global::Gazillion.MHConsoleItemPrice.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasPriceG) {
+          PriceG = other.PriceG;
+        }
+        if (other.HasPriceES) {
+          PriceES = other.PriceES;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_mHConsoleItemPriceFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _mHConsoleItemPriceFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 8: {
+              result.hasPriceG = input.ReadInt64(ref result.priceG_);
+              break;
+            }
+            case 16: {
+              result.hasPriceES = input.ReadInt64(ref result.priceES_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasPriceG {
+        get { return result.hasPriceG; }
+      }
+      public long PriceG {
+        get { return result.PriceG; }
+        set { SetPriceG(value); }
+      }
+      public Builder SetPriceG(long value) {
+        PrepareBuilder();
+        result.hasPriceG = true;
+        result.priceG_ = value;
+        return this;
+      }
+      public Builder ClearPriceG() {
+        PrepareBuilder();
+        result.hasPriceG = false;
+        result.priceG_ = 0L;
+        return this;
+      }
+      
+      public bool HasPriceES {
+        get { return result.hasPriceES; }
+      }
+      public long PriceES {
+        get { return result.PriceES; }
+        set { SetPriceES(value); }
+      }
+      public Builder SetPriceES(long value) {
+        PrepareBuilder();
+        result.hasPriceES = true;
+        result.priceES_ = value;
+        return this;
+      }
+      public Builder ClearPriceES() {
+        PrepareBuilder();
+        result.hasPriceES = false;
+        result.priceES_ = -1L;
+        return this;
+      }
+    }
+    static MHConsoleItemPrice() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class MHConsoleDiscount : pb::GeneratedMessage<MHConsoleDiscount, MHConsoleDiscount.Builder> {
+    private MHConsoleDiscount() { }
+    private static readonly MHConsoleDiscount defaultInstance = new MHConsoleDiscount().MakeReadOnly();
+    private static readonly string[] _mHConsoleDiscountFieldNames = new string[] { "discountPercent_ES", "discountPercent_G" };
+    private static readonly uint[] _mHConsoleDiscountFieldTags = new uint[] { 21, 13 };
+    public static MHConsoleDiscount DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override MHConsoleDiscount DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override MHConsoleDiscount ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHConsoleDiscount__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<MHConsoleDiscount, MHConsoleDiscount.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHConsoleDiscount__FieldAccessorTable; }
+    }
+    
+    public const int DiscountPercentGFieldNumber = 1;
+    private bool hasDiscountPercentG;
+    private float discountPercentG_;
+    public bool HasDiscountPercentG {
+      get { return hasDiscountPercentG; }
+    }
+    public float DiscountPercentG {
+      get { return discountPercentG_; }
+    }
+    
+    public const int DiscountPercentESFieldNumber = 2;
+    private bool hasDiscountPercentES;
+    private float discountPercentES_;
+    public bool HasDiscountPercentES {
+      get { return hasDiscountPercentES; }
+    }
+    public float DiscountPercentES {
+      get { return discountPercentES_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _mHConsoleDiscountFieldNames;
+      if (hasDiscountPercentG) {
+        output.WriteFloat(1, field_names[1], DiscountPercentG);
+      }
+      if (hasDiscountPercentES) {
+        output.WriteFloat(2, field_names[0], DiscountPercentES);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasDiscountPercentG) {
+        size += pb::CodedOutputStream.ComputeFloatSize(1, DiscountPercentG);
+      }
+      if (hasDiscountPercentES) {
+        size += pb::CodedOutputStream.ComputeFloatSize(2, DiscountPercentES);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static MHConsoleDiscount ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHConsoleDiscount ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsoleDiscount ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHConsoleDiscount ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsoleDiscount ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHConsoleDiscount ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsoleDiscount ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static MHConsoleDiscount ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static MHConsoleDiscount ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHConsoleDiscount ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private MHConsoleDiscount MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(MHConsoleDiscount prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<MHConsoleDiscount, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(MHConsoleDiscount cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private MHConsoleDiscount result;
+      
+      private MHConsoleDiscount PrepareBuilder() {
+        if (resultIsReadOnly) {
+          MHConsoleDiscount original = result;
+          result = new MHConsoleDiscount();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override MHConsoleDiscount MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.MHConsoleDiscount.Descriptor; }
+      }
+      
+      public override MHConsoleDiscount DefaultInstanceForType {
+        get { return global::Gazillion.MHConsoleDiscount.DefaultInstance; }
+      }
+      
+      public override MHConsoleDiscount BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is MHConsoleDiscount) {
+          return MergeFrom((MHConsoleDiscount) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(MHConsoleDiscount other) {
+        if (other == global::Gazillion.MHConsoleDiscount.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasDiscountPercentG) {
+          DiscountPercentG = other.DiscountPercentG;
+        }
+        if (other.HasDiscountPercentES) {
+          DiscountPercentES = other.DiscountPercentES;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_mHConsoleDiscountFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _mHConsoleDiscountFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 13: {
+              result.hasDiscountPercentG = input.ReadFloat(ref result.discountPercentG_);
+              break;
+            }
+            case 21: {
+              result.hasDiscountPercentES = input.ReadFloat(ref result.discountPercentES_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasDiscountPercentG {
+        get { return result.hasDiscountPercentG; }
+      }
+      public float DiscountPercentG {
+        get { return result.DiscountPercentG; }
+        set { SetDiscountPercentG(value); }
+      }
+      public Builder SetDiscountPercentG(float value) {
+        PrepareBuilder();
+        result.hasDiscountPercentG = true;
+        result.discountPercentG_ = value;
+        return this;
+      }
+      public Builder ClearDiscountPercentG() {
+        PrepareBuilder();
+        result.hasDiscountPercentG = false;
+        result.discountPercentG_ = 0F;
+        return this;
+      }
+      
+      public bool HasDiscountPercentES {
+        get { return result.hasDiscountPercentES; }
+      }
+      public float DiscountPercentES {
+        get { return result.DiscountPercentES; }
+        set { SetDiscountPercentES(value); }
+      }
+      public Builder SetDiscountPercentES(float value) {
+        PrepareBuilder();
+        result.hasDiscountPercentES = true;
+        result.discountPercentES_ = value;
+        return this;
+      }
+      public Builder ClearDiscountPercentES() {
+        PrepareBuilder();
+        result.hasDiscountPercentES = false;
+        result.discountPercentES_ = 0F;
+        return this;
+      }
+    }
+    static MHConsoleDiscount() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class MHConsoleUpsell : pb::GeneratedMessage<MHConsoleUpsell, MHConsoleUpsell.Builder> {
+    private MHConsoleUpsell() { }
+    private static readonly MHConsoleUpsell defaultInstance = new MHConsoleUpsell().MakeReadOnly();
+    private static readonly string[] _mHConsoleUpsellFieldNames = new string[] { "defaults", "localizedEntries", "so" };
+    private static readonly uint[] _mHConsoleUpsellFieldTags = new uint[] { 26, 18, 10 };
+    public static MHConsoleUpsell DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override MHConsoleUpsell DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override MHConsoleUpsell ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHConsoleUpsell__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<MHConsoleUpsell, MHConsoleUpsell.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHConsoleUpsell__FieldAccessorTable; }
+    }
+    
+    public const int SoFieldNumber = 1;
+    private bool hasSo;
+    private string so_ = "";
+    public bool HasSo {
+      get { return hasSo; }
+    }
+    public string So {
+      get { return so_; }
+    }
+    
+    public const int LocalizedEntriesFieldNumber = 2;
+    private pbc::PopsicleList<global::Gazillion.MHLocalizedStringCollection> localizedEntries_ = new pbc::PopsicleList<global::Gazillion.MHLocalizedStringCollection>();
+    public scg::IList<global::Gazillion.MHLocalizedStringCollection> LocalizedEntriesList {
+      get { return localizedEntries_; }
+    }
+    public int LocalizedEntriesCount {
+      get { return localizedEntries_.Count; }
+    }
+    public global::Gazillion.MHLocalizedStringCollection GetLocalizedEntries(int index) {
+      return localizedEntries_[index];
+    }
+    
+    public const int DefaultsFieldNumber = 3;
+    private pbc::PopsicleList<global::Gazillion.MHStringValue> defaults_ = new pbc::PopsicleList<global::Gazillion.MHStringValue>();
+    public scg::IList<global::Gazillion.MHStringValue> DefaultsList {
+      get { return defaults_; }
+    }
+    public int DefaultsCount {
+      get { return defaults_.Count; }
+    }
+    public global::Gazillion.MHStringValue GetDefaults(int index) {
+      return defaults_[index];
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasSo) return false;
+        foreach (global::Gazillion.MHLocalizedStringCollection element in LocalizedEntriesList) {
+          if (!element.IsInitialized) return false;
+        }
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _mHConsoleUpsellFieldNames;
+      if (hasSo) {
+        output.WriteString(1, field_names[2], So);
+      }
+      if (localizedEntries_.Count > 0) {
+        output.WriteMessageArray(2, field_names[1], localizedEntries_);
+      }
+      if (defaults_.Count > 0) {
+        output.WriteMessageArray(3, field_names[0], defaults_);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasSo) {
+        size += pb::CodedOutputStream.ComputeStringSize(1, So);
+      }
+      foreach (global::Gazillion.MHLocalizedStringCollection element in LocalizedEntriesList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(2, element);
+      }
+      foreach (global::Gazillion.MHStringValue element in DefaultsList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(3, element);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static MHConsoleUpsell ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHConsoleUpsell ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsoleUpsell ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHConsoleUpsell ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsoleUpsell ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHConsoleUpsell ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsoleUpsell ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static MHConsoleUpsell ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static MHConsoleUpsell ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHConsoleUpsell ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private MHConsoleUpsell MakeReadOnly() {
+      localizedEntries_.MakeReadOnly();
+      defaults_.MakeReadOnly();
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(MHConsoleUpsell prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<MHConsoleUpsell, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(MHConsoleUpsell cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private MHConsoleUpsell result;
+      
+      private MHConsoleUpsell PrepareBuilder() {
+        if (resultIsReadOnly) {
+          MHConsoleUpsell original = result;
+          result = new MHConsoleUpsell();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override MHConsoleUpsell MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.MHConsoleUpsell.Descriptor; }
+      }
+      
+      public override MHConsoleUpsell DefaultInstanceForType {
+        get { return global::Gazillion.MHConsoleUpsell.DefaultInstance; }
+      }
+      
+      public override MHConsoleUpsell BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is MHConsoleUpsell) {
+          return MergeFrom((MHConsoleUpsell) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(MHConsoleUpsell other) {
+        if (other == global::Gazillion.MHConsoleUpsell.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasSo) {
+          So = other.So;
+        }
+        if (other.localizedEntries_.Count != 0) {
+          result.localizedEntries_.Add(other.localizedEntries_);
+        }
+        if (other.defaults_.Count != 0) {
+          result.defaults_.Add(other.defaults_);
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_mHConsoleUpsellFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _mHConsoleUpsellFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 10: {
+              result.hasSo = input.ReadString(ref result.so_);
+              break;
+            }
+            case 18: {
+              input.ReadMessageArray(tag, field_name, result.localizedEntries_, global::Gazillion.MHLocalizedStringCollection.DefaultInstance, extensionRegistry);
+              break;
+            }
+            case 26: {
+              input.ReadMessageArray(tag, field_name, result.defaults_, global::Gazillion.MHStringValue.DefaultInstance, extensionRegistry);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasSo {
+        get { return result.hasSo; }
+      }
+      public string So {
+        get { return result.So; }
+        set { SetSo(value); }
+      }
+      public Builder SetSo(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasSo = true;
+        result.so_ = value;
+        return this;
+      }
+      public Builder ClearSo() {
+        PrepareBuilder();
+        result.hasSo = false;
+        result.so_ = "";
+        return this;
+      }
+      
+      public pbc::IPopsicleList<global::Gazillion.MHLocalizedStringCollection> LocalizedEntriesList {
+        get { return PrepareBuilder().localizedEntries_; }
+      }
+      public int LocalizedEntriesCount {
+        get { return result.LocalizedEntriesCount; }
+      }
+      public global::Gazillion.MHLocalizedStringCollection GetLocalizedEntries(int index) {
+        return result.GetLocalizedEntries(index);
+      }
+      public Builder SetLocalizedEntries(int index, global::Gazillion.MHLocalizedStringCollection value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.localizedEntries_[index] = value;
+        return this;
+      }
+      public Builder SetLocalizedEntries(int index, global::Gazillion.MHLocalizedStringCollection.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.localizedEntries_[index] = builderForValue.Build();
+        return this;
+      }
+      public Builder AddLocalizedEntries(global::Gazillion.MHLocalizedStringCollection value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.localizedEntries_.Add(value);
+        return this;
+      }
+      public Builder AddLocalizedEntries(global::Gazillion.MHLocalizedStringCollection.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.localizedEntries_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangeLocalizedEntries(scg::IEnumerable<global::Gazillion.MHLocalizedStringCollection> values) {
+        PrepareBuilder();
+        result.localizedEntries_.Add(values);
+        return this;
+      }
+      public Builder ClearLocalizedEntries() {
+        PrepareBuilder();
+        result.localizedEntries_.Clear();
+        return this;
+      }
+      
+      public pbc::IPopsicleList<global::Gazillion.MHStringValue> DefaultsList {
+        get { return PrepareBuilder().defaults_; }
+      }
+      public int DefaultsCount {
+        get { return result.DefaultsCount; }
+      }
+      public global::Gazillion.MHStringValue GetDefaults(int index) {
+        return result.GetDefaults(index);
+      }
+      public Builder SetDefaults(int index, global::Gazillion.MHStringValue value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.defaults_[index] = value;
+        return this;
+      }
+      public Builder SetDefaults(int index, global::Gazillion.MHStringValue.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.defaults_[index] = builderForValue.Build();
+        return this;
+      }
+      public Builder AddDefaults(global::Gazillion.MHStringValue value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.defaults_.Add(value);
+        return this;
+      }
+      public Builder AddDefaults(global::Gazillion.MHStringValue.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.defaults_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangeDefaults(scg::IEnumerable<global::Gazillion.MHStringValue> values) {
+        PrepareBuilder();
+        result.defaults_.Add(values);
+        return this;
+      }
+      public Builder ClearDefaults() {
+        PrepareBuilder();
+        result.defaults_.Clear();
+        return this;
+      }
+    }
+    static MHConsoleUpsell() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class MarvelHeroesConsoleCatalogEntry : pb::GeneratedMessage<MarvelHeroesConsoleCatalogEntry, MarvelHeroesConsoleCatalogEntry.Builder> {
+    private MarvelHeroesConsoleCatalogEntry() { }
+    private static readonly MarvelHeroesConsoleCatalogEntry defaultInstance = new MarvelHeroesConsoleCatalogEntry().MakeReadOnly();
+    private static readonly string[] _marvelHeroesConsoleCatalogEntryFieldNames = new string[] { "categories", "deliverableObject", "discount", "filterSO", "guidItems", "itemPrice", "modelGuid", "originalPrice", "presentations", "sellableObject", "tags", "upsellItems" };
+    private static readonly uint[] _marvelHeroesConsoleCatalogEntryFieldTags = new uint[] { 74, 10, 42, 90, 18, 26, 96, 34, 58, 66, 50, 82 };
+    public static MarvelHeroesConsoleCatalogEntry DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override MarvelHeroesConsoleCatalogEntry DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override MarvelHeroesConsoleCatalogEntry ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MarvelHeroesConsoleCatalogEntry__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<MarvelHeroesConsoleCatalogEntry, MarvelHeroesConsoleCatalogEntry.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MarvelHeroesConsoleCatalogEntry__FieldAccessorTable; }
+    }
+    
+    public const int DeliverableObjectFieldNumber = 1;
+    private bool hasDeliverableObject;
+    private string deliverableObject_ = "";
+    public bool HasDeliverableObject {
+      get { return hasDeliverableObject; }
+    }
+    public string DeliverableObject {
+      get { return deliverableObject_; }
+    }
+    
+    public const int GuidItemsFieldNumber = 2;
+    private pbc::PopsicleList<global::Gazillion.MHCatalogGuidEntry> guidItems_ = new pbc::PopsicleList<global::Gazillion.MHCatalogGuidEntry>();
+    public scg::IList<global::Gazillion.MHCatalogGuidEntry> GuidItemsList {
+      get { return guidItems_; }
+    }
+    public int GuidItemsCount {
+      get { return guidItems_.Count; }
+    }
+    public global::Gazillion.MHCatalogGuidEntry GetGuidItems(int index) {
+      return guidItems_[index];
+    }
+    
+    public const int ItemPriceFieldNumber = 3;
+    private bool hasItemPrice;
+    private global::Gazillion.MHConsoleItemPrice itemPrice_;
+    public bool HasItemPrice {
+      get { return hasItemPrice; }
+    }
+    public global::Gazillion.MHConsoleItemPrice ItemPrice {
+      get { return itemPrice_ ?? global::Gazillion.MHConsoleItemPrice.DefaultInstance; }
+    }
+    
+    public const int OriginalPriceFieldNumber = 4;
+    private bool hasOriginalPrice;
+    private global::Gazillion.MHConsoleItemPrice originalPrice_;
+    public bool HasOriginalPrice {
+      get { return hasOriginalPrice; }
+    }
+    public global::Gazillion.MHConsoleItemPrice OriginalPrice {
+      get { return originalPrice_ ?? global::Gazillion.MHConsoleItemPrice.DefaultInstance; }
+    }
+    
+    public const int DiscountFieldNumber = 5;
+    private bool hasDiscount;
+    private global::Gazillion.MHConsoleDiscount discount_;
+    public bool HasDiscount {
+      get { return hasDiscount; }
+    }
+    public global::Gazillion.MHConsoleDiscount Discount {
+      get { return discount_ ?? global::Gazillion.MHConsoleDiscount.DefaultInstance; }
+    }
+    
+    public const int TagsFieldNumber = 6;
+    private pbc::PopsicleList<string> tags_ = new pbc::PopsicleList<string>();
+    public scg::IList<string> TagsList {
+      get { return pbc::Lists.AsReadOnly(tags_); }
+    }
+    public int TagsCount {
+      get { return tags_.Count; }
+    }
+    public string GetTags(int index) {
+      return tags_[index];
+    }
+    
+    public const int PresentationsFieldNumber = 7;
+    private pbc::PopsicleList<global::Gazillion.MHConsolePresentationEntry> presentations_ = new pbc::PopsicleList<global::Gazillion.MHConsolePresentationEntry>();
+    public scg::IList<global::Gazillion.MHConsolePresentationEntry> PresentationsList {
+      get { return presentations_; }
+    }
+    public int PresentationsCount {
+      get { return presentations_.Count; }
+    }
+    public global::Gazillion.MHConsolePresentationEntry GetPresentations(int index) {
+      return presentations_[index];
+    }
+    
+    public const int SellableObjectFieldNumber = 8;
+    private bool hasSellableObject;
+    private string sellableObject_ = "";
+    public bool HasSellableObject {
+      get { return hasSellableObject; }
+    }
+    public string SellableObject {
+      get { return sellableObject_; }
+    }
+    
+    public const int CategoriesFieldNumber = 9;
+    private pbc::PopsicleList<string> categories_ = new pbc::PopsicleList<string>();
+    public scg::IList<string> CategoriesList {
+      get { return pbc::Lists.AsReadOnly(categories_); }
+    }
+    public int CategoriesCount {
+      get { return categories_.Count; }
+    }
+    public string GetCategories(int index) {
+      return categories_[index];
+    }
+    
+    public const int UpsellItemsFieldNumber = 10;
+    private pbc::PopsicleList<global::Gazillion.MHConsoleUpsell> upsellItems_ = new pbc::PopsicleList<global::Gazillion.MHConsoleUpsell>();
+    public scg::IList<global::Gazillion.MHConsoleUpsell> UpsellItemsList {
+      get { return upsellItems_; }
+    }
+    public int UpsellItemsCount {
+      get { return upsellItems_.Count; }
+    }
+    public global::Gazillion.MHConsoleUpsell GetUpsellItems(int index) {
+      return upsellItems_[index];
+    }
+    
+    public const int FilterSOFieldNumber = 11;
+    private bool hasFilterSO;
+    private string filterSO_ = "";
+    public bool HasFilterSO {
+      get { return hasFilterSO; }
+    }
+    public string FilterSO {
+      get { return filterSO_; }
+    }
+    
+    public const int ModelGuidFieldNumber = 12;
+    private bool hasModelGuid;
+    private long modelGuid_;
+    public bool HasModelGuid {
+      get { return hasModelGuid; }
+    }
+    public long ModelGuid {
+      get { return modelGuid_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasDeliverableObject) return false;
+        if (!hasItemPrice) return false;
+        if (!hasSellableObject) return false;
+        if (!ItemPrice.IsInitialized) return false;
+        if (HasOriginalPrice) {
+          if (!OriginalPrice.IsInitialized) return false;
+        }
+        foreach (global::Gazillion.MHConsolePresentationEntry element in PresentationsList) {
+          if (!element.IsInitialized) return false;
+        }
+        foreach (global::Gazillion.MHConsoleUpsell element in UpsellItemsList) {
+          if (!element.IsInitialized) return false;
+        }
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _marvelHeroesConsoleCatalogEntryFieldNames;
+      if (hasDeliverableObject) {
+        output.WriteString(1, field_names[1], DeliverableObject);
+      }
+      if (guidItems_.Count > 0) {
+        output.WriteMessageArray(2, field_names[4], guidItems_);
+      }
+      if (hasItemPrice) {
+        output.WriteMessage(3, field_names[5], ItemPrice);
+      }
+      if (hasOriginalPrice) {
+        output.WriteMessage(4, field_names[7], OriginalPrice);
+      }
+      if (hasDiscount) {
+        output.WriteMessage(5, field_names[2], Discount);
+      }
+      if (tags_.Count > 0) {
+        output.WriteStringArray(6, field_names[10], tags_);
+      }
+      if (presentations_.Count > 0) {
+        output.WriteMessageArray(7, field_names[8], presentations_);
+      }
+      if (hasSellableObject) {
+        output.WriteString(8, field_names[9], SellableObject);
+      }
+      if (categories_.Count > 0) {
+        output.WriteStringArray(9, field_names[0], categories_);
+      }
+      if (upsellItems_.Count > 0) {
+        output.WriteMessageArray(10, field_names[11], upsellItems_);
+      }
+      if (hasFilterSO) {
+        output.WriteString(11, field_names[3], FilterSO);
+      }
+      if (hasModelGuid) {
+        output.WriteInt64(12, field_names[6], ModelGuid);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasDeliverableObject) {
+        size += pb::CodedOutputStream.ComputeStringSize(1, DeliverableObject);
+      }
+      foreach (global::Gazillion.MHCatalogGuidEntry element in GuidItemsList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(2, element);
+      }
+      if (hasItemPrice) {
+        size += pb::CodedOutputStream.ComputeMessageSize(3, ItemPrice);
+      }
+      if (hasOriginalPrice) {
+        size += pb::CodedOutputStream.ComputeMessageSize(4, OriginalPrice);
+      }
+      if (hasDiscount) {
+        size += pb::CodedOutputStream.ComputeMessageSize(5, Discount);
+      }
+      {
+        int dataSize = 0;
+        foreach (string element in TagsList) {
+          dataSize += pb::CodedOutputStream.ComputeStringSizeNoTag(element);
+        }
+        size += dataSize;
+        size += 1 * tags_.Count;
+      }
+      foreach (global::Gazillion.MHConsolePresentationEntry element in PresentationsList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(7, element);
+      }
+      if (hasSellableObject) {
+        size += pb::CodedOutputStream.ComputeStringSize(8, SellableObject);
+      }
+      {
+        int dataSize = 0;
+        foreach (string element in CategoriesList) {
+          dataSize += pb::CodedOutputStream.ComputeStringSizeNoTag(element);
+        }
+        size += dataSize;
+        size += 1 * categories_.Count;
+      }
+      foreach (global::Gazillion.MHConsoleUpsell element in UpsellItemsList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(10, element);
+      }
+      if (hasFilterSO) {
+        size += pb::CodedOutputStream.ComputeStringSize(11, FilterSO);
+      }
+      if (hasModelGuid) {
+        size += pb::CodedOutputStream.ComputeInt64Size(12, ModelGuid);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static MarvelHeroesConsoleCatalogEntry ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MarvelHeroesConsoleCatalogEntry ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MarvelHeroesConsoleCatalogEntry ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MarvelHeroesConsoleCatalogEntry ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MarvelHeroesConsoleCatalogEntry ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MarvelHeroesConsoleCatalogEntry ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static MarvelHeroesConsoleCatalogEntry ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static MarvelHeroesConsoleCatalogEntry ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static MarvelHeroesConsoleCatalogEntry ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MarvelHeroesConsoleCatalogEntry ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private MarvelHeroesConsoleCatalogEntry MakeReadOnly() {
+      guidItems_.MakeReadOnly();
+      tags_.MakeReadOnly();
+      presentations_.MakeReadOnly();
+      categories_.MakeReadOnly();
+      upsellItems_.MakeReadOnly();
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(MarvelHeroesConsoleCatalogEntry prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<MarvelHeroesConsoleCatalogEntry, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(MarvelHeroesConsoleCatalogEntry cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private MarvelHeroesConsoleCatalogEntry result;
+      
+      private MarvelHeroesConsoleCatalogEntry PrepareBuilder() {
+        if (resultIsReadOnly) {
+          MarvelHeroesConsoleCatalogEntry original = result;
+          result = new MarvelHeroesConsoleCatalogEntry();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override MarvelHeroesConsoleCatalogEntry MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.MarvelHeroesConsoleCatalogEntry.Descriptor; }
+      }
+      
+      public override MarvelHeroesConsoleCatalogEntry DefaultInstanceForType {
+        get { return global::Gazillion.MarvelHeroesConsoleCatalogEntry.DefaultInstance; }
+      }
+      
+      public override MarvelHeroesConsoleCatalogEntry BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is MarvelHeroesConsoleCatalogEntry) {
+          return MergeFrom((MarvelHeroesConsoleCatalogEntry) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(MarvelHeroesConsoleCatalogEntry other) {
+        if (other == global::Gazillion.MarvelHeroesConsoleCatalogEntry.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasDeliverableObject) {
+          DeliverableObject = other.DeliverableObject;
+        }
+        if (other.guidItems_.Count != 0) {
+          result.guidItems_.Add(other.guidItems_);
+        }
+        if (other.HasItemPrice) {
+          MergeItemPrice(other.ItemPrice);
+        }
+        if (other.HasOriginalPrice) {
+          MergeOriginalPrice(other.OriginalPrice);
+        }
+        if (other.HasDiscount) {
+          MergeDiscount(other.Discount);
+        }
+        if (other.tags_.Count != 0) {
+          result.tags_.Add(other.tags_);
+        }
+        if (other.presentations_.Count != 0) {
+          result.presentations_.Add(other.presentations_);
+        }
+        if (other.HasSellableObject) {
+          SellableObject = other.SellableObject;
+        }
+        if (other.categories_.Count != 0) {
+          result.categories_.Add(other.categories_);
+        }
+        if (other.upsellItems_.Count != 0) {
+          result.upsellItems_.Add(other.upsellItems_);
+        }
+        if (other.HasFilterSO) {
+          FilterSO = other.FilterSO;
+        }
+        if (other.HasModelGuid) {
+          ModelGuid = other.ModelGuid;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_marvelHeroesConsoleCatalogEntryFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _marvelHeroesConsoleCatalogEntryFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 10: {
+              result.hasDeliverableObject = input.ReadString(ref result.deliverableObject_);
+              break;
+            }
+            case 18: {
+              input.ReadMessageArray(tag, field_name, result.guidItems_, global::Gazillion.MHCatalogGuidEntry.DefaultInstance, extensionRegistry);
+              break;
+            }
+            case 26: {
+              global::Gazillion.MHConsoleItemPrice.Builder subBuilder = global::Gazillion.MHConsoleItemPrice.CreateBuilder();
+              if (result.hasItemPrice) {
+                subBuilder.MergeFrom(ItemPrice);
+              }
+              input.ReadMessage(subBuilder, extensionRegistry);
+              ItemPrice = subBuilder.BuildPartial();
+              break;
+            }
+            case 34: {
+              global::Gazillion.MHConsoleItemPrice.Builder subBuilder = global::Gazillion.MHConsoleItemPrice.CreateBuilder();
+              if (result.hasOriginalPrice) {
+                subBuilder.MergeFrom(OriginalPrice);
+              }
+              input.ReadMessage(subBuilder, extensionRegistry);
+              OriginalPrice = subBuilder.BuildPartial();
+              break;
+            }
+            case 42: {
+              global::Gazillion.MHConsoleDiscount.Builder subBuilder = global::Gazillion.MHConsoleDiscount.CreateBuilder();
+              if (result.hasDiscount) {
+                subBuilder.MergeFrom(Discount);
+              }
+              input.ReadMessage(subBuilder, extensionRegistry);
+              Discount = subBuilder.BuildPartial();
+              break;
+            }
+            case 50: {
+              input.ReadStringArray(tag, field_name, result.tags_);
+              break;
+            }
+            case 58: {
+              input.ReadMessageArray(tag, field_name, result.presentations_, global::Gazillion.MHConsolePresentationEntry.DefaultInstance, extensionRegistry);
+              break;
+            }
+            case 66: {
+              result.hasSellableObject = input.ReadString(ref result.sellableObject_);
+              break;
+            }
+            case 74: {
+              input.ReadStringArray(tag, field_name, result.categories_);
+              break;
+            }
+            case 82: {
+              input.ReadMessageArray(tag, field_name, result.upsellItems_, global::Gazillion.MHConsoleUpsell.DefaultInstance, extensionRegistry);
+              break;
+            }
+            case 90: {
+              result.hasFilterSO = input.ReadString(ref result.filterSO_);
+              break;
+            }
+            case 96: {
+              result.hasModelGuid = input.ReadInt64(ref result.modelGuid_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasDeliverableObject {
+        get { return result.hasDeliverableObject; }
+      }
+      public string DeliverableObject {
+        get { return result.DeliverableObject; }
+        set { SetDeliverableObject(value); }
+      }
+      public Builder SetDeliverableObject(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasDeliverableObject = true;
+        result.deliverableObject_ = value;
+        return this;
+      }
+      public Builder ClearDeliverableObject() {
+        PrepareBuilder();
+        result.hasDeliverableObject = false;
+        result.deliverableObject_ = "";
+        return this;
+      }
+      
+      public pbc::IPopsicleList<global::Gazillion.MHCatalogGuidEntry> GuidItemsList {
+        get { return PrepareBuilder().guidItems_; }
+      }
+      public int GuidItemsCount {
+        get { return result.GuidItemsCount; }
+      }
+      public global::Gazillion.MHCatalogGuidEntry GetGuidItems(int index) {
+        return result.GetGuidItems(index);
+      }
+      public Builder SetGuidItems(int index, global::Gazillion.MHCatalogGuidEntry value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.guidItems_[index] = value;
+        return this;
+      }
+      public Builder SetGuidItems(int index, global::Gazillion.MHCatalogGuidEntry.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.guidItems_[index] = builderForValue.Build();
+        return this;
+      }
+      public Builder AddGuidItems(global::Gazillion.MHCatalogGuidEntry value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.guidItems_.Add(value);
+        return this;
+      }
+      public Builder AddGuidItems(global::Gazillion.MHCatalogGuidEntry.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.guidItems_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangeGuidItems(scg::IEnumerable<global::Gazillion.MHCatalogGuidEntry> values) {
+        PrepareBuilder();
+        result.guidItems_.Add(values);
+        return this;
+      }
+      public Builder ClearGuidItems() {
+        PrepareBuilder();
+        result.guidItems_.Clear();
+        return this;
+      }
+      
+      public bool HasItemPrice {
+       get { return result.hasItemPrice; }
+      }
+      public global::Gazillion.MHConsoleItemPrice ItemPrice {
+        get { return result.ItemPrice; }
+        set { SetItemPrice(value); }
+      }
+      public Builder SetItemPrice(global::Gazillion.MHConsoleItemPrice value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasItemPrice = true;
+        result.itemPrice_ = value;
+        return this;
+      }
+      public Builder SetItemPrice(global::Gazillion.MHConsoleItemPrice.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.hasItemPrice = true;
+        result.itemPrice_ = builderForValue.Build();
+        return this;
+      }
+      public Builder MergeItemPrice(global::Gazillion.MHConsoleItemPrice value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        if (result.hasItemPrice &&
+            result.itemPrice_ != global::Gazillion.MHConsoleItemPrice.DefaultInstance) {
+            result.itemPrice_ = global::Gazillion.MHConsoleItemPrice.CreateBuilder(result.itemPrice_).MergeFrom(value).BuildPartial();
+        } else {
+          result.itemPrice_ = value;
+        }
+        result.hasItemPrice = true;
+        return this;
+      }
+      public Builder ClearItemPrice() {
+        PrepareBuilder();
+        result.hasItemPrice = false;
+        result.itemPrice_ = null;
+        return this;
+      }
+      
+      public bool HasOriginalPrice {
+       get { return result.hasOriginalPrice; }
+      }
+      public global::Gazillion.MHConsoleItemPrice OriginalPrice {
+        get { return result.OriginalPrice; }
+        set { SetOriginalPrice(value); }
+      }
+      public Builder SetOriginalPrice(global::Gazillion.MHConsoleItemPrice value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasOriginalPrice = true;
+        result.originalPrice_ = value;
+        return this;
+      }
+      public Builder SetOriginalPrice(global::Gazillion.MHConsoleItemPrice.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.hasOriginalPrice = true;
+        result.originalPrice_ = builderForValue.Build();
+        return this;
+      }
+      public Builder MergeOriginalPrice(global::Gazillion.MHConsoleItemPrice value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        if (result.hasOriginalPrice &&
+            result.originalPrice_ != global::Gazillion.MHConsoleItemPrice.DefaultInstance) {
+            result.originalPrice_ = global::Gazillion.MHConsoleItemPrice.CreateBuilder(result.originalPrice_).MergeFrom(value).BuildPartial();
+        } else {
+          result.originalPrice_ = value;
+        }
+        result.hasOriginalPrice = true;
+        return this;
+      }
+      public Builder ClearOriginalPrice() {
+        PrepareBuilder();
+        result.hasOriginalPrice = false;
+        result.originalPrice_ = null;
+        return this;
+      }
+      
+      public bool HasDiscount {
+       get { return result.hasDiscount; }
+      }
+      public global::Gazillion.MHConsoleDiscount Discount {
+        get { return result.Discount; }
+        set { SetDiscount(value); }
+      }
+      public Builder SetDiscount(global::Gazillion.MHConsoleDiscount value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasDiscount = true;
+        result.discount_ = value;
+        return this;
+      }
+      public Builder SetDiscount(global::Gazillion.MHConsoleDiscount.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.hasDiscount = true;
+        result.discount_ = builderForValue.Build();
+        return this;
+      }
+      public Builder MergeDiscount(global::Gazillion.MHConsoleDiscount value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        if (result.hasDiscount &&
+            result.discount_ != global::Gazillion.MHConsoleDiscount.DefaultInstance) {
+            result.discount_ = global::Gazillion.MHConsoleDiscount.CreateBuilder(result.discount_).MergeFrom(value).BuildPartial();
+        } else {
+          result.discount_ = value;
+        }
+        result.hasDiscount = true;
+        return this;
+      }
+      public Builder ClearDiscount() {
+        PrepareBuilder();
+        result.hasDiscount = false;
+        result.discount_ = null;
+        return this;
+      }
+      
+      public pbc::IPopsicleList<string> TagsList {
+        get { return PrepareBuilder().tags_; }
+      }
+      public int TagsCount {
+        get { return result.TagsCount; }
+      }
+      public string GetTags(int index) {
+        return result.GetTags(index);
+      }
+      public Builder SetTags(int index, string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.tags_[index] = value;
+        return this;
+      }
+      public Builder AddTags(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.tags_.Add(value);
+        return this;
+      }
+      public Builder AddRangeTags(scg::IEnumerable<string> values) {
+        PrepareBuilder();
+        result.tags_.Add(values);
+        return this;
+      }
+      public Builder ClearTags() {
+        PrepareBuilder();
+        result.tags_.Clear();
+        return this;
+      }
+      
+      public pbc::IPopsicleList<global::Gazillion.MHConsolePresentationEntry> PresentationsList {
+        get { return PrepareBuilder().presentations_; }
+      }
+      public int PresentationsCount {
+        get { return result.PresentationsCount; }
+      }
+      public global::Gazillion.MHConsolePresentationEntry GetPresentations(int index) {
+        return result.GetPresentations(index);
+      }
+      public Builder SetPresentations(int index, global::Gazillion.MHConsolePresentationEntry value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.presentations_[index] = value;
+        return this;
+      }
+      public Builder SetPresentations(int index, global::Gazillion.MHConsolePresentationEntry.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.presentations_[index] = builderForValue.Build();
+        return this;
+      }
+      public Builder AddPresentations(global::Gazillion.MHConsolePresentationEntry value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.presentations_.Add(value);
+        return this;
+      }
+      public Builder AddPresentations(global::Gazillion.MHConsolePresentationEntry.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.presentations_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangePresentations(scg::IEnumerable<global::Gazillion.MHConsolePresentationEntry> values) {
+        PrepareBuilder();
+        result.presentations_.Add(values);
+        return this;
+      }
+      public Builder ClearPresentations() {
+        PrepareBuilder();
+        result.presentations_.Clear();
+        return this;
+      }
+      
+      public bool HasSellableObject {
+        get { return result.hasSellableObject; }
+      }
+      public string SellableObject {
+        get { return result.SellableObject; }
+        set { SetSellableObject(value); }
+      }
+      public Builder SetSellableObject(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasSellableObject = true;
+        result.sellableObject_ = value;
+        return this;
+      }
+      public Builder ClearSellableObject() {
+        PrepareBuilder();
+        result.hasSellableObject = false;
+        result.sellableObject_ = "";
+        return this;
+      }
+      
+      public pbc::IPopsicleList<string> CategoriesList {
+        get { return PrepareBuilder().categories_; }
+      }
+      public int CategoriesCount {
+        get { return result.CategoriesCount; }
+      }
+      public string GetCategories(int index) {
+        return result.GetCategories(index);
+      }
+      public Builder SetCategories(int index, string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.categories_[index] = value;
+        return this;
+      }
+      public Builder AddCategories(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.categories_.Add(value);
+        return this;
+      }
+      public Builder AddRangeCategories(scg::IEnumerable<string> values) {
+        PrepareBuilder();
+        result.categories_.Add(values);
+        return this;
+      }
+      public Builder ClearCategories() {
+        PrepareBuilder();
+        result.categories_.Clear();
+        return this;
+      }
+      
+      public pbc::IPopsicleList<global::Gazillion.MHConsoleUpsell> UpsellItemsList {
+        get { return PrepareBuilder().upsellItems_; }
+      }
+      public int UpsellItemsCount {
+        get { return result.UpsellItemsCount; }
+      }
+      public global::Gazillion.MHConsoleUpsell GetUpsellItems(int index) {
+        return result.GetUpsellItems(index);
+      }
+      public Builder SetUpsellItems(int index, global::Gazillion.MHConsoleUpsell value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.upsellItems_[index] = value;
+        return this;
+      }
+      public Builder SetUpsellItems(int index, global::Gazillion.MHConsoleUpsell.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.upsellItems_[index] = builderForValue.Build();
+        return this;
+      }
+      public Builder AddUpsellItems(global::Gazillion.MHConsoleUpsell value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.upsellItems_.Add(value);
+        return this;
+      }
+      public Builder AddUpsellItems(global::Gazillion.MHConsoleUpsell.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.upsellItems_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangeUpsellItems(scg::IEnumerable<global::Gazillion.MHConsoleUpsell> values) {
+        PrepareBuilder();
+        result.upsellItems_.Add(values);
+        return this;
+      }
+      public Builder ClearUpsellItems() {
+        PrepareBuilder();
+        result.upsellItems_.Clear();
+        return this;
+      }
+      
+      public bool HasFilterSO {
+        get { return result.hasFilterSO; }
+      }
+      public string FilterSO {
+        get { return result.FilterSO; }
+        set { SetFilterSO(value); }
+      }
+      public Builder SetFilterSO(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasFilterSO = true;
+        result.filterSO_ = value;
+        return this;
+      }
+      public Builder ClearFilterSO() {
+        PrepareBuilder();
+        result.hasFilterSO = false;
+        result.filterSO_ = "";
+        return this;
+      }
+      
+      public bool HasModelGuid {
+        get { return result.hasModelGuid; }
+      }
+      public long ModelGuid {
+        get { return result.ModelGuid; }
+        set { SetModelGuid(value); }
+      }
+      public Builder SetModelGuid(long value) {
+        PrepareBuilder();
+        result.hasModelGuid = true;
+        result.modelGuid_ = value;
+        return this;
+      }
+      public Builder ClearModelGuid() {
+        PrepareBuilder();
+        result.hasModelGuid = false;
+        result.modelGuid_ = 0L;
+        return this;
+      }
+    }
+    static MarvelHeroesConsoleCatalogEntry() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class MHConsoleCatalogCategoryEntry : pb::GeneratedMessage<MHConsoleCatalogCategoryEntry, MHConsoleCatalogCategoryEntry.Builder> {
+    private MHConsoleCatalogCategoryEntry() { }
+    private static readonly MHConsoleCatalogCategoryEntry defaultInstance = new MHConsoleCatalogCategoryEntry().MakeReadOnly();
+    private static readonly string[] _mHConsoleCatalogCategoryEntryFieldNames = new string[] { "id", "localizedEntries", "tags", "tid", "visible" };
+    private static readonly uint[] _mHConsoleCatalogCategoryEntryFieldTags = new uint[] { 10, 26, 42, 34, 16 };
+    public static MHConsoleCatalogCategoryEntry DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override MHConsoleCatalogCategoryEntry DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override MHConsoleCatalogCategoryEntry ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHConsoleCatalogCategoryEntry__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<MHConsoleCatalogCategoryEntry, MHConsoleCatalogCategoryEntry.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHConsoleCatalogCategoryEntry__FieldAccessorTable; }
+    }
+    
+    public const int IdFieldNumber = 1;
+    private bool hasId;
+    private string id_ = "";
+    public bool HasId {
+      get { return hasId; }
+    }
+    public string Id {
+      get { return id_; }
+    }
+    
+    public const int VisibleFieldNumber = 2;
+    private bool hasVisible;
+    private bool visible_;
+    public bool HasVisible {
+      get { return hasVisible; }
+    }
+    public bool Visible {
+      get { return visible_; }
+    }
+    
+    public const int LocalizedEntriesFieldNumber = 3;
+    private pbc::PopsicleList<global::Gazillion.MHLocalizedStringCollection> localizedEntries_ = new pbc::PopsicleList<global::Gazillion.MHLocalizedStringCollection>();
+    public scg::IList<global::Gazillion.MHLocalizedStringCollection> LocalizedEntriesList {
+      get { return localizedEntries_; }
+    }
+    public int LocalizedEntriesCount {
+      get { return localizedEntries_.Count; }
+    }
+    public global::Gazillion.MHLocalizedStringCollection GetLocalizedEntries(int index) {
+      return localizedEntries_[index];
+    }
+    
+    public const int TidFieldNumber = 4;
+    private bool hasTid;
+    private string tid_ = "";
+    public bool HasTid {
+      get { return hasTid; }
+    }
+    public string Tid {
+      get { return tid_; }
+    }
+    
+    public const int TagsFieldNumber = 5;
+    private pbc::PopsicleList<string> tags_ = new pbc::PopsicleList<string>();
+    public scg::IList<string> TagsList {
+      get { return pbc::Lists.AsReadOnly(tags_); }
+    }
+    public int TagsCount {
+      get { return tags_.Count; }
+    }
+    public string GetTags(int index) {
+      return tags_[index];
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasId) return false;
+        if (!hasVisible) return false;
+        if (!hasTid) return false;
+        foreach (global::Gazillion.MHLocalizedStringCollection element in LocalizedEntriesList) {
+          if (!element.IsInitialized) return false;
+        }
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _mHConsoleCatalogCategoryEntryFieldNames;
+      if (hasId) {
+        output.WriteString(1, field_names[0], Id);
+      }
+      if (hasVisible) {
+        output.WriteBool(2, field_names[4], Visible);
+      }
+      if (localizedEntries_.Count > 0) {
+        output.WriteMessageArray(3, field_names[1], localizedEntries_);
+      }
+      if (hasTid) {
+        output.WriteString(4, field_names[3], Tid);
+      }
+      if (tags_.Count > 0) {
+        output.WriteStringArray(5, field_names[2], tags_);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasId) {
+        size += pb::CodedOutputStream.ComputeStringSize(1, Id);
+      }
+      if (hasVisible) {
+        size += pb::CodedOutputStream.ComputeBoolSize(2, Visible);
+      }
+      foreach (global::Gazillion.MHLocalizedStringCollection element in LocalizedEntriesList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(3, element);
+      }
+      if (hasTid) {
+        size += pb::CodedOutputStream.ComputeStringSize(4, Tid);
+      }
+      {
+        int dataSize = 0;
+        foreach (string element in TagsList) {
+          dataSize += pb::CodedOutputStream.ComputeStringSizeNoTag(element);
+        }
+        size += dataSize;
+        size += 1 * tags_.Count;
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static MHConsoleCatalogCategoryEntry ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHConsoleCatalogCategoryEntry ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsoleCatalogCategoryEntry ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHConsoleCatalogCategoryEntry ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsoleCatalogCategoryEntry ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHConsoleCatalogCategoryEntry ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsoleCatalogCategoryEntry ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static MHConsoleCatalogCategoryEntry ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static MHConsoleCatalogCategoryEntry ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHConsoleCatalogCategoryEntry ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private MHConsoleCatalogCategoryEntry MakeReadOnly() {
+      localizedEntries_.MakeReadOnly();
+      tags_.MakeReadOnly();
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(MHConsoleCatalogCategoryEntry prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<MHConsoleCatalogCategoryEntry, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(MHConsoleCatalogCategoryEntry cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private MHConsoleCatalogCategoryEntry result;
+      
+      private MHConsoleCatalogCategoryEntry PrepareBuilder() {
+        if (resultIsReadOnly) {
+          MHConsoleCatalogCategoryEntry original = result;
+          result = new MHConsoleCatalogCategoryEntry();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override MHConsoleCatalogCategoryEntry MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.MHConsoleCatalogCategoryEntry.Descriptor; }
+      }
+      
+      public override MHConsoleCatalogCategoryEntry DefaultInstanceForType {
+        get { return global::Gazillion.MHConsoleCatalogCategoryEntry.DefaultInstance; }
+      }
+      
+      public override MHConsoleCatalogCategoryEntry BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is MHConsoleCatalogCategoryEntry) {
+          return MergeFrom((MHConsoleCatalogCategoryEntry) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(MHConsoleCatalogCategoryEntry other) {
+        if (other == global::Gazillion.MHConsoleCatalogCategoryEntry.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasId) {
+          Id = other.Id;
+        }
+        if (other.HasVisible) {
+          Visible = other.Visible;
+        }
+        if (other.localizedEntries_.Count != 0) {
+          result.localizedEntries_.Add(other.localizedEntries_);
+        }
+        if (other.HasTid) {
+          Tid = other.Tid;
+        }
+        if (other.tags_.Count != 0) {
+          result.tags_.Add(other.tags_);
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_mHConsoleCatalogCategoryEntryFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _mHConsoleCatalogCategoryEntryFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 10: {
+              result.hasId = input.ReadString(ref result.id_);
+              break;
+            }
+            case 16: {
+              result.hasVisible = input.ReadBool(ref result.visible_);
+              break;
+            }
+            case 26: {
+              input.ReadMessageArray(tag, field_name, result.localizedEntries_, global::Gazillion.MHLocalizedStringCollection.DefaultInstance, extensionRegistry);
+              break;
+            }
+            case 34: {
+              result.hasTid = input.ReadString(ref result.tid_);
+              break;
+            }
+            case 42: {
+              input.ReadStringArray(tag, field_name, result.tags_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasId {
+        get { return result.hasId; }
+      }
+      public string Id {
+        get { return result.Id; }
+        set { SetId(value); }
+      }
+      public Builder SetId(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasId = true;
+        result.id_ = value;
+        return this;
+      }
+      public Builder ClearId() {
+        PrepareBuilder();
+        result.hasId = false;
+        result.id_ = "";
+        return this;
+      }
+      
+      public bool HasVisible {
+        get { return result.hasVisible; }
+      }
+      public bool Visible {
+        get { return result.Visible; }
+        set { SetVisible(value); }
+      }
+      public Builder SetVisible(bool value) {
+        PrepareBuilder();
+        result.hasVisible = true;
+        result.visible_ = value;
+        return this;
+      }
+      public Builder ClearVisible() {
+        PrepareBuilder();
+        result.hasVisible = false;
+        result.visible_ = false;
+        return this;
+      }
+      
+      public pbc::IPopsicleList<global::Gazillion.MHLocalizedStringCollection> LocalizedEntriesList {
+        get { return PrepareBuilder().localizedEntries_; }
+      }
+      public int LocalizedEntriesCount {
+        get { return result.LocalizedEntriesCount; }
+      }
+      public global::Gazillion.MHLocalizedStringCollection GetLocalizedEntries(int index) {
+        return result.GetLocalizedEntries(index);
+      }
+      public Builder SetLocalizedEntries(int index, global::Gazillion.MHLocalizedStringCollection value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.localizedEntries_[index] = value;
+        return this;
+      }
+      public Builder SetLocalizedEntries(int index, global::Gazillion.MHLocalizedStringCollection.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.localizedEntries_[index] = builderForValue.Build();
+        return this;
+      }
+      public Builder AddLocalizedEntries(global::Gazillion.MHLocalizedStringCollection value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.localizedEntries_.Add(value);
+        return this;
+      }
+      public Builder AddLocalizedEntries(global::Gazillion.MHLocalizedStringCollection.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.localizedEntries_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangeLocalizedEntries(scg::IEnumerable<global::Gazillion.MHLocalizedStringCollection> values) {
+        PrepareBuilder();
+        result.localizedEntries_.Add(values);
+        return this;
+      }
+      public Builder ClearLocalizedEntries() {
+        PrepareBuilder();
+        result.localizedEntries_.Clear();
+        return this;
+      }
+      
+      public bool HasTid {
+        get { return result.hasTid; }
+      }
+      public string Tid {
+        get { return result.Tid; }
+        set { SetTid(value); }
+      }
+      public Builder SetTid(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasTid = true;
+        result.tid_ = value;
+        return this;
+      }
+      public Builder ClearTid() {
+        PrepareBuilder();
+        result.hasTid = false;
+        result.tid_ = "";
+        return this;
+      }
+      
+      public pbc::IPopsicleList<string> TagsList {
+        get { return PrepareBuilder().tags_; }
+      }
+      public int TagsCount {
+        get { return result.TagsCount; }
+      }
+      public string GetTags(int index) {
+        return result.GetTags(index);
+      }
+      public Builder SetTags(int index, string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.tags_[index] = value;
+        return this;
+      }
+      public Builder AddTags(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.tags_.Add(value);
+        return this;
+      }
+      public Builder AddRangeTags(scg::IEnumerable<string> values) {
+        PrepareBuilder();
+        result.tags_.Add(values);
+        return this;
+      }
+      public Builder ClearTags() {
+        PrepareBuilder();
+        result.tags_.Clear();
+        return this;
+      }
+    }
+    static MHConsoleCatalogCategoryEntry() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class MHConsoleCatalogTagEntry : pb::GeneratedMessage<MHConsoleCatalogTagEntry, MHConsoleCatalogTagEntry.Builder> {
+    private MHConsoleCatalogTagEntry() { }
+    private static readonly MHConsoleCatalogTagEntry defaultInstance = new MHConsoleCatalogTagEntry().MakeReadOnly();
+    private static readonly string[] _mHConsoleCatalogTagEntryFieldNames = new string[] { "displayName", "id", "localizedEntries", "sortKey" };
+    private static readonly uint[] _mHConsoleCatalogTagEntryFieldTags = new uint[] { 26, 10, 34, 16 };
+    public static MHConsoleCatalogTagEntry DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override MHConsoleCatalogTagEntry DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override MHConsoleCatalogTagEntry ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHConsoleCatalogTagEntry__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<MHConsoleCatalogTagEntry, MHConsoleCatalogTagEntry.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHConsoleCatalogTagEntry__FieldAccessorTable; }
+    }
+    
+    public const int IdFieldNumber = 1;
+    private bool hasId;
+    private string id_ = "";
+    public bool HasId {
+      get { return hasId; }
+    }
+    public string Id {
+      get { return id_; }
+    }
+    
+    public const int SortKeyFieldNumber = 2;
+    private bool hasSortKey;
+    private bool sortKey_;
+    public bool HasSortKey {
+      get { return hasSortKey; }
+    }
+    public bool SortKey {
+      get { return sortKey_; }
+    }
+    
+    public const int DisplayNameFieldNumber = 3;
+    private bool hasDisplayName;
+    private string displayName_ = "";
+    public bool HasDisplayName {
+      get { return hasDisplayName; }
+    }
+    public string DisplayName {
+      get { return displayName_; }
+    }
+    
+    public const int LocalizedEntriesFieldNumber = 4;
+    private pbc::PopsicleList<global::Gazillion.MHLocalizedStringCollection> localizedEntries_ = new pbc::PopsicleList<global::Gazillion.MHLocalizedStringCollection>();
+    public scg::IList<global::Gazillion.MHLocalizedStringCollection> LocalizedEntriesList {
+      get { return localizedEntries_; }
+    }
+    public int LocalizedEntriesCount {
+      get { return localizedEntries_.Count; }
+    }
+    public global::Gazillion.MHLocalizedStringCollection GetLocalizedEntries(int index) {
+      return localizedEntries_[index];
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasId) return false;
+        if (!hasSortKey) return false;
+        if (!hasDisplayName) return false;
+        foreach (global::Gazillion.MHLocalizedStringCollection element in LocalizedEntriesList) {
+          if (!element.IsInitialized) return false;
+        }
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _mHConsoleCatalogTagEntryFieldNames;
+      if (hasId) {
+        output.WriteString(1, field_names[1], Id);
+      }
+      if (hasSortKey) {
+        output.WriteBool(2, field_names[3], SortKey);
+      }
+      if (hasDisplayName) {
+        output.WriteString(3, field_names[0], DisplayName);
+      }
+      if (localizedEntries_.Count > 0) {
+        output.WriteMessageArray(4, field_names[2], localizedEntries_);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasId) {
+        size += pb::CodedOutputStream.ComputeStringSize(1, Id);
+      }
+      if (hasSortKey) {
+        size += pb::CodedOutputStream.ComputeBoolSize(2, SortKey);
+      }
+      if (hasDisplayName) {
+        size += pb::CodedOutputStream.ComputeStringSize(3, DisplayName);
+      }
+      foreach (global::Gazillion.MHLocalizedStringCollection element in LocalizedEntriesList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(4, element);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static MHConsoleCatalogTagEntry ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHConsoleCatalogTagEntry ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsoleCatalogTagEntry ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHConsoleCatalogTagEntry ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsoleCatalogTagEntry ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHConsoleCatalogTagEntry ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsoleCatalogTagEntry ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static MHConsoleCatalogTagEntry ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static MHConsoleCatalogTagEntry ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHConsoleCatalogTagEntry ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private MHConsoleCatalogTagEntry MakeReadOnly() {
+      localizedEntries_.MakeReadOnly();
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(MHConsoleCatalogTagEntry prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<MHConsoleCatalogTagEntry, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(MHConsoleCatalogTagEntry cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private MHConsoleCatalogTagEntry result;
+      
+      private MHConsoleCatalogTagEntry PrepareBuilder() {
+        if (resultIsReadOnly) {
+          MHConsoleCatalogTagEntry original = result;
+          result = new MHConsoleCatalogTagEntry();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override MHConsoleCatalogTagEntry MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.MHConsoleCatalogTagEntry.Descriptor; }
+      }
+      
+      public override MHConsoleCatalogTagEntry DefaultInstanceForType {
+        get { return global::Gazillion.MHConsoleCatalogTagEntry.DefaultInstance; }
+      }
+      
+      public override MHConsoleCatalogTagEntry BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is MHConsoleCatalogTagEntry) {
+          return MergeFrom((MHConsoleCatalogTagEntry) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(MHConsoleCatalogTagEntry other) {
+        if (other == global::Gazillion.MHConsoleCatalogTagEntry.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasId) {
+          Id = other.Id;
+        }
+        if (other.HasSortKey) {
+          SortKey = other.SortKey;
+        }
+        if (other.HasDisplayName) {
+          DisplayName = other.DisplayName;
+        }
+        if (other.localizedEntries_.Count != 0) {
+          result.localizedEntries_.Add(other.localizedEntries_);
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_mHConsoleCatalogTagEntryFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _mHConsoleCatalogTagEntryFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 10: {
+              result.hasId = input.ReadString(ref result.id_);
+              break;
+            }
+            case 16: {
+              result.hasSortKey = input.ReadBool(ref result.sortKey_);
+              break;
+            }
+            case 26: {
+              result.hasDisplayName = input.ReadString(ref result.displayName_);
+              break;
+            }
+            case 34: {
+              input.ReadMessageArray(tag, field_name, result.localizedEntries_, global::Gazillion.MHLocalizedStringCollection.DefaultInstance, extensionRegistry);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasId {
+        get { return result.hasId; }
+      }
+      public string Id {
+        get { return result.Id; }
+        set { SetId(value); }
+      }
+      public Builder SetId(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasId = true;
+        result.id_ = value;
+        return this;
+      }
+      public Builder ClearId() {
+        PrepareBuilder();
+        result.hasId = false;
+        result.id_ = "";
+        return this;
+      }
+      
+      public bool HasSortKey {
+        get { return result.hasSortKey; }
+      }
+      public bool SortKey {
+        get { return result.SortKey; }
+        set { SetSortKey(value); }
+      }
+      public Builder SetSortKey(bool value) {
+        PrepareBuilder();
+        result.hasSortKey = true;
+        result.sortKey_ = value;
+        return this;
+      }
+      public Builder ClearSortKey() {
+        PrepareBuilder();
+        result.hasSortKey = false;
+        result.sortKey_ = false;
+        return this;
+      }
+      
+      public bool HasDisplayName {
+        get { return result.hasDisplayName; }
+      }
+      public string DisplayName {
+        get { return result.DisplayName; }
+        set { SetDisplayName(value); }
+      }
+      public Builder SetDisplayName(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasDisplayName = true;
+        result.displayName_ = value;
+        return this;
+      }
+      public Builder ClearDisplayName() {
+        PrepareBuilder();
+        result.hasDisplayName = false;
+        result.displayName_ = "";
+        return this;
+      }
+      
+      public pbc::IPopsicleList<global::Gazillion.MHLocalizedStringCollection> LocalizedEntriesList {
+        get { return PrepareBuilder().localizedEntries_; }
+      }
+      public int LocalizedEntriesCount {
+        get { return result.LocalizedEntriesCount; }
+      }
+      public global::Gazillion.MHLocalizedStringCollection GetLocalizedEntries(int index) {
+        return result.GetLocalizedEntries(index);
+      }
+      public Builder SetLocalizedEntries(int index, global::Gazillion.MHLocalizedStringCollection value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.localizedEntries_[index] = value;
+        return this;
+      }
+      public Builder SetLocalizedEntries(int index, global::Gazillion.MHLocalizedStringCollection.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.localizedEntries_[index] = builderForValue.Build();
+        return this;
+      }
+      public Builder AddLocalizedEntries(global::Gazillion.MHLocalizedStringCollection value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.localizedEntries_.Add(value);
+        return this;
+      }
+      public Builder AddLocalizedEntries(global::Gazillion.MHLocalizedStringCollection.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.localizedEntries_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangeLocalizedEntries(scg::IEnumerable<global::Gazillion.MHLocalizedStringCollection> values) {
+        PrepareBuilder();
+        result.localizedEntries_.Add(values);
+        return this;
+      }
+      public Builder ClearLocalizedEntries() {
+        PrepareBuilder();
+        result.localizedEntries_.Clear();
+        return this;
+      }
+    }
+    static MHConsoleCatalogTagEntry() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class MHConsoleCatalogFeaturedEntry : pb::GeneratedMessage<MHConsoleCatalogFeaturedEntry, MHConsoleCatalogFeaturedEntry.Builder> {
+    private MHConsoleCatalogFeaturedEntry() { }
+    private static readonly MHConsoleCatalogFeaturedEntry defaultInstance = new MHConsoleCatalogFeaturedEntry().MakeReadOnly();
+    private static readonly string[] _mHConsoleCatalogFeaturedEntryFieldNames = new string[] { "actionLinkCategory", "actionLinkSaleableObjectSku", "defaults", "height", "localizedEntries", "position", "type", "width" };
+    private static readonly uint[] _mHConsoleCatalogFeaturedEntryFieldTags = new uint[] { 66, 58, 50, 32, 42, 16, 10, 24 };
+    public static MHConsoleCatalogFeaturedEntry DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override MHConsoleCatalogFeaturedEntry DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override MHConsoleCatalogFeaturedEntry ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHConsoleCatalogFeaturedEntry__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<MHConsoleCatalogFeaturedEntry, MHConsoleCatalogFeaturedEntry.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHConsoleCatalogFeaturedEntry__FieldAccessorTable; }
+    }
+    
+    public const int TypeFieldNumber = 1;
+    private bool hasType;
+    private string type_ = "";
+    public bool HasType {
+      get { return hasType; }
+    }
+    public string Type {
+      get { return type_; }
+    }
+    
+    public const int PositionFieldNumber = 2;
+    private bool hasPosition;
+    private int position_;
+    public bool HasPosition {
+      get { return hasPosition; }
+    }
+    public int Position {
+      get { return position_; }
+    }
+    
+    public const int WidthFieldNumber = 3;
+    private bool hasWidth;
+    private int width_;
+    public bool HasWidth {
+      get { return hasWidth; }
+    }
+    public int Width {
+      get { return width_; }
+    }
+    
+    public const int HeightFieldNumber = 4;
+    private bool hasHeight;
+    private int height_;
+    public bool HasHeight {
+      get { return hasHeight; }
+    }
+    public int Height {
+      get { return height_; }
+    }
+    
+    public const int LocalizedEntriesFieldNumber = 5;
+    private pbc::PopsicleList<global::Gazillion.MHLocalizedStringCollection> localizedEntries_ = new pbc::PopsicleList<global::Gazillion.MHLocalizedStringCollection>();
+    public scg::IList<global::Gazillion.MHLocalizedStringCollection> LocalizedEntriesList {
+      get { return localizedEntries_; }
+    }
+    public int LocalizedEntriesCount {
+      get { return localizedEntries_.Count; }
+    }
+    public global::Gazillion.MHLocalizedStringCollection GetLocalizedEntries(int index) {
+      return localizedEntries_[index];
+    }
+    
+    public const int DefaultsFieldNumber = 6;
+    private pbc::PopsicleList<global::Gazillion.MHStringValue> defaults_ = new pbc::PopsicleList<global::Gazillion.MHStringValue>();
+    public scg::IList<global::Gazillion.MHStringValue> DefaultsList {
+      get { return defaults_; }
+    }
+    public int DefaultsCount {
+      get { return defaults_.Count; }
+    }
+    public global::Gazillion.MHStringValue GetDefaults(int index) {
+      return defaults_[index];
+    }
+    
+    public const int ActionLinkSaleableObjectSkuFieldNumber = 7;
+    private bool hasActionLinkSaleableObjectSku;
+    private string actionLinkSaleableObjectSku_ = "";
+    public bool HasActionLinkSaleableObjectSku {
+      get { return hasActionLinkSaleableObjectSku; }
+    }
+    public string ActionLinkSaleableObjectSku {
+      get { return actionLinkSaleableObjectSku_; }
+    }
+    
+    public const int ActionLinkCategoryFieldNumber = 8;
+    private bool hasActionLinkCategory;
+    private string actionLinkCategory_ = "";
+    public bool HasActionLinkCategory {
+      get { return hasActionLinkCategory; }
+    }
+    public string ActionLinkCategory {
+      get { return actionLinkCategory_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasType) return false;
+        if (!hasPosition) return false;
+        foreach (global::Gazillion.MHLocalizedStringCollection element in LocalizedEntriesList) {
+          if (!element.IsInitialized) return false;
+        }
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _mHConsoleCatalogFeaturedEntryFieldNames;
+      if (hasType) {
+        output.WriteString(1, field_names[6], Type);
+      }
+      if (hasPosition) {
+        output.WriteInt32(2, field_names[5], Position);
+      }
+      if (hasWidth) {
+        output.WriteInt32(3, field_names[7], Width);
+      }
+      if (hasHeight) {
+        output.WriteInt32(4, field_names[3], Height);
+      }
+      if (localizedEntries_.Count > 0) {
+        output.WriteMessageArray(5, field_names[4], localizedEntries_);
+      }
+      if (defaults_.Count > 0) {
+        output.WriteMessageArray(6, field_names[2], defaults_);
+      }
+      if (hasActionLinkSaleableObjectSku) {
+        output.WriteString(7, field_names[1], ActionLinkSaleableObjectSku);
+      }
+      if (hasActionLinkCategory) {
+        output.WriteString(8, field_names[0], ActionLinkCategory);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasType) {
+        size += pb::CodedOutputStream.ComputeStringSize(1, Type);
+      }
+      if (hasPosition) {
+        size += pb::CodedOutputStream.ComputeInt32Size(2, Position);
+      }
+      if (hasWidth) {
+        size += pb::CodedOutputStream.ComputeInt32Size(3, Width);
+      }
+      if (hasHeight) {
+        size += pb::CodedOutputStream.ComputeInt32Size(4, Height);
+      }
+      foreach (global::Gazillion.MHLocalizedStringCollection element in LocalizedEntriesList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(5, element);
+      }
+      foreach (global::Gazillion.MHStringValue element in DefaultsList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(6, element);
+      }
+      if (hasActionLinkSaleableObjectSku) {
+        size += pb::CodedOutputStream.ComputeStringSize(7, ActionLinkSaleableObjectSku);
+      }
+      if (hasActionLinkCategory) {
+        size += pb::CodedOutputStream.ComputeStringSize(8, ActionLinkCategory);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static MHConsoleCatalogFeaturedEntry ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHConsoleCatalogFeaturedEntry ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsoleCatalogFeaturedEntry ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHConsoleCatalogFeaturedEntry ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsoleCatalogFeaturedEntry ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHConsoleCatalogFeaturedEntry ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsoleCatalogFeaturedEntry ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static MHConsoleCatalogFeaturedEntry ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static MHConsoleCatalogFeaturedEntry ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHConsoleCatalogFeaturedEntry ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private MHConsoleCatalogFeaturedEntry MakeReadOnly() {
+      localizedEntries_.MakeReadOnly();
+      defaults_.MakeReadOnly();
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(MHConsoleCatalogFeaturedEntry prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<MHConsoleCatalogFeaturedEntry, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(MHConsoleCatalogFeaturedEntry cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private MHConsoleCatalogFeaturedEntry result;
+      
+      private MHConsoleCatalogFeaturedEntry PrepareBuilder() {
+        if (resultIsReadOnly) {
+          MHConsoleCatalogFeaturedEntry original = result;
+          result = new MHConsoleCatalogFeaturedEntry();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override MHConsoleCatalogFeaturedEntry MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.MHConsoleCatalogFeaturedEntry.Descriptor; }
+      }
+      
+      public override MHConsoleCatalogFeaturedEntry DefaultInstanceForType {
+        get { return global::Gazillion.MHConsoleCatalogFeaturedEntry.DefaultInstance; }
+      }
+      
+      public override MHConsoleCatalogFeaturedEntry BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is MHConsoleCatalogFeaturedEntry) {
+          return MergeFrom((MHConsoleCatalogFeaturedEntry) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(MHConsoleCatalogFeaturedEntry other) {
+        if (other == global::Gazillion.MHConsoleCatalogFeaturedEntry.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasType) {
+          Type = other.Type;
+        }
+        if (other.HasPosition) {
+          Position = other.Position;
+        }
+        if (other.HasWidth) {
+          Width = other.Width;
+        }
+        if (other.HasHeight) {
+          Height = other.Height;
+        }
+        if (other.localizedEntries_.Count != 0) {
+          result.localizedEntries_.Add(other.localizedEntries_);
+        }
+        if (other.defaults_.Count != 0) {
+          result.defaults_.Add(other.defaults_);
+        }
+        if (other.HasActionLinkSaleableObjectSku) {
+          ActionLinkSaleableObjectSku = other.ActionLinkSaleableObjectSku;
+        }
+        if (other.HasActionLinkCategory) {
+          ActionLinkCategory = other.ActionLinkCategory;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_mHConsoleCatalogFeaturedEntryFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _mHConsoleCatalogFeaturedEntryFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 10: {
+              result.hasType = input.ReadString(ref result.type_);
+              break;
+            }
+            case 16: {
+              result.hasPosition = input.ReadInt32(ref result.position_);
+              break;
+            }
+            case 24: {
+              result.hasWidth = input.ReadInt32(ref result.width_);
+              break;
+            }
+            case 32: {
+              result.hasHeight = input.ReadInt32(ref result.height_);
+              break;
+            }
+            case 42: {
+              input.ReadMessageArray(tag, field_name, result.localizedEntries_, global::Gazillion.MHLocalizedStringCollection.DefaultInstance, extensionRegistry);
+              break;
+            }
+            case 50: {
+              input.ReadMessageArray(tag, field_name, result.defaults_, global::Gazillion.MHStringValue.DefaultInstance, extensionRegistry);
+              break;
+            }
+            case 58: {
+              result.hasActionLinkSaleableObjectSku = input.ReadString(ref result.actionLinkSaleableObjectSku_);
+              break;
+            }
+            case 66: {
+              result.hasActionLinkCategory = input.ReadString(ref result.actionLinkCategory_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasType {
+        get { return result.hasType; }
+      }
+      public string Type {
+        get { return result.Type; }
+        set { SetType(value); }
+      }
+      public Builder SetType(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasType = true;
+        result.type_ = value;
+        return this;
+      }
+      public Builder ClearType() {
+        PrepareBuilder();
+        result.hasType = false;
+        result.type_ = "";
+        return this;
+      }
+      
+      public bool HasPosition {
+        get { return result.hasPosition; }
+      }
+      public int Position {
+        get { return result.Position; }
+        set { SetPosition(value); }
+      }
+      public Builder SetPosition(int value) {
+        PrepareBuilder();
+        result.hasPosition = true;
+        result.position_ = value;
+        return this;
+      }
+      public Builder ClearPosition() {
+        PrepareBuilder();
+        result.hasPosition = false;
+        result.position_ = 0;
+        return this;
+      }
+      
+      public bool HasWidth {
+        get { return result.hasWidth; }
+      }
+      public int Width {
+        get { return result.Width; }
+        set { SetWidth(value); }
+      }
+      public Builder SetWidth(int value) {
+        PrepareBuilder();
+        result.hasWidth = true;
+        result.width_ = value;
+        return this;
+      }
+      public Builder ClearWidth() {
+        PrepareBuilder();
+        result.hasWidth = false;
+        result.width_ = 0;
+        return this;
+      }
+      
+      public bool HasHeight {
+        get { return result.hasHeight; }
+      }
+      public int Height {
+        get { return result.Height; }
+        set { SetHeight(value); }
+      }
+      public Builder SetHeight(int value) {
+        PrepareBuilder();
+        result.hasHeight = true;
+        result.height_ = value;
+        return this;
+      }
+      public Builder ClearHeight() {
+        PrepareBuilder();
+        result.hasHeight = false;
+        result.height_ = 0;
+        return this;
+      }
+      
+      public pbc::IPopsicleList<global::Gazillion.MHLocalizedStringCollection> LocalizedEntriesList {
+        get { return PrepareBuilder().localizedEntries_; }
+      }
+      public int LocalizedEntriesCount {
+        get { return result.LocalizedEntriesCount; }
+      }
+      public global::Gazillion.MHLocalizedStringCollection GetLocalizedEntries(int index) {
+        return result.GetLocalizedEntries(index);
+      }
+      public Builder SetLocalizedEntries(int index, global::Gazillion.MHLocalizedStringCollection value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.localizedEntries_[index] = value;
+        return this;
+      }
+      public Builder SetLocalizedEntries(int index, global::Gazillion.MHLocalizedStringCollection.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.localizedEntries_[index] = builderForValue.Build();
+        return this;
+      }
+      public Builder AddLocalizedEntries(global::Gazillion.MHLocalizedStringCollection value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.localizedEntries_.Add(value);
+        return this;
+      }
+      public Builder AddLocalizedEntries(global::Gazillion.MHLocalizedStringCollection.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.localizedEntries_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangeLocalizedEntries(scg::IEnumerable<global::Gazillion.MHLocalizedStringCollection> values) {
+        PrepareBuilder();
+        result.localizedEntries_.Add(values);
+        return this;
+      }
+      public Builder ClearLocalizedEntries() {
+        PrepareBuilder();
+        result.localizedEntries_.Clear();
+        return this;
+      }
+      
+      public pbc::IPopsicleList<global::Gazillion.MHStringValue> DefaultsList {
+        get { return PrepareBuilder().defaults_; }
+      }
+      public int DefaultsCount {
+        get { return result.DefaultsCount; }
+      }
+      public global::Gazillion.MHStringValue GetDefaults(int index) {
+        return result.GetDefaults(index);
+      }
+      public Builder SetDefaults(int index, global::Gazillion.MHStringValue value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.defaults_[index] = value;
+        return this;
+      }
+      public Builder SetDefaults(int index, global::Gazillion.MHStringValue.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.defaults_[index] = builderForValue.Build();
+        return this;
+      }
+      public Builder AddDefaults(global::Gazillion.MHStringValue value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.defaults_.Add(value);
+        return this;
+      }
+      public Builder AddDefaults(global::Gazillion.MHStringValue.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.defaults_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangeDefaults(scg::IEnumerable<global::Gazillion.MHStringValue> values) {
+        PrepareBuilder();
+        result.defaults_.Add(values);
+        return this;
+      }
+      public Builder ClearDefaults() {
+        PrepareBuilder();
+        result.defaults_.Clear();
+        return this;
+      }
+      
+      public bool HasActionLinkSaleableObjectSku {
+        get { return result.hasActionLinkSaleableObjectSku; }
+      }
+      public string ActionLinkSaleableObjectSku {
+        get { return result.ActionLinkSaleableObjectSku; }
+        set { SetActionLinkSaleableObjectSku(value); }
+      }
+      public Builder SetActionLinkSaleableObjectSku(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasActionLinkSaleableObjectSku = true;
+        result.actionLinkSaleableObjectSku_ = value;
+        return this;
+      }
+      public Builder ClearActionLinkSaleableObjectSku() {
+        PrepareBuilder();
+        result.hasActionLinkSaleableObjectSku = false;
+        result.actionLinkSaleableObjectSku_ = "";
+        return this;
+      }
+      
+      public bool HasActionLinkCategory {
+        get { return result.hasActionLinkCategory; }
+      }
+      public string ActionLinkCategory {
+        get { return result.ActionLinkCategory; }
+        set { SetActionLinkCategory(value); }
+      }
+      public Builder SetActionLinkCategory(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasActionLinkCategory = true;
+        result.actionLinkCategory_ = value;
+        return this;
+      }
+      public Builder ClearActionLinkCategory() {
+        PrepareBuilder();
+        result.hasActionLinkCategory = false;
+        result.actionLinkCategory_ = "";
+        return this;
+      }
+    }
+    static MHConsoleCatalogFeaturedEntry() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class MHConsoleCatalogFeatureLayout : pb::GeneratedMessage<MHConsoleCatalogFeatureLayout, MHConsoleCatalogFeatureLayout.Builder> {
+    private MHConsoleCatalogFeatureLayout() { }
+    private static readonly MHConsoleCatalogFeatureLayout defaultInstance = new MHConsoleCatalogFeatureLayout().MakeReadOnly();
+    private static readonly string[] _mHConsoleCatalogFeatureLayoutFieldNames = new string[] { "h", "w" };
+    private static readonly uint[] _mHConsoleCatalogFeatureLayoutFieldTags = new uint[] { 8, 16 };
+    public static MHConsoleCatalogFeatureLayout DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override MHConsoleCatalogFeatureLayout DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override MHConsoleCatalogFeatureLayout ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHConsoleCatalogFeatureLayout__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<MHConsoleCatalogFeatureLayout, MHConsoleCatalogFeatureLayout.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHConsoleCatalogFeatureLayout__FieldAccessorTable; }
+    }
+    
+    public const int HFieldNumber = 1;
+    private bool hasH;
+    private int h_;
+    public bool HasH {
+      get { return hasH; }
+    }
+    public int H {
+      get { return h_; }
+    }
+    
+    public const int WFieldNumber = 2;
+    private bool hasW;
+    private int w_;
+    public bool HasW {
+      get { return hasW; }
+    }
+    public int W {
+      get { return w_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasH) return false;
+        if (!hasW) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _mHConsoleCatalogFeatureLayoutFieldNames;
+      if (hasH) {
+        output.WriteInt32(1, field_names[0], H);
+      }
+      if (hasW) {
+        output.WriteInt32(2, field_names[1], W);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasH) {
+        size += pb::CodedOutputStream.ComputeInt32Size(1, H);
+      }
+      if (hasW) {
+        size += pb::CodedOutputStream.ComputeInt32Size(2, W);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static MHConsoleCatalogFeatureLayout ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHConsoleCatalogFeatureLayout ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsoleCatalogFeatureLayout ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHConsoleCatalogFeatureLayout ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsoleCatalogFeatureLayout ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHConsoleCatalogFeatureLayout ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsoleCatalogFeatureLayout ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static MHConsoleCatalogFeatureLayout ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static MHConsoleCatalogFeatureLayout ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHConsoleCatalogFeatureLayout ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private MHConsoleCatalogFeatureLayout MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(MHConsoleCatalogFeatureLayout prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<MHConsoleCatalogFeatureLayout, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(MHConsoleCatalogFeatureLayout cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private MHConsoleCatalogFeatureLayout result;
+      
+      private MHConsoleCatalogFeatureLayout PrepareBuilder() {
+        if (resultIsReadOnly) {
+          MHConsoleCatalogFeatureLayout original = result;
+          result = new MHConsoleCatalogFeatureLayout();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override MHConsoleCatalogFeatureLayout MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.MHConsoleCatalogFeatureLayout.Descriptor; }
+      }
+      
+      public override MHConsoleCatalogFeatureLayout DefaultInstanceForType {
+        get { return global::Gazillion.MHConsoleCatalogFeatureLayout.DefaultInstance; }
+      }
+      
+      public override MHConsoleCatalogFeatureLayout BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is MHConsoleCatalogFeatureLayout) {
+          return MergeFrom((MHConsoleCatalogFeatureLayout) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(MHConsoleCatalogFeatureLayout other) {
+        if (other == global::Gazillion.MHConsoleCatalogFeatureLayout.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasH) {
+          H = other.H;
+        }
+        if (other.HasW) {
+          W = other.W;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_mHConsoleCatalogFeatureLayoutFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _mHConsoleCatalogFeatureLayoutFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 8: {
+              result.hasH = input.ReadInt32(ref result.h_);
+              break;
+            }
+            case 16: {
+              result.hasW = input.ReadInt32(ref result.w_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasH {
+        get { return result.hasH; }
+      }
+      public int H {
+        get { return result.H; }
+        set { SetH(value); }
+      }
+      public Builder SetH(int value) {
+        PrepareBuilder();
+        result.hasH = true;
+        result.h_ = value;
+        return this;
+      }
+      public Builder ClearH() {
+        PrepareBuilder();
+        result.hasH = false;
+        result.h_ = 0;
+        return this;
+      }
+      
+      public bool HasW {
+        get { return result.hasW; }
+      }
+      public int W {
+        get { return result.W; }
+        set { SetW(value); }
+      }
+      public Builder SetW(int value) {
+        PrepareBuilder();
+        result.hasW = true;
+        result.w_ = value;
+        return this;
+      }
+      public Builder ClearW() {
+        PrepareBuilder();
+        result.hasW = false;
+        result.w_ = 0;
+        return this;
+      }
+    }
+    static MHConsoleCatalogFeatureLayout() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class MHConsoleCatalogFeatured : pb::GeneratedMessage<MHConsoleCatalogFeatured, MHConsoleCatalogFeatured.Builder> {
+    private MHConsoleCatalogFeatured() { }
+    private static readonly MHConsoleCatalogFeatured defaultInstance = new MHConsoleCatalogFeatured().MakeReadOnly();
+    private static readonly string[] _mHConsoleCatalogFeaturedFieldNames = new string[] { "deleted", "featuredEntries", "id", "layout", "layoutName" };
+    private static readonly uint[] _mHConsoleCatalogFeaturedFieldTags = new uint[] { 16, 10, 26, 42, 34 };
+    public static MHConsoleCatalogFeatured DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override MHConsoleCatalogFeatured DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override MHConsoleCatalogFeatured ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHConsoleCatalogFeatured__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<MHConsoleCatalogFeatured, MHConsoleCatalogFeatured.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MHConsoleCatalogFeatured__FieldAccessorTable; }
+    }
+    
+    public const int FeaturedEntriesFieldNumber = 1;
+    private pbc::PopsicleList<global::Gazillion.MHConsoleCatalogFeaturedEntry> featuredEntries_ = new pbc::PopsicleList<global::Gazillion.MHConsoleCatalogFeaturedEntry>();
+    public scg::IList<global::Gazillion.MHConsoleCatalogFeaturedEntry> FeaturedEntriesList {
+      get { return featuredEntries_; }
+    }
+    public int FeaturedEntriesCount {
+      get { return featuredEntries_.Count; }
+    }
+    public global::Gazillion.MHConsoleCatalogFeaturedEntry GetFeaturedEntries(int index) {
+      return featuredEntries_[index];
+    }
+    
+    public const int DeletedFieldNumber = 2;
+    private bool hasDeleted;
+    private bool deleted_;
+    public bool HasDeleted {
+      get { return hasDeleted; }
+    }
+    public bool Deleted {
+      get { return deleted_; }
+    }
+    
+    public const int IdFieldNumber = 3;
+    private bool hasId;
+    private string id_ = "";
+    public bool HasId {
+      get { return hasId; }
+    }
+    public string Id {
+      get { return id_; }
+    }
+    
+    public const int LayoutNameFieldNumber = 4;
+    private bool hasLayoutName;
+    private string layoutName_ = "";
+    public bool HasLayoutName {
+      get { return hasLayoutName; }
+    }
+    public string LayoutName {
+      get { return layoutName_; }
+    }
+    
+    public const int LayoutFieldNumber = 5;
+    private bool hasLayout;
+    private global::Gazillion.MHConsoleCatalogFeatureLayout layout_;
+    public bool HasLayout {
+      get { return hasLayout; }
+    }
+    public global::Gazillion.MHConsoleCatalogFeatureLayout Layout {
+      get { return layout_ ?? global::Gazillion.MHConsoleCatalogFeatureLayout.DefaultInstance; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasDeleted) return false;
+        if (!hasLayout) return false;
+        foreach (global::Gazillion.MHConsoleCatalogFeaturedEntry element in FeaturedEntriesList) {
+          if (!element.IsInitialized) return false;
+        }
+        if (!Layout.IsInitialized) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _mHConsoleCatalogFeaturedFieldNames;
+      if (featuredEntries_.Count > 0) {
+        output.WriteMessageArray(1, field_names[1], featuredEntries_);
+      }
+      if (hasDeleted) {
+        output.WriteBool(2, field_names[0], Deleted);
+      }
+      if (hasId) {
+        output.WriteString(3, field_names[2], Id);
+      }
+      if (hasLayoutName) {
+        output.WriteString(4, field_names[4], LayoutName);
+      }
+      if (hasLayout) {
+        output.WriteMessage(5, field_names[3], Layout);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      foreach (global::Gazillion.MHConsoleCatalogFeaturedEntry element in FeaturedEntriesList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(1, element);
+      }
+      if (hasDeleted) {
+        size += pb::CodedOutputStream.ComputeBoolSize(2, Deleted);
+      }
+      if (hasId) {
+        size += pb::CodedOutputStream.ComputeStringSize(3, Id);
+      }
+      if (hasLayoutName) {
+        size += pb::CodedOutputStream.ComputeStringSize(4, LayoutName);
+      }
+      if (hasLayout) {
+        size += pb::CodedOutputStream.ComputeMessageSize(5, Layout);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static MHConsoleCatalogFeatured ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHConsoleCatalogFeatured ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsoleCatalogFeatured ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MHConsoleCatalogFeatured ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsoleCatalogFeatured ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHConsoleCatalogFeatured ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static MHConsoleCatalogFeatured ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static MHConsoleCatalogFeatured ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static MHConsoleCatalogFeatured ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MHConsoleCatalogFeatured ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private MHConsoleCatalogFeatured MakeReadOnly() {
+      featuredEntries_.MakeReadOnly();
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(MHConsoleCatalogFeatured prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<MHConsoleCatalogFeatured, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(MHConsoleCatalogFeatured cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private MHConsoleCatalogFeatured result;
+      
+      private MHConsoleCatalogFeatured PrepareBuilder() {
+        if (resultIsReadOnly) {
+          MHConsoleCatalogFeatured original = result;
+          result = new MHConsoleCatalogFeatured();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override MHConsoleCatalogFeatured MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.MHConsoleCatalogFeatured.Descriptor; }
+      }
+      
+      public override MHConsoleCatalogFeatured DefaultInstanceForType {
+        get { return global::Gazillion.MHConsoleCatalogFeatured.DefaultInstance; }
+      }
+      
+      public override MHConsoleCatalogFeatured BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is MHConsoleCatalogFeatured) {
+          return MergeFrom((MHConsoleCatalogFeatured) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(MHConsoleCatalogFeatured other) {
+        if (other == global::Gazillion.MHConsoleCatalogFeatured.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.featuredEntries_.Count != 0) {
+          result.featuredEntries_.Add(other.featuredEntries_);
+        }
+        if (other.HasDeleted) {
+          Deleted = other.Deleted;
+        }
+        if (other.HasId) {
+          Id = other.Id;
+        }
+        if (other.HasLayoutName) {
+          LayoutName = other.LayoutName;
+        }
+        if (other.HasLayout) {
+          MergeLayout(other.Layout);
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_mHConsoleCatalogFeaturedFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _mHConsoleCatalogFeaturedFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 10: {
+              input.ReadMessageArray(tag, field_name, result.featuredEntries_, global::Gazillion.MHConsoleCatalogFeaturedEntry.DefaultInstance, extensionRegistry);
+              break;
+            }
+            case 16: {
+              result.hasDeleted = input.ReadBool(ref result.deleted_);
+              break;
+            }
+            case 26: {
+              result.hasId = input.ReadString(ref result.id_);
+              break;
+            }
+            case 34: {
+              result.hasLayoutName = input.ReadString(ref result.layoutName_);
+              break;
+            }
+            case 42: {
+              global::Gazillion.MHConsoleCatalogFeatureLayout.Builder subBuilder = global::Gazillion.MHConsoleCatalogFeatureLayout.CreateBuilder();
+              if (result.hasLayout) {
+                subBuilder.MergeFrom(Layout);
+              }
+              input.ReadMessage(subBuilder, extensionRegistry);
+              Layout = subBuilder.BuildPartial();
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public pbc::IPopsicleList<global::Gazillion.MHConsoleCatalogFeaturedEntry> FeaturedEntriesList {
+        get { return PrepareBuilder().featuredEntries_; }
+      }
+      public int FeaturedEntriesCount {
+        get { return result.FeaturedEntriesCount; }
+      }
+      public global::Gazillion.MHConsoleCatalogFeaturedEntry GetFeaturedEntries(int index) {
+        return result.GetFeaturedEntries(index);
+      }
+      public Builder SetFeaturedEntries(int index, global::Gazillion.MHConsoleCatalogFeaturedEntry value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.featuredEntries_[index] = value;
+        return this;
+      }
+      public Builder SetFeaturedEntries(int index, global::Gazillion.MHConsoleCatalogFeaturedEntry.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.featuredEntries_[index] = builderForValue.Build();
+        return this;
+      }
+      public Builder AddFeaturedEntries(global::Gazillion.MHConsoleCatalogFeaturedEntry value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.featuredEntries_.Add(value);
+        return this;
+      }
+      public Builder AddFeaturedEntries(global::Gazillion.MHConsoleCatalogFeaturedEntry.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.featuredEntries_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangeFeaturedEntries(scg::IEnumerable<global::Gazillion.MHConsoleCatalogFeaturedEntry> values) {
+        PrepareBuilder();
+        result.featuredEntries_.Add(values);
+        return this;
+      }
+      public Builder ClearFeaturedEntries() {
+        PrepareBuilder();
+        result.featuredEntries_.Clear();
+        return this;
+      }
+      
+      public bool HasDeleted {
+        get { return result.hasDeleted; }
+      }
+      public bool Deleted {
+        get { return result.Deleted; }
+        set { SetDeleted(value); }
+      }
+      public Builder SetDeleted(bool value) {
+        PrepareBuilder();
+        result.hasDeleted = true;
+        result.deleted_ = value;
+        return this;
+      }
+      public Builder ClearDeleted() {
+        PrepareBuilder();
+        result.hasDeleted = false;
+        result.deleted_ = false;
+        return this;
+      }
+      
+      public bool HasId {
+        get { return result.hasId; }
+      }
+      public string Id {
+        get { return result.Id; }
+        set { SetId(value); }
+      }
+      public Builder SetId(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasId = true;
+        result.id_ = value;
+        return this;
+      }
+      public Builder ClearId() {
+        PrepareBuilder();
+        result.hasId = false;
+        result.id_ = "";
+        return this;
+      }
+      
+      public bool HasLayoutName {
+        get { return result.hasLayoutName; }
+      }
+      public string LayoutName {
+        get { return result.LayoutName; }
+        set { SetLayoutName(value); }
+      }
+      public Builder SetLayoutName(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasLayoutName = true;
+        result.layoutName_ = value;
+        return this;
+      }
+      public Builder ClearLayoutName() {
+        PrepareBuilder();
+        result.hasLayoutName = false;
+        result.layoutName_ = "";
+        return this;
+      }
+      
+      public bool HasLayout {
+       get { return result.hasLayout; }
+      }
+      public global::Gazillion.MHConsoleCatalogFeatureLayout Layout {
+        get { return result.Layout; }
+        set { SetLayout(value); }
+      }
+      public Builder SetLayout(global::Gazillion.MHConsoleCatalogFeatureLayout value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasLayout = true;
+        result.layout_ = value;
+        return this;
+      }
+      public Builder SetLayout(global::Gazillion.MHConsoleCatalogFeatureLayout.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.hasLayout = true;
+        result.layout_ = builderForValue.Build();
+        return this;
+      }
+      public Builder MergeLayout(global::Gazillion.MHConsoleCatalogFeatureLayout value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        if (result.hasLayout &&
+            result.layout_ != global::Gazillion.MHConsoleCatalogFeatureLayout.DefaultInstance) {
+            result.layout_ = global::Gazillion.MHConsoleCatalogFeatureLayout.CreateBuilder(result.layout_).MergeFrom(value).BuildPartial();
+        } else {
+          result.layout_ = value;
+        }
+        result.hasLayout = true;
+        return this;
+      }
+      public Builder ClearLayout() {
+        PrepareBuilder();
+        result.hasLayout = false;
+        result.layout_ = null;
+        return this;
+      }
+    }
+    static MHConsoleCatalogFeatured() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class GiftHistoryEntry : pb::GeneratedMessage<GiftHistoryEntry, GiftHistoryEntry.Builder> {
+    private GiftHistoryEntry() { }
+    private static readonly GiftHistoryEntry defaultInstance = new GiftHistoryEntry().MakeReadOnly();
+    private static readonly string[] _giftHistoryEntryFieldNames = new string[] { "message", "skuId", "timestamp", "transactionId" };
+    private static readonly uint[] _giftHistoryEntryFieldTags = new uint[] { 34, 16, 24, 8 };
+    public static GiftHistoryEntry DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override GiftHistoryEntry DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override GiftHistoryEntry ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_GiftHistoryEntry__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<GiftHistoryEntry, GiftHistoryEntry.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_GiftHistoryEntry__FieldAccessorTable; }
+    }
+    
+    public const int TransactionIdFieldNumber = 1;
+    private bool hasTransactionId;
+    private long transactionId_;
+    public bool HasTransactionId {
+      get { return hasTransactionId; }
+    }
+    public long TransactionId {
+      get { return transactionId_; }
+    }
+    
+    public const int SkuIdFieldNumber = 2;
+    private bool hasSkuId;
+    private long skuId_;
+    public bool HasSkuId {
+      get { return hasSkuId; }
+    }
+    public long SkuId {
+      get { return skuId_; }
+    }
+    
+    public const int TimestampFieldNumber = 3;
+    private bool hasTimestamp;
+    private long timestamp_;
+    public bool HasTimestamp {
+      get { return hasTimestamp; }
+    }
+    public long Timestamp {
+      get { return timestamp_; }
+    }
+    
+    public const int MessageFieldNumber = 4;
+    private bool hasMessage;
+    private string message_ = "";
+    public bool HasMessage {
+      get { return hasMessage; }
+    }
+    public string Message {
+      get { return message_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasSkuId) return false;
+        if (!hasTimestamp) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _giftHistoryEntryFieldNames;
+      if (hasTransactionId) {
+        output.WriteInt64(1, field_names[3], TransactionId);
+      }
+      if (hasSkuId) {
+        output.WriteInt64(2, field_names[1], SkuId);
+      }
+      if (hasTimestamp) {
+        output.WriteInt64(3, field_names[2], Timestamp);
+      }
+      if (hasMessage) {
+        output.WriteString(4, field_names[0], Message);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasTransactionId) {
+        size += pb::CodedOutputStream.ComputeInt64Size(1, TransactionId);
+      }
+      if (hasSkuId) {
+        size += pb::CodedOutputStream.ComputeInt64Size(2, SkuId);
+      }
+      if (hasTimestamp) {
+        size += pb::CodedOutputStream.ComputeInt64Size(3, Timestamp);
+      }
+      if (hasMessage) {
+        size += pb::CodedOutputStream.ComputeStringSize(4, Message);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static GiftHistoryEntry ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GiftHistoryEntry ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GiftHistoryEntry ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GiftHistoryEntry ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GiftHistoryEntry ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GiftHistoryEntry ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static GiftHistoryEntry ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static GiftHistoryEntry ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static GiftHistoryEntry ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GiftHistoryEntry ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private GiftHistoryEntry MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(GiftHistoryEntry prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<GiftHistoryEntry, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(GiftHistoryEntry cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private GiftHistoryEntry result;
+      
+      private GiftHistoryEntry PrepareBuilder() {
+        if (resultIsReadOnly) {
+          GiftHistoryEntry original = result;
+          result = new GiftHistoryEntry();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override GiftHistoryEntry MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.GiftHistoryEntry.Descriptor; }
+      }
+      
+      public override GiftHistoryEntry DefaultInstanceForType {
+        get { return global::Gazillion.GiftHistoryEntry.DefaultInstance; }
+      }
+      
+      public override GiftHistoryEntry BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is GiftHistoryEntry) {
+          return MergeFrom((GiftHistoryEntry) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(GiftHistoryEntry other) {
+        if (other == global::Gazillion.GiftHistoryEntry.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasTransactionId) {
+          TransactionId = other.TransactionId;
+        }
+        if (other.HasSkuId) {
+          SkuId = other.SkuId;
+        }
+        if (other.HasTimestamp) {
+          Timestamp = other.Timestamp;
+        }
+        if (other.HasMessage) {
+          Message = other.Message;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_giftHistoryEntryFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _giftHistoryEntryFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 8: {
+              result.hasTransactionId = input.ReadInt64(ref result.transactionId_);
+              break;
+            }
+            case 16: {
+              result.hasSkuId = input.ReadInt64(ref result.skuId_);
+              break;
+            }
+            case 24: {
+              result.hasTimestamp = input.ReadInt64(ref result.timestamp_);
+              break;
+            }
+            case 34: {
+              result.hasMessage = input.ReadString(ref result.message_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasTransactionId {
+        get { return result.hasTransactionId; }
+      }
+      public long TransactionId {
+        get { return result.TransactionId; }
+        set { SetTransactionId(value); }
+      }
+      public Builder SetTransactionId(long value) {
+        PrepareBuilder();
+        result.hasTransactionId = true;
+        result.transactionId_ = value;
+        return this;
+      }
+      public Builder ClearTransactionId() {
+        PrepareBuilder();
+        result.hasTransactionId = false;
+        result.transactionId_ = 0L;
+        return this;
+      }
+      
+      public bool HasSkuId {
+        get { return result.hasSkuId; }
+      }
+      public long SkuId {
+        get { return result.SkuId; }
+        set { SetSkuId(value); }
+      }
+      public Builder SetSkuId(long value) {
+        PrepareBuilder();
+        result.hasSkuId = true;
+        result.skuId_ = value;
+        return this;
+      }
+      public Builder ClearSkuId() {
+        PrepareBuilder();
+        result.hasSkuId = false;
+        result.skuId_ = 0L;
+        return this;
+      }
+      
+      public bool HasTimestamp {
+        get { return result.hasTimestamp; }
+      }
+      public long Timestamp {
+        get { return result.Timestamp; }
+        set { SetTimestamp(value); }
+      }
+      public Builder SetTimestamp(long value) {
+        PrepareBuilder();
+        result.hasTimestamp = true;
+        result.timestamp_ = value;
+        return this;
+      }
+      public Builder ClearTimestamp() {
+        PrepareBuilder();
+        result.hasTimestamp = false;
+        result.timestamp_ = 0L;
+        return this;
+      }
+      
+      public bool HasMessage {
+        get { return result.hasMessage; }
+      }
+      public string Message {
+        get { return result.Message; }
+        set { SetMessage(value); }
+      }
+      public Builder SetMessage(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasMessage = true;
+        result.message_ = value;
+        return this;
+      }
+      public Builder ClearMessage() {
+        PrepareBuilder();
+        result.hasMessage = false;
+        result.message_ = "";
+        return this;
+      }
+    }
+    static GiftHistoryEntry() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class GiftHistoryForPlayerEntry : pb::GeneratedMessage<GiftHistoryForPlayerEntry, GiftHistoryForPlayerEntry.Builder> {
+    private GiftHistoryForPlayerEntry() { }
+    private static readonly GiftHistoryForPlayerEntry defaultInstance = new GiftHistoryForPlayerEntry().MakeReadOnly();
+    private static readonly string[] _giftHistoryForPlayerEntryFieldNames = new string[] { "historyEntries", "name", "platformAccountId" };
+    private static readonly uint[] _giftHistoryForPlayerEntryFieldTags = new uint[] { 26, 18, 8 };
+    public static GiftHistoryForPlayerEntry DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override GiftHistoryForPlayerEntry DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override GiftHistoryForPlayerEntry ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_GiftHistoryForPlayerEntry__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<GiftHistoryForPlayerEntry, GiftHistoryForPlayerEntry.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_GiftHistoryForPlayerEntry__FieldAccessorTable; }
+    }
+    
+    public const int PlatformAccountIdFieldNumber = 1;
+    private bool hasPlatformAccountId;
+    private long platformAccountId_;
+    public bool HasPlatformAccountId {
+      get { return hasPlatformAccountId; }
+    }
+    public long PlatformAccountId {
+      get { return platformAccountId_; }
+    }
+    
+    public const int NameFieldNumber = 2;
+    private bool hasName;
+    private string name_ = "";
+    public bool HasName {
+      get { return hasName; }
+    }
+    public string Name {
+      get { return name_; }
+    }
+    
+    public const int HistoryEntriesFieldNumber = 3;
+    private pbc::PopsicleList<global::Gazillion.GiftHistoryEntry> historyEntries_ = new pbc::PopsicleList<global::Gazillion.GiftHistoryEntry>();
+    public scg::IList<global::Gazillion.GiftHistoryEntry> HistoryEntriesList {
+      get { return historyEntries_; }
+    }
+    public int HistoryEntriesCount {
+      get { return historyEntries_.Count; }
+    }
+    public global::Gazillion.GiftHistoryEntry GetHistoryEntries(int index) {
+      return historyEntries_[index];
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasName) return false;
+        foreach (global::Gazillion.GiftHistoryEntry element in HistoryEntriesList) {
+          if (!element.IsInitialized) return false;
+        }
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _giftHistoryForPlayerEntryFieldNames;
+      if (hasPlatformAccountId) {
+        output.WriteInt64(1, field_names[2], PlatformAccountId);
+      }
+      if (hasName) {
+        output.WriteString(2, field_names[1], Name);
+      }
+      if (historyEntries_.Count > 0) {
+        output.WriteMessageArray(3, field_names[0], historyEntries_);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasPlatformAccountId) {
+        size += pb::CodedOutputStream.ComputeInt64Size(1, PlatformAccountId);
+      }
+      if (hasName) {
+        size += pb::CodedOutputStream.ComputeStringSize(2, Name);
+      }
+      foreach (global::Gazillion.GiftHistoryEntry element in HistoryEntriesList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(3, element);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static GiftHistoryForPlayerEntry ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GiftHistoryForPlayerEntry ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GiftHistoryForPlayerEntry ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static GiftHistoryForPlayerEntry ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static GiftHistoryForPlayerEntry ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GiftHistoryForPlayerEntry ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static GiftHistoryForPlayerEntry ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static GiftHistoryForPlayerEntry ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static GiftHistoryForPlayerEntry ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static GiftHistoryForPlayerEntry ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private GiftHistoryForPlayerEntry MakeReadOnly() {
+      historyEntries_.MakeReadOnly();
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(GiftHistoryForPlayerEntry prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<GiftHistoryForPlayerEntry, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(GiftHistoryForPlayerEntry cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private GiftHistoryForPlayerEntry result;
+      
+      private GiftHistoryForPlayerEntry PrepareBuilder() {
+        if (resultIsReadOnly) {
+          GiftHistoryForPlayerEntry original = result;
+          result = new GiftHistoryForPlayerEntry();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override GiftHistoryForPlayerEntry MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.GiftHistoryForPlayerEntry.Descriptor; }
+      }
+      
+      public override GiftHistoryForPlayerEntry DefaultInstanceForType {
+        get { return global::Gazillion.GiftHistoryForPlayerEntry.DefaultInstance; }
+      }
+      
+      public override GiftHistoryForPlayerEntry BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is GiftHistoryForPlayerEntry) {
+          return MergeFrom((GiftHistoryForPlayerEntry) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(GiftHistoryForPlayerEntry other) {
+        if (other == global::Gazillion.GiftHistoryForPlayerEntry.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasPlatformAccountId) {
+          PlatformAccountId = other.PlatformAccountId;
+        }
+        if (other.HasName) {
+          Name = other.Name;
+        }
+        if (other.historyEntries_.Count != 0) {
+          result.historyEntries_.Add(other.historyEntries_);
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_giftHistoryForPlayerEntryFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _giftHistoryForPlayerEntryFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 8: {
+              result.hasPlatformAccountId = input.ReadInt64(ref result.platformAccountId_);
+              break;
+            }
+            case 18: {
+              result.hasName = input.ReadString(ref result.name_);
+              break;
+            }
+            case 26: {
+              input.ReadMessageArray(tag, field_name, result.historyEntries_, global::Gazillion.GiftHistoryEntry.DefaultInstance, extensionRegistry);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasPlatformAccountId {
+        get { return result.hasPlatformAccountId; }
+      }
+      public long PlatformAccountId {
+        get { return result.PlatformAccountId; }
+        set { SetPlatformAccountId(value); }
+      }
+      public Builder SetPlatformAccountId(long value) {
+        PrepareBuilder();
+        result.hasPlatformAccountId = true;
+        result.platformAccountId_ = value;
+        return this;
+      }
+      public Builder ClearPlatformAccountId() {
+        PrepareBuilder();
+        result.hasPlatformAccountId = false;
+        result.platformAccountId_ = 0L;
+        return this;
+      }
+      
+      public bool HasName {
+        get { return result.hasName; }
+      }
+      public string Name {
+        get { return result.Name; }
+        set { SetName(value); }
+      }
+      public Builder SetName(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasName = true;
+        result.name_ = value;
+        return this;
+      }
+      public Builder ClearName() {
+        PrepareBuilder();
+        result.hasName = false;
+        result.name_ = "";
+        return this;
+      }
+      
+      public pbc::IPopsicleList<global::Gazillion.GiftHistoryEntry> HistoryEntriesList {
+        get { return PrepareBuilder().historyEntries_; }
+      }
+      public int HistoryEntriesCount {
+        get { return result.HistoryEntriesCount; }
+      }
+      public global::Gazillion.GiftHistoryEntry GetHistoryEntries(int index) {
+        return result.GetHistoryEntries(index);
+      }
+      public Builder SetHistoryEntries(int index, global::Gazillion.GiftHistoryEntry value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.historyEntries_[index] = value;
+        return this;
+      }
+      public Builder SetHistoryEntries(int index, global::Gazillion.GiftHistoryEntry.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.historyEntries_[index] = builderForValue.Build();
+        return this;
+      }
+      public Builder AddHistoryEntries(global::Gazillion.GiftHistoryEntry value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.historyEntries_.Add(value);
+        return this;
+      }
+      public Builder AddHistoryEntries(global::Gazillion.GiftHistoryEntry.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.historyEntries_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangeHistoryEntries(scg::IEnumerable<global::Gazillion.GiftHistoryEntry> values) {
+        PrepareBuilder();
+        result.historyEntries_.Add(values);
+        return this;
+      }
+      public Builder ClearHistoryEntries() {
+        PrepareBuilder();
+        result.historyEntries_.Clear();
+        return this;
+      }
+    }
+    static GiftHistoryForPlayerEntry() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class AwardItem : pb::GeneratedMessage<AwardItem, AwardItem.Builder> {
+    private AwardItem() { }
+    private static readonly AwardItem defaultInstance = new AwardItem().MakeReadOnly();
+    private static readonly string[] _awardItemFieldNames = new string[] { "awardId", "quantity", "skuId" };
+    private static readonly uint[] _awardItemFieldTags = new uint[] { 10, 24, 16 };
+    public static AwardItem DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override AwardItem DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override AwardItem ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_AwardItem__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<AwardItem, AwardItem.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_AwardItem__FieldAccessorTable; }
+    }
+    
+    public const int AwardIdFieldNumber = 1;
+    private bool hasAwardId;
+    private string awardId_ = "";
+    public bool HasAwardId {
+      get { return hasAwardId; }
+    }
+    public string AwardId {
+      get { return awardId_; }
+    }
+    
+    public const int SkuIdFieldNumber = 2;
+    private bool hasSkuId;
+    private long skuId_;
+    public bool HasSkuId {
+      get { return hasSkuId; }
+    }
+    public long SkuId {
+      get { return skuId_; }
+    }
+    
+    public const int QuantityFieldNumber = 3;
+    private bool hasQuantity;
+    private long quantity_;
+    public bool HasQuantity {
+      get { return hasQuantity; }
+    }
+    public long Quantity {
+      get { return quantity_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasAwardId) return false;
+        if (!hasSkuId) return false;
+        if (!hasQuantity) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _awardItemFieldNames;
+      if (hasAwardId) {
+        output.WriteString(1, field_names[0], AwardId);
+      }
+      if (hasSkuId) {
+        output.WriteInt64(2, field_names[2], SkuId);
+      }
+      if (hasQuantity) {
+        output.WriteInt64(3, field_names[1], Quantity);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasAwardId) {
+        size += pb::CodedOutputStream.ComputeStringSize(1, AwardId);
+      }
+      if (hasSkuId) {
+        size += pb::CodedOutputStream.ComputeInt64Size(2, SkuId);
+      }
+      if (hasQuantity) {
+        size += pb::CodedOutputStream.ComputeInt64Size(3, Quantity);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static AwardItem ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static AwardItem ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static AwardItem ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static AwardItem ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static AwardItem ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static AwardItem ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static AwardItem ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static AwardItem ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static AwardItem ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static AwardItem ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private AwardItem MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(AwardItem prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<AwardItem, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(AwardItem cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private AwardItem result;
+      
+      private AwardItem PrepareBuilder() {
+        if (resultIsReadOnly) {
+          AwardItem original = result;
+          result = new AwardItem();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override AwardItem MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.AwardItem.Descriptor; }
+      }
+      
+      public override AwardItem DefaultInstanceForType {
+        get { return global::Gazillion.AwardItem.DefaultInstance; }
+      }
+      
+      public override AwardItem BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is AwardItem) {
+          return MergeFrom((AwardItem) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(AwardItem other) {
+        if (other == global::Gazillion.AwardItem.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasAwardId) {
+          AwardId = other.AwardId;
+        }
+        if (other.HasSkuId) {
+          SkuId = other.SkuId;
+        }
+        if (other.HasQuantity) {
+          Quantity = other.Quantity;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_awardItemFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _awardItemFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 10: {
+              result.hasAwardId = input.ReadString(ref result.awardId_);
+              break;
+            }
+            case 16: {
+              result.hasSkuId = input.ReadInt64(ref result.skuId_);
+              break;
+            }
+            case 24: {
+              result.hasQuantity = input.ReadInt64(ref result.quantity_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasAwardId {
+        get { return result.hasAwardId; }
+      }
+      public string AwardId {
+        get { return result.AwardId; }
+        set { SetAwardId(value); }
+      }
+      public Builder SetAwardId(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasAwardId = true;
+        result.awardId_ = value;
+        return this;
+      }
+      public Builder ClearAwardId() {
+        PrepareBuilder();
+        result.hasAwardId = false;
+        result.awardId_ = "";
+        return this;
+      }
+      
+      public bool HasSkuId {
+        get { return result.hasSkuId; }
+      }
+      public long SkuId {
+        get { return result.SkuId; }
+        set { SetSkuId(value); }
+      }
+      public Builder SetSkuId(long value) {
+        PrepareBuilder();
+        result.hasSkuId = true;
+        result.skuId_ = value;
+        return this;
+      }
+      public Builder ClearSkuId() {
+        PrepareBuilder();
+        result.hasSkuId = false;
+        result.skuId_ = 0L;
+        return this;
+      }
+      
+      public bool HasQuantity {
+        get { return result.hasQuantity; }
+      }
+      public long Quantity {
+        get { return result.Quantity; }
+        set { SetQuantity(value); }
+      }
+      public Builder SetQuantity(long value) {
+        PrepareBuilder();
+        result.hasQuantity = true;
+        result.quantity_ = value;
+        return this;
+      }
+      public Builder ClearQuantity() {
+        PrepareBuilder();
+        result.hasQuantity = false;
+        result.quantity_ = 0L;
+        return this;
+      }
+    }
+    static AwardItem() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class AwardCouponDescription : pb::GeneratedMessage<AwardCouponDescription, AwardCouponDescription.Builder> {
+    private AwardCouponDescription() { }
+    private static readonly AwardCouponDescription defaultInstance = new AwardCouponDescription().MakeReadOnly();
+    private static readonly string[] _awardCouponDescriptionFieldNames = new string[] { "description", "localeId" };
+    private static readonly uint[] _awardCouponDescriptionFieldTags = new uint[] { 18, 10 };
+    public static AwardCouponDescription DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override AwardCouponDescription DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override AwardCouponDescription ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_AwardCouponDescription__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<AwardCouponDescription, AwardCouponDescription.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_AwardCouponDescription__FieldAccessorTable; }
+    }
+    
+    public const int LocaleIdFieldNumber = 1;
+    private bool hasLocaleId;
+    private string localeId_ = "";
+    public bool HasLocaleId {
+      get { return hasLocaleId; }
+    }
+    public string LocaleId {
+      get { return localeId_; }
+    }
+    
+    public const int DescriptionFieldNumber = 2;
+    private bool hasDescription;
+    private string description_ = "";
+    public bool HasDescription {
+      get { return hasDescription; }
+    }
+    public string Description {
+      get { return description_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasLocaleId) return false;
+        if (!hasDescription) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _awardCouponDescriptionFieldNames;
+      if (hasLocaleId) {
+        output.WriteString(1, field_names[1], LocaleId);
+      }
+      if (hasDescription) {
+        output.WriteString(2, field_names[0], Description);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasLocaleId) {
+        size += pb::CodedOutputStream.ComputeStringSize(1, LocaleId);
+      }
+      if (hasDescription) {
+        size += pb::CodedOutputStream.ComputeStringSize(2, Description);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static AwardCouponDescription ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static AwardCouponDescription ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static AwardCouponDescription ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static AwardCouponDescription ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static AwardCouponDescription ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static AwardCouponDescription ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static AwardCouponDescription ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static AwardCouponDescription ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static AwardCouponDescription ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static AwardCouponDescription ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private AwardCouponDescription MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(AwardCouponDescription prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<AwardCouponDescription, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(AwardCouponDescription cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private AwardCouponDescription result;
+      
+      private AwardCouponDescription PrepareBuilder() {
+        if (resultIsReadOnly) {
+          AwardCouponDescription original = result;
+          result = new AwardCouponDescription();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override AwardCouponDescription MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.AwardCouponDescription.Descriptor; }
+      }
+      
+      public override AwardCouponDescription DefaultInstanceForType {
+        get { return global::Gazillion.AwardCouponDescription.DefaultInstance; }
+      }
+      
+      public override AwardCouponDescription BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is AwardCouponDescription) {
+          return MergeFrom((AwardCouponDescription) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(AwardCouponDescription other) {
+        if (other == global::Gazillion.AwardCouponDescription.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasLocaleId) {
+          LocaleId = other.LocaleId;
+        }
+        if (other.HasDescription) {
+          Description = other.Description;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_awardCouponDescriptionFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _awardCouponDescriptionFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 10: {
+              result.hasLocaleId = input.ReadString(ref result.localeId_);
+              break;
+            }
+            case 18: {
+              result.hasDescription = input.ReadString(ref result.description_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasLocaleId {
+        get { return result.hasLocaleId; }
+      }
+      public string LocaleId {
+        get { return result.LocaleId; }
+        set { SetLocaleId(value); }
+      }
+      public Builder SetLocaleId(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasLocaleId = true;
+        result.localeId_ = value;
+        return this;
+      }
+      public Builder ClearLocaleId() {
+        PrepareBuilder();
+        result.hasLocaleId = false;
+        result.localeId_ = "";
+        return this;
+      }
+      
+      public bool HasDescription {
+        get { return result.hasDescription; }
+      }
+      public string Description {
+        get { return result.Description; }
+        set { SetDescription(value); }
+      }
+      public Builder SetDescription(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasDescription = true;
+        result.description_ = value;
+        return this;
+      }
+      public Builder ClearDescription() {
+        PrepareBuilder();
+        result.hasDescription = false;
+        result.description_ = "";
+        return this;
+      }
+    }
+    static AwardCouponDescription() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class AwardCoupon : pb::GeneratedMessage<AwardCoupon, AwardCoupon.Builder> {
+    private AwardCoupon() { }
+    private static readonly AwardCoupon defaultInstance = new AwardCoupon().MakeReadOnly();
+    private static readonly string[] _awardCouponFieldNames = new string[] { "couponId", "couponState", "descriptions", "discount", "expirationDateUtc", "wsec" };
+    private static readonly uint[] _awardCouponFieldTags = new uint[] { 10, 26, 42, 21, 32, 48 };
+    public static AwardCoupon DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override AwardCoupon DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override AwardCoupon ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_AwardCoupon__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<AwardCoupon, AwardCoupon.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_AwardCoupon__FieldAccessorTable; }
+    }
+    
+    public const int CouponIdFieldNumber = 1;
+    private bool hasCouponId;
+    private string couponId_ = "";
+    public bool HasCouponId {
+      get { return hasCouponId; }
+    }
+    public string CouponId {
+      get { return couponId_; }
+    }
+    
+    public const int DiscountFieldNumber = 2;
+    private bool hasDiscount;
+    private float discount_;
+    public bool HasDiscount {
+      get { return hasDiscount; }
+    }
+    public float Discount {
+      get { return discount_; }
+    }
+    
+    public const int CouponStateFieldNumber = 3;
+    private bool hasCouponState;
+    private string couponState_ = "";
+    public bool HasCouponState {
+      get { return hasCouponState; }
+    }
+    public string CouponState {
+      get { return couponState_; }
+    }
+    
+    public const int ExpirationDateUtcFieldNumber = 4;
+    private bool hasExpirationDateUtc;
+    private long expirationDateUtc_;
+    public bool HasExpirationDateUtc {
+      get { return hasExpirationDateUtc; }
+    }
+    public long ExpirationDateUtc {
+      get { return expirationDateUtc_; }
+    }
+    
+    public const int DescriptionsFieldNumber = 5;
+    private pbc::PopsicleList<global::Gazillion.AwardCouponDescription> descriptions_ = new pbc::PopsicleList<global::Gazillion.AwardCouponDescription>();
+    public scg::IList<global::Gazillion.AwardCouponDescription> DescriptionsList {
+      get { return descriptions_; }
+    }
+    public int DescriptionsCount {
+      get { return descriptions_.Count; }
+    }
+    public global::Gazillion.AwardCouponDescription GetDescriptions(int index) {
+      return descriptions_[index];
+    }
+    
+    public const int WsecFieldNumber = 6;
+    private bool hasWsec;
+    private long wsec_;
+    public bool HasWsec {
+      get { return hasWsec; }
+    }
+    public long Wsec {
+      get { return wsec_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasCouponId) return false;
+        if (!hasDiscount) return false;
+        if (!hasCouponState) return false;
+        if (!hasExpirationDateUtc) return false;
+        if (!hasWsec) return false;
+        foreach (global::Gazillion.AwardCouponDescription element in DescriptionsList) {
+          if (!element.IsInitialized) return false;
+        }
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _awardCouponFieldNames;
+      if (hasCouponId) {
+        output.WriteString(1, field_names[0], CouponId);
+      }
+      if (hasDiscount) {
+        output.WriteFloat(2, field_names[3], Discount);
+      }
+      if (hasCouponState) {
+        output.WriteString(3, field_names[1], CouponState);
+      }
+      if (hasExpirationDateUtc) {
+        output.WriteInt64(4, field_names[4], ExpirationDateUtc);
+      }
+      if (descriptions_.Count > 0) {
+        output.WriteMessageArray(5, field_names[2], descriptions_);
+      }
+      if (hasWsec) {
+        output.WriteInt64(6, field_names[5], Wsec);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasCouponId) {
+        size += pb::CodedOutputStream.ComputeStringSize(1, CouponId);
+      }
+      if (hasDiscount) {
+        size += pb::CodedOutputStream.ComputeFloatSize(2, Discount);
+      }
+      if (hasCouponState) {
+        size += pb::CodedOutputStream.ComputeStringSize(3, CouponState);
+      }
+      if (hasExpirationDateUtc) {
+        size += pb::CodedOutputStream.ComputeInt64Size(4, ExpirationDateUtc);
+      }
+      foreach (global::Gazillion.AwardCouponDescription element in DescriptionsList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(5, element);
+      }
+      if (hasWsec) {
+        size += pb::CodedOutputStream.ComputeInt64Size(6, Wsec);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static AwardCoupon ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static AwardCoupon ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static AwardCoupon ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static AwardCoupon ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static AwardCoupon ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static AwardCoupon ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static AwardCoupon ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static AwardCoupon ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static AwardCoupon ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static AwardCoupon ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private AwardCoupon MakeReadOnly() {
+      descriptions_.MakeReadOnly();
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(AwardCoupon prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<AwardCoupon, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(AwardCoupon cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private AwardCoupon result;
+      
+      private AwardCoupon PrepareBuilder() {
+        if (resultIsReadOnly) {
+          AwardCoupon original = result;
+          result = new AwardCoupon();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override AwardCoupon MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.AwardCoupon.Descriptor; }
+      }
+      
+      public override AwardCoupon DefaultInstanceForType {
+        get { return global::Gazillion.AwardCoupon.DefaultInstance; }
+      }
+      
+      public override AwardCoupon BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is AwardCoupon) {
+          return MergeFrom((AwardCoupon) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(AwardCoupon other) {
+        if (other == global::Gazillion.AwardCoupon.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasCouponId) {
+          CouponId = other.CouponId;
+        }
+        if (other.HasDiscount) {
+          Discount = other.Discount;
+        }
+        if (other.HasCouponState) {
+          CouponState = other.CouponState;
+        }
+        if (other.HasExpirationDateUtc) {
+          ExpirationDateUtc = other.ExpirationDateUtc;
+        }
+        if (other.descriptions_.Count != 0) {
+          result.descriptions_.Add(other.descriptions_);
+        }
+        if (other.HasWsec) {
+          Wsec = other.Wsec;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_awardCouponFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _awardCouponFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 10: {
+              result.hasCouponId = input.ReadString(ref result.couponId_);
+              break;
+            }
+            case 21: {
+              result.hasDiscount = input.ReadFloat(ref result.discount_);
+              break;
+            }
+            case 26: {
+              result.hasCouponState = input.ReadString(ref result.couponState_);
+              break;
+            }
+            case 32: {
+              result.hasExpirationDateUtc = input.ReadInt64(ref result.expirationDateUtc_);
+              break;
+            }
+            case 42: {
+              input.ReadMessageArray(tag, field_name, result.descriptions_, global::Gazillion.AwardCouponDescription.DefaultInstance, extensionRegistry);
+              break;
+            }
+            case 48: {
+              result.hasWsec = input.ReadInt64(ref result.wsec_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasCouponId {
+        get { return result.hasCouponId; }
+      }
+      public string CouponId {
+        get { return result.CouponId; }
+        set { SetCouponId(value); }
+      }
+      public Builder SetCouponId(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasCouponId = true;
+        result.couponId_ = value;
+        return this;
+      }
+      public Builder ClearCouponId() {
+        PrepareBuilder();
+        result.hasCouponId = false;
+        result.couponId_ = "";
+        return this;
+      }
+      
+      public bool HasDiscount {
+        get { return result.hasDiscount; }
+      }
+      public float Discount {
+        get { return result.Discount; }
+        set { SetDiscount(value); }
+      }
+      public Builder SetDiscount(float value) {
+        PrepareBuilder();
+        result.hasDiscount = true;
+        result.discount_ = value;
+        return this;
+      }
+      public Builder ClearDiscount() {
+        PrepareBuilder();
+        result.hasDiscount = false;
+        result.discount_ = 0F;
+        return this;
+      }
+      
+      public bool HasCouponState {
+        get { return result.hasCouponState; }
+      }
+      public string CouponState {
+        get { return result.CouponState; }
+        set { SetCouponState(value); }
+      }
+      public Builder SetCouponState(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasCouponState = true;
+        result.couponState_ = value;
+        return this;
+      }
+      public Builder ClearCouponState() {
+        PrepareBuilder();
+        result.hasCouponState = false;
+        result.couponState_ = "";
+        return this;
+      }
+      
+      public bool HasExpirationDateUtc {
+        get { return result.hasExpirationDateUtc; }
+      }
+      public long ExpirationDateUtc {
+        get { return result.ExpirationDateUtc; }
+        set { SetExpirationDateUtc(value); }
+      }
+      public Builder SetExpirationDateUtc(long value) {
+        PrepareBuilder();
+        result.hasExpirationDateUtc = true;
+        result.expirationDateUtc_ = value;
+        return this;
+      }
+      public Builder ClearExpirationDateUtc() {
+        PrepareBuilder();
+        result.hasExpirationDateUtc = false;
+        result.expirationDateUtc_ = 0L;
+        return this;
+      }
+      
+      public pbc::IPopsicleList<global::Gazillion.AwardCouponDescription> DescriptionsList {
+        get { return PrepareBuilder().descriptions_; }
+      }
+      public int DescriptionsCount {
+        get { return result.DescriptionsCount; }
+      }
+      public global::Gazillion.AwardCouponDescription GetDescriptions(int index) {
+        return result.GetDescriptions(index);
+      }
+      public Builder SetDescriptions(int index, global::Gazillion.AwardCouponDescription value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.descriptions_[index] = value;
+        return this;
+      }
+      public Builder SetDescriptions(int index, global::Gazillion.AwardCouponDescription.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.descriptions_[index] = builderForValue.Build();
+        return this;
+      }
+      public Builder AddDescriptions(global::Gazillion.AwardCouponDescription value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.descriptions_.Add(value);
+        return this;
+      }
+      public Builder AddDescriptions(global::Gazillion.AwardCouponDescription.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.descriptions_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangeDescriptions(scg::IEnumerable<global::Gazillion.AwardCouponDescription> values) {
+        PrepareBuilder();
+        result.descriptions_.Add(values);
+        return this;
+      }
+      public Builder ClearDescriptions() {
+        PrepareBuilder();
+        result.descriptions_.Clear();
+        return this;
+      }
+      
+      public bool HasWsec {
+        get { return result.hasWsec; }
+      }
+      public long Wsec {
+        get { return result.Wsec; }
+        set { SetWsec(value); }
+      }
+      public Builder SetWsec(long value) {
+        PrepareBuilder();
+        result.hasWsec = true;
+        result.wsec_ = value;
+        return this;
+      }
+      public Builder ClearWsec() {
+        PrepareBuilder();
+        result.hasWsec = false;
+        result.wsec_ = 0L;
+        return this;
+      }
+    }
+    static AwardCoupon() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class AwardEntry : pb::GeneratedMessage<AwardEntry, AwardEntry.Builder> {
+    private AwardEntry() { }
+    private static readonly AwardEntry defaultInstance = new AwardEntry().MakeReadOnly();
+    private static readonly string[] _awardEntryFieldNames = new string[] { "awardType", "coupon", "item" };
+    private static readonly uint[] _awardEntryFieldTags = new uint[] { 10, 26, 18 };
+    public static AwardEntry DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override AwardEntry DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override AwardEntry ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_AwardEntry__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<AwardEntry, AwardEntry.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_AwardEntry__FieldAccessorTable; }
+    }
+    
+    public const int AwardTypeFieldNumber = 1;
+    private bool hasAwardType;
+    private string awardType_ = "";
+    public bool HasAwardType {
+      get { return hasAwardType; }
+    }
+    public string AwardType {
+      get { return awardType_; }
+    }
+    
+    public const int ItemFieldNumber = 2;
+    private bool hasItem;
+    private global::Gazillion.AwardItem item_;
+    public bool HasItem {
+      get { return hasItem; }
+    }
+    public global::Gazillion.AwardItem Item {
+      get { return item_ ?? global::Gazillion.AwardItem.DefaultInstance; }
+    }
+    
+    public const int CouponFieldNumber = 3;
+    private bool hasCoupon;
+    private global::Gazillion.AwardCoupon coupon_;
+    public bool HasCoupon {
+      get { return hasCoupon; }
+    }
+    public global::Gazillion.AwardCoupon Coupon {
+      get { return coupon_ ?? global::Gazillion.AwardCoupon.DefaultInstance; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasAwardType) return false;
+        if (HasItem) {
+          if (!Item.IsInitialized) return false;
+        }
+        if (HasCoupon) {
+          if (!Coupon.IsInitialized) return false;
+        }
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _awardEntryFieldNames;
+      if (hasAwardType) {
+        output.WriteString(1, field_names[0], AwardType);
+      }
+      if (hasItem) {
+        output.WriteMessage(2, field_names[2], Item);
+      }
+      if (hasCoupon) {
+        output.WriteMessage(3, field_names[1], Coupon);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasAwardType) {
+        size += pb::CodedOutputStream.ComputeStringSize(1, AwardType);
+      }
+      if (hasItem) {
+        size += pb::CodedOutputStream.ComputeMessageSize(2, Item);
+      }
+      if (hasCoupon) {
+        size += pb::CodedOutputStream.ComputeMessageSize(3, Coupon);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static AwardEntry ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static AwardEntry ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static AwardEntry ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static AwardEntry ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static AwardEntry ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static AwardEntry ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static AwardEntry ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static AwardEntry ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static AwardEntry ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static AwardEntry ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private AwardEntry MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(AwardEntry prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<AwardEntry, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(AwardEntry cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private AwardEntry result;
+      
+      private AwardEntry PrepareBuilder() {
+        if (resultIsReadOnly) {
+          AwardEntry original = result;
+          result = new AwardEntry();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override AwardEntry MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.AwardEntry.Descriptor; }
+      }
+      
+      public override AwardEntry DefaultInstanceForType {
+        get { return global::Gazillion.AwardEntry.DefaultInstance; }
+      }
+      
+      public override AwardEntry BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is AwardEntry) {
+          return MergeFrom((AwardEntry) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(AwardEntry other) {
+        if (other == global::Gazillion.AwardEntry.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasAwardType) {
+          AwardType = other.AwardType;
+        }
+        if (other.HasItem) {
+          MergeItem(other.Item);
+        }
+        if (other.HasCoupon) {
+          MergeCoupon(other.Coupon);
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_awardEntryFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _awardEntryFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 10: {
+              result.hasAwardType = input.ReadString(ref result.awardType_);
+              break;
+            }
+            case 18: {
+              global::Gazillion.AwardItem.Builder subBuilder = global::Gazillion.AwardItem.CreateBuilder();
+              if (result.hasItem) {
+                subBuilder.MergeFrom(Item);
+              }
+              input.ReadMessage(subBuilder, extensionRegistry);
+              Item = subBuilder.BuildPartial();
+              break;
+            }
+            case 26: {
+              global::Gazillion.AwardCoupon.Builder subBuilder = global::Gazillion.AwardCoupon.CreateBuilder();
+              if (result.hasCoupon) {
+                subBuilder.MergeFrom(Coupon);
+              }
+              input.ReadMessage(subBuilder, extensionRegistry);
+              Coupon = subBuilder.BuildPartial();
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasAwardType {
+        get { return result.hasAwardType; }
+      }
+      public string AwardType {
+        get { return result.AwardType; }
+        set { SetAwardType(value); }
+      }
+      public Builder SetAwardType(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasAwardType = true;
+        result.awardType_ = value;
+        return this;
+      }
+      public Builder ClearAwardType() {
+        PrepareBuilder();
+        result.hasAwardType = false;
+        result.awardType_ = "";
+        return this;
+      }
+      
+      public bool HasItem {
+       get { return result.hasItem; }
+      }
+      public global::Gazillion.AwardItem Item {
+        get { return result.Item; }
+        set { SetItem(value); }
+      }
+      public Builder SetItem(global::Gazillion.AwardItem value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasItem = true;
+        result.item_ = value;
+        return this;
+      }
+      public Builder SetItem(global::Gazillion.AwardItem.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.hasItem = true;
+        result.item_ = builderForValue.Build();
+        return this;
+      }
+      public Builder MergeItem(global::Gazillion.AwardItem value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        if (result.hasItem &&
+            result.item_ != global::Gazillion.AwardItem.DefaultInstance) {
+            result.item_ = global::Gazillion.AwardItem.CreateBuilder(result.item_).MergeFrom(value).BuildPartial();
+        } else {
+          result.item_ = value;
+        }
+        result.hasItem = true;
+        return this;
+      }
+      public Builder ClearItem() {
+        PrepareBuilder();
+        result.hasItem = false;
+        result.item_ = null;
+        return this;
+      }
+      
+      public bool HasCoupon {
+       get { return result.hasCoupon; }
+      }
+      public global::Gazillion.AwardCoupon Coupon {
+        get { return result.Coupon; }
+        set { SetCoupon(value); }
+      }
+      public Builder SetCoupon(global::Gazillion.AwardCoupon value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasCoupon = true;
+        result.coupon_ = value;
+        return this;
+      }
+      public Builder SetCoupon(global::Gazillion.AwardCoupon.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.hasCoupon = true;
+        result.coupon_ = builderForValue.Build();
+        return this;
+      }
+      public Builder MergeCoupon(global::Gazillion.AwardCoupon value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        if (result.hasCoupon &&
+            result.coupon_ != global::Gazillion.AwardCoupon.DefaultInstance) {
+            result.coupon_ = global::Gazillion.AwardCoupon.CreateBuilder(result.coupon_).MergeFrom(value).BuildPartial();
+        } else {
+          result.coupon_ = value;
+        }
+        result.hasCoupon = true;
+        return this;
+      }
+      public Builder ClearCoupon() {
+        PrepareBuilder();
+        result.hasCoupon = false;
+        result.coupon_ = null;
+        return this;
+      }
+    }
+    static AwardEntry() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class MessageEntitlementStatus : pb::GeneratedMessage<MessageEntitlementStatus, MessageEntitlementStatus.Builder> {
+    private MessageEntitlementStatus() { }
+    private static readonly MessageEntitlementStatus defaultInstance = new MessageEntitlementStatus().MakeReadOnly();
+    private static readonly string[] _messageEntitlementStatusFieldNames = new string[] { "EntitlementId", "IsActive", "UseCount", "UseLimit" };
+    private static readonly uint[] _messageEntitlementStatusFieldTags = new uint[] { 10, 32, 16, 24 };
+    public static MessageEntitlementStatus DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override MessageEntitlementStatus DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override MessageEntitlementStatus ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MessageEntitlementStatus__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<MessageEntitlementStatus, MessageEntitlementStatus.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MessageEntitlementStatus__FieldAccessorTable; }
+    }
+    
+    public const int EntitlementIdFieldNumber = 1;
+    private bool hasEntitlementId;
+    private string entitlementId_ = "";
+    public bool HasEntitlementId {
+      get { return hasEntitlementId; }
+    }
+    public string EntitlementId {
+      get { return entitlementId_; }
+    }
+    
+    public const int UseCountFieldNumber = 2;
+    private bool hasUseCount;
+    private int useCount_;
+    public bool HasUseCount {
+      get { return hasUseCount; }
+    }
+    public int UseCount {
+      get { return useCount_; }
+    }
+    
+    public const int UseLimitFieldNumber = 3;
+    private bool hasUseLimit;
+    private int useLimit_;
+    public bool HasUseLimit {
+      get { return hasUseLimit; }
+    }
+    public int UseLimit {
+      get { return useLimit_; }
+    }
+    
+    public const int IsActiveFieldNumber = 4;
+    private bool hasIsActive;
+    private bool isActive_;
+    public bool HasIsActive {
+      get { return hasIsActive; }
+    }
+    public bool IsActive {
+      get { return isActive_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasEntitlementId) return false;
+        if (!hasUseCount) return false;
+        if (!hasUseLimit) return false;
+        if (!hasIsActive) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _messageEntitlementStatusFieldNames;
+      if (hasEntitlementId) {
+        output.WriteString(1, field_names[0], EntitlementId);
+      }
+      if (hasUseCount) {
+        output.WriteInt32(2, field_names[2], UseCount);
+      }
+      if (hasUseLimit) {
+        output.WriteInt32(3, field_names[3], UseLimit);
+      }
+      if (hasIsActive) {
+        output.WriteBool(4, field_names[1], IsActive);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasEntitlementId) {
+        size += pb::CodedOutputStream.ComputeStringSize(1, EntitlementId);
+      }
+      if (hasUseCount) {
+        size += pb::CodedOutputStream.ComputeInt32Size(2, UseCount);
+      }
+      if (hasUseLimit) {
+        size += pb::CodedOutputStream.ComputeInt32Size(3, UseLimit);
+      }
+      if (hasIsActive) {
+        size += pb::CodedOutputStream.ComputeBoolSize(4, IsActive);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static MessageEntitlementStatus ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MessageEntitlementStatus ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MessageEntitlementStatus ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MessageEntitlementStatus ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MessageEntitlementStatus ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MessageEntitlementStatus ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static MessageEntitlementStatus ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static MessageEntitlementStatus ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static MessageEntitlementStatus ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MessageEntitlementStatus ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private MessageEntitlementStatus MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(MessageEntitlementStatus prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<MessageEntitlementStatus, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(MessageEntitlementStatus cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private MessageEntitlementStatus result;
+      
+      private MessageEntitlementStatus PrepareBuilder() {
+        if (resultIsReadOnly) {
+          MessageEntitlementStatus original = result;
+          result = new MessageEntitlementStatus();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override MessageEntitlementStatus MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.MessageEntitlementStatus.Descriptor; }
+      }
+      
+      public override MessageEntitlementStatus DefaultInstanceForType {
+        get { return global::Gazillion.MessageEntitlementStatus.DefaultInstance; }
+      }
+      
+      public override MessageEntitlementStatus BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is MessageEntitlementStatus) {
+          return MergeFrom((MessageEntitlementStatus) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(MessageEntitlementStatus other) {
+        if (other == global::Gazillion.MessageEntitlementStatus.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasEntitlementId) {
+          EntitlementId = other.EntitlementId;
+        }
+        if (other.HasUseCount) {
+          UseCount = other.UseCount;
+        }
+        if (other.HasUseLimit) {
+          UseLimit = other.UseLimit;
+        }
+        if (other.HasIsActive) {
+          IsActive = other.IsActive;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_messageEntitlementStatusFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _messageEntitlementStatusFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 10: {
+              result.hasEntitlementId = input.ReadString(ref result.entitlementId_);
+              break;
+            }
+            case 16: {
+              result.hasUseCount = input.ReadInt32(ref result.useCount_);
+              break;
+            }
+            case 24: {
+              result.hasUseLimit = input.ReadInt32(ref result.useLimit_);
+              break;
+            }
+            case 32: {
+              result.hasIsActive = input.ReadBool(ref result.isActive_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasEntitlementId {
+        get { return result.hasEntitlementId; }
+      }
+      public string EntitlementId {
+        get { return result.EntitlementId; }
+        set { SetEntitlementId(value); }
+      }
+      public Builder SetEntitlementId(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasEntitlementId = true;
+        result.entitlementId_ = value;
+        return this;
+      }
+      public Builder ClearEntitlementId() {
+        PrepareBuilder();
+        result.hasEntitlementId = false;
+        result.entitlementId_ = "";
+        return this;
+      }
+      
+      public bool HasUseCount {
+        get { return result.hasUseCount; }
+      }
+      public int UseCount {
+        get { return result.UseCount; }
+        set { SetUseCount(value); }
+      }
+      public Builder SetUseCount(int value) {
+        PrepareBuilder();
+        result.hasUseCount = true;
+        result.useCount_ = value;
+        return this;
+      }
+      public Builder ClearUseCount() {
+        PrepareBuilder();
+        result.hasUseCount = false;
+        result.useCount_ = 0;
+        return this;
+      }
+      
+      public bool HasUseLimit {
+        get { return result.hasUseLimit; }
+      }
+      public int UseLimit {
+        get { return result.UseLimit; }
+        set { SetUseLimit(value); }
+      }
+      public Builder SetUseLimit(int value) {
+        PrepareBuilder();
+        result.hasUseLimit = true;
+        result.useLimit_ = value;
+        return this;
+      }
+      public Builder ClearUseLimit() {
+        PrepareBuilder();
+        result.hasUseLimit = false;
+        result.useLimit_ = 0;
+        return this;
+      }
+      
+      public bool HasIsActive {
+        get { return result.hasIsActive; }
+      }
+      public bool IsActive {
+        get { return result.IsActive; }
+        set { SetIsActive(value); }
+      }
+      public Builder SetIsActive(bool value) {
+        PrepareBuilder();
+        result.hasIsActive = true;
+        result.isActive_ = value;
+        return this;
+      }
+      public Builder ClearIsActive() {
+        PrepareBuilder();
+        result.hasIsActive = false;
+        result.isActive_ = false;
+        return this;
+      }
+    }
+    static MessageEntitlementStatus() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class BillingPlayStationUpdateEntitlementStatus : pb::GeneratedMessage<BillingPlayStationUpdateEntitlementStatus, BillingPlayStationUpdateEntitlementStatus.Builder> {
+    private BillingPlayStationUpdateEntitlementStatus() { }
+    private static readonly BillingPlayStationUpdateEntitlementStatus defaultInstance = new BillingPlayStationUpdateEntitlementStatus().MakeReadOnly();
+    private static readonly string[] _billingPlayStationUpdateEntitlementStatusFieldNames = new string[] { "ConsumableStatus", "UnlimitedStatus" };
+    private static readonly uint[] _billingPlayStationUpdateEntitlementStatusFieldTags = new uint[] { 10, 18 };
+    public static BillingPlayStationUpdateEntitlementStatus DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override BillingPlayStationUpdateEntitlementStatus DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override BillingPlayStationUpdateEntitlementStatus ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_BillingPlayStationUpdateEntitlementStatus__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<BillingPlayStationUpdateEntitlementStatus, BillingPlayStationUpdateEntitlementStatus.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_BillingPlayStationUpdateEntitlementStatus__FieldAccessorTable; }
+    }
+    
+    public const int ConsumableStatusFieldNumber = 1;
+    private pbc::PopsicleList<global::Gazillion.MessageEntitlementStatus> consumableStatus_ = new pbc::PopsicleList<global::Gazillion.MessageEntitlementStatus>();
+    public scg::IList<global::Gazillion.MessageEntitlementStatus> ConsumableStatusList {
+      get { return consumableStatus_; }
+    }
+    public int ConsumableStatusCount {
+      get { return consumableStatus_.Count; }
+    }
+    public global::Gazillion.MessageEntitlementStatus GetConsumableStatus(int index) {
+      return consumableStatus_[index];
+    }
+    
+    public const int UnlimitedStatusFieldNumber = 2;
+    private pbc::PopsicleList<string> unlimitedStatus_ = new pbc::PopsicleList<string>();
+    public scg::IList<string> UnlimitedStatusList {
+      get { return pbc::Lists.AsReadOnly(unlimitedStatus_); }
+    }
+    public int UnlimitedStatusCount {
+      get { return unlimitedStatus_.Count; }
+    }
+    public string GetUnlimitedStatus(int index) {
+      return unlimitedStatus_[index];
+    }
+    
+    public override bool IsInitialized {
+      get {
+        foreach (global::Gazillion.MessageEntitlementStatus element in ConsumableStatusList) {
+          if (!element.IsInitialized) return false;
+        }
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _billingPlayStationUpdateEntitlementStatusFieldNames;
+      if (consumableStatus_.Count > 0) {
+        output.WriteMessageArray(1, field_names[0], consumableStatus_);
+      }
+      if (unlimitedStatus_.Count > 0) {
+        output.WriteStringArray(2, field_names[1], unlimitedStatus_);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      foreach (global::Gazillion.MessageEntitlementStatus element in ConsumableStatusList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(1, element);
+      }
+      {
+        int dataSize = 0;
+        foreach (string element in UnlimitedStatusList) {
+          dataSize += pb::CodedOutputStream.ComputeStringSizeNoTag(element);
+        }
+        size += dataSize;
+        size += 1 * unlimitedStatus_.Count;
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static BillingPlayStationUpdateEntitlementStatus ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static BillingPlayStationUpdateEntitlementStatus ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static BillingPlayStationUpdateEntitlementStatus ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static BillingPlayStationUpdateEntitlementStatus ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static BillingPlayStationUpdateEntitlementStatus ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static BillingPlayStationUpdateEntitlementStatus ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static BillingPlayStationUpdateEntitlementStatus ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static BillingPlayStationUpdateEntitlementStatus ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static BillingPlayStationUpdateEntitlementStatus ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static BillingPlayStationUpdateEntitlementStatus ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private BillingPlayStationUpdateEntitlementStatus MakeReadOnly() {
+      consumableStatus_.MakeReadOnly();
+      unlimitedStatus_.MakeReadOnly();
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(BillingPlayStationUpdateEntitlementStatus prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<BillingPlayStationUpdateEntitlementStatus, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(BillingPlayStationUpdateEntitlementStatus cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private BillingPlayStationUpdateEntitlementStatus result;
+      
+      private BillingPlayStationUpdateEntitlementStatus PrepareBuilder() {
+        if (resultIsReadOnly) {
+          BillingPlayStationUpdateEntitlementStatus original = result;
+          result = new BillingPlayStationUpdateEntitlementStatus();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override BillingPlayStationUpdateEntitlementStatus MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.BillingPlayStationUpdateEntitlementStatus.Descriptor; }
+      }
+      
+      public override BillingPlayStationUpdateEntitlementStatus DefaultInstanceForType {
+        get { return global::Gazillion.BillingPlayStationUpdateEntitlementStatus.DefaultInstance; }
+      }
+      
+      public override BillingPlayStationUpdateEntitlementStatus BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is BillingPlayStationUpdateEntitlementStatus) {
+          return MergeFrom((BillingPlayStationUpdateEntitlementStatus) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(BillingPlayStationUpdateEntitlementStatus other) {
+        if (other == global::Gazillion.BillingPlayStationUpdateEntitlementStatus.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.consumableStatus_.Count != 0) {
+          result.consumableStatus_.Add(other.consumableStatus_);
+        }
+        if (other.unlimitedStatus_.Count != 0) {
+          result.unlimitedStatus_.Add(other.unlimitedStatus_);
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_billingPlayStationUpdateEntitlementStatusFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _billingPlayStationUpdateEntitlementStatusFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 10: {
+              input.ReadMessageArray(tag, field_name, result.consumableStatus_, global::Gazillion.MessageEntitlementStatus.DefaultInstance, extensionRegistry);
+              break;
+            }
+            case 18: {
+              input.ReadStringArray(tag, field_name, result.unlimitedStatus_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public pbc::IPopsicleList<global::Gazillion.MessageEntitlementStatus> ConsumableStatusList {
+        get { return PrepareBuilder().consumableStatus_; }
+      }
+      public int ConsumableStatusCount {
+        get { return result.ConsumableStatusCount; }
+      }
+      public global::Gazillion.MessageEntitlementStatus GetConsumableStatus(int index) {
+        return result.GetConsumableStatus(index);
+      }
+      public Builder SetConsumableStatus(int index, global::Gazillion.MessageEntitlementStatus value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.consumableStatus_[index] = value;
+        return this;
+      }
+      public Builder SetConsumableStatus(int index, global::Gazillion.MessageEntitlementStatus.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.consumableStatus_[index] = builderForValue.Build();
+        return this;
+      }
+      public Builder AddConsumableStatus(global::Gazillion.MessageEntitlementStatus value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.consumableStatus_.Add(value);
+        return this;
+      }
+      public Builder AddConsumableStatus(global::Gazillion.MessageEntitlementStatus.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.consumableStatus_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangeConsumableStatus(scg::IEnumerable<global::Gazillion.MessageEntitlementStatus> values) {
+        PrepareBuilder();
+        result.consumableStatus_.Add(values);
+        return this;
+      }
+      public Builder ClearConsumableStatus() {
+        PrepareBuilder();
+        result.consumableStatus_.Clear();
+        return this;
+      }
+      
+      public pbc::IPopsicleList<string> UnlimitedStatusList {
+        get { return PrepareBuilder().unlimitedStatus_; }
+      }
+      public int UnlimitedStatusCount {
+        get { return result.UnlimitedStatusCount; }
+      }
+      public string GetUnlimitedStatus(int index) {
+        return result.GetUnlimitedStatus(index);
+      }
+      public Builder SetUnlimitedStatus(int index, string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.unlimitedStatus_[index] = value;
+        return this;
+      }
+      public Builder AddUnlimitedStatus(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.unlimitedStatus_.Add(value);
+        return this;
+      }
+      public Builder AddRangeUnlimitedStatus(scg::IEnumerable<string> values) {
+        PrepareBuilder();
+        result.unlimitedStatus_.Add(values);
+        return this;
+      }
+      public Builder ClearUnlimitedStatus() {
+        PrepareBuilder();
+        result.unlimitedStatus_.Clear();
+        return this;
+      }
+    }
+    static BillingPlayStationUpdateEntitlementStatus() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class MessageEntitlementStatusResponse : pb::GeneratedMessage<MessageEntitlementStatusResponse, MessageEntitlementStatusResponse.Builder> {
+    private MessageEntitlementStatusResponse() { }
+    private static readonly MessageEntitlementStatusResponse defaultInstance = new MessageEntitlementStatusResponse().MakeReadOnly();
+    private static readonly string[] _messageEntitlementStatusResponseFieldNames = new string[] { "Consumed", "EntitlementId", "UseCount", "UseLimit" };
+    private static readonly uint[] _messageEntitlementStatusResponseFieldTags = new uint[] { 32, 10, 16, 24 };
+    public static MessageEntitlementStatusResponse DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override MessageEntitlementStatusResponse DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override MessageEntitlementStatusResponse ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MessageEntitlementStatusResponse__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<MessageEntitlementStatusResponse, MessageEntitlementStatusResponse.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_MessageEntitlementStatusResponse__FieldAccessorTable; }
+    }
+    
+    public const int EntitlementIdFieldNumber = 1;
+    private bool hasEntitlementId;
+    private string entitlementId_ = "";
+    public bool HasEntitlementId {
+      get { return hasEntitlementId; }
+    }
+    public string EntitlementId {
+      get { return entitlementId_; }
+    }
+    
+    public const int UseCountFieldNumber = 2;
+    private bool hasUseCount;
+    private int useCount_;
+    public bool HasUseCount {
+      get { return hasUseCount; }
+    }
+    public int UseCount {
+      get { return useCount_; }
+    }
+    
+    public const int UseLimitFieldNumber = 3;
+    private bool hasUseLimit;
+    private int useLimit_;
+    public bool HasUseLimit {
+      get { return hasUseLimit; }
+    }
+    public int UseLimit {
+      get { return useLimit_; }
+    }
+    
+    public const int ConsumedFieldNumber = 4;
+    private bool hasConsumed;
+    private bool consumed_;
+    public bool HasConsumed {
+      get { return hasConsumed; }
+    }
+    public bool Consumed {
+      get { return consumed_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        if (!hasEntitlementId) return false;
+        if (!hasUseCount) return false;
+        if (!hasUseLimit) return false;
+        if (!hasConsumed) return false;
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _messageEntitlementStatusResponseFieldNames;
+      if (hasEntitlementId) {
+        output.WriteString(1, field_names[1], EntitlementId);
+      }
+      if (hasUseCount) {
+        output.WriteInt32(2, field_names[2], UseCount);
+      }
+      if (hasUseLimit) {
+        output.WriteInt32(3, field_names[3], UseLimit);
+      }
+      if (hasConsumed) {
+        output.WriteBool(4, field_names[0], Consumed);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasEntitlementId) {
+        size += pb::CodedOutputStream.ComputeStringSize(1, EntitlementId);
+      }
+      if (hasUseCount) {
+        size += pb::CodedOutputStream.ComputeInt32Size(2, UseCount);
+      }
+      if (hasUseLimit) {
+        size += pb::CodedOutputStream.ComputeInt32Size(3, UseLimit);
+      }
+      if (hasConsumed) {
+        size += pb::CodedOutputStream.ComputeBoolSize(4, Consumed);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static MessageEntitlementStatusResponse ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MessageEntitlementStatusResponse ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MessageEntitlementStatusResponse ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static MessageEntitlementStatusResponse ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static MessageEntitlementStatusResponse ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MessageEntitlementStatusResponse ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static MessageEntitlementStatusResponse ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static MessageEntitlementStatusResponse ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static MessageEntitlementStatusResponse ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static MessageEntitlementStatusResponse ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private MessageEntitlementStatusResponse MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(MessageEntitlementStatusResponse prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<MessageEntitlementStatusResponse, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(MessageEntitlementStatusResponse cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private MessageEntitlementStatusResponse result;
+      
+      private MessageEntitlementStatusResponse PrepareBuilder() {
+        if (resultIsReadOnly) {
+          MessageEntitlementStatusResponse original = result;
+          result = new MessageEntitlementStatusResponse();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override MessageEntitlementStatusResponse MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.MessageEntitlementStatusResponse.Descriptor; }
+      }
+      
+      public override MessageEntitlementStatusResponse DefaultInstanceForType {
+        get { return global::Gazillion.MessageEntitlementStatusResponse.DefaultInstance; }
+      }
+      
+      public override MessageEntitlementStatusResponse BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is MessageEntitlementStatusResponse) {
+          return MergeFrom((MessageEntitlementStatusResponse) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(MessageEntitlementStatusResponse other) {
+        if (other == global::Gazillion.MessageEntitlementStatusResponse.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasEntitlementId) {
+          EntitlementId = other.EntitlementId;
+        }
+        if (other.HasUseCount) {
+          UseCount = other.UseCount;
+        }
+        if (other.HasUseLimit) {
+          UseLimit = other.UseLimit;
+        }
+        if (other.HasConsumed) {
+          Consumed = other.Consumed;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_messageEntitlementStatusResponseFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _messageEntitlementStatusResponseFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 10: {
+              result.hasEntitlementId = input.ReadString(ref result.entitlementId_);
+              break;
+            }
+            case 16: {
+              result.hasUseCount = input.ReadInt32(ref result.useCount_);
+              break;
+            }
+            case 24: {
+              result.hasUseLimit = input.ReadInt32(ref result.useLimit_);
+              break;
+            }
+            case 32: {
+              result.hasConsumed = input.ReadBool(ref result.consumed_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasEntitlementId {
+        get { return result.hasEntitlementId; }
+      }
+      public string EntitlementId {
+        get { return result.EntitlementId; }
+        set { SetEntitlementId(value); }
+      }
+      public Builder SetEntitlementId(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasEntitlementId = true;
+        result.entitlementId_ = value;
+        return this;
+      }
+      public Builder ClearEntitlementId() {
+        PrepareBuilder();
+        result.hasEntitlementId = false;
+        result.entitlementId_ = "";
+        return this;
+      }
+      
+      public bool HasUseCount {
+        get { return result.hasUseCount; }
+      }
+      public int UseCount {
+        get { return result.UseCount; }
+        set { SetUseCount(value); }
+      }
+      public Builder SetUseCount(int value) {
+        PrepareBuilder();
+        result.hasUseCount = true;
+        result.useCount_ = value;
+        return this;
+      }
+      public Builder ClearUseCount() {
+        PrepareBuilder();
+        result.hasUseCount = false;
+        result.useCount_ = 0;
+        return this;
+      }
+      
+      public bool HasUseLimit {
+        get { return result.hasUseLimit; }
+      }
+      public int UseLimit {
+        get { return result.UseLimit; }
+        set { SetUseLimit(value); }
+      }
+      public Builder SetUseLimit(int value) {
+        PrepareBuilder();
+        result.hasUseLimit = true;
+        result.useLimit_ = value;
+        return this;
+      }
+      public Builder ClearUseLimit() {
+        PrepareBuilder();
+        result.hasUseLimit = false;
+        result.useLimit_ = 0;
+        return this;
+      }
+      
+      public bool HasConsumed {
+        get { return result.hasConsumed; }
+      }
+      public bool Consumed {
+        get { return result.Consumed; }
+        set { SetConsumed(value); }
+      }
+      public Builder SetConsumed(bool value) {
+        PrepareBuilder();
+        result.hasConsumed = true;
+        result.consumed_ = value;
+        return this;
+      }
+      public Builder ClearConsumed() {
+        PrepareBuilder();
+        result.hasConsumed = false;
+        result.consumed_ = false;
+        return this;
+      }
+    }
+    static MessageEntitlementStatusResponse() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class BillingPlayStationUpdateEntitlementStatusResponse : pb::GeneratedMessage<BillingPlayStationUpdateEntitlementStatusResponse, BillingPlayStationUpdateEntitlementStatusResponse.Builder> {
+    private BillingPlayStationUpdateEntitlementStatusResponse() { }
+    private static readonly BillingPlayStationUpdateEntitlementStatusResponse defaultInstance = new BillingPlayStationUpdateEntitlementStatusResponse().MakeReadOnly();
+    private static readonly string[] _billingPlayStationUpdateEntitlementStatusResponseFieldNames = new string[] { "responses" };
+    private static readonly uint[] _billingPlayStationUpdateEntitlementStatusResponseFieldTags = new uint[] { 10 };
+    public static BillingPlayStationUpdateEntitlementStatusResponse DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override BillingPlayStationUpdateEntitlementStatusResponse DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override BillingPlayStationUpdateEntitlementStatusResponse ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_BillingPlayStationUpdateEntitlementStatusResponse__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<BillingPlayStationUpdateEntitlementStatusResponse, BillingPlayStationUpdateEntitlementStatusResponse.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_BillingPlayStationUpdateEntitlementStatusResponse__FieldAccessorTable; }
+    }
+    
+    public const int ResponsesFieldNumber = 1;
+    private pbc::PopsicleList<global::Gazillion.MessageEntitlementStatusResponse> responses_ = new pbc::PopsicleList<global::Gazillion.MessageEntitlementStatusResponse>();
+    public scg::IList<global::Gazillion.MessageEntitlementStatusResponse> ResponsesList {
+      get { return responses_; }
+    }
+    public int ResponsesCount {
+      get { return responses_.Count; }
+    }
+    public global::Gazillion.MessageEntitlementStatusResponse GetResponses(int index) {
+      return responses_[index];
+    }
+    
+    public override bool IsInitialized {
+      get {
+        foreach (global::Gazillion.MessageEntitlementStatusResponse element in ResponsesList) {
+          if (!element.IsInitialized) return false;
+        }
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _billingPlayStationUpdateEntitlementStatusResponseFieldNames;
+      if (responses_.Count > 0) {
+        output.WriteMessageArray(1, field_names[0], responses_);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      foreach (global::Gazillion.MessageEntitlementStatusResponse element in ResponsesList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(1, element);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static BillingPlayStationUpdateEntitlementStatusResponse ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static BillingPlayStationUpdateEntitlementStatusResponse ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static BillingPlayStationUpdateEntitlementStatusResponse ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static BillingPlayStationUpdateEntitlementStatusResponse ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static BillingPlayStationUpdateEntitlementStatusResponse ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static BillingPlayStationUpdateEntitlementStatusResponse ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static BillingPlayStationUpdateEntitlementStatusResponse ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static BillingPlayStationUpdateEntitlementStatusResponse ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static BillingPlayStationUpdateEntitlementStatusResponse ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static BillingPlayStationUpdateEntitlementStatusResponse ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private BillingPlayStationUpdateEntitlementStatusResponse MakeReadOnly() {
+      responses_.MakeReadOnly();
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(BillingPlayStationUpdateEntitlementStatusResponse prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<BillingPlayStationUpdateEntitlementStatusResponse, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(BillingPlayStationUpdateEntitlementStatusResponse cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private BillingPlayStationUpdateEntitlementStatusResponse result;
+      
+      private BillingPlayStationUpdateEntitlementStatusResponse PrepareBuilder() {
+        if (resultIsReadOnly) {
+          BillingPlayStationUpdateEntitlementStatusResponse original = result;
+          result = new BillingPlayStationUpdateEntitlementStatusResponse();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override BillingPlayStationUpdateEntitlementStatusResponse MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.BillingPlayStationUpdateEntitlementStatusResponse.Descriptor; }
+      }
+      
+      public override BillingPlayStationUpdateEntitlementStatusResponse DefaultInstanceForType {
+        get { return global::Gazillion.BillingPlayStationUpdateEntitlementStatusResponse.DefaultInstance; }
+      }
+      
+      public override BillingPlayStationUpdateEntitlementStatusResponse BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is BillingPlayStationUpdateEntitlementStatusResponse) {
+          return MergeFrom((BillingPlayStationUpdateEntitlementStatusResponse) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(BillingPlayStationUpdateEntitlementStatusResponse other) {
+        if (other == global::Gazillion.BillingPlayStationUpdateEntitlementStatusResponse.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.responses_.Count != 0) {
+          result.responses_.Add(other.responses_);
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_billingPlayStationUpdateEntitlementStatusResponseFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _billingPlayStationUpdateEntitlementStatusResponseFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 10: {
+              input.ReadMessageArray(tag, field_name, result.responses_, global::Gazillion.MessageEntitlementStatusResponse.DefaultInstance, extensionRegistry);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public pbc::IPopsicleList<global::Gazillion.MessageEntitlementStatusResponse> ResponsesList {
+        get { return PrepareBuilder().responses_; }
+      }
+      public int ResponsesCount {
+        get { return result.ResponsesCount; }
+      }
+      public global::Gazillion.MessageEntitlementStatusResponse GetResponses(int index) {
+        return result.GetResponses(index);
+      }
+      public Builder SetResponses(int index, global::Gazillion.MessageEntitlementStatusResponse value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.responses_[index] = value;
+        return this;
+      }
+      public Builder SetResponses(int index, global::Gazillion.MessageEntitlementStatusResponse.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.responses_[index] = builderForValue.Build();
+        return this;
+      }
+      public Builder AddResponses(global::Gazillion.MessageEntitlementStatusResponse value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.responses_.Add(value);
+        return this;
+      }
+      public Builder AddResponses(global::Gazillion.MessageEntitlementStatusResponse.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.responses_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangeResponses(scg::IEnumerable<global::Gazillion.MessageEntitlementStatusResponse> values) {
+        PrepareBuilder();
+        result.responses_.Add(values);
+        return this;
+      }
+      public Builder ClearResponses() {
+        PrepareBuilder();
+        result.responses_.Clear();
+        return this;
+      }
+    }
+    static BillingPlayStationUpdateEntitlementStatusResponse() {
+      object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class BillingAcquireUnfulfilledOrders : pb::GeneratedMessage<BillingAcquireUnfulfilledOrders, BillingAcquireUnfulfilledOrders.Builder> {
+    private BillingAcquireUnfulfilledOrders() { }
+    private static readonly BillingAcquireUnfulfilledOrders defaultInstance = new BillingAcquireUnfulfilledOrders().MakeReadOnly();
+    private static readonly string[] _billingAcquireUnfulfilledOrdersFieldNames = new string[] {  };
+    private static readonly uint[] _billingAcquireUnfulfilledOrdersFieldTags = new uint[] {  };
+    public static BillingAcquireUnfulfilledOrders DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override BillingAcquireUnfulfilledOrders DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override BillingAcquireUnfulfilledOrders ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_BillingAcquireUnfulfilledOrders__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<BillingAcquireUnfulfilledOrders, BillingAcquireUnfulfilledOrders.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.BillingCommon.internal__static_Gazillion_BillingAcquireUnfulfilledOrders__FieldAccessorTable; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _billingAcquireUnfulfilledOrdersFieldNames;
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static BillingAcquireUnfulfilledOrders ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static BillingAcquireUnfulfilledOrders ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static BillingAcquireUnfulfilledOrders ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static BillingAcquireUnfulfilledOrders ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static BillingAcquireUnfulfilledOrders ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static BillingAcquireUnfulfilledOrders ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static BillingAcquireUnfulfilledOrders ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static BillingAcquireUnfulfilledOrders ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static BillingAcquireUnfulfilledOrders ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static BillingAcquireUnfulfilledOrders ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private BillingAcquireUnfulfilledOrders MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(BillingAcquireUnfulfilledOrders prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<BillingAcquireUnfulfilledOrders, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(BillingAcquireUnfulfilledOrders cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private BillingAcquireUnfulfilledOrders result;
+      
+      private BillingAcquireUnfulfilledOrders PrepareBuilder() {
+        if (resultIsReadOnly) {
+          BillingAcquireUnfulfilledOrders original = result;
+          result = new BillingAcquireUnfulfilledOrders();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override BillingAcquireUnfulfilledOrders MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.BillingAcquireUnfulfilledOrders.Descriptor; }
+      }
+      
+      public override BillingAcquireUnfulfilledOrders DefaultInstanceForType {
+        get { return global::Gazillion.BillingAcquireUnfulfilledOrders.DefaultInstance; }
+      }
+      
+      public override BillingAcquireUnfulfilledOrders BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is BillingAcquireUnfulfilledOrders) {
+          return MergeFrom((BillingAcquireUnfulfilledOrders) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(BillingAcquireUnfulfilledOrders other) {
+        if (other == global::Gazillion.BillingAcquireUnfulfilledOrders.DefaultInstance) return this;
+        PrepareBuilder();
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_billingAcquireUnfulfilledOrdersFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _billingAcquireUnfulfilledOrdersFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+    }
+    static BillingAcquireUnfulfilledOrders() {
       object.ReferenceEquals(global::Gazillion.BillingCommon.Descriptor, null);
     }
   }

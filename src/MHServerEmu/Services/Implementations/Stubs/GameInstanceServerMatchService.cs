@@ -12,7 +12,7 @@ namespace MHServerEmu.Services.Implementations
     {
         public GameInstanceServerMatchService()
         {
-            ServerType = Gazillion.PubSubServerTypes.GAME_INSTANCE_SERVER_MATCH;
+            //ServerType = Gazillion.PubSubServerTypes.GAME_INSTANCE_SERVER_MATCH;
         }
     }
 }

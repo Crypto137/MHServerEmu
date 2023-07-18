@@ -33,7 +33,7 @@ namespace MHServerEmu
             { PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND, new PlayerMgrServerFrontendService() },
             { PubSubServerTypes.PLAYERMGR_SERVER_SITEMGR_CONTROL, new PlayerMgrServerSiteMgrControlService() },
             { PubSubServerTypes.PLAYERMGR_SERVER_SOCIAL_COMMON, new PlayerMgrServerSocialCommonService() },
-            { PubSubServerTypes.PLAYERMGR_SERVER_MATCH, new PlayerMgrServerMatchService() },
+            //{ PubSubServerTypes.PLAYERMGR_SERVER_MATCH, new PlayerMgrServerMatchService() },
             { PubSubServerTypes.GROUPING_MANAGER_FRONTEND, new GroupingManagerFrontendService() },
             { PubSubServerTypes.FAKE_CHAT_LOAD_TESTER, new FakeChatLoadTesterService() }
         };

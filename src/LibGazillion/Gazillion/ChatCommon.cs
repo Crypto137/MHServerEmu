@@ -30,40 +30,50 @@ namespace Gazillion {
     static ChatCommon() {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
-            "ChBDaGF0Q29tbW9uLnByb3RvEglHYXppbGxpb24iYAoWQ2hhdE1lc3NhZ2VB", 
-            "dHRhY2htZW50cxIiCgxhdHRhY2htbWVudHMYASADKAxSDGF0dGFjaG1tZW50", 
-            "cxIiCgxlbW90ZURhdGFSZWYYAiABKANSDGVtb3RlRGF0YVJlZiJkCgtDaGF0", 
-            "TWVzc2FnZRISCgRib2R5GAEgASgJUgRib2R5EkEKCmF0dGFjaG1lbnQYAiAB", 
-            "KAsyIS5HYXppbGxpb24uQ2hhdE1lc3NhZ2VBdHRhY2htZW50c1IKYXR0YWNo", 
-            "bWVudCrZAgoNQ2hhdFJvb21UeXBlcxIYChRDSEFUX1JPT01fVFlQRV9MT0NB", 
-            "TBAAEhYKEkNIQVRfUk9PTV9UWVBFX1NBWRABEhgKFENIQVRfUk9PTV9UWVBF", 
-            "X1BBUlRZEAISFwoTQ0hBVF9ST09NX1RZUEVfVEVMTBADEigKJENIQVRfUk9P", 
-            "TV9UWVBFX0JST0FEQ0FTVF9BTExfU0VSVkVSUxAEEhkKFUNIQVRfUk9PTV9U", 
-            "WVBFX1NPQ0lBTBAFEhgKFENIQVRfUk9PTV9UWVBFX1RSQURFEAYSFgoSQ0hB", 
-            "VF9ST09NX1RZUEVfTEZHEAcSGAoUQ0hBVF9ST09NX1RZUEVfR1VJTEQQCBIa", 
-            "ChZDSEFUX1JPT01fVFlQRV9GQUNUSU9OEAkSGAoUQ0hBVF9ST09NX1RZUEVf", 
-            "RU1PVEUQChIcChhDSEFUX1JPT01fVFlQRV9OVU1fVFlQRVMQCypwChBHcm91", 
-            "cExlYXZlUmVhc29uEhsKF0dST1VQX0xFQVZFX1JFQVNPTl9MRUZUEAESHQoZ", 
-            "R1JPVVBfTEVBVkVfUkVBU09OX0JPT1RFRBACEiAKHEdST1VQX0xFQVZFX1JF", 
-            "QVNPTl9ESVNCQU5ERUQQAypyChFDaGF0RXJyb3JNZXNzYWdlcxIbChdDSEFU", 
-            "X0VSUk9SX05PX1NVQ0hfVVNFUhAAEiUKIUNIQVRfRVJST1JfQ09NTUFORF9O", 
-          "T1RfUkVDT0dOSVpFRBABEhkKFUNIQVRfRVJST1JfTlVNX0VSUk9SUxAC"));
+            "ChBDaGF0Q29tbW9uLnByb3RvEglHYXppbGxpb24aFENvbW1vbk1lc3NhZ2Vz", 
+            "LnByb3RvIpwBChZDaGF0TWVzc2FnZUF0dGFjaG1lbnRzEiIKDGF0dGFjaG1t", 
+            "ZW50cxgBIAMoDFIMYXR0YWNobW1lbnRzEiIKDGVtb3RlRGF0YVJlZhgCIAEo", 
+            "A1IMZW1vdGVEYXRhUmVmEjoKCWl0ZW1TcGVjcxgDIAMoCzIcLkdhemlsbGlv", 
+            "bi5OZXRTdHJ1Y3RJdGVtU3BlY1IJaXRlbVNwZWNzInwKC0NoYXRNZXNzYWdl", 
+            "EhIKBGJvZHkYASABKAlSBGJvZHkSFgoGYm9keUlkGAIgASgDUgZib2R5SWQS", 
+            "QQoKYXR0YWNobWVudBgDIAEoCzIhLkdhemlsbGlvbi5DaGF0TWVzc2FnZUF0", 
+            "dGFjaG1lbnRzUgphdHRhY2htZW50KsUFCg1DaGF0Um9vbVR5cGVzEhgKFENI", 
+            "QVRfUk9PTV9UWVBFX0xPQ0FMEAASFgoSQ0hBVF9ST09NX1RZUEVfU0FZEAES", 
+            "GAoUQ0hBVF9ST09NX1RZUEVfUEFSVFkQAhIXChNDSEFUX1JPT01fVFlQRV9U", 
+            "RUxMEAMSKAokQ0hBVF9ST09NX1RZUEVfQlJPQURDQVNUX0FMTF9TRVJWRVJT", 
+            "EAQSHAoYQ0hBVF9ST09NX1RZUEVfU09DSUFMX1pIEBYSHAoYQ0hBVF9ST09N", 
+            "X1RZUEVfU09DSUFMX0VOEAUSHAoYQ0hBVF9ST09NX1RZUEVfU09DSUFMX0ZS", 
+            "EAYSHAoYQ0hBVF9ST09NX1RZUEVfU09DSUFMX0RFEAcSHAoYQ0hBVF9ST09N", 
+            "X1RZUEVfU09DSUFMX0VMEAgSHAoYQ0hBVF9ST09NX1RZUEVfU09DSUFMX0pQ", 
+            "EBUSHAoYQ0hBVF9ST09NX1RZUEVfU09DSUFMX0tPEAkSHAoYQ0hBVF9ST09N", 
+            "X1RZUEVfU09DSUFMX1BUEAoSHAoYQ0hBVF9ST09NX1RZUEVfU09DSUFMX1JV", 
+            "EAsSHAoYQ0hBVF9ST09NX1RZUEVfU09DSUFMX0VTEAwSGAoUQ0hBVF9ST09N", 
+            "X1RZUEVfVFJBREUQDRIWChJDSEFUX1JPT01fVFlQRV9MRkcQDhIYChRDSEFU", 
+            "X1JPT01fVFlQRV9HVUlMRBAPEhoKFkNIQVRfUk9PTV9UWVBFX0ZBQ1RJT04Q", 
+            "EBIYChRDSEFUX1JPT01fVFlQRV9FTU9URRAREhoKFkNIQVRfUk9PTV9UWVBF", 
+            "X0VOREdBTUUQEhIbChdDSEFUX1JPT01fVFlQRV9NRVRBR0FNRRATEiAKHENI", 
+            "QVRfUk9PTV9UWVBFX0dVSUxEX09GRklDRVIQFBIcChhDSEFUX1JPT01fVFlQ", 
+            "RV9OVU1fVFlQRVMQFypyChFDaGF0RXJyb3JNZXNzYWdlcxIbChdDSEFUX0VS", 
+            "Uk9SX05PX1NVQ0hfVVNFUhAAEiUKIUNIQVRfRVJST1JfQ09NTUFORF9OT1Rf", 
+          "UkVDT0dOSVpFRBABEhkKFUNIQVRfRVJST1JfTlVNX0VSUk9SUxAC"));
       pbd::FileDescriptor.InternalDescriptorAssigner assigner = delegate(pbd::FileDescriptor root) {
         descriptor = root;
         internal__static_Gazillion_ChatMessageAttachments__Descriptor = Descriptor.MessageTypes[0];
         internal__static_Gazillion_ChatMessageAttachments__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.ChatMessageAttachments, global::Gazillion.ChatMessageAttachments.Builder>(internal__static_Gazillion_ChatMessageAttachments__Descriptor,
-                new string[] { "Attachmments", "EmoteDataRef", });
+                new string[] { "Attachmments", "EmoteDataRef", "ItemSpecs", });
         internal__static_Gazillion_ChatMessage__Descriptor = Descriptor.MessageTypes[1];
         internal__static_Gazillion_ChatMessage__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.ChatMessage, global::Gazillion.ChatMessage.Builder>(internal__static_Gazillion_ChatMessage__Descriptor,
-                new string[] { "Body", "Attachment", });
+                new string[] { "Body", "BodyId", "Attachment", });
         pb::ExtensionRegistry registry = pb::ExtensionRegistry.CreateInstance();
         RegisterAllExtensions(registry);
+        global::Gazillion.CommonMessages.RegisterAllExtensions(registry);
         return registry;
       };
       pbd::FileDescriptor.InternalBuildGeneratedFileFrom(descriptorData,
           new pbd::FileDescriptor[] {
+          global::Gazillion.CommonMessages.Descriptor, 
           }, assigner);
     }
     #endregion
@@ -76,19 +86,25 @@ namespace Gazillion {
     CHAT_ROOM_TYPE_PARTY = 2,
     CHAT_ROOM_TYPE_TELL = 3,
     CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS = 4,
-    CHAT_ROOM_TYPE_SOCIAL = 5,
-    CHAT_ROOM_TYPE_TRADE = 6,
-    CHAT_ROOM_TYPE_LFG = 7,
-    CHAT_ROOM_TYPE_GUILD = 8,
-    CHAT_ROOM_TYPE_FACTION = 9,
-    CHAT_ROOM_TYPE_EMOTE = 10,
-    CHAT_ROOM_TYPE_NUM_TYPES = 11,
-  }
-  
-  public enum GroupLeaveReason {
-    GROUP_LEAVE_REASON_LEFT = 1,
-    GROUP_LEAVE_REASON_BOOTED = 2,
-    GROUP_LEAVE_REASON_DISBANDED = 3,
+    CHAT_ROOM_TYPE_SOCIAL_ZH = 22,
+    CHAT_ROOM_TYPE_SOCIAL_EN = 5,
+    CHAT_ROOM_TYPE_SOCIAL_FR = 6,
+    CHAT_ROOM_TYPE_SOCIAL_DE = 7,
+    CHAT_ROOM_TYPE_SOCIAL_EL = 8,
+    CHAT_ROOM_TYPE_SOCIAL_JP = 21,
+    CHAT_ROOM_TYPE_SOCIAL_KO = 9,
+    CHAT_ROOM_TYPE_SOCIAL_PT = 10,
+    CHAT_ROOM_TYPE_SOCIAL_RU = 11,
+    CHAT_ROOM_TYPE_SOCIAL_ES = 12,
+    CHAT_ROOM_TYPE_TRADE = 13,
+    CHAT_ROOM_TYPE_LFG = 14,
+    CHAT_ROOM_TYPE_GUILD = 15,
+    CHAT_ROOM_TYPE_FACTION = 16,
+    CHAT_ROOM_TYPE_EMOTE = 17,
+    CHAT_ROOM_TYPE_ENDGAME = 18,
+    CHAT_ROOM_TYPE_METAGAME = 19,
+    CHAT_ROOM_TYPE_GUILD_OFFICER = 20,
+    CHAT_ROOM_TYPE_NUM_TYPES = 23,
   }
   
   public enum ChatErrorMessages {
@@ -104,8 +120,8 @@ namespace Gazillion {
   public sealed partial class ChatMessageAttachments : pb::GeneratedMessage<ChatMessageAttachments, ChatMessageAttachments.Builder> {
     private ChatMessageAttachments() { }
     private static readonly ChatMessageAttachments defaultInstance = new ChatMessageAttachments().MakeReadOnly();
-    private static readonly string[] _chatMessageAttachmentsFieldNames = new string[] { "attachmments", "emoteDataRef" };
-    private static readonly uint[] _chatMessageAttachmentsFieldTags = new uint[] { 10, 16 };
+    private static readonly string[] _chatMessageAttachmentsFieldNames = new string[] { "attachmments", "emoteDataRef", "itemSpecs" };
+    private static readonly uint[] _chatMessageAttachmentsFieldTags = new uint[] { 10, 16, 26 };
     public static ChatMessageAttachments DefaultInstance {
       get { return defaultInstance; }
     }
@@ -148,8 +164,23 @@ namespace Gazillion {
       get { return emoteDataRef_; }
     }
     
+    public const int ItemSpecsFieldNumber = 3;
+    private pbc::PopsicleList<global::Gazillion.NetStructItemSpec> itemSpecs_ = new pbc::PopsicleList<global::Gazillion.NetStructItemSpec>();
+    public scg::IList<global::Gazillion.NetStructItemSpec> ItemSpecsList {
+      get { return itemSpecs_; }
+    }
+    public int ItemSpecsCount {
+      get { return itemSpecs_.Count; }
+    }
+    public global::Gazillion.NetStructItemSpec GetItemSpecs(int index) {
+      return itemSpecs_[index];
+    }
+    
     public override bool IsInitialized {
       get {
+        foreach (global::Gazillion.NetStructItemSpec element in ItemSpecsList) {
+          if (!element.IsInitialized) return false;
+        }
         return true;
       }
     }
@@ -162,6 +193,9 @@ namespace Gazillion {
       }
       if (hasEmoteDataRef) {
         output.WriteInt64(2, field_names[1], EmoteDataRef);
+      }
+      if (itemSpecs_.Count > 0) {
+        output.WriteMessageArray(3, field_names[2], itemSpecs_);
       }
       UnknownFields.WriteTo(output);
     }
@@ -190,6 +224,9 @@ namespace Gazillion {
       }
       if (hasEmoteDataRef) {
         size += pb::CodedOutputStream.ComputeInt64Size(2, EmoteDataRef);
+      }
+      foreach (global::Gazillion.NetStructItemSpec element in ItemSpecsList) {
+        size += pb::CodedOutputStream.ComputeMessageSize(3, element);
       }
       size += UnknownFields.SerializedSize;
       memoizedSerializedSize = size;
@@ -227,6 +264,7 @@ namespace Gazillion {
     }
     private ChatMessageAttachments MakeReadOnly() {
       attachmments_.MakeReadOnly();
+      itemSpecs_.MakeReadOnly();
       return this;
     }
     
@@ -320,6 +358,9 @@ namespace Gazillion {
         if (other.HasEmoteDataRef) {
           EmoteDataRef = other.EmoteDataRef;
         }
+        if (other.itemSpecs_.Count != 0) {
+          result.itemSpecs_.Add(other.itemSpecs_);
+        }
         this.MergeUnknownFields(other.UnknownFields);
         return this;
       }
@@ -369,6 +410,10 @@ namespace Gazillion {
             }
             case 16: {
               result.hasEmoteDataRef = input.ReadInt64(ref result.emoteDataRef_);
+              break;
+            }
+            case 26: {
+              input.ReadMessageArray(tag, field_name, result.itemSpecs_, global::Gazillion.NetStructItemSpec.DefaultInstance, extensionRegistry);
               break;
             }
           }
@@ -432,6 +477,50 @@ namespace Gazillion {
         result.emoteDataRef_ = 0L;
         return this;
       }
+      
+      public pbc::IPopsicleList<global::Gazillion.NetStructItemSpec> ItemSpecsList {
+        get { return PrepareBuilder().itemSpecs_; }
+      }
+      public int ItemSpecsCount {
+        get { return result.ItemSpecsCount; }
+      }
+      public global::Gazillion.NetStructItemSpec GetItemSpecs(int index) {
+        return result.GetItemSpecs(index);
+      }
+      public Builder SetItemSpecs(int index, global::Gazillion.NetStructItemSpec value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.itemSpecs_[index] = value;
+        return this;
+      }
+      public Builder SetItemSpecs(int index, global::Gazillion.NetStructItemSpec.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.itemSpecs_[index] = builderForValue.Build();
+        return this;
+      }
+      public Builder AddItemSpecs(global::Gazillion.NetStructItemSpec value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.itemSpecs_.Add(value);
+        return this;
+      }
+      public Builder AddItemSpecs(global::Gazillion.NetStructItemSpec.Builder builderForValue) {
+        pb::ThrowHelper.ThrowIfNull(builderForValue, "builderForValue");
+        PrepareBuilder();
+        result.itemSpecs_.Add(builderForValue.Build());
+        return this;
+      }
+      public Builder AddRangeItemSpecs(scg::IEnumerable<global::Gazillion.NetStructItemSpec> values) {
+        PrepareBuilder();
+        result.itemSpecs_.Add(values);
+        return this;
+      }
+      public Builder ClearItemSpecs() {
+        PrepareBuilder();
+        result.itemSpecs_.Clear();
+        return this;
+      }
     }
     static ChatMessageAttachments() {
       object.ReferenceEquals(global::Gazillion.ChatCommon.Descriptor, null);
@@ -442,8 +531,8 @@ namespace Gazillion {
   public sealed partial class ChatMessage : pb::GeneratedMessage<ChatMessage, ChatMessage.Builder> {
     private ChatMessage() { }
     private static readonly ChatMessage defaultInstance = new ChatMessage().MakeReadOnly();
-    private static readonly string[] _chatMessageFieldNames = new string[] { "attachment", "body" };
-    private static readonly uint[] _chatMessageFieldTags = new uint[] { 18, 10 };
+    private static readonly string[] _chatMessageFieldNames = new string[] { "attachment", "body", "bodyId" };
+    private static readonly uint[] _chatMessageFieldTags = new uint[] { 26, 10, 16 };
     public static ChatMessage DefaultInstance {
       get { return defaultInstance; }
     }
@@ -474,7 +563,17 @@ namespace Gazillion {
       get { return body_; }
     }
     
-    public const int AttachmentFieldNumber = 2;
+    public const int BodyIdFieldNumber = 2;
+    private bool hasBodyId;
+    private long bodyId_;
+    public bool HasBodyId {
+      get { return hasBodyId; }
+    }
+    public long BodyId {
+      get { return bodyId_; }
+    }
+    
+    public const int AttachmentFieldNumber = 3;
     private bool hasAttachment;
     private global::Gazillion.ChatMessageAttachments attachment_;
     public bool HasAttachment {
@@ -486,6 +585,9 @@ namespace Gazillion {
     
     public override bool IsInitialized {
       get {
+        if (HasAttachment) {
+          if (!Attachment.IsInitialized) return false;
+        }
         return true;
       }
     }
@@ -496,8 +598,11 @@ namespace Gazillion {
       if (hasBody) {
         output.WriteString(1, field_names[1], Body);
       }
+      if (hasBodyId) {
+        output.WriteInt64(2, field_names[2], BodyId);
+      }
       if (hasAttachment) {
-        output.WriteMessage(2, field_names[0], Attachment);
+        output.WriteMessage(3, field_names[0], Attachment);
       }
       UnknownFields.WriteTo(output);
     }
@@ -519,8 +624,11 @@ namespace Gazillion {
       if (hasBody) {
         size += pb::CodedOutputStream.ComputeStringSize(1, Body);
       }
+      if (hasBodyId) {
+        size += pb::CodedOutputStream.ComputeInt64Size(2, BodyId);
+      }
       if (hasAttachment) {
-        size += pb::CodedOutputStream.ComputeMessageSize(2, Attachment);
+        size += pb::CodedOutputStream.ComputeMessageSize(3, Attachment);
       }
       size += UnknownFields.SerializedSize;
       memoizedSerializedSize = size;
@@ -647,6 +755,9 @@ namespace Gazillion {
         if (other.HasBody) {
           Body = other.Body;
         }
+        if (other.HasBodyId) {
+          BodyId = other.BodyId;
+        }
         if (other.HasAttachment) {
           MergeAttachment(other.Attachment);
         }
@@ -697,7 +808,11 @@ namespace Gazillion {
               result.hasBody = input.ReadString(ref result.body_);
               break;
             }
-            case 18: {
+            case 16: {
+              result.hasBodyId = input.ReadInt64(ref result.bodyId_);
+              break;
+            }
+            case 26: {
               global::Gazillion.ChatMessageAttachments.Builder subBuilder = global::Gazillion.ChatMessageAttachments.CreateBuilder();
               if (result.hasAttachment) {
                 subBuilder.MergeFrom(Attachment);
@@ -734,6 +849,26 @@ namespace Gazillion {
         PrepareBuilder();
         result.hasBody = false;
         result.body_ = "";
+        return this;
+      }
+      
+      public bool HasBodyId {
+        get { return result.hasBodyId; }
+      }
+      public long BodyId {
+        get { return result.BodyId; }
+        set { SetBodyId(value); }
+      }
+      public Builder SetBodyId(long value) {
+        PrepareBuilder();
+        result.hasBodyId = true;
+        result.bodyId_ = value;
+        return this;
+      }
+      public Builder ClearBodyId() {
+        PrepareBuilder();
+        result.hasBodyId = false;
+        result.bodyId_ = 0L;
         return this;
       }
       

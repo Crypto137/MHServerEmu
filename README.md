@@ -2,7 +2,7 @@
 
 MHServerEmu is a proof of concept server emulator for Marvel Heroes.
 
-The only currently supported version of the game client is **1.10.0.83**.
+The only currently supported version of the game client is **1.52.0.1700**.
 
 Please see [Overview.md](https://github.com/Crypto137/MHServerEmu/blob/master/docs/Overview.md) to find out how everything works.
 
@@ -10,7 +10,7 @@ Please see [Overview.md](https://github.com/Crypto137/MHServerEmu/blob/master/do
 
 This server emulator is currently in very early stages of development.
 
-- Partial network protocol implementation.
+- Network protocol implementation.
 
 - Initial server-client communication implementation.
 

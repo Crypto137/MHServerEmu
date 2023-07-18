@@ -24,6 +24,12 @@ namespace Gazillion {
     internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.PubSubEventNotification, global::Gazillion.PubSubEventNotification.Builder> internal__static_Gazillion_PubSubEventNotification__FieldAccessorTable;
     internal static pbd::MessageDescriptor internal__static_Gazillion_PubSubOrderlyShutdown__Descriptor;
     internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.PubSubOrderlyShutdown, global::Gazillion.PubSubOrderlyShutdown.Builder> internal__static_Gazillion_PubSubOrderlyShutdown__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_PubSubForceLogRollover__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.PubSubForceLogRollover, global::Gazillion.PubSubForceLogRollover.Builder> internal__static_Gazillion_PubSubForceLogRollover__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_PubSubServerStatusUpdate__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.PubSubServerStatusUpdate, global::Gazillion.PubSubServerStatusUpdate.Builder> internal__static_Gazillion_PubSubServerStatusUpdate__FieldAccessorTable;
+    internal static pbd::MessageDescriptor internal__static_Gazillion_PubSubServerStatusRequest__Descriptor;
+    internal static pb::FieldAccess.FieldAccessorTable<global::Gazillion.PubSubServerStatusRequest, global::Gazillion.PubSubServerStatusRequest.Builder> internal__static_Gazillion_PubSubServerStatusRequest__FieldAccessorTable;
     #endregion
     #region Descriptor
     public static pbd::FileDescriptor Descriptor {
@@ -52,17 +58,41 @@ namespace Gazillion {
             "IAEoCVIOc2VydmljZVZlcnNpb24SLgoScmVxdWVzdFJlc2lnbmF0aW9uGAYg", 
             "ASgIUhJyZXF1ZXN0UmVzaWduYXRpb24iYwoVUHViU3ViT3JkZXJseVNodXRk", 
             "b3duEhgKB21lc3NhZ2UYASABKAlSB21lc3NhZ2USMAoRbWludXRlc1RvU2h1", 
-            "dGRvd24YAiABKAU6AjE1UhFtaW51dGVzVG9TaHV0ZG93birHAwoRUHViU3Vi", 
-            "U2VydmVyVHlwZXMSEwoPRlJPTlRFTkRfU0VSVkVSEAASHQoZR0FNRV9JTlNU", 
-            "QU5DRV9TRVJWRVJfVVNFUhABEiIKHkdBTUVfSU5TVEFOQ0VfU0VSVkVSX1BM", 
-            "QVlFUk1HUhACEiEKHUdBTUVfSU5TVEFOQ0VfU0VSVkVSX0dST1VQSU5HEAMS", 
-            "IAocR0FNRV9JTlNUQU5DRV9TRVJWRVJfTUVUUklDUxAEEiAKHEdBTUVfSU5T", 
-            "VEFOQ0VfU0VSVkVSX0JJTExJTkcQChIeChpHQU1FX0lOU1RBTkNFX1NFUlZF", 
-            "Ul9NQVRDSBALEh0KGVBMQVlFUk1HUl9TRVJWRVJfRlJPTlRFTkQQBRIkCiBQ", 
-            "TEFZRVJNR1JfU0VSVkVSX1NJVEVNR1JfQ09OVFJPTBAGEiIKHlBMQVlFUk1H", 
-            "Ul9TRVJWRVJfU09DSUFMX0NPTU1PThAHEhoKFlBMQVlFUk1HUl9TRVJWRVJf", 
-            "TUFUQ0gQDBIdChlHUk9VUElOR19NQU5BR0VSX0ZST05URU5EEAgSGQoVRkFL", 
-          "RV9DSEFUX0xPQURfVEVTVEVSEAkSFAoQTlVNX1NFUlZFUl9UWVBFUxAN"));
+            "dGRvd24YAiABKAU6AjE1UhFtaW51dGVzVG9TaHV0ZG93biIYChZQdWJTdWJG", 
+            "b3JjZUxvZ1JvbGxvdmVyIuIGChhQdWJTdWJTZXJ2ZXJTdGF0dXNVcGRhdGUS", 
+            "MgoUcHJvY2Vzc0NwdVBlcmNlbnRhZ2UYASABKAJSFHByb2Nlc3NDcHVQZXJj", 
+            "ZW50YWdlEjIKFHByb2Nlc3NSYW1QZXJjZW50YWdlGAIgASgCUhRwcm9jZXNz", 
+            "UmFtUGVyY2VudGFnZRIyChRwcm9jZXNzUmFtVXNhZ2VCeXRlcxgDIAEoA1IU", 
+            "cHJvY2Vzc1JhbVVzYWdlQnl0ZXMSOAoXdG90YWxDcHVVc2FnZVBlcmNlbnRh", 
+            "Z2UYBCABKAJSF3RvdGFsQ3B1VXNhZ2VQZXJjZW50YWdlEjgKF3RvdGFsUmFt", 
+            "VXNhZ2VQZXJjZW50YWdlGAUgASgCUhd0b3RhbFJhbVVzYWdlUGVyY2VudGFn", 
+            "ZRJoCgVzdGF0ZRgGIAEoDjI8LkdhemlsbGlvbi5QdWJTdWJTZXJ2ZXJTdGF0", 
+            "dXNVcGRhdGUuU2VydmVyU3RhdHVzU2VydmljZVN0YXRlOhRTU1NTX1NFUlZJ", 
+            "Q0VfU1RPUFBFRFIFc3RhdGUSGgoIaG9zdG5hbWUYByABKAlSCGhvc3RuYW1l", 
+            "EiAKC3NlcnZpY2VOYW1lGAggASgJUgtzZXJ2aWNlTmFtZRImCg5jb25uZWN0", 
+            "ZWRIb3N0cxgJIAMoCVIOY29ubmVjdGVkSG9zdHMSLAoRY29ubmVjdGVkU2Vy", 
+            "dmljZXMYCiADKAlSEWNvbm5lY3RlZFNlcnZpY2VzEiQKDWdpc0lzRHJhaW5p", 
+            "bmcYCyABKAhSDWdpc0lzRHJhaW5pbmcSJgoOZ2lzUGxheWVyQ291bnQYDCAB", 
+            "KAVSDmdpc1BsYXllckNvdW50IukBChhTZXJ2ZXJTdGF0dXNTZXJ2aWNlU3Rh", 
+            "dGUSGAoUU1NTU19TRVJWSUNFX1NUT1BQRUQQARIeChpTU1NTX1NFUlZJQ0Vf", 
+            "U1RBUlRfUEVORElORxACEh0KGVNTU1NfU0VSVklDRV9TVE9QX1BFTkRJTkcQ", 
+            "AxIYChRTU1NTX1NFUlZJQ0VfUlVOTklORxAEEiEKHVNTU1NfU0VSVklDRV9D", 
+            "T05USU5VRV9QRU5ESU5HEAUSHgoaU1NTU19TRVJWSUNFX1BBVVNFX1BFTkRJ", 
+            "TkcQBhIXChNTU1NTX1NFUlZJQ0VfUEFVU0VEEAciGwoZUHViU3ViU2VydmVy", 
+            "U3RhdHVzUmVxdWVzdCrIBAoRUHViU3ViU2VydmVyVHlwZXMSEwoPRlJPTlRF", 
+            "TkRfU0VSVkVSEAASHQoZR0FNRV9JTlNUQU5DRV9TRVJWRVJfVVNFUhABEiIK", 
+            "HkdBTUVfSU5TVEFOQ0VfU0VSVkVSX1BMQVlFUk1HUhACEiEKHUdBTUVfSU5T", 
+            "VEFOQ0VfU0VSVkVSX0dST1VQSU5HEAMSIAocR0FNRV9JTlNUQU5DRV9TRVJW", 
+            "RVJfTUVUUklDUxAEEh0KGVBMQVlFUk1HUl9TRVJWRVJfRlJPTlRFTkQQBRIk", 
+            "CiBQTEFZRVJNR1JfU0VSVkVSX1NJVEVNR1JfQ09OVFJPTBAGEiIKHlBMQVlF", 
+            "Uk1HUl9TRVJWRVJfU09DSUFMX0NPTU1PThAHEh0KGUdST1VQSU5HX01BTkFH", 
+            "RVJfRlJPTlRFTkQQCBIZChVGQUtFX0NIQVRfTE9BRF9URVNURVIQCRIgChxH", 
+            "QU1FX0lOU1RBTkNFX1NFUlZFUl9CSUxMSU5HEAoSKgomR0FNRV9JTlNUQU5D", 
+            "RV9TRVJWRVJfR0xPQkFMX0dBTUVfRVZFTlQQDBIVChFQTEFZRVJNR1JfTUVU", 
+            "UklDUxANEigKJEdBTUVfSU5TVEFOQ0VfU0VSVkVSX01PQklMRV9GUk9OVEVO", 
+            "RBAOEiQKIEdBTUVfSU5TVEFOQ0VfU0VSVkVSX0xFQURFUkJPQVJEEA8SKAok", 
+            "TEVBREVSQk9BUkRfU0VSVkVSX0dMT0JBTF9HQU1FX0VWRU5UEBASFAoQTlVN", 
+          "X1NFUlZFUl9UWVBFUxAS"));
       pbd::FileDescriptor.InternalDescriptorAssigner assigner = delegate(pbd::FileDescriptor root) {
         descriptor = root;
         internal__static_Gazillion_PubSubPublish__Descriptor = Descriptor.MessageTypes[0];
@@ -81,6 +111,18 @@ namespace Gazillion {
         internal__static_Gazillion_PubSubOrderlyShutdown__FieldAccessorTable = 
             new pb::FieldAccess.FieldAccessorTable<global::Gazillion.PubSubOrderlyShutdown, global::Gazillion.PubSubOrderlyShutdown.Builder>(internal__static_Gazillion_PubSubOrderlyShutdown__Descriptor,
                 new string[] { "Message", "MinutesToShutdown", });
+        internal__static_Gazillion_PubSubForceLogRollover__Descriptor = Descriptor.MessageTypes[4];
+        internal__static_Gazillion_PubSubForceLogRollover__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.PubSubForceLogRollover, global::Gazillion.PubSubForceLogRollover.Builder>(internal__static_Gazillion_PubSubForceLogRollover__Descriptor,
+                new string[] { });
+        internal__static_Gazillion_PubSubServerStatusUpdate__Descriptor = Descriptor.MessageTypes[5];
+        internal__static_Gazillion_PubSubServerStatusUpdate__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.PubSubServerStatusUpdate, global::Gazillion.PubSubServerStatusUpdate.Builder>(internal__static_Gazillion_PubSubServerStatusUpdate__Descriptor,
+                new string[] { "ProcessCpuPercentage", "ProcessRamPercentage", "ProcessRamUsageBytes", "TotalCpuUsagePercentage", "TotalRamUsagePercentage", "State", "Hostname", "ServiceName", "ConnectedHosts", "ConnectedServices", "GisIsDraining", "GisPlayerCount", });
+        internal__static_Gazillion_PubSubServerStatusRequest__Descriptor = Descriptor.MessageTypes[6];
+        internal__static_Gazillion_PubSubServerStatusRequest__FieldAccessorTable = 
+            new pb::FieldAccess.FieldAccessorTable<global::Gazillion.PubSubServerStatusRequest, global::Gazillion.PubSubServerStatusRequest.Builder>(internal__static_Gazillion_PubSubServerStatusRequest__Descriptor,
+                new string[] { });
         pb::ExtensionRegistry registry = pb::ExtensionRegistry.CreateInstance();
         RegisterAllExtensions(registry);
         return registry;
@@ -99,15 +141,18 @@ namespace Gazillion {
     GAME_INSTANCE_SERVER_PLAYERMGR = 2,
     GAME_INSTANCE_SERVER_GROUPING = 3,
     GAME_INSTANCE_SERVER_METRICS = 4,
-    GAME_INSTANCE_SERVER_BILLING = 10,
-    GAME_INSTANCE_SERVER_MATCH = 11,
     PLAYERMGR_SERVER_FRONTEND = 5,
     PLAYERMGR_SERVER_SITEMGR_CONTROL = 6,
     PLAYERMGR_SERVER_SOCIAL_COMMON = 7,
-    PLAYERMGR_SERVER_MATCH = 12,
     GROUPING_MANAGER_FRONTEND = 8,
     FAKE_CHAT_LOAD_TESTER = 9,
-    NUM_SERVER_TYPES = 13,
+    GAME_INSTANCE_SERVER_BILLING = 10,
+    GAME_INSTANCE_SERVER_GLOBAL_GAME_EVENT = 12,
+    PLAYERMGR_METRICS = 13,
+    GAME_INSTANCE_SERVER_MOBILE_FRONTEND = 14,
+    GAME_INSTANCE_SERVER_LEADERBOARD = 15,
+    LEADERBOARD_SERVER_GLOBAL_GAME_EVENT = 16,
+    NUM_SERVER_TYPES = 18,
   }
   
   #endregion
@@ -1714,6 +1759,1284 @@ namespace Gazillion {
       }
     }
     static PubSubOrderlyShutdown() {
+      object.ReferenceEquals(global::Gazillion.PubSubProtocol.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class PubSubForceLogRollover : pb::GeneratedMessage<PubSubForceLogRollover, PubSubForceLogRollover.Builder> {
+    private PubSubForceLogRollover() { }
+    private static readonly PubSubForceLogRollover defaultInstance = new PubSubForceLogRollover().MakeReadOnly();
+    private static readonly string[] _pubSubForceLogRolloverFieldNames = new string[] {  };
+    private static readonly uint[] _pubSubForceLogRolloverFieldTags = new uint[] {  };
+    public static PubSubForceLogRollover DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override PubSubForceLogRollover DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override PubSubForceLogRollover ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.PubSubProtocol.internal__static_Gazillion_PubSubForceLogRollover__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<PubSubForceLogRollover, PubSubForceLogRollover.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.PubSubProtocol.internal__static_Gazillion_PubSubForceLogRollover__FieldAccessorTable; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _pubSubForceLogRolloverFieldNames;
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static PubSubForceLogRollover ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static PubSubForceLogRollover ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static PubSubForceLogRollover ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static PubSubForceLogRollover ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static PubSubForceLogRollover ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static PubSubForceLogRollover ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static PubSubForceLogRollover ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static PubSubForceLogRollover ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static PubSubForceLogRollover ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static PubSubForceLogRollover ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private PubSubForceLogRollover MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(PubSubForceLogRollover prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<PubSubForceLogRollover, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(PubSubForceLogRollover cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private PubSubForceLogRollover result;
+      
+      private PubSubForceLogRollover PrepareBuilder() {
+        if (resultIsReadOnly) {
+          PubSubForceLogRollover original = result;
+          result = new PubSubForceLogRollover();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override PubSubForceLogRollover MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.PubSubForceLogRollover.Descriptor; }
+      }
+      
+      public override PubSubForceLogRollover DefaultInstanceForType {
+        get { return global::Gazillion.PubSubForceLogRollover.DefaultInstance; }
+      }
+      
+      public override PubSubForceLogRollover BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is PubSubForceLogRollover) {
+          return MergeFrom((PubSubForceLogRollover) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(PubSubForceLogRollover other) {
+        if (other == global::Gazillion.PubSubForceLogRollover.DefaultInstance) return this;
+        PrepareBuilder();
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_pubSubForceLogRolloverFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _pubSubForceLogRolloverFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+    }
+    static PubSubForceLogRollover() {
+      object.ReferenceEquals(global::Gazillion.PubSubProtocol.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class PubSubServerStatusUpdate : pb::GeneratedMessage<PubSubServerStatusUpdate, PubSubServerStatusUpdate.Builder> {
+    private PubSubServerStatusUpdate() { }
+    private static readonly PubSubServerStatusUpdate defaultInstance = new PubSubServerStatusUpdate().MakeReadOnly();
+    private static readonly string[] _pubSubServerStatusUpdateFieldNames = new string[] { "connectedHosts", "connectedServices", "gisIsDraining", "gisPlayerCount", "hostname", "processCpuPercentage", "processRamPercentage", "processRamUsageBytes", "serviceName", "state", "totalCpuUsagePercentage", "totalRamUsagePercentage" };
+    private static readonly uint[] _pubSubServerStatusUpdateFieldTags = new uint[] { 74, 82, 88, 96, 58, 13, 21, 24, 66, 48, 37, 45 };
+    public static PubSubServerStatusUpdate DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override PubSubServerStatusUpdate DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override PubSubServerStatusUpdate ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.PubSubProtocol.internal__static_Gazillion_PubSubServerStatusUpdate__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<PubSubServerStatusUpdate, PubSubServerStatusUpdate.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.PubSubProtocol.internal__static_Gazillion_PubSubServerStatusUpdate__FieldAccessorTable; }
+    }
+    
+    #region Nested types
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public static partial class Types {
+      public enum ServerStatusServiceState {
+        SSSS_SERVICE_STOPPED = 1,
+        SSSS_SERVICE_START_PENDING = 2,
+        SSSS_SERVICE_STOP_PENDING = 3,
+        SSSS_SERVICE_RUNNING = 4,
+        SSSS_SERVICE_CONTINUE_PENDING = 5,
+        SSSS_SERVICE_PAUSE_PENDING = 6,
+        SSSS_SERVICE_PAUSED = 7,
+      }
+      
+    }
+    #endregion
+    
+    public const int ProcessCpuPercentageFieldNumber = 1;
+    private bool hasProcessCpuPercentage;
+    private float processCpuPercentage_;
+    public bool HasProcessCpuPercentage {
+      get { return hasProcessCpuPercentage; }
+    }
+    public float ProcessCpuPercentage {
+      get { return processCpuPercentage_; }
+    }
+    
+    public const int ProcessRamPercentageFieldNumber = 2;
+    private bool hasProcessRamPercentage;
+    private float processRamPercentage_;
+    public bool HasProcessRamPercentage {
+      get { return hasProcessRamPercentage; }
+    }
+    public float ProcessRamPercentage {
+      get { return processRamPercentage_; }
+    }
+    
+    public const int ProcessRamUsageBytesFieldNumber = 3;
+    private bool hasProcessRamUsageBytes;
+    private long processRamUsageBytes_;
+    public bool HasProcessRamUsageBytes {
+      get { return hasProcessRamUsageBytes; }
+    }
+    public long ProcessRamUsageBytes {
+      get { return processRamUsageBytes_; }
+    }
+    
+    public const int TotalCpuUsagePercentageFieldNumber = 4;
+    private bool hasTotalCpuUsagePercentage;
+    private float totalCpuUsagePercentage_;
+    public bool HasTotalCpuUsagePercentage {
+      get { return hasTotalCpuUsagePercentage; }
+    }
+    public float TotalCpuUsagePercentage {
+      get { return totalCpuUsagePercentage_; }
+    }
+    
+    public const int TotalRamUsagePercentageFieldNumber = 5;
+    private bool hasTotalRamUsagePercentage;
+    private float totalRamUsagePercentage_;
+    public bool HasTotalRamUsagePercentage {
+      get { return hasTotalRamUsagePercentage; }
+    }
+    public float TotalRamUsagePercentage {
+      get { return totalRamUsagePercentage_; }
+    }
+    
+    public const int StateFieldNumber = 6;
+    private bool hasState;
+    private global::Gazillion.PubSubServerStatusUpdate.Types.ServerStatusServiceState state_ = global::Gazillion.PubSubServerStatusUpdate.Types.ServerStatusServiceState.SSSS_SERVICE_STOPPED;
+    public bool HasState {
+      get { return hasState; }
+    }
+    public global::Gazillion.PubSubServerStatusUpdate.Types.ServerStatusServiceState State {
+      get { return state_; }
+    }
+    
+    public const int HostnameFieldNumber = 7;
+    private bool hasHostname;
+    private string hostname_ = "";
+    public bool HasHostname {
+      get { return hasHostname; }
+    }
+    public string Hostname {
+      get { return hostname_; }
+    }
+    
+    public const int ServiceNameFieldNumber = 8;
+    private bool hasServiceName;
+    private string serviceName_ = "";
+    public bool HasServiceName {
+      get { return hasServiceName; }
+    }
+    public string ServiceName {
+      get { return serviceName_; }
+    }
+    
+    public const int ConnectedHostsFieldNumber = 9;
+    private pbc::PopsicleList<string> connectedHosts_ = new pbc::PopsicleList<string>();
+    public scg::IList<string> ConnectedHostsList {
+      get { return pbc::Lists.AsReadOnly(connectedHosts_); }
+    }
+    public int ConnectedHostsCount {
+      get { return connectedHosts_.Count; }
+    }
+    public string GetConnectedHosts(int index) {
+      return connectedHosts_[index];
+    }
+    
+    public const int ConnectedServicesFieldNumber = 10;
+    private pbc::PopsicleList<string> connectedServices_ = new pbc::PopsicleList<string>();
+    public scg::IList<string> ConnectedServicesList {
+      get { return pbc::Lists.AsReadOnly(connectedServices_); }
+    }
+    public int ConnectedServicesCount {
+      get { return connectedServices_.Count; }
+    }
+    public string GetConnectedServices(int index) {
+      return connectedServices_[index];
+    }
+    
+    public const int GisIsDrainingFieldNumber = 11;
+    private bool hasGisIsDraining;
+    private bool gisIsDraining_;
+    public bool HasGisIsDraining {
+      get { return hasGisIsDraining; }
+    }
+    public bool GisIsDraining {
+      get { return gisIsDraining_; }
+    }
+    
+    public const int GisPlayerCountFieldNumber = 12;
+    private bool hasGisPlayerCount;
+    private int gisPlayerCount_;
+    public bool HasGisPlayerCount {
+      get { return hasGisPlayerCount; }
+    }
+    public int GisPlayerCount {
+      get { return gisPlayerCount_; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _pubSubServerStatusUpdateFieldNames;
+      if (hasProcessCpuPercentage) {
+        output.WriteFloat(1, field_names[5], ProcessCpuPercentage);
+      }
+      if (hasProcessRamPercentage) {
+        output.WriteFloat(2, field_names[6], ProcessRamPercentage);
+      }
+      if (hasProcessRamUsageBytes) {
+        output.WriteInt64(3, field_names[7], ProcessRamUsageBytes);
+      }
+      if (hasTotalCpuUsagePercentage) {
+        output.WriteFloat(4, field_names[10], TotalCpuUsagePercentage);
+      }
+      if (hasTotalRamUsagePercentage) {
+        output.WriteFloat(5, field_names[11], TotalRamUsagePercentage);
+      }
+      if (hasState) {
+        output.WriteEnum(6, field_names[9], (int) State, State);
+      }
+      if (hasHostname) {
+        output.WriteString(7, field_names[4], Hostname);
+      }
+      if (hasServiceName) {
+        output.WriteString(8, field_names[8], ServiceName);
+      }
+      if (connectedHosts_.Count > 0) {
+        output.WriteStringArray(9, field_names[0], connectedHosts_);
+      }
+      if (connectedServices_.Count > 0) {
+        output.WriteStringArray(10, field_names[1], connectedServices_);
+      }
+      if (hasGisIsDraining) {
+        output.WriteBool(11, field_names[2], GisIsDraining);
+      }
+      if (hasGisPlayerCount) {
+        output.WriteInt32(12, field_names[3], GisPlayerCount);
+      }
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      if (hasProcessCpuPercentage) {
+        size += pb::CodedOutputStream.ComputeFloatSize(1, ProcessCpuPercentage);
+      }
+      if (hasProcessRamPercentage) {
+        size += pb::CodedOutputStream.ComputeFloatSize(2, ProcessRamPercentage);
+      }
+      if (hasProcessRamUsageBytes) {
+        size += pb::CodedOutputStream.ComputeInt64Size(3, ProcessRamUsageBytes);
+      }
+      if (hasTotalCpuUsagePercentage) {
+        size += pb::CodedOutputStream.ComputeFloatSize(4, TotalCpuUsagePercentage);
+      }
+      if (hasTotalRamUsagePercentage) {
+        size += pb::CodedOutputStream.ComputeFloatSize(5, TotalRamUsagePercentage);
+      }
+      if (hasState) {
+        size += pb::CodedOutputStream.ComputeEnumSize(6, (int) State);
+      }
+      if (hasHostname) {
+        size += pb::CodedOutputStream.ComputeStringSize(7, Hostname);
+      }
+      if (hasServiceName) {
+        size += pb::CodedOutputStream.ComputeStringSize(8, ServiceName);
+      }
+      {
+        int dataSize = 0;
+        foreach (string element in ConnectedHostsList) {
+          dataSize += pb::CodedOutputStream.ComputeStringSizeNoTag(element);
+        }
+        size += dataSize;
+        size += 1 * connectedHosts_.Count;
+      }
+      {
+        int dataSize = 0;
+        foreach (string element in ConnectedServicesList) {
+          dataSize += pb::CodedOutputStream.ComputeStringSizeNoTag(element);
+        }
+        size += dataSize;
+        size += 1 * connectedServices_.Count;
+      }
+      if (hasGisIsDraining) {
+        size += pb::CodedOutputStream.ComputeBoolSize(11, GisIsDraining);
+      }
+      if (hasGisPlayerCount) {
+        size += pb::CodedOutputStream.ComputeInt32Size(12, GisPlayerCount);
+      }
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static PubSubServerStatusUpdate ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static PubSubServerStatusUpdate ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static PubSubServerStatusUpdate ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static PubSubServerStatusUpdate ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static PubSubServerStatusUpdate ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static PubSubServerStatusUpdate ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static PubSubServerStatusUpdate ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static PubSubServerStatusUpdate ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static PubSubServerStatusUpdate ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static PubSubServerStatusUpdate ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private PubSubServerStatusUpdate MakeReadOnly() {
+      connectedHosts_.MakeReadOnly();
+      connectedServices_.MakeReadOnly();
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(PubSubServerStatusUpdate prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<PubSubServerStatusUpdate, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(PubSubServerStatusUpdate cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private PubSubServerStatusUpdate result;
+      
+      private PubSubServerStatusUpdate PrepareBuilder() {
+        if (resultIsReadOnly) {
+          PubSubServerStatusUpdate original = result;
+          result = new PubSubServerStatusUpdate();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override PubSubServerStatusUpdate MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.PubSubServerStatusUpdate.Descriptor; }
+      }
+      
+      public override PubSubServerStatusUpdate DefaultInstanceForType {
+        get { return global::Gazillion.PubSubServerStatusUpdate.DefaultInstance; }
+      }
+      
+      public override PubSubServerStatusUpdate BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is PubSubServerStatusUpdate) {
+          return MergeFrom((PubSubServerStatusUpdate) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(PubSubServerStatusUpdate other) {
+        if (other == global::Gazillion.PubSubServerStatusUpdate.DefaultInstance) return this;
+        PrepareBuilder();
+        if (other.HasProcessCpuPercentage) {
+          ProcessCpuPercentage = other.ProcessCpuPercentage;
+        }
+        if (other.HasProcessRamPercentage) {
+          ProcessRamPercentage = other.ProcessRamPercentage;
+        }
+        if (other.HasProcessRamUsageBytes) {
+          ProcessRamUsageBytes = other.ProcessRamUsageBytes;
+        }
+        if (other.HasTotalCpuUsagePercentage) {
+          TotalCpuUsagePercentage = other.TotalCpuUsagePercentage;
+        }
+        if (other.HasTotalRamUsagePercentage) {
+          TotalRamUsagePercentage = other.TotalRamUsagePercentage;
+        }
+        if (other.HasState) {
+          State = other.State;
+        }
+        if (other.HasHostname) {
+          Hostname = other.Hostname;
+        }
+        if (other.HasServiceName) {
+          ServiceName = other.ServiceName;
+        }
+        if (other.connectedHosts_.Count != 0) {
+          result.connectedHosts_.Add(other.connectedHosts_);
+        }
+        if (other.connectedServices_.Count != 0) {
+          result.connectedServices_.Add(other.connectedServices_);
+        }
+        if (other.HasGisIsDraining) {
+          GisIsDraining = other.GisIsDraining;
+        }
+        if (other.HasGisPlayerCount) {
+          GisPlayerCount = other.GisPlayerCount;
+        }
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_pubSubServerStatusUpdateFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _pubSubServerStatusUpdateFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+            case 13: {
+              result.hasProcessCpuPercentage = input.ReadFloat(ref result.processCpuPercentage_);
+              break;
+            }
+            case 21: {
+              result.hasProcessRamPercentage = input.ReadFloat(ref result.processRamPercentage_);
+              break;
+            }
+            case 24: {
+              result.hasProcessRamUsageBytes = input.ReadInt64(ref result.processRamUsageBytes_);
+              break;
+            }
+            case 37: {
+              result.hasTotalCpuUsagePercentage = input.ReadFloat(ref result.totalCpuUsagePercentage_);
+              break;
+            }
+            case 45: {
+              result.hasTotalRamUsagePercentage = input.ReadFloat(ref result.totalRamUsagePercentage_);
+              break;
+            }
+            case 48: {
+              object unknown;
+              if(input.ReadEnum(ref result.state_, out unknown)) {
+                result.hasState = true;
+              } else if(unknown is int) {
+                if (unknownFields == null) {
+                  unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+                }
+                unknownFields.MergeVarintField(6, (ulong)(int)unknown);
+              }
+              break;
+            }
+            case 58: {
+              result.hasHostname = input.ReadString(ref result.hostname_);
+              break;
+            }
+            case 66: {
+              result.hasServiceName = input.ReadString(ref result.serviceName_);
+              break;
+            }
+            case 74: {
+              input.ReadStringArray(tag, field_name, result.connectedHosts_);
+              break;
+            }
+            case 82: {
+              input.ReadStringArray(tag, field_name, result.connectedServices_);
+              break;
+            }
+            case 88: {
+              result.hasGisIsDraining = input.ReadBool(ref result.gisIsDraining_);
+              break;
+            }
+            case 96: {
+              result.hasGisPlayerCount = input.ReadInt32(ref result.gisPlayerCount_);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+      
+      public bool HasProcessCpuPercentage {
+        get { return result.hasProcessCpuPercentage; }
+      }
+      public float ProcessCpuPercentage {
+        get { return result.ProcessCpuPercentage; }
+        set { SetProcessCpuPercentage(value); }
+      }
+      public Builder SetProcessCpuPercentage(float value) {
+        PrepareBuilder();
+        result.hasProcessCpuPercentage = true;
+        result.processCpuPercentage_ = value;
+        return this;
+      }
+      public Builder ClearProcessCpuPercentage() {
+        PrepareBuilder();
+        result.hasProcessCpuPercentage = false;
+        result.processCpuPercentage_ = 0F;
+        return this;
+      }
+      
+      public bool HasProcessRamPercentage {
+        get { return result.hasProcessRamPercentage; }
+      }
+      public float ProcessRamPercentage {
+        get { return result.ProcessRamPercentage; }
+        set { SetProcessRamPercentage(value); }
+      }
+      public Builder SetProcessRamPercentage(float value) {
+        PrepareBuilder();
+        result.hasProcessRamPercentage = true;
+        result.processRamPercentage_ = value;
+        return this;
+      }
+      public Builder ClearProcessRamPercentage() {
+        PrepareBuilder();
+        result.hasProcessRamPercentage = false;
+        result.processRamPercentage_ = 0F;
+        return this;
+      }
+      
+      public bool HasProcessRamUsageBytes {
+        get { return result.hasProcessRamUsageBytes; }
+      }
+      public long ProcessRamUsageBytes {
+        get { return result.ProcessRamUsageBytes; }
+        set { SetProcessRamUsageBytes(value); }
+      }
+      public Builder SetProcessRamUsageBytes(long value) {
+        PrepareBuilder();
+        result.hasProcessRamUsageBytes = true;
+        result.processRamUsageBytes_ = value;
+        return this;
+      }
+      public Builder ClearProcessRamUsageBytes() {
+        PrepareBuilder();
+        result.hasProcessRamUsageBytes = false;
+        result.processRamUsageBytes_ = 0L;
+        return this;
+      }
+      
+      public bool HasTotalCpuUsagePercentage {
+        get { return result.hasTotalCpuUsagePercentage; }
+      }
+      public float TotalCpuUsagePercentage {
+        get { return result.TotalCpuUsagePercentage; }
+        set { SetTotalCpuUsagePercentage(value); }
+      }
+      public Builder SetTotalCpuUsagePercentage(float value) {
+        PrepareBuilder();
+        result.hasTotalCpuUsagePercentage = true;
+        result.totalCpuUsagePercentage_ = value;
+        return this;
+      }
+      public Builder ClearTotalCpuUsagePercentage() {
+        PrepareBuilder();
+        result.hasTotalCpuUsagePercentage = false;
+        result.totalCpuUsagePercentage_ = 0F;
+        return this;
+      }
+      
+      public bool HasTotalRamUsagePercentage {
+        get { return result.hasTotalRamUsagePercentage; }
+      }
+      public float TotalRamUsagePercentage {
+        get { return result.TotalRamUsagePercentage; }
+        set { SetTotalRamUsagePercentage(value); }
+      }
+      public Builder SetTotalRamUsagePercentage(float value) {
+        PrepareBuilder();
+        result.hasTotalRamUsagePercentage = true;
+        result.totalRamUsagePercentage_ = value;
+        return this;
+      }
+      public Builder ClearTotalRamUsagePercentage() {
+        PrepareBuilder();
+        result.hasTotalRamUsagePercentage = false;
+        result.totalRamUsagePercentage_ = 0F;
+        return this;
+      }
+      
+      public bool HasState {
+       get { return result.hasState; }
+      }
+      public global::Gazillion.PubSubServerStatusUpdate.Types.ServerStatusServiceState State {
+        get { return result.State; }
+        set { SetState(value); }
+      }
+      public Builder SetState(global::Gazillion.PubSubServerStatusUpdate.Types.ServerStatusServiceState value) {
+        PrepareBuilder();
+        result.hasState = true;
+        result.state_ = value;
+        return this;
+      }
+      public Builder ClearState() {
+        PrepareBuilder();
+        result.hasState = false;
+        result.state_ = global::Gazillion.PubSubServerStatusUpdate.Types.ServerStatusServiceState.SSSS_SERVICE_STOPPED;
+        return this;
+      }
+      
+      public bool HasHostname {
+        get { return result.hasHostname; }
+      }
+      public string Hostname {
+        get { return result.Hostname; }
+        set { SetHostname(value); }
+      }
+      public Builder SetHostname(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasHostname = true;
+        result.hostname_ = value;
+        return this;
+      }
+      public Builder ClearHostname() {
+        PrepareBuilder();
+        result.hasHostname = false;
+        result.hostname_ = "";
+        return this;
+      }
+      
+      public bool HasServiceName {
+        get { return result.hasServiceName; }
+      }
+      public string ServiceName {
+        get { return result.ServiceName; }
+        set { SetServiceName(value); }
+      }
+      public Builder SetServiceName(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.hasServiceName = true;
+        result.serviceName_ = value;
+        return this;
+      }
+      public Builder ClearServiceName() {
+        PrepareBuilder();
+        result.hasServiceName = false;
+        result.serviceName_ = "";
+        return this;
+      }
+      
+      public pbc::IPopsicleList<string> ConnectedHostsList {
+        get { return PrepareBuilder().connectedHosts_; }
+      }
+      public int ConnectedHostsCount {
+        get { return result.ConnectedHostsCount; }
+      }
+      public string GetConnectedHosts(int index) {
+        return result.GetConnectedHosts(index);
+      }
+      public Builder SetConnectedHosts(int index, string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.connectedHosts_[index] = value;
+        return this;
+      }
+      public Builder AddConnectedHosts(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.connectedHosts_.Add(value);
+        return this;
+      }
+      public Builder AddRangeConnectedHosts(scg::IEnumerable<string> values) {
+        PrepareBuilder();
+        result.connectedHosts_.Add(values);
+        return this;
+      }
+      public Builder ClearConnectedHosts() {
+        PrepareBuilder();
+        result.connectedHosts_.Clear();
+        return this;
+      }
+      
+      public pbc::IPopsicleList<string> ConnectedServicesList {
+        get { return PrepareBuilder().connectedServices_; }
+      }
+      public int ConnectedServicesCount {
+        get { return result.ConnectedServicesCount; }
+      }
+      public string GetConnectedServices(int index) {
+        return result.GetConnectedServices(index);
+      }
+      public Builder SetConnectedServices(int index, string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.connectedServices_[index] = value;
+        return this;
+      }
+      public Builder AddConnectedServices(string value) {
+        pb::ThrowHelper.ThrowIfNull(value, "value");
+        PrepareBuilder();
+        result.connectedServices_.Add(value);
+        return this;
+      }
+      public Builder AddRangeConnectedServices(scg::IEnumerable<string> values) {
+        PrepareBuilder();
+        result.connectedServices_.Add(values);
+        return this;
+      }
+      public Builder ClearConnectedServices() {
+        PrepareBuilder();
+        result.connectedServices_.Clear();
+        return this;
+      }
+      
+      public bool HasGisIsDraining {
+        get { return result.hasGisIsDraining; }
+      }
+      public bool GisIsDraining {
+        get { return result.GisIsDraining; }
+        set { SetGisIsDraining(value); }
+      }
+      public Builder SetGisIsDraining(bool value) {
+        PrepareBuilder();
+        result.hasGisIsDraining = true;
+        result.gisIsDraining_ = value;
+        return this;
+      }
+      public Builder ClearGisIsDraining() {
+        PrepareBuilder();
+        result.hasGisIsDraining = false;
+        result.gisIsDraining_ = false;
+        return this;
+      }
+      
+      public bool HasGisPlayerCount {
+        get { return result.hasGisPlayerCount; }
+      }
+      public int GisPlayerCount {
+        get { return result.GisPlayerCount; }
+        set { SetGisPlayerCount(value); }
+      }
+      public Builder SetGisPlayerCount(int value) {
+        PrepareBuilder();
+        result.hasGisPlayerCount = true;
+        result.gisPlayerCount_ = value;
+        return this;
+      }
+      public Builder ClearGisPlayerCount() {
+        PrepareBuilder();
+        result.hasGisPlayerCount = false;
+        result.gisPlayerCount_ = 0;
+        return this;
+      }
+    }
+    static PubSubServerStatusUpdate() {
+      object.ReferenceEquals(global::Gazillion.PubSubProtocol.Descriptor, null);
+    }
+  }
+  
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+  public sealed partial class PubSubServerStatusRequest : pb::GeneratedMessage<PubSubServerStatusRequest, PubSubServerStatusRequest.Builder> {
+    private PubSubServerStatusRequest() { }
+    private static readonly PubSubServerStatusRequest defaultInstance = new PubSubServerStatusRequest().MakeReadOnly();
+    private static readonly string[] _pubSubServerStatusRequestFieldNames = new string[] {  };
+    private static readonly uint[] _pubSubServerStatusRequestFieldTags = new uint[] {  };
+    public static PubSubServerStatusRequest DefaultInstance {
+      get { return defaultInstance; }
+    }
+    
+    public override PubSubServerStatusRequest DefaultInstanceForType {
+      get { return DefaultInstance; }
+    }
+    
+    protected override PubSubServerStatusRequest ThisMessage {
+      get { return this; }
+    }
+    
+    public static pbd::MessageDescriptor Descriptor {
+      get { return global::Gazillion.PubSubProtocol.internal__static_Gazillion_PubSubServerStatusRequest__Descriptor; }
+    }
+    
+    protected override pb::FieldAccess.FieldAccessorTable<PubSubServerStatusRequest, PubSubServerStatusRequest.Builder> InternalFieldAccessors {
+      get { return global::Gazillion.PubSubProtocol.internal__static_Gazillion_PubSubServerStatusRequest__FieldAccessorTable; }
+    }
+    
+    public override bool IsInitialized {
+      get {
+        return true;
+      }
+    }
+    
+    public override void WriteTo(pb::ICodedOutputStream output) {
+      CalcSerializedSize();
+      string[] field_names = _pubSubServerStatusRequestFieldNames;
+      UnknownFields.WriteTo(output);
+    }
+    
+    private int memoizedSerializedSize = -1;
+    public override int SerializedSize {
+      get {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+        return CalcSerializedSize();
+      }
+    }
+    
+    private int CalcSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+      
+      size = 0;
+      size += UnknownFields.SerializedSize;
+      memoizedSerializedSize = size;
+      return size;
+    }
+    public static PubSubServerStatusRequest ParseFrom(pb::ByteString data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static PubSubServerStatusRequest ParseFrom(pb::ByteString data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static PubSubServerStatusRequest ParseFrom(byte[] data) {
+      return ((Builder) CreateBuilder().MergeFrom(data)).BuildParsed();
+    }
+    public static PubSubServerStatusRequest ParseFrom(byte[] data, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(data, extensionRegistry)).BuildParsed();
+    }
+    public static PubSubServerStatusRequest ParseFrom(global::System.IO.Stream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static PubSubServerStatusRequest ParseFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    public static PubSubServerStatusRequest ParseDelimitedFrom(global::System.IO.Stream input) {
+      return CreateBuilder().MergeDelimitedFrom(input).BuildParsed();
+    }
+    public static PubSubServerStatusRequest ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
+      return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
+    }
+    public static PubSubServerStatusRequest ParseFrom(pb::ICodedInputStream input) {
+      return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
+    }
+    public static PubSubServerStatusRequest ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
+    }
+    private PubSubServerStatusRequest MakeReadOnly() {
+      return this;
+    }
+    
+    public static Builder CreateBuilder() { return new Builder(); }
+    public override Builder ToBuilder() { return CreateBuilder(this); }
+    public override Builder CreateBuilderForType() { return new Builder(); }
+    public static Builder CreateBuilder(PubSubServerStatusRequest prototype) {
+      return new Builder(prototype);
+    }
+    
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    public sealed partial class Builder : pb::GeneratedBuilder<PubSubServerStatusRequest, Builder> {
+      protected override Builder ThisBuilder {
+        get { return this; }
+      }
+      public Builder() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+      }
+      internal Builder(PubSubServerStatusRequest cloneFrom) {
+        result = cloneFrom;
+        resultIsReadOnly = true;
+      }
+      
+      private bool resultIsReadOnly;
+      private PubSubServerStatusRequest result;
+      
+      private PubSubServerStatusRequest PrepareBuilder() {
+        if (resultIsReadOnly) {
+          PubSubServerStatusRequest original = result;
+          result = new PubSubServerStatusRequest();
+          resultIsReadOnly = false;
+          MergeFrom(original);
+        }
+        return result;
+      }
+      
+      public override bool IsInitialized {
+        get { return result.IsInitialized; }
+      }
+      
+      protected override PubSubServerStatusRequest MessageBeingBuilt {
+        get { return PrepareBuilder(); }
+      }
+      
+      public override Builder Clear() {
+        result = DefaultInstance;
+        resultIsReadOnly = true;
+        return this;
+      }
+      
+      public override Builder Clone() {
+        if (resultIsReadOnly) {
+          return new Builder(result);
+        } else {
+          return new Builder().MergeFrom(result);
+        }
+      }
+      
+      public override pbd::MessageDescriptor DescriptorForType {
+        get { return global::Gazillion.PubSubServerStatusRequest.Descriptor; }
+      }
+      
+      public override PubSubServerStatusRequest DefaultInstanceForType {
+        get { return global::Gazillion.PubSubServerStatusRequest.DefaultInstance; }
+      }
+      
+      public override PubSubServerStatusRequest BuildPartial() {
+        if (resultIsReadOnly) {
+          return result;
+        }
+        resultIsReadOnly = true;
+        return result.MakeReadOnly();
+      }
+      
+      public override Builder MergeFrom(pb::IMessage other) {
+        if (other is PubSubServerStatusRequest) {
+          return MergeFrom((PubSubServerStatusRequest) other);
+        } else {
+          base.MergeFrom(other);
+          return this;
+        }
+      }
+      
+      public override Builder MergeFrom(PubSubServerStatusRequest other) {
+        if (other == global::Gazillion.PubSubServerStatusRequest.DefaultInstance) return this;
+        PrepareBuilder();
+        this.MergeUnknownFields(other.UnknownFields);
+        return this;
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
+        return MergeFrom(input, pb::ExtensionRegistry.Empty);
+      }
+      
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        PrepareBuilder();
+        pb::UnknownFieldSet.Builder unknownFields = null;
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_pubSubServerStatusRequestFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _pubSubServerStatusRequestFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
+          switch (tag) {
+            case 0: {
+              throw pb::InvalidProtocolBufferException.InvalidTag();
+            }
+            default: {
+              if (pb::WireFormat.IsEndGroupTag(tag)) {
+                if (unknownFields != null) {
+                  this.UnknownFields = unknownFields.Build();
+                }
+                return this;
+              }
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              break;
+            }
+          }
+        }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
+      }
+      
+    }
+    static PubSubServerStatusRequest() {
       object.ReferenceEquals(global::Gazillion.PubSubProtocol.Descriptor, null);
     }
   }
