@@ -1,7 +1,6 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
-namespace MHServerEmu
+namespace MHServerEmu.Common
 {
     public static class LogManager
     {
@@ -55,7 +54,7 @@ namespace MHServerEmu
         private void Log(Level level, string message)
         {
             SetForegroundColor(level);
-            string timestamp = (_enableTimestamps) ? $"[{DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss.fff")}] " : "";
+            string timestamp = _enableTimestamps ? $"[{DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss.fff")}] " : "";
             Console.WriteLine($"{timestamp}[{level.ToString().PadLeft(5)}] [{Name}] {message}");
             Console.ResetColor();
         }
@@ -64,12 +63,12 @@ namespace MHServerEmu
         {
             switch (level)
             {
-                case Logger.Level.Trace: Console.ForegroundColor = ConsoleColor.DarkGray; break;
-                case Logger.Level.Debug: Console.ForegroundColor = ConsoleColor.Cyan; break;
-                case Logger.Level.Info: Console.ForegroundColor = ConsoleColor.White; break;
-                case Logger.Level.Warn: Console.ForegroundColor = ConsoleColor.Yellow; break;
-                case Logger.Level.Error: Console.ForegroundColor = ConsoleColor.Magenta; break;
-                case Logger.Level.Fatal: Console.ForegroundColor = ConsoleColor.Red; break;
+                case Level.Trace: Console.ForegroundColor = ConsoleColor.DarkGray; break;
+                case Level.Debug: Console.ForegroundColor = ConsoleColor.Cyan; break;
+                case Level.Info: Console.ForegroundColor = ConsoleColor.White; break;
+                case Level.Warn: Console.ForegroundColor = ConsoleColor.Yellow; break;
+                case Level.Error: Console.ForegroundColor = ConsoleColor.Magenta; break;
+                case Level.Fatal: Console.ForegroundColor = ConsoleColor.Red; break;
                 default: break;
             }
         }

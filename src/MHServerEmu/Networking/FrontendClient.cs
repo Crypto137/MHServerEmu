@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Net.Sockets;
+﻿using System.Net.Sockets;
 using Google.ProtocolBuffers;
-using Google.ProtocolBuffers.Descriptors;
-using System.Reflection.PortableExecutable;
 using Gazillion;
+using MHServerEmu.Common;
 using MHServerEmu.Services;
 using MHServerEmu.Services.Implementations;
 
-namespace MHServerEmu
+namespace MHServerEmu.Networking
 {
     public class FrontendClient
     {
@@ -20,7 +14,7 @@ namespace MHServerEmu
         private readonly Socket socket;
         private readonly NetworkStream stream;
 
-        private readonly bool SimulateQueue = false;
+        private readonly bool SimulateQueue = true;
 
         private static Dictionary<PubSubServerTypes, GameService> ServiceDict = new()
         {
@@ -44,7 +38,7 @@ namespace MHServerEmu
         public FrontendClient(Socket socket)
         {
             this.socket = socket;
-            this.stream = new NetworkStream(socket);
+            stream = new NetworkStream(socket);
         }
 
         public void Run()
@@ -70,7 +64,7 @@ namespace MHServerEmu
             socket.Disconnect(false);
         }
 
-        public void SendGameServiceMessage(Gazillion.PubSubServerTypes serverType, byte messageId, byte[] message, long timestamp = 0)
+        public void SendGameServiceMessage(PubSubServerTypes serverType, byte messageId, byte[] message, long timestamp = 0)
         {
             ServerPacket packet = new(ServerMuxIdDict[serverType], MuxCommand.Message);
             packet.WriteMessage(messageId, message, timestamp);
@@ -144,7 +138,7 @@ namespace MHServerEmu
                         {
                             case FrontendProtocolMessage.ClientCredentials:
                                 Logger.Info($"Received ClientCredentials message:");
-                                Gazillion.ClientCredentials clientCredentials = Gazillion.ClientCredentials.ParseFrom(message);
+                                ClientCredentials clientCredentials = ClientCredentials.ParseFrom(message);
                                 Logger.Trace(clientCredentials.ToString());
                                 Cryptography.SetIV(clientCredentials.Iv.ToByteArray());
                                 byte[] decryptedToken = Cryptography.DecryptSessionToken(clientCredentials);
@@ -155,7 +149,7 @@ namespace MHServerEmu
                                 {
                                     Logger.Info("Responding with LoginQueueStatus message");
 
-                                    responseMessage = Gazillion.LoginQueueStatus.CreateBuilder()
+                                    responseMessage = LoginQueueStatus.CreateBuilder()
                                         .SetPlaceInLine(1337)
                                         .SetNumberOfPlayersInLine(9001)
                                         .Build().ToByteArray();
@@ -168,7 +162,7 @@ namespace MHServerEmu
                                 {
                                     Logger.Info("Responding with SessionEncryptionChanged message");
 
-                                    responseMessage = Gazillion.SessionEncryptionChanged.CreateBuilder()
+                                    responseMessage = SessionEncryptionChanged.CreateBuilder()
                                         .SetRandomNumberIndex(1)
                                         .SetEncryptedRandomNumber(ByteString.Empty)
                                         .Build().ToByteArray();
@@ -182,7 +176,7 @@ namespace MHServerEmu
 
                             case FrontendProtocolMessage.InitialClientHandshake:
                                 Logger.Info($"Received InitialClientHandshake message:");
-                                Gazillion.InitialClientHandshake initialClientHandshake = Gazillion.InitialClientHandshake.ParseFrom(message);
+                                InitialClientHandshake initialClientHandshake = InitialClientHandshake.ParseFrom(message);
                                 Logger.Trace(initialClientHandshake.ToString());
 
                                 MuxIdServerDict[packet.MuxId] = initialClientHandshake.ServerType;
@@ -217,13 +211,13 @@ namespace MHServerEmu
         {
             byte[] data = packet.Data;
             Logger.Trace($"OUT: {data.ToHexString()}");
-            this.stream.Write(data, 0, data.Length);
+            stream.Write(data, 0, data.Length);
         }
 
         private void SendRaw(byte[] data)
         {
             Logger.Trace($"OUT: raw {data.Length} bytes");
-            this.stream.Write(data, 0, data.Length);
+            stream.Write(data, 0, data.Length);
         }
     }
 }

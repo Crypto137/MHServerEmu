@@ -1,13 +1,9 @@
-﻿using Gazillion;
+﻿using System.Net;
 using Google.ProtocolBuffers;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+using Gazillion;
+using MHServerEmu.Common;
 
-namespace MHServerEmu
+namespace MHServerEmu.Networking
 {
     public class AuthServer
     {
@@ -45,8 +41,8 @@ namespace MHServerEmu
                 Logger.Trace($"Request user agent: {req.UserAgent}");
                 Logger.Info($"Sending AuthTicket message");
 
-                // Prepare data
-                byte[] authTicket = Gazillion.AuthTicket.CreateBuilder()
+                // Sending an auth ticket straight away allows us to completely bypass auth
+                byte[] authTicket = AuthTicket.CreateBuilder()
                     .SetSessionKey(ByteString.CopyFrom(Cryptography.AuthEncryptionKey))
                     .SetSessionToken(ByteString.CopyFrom(new byte[] { 0x00, 0x01, 0x02, 0x03 }))
                     .SetSessionId(17323122570962387736)

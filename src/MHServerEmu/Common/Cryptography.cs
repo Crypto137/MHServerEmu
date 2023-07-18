@@ -1,7 +1,6 @@
-﻿using System;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 
-namespace MHServerEmu
+namespace MHServerEmu.Common
 {
     public static class Cryptography
     {

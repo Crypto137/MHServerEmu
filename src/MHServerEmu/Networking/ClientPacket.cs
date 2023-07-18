@@ -1,12 +1,7 @@
-﻿using Gazillion;
-using Google.ProtocolBuffers;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Google.ProtocolBuffers;
+using MHServerEmu.Common;
 
-namespace MHServerEmu
+namespace MHServerEmu.Networking
 {
     public enum MuxCommand
     {
@@ -23,7 +18,7 @@ namespace MHServerEmu
 
         private readonly CodedInputStream _stream;
 
-        public ushort MuxId { get;  }
+        public ushort MuxId { get; }
         public int BodyLength { get; }
         public MuxCommand Command { get; }
 
@@ -56,7 +51,7 @@ namespace MHServerEmu
 
             // Body length is stored as uint24
             byte[] lengthArray = stream.ReadRawBytes(3);
-            byte[] bodyLengthArray = (BitConverter.IsLittleEndian)
+            byte[] bodyLengthArray = BitConverter.IsLittleEndian
                 ? new byte[] { lengthArray[0], lengthArray[1], lengthArray[2], 0 }
                 : new byte[] { 0, lengthArray[2], lengthArray[1], lengthArray[0] };
 
