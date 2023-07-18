@@ -2,7 +2,7 @@
 
 Marvel Heroes uses [Protocol Buffers](https://protobuf.dev/) for network message serialization. It is possible to extract protobuf schemas (.proto) from the main client executable using [protod](https://github.com/dennwc/protod) and then use them with tools such as protogen included with [protobuf-csharp-port](https://github.com/jskeet/protobuf-csharp-port).
 
-Protobuf payloads follow the following structure:
+Most protobuf payloads have the following structure:
 
 ```
 byte MessageId          // same as index in its .proto schema
@@ -10,7 +10,9 @@ byte MessageSize        // in bytes
 byte[] EncodedMessage
 ```
 
-When a player tries to log in, the client first requests an AuthTicket protobuf message from the auth server specified in SiteConfig.xml over https. This message contains session info (id, token, AES-256 encryption key), as well as the frontend server address and port that the client proceeds to connect to.
+Some payloads appear to slightly deviate from this structure (e.g. dumped NetMessageInitialTimeSync has an extra 0x01 byte between id and size). The details of this are still being investigated.
+
+When a player tries to log in, the client communicates with the auth server specified in SiteConfig.xml over https. The end result of this communication is an AuthTicket payload that contains session info (id, token, AES-256 encryption key), as well as the frontend server address and port that the client proceeds to connect to. It's possible to bypass the authorization process entirely by responding to the initial request with an AuthTicket payload straight away.
 
 The frontend server routes messages to various services using what is called mux. Communication with the frontend server requires a 6 byte header with the following structure:
 
@@ -35,14 +37,18 @@ enum MuxCommand
 
 After establishing a mux connection with the frontend server, the client sends a ClientCredentials message that contains a session id and a session token encrypted using the AES-256 key provided in the AuthTicket message along with a specified random IV.
 
-The frontend server can respond with either a LoginQueueStatus to display a login queue screen in the client, or a SessionEncryptionChanged to proceed with authorization. It's currently unclear how SessionEncryptionChanged functions.
+The frontend server can respond with either a LoginQueueStatus to display a login queue screen in the client, or a SessionEncryptionChanged to proceed with logging in. It's currently unclear how SessionEncryptionChanged functions.
 
 The client responds to the SessionEncryptionChanged message with two messages in a row: InitialClientHandshake with PLAYERMGR_SERVER_FRONTEND followed by  NetMessageReadyForGameJoin that is most likely supposed to be routed to the server specified in the handshake.
 
-What is supposed to happen after that is currently unclear:
+After that roughly the following sequence happens:
 
-- PLAYERMGR_SERVER_FRONTEND can initiate time synchronization with a NetMessageReadyForTimeSync. The client will then send a NetMessageSyncTimeRequest that can be responded with NetMessageSyncTimeReply. The client will then periodically send NetMessagePing.
+- The server responds with NetMessageReadyAndLoggedIn.
 
-- Sending a NetMessageReadyAndLoggedIn will cause the client to start a new mux connection on a different muxId and use it to send another InitialClientHandshake message, but this one is addressed to GROUPING_MANAGER_FRONTEND. The client doesn't respond to any GroupingManager messages.
+- The client connects on mux id 2 and sends InitialClientHandshake for GROUPING_MANAGER_FRONTEND. It appears mux id 2 is used for communicating with GROUPING_MANAGER_FRONTEND.
 
-- It's is possible in some cases to make the client display either a hero selection screen or a loading screen using NetMessageSelectStartingAvatarForNewPlayer or NetMessageQueueLoadingScreen respectively. However, these messages appear to require a timestamp of some type, and it's currently unclear how it fits in the protobuf payload structure.
+- The server initiates time sync with NetMessageInitialTimeSync.
+
+- After syncing time the client starts sending NetMessagePing periodically.
+
+- The server queues a loading screen with NetMessageQueueLoadingScreen and begins sending a lot of data required for game initialization. The specifics are under investigation.

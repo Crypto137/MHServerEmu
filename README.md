@@ -10,12 +10,14 @@ If you want to ask questions about the server emulator or help with the developm
 
 ## Features
 
-This server emulator is currently in very early stages of development.
+This server emulator is currently in early stages of development.
 
 - Network protocol implementation.
 
-- Initial server-client communication implementation.
+- Initial client-server communication implementation.
+
+- Loading into the game via hardcoded data.
 
 ## Setup
 
-See [Setup.md](https://github.com/Crypto137/MHServerEmu/blob/master/docs/Setup.md) for information on how to set the server up.
+See [Setup.md](https://github.com/Crypto137/MHServerEmu/blob/master/docs/Setup.md) for information on how to set the server up. Please note that since MHServerEmu is still in early stages in development, the process is currently not particularly user friendly.
