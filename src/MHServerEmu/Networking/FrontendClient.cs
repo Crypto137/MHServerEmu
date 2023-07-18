@@ -18,6 +18,13 @@ namespace MHServerEmu.Networking
         public bool FinishedPlayerMgrServerFrontendHandshake { get; set; } = false;
         public bool FinishedGroupingManagerFrontendHandshake { get; set; } = false;
 
+        // Flags for hardcoded initialization
+        public bool InitReceivedFirstNetMessagePlayerTradeCancel { get; set; } = false;
+        public bool InitReceivedSecondNetMessagePlayerTradeCancel { get; set; } = false;
+        public bool InitReceivedFirstNetMessageVanityTitleSelect { get; set; } = false;
+        public bool InitReceivedFirstNetMessageRequestInterestInInventory { get; set; } = false;
+        public bool InitReceivedFirstNetMessageCellLoaded { get; set; } = false;
+
         public FrontendClient(Socket socket, GameServerManager gameServerManager)
         {
             this.socket = socket;
@@ -49,16 +56,16 @@ namespace MHServerEmu.Networking
             socket.Disconnect(false);
         }
 
-        public void SendGameMessage(ushort muxId, byte messageId, byte[] message, long timestamp = 0)
+        public void SendGameMessage(ushort muxId, byte messageId, byte[] message, bool addExtraByte = false)
         {
             ServerPacket packet = new(muxId, MuxCommand.Message);
-            packet.WriteMessage(messageId, message, timestamp);
+            packet.WriteMessage(messageId, message, addExtraByte);
             Send(packet);
         }
 
         public void SendPacketFromFile(string fileName)
         {
-            string path = $"{Directory.GetCurrentDirectory()}\\packets\\{fileName}";
+            string path = $"{Directory.GetCurrentDirectory()}\\Assets\\Packets\\{fileName}";
 
             if (File.Exists(path))
             {
@@ -97,7 +104,7 @@ namespace MHServerEmu.Networking
                     break;
 
                 case MuxCommand.Message:
-                    Logger.Info($"Received message on MuxId {packet.MuxId} ({packet.BodyLength} bytes)");
+                    Logger.Trace($"Received message on MuxId {packet.MuxId} ({packet.BodyLength} bytes)");
 
                     // First byte is message id, second byte is generally protobuf size as uint8
                     // Some messages have weird structure, need to figure this out

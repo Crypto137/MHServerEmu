@@ -48,7 +48,9 @@ namespace MHServerEmu.GameServer.Services.Implementations
                             .SetEncryptedRandomNumber(ByteString.Empty)
                             .Build().ToByteArray();
 
-                        client.SendGameMessage(muxId, (byte)FrontendProtocolMessage.SessionEncryptionChanged, response);
+                        //client.SendGameMessage(muxId, (byte)FrontendProtocolMessage.SessionEncryptionChanged, response);
+                        // SessionEncryptionChanged seems to deviate from the standard payload structure, so we'll send a canned response here for now
+                        client.SendPacketFromFile("SessionEncryptionChanged.bin");
                     }
 
                     break;
@@ -65,6 +67,19 @@ namespace MHServerEmu.GameServer.Services.Implementations
                     else if (initialClientHandshake.ServerType == PubSubServerTypes.GROUPING_MANAGER_FRONTEND)
                     {
                         client.FinishedGroupingManagerFrontendHandshake = true;
+
+                        byte[] response = NetMessageQueueLoadingScreen.CreateBuilder()
+                            .SetRegionPrototypeId(0)
+                            .Build().ToByteArray();
+
+                        client.SendGameMessage(muxId, (byte)GameServerToClientMessage.NetMessageQueueLoadingScreen, response);
+
+                        // Send hardcoded data after the initial handshakes finish
+                        client.SendPacketFromFile("ChatBroadcastMessage.bin");
+                        client.SendPacketFromFile("NetMessageMarkFirstGameFrame.bin");
+                        client.SendPacketFromFile("NetMessageModifyCommunityMember.bin");
+                        client.SendPacketFromFile("NetMessageQueryIsRegionAvailable.bin");
+                        client.SendPacketFromFile("NetMessageMarkFirstGameFrame2.bin");
                     }
 
                     break;

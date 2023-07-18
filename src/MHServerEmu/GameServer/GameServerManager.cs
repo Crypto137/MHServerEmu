@@ -28,25 +28,25 @@ namespace MHServerEmu.GameServer
                 case 1:
                     if (client.FinishedPlayerMgrServerFrontendHandshake)
                     {
-                        Logger.Info($"Routing messageId {messageId} on muxId {muxId} to GameInstanceService");
+                        Logger.Trace($"Routing messageId {messageId} on muxId {muxId} to GameInstanceService");
                         _gameInstanceService.Handle(client, muxId, messageId, message);
                     }
                     else
                     {
-                        Logger.Info($"Routing messageId {messageId} on muxId {muxId} to FrontendService");
+                        Logger.Trace($"Routing messageId {messageId} on muxId {muxId} to FrontendService");
                         _frontendService.Handle(client, muxId, messageId, message);
                     }
 
                     break;
 
                 case 2:
-                    if (client.FinishedPlayerMgrServerFrontendHandshake)
+                    if (client.FinishedGroupingManagerFrontendHandshake)
                     {
                         Logger.Warn($"Unhandled message id {messageId} on muxId {muxId} (most likely for GroupingManagerFrontend)");
                     }
                     else
                     {
-                        Logger.Info($"Routing messageId {messageId} on muxId {muxId} to FrontendService");
+                        Logger.Trace($"Routing messageId {messageId} on muxId {muxId} to FrontendService");
                         _frontendService.Handle(client, muxId, messageId, message);
                     }
 

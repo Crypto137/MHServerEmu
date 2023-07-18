@@ -34,7 +34,7 @@ namespace MHServerEmu.Networking
             _muxCommand = command;
         }
 
-        public void WriteMessage(byte messageId, byte[] message, long timestamp = 0)
+        public void WriteMessage(byte messageId, byte[] message, bool addExtraByte)
         {
             using (MemoryStream memoryStream = new())
             {
@@ -42,16 +42,8 @@ namespace MHServerEmu.Networking
                 {
                     binaryWriter.Write(messageId);
 
-                    if (timestamp != 0)
-                    {
-                        // This doesn't work
-                        binaryWriter.Write(Convert.ToByte(message.Length));
-                        binaryWriter.Write(timestamp);
-                    }
-                    else
-                    {
-                        binaryWriter.Write(Convert.ToByte(message.Length));
-                    }
+                    if (addExtraByte) binaryWriter.Write(Convert.ToByte(1));   // NetMessageInitialTimeSync needs an extra byte here for some reason
+                    binaryWriter.Write(Convert.ToByte(message.Length));
 
                     binaryWriter.Write(message);
 

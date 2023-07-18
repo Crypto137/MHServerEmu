@@ -15,84 +15,114 @@ namespace MHServerEmu.GameServer.Services.Implementations
 
         public override void Handle(FrontendClient client, ushort muxId, byte messageId, byte[] message)
         {
-            if (messageId == (byte)ClientToGameServerMessage.NetMessageReadyForGameJoin)
+            byte[] response;
+            switch ((ClientToGameServerMessage)messageId)
             {
-                Logger.Info($"Received NetMessageReadyForGameJoin message");
-                try
-                {
-                    var parsedMessage = NetMessageReadyForGameJoin.ParseFrom(message);
-                    Logger.Trace(parsedMessage.ToString());
-                }
-                catch (InvalidProtocolBufferException e)
-                {
-                    Logger.Warn($"Failed to parse NetMessageReadyForGameJoin message: {e.Message}");
-                }
+                case ClientToGameServerMessage.NetMessageReadyForGameJoin:
 
-                /*
-                Logger.Info("Responding with NetMessageReadyAndLoggedIn message");
-                byte[] response = NetMessageReadyAndLoggedIn.CreateBuilder()
-                    .Build().ToByteArray();
-                client.SendGameServiceMessage(ServerType, (byte)GameServerToClientMessage.NetMessageReadyAndLoggedIn, response);
-                */
+                    Logger.Info($"Received NetMessageReadyForGameJoin message");
+                    try
+                    {
+                        var parsedReadyForGameJoin = NetMessageReadyForGameJoin.ParseFrom(message);
+                        Logger.Trace(parsedReadyForGameJoin.ToString());
+                    }
+                    catch (InvalidProtocolBufferException e)
+                    {
+                        Logger.Warn($"Failed to parse NetMessageReadyForGameJoin message: {e.Message}");
+                    }
 
-                Logger.Info("Responding with NetMessageReadyForTimeSync message");
-                byte[] response = NetMessageReadyForTimeSync.CreateBuilder()
-                    .Build().ToByteArray();
+                    Logger.Info("Responding with NetMessageReadyAndLoggedIn message");
+                    response = NetMessageReadyAndLoggedIn.CreateBuilder()
+                        .Build().ToByteArray();
+                    client.SendGameMessage(muxId, (byte)GameServerToClientMessage.NetMessageReadyAndLoggedIn, response);
 
-                client.SendGameMessage(muxId, (byte)GameServerToClientMessage.NetMessageReadyForTimeSync, response);
+                    Logger.Info("Responding with NetMessageInitialTimeSync message");
+                    response = NetMessageInitialTimeSync.CreateBuilder()
+                        .SetGameTimeServerSent(161351679299542)     // dumped
+                        .SetDateTimeServerSent(1509657957345525)    // dumped
+                        .Build().ToByteArray();
+                    client.SendGameMessage(muxId, (byte)GameServerToClientMessage.NetMessageInitialTimeSync, response, true);
 
-                /*
-                Logger.Info("Responding with NetMessageSelectStartingAvatarForNewPlayer message");
-                byte[] response = NetMessageSelectStartingAvatarForNewPlayer.CreateBuilder()
-                    .Build().ToByteArray();
-                client.SendGameServiceMessage(ServerType, (byte)GameServerToClientMessage.NetMessageSelectStartingAvatarForNewPlayer, response, GetGameTime());
-                */
+                    break;
 
-            }
-            else if (messageId == (byte)ClientToGameServerMessage.NetMessageSyncTimeRequest)
-            {
-                Logger.Info($"Received NetMessageSyncTimeRequest message");
-                var parsedMessage = NetMessageSyncTimeRequest.ParseFrom(message);
-                Logger.Trace(parsedMessage.ToString());
+                case ClientToGameServerMessage.NetMessageSyncTimeRequest:
+                    Logger.Info($"Received NetMessageSyncTimeRequest message");
+                    var parsedSyncTimeRequestMessage = NetMessageSyncTimeRequest.ParseFrom(message);
+                    Logger.Trace(parsedSyncTimeRequestMessage.ToString());
 
-                Logger.Info("Responding with NetMessageSyncTimeReply");
+                    //Logger.Info("Responding with NetMessageSyncTimeReply");
 
-                byte[] response = NetMessageSyncTimeReply.CreateBuilder()
-                    .SetGameTimeClientSent(parsedMessage.GameTimeClientSent)
-                    .SetGameTimeServerReceived(_gameServerManager.GetGameTime())
-                    .SetGameTimeServerSent(_gameServerManager.GetGameTime())
+                    response = NetMessageSyncTimeReply.CreateBuilder()
+                        .SetGameTimeClientSent(parsedSyncTimeRequestMessage.GameTimeClientSent)
+                        .SetGameTimeServerReceived(_gameServerManager.GetGameTime())
+                        .SetGameTimeServerSent(_gameServerManager.GetGameTime())
 
-                    .SetDateTimeClientSent(parsedMessage.DateTimeClientSent)
-                    .SetDateTimeServerReceived(_gameServerManager.GetDateTime())
-                    .SetDateTimeServerSent(_gameServerManager.GetDateTime())
+                        .SetDateTimeClientSent(parsedSyncTimeRequestMessage.DateTimeClientSent)
+                        .SetDateTimeServerReceived(_gameServerManager.GetDateTime())
+                        .SetDateTimeServerSent(_gameServerManager.GetDateTime())
 
-                    .SetDialation(0.0f)
-                    .SetGametimeDialationStarted(_gameServerManager.GetGameTime())
-                    .SetDatetimeDialationStarted(_gameServerManager.GetDateTime())
-                    .Build().ToByteArray();
+                        .SetDialation(0.0f)
+                        .SetGametimeDialationStarted(_gameServerManager.GetGameTime())
+                        .SetDatetimeDialationStarted(_gameServerManager.GetDateTime())
+                        .Build().ToByteArray();
 
-                client.SendGameMessage(muxId, (byte)GameServerToClientMessage.NetMessageSyncTimeReply, response);
-            }
-            else if (messageId == (byte)ClientToGameServerMessage.NetMessagePing)
-            {
-                Logger.Info($"Received NetMessagePing message");
+                    //client.SendGameServiceMessage(ServerType, (byte)GameServerToClientMessage.NetMessageSyncTimeReply, response);
+                    break;
 
-                var parsedMessage = NetMessagePing.ParseFrom(message);
-                Logger.Trace(parsedMessage.ToString());
+                case ClientToGameServerMessage.NetMessagePing:
+                    Logger.Info($"Received NetMessagePing message");
+                    var parsedPingMessage = NetMessagePing.ParseFrom(message);
+                    //Logger.Trace(parsedPingMessage.ToString());
+                    break;
 
-                /*
-                byte[] response = NetMessagePingResponse.CreateBuilder()
-                    .SetDisplayOutput(false)
-                    .SetRequestSentClientTime(parsedMessage.SendClientTime)
-                    .SetRequestSentGameTime(parsedMessage.SendGameTime)
-                    .Build().ToByteArray();
+                case ClientToGameServerMessage.NetMessagePlayerTradeCancel:
+                    Logger.Info($"Received NetMessagePlayerTradeCancel message");
 
-                client.SendGameServiceMessage(ServerType, (byte)GameServerToClientMessage.NetMessagePingResponse, response);
-                */
-            }
-            else
-            {
-                Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)messageId} (id {messageId})");
+                    if (client.InitReceivedFirstNetMessagePlayerTradeCancel == false)
+                    {
+                        client.SendPacketFromFile("NetMessagePlayerTradeStatus.bin");
+                        client.InitReceivedFirstNetMessagePlayerTradeCancel = true;
+                    }
+                    else if (client.InitReceivedSecondNetMessagePlayerTradeCancel == false)
+                    {
+                        client.SendPacketFromFile("NetMessagePlayerTradeStatus2.bin");
+                        client.SendPacketFromFile("NetMessageEntityCreate.bin");
+                        client.InitReceivedSecondNetMessagePlayerTradeCancel = true;
+                    }
+                    break;
+
+                case ClientToGameServerMessage.NetMessageVanityTitleSelect:
+                    Logger.Info($"Received NetMessagePlayerTradeCancel message");
+
+                    if (client.InitReceivedFirstNetMessageVanityTitleSelect == false)
+                    {
+                        client.SendPacketFromFile("NetMessageAddCondition.bin");
+                        client.InitReceivedFirstNetMessageVanityTitleSelect = true;
+                    }
+                    break;
+
+                case ClientToGameServerMessage.NetMessageRequestInterestInInventory:
+                    Logger.Info($"Received NetMessageRequestInterestInInventory message");
+                    if (client.InitReceivedFirstNetMessageRequestInterestInInventory == false)
+                    {
+                        client.SendPacketFromFile("NetMessageEntityCreate2.bin");
+                        client.InitReceivedFirstNetMessageRequestInterestInInventory = true;
+                    }
+                    break;
+
+                case ClientToGameServerMessage.NetMessageCellLoaded:
+                    Logger.Info($"Received NetMessageCellLoaded message");
+
+                    if (client.InitReceivedFirstNetMessageCellLoaded == false)
+                    {
+                        client.SendPacketFromFile("NetMessageEntityCreate3.bin");
+                        client.InitReceivedFirstNetMessageCellLoaded = true;
+                    }
+                    break;
+
+                default:
+                    Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)messageId} (id {messageId})");
+                    break;
             }
         }
     }
