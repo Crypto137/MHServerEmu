@@ -77,6 +77,21 @@ namespace MHServerEmu
             Send(packet);
         }
 
+        public void SendPacketFromFile(string fileName)
+        {
+            string path = $"{Directory.GetCurrentDirectory()}\\packets\\{fileName}";
+
+            if (File.Exists(path))
+            {
+                Logger.Info($"Sending {fileName}");
+                SendRaw(File.ReadAllBytes(path));
+            }
+            else
+            {
+                Logger.Warn($"{fileName} not found");
+            }
+        }
+
         private void Handle(CodedInputStream stream)
         {
             ClientPacket packet = new(stream);
@@ -202,6 +217,12 @@ namespace MHServerEmu
         {
             byte[] data = packet.Data;
             Logger.Trace($"OUT: {data.ToHexString()}");
+            this.stream.Write(data, 0, data.Length);
+        }
+
+        private void SendRaw(byte[] data)
+        {
+            Logger.Trace($"OUT: raw {data.Length} bytes");
             this.stream.Write(data, 0, data.Length);
         }
     }
