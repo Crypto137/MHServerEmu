@@ -1,31 +1,45 @@
 <config>
 	<str name="AuthServerAddress" value="localhost" />
 	<str name="AuthServerUrl" value="/marvelheroes/AuthServer/Login/IndexPB" />
+	<!-- <str name="AuthServerAddress" value="auth.marvelheroes.com" /> -->
+	<!-- <str name="AuthServerUrl" value="/AuthServer/Login/IndexPB" /> -->
 	<str name="AuthServerTicketUrl" value="" />
-	<str name="AuthServerPort" value="80" />
+	<str name="AuthServerPort" value="443" />
 	<str name="CrashReportHost" value="hq-gar-dev01" />
 	<str name="CrashReportUrl" value="/MinidumpWebService/Home/ProcessPostedDump" />
 	<str name="CrashReportPort" value="" />
 	<str name="VerifyFailureHost" value="localhost" />
 	<str name="VerifyFailureUrl" value="" />
 	<str name="VerifyFailurePort" value="" />
-	<str name="ReportDefectHost" value="" />
-	<str name="ReportDefectUrl" value="/BugAndFeatureWebService/NewDefect" />
-	<str name="ReportDefectPort" value="" />
 	<str name="ReportSuggestionHost" value="" />
 	<str name="ReportSuggestionUrl" value="/BugAndFeatureWebService/NewSuggestion" />
 	<str name="ReportSuggestionPort" value="" />
-	<bool name="UsePlaytestOnlyCommands" value="false" />
 	<str name="OnCloseUrl" value="" />
 	<str name="OnCloseUrlSteam" value="" />
 	<str name="AccountWebsiteUrl" value="https://www.marvelheroes.com" />
 	<str name="AccountRegistrationUrl" value="https://login.marvelheroes.com/registration.php?pcode=" />
 	<str name="SteamAccountRegistrationUrl" value="https://login.marvelheroes.com/registration.php?pcode=steam" />
-	<str name="BitRaiderAccountRegistrationUrl" value="" />
 	<str name="SteamMicroTransactionCompleteHost" value="partner.marvelheroes.com" />
 	<str name="SteamMicroTransactionCompletePort" value="" />
 	<str name="SteamMicroTransactionCompleteUrl" value="/steam/finalize" />
 	<bool name="SteamMicroTransactionCompleteUseSsl" value="false" />
 	<str name="DriverUpdateURL" value="https://marvelheroes.com/support/drivers" />
 	<bool name="AllowNonSteamStoreInSteamBuild" value="true" />
+	<str name="InGameHelpURL" value="https://d5.parature.com/ics/support/default.asp?deptID=15144" />
+	<str name="LowMemoryURL" value="https://forums.marvelheroes.com/discussion/comment/1179527/#Comment_1179527" />
+	<str name="ForgotPasswordURL" value="https://login.marvelheroes.com/forgotpassword.php" />
+	<str name="VerifyEmailURL" value="https://login.marvelheroes.com" />
+	<str name="ChangePasswordURL" value="https://login.marvelheroes.com/dashboard/changepassword.php" />
+	<bool name="EnableLiveTips" value="false" />
+	<bool name="EnableLiveTipsDownloader" value="false" />
+	<str name="LoadScreenTipsURL" value="http://cdn.marvelheroes.com/marvelheroes/liveloadingtips.xml" />
+	<str name="LiveTipsQueryInterval" value="" />
+	<str name="ConfirmEmailFAQ" value="" />
+	<str name="YouTubeVideoPlayer" value="http://storecdn.marvelheroes.com/cdn/youtubePlayer.html?videoId=%S&height=%d&width=%d&protoId=%S" />
+	<str name="YouTubeVideoPlayerPlaylist" value="http://storecdn.marvelheroes.com/cdn/youtubePlayer.html?playlist=%S&height=%d&width=%d&protoId=%S" />
+	<str name="BinkMovieUrl" value="http://storecdn.marvelheroes.com/cdn/videos/%s" />
+	<str name="EnabledLocales" value="chi.all;deu.all;eng.all;fra.all;jpn.all;kor.all;por.all;rus.all;sg1.all;sg2.all;sg3.all;spa.all" />
+	<str name="LoginDownloadURL" value="" />
+	<str name="LoginStreamURL" value="" />
+	<str name="CatalogDownloadHost" value="" />
 </config>
