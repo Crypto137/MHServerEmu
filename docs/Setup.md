@@ -2,9 +2,9 @@
 
 First you need to get the 1.52.0.1700 client. If you still have Marvel Heroes in your Steam library, you can download it from there.
 
-It is also possible to download other versions of the client from Steam. See [ClientVersions.md](https://github.com/Crypto137/MHServerEmu/blob/master/docs/ClientConfig.md) for details.
+*Note: it is also possible to download other versions of the client from Steam. See [ClientVersions.md](https://github.com/Crypto137/MHServerEmu/blob/master/docs/ClientVersions.md) for details.*
 
-After getting the client you need to set up a web server to serve SiteConfig.xml and redirect the https AuthTicket request to localhost:8080. You can either set the server up yourself, or use a solution stack such as WAMP.
+After getting the client you need to set up a web server to serve SiteConfig.xml and redirect the https authorization request to localhost:8080. You can either set the server up yourself, or use a solution stack such as WAMP.
 
 1. Set up your preferred web server.
 
@@ -25,8 +25,10 @@ Now you can actually redirect the client to your server and connect.
 
 3. Compile and run MHServerEmu.
 
-4. Launch the game. You can launch the game without Steam by running MarvelHeroesOmega.exe with the following arguments: -solidstate -nobitraider -nosteam. There will be a DownloadChunkManifest error, but the game will start anyway.
+4. Launch the game.
 
 5. Log in with any email and password.
 
 If everything works correctly, the server should display client connection information.
+
+*Note: you can launch the game without Steam by running MarvelHeroesOmega.exe with the following arguments: -solidstate -nobitraider -nosteam. There will be a DownloadChunkManifest error, but the game will start anyway.*
