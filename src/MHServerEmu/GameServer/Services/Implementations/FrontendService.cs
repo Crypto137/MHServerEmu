@@ -74,6 +74,9 @@ namespace MHServerEmu.GameServer.Services.Implementations
 
                         client.SendGameMessage(muxId, (byte)GameServerToClientMessage.NetMessageQueueLoadingScreen, queueLoadingScreenMessage);
 
+                        client.SendPacketFromFile("NetMessageAchievementDatabaseDump.bin");
+                        client.SendPacketFromFile("NetMessageEntityEnterGameWorld.bin");
+
                         var chatBroadcastMessage = ChatBroadcastMessage.CreateBuilder()
                             .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS)
                             //.SetFromPlayerName("System")
