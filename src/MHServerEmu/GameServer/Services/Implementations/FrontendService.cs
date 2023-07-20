@@ -68,14 +68,24 @@ namespace MHServerEmu.GameServer.Services.Implementations
                     {
                         client.FinishedGroupingManagerFrontendHandshake = true;
 
-                        byte[] response = NetMessageQueueLoadingScreen.CreateBuilder()
+                        byte[] queueLoadingScreenMessage = NetMessageQueueLoadingScreen.CreateBuilder()
                             .SetRegionPrototypeId(0)
                             .Build().ToByteArray();
 
-                        client.SendGameMessage(muxId, (byte)GameServerToClientMessage.NetMessageQueueLoadingScreen, response);
+                        client.SendGameMessage(muxId, (byte)GameServerToClientMessage.NetMessageQueueLoadingScreen, queueLoadingScreenMessage);
+
+                        var chatBroadcastMessage = ChatBroadcastMessage.CreateBuilder()
+                            .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS)
+                            //.SetFromPlayerName("System")
+                            //.SetTheMessage(ChatMessage.CreateBuilder().SetBody("Operation Omega is now active. Will you fight to defend S.H.I.E.L.D.?  Or will you support the evil HYDRA?"))
+                            .SetFromPlayerName("MHServerEmu")
+                            .SetTheMessage(ChatMessage.CreateBuilder().SetBody("Hello world 2023"))
+                            .SetPrestigeLevel(6)
+                            .Build().ToByteArray();
+
+                        client.SendGameMessage(2, (byte)GroupingManagerMessage.ChatBroadcastMessage, chatBroadcastMessage);
 
                         // Send hardcoded data after the initial handshakes finish
-                        client.SendPacketFromFile("ChatBroadcastMessage.bin");
                         client.SendPacketFromFile("NetMessageMarkFirstGameFrame.bin");
                         client.SendPacketFromFile("NetMessageModifyCommunityMember.bin");
                         client.SendPacketFromFile("NetMessageQueryIsRegionAvailable.bin");
