@@ -1,33 +1,32 @@
 # Setup
 
-First you need to get the 1.52.0.1700 client. If you still have Marvel Heroes in your Steam library, you can download it from there.
+First you need to get the 1.52.0.1700 client. This is the final released version of Marvel Heroes, If you still have the game in your Steam library, you can download it from there.
 
 *Note: it is also possible to download other versions of the client from Steam. See [ClientVersions.md](https://github.com/Crypto137/MHServerEmu/blob/master/docs/ClientVersions.md) for details.*
 
-After getting the client you need to set up a web server to serve SiteConfig.xml and redirect the https authorization request to localhost:8080. You can either set the server up yourself, or use a solution stack such as WAMP.
+After getting the client, you need to set up a web server to serve SiteConfig.xml and AuthTicket. For this guide we're going to use Apache.
 
-1. Set up your preferred web server.
+1. Download Apache 2.4.x OpenSSL 1.1.1 VS17 [here](https://www.apachehaus.com/cgi-bin/download.plx). You can use any other version of Apache you prefer, as long as it has OpenSSL support enabled.
 
-2. Enable HTTPS support ([here](https://gist.github.com/danieldogeanu/081dc198a2d727afd6bf01174990ee8d) are instructions for WAMP)
+2. Extract the ```Apache24``` folder in the archive to the root directory on any drive (e.g. ```C:\Apache24```).
 
-3. Add the following lines to your virtual host configuration in httpd-ssl.conf:
+3. Open ```Apache24\conf\extra\httpd-ssl.conf``` with any text editor and replace ```ServerName www.example.com:443``` with ```ServerName localhost:443```.
 
-```
-RewriteEngine on
-RewriteRule ^/marvelheroes(.*) http://%{HTTP_HOST}:8080$1
-```
+4. Put [SiteConfig.xml](https://github.com/Crypto137/MHServerEmu/blob/master/assets/SiteConfig.xml) and [AuthTicket](https://github.com/Crypto137/MHServerEmu/blob/master/assets/AuthTicket) provided in this repository in ```Apache24\htdocs```.
 
-Now you can actually redirect the client to your server and connect.
+5. Open ```ClientConfig.xml``` located in ```Marvel Heroes\Data\Configs``` with any text editor and replace the ```SiteConfigLocation``` value with ```localhost/SiteConfig.xml```
 
-1. Put [SiteConfig.xml](https://github.com/Crypto137/MHServerEmu/blob/master/assets/SiteConfig.xml) provided in this repository in your web server's www folder.
+6. Compile MHServerEmu with Visual Studio or any other tool you prefer.
 
-2. Edit your ClientConfig.xml file located in "Marvel Heroes\Data\Configs" and replace the SiteConfigLocation value with "localhost/SiteConfig.xml".
+Now you can actually start everything and get in-game.
 
-3. Compile and run MHServerEmu.
+1. Start Apache by running ```Apache24\bin\httpd.exe```.
 
-4. Launch the game.
+2. Start MHServerEmu.
 
-5. Log in with any email and password.
+3. Launch the game.
+
+4. Log in with any email and password.
 
 If everything works correctly, the server should display client connection information.
 
