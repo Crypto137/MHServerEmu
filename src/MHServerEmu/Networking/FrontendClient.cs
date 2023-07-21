@@ -81,7 +81,6 @@ namespace MHServerEmu.Networking
         private void Handle(CodedInputStream stream)
         {
             ClientPacket packet = new(stream);
-            Logger.Trace($"IN: {packet.RawData.ToHexString()}");
 
             switch (packet.Command)
             {
@@ -104,14 +103,8 @@ namespace MHServerEmu.Networking
                     break;
 
                 case MuxCommand.Message:
-                    Logger.Trace($"Received message on MuxId {packet.MuxId} ({packet.BodyLength} bytes)");
-
-                    // First byte is message id, second byte is generally protobuf size as uint8
-                    // Some messages have weird structure, need to figure this out
-                    byte[] message = new byte[packet.Body[1]];
-                    for (int i = 0; i < message.Length; i++) message[i] = packet.Body[i + 2];
-
-                    _gameServerManager.Handle(this, packet.MuxId, packet.Body[0], message);        
+                    Logger.Trace($"Received {packet.Messages.Length} message(s) on MuxId {packet.MuxId}");
+                    _gameServerManager.Handle(this, packet.MuxId, packet.Messages);
 
                     break;
             }

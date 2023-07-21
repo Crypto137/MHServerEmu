@@ -16,36 +16,12 @@ namespace MHServerEmu.Networking
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly CodedInputStream _stream;
-
         public ushort MuxId { get; }
-        public int BodyLength { get; }
         public MuxCommand Command { get; }
-
-        public byte[] Body { get; }
-
-        public byte[] RawData
-        {
-            get
-            {
-                using (MemoryStream memoryStream = new())
-                {
-                    using (BinaryWriter binaryWriter = new(memoryStream))
-                    {
-                        binaryWriter.Write(MuxId);
-                        binaryWriter.Write(BodyLength.ToUInt24ByteArray());
-                        binaryWriter.Write((byte)Command);
-                        binaryWriter.Write(Body);
-                        return memoryStream.ToArray();
-                    }
-                }
-            }
-        }
+        public GameMessage[] Messages { get; }
 
         public ClientPacket(CodedInputStream stream)
         {
-            _stream = stream;
-
             // Read header (6 bytes)
             MuxId = BitConverter.ToUInt16(stream.ReadRawBytes(2));
 
@@ -54,12 +30,38 @@ namespace MHServerEmu.Networking
             byte[] bodyLengthArray = BitConverter.IsLittleEndian
                 ? new byte[] { lengthArray[0], lengthArray[1], lengthArray[2], 0 }
                 : new byte[] { 0, lengthArray[2], lengthArray[1], lengthArray[0] };
+            int bodyLength = BitConverter.ToInt32(bodyLengthArray);
 
-            BodyLength = BitConverter.ToInt32(bodyLengthArray);
             Command = (MuxCommand)stream.ReadRawByte();
 
-            // Read body
-            Body = stream.ReadRawBytes(BodyLength);
+            // Read messages
+            if (Command == MuxCommand.Message)
+            {
+                if (bodyLength > 0)
+                {
+                    List<GameMessage> messageList = new();
+
+                    CodedInputStream messageInputStream = CodedInputStream.CreateInstance(stream.ReadRawBytes(bodyLength));
+
+                    while (!messageInputStream.IsAtEnd)
+                    {
+                        byte messageId = (byte)messageInputStream.ReadRawVarint64();
+                        int messageSize = (int)messageInputStream.ReadRawVarint64();
+                        byte[] messageContent = messageInputStream.ReadRawBytes(messageSize);
+                        messageList.Add(new(messageId, messageContent));
+                    }
+
+                    Messages = messageList.ToArray();
+                }
+                else
+                {
+                    Logger.Warn($"Received empty message packet on {MuxId}");
+                }
+            }
+            else
+            {
+                Messages = Array.Empty<GameMessage>();
+            }
         }
     }
 }

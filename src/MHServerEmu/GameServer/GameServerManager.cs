@@ -21,20 +21,20 @@ namespace MHServerEmu.GameServer
             StartTime = GetDateTime();
         }
 
-        public void Handle(FrontendClient client, ushort muxId, byte messageId, byte[] message)
+        public void Handle(FrontendClient client, ushort muxId, GameMessage[] messages)
         {
             switch (muxId)
             {
                 case 1:
                     if (client.FinishedPlayerMgrServerFrontendHandshake)
                     {
-                        Logger.Trace($"Routing messageId {messageId} on muxId {muxId} to GameInstanceService");
-                        _gameInstanceService.Handle(client, muxId, messageId, message);
+                        Logger.Trace($"Routing {messages.Length} message(s) on muxId {muxId} to GameInstanceService");
+                        _gameInstanceService.Handle(client, muxId, messages);
                     }
                     else
                     {
-                        Logger.Trace($"Routing messageId {messageId} on muxId {muxId} to FrontendService");
-                        _frontendService.Handle(client, muxId, messageId, message);
+                        Logger.Trace($"Routing {messages.Length} message(s) on muxId {muxId} to FrontendService");
+                        _frontendService.Handle(client, muxId, messages);
                     }
 
                     break;
@@ -42,18 +42,18 @@ namespace MHServerEmu.GameServer
                 case 2:
                     if (client.FinishedGroupingManagerFrontendHandshake)
                     {
-                        Logger.Warn($"Unhandled message id {messageId} on muxId {muxId} (most likely for GroupingManagerFrontend)");
+                        Logger.Warn($"{messages.Length} unhandled message(s) on muxId {muxId} (most likely for GroupingManagerFrontend)");
                     }
                     else
                     {
-                        Logger.Trace($"Routing messageId {messageId} on muxId {muxId} to FrontendService");
-                        _frontendService.Handle(client, muxId, messageId, message);
+                        Logger.Trace($"Routing {messages.Length} message(s) on muxId {muxId} to FrontendService");
+                        _frontendService.Handle(client, muxId, messages);
                     }
 
                     break;
 
                 default:
-                    Logger.Warn($"Unhandled message id {messageId} on muxId {muxId}");
+                    Logger.Warn($"{messages.Length} unhandled message(s) on muxId {muxId}");
                     break;
             }
         }

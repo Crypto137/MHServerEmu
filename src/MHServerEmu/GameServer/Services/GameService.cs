@@ -14,9 +14,12 @@ namespace MHServerEmu.GameServer.Services
             _gameServerManager = gameServerManager;
         }
 
-        public virtual void Handle(FrontendClient client, ushort muxId, byte messageId, byte[] message)
+        public virtual void Handle(FrontendClient client, ushort muxId, GameMessage[] messages)
         {
-            Logger.Warn($"Unimplemented game service received message id {messageId} on muxId {muxId}");
+            foreach (GameMessage message in messages)
+            {
+                Logger.Warn($"Unimplemented game service received message id {message.Id} on muxId {muxId}");
+            }
         }
     }
 }
