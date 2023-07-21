@@ -2,15 +2,15 @@
 
 Marvel Heroes uses [Protocol Buffers](https://protobuf.dev/) for network message serialization. It is possible to extract protobuf schemas (.proto) from the main client executable using [protod](https://github.com/dennwc/protod) and then use them with tools such as protogen included with [protobuf-csharp-port](https://github.com/jskeet/protobuf-csharp-port).
 
-Most protobuf payloads have the following structure:
+Protobuf payloads have the following structure:
 
 ```
-byte MessageId          // same as index in its .proto schema
-byte MessageSize        // in bytes
+varint MessageId          // same as index in its .proto schema
+varint MessageSize        // in bytes
 byte[] EncodedMessage
 ```
 
-Some payloads appear to slightly deviate from this structure (e.g. dumped NetMessageInitialTimeSync has an extra 0x01 byte between id and size). The details of this are still being investigated.
+For more information on varint see [protobuf documentation on encoding](https://protobuf.dev/programming-guides/encoding/).
 
 When a player tries to log in, the client communicates with the auth server specified in SiteConfig.xml over https. The end result of this communication is an AuthTicket payload that contains session info (id, token, AES-256 encryption key), as well as the frontend server address and port that the client proceeds to connect to. It's possible to bypass the authorization process entirely by responding to the initial request with an AuthTicket payload straight away.
 
