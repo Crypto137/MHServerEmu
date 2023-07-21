@@ -56,10 +56,20 @@ namespace MHServerEmu.Networking
             socket.Disconnect(false);
         }
 
-        public void SendGameMessage(ushort muxId, byte messageId, byte[] message, bool addExtraByte = false)
+        public void SendMessage(ushort muxId, GameMessage message)
         {
             ServerPacket packet = new(muxId, MuxCommand.Message);
-            packet.WriteMessage(messageId, message, addExtraByte);
+            packet.AddMessage(message);
+            Send(packet);
+        }
+
+        public void SendMultipleMessages(ushort muxId, GameMessage[] messages)
+        {
+            ServerPacket packet = new(muxId, MuxCommand.Message);
+            foreach (GameMessage message in messages)
+            {
+                packet.AddMessage(message);
+            }
             Send(packet);
         }
 

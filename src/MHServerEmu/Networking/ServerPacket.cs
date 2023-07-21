@@ -1,27 +1,54 @@
-﻿using MHServerEmu.Common;
+﻿using Google.ProtocolBuffers;
+using MHServerEmu.Common;
 
 namespace MHServerEmu.Networking
 {
     class ServerPacket
     {
-        // Set ClientPacket for information on the structure
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         private ushort _muxId;
         private MuxCommand _muxCommand;
-
-        private byte[] _body = new byte[] { };
+        private List<GameMessage> _messageList = new();
 
         public byte[] Data
         {
             get
             {
+                byte[] bodyBuffer = Array.Empty<byte>();
+                if (_muxCommand == MuxCommand.Message)
+                {
+                    if (_messageList.Count > 0)
+                    {
+                        using (MemoryStream memoryStream = new())
+                        {
+                            CodedOutputStream outputStream = CodedOutputStream.CreateInstance(memoryStream);
+
+                            foreach (GameMessage message in _messageList)
+                            {
+                                outputStream.WriteRawVarint64(message.Id);
+                                outputStream.WriteRawVarint64((ulong)message.Content.Length);
+                                outputStream.WriteRawBytes(message.Content);
+                            }
+
+                            outputStream.Flush();
+                            bodyBuffer = memoryStream.ToArray();
+                        }
+                    }
+                    else
+                    {
+                        Logger.Warn("Message packet contains no messages!");
+                    }
+                }
+
                 using (MemoryStream memoryStream = new())
                 {
                     using (BinaryWriter binaryWriter = new(memoryStream))
                     {
                         binaryWriter.Write(_muxId);
-                        binaryWriter.Write(_body.Length.ToUInt24ByteArray());
+                        binaryWriter.Write(bodyBuffer.Length.ToUInt24ByteArray());
                         binaryWriter.Write((byte)_muxCommand);
-                        binaryWriter.Write(_body);
+                        binaryWriter.Write(bodyBuffer);
                         return memoryStream.ToArray();
                     }
                 }
@@ -34,22 +61,9 @@ namespace MHServerEmu.Networking
             _muxCommand = command;
         }
 
-        public void WriteMessage(byte messageId, byte[] message, bool addExtraByte)
+        public void AddMessage(GameMessage message)
         {
-            using (MemoryStream memoryStream = new())
-            {
-                using (BinaryWriter binaryWriter = new(memoryStream))
-                {
-                    binaryWriter.Write(messageId);
-
-                    if (addExtraByte) binaryWriter.Write(Convert.ToByte(1));   // NetMessageInitialTimeSync needs an extra byte here for some reason
-                    binaryWriter.Write(Convert.ToByte(message.Length));
-
-                    binaryWriter.Write(message);
-
-                    _body = memoryStream.ToArray();
-                }
-            }
+            _messageList.Add(message);
         }
     }
 }

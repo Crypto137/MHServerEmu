@@ -36,14 +36,14 @@ namespace MHServerEmu.GameServer.Services.Implementations
                         Logger.Info("Responding with NetMessageReadyAndLoggedIn message");
                         response = NetMessageReadyAndLoggedIn.CreateBuilder()
                             .Build().ToByteArray();
-                        client.SendGameMessage(muxId, (byte)GameServerToClientMessage.NetMessageReadyAndLoggedIn, response);
+                        client.SendMessage(muxId, new((byte)GameServerToClientMessage.NetMessageReadyAndLoggedIn, response));
 
                         Logger.Info("Responding with NetMessageInitialTimeSync message");
                         response = NetMessageInitialTimeSync.CreateBuilder()
                             .SetGameTimeServerSent(161351679299542)     // dumped
                             .SetDateTimeServerSent(1509657957345525)    // dumped
                             .Build().ToByteArray();
-                        client.SendGameMessage(muxId, (byte)GameServerToClientMessage.NetMessageInitialTimeSync, response, true);
+                        client.SendMessage(muxId, new((byte)GameServerToClientMessage.NetMessageInitialTimeSync, response));
 
                         break;
 

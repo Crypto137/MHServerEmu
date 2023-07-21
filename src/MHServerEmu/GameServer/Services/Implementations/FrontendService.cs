@@ -39,7 +39,7 @@ namespace MHServerEmu.GameServer.Services.Implementations
                                 .SetNumberOfPlayersInLine(9001)
                                 .Build().ToByteArray();
 
-                            client.SendGameMessage(muxId, (byte)FrontendProtocolMessage.LoginQueueStatus, response);
+                            client.SendMessage(muxId, new((byte)FrontendProtocolMessage.LoginQueueStatus, response));
                         }
                         else
                         {
@@ -50,9 +50,7 @@ namespace MHServerEmu.GameServer.Services.Implementations
                                 .SetEncryptedRandomNumber(ByteString.Empty)
                                 .Build().ToByteArray();
 
-                            //client.SendGameMessage(muxId, (byte)FrontendProtocolMessage.SessionEncryptionChanged, response);
-                            // SessionEncryptionChanged seems to deviate from the standard payload structure, so we'll send a canned response here for now
-                            client.SendPacketFromFile("SessionEncryptionChanged.bin");
+                            client.SendMessage(muxId, new((byte)FrontendProtocolMessage.SessionEncryptionChanged, response));
                         }
 
                         break;
@@ -74,7 +72,7 @@ namespace MHServerEmu.GameServer.Services.Implementations
                                 .SetRegionPrototypeId(0)
                                 .Build().ToByteArray();
 
-                            client.SendGameMessage(muxId, (byte)GameServerToClientMessage.NetMessageQueueLoadingScreen, queueLoadingScreenMessage);
+                            client.SendMessage(muxId, new((byte)GameServerToClientMessage.NetMessageQueueLoadingScreen, queueLoadingScreenMessage));
 
                             client.SendPacketFromFile("NetMessageAchievementDatabaseDump.bin");
                             client.SendPacketFromFile("NetMessageEntityEnterGameWorld.bin");
@@ -88,7 +86,7 @@ namespace MHServerEmu.GameServer.Services.Implementations
                                 .SetPrestigeLevel(6)
                                 .Build().ToByteArray();
 
-                            client.SendGameMessage(2, (byte)GroupingManagerMessage.ChatBroadcastMessage, chatBroadcastMessage);
+                            client.SendMessage(2, new((byte)GroupingManagerMessage.ChatBroadcastMessage, chatBroadcastMessage));
 
                             // NetMessageMarkFirstGameFrame.bin
                             var markFirstGameFrameMessage = NetMessageMarkFirstGameFrame.CreateBuilder()

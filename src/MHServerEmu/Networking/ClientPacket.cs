@@ -6,10 +6,10 @@ namespace MHServerEmu.Networking
     public enum MuxCommand
     {
         Connect = 0x01,
-        Accept = 0x02,      // Expected response to Connect and Insert
+        Accept = 0x02,
         Disconnect = 0x03,
-        Insert = 0x04,      // Purpose unclear, works similar to connect
-        Message = 0x05      // Requires a body
+        Insert = 0x04,
+        Message = 0x05
     }
 
     public class ClientPacket
@@ -18,7 +18,7 @@ namespace MHServerEmu.Networking
 
         public ushort MuxId { get; }
         public MuxCommand Command { get; }
-        public GameMessage[] Messages { get; }
+        public GameMessage[] Messages { get; } = Array.Empty<GameMessage>();
 
         public ClientPacket(CodedInputStream stream)
         {
@@ -57,10 +57,6 @@ namespace MHServerEmu.Networking
                 {
                     Logger.Warn($"Received empty message packet on {MuxId}");
                 }
-            }
-            else
-            {
-                Messages = Array.Empty<GameMessage>();
             }
         }
     }
