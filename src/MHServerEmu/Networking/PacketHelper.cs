@@ -1,14 +1,16 @@
-﻿using Google.ProtocolBuffers;
+﻿using System.Reflection;
+using Google.ProtocolBuffers;
+using Gazillion;
 using MHServerEmu.Common;
 
 namespace MHServerEmu.Networking
 {
     public static class PacketHelper
     {
-        public static void ParseServerMessagesFromPacketFile(string fileName)
-        {
-            string path = $"{Directory.GetCurrentDirectory()}\\Assets\\Packets\\{fileName}";
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
+        public static void ParseServerMessagesFromPacketFile(string path)
+        {
             if (File.Exists(path))
             {
                 CodedInputStream stream = CodedInputStream.CreateInstance(File.ReadAllBytes(path));
@@ -16,18 +18,45 @@ namespace MHServerEmu.Networking
 
                 if (packet.Command == MuxCommand.Message)
                 {
-                    foreach (GameMessage message in packet.Messages)
+                    using (StreamWriter streamWriter = new($"{path}_parsed.txt"))
                     {
-                        Console.WriteLine((GameServerToClientMessage)message.Id);
-                        Console.WriteLine(message.Content.ToHexString());
-                        Console.WriteLine();
+                        foreach (GameMessage message in packet.Messages)
+                        {
+                            string messageName = ((GameServerToClientMessage)message.Id).ToString();
+                            Logger.Trace($"Deserializing {messageName}...");
+                            streamWriter.WriteLine(messageName);
+
+                            // Get parse method using reflection
+                            Type t = typeof(NetMessageReadyAndLoggedIn).Assembly.GetType($"Gazillion.{messageName}");
+                            MethodInfo method = t.GetMethod("ParseFrom", BindingFlags.Static | BindingFlags.Public, new Type[] { typeof(byte[]) });
+                            IMessage protobufMessage = (IMessage)method.Invoke(null, new object[] { message.Content });
+
+                            streamWriter.WriteLine(protobufMessage);
+                            streamWriter.WriteLine();
+                        }
                     }
                 }
             }
             else
             {
-                Console.WriteLine($"{fileName} not found");
+                Logger.Warn($"{path} not found");
             }
+        }
+
+        public static void ParseServerMessagesFromAllPacketFiles()
+        {
+            string[] files = Directory.GetFiles($"{Directory.GetCurrentDirectory()}\\Assets\\Packets\\");
+
+            foreach (string file in files)
+            {
+                if (file.EndsWith(".txt") == false)     // ignore previous parses
+                {
+                    Logger.Info($"Parsing {file}...");
+                    ParseServerMessagesFromPacketFile(file);
+                }
+            }
+
+            Logger.Info($"Finished parsing {files.Length} packet files");
         }
     }
 }

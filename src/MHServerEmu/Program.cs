@@ -30,6 +30,8 @@ namespace MHServerEmu
                     break;
                 else if (input.Equals("stop", StringComparison.OrdinalIgnoreCase))
                     _frontendServer.Shutdown();
+                else if (input.Equals("parse", StringComparison.OrdinalIgnoreCase))
+                    PacketHelper.ParseServerMessagesFromAllPacketFiles();
             }
 
             _frontendServer.Shutdown();
