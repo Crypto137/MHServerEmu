@@ -77,6 +77,7 @@ namespace MHServerEmu.GameServer.Services.Implementations
                         //Logger.Trace(parsedPingMessage.ToString());
                         break;
 
+                    /*
                     case ClientToGameServerMessage.NetMessagePlayerTradeCancel:
                         Logger.Info($"Received NetMessagePlayerTradeCancel message");
 
@@ -112,12 +113,27 @@ namespace MHServerEmu.GameServer.Services.Implementations
                         }
                         break;
 
+                    */
+
                     case ClientToGameServerMessage.NetMessageCellLoaded:
                         Logger.Info($"Received NetMessageCellLoaded message");
 
                         if (client.InitReceivedFirstNetMessageCellLoaded == false)
                         {
-                            client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageEntityCreate3.bin"));
+                            GameMessage[] loadedMessages = PacketHelper.LoadMessagesFromPacketFile("NetMessageEntityCreate3.bin");
+                            List<GameMessage> messageList = new();
+
+                            foreach (GameMessage gameMessage in loadedMessages)
+                            {
+                                if (gameMessage.Id != (byte)GameServerToClientMessage.NetMessageEntityCreate)
+                                {
+                                    messageList.Add(gameMessage);
+                                }
+                            }
+
+                            client.SendMultipleMessages(1, messageList.ToArray());
+
+                            //client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageEntityCreate3.bin"));
                             client.InitReceivedFirstNetMessageCellLoaded = true;
                         }
                         break;
