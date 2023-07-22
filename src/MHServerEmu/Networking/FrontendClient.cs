@@ -58,14 +58,14 @@ namespace MHServerEmu.Networking
 
         public void SendMessage(ushort muxId, GameMessage message)
         {
-            ServerPacket packet = new(muxId, MuxCommand.Message);
+            PacketOut packet = new(muxId, MuxCommand.Message);
             packet.AddMessage(message);
             Send(packet);
         }
 
         public void SendMultipleMessages(ushort muxId, GameMessage[] messages)
         {
-            ServerPacket packet = new(muxId, MuxCommand.Message);
+            PacketOut packet = new(muxId, MuxCommand.Message);
             foreach (GameMessage message in messages)
             {
                 packet.AddMessage(message);
@@ -90,7 +90,7 @@ namespace MHServerEmu.Networking
 
         private void Handle(CodedInputStream stream)
         {
-            ClientPacket packet = new(stream);
+            PacketIn packet = new(stream);
 
             switch (packet.Command)
             {
@@ -120,10 +120,10 @@ namespace MHServerEmu.Networking
             }
         }
 
-        private void Send(ServerPacket packet)
+        private void Send(PacketOut packet)
         {
             byte[] data = packet.Data;
-            Logger.Trace($"OUT: {data.ToHexString()}");
+            Logger.Trace($"OUT: {data.Length} bytes");
             stream.Write(data, 0, data.Length);
         }
 

@@ -14,7 +14,7 @@ namespace MHServerEmu.Networking
             if (File.Exists(path))
             {
                 CodedInputStream stream = CodedInputStream.CreateInstance(File.ReadAllBytes(path));
-                ClientPacket packet = new(stream);
+                PacketIn packet = new(stream);
 
                 if (packet.Command == MuxCommand.Message)
                 {
@@ -60,6 +60,24 @@ namespace MHServerEmu.Networking
             }
 
             Logger.Info($"Finished parsing {packetCount} packet files");
+        }
+
+        public static GameMessage[] LoadMessagesFromPacketFile(string fileName)
+        {
+            string path = $"{Directory.GetCurrentDirectory()}\\Assets\\Packets\\{fileName}";
+
+            if (File.Exists(path))
+            {
+                CodedInputStream stream = CodedInputStream.CreateInstance(File.ReadAllBytes(path));
+                PacketIn packet = new(stream);
+                Logger.Info($"Loaded {packet.Messages.Length} messages from {fileName}");
+                return packet.Messages;
+            }
+            else
+            {
+                Logger.Warn($"{fileName} not found");
+                return Array.Empty<GameMessage>();
+            }
         }
     }
 }

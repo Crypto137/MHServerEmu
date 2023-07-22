@@ -12,7 +12,7 @@ namespace MHServerEmu.Networking
         Message = 0x05
     }
 
-    public class ClientPacket
+    public class PacketIn
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -20,7 +20,7 @@ namespace MHServerEmu.Networking
         public MuxCommand Command { get; }
         public GameMessage[] Messages { get; } = Array.Empty<GameMessage>();
 
-        public ClientPacket(CodedInputStream stream)
+        public PacketIn(CodedInputStream stream)
         {
             // Read header (6 bytes)
             MuxId = BitConverter.ToUInt16(stream.ReadRawBytes(2));

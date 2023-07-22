@@ -74,8 +74,8 @@ namespace MHServerEmu.GameServer.Services.Implementations
 
                             client.SendMessage(muxId, new((byte)GameServerToClientMessage.NetMessageQueueLoadingScreen, queueLoadingScreenMessage));
 
-                            client.SendPacketFromFile("NetMessageAchievementDatabaseDump.bin");
-                            client.SendPacketFromFile("NetMessageEntityEnterGameWorld.bin");
+                            client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageAchievementDatabaseDump.bin"));
+                            client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageEntityEnterGameWorld.bin"));
 
                             var chatBroadcastMessage = ChatBroadcastMessage.CreateBuilder()
                                 .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS)
@@ -88,27 +88,11 @@ namespace MHServerEmu.GameServer.Services.Implementations
 
                             client.SendMessage(2, new((byte)GroupingManagerMessage.ChatBroadcastMessage, chatBroadcastMessage));
 
-                            // NetMessageMarkFirstGameFrame.bin
-                            var markFirstGameFrameMessage = NetMessageMarkFirstGameFrame.CreateBuilder()
-                                .SetCurrentservergametime(161351681600)
-                                .SetCurrentservergameid(1125336957151523818)
-                                .SetGamestarttime(1)
-                                .Build().ToByteArray();
-
-                            var serverVersionMessage = NetMessageServerVersion.CreateBuilder().SetVersion("1.52.0.1700").Build().ToByteArray();
-
-                            /*
-                            var liveTuningMessage = NetMessageLiveTuningUpdate.CreateBuilder().SetTuningTypeKeyValueSettings(NetStructLiveTuningSettingProtoEnumValue.CreateBuilder()
-
-                                )
-                                .Build.ToByteArray();
-                            */
-
                             // Send hardcoded data after the initial handshakes finish
-                            client.SendPacketFromFile("NetMessageMarkFirstGameFrame.bin");
-                            client.SendPacketFromFile("NetMessageModifyCommunityMember.bin");
-                            client.SendPacketFromFile("NetMessageQueryIsRegionAvailable.bin");
-                            client.SendPacketFromFile("NetMessageMarkFirstGameFrame2.bin");
+                            client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageMarkFirstGameFrame.bin"));
+                            client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageModifyCommunityMember.bin"));
+                            client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageQueryIsRegionAvailable.bin"));
+                            client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageMarkFirstGameFrame2.bin"));
                         }
 
                         break;

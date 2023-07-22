@@ -82,13 +82,13 @@ namespace MHServerEmu.GameServer.Services.Implementations
 
                         if (client.InitReceivedFirstNetMessagePlayerTradeCancel == false)
                         {
-                            client.SendPacketFromFile("NetMessagePlayerTradeStatus.bin");
+                            client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessagePlayerTradeStatus.bin"));
                             client.InitReceivedFirstNetMessagePlayerTradeCancel = true;
                         }
                         else if (client.InitReceivedSecondNetMessagePlayerTradeCancel == false)
                         {
-                            client.SendPacketFromFile("NetMessagePlayerTradeStatus2.bin");
-                            client.SendPacketFromFile("NetMessageEntityCreate.bin");
+                            client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessagePlayerTradeStatus2.bin"));
+                            client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageEntityCreate.bin"));
                             client.InitReceivedSecondNetMessagePlayerTradeCancel = true;
                         }
                         break;
@@ -98,7 +98,7 @@ namespace MHServerEmu.GameServer.Services.Implementations
 
                         if (client.InitReceivedFirstNetMessageVanityTitleSelect == false)
                         {
-                            client.SendPacketFromFile("NetMessageAddCondition.bin");
+                            client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageAddCondition.bin"));
                             client.InitReceivedFirstNetMessageVanityTitleSelect = true;
                         }
                         break;
@@ -107,7 +107,7 @@ namespace MHServerEmu.GameServer.Services.Implementations
                         Logger.Info($"Received NetMessageRequestInterestInInventory message");
                         if (client.InitReceivedFirstNetMessageRequestInterestInInventory == false)
                         {
-                            client.SendPacketFromFile("NetMessageEntityCreate2.bin");
+                            client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageEntityCreate2.bin"));
                             client.InitReceivedFirstNetMessageRequestInterestInInventory = true;
                         }
                         break;
@@ -117,7 +117,7 @@ namespace MHServerEmu.GameServer.Services.Implementations
 
                         if (client.InitReceivedFirstNetMessageCellLoaded == false)
                         {
-                            client.SendPacketFromFile("NetMessageEntityCreate3.bin");
+                            client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageEntityCreate3.bin"));
                             client.InitReceivedFirstNetMessageCellLoaded = true;
                         }
                         break;
