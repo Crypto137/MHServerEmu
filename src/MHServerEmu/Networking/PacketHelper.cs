@@ -47,16 +47,19 @@ namespace MHServerEmu.Networking
         {
             string[] files = Directory.GetFiles($"{Directory.GetCurrentDirectory()}\\Assets\\Packets\\");
 
+            int packetCount = 0;
+
             foreach (string file in files)
             {
                 if (file.EndsWith(".txt") == false)     // ignore previous parses
                 {
                     Logger.Info($"Parsing {file}...");
                     ParseServerMessagesFromPacketFile(file);
+                    packetCount++;
                 }
             }
 
-            Logger.Info($"Finished parsing {files.Length} packet files");
+            Logger.Info($"Finished parsing {packetCount} packet files");
         }
     }
 }
