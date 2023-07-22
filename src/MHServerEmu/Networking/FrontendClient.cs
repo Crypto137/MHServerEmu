@@ -113,7 +113,7 @@ namespace MHServerEmu.Networking
                     break;
 
                 case MuxCommand.Message:
-                    Logger.Trace($"Received {packet.Messages.Length} message(s) on MuxId {packet.MuxId}");
+                    //Logger.Trace($"Received {packet.Messages.Length} message(s) on MuxId {packet.MuxId}");
                     _gameServerManager.Handle(this, packet.MuxId, packet.Messages);
 
                     break;
@@ -123,7 +123,7 @@ namespace MHServerEmu.Networking
         private void Send(PacketOut packet)
         {
             byte[] data = packet.Data;
-            Logger.Trace($"OUT: {data.Length} bytes");
+            //Logger.Trace($"OUT: {data.Length} bytes");
             stream.Write(data, 0, data.Length);
         }
 

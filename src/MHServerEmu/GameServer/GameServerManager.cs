@@ -28,12 +28,12 @@ namespace MHServerEmu.GameServer
                 case 1:
                     if (client.FinishedPlayerMgrServerFrontendHandshake)
                     {
-                        Logger.Trace($"Routing {messages.Length} message(s) on muxId {muxId} to GameInstanceService");
+                        //Logger.Trace($"Routing {messages.Length} message(s) on muxId {muxId} to GameInstanceService");
                         _gameInstanceService.Handle(client, muxId, messages);
                     }
                     else
                     {
-                        Logger.Trace($"Routing {messages.Length} message(s) on muxId {muxId} to FrontendService");
+                        //Logger.Trace($"Routing {messages.Length} message(s) on muxId {muxId} to FrontendService");
                         _frontendService.Handle(client, muxId, messages);
                     }
 
@@ -46,7 +46,7 @@ namespace MHServerEmu.GameServer
                     }
                     else
                     {
-                        Logger.Trace($"Routing {messages.Length} message(s) on muxId {muxId} to FrontendService");
+                        //Logger.Trace($"Routing {messages.Length} message(s) on muxId {muxId} to FrontendService");
                         _frontendService.Handle(client, muxId, messages);
                     }
 
