@@ -131,5 +131,28 @@ namespace MHServerEmu.Networking
                 Logger.Warn($"{path} not found");
             }
         }
+
+        public static void SeparateDumpIntoPackets(string fileName)
+        {
+            string path = $"{Directory.GetCurrentDirectory()}\\Assets\\Packets\\{fileName}";
+
+            if (File.Exists(path))
+            {
+                CodedInputStream stream = CodedInputStream.CreateInstance(File.ReadAllBytes(path));
+
+                int packetCount = 0;
+
+                while (!stream.IsAtEnd)
+                {
+                    byte[] rawPacket = new PacketIn(stream).ToPacketOut().Data;
+                    File.WriteAllBytes($"{path}_packet{packetCount}_raw.bin", rawPacket);
+                    packetCount++;
+                }
+            }
+            else
+            {
+                Logger.Warn($"{path} not found");
+            }
+        }
     }
 }

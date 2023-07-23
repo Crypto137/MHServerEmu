@@ -73,6 +73,11 @@ namespace MHServerEmu.Networking
             Send(packet);
         }
 
+        public void SendMultipleMessages(ushort muxId, List<GameMessage> messageList)
+        {
+            SendMultipleMessages(muxId, messageList.ToArray());
+        }
+
         public void SendPacketFromFile(string fileName)
         {
             string path = $"{Directory.GetCurrentDirectory()}\\Assets\\Packets\\{fileName}";

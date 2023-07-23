@@ -59,5 +59,12 @@ namespace MHServerEmu.Networking
                 }
             }
         }
+
+        public PacketOut ToPacketOut()
+        {
+            PacketOut packetOut = new(MuxId, Command);
+            foreach (GameMessage message in Messages) packetOut.AddMessage(message);
+            return packetOut;
+        }
     }
 }

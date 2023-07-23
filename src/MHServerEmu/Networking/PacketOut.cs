@@ -3,7 +3,7 @@ using MHServerEmu.Common;
 
 namespace MHServerEmu.Networking
 {
-    class PacketOut
+    public class PacketOut
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
