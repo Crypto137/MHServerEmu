@@ -117,25 +117,34 @@ namespace MHServerEmu.GameServer.Services.Implementations
 
                     case ClientToGameServerMessage.NetMessageCellLoaded:
                         Logger.Info($"Received NetMessageCellLoaded message");
-
+                        
                         if (client.InitReceivedFirstNetMessageCellLoaded == false)
                         {
-                            GameMessage[] loadedMessages = PacketHelper.LoadMessagesFromPacketFile("NetMessageEntityCreate3.bin");
                             List<GameMessage> messageList = new();
 
-                            foreach (GameMessage gameMessage in loadedMessages)
-                            {
-                                if (gameMessage.Id != (byte)GameServerToClientMessage.NetMessageEntityCreate)
-                                {
-                                    messageList.Add(gameMessage);
-                                }
-                            }
+                            byte[] blackCatEntityEnterGameWorld = {
+                                0x01, 0xB2, 0xF8, 0xFD, 0x06, 0xA0, 0x21, 0xF0, 0xA3, 0x01, 0xBC, 0x40,
+                                0x90, 0x2E, 0x91, 0x03, 0xBC, 0x05, 0x00, 0x00, 0x01
+                            };
+
+                            messageList.Add(new((byte)GameServerToClientMessage.NetMessageEntityEnterGameWorld,
+                                NetMessageEntityEnterGameWorld.CreateBuilder().SetArchiveData(ByteString.CopyFrom(blackCatEntityEnterGameWorld)).Build().ToByteArray()));
+
+                            byte[] waypointEntityEnterGameWorld = {
+                                0x01, 0x0C, 0x02, 0x80, 0x43, 0xE0, 0x6B, 0xD8, 0x2A, 0xC8, 0x01
+                            };
+
+                            messageList.Add(new((byte)GameServerToClientMessage.NetMessageEntityEnterGameWorld,
+                                NetMessageEntityEnterGameWorld.CreateBuilder().SetArchiveData(ByteString.CopyFrom(waypointEntityEnterGameWorld)).Build().ToByteArray()));
+
+                            messageList.Add(new((byte)GameServerToClientMessage.NetMessageDequeueLoadingScreen, NetMessageDequeueLoadingScreen.DefaultInstance.ToByteArray()));
 
                             client.SendMultipleMessages(1, messageList.ToArray());
 
                             //client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageEntityCreate3.bin"));
                             client.InitReceivedFirstNetMessageCellLoaded = true;
                         }
+
                         break;
 
                     default:
