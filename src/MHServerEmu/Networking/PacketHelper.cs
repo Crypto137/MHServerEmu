@@ -9,8 +9,12 @@ namespace MHServerEmu.Networking
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public static void ParseServerMessagesFromPacketFile(string path)
+        private static readonly string PacketDirectory = $"{Directory.GetCurrentDirectory()}\\Assets\\Packets";
+
+        public static void ParseServerMessagesFromPacketFile(string fileName)
         {
+            string path = $"{PacketDirectory}\\{fileName}";
+
             if (File.Exists(path))
             {
                 CodedInputStream stream = CodedInputStream.CreateInstance(File.ReadAllBytes(path));
@@ -18,7 +22,7 @@ namespace MHServerEmu.Networking
 
                 if (packet.Command == MuxCommand.Message)
                 {
-                    using (StreamWriter streamWriter = new($"{path}_parsed.txt"))
+                    using (StreamWriter streamWriter = new($"{PacketDirectory}\\{Path.GetFileNameWithoutExtension(path)}_parsed.txt"))
                     {
                         foreach (GameMessage message in packet.Messages)
                         {
@@ -45,8 +49,7 @@ namespace MHServerEmu.Networking
 
         public static void ParseServerMessagesFromAllPacketFiles()
         {
-            string[] files = Directory.GetFiles($"{Directory.GetCurrentDirectory()}\\Assets\\Packets\\");
-
+            string[] files = Directory.GetFiles(PacketDirectory);
             int packetCount = 0;
 
             foreach (string file in files)
@@ -54,7 +57,7 @@ namespace MHServerEmu.Networking
                 if (file.EndsWith(".txt") == false)     // ignore previous parses
                 {
                     Logger.Info($"Parsing {file}...");
-                    ParseServerMessagesFromPacketFile(file);
+                    ParseServerMessagesFromPacketFile(Path.GetFileName(file));
                     packetCount++;
                 }
             }
@@ -62,32 +65,13 @@ namespace MHServerEmu.Networking
             Logger.Info($"Finished parsing {packetCount} packet files");
         }
 
-        public static GameMessage[] LoadMessagesFromPacketFile(string fileName)
+        public static void ParseServerMessagesFromPacketDump(string fileName)
         {
-            string path = $"{Directory.GetCurrentDirectory()}\\Assets\\Packets\\{fileName}";
+            string path = $"{PacketDirectory}\\{fileName}";
 
             if (File.Exists(path))
             {
                 CodedInputStream stream = CodedInputStream.CreateInstance(File.ReadAllBytes(path));
-                PacketIn packet = new(stream);
-                Logger.Info($"Loaded {packet.Messages.Length} messages from {fileName}");
-                return packet.Messages;
-            }
-            else
-            {
-                Logger.Warn($"{fileName} not found");
-                return Array.Empty<GameMessage>();
-            }
-        }
-
-        public static void ParsePacketDump(string fileName)
-        {
-            string path = $"{Directory.GetCurrentDirectory()}\\Assets\\Packets\\{fileName}";
-
-            if (File.Exists(path))
-            {
-                CodedInputStream stream = CodedInputStream.CreateInstance(File.ReadAllBytes(path));
-
                 int packetCount = 0;
 
                 while (!stream.IsAtEnd)
@@ -96,7 +80,7 @@ namespace MHServerEmu.Networking
 
                     if (packet.Command == MuxCommand.Message)
                     {
-                        using (StreamWriter streamWriter = new($"{path}_packet{packetCount}.txt"))
+                        using (StreamWriter streamWriter = new($"{PacketDirectory}\\{Path.GetFileNameWithoutExtension(path)}_packet{packetCount}_parsed.txt"))
                         {
                             foreach (GameMessage message in packet.Messages)
                             {
@@ -132,26 +116,48 @@ namespace MHServerEmu.Networking
             }
         }
 
-        public static void SeparateDumpIntoPackets(string fileName)
+        public static void ExtractMessagePacketsFromDump(string fileName)
         {
-            string path = $"{Directory.GetCurrentDirectory()}\\Assets\\Packets\\{fileName}";
+            string path = $"{PacketDirectory}\\{fileName}";
 
             if (File.Exists(path))
             {
                 CodedInputStream stream = CodedInputStream.CreateInstance(File.ReadAllBytes(path));
-
                 int packetCount = 0;
 
                 while (!stream.IsAtEnd)
                 {
-                    byte[] rawPacket = new PacketIn(stream).ToPacketOut().Data;
-                    File.WriteAllBytes($"{path}_packet{packetCount}_raw.bin", rawPacket);
-                    packetCount++;
+                    PacketIn packet = new(stream);
+
+                    if (packet.Command == MuxCommand.Message)
+                    {
+                        byte[] rawPacket = packet.ToPacketOut().Data;
+                        File.WriteAllBytes($"{PacketDirectory}\\{Path.GetFileNameWithoutExtension(path)}_packet{packetCount}_raw.bin", rawPacket);
+                        packetCount++;
+                    }
                 }
             }
             else
             {
                 Logger.Warn($"{path} not found");
+            }
+        }
+
+        public static GameMessage[] LoadMessagesFromPacketFile(string fileName)
+        {
+            string path = $"{PacketDirectory}\\{fileName}";
+
+            if (File.Exists(path))
+            {
+                CodedInputStream stream = CodedInputStream.CreateInstance(File.ReadAllBytes(path));
+                PacketIn packet = new(stream);
+                Logger.Info($"Loaded {packet.Messages.Length} messages from {fileName}");
+                return packet.Messages;
+            }
+            else
+            {
+                Logger.Warn($"{fileName} not found");
+                return Array.Empty<GameMessage>();
             }
         }
     }
