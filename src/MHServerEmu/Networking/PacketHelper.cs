@@ -79,5 +79,57 @@ namespace MHServerEmu.Networking
                 return Array.Empty<GameMessage>();
             }
         }
+
+        public static void ParsePacketDump(string fileName)
+        {
+            string path = $"{Directory.GetCurrentDirectory()}\\Assets\\Packets\\{fileName}";
+
+            if (File.Exists(path))
+            {
+                CodedInputStream stream = CodedInputStream.CreateInstance(File.ReadAllBytes(path));
+
+                int packetCount = 0;
+
+                while (!stream.IsAtEnd)
+                {
+                    PacketIn packet = new(stream);
+
+                    if (packet.Command == MuxCommand.Message)
+                    {
+                        using (StreamWriter streamWriter = new($"{path}_packet{packetCount}.txt"))
+                        {
+                            foreach (GameMessage message in packet.Messages)
+                            {
+                                string messageName = ((GameServerToClientMessage)message.Id).ToString();
+                                Logger.Trace($"Deserializing {messageName}...");
+                                streamWriter.WriteLine(messageName);
+
+                                try
+                                {
+                                    // Get parse method using reflection
+                                    Type t = typeof(NetMessageReadyAndLoggedIn).Assembly.GetType($"Gazillion.{messageName}");
+                                    MethodInfo method = t.GetMethod("ParseFrom", BindingFlags.Static | BindingFlags.Public, new Type[] { typeof(byte[]) });
+                                    IMessage protobufMessage = (IMessage)method.Invoke(null, new object[] { message.Content });
+                                    streamWriter.WriteLine(protobufMessage);
+                                }
+                                catch
+                                {
+                                    Logger.Warn($"Failed to deserialize {messageName}");
+                                    streamWriter.WriteLine("Failed to deserialize");
+                                }
+                                
+                                streamWriter.WriteLine();
+                            }
+                        }
+
+                        packetCount++;
+                    }
+                }
+            }
+            else
+            {
+                Logger.Warn($"{path} not found");
+            }
+        }
     }
 }
