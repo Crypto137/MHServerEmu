@@ -18,12 +18,7 @@ namespace MHServerEmu.Networking
         public bool FinishedPlayerMgrServerFrontendHandshake { get; set; } = false;
         public bool FinishedGroupingManagerFrontendHandshake { get; set; } = false;
 
-        // Flags for hardcoded initialization
-        public bool InitReceivedFirstNetMessagePlayerTradeCancel { get; set; } = false;
-        public bool InitReceivedSecondNetMessagePlayerTradeCancel { get; set; } = false;
-        public bool InitReceivedFirstNetMessageVanityTitleSelect { get; set; } = false;
-        public bool InitReceivedFirstNetMessageRequestInterestInInventory { get; set; } = false;
-        public bool InitReceivedFirstNetMessageCellLoaded { get; set; } = false;
+        public GameRegion StartingRegion = GameRegion.AvengersTower;
 
         public FrontendClient(Socket socket, GameServerManager gameServerManager)
         {

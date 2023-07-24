@@ -77,73 +77,16 @@ namespace MHServerEmu.GameServer.Services.Implementations
                         //Logger.Trace(parsedPingMessage.ToString());
                         break;
 
-                    /*
-                    case ClientToGameServerMessage.NetMessagePlayerTradeCancel:
-                        Logger.Info($"Received NetMessagePlayerTradeCancel message");
-
-                        if (client.InitReceivedFirstNetMessagePlayerTradeCancel == false)
-                        {
-                            client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessagePlayerTradeStatus.bin"));
-                            client.InitReceivedFirstNetMessagePlayerTradeCancel = true;
-                        }
-                        else if (client.InitReceivedSecondNetMessagePlayerTradeCancel == false)
-                        {
-                            client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessagePlayerTradeStatus2.bin"));
-                            client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageEntityCreate.bin"));
-                            client.InitReceivedSecondNetMessagePlayerTradeCancel = true;
-                        }
-                        break;
-
-                    case ClientToGameServerMessage.NetMessageVanityTitleSelect:
-                        Logger.Info($"Received NetMessagePlayerTradeCancel message");
-
-                        if (client.InitReceivedFirstNetMessageVanityTitleSelect == false)
-                        {
-                            client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageAddCondition.bin"));
-                            client.InitReceivedFirstNetMessageVanityTitleSelect = true;
-                        }
-                        break;
-
-                    case ClientToGameServerMessage.NetMessageRequestInterestInInventory:
-                        Logger.Info($"Received NetMessageRequestInterestInInventory message");
-                        if (client.InitReceivedFirstNetMessageRequestInterestInInventory == false)
-                        {
-                            client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageEntityCreate2.bin"));
-                            client.InitReceivedFirstNetMessageRequestInterestInInventory = true;
-                        }
-                        break;
-
-                    */
-
                     case ClientToGameServerMessage.NetMessageCellLoaded:
                         Logger.Info($"Received NetMessageCellLoaded message");
-                        
-                        if (client.InitReceivedFirstNetMessageCellLoaded == false)
-                        {
-                            List<GameMessage> messageList = new();
+                        client.SendMultipleMessages(1, RegionLoader.GetFinishLoadingMessages(client.StartingRegion));
 
-                            byte[] blackCatEntityEnterGameWorld = {
-                                0x01, 0xB2, 0xF8, 0xFD, 0x06, 0xA0, 0x21, 0xF0, 0xA3, 0x01, 0xBC, 0x40,
-                                0x90, 0x2E, 0x91, 0x03, 0xBC, 0x05, 0x00, 0x00, 0x01
-                            };
+                        break;
 
-                            messageList.Add(new((byte)GameServerToClientMessage.NetMessageEntityEnterGameWorld,
-                                NetMessageEntityEnterGameWorld.CreateBuilder().SetArchiveData(ByteString.CopyFrom(blackCatEntityEnterGameWorld)).Build().ToByteArray()));
-
-                            byte[] waypointEntityEnterGameWorld = {
-                                0x01, 0x0C, 0x02, 0x80, 0x43, 0xE0, 0x6B, 0xD8, 0x2A, 0xC8, 0x01
-                            };
-
-                            messageList.Add(new((byte)GameServerToClientMessage.NetMessageEntityEnterGameWorld,
-                                NetMessageEntityEnterGameWorld.CreateBuilder().SetArchiveData(ByteString.CopyFrom(waypointEntityEnterGameWorld)).Build().ToByteArray()));
-
-                            messageList.Add(new((byte)GameServerToClientMessage.NetMessageDequeueLoadingScreen, NetMessageDequeueLoadingScreen.DefaultInstance.ToByteArray()));
-
-                            client.SendMultipleMessages(1, messageList.ToArray());
-
-                            //client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageEntityCreate3.bin"));
-                            client.InitReceivedFirstNetMessageCellLoaded = true;
-                        }
+                    case ClientToGameServerMessage.NetMessageUseWaypoint:
+                        Logger.Info($"Received NetMessageUseWaypoint message");
+                        var useWaypointMessage = NetMessageUseWaypoint.ParseFrom(message.Content);
+                        Logger.Trace(useWaypointMessage.ToString());
 
                         break;
 

@@ -68,11 +68,8 @@ namespace MHServerEmu.GameServer.Services.Implementations
                         {
                             client.FinishedGroupingManagerFrontendHandshake = true;
 
-                            byte[] queueLoadingScreenMessage = NetMessageQueueLoadingScreen.CreateBuilder()
-                                .SetRegionPrototypeId(0)
-                                .Build().ToByteArray();
-
-                            client.SendMessage(muxId, new((byte)GameServerToClientMessage.NetMessageQueueLoadingScreen, queueLoadingScreenMessage));
+                            client.SendMessage(muxId, new((byte)GameServerToClientMessage.NetMessageQueueLoadingScreen,
+                                NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build().ToByteArray()));
 
                             client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageAchievementDatabaseDump.bin"));
                             //client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageEntityEnterGameWorld.bin"));
@@ -88,31 +85,8 @@ namespace MHServerEmu.GameServer.Services.Implementations
 
                             client.SendMessage(2, new((byte)GroupingManagerMessage.ChatBroadcastMessage, chatBroadcastMessage));
 
-                            // Send hardcoded data after the initial handshakes finish
-                            //client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageMarkFirstGameFrame.bin"));
-                            //client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageModifyCommunityMember.bin"));
-                            //client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageQueryIsRegionAvailable.bin"));
-                            //client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageMarkFirstGameFrame2.bin"));
-
-                            GameMessage[] loadedMessages = PacketHelper.LoadMessagesFromPacketFile("NetMessageMarkFirstGameFrame2.bin");
-                            List<GameMessage> messageList = new();
-
-                            for (int i = 0; i < loadedMessages.Length; i++)
-                            {
-                                if (loadedMessages[i].Id == (byte)GameServerToClientMessage.NetMessageEntityCreate)
-                                {
-                                    // message 5 == account data?
-                                    // message 115 == player entity
-                                    // message 364 == waypoint
-                                    if (i == 5 || i == 115 || i == 364) messageList.Add(loadedMessages[i]);
-                                }
-                                else
-                                {
-                                    messageList.Add(loadedMessages[i]);
-                                }
-                            }
-
-                            client.SendMultipleMessages(1, messageList.ToArray());
+                            // Send hardcoded region loading data after initial handshakes finish
+                            client.SendMultipleMessages(1, RegionLoader.GetBeginLoadingMessages(client.StartingRegion));
                         }
 
                         break;
