@@ -55,13 +55,11 @@ namespace MHServerEmu.Networking
                 byte[] buffer;
                 using (MemoryStream memoryStream = new())
                 {
-                    using (BinaryWriter binaryWriter = new(memoryStream))
-                    {
-                        binaryWriter.Write((byte)AuthMessage.AuthTicket);
-                        binaryWriter.Write(Convert.ToByte(authTicket.Length));
-                        binaryWriter.Write(authTicket);
-                    }
-
+                    CodedOutputStream outputStream = CodedOutputStream.CreateInstance(memoryStream);
+                    outputStream.WriteRawVarint64((byte)AuthMessage.AuthTicket);
+                    outputStream.WriteRawVarint64((ulong)authTicket.Length);
+                    outputStream.WriteRawBytes(authTicket);
+                    outputStream.Flush();
                     buffer = memoryStream.ToArray();
                 }
 
