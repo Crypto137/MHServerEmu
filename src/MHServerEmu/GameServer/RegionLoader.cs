@@ -1,6 +1,7 @@
 ﻿using Google.ProtocolBuffers;
 using Gazillion;
 using MHServerEmu.Networking;
+using MHServerEmu.Common;
 
 namespace MHServerEmu.GameServer
 {
@@ -13,6 +14,8 @@ namespace MHServerEmu.GameServer
 
     public static class RegionLoader
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public static GameMessage[] GetBeginLoadingMessages(GameRegion region)
         {
             GameMessage[] messages = Array.Empty<GameMessage>(); ;
@@ -31,7 +34,14 @@ namespace MHServerEmu.GameServer
                             // message 5 == account data?
                             // message 115 == player entity
                             // message 364 == waypoint
-                            if (i == 5 || i == 115 || i == 364) messageList.Add(loadedMessages[i]);
+                            if (i == 5 || i == 115 || i == 364)
+                            {
+                                messageList.Add(loadedMessages[i]);
+
+                                var entityCreateMessage = NetMessageEntityCreate.ParseFrom(loadedMessages[i].Content);
+                                Logger.Debug(new Archive(entityCreateMessage.BaseData.ToByteArray()).ToString());
+                                //ArchiveHelper.ParseDataAsVarint(entityCreateMessage.ArchiveData.ToByteArray(), $"{i}_entityCreateArchiveData.txt");
+                            }
                         }
                         else
                         {
