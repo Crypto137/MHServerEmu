@@ -1,0 +1,50 @@
+syntax = "proto2";
+
+package Gazillion;
+
+enum PubSubServerTypes {
+	FRONTEND_SERVER	= 0;
+	GAME_INSTANCE_SERVER_USER	= 1;
+	GAME_INSTANCE_SERVER_PLAYERMGR	= 2;
+	GAME_INSTANCE_SERVER_GROUPING	= 3;
+	GAME_INSTANCE_SERVER_METRICS	= 4;
+	PLAYERMGR_SERVER_FRONTEND	= 5;
+	PLAYERMGR_SERVER_SITEMGR_CONTROL	= 6;
+	PLAYERMGR_SERVER_SOCIAL_COMMON	= 7;
+	GROUPING_MANAGER_FRONTEND	= 8;
+	FAKE_CHAT_LOAD_TESTER	= 9;
+	GAME_INSTANCE_SERVER_BILLING	= 10;
+	GAME_INSTANCE_SERVER_GLOBAL_GAME_EVENT	= 12;
+	NUM_SERVER_TYPES	= 13;
+}
+
+message PubSubPublish {
+	optional PubSubServerTypes	serverType	= 1 [default = NUM_SERVER_TYPES];
+	optional string	serviceIPAddress	= 2;
+	optional string	servicePort	= 3;
+	optional string	serviceVersion	= 4;
+}
+
+message PubSubSubscribe {
+	optional PubSubServerTypes	serverType	= 1 [default = NUM_SERVER_TYPES];
+	optional int32	subscriptionId	= 2;
+	optional string	serviceVersion	= 3;
+}
+
+message PubSubEventNotification {
+	optional PubSubServerTypes	serverType	= 1 [default = NUM_SERVER_TYPES];
+	optional int32	subscriptionId	= 2;
+	optional string	serviceIPAddress	= 3;
+	optional string	servicePort	= 4;
+	optional string	serviceVersion	= 5;
+	optional bool	requestResignation	= 6;
+}
+
+message PubSubOrderlyShutdown {
+	optional string	message	= 1;
+	optional int32	minutesToShutdown	= 2 [default = 15];
+}
+
+message PubSubForceLogRollover {
+}
+

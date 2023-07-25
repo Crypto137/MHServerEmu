@@ -1,0 +1,47 @@
+syntax = "proto2";
+
+package Gazillion;
+
+import "CommonMessages.proto";
+
+enum ChatRoomTypes {
+	CHAT_ROOM_TYPE_LOCAL	= 0;
+	CHAT_ROOM_TYPE_SAY	= 1;
+	CHAT_ROOM_TYPE_PARTY	= 2;
+	CHAT_ROOM_TYPE_TELL	= 3;
+	CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS	= 4;
+	CHAT_ROOM_TYPE_SOCIAL	= 5;
+	CHAT_ROOM_TYPE_TRADE	= 6;
+	CHAT_ROOM_TYPE_LFG	= 7;
+	CHAT_ROOM_TYPE_GUILD	= 8;
+	CHAT_ROOM_TYPE_FACTION	= 9;
+	CHAT_ROOM_TYPE_EMOTE	= 10;
+	CHAT_ROOM_TYPE_ENDGAME	= 11;
+	CHAT_ROOM_TYPE_METAGAME	= 12;
+	CHAT_ROOM_TYPE_NUM_TYPES	= 13;
+}
+
+enum GroupLeaveReason {
+	GROUP_LEAVE_REASON_LEFT	= 1;
+	GROUP_LEAVE_REASON_BOOTED	= 2;
+	GROUP_LEAVE_REASON_DISBANDED	= 3;
+}
+
+enum ChatErrorMessages {
+	CHAT_ERROR_NO_SUCH_USER	= 0;
+	CHAT_ERROR_COMMAND_NOT_RECOGNIZED	= 1;
+	CHAT_ERROR_NUM_ERRORS	= 2;
+}
+
+message ChatMessageAttachments {
+	repeated bytes	attachmments	= 1;
+	optional int64	emoteDataRef	= 2;
+	repeated NetStructItemSpec	itemSpecs	= 3;
+}
+
+message ChatMessage {
+	optional string	body	= 1;
+	optional int64	bodyId	= 2;
+	optional ChatMessageAttachments	attachment	= 3;
+}
+
