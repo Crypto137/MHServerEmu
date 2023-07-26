@@ -39,6 +39,9 @@
     <None Update="Assets\Packets\AvengersTowerBeginLoading.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Assets\Packets\NetMessageCatalogItems.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

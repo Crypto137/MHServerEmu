@@ -96,6 +96,20 @@ namespace MHServerEmu.GameServer.Services.Implementations
                         Logger.Trace(switchAvatarMessage.ToString());
                         break;
 
+                    case ClientToGameServerMessage.NetMessageGetCatalog:
+                        Logger.Info($"Received NetMessageGetCatalog");
+                        var dumpedCatalog = NetMessageCatalogItems.ParseFrom(PacketHelper.LoadMessagesFromPacketFile("NetMessageCatalogItems.bin")[0].Content);
+
+                        byte[] catalog = NetMessageCatalogItems.CreateBuilder()
+                            .MergeFrom(dumpedCatalog)
+                            .SetTimestampSeconds(_gameServerManager.GetDateTime() / 1000000)
+                            .SetTimestampMicroseconds(_gameServerManager.GetDateTime())
+                            .SetClientmustdownloadimages(false)
+                            .Build().ToByteArray();
+
+                        client.SendMessage(1, new((byte)GameServerToClientMessage.NetMessageCatalogItems, catalog));
+                        break;
+
                     default:
                         Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
                         break;
