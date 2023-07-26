@@ -22,7 +22,7 @@ namespace MHServerEmu.GameServer.Services.Implementations
                 {
                     case ClientToGameServerMessage.NetMessageReadyForGameJoin:
 
-                        Logger.Info($"Received NetMessageReadyForGameJoin message");
+                        Logger.Info($"Received NetMessageReadyForGameJoin");
                         try
                         {
                             var parsedReadyForGameJoin = NetMessageReadyForGameJoin.ParseFrom(message.Content);
@@ -30,15 +30,15 @@ namespace MHServerEmu.GameServer.Services.Implementations
                         }
                         catch (InvalidProtocolBufferException e)
                         {
-                            Logger.Warn($"Failed to parse NetMessageReadyForGameJoin message: {e.Message}");
+                            Logger.Warn($"Failed to parse NetMessageReadyForGameJoin: {e.Message}");
                         }
 
-                        Logger.Info("Responding with NetMessageReadyAndLoggedIn message");
+                        Logger.Info("Responding with NetMessageReadyAndLoggedIn");
                         response = NetMessageReadyAndLoggedIn.CreateBuilder()
                             .Build().ToByteArray();
                         client.SendMessage(muxId, new((byte)GameServerToClientMessage.NetMessageReadyAndLoggedIn, response));
 
-                        Logger.Info("Responding with NetMessageInitialTimeSync message");
+                        Logger.Info("Responding with NetMessageInitialTimeSync");
                         response = NetMessageInitialTimeSync.CreateBuilder()
                             .SetGameTimeServerSent(161351679299542)     // dumped
                             .SetDateTimeServerSent(1509657957345525)    // dumped
@@ -48,7 +48,7 @@ namespace MHServerEmu.GameServer.Services.Implementations
                         break;
 
                     case ClientToGameServerMessage.NetMessageSyncTimeRequest:
-                        Logger.Info($"Received NetMessageSyncTimeRequest message");
+                        Logger.Info($"Received NetMessageSyncTimeRequest");
                         var parsedSyncTimeRequestMessage = NetMessageSyncTimeRequest.ParseFrom(message.Content);
                         Logger.Trace(parsedSyncTimeRequestMessage.ToString());
 
@@ -72,22 +72,28 @@ namespace MHServerEmu.GameServer.Services.Implementations
                         break;
 
                     case ClientToGameServerMessage.NetMessagePing:
-                        Logger.Info($"Received NetMessagePing message");
+                        Logger.Info($"Received NetMessagePing");
                         var parsedPingMessage = NetMessagePing.ParseFrom(message.Content);
                         //Logger.Trace(parsedPingMessage.ToString());
                         break;
 
                     case ClientToGameServerMessage.NetMessageCellLoaded:
-                        Logger.Info($"Received NetMessageCellLoaded message");
+                        Logger.Info($"Received NetMessageCellLoaded");
                         client.SendMultipleMessages(1, RegionLoader.GetFinishLoadingMessages(client.StartingRegion));
 
                         break;
 
                     case ClientToGameServerMessage.NetMessageUseWaypoint:
-                        Logger.Info($"Received NetMessageUseWaypoint message");
+                        Logger.Info($"Received NetMessageUseWaypoint");
                         var useWaypointMessage = NetMessageUseWaypoint.ParseFrom(message.Content);
                         Logger.Trace(useWaypointMessage.ToString());
 
+                        break;
+
+                    case ClientToGameServerMessage.NetMessageSwitchAvatar:
+                        Logger.Info($"Received NetMessageSwitchAvatar");
+                        var switchAvatarMessage = NetMessageSwitchAvatar.ParseFrom(message.Content);
+                        Logger.Trace(switchAvatarMessage.ToString());
                         break;
 
                     default:

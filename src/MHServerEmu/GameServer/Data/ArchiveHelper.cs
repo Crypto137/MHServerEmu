@@ -1,7 +1,7 @@
 ﻿using Google.ProtocolBuffers;
 using MHServerEmu.Common;
 
-namespace MHServerEmu.Networking
+namespace MHServerEmu.GameServer.Data
 {
     public static class ArchiveHelper
     {

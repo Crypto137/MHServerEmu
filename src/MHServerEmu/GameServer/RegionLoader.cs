@@ -2,6 +2,7 @@
 using Gazillion;
 using MHServerEmu.Networking;
 using MHServerEmu.Common;
+using MHServerEmu.GameServer.Data;
 
 namespace MHServerEmu.GameServer
 {
