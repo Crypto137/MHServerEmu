@@ -3,6 +3,7 @@ using Gazillion;
 using MHServerEmu.Networking;
 using MHServerEmu.Common;
 using MHServerEmu.GameServer.Data;
+using MHServerEmu.GameServer.Data.Types;
 
 namespace MHServerEmu.GameServer
 {
@@ -40,18 +41,21 @@ namespace MHServerEmu.GameServer
                                 messageList.Add(loadedMessages[i]);
 
                                 var entityCreateMessage = NetMessageEntityCreate.ParseFrom(loadedMessages[i].Content);
-                                Archive baseDataArchive = new(entityCreateMessage.BaseData.ToByteArray());
-                                Logger.Debug(baseDataArchive.ToString());
-                                //ArchiveHelper.ParseDataAsVarint(entityCreateMessage.ArchiveData.ToByteArray(), $"{i}_entityCreateArchiveData.txt");
-                                
+                                EntityCreateBaseData baseData = new(entityCreateMessage.BaseData.ToByteArray());
+                                Logger.Debug(baseData.ToString());
+                                //EntityCreateArchiveData archiveData = new(entityCreateMessage.ArchiveData.ToByteArray());
+                                //File.WriteAllText($"{Directory.GetCurrentDirectory()}\\{i}_entityCreateArchiveData.txt", archiveData.ToString());
+
+                                if (i == 115) Logger.Debug(entityCreateMessage.ArchiveData.ToByteArray().ToHexString());
+
                                 // try to get prototype id from enum
-                                if ((int)baseDataArchive.EnumValue < Database.PrototypeTable.Length)
+                                if ((int)baseData.EnumValue < Database.PrototypeTable.Length)
                                 {
-                                    Logger.Debug($"enum {baseDataArchive.EnumValue} == prototype {Database.PrototypeTable[baseDataArchive.EnumValue]}");
+                                    Logger.Debug($"enum {baseData.EnumValue} == prototype {Database.PrototypeTable[baseData.EnumValue]}");
                                 }
                                 else
                                 {
-                                    Logger.Debug($"enum value {baseDataArchive.EnumValue} out of range (database table length: {Database.PrototypeTable.Length})");
+                                    Logger.Debug($"enum value {baseData.EnumValue} out of range (database table length: {Database.PrototypeTable.Length})");
                                 }
 
                                 Console.WriteLine();

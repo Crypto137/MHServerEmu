@@ -3,11 +3,11 @@ using MHServerEmu.Common;
 
 namespace MHServerEmu.GameServer.Data
 {
-    public static class ArchiveHelper
+    public static class DataHelper
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public static void ParseDataAsVarint(byte[] data, string outputFileName)
+        public static void ParseDataAsVarintArray(byte[] data, string outputFileName)
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(data);
 

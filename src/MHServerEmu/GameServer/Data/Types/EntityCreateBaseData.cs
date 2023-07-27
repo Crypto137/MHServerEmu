@@ -1,9 +1,9 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 
-namespace MHServerEmu.GameServer.Data
+namespace MHServerEmu.GameServer.Data.Types
 {
-    public class Archive
+    public class EntityCreateBaseData
     {
         public ulong Header { get; }
         public ulong EntityId { get; }
@@ -12,9 +12,9 @@ namespace MHServerEmu.GameServer.Data
 
         public ulong[] DynamicFields { get; }
 
-        public Archive(byte[] baseData)
+        public EntityCreateBaseData(byte[] data)
         {
-            CodedInputStream stream = CodedInputStream.CreateInstance(baseData);
+            CodedInputStream stream = CodedInputStream.CreateInstance(data);
 
             Header = stream.ReadRawVarint64();
             EntityId = stream.ReadRawVarint64();
@@ -30,7 +30,7 @@ namespace MHServerEmu.GameServer.Data
             DynamicFields = dynamicFieldList.ToArray();
         }
 
-        public Archive(ulong header, ulong entityId, ulong enumValue, ulong flag, ulong[] dynamicFields)
+        public EntityCreateBaseData(ulong header, ulong entityId, ulong enumValue, ulong flag, ulong[] dynamicFields)
         {
             Header = header;
             EntityId = entityId;
@@ -54,7 +54,6 @@ namespace MHServerEmu.GameServer.Data
                 stream.Flush();
                 return memoryStream.ToArray();
             }
-            
         }
 
         public override string ToString()
