@@ -40,8 +40,21 @@ namespace MHServerEmu.GameServer
                                 messageList.Add(loadedMessages[i]);
 
                                 var entityCreateMessage = NetMessageEntityCreate.ParseFrom(loadedMessages[i].Content);
-                                Logger.Debug(new Archive(entityCreateMessage.BaseData.ToByteArray()).ToString());
+                                Archive baseDataArchive = new(entityCreateMessage.BaseData.ToByteArray());
+                                Logger.Debug(baseDataArchive.ToString());
                                 //ArchiveHelper.ParseDataAsVarint(entityCreateMessage.ArchiveData.ToByteArray(), $"{i}_entityCreateArchiveData.txt");
+                                
+                                // try to get prototype id from enum
+                                if ((int)baseDataArchive.EnumValue < Database.PrototypeTable.Length)
+                                {
+                                    Logger.Debug($"enum {baseDataArchive.EnumValue} == prototype {Database.PrototypeTable[baseDataArchive.EnumValue]}");
+                                }
+                                else
+                                {
+                                    Logger.Debug($"enum value {baseDataArchive.EnumValue} out of range (database table length: {Database.PrototypeTable.Length})");
+                                }
+
+                                Console.WriteLine();
                             }
                         }
                         else
