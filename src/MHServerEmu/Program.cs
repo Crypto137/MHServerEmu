@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Common;
+using MHServerEmu.GameServer.Data;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu
@@ -17,6 +18,11 @@ namespace MHServerEmu
             Console.ResetColor();
 
             Logger.Info("MHServerEmu starting...");
+
+            if (Database.IsInitialized == false)
+            {
+                // TODO: stop the server if the database is not initialized
+            }
 
             _authServer = new AuthServer(8080);
             new Thread(() => _authServer.HandleIncomingConnections()).Start();
