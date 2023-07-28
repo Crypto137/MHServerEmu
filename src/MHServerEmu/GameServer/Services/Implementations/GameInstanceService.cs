@@ -83,6 +83,19 @@ namespace MHServerEmu.GameServer.Services.Implementations
 
                         break;
 
+                    case ClientToGameServerMessage.NetMessageTryInventoryMove:
+                        Logger.Info($"Received NetMessageTryInventoryMove");
+                        var tryInventoryMoveMessage = NetMessageTryInventoryMove.ParseFrom(message.Content);
+                        var inventoryMoveMessage = NetMessageInventoryMove.CreateBuilder()
+                            .SetEntityId(tryInventoryMoveMessage.ItemId)
+                            .SetInvLocContainerEntityId(tryInventoryMoveMessage.ToInventoryOwnerId)
+                            .SetInvLocInventoryPrototypeId(tryInventoryMoveMessage.ToInventoryPrototype)
+                            .SetInvLocSlot(tryInventoryMoveMessage.ToSlot)
+                            .Build().ToByteArray();
+
+                        client.SendMessage(1, new(GameServerToClientMessage.NetMessageInventoryMove, inventoryMoveMessage));
+                        break;
+
                     case ClientToGameServerMessage.NetMessageUseWaypoint:
                         Logger.Info($"Received NetMessageUseWaypoint");
                         var useWaypointMessage = NetMessageUseWaypoint.ParseFrom(message.Content);
