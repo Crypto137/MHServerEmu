@@ -3,7 +3,7 @@ using Google.ProtocolBuffers;
 using Gazillion;
 using MHServerEmu.Common;
 using MHServerEmu.GameServer;
-using MHServerEmu.GameServer.Data;
+using MHServerEmu.GameServer.Data.Enums;
 
 namespace MHServerEmu.Networking
 {

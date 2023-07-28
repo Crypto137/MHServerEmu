@@ -48,7 +48,10 @@
     <None Update="Assets\Packets\NetMessageLiveTuningUpdate.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\PrototypeTable1.bin">
+    <None Update="Assets\PrototypeDataTable.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\PrototypeEnumReferenceTable.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -2,8 +2,8 @@
 using Gazillion;
 using MHServerEmu.Networking;
 using MHServerEmu.Common;
-using MHServerEmu.GameServer.Data;
 using MHServerEmu.GameServer.Data.Types;
+using MHServerEmu.GameServer.Data.Enums;
 
 namespace MHServerEmu.GameServer
 {
