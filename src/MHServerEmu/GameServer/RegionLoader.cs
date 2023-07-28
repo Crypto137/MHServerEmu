@@ -274,6 +274,19 @@ namespace MHServerEmu.GameServer
                     .SetDifficultyTierProtoId(18016845980090109785))
                 .Build().ToByteArray()));
 
+            messageList.Add(new(GameServerToClientMessage.NetMessagePrefetchRegionsForDownload, NetMessagePrefetchRegionsForDownload.CreateBuilder()
+                .AddPrototypes(5542489395005235439)
+                .AddPrototypes(6121022758926621561)
+                .AddPrototypes(6769056952657388355)
+                .AddPrototypes(7293929583592937434)
+                .AddPrototypes(10115017851235015611)
+                .AddPrototypes(11922318117493283053)
+                .AddPrototypes(13643380196511063922)
+                .AddPrototypes(14928163756943415585)
+                .AddPrototypes(15546930156792977757)
+                .AddPrototypes(16748618685203816205)
+                .Build().ToByteArray()));
+
             messageList.Add(new(GameServerToClientMessage.NetMessageQueueLoadingScreen, NetMessageQueueLoadingScreen.CreateBuilder()
                 .SetRegionPrototypeId(9142075282174842340)
                 .Build().ToByteArray()));
@@ -297,12 +310,10 @@ namespace MHServerEmu.GameServer
                     .SetY(0)
                     .SetZ(0))
                 .SetCellRandomSeed(1488502313)
-                /* TODO: figure out repeated fields
-                .SetEncounters(0, NetStructReservedSpawn.CreateBuilder()
+                .AddEncounters(NetStructReservedSpawn.CreateBuilder()
                     .SetAsset(605211710028059265)
                     .SetId(5)
-                    .SetUseMarkerOrientation(true)))
-                */
+                    .SetUseMarkerOrientation(true))
                 .SetBufferwidth(0)
                 .SetOverrideLocationName(0)
                 .Build().ToByteArray()));
