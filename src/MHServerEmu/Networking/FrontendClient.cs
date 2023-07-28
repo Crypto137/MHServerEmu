@@ -3,6 +3,7 @@ using Google.ProtocolBuffers;
 using Gazillion;
 using MHServerEmu.Common;
 using MHServerEmu.GameServer;
+using MHServerEmu.GameServer.Data;
 
 namespace MHServerEmu.Networking
 {
@@ -19,6 +20,7 @@ namespace MHServerEmu.Networking
         public bool FinishedGroupingManagerFrontendHandshake { get; set; } = false;
 
         public GameRegion StartingRegion = GameRegion.AvengersTower;
+        public HardcodedAvatarEntity StartingAvatar = HardcodedAvatarEntity.IronMan;
 
         public FrontendClient(Socket socket, GameServerManager gameServerManager)
         {

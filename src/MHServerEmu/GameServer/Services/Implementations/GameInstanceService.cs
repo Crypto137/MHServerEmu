@@ -79,7 +79,7 @@ namespace MHServerEmu.GameServer.Services.Implementations
 
                     case ClientToGameServerMessage.NetMessageCellLoaded:
                         Logger.Info($"Received NetMessageCellLoaded");
-                        client.SendMultipleMessages(1, RegionLoader.GetFinishLoadingMessages(client.StartingRegion));
+                        client.SendMultipleMessages(1, RegionLoader.GetFinishLoadingMessages(client.StartingRegion, client.StartingAvatar));
 
                         break;
 

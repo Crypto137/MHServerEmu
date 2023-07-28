@@ -86,7 +86,7 @@ namespace MHServerEmu.GameServer.Services.Implementations
                             client.SendMessage(2, new((byte)GroupingManagerMessage.ChatBroadcastMessage, chatBroadcastMessage));
 
                             // Send hardcoded region loading data after initial handshakes finish
-                            client.SendMultipleMessages(1, RegionLoader.GetBeginLoadingMessages(client.StartingRegion));
+                            client.SendMultipleMessages(1, RegionLoader.GetBeginLoadingMessages(client.StartingRegion, client.StartingAvatar));
                         }
 
                         break;
