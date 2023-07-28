@@ -12,5 +12,23 @@ namespace MHServerEmu.Networking
             Id = id;
             Content = content;
         }
+
+        public GameMessage(FrontendProtocolMessage id, byte[] content)
+        {
+            Id = (byte)id;
+            Content = content;
+        }
+
+        public GameMessage(GameServerToClientMessage id, byte[] content)
+        {
+            Id = (byte)id;
+            Content = content;
+        }
+
+        public GameMessage(GroupingManagerMessage id, byte[] content)
+        {
+            Id = (byte)id;
+            Content = content;
+        }
     }
 }

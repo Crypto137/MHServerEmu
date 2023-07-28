@@ -36,14 +36,14 @@ namespace MHServerEmu.GameServer.Services.Implementations
                         Logger.Info("Responding with NetMessageReadyAndLoggedIn");
                         response = NetMessageReadyAndLoggedIn.CreateBuilder()
                             .Build().ToByteArray();
-                        client.SendMessage(muxId, new((byte)GameServerToClientMessage.NetMessageReadyAndLoggedIn, response));
+                        client.SendMessage(muxId, new(GameServerToClientMessage.NetMessageReadyAndLoggedIn, response));
 
                         Logger.Info("Responding with NetMessageInitialTimeSync");
                         response = NetMessageInitialTimeSync.CreateBuilder()
                             .SetGameTimeServerSent(161351679299542)     // dumped
                             .SetDateTimeServerSent(1509657957345525)    // dumped
                             .Build().ToByteArray();
-                        client.SendMessage(muxId, new((byte)GameServerToClientMessage.NetMessageInitialTimeSync, response));
+                        client.SendMessage(muxId, new(GameServerToClientMessage.NetMessageInitialTimeSync, response));
 
                         break;
 
@@ -68,7 +68,7 @@ namespace MHServerEmu.GameServer.Services.Implementations
                             .SetDatetimeDialationStarted(_gameServerManager.GetDateTime())
                             .Build().ToByteArray();
 
-                        //client.SendGameServiceMessage(ServerType, (byte)GameServerToClientMessage.NetMessageSyncTimeReply, response);
+                        //client.SendMessage(1, new(GameServerToClientMessage.NetMessageSyncTimeReply, response));
                         break;
 
                     case ClientToGameServerMessage.NetMessagePing:
@@ -107,7 +107,7 @@ namespace MHServerEmu.GameServer.Services.Implementations
                             .SetClientmustdownloadimages(false)
                             .Build().ToByteArray();
 
-                        client.SendMessage(1, new((byte)GameServerToClientMessage.NetMessageCatalogItems, catalog));
+                        client.SendMessage(1, new(GameServerToClientMessage.NetMessageCatalogItems, catalog));
                         break;
 
                     default:

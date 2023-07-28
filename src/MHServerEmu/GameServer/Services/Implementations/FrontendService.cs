@@ -39,7 +39,7 @@ namespace MHServerEmu.GameServer.Services.Implementations
                                 .SetNumberOfPlayersInLine(9001)
                                 .Build().ToByteArray();
 
-                            client.SendMessage(muxId, new((byte)FrontendProtocolMessage.LoginQueueStatus, response));
+                            client.SendMessage(muxId, new(FrontendProtocolMessage.LoginQueueStatus, response));
                         }
                         else
                         {
@@ -50,7 +50,7 @@ namespace MHServerEmu.GameServer.Services.Implementations
                                 .SetEncryptedRandomNumber(ByteString.Empty)
                                 .Build().ToByteArray();
 
-                            client.SendMessage(muxId, new((byte)FrontendProtocolMessage.SessionEncryptionChanged, response));
+                            client.SendMessage(muxId, new(FrontendProtocolMessage.SessionEncryptionChanged, response));
                         }
 
                         break;
@@ -68,7 +68,7 @@ namespace MHServerEmu.GameServer.Services.Implementations
                         {
                             client.FinishedGroupingManagerFrontendHandshake = true;
 
-                            client.SendMessage(muxId, new((byte)GameServerToClientMessage.NetMessageQueueLoadingScreen,
+                            client.SendMessage(muxId, new(GameServerToClientMessage.NetMessageQueueLoadingScreen,
                                 NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build().ToByteArray()));
 
                             client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageAchievementDatabaseDump.bin"));
@@ -83,7 +83,7 @@ namespace MHServerEmu.GameServer.Services.Implementations
                                 .SetPrestigeLevel(6)
                                 .Build().ToByteArray();
 
-                            client.SendMessage(2, new((byte)GroupingManagerMessage.ChatBroadcastMessage, chatBroadcastMessage));
+                            client.SendMessage(2, new(GroupingManagerMessage.ChatBroadcastMessage, chatBroadcastMessage));
 
                             // Send hardcoded region loading data after initial handshakes finish
                             client.SendMultipleMessages(1, RegionLoader.GetBeginLoadingMessages(client.StartingRegion, client.StartingAvatar));
