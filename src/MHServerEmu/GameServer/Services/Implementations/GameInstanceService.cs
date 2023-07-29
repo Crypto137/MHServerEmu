@@ -112,19 +112,19 @@ namespace MHServerEmu.GameServer.Services.Implementations
 
                         Logger.Trace(useWaypointMessage.ToString());
 
-                        switch (useWaypointMessage.RegionProtoId)
+                        switch ((RegionPrototype)useWaypointMessage.RegionProtoId)
                         {
-                            case (ulong)RegionPrototype.AvengersTower:
+                            case RegionPrototype.AvengersTower:
                                 client.WaypointRegion = RegionPrototype.AvengersTower;
                                 client.ReloadEntities = true;
                                 client.SendMultipleMessages(1, RegionLoader.GetWaypointRegionChangeMessages(RegionPrototype.AvengersTower));
                                 break;
-                            case (ulong)RegionPrototype.DangerRoom:
+                            case RegionPrototype.DangerRoom:
                                 client.WaypointRegion = RegionPrototype.DangerRoom;
                                 client.ReloadEntities = true;
                                 client.SendMultipleMessages(1, RegionLoader.GetWaypointRegionChangeMessages(RegionPrototype.DangerRoom));
                                 break;
-                            case (ulong)RegionPrototype.MidtownPatrolCosmic:
+                            case RegionPrototype.MidtownPatrolCosmic:
                                 client.WaypointRegion = RegionPrototype.MidtownPatrolCosmic;
                                 client.ReloadEntities = true;
                                 client.SendMultipleMessages(1, RegionLoader.GetWaypointRegionChangeMessages(RegionPrototype.MidtownPatrolCosmic));
