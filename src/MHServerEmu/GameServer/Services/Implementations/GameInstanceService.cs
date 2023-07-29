@@ -1,6 +1,8 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common;
+using MHServerEmu.GameServer.Data.Enums;
+using MHServerEmu.GameServer.Data.Types;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.GameServer.Services.Implementations
@@ -79,8 +81,16 @@ namespace MHServerEmu.GameServer.Services.Implementations
 
                     case ClientToGameServerMessage.NetMessageCellLoaded:
                         Logger.Info($"Received NetMessageCellLoaded");
-                        client.SendMultipleMessages(1, RegionLoader.GetFinishLoadingMessages(client.StartingRegion, client.StartingAvatar));
-
+                        if (client.WaypointRegion is not null && client.ReloadEntities)
+                        {
+                            client.SendMultipleMessages(1, RegionLoader.GetWaypointRegionChangeFinishLoadingMessages(client.WaypointRegion, client.StartingAvatar));
+                            client.SendMultipleMessages(1, PowerLoader.LoadAvatarPowerCollection(client.StartingAvatar));
+                            client.ReloadEntities = false;
+                        }
+                        else if (client.WaypointRegion is null)
+                        {
+                            client.SendMultipleMessages(1, RegionLoader.GetFinishLoadingMessages(client.StartingRegion, client.StartingAvatar));
+                        }
                         break;
 
                     case ClientToGameServerMessage.NetMessageTryInventoryMove:
@@ -97,9 +107,30 @@ namespace MHServerEmu.GameServer.Services.Implementations
                         break;
 
                     case ClientToGameServerMessage.NetMessageUseWaypoint:
-                        Logger.Info($"Received NetMessageUseWaypoint");
+                        Logger.Info($"Received NetMessageUseWaypoint message");
                         var useWaypointMessage = NetMessageUseWaypoint.ParseFrom(message.Content);
+
                         Logger.Trace(useWaypointMessage.ToString());
+
+                        switch (useWaypointMessage.RegionProtoId)
+                        {
+                            case (ulong)RegionPrototype.AvengersTower:
+                                client.WaypointRegion = RegionPrototype.AvengersTower;
+                                client.ReloadEntities = true;
+                                client.SendMultipleMessages(1, RegionLoader.GetWaypointRegionChangeMessages(RegionPrototype.AvengersTower));
+                                break;
+                            case (ulong)RegionPrototype.DangerRoom:
+                                client.WaypointRegion = RegionPrototype.DangerRoom;
+                                client.ReloadEntities = true;
+                                client.SendMultipleMessages(1, RegionLoader.GetWaypointRegionChangeMessages(RegionPrototype.DangerRoom));
+                                break;
+                            case (ulong)RegionPrototype.MidtownPatrolCosmic:
+                                client.WaypointRegion = RegionPrototype.MidtownPatrolCosmic;
+                                client.ReloadEntities = true;
+                                client.SendMultipleMessages(1, RegionLoader.GetWaypointRegionChangeMessages(RegionPrototype.MidtownPatrolCosmic));
+                                break;
+
+                        }
 
                         break;
 
@@ -107,6 +138,42 @@ namespace MHServerEmu.GameServer.Services.Implementations
                         Logger.Info($"Received NetMessageSwitchAvatar");
                         var switchAvatarMessage = NetMessageSwitchAvatar.ParseFrom(message.Content);
                         Logger.Trace(switchAvatarMessage.ToString());
+
+                        //WIP - Hardcoded Black Cat -> Thor -> requires triggering an avatar swap back to Black Cat to move Thor again
+                        List<GameMessage> messageList = new();
+                        messageList.Add(new(GameServerToClientMessage.NetMessageInventoryMove, NetMessageInventoryMove.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Thor)
+                            .SetEntityDataId((ulong)HardcodedAvatarEntity.BlackCat)      
+                            .SetDestOwnerDataId((ulong)HardcodedAvatarEntity.Thor)
+                            .SetInvLocContainerEntityId(14646212)
+                            .SetInvLocInventoryPrototypeId(9555311166682372646)
+                            .SetInvLocSlot(0)
+                            .Build().ToByteArray()));
+
+                        // Put player avatar entity in the game world
+                        byte[] avatarEntityEnterGameWorldArchiveData = {
+                            0x01, 0xB2, 0xF8, 0xFD, 0x06, 0xA0, 0x21, 0xF0, 0xA3, 0x01, 0xBC, 0x40,
+                            0x90, 0x2E, 0x91, 0x03, 0xBC, 0x05, 0x00, 0x00, 0x01
+                        };
+
+                        EntityEnterGameWorldArchiveData avatarEnterArchiveData = new(avatarEntityEnterGameWorldArchiveData);
+                        avatarEnterArchiveData.EntityId = (ulong)HardcodedAvatarEntity.Thor;
+
+                        messageList.Add(new(GameServerToClientMessage.NetMessageEntityDestroy,
+                           NetMessageEntityDestroy.CreateBuilder()
+                           .SetIdEntity((ulong)HardcodedAvatarEntity.BlackCat)
+                           .SetCellId(1)
+                           .SetAreaId(1)
+                           .SetOwnerEntityId(14646212)
+                           .Build().ToByteArray()));
+
+                        messageList.Add(new(GameServerToClientMessage.NetMessageEntityEnterGameWorld,
+                            NetMessageEntityEnterGameWorld.CreateBuilder()
+                            .SetArchiveData(ByteString.CopyFrom(avatarEnterArchiveData.Encode()))
+                            .Build().ToByteArray()));
+                        
+                        client.SendMultipleMessages(1, messageList.ToArray());
+
                         break;
 
                     case ClientToGameServerMessage.NetMessageGetCatalog:
@@ -121,6 +188,16 @@ namespace MHServerEmu.GameServer.Services.Implementations
                             .Build().ToByteArray();
 
                         client.SendMessage(1, new(GameServerToClientMessage.NetMessageCatalogItems, catalog));
+                        break;
+
+                    case ClientToGameServerMessage.NetMessageUpdateAvatarState:
+                        Logger.Info($"Received NetMessageUpdateAvatarState");
+                        var updateAvatarState = NetMessageUpdateAvatarState.ParseFrom(message.Content);
+                        break;
+
+                    case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:
+                        Logger.Info($"Received NetMessageRequestInterestInAvatarEquipment");
+                        var requestInterestInAvatarEquipment = NetMessageRequestInterestInAvatarEquipment.ParseFrom(message.Content);
                         break;
 
                     default:
