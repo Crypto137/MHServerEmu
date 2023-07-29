@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common;
+using MHServerEmu.GameServer.Data.Enums;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.GameServer.Services.Implementations
@@ -86,6 +87,14 @@ namespace MHServerEmu.GameServer.Services.Implementations
                             client.SendMessage(2, new(GroupingManagerMessage.ChatBroadcastMessage, chatBroadcastMessage));
 
                             // Send hardcoded region loading data after initial handshakes finish
+                            if (client.StartingRegion != RegionPrototype.AvengersTower &&
+                                client.StartingRegion != RegionPrototype.DangerRoom &&
+                                client.StartingRegion != RegionPrototype.MidtownPatrolCosmic)
+                            {
+                                Logger.Error($"Trying to load region {client.StartingRegion} that has no data, falling back to AvengersTower");
+                                client.StartingRegion = RegionPrototype.AvengersTower;
+                            }
+
                             client.SendMultipleMessages(1, RegionLoader.GetBeginLoadingMessages(client.StartingRegion, client.StartingAvatar));
                         }
 

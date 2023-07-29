@@ -18,15 +18,16 @@ namespace MHServerEmu.Networking
 
         public bool FinishedPlayerMgrServerFrontendHandshake { get; set; } = false;
         public bool FinishedGroupingManagerFrontendHandshake { get; set; } = false;
+        public bool ReloadEntities { get; set; } = false;
 
-        public GameRegion StartingRegion = GameRegion.AvengersTower;
-        public HardcodedAvatarEntity StartingAvatar = HardcodedAvatarEntity.IronMan;
+        public RegionPrototype? StartingRegion = RegionPrototype.AvengersTower; 
+        public RegionPrototype? WaypointRegion;
+        public HardcodedAvatarEntity StartingAvatar = HardcodedAvatarEntity.BlackCat;
 
         public FrontendClient(Socket socket, GameServerManager gameServerManager)
         {
             this.socket = socket;
             stream = new NetworkStream(socket);
-
             _gameServerManager = gameServerManager;
         }
 
