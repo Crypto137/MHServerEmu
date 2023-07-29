@@ -139,7 +139,7 @@ namespace MHServerEmu.GameServer.Services.Implementations
                         var switchAvatarMessage = NetMessageSwitchAvatar.ParseFrom(message.Content);
                         Logger.Trace(switchAvatarMessage.ToString());
 
-                        //WIP - Hardcoded Black Cat -> Thor -> requires triggering an avatar swap back to Black Cat to move Thor again
+                        /* WIP - Hardcoded Black Cat -> Thor -> requires triggering an avatar swap back to Black Cat to move Thor again
                         List<GameMessage> messageList = new();
                         messageList.Add(new(GameServerToClientMessage.NetMessageInventoryMove, NetMessageInventoryMove.CreateBuilder()
                             .SetEntityId((ulong)HardcodedAvatarEntity.Thor)
@@ -173,6 +173,7 @@ namespace MHServerEmu.GameServer.Services.Implementations
                             .Build().ToByteArray()));
                         
                         client.SendMultipleMessages(1, messageList.ToArray());
+                        */
 
                         break;
 
