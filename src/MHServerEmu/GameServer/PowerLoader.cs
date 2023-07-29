@@ -20,15 +20,15 @@ namespace MHServerEmu.GameServer
 
                     foreach (GameMessage gameMessage in loadedMessages)
                     {
-                        switch(gameMessage.Id)
+                        switch((GameServerToClientMessage)gameMessage.Id)
                         {
-                            case (byte)GameServerToClientMessage.NetMessageAssignPowerCollection:
+                            case GameServerToClientMessage.NetMessageAssignPowerCollection:
                                 messageList.Add(gameMessage);
                                 break;
-                            case (byte)GameServerToClientMessage.NetMessagePowerCollectionAssignPower:
+                            case GameServerToClientMessage.NetMessagePowerCollectionAssignPower:
                                 messageList.Add(gameMessage);
                                 break;
-                            case (byte)GameServerToClientMessage.NetMessagePowerCollectionUnassignPower:
+                            case GameServerToClientMessage.NetMessagePowerCollectionUnassignPower:
                                 messageList.Add(gameMessage);
                                 break;
                             default: 
