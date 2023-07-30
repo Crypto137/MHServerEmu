@@ -4,6 +4,7 @@ using MHServerEmu.Networking;
 using MHServerEmu.Common;
 using MHServerEmu.GameServer.Data.Types;
 using MHServerEmu.GameServer.Data.Enums;
+using MHServerEmu.Common.Config;
 
 namespace MHServerEmu.GameServer
 {
@@ -140,28 +141,28 @@ namespace MHServerEmu.GameServer
             var localPlayerMessage = NetMessageLocalPlayer.CreateBuilder()
                 .SetLocalPlayerEntityId(14646212)
                 .SetGameOptions(NetStructGameOptions.CreateBuilder()
-                    .SetTeamUpSystemEnabled(true)
-                    .SetAchievementsEnabled(true)
-                    .SetOmegaMissionsEnabled(true)
-                    .SetVeteranRewardsEnabled(true)
-                    .SetMultiSpecRewardsEnabled(true)
-                    .SetGiftingEnabled(true)
-                    .SetCharacterSelectV2Enabled(true)
-                    .SetCommunityNewsV2Enabled(true)
-                    .SetLeaderboardsEnabled(true)
-                    .SetNewPlayerExperienceEnabled(true)
+                    .SetTeamUpSystemEnabled(ConfigManager.GameOptions.TeamUpSystemEnabled)
+                    .SetAchievementsEnabled(ConfigManager.GameOptions.AchievementsEnabled)
+                    .SetOmegaMissionsEnabled(ConfigManager.GameOptions.OmegaMissionsEnabled)
+                    .SetVeteranRewardsEnabled(ConfigManager.GameOptions.VeteranRewardsEnabled)
+                    .SetMultiSpecRewardsEnabled(ConfigManager.GameOptions.MultiSpecRewardsEnabled)
+                    .SetGiftingEnabled(ConfigManager.GameOptions.GiftingEnabled)
+                    .SetCharacterSelectV2Enabled(ConfigManager.GameOptions.CharacterSelectV2Enabled)
+                    .SetCommunityNewsV2Enabled(ConfigManager.GameOptions.CommunityNewsV2Enabled)
+                    .SetLeaderboardsEnabled(ConfigManager.GameOptions.LeaderboardsEnabled)
+                    .SetNewPlayerExperienceEnabled(ConfigManager.GameOptions.NewPlayerExperienceEnabled)
                     .SetServerTimeOffsetUTC(-7)
                     .SetUseServerTimeOffset(false)
-                    .SetMissionTrackerV2Enabled(true)
-                    .SetGiftingAccountAgeInDaysRequired(7)
-                    .SetGiftingAvatarLevelRequired(20)
-                    .SetGiftingLoginCountRequired(5)
-                    .SetInfinitySystemEnabled(true)
-                    .SetChatBanVoteAccountAgeInDaysRequired(7)
-                    .SetChatBanVoteAvatarLevelRequired(20)
-                    .SetChatBanVoteLoginCountRequired(5)
-                    .SetIsDifficultySliderEnabled(true)
-                    .SetOrbisTrophiesEnabled(true)
+                    .SetMissionTrackerV2Enabled(ConfigManager.GameOptions.MissionTrackerV2Enabled)
+                    .SetGiftingAccountAgeInDaysRequired(ConfigManager.GameOptions.GiftingAccountAgeInDaysRequired)
+                    .SetGiftingAvatarLevelRequired(ConfigManager.GameOptions.GiftingAvatarLevelRequired)
+                    .SetGiftingLoginCountRequired(ConfigManager.GameOptions.GiftingLoginCountRequired)
+                    .SetInfinitySystemEnabled(ConfigManager.GameOptions.InfinitySystemEnabled)
+                    .SetChatBanVoteAccountAgeInDaysRequired(ConfigManager.GameOptions.ChatBanVoteAccountAgeInDaysRequired)
+                    .SetChatBanVoteAvatarLevelRequired(ConfigManager.GameOptions.ChatBanVoteAvatarLevelRequired)
+                    .SetChatBanVoteLoginCountRequired(ConfigManager.GameOptions.ChatBanVoteLoginCountRequired)
+                    .SetIsDifficultySliderEnabled(ConfigManager.GameOptions.IsDifficultySliderEnabled)
+                    .SetOrbisTrophiesEnabled(ConfigManager.GameOptions.OrbisTrophiesEnabled)
                     .SetPlatformType(8))
                 .Build().ToByteArray();
 

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using MHServerEmu.Common.Config;
 
 namespace MHServerEmu.Common
 {
@@ -25,7 +26,7 @@ namespace MHServerEmu.Common
 
     public class Logger
     {
-        private static bool _enableTimestamps = true;
+        private static bool _enableTimestamps = ConfigManager.Server.EnableTimestamps;
 
         public enum Level
         {
