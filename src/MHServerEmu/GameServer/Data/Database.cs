@@ -8,31 +8,33 @@ namespace MHServerEmu.GameServer.Data
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public static bool IsInitialized { get; private set; }
-        public static Prototype[] PrototypeDataTable { get; private set; }
-        public static ulong[] PrototypeEnumReferenceTable { get; private set; }
+        public static Dictionary<ulong, Prototype> PrototypeDataDict { get; private set; }
+        public static ulong[] GlobalEnumReferenceTable { get; private set; }
+        public static ulong[] ResourceEnumReferenceTable { get; private set; }
 
         static Database()
         {
             Logger.Info("Loading prototypes...");
-            PrototypeDataTable = LoadPrototypeDataTable($"{Directory.GetCurrentDirectory()}\\Assets\\PrototypeDataTable.bin");
-            PrototypeEnumReferenceTable = LoadPrototypeEnumReferenceTable($"{Directory.GetCurrentDirectory()}\\Assets\\PrototypeEnumReferenceTable.bin");
+            PrototypeDataDict = LoadPrototypeData($"{Directory.GetCurrentDirectory()}\\Assets\\PrototypeDataTable.bin");
+            GlobalEnumReferenceTable = LoadPrototypeEnumReferenceTable($"{Directory.GetCurrentDirectory()}\\Assets\\GlobalEnumReferenceTable.bin");
+            ResourceEnumReferenceTable = LoadPrototypeEnumReferenceTable($"{Directory.GetCurrentDirectory()}\\Assets\\ResourceEnumReferenceTable.bin");
 
-            if (PrototypeEnumReferenceTable.Length > 0 && PrototypeDataTable.Length > 0)
+            if (PrototypeDataDict.Count > 0 && GlobalEnumReferenceTable.Length > 0 && ResourceEnumReferenceTable.Length > 0)
             {
                 // -1 is here because the first entry is 0 to offset values and align with the data we get from the game
-                Logger.Info($"Loaded {PrototypeDataTable.Length} prototypes and {PrototypeEnumReferenceTable.Length - 1} enum references");
+                Logger.Info($"Loaded {PrototypeDataDict.Count} prototypes, {GlobalEnumReferenceTable.Length - 1} global enum references, and {ResourceEnumReferenceTable.Length - 1} resource enum references");
                 IsInitialized = true;
             }
             else
             {
-                Logger.Error("Failed to initialize");
+                Logger.Fatal("Failed to initialize database");
                 IsInitialized = false;
             }
         }
 
-        private static Prototype[] LoadPrototypeDataTable(string path)
+        private static Dictionary<ulong, Prototype> LoadPrototypeData(string path)
         {
-            List<Prototype> prototypeList = new();
+            Dictionary<ulong, Prototype> prototypeDict = new();
 
             if (File.Exists(path))
             {
@@ -49,7 +51,7 @@ namespace MHServerEmu.GameServer.Data
                         binaryReader.ReadByte();                // always 0x00
                         string stringValue = Encoding.UTF8.GetString(binaryReader.ReadBytes(size));
 
-                        prototypeList.Add(new(id, field1, parentId, flag, stringValue));
+                        prototypeDict.Add(id, new(id, field1, parentId, flag, stringValue));
                     }
                 }
             }
@@ -61,16 +63,16 @@ namespace MHServerEmu.GameServer.Data
             /*
             using (StreamWriter streamWriter = new($"{Directory.GetCurrentDirectory()}\\parsed.tsv"))
             {
-                foreach (Prototype prototype in prototypeList)
+                foreach (KeyValuePair<ulong, Prototype> kvp in prototypeDict)
                 {
-                    streamWriter.WriteLine($"{prototype.Id}\t{prototype.Field1}\t{prototype.Parent}\t{prototype.Flag}\t{prototype.StringValue}");
+                    streamWriter.WriteLine($"{kvp.Value.Id}\t{kvp.Value.Field1}\t{kvp.Value.ParentId}\t{kvp.Value.Flag}\t{kvp.Value.StringValue}");
                 }
 
                 streamWriter.Flush();
             }
             */
 
-            return prototypeList.ToArray();
+            return prototypeDict;
         }
 
         private static ulong[] LoadPrototypeEnumReferenceTable(string path)

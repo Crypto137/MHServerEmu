@@ -29,7 +29,8 @@ namespace MHServerEmu
 
             if (Database.IsInitialized == false)
             {
-                // TODO: stop the server if the database is not initialized
+                Console.ReadKey();
+                return;
             }
 
             _authServer = new AuthServer(8080);
