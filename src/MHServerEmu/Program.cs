@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Common;
+using MHServerEmu.Common.Config;
 using MHServerEmu.GameServer.Data;
 using MHServerEmu.Networking;
 
@@ -16,6 +17,13 @@ namespace MHServerEmu
             Console.ForegroundColor = ConsoleColor.Yellow;
             PrintBanner();
             Console.ResetColor();
+
+            if (ConfigManager.IsInitialized == false)
+            {
+                Logger.Fatal("Failed to initialize config");
+                Console.ReadKey();
+                return;
+            }
 
             Logger.Info("MHServerEmu starting...");
 
