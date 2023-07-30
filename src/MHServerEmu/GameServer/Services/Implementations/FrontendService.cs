@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common;
+using MHServerEmu.Common.Config;
 using MHServerEmu.GameServer.Data.Enums;
 using MHServerEmu.Networking;
 
@@ -31,13 +32,13 @@ namespace MHServerEmu.GameServer.Services.Implementations
                         Logger.Trace($"Decrypted token: {decryptedToken.ToHexString()}");
 
                         // Generate response
-                        if (_simulateQueue)
+                        if (ConfigManager.Frontend.SimulateQueue)
                         {
                             Logger.Info("Responding with LoginQueueStatus message");
 
                             byte[] response = LoginQueueStatus.CreateBuilder()
-                                .SetPlaceInLine(1337)
-                                .SetNumberOfPlayersInLine(9001)
+                                .SetPlaceInLine(ConfigManager.Frontend.QueuePlaceInLine)
+                                .SetNumberOfPlayersInLine(ConfigManager.Frontend.QueueNumberOfPlayersInLine)
                                 .Build().ToByteArray();
 
                             client.SendMessage(muxId, new(FrontendProtocolMessage.LoginQueueStatus, response));
@@ -79,22 +80,14 @@ namespace MHServerEmu.GameServer.Services.Implementations
                                 .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS)
                                 //.SetFromPlayerName("System")
                                 //.SetTheMessage(ChatMessage.CreateBuilder().SetBody("Operation Omega is now active. Will you fight to defend S.H.I.E.L.D.?  Or will you support the evil HYDRA?"))
-                                .SetFromPlayerName("MHServerEmu")
-                                .SetTheMessage(ChatMessage.CreateBuilder().SetBody("Hello world 2023"))
-                                .SetPrestigeLevel(6)
+                                .SetFromPlayerName(ConfigManager.GroupingManager.MotdPlayerName)
+                                .SetTheMessage(ChatMessage.CreateBuilder().SetBody(ConfigManager.GroupingManager.MotdText))
+                                .SetPrestigeLevel(ConfigManager.GroupingManager.MotdPrestigeLevel)
                                 .Build().ToByteArray();
 
                             client.SendMessage(2, new(GroupingManagerMessage.ChatBroadcastMessage, chatBroadcastMessage));
 
                             // Send hardcoded region loading data after initial handshakes finish
-                            if (client.StartingRegion != RegionPrototype.AvengersTower &&
-                                client.StartingRegion != RegionPrototype.DangerRoom &&
-                                client.StartingRegion != RegionPrototype.MidtownPatrolCosmic)
-                            {
-                                Logger.Error($"Trying to load region {client.StartingRegion} that has no data, falling back to AvengersTower");
-                                client.StartingRegion = RegionPrototype.AvengersTower;
-                            }
-
                             client.SendMultipleMessages(1, RegionLoader.GetBeginLoadingMessages(client.StartingRegion, client.StartingAvatar));
                         }
 

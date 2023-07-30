@@ -20,7 +20,6 @@ namespace MHServerEmu
 
             if (ConfigManager.IsInitialized == false)
             {
-                Logger.Fatal("Failed to initialize config");
                 Console.ReadKey();
                 return;
             }

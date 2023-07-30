@@ -4,6 +4,7 @@ using Gazillion;
 using MHServerEmu.Common;
 using MHServerEmu.GameServer;
 using MHServerEmu.GameServer.Data.Enums;
+using MHServerEmu.Common.Config;
 
 namespace MHServerEmu.Networking
 {
@@ -20,9 +21,9 @@ namespace MHServerEmu.Networking
         public bool FinishedGroupingManagerFrontendHandshake { get; set; } = false;
         public bool ReloadEntities { get; set; } = false;
 
-        public RegionPrototype? StartingRegion = RegionPrototype.AvengersTower; 
+        public RegionPrototype? StartingRegion = ConfigManager.PlayerData.StartingRegion; 
         public RegionPrototype? WaypointRegion;
-        public HardcodedAvatarEntity StartingAvatar = HardcodedAvatarEntity.BlackCat;
+        public HardcodedAvatarEntity StartingAvatar = ConfigManager.PlayerData.StartingAvatar;
 
         public FrontendClient(Socket socket, GameServerManager gameServerManager)
         {
