@@ -24,16 +24,16 @@ namespace MHServerEmu.Common.Config.Sections
             catch (Exception e)
             {
                 Logger.Error(e.Message);
-                Logger.Error($"Failed to parse StartingRegion {startingRegion}, falling back to AvengersTower");
-                StartingRegion = RegionPrototype.AvengersTower;
+                Logger.Error($"Failed to parse StartingRegion {startingRegion}, falling back to NPEAvengersTowerHUBRegion");
+                StartingRegion = RegionPrototype.NPEAvengersTowerHUBRegion;
             }
 
-            if (StartingRegion != RegionPrototype.AvengersTower &&
-                StartingRegion != RegionPrototype.DangerRoom &&
-                StartingRegion != RegionPrototype.MidtownPatrolCosmic)
+            if (StartingRegion != RegionPrototype.NPEAvengersTowerHUBRegion &&
+                StartingRegion != RegionPrototype.DangerRoomHubRegion &&
+                StartingRegion != RegionPrototype.XManhattanRegion60Cosmic)
             {
-                Logger.Error($"Region {StartingRegion} has no data, falling back to AvengersTower");
-                StartingRegion = RegionPrototype.AvengersTower;
+                Logger.Error($"Region {StartingRegion} has no data, falling back to NPEAvengersTowerHUBRegion");
+                StartingRegion = RegionPrototype.NPEAvengersTowerHUBRegion;
             }
 
             // StartingHero

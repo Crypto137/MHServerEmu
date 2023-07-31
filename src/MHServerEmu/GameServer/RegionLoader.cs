@@ -18,7 +18,7 @@ namespace MHServerEmu.GameServer
 
             switch (region)
             {
-                case RegionPrototype.AvengersTower:
+                case RegionPrototype.NPEAvengersTowerHUBRegion:
 
                     List<GameMessage> messageList = new();
 
@@ -65,11 +65,11 @@ namespace MHServerEmu.GameServer
 
                     break;
 
-                case RegionPrototype.DangerRoom:
+                case RegionPrototype.DangerRoomHubRegion:
                     messages = PacketHelper.LoadMessagesFromPacketFile("DangerRoomBeginLoading.bin");
                     break;
 
-                case RegionPrototype.MidtownPatrolCosmic:
+                case RegionPrototype.XManhattanRegion60Cosmic:
                     messages = PacketHelper.LoadMessagesFromPacketFile("MidtownBeginLoading.bin");
                     break;
             }
@@ -82,7 +82,7 @@ namespace MHServerEmu.GameServer
             GameMessage[] messages = Array.Empty<GameMessage>();
             switch (region)
             {
-                case RegionPrototype.AvengersTower:
+                case RegionPrototype.NPEAvengersTowerHUBRegion:
 
                     if (avatar == HardcodedAvatarEntity.BlackCat)
                     {
@@ -122,11 +122,11 @@ namespace MHServerEmu.GameServer
 
                     break;
 
-                case RegionPrototype.DangerRoom:
+                case RegionPrototype.DangerRoomHubRegion:
                     messages = PacketHelper.LoadMessagesFromPacketFile("DangerRoomFinishLoading.bin");
                     break;
 
-                case RegionPrototype.MidtownPatrolCosmic:
+                case RegionPrototype.XManhattanRegion60Cosmic:
                     messages = PacketHelper.LoadMessagesFromPacketFile("MidtownFinishLoading.bin");
                     break;
             }
@@ -228,7 +228,7 @@ namespace MHServerEmu.GameServer
                 .Build().ToByteArray()));
 
             messageList.Add(new(GameServerToClientMessage.NetMessageQueueLoadingScreen, NetMessageQueueLoadingScreen.CreateBuilder()
-                .SetRegionPrototypeId((ulong)RegionPrototype.AvengersTower)
+                .SetRegionPrototypeId((ulong)RegionPrototype.NPEAvengersTowerHUBRegion)
                 .Build().ToByteArray()));
 
             byte[] avengersTowerRawRegionArchiveData = {
@@ -251,7 +251,7 @@ namespace MHServerEmu.GameServer
                 .SetRegionId(1153583383226286088)
                 .SetServerGameId(1150669705055451881)
                 .SetClearingAllInterest(false)
-                .SetRegionPrototypeId((ulong)RegionPrototype.AvengersTower)
+                .SetRegionPrototypeId((ulong)RegionPrototype.NPEAvengersTowerHUBRegion)
                 .SetRegionRandomSeed(1488502313)
                 .SetArchiveData(ByteString.CopyFrom(avengersTowerRawRegionArchiveData))
                 .SetRegionMin(NetStructPoint3.CreateBuilder()
@@ -281,7 +281,7 @@ namespace MHServerEmu.GameServer
                 .Build().ToByteArray()));
 
             messageList.Add(new(GameServerToClientMessage.NetMessageQueueLoadingScreen, NetMessageQueueLoadingScreen.CreateBuilder()
-                .SetRegionPrototypeId((ulong)RegionPrototype.AvengersTower)
+                .SetRegionPrototypeId((ulong)RegionPrototype.NPEAvengersTowerHUBRegion)
                 .Build().ToByteArray()));
 
             messageList.Add(new(GameServerToClientMessage.NetMessageAddArea, NetMessageAddArea.CreateBuilder()
@@ -342,7 +342,7 @@ namespace MHServerEmu.GameServer
 
             switch (region)
             {
-                case RegionPrototype.AvengersTower:
+                case RegionPrototype.NPEAvengersTowerHUBRegion:
 
                     messageList.Add(new(GameServerToClientMessage.NetMessageRegionChange, NetMessageRegionChange.CreateBuilder()
                       .SetRegionId(0)
@@ -351,7 +351,7 @@ namespace MHServerEmu.GameServer
                       .Build().ToByteArray()));
 
                     messageList.Add(new(GameServerToClientMessage.NetMessageQueueLoadingScreen, NetMessageQueueLoadingScreen.CreateBuilder()
-                        .SetRegionPrototypeId((ulong)RegionPrototype.AvengersTower)
+                        .SetRegionPrototypeId((ulong)RegionPrototype.NPEAvengersTowerHUBRegion)
                         .Build().ToByteArray()));
 
                     byte[] avengersTowerRawRegionArchiveData = {
@@ -371,7 +371,7 @@ namespace MHServerEmu.GameServer
                     };
 
                     messageList.Add(new((byte)GameServerToClientMessage.NetMessageRegionChange, NetMessageRegionChange.CreateBuilder()
-                        .SetRegionPrototypeId((ulong)RegionPrototype.AvengersTower)
+                        .SetRegionPrototypeId((ulong)RegionPrototype.NPEAvengersTowerHUBRegion)
                         .SetServerGameId(1150669705055451881)
                         .SetClearingAllInterest(false)
                         .SetRegionId(1150669705055451881)
@@ -404,7 +404,7 @@ namespace MHServerEmu.GameServer
                         .Build().ToByteArray()));
 
                     messageList.Add(new(GameServerToClientMessage.NetMessageQueueLoadingScreen, NetMessageQueueLoadingScreen.CreateBuilder()
-                        .SetRegionPrototypeId((ulong)RegionPrototype.AvengersTower)
+                        .SetRegionPrototypeId((ulong)RegionPrototype.NPEAvengersTowerHUBRegion)
                         .Build().ToByteArray()));
 
                     messageList.Add(new(GameServerToClientMessage.NetMessageAddArea, NetMessageAddArea.CreateBuilder()
@@ -450,7 +450,7 @@ namespace MHServerEmu.GameServer
                     messages = messageList.ToArray();
                     break;
 
-                case RegionPrototype.DangerRoom:
+                case RegionPrototype.DangerRoomHubRegion:
 
                     messageList.Add(new(GameServerToClientMessage.NetMessageRegionChange, NetMessageRegionChange.CreateBuilder()
                         .SetRegionId(0)
@@ -459,12 +459,12 @@ namespace MHServerEmu.GameServer
                         .Build().ToByteArray()));
 
                     messageList.Add(new(GameServerToClientMessage.NetMessageQueueLoadingScreen, NetMessageQueueLoadingScreen.CreateBuilder()
-                        .SetRegionPrototypeId((ulong)RegionPrototype.DangerRoom)
+                        .SetRegionPrototypeId((ulong)RegionPrototype.DangerRoomHubRegion)
                         .Build().ToByteArray()));
 
                     messageList.Add(new((byte)GameServerToClientMessage.NetMessageRegionChange,
                         NetMessageRegionChange.CreateBuilder()
-                        .SetRegionPrototypeId((ulong)RegionPrototype.DangerRoom)
+                        .SetRegionPrototypeId((ulong)RegionPrototype.DangerRoomHubRegion)
                         .SetServerGameId(1)
                         .SetClearingAllInterest(false)
                         .SetRegionId(1)
@@ -514,7 +514,7 @@ namespace MHServerEmu.GameServer
                     messages = messageList.ToArray();
                     break;
 
-                case RegionPrototype.MidtownPatrolCosmic:
+                case RegionPrototype.XManhattanRegion60Cosmic:
 
                     messageList.Add(new(GameServerToClientMessage.NetMessageRegionChange, NetMessageRegionChange.CreateBuilder()
                         .SetRegionId(0)
@@ -523,11 +523,11 @@ namespace MHServerEmu.GameServer
                         .Build().ToByteArray()));
 
                     messageList.Add(new(GameServerToClientMessage.NetMessageQueueLoadingScreen, NetMessageQueueLoadingScreen.CreateBuilder()
-                        .SetRegionPrototypeId((ulong)RegionPrototype.MidtownPatrolCosmic)
+                        .SetRegionPrototypeId((ulong)RegionPrototype.XManhattanRegion60Cosmic)
                         .Build().ToByteArray()));
 
                     messageList.Add(new((byte)GameServerToClientMessage.NetMessageRegionChange, NetMessageRegionChange.CreateBuilder()
-                        .SetRegionPrototypeId((ulong)RegionPrototype.MidtownPatrolCosmic)
+                        .SetRegionPrototypeId((ulong)RegionPrototype.XManhattanRegion60Cosmic)
                         .SetServerGameId(1150669705055451881)
                         .SetClearingAllInterest(false)
                         .SetRegionId(1154146333179724697)
@@ -537,7 +537,7 @@ namespace MHServerEmu.GameServer
                         .SetRegionMin(NetStructPoint3.CreateBuilder().SetX(-20000).SetY(-20000).SetZ(-1152).Build())
                         .Build().ToByteArray()));
 
-                    messageList.Add(new((byte)GameServerToClientMessage.NetMessagePrefetchRegionsForDownload, NetMessagePrefetchRegionsForDownload.CreateBuilder().AddPrototypes((ulong)RegionPrototype.AvengersTower).Build().ToByteArray()));
+                    messageList.Add(new((byte)GameServerToClientMessage.NetMessagePrefetchRegionsForDownload, NetMessagePrefetchRegionsForDownload.CreateBuilder().AddPrototypes((ulong)RegionPrototype.NPEAvengersTowerHUBRegion).Build().ToByteArray()));
 
                     messageList.Add(new((byte)GameServerToClientMessage.NetMessageMatchTeamSizeNotification,
                      NetMessageMatchTeamSizeNotification.CreateBuilder().SetMetaGameEntityId(63).SetTeamSize(10).Build().ToByteArray()));
@@ -673,9 +673,9 @@ namespace MHServerEmu.GameServer
             {
                 switch (waypointRegion)
                 {
-                    case RegionPrototype.AvengersTower:
+                    case RegionPrototype.NPEAvengersTowerHUBRegion:
                         break;
-                    case RegionPrototype.DangerRoom:
+                    case RegionPrototype.DangerRoomHubRegion:
                         messageList.Add(new(GameServerToClientMessage.NetMessageEntityPosition, NetMessageEntityPosition.CreateBuilder()
                             .SetAreaId(1)
                             .SetCellId(1)
@@ -691,7 +691,7 @@ namespace MHServerEmu.GameServer
                                 .SetZ(0))
                             .Build().ToByteArray()));
                         break;
-                    case RegionPrototype.MidtownPatrolCosmic:
+                    case RegionPrototype.XManhattanRegion60Cosmic:
 
                         messageList.Add(new(GameServerToClientMessage.NetMessageEntityPosition, NetMessageEntityPosition.CreateBuilder()
                             .SetAreaId(1)
