@@ -156,6 +156,14 @@ namespace MHServerEmu.Networking
                             case NetMessageUpdateMiniMap updateMiniMapMessage:
                                 streamWriter.WriteLine($"_archiveDataHex: {updateMiniMapMessage.ArchiveData.ToByteArray().ToHexString()}");
                                 break;
+
+                            //case NetMessageSetProperty propertyMessage:
+
+                            //    if (propertyMessage.ReplicationId == 9078507)
+                            //    {
+                            //        streamWriter.WriteLine($"messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()\r\n                        .SetReplicationId({propertyMessage.ReplicationId})\r\n                        .SetPropertyId({propertyMessage.PropertyId})\r\n                        .SetValueBits({propertyMessage.ValueBits})\r\n                        .Build().ToByteArray()));");
+                            //    }
+                            //    break;
                         }
                     }
                     catch

@@ -114,6 +114,8 @@ namespace MHServerEmu.GameServer
                         messageList.Add(new(GameServerToClientMessage.NetMessageEntityEnterGameWorld,
                             NetMessageEntityEnterGameWorld.CreateBuilder().SetArchiveData(ByteString.CopyFrom(waypointEntityEnterGameWorld)).Build().ToByteArray()));
 
+                        messageList.AddRange(PowerLoader.LoadAvatarPowerCollection(avatar).ToList());
+
                         // Dequeue loading screen
                         messageList.Add(new(GameServerToClientMessage.NetMessageDequeueLoadingScreen, NetMessageDequeueLoadingScreen.DefaultInstance.ToByteArray()));
 
