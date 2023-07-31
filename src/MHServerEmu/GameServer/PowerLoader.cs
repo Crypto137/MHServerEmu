@@ -36,229 +36,105 @@ namespace MHServerEmu.GameServer
 
                     messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
                         .SetReplicationId(9078507)
-                        .SetPropertyId(52364218)
+                        .SetPropertyId(41083834) // This Id unlocks Unleashed
+                        .SetValueBits(40)
+                        .Build().ToByteArray()));
+                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                        .SetReplicationId(9078507)
+                        .SetPropertyId(52364218) // This Id unlocks Graple Swing Line
                         .SetValueBits(2)
                         .Build().ToByteArray()));
                     messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
                         .SetReplicationId(9078507)
-                        .SetPropertyId(9572218)
+                        .SetPropertyId(18863034) // This Id unlocks Quick Getaway
                         .SetValueBits(2)
                         .Build().ToByteArray()));
                     messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
                         .SetReplicationId(9078507)
-                        .SetPropertyId(18863546)
+                        .SetPropertyId(16094138) // This Id unlocks Cat's Claws
                         .SetValueBits(2)
                         .Build().ToByteArray()));
                     messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
                         .SetReplicationId(9078507)
-                        .SetPropertyId(18863034)
+                        .SetPropertyId(40391610) // This Id unlocks Deep Cuts
                         .SetValueBits(2)
                         .Build().ToByteArray()));
                     messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
                         .SetReplicationId(9078507)
-                        .SetPropertyId(16094650)
+                        .SetPropertyId(24478650) // This Id unlocks Claws Out
                         .SetValueBits(2)
                         .Build().ToByteArray()));
                     messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
                         .SetReplicationId(9078507)
-                        .SetPropertyId(16094138)
+                        .SetPropertyId(22909882) // This Id unlocks Master Thief
                         .SetValueBits(2)
                         .Build().ToByteArray()));
                     messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
                         .SetReplicationId(9078507)
-                        .SetPropertyId(40392122)
+                        .SetPropertyId(3257274) // This Id unlocks Foe Fillet
                         .SetValueBits(2)
                         .Build().ToByteArray()));
                     messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
                         .SetReplicationId(9078507)
-                        .SetPropertyId(40391610)
+                        .SetPropertyId(52511674) // This Id unlocks Land On Your Feet
                         .SetValueBits(2)
                         .Build().ToByteArray()));
                     messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
                         .SetReplicationId(9078507)
-                        .SetPropertyId(24479162)
+                        .SetPropertyId(55354298) // This Id unlocks Cat Nap
                         .SetValueBits(2)
                         .Build().ToByteArray()));
                     messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
                         .SetReplicationId(9078507)
-                        .SetPropertyId(24478650)
+                        .SetPropertyId(38609850) // This Id unlocks The Cat's Meow
                         .SetValueBits(2)
                         .Build().ToByteArray()));
                     messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
                         .SetReplicationId(9078507)
-                        .SetPropertyId(22910394)
+                        .SetPropertyId(32191418) // This Id unlocks Explosive Trap
                         .SetValueBits(2)
                         .Build().ToByteArray()));
                     messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
                         .SetReplicationId(9078507)
-                        .SetPropertyId(22909882)
+                        .SetPropertyId(16360378) // This Id unlocks Gas Trap
                         .SetValueBits(2)
                         .Build().ToByteArray()));
                     messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
                         .SetReplicationId(9078507)
-                        .SetPropertyId(3257786)
+                        .SetPropertyId(57111482)  // This Id unlocks Whip Crack
                         .SetValueBits(2)
                         .Build().ToByteArray()));
                     messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
                         .SetReplicationId(9078507)
-                        .SetPropertyId(3257274)
+                        .SetPropertyId(7828410)  // This Id unlocks Grappling Whip
                         .SetValueBits(2)
                         .Build().ToByteArray()));
                     messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
                         .SetReplicationId(9078507)
-                        .SetPropertyId(52512186)
+                        .SetPropertyId(38605754) // This Id unlocks C'mere Kitty
                         .SetValueBits(2)
                         .Build().ToByteArray()));
                     messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
                         .SetReplicationId(9078507)
-                        .SetPropertyId(52511674)
+                        .SetPropertyId(50938810) // This Id unlocks Sticky Trap
                         .SetValueBits(2)
                         .Build().ToByteArray()));
                     messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
                         .SetReplicationId(9078507)
-                        .SetPropertyId(55354810)
+                        .SetPropertyId(63943610) // This Id unlocks Put 'Em Down
                         .SetValueBits(2)
                         .Build().ToByteArray()));
                     messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
                         .SetReplicationId(9078507)
-                        .SetPropertyId(55354298)
+                        .SetPropertyId(34288570) // This Id unlocks Taser Trap
                         .SetValueBits(2)
                         .Build().ToByteArray()));
                     messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
                         .SetReplicationId(9078507)
-                        .SetPropertyId(33244602)
+                        .SetPropertyId(52364730) // This Id unlocks Grapple Swing Line on the UI Panel
                         .SetValueBits(2)
                         .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(33244090)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(38610362)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(38609850)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(32191930)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(32191418)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(32191834)
-                        .SetValueBits(4)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(32190682)
-                        .SetValueBits(4)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(16360890)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(16360378)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(16360794)
-                        .SetValueBits(4)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(16359642)
-                        .SetValueBits(4)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(57111994)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(57111482)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(7828922)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(7828410)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(38606266)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(38605754)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(50939322)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(50938810)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(50939226)
-                        .SetValueBits(4)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(50938074)
-                        .SetValueBits(4)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(63944122)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(63943610)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(34289082)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(34288570)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078507)
-                        .SetPropertyId(52364730)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
+
                     break;
                 case HardcodedAvatarEntity.Thor:
                     List<NetMessagePowerCollectionAssignPower> powerList = new List<NetMessagePowerCollectionAssignPower>
@@ -1650,232 +1526,7 @@ namespace MHServerEmu.GameServer
 
                     messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
                         .SetReplicationId(9078450)
-                        .SetPropertyId(18863546)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(52364218)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(9572218)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(18863546)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(18863034)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(16094650)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(16094138)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(40392122)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(40391610)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(24479162)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(24478650)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(22910394)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(22909882)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(3257786)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(3257274)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(52512186)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(52511674)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(55354810)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(55354298)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(33244602)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(33244090)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(38610362)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(38609850)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(32191930)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(32191418)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(32191834)
-                        .SetValueBits(4)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(32190682)
-                        .SetValueBits(4)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(16360890)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(16360378)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(16360794)
-                        .SetValueBits(4)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(16359642)
-                        .SetValueBits(4)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(57111994)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(57111482)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(7828922)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(7828410)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(38606266)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(38605754)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(50939322)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(50938810)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(50939226)
-                        .SetValueBits(4)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(50938074)
-                        .SetValueBits(4)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(63944122)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(63943610)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(34289082)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(34288570)
-                        .SetValueBits(2)
-                        .Build().ToByteArray()));
-                    messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
-                        .SetReplicationId(9078450)
-                        .SetPropertyId(52364730)
+                        .SetPropertyId(18863546) // no idea why this loads Thors power panel
                         .SetValueBits(2)
                         .Build().ToByteArray()));
 
