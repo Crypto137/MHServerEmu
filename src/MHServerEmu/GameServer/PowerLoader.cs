@@ -761,7 +761,7 @@ namespace MHServerEmu.GameServer
 
                         NetMessagePowerCollectionAssignPower.CreateBuilder()
                         .SetEntityId((ulong)HardcodedAvatarEntity.Thor)
-                        .SetPowerProtoId(8018830905534583377)
+                        .SetPowerProtoId(18018830905534583377)
                         .SetPowerRank(0)
                         .SetCharacterLevel(60)
                         .SetCombatLevel(60)
