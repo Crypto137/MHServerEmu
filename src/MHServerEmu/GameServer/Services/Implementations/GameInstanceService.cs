@@ -114,20 +114,20 @@ namespace MHServerEmu.GameServer.Services.Implementations
 
                         switch ((RegionPrototype)useWaypointMessage.RegionProtoId)
                         {
-                            case RegionPrototype.AvengersTower:
-                                client.WaypointRegion = RegionPrototype.AvengersTower;
+                            case RegionPrototype.NPEAvengersTowerHUBRegion:
+                                client.WaypointRegion = RegionPrototype.NPEAvengersTowerHUBRegion;
                                 client.ReloadEntities = true;
-                                client.SendMultipleMessages(1, RegionLoader.GetWaypointRegionChangeMessages(RegionPrototype.AvengersTower));
+                                client.SendMultipleMessages(1, RegionLoader.GetWaypointRegionChangeMessages(RegionPrototype.NPEAvengersTowerHUBRegion));
                                 break;
-                            case RegionPrototype.DangerRoom:
-                                client.WaypointRegion = RegionPrototype.DangerRoom;
+                            case RegionPrototype.DangerRoomHubRegion:
+                                client.WaypointRegion = RegionPrototype.DangerRoomHubRegion;
                                 client.ReloadEntities = true;
-                                client.SendMultipleMessages(1, RegionLoader.GetWaypointRegionChangeMessages(RegionPrototype.DangerRoom));
+                                client.SendMultipleMessages(1, RegionLoader.GetWaypointRegionChangeMessages(RegionPrototype.DangerRoomHubRegion));
                                 break;
-                            case RegionPrototype.MidtownPatrolCosmic:
-                                client.WaypointRegion = RegionPrototype.MidtownPatrolCosmic;
+                            case RegionPrototype.XManhattanRegion60Cosmic:
+                                client.WaypointRegion = RegionPrototype.XManhattanRegion60Cosmic;
                                 client.ReloadEntities = true;
-                                client.SendMultipleMessages(1, RegionLoader.GetWaypointRegionChangeMessages(RegionPrototype.MidtownPatrolCosmic));
+                                client.SendMultipleMessages(1, RegionLoader.GetWaypointRegionChangeMessages(RegionPrototype.XManhattanRegion60Cosmic));
                                 break;
 
                         }

@@ -61,11 +61,18 @@ namespace MHServerEmu.GameServer.Data.Types
             using (MemoryStream memoryStream = new())
             using (StreamWriter streamWriter = new(memoryStream))
             {
+                /* dec output
                 streamWriter.WriteLine($"Header: {Header}");
                 streamWriter.WriteLine($"EntityId: {EntityId}");
                 streamWriter.WriteLine($"EnumValue: {EnumValue}");
                 streamWriter.WriteLine($"Flag: {Flag}");
                 for (int i = 0; i < DynamicFields.Length; i++) streamWriter.WriteLine($"DynamicField{i}: {DynamicFields[i]}");
+                */
+                streamWriter.WriteLine($"Header: 0x{Header.ToString("X")}");
+                streamWriter.WriteLine($"EntityId: 0x{EntityId.ToString("X")}");
+                streamWriter.WriteLine($"EnumValue: 0x{EnumValue.ToString("X")}");
+                streamWriter.WriteLine($"Flag: 0x{Flag.ToString("X")}");
+                for (int i = 0; i < DynamicFields.Length; i++) streamWriter.WriteLine($"DynamicField{i}: 0x{DynamicFields[i].ToString("X")}");
 
                 streamWriter.Flush();
 

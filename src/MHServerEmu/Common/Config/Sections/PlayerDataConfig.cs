@@ -5,13 +5,17 @@ namespace MHServerEmu.Common.Config.Sections
 {
     public class PlayerDataConfig
     {
+        private const string Section = "PlayerData";
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public RegionPrototype StartingRegion { get; }
         public HardcodedAvatarEntity StartingAvatar { get; }
 
-        public PlayerDataConfig(string startingRegion, string startingAvatar)
+        public PlayerDataConfig(IniFile configFile)
         {
+            string startingRegion = configFile.ReadString(Section, "StartingRegion");
+            string startingAvatar = configFile.ReadString(Section, "StartingAvatar");
+
             // StartingRegion
             try
             {
@@ -20,16 +24,16 @@ namespace MHServerEmu.Common.Config.Sections
             catch (Exception e)
             {
                 Logger.Error(e.Message);
-                Logger.Error($"Failed to parse StartingRegion {startingRegion}, falling back to AvengersTower");
-                StartingRegion = RegionPrototype.AvengersTower;
+                Logger.Error($"Failed to parse StartingRegion {startingRegion}, falling back to NPEAvengersTowerHUBRegion");
+                StartingRegion = RegionPrototype.NPEAvengersTowerHUBRegion;
             }
 
-            if (StartingRegion != RegionPrototype.AvengersTower &&
-                StartingRegion != RegionPrototype.DangerRoom &&
-                StartingRegion != RegionPrototype.MidtownPatrolCosmic)
+            if (StartingRegion != RegionPrototype.NPEAvengersTowerHUBRegion &&
+                StartingRegion != RegionPrototype.DangerRoomHubRegion &&
+                StartingRegion != RegionPrototype.XManhattanRegion60Cosmic)
             {
-                Logger.Error($"Region {StartingRegion} has no data, falling back to AvengersTower");
-                StartingRegion = RegionPrototype.AvengersTower;
+                Logger.Error($"Region {StartingRegion} has no data, falling back to NPEAvengersTowerHUBRegion");
+                StartingRegion = RegionPrototype.NPEAvengersTowerHUBRegion;
             }
 
             // StartingHero

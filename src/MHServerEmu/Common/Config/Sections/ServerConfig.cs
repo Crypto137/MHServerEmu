@@ -4,11 +4,13 @@ namespace MHServerEmu.Common.Config.Sections
 {
     public class ServerConfig
     {
+        private const string Section = "Server";
+
         public bool EnableTimestamps { get; }
 
-        public ServerConfig(bool enableTimestamps)
+        public ServerConfig(IniFile configFile)
         {
-            EnableTimestamps = enableTimestamps;
+            EnableTimestamps = configFile.ReadBool(Section, "EnableTimestamps");
         }
 
         public ServerConfig()
