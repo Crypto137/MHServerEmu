@@ -5,13 +5,17 @@ namespace MHServerEmu.Common.Config.Sections
 {
     public class PlayerDataConfig
     {
+        private const string Section = "PlayerData";
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public RegionPrototype StartingRegion { get; }
         public HardcodedAvatarEntity StartingAvatar { get; }
 
-        public PlayerDataConfig(string startingRegion, string startingAvatar)
+        public PlayerDataConfig(IniFile configFile)
         {
+            string startingRegion = configFile.ReadString(Section, "StartingRegion");
+            string startingAvatar = configFile.ReadString(Section, "StartingAvatar");
+
             // StartingRegion
             try
             {

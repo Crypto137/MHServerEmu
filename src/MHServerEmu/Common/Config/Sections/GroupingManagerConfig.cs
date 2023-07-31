@@ -4,15 +4,17 @@ namespace MHServerEmu.Common.Config.Sections
 {
     public class GroupingManagerConfig
     {
+        private const string Section = "GroupingManager";
+
         public string MotdPlayerName { get; }
         public string MotdText { get; }
         public int MotdPrestigeLevel { get; }
         
-        public GroupingManagerConfig(string motdPlayerName, string motdText, int motdPrestigeLevel)
+        public GroupingManagerConfig(IniFile configFile)
         {
-            MotdPlayerName = motdPlayerName;
-            MotdText = motdText;
-            MotdPrestigeLevel = motdPrestigeLevel;
+            MotdPlayerName = configFile.ReadString(Section, "MotdPlayerName"); ;
+            MotdText = configFile.ReadString(Section, "MotdText");
+            MotdPrestigeLevel = configFile.ReadInt(Section, "MotdPrestigeLevel"); ;
         }
     }
 }

@@ -4,15 +4,17 @@ namespace MHServerEmu.Common.Config.Sections
 {
     public class FrontendConfig
     {
+        private const string Section = "Frontend";
+
         public bool SimulateQueue { get; }
         public ulong QueuePlaceInLine { get; }
         public ulong QueueNumberOfPlayersInLine { get; }
 
-        public FrontendConfig(bool simulateQueue, ulong queuePlaceInLine, ulong queueNumberOfPlayersInLine)
+        public FrontendConfig(IniFile configFile)
         {
-            SimulateQueue = simulateQueue;
-            QueuePlaceInLine = queuePlaceInLine;
-            QueueNumberOfPlayersInLine = queueNumberOfPlayersInLine;
+            SimulateQueue = configFile.ReadBool(Section, "SimulateQueue"); ;
+            QueuePlaceInLine = (ulong)configFile.ReadInt(Section, "QueuePlaceInLine");
+            QueueNumberOfPlayersInLine = (ulong)configFile.ReadInt(Section, "QueueNumberOfPlayersInLine");
         }
     }
 }

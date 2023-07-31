@@ -4,6 +4,8 @@ namespace MHServerEmu.Common.Config.Sections
 {
     public class GameOptionsConfig
     {
+        private const string Section = "GameOptions";
+
         public bool TeamUpSystemEnabled { get; }
         public bool AchievementsEnabled { get; }
         public bool OmegaMissionsEnabled { get; }
@@ -25,31 +27,28 @@ namespace MHServerEmu.Common.Config.Sections
         public bool IsDifficultySliderEnabled { get; }
         public bool OrbisTrophiesEnabled { get; }
 
-        public GameOptionsConfig(bool teamUpSystemEnabled, bool achievementsEnabled, bool omegaMissionsEnabled, bool veteranRewardsEnabled, bool multiSpecRewardsEnabled,
-            bool giftingEnabled, bool characterSelectV2Enabled, bool communityNewsV2Enabled, bool leaderboardsEnabled, bool newPlayerExperienceEnabled,
-            bool missionTrackerV2Enabled, int giftingAccountAgeInDaysRequired, int giftingAvatarLevelRequired, int giftingLoginCountRequired, bool infinitySystemEnabled,
-            int chatBanVoteAccountAgeInDaysRequired, int chatBanVoteAvatarLevelRequired, int chatBanVoteLoginCountRequired, bool isDifficultySliderEnabled, bool orbisTrophiesEnabled)
+        public GameOptionsConfig(IniFile configFile)
         {
-            TeamUpSystemEnabled = teamUpSystemEnabled;
-            AchievementsEnabled = achievementsEnabled;
-            OmegaMissionsEnabled = omegaMissionsEnabled;
-            VeteranRewardsEnabled = veteranRewardsEnabled;
-            MultiSpecRewardsEnabled = multiSpecRewardsEnabled;
-            GiftingEnabled = giftingEnabled;
-            CharacterSelectV2Enabled = characterSelectV2Enabled;
-            CommunityNewsV2Enabled = communityNewsV2Enabled;
-            LeaderboardsEnabled = leaderboardsEnabled;
-            NewPlayerExperienceEnabled = newPlayerExperienceEnabled;
-            MissionTrackerV2Enabled = missionTrackerV2Enabled;
-            GiftingAccountAgeInDaysRequired = giftingAccountAgeInDaysRequired;
-            GiftingAvatarLevelRequired = giftingAvatarLevelRequired;
-            GiftingLoginCountRequired = giftingLoginCountRequired;
-            InfinitySystemEnabled = infinitySystemEnabled;
-            ChatBanVoteAccountAgeInDaysRequired = chatBanVoteAccountAgeInDaysRequired;
-            ChatBanVoteAvatarLevelRequired = chatBanVoteAvatarLevelRequired;
-            ChatBanVoteLoginCountRequired = chatBanVoteLoginCountRequired;
-            IsDifficultySliderEnabled = isDifficultySliderEnabled;
-            OrbisTrophiesEnabled = orbisTrophiesEnabled;
+            TeamUpSystemEnabled = configFile.ReadBool(Section, "TeamUpSystemEnabled");
+            AchievementsEnabled = configFile.ReadBool(Section, "AchievementsEnabled");
+            OmegaMissionsEnabled = configFile.ReadBool(Section, "OmegaMissionsEnabled");
+            VeteranRewardsEnabled = configFile.ReadBool(Section, "VeteranRewardsEnabled");
+            MultiSpecRewardsEnabled = configFile.ReadBool(Section, "MultiSpecRewardsEnabled");
+            GiftingEnabled = configFile.ReadBool(Section, "GiftingEnabled");
+            CharacterSelectV2Enabled = configFile.ReadBool(Section, "CharacterSelectV2Enabled");
+            CommunityNewsV2Enabled = configFile.ReadBool(Section, "CommunityNewsV2Enabled");
+            LeaderboardsEnabled = configFile.ReadBool(Section, "LeaderboardsEnabled");
+            NewPlayerExperienceEnabled = configFile.ReadBool(Section, "NewPlayerExperienceEnabled");
+            MissionTrackerV2Enabled = configFile.ReadBool(Section, "MissionTrackerV2Enabled");
+            GiftingAccountAgeInDaysRequired = configFile.ReadInt(Section, "GiftingAccountAgeInDaysRequired");
+            GiftingAvatarLevelRequired = configFile.ReadInt(Section, "GiftingAvatarLevelRequired");
+            GiftingLoginCountRequired = configFile.ReadInt(Section, "GiftingLoginCountRequired");
+            InfinitySystemEnabled = configFile.ReadBool(Section, "InfinitySystemEnabled");
+            ChatBanVoteAccountAgeInDaysRequired = configFile.ReadInt(Section, "ChatBanVoteAccountAgeInDaysRequired");
+            ChatBanVoteAvatarLevelRequired = configFile.ReadInt(Section, "ChatBanVoteAvatarLevelRequired");
+            ChatBanVoteLoginCountRequired = configFile.ReadInt(Section, "ChatBanVoteLoginCountRequired");
+            IsDifficultySliderEnabled = configFile.ReadBool(Section, "IsDifficultySliderEnabled");
+            OrbisTrophiesEnabled = configFile.ReadBool(Section, "OrbisTrophiesEnabled");
         }
     }
 }
