@@ -52,9 +52,14 @@ namespace MHServerEmu.GameServer.Data.Types
             using (MemoryStream memoryStream = new())
             using (StreamWriter streamWriter = new(memoryStream))
             {
+                /* dec output
                 streamWriter.WriteLine($"Header: {Header}");
                 streamWriter.WriteLine($"EntityId: {EntityId}");
                 for (int i = 0; i < Fields.Length; i++) streamWriter.WriteLine($"Field{i}: {Fields[i]}");
+                */
+                streamWriter.WriteLine($"Header: 0x{Header.ToString("X")}");
+                streamWriter.WriteLine($"EntityId: 0x{EntityId.ToString("X")}");
+                for (int i = 0; i < Fields.Length; i++) streamWriter.WriteLine($"Field{i}: 0x{Fields[i].ToString("X")}");
 
                 streamWriter.Flush();
 
