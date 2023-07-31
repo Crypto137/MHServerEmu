@@ -84,12 +84,12 @@ namespace MHServerEmu.GameServer
             {
                 case RegionPrototype.NPEAvengersTowerHUBRegion:
 
-                    if (avatar == HardcodedAvatarEntity.BlackCat)
-                    {
-                        messages = PacketHelper.LoadMessagesFromPacketFile("AvengersTowerFinishLoading.bin");
-                    }
-                    else
-                    {
+                    //if (avatar == HardcodedAvatarEntity.BlackCat)
+                    //{
+                    //    messages = PacketHelper.LoadMessagesFromPacketFile("AvengersTowerFinishLoading.bin");
+                    //}
+                    //else
+                    //{
                         List<GameMessage> messageList = new();
 
                         // Put player avatar entity in the game world
@@ -120,7 +120,7 @@ namespace MHServerEmu.GameServer
                         messageList.Add(new(GameServerToClientMessage.NetMessageDequeueLoadingScreen, NetMessageDequeueLoadingScreen.DefaultInstance.ToByteArray()));
 
                         messages = messageList.ToArray();
-                    }
+                    //}
 
                     break;
 
