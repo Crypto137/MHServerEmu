@@ -1,23 +1,20 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 
-namespace MHServerEmu.GameServer.Data.Types
+namespace MHServerEmu.GameServer.Entities.Archives
 {
-    public class EntityCreateArchiveData
+    public class EntityEnterGameWorldArchiveData
     {
         public ulong Header { get; }
-        public ulong RepId { get; }
-        public uint Size { get; }
-
+        public ulong EntityId { get; set; }
         public ulong[] Fields { get; }
 
-        public EntityCreateArchiveData(byte[] data)
+        public EntityEnterGameWorldArchiveData(byte[] data)
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(data);
 
             Header = stream.ReadRawVarint64();
-            RepId = stream.ReadRawVarint64();
-            Size = BitConverter.ToUInt32(stream.ReadRawBytes(4));
+            EntityId = stream.ReadRawVarint64();
 
             List<ulong> fieldList = new();
             while (!stream.IsAtEnd)
@@ -28,11 +25,10 @@ namespace MHServerEmu.GameServer.Data.Types
             Fields = fieldList.ToArray();
         }
 
-        public EntityCreateArchiveData(ulong header, ulong repId, uint size, ulong[] fields)
+        public EntityEnterGameWorldArchiveData(ulong header, ulong entityId, ulong[] fields)
         {
             Header = header;
-            RepId = repId;
-            Size = size;
+            EntityId = entityId;
             Fields = fields;
         }
 
@@ -43,8 +39,7 @@ namespace MHServerEmu.GameServer.Data.Types
                 CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
 
                 stream.WriteRawVarint64(Header);
-                stream.WriteRawVarint64(RepId);
-                stream.WriteRawBytes(BitConverter.GetBytes(Size));
+                stream.WriteRawVarint64(EntityId);
                 foreach (ulong field in Fields) stream.WriteRawVarint64(field);
 
                 stream.Flush();
@@ -59,13 +54,11 @@ namespace MHServerEmu.GameServer.Data.Types
             {
                 /* dec output
                 streamWriter.WriteLine($"Header: {Header}");
-                streamWriter.WriteLine($"RepId: {RepId}");
-                streamWriter.WriteLine($"Size: {Size}");
+                streamWriter.WriteLine($"EntityId: {EntityId}");
                 for (int i = 0; i < Fields.Length; i++) streamWriter.WriteLine($"Field{i}: {Fields[i]}");
                 */
                 streamWriter.WriteLine($"Header: 0x{Header.ToString("X")}");
-                streamWriter.WriteLine($"RepId: 0x{RepId.ToString("X")}");
-                streamWriter.WriteLine($"Size: 0x{Size.ToString("X")}");
+                streamWriter.WriteLine($"EntityId: 0x{EntityId.ToString("X")}");
                 for (int i = 0; i < Fields.Length; i++) streamWriter.WriteLine($"Field{i}: 0x{Fields[i].ToString("X")}");
 
                 streamWriter.Flush();

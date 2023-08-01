@@ -1,5 +1,6 @@
 ﻿using System;
-using MHServerEmu.GameServer.Data.Enums;
+using MHServerEmu.GameServer.Entities;
+using MHServerEmu.GameServer.Regions;
 
 namespace MHServerEmu.Common.Config.Sections
 {

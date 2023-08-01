@@ -1,9 +1,9 @@
 ﻿using Gazillion;
 using MHServerEmu.Networking;
 using MHServerEmu.Common;
-using MHServerEmu.GameServer.Data.Enums;
+using MHServerEmu.GameServer.Entities;
 
-namespace MHServerEmu.GameServer
+namespace MHServerEmu.GameServer.Powers
 {
     public static class PowerLoader
     {
@@ -15,7 +15,7 @@ namespace MHServerEmu.GameServer
             GameMessage[] loadedMessages = PacketHelper.LoadMessagesFromPacketFile("AvengersTowerFinishLoading.bin");
             switch (avatar)
             {
-                case HardcodedAvatarEntity.BlackCat:    
+                case HardcodedAvatarEntity.BlackCat:
                     foreach (GameMessage gameMessage in loadedMessages)
                     {
                         switch ((GameServerToClientMessage)gameMessage.Id)
@@ -29,7 +29,7 @@ namespace MHServerEmu.GameServer
                             case GameServerToClientMessage.NetMessagePowerCollectionUnassignPower:
                                 messageList.Add(gameMessage);
                                 break;
-                            default: 
+                            default:
                                 break;
                         }
                     }

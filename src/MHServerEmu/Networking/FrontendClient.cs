@@ -1,10 +1,10 @@
 ﻿using System.Net.Sockets;
 using Google.ProtocolBuffers;
-using Gazillion;
 using MHServerEmu.Common;
-using MHServerEmu.GameServer;
-using MHServerEmu.GameServer.Data.Enums;
 using MHServerEmu.Common.Config;
+using MHServerEmu.GameServer;
+using MHServerEmu.GameServer.Entities;
+using MHServerEmu.GameServer.Regions;
 
 namespace MHServerEmu.Networking
 {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MHServerEmu.GameServer.Data.Enums
+namespace MHServerEmu.GameServer.Entities
 {
     public enum HardcodedAvatarEntity : ulong
     {

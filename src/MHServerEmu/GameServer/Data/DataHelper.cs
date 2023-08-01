@@ -1,7 +1,7 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common;
-using MHServerEmu.GameServer.Data.Types;
+using MHServerEmu.GameServer.Entities.Archives;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.GameServer.Data

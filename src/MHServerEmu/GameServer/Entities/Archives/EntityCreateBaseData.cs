@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 
-namespace MHServerEmu.GameServer.Data.Types
+namespace MHServerEmu.GameServer.Entities.Archives
 {
     public class EntityCreateBaseData
     {

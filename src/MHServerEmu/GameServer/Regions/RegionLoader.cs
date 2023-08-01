@@ -2,11 +2,12 @@
 using Gazillion;
 using MHServerEmu.Networking;
 using MHServerEmu.Common;
-using MHServerEmu.GameServer.Data.Types;
-using MHServerEmu.GameServer.Data.Enums;
 using MHServerEmu.Common.Config;
+using MHServerEmu.GameServer.Entities;
+using MHServerEmu.GameServer.Entities.Archives;
+using MHServerEmu.GameServer.Powers;
 
-namespace MHServerEmu.GameServer
+namespace MHServerEmu.GameServer.Regions
 {
     public static class RegionLoader
     {
@@ -90,36 +91,36 @@ namespace MHServerEmu.GameServer
                     //}
                     //else
                     //{
-                        List<GameMessage> messageList = new();
+                    List<GameMessage> messageList = new();
 
-                        // Put player avatar entity in the game world
-                        byte[] avatarEntityEnterGameWorldArchiveData = {
+                    // Put player avatar entity in the game world
+                    byte[] avatarEntityEnterGameWorldArchiveData = {
                             0x01, 0xB2, 0xF8, 0xFD, 0x06, 0xA0, 0x21, 0xF0, 0xA3, 0x01, 0xBC, 0x40,
                             0x90, 0x2E, 0x91, 0x03, 0xBC, 0x05, 0x00, 0x00, 0x01
                         };
 
-                        EntityEnterGameWorldArchiveData avatarEnterArchiveData = new(avatarEntityEnterGameWorldArchiveData);
-                        avatarEnterArchiveData.EntityId = (ulong)avatar;
+                    EntityEnterGameWorldArchiveData avatarEnterArchiveData = new(avatarEntityEnterGameWorldArchiveData);
+                    avatarEnterArchiveData.EntityId = (ulong)avatar;
 
-                        messageList.Add(new(GameServerToClientMessage.NetMessageEntityEnterGameWorld,
-                            NetMessageEntityEnterGameWorld.CreateBuilder()
-                            .SetArchiveData(ByteString.CopyFrom(avatarEnterArchiveData.Encode()))
-                            .Build().ToByteArray()));
+                    messageList.Add(new(GameServerToClientMessage.NetMessageEntityEnterGameWorld,
+                        NetMessageEntityEnterGameWorld.CreateBuilder()
+                        .SetArchiveData(ByteString.CopyFrom(avatarEnterArchiveData.Encode()))
+                        .Build().ToByteArray()));
 
-                        // Put waypoint entity in the game world
-                        byte[] waypointEntityEnterGameWorld = {
+                    // Put waypoint entity in the game world
+                    byte[] waypointEntityEnterGameWorld = {
                             0x01, 0x0C, 0x02, 0x80, 0x43, 0xE0, 0x6B, 0xD8, 0x2A, 0xC8, 0x01
                         };
 
-                        messageList.Add(new(GameServerToClientMessage.NetMessageEntityEnterGameWorld,
-                            NetMessageEntityEnterGameWorld.CreateBuilder().SetArchiveData(ByteString.CopyFrom(waypointEntityEnterGameWorld)).Build().ToByteArray()));
+                    messageList.Add(new(GameServerToClientMessage.NetMessageEntityEnterGameWorld,
+                        NetMessageEntityEnterGameWorld.CreateBuilder().SetArchiveData(ByteString.CopyFrom(waypointEntityEnterGameWorld)).Build().ToByteArray()));
 
-                        messageList.AddRange(PowerLoader.LoadAvatarPowerCollection(avatar).ToList());
+                    messageList.AddRange(PowerLoader.LoadAvatarPowerCollection(avatar).ToList());
 
-                        // Dequeue loading screen
-                        messageList.Add(new(GameServerToClientMessage.NetMessageDequeueLoadingScreen, NetMessageDequeueLoadingScreen.DefaultInstance.ToByteArray()));
+                    // Dequeue loading screen
+                    messageList.Add(new(GameServerToClientMessage.NetMessageDequeueLoadingScreen, NetMessageDequeueLoadingScreen.DefaultInstance.ToByteArray()));
 
-                        messages = messageList.ToArray();
+                    messages = messageList.ToArray();
                     //}
 
                     break;
@@ -217,7 +218,7 @@ namespace MHServerEmu.GameServer
             }
 
             return messageList.ToArray();
-        }           
+        }
 
         private static GameMessage[] LoadRegionTransitionMessages(RegionPrototype? region)
         {
@@ -318,7 +319,7 @@ namespace MHServerEmu.GameServer
                 .Build().ToByteArray()));
 
             messageList.Add(new(GameServerToClientMessage.NetMessageUpdateMiniMap, NetMessageUpdateMiniMap.CreateBuilder()
-                .SetArchiveData(ByteString.CopyFrom(new byte[] { 0xEF, 0x01, 0x81 } ))
+                .SetArchiveData(ByteString.CopyFrom(new byte[] { 0xEF, 0x01, 0x81 }))
                 .Build().ToByteArray()));
 
             return messageList.ToArray();
