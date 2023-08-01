@@ -5,19 +5,20 @@ using MHServerEmu.Common.Config;
 using MHServerEmu.GameServer.Data.Enums;
 using MHServerEmu.Networking;
 
-namespace MHServerEmu.GameServer.Services.Implementations
+namespace MHServerEmu.GameServer.Frontend
 {
-    public class FrontendService : GameService
+    public class FrontendService : IGameMessageHandler
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private bool _simulateQueue = false;
+        private GameServerManager _gameServerManager;
 
-        public FrontendService(GameServerManager gameServerManager) : base(gameServerManager)
+        public FrontendService(GameServerManager gameServerManager)
         {
+            _gameServerManager = gameServerManager;
         }
 
-        public override void Handle(FrontendClient client, ushort muxId, GameMessage[] messages)
+        public void Handle(FrontendClient client, ushort muxId, GameMessage[] messages)
         {
             foreach (GameMessage message in messages)
             {

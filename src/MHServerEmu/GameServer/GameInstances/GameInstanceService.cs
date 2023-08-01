@@ -2,20 +2,22 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common;
 using MHServerEmu.GameServer.Data.Enums;
-using MHServerEmu.GameServer.Data.Types;
 using MHServerEmu.Networking;
 
-namespace MHServerEmu.GameServer.Services.Implementations
+namespace MHServerEmu.GameServer.GameInstances
 {
-    public class GameInstanceService : GameService
+    public class GameInstanceService : IGameMessageHandler
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public GameInstanceService(GameServerManager gameServerManager) : base(gameServerManager)
+        private GameServerManager _gameServerManager;
+
+        public GameInstanceService(GameServerManager gameServerManager)
         {
+            _gameServerManager = gameServerManager;
         }
 
-        public override void Handle(FrontendClient client, ushort muxId, GameMessage[] messages)
+        public void Handle(FrontendClient client, ushort muxId, GameMessage[] messages)
         {
             foreach (GameMessage message in messages)
             {

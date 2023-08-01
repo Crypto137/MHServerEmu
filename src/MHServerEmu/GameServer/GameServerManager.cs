@@ -1,10 +1,11 @@
 ﻿using MHServerEmu.Common;
 using MHServerEmu.Networking;
-using MHServerEmu.GameServer.Services.Implementations;
+using MHServerEmu.GameServer.Frontend;
+using MHServerEmu.GameServer.GameInstances;
 
 namespace MHServerEmu.GameServer
 {
-    public class GameServerManager
+    public class GameServerManager : IGameMessageHandler
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
