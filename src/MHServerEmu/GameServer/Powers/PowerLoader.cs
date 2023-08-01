@@ -141,7 +141,7 @@ namespace MHServerEmu.GameServer.Powers
                     break;
 
                 case HardcodedAvatarEntity.Angela:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Angela)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -160,7 +160,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.AntMan:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.AntMan)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -179,7 +179,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Beast:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Beast)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -198,7 +198,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.BlackBolt:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.BlackBolt)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -217,7 +217,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.BlackPanther:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.BlackPanther)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -236,7 +236,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.BlackWidow:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.BlackWidow)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -255,7 +255,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Blade:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Blade)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -274,7 +274,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Cable:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Cable)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -293,7 +293,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.CaptainAmerica:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.CaptainAmerica)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -312,7 +312,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Carnage:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Carnage)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -331,7 +331,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Colossus:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Colossus)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -350,7 +350,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Cyclops:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Cyclops)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -369,7 +369,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Daredevil:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Daredevil)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -388,7 +388,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Deadpool:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Deadpool)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -407,7 +407,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.DoctorStrange:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.DoctorStrange)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -426,7 +426,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.DrDoom:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.DrDoom)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -445,7 +445,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Elektra:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Elektra)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -464,7 +464,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.EmmaFrost:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.EmmaFrost)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -483,7 +483,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Gambit:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Gambit)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -502,7 +502,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.GhostRider:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.GhostRider)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -521,7 +521,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.GreenGoblin:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.GreenGoblin)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -540,7 +540,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Hawkeye:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Hawkeye)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -559,7 +559,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Hulk:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Hulk)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -578,7 +578,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.HumanTorch:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.HumanTorch)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -597,7 +597,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Iceman:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Iceman)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -616,7 +616,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.InvisibleWoman:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.InvisibleWoman)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -635,7 +635,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.IronFist:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.IronFist)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -654,7 +654,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.IronMan:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.IronMan)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -673,7 +673,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.JeanGrey:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.JeanGrey)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -692,7 +692,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Juggernaut:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Juggernaut)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -711,7 +711,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.KittyPryde:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.KittyPryde)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -730,7 +730,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Loki:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Loki)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -749,7 +749,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.LukeCage:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.LukeCage)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -768,7 +768,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Magik:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Magik)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -787,7 +787,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Magneto:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Magneto)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -806,7 +806,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.MoonKnight:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.MoonKnight)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -825,7 +825,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.MrFantastic:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.MrFantastic)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -844,7 +844,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.MsMarvel:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.MsMarvel)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -863,7 +863,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.NickFury:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.NickFury)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -882,7 +882,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Nightcrawler:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Nightcrawler)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -901,7 +901,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Nova:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Nova)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -920,7 +920,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Psylocke:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Psylocke)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -939,7 +939,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Punisher:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Punisher)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -958,7 +958,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.RocketRaccoon:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.RocketRaccoon)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -977,7 +977,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Rogue:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Rogue)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -996,7 +996,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.ScarletWitch:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.ScarletWitch)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -1015,7 +1015,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.SheHulk:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.SheHulk)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -1034,7 +1034,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.SilverSurfer:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.SilverSurfer)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -1053,7 +1053,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Spiderman:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Spiderman)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -1072,7 +1072,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.SquirrelGirl:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.SquirrelGirl)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -1091,7 +1091,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Starlord:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Starlord)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -1110,7 +1110,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Storm:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Storm)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -1129,7 +1129,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Taskmaster:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Taskmaster)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -1148,7 +1148,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Thing:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Thing)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -1167,7 +1167,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Thor:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Thor)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -1192,7 +1192,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Ultron:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Ultron)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -1211,7 +1211,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Venom:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Venom)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -1230,7 +1230,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Vision:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Vision)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -1249,7 +1249,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.WarMachine:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.WarMachine)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -1268,7 +1268,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.WinterSoldier:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.WinterSoldier)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -1287,7 +1287,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.Wolverine:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Wolverine)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -1306,7 +1306,7 @@ namespace MHServerEmu.GameServer.Powers
                         .Build().ToByteArray()));
                     break;
                 case HardcodedAvatarEntity.X23:
-                    powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.X23)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
