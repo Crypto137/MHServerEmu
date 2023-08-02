@@ -81,5 +81,28 @@ namespace MHServerEmu.GameServer.Data
 
             return BitConverter.ToUInt64(hashBytes);
         }
+
+        public static ulong ReconstructPowerPropertyIdFromHash(ulong hash)
+        {
+            BitArray bitArray = new(BitConverter.GetBytes(hash));
+
+            bool[] buffer = new bool[14];
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                buffer[i] = bitArray[i];
+            }
+
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                bitArray[i] = buffer[buffer.Length - 1 - i];
+            }
+
+            byte[] propertyIdBytes = new byte[8];
+            bitArray.CopyTo(propertyIdBytes, 0);
+
+            ulong propertyId = (BitConverter.ToUInt64(propertyIdBytes) << 12) + 0x3ba;
+
+            return propertyId;
+        }
     }
 }
