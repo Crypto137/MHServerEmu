@@ -13,6 +13,7 @@ namespace MHServerEmu.GameServer.Powers
         {
             List<GameMessage> messageList = new();
             GameMessage[] loadedMessages = PacketHelper.LoadMessagesFromPacketFile("AvengersTowerFinishLoading.bin");
+            List<NetMessagePowerCollectionAssignPower> powerList = new();
             switch (avatar)
             {
                 case HardcodedAvatarEntity.BlackCat:
@@ -138,8 +139,1035 @@ namespace MHServerEmu.GameServer.Powers
                     #endregion
 
                     break;
+
+                case HardcodedAvatarEntity.Angela:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Angela)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Angela)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Angela.AngelaFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.AntMan:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.AntMan)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.AntMan)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.AntMan.AntmanFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Beast:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Beast)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Beast)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Beast.BeastSprint ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.BlackBolt:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.BlackBolt)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.BlackBolt)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.BlackBolt.BlackBoltFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.BlackPanther:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.BlackPanther)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.BlackPanther)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.BlackPanther.BlackPantherSprint ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.BlackWidow:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.BlackWidow)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.BlackWidow)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.BlackWidow.BlackWidowRide ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Blade:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Blade)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Blade)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Blade.BladeRide ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Cable:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Cable)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Cable)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Cable.CableSprint ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.CaptainAmerica:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.CaptainAmerica)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.CaptainAmerica)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.CaptainAmerica.CaptainAmericaSprint ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Carnage:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Carnage)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Carnage)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Carnage.CarnageFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Colossus:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Colossus)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Colossus)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Colossus.ColossusSprint ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Cyclops:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Cyclops)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Cyclops)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Cyclops.CyclopsRide ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Daredevil:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Daredevil)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Daredevil)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Daredevil.DaredevilFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Deadpool:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Deadpool)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Deadpool)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Deadpool.DeadpoolRide ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.DoctorStrange:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.DoctorStrange)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.DoctorStrange)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.DoctorStrange.DoctorStrangeFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.DrDoom:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.DrDoom)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.DrDoom)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.DrDoom.DrDoomFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Elektra:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Elektra)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Elektra)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Elektra.ElektraSprint ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.EmmaFrost:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.EmmaFrost)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.EmmaFrost)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.EmmaFrost.EmmaFrostSprint ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Gambit:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Gambit)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Gambit)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Gambit.GambitSprint ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.GhostRider:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.GhostRider)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.GhostRider)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.GhostRider.GhostRiderRide ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.GreenGoblin:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.GreenGoblin)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.GreenGoblin)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.GreenGoblin.GreenGoblinFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Hawkeye:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Hawkeye)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Hawkeye)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Hawkeye.HawkeyeFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Hulk:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Hulk)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Hulk)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Hulk.HulkSprint ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.HumanTorch:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.HumanTorch)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.HumanTorch)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.HumanTorch.HumanTorchFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Iceman:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Iceman)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Iceman)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Iceman.IcemanFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.InvisibleWoman:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.InvisibleWoman)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.InvisibleWoman)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.InvisibleWoman.InvisibleWomanFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.IronFist:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.IronFist)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.IronFist)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.IronFist.IronFistSprint ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.IronMan:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.IronMan)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.IronMan)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.IronMan.IronManFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.JeanGrey:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.JeanGrey)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.JeanGrey)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.JeanGrey.JeanGreyFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Juggernaut:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Juggernaut)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Juggernaut)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Juggernaut.JuggernautSprint ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.KittyPryde:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.KittyPryde)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.KittyPryde)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.KittyPryde.KittyPrydeFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Loki:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Loki)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Loki)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Loki.LokiFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.LukeCage:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.LukeCage)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.LukeCage)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.LukeCage.LukeCageSprint ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Magik:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Magik)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Magik)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Magik.MagikFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Magneto:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Magneto)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Magneto)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Magneto.MagnetoFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.MoonKnight:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.MoonKnight)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.MoonKnight)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.MoonKnight.MoonKnightFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.MrFantastic:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.MrFantastic)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.MrFantastic)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.MrFantastic.MrFantasticSprint ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.MsMarvel:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.MsMarvel)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.MsMarvel)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.MsMarvel.CaptainMarvelFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.NickFury:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.NickFury)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.NickFury)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.NickFury.NickFuryRide ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Nightcrawler:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Nightcrawler)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Nightcrawler)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Nightcrawler.NightcrawlerSprint ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Nova:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Nova)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Nova)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Nova.NovaFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Psylocke:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Psylocke)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Psylocke)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Psylocke.PsylockeSprint ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Punisher:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Punisher)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Punisher)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Punisher.PunisherSprint ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.RocketRaccoon:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.RocketRaccoon)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.RocketRaccoon)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.RocketRaccoon.RocketRacoonFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Rogue:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Rogue)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Rogue)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Rogue.RogueFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.ScarletWitch:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.ScarletWitch)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.ScarletWitch)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.ScarletWitch.ScarletWitchFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.SheHulk:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.SheHulk)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.SheHulk)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.SheHulk.SheHulkSprint ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.SilverSurfer:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.SilverSurfer)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.SilverSurfer)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.SilverSurfer.SilverSurferFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Spiderman:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Spiderman)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Spiderman)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Spiderman.SpidermanFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.SquirrelGirl:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.SquirrelGirl)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.SquirrelGirl)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.SquirrelGirl.SquirrelGirlSprint ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Starlord:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Starlord)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Starlord)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Starlord.StarlordFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Storm:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Storm)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Storm)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Storm.StormFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Taskmaster:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Taskmaster)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Taskmaster)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Taskmaster.TaskmasterFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Thing:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Thing)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Thing)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Thing.ThingFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
                 case HardcodedAvatarEntity.Thor:
-                    List<NetMessagePowerCollectionAssignPower> powerList = new();
+                    
                     foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Thor)))
                     {
                         powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -162,7 +1190,139 @@ namespace MHServerEmu.GameServer.Powers
                         .SetPropertyId(18863546) // no idea why this loads Thors power panel
                         .SetValueBits(2)
                         .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Ultron:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Ultron)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Ultron)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Ultron.UltronFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
 
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Venom:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Venom)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Venom)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Venom.VenomFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Vision:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Vision)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Vision)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Vision.VisionFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.WarMachine:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.WarMachine)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.WarMachine)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.WarMachine.WarMarchineFlight ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.WinterSoldier:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.WinterSoldier)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.WinterSoldier)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.WinterSoldier.WinterSoldierSprint ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.Wolverine:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.Wolverine)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.Wolverine)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Wolverine.WolverineRide ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
+                    break;
+                case HardcodedAvatarEntity.X23:
+                    
+                    foreach (ulong powerProtoId in Enum.GetValues(typeof(PowerPrototypes.X23)))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)HardcodedAvatarEntity.X23)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(powerProtoId == (ulong)PowerPrototypes.X23.X23Sprint ? 1 : 0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
+                        .AddRangePower(powerList)
+                        .Build().ToByteArray()));
                     break;
 
             }

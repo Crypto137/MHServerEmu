@@ -1,6 +1,8 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common;
+using MHServerEmu.GameServer.Entities;
+using MHServerEmu.GameServer.Entities.Archives;
 using MHServerEmu.GameServer.Powers;
 using MHServerEmu.GameServer.Regions;
 using MHServerEmu.Networking;
@@ -142,11 +144,10 @@ namespace MHServerEmu.GameServer.GameInstances
                         var switchAvatarMessage = NetMessageSwitchAvatar.ParseFrom(message.Content);
                         Logger.Trace(switchAvatarMessage.ToString());
 
-                        /* WIP - Hardcoded Black Cat -> Thor -> requires triggering an avatar swap back to Black Cat to move Thor again
+                        /* WIP - Hardcoded Black Cat -> Thor -> requires triggering an avatar swap back to Black Cat to move Thor again  
                         List<GameMessage> messageList = new();
                         messageList.Add(new(GameServerToClientMessage.NetMessageInventoryMove, NetMessageInventoryMove.CreateBuilder()
                             .SetEntityId((ulong)HardcodedAvatarEntity.Thor)
-                            .SetEntityDataId((ulong)HardcodedAvatarEntity.BlackCat)      
                             .SetDestOwnerDataId((ulong)HardcodedAvatarEntity.Thor)
                             .SetInvLocContainerEntityId(14646212)
                             .SetInvLocInventoryPrototypeId(9555311166682372646)
@@ -162,21 +163,12 @@ namespace MHServerEmu.GameServer.GameInstances
                         EntityEnterGameWorldArchiveData avatarEnterArchiveData = new(avatarEntityEnterGameWorldArchiveData);
                         avatarEnterArchiveData.EntityId = (ulong)HardcodedAvatarEntity.Thor;
 
-                        messageList.Add(new(GameServerToClientMessage.NetMessageEntityDestroy,
-                           NetMessageEntityDestroy.CreateBuilder()
-                           .SetIdEntity((ulong)HardcodedAvatarEntity.BlackCat)
-                           .SetCellId(1)
-                           .SetAreaId(1)
-                           .SetOwnerEntityId(14646212)
-                           .Build().ToByteArray()));
-
                         messageList.Add(new(GameServerToClientMessage.NetMessageEntityEnterGameWorld,
                             NetMessageEntityEnterGameWorld.CreateBuilder()
                             .SetArchiveData(ByteString.CopyFrom(avatarEnterArchiveData.Encode()))
                             .Build().ToByteArray()));
                         
-                        client.SendMultipleMessages(1, messageList.ToArray());
-                        */
+                        client.SendMultipleMessages(1, messageList.ToArray());*/
 
                         break;
 
