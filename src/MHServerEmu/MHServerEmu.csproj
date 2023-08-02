@@ -48,13 +48,16 @@
     <None Update="Assets\Packets\NetMessageLiveTuningUpdate.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Assets\PropertyIdPowerRefTable.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Assets\PrototypeDataTable.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\GlobalEnumReferenceTable.bin">
+    <None Update="Assets\GlobalEnumRefTable.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\ResourceEnumReferenceTable.bin">
+    <None Update="Assets\ResourceEnumRefTable.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Config.ini">

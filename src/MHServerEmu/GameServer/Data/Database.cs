@@ -9,20 +9,24 @@ namespace MHServerEmu.GameServer.Data
 
         public static bool IsInitialized { get; private set; }
         public static Dictionary<ulong, Prototype> PrototypeDataDict { get; private set; }
-        public static ulong[] GlobalEnumReferenceTable { get; private set; }
-        public static ulong[] ResourceEnumReferenceTable { get; private set; }
+
+        public static ulong[] GlobalEnumRefTable { get; private set; }
+        public static ulong[] ResourceEnumRefTable { get; private set; }
+        public static ulong[] PropertyIdPowerRefTable { get; private set; }
 
         static Database()
         {
             Logger.Info("Loading prototypes...");
             PrototypeDataDict = LoadPrototypeData($"{Directory.GetCurrentDirectory()}\\Assets\\PrototypeDataTable.bin");
-            GlobalEnumReferenceTable = LoadPrototypeEnumReferenceTable($"{Directory.GetCurrentDirectory()}\\Assets\\GlobalEnumReferenceTable.bin");
-            ResourceEnumReferenceTable = LoadPrototypeEnumReferenceTable($"{Directory.GetCurrentDirectory()}\\Assets\\ResourceEnumReferenceTable.bin");
 
-            if (PrototypeDataDict.Count > 0 && GlobalEnumReferenceTable.Length > 0 && ResourceEnumReferenceTable.Length > 0)
+            GlobalEnumRefTable = LoadPrototypeEnumRefTable($"{Directory.GetCurrentDirectory()}\\Assets\\GlobalEnumRefTable.bin");
+            ResourceEnumRefTable = LoadPrototypeEnumRefTable($"{Directory.GetCurrentDirectory()}\\Assets\\ResourceEnumRefTable.bin");
+            PropertyIdPowerRefTable = LoadPrototypeEnumRefTable($"{Directory.GetCurrentDirectory()}\\Assets\\PropertyIdPowerRefTable.bin");
+
+            if (PrototypeDataDict.Count > 0 && GlobalEnumRefTable.Length > 0 && ResourceEnumRefTable.Length > 0 && PropertyIdPowerRefTable.Length > 0)
             {
                 // -1 is here because the first entry is 0 to offset values and align with the data we get from the game
-                Logger.Info($"Loaded {PrototypeDataDict.Count} prototypes, {GlobalEnumReferenceTable.Length - 1} global enum references, and {ResourceEnumReferenceTable.Length - 1} resource enum references");
+                Logger.Info($"Loaded {PrototypeDataDict.Count} prototypes");
                 IsInitialized = true;
             }
             else
@@ -75,7 +79,7 @@ namespace MHServerEmu.GameServer.Data
             return prototypeDict;
         }
 
-        private static ulong[] LoadPrototypeEnumReferenceTable(string path)
+        private static ulong[] LoadPrototypeEnumRefTable(string path)
         {
             if (File.Exists(path))
             {

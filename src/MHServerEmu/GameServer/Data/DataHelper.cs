@@ -1,4 +1,5 @@
-﻿using Gazillion;
+﻿using System.Collections;
+using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common;
 using MHServerEmu.GameServer.Entities.Archives;
@@ -58,6 +59,27 @@ namespace MHServerEmu.GameServer.Data
                     }
                 }
             }
+        }
+
+        public static ulong GetPropertyIdHash(ulong propertyId)
+        {
+            BitArray bitArray = new(BitConverter.GetBytes(propertyId >> 12));
+
+            bool[] buffer = new bool[14];
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                buffer[i] = bitArray[i];
+            }
+
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                bitArray[i] = buffer[buffer.Length - 1 - i];
+            }
+
+            byte[] hashBytes = new byte[8];
+            bitArray.CopyTo(hashBytes, 0);
+
+            return BitConverter.ToUInt64(hashBytes);
         }
     }
 }
