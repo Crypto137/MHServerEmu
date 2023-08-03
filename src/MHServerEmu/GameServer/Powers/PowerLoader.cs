@@ -14,6 +14,8 @@ namespace MHServerEmu.GameServer.Powers
             List<GameMessage> messageList = new();
             GameMessage[] loadedMessages = PacketHelper.LoadMessagesFromPacketFile("AvengersTowerFinishLoading.bin");
             List<NetMessagePowerCollectionAssignPower> powerList = new();
+
+            // TODO: replace switch with reflection
             switch (avatar)
             {
                 case HardcodedAvatarEntity.BlackCat:
@@ -35,7 +37,16 @@ namespace MHServerEmu.GameServer.Powers
                         }
                     }
 
-                    #region NetMessageSetProperty
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.BlackCat)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.BlackCat))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
+
+                    /* NetMessageSetProperty
                     messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
                         .SetReplicationId(9078507)
                         .SetPropertyId(41083834) // This Id unlocks Unleashed
@@ -136,7 +147,7 @@ namespace MHServerEmu.GameServer.Powers
                         .SetPropertyId(52364730) // This Id unlocks Grapple Swing Line on the UI Panel
                         .SetValueBits(2)
                         .Build().ToByteArray()));
-                    #endregion
+                    */
 
                     break;
 
@@ -158,6 +169,16 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Angela)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Angela))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
+
                     break;
                 case HardcodedAvatarEntity.AntMan:
                     
@@ -177,6 +198,16 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.AntMan)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.AntMan))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
+
                     break;
                 case HardcodedAvatarEntity.Beast:
                     
@@ -196,6 +227,16 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Beast)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Beast))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
+
                     break;
                 case HardcodedAvatarEntity.BlackBolt:
                     
@@ -215,6 +256,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.BlackBolt)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.BlackBolt))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.BlackPanther:
                     
@@ -234,6 +284,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.BlackPanther)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.BlackPanther))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.BlackWidow:
                     
@@ -253,6 +312,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.BlackWidow)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.BlackWidow))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Blade:
                     
@@ -272,6 +340,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Blade)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Blade))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Cable:
                     
@@ -291,6 +368,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Cable)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Cable))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.CaptainAmerica:
                     
@@ -310,6 +396,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.CaptainAmerica)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.CaptainAmerica))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Carnage:
                     
@@ -329,6 +424,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Carnage)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Carnage))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Colossus:
                     
@@ -348,6 +452,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Colossus)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Colossus))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Cyclops:
                     
@@ -367,6 +480,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Cyclops)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Cyclops))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Daredevil:
                     
@@ -386,6 +508,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Daredevil)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Daredevil))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Deadpool:
                     
@@ -405,6 +536,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Deadpool)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Deadpool))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.DoctorStrange:
                     
@@ -424,6 +564,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.DoctorStrange)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.DoctorStrange))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.DrDoom:
                     
@@ -443,6 +592,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.DrDoom)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.DrDoom))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Elektra:
                     
@@ -462,6 +620,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Elektra)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Elektra))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.EmmaFrost:
                     
@@ -481,6 +648,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.EmmaFrost)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.EmmaFrost))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Gambit:
                     
@@ -500,6 +676,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Gambit)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Gambit))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.GhostRider:
                     
@@ -519,6 +704,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.GhostRider)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.GhostRider))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.GreenGoblin:
                     
@@ -538,6 +732,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.GreenGoblin)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.GreenGoblin))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Hawkeye:
                     
@@ -557,6 +760,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Hawkeye)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Hawkeye))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Hulk:
                     
@@ -576,6 +788,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Hulk)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Hulk))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.HumanTorch:
                     
@@ -595,6 +816,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.HumanTorch)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.HumanTorch))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Iceman:
                     
@@ -614,6 +844,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Iceman)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Iceman))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.InvisibleWoman:
                     
@@ -633,6 +872,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.InvisibleWoman)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.InvisibleWoman))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.IronFist:
                     
@@ -652,6 +900,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.IronFist)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.IronFist))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.IronMan:
                     
@@ -671,6 +928,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.IronMan)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.IronMan))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.JeanGrey:
                     
@@ -690,6 +956,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.JeanGrey)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.JeanGrey))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Juggernaut:
                     
@@ -709,6 +984,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Juggernaut)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Juggernaut))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.KittyPryde:
                     
@@ -728,6 +1012,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.KittyPryde)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.KittyPryde))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Loki:
                     
@@ -747,6 +1040,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Loki)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Loki))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.LukeCage:
                     
@@ -766,6 +1068,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.LukeCage)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.LukeCage))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Magik:
                     
@@ -785,6 +1096,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Magik)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Magik))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Magneto:
                     
@@ -804,6 +1124,16 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Magneto)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Magneto))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.MoonKnight:
                     
@@ -823,6 +1153,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.MoonKnight)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.MoonKnight))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.MrFantastic:
                     
@@ -842,6 +1181,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.MrFantastic)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.MrFantastic))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.MsMarvel:
                     
@@ -861,6 +1209,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.MsMarvel)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.MsMarvel))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.NickFury:
                     
@@ -880,6 +1237,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.NickFury)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.NickFury))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Nightcrawler:
                     
@@ -899,6 +1265,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Nightcrawler)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Nightcrawler))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Nova:
                     
@@ -918,6 +1293,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Nova)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Nova))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Psylocke:
                     
@@ -937,6 +1321,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Psylocke)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Psylocke))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Punisher:
                     
@@ -956,6 +1349,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Punisher)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Punisher))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.RocketRaccoon:
                     
@@ -975,6 +1377,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.RocketRaccoon)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.RocketRaccoon))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Rogue:
                     
@@ -994,6 +1405,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Rogue)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Rogue))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.ScarletWitch:
                     
@@ -1013,6 +1433,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.ScarletWitch)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.ScarletWitch))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.SheHulk:
                     
@@ -1032,6 +1461,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.SheHulk)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.SheHulk))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.SilverSurfer:
                     
@@ -1051,6 +1489,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.SilverSurfer)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.SilverSurfer))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Spiderman:
                     
@@ -1070,6 +1517,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Spiderman)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Spiderman))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.SquirrelGirl:
                     
@@ -1089,6 +1545,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.SquirrelGirl)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.SquirrelGirl))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Starlord:
                     
@@ -1108,6 +1573,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Starlord)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Starlord))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Storm:
                     
@@ -1127,6 +1601,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Storm)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Storm))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Taskmaster:
                     
@@ -1146,6 +1629,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Taskmaster)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Taskmaster))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Thing:
                     
@@ -1165,6 +1657,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Thing)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Thing))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Thor:
                     
@@ -1184,6 +1685,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Thor)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Thor))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
 
                     messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
                         .SetReplicationId(9078450)
@@ -1209,6 +1719,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Ultron)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Ultron))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Venom:
                     
@@ -1228,6 +1747,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Venom)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Venom))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Vision:
                     
@@ -1247,6 +1775,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Vision)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Vision))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.WarMachine:
                     
@@ -1266,6 +1803,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.WarMachine)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.WarMachine))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.WinterSoldier:
                     
@@ -1285,6 +1831,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.WinterSoldier)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.WinterSoldier))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.Wolverine:
                     
@@ -1304,6 +1859,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.Wolverine)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.Wolverine))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
                 case HardcodedAvatarEntity.X23:
                     
@@ -1323,6 +1887,15 @@ namespace MHServerEmu.GameServer.Powers
                     messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
                         .AddRangePower(powerList)
                         .Build().ToByteArray()));
+
+                    foreach (ulong propertyId in Enum.GetValues(typeof(PowerProperties.X23)))
+                    {
+                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                            .SetReplicationId(((long)HardcodedAvatarReplicationId.X23))
+                            .SetPropertyId(propertyId)
+                            .SetValueBits(2)
+                            .Build().ToByteArray()));
+                    }
                     break;
 
             }
