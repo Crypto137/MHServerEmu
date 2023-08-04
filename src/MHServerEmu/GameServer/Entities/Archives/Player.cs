@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common;
+using MHServerEmu.GameServer.Common;
 
 namespace MHServerEmu.GameServer.Entities.Archives
 {

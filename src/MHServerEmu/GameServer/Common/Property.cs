@@ -1,7 +1,8 @@
 ﻿using System.Text;
+using Gazillion;
 using Google.ProtocolBuffers;
 
-namespace MHServerEmu.GameServer.Entities.Archives
+namespace MHServerEmu.GameServer.Common
 {
     public class Property
     {
@@ -27,6 +28,8 @@ namespace MHServerEmu.GameServer.Entities.Archives
                 return memoryStream.ToArray();
             }
         }
+
+        public NetStructProperty ToNetStruct() => NetStructProperty.CreateBuilder().SetId(Id).SetValue(Value).Build();
 
         public override string ToString()
         {
