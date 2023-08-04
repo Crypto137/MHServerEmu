@@ -12,6 +12,7 @@ namespace MHServerEmu.GameServer.Regions
         static RegionManager()
         {
             RegionDict.Add(RegionPrototype.NPEAvengersTowerHUBRegion, LoadRegionData(RegionPrototype.NPEAvengersTowerHUBRegion));
+            RegionDict.Add(RegionPrototype.TrainingRoomSHIELDRegion, LoadRegionData(RegionPrototype.TrainingRoomSHIELDRegion));
             RegionDict.Add(RegionPrototype.XaviersMansionRegion, LoadRegionData(RegionPrototype.XaviersMansionRegion));
             RegionDict.Add(RegionPrototype.DangerRoomHubRegion, LoadRegionData(RegionPrototype.DangerRoomHubRegion));
             RegionDict.Add(RegionPrototype.XManhattanRegion60Cosmic, LoadRegionData(RegionPrototype.XManhattanRegion60Cosmic));
@@ -85,6 +86,40 @@ namespace MHServerEmu.GameServer.Regions
                         0x1710,
                         0x191,
                         0x2BC,
+                        0x0,
+                        0x0,
+                        0x1
+                    };
+
+                    break;
+
+                case RegionPrototype.TrainingRoomSHIELDRegion:
+
+                    archiveData = new byte[] {
+                    };
+
+                    region = new(RegionPrototype.TrainingRoomSHIELDRegion,
+                        1153032328761311238,
+                        740100172,
+                        archiveData,
+                        new(-3250f, -3250f, -3250f),
+                        new(3250f, 3250f, 3250f),
+                        new(10, DifficultyTier.Normal));
+
+                    area = new(1, AreaPrototype.TrainingRoomSHIELDArea, new(), true);
+                    area.AddCell(new(1, 4566519072692968513, new()));
+
+                    region.AddArea(area);
+
+                    region.EnterGameWorldFields = new ulong[]
+                    {
+                        0x18A0,
+                        0x2DA9,
+                        0xB7FD,
+                        0x1000,
+                        0x1340,
+                        0xC7,
+                        0x26C,
                         0x0,
                         0x0,
                         0x1
