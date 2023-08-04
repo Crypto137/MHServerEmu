@@ -21,9 +21,11 @@ namespace MHServerEmu.Networking
         public bool FinishedGroupingManagerFrontendHandshake { get; set; } = false;
         public bool ReloadEntities { get; set; } = false;
 
-        public RegionPrototype? StartingRegion = ConfigManager.PlayerData.StartingRegion; 
+        public bool IsLoading { get; set; } = false;
+        public RegionPrototype CurrentRegion { get; set; } = ConfigManager.PlayerData.StartingRegion;
+        public HardcodedAvatarEntity StartingAvatar { get; set; } = ConfigManager.PlayerData.StartingAvatar;
+
         public RegionPrototype? WaypointRegion;
-        public HardcodedAvatarEntity StartingAvatar = ConfigManager.PlayerData.StartingAvatar;
 
         public FrontendClient(Socket socket, GameServerManager gameServerManager)
         {

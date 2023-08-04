@@ -25,9 +25,9 @@ namespace MHServerEmu.GameServer.Entities.Archives
             Fields = fieldList.ToArray();
         }
 
-        public EntityEnterGameWorldArchiveData(ulong header, ulong entityId, ulong[] fields)
+        public EntityEnterGameWorldArchiveData(ulong entityId, ulong[] fields)
         {
-            Header = header;
+            Header = 0x01;
             EntityId = entityId;
             Fields = fields;
         }

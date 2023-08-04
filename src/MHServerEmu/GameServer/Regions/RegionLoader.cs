@@ -13,128 +13,69 @@ namespace MHServerEmu.GameServer.Regions
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public static GameMessage[] GetBeginLoadingMessages(RegionPrototype? region, HardcodedAvatarEntity avatar)
+        public static GameMessage[] GetBeginLoadingMessages(RegionPrototype regionPrototype, HardcodedAvatarEntity avatar)
         {
-            GameMessage[] messages = Array.Empty<GameMessage>(); ;
+            List<GameMessage> messageList = new();
 
-            switch (region)
-            {
-                case RegionPrototype.NPEAvengersTowerHUBRegion:
+            // Add server info messages
+            messageList.Add(new(GameServerToClientMessage.NetMessageMarkFirstGameFrame, NetMessageMarkFirstGameFrame.CreateBuilder()
+                .SetCurrentservergametime(161351682950)
+                .SetCurrentservergameid(1150669705055451881)
+                .SetGamestarttime(1)
+                .Build().ToByteArray()));
 
-                    List<GameMessage> messageList = new();
+            messageList.Add(new(GameServerToClientMessage.NetMessageServerVersion, NetMessageServerVersion.CreateBuilder()
+                .SetVersion("1.52.0.1700")
+                .Build().ToByteArray()));
 
-                    // Add server info messages
-                    messageList.Add(new(GameServerToClientMessage.NetMessageMarkFirstGameFrame, NetMessageMarkFirstGameFrame.CreateBuilder()
-                        .SetCurrentservergametime(161351682950)
-                        .SetCurrentservergameid(1150669705055451881)
-                        .SetGamestarttime(1)
-                        .Build().ToByteArray()));
+            messageList.Add(PacketHelper.LoadMessagesFromPacketFile("NetMessageLiveTuningUpdate.bin")[0]);
+            messageList.Add(new(GameServerToClientMessage.NetMessageReadyForTimeSync, NetMessageReadyForTimeSync.DefaultInstance.ToByteArray()));
 
-                    messageList.Add(new(GameServerToClientMessage.NetMessageServerVersion, NetMessageServerVersion.CreateBuilder()
-                        .SetVersion("1.52.0.1700")
-                        .Build().ToByteArray()));
+            // Load local player data
+            messageList.AddRange(LoadLocalPlayerDataMessages(avatar));
+            messageList.Add(new(GameServerToClientMessage.NetMessageReadyAndLoadedOnGameServer, NetMessageReadyAndLoadedOnGameServer.DefaultInstance.ToByteArray()));
 
-                    messageList.Add(PacketHelper.LoadMessagesFromPacketFile("NetMessageLiveTuningUpdate.bin")[0]);
-                    messageList.Add(new(GameServerToClientMessage.NetMessageReadyForTimeSync, NetMessageReadyForTimeSync.DefaultInstance.ToByteArray()));
+            // Load region data
+            messageList.AddRange(RegionManager.GetRegion(regionPrototype).GetLoadingMessages(1150669705055451881));
 
-                    // Load local player data
-                    foreach (GameMessage message in LoadLocalPlayerDataMessages(avatar)) messageList.Add(message);
-                    messageList.Add(new(GameServerToClientMessage.NetMessageReadyAndLoadedOnGameServer, NetMessageReadyAndLoadedOnGameServer.DefaultInstance.ToByteArray()));
+            // Create waypoint entity
+            messageList.Add(new(GameServerToClientMessage.NetMessageEntityCreate, NetMessageEntityCreate.CreateBuilder()
+                .SetBaseData(ByteString.CopyFrom(Convert.FromHexString("200C839F01200020")))
+                .SetArchiveData(ByteString.CopyFrom(Convert.FromHexString("20F4C10206000000CD80018880FCFF99BF968110CCC00202CC800302CD40D58280DE868098044DA1A1A4FE0399C00183B8030000000000")))
+                .Build().ToByteArray()));
 
-                    // Load region data
-                    messageList.AddRange(RegionManager.GetRegion(RegionPrototype.NPEAvengersTowerHUBRegion).GetLoadingMessages(1150669705055451881));
-
-                    // Create waypoint entity
-                    byte[] waypointEntityCreateBaseData = {
-                        0x20, 0x0C, 0x83, 0x9F, 0x01, 0x20, 0x00, 0x20
-                    };
-
-                    byte[] waypointEntityCreateArchiveData = {
-                        0x20, 0xF4, 0xC1, 0x02, 0x06, 0x00, 0x00, 0x00, 0xCD, 0x80, 0x01, 0x88,
-                        0x80, 0xFC, 0xFF, 0x99, 0xBF, 0x96, 0x81, 0x10, 0xCC, 0xC0, 0x02, 0x02,
-                        0xCC, 0x80, 0x03, 0x02, 0xCD, 0x40, 0xD5, 0x82, 0x80, 0xDE, 0x86, 0x80,
-                        0x98, 0x04, 0x4D, 0xA1, 0xA1, 0xA4, 0xFE, 0x03, 0x99, 0xC0, 0x01, 0x83,
-                        0xB8, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00
-                    };
-
-                    messageList.Add(new(GameServerToClientMessage.NetMessageEntityCreate, NetMessageEntityCreate.CreateBuilder()
-                        .SetBaseData(ByteString.CopyFrom(waypointEntityCreateBaseData))
-                        .SetArchiveData(ByteString.CopyFrom(waypointEntityCreateArchiveData))
-                        .Build().ToByteArray()));
-
-                    messages = messageList.ToArray();
-
-                    break;
-
-                case RegionPrototype.DangerRoomHubRegion:
-                    messages = PacketHelper.LoadMessagesFromPacketFile("DangerRoomBeginLoading.bin");
-                    break;
-
-                case RegionPrototype.XManhattanRegion60Cosmic:
-                    messages = PacketHelper.LoadMessagesFromPacketFile("MidtownBeginLoading.bin");
-                    break;
-            }
-
-            return messages;
+            return messageList.ToArray();
         }
 
-        public static GameMessage[] GetFinishLoadingMessages(RegionPrototype? region, HardcodedAvatarEntity avatar)
+        public static GameMessage[] GetFinishLoadingMessages(RegionPrototype regionPrototype, HardcodedAvatarEntity avatar)
         {
-            GameMessage[] messages = Array.Empty<GameMessage>();
-            switch (region)
-            {
-                case RegionPrototype.NPEAvengersTowerHUBRegion:
+            List<GameMessage> messageList = new();
 
-                    //if (avatar == HardcodedAvatarEntity.BlackCat)
-                    //{
-                    //    messages = PacketHelper.LoadMessagesFromPacketFile("AvengersTowerFinishLoading.bin");
-                    //}
-                    //else
-                    //{
-                    List<GameMessage> messageList = new();
+            Region region = RegionManager.GetRegion(regionPrototype);
 
-                    // Put player avatar entity in the game world
-                    byte[] avatarEntityEnterGameWorldArchiveData = {
-                            0x01, 0xB2, 0xF8, 0xFD, 0x06, 0xA0, 0x21, 0xF0, 0xA3, 0x01, 0xBC, 0x40,
-                            0x90, 0x2E, 0x91, 0x03, 0xBC, 0x05, 0x00, 0x00, 0x01
-                        };
+            EntityEnterGameWorldArchiveData avatarEnterGameWorldArchiveData = new((ulong)avatar, region.EnterGameWorldFields);
 
-                    EntityEnterGameWorldArchiveData avatarEnterArchiveData = new(avatarEntityEnterGameWorldArchiveData);
-                    avatarEnterArchiveData.EntityId = (ulong)avatar;
+            messageList.Add(new(GameServerToClientMessage.NetMessageEntityEnterGameWorld,
+                NetMessageEntityEnterGameWorld.CreateBuilder()
+                .SetArchiveData(ByteString.CopyFrom(avatarEnterGameWorldArchiveData.Encode()))
+                .Build().ToByteArray()));
 
-                    messageList.Add(new(GameServerToClientMessage.NetMessageEntityEnterGameWorld,
-                        NetMessageEntityEnterGameWorld.CreateBuilder()
-                        .SetArchiveData(ByteString.CopyFrom(avatarEnterArchiveData.Encode()))
-                        .Build().ToByteArray()));
+            // Put waypoint entity in the game world
+            // TODO: proper waypoint positions for each region
+            EntityEnterGameWorldArchiveData waypointEnterGameWorldArchiveData = (regionPrototype == RegionPrototype.NPEAvengersTowerHUBRegion
+                ? new(Convert.FromHexString("010C028043E06BD82AC801"))
+                : new(12, region.EnterGameWorldFields));
 
-                    // Put waypoint entity in the game world
-                    byte[] waypointEntityEnterGameWorld = {
-                            0x01, 0x0C, 0x02, 0x80, 0x43, 0xE0, 0x6B, 0xD8, 0x2A, 0xC8, 0x01
-                        };
+            messageList.Add(new(GameServerToClientMessage.NetMessageEntityEnterGameWorld,
+                NetMessageEntityEnterGameWorld.CreateBuilder().SetArchiveData(ByteString.CopyFrom(waypointEnterGameWorldArchiveData.Encode())).Build().ToByteArray()));
 
-                    messageList.Add(new(GameServerToClientMessage.NetMessageEntityEnterGameWorld,
-                        NetMessageEntityEnterGameWorld.CreateBuilder().SetArchiveData(ByteString.CopyFrom(waypointEntityEnterGameWorld)).Build().ToByteArray()));
+            // Load power collection
+            messageList.AddRange(PowerLoader.LoadAvatarPowerCollection(avatar).ToList());
 
-                    messageList.AddRange(PowerLoader.LoadAvatarPowerCollection(avatar).ToList());
+            // Dequeue loading screen
+            messageList.Add(new(GameServerToClientMessage.NetMessageDequeueLoadingScreen, NetMessageDequeueLoadingScreen.DefaultInstance.ToByteArray()));
 
-                    // Dequeue loading screen
-                    messageList.Add(new(GameServerToClientMessage.NetMessageDequeueLoadingScreen, NetMessageDequeueLoadingScreen.DefaultInstance.ToByteArray()));
-
-                    messages = messageList.ToArray();
-                    //}
-
-                    break;
-
-                case RegionPrototype.DangerRoomHubRegion:
-                    messages = PacketHelper.LoadMessagesFromPacketFile("DangerRoomFinishLoading.bin");
-                    break;
-
-                case RegionPrototype.XManhattanRegion60Cosmic:
-                    messages = PacketHelper.LoadMessagesFromPacketFile("MidtownFinishLoading.bin");
-                    break;
-            }
-
-            return messages;
+            return messageList.ToArray();
         }
 
         private static GameMessage[] LoadLocalPlayerDataMessages(HardcodedAvatarEntity avatar)

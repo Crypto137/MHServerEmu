@@ -94,7 +94,7 @@ namespace MHServerEmu.GameServer.GameInstances
                         }
                         else if (client.WaypointRegion is null)
                         {
-                            client.SendMultipleMessages(1, RegionLoader.GetFinishLoadingMessages(client.StartingRegion, client.StartingAvatar));
+                            client.SendMultipleMessages(1, RegionLoader.GetFinishLoadingMessages(client.CurrentRegion, client.StartingAvatar));
                         }
                         break;
 

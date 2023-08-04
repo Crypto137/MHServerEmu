@@ -74,6 +74,19 @@ namespace MHServerEmu.GameServer.Regions
 
                     region.AddArea(area);
 
+                    region.EnterGameWorldFields = new ulong[]
+                    {
+                        0x10A0,
+                        0x51F0,
+                        0x203C,
+                        0x1710,
+                        0x191,
+                        0x2BC,
+                        0x0,
+                        0x0,
+                        0x1
+                    };
+
                     break;
 
                 case RegionPrototype.DangerRoomHubRegion:
@@ -99,6 +112,19 @@ namespace MHServerEmu.GameServer.Regions
                     area.AddCell(new(1, 5938132704447044414, new()));
 
                     region.AddArea(area);
+
+                    region.EnterGameWorldFields = new ulong[]
+                    {
+                        0x10A0,
+                        0x11BF,
+                        0x194F,
+                        0x1340,
+                        0x152,
+                        0x2BC,
+                        0x0,
+                        0x0,
+                        0x1
+                    };
 
                     break;
 
@@ -271,6 +297,19 @@ namespace MHServerEmu.GameServer.Regions
                     area.AddCell(new(13, 16358808346792043741, new()));
 
                     region.AddArea(area);
+
+                    region.EnterGameWorldFields = new ulong[]
+                    {
+                        0x10A0,
+                        0x2EB00,
+                        0x1B800,
+                        0x300,
+                        0xC8,
+                        0x2BC,
+                        0x0,
+                        0x0,
+                        0x1
+                    };
 
                     break;
 

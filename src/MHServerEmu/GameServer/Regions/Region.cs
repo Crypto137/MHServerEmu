@@ -17,6 +17,8 @@ namespace MHServerEmu.GameServer.Regions
 
         public List<Area> AreaList { get; } = new();
 
+        public ulong[] EnterGameWorldFields { get; set; }       // temporary solution until we figure out EnterGameWorld archiveData
+
         public Region(RegionPrototype prototype, ulong id, int randomSeed, byte[] archiveData, Point3 min, Point3 max, CreateRegionParams createParams)
         {
             Prototype = prototype;
