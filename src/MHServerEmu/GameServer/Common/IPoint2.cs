@@ -25,6 +25,8 @@ namespace MHServerEmu.GameServer.Common
             Y = y;
         }
 
+        public NetStructIPoint2 ToNetStruct() => NetStructIPoint2.CreateBuilder().SetX(X).SetY(Y).Build();
+
         public static IPoint2 operator +(IPoint2 a, IPoint2 b) => new(a.X + b.X, a.Y + b.Y);
         public static IPoint2 operator -(IPoint2 a, IPoint2 b)
         {
@@ -48,8 +50,6 @@ namespace MHServerEmu.GameServer.Common
         }
 
         public override int GetHashCode() => X.GetHashCode() ^ Y.GetHashCode();
-
         public override string ToString() => $"x:{X} y:{Y}";
-        public NetStructIPoint2 ToNetStruct() => NetStructIPoint2.CreateBuilder().SetX(X).SetY(Y).Build();
     }
 }

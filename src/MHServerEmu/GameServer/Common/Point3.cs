@@ -29,6 +29,8 @@ namespace MHServerEmu.GameServer.Common
             Z = z;
         }
 
+        public NetStructPoint3 ToNetStruct() => NetStructPoint3.CreateBuilder().SetX(X).SetY(Y).SetZ(Z).Build();
+
         public static Point3 operator +(Point3 a, Point3 b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
         public static Point3 operator -(Point3 a, Point3 b) => new(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
         public static bool operator ==(Point3 a, Point3 b) => ReferenceEquals(null, a) ? ReferenceEquals(null, b) : a.Equals(b);
@@ -47,8 +49,6 @@ namespace MHServerEmu.GameServer.Common
         }
 
         public override int GetHashCode() => X.GetHashCode() ^ Y.GetHashCode() ^ Z.GetHashCode();
-
         public override string ToString() => $"x:{X} y:{Y} z:{Z}";
-        public NetStructPoint3 ToNetStruct() => NetStructPoint3.CreateBuilder().SetX(X).SetY(Y).SetZ(Z).Build();
     }
 }
