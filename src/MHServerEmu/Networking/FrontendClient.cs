@@ -21,6 +21,7 @@ namespace MHServerEmu.Networking
         public bool FinishedGroupingManagerFrontendHandshake { get; set; } = false;
         public bool IsLoading { get; set; } = false;
 
+        // TODO: move player data to its own class separate from networking
         public RegionPrototype CurrentRegion { get; set; } = ConfigManager.PlayerData.StartingRegion;
         public HardcodedAvatarEntity CurrentAvatar { get; set; } = ConfigManager.PlayerData.StartingAvatar;
 
@@ -29,6 +30,12 @@ namespace MHServerEmu.Networking
             this.socket = socket;
             stream = new NetworkStream(socket);
             _gameServerManager = gameServerManager;
+
+            if (RegionManager.IsRegionAvailable(CurrentRegion) == false)
+            {
+                Logger.Warn($"No data is available for {CurrentRegion}, falling back to NPEAvengersTowerHUBRegion");
+                CurrentRegion = RegionPrototype.NPEAvengersTowerHUBRegion;
+            }
         }
 
         public void Run()

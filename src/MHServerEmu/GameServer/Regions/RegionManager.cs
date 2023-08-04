@@ -12,6 +12,7 @@ namespace MHServerEmu.GameServer.Regions
         static RegionManager()
         {
             RegionDict.Add(RegionPrototype.NPEAvengersTowerHUBRegion, LoadRegionData(RegionPrototype.NPEAvengersTowerHUBRegion));
+            RegionDict.Add(RegionPrototype.XaviersMansionRegion, LoadRegionData(RegionPrototype.XaviersMansionRegion));
             RegionDict.Add(RegionPrototype.DangerRoomHubRegion, LoadRegionData(RegionPrototype.DangerRoomHubRegion));
             RegionDict.Add(RegionPrototype.XManhattanRegion60Cosmic, LoadRegionData(RegionPrototype.XManhattanRegion60Cosmic));
 
@@ -87,6 +88,68 @@ namespace MHServerEmu.GameServer.Regions
                         0x0,
                         0x0,
                         0x1
+                    };
+
+                    break;
+
+                case RegionPrototype.XaviersMansionRegion:
+
+                    archiveData = new byte[] {    
+                    };
+
+                    region = new(RegionPrototype.XaviersMansionRegion,
+                        1153032328761311239,
+                        1640169729,
+                        archiveData,
+                        new(-6144f, -5120f, -1043f),
+                        new(4096f, 9216f, 1024f),
+                        new(28, DifficultyTier.Normal));
+
+                    area = new(1, AreaPrototype.XaviersMansionArea, new(), true);
+                    area.AddCell(new(12, 9109153860316370436, new()));
+
+                    area.AddCell(new(27, 13177785476563801619, new()));
+                    area.AddCell(new(13, 17941854392027125253, new()));
+                    area.AddCell(new(18, 12120264330993014282, new()));
+                    area.AddCell(new(19, 6535677982759130635, new()));
+                    area.AddCell(new(20, 10515825803755329036, new()));
+                    area.AddCell(new(25, 10154077166729893393, new()));
+                    area.AddCell(new(26, 5167410838022985234, new()));
+                    area.AddCell(new(28, 9060175612352206356, new()));
+                    area.AddCell(new(21, 1692163188906202637, new()));
+                    area.AddCell(new(14, 3720701338298160646, new()));
+                    area.AddCell(new(8, 696078097349416448, new()));
+                    area.AddCell(new(1, 10536652095872374268, new()));
+                    area.AddCell(new(29, 18097793277182809621, new()));
+                    area.AddCell(new(22, 15863673301231801870, new()));
+                    area.AddCell(new(15, 3361838850574587399, new()));
+                    area.AddCell(new(9, 10321271752406537729, new()));
+                    area.AddCell(new(3, 1490066882925893117, new()));
+                    area.AddCell(new(2, 16400080554702018141, new()));
+                    area.AddCell(new(23, 13916728032834033167, new()));
+                    area.AddCell(new(16, 16571968147698030088, new()));
+                    area.AddCell(new(10, 4927032947367548418, new()));
+                    area.AddCell(new(5, 16136701249791006206, new()));
+                    area.AddCell(new(4, 6117192780878648927, new()));
+                    area.AddCell(new(24, 756312045859706384, new()));
+                    area.AddCell(new(17, 7164953866296301065, new()));
+                    area.AddCell(new(11, 13057875448556623363, new()));
+                    area.AddCell(new(7, 14047893761362171391, new()));
+                    area.AddCell(new(6, 4165682859893855841, new()));
+
+                    region.AddArea(area);
+
+                    region.EnterGameWorldFields = new ulong[]
+                    {
+                        0x8A0,
+                        0x282F,
+                        0x8135,
+                        0x13B54,
+                        0x4AF,
+                        0x0,
+                        0x294,
+                        0x0,
+                        0x0
                     };
 
                     break;

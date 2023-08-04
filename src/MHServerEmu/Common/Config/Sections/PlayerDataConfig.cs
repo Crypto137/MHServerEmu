@@ -29,14 +29,6 @@ namespace MHServerEmu.Common.Config.Sections
                 StartingRegion = RegionPrototype.NPEAvengersTowerHUBRegion;
             }
 
-            if (StartingRegion != RegionPrototype.NPEAvengersTowerHUBRegion &&
-                StartingRegion != RegionPrototype.DangerRoomHubRegion &&
-                StartingRegion != RegionPrototype.XManhattanRegion60Cosmic)
-            {
-                Logger.Error($"Region {StartingRegion} has no data, falling back to NPEAvengersTowerHUBRegion");
-                StartingRegion = RegionPrototype.NPEAvengersTowerHUBRegion;
-            }
-
             // StartingHero
             try
             {
