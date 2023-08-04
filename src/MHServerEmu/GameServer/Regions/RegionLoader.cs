@@ -42,7 +42,7 @@ namespace MHServerEmu.GameServer.Regions
                     messageList.Add(new(GameServerToClientMessage.NetMessageReadyAndLoadedOnGameServer, NetMessageReadyAndLoadedOnGameServer.DefaultInstance.ToByteArray()));
 
                     // Load region data
-                    foreach (GameMessage message in LoadRegionTransitionMessages(region)) messageList.Add(message);
+                    messageList.AddRange(RegionManager.GetRegion(RegionPrototype.NPEAvengersTowerHUBRegion).GetLoadingMessages(1150669705055451881));
 
                     // Create waypoint entity
                     byte[] waypointEntityCreateBaseData = {
@@ -216,111 +216,6 @@ namespace MHServerEmu.GameServer.Regions
                     }
                 }
             }
-
-            return messageList.ToArray();
-        }
-
-        private static GameMessage[] LoadRegionTransitionMessages(RegionPrototype? region)
-        {
-            List<GameMessage> messageList = new();
-
-            messageList.Add(new(GameServerToClientMessage.NetMessageRegionChange, NetMessageRegionChange.CreateBuilder()
-                .SetRegionId(0)
-                .SetServerGameId(0)
-                .SetClearingAllInterest(false)
-                .Build().ToByteArray()));
-
-            messageList.Add(new(GameServerToClientMessage.NetMessageQueueLoadingScreen, NetMessageQueueLoadingScreen.CreateBuilder()
-                .SetRegionPrototypeId((ulong)RegionPrototype.NPEAvengersTowerHUBRegion)
-                .Build().ToByteArray()));
-
-            byte[] avengersTowerRawRegionArchiveData = {
-                0xEF, 0x01, 0xE8, 0xC1, 0x02, 0x02, 0x00, 0x00, 0x00, 0x2C, 0xED, 0xC6,
-                0x05, 0x95, 0x80, 0x02, 0x0C, 0x00, 0x04, 0x9E, 0xCB, 0xD1, 0x93, 0xC7,
-                0xE8, 0xAF, 0xCC, 0xEE, 0x01, 0x06, 0x00, 0x8B, 0xE5, 0x02, 0x9E, 0xE6,
-                0x97, 0xCA, 0x0C, 0x01, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x04, 0x9B, 0xB2, 0x81, 0xF2, 0x83, 0xC6, 0xCD, 0x92, 0x10,
-                0x06, 0x00, 0xA2, 0xE0, 0x03, 0xBC, 0x88, 0xA0, 0x89, 0x0E, 0x01, 0x00,
-                0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xCC, 0xD7, 0xD1,
-                0xBE, 0xA9, 0xB0, 0xBB, 0xFE, 0x44, 0x06, 0x00, 0xCF, 0xF3, 0x04, 0xBC,
-                0xA4, 0xAD, 0xD3, 0x0A, 0x01, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0xC3, 0xBE, 0xB9, 0xC8, 0xD6, 0x8F, 0xAF, 0x8C, 0xE7,
-                0x01, 0x06, 0x00, 0xC7, 0x98, 0x05, 0xD6, 0x91, 0xB8, 0xA9, 0x0E, 0x01,
-                0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00
-            };
-
-            messageList.Add(new(GameServerToClientMessage.NetMessageRegionChange, NetMessageRegionChange.CreateBuilder()
-                .SetRegionId(1153583383226286088)
-                .SetServerGameId(1150669705055451881)
-                .SetClearingAllInterest(false)
-                .SetRegionPrototypeId((ulong)RegionPrototype.NPEAvengersTowerHUBRegion)
-                .SetRegionRandomSeed(1488502313)
-                .SetArchiveData(ByteString.CopyFrom(avengersTowerRawRegionArchiveData))
-                .SetRegionMin(NetStructPoint3.CreateBuilder()
-                    .SetX(-5024)
-                    .SetY(-5024)
-                    .SetZ(-2048))
-                .SetRegionMax(NetStructPoint3.CreateBuilder()
-                    .SetX(5024)
-                    .SetY(5024)
-                    .SetZ(2048))
-                .SetCreateRegionParams(NetStructCreateRegionParams.CreateBuilder()
-                    .SetLevel(10)
-                    .SetDifficultyTierProtoId(18016845980090109785))
-                .Build().ToByteArray()));
-
-            messageList.Add(new(GameServerToClientMessage.NetMessagePrefetchRegionsForDownload, NetMessagePrefetchRegionsForDownload.CreateBuilder()
-                .AddPrototypes(5542489395005235439)
-                .AddPrototypes(6121022758926621561)
-                .AddPrototypes(6769056952657388355)
-                .AddPrototypes(7293929583592937434)
-                .AddPrototypes(10115017851235015611)
-                .AddPrototypes(11922318117493283053)
-                .AddPrototypes(13643380196511063922)
-                .AddPrototypes(14928163756943415585)
-                .AddPrototypes(15546930156792977757)
-                .AddPrototypes(16748618685203816205)
-                .Build().ToByteArray()));
-
-            messageList.Add(new(GameServerToClientMessage.NetMessageQueueLoadingScreen, NetMessageQueueLoadingScreen.CreateBuilder()
-                .SetRegionPrototypeId((ulong)RegionPrototype.NPEAvengersTowerHUBRegion)
-                .Build().ToByteArray()));
-
-            messageList.Add(new(GameServerToClientMessage.NetMessageAddArea, NetMessageAddArea.CreateBuilder()
-                .SetAreaId(1)
-                .SetAreaPrototypeId(11135337283876558073)
-                .SetAreaOrigin(NetStructPoint3.CreateBuilder()
-                    .SetX(0)
-                    .SetY(0)
-                    .SetZ(0))
-                .SetIsStartArea(true)
-                .Build().ToByteArray()));
-
-            messageList.Add(new(GameServerToClientMessage.NetMessageCellCreate, NetMessageCellCreate.CreateBuilder()
-                .SetAreaId(1)
-                .SetCellId(1)
-                .SetCellPrototypeId(14256372356117109756)
-                .SetPositionInArea(NetStructPoint3.CreateBuilder()
-                    .SetX(0)
-                    .SetY(0)
-                    .SetZ(0))
-                .SetCellRandomSeed(1488502313)
-                .AddEncounters(NetStructReservedSpawn.CreateBuilder()
-                    .SetAsset(605211710028059265)
-                    .SetId(5)
-                    .SetUseMarkerOrientation(true))
-                .SetBufferwidth(0)
-                .SetOverrideLocationName(0)
-                .Build().ToByteArray()));
-
-            messageList.Add(new(GameServerToClientMessage.NetMessageEnvironmentUpdate, NetMessageEnvironmentUpdate.CreateBuilder()
-                .SetFlags(1)
-                .Build().ToByteArray()));
-
-            messageList.Add(new(GameServerToClientMessage.NetMessageUpdateMiniMap, NetMessageUpdateMiniMap.CreateBuilder()
-                .SetArchiveData(ByteString.CopyFrom(new byte[] { 0xEF, 0x01, 0x81 }))
-                .Build().ToByteArray()));
 
             return messageList.ToArray();
         }
