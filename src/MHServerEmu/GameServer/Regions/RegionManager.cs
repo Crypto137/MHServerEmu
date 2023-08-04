@@ -33,6 +33,8 @@ namespace MHServerEmu.GameServer.Regions
             }
         }
 
+        public static bool IsRegionAvailable(RegionPrototype prototype) => RegionDict.ContainsKey(prototype);
+
         private static Region LoadRegionData(RegionPrototype prototype)
         {
             // TODO: loading data externally

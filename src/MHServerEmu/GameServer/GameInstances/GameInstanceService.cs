@@ -86,16 +86,12 @@ namespace MHServerEmu.GameServer.GameInstances
 
                     case ClientToGameServerMessage.NetMessageCellLoaded:
                         Logger.Info($"Received NetMessageCellLoaded");
-                        if (client.WaypointRegion is not null && client.ReloadEntities)
+                        if (client.IsLoading)
                         {
-                            client.SendMultipleMessages(1, RegionLoader.GetWaypointRegionChangeFinishLoadingMessages(client.WaypointRegion, client.StartingAvatar));
-                            client.SendMultipleMessages(1, PowerLoader.LoadAvatarPowerCollection(client.StartingAvatar));
-                            client.ReloadEntities = false;
+                            client.SendMultipleMessages(1, RegionLoader.GetFinishLoadingMessages(client.CurrentRegion, client.CurrentAvatar));
+                            client.IsLoading = false;
                         }
-                        else if (client.WaypointRegion is null)
-                        {
-                            client.SendMultipleMessages(1, RegionLoader.GetFinishLoadingMessages(client.CurrentRegion, client.StartingAvatar));
-                        }
+
                         break;
 
                     case ClientToGameServerMessage.NetMessageTryInventoryMove:
@@ -117,24 +113,17 @@ namespace MHServerEmu.GameServer.GameInstances
 
                         Logger.Trace(useWaypointMessage.ToString());
 
-                        switch ((RegionPrototype)useWaypointMessage.RegionProtoId)
+                        RegionPrototype destinationRegion = (RegionPrototype)useWaypointMessage.RegionProtoId;
+                        
+                        if (RegionManager.IsRegionAvailable(destinationRegion))
                         {
-                            case RegionPrototype.NPEAvengersTowerHUBRegion:
-                                client.WaypointRegion = RegionPrototype.NPEAvengersTowerHUBRegion;
-                                client.ReloadEntities = true;
-                                client.SendMultipleMessages(1, RegionLoader.GetWaypointRegionChangeMessages(RegionPrototype.NPEAvengersTowerHUBRegion));
-                                break;
-                            case RegionPrototype.DangerRoomHubRegion:
-                                client.WaypointRegion = RegionPrototype.DangerRoomHubRegion;
-                                client.ReloadEntities = true;
-                                client.SendMultipleMessages(1, RegionLoader.GetWaypointRegionChangeMessages(RegionPrototype.DangerRoomHubRegion));
-                                break;
-                            case RegionPrototype.XManhattanRegion60Cosmic:
-                                client.WaypointRegion = RegionPrototype.XManhattanRegion60Cosmic;
-                                client.ReloadEntities = true;
-                                client.SendMultipleMessages(1, RegionLoader.GetWaypointRegionChangeMessages(RegionPrototype.XManhattanRegion60Cosmic));
-                                break;
-
+                            client.CurrentRegion = (RegionPrototype)useWaypointMessage.RegionProtoId;
+                            client.SendMultipleMessages(1, RegionLoader.GetBeginLoadingMessages(client.CurrentRegion, client.CurrentAvatar, false));
+                            client.IsLoading = true;
+                        }
+                        else
+                        {
+                            Logger.Warn($"Cannot go to {destinationRegion}: no data is available");
                         }
 
                         break;
