@@ -133,9 +133,10 @@ namespace MHServerEmu.Networking
                     try
                     {
                         // Get parse method using reflection
-                        Type t = typeof(NetMessageReadyAndLoggedIn).Assembly.GetType($"Gazillion.{messageName}");
-                        MethodInfo method = t.GetMethod("ParseFrom", BindingFlags.Static | BindingFlags.Public, new Type[] { typeof(byte[]) });
-                        IMessage protobufMessage = (IMessage)method.Invoke(null, new object[] { message.Content });
+                        // Throw exceptions if either the type or the method is null
+                        Type? type = typeof(NetMessageReadyAndLoggedIn).Assembly.GetType($"Gazillion.{messageName}") ?? throw new();
+                        MethodInfo? method = type.GetMethod("ParseFrom", BindingFlags.Static | BindingFlags.Public, new Type[] { typeof(byte[]) }) ?? throw new();
+                        IMessage? protobufMessage = (IMessage?)method.Invoke(null, new object[] { message.Content });
                         streamWriter.WriteLine(protobufMessage);
 
                         switch (protobufMessage)
@@ -156,14 +157,6 @@ namespace MHServerEmu.Networking
                             case NetMessageUpdateMiniMap updateMiniMapMessage:
                                 streamWriter.WriteLine($"_archiveDataHex: {updateMiniMapMessage.ArchiveData.ToByteArray().ToHexString()}");
                                 break;
-
-                            //case NetMessageSetProperty propertyMessage:
-
-                            //    if (propertyMessage.ReplicationId == 9078507)
-                            //    {
-                            //        streamWriter.WriteLine($"messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()\r\n                        .SetReplicationId({propertyMessage.ReplicationId})\r\n                        .SetPropertyId({propertyMessage.PropertyId})\r\n                        .SetValueBits({propertyMessage.ValueBits})\r\n                        .Build().ToByteArray()));");
-                            //    }
-                            //    break;
                         }
                     }
                     catch
