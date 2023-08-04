@@ -14,6 +14,7 @@ namespace MHServerEmu.GameServer.Regions
             RegionDict.Add(RegionPrototype.NPEAvengersTowerHUBRegion, LoadRegionData(RegionPrototype.NPEAvengersTowerHUBRegion));
             RegionDict.Add(RegionPrototype.TrainingRoomSHIELDRegion, LoadRegionData(RegionPrototype.TrainingRoomSHIELDRegion));
             RegionDict.Add(RegionPrototype.XaviersMansionRegion, LoadRegionData(RegionPrototype.XaviersMansionRegion));
+            RegionDict.Add(RegionPrototype.GenoshaHUBRegion, LoadRegionData(RegionPrototype.GenoshaHUBRegion));
             RegionDict.Add(RegionPrototype.DangerRoomHubRegion, LoadRegionData(RegionPrototype.DangerRoomHubRegion));
             RegionDict.Add(RegionPrototype.XManhattanRegion60Cosmic, LoadRegionData(RegionPrototype.XManhattanRegion60Cosmic));
 
@@ -142,7 +143,6 @@ namespace MHServerEmu.GameServer.Regions
 
                     area = new(1, AreaPrototype.XaviersMansionArea, new(), true);
                     area.AddCell(new(12, 9109153860316370436, new()));
-
                     area.AddCell(new(27, 13177785476563801619, new()));
                     area.AddCell(new(13, 17941854392027125253, new()));
                     area.AddCell(new(18, 12120264330993014282, new()));
@@ -185,6 +185,59 @@ namespace MHServerEmu.GameServer.Regions
                         0x294,
                         0x0,
                         0x0
+                    };
+
+                    break;
+
+                case RegionPrototype.GenoshaHUBRegion:
+
+                    archiveData = new byte[] {
+                    };
+
+                    region = new(RegionPrototype.GenoshaHUBRegion,
+                        1153032328761311240,
+                        1922430980,
+                        archiveData,
+                        new(-11319f, -12336f, -2304f),
+                        new(11319f, 12336f, 2304f),
+                        new(60, DifficultyTier.Normal));
+
+                    area = new(1, AreaPrototype.GenoshaHUBArea, new(951f, -336f, 0f), true);
+                    area.AddCell(new(3, 5680859166885025055, new()));
+                    area.AddCell(new(4, 9622684927434298656, new()));
+                    area.AddCell(new(5, 224852719175734561, new()));
+                    area.AddCell(new(11, 933212887802189089, new()));
+                    area.AddCell(new(7, 13860233243740869920, new()));
+                    area.AddCell(new(8, 794220225615762721, new()));
+                    area.AddCell(new(12, 14388899140413822242, new()));
+                    area.AddCell(new(13, 4700580598661518627, new()));
+                    area.AddCell(new(9, 10201165220605859106, new()));
+                    //area.AddCell(new(1, 9402521850118673694, new()));
+                    //area.AddCell(new(2, 5269392344921281823, new()));
+                    //area.AddCell(new(6, 14430102745958978850, new()));
+                    //area.AddCell(new(10, 5101736277889127715, new()));
+                    //area.AddCell(new(14, 9972942662930928932, new()));
+                    //area.AddCell(new(17, 9268983740567000357, new()));
+                    //area.AddCell(new(15, 10908336477861319973, new()));
+                    //area.AddCell(new(16, 6646998170199004454, new()));
+                    region.AddArea(area);
+
+                    //Area entryArea = new(2, AreaPrototype.GenoshaHUBEntryArea, new(-11049f, -12336f, 0f), false);
+                    //area.AddCell(new(18, 14666675902348205617, new()));
+                    //region.AddArea(entryArea);
+
+                    region.EnterGameWorldFields = new ulong[]
+                    {
+                        0x18A0,
+                        0x2DA9,
+                        0x11522,
+                        0x954E,
+                        0x517F,
+                        0x106,
+                        0x26C,
+                        0x0,
+                        0x0,
+                        0x1
                     };
 
                     break;
