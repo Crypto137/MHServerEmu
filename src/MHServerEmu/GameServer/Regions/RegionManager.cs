@@ -80,18 +80,10 @@ namespace MHServerEmu.GameServer.Regions
 
                     region.AddArea(area);
 
-                    region.EnterGameWorldFields = new ulong[]
-                    {
-                        0x10A0,
-                        0x51F0,
-                        0x203C,
-                        0x1710,
-                        0x191,
-                        0x2BC,
-                        0x0,
-                        0x0,
-                        0x1
-                    };
+                    region.EntrancePosition = new(1311f, 515.75f, 369f);
+                    region.EntranceOrientation = new(-3.140625f, 0f, 0f);
+                    region.WaypointPosition = new(536f, 862f, 341.5f);
+                    region.WaypointOrientation = new(1.5625f, 0f, 0f);
 
                     break;
 
@@ -113,19 +105,10 @@ namespace MHServerEmu.GameServer.Regions
 
                     region.AddArea(area);
 
-                    region.EnterGameWorldFields = new ulong[]
-                    {
-                        0x18A0,
-                        0x2DA9,
-                        0xB7FD,
-                        0x1000,
-                        0x1340,
-                        0xC7,
-                        0x26C,
-                        0x0,
-                        0x0,
-                        0x1
-                    };
+                    region.EntrancePosition = new(-2943.875f, 256f, 38.5f);
+                    region.EntranceOrientation = new();
+                    region.WaypointPosition = new(-2943.875f, 256f, 38.5f);
+                    region.WaypointOrientation = new();
 
                     break;
 
@@ -175,18 +158,10 @@ namespace MHServerEmu.GameServer.Regions
 
                     region.AddArea(area);
 
-                    region.EnterGameWorldFields = new ulong[]
-                    {
-                        0x8A0,
-                        0x282F,
-                        0x8135,
-                        0x13B54,
-                        0x4AF,
-                        0x0,
-                        0x294,
-                        0x0,
-                        0x0
-                    };
+                    region.EntrancePosition = new(-2047f, 5136f, -9.375f);
+                    region.EntranceOrientation = new();
+                    region.WaypointPosition = new(-2047f, 5136f, -9.375f);
+                    region.WaypointOrientation = new();
 
                     break;
 
@@ -227,19 +202,10 @@ namespace MHServerEmu.GameServer.Regions
                     //area.AddCell(new(18, 14666675902348205617, new()));
                     //region.AddArea(entryArea);
 
-                    region.EnterGameWorldFields = new ulong[]
-                    {
-                        0x18A0,
-                        0x2DA9,
-                        0x11522,
-                        0x954E,
-                        0x517F,
-                        0x106,
-                        0x26C,
-                        0x0,
-                        0x0,
-                        0x1
-                    };
+                    region.EntrancePosition = new(4273.25f, 2391.25f, -163f);
+                    region.EntranceOrientation = new();
+                    region.WaypointPosition = new(4273.25f, 2391.25f, -163f);
+                    region.WaypointOrientation = new();
 
                     break;
 
@@ -267,18 +233,10 @@ namespace MHServerEmu.GameServer.Regions
 
                     region.AddArea(area);
 
-                    region.EnterGameWorldFields = new ulong[]
-                    {
-                        0x10A0,
-                        0x11BF,
-                        0x194F,
-                        0x1340,
-                        0x152,
-                        0x2BC,
-                        0x0,
-                        0x0,
-                        0x1
-                    };
+                    region.EntrancePosition = new(-384.125f, -301.375f, 308f);
+                    region.EntranceOrientation = new();
+                    region.WaypointPosition = new(-284f, -405f, 308f);
+                    region.WaypointOrientation = new(2.640625f, 0f, 0f);
 
                     break;
 
@@ -322,18 +280,10 @@ namespace MHServerEmu.GameServer.Regions
                     area.AddCell(new(1, 1568191647055552056, new()));
                     region.AddArea(area);
 
-                    region.EnterGameWorldFields = new ulong[]
-                    {
-                        0x8A0,
-                        0x3E97,
-                        0xD59F,
-                        0x1FD15,
-                        0x380,
-                        0x0,
-                        0x294,
-                        0x0,
-                        0x0
-                    };
+                    region.EntrancePosition = new(-3376.5f, -8016f, 7f);
+                    region.EntranceOrientation = new();
+                    region.WaypointPosition = new(-3376.5f, -8016f, 7f);
+                    region.WaypointOrientation = new();
 
                     break;
 
@@ -507,18 +457,10 @@ namespace MHServerEmu.GameServer.Regions
 
                     region.AddArea(area);
 
-                    region.EnterGameWorldFields = new ulong[]
-                    {
-                        0x10A0,
-                        0x2EB00,
-                        0x1B800,
-                        0x300,
-                        0xC8,
-                        0x2BC,
-                        0x0,
-                        0x0,
-                        0x1
-                    };
+                    region.EntrancePosition = new(12131.125f, 7102.125f, 48f);
+                    region.EntranceOrientation = new();
+                    region.WaypointPosition = new(11952f, 7040f, 48f);
+                    region.WaypointOrientation = new(1.5625f, 0f, 0f);
 
                     break;
 

@@ -53,7 +53,7 @@ namespace MHServerEmu.GameServer.Regions
 
             Region region = RegionManager.GetRegion(regionPrototype);
 
-            EntityEnterGameWorldArchiveData avatarEnterGameWorldArchiveData = new((ulong)avatar, region.EnterGameWorldFields);
+            EntityEnterGameWorldArchiveData avatarEnterGameWorldArchiveData = new((ulong)avatar, region.EntrancePosition, region.EntranceOrientation.X, 350f);
 
             messageList.Add(new(GameServerToClientMessage.NetMessageEntityEnterGameWorld,
                 NetMessageEntityEnterGameWorld.CreateBuilder()
@@ -61,10 +61,7 @@ namespace MHServerEmu.GameServer.Regions
                 .Build().ToByteArray()));
 
             // Put waypoint entity in the game world
-            // TODO: proper waypoint positions for each region
-            EntityEnterGameWorldArchiveData waypointEnterGameWorldArchiveData = (regionPrototype == RegionPrototype.NPEAvengersTowerHUBRegion
-                ? new(Convert.FromHexString("010C028043E06BD82AC801"))
-                : new(12, region.EnterGameWorldFields));
+            EntityEnterGameWorldArchiveData waypointEnterGameWorldArchiveData = new(12, region.WaypointPosition, region.WaypointOrientation.X);
 
             messageList.Add(new(GameServerToClientMessage.NetMessageEntityEnterGameWorld,
                 NetMessageEntityEnterGameWorld.CreateBuilder().SetArchiveData(ByteString.CopyFrom(waypointEnterGameWorldArchiveData.Encode())).Build().ToByteArray()));
