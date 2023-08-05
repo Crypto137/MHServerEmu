@@ -16,6 +16,7 @@ namespace MHServerEmu.GameServer.Regions
             RegionDict.Add(RegionPrototype.XaviersMansionRegion, LoadRegionData(RegionPrototype.XaviersMansionRegion));
             RegionDict.Add(RegionPrototype.GenoshaHUBRegion, LoadRegionData(RegionPrototype.GenoshaHUBRegion));
             RegionDict.Add(RegionPrototype.DangerRoomHubRegion, LoadRegionData(RegionPrototype.DangerRoomHubRegion));
+            RegionDict.Add(RegionPrototype.DailyGShockerSubwayRegionL60, LoadRegionData(RegionPrototype.DailyGShockerSubwayRegionL60));
             RegionDict.Add(RegionPrototype.XManhattanRegion60Cosmic, LoadRegionData(RegionPrototype.XManhattanRegion60Cosmic));
 
             Logger.Info($"Loaded data for {RegionDict.Count} regions");
@@ -277,6 +278,61 @@ namespace MHServerEmu.GameServer.Regions
                         0x0,
                         0x0,
                         0x1
+                    };
+
+                    break;
+
+                case RegionPrototype.DailyGShockerSubwayRegionL60:
+
+                    archiveData = new byte[] {
+                    };
+
+                    region = new(RegionPrototype.DailyGShockerSubwayRegionL60,
+                        1153032329227796483,
+                        1901487720,
+                        archiveData,
+                        new(-5633f, -9600f, -2176f),
+                        new(5633f, 9600f, 2176f),
+                        new(11, DifficultyTier.Normal));
+
+                    area = new(1, AreaPrototype.DailyGSubwayFactoryGen1Area, new(-3456.5f, -7424f, 0f), true);
+                    area.AddCell(new(13, 7185016125568720961, new()));
+                    region.AddArea(area);
+
+                    area = new(2, AreaPrototype.DailyGSubwayFactoryGen1Area, new(-3456.5f, -3072.001f, 0f), false);
+                    area.AddCell(new(12, 1642556494936285849, new()));
+                    region.AddArea(area);
+
+                    area = new(3, AreaPrototype.DailyGSubwayFactoryGen1Area, new(-128.5f, -3072.001f, 0f), false);
+                    area.AddCell(new(8, 650610774018169216, new()));
+                    area.AddCell(new(9, 3804320553692305684, new(2304f, 0f, 0f)));
+                    area.AddCell(new(11, 12283464609304222089, new(2304f, 2304f, 0f)));
+                    region.AddArea(area);
+
+                    area = new(4, AreaPrototype.DailyGSubwayFactoryGen1Area, new(2175.5f, 1535.999f, 0f), false);
+                    area.AddCell(new(2, 10181902047256058244, new()));
+                    area.AddCell(new(3, 337661052037765293, new(2304f, 0f, 0f)));
+                    area.AddCell(new(4, 5943981279539894550, new(0f, 2304f, 0f)));
+                    area.AddCell(new(7, 8677344119691811512, new(2304f, 2304f, 0f)));
+                    area.AddCell(new(5, 3662615361967954209, new(0f, 4608f, 0f)));
+                    area.AddCell(new(6, 3804320553692305684, new(2304f, 4608f, 0f)));
+                    region.AddArea(area);
+
+                    area = new(5, AreaPrototype.DailyGSubwayFactoryGen1Area, new(4480.5044f, 8448f, 0f), false);
+                    area.AddCell(new(1, 1568191647055552056, new()));
+                    region.AddArea(area);
+
+                    region.EnterGameWorldFields = new ulong[]
+                    {
+                        0x8A0,
+                        0x3E97,
+                        0xD59F,
+                        0x1FD15,
+                        0x380,
+                        0x0,
+                        0x294,
+                        0x0,
+                        0x0
                     };
 
                     break;
