@@ -11,15 +11,15 @@ namespace MHServerEmu.GameServer.Regions
         public ulong Id { get; }
         public int RandomSeed { get; }
         public byte[] ArchiveData { get; }
-        public Point3 Min { get; }
-        public Point3 Max { get; }
+        public Vector3 Min { get; }
+        public Vector3 Max { get; }
         public CreateRegionParams CreateParams { get; }
 
         public List<Area> AreaList { get; } = new();
 
         public ulong[] EnterGameWorldFields { get; set; }       // temporary solution until we figure out EnterGameWorld archiveData
 
-        public Region(RegionPrototype prototype, ulong id, int randomSeed, byte[] archiveData, Point3 min, Point3 max, CreateRegionParams createParams)
+        public Region(RegionPrototype prototype, ulong id, int randomSeed, byte[] archiveData, Vector3 min, Vector3 max, CreateRegionParams createParams)
         {
             Prototype = prototype;
             Id = id;
@@ -54,8 +54,8 @@ namespace MHServerEmu.GameServer.Regions
                 .SetRegionId(Id)
                 .SetRegionRandomSeed(RandomSeed)
                 .SetCreateRegionParams(CreateParams.ToNetStruct())
-                .SetRegionMin(Min.ToNetStruct())
-                .SetRegionMax(Max.ToNetStruct())
+                .SetRegionMin(Min.ToNetStructPoint3())
+                .SetRegionMax(Max.ToNetStructPoint3())
                 .Build().ToByteArray()));
 
             // mission updates and entity creation happens here
@@ -72,7 +72,7 @@ namespace MHServerEmu.GameServer.Regions
                 messageList.Add(new((byte)GameServerToClientMessage.NetMessageAddArea, NetMessageAddArea.CreateBuilder()
                     .SetAreaId(area.Id)
                     .SetAreaPrototypeId((ulong)area.Prototype)
-                    .SetAreaOrigin(area.Origin.ToNetStruct())
+                    .SetAreaOrigin(area.Origin.ToNetStructPoint3())
                     .SetIsStartArea(area.IsStartArea)
                     .Build().ToByteArray()));
 
@@ -82,7 +82,7 @@ namespace MHServerEmu.GameServer.Regions
                         .SetAreaId(area.Id)
                         .SetCellId(cell.Id)
                         .SetCellPrototypeId(cell.PrototypeId)
-                        .SetPositionInArea(cell.PositionInArea.ToNetStruct())
+                        .SetPositionInArea(cell.PositionInArea.ToNetStructPoint3())
                         .SetCellRandomSeed(RandomSeed)
                         .SetBufferwidth(0)
                         .SetOverrideLocationName(0)

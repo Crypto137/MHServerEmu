@@ -6,10 +6,10 @@ namespace MHServerEmu.GameServer.Regions
     {
         public uint Id { get; }
         public ulong PrototypeId { get; }
-        public Point3 PositionInArea { get; }
+        public Vector3 PositionInArea { get; }
         //TODO: encounters
 
-        public Cell(uint id, ulong prototypeId, Point3 positionInArea)
+        public Cell(uint id, ulong prototypeId, Vector3 positionInArea)
         {
             Id = id;
             PrototypeId = prototypeId;

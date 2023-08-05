@@ -6,12 +6,12 @@ namespace MHServerEmu.GameServer.Regions
     {
         public uint Id { get; }
         public AreaPrototype Prototype { get; }
-        public Point3 Origin { get; }
+        public Vector3 Origin { get; }
         public bool IsStartArea { get; }
 
         public List<Cell> CellList { get; } = new();
 
-        public Area(uint id, AreaPrototype prototype, Point3 origin, bool isStartArea)
+        public Area(uint id, AreaPrototype prototype, Vector3 origin, bool isStartArea)
         {
             Id = id;
             Prototype = prototype;
