@@ -27,7 +27,7 @@ namespace MHServerEmu.GameServer.Data
             }
         }
 
-        public static void ParseArchiveDataFromPacket(string packetName)
+        public static void ParseEntityCreateFromPacket(string packetName)
         {
             GameMessage[] messages = PacketHelper.LoadMessagesFromPacketFile(packetName);
             for (int i = 0; i < messages.Length; i++)
@@ -38,7 +38,7 @@ namespace MHServerEmu.GameServer.Data
                     {
                         var entityCreateMessage = NetMessageEntityCreate.ParseFrom(messages[i].Content);
                         EntityCreateBaseData baseData = new(entityCreateMessage.BaseData.ToByteArray());
-                        EntityCreateArchiveData archiveData = new(entityCreateMessage.ArchiveData.ToByteArray());
+                        Entity archiveData = new(entityCreateMessage.ArchiveData.ToByteArray());
 
                         streamWriter.WriteLine("baseData:");
                         streamWriter.WriteLine(baseData.ToString());
@@ -47,6 +47,7 @@ namespace MHServerEmu.GameServer.Data
                         streamWriter.WriteLine(archiveData.ToString());
                     }
                 }
+                /*
                 else if (messages[i].Id == (byte)GameServerToClientMessage.NetMessageEntityEnterGameWorld)
                 {
                     using (StreamWriter streamWriter = new($"{Directory.GetCurrentDirectory()}\\{i}_entityEnterGameWorld.txt"))
@@ -58,6 +59,7 @@ namespace MHServerEmu.GameServer.Data
                         streamWriter.WriteLine(archiveData.ToString());
                     }
                 }
+                */
             }
         }
 

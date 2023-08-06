@@ -141,9 +141,11 @@ namespace MHServerEmu.GameServer.Regions
                             if (replacementInventorySlot == 0) Logger.Warn("replacementInventorySlot is 100! Check the hardcoded avatar entity data");
                         }
 
+                        Entity entity = new(entityCreateMessage.ArchiveData.ToByteArray());
+
                         var customEntityCreateMessage = NetMessageEntityCreate.CreateBuilder()
                             .SetBaseData(ByteString.CopyFrom(baseData.Encode()))
-                            .SetArchiveData(entityCreateMessage.ArchiveData)
+                            .SetArchiveData(ByteString.CopyFrom(entity.Encode()))
                             .Build().ToByteArray();
 
                         messageList.Add(new(GameServerToClientMessage.NetMessageEntityCreate, customEntityCreateMessage));
