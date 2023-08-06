@@ -11,6 +11,7 @@ namespace MHServerEmu.Common.Config.Sections
 
         public RegionPrototype StartingRegion { get; }
         public HardcodedAvatarEntity StartingAvatar { get; }
+        public ulong CostumeOverride { get; }
 
         public PlayerDataConfig(IniFile configFile)
         {
@@ -40,6 +41,8 @@ namespace MHServerEmu.Common.Config.Sections
                 Logger.Error($"Failed to parse HardcodedAvatarEntity {startingAvatar}, falling back to BlackCat");
                 StartingAvatar = HardcodedAvatarEntity.BlackCat;
             }
+
+            CostumeOverride = Convert.ToUInt64(configFile.ReadString(Section, "CostumeOverride"));
         }
     }
 }

@@ -6,6 +6,8 @@ using MHServerEmu.Common.Config;
 using MHServerEmu.GameServer.Entities;
 using MHServerEmu.GameServer.Entities.Archives;
 using MHServerEmu.GameServer.Powers;
+using MHServerEmu.GameServer.Data;
+using MHServerEmu.GameServer.Common;
 
 namespace MHServerEmu.GameServer.Regions
 {
@@ -116,6 +118,7 @@ namespace MHServerEmu.GameServer.Regions
             {
                 var entityCreateMessage = NetMessageEntityCreate.ParseFrom(message.Content);
                 EntityCreateBaseData baseData = new(entityCreateMessage.BaseData.ToByteArray());
+                Entity entity = new(entityCreateMessage.ArchiveData.ToByteArray());
 
                 if (baseData.EntityId == 14646212)      // add the main local player entity straight away
                 {
@@ -140,20 +143,30 @@ namespace MHServerEmu.GameServer.Regions
                             // Black Cat goes last in the hardcoded messages, so this should always be assigned last
                             if (replacementInventorySlot == 0) Logger.Warn("replacementInventorySlot is 100! Check the hardcoded avatar entity data");
                         }
-
-                        Entity entity = new(entityCreateMessage.ArchiveData.ToByteArray());
-
-                        var customEntityCreateMessage = NetMessageEntityCreate.CreateBuilder()
-                            .SetBaseData(ByteString.CopyFrom(baseData.Encode()))
-                            .SetArchiveData(ByteString.CopyFrom(entity.Encode()))
-                            .Build().ToByteArray();
-
-                        messageList.Add(new(GameServerToClientMessage.NetMessageEntityCreate, customEntityCreateMessage));
                     }
-                    else
+
+                    if (ConfigManager.PlayerData.CostumeOverride != 0)
                     {
-                        messageList.Add(message);
+                        for (int i = 0; i < Database.GlobalEnumRefTable.Length; i++)
+                        {
+                            if (Database.GlobalEnumRefTable[i] == ConfigManager.PlayerData.CostumeOverride)
+                            {
+                                foreach (Property property in entity.Properties)
+                                {
+                                    if (property.Id == 0xE019) property.Value = (ulong)i;
+                                }
+
+                                break;
+                            }
+                        }
                     }
+
+                    var customEntityCreateMessage = NetMessageEntityCreate.CreateBuilder()
+                        .SetBaseData(ByteString.CopyFrom(baseData.Encode()))
+                        .SetArchiveData(ByteString.CopyFrom(entity.Encode()))
+                        .Build().ToByteArray();
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageEntityCreate, customEntityCreateMessage));
                 }
             }
 
