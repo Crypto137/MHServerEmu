@@ -47,6 +47,10 @@ namespace MHServerEmu
                     _frontendServer.Shutdown();
                 else if (input.Equals("parse", StringComparison.OrdinalIgnoreCase))
                     PacketHelper.ParseServerMessagesFromAllPacketFiles();
+                else if (input.Equals("exportgpakentries", StringComparison.OrdinalIgnoreCase))
+                    Database.ExportGpakEntries();
+                else if (input.Equals("exportgpakdata", StringComparison.OrdinalIgnoreCase))
+                    Database.ExportGpakData();
             }
 
             _frontendServer.Shutdown();

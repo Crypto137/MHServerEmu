@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System.IO;
+using System.Text;
+using K4os.Compression.LZ4;
 using MHServerEmu.Common;
 
 namespace MHServerEmu.GameServer.Data.Gpak
@@ -10,7 +12,7 @@ namespace MHServerEmu.GameServer.Data.Gpak
 
         public int Header { get; }  // KAPG
         public int Field1 { get; }
-        public GpakEntry[] Entries { get; }
+        public GpakEntry[] Entries { get; } = Array.Empty<GpakEntry>();
 
         public GpakFile(string gpakFileName)
         {
@@ -18,15 +20,18 @@ namespace MHServerEmu.GameServer.Data.Gpak
 
             if (File.Exists(path))
             {
+                Logger.Trace($"Loading {gpakFileName}...");
+
                 using (FileStream fileStream = File.OpenRead(path))
                 {
                     byte[] buffer = new byte[4096];
 
+                    // Header
                     Header = ReadInt(fileStream, buffer);
                     Field1 = ReadInt(fileStream, buffer);
+                    Entries = new GpakEntry[ReadInt(fileStream, buffer)];
 
-                    Entries = new GpakEntry[ReadInt(fileStream, buffer)]; 
-
+                    // Entry metadata
                     for (int i = 0; i < Entries.Length; i++)
                     {
                         ulong id = ReadUlong(fileStream, buffer);
@@ -42,12 +47,46 @@ namespace MHServerEmu.GameServer.Data.Gpak
                         Entries[i] = new(id, filePath, field2, offset, compressedSize, uncompressedSize);
                     }
 
-                    Logger.Debug($"Loaded {Entries.Length} GPAK entries");
+                    // Entry data
+                    foreach (GpakEntry entry in Entries)
+                    {
+                        byte[] compressedData = new byte[entry.CompressedSize];
+                        byte[] uncompressedData = new byte[entry.UncompressedSize];
+                        fileStream.Read(compressedData, 0, compressedData.Length);
+                        LZ4Codec.Decode(compressedData, uncompressedData);
+                        entry.Data = uncompressedData;
+                    }
                 }
+
+                Logger.Info($"Loaded {Entries.Length} GPAK entries from {gpakFileName}");
             }
             else
             {
-                Logger.Warn($"{gpakFileName} not found");
+                Logger.Error($"{gpakFileName} not found");
+            }
+        }
+
+        public void ExportEntries(string fileName)
+        {
+            using (StreamWriter streamWriter = new($"{GpakDirectory}\\{fileName}"))
+            {
+                foreach (GpakEntry entry in Entries)
+                {
+                    string entryString = $"{entry.Id}\t{entry.FilePath}\t{entry.Field2}\t{entry.Offset}\t{entry.CompressedSize}\t{entry.UncompressedSize}";
+                    streamWriter.WriteLine(entryString);
+                }
+            }
+        }
+
+        public void ExportData()
+        {
+            foreach (GpakEntry entry in Entries)
+            {
+                string uncompressedFilePath = $"{GpakDirectory}\\{entry.FilePath}";
+                string uncompressedFileDirectory = Path.GetDirectoryName(uncompressedFilePath);
+
+                if (Directory.Exists(uncompressedFileDirectory) == false) Directory.CreateDirectory(uncompressedFileDirectory);
+                File.WriteAllBytes($"{GpakDirectory}\\{entry.FilePath}", entry.Data);
             }
         }
 

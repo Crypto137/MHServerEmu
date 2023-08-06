@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using MHServerEmu.Common;
+using MHServerEmu.GameServer.Data.Gpak;
 
 namespace MHServerEmu.GameServer.Data
 {
@@ -8,6 +9,9 @@ namespace MHServerEmu.GameServer.Data
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public static bool IsInitialized { get; private set; }
+        public static GpakFile Calligraphy { get; private set; }
+        public static GpakFile Resource { get; private set; }
+
         public static Dictionary<ulong, Prototype> PrototypeDataDict { get; private set; }
 
         public static ulong[] GlobalEnumRefTable { get; private set; }
@@ -16,17 +20,23 @@ namespace MHServerEmu.GameServer.Data
 
         static Database()
         {
-            Logger.Info("Loading prototypes...");
+            long startTime = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeMilliseconds();
+
+            Calligraphy = new("Calligraphy.sip");
+            Resource = new("mu_cdata.sip");
+
+            Logger.Trace("Loading prototypes...");
             PrototypeDataDict = LoadPrototypeData($"{Directory.GetCurrentDirectory()}\\Assets\\PrototypeDataTable.bin");
+            Logger.Info($"Loaded {PrototypeDataDict.Count} prototypes");
 
             GlobalEnumRefTable = LoadPrototypeEnumRefTable($"{Directory.GetCurrentDirectory()}\\Assets\\GlobalEnumRefTable.bin");
             ResourceEnumRefTable = LoadPrototypeEnumRefTable($"{Directory.GetCurrentDirectory()}\\Assets\\ResourceEnumRefTable.bin");
             PropertyIdPowerRefTable = LoadPrototypeEnumRefTable($"{Directory.GetCurrentDirectory()}\\Assets\\PropertyIdPowerRefTable.bin");
 
-            if (PrototypeDataDict.Count > 0 && GlobalEnumRefTable.Length > 0 && ResourceEnumRefTable.Length > 0 && PropertyIdPowerRefTable.Length > 0)
+            if (VerifyData())
             {
-                // -1 is here because the first entry is 0 to offset values and align with the data we get from the game
-                Logger.Info($"Loaded {PrototypeDataDict.Count} prototypes");
+                long loadTime = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeMilliseconds() - startTime;
+                Logger.Info($"Finished loading in {loadTime} ms");
                 IsInitialized = true;
             }
             else
@@ -34,6 +44,24 @@ namespace MHServerEmu.GameServer.Data
                 Logger.Fatal("Failed to initialize database");
                 IsInitialized = false;
             }
+        }
+
+        public static void ExportGpakEntries()
+        {
+            Logger.Info("Exporting Calligraphy entries...");
+            Calligraphy.ExportEntries("Calligraphy.tsv");
+            Logger.Info("Exporting Resource entries...");
+            Resource.ExportEntries("mu_cdata.tsv");
+            Logger.Info("Finished exporting GPAK entries");
+        }
+
+        public static void ExportGpakData()
+        {
+            Logger.Info("Exporting Calligraphy data...");
+            Calligraphy.ExportData();
+            Logger.Info("Exporting Resource data...");
+            Resource.ExportData();
+            Logger.Info("Finished exporting GPAK data");
         }
 
         private static Dictionary<ulong, Prototype> LoadPrototypeData(string path)
@@ -96,6 +124,16 @@ namespace MHServerEmu.GameServer.Data
                 Logger.Error($"Failed to locate {Path.GetFileName(path)}");
                 return Array.Empty<ulong>();
             }
+        }
+
+        private static bool VerifyData()
+        {
+            return Calligraphy.Entries.Length > 0
+                && Resource.Entries.Length > 0
+                && PrototypeDataDict.Count > 0
+                && GlobalEnumRefTable.Length > 0
+                && ResourceEnumRefTable.Length > 0
+                && PropertyIdPowerRefTable.Length > 0;
         }
     }
 }

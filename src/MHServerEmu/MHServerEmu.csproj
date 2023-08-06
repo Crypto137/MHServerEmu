@@ -15,9 +15,15 @@
     <Reference Include="Google.ProtocolBuffers">
       <HintPath>..\..\dep\protobuf-csharp\Google.ProtocolBuffers.dll</HintPath>
     </Reference>
+    <Reference Include="K4os.Compression.LZ4">
+      <HintPath>..\..\dep\K4os.Compression.LZ4\K4os.Compression.LZ4.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Assets\GPAK\IMPORTANT">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Assets\Packets\DangerRoomBeginLoading.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -18,6 +18,8 @@ After getting the client, you need to set up a web server to serve SiteConfig.xm
 
 6. Compile MHServerEmu with Visual Studio or any other tool you prefer.
 
+7. Copy `Calligraphy.sip` and `mu_cdata.sip` located in `Marvel Heroes\Data\Game` to `MHServerEmu\Assets\GPAK`.
+
 Now you can actually start everything and get in-game.
 
 1. Start Apache by running ```Apache24\bin\httpd.exe```.
