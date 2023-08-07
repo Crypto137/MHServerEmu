@@ -1,11 +1,14 @@
 ﻿using System.Text;
 using Gazillion;
 using Google.ProtocolBuffers;
+using MHServerEmu.GameServer.Data;
 
 namespace MHServerEmu.GameServer.Common
 {
     public class Property
     {
+        private int _propertyInfoIndex;
+
         public ulong Id { get; set; }
         public ulong Value { get; set; }
 
@@ -13,6 +16,8 @@ namespace MHServerEmu.GameServer.Common
         {
             Id = id;
             Value = value;
+
+            CalculatePropertyInfoIndex();
         }
 
         public byte[] Encode()
@@ -36,16 +41,20 @@ namespace MHServerEmu.GameServer.Common
             using (MemoryStream memoryStream = new())
             using (StreamWriter streamWriter = new(memoryStream))
             {
-                /* dec output
-                streamWriter.WriteLine($"Id: {Id}");
-                streamWriter.WriteLine($"Value: {Value}");
-                */
                 streamWriter.WriteLine($"Id: 0x{Id.ToString("X")}");
                 streamWriter.WriteLine($"Value: 0x{Value.ToString("X")}");
+                streamWriter.WriteLine($"PropertyInfo: {Database.PropertyInfos[_propertyInfoIndex]}");
                 streamWriter.Flush();
 
                 return Encoding.UTF8.GetString(memoryStream.ToArray());
             }
+        }
+
+        private void CalculatePropertyInfoIndex()
+        {
+            byte[] hiDword = BitConverter.GetBytes((uint)(Id & 0x00000000FFFFFFFF));    // get HIDWORD of propertyId
+            Array.Reverse(hiDword);                                                     // reverse to match message data
+            _propertyInfoIndex = BitConverter.ToInt32(hiDword) >> 21;                   // shift to get index in the table
         }
     }
 }

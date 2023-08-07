@@ -7,12 +7,14 @@ namespace MHServerEmu.GameServer.Data
     public static class Database
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+        private static readonly string AssetDirectory = $"{Directory.GetCurrentDirectory()}\\Assets";
 
         public static bool IsInitialized { get; private set; }
         public static GpakFile Calligraphy { get; private set; }
         public static GpakFile Resource { get; private set; }
 
         public static Dictionary<ulong, Prototype> PrototypeDataDict { get; private set; }
+        public static PropertyInfo[] PropertyInfos { get; private set; }
 
         public static ulong[] GlobalEnumRefTable { get; private set; }
         public static ulong[] ResourceEnumRefTable { get; private set; }
@@ -26,12 +28,14 @@ namespace MHServerEmu.GameServer.Data
             Resource = new("mu_cdata.sip");
 
             Logger.Trace("Loading prototypes...");
-            PrototypeDataDict = LoadPrototypeData($"{Directory.GetCurrentDirectory()}\\Assets\\PrototypeDataTable.bin");
+            PrototypeDataDict = LoadPrototypeData($"{AssetDirectory}\\PrototypeDataTable.bin");
             Logger.Info($"Loaded {PrototypeDataDict.Count} prototypes");
 
-            GlobalEnumRefTable = LoadPrototypeEnumRefTable($"{Directory.GetCurrentDirectory()}\\Assets\\GlobalEnumRefTable.bin");
-            ResourceEnumRefTable = LoadPrototypeEnumRefTable($"{Directory.GetCurrentDirectory()}\\Assets\\ResourceEnumRefTable.bin");
-            PropertyIdPowerRefTable = LoadPrototypeEnumRefTable($"{Directory.GetCurrentDirectory()}\\Assets\\PropertyIdPowerRefTable.bin");
+            PropertyInfos = LoadPropertyInfos($"{AssetDirectory}\\PropertyInfoTable.tsv");
+
+            GlobalEnumRefTable = LoadPrototypeEnumRefTable($"{AssetDirectory}\\GlobalEnumRefTable.bin");
+            ResourceEnumRefTable = LoadPrototypeEnumRefTable($"{AssetDirectory}\\ResourceEnumRefTable.bin");
+            PropertyIdPowerRefTable = LoadPrototypeEnumRefTable($"{AssetDirectory}\\PropertyIdPowerRefTable.bin");
 
             if (VerifyData())
             {
@@ -107,6 +111,36 @@ namespace MHServerEmu.GameServer.Data
             return prototypeDict;
         }
 
+        private static PropertyInfo[] LoadPropertyInfos(string path)
+        {
+            List<PropertyInfo> propertyInfoList = new();
+
+            if (File.Exists(path))
+            {
+                using (StreamReader streamReader = new(path))
+                {
+                    string? line = streamReader.ReadLine();
+
+                    while (line != null)
+                    {
+                        if (line != "")
+                        {
+                            string[] values = line.Split("\t");
+                            propertyInfoList.Add(new(values[0], (PropertyValueType)Enum.Parse(typeof(PropertyValueType), values[1])));
+                        }
+
+                        line = streamReader.ReadLine();
+                    }
+                }
+            }
+            else
+            {
+                Logger.Error($"Failed to locate {Path.GetFileName(path)}");
+            }
+
+            return propertyInfoList.ToArray();
+        }
+
         private static ulong[] LoadPrototypeEnumRefTable(string path)
         {
             if (File.Exists(path))
@@ -131,6 +165,7 @@ namespace MHServerEmu.GameServer.Data
             return Calligraphy.Entries.Length > 0
                 && Resource.Entries.Length > 0
                 && PrototypeDataDict.Count > 0
+                && PropertyInfos.Length > 0
                 && GlobalEnumRefTable.Length > 0
                 && ResourceEnumRefTable.Length > 0
                 && PropertyIdPowerRefTable.Length > 0;
