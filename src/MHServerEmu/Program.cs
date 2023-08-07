@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Common;
+using MHServerEmu.Common.Commands;
 using MHServerEmu.Common.Config;
 using MHServerEmu.GameServer.Data;
 using MHServerEmu.GameServer.Regions;
@@ -15,9 +16,7 @@ namespace MHServerEmu
 
         static void Main(string[] args)
         {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            PrintBanner();
-            Console.ResetColor();
+            PrintBanner();  
 
             if (ConfigManager.IsInitialized == false)
             {
@@ -34,31 +33,24 @@ namespace MHServerEmu
             }
 
             _authServer = new AuthServer(8080);
-            new Thread(() => _authServer.HandleIncomingConnections()).Start();
-
             _frontendServer = new FrontendServer(4306);
 
             while (true)
             {
                 string input = Console.ReadLine();
-                if (input.Equals("exit", StringComparison.OrdinalIgnoreCase))
-                    break;
-                else if (input.Equals("stop", StringComparison.OrdinalIgnoreCase))
-                    _frontendServer.Shutdown();
-                else if (input.Equals("parse", StringComparison.OrdinalIgnoreCase))
-                    PacketHelper.ParseServerMessagesFromAllPacketFiles();
-                else if (input.Equals("exportgpakentries", StringComparison.OrdinalIgnoreCase))
-                    Database.ExportGpakEntries();
-                else if (input.Equals("exportgpakdata", StringComparison.OrdinalIgnoreCase))
-                    Database.ExportGpakData();
+                CommandHandler.Parse(input);
             }
+        }
 
+        public static void Shutdown()
+        {
             _frontendServer.Shutdown();
+            Environment.Exit(0);
         }
 
         private static void PrintBanner()
         {
-
+            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine(@"  __  __ _    _  _____                          ______                 ");
             Console.WriteLine(@" |  \/  | |  | |/ ____|                        |  ____|                ");
             Console.WriteLine(@" | \  / | |__| | (___   ___ _ ____   _____ _ __| |__   _ __ ___  _   _ ");
@@ -66,6 +58,7 @@ namespace MHServerEmu
             Console.WriteLine(@" | |  | | |  | |____) |  __/ |   \ V /  __/ |  | |____| | | | | | |_| |");
             Console.WriteLine(@" |_|  |_|_|  |_|_____/ \___|_|    \_/ \___|_|  |______|_| |_| |_|\__,_|");
             Console.WriteLine();
+            Console.ResetColor();
         }
     }
 }

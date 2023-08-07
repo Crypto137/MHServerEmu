@@ -20,8 +20,11 @@ namespace MHServerEmu.Networking
 
             // Create an http server and start listening for incoming connections
             _listener = new HttpListener();
-            _listener.Prefixes.Add($"http://{ServerHost}:{port}/");
+            _listener.Prefixes.Add(url);
             _listener.Start();
+
+            new Thread(() => HandleIncomingConnections()).Start();
+
             Logger.Info($"AuthServer is listening on {url}...");
         }
 
