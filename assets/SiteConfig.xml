@@ -1,8 +1,7 @@
 <config>
-	<str name="AuthServerAddress" value="localhost" />
-	<str name="AuthServerUrl" value="/AuthTicket" />
 	<!-- <str name="AuthServerAddress" value="auth.marvelheroes.com" /> -->
-	<!-- <str name="AuthServerUrl" value="/AuthServer/Login/IndexPB" /> -->
+	<str name="AuthServerAddress" value="localhost" />
+	<str name="AuthServerUrl" value="/AuthServer/Login/IndexPB" />
 	<str name="AuthServerTicketUrl" value="" />
 	<str name="AuthServerPort" value="443" />
 	<str name="CrashReportHost" value="hq-gar-dev01" />
