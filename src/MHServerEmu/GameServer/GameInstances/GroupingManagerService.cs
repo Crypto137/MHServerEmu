@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Common;
+using MHServerEmu.Common.Config;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.GameServer.GameInstances
@@ -20,7 +21,17 @@ namespace MHServerEmu.GameServer.GameInstances
             switch ((ClientToGameServerMessage)message.Id)
             {
                 case ClientToGameServerMessage.NetMessageChat:
+                    var chatMessage = NetMessageChat.ParseFrom(message.Content);
                     Logger.Trace(NetMessageChat.ParseFrom(message.Content).ToString());
+
+                    var chatBroadcastMessage = ChatBroadcastMessage.CreateBuilder()
+                        .SetRoomType(chatMessage.RoomType)
+                        .SetFromPlayerName("Player")
+                        .SetTheMessage(chatMessage.TheMessage)
+                        .Build().ToByteArray();
+
+                    client.SendMessage(2, new(GroupingManagerMessage.ChatBroadcastMessage, chatBroadcastMessage));
+
                     break;
 
                 default:
