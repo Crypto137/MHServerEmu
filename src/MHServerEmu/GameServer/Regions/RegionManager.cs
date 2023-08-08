@@ -14,6 +14,7 @@ namespace MHServerEmu.GameServer.Regions
             RegionDict.Add(RegionPrototype.NPEAvengersTowerHUBRegion, LoadRegionData(RegionPrototype.NPEAvengersTowerHUBRegion));
             RegionDict.Add(RegionPrototype.TrainingRoomSHIELDRegion, LoadRegionData(RegionPrototype.TrainingRoomSHIELDRegion));
             RegionDict.Add(RegionPrototype.XaviersMansionRegion, LoadRegionData(RegionPrototype.XaviersMansionRegion));
+            RegionDict.Add(RegionPrototype.AsgardiaRegion, LoadRegionData(RegionPrototype.AsgardiaRegion));
             RegionDict.Add(RegionPrototype.GenoshaHUBRegion, LoadRegionData(RegionPrototype.GenoshaHUBRegion));
             RegionDict.Add(RegionPrototype.DangerRoomHubRegion, LoadRegionData(RegionPrototype.DangerRoomHubRegion));
             RegionDict.Add(RegionPrototype.DailyGShockerSubwayRegionL60, LoadRegionData(RegionPrototype.DailyGShockerSubwayRegionL60));
@@ -161,6 +162,44 @@ namespace MHServerEmu.GameServer.Regions
                     region.EntrancePosition = new(-2047f, 5136f, -9.375f);
                     region.EntranceOrientation = new();
                     region.WaypointPosition = new(-2047f, 5136f, -9.375f);
+                    region.WaypointOrientation = new();
+
+                    break;
+
+                case RegionPrototype.AsgardiaRegion:
+
+                    archiveData = new byte[] {
+                    };
+
+                    region = new(RegionPrototype.AsgardiaRegion,
+                        1153032354375335950,
+                        2119981225,
+                        archiveData,
+                        new(-1152f, -5760f, -1152f),
+                        new(5760f, 8064f, 1152f),
+                        new(58, DifficultyTier.Normal));
+
+                    area = new(1, AreaPrototype.AsgardiaArea, new(), true);
+                    area.AddCell(new(13, 15073780346019977560, new()));
+                    area.AddCell(new(11, 11246649063905891792, new()));
+                    area.AddCell(new(10, 1909646168222143951, new()));
+                    area.AddCell(new(9, 15122171344131397070, new()));
+                    area.AddCell(new(1, 10662757872149665228, new()));
+                    area.AddCell(new(2, 6387628673607996877, new()));
+                    area.AddCell(new(5, 6869037629237827021, new()));
+                    area.AddCell(new(6, 10668863627723347406, new()));
+                    area.AddCell(new(3, 16010605369626138062, new()));
+                    area.AddCell(new(7, 1340692112513897935, new()));
+                    area.AddCell(new(14, 6315350639355304281, new()));
+                    area.AddCell(new(4, 1544113879755068879, new()));
+                    area.AddCell(new(8, 15692735703338522064, new()));
+                    area.AddCell(new(12, 6289501289510147537, new()));
+
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(1919.875f, 767.875f, 7.875f);
+                    region.EntranceOrientation = new();
+                    region.WaypointPosition = new(1919.875f, 767.875f, 7.875f);
                     region.WaypointOrientation = new();
 
                     break;
