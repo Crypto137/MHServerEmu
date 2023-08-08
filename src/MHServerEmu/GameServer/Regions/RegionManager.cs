@@ -14,6 +14,7 @@ namespace MHServerEmu.GameServer.Regions
             RegionDict.Add(RegionPrototype.NPEAvengersTowerHUBRegion, LoadRegionData(RegionPrototype.NPEAvengersTowerHUBRegion));
             RegionDict.Add(RegionPrototype.TrainingRoomSHIELDRegion, LoadRegionData(RegionPrototype.TrainingRoomSHIELDRegion));
             RegionDict.Add(RegionPrototype.XaviersMansionRegion, LoadRegionData(RegionPrototype.XaviersMansionRegion));
+            RegionDict.Add(RegionPrototype.HelicarrierRegion, LoadRegionData(RegionPrototype.HelicarrierRegion));
             RegionDict.Add(RegionPrototype.AsgardiaRegion, LoadRegionData(RegionPrototype.AsgardiaRegion));
             RegionDict.Add(RegionPrototype.GenoshaHUBRegion, LoadRegionData(RegionPrototype.GenoshaHUBRegion));
             RegionDict.Add(RegionPrototype.DangerRoomHubRegion, LoadRegionData(RegionPrototype.DangerRoomHubRegion));
@@ -162,6 +163,31 @@ namespace MHServerEmu.GameServer.Regions
                     region.EntrancePosition = new(-2047f, 5136f, -9.375f);
                     region.EntranceOrientation = new();
                     region.WaypointPosition = new(-2047f, 5136f, -9.375f);
+                    region.WaypointOrientation = new();
+
+                    break;
+
+                case RegionPrototype.HelicarrierRegion:
+
+                    archiveData = new byte[] {
+                    };
+
+                    region = new(RegionPrototype.HelicarrierRegion,
+                        1153032354375335949,
+                        1347063143,
+                        archiveData,
+                        new(-4352f, -4352f, -4352f),
+                        new(4352f, 4352f, 4352f),
+                        new(49, DifficultyTier.Normal));
+
+                    area = new(1, AreaPrototype.HelicarrierArea, new(), true);
+                    area.AddCell(new(1, 9132424850153412694, new()));
+
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(-405.75f, 1274.125f, 7f);
+                    region.EntranceOrientation = new();
+                    region.WaypointPosition = new(-405.75f, 1274.125f, 7f);
                     region.WaypointOrientation = new();
 
                     break;
