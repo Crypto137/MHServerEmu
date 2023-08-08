@@ -18,6 +18,7 @@ namespace MHServerEmu.GameServer.Regions
             RegionDict.Add(RegionPrototype.AsgardiaRegion, LoadRegionData(RegionPrototype.AsgardiaRegion));
             RegionDict.Add(RegionPrototype.GenoshaHUBRegion, LoadRegionData(RegionPrototype.GenoshaHUBRegion));
             RegionDict.Add(RegionPrototype.DangerRoomHubRegion, LoadRegionData(RegionPrototype.DangerRoomHubRegion));
+            RegionDict.Add(RegionPrototype.InvasionSafeAbodeRegion, LoadRegionData(RegionPrototype.InvasionSafeAbodeRegion));
             RegionDict.Add(RegionPrototype.DailyGShockerSubwayRegionL60, LoadRegionData(RegionPrototype.DailyGShockerSubwayRegionL60));
             RegionDict.Add(RegionPrototype.XManhattanRegion60Cosmic, LoadRegionData(RegionPrototype.XManhattanRegion60Cosmic));
 
@@ -302,6 +303,34 @@ namespace MHServerEmu.GameServer.Regions
                     region.EntranceOrientation = new();
                     region.WaypointPosition = new(-284f, -405f, 308f);
                     region.WaypointOrientation = new(2.640625f, 0f, 0f);
+
+                    break;
+
+                case RegionPrototype.InvasionSafeAbodeRegion:
+
+                    archiveData = new byte[] {
+                    };
+
+                    region = new(RegionPrototype.InvasionSafeAbodeRegion,
+                        1153032354375335951,
+                        1038711701,
+                        archiveData,
+                        new(-2304f, -1152f, -1152f),
+                        new(2304f, 1152f, 1152f),
+                        new(60, DifficultyTier.Normal));
+
+                    area = new(2, AreaPrototype.InvasionSafeAbodeArea2, new(1152f, 0f, 0f), true);
+                    area.AddCell(new(1, 17230426162301181800, new()));
+                    region.AddArea(area);
+
+                    area = new(1, AreaPrototype.InvasionSafeAbodeArea1, new(-1152f, 0f, 0f), true);
+                    area.AddCell(new(2, 8175011988152327381, new()));
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(893f, 0f, 7.5f);
+                    region.EntranceOrientation = new();
+                    region.WaypointPosition = new(893f, 0f, 7.5f);
+                    region.WaypointOrientation = new();
 
                     break;
 
