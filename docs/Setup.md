@@ -35,4 +35,4 @@ Now you can actually start everything and get in-game.
 
 If everything works correctly, the server should display client connection information.
 
-*Note: you can launch the game without Steam by running MarvelHeroesOmega.exe with the following arguments: -solidstate -nosteam. There will be a DownloadChunkManifest error, but the game will start anyway.*
+*Note: you can launch the game without Steam by running MarvelHeroesOmega.exe with the following arguments: -robocopy -nosteam.*
