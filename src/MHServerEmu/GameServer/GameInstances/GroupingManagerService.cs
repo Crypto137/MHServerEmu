@@ -25,11 +25,7 @@ namespace MHServerEmu.GameServer.GameInstances
                     var chatMessageIn = NetMessageChat.ParseFrom(message.Content);
                     Logger.Trace(NetMessageChat.ParseFrom(message.Content).ToString());
 
-                    if (chatMessageIn.TheMessage.Body.StartsWith("!"))
-                    {
-                        CommandHandler.Parse(chatMessageIn.TheMessage.Body.TrimStart('!'), client);
-                    }
-                    else
+                    if (CommandManager.TryParse(chatMessageIn.TheMessage.Body, client) == false)
                     {
                         var chatMessageOut = ChatNormalMessage.CreateBuilder()
                             .SetRoomType(chatMessageIn.RoomType)
