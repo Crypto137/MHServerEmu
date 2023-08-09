@@ -2,36 +2,26 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common;
 using MHServerEmu.GameServer.Common;
+using MHServerEmu.GameServer.Entities.Archives;
 
-namespace MHServerEmu.GameServer.Entities.Archives
+namespace MHServerEmu.GameServer.Entities
 {
-    public class Player
+    public class Player : Entity
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public ulong Header { get; set; }
-        public ulong RepId { get; set; }
-        public Property[] Properties { get; set; }
         public ulong EnumValue { get; set; }
         public Mission[] Missions { get; set; }
         public ulong[] MissionFields { get; set; }
         public Quest[] Quests { get; set; }
         public ulong[] UnknownFields { get; set; }
 
-        public Player(byte[] data)
+        public Player(byte[] archiveData)
         {
-            CodedInputStream stream = CodedInputStream.CreateInstance(data);
+            CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
 
-            Header = stream.ReadRawVarint64();
-            RepId = stream.ReadRawVarint64();
-
-            Properties = new Property[BitConverter.ToUInt32(stream.ReadRawBytes(4))];
-            for (int i = 0; i < Properties.Length; i++)
-            {
-                ulong id = stream.ReadRawVarint64();
-                ulong value = stream.ReadRawVarint64();
-                Properties[i] = new(id, value);
-            }
+            ReadHeader(stream);
+            ReadProperties(stream);
 
             EnumValue = stream.ReadRawVarint64();
 
@@ -57,35 +47,27 @@ namespace MHServerEmu.GameServer.Entities.Archives
                 Quests[i] = new(prototypeId, fields);
             }
 
-            List<ulong> fieldList = new();
-            while (!stream.IsAtEnd)
-            {
-                fieldList.Add(stream.ReadRawVarint64());
-            }
-
-            UnknownFields = fieldList.ToArray();
+            ReadUnknownFields(stream);
         }
 
-        public Player(ulong header, ulong repId, Property[] properties, ulong enumValue, Mission[] missions, ulong[] missionFields, Quest[] quests, ulong[] unknownFields)
+        public Player(ulong replicationPolicy, ulong replicationId, Property[] properties,
+            ulong enumValue, Mission[] missions, ulong[] missionFields, Quest[] quests, ulong[] unknownFields)
+            : base(replicationPolicy, replicationId, properties, unknownFields)
         {
-            Header = header;
-            RepId = repId;
-            Properties = properties;
             EnumValue = enumValue;
             Missions = missions;
             MissionFields = missionFields;
             Quests = quests;
-            UnknownFields = unknownFields;
         }
 
-        public byte[] Encode()
+        public override byte[] Encode()
         {
             using (MemoryStream memoryStream = new())
             {
                 CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
 
-                stream.WriteRawVarint64(Header);
-                stream.WriteRawVarint64(RepId);
+                stream.WriteRawVarint64(ReplicationPolicy);
+                stream.WriteRawVarint64(ReplicationId);
 
                 stream.WriteRawBytes(BitConverter.GetBytes(Properties.Length));
                 foreach (Property property in Properties) stream.WriteRawBytes(property.Encode());
@@ -109,8 +91,8 @@ namespace MHServerEmu.GameServer.Entities.Archives
             using (MemoryStream memoryStream = new())
             using (StreamWriter streamWriter = new(memoryStream))
             {
-                streamWriter.WriteLine($"Header: 0x{Header.ToString("X")}");
-                streamWriter.WriteLine($"RepId: 0x{RepId.ToString("X")}");
+                streamWriter.WriteLine($"Header: 0x{ReplicationPolicy.ToString("X")}");
+                streamWriter.WriteLine($"RepId: 0x{ReplicationId.ToString("X")}");
                 for (int i = 0; i < Properties.Length; i++) streamWriter.WriteLine($"Property{i}: {Properties[i]}");
 
                 streamWriter.WriteLine($"EnumValue: 0x{EnumValue.ToString("X")}");

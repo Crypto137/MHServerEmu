@@ -2,38 +2,26 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.GameServer.Common;
 
-namespace MHServerEmu.GameServer.Entities.Archives
+namespace MHServerEmu.GameServer.Entities
 {
     public class Entity
     {
-        public ulong ReplicationPolicy { get; }
-        public ulong ReplicationId { get; }
-        public Property[] Properties { get; }
+        public ulong ReplicationPolicy { get; set; }
+        public ulong ReplicationId { get; set; }
+        public Property[] Properties { get; set; }
+        public ulong[] UnknownFields { get; set; }
 
-        public ulong[] UnknownFields { get; }
+        public Entity()
+        {
+        }
 
         public Entity(byte[] archiveData)
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
 
-            ReplicationPolicy = stream.ReadRawVarint64();
-            ReplicationId = stream.ReadRawVarint64();
-
-            Properties = new Property[BitConverter.ToUInt32(stream.ReadRawBytes(4))];
-            for (int i = 0; i < Properties.Length; i++)
-            {
-                ulong id = stream.ReadRawVarint64();
-                ulong value = stream.ReadRawVarint64();
-                Properties[i] = new(id, value);
-            }
-
-            List<ulong> fieldList = new();
-            while (!stream.IsAtEnd)
-            {
-                fieldList.Add(stream.ReadRawVarint64());
-            }
-
-            UnknownFields = fieldList.ToArray();
+            ReadHeader(stream);
+            ReadProperties(stream);
+            ReadUnknownFields(stream);
         }
 
         public Entity(ulong replicationPolicy, ulong replicationId, Property[] properties, ulong[] unknownFields)
@@ -44,7 +32,7 @@ namespace MHServerEmu.GameServer.Entities.Archives
             UnknownFields = unknownFields;
         }
 
-        public byte[] Encode()
+        public virtual byte[] Encode()
         {
             using (MemoryStream memoryStream = new())
             {
@@ -75,6 +63,30 @@ namespace MHServerEmu.GameServer.Entities.Archives
 
                 return Encoding.UTF8.GetString(memoryStream.ToArray());
             }
+        }
+
+        protected void ReadHeader(CodedInputStream stream)
+        {
+            ReplicationPolicy = stream.ReadRawVarint64();
+            ReplicationId = stream.ReadRawVarint64();
+        }
+
+        protected void ReadProperties(CodedInputStream stream)
+        {
+            Properties = new Property[BitConverter.ToUInt32(stream.ReadRawBytes(4))];
+            for (int i = 0; i < Properties.Length; i++)
+            {
+                ulong id = stream.ReadRawVarint64();
+                ulong value = stream.ReadRawVarint64();
+                Properties[i] = new(id, value);
+            }
+        }
+
+        protected void ReadUnknownFields(CodedInputStream stream)
+        {
+            List<ulong> fieldList = new();
+            while (!stream.IsAtEnd) fieldList.Add(stream.ReadRawVarint64());
+            UnknownFields = fieldList.ToArray();
         }
     }
 }
