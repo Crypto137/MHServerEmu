@@ -34,7 +34,7 @@ namespace MHServerEmu.GameServer.Data.Gpak
                     // Entry metadata
                     for (int i = 0; i < Entries.Length; i++)
                     {
-                        ulong id = ReadUlong(fileStream, buffer);
+                        ulong id = ReadULong(fileStream, buffer);
                         string filePath = ReadString(fileStream, buffer, ReadInt(fileStream, buffer));
                         int field2 = ReadInt(fileStream, buffer);
                         int offset = ReadInt(fileStream, buffer);
@@ -96,7 +96,7 @@ namespace MHServerEmu.GameServer.Data.Gpak
             return BitConverter.ToInt32(buffer, 0);
         }
 
-        private ulong ReadUlong(FileStream fileStream, byte[] buffer)
+        private ulong ReadULong(FileStream fileStream, byte[] buffer)
         {
             fileStream.Read(buffer, 0, 8);
             return BitConverter.ToUInt64(buffer, 0);

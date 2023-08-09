@@ -10,8 +10,8 @@ namespace MHServerEmu.GameServer.Data
         private static readonly string AssetDirectory = $"{Directory.GetCurrentDirectory()}\\Assets";
 
         public static bool IsInitialized { get; private set; }
-        public static GpakFile Calligraphy { get; private set; }
-        public static GpakFile Resource { get; private set; }
+        public static GpakFile CalligraphyFile { get; private set; }
+        public static GpakFile ResourceFile { get; private set; }
 
         public static Dictionary<ulong, Prototype> PrototypeDataDict { get; private set; }
         public static PropertyInfo[] PropertyInfos { get; private set; }
@@ -24,8 +24,9 @@ namespace MHServerEmu.GameServer.Data
         {
             long startTime = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeMilliseconds();
 
-            Calligraphy = new("Calligraphy.sip");
-            Resource = new("mu_cdata.sip");
+            CalligraphyFile = new("Calligraphy.sip");
+            ResourceFile = new("mu_cdata.sip");
+            Calligraphy.Initialize(CalligraphyFile);
 
             Logger.Trace("Loading prototypes...");
             PrototypeDataDict = LoadPrototypeData($"{AssetDirectory}\\PrototypeDataTable.bin");
@@ -53,18 +54,18 @@ namespace MHServerEmu.GameServer.Data
         public static void ExportGpakEntries()
         {
             Logger.Info("Exporting Calligraphy entries...");
-            Calligraphy.ExportEntries("Calligraphy.tsv");
+            CalligraphyFile.ExportEntries("Calligraphy.tsv");
             Logger.Info("Exporting Resource entries...");
-            Resource.ExportEntries("mu_cdata.tsv");
+            ResourceFile.ExportEntries("mu_cdata.tsv");
             Logger.Info("Finished exporting GPAK entries");
         }
 
         public static void ExportGpakData()
         {
             Logger.Info("Exporting Calligraphy data...");
-            Calligraphy.ExportData();
+            CalligraphyFile.ExportData();
             Logger.Info("Exporting Resource data...");
-            Resource.ExportData();
+            ResourceFile.ExportData();
             Logger.Info("Finished exporting GPAK data");
         }
 
@@ -162,8 +163,8 @@ namespace MHServerEmu.GameServer.Data
 
         private static bool VerifyData()
         {
-            return Calligraphy.Entries.Length > 0
-                && Resource.Entries.Length > 0
+            return CalligraphyFile.Entries.Length > 0
+                && ResourceFile.Entries.Length > 0
                 && PrototypeDataDict.Count > 0
                 && PropertyInfos.Length > 0
                 && GlobalEnumRefTable.Length > 0
