@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
+using MHServerEmu.Common;
 using MHServerEmu.GameServer.Common;
 
 namespace MHServerEmu.GameServer.Entities
@@ -73,7 +74,7 @@ namespace MHServerEmu.GameServer.Entities
 
         protected void ReadProperties(CodedInputStream stream)
         {
-            Properties = new Property[BitConverter.ToUInt32(stream.ReadRawBytes(4))];
+            Properties = new Property[stream.ReadRawUInt32()];
             for (int i = 0; i < Properties.Length; i++)
             {
                 ulong id = stream.ReadRawVarint64();

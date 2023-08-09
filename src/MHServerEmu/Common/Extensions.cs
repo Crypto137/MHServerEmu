@@ -1,4 +1,7 @@
-﻿namespace MHServerEmu.Common
+﻿using System.Text;
+using Google.ProtocolBuffers;
+
+namespace MHServerEmu.Common
 {
     public static class Extensions
     {
@@ -24,6 +27,29 @@
         {
             int n = (int)(number * (1 << precision));
             return (uint)((2 * n) ^ (n >> 31));
+        }
+
+        public static uint ReadRawUInt32(this CodedInputStream stream)
+        {
+            return BitConverter.ToUInt32(stream.ReadRawBytes(4));
+        }
+
+        public static string ReadRawString(this CodedInputStream stream)
+        {
+            int length = (int)stream.ReadRawVarint32();
+            return Encoding.UTF8.GetString(stream.ReadRawBytes(length));
+        }
+
+        public static void WriteRawUInt32(this CodedOutputStream stream, uint value)
+        {
+            stream.WriteRawBytes(BitConverter.GetBytes(value));
+        }
+
+        public static void WriteRawString(this CodedOutputStream stream, string value)
+        {
+            byte[] rawBytes = Encoding.UTF8.GetBytes(value);
+            stream.WriteRawVarint64((ulong)rawBytes.Length);
+            stream.WriteRawBytes(rawBytes);
         }
     }
 }

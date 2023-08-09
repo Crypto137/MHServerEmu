@@ -118,15 +118,25 @@ namespace MHServerEmu.GameServer.Regions
             {
                 var entityCreateMessage = NetMessageEntityCreate.ParseFrom(message.Content);
                 EntityCreateBaseData baseData = new(entityCreateMessage.BaseData.ToByteArray());
-                Entity entity = new(entityCreateMessage.ArchiveData.ToByteArray());
 
-                if (baseData.EntityId == 14646212)      // add the main local player entity straight away
+                if (baseData.EntityId == 14646212)      // Player entity
                 {
-                    messageList.Add(message);
+                    Player player = new(entityCreateMessage.ArchiveData.ToByteArray());
+
+                    // modify player data here
+
+                    var customEntityCreateMessage = NetMessageEntityCreate.CreateBuilder()
+                        .SetBaseData(ByteString.CopyFrom(baseData.Encode()))
+                        .SetArchiveData(ByteString.CopyFrom(player.Encode()))
+                        .Build().ToByteArray();
+
+                    messageList.Add(new(GameServerToClientMessage.NetMessageEntityCreate, customEntityCreateMessage));
                 }
                 else
                 {
                     // Modify base data if loading any hero other than Black Cat
+                    Entity entity = new(entityCreateMessage.ArchiveData.ToByteArray());
+
                     if (avatar != HardcodedAvatarEntity.BlackCat)
                     {
                         if (baseData.EntityId == (ulong)avatar)
