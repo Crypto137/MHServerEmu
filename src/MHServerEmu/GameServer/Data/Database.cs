@@ -27,6 +27,7 @@ namespace MHServerEmu.GameServer.Data
             CalligraphyFile = new("Calligraphy.sip");
             ResourceFile = new("mu_cdata.sip");
             Calligraphy.Initialize(CalligraphyFile);
+            Resource.Initialize(ResourceFile);
 
             Logger.Trace("Loading prototypes...");
             PrototypeDataDict = LoadPrototypeData($"{AssetDirectory}\\PrototypeDataTable.bin");
