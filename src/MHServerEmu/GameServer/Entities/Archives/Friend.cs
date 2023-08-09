@@ -35,9 +35,21 @@ namespace MHServerEmu.GameServer.Entities.Archives
             Field11 = stream.ReadRawVarint64();
         }
 
-        public Friend()
+        public Friend(string field0, ulong field1, ulong field2, ulong field3, ulong field4, ulong field5,
+            string field6, string field7, ulong field8, ulong field9, ulong field10, ulong field11)
         {
-            // TODO: manual constructor
+            Field0 = field0;
+            Field1 = field1;
+            Field2 = field2;
+            Field3 = field3;
+            Field4 = field4;
+            Field5 = field5;
+            Field6 = field6;
+            Field7 = field7;
+            Field8 = field8;
+            Field9 = field9;
+            Field10 = field10;
+            Field11 = field11;
         }
 
         public byte[] Encode()

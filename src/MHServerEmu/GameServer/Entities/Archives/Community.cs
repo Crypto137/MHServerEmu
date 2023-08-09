@@ -6,12 +6,12 @@ namespace MHServerEmu.GameServer.Entities.Archives
 {
     public class Community
     {
-        ulong ReplicationId { get; set; }
-        ulong Field1 { get; set; }
-        string Field2 { get; set; }
-        ulong Flag { get; set; }
-        string[] Captions { get; set; }
-        Friend[] Friends { get; set; }
+        public ulong ReplicationId { get; set; }
+        public ulong Field1 { get; set; }
+        public string Field2 { get; set; }
+        public ulong Flag { get; set; }
+        public string[] Captions { get; set; }
+        public Friend[] Friends { get; set; }
 
         public Community(CodedInputStream stream)
         {
