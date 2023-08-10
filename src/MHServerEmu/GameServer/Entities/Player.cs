@@ -12,7 +12,6 @@ namespace MHServerEmu.GameServer.Entities
 
         public ulong EnumValue { get; set; }
         public Mission[] Missions { get; set; }
-        public ulong[] MissionFields { get; set; }
         public Quest[] Quests { get; set; }
 
         public ulong UnknownCollectionRepId { get; set;}
@@ -28,6 +27,7 @@ namespace MHServerEmu.GameServer.Entities
         public ReplicatedString ReplicatedString2 { get; set; }
 
         public ulong MatchQueueStatus { get; set; }
+        public bool ReplicationPolicyBool { get; set; }
         public ulong DateTime { get; set; }
 
         public Community Community { get; set; }
@@ -35,13 +35,14 @@ namespace MHServerEmu.GameServer.Entities
         public Player(byte[] archiveData)
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
+            BoolBuffer boolBuffer = new();
 
             ReadHeader(stream);
             ReadProperties(stream);
 
             EnumValue = stream.ReadRawVarint64();
 
-            ReadMissions(stream);
+            ReadMissions(stream, boolBuffer);
             ReadQuests(stream);
 
             UnknownCollectionRepId = stream.ReadRawVarint64();
@@ -52,23 +53,26 @@ namespace MHServerEmu.GameServer.Entities
             Community2 = stream.ReadRawVarint64();
             ReplicatedString2 = new(stream.ReadRawVarint64(), stream.ReadRawString());
             MatchQueueStatus = stream.ReadRawVarint64();
+
+            if (boolBuffer.IsEmpty())
+                boolBuffer.SetBits(stream.ReadRawByte());
+            ReplicationPolicyBool = boolBuffer.ReadBool();
+
             DateTime = stream.ReadRawVarint64();
-            Community = new(stream);
+            Community = new(stream, boolBuffer);
 
             ReadUnknownFields(stream);
         }
 
         // note: this is ugly
         public Player(ulong replicationPolicy, ulong replicationId, Property[] properties,
-            ulong enumValue, Mission[] missions, ulong[] missionFields, Quest[] quests,
-            ulong unknownCollectionRepId, uint unknownCollectionSize, ulong shardId, ReplicatedString replicatedString1,
-            ulong community1, ulong community2, ReplicatedString replicatedString2, ulong matchQueueStatus, ulong dateTime,
-            Community community, ulong[] unknownFields)
+            ulong enumValue, Mission[] missions, Quest[] quests, ulong unknownCollectionRepId, uint unknownCollectionSize,
+            ulong shardId, ReplicatedString replicatedString1, ulong community1, ulong community2, ReplicatedString replicatedString2,
+            ulong matchQueueStatus, bool replicationPolicyBool, ulong dateTime, Community community, ulong[] unknownFields)
             : base(replicationPolicy, replicationId, properties, unknownFields)
         {
             EnumValue = enumValue;
             Missions = missions;
-            MissionFields = missionFields;
             Quests = quests;
             UnknownCollectionRepId = unknownCollectionRepId;
             UnknownCollectionSize = unknownCollectionSize;
@@ -78,6 +82,7 @@ namespace MHServerEmu.GameServer.Entities
             Community2 = community2;
             ReplicatedString2 = replicatedString2;
             MatchQueueStatus = matchQueueStatus;
+            ReplicationPolicyBool = replicationPolicyBool;
             DateTime = dateTime;
             Community = community;
             UnknownFields = unknownFields;
@@ -98,7 +103,7 @@ namespace MHServerEmu.GameServer.Entities
                 stream.WriteRawVarint64(EnumValue);
 
                 stream.WriteRawVarint64((ulong)Missions.Length);
-                foreach (ulong field in MissionFields) stream.WriteRawVarint64(field);
+                //foreach (ulong field in MissionFields) stream.WriteRawVarint64(field);
 
                 stream.WriteRawVarint64((ulong)(Quests.Length << 1));
                 foreach (Quest quest in Quests) stream.WriteRawBytes(quest.Encode());
@@ -130,7 +135,7 @@ namespace MHServerEmu.GameServer.Entities
                 streamWriter.WriteLine($"RepId: 0x{ReplicationId.ToString("X")}");
                 for (int i = 0; i < Properties.Length; i++) streamWriter.WriteLine($"Property{i}: {Properties[i]}");
                 streamWriter.WriteLine($"EnumValue: 0x{EnumValue.ToString("X")}");
-                for (int i = 0; i < MissionFields.Length; i++) streamWriter.WriteLine($"MissionField{i}: 0x{MissionFields[i].ToString("X")}");
+                for (int i = 0; i < Missions.Length; i++) streamWriter.WriteLine($"Mission{i}: {Missions[i]}");
                 for (int i = 0; i < Quests.Length; i++) streamWriter.WriteLine($"Quest{i}: {Quests[i]}");
 
                 streamWriter.WriteLine($"UnknownCollectionRepId: 0x{UnknownCollectionRepId.ToString("X")}");
@@ -141,6 +146,7 @@ namespace MHServerEmu.GameServer.Entities
                 streamWriter.WriteLine($"Community2: 0x{Community2.ToString("X")}");
                 streamWriter.WriteLine($"ReplicatedString2: {ReplicatedString2}");
                 streamWriter.WriteLine($"MatchQueueStatus: 0x{MatchQueueStatus.ToString("X")}");
+                streamWriter.WriteLine($"ReplicationPolicyBool: 0x{DateTime.ToString("X")}");
                 streamWriter.WriteLine($"DateTime: 0x{DateTime.ToString("X")}");
                 streamWriter.WriteLine($"Community: {Community}");
 
@@ -152,13 +158,13 @@ namespace MHServerEmu.GameServer.Entities
             }
         }
 
-        private void ReadMissions(CodedInputStream stream)
+        private void ReadMissions(CodedInputStream stream, BoolBuffer boolBuffer)
         {
             Missions = new Mission[stream.ReadRawVarint64()];
-            MissionFields = new ulong[4664];    // hardcoded size for skipping
-            for (int i = 0; i < MissionFields.Length; i++)
+            //MissionFields = new ulong[4664];    // hardcoded size for skipping
+            for (int i = 0; i < Missions.Length; i++)
             {
-                MissionFields[i] = stream.ReadRawVarint64();
+                Missions[i] = new(stream, boolBuffer);
             }
         }
 

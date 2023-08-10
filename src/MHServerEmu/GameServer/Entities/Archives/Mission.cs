@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common;
+using MHServerEmu.GameServer.Common;
 
 namespace MHServerEmu.GameServer.Entities.Archives
 {
@@ -16,10 +17,9 @@ namespace MHServerEmu.GameServer.Entities.Archives
         public Objective[] Objectives { get; set; }
         public ulong Participant { get; set; }
         public ulong ParticipantOwnerEntityId { get; set; }
-        public byte BoolByte { get; set; }
+        public bool BoolField { get; set; }
 
-
-        public Mission(CodedInputStream stream)
+        public Mission(CodedInputStream stream, BoolBuffer boolBuffer)
         {
             PrototypeId = stream.ReadRawVarint64();
             State = stream.ReadRawVarint64();
@@ -28,11 +28,13 @@ namespace MHServerEmu.GameServer.Entities.Archives
             Random = stream.ReadRawVarint64();
             Objectives = new Objective[stream.ReadRawVarint64()];
             for (int i = 0; i < Objectives.Length; i++)
-                for (int j = 0; j < 9; j++) stream.ReadRawVarint64();   // skip objectives
+                Objectives[i] = new(stream);
             Participant = stream.ReadRawVarint64();
             ParticipantOwnerEntityId = stream.ReadRawVarint64();
 
-
+            if (boolBuffer.IsEmpty())
+                boolBuffer.SetBits(stream.ReadRawByte());
+            BoolField = boolBuffer.ReadBool();
 
             Console.WriteLine(ParticipantOwnerEntityId);
         }
@@ -61,7 +63,15 @@ namespace MHServerEmu.GameServer.Entities.Archives
             using (MemoryStream memoryStream = new())
             using (StreamWriter streamWriter = new(memoryStream))
             {
-                //streamWriter.WriteLine($"ReplicationId: 0x{ReplicationId.ToString("X")}");
+                streamWriter.WriteLine($"PrototypeId: 0x{PrototypeId.ToString("X")}");
+                streamWriter.WriteLine($"State: 0x{State.ToString("X")}");
+                streamWriter.WriteLine($"GameTime: 0x{GameTime.ToString("X")}");
+                streamWriter.WriteLine($"PrototypeGuid: 0x{PrototypeGuid.ToString("X")}");
+                streamWriter.WriteLine($"Random: 0x{Random.ToString("X")}");
+                streamWriter.WriteLine($"Objectives: {Objectives}");
+                streamWriter.WriteLine($"Participant: 0x{Participant.ToString("X")}");
+                streamWriter.WriteLine($"ParticipantOwnerEntityId: 0x{ParticipantOwnerEntityId.ToString("X")}");
+                streamWriter.WriteLine($"BoolField: {BoolField}");
 
                 streamWriter.Flush();
                 return Encoding.UTF8.GetString(memoryStream.ToArray());
