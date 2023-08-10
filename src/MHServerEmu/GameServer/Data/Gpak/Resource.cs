@@ -27,7 +27,17 @@ namespace MHServerEmu.GameServer.Data.Gpak
 
         public static void Export()
         {
-            File.WriteAllText($"{Directory.GetCurrentDirectory()}\\Assets\\GPAK\\District.json", JsonSerializer.Serialize(DistrictDict));
+            JsonSerializerOptions jsonOptions = new();
+            jsonOptions.WriteIndented = true;
+
+            foreach (var kvp in DistrictDict)
+            {
+                string path = $"{Directory.GetCurrentDirectory()}\\Assets\\GPAK\\Export\\{kvp.Key}.json";
+                string dir = Path.GetDirectoryName(path);
+                if (Directory.Exists(dir) == false) Directory.CreateDirectory(dir);
+
+                File.WriteAllText(path, JsonSerializer.Serialize(kvp.Value, jsonOptions));
+            }
         }
     }
 }
