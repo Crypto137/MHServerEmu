@@ -32,8 +32,7 @@ namespace MHServerEmu.GameServer.Entities.Archives
             Participant = stream.ReadRawVarint64();
             ParticipantOwnerEntityId = stream.ReadRawVarint64();
 
-            if (boolBuffer.IsEmpty())
-                boolBuffer.SetBits(stream.ReadRawByte());
+            if (boolBuffer.IsEmpty) boolBuffer.SetBits(stream.ReadRawByte());
             BoolField = boolBuffer.ReadBool();
 
             Console.WriteLine(ParticipantOwnerEntityId);

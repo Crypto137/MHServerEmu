@@ -34,6 +34,11 @@ namespace MHServerEmu.Common
             return BitConverter.ToUInt32(stream.ReadRawBytes(4));
         }
 
+        public static int ReadRawInt32(this CodedInputStream stream)
+        {
+            return (int)(stream.ReadRawVarint64() >> 1);
+        }
+
         public static string ReadRawString(this CodedInputStream stream)
         {
             int length = (int)stream.ReadRawVarint32();
@@ -43,6 +48,11 @@ namespace MHServerEmu.Common
         public static void WriteRawUInt32(this CodedOutputStream stream, uint value)
         {
             stream.WriteRawBytes(BitConverter.GetBytes(value));
+        }
+
+        public static void WriteRawInt32(this CodedOutputStream stream, int value)
+        {
+            stream.WriteRawVarint64((ulong)(value << 1));
         }
 
         public static void WriteRawString(this CodedOutputStream stream, string value)

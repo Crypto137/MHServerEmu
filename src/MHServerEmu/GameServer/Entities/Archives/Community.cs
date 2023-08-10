@@ -20,23 +20,21 @@ namespace MHServerEmu.GameServer.Entities.Archives
             ReplicationId = stream.ReadRawVarint64();
             Field1 = stream.ReadRawVarint64();
 
-            if (boolBuffer.IsEmpty())
-                boolBuffer.SetBits(stream.ReadRawByte());
+            if (boolBuffer.IsEmpty) boolBuffer.SetBits(stream.ReadRawByte());
             GmBool = boolBuffer.ReadBool();
 
             UnknownString = stream.ReadRawString();
 
-            if (boolBuffer.IsEmpty())
-                boolBuffer.SetBits(stream.ReadRawByte());
+            if (boolBuffer.IsEmpty) boolBuffer.SetBits(stream.ReadRawByte());
             Flag3 = boolBuffer.ReadBool();
 
-            Captions = new string[stream.ReadRawVarint64() >> 1];
+            Captions = new string[stream.ReadRawInt32()];
             for (int i = 0; i < Captions.Length; i++)
             {
                 Captions[i] = stream.ReadRawString();
             }
 
-            Friends = new Friend[stream.ReadRawVarint64() >> 1];
+            Friends = new Friend[stream.ReadRawInt32()];
             for (int i = 0; i < Friends.Length; i++)
             {
                 Friends[i] = new(stream);
@@ -66,7 +64,7 @@ namespace MHServerEmu.GameServer.Entities.Archives
                 stream.WriteRawString(UnknownString);
                 //stream.WriteRawVarint64(Flag);
                 foreach (string caption in Captions) stream.WriteRawString(caption);
-                stream.WriteRawVarint64((ulong)Friends.Length << 1);
+                stream.WriteRawInt32(Friends.Length);
                 foreach (Friend friend in Friends) stream.WriteRawBytes(friend.Encode());
 
                 stream.Flush();

@@ -9,6 +9,8 @@ namespace MHServerEmu.GameServer.Common
         private byte _bitBuffer = 0;
         private byte _position = 0;
 
+        public bool IsEmpty { get => _bitBuffer == 0; } 
+
         public bool ReadBool()
         {
             byte remainingBits = (byte)(_bitBuffer & 0x7);
@@ -37,11 +39,6 @@ namespace MHServerEmu.GameServer.Common
         {
             _bitBuffer = buffer;
             _position = 0;
-        }
-
-        public bool IsEmpty()
-        {
-            return _bitBuffer == 0;
         }
     }
 }

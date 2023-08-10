@@ -13,24 +13,26 @@ namespace MHServerEmu.GameServer.Entities
         public ulong EnumValue { get; set; }
         public Mission[] Missions { get; set; }
         public Quest[] Quests { get; set; }
-
         public ulong UnknownCollectionRepId { get; set;}
         public uint UnknownCollectionSize { get; set; }
-
         public ulong ShardId { get; set; }
-
         public ReplicatedString ReplicatedString1 { get; set; }
-
         public ulong Community1 { get; set; }
         public ulong Community2 { get; set; }
-
         public ReplicatedString ReplicatedString2 { get; set; }
-
         public ulong MatchQueueStatus { get; set; }
         public bool ReplicationPolicyBool { get; set; }
         public ulong DateTime { get; set; }
-
         public Community Community { get; set; }
+        public bool Flag3 { get; set; }
+        public ulong[] StashInventories { get; set; }
+        public uint[] AvailableBadges { get; set; }
+        public ChatChannelOption[] ChatChannelOptions { get; set; }
+        public ulong[] ChatChannelOptions2 { get; set; }
+        public ulong[] UnknownOptions { get; set; }
+        public EquipmentInvUISlot[] EquipmentInvUISlots { get; set; }
+        public AchievementState[] AchievementStates { get; set; }
+        public StashTabOption[] StashTabOptions { get; set; }
 
         public Player(byte[] archiveData)
         {
@@ -42,8 +44,12 @@ namespace MHServerEmu.GameServer.Entities
 
             EnumValue = stream.ReadRawVarint64();
 
-            ReadMissions(stream, boolBuffer);
-            ReadQuests(stream);
+            Missions = new Mission[stream.ReadRawVarint64()];
+            for (int i = 0; i < Missions.Length; i++)
+                Missions[i] = new(stream, boolBuffer);
+            Quests = new Quest[stream.ReadRawInt32()];
+            for (int i = 0; i < Quests.Length; i++)
+                Quests[i] = new(stream);
 
             UnknownCollectionRepId = stream.ReadRawVarint64();
             UnknownCollectionSize = stream.ReadRawUInt32();
@@ -54,12 +60,47 @@ namespace MHServerEmu.GameServer.Entities
             ReplicatedString2 = new(stream.ReadRawVarint64(), stream.ReadRawString());
             MatchQueueStatus = stream.ReadRawVarint64();
 
-            if (boolBuffer.IsEmpty())
-                boolBuffer.SetBits(stream.ReadRawByte());
+            if (boolBuffer.IsEmpty) boolBuffer.SetBits(stream.ReadRawByte());
             ReplicationPolicyBool = boolBuffer.ReadBool();
 
             DateTime = stream.ReadRawVarint64();
             Community = new(stream, boolBuffer);
+
+            if (boolBuffer.IsEmpty) boolBuffer.SetBits(stream.ReadRawByte());
+            Flag3 = boolBuffer.ReadBool();
+
+            StashInventories = new ulong[stream.ReadRawVarint64()];
+            for (int i = 0; i < StashInventories.Length; i++)
+                StashInventories[i] = stream.ReadRawVarint64();
+
+            AvailableBadges = new uint[stream.ReadRawVarint64()];
+
+            ChatChannelOptions = new ChatChannelOption[stream.ReadRawVarint64()];
+            for (int i = 0; i < ChatChannelOptions.Length; i++)
+                ChatChannelOptions[i] = new(stream, boolBuffer);
+
+            ChatChannelOptions2 = new ulong[stream.ReadRawVarint64()];
+            for (int i = 0; i < ChatChannelOptions2.Length; i++)
+                ChatChannelOptions2[i] = stream.ReadRawVarint64();
+
+            UnknownOptions = new ulong[stream.ReadRawVarint64()];
+            for (int i = 0; i < UnknownOptions.Length; i++)
+                UnknownOptions[i] = stream.ReadRawVarint64();
+
+            EquipmentInvUISlots = new EquipmentInvUISlot[stream.ReadRawVarint64()];
+            for (int i = 0; i < EquipmentInvUISlots.Length; i++)
+                EquipmentInvUISlots[i] = new(stream);
+
+            AchievementStates = new AchievementState[stream.ReadRawVarint64()];
+            //for (int i = 0; i < AchievementStates.Length; i++)
+            //    AchievementStates[i] = new(stream, boolBuffer);
+
+            for (int i = 0; i < 7893; i++)  // Skip achievement states
+                stream.ReadRawVarint64();
+
+            StashTabOptions = new StashTabOption[stream.ReadRawVarint64()];
+            for (int i = 0; i < StashTabOptions.Length; i++)
+                StashTabOptions[i] = new(stream);
 
             ReadUnknownFields(stream);
         }
@@ -105,7 +146,7 @@ namespace MHServerEmu.GameServer.Entities
                 stream.WriteRawVarint64((ulong)Missions.Length);
                 //foreach (ulong field in MissionFields) stream.WriteRawVarint64(field);
 
-                stream.WriteRawVarint64((ulong)(Quests.Length << 1));
+                stream.WriteRawInt32(Quests.Length);
                 foreach (Quest quest in Quests) stream.WriteRawBytes(quest.Encode());
 
                 stream.WriteRawVarint64(UnknownCollectionRepId);
@@ -155,25 +196,6 @@ namespace MHServerEmu.GameServer.Entities
                 streamWriter.Flush();
 
                 return Encoding.UTF8.GetString(memoryStream.ToArray());
-            }
-        }
-
-        private void ReadMissions(CodedInputStream stream, BoolBuffer boolBuffer)
-        {
-            Missions = new Mission[stream.ReadRawVarint64()];
-            //MissionFields = new ulong[4664];    // hardcoded size for skipping
-            for (int i = 0; i < Missions.Length; i++)
-            {
-                Missions[i] = new(stream, boolBuffer);
-            }
-        }
-
-        private void ReadQuests(CodedInputStream stream)
-        {
-            Quests = new Quest[stream.ReadRawVarint64() >> 1];
-            for (int i = 0; i < Quests.Length; i++)
-            {
-                Quests[i] = new(stream);
             }
         }
     }
