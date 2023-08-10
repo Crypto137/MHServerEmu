@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Reflection;
+using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common;
 using MHServerEmu.GameServer.Common;
@@ -67,7 +68,7 @@ namespace MHServerEmu.GameServer.Entities.Archives
                 streamWriter.WriteLine($"GameTime: 0x{GameTime.ToString("X")}");
                 streamWriter.WriteLine($"PrototypeGuid: 0x{PrototypeGuid.ToString("X")}");
                 streamWriter.WriteLine($"Random: 0x{Random.ToString("X")}");
-                streamWriter.WriteLine($"Objectives: {Objectives}");
+                for (int i = 0; i < Objectives.Length; i++) streamWriter.WriteLine($"Objective{i}: {Objectives[i]}");
                 streamWriter.WriteLine($"Participant: 0x{Participant.ToString("X")}");
                 streamWriter.WriteLine($"ParticipantOwnerEntityId: 0x{ParticipantOwnerEntityId.ToString("X")}");
                 streamWriter.WriteLine($"BoolField: {BoolField}");

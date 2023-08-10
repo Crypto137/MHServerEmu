@@ -6,26 +6,22 @@ namespace MHServerEmu.GameServer.Entities.Archives
 {
     public class AchievementState
     {
-        public ulong Id { get; set; }
+        public ulong AchievementId { get; set; }
         public ulong Count { get; set; }
         public ulong CompletionDate { get; set; }
-        public bool ModifiedSinceCheckpoint { get; set; }
 
-        public AchievementState(CodedInputStream stream, BoolBuffer boolBuffer)
+        public AchievementState(CodedInputStream stream)
         {
-            Id = stream.ReadRawVarint64();
+            AchievementId = stream.ReadRawVarint64();
             Count = stream.ReadRawVarint64();
             CompletionDate = stream.ReadRawVarint64();
-            if (boolBuffer.IsEmpty) boolBuffer.SetBits(stream.ReadRawByte());
-            ModifiedSinceCheckpoint = boolBuffer.ReadBool();
         }
 
-        public AchievementState(ulong id, ulong count, ulong completionDate, bool modifiedSinceCheckpoint)
+        public AchievementState(ulong achievementId, ulong count, ulong completionDate)
         {
-            Id = id;
+            AchievementId = achievementId;
             Count = count;
             CompletionDate = completionDate;
-            ModifiedSinceCheckpoint = modifiedSinceCheckpoint;
         }
 
         public byte[] Encode()
@@ -38,10 +34,9 @@ namespace MHServerEmu.GameServer.Entities.Archives
             using (MemoryStream memoryStream = new())
             using (StreamWriter streamWriter = new(memoryStream))
             {
-                streamWriter.WriteLine($"Id: 0x{Id.ToString("X")}");
+                streamWriter.WriteLine($"Id: 0x{AchievementId.ToString("X")}");
                 streamWriter.WriteLine($"Count: 0x{Count.ToString("X")}");
                 streamWriter.WriteLine($"CompletionDate: 0x{CompletionDate.ToString("X")}");
-                streamWriter.WriteLine($"ModifiedSinceCheckpoint: {ModifiedSinceCheckpoint}");
 
                 streamWriter.Flush();
                 return Encoding.UTF8.GetString(memoryStream.ToArray());

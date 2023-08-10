@@ -92,17 +92,12 @@ namespace MHServerEmu.GameServer.Entities
                 EquipmentInvUISlots[i] = new(stream);
 
             AchievementStates = new AchievementState[stream.ReadRawVarint64()];
-            //for (int i = 0; i < AchievementStates.Length; i++)
-            //    AchievementStates[i] = new(stream, boolBuffer);
-
-            for (int i = 0; i < 7893; i++)  // Skip achievement states
-                stream.ReadRawVarint64();
+            for (int i = 0; i < AchievementStates.Length; i++)
+                AchievementStates[i] = new(stream);
 
             StashTabOptions = new StashTabOption[stream.ReadRawVarint64()];
             for (int i = 0; i < StashTabOptions.Length; i++)
                 StashTabOptions[i] = new(stream);
-
-            ReadUnknownFields(stream);
         }
 
         // note: this is ugly
@@ -172,8 +167,8 @@ namespace MHServerEmu.GameServer.Entities
             using (MemoryStream memoryStream = new())
             using (StreamWriter streamWriter = new(memoryStream))
             {
-                streamWriter.WriteLine($"Header: 0x{ReplicationPolicy.ToString("X")}");
-                streamWriter.WriteLine($"RepId: 0x{ReplicationId.ToString("X")}");
+                streamWriter.WriteLine($"ReplicationPolicy: 0x{ReplicationPolicy.ToString("X")}");
+                streamWriter.WriteLine($"ReplicationId: 0x{ReplicationId.ToString("X")}");
                 for (int i = 0; i < Properties.Length; i++) streamWriter.WriteLine($"Property{i}: {Properties[i]}");
                 streamWriter.WriteLine($"EnumValue: 0x{EnumValue.ToString("X")}");
                 for (int i = 0; i < Missions.Length; i++) streamWriter.WriteLine($"Mission{i}: {Missions[i]}");
@@ -191,7 +186,21 @@ namespace MHServerEmu.GameServer.Entities
                 streamWriter.WriteLine($"DateTime: 0x{DateTime.ToString("X")}");
                 streamWriter.WriteLine($"Community: {Community}");
 
-                for (int i = 0; i < UnknownFields.Length; i++) streamWriter.WriteLine($"UnknownField{i}: 0x{UnknownFields[i].ToString("X")}");
+                streamWriter.WriteLine($"Flag3: {Flag3}");
+                for (int i = 0; i < StashInventories.Length; i++) streamWriter.WriteLine($"StashInventory{i}: 0x{StashInventories[i].ToString("X")}");
+                for (int i = 0; i < AvailableBadges.Length; i++) streamWriter.WriteLine($"AvailableBadge{i}: 0x{AvailableBadges[i].ToString("X")}");
+
+                for (int i = 0; i < ChatChannelOptions.Length; i++) streamWriter.WriteLine($"ChatChannelOption{i}: {ChatChannelOptions[i]}");
+
+                for (int i = 0; i < ChatChannelOptions2.Length; i++) streamWriter.WriteLine($"ChatChannelOptions2_{i}: 0x{ChatChannelOptions2[i].ToString("X")}");
+
+                for (int i = 0; i < UnknownOptions.Length; i++) streamWriter.WriteLine($"UnknownOption{i}: 0x{UnknownOptions[i].ToString("X")}");
+
+                for (int i = 0; i < EquipmentInvUISlots.Length; i++) streamWriter.WriteLine($"EquipmentInvUISlot{i}: {EquipmentInvUISlots[i]}");
+
+                for (int i = 0; i < AchievementStates.Length; i++) streamWriter.WriteLine($"AchievementState{i}: {AchievementStates[i]}");
+
+                for (int i = 0; i < StashTabOptions.Length; i++) streamWriter.WriteLine($"StashTabOption{i}: {StashTabOptions[i]}");
 
                 streamWriter.Flush();
 
