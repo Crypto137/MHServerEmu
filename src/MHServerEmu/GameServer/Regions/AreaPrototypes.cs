@@ -4,6 +4,7 @@ namespace MHServerEmu.GameServer.Regions
 {
     public enum AreaPrototype : ulong
     {
+        AvengersTowerHubArea = 11587794710165067927,
         NPEAvengersTowerHubArea = 11135337283876558073,
         TrainingRoomSHIELDArea = 5570532918023034911,
         XaviersMansionArea = 10707862600903825135,

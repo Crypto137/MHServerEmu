@@ -11,6 +11,7 @@ namespace MHServerEmu.GameServer.Regions
 
         static RegionManager()
         {
+            RegionDict.Add(RegionPrototype.AvengersTowerHUBRegion, LoadRegionData(RegionPrototype.AvengersTowerHUBRegion));
             RegionDict.Add(RegionPrototype.NPEAvengersTowerHUBRegion, LoadRegionData(RegionPrototype.NPEAvengersTowerHUBRegion));
             RegionDict.Add(RegionPrototype.TrainingRoomSHIELDRegion, LoadRegionData(RegionPrototype.TrainingRoomSHIELDRegion));
             RegionDict.Add(RegionPrototype.XaviersMansionRegion, LoadRegionData(RegionPrototype.XaviersMansionRegion));
@@ -52,6 +53,32 @@ namespace MHServerEmu.GameServer.Regions
 
             switch (prototype)
             {
+                case RegionPrototype.AvengersTowerHUBRegion:
+
+                    archiveData = new byte[] {
+                    };
+
+                    region = new(RegionPrototype.AvengersTowerHUBRegion,
+                        1,
+                        1488502313,
+                        archiveData,
+                        new(-5024f, -5024f, -2048f),
+                        new(5024f, 5024f, 2048f),
+                        new(10, DifficultyTier.Normal));
+
+                    area = new(1, AreaPrototype.AvengersTowerHubArea, new(), true);
+                    area.AddCell(new(1, 9602664968964741817, new()));
+
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(500f, 0f, 0f);
+                    region.EntranceOrientation = new();
+                    region.WaypointPosition = new(1575f, 0f, 0f);
+                    region.WaypointOrientation = new();
+
+                    break;
+
+
                 case RegionPrototype.NPEAvengersTowerHUBRegion:
 
                     archiveData = new byte[] {

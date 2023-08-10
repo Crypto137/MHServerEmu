@@ -9,6 +9,7 @@ namespace MHServerEmu.GameServer.Regions
     public enum RegionPrototype : ulong
     {
         // Hubs
+        AvengersTowerHUBRegion = 14599574127156009346,      // Avengers Tower (original)
         NPEAvengersTowerHUBRegion = 9142075282174842340,    // Avengers Tower
         TrainingRoomSHIELDRegion = 12181996598405306634,    // S.H.I.E.L.D. Training Room
         XaviersMansionRegion = 7293929583592937434,         // Xavier's School
