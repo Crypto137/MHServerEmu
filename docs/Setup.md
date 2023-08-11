@@ -12,7 +12,7 @@ After getting the client, you need to set up a web server to serve SiteConfig.xm
 
 3. Open `Apache24\conf\httpd.conf` with any text editor and uncomment (by removing #) the following line: `LoadModule rewrite_module modules/mod_rewrite.so`.
 
-4. Open ```Apache24\conf\extra\httpd-ahssl.conf``` with any text editor, scroll to the bottom and add the following lines to the `<VirtualHost _default_:443>` section:
+4. Open ```Apache24\conf\extra\httpd-ahssl.conf``` with any text editor, find the `<VirtualHost _default_:443>` section, and add the following to it:
    `RewriteEngine on` and `RewriteRule ^/AuthServer(.*) http://%{HTTP_HOST}:8080$1`.
 
 5. Put [SiteConfig.xml](https://github.com/Crypto137/MHServerEmu/blob/master/assets/SiteConfig.xml) provided in this repository in ```Apache24\htdocs```.
@@ -36,3 +36,5 @@ Now you can actually start everything and get in-game.
 If everything works correctly, the server should display client connection information.
 
 *Note: you can launch the game without Steam by running MarvelHeroesOmega.exe with the following arguments: -robocopy -nosteam.*
+
+You can customize how the emulator functions, including changing your starter hero, by editing the `Config.ini` file.
