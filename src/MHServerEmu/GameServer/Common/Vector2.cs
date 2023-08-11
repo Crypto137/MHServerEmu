@@ -36,11 +36,11 @@ namespace MHServerEmu.GameServer.Common
         public static bool operator >(Vector2 a, Vector2 b) => ReferenceEquals(null, a) ? ReferenceEquals(null, b) : (a.X > b.X && a.Y > b.Y);
         public static bool operator <(Vector2 a, Vector2 b) => !(a > b);
 
-        public override bool Equals(object? obj)
+        public override bool Equals(object obj)
         {
             if (ReferenceEquals(this, obj)) return true;
 
-            Vector2? point = obj as Vector2;
+            Vector2 point = obj as Vector2;
             if (point != null) return (X == point.X && Y == point.Y);
 
             return false;

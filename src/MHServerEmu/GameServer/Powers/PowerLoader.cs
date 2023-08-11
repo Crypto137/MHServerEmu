@@ -15,11 +15,11 @@ namespace MHServerEmu.GameServer.Powers
             List<GameMessage> messageList = new();
             List<NetMessagePowerCollectionAssignPower> powerList = new();
 
-            string? avatarName = Enum.GetName(typeof(HardcodedAvatarEntity), avatar);
+            string avatarName = Enum.GetName(typeof(HardcodedAvatarEntity), avatar);
 
             if (avatarName != null)
             {
-                Type? powerPrototypeEnumType = typeof(PowerPrototypes).GetNestedType(avatarName, BindingFlags.Public);
+                Type powerPrototypeEnumType = typeof(PowerPrototypes).GetNestedType(avatarName, BindingFlags.Public);
                 if (powerPrototypeEnumType != null)
                 {
                     foreach (ulong powerProtoId in Enum.GetValues(powerPrototypeEnumType))
@@ -45,7 +45,7 @@ namespace MHServerEmu.GameServer.Powers
                     Logger.Warn($"Failed to get power prototype ids for {avatarName}");
                 }
 
-                Type? propertyEnumType = typeof(PowerProperties).GetNestedType(avatarName, BindingFlags.Public);
+                Type propertyEnumType = typeof(PowerProperties).GetNestedType(avatarName, BindingFlags.Public);
                 if (propertyEnumType != null)
                 {
                     foreach (ulong propertyId in Enum.GetValues(propertyEnumType))

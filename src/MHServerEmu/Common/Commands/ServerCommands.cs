@@ -7,7 +7,7 @@ namespace MHServerEmu.Common.Commands
     public class ServerCommands : CommandGroup
     {
         [Command("shutdown", "Usage: server shutdown")]
-        public string Shutdown(string[]? @params, FrontendClient? client)
+        public string Shutdown(string[] @params, FrontendClient client)
         {
             Program.Shutdown();
             return string.Empty;
@@ -18,7 +18,7 @@ namespace MHServerEmu.Common.Commands
     public class PacketCommands : CommandGroup
     {
         [Command("parse", "Parses messages from all packets\nUsage: packet parse")]
-        public string Extract(string[]? @params, FrontendClient? client)
+        public string Extract(string[] @params, FrontendClient client)
         {
             if (client != null)
                 return "You can only invoke this command from the server console.";
@@ -33,7 +33,7 @@ namespace MHServerEmu.Common.Commands
     public class GpakCommands : CommandGroup
     {
         [Command("export", "Exports data from GPAK files.\nUsage: gpak export [entries|data|all]")]
-        public string Extract(string[]? @params, FrontendClient? client)
+        public string Extract(string[] @params, FrontendClient client)
         {
             if (client != null)
                 return "You can only invoke this command from the server console.";

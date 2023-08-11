@@ -18,10 +18,10 @@ namespace MHServerEmu.Common.Commands
             RegisterCommands();
         }
 
-        public virtual string Handle(string parameters, FrontendClient? client = null)
+        public virtual string Handle(string parameters, FrontendClient client = null)
         {
-            string[]? @params = null;
-            CommandAttribute? target = null;
+            string[] @params = null;
+            CommandAttribute target = null;
 
             if (parameters == string.Empty)
             {
@@ -50,7 +50,7 @@ namespace MHServerEmu.Common.Commands
         }
 
         [DefaultCommand]
-        public virtual string Fallback(string[]? @params = null, FrontendClient? client = null)
+        public virtual string Fallback(string[] @params = null, FrontendClient client = null)
         {
             string output = "Available subcommands: ";
 
@@ -64,7 +64,7 @@ namespace MHServerEmu.Common.Commands
         }
 
         protected CommandAttribute GetDefaultSubcommand() => _commandDict.Keys.First();
-        protected CommandAttribute? GetSubcommand(string name) => _commandDict.Keys.FirstOrDefault(command => command.Name == name);
+        protected CommandAttribute GetSubcommand(string name) => _commandDict.Keys.FirstOrDefault(command => command.Name == name);
 
         private void RegisterCommands()
         {

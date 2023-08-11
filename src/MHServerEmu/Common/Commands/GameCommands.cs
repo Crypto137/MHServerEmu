@@ -7,7 +7,7 @@ namespace MHServerEmu.Common.Commands
     public class TowerCommand : CommandGroup
     {
         [DefaultCommand]
-        public string Tower(string[]? @params, FrontendClient? client)
+        public string Tower(string[] @params, FrontendClient client)
         {
             if (client == null)
                 return "You can only invoke this command from the game.";

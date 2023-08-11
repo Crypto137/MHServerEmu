@@ -121,7 +121,7 @@ namespace MHServerEmu.GameServer.Data
             {
                 using (StreamReader streamReader = new(path))
                 {
-                    string? line = streamReader.ReadLine();
+                    string line = streamReader.ReadLine();
 
                     while (line != null)
                     {

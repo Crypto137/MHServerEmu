@@ -88,7 +88,7 @@ namespace MHServerEmu.Common.Commands
         [CommandGroup("commands", "Lists available commands.")]
         public class CommandsCommandGroup : CommandGroup
         {
-            public override string Fallback(string[]? @params = null, FrontendClient? client = null)
+            public override string Fallback(string[] @params = null, FrontendClient client = null)
             {
                 string output = "Available commands: ";
 
@@ -105,7 +105,7 @@ namespace MHServerEmu.Common.Commands
         [CommandGroup("help", "Help needs no help.")]
         public class HelpCommandGroup : CommandGroup
         {
-            public override string Fallback(string[]? @params = null, FrontendClient? client = null)
+            public override string Fallback(string[] @params = null, FrontendClient client = null)
             {
                 return "usage: help [command]"; ;
             }

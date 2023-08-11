@@ -134,9 +134,9 @@ namespace MHServerEmu.Networking
                     {
                         // Get parse method using reflection
                         // Throw exceptions if either the type or the method is null
-                        Type? type = typeof(NetMessageReadyAndLoggedIn).Assembly.GetType($"Gazillion.{messageName}") ?? throw new();
-                        MethodInfo? method = type.GetMethod("ParseFrom", BindingFlags.Static | BindingFlags.Public, new Type[] { typeof(byte[]) }) ?? throw new();
-                        IMessage? protobufMessage = (IMessage?)method.Invoke(null, new object[] { message.Content });
+                        Type type = typeof(NetMessageReadyAndLoggedIn).Assembly.GetType($"Gazillion.{messageName}") ?? throw new();
+                        MethodInfo method = type.GetMethod("ParseFrom", BindingFlags.Static | BindingFlags.Public, new Type[] { typeof(byte[]) }) ?? throw new();
+                        IMessage protobufMessage = (IMessage)method.Invoke(null, new object[] { message.Content });
                         streamWriter.WriteLine(protobufMessage);
 
                         switch (protobufMessage)
