@@ -37,7 +37,7 @@ namespace MHServerEmu.GameServer.Entities
         public Player(byte[] archiveData)
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
-            BoolBuffer boolBuffer = new();
+            BoolDecoder boolDecoder = new();
 
             ReadHeader(stream);
             ReadProperties(stream);
@@ -46,7 +46,7 @@ namespace MHServerEmu.GameServer.Entities
 
             Missions = new Mission[stream.ReadRawVarint64()];
             for (int i = 0; i < Missions.Length; i++)
-                Missions[i] = new(stream, boolBuffer);
+                Missions[i] = new(stream, boolDecoder);
             Quests = new Quest[stream.ReadRawInt32()];
             for (int i = 0; i < Quests.Length; i++)
                 Quests[i] = new(stream);
@@ -54,20 +54,20 @@ namespace MHServerEmu.GameServer.Entities
             UnknownCollectionRepId = stream.ReadRawVarint64();
             UnknownCollectionSize = stream.ReadRawUInt32();
             ShardId = stream.ReadRawVarint64();
-            ReplicatedString1 = new(stream.ReadRawVarint64(), stream.ReadRawString());
+            ReplicatedString1 = new(stream);
             Community1 = stream.ReadRawVarint64();
             Community2 = stream.ReadRawVarint64();
-            ReplicatedString2 = new(stream.ReadRawVarint64(), stream.ReadRawString());
+            ReplicatedString2 = new(stream);
             MatchQueueStatus = stream.ReadRawVarint64();
 
-            if (boolBuffer.IsEmpty) boolBuffer.SetBits(stream.ReadRawByte());
-            ReplicationPolicyBool = boolBuffer.ReadBool();
+            if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
+            ReplicationPolicyBool = boolDecoder.ReadBool();
 
             DateTime = stream.ReadRawVarint64();
-            Community = new(stream, boolBuffer);
+            Community = new(stream, boolDecoder);
 
-            if (boolBuffer.IsEmpty) boolBuffer.SetBits(stream.ReadRawByte());
-            Flag3 = boolBuffer.ReadBool();
+            if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
+            Flag3 = boolDecoder.ReadBool();
 
             StashInventories = new ulong[stream.ReadRawVarint64()];
             for (int i = 0; i < StashInventories.Length; i++)
@@ -77,7 +77,7 @@ namespace MHServerEmu.GameServer.Entities
 
             ChatChannelOptions = new ChatChannelOption[stream.ReadRawVarint64()];
             for (int i = 0; i < ChatChannelOptions.Length; i++)
-                ChatChannelOptions[i] = new(stream, boolBuffer);
+                ChatChannelOptions[i] = new(stream, boolDecoder);
 
             ChatChannelOptions2 = new ulong[stream.ReadRawVarint64()];
             for (int i = 0; i < ChatChannelOptions2.Length; i++)
@@ -130,19 +130,38 @@ namespace MHServerEmu.GameServer.Entities
             {
                 CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
 
+                // Prepare bool encoder
+                BoolEncoder boolEncoder = new();
+                byte bitBuffer;
+
+                foreach (Mission mission in Missions)
+                    boolEncoder.WriteBool(mission.BoolField);
+                boolEncoder.WriteBool(ReplicationPolicyBool);
+                boolEncoder.WriteBool(Community.GmBool);
+                boolEncoder.WriteBool(Community.Flag3);
+                boolEncoder.WriteBool(Flag3);
+                foreach (ChatChannelOption option in ChatChannelOptions)
+                    boolEncoder.WriteBool(option.Value);
+
+                boolEncoder.Cook();
+
+                // Encode
                 stream.WriteRawVarint64(ReplicationPolicy);
                 stream.WriteRawVarint64(ReplicationId);
 
                 stream.WriteRawBytes(BitConverter.GetBytes(Properties.Length));
-                foreach (Property property in Properties) stream.WriteRawBytes(property.Encode());
+                foreach (Property property in Properties)
+                    stream.WriteRawBytes(property.Encode());
 
                 stream.WriteRawVarint64(EnumValue);
 
                 stream.WriteRawVarint64((ulong)Missions.Length);
-                //foreach (ulong field in MissionFields) stream.WriteRawVarint64(field);
+                foreach (Mission mission in Missions)
+                    stream.WriteRawBytes(mission.Encode(boolEncoder));
 
                 stream.WriteRawInt32(Quests.Length);
-                foreach (Quest quest in Quests) stream.WriteRawBytes(quest.Encode());
+                foreach (Quest quest in Quests)
+                    stream.WriteRawBytes(quest.Encode());
 
                 stream.WriteRawVarint64(UnknownCollectionRepId);
                 stream.WriteRawUInt32(UnknownCollectionSize);
@@ -152,10 +171,46 @@ namespace MHServerEmu.GameServer.Entities
                 stream.WriteRawVarint64(Community2);
                 stream.WriteRawBytes(ReplicatedString2.Encode());
                 stream.WriteRawVarint64(MatchQueueStatus);
-                stream.WriteRawVarint64(DateTime);
-                stream.WriteRawBytes(Community.Encode());
 
-                foreach (ulong field in UnknownFields) stream.WriteRawVarint64(field);
+                bitBuffer = boolEncoder.GetBitBuffer();             //ReplicationPolicyBool
+                if (bitBuffer != 0) stream.WriteRawByte(bitBuffer);
+
+                stream.WriteRawVarint64(DateTime);
+                stream.WriteRawBytes(Community.Encode(boolEncoder));
+
+                bitBuffer = boolEncoder.GetBitBuffer();             //Flag3
+                if (bitBuffer != 0) stream.WriteRawByte(bitBuffer);
+
+                stream.WriteRawVarint64((ulong)StashInventories.Length);
+                foreach (ulong stashInventory in StashInventories) stream.WriteRawVarint64(stashInventory);
+
+                stream.WriteRawVarint64((ulong)AvailableBadges.Length);
+                foreach (uint badge in AvailableBadges)
+                    stream.WriteRawVarint64(badge);
+
+                stream.WriteRawVarint64((ulong)ChatChannelOptions.Length);
+                foreach (ChatChannelOption option in ChatChannelOptions)
+                    stream.WriteRawBytes(option.Encode(boolEncoder));
+
+                stream.WriteRawVarint64((ulong)ChatChannelOptions2.Length);
+                foreach (ulong option in ChatChannelOptions2)
+                    stream.WriteRawVarint64(option);
+
+                stream.WriteRawVarint64((ulong)UnknownOptions.Length);
+                foreach (ulong option in UnknownOptions)
+                    stream.WriteRawVarint64(option);
+
+                stream.WriteRawVarint64((ulong)EquipmentInvUISlots.Length);
+                foreach (EquipmentInvUISlot slot in EquipmentInvUISlots)
+                    stream.WriteRawBytes(slot.Encode());
+
+                stream.WriteRawVarint64((ulong)AchievementStates.Length);
+                foreach (AchievementState state in AchievementStates)
+                    stream.WriteRawBytes(state.Encode());
+
+                stream.WriteRawVarint64((ulong)StashTabOptions.Length);
+                foreach (StashTabOption option in StashTabOptions)
+                    stream.WriteRawBytes(option.Encode());
 
                 stream.Flush();
                 return memoryStream.ToArray();

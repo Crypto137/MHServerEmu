@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.GameServer.Common;
 
 namespace MHServerEmu.GameServer.Entities.Archives
 {
@@ -26,7 +25,17 @@ namespace MHServerEmu.GameServer.Entities.Archives
 
         public byte[] Encode()
         {
-            return Array.Empty<byte>();
+            using (MemoryStream memoryStream = new())
+            {
+                CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
+
+                stream.WriteRawVarint64(AchievementId);
+                stream.WriteRawVarint64(Count);
+                stream.WriteRawVarint64(CompletionDate);
+
+                stream.Flush();
+                return memoryStream.ToArray();
+            }
         }
 
         public override string ToString()

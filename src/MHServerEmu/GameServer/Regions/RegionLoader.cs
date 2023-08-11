@@ -121,9 +121,9 @@ namespace MHServerEmu.GameServer.Regions
 
                 if (baseData.EntityId == 14646212)      // Player entity
                 {
-
-                    /* player encoding test
                     Player player = new(entityCreateMessage.ArchiveData.ToByteArray());
+
+                    // edit player data here
 
                     var customEntityCreateMessage = NetMessageEntityCreate.CreateBuilder()
                         .SetBaseData(ByteString.CopyFrom(baseData.Encode()))
@@ -131,9 +131,6 @@ namespace MHServerEmu.GameServer.Regions
                         .Build().ToByteArray();
 
                     messageList.Add(new(GameServerToClientMessage.NetMessageEntityCreate, customEntityCreateMessage));
-                    */
-
-                    messageList.Add(message);
                 }
                 else
                 {

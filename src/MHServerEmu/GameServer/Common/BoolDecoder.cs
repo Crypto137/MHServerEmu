@@ -2,7 +2,7 @@
 
 namespace MHServerEmu.GameServer.Common
 {
-    public class BoolBuffer
+    public class BoolDecoder
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 

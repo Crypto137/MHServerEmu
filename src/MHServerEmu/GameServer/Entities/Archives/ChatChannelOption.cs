@@ -9,11 +9,11 @@ namespace MHServerEmu.GameServer.Entities.Archives
         public ulong PrototypeEnum { get; set; }
         public bool Value { get; set; }
 
-        public ChatChannelOption(CodedInputStream stream, BoolBuffer boolBuffer)
+        public ChatChannelOption(CodedInputStream stream, BoolDecoder boolDecoder)
         {
             PrototypeEnum = stream.ReadRawVarint64();
-            if (boolBuffer.IsEmpty) boolBuffer.SetBits(stream.ReadRawByte());
-            Value = boolBuffer.ReadBool();
+            if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
+            Value = boolDecoder.ReadBool();
         }
 
         public ChatChannelOption(ulong prototypeEnum, bool value)
@@ -22,9 +22,20 @@ namespace MHServerEmu.GameServer.Entities.Archives
             Value = value;
         }
 
-        public byte[] Encode()
+        public byte[] Encode(BoolEncoder boolEncoder)
         {
-            return Array.Empty<byte>();
+            using (MemoryStream memoryStream = new())
+            {
+                CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
+
+                stream.WriteRawVarint64(PrototypeEnum);
+
+                byte bitBuffer = boolEncoder.GetBitBuffer();             //Value
+                if (bitBuffer != 0) stream.WriteRawByte(bitBuffer);
+
+                stream.Flush();
+                return memoryStream.ToArray();
+            }
         }
 
         public override string ToString()

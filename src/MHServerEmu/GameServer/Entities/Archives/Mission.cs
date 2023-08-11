@@ -8,8 +8,6 @@ namespace MHServerEmu.GameServer.Entities.Archives
 {
     public class Mission
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public ulong PrototypeId { get; set; }
         public ulong State { get; set; }
         public ulong GameTime { get; set; }
@@ -20,7 +18,7 @@ namespace MHServerEmu.GameServer.Entities.Archives
         public ulong ParticipantOwnerEntityId { get; set; }
         public bool BoolField { get; set; }
 
-        public Mission(CodedInputStream stream, BoolBuffer boolBuffer)
+        public Mission(CodedInputStream stream, BoolDecoder boolDecoder)
         {
             PrototypeId = stream.ReadRawVarint64();
             State = stream.ReadRawVarint64();
@@ -33,25 +31,43 @@ namespace MHServerEmu.GameServer.Entities.Archives
             Participant = stream.ReadRawVarint64();
             ParticipantOwnerEntityId = stream.ReadRawVarint64();
 
-            if (boolBuffer.IsEmpty) boolBuffer.SetBits(stream.ReadRawByte());
-            BoolField = boolBuffer.ReadBool();
-
-            Console.WriteLine(ParticipantOwnerEntityId);
+            if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
+            BoolField = boolDecoder.ReadBool();
         }
 
-        public Mission()
+        public Mission(ulong prototypeId, ulong state, ulong gameTime, ulong prototypeGuid,
+            Objective[] objectives, ulong participant, ulong participantOwnerEntityId, bool boolField)
         {
-
+            PrototypeId = prototypeId;
+            State = state;
+            GameTime = gameTime;
+            PrototypeGuid = prototypeGuid;
+            Objectives = objectives;
+            Participant = participant;
+            ParticipantOwnerEntityId = participantOwnerEntityId;
+            BoolField = boolField;
         }
 
-        public byte[] Encode()
+        public byte[] Encode(BoolEncoder boolEncoder)
         {
             using (MemoryStream memoryStream = new())
             {
                 CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
 
-                //stream.WriteRawVarint64(ReplicationId);
-                //stream.WriteRawString(Text);
+                stream.WriteRawVarint64(PrototypeId);
+                stream.WriteRawVarint64(State);
+                stream.WriteRawVarint64(GameTime);
+                stream.WriteRawVarint64(PrototypeGuid);
+                stream.WriteRawVarint64(Random);
+                stream.WriteRawVarint64((ulong)Objectives.Length);
+                foreach (Objective objective in Objectives)
+                    stream.WriteRawBytes(objective.Encode());
+                stream.WriteRawVarint64(Participant);
+                stream.WriteRawVarint64(ParticipantOwnerEntityId);
+
+                byte bitBuffer = boolEncoder.GetBitBuffer();             //BoolField
+                if (bitBuffer != 0)
+                    stream.WriteRawByte(bitBuffer);
 
                 stream.Flush();
                 return memoryStream.ToArray();

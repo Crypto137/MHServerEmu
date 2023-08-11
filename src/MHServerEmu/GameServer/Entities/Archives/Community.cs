@@ -15,18 +15,18 @@ namespace MHServerEmu.GameServer.Entities.Archives
         public string[] Captions { get; set; }
         public Friend[] Friends { get; set; }
 
-        public Community(CodedInputStream stream, BoolBuffer boolBuffer)
+        public Community(CodedInputStream stream, BoolDecoder boolDecoder)
         {
             ReplicationId = stream.ReadRawVarint64();
             Field1 = stream.ReadRawVarint64();
 
-            if (boolBuffer.IsEmpty) boolBuffer.SetBits(stream.ReadRawByte());
-            GmBool = boolBuffer.ReadBool();
+            if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
+            GmBool = boolDecoder.ReadBool();
 
             UnknownString = stream.ReadRawString();
 
-            if (boolBuffer.IsEmpty) boolBuffer.SetBits(stream.ReadRawByte());
-            Flag3 = boolBuffer.ReadBool();
+            if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
+            Flag3 = boolDecoder.ReadBool();
 
             Captions = new string[stream.ReadRawInt32()];
             for (int i = 0; i < Captions.Length; i++)
@@ -41,28 +41,36 @@ namespace MHServerEmu.GameServer.Entities.Archives
             }
         }
 
-        public Community(ulong repId, ulong field1, string field2, ulong flag, string[] captions, Friend[] friends)
+        public Community(ulong repId, ulong field1, bool gmBool, string unknownString, bool flag3, string[] captions, Friend[] friends)
         {
-            /*
             ReplicationId = repId;
             Field1 = field1;
-            Field2 = field2;
-            Flag = flag;
+            GmBool = gmBool;
+            UnknownString = unknownString;
+            Flag3 = flag3;
             Captions = captions;
             Friends = friends;
-            */
         }
 
-        public byte[] Encode()
+        public byte[] Encode(BoolEncoder boolEncoder)
         {
             using (MemoryStream memoryStream = new())
             {
                 CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
+                byte bitBuffer;
 
                 stream.WriteRawVarint64(ReplicationId);
                 stream.WriteRawVarint64(Field1);
+
+                bitBuffer = boolEncoder.GetBitBuffer();             //GmBool
+                if (bitBuffer != 0) stream.WriteRawByte(bitBuffer);
+
                 stream.WriteRawString(UnknownString);
-                //stream.WriteRawVarint64(Flag);
+
+                bitBuffer = boolEncoder.GetBitBuffer();             //Flag3
+                if (bitBuffer != 0) stream.WriteRawByte(bitBuffer);
+
+                stream.WriteRawInt32(Captions.Length);
                 foreach (string caption in Captions) stream.WriteRawString(caption);
                 stream.WriteRawInt32(Friends.Length);
                 foreach (Friend friend in Friends) stream.WriteRawBytes(friend.Encode());
