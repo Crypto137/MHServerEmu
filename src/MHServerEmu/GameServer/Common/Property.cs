@@ -11,6 +11,7 @@ namespace MHServerEmu.GameServer.Common
 
         public ulong Id { get; set; }
         public ulong Value { get; set; }
+        public PropertyInfo Info { get => Database.PropertyInfos[_propertyInfoIndex]; }
 
         public Property(ulong id, ulong value)
         {

@@ -155,18 +155,22 @@ namespace MHServerEmu.GameServer.Regions
                         }
                     }
 
-                    if (ConfigManager.PlayerData.CostumeOverride != 0)
+                    if (baseData.EntityId == (ulong)avatar)
                     {
-                        for (int i = 0; i < Database.GlobalEnumRefTable.Length; i++)
-                        {
-                            if (Database.GlobalEnumRefTable[i] == ConfigManager.PlayerData.CostumeOverride)
-                            {
-                                foreach (Property property in entity.Properties)
-                                {
-                                    if (property.Id == 0xE019) property.Value = (ulong)i;
-                                }
+                        // edit avatar data here
 
-                                break;
+                        foreach (Property property in entity.Properties)
+                        {
+                            if (property.Info.Name == "CostumeCurrent" && ConfigManager.PlayerData.CostumeOverride != 0)
+                            {
+                                for (int i = 0; i < Database.GlobalEnumRefTable.Length; i++)
+                                {
+                                    if (Database.GlobalEnumRefTable[i] == ConfigManager.PlayerData.CostumeOverride)
+                                    {
+                                        property.Value = (ulong)i;
+                                        break;
+                                    }
+                                }
                             }
                         }
                     }
