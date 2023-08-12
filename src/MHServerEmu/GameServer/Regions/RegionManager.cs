@@ -135,9 +135,9 @@ namespace MHServerEmu.GameServer.Regions
 
                     region.AddArea(area);
 
-                    region.EntrancePosition = new(-2943.875f, 256f, 38.5f);
-                    region.EntranceOrientation = new();
-                    region.WaypointPosition = new(-2943.875f, 256f, 38.5f);
+                    region.EntrancePosition = new(-2943.875f, 256f, 308f);
+                    region.EntranceOrientation = new(-1.5625f, 0f, 0f);
+                    region.WaypointPosition = new(-2943.875f, 256f, 308f);
                     region.WaypointOrientation = new();
 
                     break;
@@ -188,9 +188,9 @@ namespace MHServerEmu.GameServer.Regions
 
                     region.AddArea(area);
 
-                    region.EntrancePosition = new(-2047f, 5136f, -9.375f);
+                    region.EntrancePosition = new(-2047f, 5136f, -75f);
                     region.EntranceOrientation = new();
-                    region.WaypointPosition = new(-2047f, 5136f, -9.375f);
+                    region.WaypointPosition = new(-2047f, 5136f, -75f);
                     region.WaypointOrientation = new();
 
                     break;
@@ -213,9 +213,9 @@ namespace MHServerEmu.GameServer.Regions
 
                     region.AddArea(area);
 
-                    region.EntrancePosition = new(-405.75f, 1274.125f, 7f);
-                    region.EntranceOrientation = new();
-                    region.WaypointPosition = new(-405.75f, 1274.125f, 7f);
+                    region.EntrancePosition = new(-405.75f, 1274.125f, 56f);
+                    region.EntranceOrientation = new(0.78125f, 0f, 0f);
+                    region.WaypointPosition = new(-405.75f, 1274.125f, 56f);
                     region.WaypointOrientation = new();
 
                     break;
@@ -251,9 +251,9 @@ namespace MHServerEmu.GameServer.Regions
 
                     region.AddArea(area);
 
-                    region.EntrancePosition = new(1919.875f, 767.875f, 7.875f);
-                    region.EntranceOrientation = new();
-                    region.WaypointPosition = new(1919.875f, 767.875f, 7.875f);
+                    region.EntrancePosition = new(1919.875f, 767.875f, 63f);
+                    region.EntranceOrientation = new(3.140625f, 0f, 0f);
+                    region.WaypointPosition = new(1919.875f, 767.875f, 63f);
                     region.WaypointOrientation = new();
 
                     break;
@@ -295,9 +295,9 @@ namespace MHServerEmu.GameServer.Regions
                     //area.AddCell(new(18, 14666675902348205617, new()));
                     //region.AddArea(entryArea);
 
-                    region.EntrancePosition = new(4273.25f, 2391.25f, -163f);
-                    region.EntranceOrientation = new();
-                    region.WaypointPosition = new(4273.25f, 2391.25f, -163f);
+                    region.EntrancePosition = new(4434.125f, 2388.875f, -1304f);
+                    region.EntranceOrientation = new(2.046875f, 0.0f, 0.0f);
+                    region.WaypointPosition = new(4434.125f, 2388.875f, -1304f);
                     region.WaypointOrientation = new();
 
                     break;
@@ -354,9 +354,9 @@ namespace MHServerEmu.GameServer.Regions
                     area.AddCell(new(2, 8175011988152327381, new()));
                     region.AddArea(area);
 
-                    region.EntrancePosition = new(893f, 0f, 7.5f);
-                    region.EntranceOrientation = new();
-                    region.WaypointPosition = new(893f, 0f, 7.5f);
+                    region.EntrancePosition = new(893f, 0f, 60f);
+                    region.EntranceOrientation = new(-0.78125f, 0f, 0f);
+                    region.WaypointPosition = new(893f, 0f, 60f);
                     region.WaypointOrientation = new();
 
                     break;
@@ -401,9 +401,9 @@ namespace MHServerEmu.GameServer.Regions
                     area.AddCell(new(1, 1568191647055552056, new()));
                     region.AddArea(area);
 
-                    region.EntrancePosition = new(-3376.5f, -8016f, 7f);
-                    region.EntranceOrientation = new();
-                    region.WaypointPosition = new(-3376.5f, -8016f, 7f);
+                    region.EntrancePosition = new(-3376.5f, -8016f, 56f);
+                    region.EntranceOrientation = new(1.5625f, 0f, 0f);
+                    region.WaypointPosition = new(-3376.5f, -8016f, 56f);
                     region.WaypointOrientation = new();
 
                     break;
