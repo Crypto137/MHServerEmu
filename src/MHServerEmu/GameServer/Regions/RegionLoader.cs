@@ -55,15 +55,15 @@ namespace MHServerEmu.GameServer.Regions
 
             Region region = RegionManager.GetRegion(regionPrototype);
 
-            EntityEnterGameWorldArchiveData avatarEnterGameWorldArchiveData = new((ulong)avatar, region.EntrancePosition, region.EntranceOrientation.X, 350f);
+            EnterGameWorldArchive avatarEnterGameWorldArchive = new((ulong)avatar, region.EntrancePosition, region.EntranceOrientation.X, 350f);
 
             messageList.Add(new(GameServerToClientMessage.NetMessageEntityEnterGameWorld,
                 NetMessageEntityEnterGameWorld.CreateBuilder()
-                .SetArchiveData(ByteString.CopyFrom(avatarEnterGameWorldArchiveData.Encode()))
+                .SetArchiveData(ByteString.CopyFrom(avatarEnterGameWorldArchive.Encode()))
                 .Build().ToByteArray()));
 
             // Put waypoint entity in the game world
-            EntityEnterGameWorldArchiveData waypointEnterGameWorldArchiveData = new(12, region.WaypointPosition, region.WaypointOrientation.X);
+            EnterGameWorldArchive waypointEnterGameWorldArchiveData = new(12, region.WaypointPosition, region.WaypointOrientation.X);
 
             messageList.Add(new(GameServerToClientMessage.NetMessageEntityEnterGameWorld,
                 NetMessageEntityEnterGameWorld.CreateBuilder().SetArchiveData(ByteString.CopyFrom(waypointEnterGameWorldArchiveData.Encode())).Build().ToByteArray()));

@@ -1,4 +1,6 @@
 ﻿using Gazillion;
+using Google.ProtocolBuffers;
+using MHServerEmu.Common;
 
 namespace MHServerEmu.GameServer.Common
 {
@@ -15,18 +17,33 @@ namespace MHServerEmu.GameServer.Common
             Z = 0.0f;
         }
 
-        public Vector3(Vector3 point)
-        {
-            X = point.X;
-            Y = point.Y;
-            Z = point.Z;
-        }
-
         public Vector3(float x, float y, float z)
         {
             X = x;
             Y = y;
             Z = z;
+        }
+
+        public Vector3(CodedInputStream stream, int precision = 3)
+        {
+            X = stream.ReadRawFloat(precision);
+            Y = stream.ReadRawFloat(precision);
+            Z = stream.ReadRawFloat(precision);
+        }
+
+        public byte[] Encode(int precision = 3)
+        {
+            using (MemoryStream memoryStream = new())
+            {
+                CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
+
+                stream.WriteRawFloat(X, precision);
+                stream.WriteRawFloat(Y, precision);
+                stream.WriteRawFloat(Z, precision);
+
+                stream.Flush();
+                return memoryStream.ToArray();
+            }
         }
 
         public NetStructPoint3 ToNetStructPoint3() => NetStructPoint3.CreateBuilder().SetX(X).SetY(Y).SetZ(Z).Build();

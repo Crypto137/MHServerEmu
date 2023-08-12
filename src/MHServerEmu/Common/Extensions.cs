@@ -18,6 +18,7 @@ namespace MHServerEmu.Common
                 : new byte[] { byteArray[3], byteArray[2], byteArray[1] };
         }
 
+        /*
         public static float ZigZagDecode32(this uint number, int precision)
         {
             return (float)((number >> 1) ^ -(number & 1)) / (1 << precision);
@@ -27,6 +28,13 @@ namespace MHServerEmu.Common
         {
             int n = (int)(number * (1 << precision));
             return (uint)((2 * n) ^ (n >> 31));
+        }
+        */
+
+        public static float ReadRawFloat(this CodedInputStream stream, int precision)
+        {
+            uint number = stream.ReadRawVarint32();
+            return (float)((number >> 1) ^ -(number & 1)) / (1 << precision);
         }
 
         public static uint ReadRawUInt32(this CodedInputStream stream)
@@ -43,6 +51,12 @@ namespace MHServerEmu.Common
         {
             int length = (int)stream.ReadRawVarint32();
             return Encoding.UTF8.GetString(stream.ReadRawBytes(length));
+        }
+
+        public static void WriteRawFloat(this CodedOutputStream stream, float number, int precision)
+        {
+            int n = (int)(number * (1 << precision));
+            stream.WriteRawVarint32((uint)((2 * n) ^ (n >> 31)));
         }
 
         public static void WriteRawUInt32(this CodedOutputStream stream, uint value)
