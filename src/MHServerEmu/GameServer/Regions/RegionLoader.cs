@@ -157,6 +157,8 @@ namespace MHServerEmu.GameServer.Regions
 
                     if (baseData.EntityId == (ulong)avatar)
                     {
+                        //Avatar avatarEntity = new(entityCreateMessage.ArchiveData.ToByteArray());
+
                         // edit avatar data here
 
                         foreach (Property property in entity.Properties)
