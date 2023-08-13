@@ -48,83 +48,88 @@ namespace MHServerEmu.Networking
             Logger.Info($"AuthServer is listening on {url}...");
         }
 
-        public async void HandleIncomingConnections()
+        private async void HandleIncomingConnections()
         {
             while (true)
             {
                 // Wait for a connection and get request and response from it
-                HttpListenerContext ctx = await _listener.GetContextAsync();
-                HttpListenerRequest req = ctx.Request;
-                HttpListenerResponse resp = ctx.Response;
+                HttpListenerContext context = await _listener.GetContextAsync();
+                HttpListenerRequest request = context.Request;
+                HttpListenerResponse response = context.Response;
 
-                if (req.UserAgent == "Secret Identity Studios Http Client")     // Ignore requests from other user agents
+                if (request.UserAgent == "Secret Identity Studios Http Client")     // Ignore requests from other user agents
                 {
-                    if (req.HttpMethod == "POST")
-                    {
-                        // Parse message from POST
-                        CodedInputStream stream = CodedInputStream.CreateInstance(req.InputStream);
-                        GameMessage message = new((byte)stream.ReadRawVarint64(), stream.ReadRawBytes((int)stream.ReadRawVarint64()));
-
-                        switch ((FrontendProtocolMessage)message.Id)
-                        {
-                            case FrontendProtocolMessage.LoginDataPB:
-                                var loginDataPB = LoginDataPB.ParseFrom(message.Content);
-                                byte[] authTicket;
-
-                                if (CheckLoginDataPB(loginDataPB))  // check if LoginDataPB is valid
-                                {
-                                    authTicket = AuthTicket.CreateBuilder()
-                                        .SetSessionKey(ByteString.CopyFrom(Cryptography.AuthEncryptionKey))
-                                        .SetSessionToken(ByteString.CopyFrom(new byte[] { 0x00, 0x01, 0x02, 0x03 }))
-                                        .SetSessionId(17323122570962387736)
-                                        .SetFrontendServer("localhost")
-                                        .SetFrontendPort("4306")
-                                        .SetSuccess(true)
-                                        .Build().ToByteArray();
-
-                                    // Write data to a buffer and send the response
-                                    byte[] buffer;
-                                    using (MemoryStream memoryStream = new())
-                                    {
-                                        CodedOutputStream outputStream = CodedOutputStream.CreateInstance(memoryStream);
-                                        outputStream.WriteRawVarint64((byte)AuthMessage.AuthTicket);
-                                        outputStream.WriteRawVarint64((ulong)authTicket.Length);
-                                        outputStream.WriteRawBytes(authTicket);
-                                        outputStream.Flush();
-                                        buffer = memoryStream.ToArray();
-                                    }
-
-                                    resp.KeepAlive = false;
-                                    resp.ContentType = "application/octet-stream";
-                                    resp.ContentLength64 = buffer.Length;
-
-                                    await resp.OutputStream.WriteAsync(buffer, 0, buffer.Length);
-                                }
-                                else
-                                {
-                                    Logger.Info("Authentication failed (LoginDataPB is invalid)");
-                                    resp.StatusCode = (int)ErrorCode.IncorrectUsernameOrPassword1;
-                                }
-
-                                break;
-
-                            case FrontendProtocolMessage.PrecacheHeaders:
-                                // The client sends this message on startup
-                                Logger.Trace($"Received PrecacheHeaders message");
-                                break;
-
-                            default:
-                                Logger.Warn($"Received unknown messageId {message.Id}");
-                                break;
-                        }
-                    }
+                    if (request.HttpMethod == "POST")
+                        HandleMessage(request.InputStream, response);
+                    else
+                        Logger.Warn($"Received {request.HttpMethod} from the game client");
                 }
                 else
                 {
-                    Logger.Warn($"Received {req.HttpMethod} from an unknown UserAgent: {req.UserAgent}");
+                    Logger.Warn($"Received {request.HttpMethod} from an unknown UserAgent: {request.UserAgent}");
                 }
 
-                resp.Close();
+                response.Close();
+            }
+        }
+
+        private async void HandleMessage(Stream inputStream, HttpListenerResponse response)
+        {
+            // Parse message from POST
+            CodedInputStream stream = CodedInputStream.CreateInstance(inputStream);
+            GameMessage message = new((byte)stream.ReadRawVarint64(), stream.ReadRawBytes((int)stream.ReadRawVarint64()));
+
+            switch ((FrontendProtocolMessage)message.Id)
+            {
+                case FrontendProtocolMessage.LoginDataPB:
+                    var loginDataPB = LoginDataPB.ParseFrom(message.Content);
+                    byte[] authTicket;
+
+                    if (CheckLoginDataPB(loginDataPB))  // check if LoginDataPB is valid
+                    {
+                        authTicket = AuthTicket.CreateBuilder()
+                            .SetSessionKey(ByteString.CopyFrom(Cryptography.AuthEncryptionKey))
+                            .SetSessionToken(ByteString.CopyFrom(new byte[] { 0x00, 0x01, 0x02, 0x03 }))
+                            .SetSessionId(17323122570962387736)
+                            .SetFrontendServer("localhost")
+                            .SetFrontendPort("4306")
+                            .SetSuccess(true)
+                            .Build().ToByteArray();
+
+                        // Write data to a buffer and send the response
+                        byte[] buffer;
+                        using (MemoryStream memoryStream = new())
+                        {
+                            CodedOutputStream outputStream = CodedOutputStream.CreateInstance(memoryStream);
+                            outputStream.WriteRawVarint64((byte)AuthMessage.AuthTicket);
+                            outputStream.WriteRawVarint64((ulong)authTicket.Length);
+                            outputStream.WriteRawBytes(authTicket);
+                            outputStream.Flush();
+                            buffer = memoryStream.ToArray();
+                        }
+
+                        response.KeepAlive = false;
+                        response.ContentType = "application/octet-stream";
+                        response.ContentLength64 = buffer.Length;
+
+                        await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+                    }
+                    else
+                    {
+                        Logger.Info("Authentication failed (LoginDataPB is invalid)");
+                        response.StatusCode = (int)ErrorCode.IncorrectUsernameOrPassword1;
+                    }
+
+                    break;
+
+                case FrontendProtocolMessage.PrecacheHeaders:
+                    // The client sends this message on startup
+                    Logger.Trace($"Received PrecacheHeaders message");
+                    break;
+
+                default:
+                    Logger.Warn($"Received unknown messageId {message.Id}");
+                    break;
             }
         }
 
