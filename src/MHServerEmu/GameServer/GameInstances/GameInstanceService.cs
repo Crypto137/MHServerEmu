@@ -176,7 +176,7 @@ namespace MHServerEmu.GameServer.GameInstances
                     break;
 
                 case ClientToGameServerMessage.NetMessageUpdateAvatarState:
-                    Logger.Info($"Received NetMessageUpdateAvatarState");
+                    //Logger.Trace($"Received NetMessageUpdateAvatarState");
                     var updateAvatarState = NetMessageUpdateAvatarState.ParseFrom(message.Content);
                     break;
 
