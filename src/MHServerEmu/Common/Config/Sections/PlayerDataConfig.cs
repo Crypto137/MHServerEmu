@@ -9,12 +9,15 @@ namespace MHServerEmu.Common.Config.Sections
         private const string Section = "PlayerData";
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        public string PlayerName { get; }
         public RegionPrototype StartingRegion { get; }
         public HardcodedAvatarEntity StartingAvatar { get; }
         public ulong CostumeOverride { get; }
 
         public PlayerDataConfig(IniFile configFile)
         {
+            PlayerName = configFile.ReadString(Section, "PlayerName");
+
             string startingRegion = configFile.ReadString(Section, "StartingRegion");
             string startingAvatar = configFile.ReadString(Section, "StartingAvatar");
 

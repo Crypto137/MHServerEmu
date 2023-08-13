@@ -159,7 +159,7 @@ namespace MHServerEmu.GameServer.Regions
                     {
                         // modify avatar data here
 
-                        avatar.PlayerName.Text = "Player";
+                        avatar.PlayerName.Text = ConfigManager.PlayerData.PlayerName;
 
                         foreach (Property property in avatar.Properties)
                         {
