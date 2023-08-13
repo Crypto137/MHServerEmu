@@ -2,7 +2,7 @@
 using System.Text;
 using MHServerEmu.Common;
 
-namespace MHServerEmu.GameServer.Entities.Archives
+namespace MHServerEmu.GameServer.Misc
 {
     public class StashTabOption
     {

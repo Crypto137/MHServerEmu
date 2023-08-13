@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 
-namespace MHServerEmu.GameServer.Entities.Archives
+namespace MHServerEmu.GameServer.Common
 {
     // Placeholder name until we figure out what this actually is
     public class PrototypeCollectionEntry

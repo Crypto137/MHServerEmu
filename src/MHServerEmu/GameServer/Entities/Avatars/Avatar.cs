@@ -1,10 +1,11 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common;
+using MHServerEmu.Common.Encoding;
 using MHServerEmu.GameServer.Common;
-using MHServerEmu.GameServer.Entities.Archives;
+using MHServerEmu.GameServer.Powers;
 
-namespace MHServerEmu.GameServer.Entities
+namespace MHServerEmu.GameServer.Entities.Avatars
 {
     public class Avatar : Entity
     {

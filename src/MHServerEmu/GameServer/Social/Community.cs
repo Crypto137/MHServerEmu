@@ -1,9 +1,9 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common;
-using MHServerEmu.GameServer.Common;
+using MHServerEmu.Common.Encoding;
 
-namespace MHServerEmu.GameServer.Entities.Archives
+namespace MHServerEmu.GameServer.Social
 {
     public class Community
     {

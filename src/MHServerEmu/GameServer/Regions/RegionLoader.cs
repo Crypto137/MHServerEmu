@@ -4,7 +4,7 @@ using MHServerEmu.Networking;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Config;
 using MHServerEmu.GameServer.Entities;
-using MHServerEmu.GameServer.Entities.Archives;
+using MHServerEmu.GameServer.Entities.Avatars;
 using MHServerEmu.GameServer.Powers;
 using MHServerEmu.GameServer.Data;
 using MHServerEmu.GameServer.Common;

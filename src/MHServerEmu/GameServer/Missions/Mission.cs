@@ -1,10 +1,8 @@
-﻿using System.Reflection;
-using System.Text;
+﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common;
-using MHServerEmu.GameServer.Common;
+using MHServerEmu.Common.Encoding;
 
-namespace MHServerEmu.GameServer.Entities.Archives
+namespace MHServerEmu.GameServer.Missions
 {
     public class Mission
     {

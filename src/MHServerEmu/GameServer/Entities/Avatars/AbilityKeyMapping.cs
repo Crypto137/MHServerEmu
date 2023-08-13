@@ -1,8 +1,8 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.GameServer.Common;
+using MHServerEmu.Common.Encoding;
 
-namespace MHServerEmu.GameServer.Entities.Archives
+namespace MHServerEmu.GameServer.Entities.Avatars
 {
     public class AbilityKeyMapping
     {

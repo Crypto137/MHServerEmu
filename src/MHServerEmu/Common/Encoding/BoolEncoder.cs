@@ -1,6 +1,6 @@
 ﻿using MHServerEmu.Common;
 
-namespace MHServerEmu.GameServer.Common
+namespace MHServerEmu.Common.Encoding
 {
     public class BoolEncoder
     {
@@ -33,7 +33,7 @@ namespace MHServerEmu.GameServer.Common
                     encodedBits = 0;
                 }
 
-                bitBuffer |= (byte)(Convert.ToInt32(value) << (7 - encodedBits));
+                bitBuffer |= (byte)(Convert.ToInt32(value) << 7 - encodedBits);
                 bitBuffer &= 0xf8;
                 bitBuffer |= ++encodedBits;
 

@@ -1,6 +1,6 @@
 ﻿using MHServerEmu.Common;
 
-namespace MHServerEmu.GameServer.Common
+namespace MHServerEmu.Common.Encoding
 {
     public class BoolDecoder
     {
@@ -9,7 +9,7 @@ namespace MHServerEmu.GameServer.Common
         private byte _bitBuffer = 0;
         private byte _position = 0;
 
-        public bool IsEmpty { get => _bitBuffer == 0; } 
+        public bool IsEmpty { get => _bitBuffer == 0; }
 
         public bool ReadBool()
         {
@@ -19,7 +19,7 @@ namespace MHServerEmu.GameServer.Common
             if (remainingBits > 5 || _position > 5 || remainingBits - _position > 5) throw new();
 
             // Get bit value from byte
-            bool value = (_bitBuffer & (1 << (7 - _position))) == 0 ? false : true;
+            bool value = (_bitBuffer & 1 << 7 - _position) == 0 ? false : true;
 
             // Update buffer
             _bitBuffer &= 0xf8;

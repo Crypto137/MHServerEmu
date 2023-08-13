@@ -1,5 +1,4 @@
-﻿using System.Text;
-using Google.ProtocolBuffers;
+﻿using Google.ProtocolBuffers;
 
 namespace MHServerEmu.Common
 {
@@ -50,7 +49,7 @@ namespace MHServerEmu.Common
         public static string ReadRawString(this CodedInputStream stream)
         {
             int length = (int)stream.ReadRawVarint32();
-            return Encoding.UTF8.GetString(stream.ReadRawBytes(length));
+            return System.Text.Encoding.UTF8.GetString(stream.ReadRawBytes(length));
         }
 
         public static void WriteRawFloat(this CodedOutputStream stream, float number, int precision)
@@ -71,7 +70,7 @@ namespace MHServerEmu.Common
 
         public static void WriteRawString(this CodedOutputStream stream, string value)
         {
-            byte[] rawBytes = Encoding.UTF8.GetBytes(value);
+            byte[] rawBytes = System.Text.Encoding.UTF8.GetBytes(value);
             stream.WriteRawVarint64((ulong)rawBytes.Length);
             stream.WriteRawBytes(rawBytes);
         }

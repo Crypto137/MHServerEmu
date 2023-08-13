@@ -1,8 +1,12 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common;
+using MHServerEmu.Common.Encoding;
+using MHServerEmu.GameServer.Achievements;
 using MHServerEmu.GameServer.Common;
-using MHServerEmu.GameServer.Entities.Archives;
+using MHServerEmu.GameServer.Misc;
+using MHServerEmu.GameServer.Missions;
+using MHServerEmu.GameServer.Social;
 
 namespace MHServerEmu.GameServer.Entities
 {

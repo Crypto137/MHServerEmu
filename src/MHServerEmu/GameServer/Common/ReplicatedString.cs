@@ -2,7 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common;
 
-namespace MHServerEmu.GameServer.Entities.Archives
+namespace MHServerEmu.GameServer.Common
 {
     public class ReplicatedString
     {
