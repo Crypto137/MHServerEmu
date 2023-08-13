@@ -8,17 +8,17 @@ namespace MHServerEmu.GameServer.Entities.Archives
     public class Condition
     {
         public ulong Flags { get; set; }
-        public ulong Field1 { get; set; }
-        public ulong Field2 { get; set; }
-        public ulong Field3 { get; set; }
-        public ulong Prototype4 { get; set; }
-        public ulong Prototype8 { get; set; }
+        public ulong Id { get; set; }
+        public ulong CreatorId { get; set; }
+        public ulong UltimateCreatorId { get; set; }
+        public ulong ConditionPrototypeRef { get; set; }
+        public ulong CreatorPowerPrototypeRef { get; set; }
         public ulong UnknownSize { get; set; }
         public ulong AssetId { get; set; }
-        public ulong Time1 { get; set; }    // zigzag
-        public ulong Time2 { get; set; }
-        public ulong Time3 { get; set; }
-        public ulong UnknownInt { get; set; }   // zigzag?
+        public ulong StartTime { get; set; }    // zigzag
+        public ulong PauseTime { get; set; }
+        public ulong Field10 { get; set; }      // time3
+        public ulong UpdateInterval { get; set; }   // zigzag int
         public ulong PropertyCollectionReplicationId { get; set; }
         public Property[] Properties { get; set; }
         public uint Field13 { get; set; }
@@ -26,24 +26,22 @@ namespace MHServerEmu.GameServer.Entities.Archives
         public Condition(CodedInputStream stream)
         {
             Flags = stream.ReadRawVarint64();
-            Field1 = stream.ReadRawVarint64();
-            if ((Flags & 0x1) == 0) Field2 = stream.ReadRawVarint64();
-            if ((Flags & 0x2) == 0) Field3 = stream.ReadRawVarint64();
-            if ((Flags & 0x4) == 0) Prototype4 = stream.ReadRawVarint64();
-            if ((Flags & 0x8) == 0) Prototype8 = stream.ReadRawVarint64();
+            Id = stream.ReadRawVarint64();
+            if ((Flags & 0x1) == 0) CreatorId = stream.ReadRawVarint64();
+            if ((Flags & 0x2) == 0) UltimateCreatorId = stream.ReadRawVarint64();
+            if ((Flags & 0x4) == 0) ConditionPrototypeRef = stream.ReadRawVarint64();
+            if ((Flags & 0x8) == 0) CreatorPowerPrototypeRef = stream.ReadRawVarint64();
             if ((Flags & 0x10) > 0) UnknownSize = stream.ReadRawVarint64();
 
             if ((Flags & 0x200) > 0)
             {
-                AssetId = stream.ReadRawVarint64(); // MarvelPlayer_BlackCat
-                Time1 = stream.ReadRawVarint64();   // zigzag
+                AssetId = stream.ReadRawVarint64();     // MarvelPlayer_BlackCat
+                StartTime = stream.ReadRawVarint64();   // zigzag
             }
 
-            if ((Flags & 0x40) > 0) Time2 = stream.ReadRawVarint64();
-            if ((Flags & 0x80) > 0) Time3 = stream.ReadRawVarint64();
-            if ((Flags & 0x400) > 0) UnknownInt = stream.ReadRawVarint64();
-
-            Console.WriteLine((Flags & 0x400).ToString());
+            if ((Flags & 0x40) > 0) PauseTime = stream.ReadRawVarint64();
+            if ((Flags & 0x80) > 0) Field10 = stream.ReadRawVarint64();
+            if ((Flags & 0x400) > 0) UpdateInterval = stream.ReadRawVarint64();
             
             PropertyCollectionReplicationId = stream.ReadRawVarint64();
             Properties = new Property[stream.ReadRawUInt32()];
@@ -53,9 +51,8 @@ namespace MHServerEmu.GameServer.Entities.Archives
             if ((Flags & 0x800) > 0) Field13 = stream.ReadRawVarint32();
         }
 
-        public Condition(ulong prototypeId, uint value)
-        {
-            
+        public Condition()
+        {            
         }
 
         public byte[] Encode()
@@ -64,8 +61,29 @@ namespace MHServerEmu.GameServer.Entities.Archives
             {
                 CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
 
-                //stream.WriteRawVarint64(PrototypeId);
-                //stream.WriteRawVarint64(Value);
+                stream.WriteRawVarint64(Flags);
+                stream.WriteRawVarint64(Id);
+                if ((Flags & 0x1) == 0) stream.WriteRawVarint64(CreatorId);
+                if ((Flags & 0x2) == 0) stream.WriteRawVarint64(UltimateCreatorId);
+                if ((Flags & 0x4) == 0) stream.WriteRawVarint64(ConditionPrototypeRef);
+                if ((Flags & 0x8) == 0) stream.WriteRawVarint64(CreatorPowerPrototypeRef);
+                if ((Flags & 0x10) > 0) stream.WriteRawVarint64(UnknownSize);
+
+                if ((Flags & 0x200) > 0)
+                {
+                    stream.WriteRawVarint64(AssetId);
+                    stream.WriteRawVarint64(StartTime);
+                }
+
+                if ((Flags & 0x40) > 0) stream.WriteRawVarint64(PauseTime);
+                if ((Flags & 0x80) > 0) stream.WriteRawVarint64(Field10);
+                if ((Flags & 0x400) > 0) stream.WriteRawVarint64(UpdateInterval);
+
+                stream.WriteRawVarint64(PropertyCollectionReplicationId);
+                stream.WriteRawUInt32((uint)Properties.Length);
+                foreach (Property property in Properties) stream.WriteRawBytes(property.Encode());
+
+                if ((Flags & 0x800) > 0) stream.WriteRawVarint32(Field13);
 
                 stream.Flush();
                 return memoryStream.ToArray();
@@ -78,16 +96,16 @@ namespace MHServerEmu.GameServer.Entities.Archives
             using (StreamWriter streamWriter = new(memoryStream))
             {
                 streamWriter.WriteLine($"Flags: 0x{Flags.ToString("X")}");
-                streamWriter.WriteLine($"Field1: 0x{Field1.ToString("X")}");
-                streamWriter.WriteLine($"Field2: 0x{Field2.ToString("X")}");
-                streamWriter.WriteLine($"Field3: 0x{Field3.ToString("X")}");
-                streamWriter.WriteLine($"Prototype4: 0x{Prototype4.ToString("X")}");
-                streamWriter.WriteLine($"Prototype8: 0x{Prototype8.ToString("X")}");
+                streamWriter.WriteLine($"Id: 0x{Id.ToString("X")}");
+                streamWriter.WriteLine($"CreatorId: 0x{CreatorId.ToString("X")}");
+                streamWriter.WriteLine($"UltimateCreatorId: 0x{UltimateCreatorId.ToString("X")}");
+                streamWriter.WriteLine($"ConditionPrototypeRef: 0x{ConditionPrototypeRef.ToString("X")}");
+                streamWriter.WriteLine($"CreatorPowerPrototypeRef: 0x{CreatorPowerPrototypeRef.ToString("X")}");
                 streamWriter.WriteLine($"UnknownSize: 0x{UnknownSize.ToString("X")}");
                 streamWriter.WriteLine($"AssetId: 0x{AssetId.ToString("X")}");
-                streamWriter.WriteLine($"Time1: 0x{Time1.ToString("X")}");
-                streamWriter.WriteLine($"Time2: 0x{Time2.ToString("X")}");
-                streamWriter.WriteLine($"Time3: 0x{Time3.ToString("X")}");
+                streamWriter.WriteLine($"StartTime: 0x{StartTime.ToString("X")}");
+                streamWriter.WriteLine($"PauseTime: 0x{PauseTime.ToString("X")}");
+                streamWriter.WriteLine($"Field10: 0x{Field10.ToString("X")}");
                 streamWriter.WriteLine($"PropertyCollectionReplicationId: 0x{PropertyCollectionReplicationId.ToString("X")}");
                 for (int i = 0; i < Properties.Length; i++) streamWriter.WriteLine($"Property{i}: {Properties[i]}");
                 streamWriter.WriteLine($"Field13: 0x{Field13.ToString("X")}");

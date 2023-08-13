@@ -28,7 +28,7 @@ namespace MHServerEmu.GameServer.Entities.Archives
                 CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
 
                 stream.WriteRawVarint64(PrototypeId);
-                stream.WriteRawVarint64(Value);
+                stream.WriteRawVarint32(Value);
 
                 stream.Flush();
                 return memoryStream.ToArray();

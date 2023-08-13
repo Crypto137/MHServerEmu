@@ -77,7 +77,7 @@ namespace MHServerEmu.GameServer.Regions
             return messageList.ToArray();
         }
 
-        private static GameMessage[] LoadLocalPlayerDataMessages(HardcodedAvatarEntity avatar)
+        private static GameMessage[] LoadLocalPlayerDataMessages(HardcodedAvatarEntity avatarEntityId)
         {
             List<GameMessage> messageList = new();
 
@@ -134,12 +134,12 @@ namespace MHServerEmu.GameServer.Regions
                 }
                 else
                 {
-                    // Modify base data if loading any hero other than Black Cat
-                    Entity entity = new(entityCreateMessage.ArchiveData.ToByteArray());
+                    Avatar avatar = new(entityCreateMessage.ArchiveData.ToByteArray());
 
-                    if (avatar != HardcodedAvatarEntity.BlackCat)
+                    // modify base data
+                    if (avatarEntityId != HardcodedAvatarEntity.BlackCat)
                     {
-                        if (baseData.EntityId == (ulong)avatar)
+                        if (baseData.EntityId == (ulong)avatarEntityId)
                         {
                             replacementInventorySlot = baseData.DynamicFields[5];
                             baseData.DynamicFields[4] = 273;    // put selected avatar in PlayerAvatarInPlay
@@ -155,13 +155,13 @@ namespace MHServerEmu.GameServer.Regions
                         }
                     }
 
-                    if (baseData.EntityId == (ulong)avatar)
+                    if (baseData.EntityId == (ulong)avatarEntityId)
                     {
-                        //Avatar avatarEntity = new(entityCreateMessage.ArchiveData.ToByteArray());
+                        // modify avatar data here
 
-                        // edit avatar data here
+                        avatar.PlayerName.Text = "Player";
 
-                        foreach (Property property in entity.Properties)
+                        foreach (Property property in avatar.Properties)
                         {
                             if (property.Info.Name == "CostumeCurrent" && ConfigManager.PlayerData.CostumeOverride != 0)
                             {
@@ -179,7 +179,7 @@ namespace MHServerEmu.GameServer.Regions
 
                     var customEntityCreateMessage = NetMessageEntityCreate.CreateBuilder()
                         .SetBaseData(ByteString.CopyFrom(baseData.Encode()))
-                        .SetArchiveData(ByteString.CopyFrom(entity.Encode()))
+                        .SetArchiveData(ByteString.CopyFrom(avatar.Encode()))
                         .Build().ToByteArray();
 
                     messageList.Add(new(GameServerToClientMessage.NetMessageEntityCreate, customEntityCreateMessage));

@@ -80,6 +80,9 @@ namespace MHServerEmu.GameServer.Entities
                 BoolEncoder boolEncoder = new();
                 byte bitBuffer;
 
+                boolEncoder.WriteBool(IsRuntimeInfo);
+                foreach (AbilityKeyMapping keyMap in AbilityKeyMappings) boolEncoder.WriteBool(keyMap.ShouldPersist);
+
                 boolEncoder.Cook();
 
                 // Encode
@@ -89,6 +92,23 @@ namespace MHServerEmu.GameServer.Entities
                 stream.WriteRawBytes(BitConverter.GetBytes(Properties.Length));
                 foreach (Property property in Properties)
                     stream.WriteRawBytes(property.Encode());
+
+                stream.WriteRawVarint64((ulong)UnknownPrototypes.Length);
+                foreach (PrototypeCollectionEntry entry in UnknownPrototypes) stream.WriteRawBytes(entry.Encode());
+
+                stream.WriteRawVarint64((ulong)Conditions.Length);
+                foreach (Condition condition in Conditions) stream.WriteRawBytes(condition.Encode());
+
+                stream.WriteRawVarint64(UnknownPowerVar);
+                stream.WriteRawBytes(PlayerName.Encode());
+                stream.WriteRawVarint64(OwnerPlayerDbId);
+                stream.WriteRawString(GuildName);
+
+                bitBuffer = boolEncoder.GetBitBuffer();             // IsRuntimeInfo
+                if (bitBuffer != 0) stream.WriteRawByte(bitBuffer);
+
+                stream.WriteRawVarint64((ulong)AbilityKeyMappings.Length);
+                foreach (AbilityKeyMapping keyMap in AbilityKeyMappings) stream.WriteRawBytes(keyMap.Encode(boolEncoder));
 
                 stream.Flush();
                 return memoryStream.ToArray();
