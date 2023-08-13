@@ -8,6 +8,7 @@ namespace MHServerEmu.GameServer.Entities
 {
     public class Avatar : Entity
     {
+        public PrototypeCollectionEntry[] UnknownPrototypes { get; set; }
         public Condition[] Conditions { get; set; }
         public ulong UnknownPowerVar { get; set; }
         public ReplicatedString PlayerName { get; set; }
@@ -24,7 +25,10 @@ namespace MHServerEmu.GameServer.Entities
             ReadHeader(stream);
             ReadProperties(stream);
 
-            ulong test = stream.ReadRawVarint64();
+            UnknownPrototypes = new PrototypeCollectionEntry[stream.ReadRawVarint64()];
+            for (int i = 0; i < UnknownPrototypes.Length; i++)
+                UnknownPrototypes[i] = new(stream);
+
             Conditions = new Condition[stream.ReadRawVarint64()];
             for (int i = 0; i < Conditions.Length; i++)             
                 Conditions[i] = new(stream);
@@ -61,7 +65,7 @@ namespace MHServerEmu.GameServer.Entities
             UnknownPowerVar = unknownPowerVar;
             PlayerName = playerName;
             OwnerPlayerDbId = ownerPlayerDbId;
-            GuildName = GuildName;
+            GuildName = guildName;
             IsRuntimeInfo = isRuntimeInfo;
             AbilityKeyMappings = abilityKeyMappings;
         }

@@ -13,6 +13,14 @@ namespace MHServerEmu.GameServer.Common
         public ulong Value { get; set; }
         public PropertyInfo Info { get => Database.PropertyInfos[_propertyInfoIndex]; }
 
+        public Property(CodedInputStream stream)
+        {
+            Id = stream.ReadRawVarint64();
+            Value = stream.ReadRawVarint64();
+
+            CalculatePropertyInfoIndex();
+        }
+
         public Property(ulong id, ulong value)
         {
             Id = id;
