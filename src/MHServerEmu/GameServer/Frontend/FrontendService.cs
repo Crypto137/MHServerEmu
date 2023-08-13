@@ -47,7 +47,7 @@ namespace MHServerEmu.GameServer.Frontend
                         Logger.Info("Responding with SessionEncryptionChanged message");
 
                         byte[] response = SessionEncryptionChanged.CreateBuilder()
-                            .SetRandomNumberIndex(1)
+                            .SetRandomNumberIndex(0)
                             .SetEncryptedRandomNumber(ByteString.Empty)
                             .Build().ToByteArray();
 

@@ -10,10 +10,10 @@ After getting the client, you need to set up a web server to serve SiteConfig.xm
 
 2. Extract the ```Apache24``` folder in the archive to the root directory on any drive (e.g. ```C:\Apache24```).
 
-3. Open `Apache24\conf\httpd.conf` with any text editor and uncomment (by removing #) the following line: `LoadModule rewrite_module modules/mod_rewrite.so`.
+3. Open `Apache24\conf\httpd.conf` with any text editor and uncomment (by removing #) the following three lines: `LoadModule rewrite_module modules/mod_rewrite.so`, `LoadModule proxy_module modules/mod_proxy.so`, and `LoadModule proxy_http_module modules/mod_proxy_http.so`.
 
-4. Open ```Apache24\conf\extra\httpd-ahssl.conf``` with any text editor, find the `<VirtualHost _default_:443>` section, and add the following to it:
-   `RewriteEngine on` and `RewriteRule ^/AuthServer(.*) http://%{HTTP_HOST}:8080$1`.
+4. Open ```Apache24\conf\extra\httpd-ahssl.conf``` with any text editor, find the `<VirtualHost _default_:443>` section, and add the following two lines to it:
+   `RewriteEngine on` and `RewriteRule ^/AuthServer(.*) http://%{HTTP_HOST}:8080$1 [P]`.
 
 5. Put [SiteConfig.xml](https://github.com/Crypto137/MHServerEmu/blob/master/assets/SiteConfig.xml) provided in this repository in ```Apache24\htdocs```.
 
