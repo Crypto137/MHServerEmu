@@ -1,5 +1,7 @@
 ﻿using MHServerEmu.Common;
 using MHServerEmu.GameServer.Data;
+using MHServerEmu.GameServer.Data.Gpak;
+using MHServerEmu.GameServer.Data.Gpak.FileFormats;
 
 namespace MHServerEmu.GameServer.Regions
 {
@@ -570,12 +572,11 @@ namespace MHServerEmu.GameServer.Regions
 
 
                     area = new(1, AreaPrototype.XManhattanArea1, new(), true);
-                    area.AddCell(new(30, Database.GetPrototypeId("Resource/Cells/DistrictCells/MidtownStatic/MidtownStatic_A/UES_Static_cESWa_X5_Y2_A.cell"), new()));
-                    area.AddCell(new(23, Database.GetPrototypeId("Resource/Cells/DistrictCells/MidtownStatic/MidtownStatic_A/UES_Static_cNESWa_X4_Y2_A.cell"), new()));
-                    area.AddCell(new(35, Database.GetPrototypeId("Resource/Cells/DistrictCells/MidtownStatic/MidtownStatic_A/UES_Static_StarkLobby_X5_Y3_A2.cell"), new()));
-                    area.AddCell(new(31, Database.GetPrototypeId("Resource/Cells/DistrictCells/MidtownStatic/MidtownStatic_A/UES_Static_cESWb_X5_Y4_A.cell"), new()));
-                    area.AddCell(new(12, Database.GetPrototypeId("Resource/Cells/DistrictCells/MidtownStatic/MidtownStatic_A/UES_Static_ParkLeft_X4_Y3_A.cell"), new()));
-                    area.AddCell(new(13, Database.GetPrototypeId("Resource/Cells/DistrictCells/MidtownStatic/MidtownStatic_A/UES_Static_ParkRight_X4_Y4_A.cell"), new()));
+
+                    District district = Resource.DistrictDict["Resource/Districts/MidtownStatic/MidtownStatic_A.district"];
+
+                    for (int i = 0; i < district.Cells.Length; i++)
+                        area.AddCell(new((uint)i, Database.GetPrototypeId(district.Cells[i].Name), new()));
 
                     region.AddArea(area);
 
