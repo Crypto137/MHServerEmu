@@ -6,13 +6,15 @@ namespace MHServerEmu.Common.Config.Sections
     {
         private const string Section = "Frontend";
 
+        public bool BypassAuth { get; }
         public bool SimulateQueue { get; }
         public ulong QueuePlaceInLine { get; }
         public ulong QueueNumberOfPlayersInLine { get; }
 
         public FrontendConfig(IniFile configFile)
         {
-            SimulateQueue = configFile.ReadBool(Section, "SimulateQueue"); ;
+            BypassAuth = configFile.ReadBool(Section, "BypassAuth");
+            SimulateQueue = configFile.ReadBool(Section, "SimulateQueue");
             QueuePlaceInLine = (ulong)configFile.ReadInt(Section, "QueuePlaceInLine");
             QueueNumberOfPlayersInLine = (ulong)configFile.ReadInt(Section, "QueueNumberOfPlayersInLine");
         }

@@ -21,12 +21,28 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             if (@params == null) return Fallback();
             if (@params.Length < 2) return "Invalid arguments. Type 'help account verify' to get help.";
 
-            Account account = AccountManager.GetAccountByEmail(@params[0].ToLower(), @params[1]);
+            Account account = AccountManager.GetAccountByEmail(@params[0].ToLower(), @params[1], out AuthServer.ErrorCode? errorCode);
 
-            if (account == null)
-                return "Account credentials are NOT valid!";
-            else
+            if (account != null)
                 return "Account credentials are valid.";
+            else
+                return $"Account credentials are NOT valid: {errorCode}!";
+        }
+
+        [Command("ban", "Bans the specified account.\nUsage: account ban [email]")]
+        public string Ban(string[] @params, FrontendClient client)
+        {
+            if (@params == null) return Fallback();
+            if (@params.Length == 0) return "Invalid arguments. Type 'help account ban' to get help.";
+            return AccountManager.BanAccount(@params[0].ToLower());
+        }
+
+        [Command("unban", "Unbans the specified account.\nUsage: account unban [email]")]
+        public string Unban(string[] @params, FrontendClient client)
+        {
+            if (@params == null) return Fallback();
+            if (@params.Length == 0) return "Invalid arguments. Type 'help account unban' to get help.";
+            return AccountManager.UnbanAccount(@params[0].ToLower());
         }
     }
 }

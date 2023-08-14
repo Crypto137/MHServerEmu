@@ -2,12 +2,14 @@
 using Google.ProtocolBuffers;
 using Gazillion;
 using MHServerEmu.Common;
+using MHServerEmu.Common.Config;
+using MHServerEmu.GameServer.Frontend.Accounts;
 
 namespace MHServerEmu.Networking
 {
     public class AuthServer
     {
-        private enum ErrorCode
+        public enum ErrorCode
         {
             IncorrectUsernameOrPassword1 = 401,
             AccountBanned = 402,
@@ -85,7 +87,7 @@ namespace MHServerEmu.Networking
                     var loginDataPB = LoginDataPB.ParseFrom(message.Content);
                     byte[] authTicket;
 
-                    if (CheckLoginDataPB(loginDataPB))  // check if LoginDataPB is valid
+                    if (CheckLoginDataPB(loginDataPB, out ErrorCode? errorCode))  // check if LoginDataPB is valid
                     {
                         authTicket = AuthTicket.CreateBuilder()
                             .SetSessionKey(ByteString.CopyFrom(Cryptography.AuthEncryptionKey))
@@ -116,8 +118,8 @@ namespace MHServerEmu.Networking
                     }
                     else
                     {
-                        Logger.Info("Authentication failed (LoginDataPB is invalid)");
-                        response.StatusCode = (int)ErrorCode.IncorrectUsernameOrPassword1;
+                        Logger.Info($"Authentication failed ({errorCode})");
+                        response.StatusCode = (int)errorCode;
                     }
 
                     break;
@@ -133,9 +135,18 @@ namespace MHServerEmu.Networking
             }
         }
 
-        private bool CheckLoginDataPB(LoginDataPB loginDataPB)
+        private bool CheckLoginDataPB(LoginDataPB loginDataPB, out ErrorCode? errorCode)
         {
-            return true;    // TODO: actual checking
+            if (ConfigManager.Frontend.BypassAuth)
+            {
+                errorCode = null;
+                return true;
+            }
+            else
+            {
+                Account account = AccountManager.GetAccountByLoginDataPB(loginDataPB, out errorCode);
+                return account != null;
+            }
         }
     }
 }

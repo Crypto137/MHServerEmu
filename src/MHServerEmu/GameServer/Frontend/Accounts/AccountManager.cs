@@ -1,6 +1,8 @@
 ﻿using System.Text.Json;
 using Gazillion;
 using MHServerEmu.Common;
+using MHServerEmu.Networking;
+using static MHServerEmu.Networking.AuthServer;
 
 namespace MHServerEmu.GameServer.Frontend.Accounts
 {
@@ -14,9 +16,59 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
         private static List<Account> _accountList = new();
         private static Dictionary<string, Account> _emailAccountDict = new();
 
+        public static bool IsInitialized { get; private set; }
+
         static AccountManager()
         {
             LoadAccounts();
+            IsInitialized = true;
+        }
+
+        public static Account GetAccountByEmail(string email, string password, out ErrorCode? errorCode)
+        {
+            errorCode = null;
+
+            if (_emailAccountDict.ContainsKey(email) == false)
+            {
+                errorCode = ErrorCode.IncorrectUsernameOrPassword1;
+                return null;
+            }
+
+            Account account = _emailAccountDict[email];
+
+            if (Cryptography.VerifyPassword(password, account.PasswordHash, account.Salt))
+            {
+                if (account.IsBanned)
+                {
+                    errorCode = ErrorCode.AccountBanned;
+                    return null;
+                }
+                else if (account.IsArchived)
+                {
+                    errorCode = ErrorCode.AccountArchived;
+                    return null;
+                }
+                else if (account.IsPasswordExpired)
+                {
+                    errorCode = ErrorCode.PasswordExpired;
+                    return null;
+                }
+                else
+                {
+                    return account;
+                }
+            }
+            else
+            {
+                errorCode = ErrorCode.IncorrectUsernameOrPassword1;
+                return null;
+            }
+        }
+
+        public static Account GetAccountByLoginDataPB(LoginDataPB loginDataPB, out ErrorCode? errorCode)
+        {
+            string email = loginDataPB.EmailAddress.ToLower();
+            return GetAccountByEmail(email, loginDataPB.Password, out errorCode);
         }
 
         public static void CreateAccount(string email, string password)
@@ -43,21 +95,44 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             }
         }
 
-        public static Account GetAccountByEmail(string email, string password)
+        public static string BanAccount(string email)
         {
-            if (_emailAccountDict.ContainsKey(email) == false) return null;
-            Account account = _emailAccountDict[email];
-
-            if (Cryptography.VerifyPassword(password, account.PasswordHash, account.Salt))
-                return account;
+            if (_emailAccountDict.ContainsKey(email))
+            {
+                if (_emailAccountDict[email].IsBanned == false)
+                {
+                    _emailAccountDict[email].IsBanned = true;
+                    return $"Successfully banned account {email}";
+                }
+                else
+                {
+                    return $"Account {email} is already banned";
+                }
+            }
             else
-                return null;
+            {
+                return $"Cannot ban {email}: account not found";
+            }
         }
 
-        public static Account GetAccountByLoginDataPB(LoginDataPB loginDataPB)
+        public static string UnbanAccount(string email)
         {
-            string email = loginDataPB.EmailAddress.ToLower();
-            return GetAccountByEmail(email, loginDataPB.Password);
+            if (_emailAccountDict.ContainsKey(email))
+            {
+                if (_emailAccountDict[email].IsBanned)
+                {
+                    _emailAccountDict[email].IsBanned = false;
+                    return $"Successfully unbanned account {email}";
+                }
+                else
+                {
+                    return $"Account {email} is not banned";
+                }
+            }
+            else
+            {
+                return $"Cannot unban {email}: account not found";
+            }
         }
 
         private static void LoadAccounts()

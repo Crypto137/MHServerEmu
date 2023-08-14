@@ -2,6 +2,7 @@
 using MHServerEmu.Common.Commands;
 using MHServerEmu.Common.Config;
 using MHServerEmu.GameServer.Data;
+using MHServerEmu.GameServer.Frontend.Accounts;
 using MHServerEmu.GameServer.Regions;
 using MHServerEmu.Networking;
 
@@ -26,7 +27,7 @@ namespace MHServerEmu
 
             Logger.Info("MHServerEmu starting...");
 
-            if (Database.IsInitialized == false || RegionManager.IsInitialized == false)
+            if (Database.IsInitialized == false || AccountManager.IsInitialized == false || RegionManager.IsInitialized == false)
             {
                 Console.ReadKey();
                 return;
