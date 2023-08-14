@@ -9,6 +9,7 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
     public static class AccountManager
     {
         private const int MinimumPasswordLength = 3;
+        private const int MaximumPasswordLength = 64;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly string SavedDataDirectory = $"{Directory.GetCurrentDirectory()}\\SavedData";
@@ -71,27 +72,51 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             return GetAccountByEmail(email, loginDataPB.Password, out errorCode);
         }
 
-        public static void CreateAccount(string email, string password)
+        public static string CreateAccount(string email, string password)
         {
             if (_emailAccountDict.ContainsKey(email) == false)
             {
-                if (password.Length >= MinimumPasswordLength)
+                if (password.Length >= MinimumPasswordLength && password.Length <= MaximumPasswordLength)
                 {
                     Account account = new((ulong)_accountList.Count + 1, email, password);
                     _accountList.Add(account);
                     _emailAccountDict.Add(email, account);
                     SaveAccounts();
 
-                    Logger.Info($"Created a new account {email}");
+                    return $"Created a new account: {email}.";
                 }
                 else
                 {
-                    Logger.Warn($"Failed to create account: password must be at least {MinimumPasswordLength} characters long");
+                    return $"Failed to create account: password must between {MinimumPasswordLength} and {MaximumPasswordLength} characters long";
                 }
             }
             else
             {
-                Logger.Warn($"Failed to create account: email {email} is already used by another account");
+                return $"Failed to create account: email {email} is already used by another account";
+            }
+        }
+
+        public static string ChangeAccountPassword(string email, string newPassword)
+        {
+            if (_emailAccountDict.ContainsKey(email))
+            {
+                if (newPassword.Length >= MinimumPasswordLength && newPassword.Length <= MaximumPasswordLength)
+                {
+                    Account account = _emailAccountDict[email];
+                    account.PasswordHash = Cryptography.HashPassword(newPassword, out byte[] salt);
+                    account.Salt = salt;
+                    account.IsPasswordExpired = false;
+                    SaveAccounts();
+                    return $"Successfully changed password for account {email}.";
+                }
+                else
+                {
+                    return $"Failed to change password: password must between {MinimumPasswordLength} and {MaximumPasswordLength} characters long.";
+                }
+            }
+            else
+            {
+                return $"Failed to change password: account {email} not found.";
             }
         }
 
@@ -102,16 +127,17 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
                 if (_emailAccountDict[email].IsBanned == false)
                 {
                     _emailAccountDict[email].IsBanned = true;
-                    return $"Successfully banned account {email}";
+                    SaveAccounts();
+                    return $"Successfully banned account {email}.";
                 }
                 else
                 {
-                    return $"Account {email} is already banned";
+                    return $"Account {email} is already banned.";
                 }
             }
             else
             {
-                return $"Cannot ban {email}: account not found";
+                return $"Cannot ban {email}: account not found.";
             }
         }
 
@@ -122,16 +148,17 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
                 if (_emailAccountDict[email].IsBanned)
                 {
                     _emailAccountDict[email].IsBanned = false;
-                    return $"Successfully unbanned account {email}";
+                    SaveAccounts();
+                    return $"Successfully unbanned account {email}.";
                 }
                 else
                 {
-                    return $"Account {email} is not banned";
+                    return $"Account {email} is not banned.";
                 }
             }
             else
             {
-                return $"Cannot unban {email}: account not found";
+                return $"Cannot unban {email}: account not found.";
             }
         }
 

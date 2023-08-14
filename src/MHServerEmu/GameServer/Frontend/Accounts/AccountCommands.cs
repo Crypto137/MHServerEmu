@@ -11,8 +11,15 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
         {
             if (@params == null) return Fallback();
             if (@params.Length < 2) return "Invalid arguments. Type 'help account create' to get help.";
-            AccountManager.CreateAccount(@params[0].ToLower(), @params[1]);
-            return string.Empty;
+            return AccountManager.CreateAccount(@params[0].ToLower(), @params[1]);
+        }
+
+        [Command("password", "Changes password for the specified account.\nUsage: account password [email] [password]")]
+        public string Password(string[] @params, FrontendClient client)
+        {
+            if (@params == null) return Fallback();
+            if (@params.Length < 2) return "Invalid arguments. Type 'help account password' to get help.";
+            return AccountManager.ChangeAccountPassword(@params[0].ToLower(), @params[1]);
         }
 
         [Command("verify", "Checks if an email/password combination is valid.\nUsage: account verify [email] [password]")]
