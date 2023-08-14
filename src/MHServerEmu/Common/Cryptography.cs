@@ -4,6 +4,9 @@ namespace MHServerEmu.Common
 {
     public static class Cryptography
     {
+        private const int PasswordKeySize = 64;
+        private const int PasswordIterationCount = 350000;
+
         // The game uses AES-256 CBC encryption for auth
         // The real server probably generated a new key for each session, but until we have auth <-> frontend communication we'll use a static one
         public static readonly byte[] AuthEncryptionKey = Convert.FromBase64String("M/+i0JeQS/xWW5+FN4C1LVvc3nerQc3G3VoCcqWTC9A=");
@@ -79,6 +82,19 @@ namespace MHServerEmu.Common
                 aesAlgorithm.GenerateKey();
                 return aesAlgorithm.Key;
             }
+        }
+
+        public static byte[] HashPassword(string password, out byte[] salt)
+        {
+            salt = RandomNumberGenerator.GetBytes(PasswordKeySize);
+            byte[] hash = Rfc2898DeriveBytes.Pbkdf2(password, salt, PasswordIterationCount, HashAlgorithmName.SHA512, PasswordKeySize);
+            return hash;
+        }
+
+        public static bool VerifyPassword(string password, byte[] hash, byte[] salt)
+        {
+            byte[] hashToCompare = Rfc2898DeriveBytes.Pbkdf2(password, salt, PasswordIterationCount, HashAlgorithmName.SHA512, PasswordKeySize);
+            return CryptographicOperations.FixedTimeEquals(hashToCompare, hash);
         }
     }
 }
