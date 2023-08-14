@@ -23,6 +23,7 @@ namespace MHServerEmu.GameServer.Regions
             RegionDict.Add(RegionPrototype.GenoshaHUBRegion, LoadRegionData(RegionPrototype.GenoshaHUBRegion));
             RegionDict.Add(RegionPrototype.DangerRoomHubRegion, LoadRegionData(RegionPrototype.DangerRoomHubRegion));
             RegionDict.Add(RegionPrototype.InvasionSafeAbodeRegion, LoadRegionData(RegionPrototype.InvasionSafeAbodeRegion));
+            RegionDict.Add(RegionPrototype.NPERaftRegion, LoadRegionData(RegionPrototype.NPERaftRegion));
             RegionDict.Add(RegionPrototype.DailyGShockerSubwayRegionL60, LoadRegionData(RegionPrototype.DailyGShockerSubwayRegionL60));
             RegionDict.Add(RegionPrototype.XManhattanRegion60Cosmic, LoadRegionData(RegionPrototype.XManhattanRegion60Cosmic));
 
@@ -53,6 +54,7 @@ namespace MHServerEmu.GameServer.Regions
             Region region = null;
             byte[] archiveData = Array.Empty<byte>();
             Area area;
+            District district = null;
 
             switch (prototype)
             {
@@ -364,6 +366,33 @@ namespace MHServerEmu.GameServer.Regions
 
                     break;
 
+                case RegionPrototype.NPERaftRegion:
+                    archiveData = new byte[] {
+                    };
+                    region = new(RegionPrototype.NPERaftRegion,
+                        1153032354375335951,
+                        1038711701,
+                        archiveData,
+                        new(-1152.0f, 0.0f, -1152.0f),
+                        new(8064.0f, 12672.0f, 1152.0f),
+                        new(60, DifficultyTier.Normal));
+
+                    AreaPrototype raftArea = (AreaPrototype)Database.GetPrototypeId("Regions/StoryRevamp/CH00Raft/TheRaftNPE/NPERaftArea.prototype");
+                    area = new(1, raftArea, new(), true);
+
+                    district = Resource.DistrictDict["Resource/Districts/Raft_District.district"];
+
+                    for (int i = 0; i < district.Cells.Length; i++)
+                        area.AddCell(new((uint)i + 1, Database.GetPrototypeId(district.Cells[i].Name), new()));
+
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(100.0f, 8700.0f, 0.0f);
+                    region.EntranceOrientation = new(3.1415f, 0f, 0f); ;
+                    region.WaypointPosition = new(0.0f, 2304.0f, 0.0f);
+                    region.WaypointOrientation = new(0f, 0f, 0f);
+                    break;
+
                 case RegionPrototype.DailyGShockerSubwayRegionL60:
 
                     archiveData = new byte[] {
@@ -573,7 +602,7 @@ namespace MHServerEmu.GameServer.Regions
 
                     area = new(1, AreaPrototype.XManhattanArea1, new(), true);
 
-                    District district = Resource.DistrictDict["Resource/Districts/MidtownStatic/MidtownStatic_A.district"];
+                    district = Resource.DistrictDict["Resource/Districts/MidtownStatic/MidtownStatic_A.district"];
 
                     for (int i = 0; i < district.Cells.Length; i++)
                         area.AddCell(new((uint)i + 1, Database.GetPrototypeId(district.Cells[i].Name), new()));
