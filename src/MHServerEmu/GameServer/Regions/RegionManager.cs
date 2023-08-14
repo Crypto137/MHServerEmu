@@ -576,7 +576,7 @@ namespace MHServerEmu.GameServer.Regions
                     District district = Resource.DistrictDict["Resource/Districts/MidtownStatic/MidtownStatic_A.district"];
 
                     for (int i = 0; i < district.Cells.Length; i++)
-                        area.AddCell(new((uint)i, Database.GetPrototypeId(district.Cells[i].Name), new()));
+                        area.AddCell(new((uint)i + 1, Database.GetPrototypeId(district.Cells[i].Name), new()));
 
                     region.AddArea(area);
 
