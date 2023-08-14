@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Common;
+using MHServerEmu.GameServer.Data;
 
 namespace MHServerEmu.GameServer.Regions
 {
@@ -67,7 +68,7 @@ namespace MHServerEmu.GameServer.Regions
                         new(10, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototype.AvengersTowerHubArea, new(), true);
-                    area.AddCell(new(1, 9602664968964741817, new()));
+                    area.AddCell(new(1, Database.GetPrototypeId("Resource/Cells/DistrictCells/Avengers_Tower/AvengersTower_HUB.cell"), new()));
 
                     region.AddArea(area);
 
@@ -106,7 +107,7 @@ namespace MHServerEmu.GameServer.Regions
                         new(10, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototype.NPEAvengersTowerHubArea, new(), true);
-                    area.AddCell(new(1, 14256372356117109756, new()));
+                    area.AddCell(new(1, Database.GetPrototypeId("Resource/Cells/DistrictCells/Avengers_Tower/AvengersTowerNPE_HUB.cell"), new()));
 
                     region.AddArea(area);
 
@@ -131,7 +132,7 @@ namespace MHServerEmu.GameServer.Regions
                         new(10, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototype.TrainingRoomSHIELDArea, new(), true);
-                    area.AddCell(new(1, 4566519072692968513, new()));
+                    area.AddCell(new(1, Database.GetPrototypeId("Resource/Cells/DistrictCells/Training_Rooms/TrainingRoom_SHIELD_B.cell"), new()));
 
                     region.AddArea(area);
 
@@ -156,35 +157,35 @@ namespace MHServerEmu.GameServer.Regions
                         new(28, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototype.XaviersMansionArea, new(), true);
-                    area.AddCell(new(12, 9109153860316370436, new()));
-                    area.AddCell(new(27, 13177785476563801619, new()));
-                    area.AddCell(new(13, 17941854392027125253, new()));
-                    area.AddCell(new(18, 12120264330993014282, new()));
-                    area.AddCell(new(19, 6535677982759130635, new()));
-                    area.AddCell(new(20, 10515825803755329036, new()));
-                    area.AddCell(new(25, 10154077166729893393, new()));
-                    area.AddCell(new(26, 5167410838022985234, new()));
-                    area.AddCell(new(28, 9060175612352206356, new()));
-                    area.AddCell(new(21, 1692163188906202637, new()));
-                    area.AddCell(new(14, 3720701338298160646, new()));
-                    area.AddCell(new(8, 696078097349416448, new()));
-                    area.AddCell(new(1, 10536652095872374268, new()));
-                    area.AddCell(new(29, 18097793277182809621, new()));
-                    area.AddCell(new(22, 15863673301231801870, new()));
-                    area.AddCell(new(15, 3361838850574587399, new()));
-                    area.AddCell(new(9, 10321271752406537729, new()));
-                    area.AddCell(new(3, 1490066882925893117, new()));
-                    area.AddCell(new(2, 16400080554702018141, new()));
-                    area.AddCell(new(23, 13916728032834033167, new()));
-                    area.AddCell(new(16, 16571968147698030088, new()));
-                    area.AddCell(new(10, 4927032947367548418, new()));
-                    area.AddCell(new(5, 16136701249791006206, new()));
-                    area.AddCell(new(4, 6117192780878648927, new()));
-                    area.AddCell(new(24, 756312045859706384, new()));
-                    area.AddCell(new(17, 7164953866296301065, new()));
-                    area.AddCell(new(11, 13057875448556623363, new()));
-                    area.AddCell(new(7, 14047893761362171391, new()));
-                    area.AddCell(new(6, 4165682859893855841, new()));
+                    area.AddCell(new(12, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_I.cell"), new()));
+                    area.AddCell(new(27, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_X.cell"), new()));
+                    area.AddCell(new(13, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_J.cell"), new()));
+                    area.AddCell(new(18, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_O.cell"), new()));
+                    area.AddCell(new(19, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_P.cell"), new()));
+                    area.AddCell(new(20, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_Q.cell"), new()));
+                    area.AddCell(new(25, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_V.cell"), new()));
+                    area.AddCell(new(26, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_W.cell"), new()));
+                    area.AddCell(new(28, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_Y.cell"), new()));
+                    area.AddCell(new(21, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_R.cell"), new()));
+                    area.AddCell(new(14, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_K.cell"), new()));
+                    area.AddCell(new(8, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_E.cell"), new()));
+                    area.AddCell(new(1, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_A.cell"), new()));
+                    area.AddCell(new(29, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_Z.cell"), new()));
+                    area.AddCell(new(22, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_S.cell"), new()));
+                    area.AddCell(new(15, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_L.cell"), new()));
+                    area.AddCell(new(9, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_F.cell"), new()));
+                    area.AddCell(new(3, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_B.cell"), new()));
+                    area.AddCell(new(2, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_AA.cell"), new()));
+                    area.AddCell(new(23, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_T.cell"), new()));
+                    area.AddCell(new(16, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_M.cell"), new()));
+                    area.AddCell(new(10, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_G.cell"), new()));
+                    area.AddCell(new(5, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_C.cell"), new()));
+                    area.AddCell(new(4, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_BB.cell"), new()));
+                    area.AddCell(new(24, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_U.cell"), new()));
+                    area.AddCell(new(17, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_N.cell"), new()));
+                    area.AddCell(new(11, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_H.cell"), new()));
+                    area.AddCell(new(7, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_D.cell"), new()));
+                    area.AddCell(new(6, Database.GetPrototypeId("Resource/Cells/DistrictCells/X_Mansion/X_Mansion_CC.cell"), new()));
 
                     region.AddArea(area);
 
@@ -209,7 +210,7 @@ namespace MHServerEmu.GameServer.Regions
                         new(49, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototype.HelicarrierArea, new(), true);
-                    area.AddCell(new(1, 9132424850153412694, new()));
+                    area.AddCell(new(1, Database.GetPrototypeId("Resource/Cells/DistrictCells/Helicarrier/Helicarrier_HUB.cell"), new()));
 
                     region.AddArea(area);
 
@@ -234,20 +235,20 @@ namespace MHServerEmu.GameServer.Regions
                         new(58, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototype.AsgardiaArea, new(), true);
-                    area.AddCell(new(13, 15073780346019977560, new()));
-                    area.AddCell(new(11, 11246649063905891792, new()));
-                    area.AddCell(new(10, 1909646168222143951, new()));
-                    area.AddCell(new(9, 15122171344131397070, new()));
-                    area.AddCell(new(1, 10662757872149665228, new()));
-                    area.AddCell(new(2, 6387628673607996877, new()));
-                    area.AddCell(new(5, 6869037629237827021, new()));
-                    area.AddCell(new(6, 10668863627723347406, new()));
-                    area.AddCell(new(3, 16010605369626138062, new()));
-                    area.AddCell(new(7, 1340692112513897935, new()));
-                    area.AddCell(new(14, 6315350639355304281, new()));
-                    area.AddCell(new(4, 1544113879755068879, new()));
-                    area.AddCell(new(8, 15692735703338522064, new()));
-                    area.AddCell(new(12, 6289501289510147537, new()));
+                    area.AddCell(new(13, Database.GetPrototypeId("Resource/Cells/DistrictCells/Asgardia/Asgardia_Bridge_EXT_A.cell"), new()));
+                    area.AddCell(new(11, Database.GetPrototypeId("Resource/Cells/DistrictCells/Asgardia/Asgardia_X2Y2.cell"), new()));
+                    area.AddCell(new(10, Database.GetPrototypeId("Resource/Cells/DistrictCells/Asgardia/Asgardia_X2Y1.cell"), new()));
+                    area.AddCell(new(9, Database.GetPrototypeId("Resource/Cells/DistrictCells/Asgardia/Asgardia_X2Y0.cell"), new()));
+                    area.AddCell(new(1, Database.GetPrototypeId("Resource/Cells/DistrictCells/Asgardia/Asgardia_X0Y0.cell"), new()));
+                    area.AddCell(new(2, Database.GetPrototypeId("Resource/Cells/DistrictCells/Asgardia/Asgardia_X0Y1.cell"), new()));
+                    area.AddCell(new(5, Database.GetPrototypeId("Resource/Cells/DistrictCells/Asgardia/Asgardia_X1Y0.cell"), new()));
+                    area.AddCell(new(6, Database.GetPrototypeId("Resource/Cells/DistrictCells/Asgardia/Asgardia_X1Y1.cell"), new()));
+                    area.AddCell(new(3, Database.GetPrototypeId("Resource/Cells/DistrictCells/Asgardia/Asgardia_X0Y2.cell"), new()));
+                    area.AddCell(new(7, Database.GetPrototypeId("Resource/Cells/DistrictCells/Asgardia/Asgardia_X1Y2.cell"), new()));
+                    area.AddCell(new(14, Database.GetPrototypeId("Resource/Cells/DistrictCells/Asgardia/Asgardia_Bridge_EXT_B.cell"), new()));
+                    area.AddCell(new(4, Database.GetPrototypeId("Resource/Cells/DistrictCells/Asgardia/Asgardia_X0Y3.cell"), new()));
+                    area.AddCell(new(8, Database.GetPrototypeId("Resource/Cells/DistrictCells/Asgardia/Asgardia_X1Y3.cell"), new()));
+                    area.AddCell(new(12, Database.GetPrototypeId("Resource/Cells/DistrictCells/Asgardia/Asgardia_X2Y3.cell"), new()));
 
                     region.AddArea(area);
 
@@ -272,27 +273,27 @@ namespace MHServerEmu.GameServer.Regions
                         new(60, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototype.GenoshaHUBArea, new(951f, -336f, 0f), true);
-                    area.AddCell(new(3, 5680859166885025055, new()));
-                    area.AddCell(new(4, 9622684927434298656, new()));
-                    area.AddCell(new(5, 224852719175734561, new()));
-                    area.AddCell(new(11, 933212887802189089, new()));
-                    area.AddCell(new(7, 13860233243740869920, new()));
-                    area.AddCell(new(8, 794220225615762721, new()));
-                    area.AddCell(new(12, 14388899140413822242, new()));
-                    area.AddCell(new(13, 4700580598661518627, new()));
-                    area.AddCell(new(9, 10201165220605859106, new()));
-                    //area.AddCell(new(1, 9402521850118673694, new()));
-                    //area.AddCell(new(2, 5269392344921281823, new()));
-                    //area.AddCell(new(6, 14430102745958978850, new()));
-                    //area.AddCell(new(10, 5101736277889127715, new()));
-                    //area.AddCell(new(14, 9972942662930928932, new()));
-                    //area.AddCell(new(17, 9268983740567000357, new()));
-                    //area.AddCell(new(15, 10908336477861319973, new()));
-                    //area.AddCell(new(16, 6646998170199004454, new()));
+                    area.AddCell(new(3, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X1Y0.cell"), new()));
+                    area.AddCell(new(4, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X1Y1.cell"), new()));
+                    area.AddCell(new(5, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X1Y2.cell"), new()));
+                    area.AddCell(new(11, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X3Y0.cell"), new()));
+                    area.AddCell(new(7, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X2Y0.cell"), new()));
+                    area.AddCell(new(8, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X2Y1.cell"), new()));
+                    area.AddCell(new(12, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X3Y1.cell"), new()));
+                    area.AddCell(new(13, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X3Y2.cell"), new()));
+                    area.AddCell(new(9, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X2Y2.cell"), new()));
+                    //area.AddCell(new(1, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X0Y0.cell"), new()));
+                    //area.AddCell(new(2, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X0Y1.cell"), new()));
+                    //area.AddCell(new(6, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X1Y3.cell"), new()));
+                    //area.AddCell(new(10, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X2Y3.cell"), new()));
+                    //area.AddCell(new(14, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X3Y3.cell"), new()));
+                    //area.AddCell(new(17, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X4Y3.cell"), new()));
+                    //area.AddCell(new(15, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X3Y4.cell"), new()));
+                    //area.AddCell(new(16, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X3Y5.cell"), new()));
                     region.AddArea(area);
 
                     //Area entryArea = new(2, AreaPrototype.GenoshaHUBEntryArea, new(-11049f, -12336f, 0f), false);
-                    //area.AddCell(new(18, 14666675902348205617, new()));
+                    //area.AddCell(new(18, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/GenoshaEntryArea/GenoshaEntry_X1Y1.cell"), new()));
                     //region.AddArea(entryArea);
 
                     region.EntrancePosition = new(4434.125f, 2388.875f, -1304f);
@@ -322,7 +323,7 @@ namespace MHServerEmu.GameServer.Regions
                         new(63, DifficultyTier.Heroic));
 
                     area = new(1, AreaPrototype.DangerRoomHubArea, new(), true);
-                    area.AddCell(new(1, 5938132704447044414, new()));
+                    area.AddCell(new(1, Database.GetPrototypeId("Resource/Cells/EndGame/EndlessDungeon/DangerRoom_LaunchTerminal.cell"), new()));
 
                     region.AddArea(area);
 
@@ -347,11 +348,11 @@ namespace MHServerEmu.GameServer.Regions
                         new(60, DifficultyTier.Normal));
 
                     area = new(2, AreaPrototype.InvasionSafeAbodeArea2, new(1152f, 0f, 0f), true);
-                    area.AddCell(new(1, 17230426162301181800, new()));
+                    area.AddCell(new(1, Database.GetPrototypeId("Resource/Cells/SecretInvasion/MadripoorInvasion/Invasion_SafehouseWithin.cell"), new()));
                     region.AddArea(area);
 
                     area = new(1, AreaPrototype.InvasionSafeAbodeArea1, new(-1152f, 0f, 0f), true);
-                    area.AddCell(new(2, 8175011988152327381, new()));
+                    area.AddCell(new(2, Database.GetPrototypeId("Resource/Cells/SecretInvasion/MadripoorInvasion/Invasion_Safehouse.cell"), new()));
                     region.AddArea(area);
 
                     region.EntrancePosition = new(893f, 0f, 60f);
@@ -375,30 +376,30 @@ namespace MHServerEmu.GameServer.Regions
                         new(11, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototype.DailyGSubwayFactoryGen1Area, new(-3456.5f, -7424f, 0f), true);
-                    area.AddCell(new(13, 7185016125568720961, new()));
+                    area.AddCell(new(13, Database.GetPrototypeId("Resource/Cells/EndGame/DangerDailies/ShockerSubway/Daily_ShockerSubway_A_E_A.cell"), new()));
                     region.AddArea(area);
 
                     area = new(2, AreaPrototype.DailyGSubwayFactoryGen1Area, new(-3456.5f, -3072.001f, 0f), false);
-                    area.AddCell(new(12, 1642556494936285849, new()));
+                    area.AddCell(new(12, Database.GetPrototypeId("Resource/Cells/Hells_Kitchen_01/ShockerSubway/ShockerSubway_A/ShockerSubway_A_NW_A.cell"), new()));
                     region.AddArea(area);
 
                     area = new(3, AreaPrototype.DailyGSubwayFactoryGen1Area, new(-128.5f, -3072.001f, 0f), false);
-                    area.AddCell(new(8, 650610774018169216, new()));
-                    area.AddCell(new(9, 3804320553692305684, new(2304f, 0f, 0f)));
-                    area.AddCell(new(11, 12283464609304222089, new(2304f, 2304f, 0f)));
+                    area.AddCell(new(8, Database.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_NES_A.cell"), new()));
+                    area.AddCell(new(9, Database.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_B/Factory_B_ES_A.cell"), new(2304f, 0f, 0f)));
+                    area.AddCell(new(11, Database.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_ESW_A.cell"), new(2304f, 2304f, 0f)));
                     region.AddArea(area);
 
                     area = new(4, AreaPrototype.DailyGSubwayFactoryGen1Area, new(2175.5f, 1535.999f, 0f), false);
-                    area.AddCell(new(2, 10181902047256058244, new()));
-                    area.AddCell(new(3, 337661052037765293, new(2304f, 0f, 0f)));
-                    area.AddCell(new(4, 5943981279539894550, new(0f, 2304f, 0f)));
-                    area.AddCell(new(7, 8677344119691811512, new(2304f, 2304f, 0f)));
-                    area.AddCell(new(5, 3662615361967954209, new(0f, 4608f, 0f)));
-                    area.AddCell(new(6, 3804320553692305684, new(2304f, 4608f, 0f)));
+                    area.AddCell(new(2, Database.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_NEW_A.cell"), new()));
+                    area.AddCell(new(3, Database.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_S_A.cell"), new(2304f, 0f, 0f)));
+                    area.AddCell(new(4, Database.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_EW_A.cell"), new(0f, 2304f, 0f)));
+                    area.AddCell(new(7, Database.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_FILLER_A.cell"), new(2304f, 2304f, 0f)));
+                    area.AddCell(new(5, Database.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_B/Factory_B_NW_A.cell"), new(0f, 4608f, 0f)));
+                    area.AddCell(new(6, Database.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_B/Factory_B_ES_A.cell"), new(2304f, 4608f, 0f)));
                     region.AddArea(area);
 
                     area = new(5, AreaPrototype.DailyGSubwayFactoryGen1Area, new(4480.5044f, 8448f, 0f), false);
-                    area.AddCell(new(1, 1568191647055552056, new()));
+                    area.AddCell(new(1, Database.GetPrototypeId("Resource/Cells/EndGame/DangerDailies/ShockerSubway/Daily_Shocker_Boss_A.cell"), new()));
                     region.AddArea(area);
 
                     region.EntrancePosition = new(-3376.5f, -8016f, 56f);
@@ -569,12 +570,12 @@ namespace MHServerEmu.GameServer.Regions
 
 
                     area = new(1, AreaPrototype.XManhattanArea1, new(), true);
-                    area.AddCell(new(30, 16904680670227997475, new()));
-                    area.AddCell(new(23, 6471827512511636368, new()));
-                    area.AddCell(new(35, 92949505051927936, new()));
-                    area.AddCell(new(31, 5807200255061009190, new()));
-                    area.AddCell(new(12, 4255131489983407209, new()));
-                    area.AddCell(new(13, 16358808346792043741, new()));
+                    area.AddCell(new(30, Database.GetPrototypeId("Resource/Cells/DistrictCells/MidtownStatic/MidtownStatic_A/UES_Static_cESWa_X5_Y2_A.cell"), new()));
+                    area.AddCell(new(23, Database.GetPrototypeId("Resource/Cells/DistrictCells/MidtownStatic/MidtownStatic_A/UES_Static_cNESWa_X4_Y2_A.cell"), new()));
+                    area.AddCell(new(35, Database.GetPrototypeId("Resource/Cells/DistrictCells/MidtownStatic/MidtownStatic_A/UES_Static_StarkLobby_X5_Y3_A2.cell"), new()));
+                    area.AddCell(new(31, Database.GetPrototypeId("Resource/Cells/DistrictCells/MidtownStatic/MidtownStatic_A/UES_Static_cESWb_X5_Y4_A.cell"), new()));
+                    area.AddCell(new(12, Database.GetPrototypeId("Resource/Cells/DistrictCells/MidtownStatic/MidtownStatic_A/UES_Static_ParkLeft_X4_Y3_A.cell"), new()));
+                    area.AddCell(new(13, Database.GetPrototypeId("Resource/Cells/DistrictCells/MidtownStatic/MidtownStatic_A/UES_Static_ParkRight_X4_Y4_A.cell"), new()));
 
                     region.AddArea(area);
 

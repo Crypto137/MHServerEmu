@@ -13,20 +13,20 @@ namespace MHServerEmu.Common.Commands
             {
                 if (@params == null) return Fallback();
 
-                List<Prototype> matches = new();
+                List<KeyValuePair<ulong, string>> matches = new();
 
                 if (@params.Length == 0) return "Invalid arguments. Type 'help lookup costume' to get help.";
 
                 string pattern = @params[0].ToLower();
 
-                foreach (var kvp in Database.PrototypeDataDict)
+                foreach (var kvp in Database.HashMapDict[HashMapType.Prototype].ForwardDict)
                 {
-                    if (kvp.Value.StringValue.Contains("Entity\\Items\\Costumes\\Prototypes\\") && kvp.Value.StringValue.ToLower().Contains(pattern))
-                        matches.Add(kvp.Value);
+                    if (kvp.Value.Contains("Entity/Items/Costumes/Prototypes/") && kvp.Value.ToLower().Contains(pattern))
+                        matches.Add(kvp);
                 }
 
                 return matches.Aggregate(matches.Count >= 1 ? "Costume Matches:\n" : "No match found.",
-                    (current, match) => $"{current}[{match.Id}] {Path.GetRelativePath("Entity\\Items\\Costumes\\Prototypes\\", match.StringValue)}\n");
+                    (current, match) => $"{current}[{match.Key}] {Path.GetRelativePath("Entity/Items/Costumes/Prototypes/", match.Value)}\n");
             }
         }
     }
