@@ -277,28 +277,19 @@ namespace MHServerEmu.GameServer.Regions
                         new(60, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototype.GenoshaHUBArea, new(951f, -336f, 0f), true);
-                    area.AddCell(new(3, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X1Y0.cell"), new()));
-                    area.AddCell(new(4, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X1Y1.cell"), new()));
-                    area.AddCell(new(5, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X1Y2.cell"), new()));
-                    area.AddCell(new(11, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X3Y0.cell"), new()));
-                    area.AddCell(new(7, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X2Y0.cell"), new()));
-                    area.AddCell(new(8, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X2Y1.cell"), new()));
-                    area.AddCell(new(12, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X3Y1.cell"), new()));
-                    area.AddCell(new(13, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X3Y2.cell"), new()));
-                    area.AddCell(new(9, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X2Y2.cell"), new()));
-                    //area.AddCell(new(1, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X0Y0.cell"), new()));
-                    //area.AddCell(new(2, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X0Y1.cell"), new()));
-                    //area.AddCell(new(6, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X1Y3.cell"), new()));
-                    //area.AddCell(new(10, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X2Y3.cell"), new()));
-                    //area.AddCell(new(14, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X3Y3.cell"), new()));
-                    //area.AddCell(new(17, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X4Y3.cell"), new()));
-                    //area.AddCell(new(15, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X3Y4.cell"), new()));
-                    //area.AddCell(new(16, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/Genosha_X3Y5.cell"), new()));
+
+                    district = Resource.DistrictDict["Resource/Districts/GenoshaHUB.district"];
+
+                    for (int i = 0; i < district.Cells.Length; i++)
+                        area.AddCell(new((uint)i + 1, Database.GetPrototypeId(district.Cells[i].Name), new()));
+
                     region.AddArea(area);
 
-                    //Area entryArea = new(2, AreaPrototype.GenoshaHUBEntryArea, new(-11049f, -12336f, 0f), false);
-                    //area.AddCell(new(18, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/GenoshaEntryArea/GenoshaEntry_X1Y1.cell"), new()));
-                    //region.AddArea(entryArea);
+                    /*
+                    Area entryArea = new(2, AreaPrototype.GenoshaHUBEntryArea, new(-11049f, -12336f, 0f), false);
+                    area.AddCell(new(18, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/GenoshaEntryArea/GenoshaEntry_X1Y1.cell"), new()));
+                    region.AddArea(entryArea);
+                    */
 
                     region.EntrancePosition = new(4434.125f, 2388.875f, -1304f);
                     region.EntranceOrientation = new(2.046875f, 0.0f, 0.0f);
