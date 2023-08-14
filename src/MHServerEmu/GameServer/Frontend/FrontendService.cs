@@ -26,8 +26,7 @@ namespace MHServerEmu.GameServer.Frontend
                     Logger.Info($"Received ClientCredentials message on muxId {muxId}:");
                     ClientCredentials clientCredentials = ClientCredentials.ParseFrom(message.Content);
                     Logger.Trace(clientCredentials.ToString());
-                    Cryptography.SetIV(clientCredentials.Iv.ToByteArray());
-                    byte[] decryptedToken = Cryptography.DecryptSessionToken(clientCredentials);
+                    byte[] decryptedToken = Cryptography.DecryptToken(clientCredentials.EncryptedToken.ToByteArray(), clientCredentials.Iv.ToByteArray());
                     Logger.Trace($"Decrypted token: {decryptedToken.ToHexString()}");
 
                     // Generate response
