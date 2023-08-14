@@ -4,7 +4,7 @@ First you need to get the 1.52.0.1700 client. This is the final released version
 
 *Note: it is also possible to download other versions of the client from Steam. See [ClientVersions.md](https://github.com/Crypto137/MHServerEmu/blob/master/docs/ClientVersions.md) for details.*
 
-After getting the client, you need to set up a web server to serve SiteConfig.xml and AuthTicket. For this guide we're going to use Apache.
+After getting the client, you need to set up a web server to serve SiteConfig.xml and redirect login requests. For this guide we're going to use Apache.
 
 1. Download Apache 2.4.x OpenSSL 1.1.1 VS17 [here](https://www.apachehaus.com/cgi-bin/download.plx). You can use any other version of Apache you prefer, as long as it has OpenSSL support enabled.
 
@@ -27,9 +27,9 @@ Now you can actually start everything and get in-game.
 
 1. Start Apache by running ```Apache24\bin\httpd.exe```.
 
-2. Launch the game.
+2. Start MHServerEmu.
 
-3. Start MHServerEmu. *Note: the game sometimes crashes if you launch it after MHServerEmu.*
+3. Launch the game.
 
 4. Log in with any email and password.
 
