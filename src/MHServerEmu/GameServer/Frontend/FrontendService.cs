@@ -138,20 +138,18 @@ namespace MHServerEmu.GameServer.Frontend
             foreach (GameMessage message in messages) Handle(client, muxId, message);
         }
 
-        public ClientSession CreateAccountlessSession()
-        {
-            // placeholder until we have a default account for bypassing auth
-            ulong sessionId = HashHelper.GenerateRandomId();
-            while (_sessionDict.ContainsKey(sessionId)) sessionId = HashHelper.GenerateRandomId();
-
-            ClientSession session = new(sessionId);
-            _sessionDict.Add(session.Id, session);
-            return session;
-        }
-
         public ClientSession CreateSessionFromLoginDataPB(LoginDataPB loginDataPB, out AuthServer.ErrorCode? errorCode)
         {
-            Account account = AccountManager.GetAccountByLoginDataPB(loginDataPB, out errorCode);
+            Account account;
+            if (ConfigManager.Frontend.BypassAuth)
+            {
+                account = AccountManager.DefaultAccount;
+                errorCode = null;
+            }
+            else
+            {
+                account = AccountManager.GetAccountByLoginDataPB(loginDataPB, out errorCode);
+            }
 
             if (account != null)
             {

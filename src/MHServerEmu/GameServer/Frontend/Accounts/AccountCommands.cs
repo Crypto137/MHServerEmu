@@ -51,5 +51,16 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             if (@params.Length == 0) return "Invalid arguments. Type 'help account unban' to get help.";
             return AccountManager.UnbanAccount(@params[0].ToLower());
         }
+
+        [Command("info", "Shows information for the logged in account.\nUsage: account info")]
+        public string Info(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            return $"Account Info:\nEmail: {client.Account.Email}\n" +
+                $"IsBanned: {client.Account.IsArchived}\n" +
+                $"IsArchived: {client.Account.IsArchived}\n" +
+                $"IsPasswordExpired: {client.Account.IsPasswordExpired}";
+        }
     }
 }

@@ -2,8 +2,6 @@
 using Google.ProtocolBuffers;
 using Gazillion;
 using MHServerEmu.Common;
-using MHServerEmu.Common.Config;
-using MHServerEmu.GameServer.Frontend.Accounts;
 using MHServerEmu.GameServer.Frontend;
 
 namespace MHServerEmu.Networking
@@ -91,9 +89,9 @@ namespace MHServerEmu.Networking
                     var loginDataPB = LoginDataPB.ParseFrom(message.Content);
                     byte[] authTicket;
 
-                    ClientSession session = TryCreateSession(loginDataPB, out ErrorCode? errorCode);
+                    ClientSession session = _frontendService.CreateSessionFromLoginDataPB(loginDataPB, out ErrorCode? errorCode);
 
-                    if (session != null)  // check if LoginDataPB is valid
+                    if (session != null)  // Send an AuthTicket if we were able to create a session
                     {
                         authTicket = AuthTicket.CreateBuilder()
                             .SetSessionKey(ByteString.CopyFrom(session.Key))
@@ -108,6 +106,7 @@ namespace MHServerEmu.Networking
                         byte[] buffer;
                         using (MemoryStream memoryStream = new())
                         {
+                            // The structure is like a mux packet, but without the 6 byte header
                             CodedOutputStream outputStream = CodedOutputStream.CreateInstance(memoryStream);
                             outputStream.WriteRawVarint64((byte)AuthMessage.AuthTicket);
                             outputStream.WriteRawVarint64((ulong)authTicket.Length);
@@ -138,19 +137,6 @@ namespace MHServerEmu.Networking
                 default:
                     Logger.Warn($"Received unknown messageId {message.Id}");
                     break;
-            }
-        }
-
-        private ClientSession TryCreateSession(LoginDataPB loginDataPB, out ErrorCode? errorCode)
-        {
-            if (ConfigManager.Frontend.BypassAuth)
-            {
-                errorCode = null;
-                return _frontendService.CreateAccountlessSession();
-            }
-            else
-            {
-                return _frontendService.CreateSessionFromLoginDataPB(loginDataPB, out errorCode);
             }
         }
     }

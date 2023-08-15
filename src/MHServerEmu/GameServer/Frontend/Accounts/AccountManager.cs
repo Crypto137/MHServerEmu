@@ -18,6 +18,8 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
         private static Dictionary<ulong, Account> _idAccountDict = new();
         private static Dictionary<string, Account> _emailAccountDict = new();
 
+        public static Account DefaultAccount = new(0, "default@account.mh", "123");
+
         public static bool IsInitialized { get; private set; }
 
         static AccountManager()
