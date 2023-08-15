@@ -25,8 +25,10 @@ namespace MHServerEmu.GameServer.Regions
             RegionDict.Add(RegionPrototype.InvasionSafeAbodeRegion, LoadRegionData(RegionPrototype.InvasionSafeAbodeRegion));
             RegionDict.Add(RegionPrototype.NPERaftRegion, LoadRegionData(RegionPrototype.NPERaftRegion));
             RegionDict.Add(RegionPrototype.DailyGShockerSubwayRegionL60, LoadRegionData(RegionPrototype.DailyGShockerSubwayRegionL60));
+            RegionDict.Add(RegionPrototype.BronxZooRegionL60, LoadRegionData(RegionPrototype.BronxZooRegionL60));
             RegionDict.Add(RegionPrototype.XManhattanRegion1to60, LoadRegionData(RegionPrototype.XManhattanRegion1to60));
             RegionDict.Add(RegionPrototype.XManhattanRegion60Cosmic, LoadRegionData(RegionPrototype.XManhattanRegion60Cosmic));
+            
 
             Logger.Info($"Loaded data for {RegionDict.Count} regions");
 
@@ -395,6 +397,114 @@ namespace MHServerEmu.GameServer.Regions
                     region.WaypointOrientation = new();
 
                     break;
+
+                case RegionPrototype.BronxZooRegionL60:
+                    archiveData = new byte[] {
+                    };
+                    region = new(RegionPrototype.BronxZooRegionL60,
+                        1154146333179731968,
+                        1038711701,
+                        archiveData,
+                        new(-4480.0f, -10944.0f, -1152.0f),
+                        new(20864.0f, 2880.0f, 1152.0f),
+                        new(60, DifficultyTier.Normal));
+
+                    string Rzoo = "Resource/Cells/Bronx_Zoo/";
+                    
+                    area = new(1, (AreaPrototype) Database.GetPrototypeId("Regions/EndGame/OneShotMissions/NonChapterBound/BronxZoo/ZooAreas/ZooArea1SN.prototype"), new(), true);
+
+                    area.AddCell(new(24, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_NE_Entry_A.cell"), new(-1024.0f, -7488.0f, 0.0f)));
+                    area.AddCell(new(9, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_NEW_Entry_A.cell"), new(-1024.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(13, Database.GetPrototypeId(Rzoo+ "Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NEW_A.cell"), new(-1024.0f, -2880.0f, 0.0f))); // Bronx_Zoo_A/Bronx_Zoo_A_NEW_B.cell
+                    area.AddCell(new(14, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_TR_Stadium_Entry_A.cell"), new(-1024.0f, -576.0f, 0.0f)));
+                    area.AddCell(new(22, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_NES_Entry_A.cell"), new(1280.0f, -7488.0f, 0.0f)));
+                    area.AddCell(new(3, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_NESW_Attractions_A/Bronx_Zoo_FoodCourt_NESW_A.cell"), new(1280.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(5, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_NESW_Attractions_A/Bronx_Zoo_Carousel_NESW_A.cell"), new(1280.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(11, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NSW_B.cell"), new(1280.0f, -576.0f, 0.0f)));
+
+                    area.AddCell(new(19, Database.GetPrototypeId(Rzoo+ "Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NES_A.cell"), new(3584.0f, -7488.0f, 0.0f)));//Bronx_Zoo_A/Bronx_Zoo_A_NES_B.cell
+                    area.AddCell(new(21, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NES_A.cell"), new(5888.0f, -7488.0f, 0.0f)));
+                    area.AddCell(new(20, Database.GetPrototypeId(Rzoo+ "Bronx_Zoo_A/Bronx_Zoo_A_NES_B.cell"), new(8192.0f, -7488.0f, 0.0f)));//Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NES_A.cell
+                    area.AddCell(new(23, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_TR_Employee_Entry_A.cell"), new(10496.0f, -7488.0f, 0.0f)));  
+
+                    area.AddCell(new(1, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NESW_A.cell"), new(8192.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(4, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_NESW_Attractions_A/Bronx_Zoo_Theater_NESW_A.cell"), new(8192.0f, -5184.0f, 0.0f)));                    
+                    area.AddCell(new(6, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NSW_A.cell"), new(5888.0f, -576.0f, 0.0f)));
+
+                    area.AddCell(new(7, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_TopLeft_A.cell"), new(5888.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(12, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_TopRight_A.cell"), new(5888.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(2, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_BotLeft_A.cell"), new(3584.0f, -5184.0f, 0.0f)));                    
+                    area.AddCell(new(15, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_BotRight_A.cell"), new(3584.0f, -2880.0f, 0.0f)));
+                    
+                    area.AddCell(new(8, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NSW_B.cell"), new(8192.0f, -576.0f, 0.0f)));                 
+                    area.AddCell(new(10, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NSW_A.cell"), new(3584.0f, -576.0f, 0.0f)));                    
+                                        
+                    area.AddCell(new(16, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NESWcN_A.cell"), new(10496.0f, -5184.0f, 0.0f))); 
+                    area.AddCell(new(17, Database.GetPrototypeId(Rzoo+ "Bronx_Zoo_A/Bronx_Zoo_A_NESWdNE_A.cell"), new(10496.0f, -2880.0f, 0.0f))); // Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_ESW_A
+                    area.AddCell(new(18, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_TR_Aquarium_Entry_A.cell"), new(10496.0f, -576.0f, 0.0f)));
+                  
+                    region.AddArea(area);
+
+                    ulong filler = Database.GetPrototypeId(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_FILLER_A.cell");
+
+                    // fillers for ZooArea1SN
+
+                    area = new(10, (AreaPrototype)Database.GetPrototypeId("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
+                    area.AddCell(new(201, filler, new(-1024.0f, -9792.0f, 0.0f)));
+                    area.AddCell(new(202, filler, new(10496.0f, 1728.0f, 0.0f)));
+                    area.AddCell(new(203, filler, new(1280.0f, -9792.0f, 0.0f)));
+                    area.AddCell(new(204, filler, new(8192.0f, 1728.0f, 0.0f)));
+                    area.AddCell(new(205, filler, new(3584.0f, -9792.0f, 0.0f)));
+                    area.AddCell(new(206, filler, new(5888.0f, 1728.0f, 0.0f)));
+                    area.AddCell(new(207, filler, new(5888.0f, -9792.0f, 0.0f)));
+                    area.AddCell(new(208, filler, new(3584.0f, 1728.0f, 0.0f)));
+                    area.AddCell(new(209, filler, new(8192.0f, -9792.0f, 0.0f)));
+                    area.AddCell(new(210, filler, new(1280.0f, 1728.0f, 0.0f)));
+                    area.AddCell(new(211, filler, new(10496.0f, -9792.0f, 0.0f)));
+                    area.AddCell(new(212, filler, new(-1024.0f, 1728.0f, 0.0f)));
+                    area.AddCell(new(213, filler, new(12800.0f, -9792.0f, 0.0f)));
+                    area.AddCell(new(214, filler, new(-3328.0f, 1728.0f, 0.0f)));
+                    area.AddCell(new(215, filler, new(-3328.0f, -576.0f, 0.0f)));
+                    area.AddCell(new(216, filler, new(-3328.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(217, filler, new(-3328.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(218, filler, new(12800.0f, -576.0f, 0.0f)));
+                    area.AddCell(new(219, filler, new(-3328.0f, -7488.0f, 0.0f)));
+                    area.AddCell(new(220, filler, new(12800.0f, 1728.0f, 0.0f)));
+                    area.AddCell(new(221, filler, new(-3328.0f, -9792.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    area = new(2, (AreaPrototype) Database.GetPrototypeId("Regions/EndGame/OneShotMissions/NonChapterBound/BronxZoo/ZooAreas/ZooArea2.prototype"), new(), false);
+                    area.AddCell(new(122, Database.GetPrototypeId(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_CagedCivisMission_A.cell"), new(15104.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(125, Database.GetPrototypeId(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_NSW_JungleExit_A.cell"), new(15104.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(121, Database.GetPrototypeId(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_NESWcS_A.cell"), new(12800.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(124, Database.GetPrototypeId(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_NW_JungleExit_A.cell"), new(12800.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(123, Database.GetPrototypeId(Rzoo + "Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_ESW_A.cell"), new(17408.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(126, Database.GetPrototypeId(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_SW_JungleExit_A.cell"), new(17408.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(119, Database.GetPrototypeId(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_NES_B.cell"), new(15104.0f, -7488.0f, 0.0f))); // Bronx_Zoo_A/Bronx_Zoo_A_NES_B.cell
+                    area.AddCell(new(120, Database.GetPrototypeId(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_ES_A.cell"), new(17408.0f, -7488.0f, 0.0f)));
+                    area.AddCell(new(118, Database.GetPrototypeId(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_NE_A.cell"), new(12800.0f, -7488.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    // fillers for ZooArea2
+
+                    area = new(11, (AreaPrototype) Database.GetPrototypeId("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
+                    area.AddCell(new(222, filler, new(17408.0f, -576.0f, 0.0f)));
+                    area.AddCell(new(223, filler, new(15104.0f, -9792.0f, 0.0f)));
+                    area.AddCell(new(224, filler, new(15104.0f, -576.0f, 0.0f)));
+                    area.AddCell(new(225, filler, new(17408.0f, -9792.0f, 0.0f)));
+                    area.AddCell(new(226, filler, new(19712.0f, -9792.0f, 0.0f)));
+                    area.AddCell(new(227, filler, new(19712.0f, -7488.0f, 0.0f)));
+                    area.AddCell(new(228, filler, new(19712.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(229, filler, new(19712.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(230, filler, new(19712.0f, -576.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(-1024.0f, -8100.0f, 0.0f); 
+                    region.EntranceOrientation = new(1.5625f, 0f, 0f); ;
+                    region.WaypointPosition = new(15104.0f, -3100.0f, 0.0f);
+                    region.WaypointOrientation = new();
+                    
+                    break;                   
 
                 case RegionPrototype.XManhattanRegion1to60:
 
