@@ -2,8 +2,10 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Config;
+using MHServerEmu.GameServer.Frontend.Accounts;
 using MHServerEmu.GameServer.Regions;
 using MHServerEmu.Networking;
+using System.Security.Principal;
 
 namespace MHServerEmu.GameServer.Frontend
 {
@@ -12,6 +14,7 @@ namespace MHServerEmu.GameServer.Frontend
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private GameServerManager _gameServerManager;
+        private Dictionary<ulong, ClientSession> _sessionDict = new();      // todo: session management (invalidate old sessions, remove session when a client disconnects, etc.)
 
         public FrontendService(GameServerManager gameServerManager)
         {
@@ -23,42 +26,74 @@ namespace MHServerEmu.GameServer.Frontend
             switch ((FrontendProtocolMessage)message.Id)
             {
                 case FrontendProtocolMessage.ClientCredentials:
-                    Logger.Info($"Received ClientCredentials message on muxId {muxId}:");
+                    Logger.Info($"Received ClientCredentials on muxId {muxId}");
                     ClientCredentials clientCredentials = ClientCredentials.ParseFrom(message.Content);
-                    Logger.Trace(clientCredentials.ToString());
-                    byte[] decryptedToken = Cryptography.DecryptToken(clientCredentials.EncryptedToken.ToByteArray(), clientCredentials.Iv.ToByteArray());
-                    Logger.Trace($"Decrypted token: {decryptedToken.ToHexString()}");
+                    //Logger.Trace(clientCredentials.ToString());
 
-                    // Generate response
-                    if (ConfigManager.Frontend.SimulateQueue)
+                    if (_sessionDict.ContainsKey(clientCredentials.Sessionid))
                     {
-                        Logger.Info("Responding with LoginQueueStatus message");
+                        ClientSession session = _sessionDict[clientCredentials.Sessionid];
+                        byte[] decryptedToken = null;
 
-                        byte[] response = LoginQueueStatus.CreateBuilder()
-                            .SetPlaceInLine(ConfigManager.Frontend.QueuePlaceInLine)
-                            .SetNumberOfPlayersInLine(ConfigManager.Frontend.QueueNumberOfPlayersInLine)
-                            .Build().ToByteArray();
+                        try
+                        {
+                            decryptedToken = Cryptography.DecryptToken(clientCredentials.EncryptedToken.ToByteArray(), session.Key, clientCredentials.Iv.ToByteArray());
+                            //Logger.Trace($"Decrypted token for sessionId {session.Id}: {decryptedToken.ToHexString()}");
+                        }
+                        catch
+                        {
+                            Logger.Warn($"Failed to decrypt token for sessionId {session.Id}");
+                        }
 
-                        client.SendMessage(muxId, new(FrontendProtocolMessage.LoginQueueStatus, response));
+                        if (decryptedToken != null && Cryptography.VerifyToken(decryptedToken, session.Token))
+                        {
+                            client.Account = session.Account;   // assign account to the client if the token is valid
+                            _sessionDict.Remove(session.Id);
+
+                            // Generate response
+                            if (ConfigManager.Frontend.SimulateQueue)
+                            {
+                                Logger.Info("Responding with LoginQueueStatus message");
+
+                                byte[] response = LoginQueueStatus.CreateBuilder()
+                                    .SetPlaceInLine(ConfigManager.Frontend.QueuePlaceInLine)
+                                    .SetNumberOfPlayersInLine(ConfigManager.Frontend.QueueNumberOfPlayersInLine)
+                                    .Build().ToByteArray();
+
+                                client.SendMessage(muxId, new(FrontendProtocolMessage.LoginQueueStatus, response));
+                            }
+                            else
+                            {
+                                Logger.Info("Responding with SessionEncryptionChanged message");
+
+                                byte[] response = SessionEncryptionChanged.CreateBuilder()
+                                    .SetRandomNumberIndex(0)
+                                    .SetEncryptedRandomNumber(ByteString.Empty)
+                                    .Build().ToByteArray();
+
+                                client.SendMessage(muxId, new(FrontendProtocolMessage.SessionEncryptionChanged, response));
+                            }
+                        }
+                        else
+                        {
+                            Logger.Warn($"Failed to verify token for sessionId {session.Id}, disconnecting client");
+                            client.Disconnect();
+                        }
+
                     }
                     else
                     {
-                        Logger.Info("Responding with SessionEncryptionChanged message");
-
-                        byte[] response = SessionEncryptionChanged.CreateBuilder()
-                            .SetRandomNumberIndex(0)
-                            .SetEncryptedRandomNumber(ByteString.Empty)
-                            .Build().ToByteArray();
-
-                        client.SendMessage(muxId, new(FrontendProtocolMessage.SessionEncryptionChanged, response));
+                        Logger.Warn($"SessionId {clientCredentials.Sessionid} not found, disconnecting client");
+                        client.Disconnect();
+                        return;
                     }
 
                     break;
 
                 case FrontendProtocolMessage.InitialClientHandshake:
-                    Logger.Info($"Received InitialClientHandshake message on muxId {muxId}:");
                     InitialClientHandshake initialClientHandshake = InitialClientHandshake.ParseFrom(message.Content);
-                    Logger.Trace(initialClientHandshake.ToString());
+                    Logger.Info($"Received InitialClientHandshake for {initialClientHandshake.ServerType} on muxId {muxId}");
+                    //Logger.Trace(initialClientHandshake.ToString());
 
                     if (initialClientHandshake.ServerType == PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND)
                     {
@@ -101,6 +136,36 @@ namespace MHServerEmu.GameServer.Frontend
         public void Handle(FrontendClient client, ushort muxId, GameMessage[] messages)
         {
             foreach (GameMessage message in messages) Handle(client, muxId, message);
+        }
+
+        public ClientSession CreateAccountlessSession()
+        {
+            // placeholder until we have a default account for bypassing auth
+            ulong sessionId = HashHelper.GenerateRandomId();
+            while (_sessionDict.ContainsKey(sessionId)) sessionId = HashHelper.GenerateRandomId();
+
+            ClientSession session = new(sessionId);
+            _sessionDict.Add(session.Id, session);
+            return session;
+        }
+
+        public ClientSession CreateSessionFromLoginDataPB(LoginDataPB loginDataPB, out AuthServer.ErrorCode? errorCode)
+        {
+            Account account = AccountManager.GetAccountByLoginDataPB(loginDataPB, out errorCode);
+
+            if (account != null)
+            {
+                ulong sessionId = HashHelper.GenerateRandomId();
+                while (_sessionDict.ContainsKey(sessionId)) sessionId = HashHelper.GenerateRandomId();
+
+                ClientSession session = new(sessionId, account);
+                _sessionDict.Add(session.Id, session);
+                return session;
+            }
+            else
+            {
+                return null;
+            }   
         }
     }
 }

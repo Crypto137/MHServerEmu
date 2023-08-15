@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 using MHServerEmu.Common;
 using MHServerEmu.GameServer;
+using MHServerEmu.GameServer.Frontend;
 
 namespace MHServerEmu.Networking
 {
@@ -15,6 +14,8 @@ namespace MHServerEmu.Networking
 
         private Socket _socket;
         private List<FrontendClient> _clientList = new();
+
+        public FrontendService FrontendService { get => _gameServerManager.FrontendService; }
 
         public FrontendServer(int port)
         {

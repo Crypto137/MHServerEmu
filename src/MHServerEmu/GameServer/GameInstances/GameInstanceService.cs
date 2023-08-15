@@ -11,12 +11,10 @@ namespace MHServerEmu.GameServer.GameInstances
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private GameServerManager _gameServerManager;
-        private GroupingManagerService _groupingManagerService;
 
-        public GameInstanceService(GameServerManager gameServerManager, GroupingManagerService groupingManagerService)
+        public GameInstanceService(GameServerManager gameServerManager)
         {
             _gameServerManager = gameServerManager;
-            _groupingManagerService = groupingManagerService;
         }
 
         public void Handle(FrontendClient client, ushort muxId, GameMessage message)
@@ -183,7 +181,7 @@ namespace MHServerEmu.GameServer.GameInstances
                     break;
 
                 case ClientToGameServerMessage.NetMessageChat:
-                    _groupingManagerService.Handle(client, muxId, message);
+                    _gameServerManager.GroupingManagerService.Handle(client, muxId, message);
                     break;
 
                 default:

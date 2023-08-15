@@ -4,6 +4,7 @@ using Gazillion;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Config;
 using MHServerEmu.GameServer.Frontend.Accounts;
+using MHServerEmu.GameServer.Frontend;
 
 namespace MHServerEmu.Networking
 {
@@ -34,10 +35,13 @@ namespace MHServerEmu.Networking
 
         private const string ServerHost = "localhost";
 
+        private FrontendService _frontendService;
         private HttpListener _listener;
 
-        public AuthServer(int port)
+        public AuthServer(int port, FrontendService frontendService)
         {
+            _frontendService = frontendService;
+
             string url = $"http://{ServerHost}:{port}/";
 
             // Create an http server and start listening for incoming connections
@@ -87,12 +91,14 @@ namespace MHServerEmu.Networking
                     var loginDataPB = LoginDataPB.ParseFrom(message.Content);
                     byte[] authTicket;
 
-                    if (CheckLoginDataPB(loginDataPB, out ErrorCode? errorCode))  // check if LoginDataPB is valid
+                    ClientSession session = TryCreateSession(loginDataPB, out ErrorCode? errorCode);
+
+                    if (session != null)  // check if LoginDataPB is valid
                     {
                         authTicket = AuthTicket.CreateBuilder()
-                            .SetSessionKey(ByteString.CopyFrom(Cryptography.AuthEncryptionKey))
-                            .SetSessionToken(ByteString.CopyFrom(new byte[] { 0x00, 0x01, 0x02, 0x03 }))
-                            .SetSessionId(17323122570962387736)
+                            .SetSessionKey(ByteString.CopyFrom(session.Key))
+                            .SetSessionToken(ByteString.CopyFrom(session.Token))
+                            .SetSessionId(session.Id)
                             .SetFrontendServer("localhost")
                             .SetFrontendPort("4306")
                             .SetSuccess(true)
@@ -135,17 +141,16 @@ namespace MHServerEmu.Networking
             }
         }
 
-        private bool CheckLoginDataPB(LoginDataPB loginDataPB, out ErrorCode? errorCode)
+        private ClientSession TryCreateSession(LoginDataPB loginDataPB, out ErrorCode? errorCode)
         {
             if (ConfigManager.Frontend.BypassAuth)
             {
                 errorCode = null;
-                return true;
+                return _frontendService.CreateAccountlessSession();
             }
             else
             {
-                Account account = AccountManager.GetAccountByLoginDataPB(loginDataPB, out errorCode);
-                return account != null;
+                return _frontendService.CreateSessionFromLoginDataPB(loginDataPB, out errorCode);
             }
         }
     }

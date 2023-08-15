@@ -4,6 +4,7 @@ using MHServerEmu.Common;
 using MHServerEmu.Common.Config;
 using MHServerEmu.GameServer;
 using MHServerEmu.GameServer.Entities;
+using MHServerEmu.GameServer.Frontend.Accounts;
 using MHServerEmu.GameServer.Regions;
 
 namespace MHServerEmu.Networking
@@ -21,7 +22,8 @@ namespace MHServerEmu.Networking
         public bool FinishedGroupingManagerFrontendHandshake { get; set; } = false;
         public bool IsLoading { get; set; } = false;
 
-        // TODO: move player data to its own class separate from networking
+        // TODO: move player data to account
+        public Account Account { get; set; }
         public RegionPrototype CurrentRegion { get; set; } = ConfigManager.PlayerData.StartingRegion;
         public HardcodedAvatarEntity CurrentAvatar { get; set; } = ConfigManager.PlayerData.StartingAvatar;
 

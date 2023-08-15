@@ -33,8 +33,8 @@ namespace MHServerEmu
                 return;
             }
 
-            _authServer = new AuthServer(8080);
             _frontendServer = new FrontendServer(4306);
+            _authServer = new AuthServer(8080, _frontendServer.FrontendService);
 
             while (true)
             {
