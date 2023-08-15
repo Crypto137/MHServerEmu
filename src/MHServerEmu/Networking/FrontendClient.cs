@@ -107,26 +107,24 @@ namespace MHServerEmu.Networking
             switch (packet.Command)
             {
                 case MuxCommand.Connect:
-                    Logger.Info($"Received connect for MuxId {packet.MuxId}");
-                    Logger.Info($"Sending accept for MuxId {packet.MuxId}");
+                    Logger.Info($"Accepting connection for muxId {packet.MuxId}");
                     Send(new(packet.MuxId, MuxCommand.Accept));
                     break;
 
                 case MuxCommand.Accept:
-                    Logger.Info($"Received accept for MuxId {packet.MuxId}");
+                    Logger.Warn($"Received accept for muxId {packet.MuxId}. Is this supposed to happen?");
                     break;
 
                 case MuxCommand.Disconnect:
-                    Logger.Info($"Received disconnect for MuxId {packet.MuxId}");
+                    Logger.Info($"Received disconnect for muxId {packet.MuxId}");
                     if (packet.MuxId == 1) Disconnect();
                     break;
 
                 case MuxCommand.Insert:
-                    Logger.Info($"Received insert for MuxId {packet.MuxId}");
+                    Logger.Warn($"Received insert for muxId {packet.MuxId}. Is this supposed to happen?");
                     break;
 
                 case MuxCommand.Message:
-                    //Logger.Trace($"Received {packet.Messages.Length} message(s) on MuxId {packet.MuxId}");
                     _gameServerManager.Handle(this, packet.MuxId, packet.Messages);
 
                     break;
@@ -136,7 +134,6 @@ namespace MHServerEmu.Networking
         private void Send(PacketOut packet)
         {
             byte[] data = packet.Data;
-            //Logger.Trace($"OUT: {data.Length} bytes");
             stream.Write(data, 0, data.Length);
         }
 
