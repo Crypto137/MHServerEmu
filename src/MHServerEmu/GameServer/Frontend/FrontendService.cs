@@ -5,7 +5,6 @@ using MHServerEmu.Common.Config;
 using MHServerEmu.GameServer.Frontend.Accounts;
 using MHServerEmu.GameServer.Regions;
 using MHServerEmu.Networking;
-using System.Security.Principal;
 
 namespace MHServerEmu.GameServer.Frontend
 {
@@ -47,6 +46,7 @@ namespace MHServerEmu.GameServer.Frontend
 
                         if (decryptedToken != null && Cryptography.VerifyToken(decryptedToken, session.Token))
                         {
+                            Logger.Info($"Verified client for sessionId {session.Id}");
                             client.Account = session.Account;   // assign account to the client if the token is valid
                             _sessionDict.Remove(session.Id);
 
@@ -153,10 +153,7 @@ namespace MHServerEmu.GameServer.Frontend
 
             if (account != null)
             {
-                ulong sessionId = HashHelper.GenerateRandomId();
-                while (_sessionDict.ContainsKey(sessionId)) sessionId = HashHelper.GenerateRandomId();
-
-                ClientSession session = new(sessionId, account);
+                ClientSession session = new(HashHelper.GenerateUniqueRandomId(_sessionDict), account);
                 _sessionDict.Add(session.Id, session);
                 return session;
             }

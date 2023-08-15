@@ -81,10 +81,7 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             {
                 if (password.Length >= MinimumPasswordLength && password.Length <= MaximumPasswordLength)
                 {
-                    ulong accountId = HashHelper.GenerateRandomId();
-                    while (_idAccountDict.ContainsKey(accountId)) accountId = HashHelper.GenerateRandomId();
-
-                    Account account = new(accountId, email, password);
+                    Account account = new(HashHelper.GenerateUniqueRandomId(_idAccountDict), email, password);
                     _accountList.Add(account);
                     _idAccountDict.Add(account.Id, account);
                     _emailAccountDict.Add(account.Email, account);

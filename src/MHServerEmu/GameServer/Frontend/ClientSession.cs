@@ -12,14 +12,14 @@ namespace MHServerEmu.GameServer.Frontend
 
         public ClientSession(ulong id)
         {
-            Id = HashHelper.GenerateRandomId();
+            Id = id;
             Key = Cryptography.GenerateAesKey();
             Token = Cryptography.GenerateToken();
         }
 
         public ClientSession(ulong id, Account account)
         {
-            Id = HashHelper.GenerateRandomId();
+            Id = id;
             Key = Cryptography.GenerateAesKey();
             Token = Cryptography.GenerateToken();
             Account = account;

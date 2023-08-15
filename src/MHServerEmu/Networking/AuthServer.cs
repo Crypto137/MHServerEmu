@@ -93,6 +93,8 @@ namespace MHServerEmu.Networking
 
                     if (session != null)  // Send an AuthTicket if we were able to create a session
                     {
+                        Logger.Info($"Sending AuthTicket for sessionId {session.Id}");
+
                         authTicket = AuthTicket.CreateBuilder()
                             .SetSessionKey(ByteString.CopyFrom(session.Key))
                             .SetSessionToken(ByteString.CopyFrom(session.Token))
