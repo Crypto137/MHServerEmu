@@ -46,7 +46,7 @@ namespace MHServerEmu.Networking
             {
                 CodedInputStream stream = CodedInputStream.CreateInstance(this.stream);
 
-                while (!stream.IsAtEnd)
+                while (socket.Connected && stream.IsAtEnd == false)
                 {
                     Handle(stream);
                 }
@@ -118,6 +118,7 @@ namespace MHServerEmu.Networking
 
                 case MuxCommand.Disconnect:
                     Logger.Info($"Received disconnect for MuxId {packet.MuxId}");
+                    if (packet.MuxId == 1) Disconnect();
                     break;
 
                 case MuxCommand.Insert:
