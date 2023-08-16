@@ -23,7 +23,6 @@ namespace MHServerEmu.GameServer.Data
 
         public static Dictionary<HashMapType, HashMap> HashMapDict { get; private set; }
 
-        //public static Dictionary<ulong, Prototype> PrototypeDataDict { get; private set; }
         public static PropertyInfo[] PropertyInfos { get; private set; }
 
         public static ulong[] GlobalEnumRefTable { get; private set; }
@@ -40,8 +39,6 @@ namespace MHServerEmu.GameServer.Data
             Resource.Initialize(ResourceFile);
 
             HashMapDict = LoadHashMapDict();
-
-            //PrototypeDataDict = LoadPrototypeData($"{AssetDirectory}\\PrototypeDataTable.bin");
 
             PropertyInfos = LoadPropertyInfos($"{AssetDirectory}\\PropertyInfoTable.tsv");
 
@@ -122,49 +119,6 @@ namespace MHServerEmu.GameServer.Data
             return hashMapDict;
         }
 
-        /*
-        private static Dictionary<ulong, Prototype> LoadPrototypeData(string path)
-        {
-            Dictionary<ulong, Prototype> prototypeDict = new();
-
-            if (File.Exists(path))
-            {
-                using (MemoryStream memoryStream = new(File.ReadAllBytes(path)))
-                using (BinaryReader binaryReader = new(memoryStream))
-                {
-                    while (memoryStream.Position < memoryStream.Length)
-                    {
-                        ulong id = binaryReader.ReadUInt64();
-                        ulong field1 = binaryReader.ReadUInt64();
-                        ulong parentId = binaryReader.ReadUInt64();
-                        byte flag = binaryReader.ReadByte();
-                        byte size = binaryReader.ReadByte();
-                        binaryReader.ReadByte();                // always 0x00
-                        string stringValue = Encoding.UTF8.GetString(binaryReader.ReadBytes(size));
-
-                        prototypeDict.Add(id, new(id, field1, parentId, flag, stringValue));
-                    }
-                }
-            }
-            else
-            {
-                Logger.Error($"Failed to locate {Path.GetFileName(path)}");
-            }
-
-            using (StreamWriter streamWriter = new($"{Directory.GetCurrentDirectory()}\\parsed.tsv"))
-            {
-                foreach (KeyValuePair<ulong, Prototype> kvp in prototypeDict)
-                {
-                    streamWriter.WriteLine($"{kvp.Value.Id}\t{kvp.Value.Field1}\t{kvp.Value.ParentId}\t{kvp.Value.Flag}\t{kvp.Value.StringValue}");
-                }
-
-                streamWriter.Flush();
-            }
-
-            return prototypeDict;
-        }
-        */
-
         private static PropertyInfo[] LoadPropertyInfos(string path)
         {
             List<PropertyInfo> propertyInfoList = new();
@@ -219,7 +173,6 @@ namespace MHServerEmu.GameServer.Data
             return CalligraphyFile.Entries.Length > 0
                 && ResourceFile.Entries.Length > 0
                 && HashMapDict.Count > 0
-                //&& PrototypeDataDict.Count > 0
                 && PropertyInfos.Length > 0
                 && GlobalEnumRefTable.Length > 0
                 && ResourceEnumRefTable.Length > 0

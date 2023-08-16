@@ -2,7 +2,7 @@
 
 namespace MHServerEmu.GameServer.Data.Gpak.FileFormats
 {
-    // It's actually called Type, but we're calling GType to avoid confusion with C# stuff
+    // It's actually called Type, but we're calling it GType to avoid confusion with C# stuff
     public class GType
     {
         public uint Header { get; }
