@@ -1,4 +1,5 @@
-﻿using MHServerEmu.GameServer.Data;
+﻿using MHServerEmu.GameServer.Data.Gpak;
+using MHServerEmu.GameServer.Data.Gpak.FileFormats;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.Common.Commands
@@ -13,20 +14,20 @@ namespace MHServerEmu.Common.Commands
             {
                 if (@params == null) return Fallback();
 
-                List<KeyValuePair<ulong, string>> matches = new();
+                List<GDirectoryPrototypeEntry> matches = new();
 
                 if (@params.Length == 0) return "Invalid arguments. Type 'help lookup costume' to get help.";
 
                 string pattern = @params[0].ToLower();
 
-                foreach (var kvp in Database.HashMapDict[HashMapType.Prototype].ForwardDict)
+                foreach (GDirectoryPrototypeEntry entry in Calligraphy.GDirectoryDict["Calligraphy/Prototype.directory"].Entries)
                 {
-                    if (kvp.Value.Contains("Entity/Items/Costumes/Prototypes/") && kvp.Value.ToLower().Contains(pattern))
-                        matches.Add(kvp);
+                    if (entry.Name.Contains("Entity\\Items\\Costumes\\Prototypes\\") && entry.Name.ToLower().Contains(pattern))
+                        matches.Add(entry);
                 }
 
                 return matches.Aggregate(matches.Count >= 1 ? "Costume Matches:\n" : "No match found.",
-                    (current, match) => $"{current}[{match.Key}] {Path.GetRelativePath("Entity/Items/Costumes/Prototypes/", match.Value)}\n");
+                    (current, match) => $"{current}[{match.Id1}] {Path.GetRelativePath("Entity\\Items\\Costumes\\Prototypes\\", match.Name)}\n");
             }
         }
     }
