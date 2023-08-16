@@ -11,6 +11,7 @@ namespace MHServerEmu.GameServer.Data.Gpak
         public static readonly Dictionary<string, GDirectory> GDirectoryDict = new();
         public static readonly Dictionary<string, GType> GTypeDict = new();
         public static readonly Dictionary<string, Curve> CurveDict = new();
+        //public static readonly Dictionary<string, Blueprint> BlueprintDict = new();
 
         public static void Initialize(GpakFile gpakFile)
         {
@@ -27,6 +28,9 @@ namespace MHServerEmu.GameServer.Data.Gpak
                     case ".curve":
                         CurveDict.Add(entry.FilePath, new(entry.Data));
                         break;
+                    //case ".blueprint":
+                    //    BlueprintDict.Add(entry.FilePath, new(entry.Data));
+                    //    break;
                 }
             }
 
@@ -37,6 +41,7 @@ namespace MHServerEmu.GameServer.Data.Gpak
         {
             SerializeDictAsJson(GDirectoryDict);
             SerializeDictAsJson(GTypeDict);
+            //SerializeDictAsJson(BlueprintDict);
 
             foreach (var kvp in CurveDict)
             {
