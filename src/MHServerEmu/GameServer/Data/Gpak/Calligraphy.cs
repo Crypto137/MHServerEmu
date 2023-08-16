@@ -15,24 +15,55 @@ namespace MHServerEmu.GameServer.Data.Gpak
 
         public static void Initialize(GpakFile gpakFile)
         {
+            // Sort GpakEntries by type
+            List<GpakEntry> directoryList = new();
+            List<GpakEntry> typeList = new();
+            List<GpakEntry> curveList = new();
+            List<GpakEntry> blueprintList = new();
+            List<GpakEntry> defaultsList = new();
+            List<GpakEntry> prototypeList = new();
+
             foreach (GpakEntry entry in gpakFile.Entries)
             {
                 switch (Path.GetExtension(entry.FilePath))
                 {
                     case ".directory":
-                        GDirectoryDict.Add(entry.FilePath, new(entry.Data));
+                        directoryList.Add(entry);
                         break;
                     case ".type":
-                        GTypeDict.Add(entry.FilePath, new(entry.Data));
+                        typeList.Add(entry);
                         break;
                     case ".curve":
-                        CurveDict.Add(entry.FilePath, new(entry.Data));
+                        curveList.Add(entry);
                         break;
-                    //case ".blueprint":
-                    //    BlueprintDict.Add(entry.FilePath, new(entry.Data));
-                    //    break;
+                    case ".blueprint":
+                        blueprintList.Add(entry);
+                        break;
+                    case ".defaults":
+                        defaultsList.Add(entry);
+                        break;
+                    case ".prototype":
+                        prototypeList.Add(entry);
+                        break;
                 }
             }
+
+            // Parse all entires in order by type
+            foreach (GpakEntry entry in directoryList)
+                GDirectoryDict.Add(entry.FilePath, new(entry.Data));
+
+            foreach (GpakEntry entry in typeList)
+                GTypeDict.Add(entry.FilePath, new(entry.Data));
+
+            foreach (GpakEntry entry in curveList)
+                CurveDict.Add(entry.FilePath, new(entry.Data));
+
+            //foreach (GpakEntry entry in blueprintList)
+            //    BlueprintDict.Add(entry.FilePath, new(entry.Data));
+
+            // TODO: defaults
+
+            // TODO: prototypes
 
             Logger.Info($"Parsed {GDirectoryDict.Count} directories, {GTypeDict.Count} types, {CurveDict.Count} curves");
         }
@@ -41,7 +72,6 @@ namespace MHServerEmu.GameServer.Data.Gpak
         {
             SerializeDictAsJson(GDirectoryDict);
             SerializeDictAsJson(GTypeDict);
-            //SerializeDictAsJson(BlueprintDict);
 
             foreach (var kvp in CurveDict)
             {
@@ -54,7 +84,9 @@ namespace MHServerEmu.GameServer.Data.Gpak
                     foreach (double value in kvp.Value.Entries)
                         sw.WriteLine(value);
                 }
-            }     
+            }
+
+            //SerializeDictAsJson(BlueprintDict);
         }
 
         private static void SerializeDictAsJson<T>(Dictionary<string, T> dict)
