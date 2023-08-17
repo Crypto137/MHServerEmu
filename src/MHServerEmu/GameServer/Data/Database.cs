@@ -1,27 +1,18 @@
-﻿using System.Text;
-using MHServerEmu.Common;
+﻿using MHServerEmu.Common;
 using MHServerEmu.GameServer.Data.Gpak;
 
 namespace MHServerEmu.GameServer.Data
 {
-    public enum HashMapType
-    {
-        Blueprint,
-        Curve,
-        Prototype,
-        Type
-    }
-
-    public static class Database
+    public static class Database    // TODO: Rename this to GameDatabase to match the game?
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly string AssetDirectory = $"{Directory.GetCurrentDirectory()}\\Assets";
 
+        private static HashMap _prototypeHashMap;
+
         public static bool IsInitialized { get; private set; }
         public static GpakFile CalligraphyFile { get; private set; }
         public static GpakFile ResourceFile { get; private set; }
-
-        public static Dictionary<HashMapType, HashMap> HashMapDict { get; private set; }
 
         public static PropertyInfo[] PropertyInfos { get; private set; }
 
@@ -33,12 +24,14 @@ namespace MHServerEmu.GameServer.Data
         {
             long startTime = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeMilliseconds();
 
+            // Initialize GPAK
             CalligraphyFile = new("Calligraphy.sip");
             ResourceFile = new("mu_cdata.sip");
             Calligraphy.Initialize(CalligraphyFile);
             Resource.Initialize(ResourceFile);
 
-            HashMapDict = LoadHashMapDict();
+            // Load other datga
+            _prototypeHashMap = LoadHashMap($"{AssetDirectory}\\PrototypeHashMap.tsv");
 
             PropertyInfos = LoadPropertyInfos($"{AssetDirectory}\\PropertyInfoTable.tsv");
 
@@ -46,6 +39,7 @@ namespace MHServerEmu.GameServer.Data
             ResourceEnumRefTable = LoadPrototypeEnumRefTable($"{AssetDirectory}\\ResourceEnumRefTable.bin");
             PropertyIdPowerRefTable = LoadPrototypeEnumRefTable($"{AssetDirectory}\\PropertyIdPowerRefTable.bin");
 
+            // Verify and finish game database initialization
             if (VerifyData())
             {
                 long loadTime = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeMilliseconds() - startTime;
@@ -77,46 +71,37 @@ namespace MHServerEmu.GameServer.Data
             Logger.Info("Finished exporting GPAK data");
         }
 
-        public static string GetPrototypePath(ulong id) => HashMapDict[HashMapType.Prototype].ForwardDict[id];
-        public static ulong GetPrototypeId(string path) => HashMapDict[HashMapType.Prototype].ReverseDict[path];
+        public static string GetPrototypePath(ulong id) => _prototypeHashMap.GetForward(id);
+        public static ulong GetPrototypeId(string path) => _prototypeHashMap.GetReverse(path);
 
-        private static Dictionary<HashMapType, HashMap> LoadHashMapDict()
+        private static HashMap LoadHashMap(string path)
         {
-            Dictionary<HashMapType, HashMap> hashMapDict = new();
+            HashMap hashMap = new();
 
-            foreach (string name in Enum.GetNames(typeof(HashMapType)))
+            if (File.Exists(path))
             {
-                string path = $"{AssetDirectory}\\Hashmaps\\{name}s.tsv";
-
-                if (File.Exists(path))
+                using (StreamReader streamReader = new(path))
                 {
-                    HashMap hashMap = new();
+                    string line = streamReader.ReadLine();
 
-                    using (StreamReader streamReader = new(path))
+                    while (line != null)
                     {
-                        string line = streamReader.ReadLine();
-
-                        while (line != null)
+                        if (line != "")
                         {
-                            if (line != "")
-                            {
-                                string[] values = line.Split("\t");
-                                hashMap.Add(ulong.Parse(values[0]), values[1]);
-                            }
-
-                            line = streamReader.ReadLine();
+                            string[] values = line.Split("\t");
+                            hashMap.Add(ulong.Parse(values[0]), values[1]);
                         }
-                    }
 
-                    hashMapDict.Add((HashMapType)Enum.Parse(typeof(HashMapType), name), hashMap);
-                }
-                else
-                {
-                    Logger.Warn($"Failed to locate {Path.GetFileName(path)}");
+                        line = streamReader.ReadLine();
+                    }
                 }
             }
+            else
+            {
+                Logger.Warn($"Failed to locate {Path.GetFileName(path)}");
+            }
 
-            return hashMapDict;
+            return hashMap;
         }
 
         private static PropertyInfo[] LoadPropertyInfos(string path)
@@ -170,9 +155,9 @@ namespace MHServerEmu.GameServer.Data
 
         private static bool VerifyData()
         {
-            return CalligraphyFile.Entries.Length > 0
+            return _prototypeHashMap.Count > 0
+                && CalligraphyFile.Entries.Length > 0
                 && ResourceFile.Entries.Length > 0
-                && HashMapDict.Count > 0
                 && PropertyInfos.Length > 0
                 && GlobalEnumRefTable.Length > 0
                 && ResourceEnumRefTable.Length > 0
