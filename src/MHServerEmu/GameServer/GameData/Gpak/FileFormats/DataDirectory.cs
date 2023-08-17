@@ -33,15 +33,15 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
                     case DataDirectoryHeader.Curve:
                     case DataDirectoryHeader.Type:
                         for (int i = 0; i < Entries.Length; i++)
-                            Entries[i] = new GDirectoryGenericEntry(reader);
+                            Entries[i] = new DataDirectoryGenericEntry(reader);
                         break;
                     case DataDirectoryHeader.Replacement:
                         for (int i = 0; i < Entries.Length; i++)
-                            Entries[i] = new GDirectoryReplacementEntry(reader);
+                            Entries[i] = new DataDirectoryReplacementEntry(reader);
                         break;
                     case DataDirectoryHeader.Prototype:
                         for (int i = 0; i < Entries.Length; i++)
-                            Entries[i] = new GDirectoryPrototypeEntry(reader);
+                            Entries[i] = new DataDirectoryPrototypeEntry(reader);
                         break;
                 }
 
@@ -57,14 +57,14 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         public string Name { get; }
     }
 
-    public class GDirectoryGenericEntry : IDataDirectoryEntry      // BDR, CDR, and TDR share the same structure
+    public class DataDirectoryGenericEntry : IDataDirectoryEntry      // BDR, CDR, and TDR share the same structure
     {
         public ulong Id1 { get; }
         public ulong Id2 { get; }
         public byte Field2 { get; }
         public string Name { get; }
 
-        public GDirectoryGenericEntry(BinaryReader reader)
+        public DataDirectoryGenericEntry(BinaryReader reader)
         {
             Id1 = reader.ReadUInt64();
             Id2 = reader.ReadUInt64();
@@ -73,13 +73,13 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         }
     }
 
-    public class GDirectoryReplacementEntry : IDataDirectoryEntry  // RDR
+    public class DataDirectoryReplacementEntry : IDataDirectoryEntry  // RDR
     {
         public ulong Id1 { get; }
         public ulong Id2 { get; }
         public string Name { get; }
 
-        public GDirectoryReplacementEntry(BinaryReader reader)
+        public DataDirectoryReplacementEntry(BinaryReader reader)
         {
             Id1 = reader.ReadUInt64();
             Id2 = reader.ReadUInt64();
@@ -87,7 +87,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         }
     }
 
-    public class GDirectoryPrototypeEntry : IDataDirectoryEntry    // PDR
+    public class DataDirectoryPrototypeEntry : IDataDirectoryEntry    // PDR
     {
         public ulong Id1 { get; }
         public ulong Id2 { get; }
@@ -95,7 +95,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         public byte Field3 { get; }
         public string Name { get; }
 
-        public GDirectoryPrototypeEntry(BinaryReader reader)
+        public DataDirectoryPrototypeEntry(BinaryReader reader)
         {
             Id1 = reader.ReadUInt64();
             Id2 = reader.ReadUInt64();

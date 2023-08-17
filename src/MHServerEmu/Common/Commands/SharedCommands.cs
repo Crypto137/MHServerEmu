@@ -12,13 +12,13 @@ namespace MHServerEmu.Common.Commands
         {
             if (@params == null) return Fallback();
 
-            List<GDirectoryPrototypeEntry> matches = new();
+            List<DataDirectoryPrototypeEntry> matches = new();
 
             if (@params.Length == 0) return "Invalid arguments. Type 'help lookup costume' to get help.";
 
             string pattern = @params[0].ToLower();
 
-            foreach (GDirectoryPrototypeEntry entry in GameDatabase.Calligraphy.DataDirectoryDict["Calligraphy/Prototype.directory"].Entries)
+            foreach (DataDirectoryPrototypeEntry entry in GameDatabase.Calligraphy.DataDirectoryDict["Calligraphy/Prototype.directory"].Entries)
             {
                 if (entry.Name.Contains("Entity\\Items\\Costumes\\Prototypes\\") && entry.Name.ToLower().Contains(pattern))
                     matches.Add(entry);
