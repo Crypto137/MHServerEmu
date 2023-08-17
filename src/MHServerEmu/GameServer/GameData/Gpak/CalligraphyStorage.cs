@@ -57,6 +57,12 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             foreach (GpakEntry entry in curveList)
                 CurveDict.Add(entry.FilePath, new(entry.Data));
 
+            /* PrototypeId dict for parsing
+            Dictionary<ulong, string> prototypeIdDict = new();
+            foreach (IDataDirectoryEntry entry in DataDirectoryDict["Calligraphy/Prototype.directory"].Entries)
+                prototypeIdDict.Add(entry.Id1, entry.Name);
+            */
+
             foreach (GpakEntry entry in blueprintList)
                 BlueprintDict.Add(entry.FilePath, new(entry.Data));
 

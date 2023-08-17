@@ -7,6 +7,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         public uint Header { get; }
         public string PrototypeName { get; }
         public ulong PrototypeId { get; }
+        //public string PrototypeIdName { get; }
         public BlueprintReference[] References1 { get; }
         public BlueprintReference[] References2 { get; }
         public BlueprintEntry[] Entries { get; }
@@ -19,6 +20,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
                 Header = reader.ReadUInt32();
                 PrototypeName = Encoding.UTF8.GetString(reader.ReadBytes(reader.ReadUInt16()));
                 PrototypeId = reader.ReadUInt64();
+                //PrototypeIdName = prototypeIdDict[PrototypeId];
 
                 References1 = new BlueprintReference[reader.ReadUInt16()];
                 for (int i = 0; i < References1.Length; i++)
@@ -38,11 +40,13 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
     public class BlueprintReference
     {
         public ulong Id { get; }
+        //public string IdName { get; }
         public byte Field1 { get; }
 
         public BlueprintReference(BinaryReader reader)
         {
             Id = reader.ReadUInt64();
+            //IdName = prototypeIdDict[Id];
             Field1 = reader.ReadByte();
         }
     }
@@ -72,6 +76,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         public BlueprintEntryType1 Type1 { get; }
         public BlueprintEntryType2 Type2 { get; }
         public ulong TypeSpecificId { get; }
+        //public string TypeSpecificIdName { get; }
 
         public BlueprintEntry(BinaryReader reader)
         {
@@ -83,10 +88,13 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             if (Type1 == BlueprintEntryType1.P && Type2 == BlueprintEntryType2.S)
             {
                 TypeSpecificId = reader.ReadUInt64();
+                //TypeSpecificIdName = prototypeIdDict[TypeSpecificId];
             }
             else if (Type1 == BlueprintEntryType1.C && Type2 == BlueprintEntryType2.S)
             {
                 TypeSpecificId = reader.ReadUInt64();
+                //TypeSpecificIdName = "not a prototype? (CS)";
+
             }
             else if (Type1 == BlueprintEntryType1.B && Type2 == BlueprintEntryType2.S)
             {
@@ -99,6 +107,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             else if (Type1 == BlueprintEntryType1.A && Type2 == BlueprintEntryType2.S)
             {
                 TypeSpecificId = reader.ReadUInt64();
+                //TypeSpecificIdName = "not a prototype? (AS)";
             }
             else if (Type1 == BlueprintEntryType1.D && Type2 == BlueprintEntryType2.S)
             {
@@ -107,18 +116,22 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             else if (Type1 == BlueprintEntryType1.R && Type2 == BlueprintEntryType2.S)
             {
                 TypeSpecificId = reader.ReadUInt64();
+                //TypeSpecificIdName = "not a prototype? (RS)";
             }
             else if (Type1 == BlueprintEntryType1.P && Type2 == BlueprintEntryType2.L)
             {
                 TypeSpecificId = reader.ReadUInt64();
+                //TypeSpecificIdName = prototypeIdDict[TypeSpecificId];
             }
             else if (Type1 == BlueprintEntryType1.A && Type2 == BlueprintEntryType2.L)
             {
                 TypeSpecificId = reader.ReadUInt64();
+                //TypeSpecificIdName = "not a prototype? (AL)";
             }
             else if (Type1 == BlueprintEntryType1.R && Type2 == BlueprintEntryType2.L)
             {
                 TypeSpecificId = reader.ReadUInt64();
+                //TypeSpecificIdName = prototypeIdDict[TypeSpecificId];
             }
             else if (Type1 == BlueprintEntryType1.S && Type2 == BlueprintEntryType2.S)
             {
