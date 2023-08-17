@@ -7,20 +7,8 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         public uint Header { get; }
         public string PrototypeName { get; }
         public ulong PrototypeId { get; }
-
-        public byte ProtoSub1_1 { get; }
-        public byte ProtoSub1_2 { get; }
-        public ulong ProtoSub1_Data2 { get; }
-        public BlueprintIduid[] Iduids1 { get; }
-        public byte ProtoSub2_1 { get; }
-        public byte ProtoSub2_2 { get; }
-        public byte ProtoSub2_3 { get; }
-        public ulong ProtoSub2_Data2 { get; }
-        public ulong Uid { get; }
-        public BlueprintIduid[] Iduids2 { get; }
-        public byte ProtoSub3_1 { get; }
-        public ushort ProtoSub3_2 { get; }
-
+        public BlueprintReference[] References1 { get; }
+        public BlueprintReference[] References2 { get; }
         public BlueprintEntry[] Entries { get; }
 
         public Blueprint(byte[] data)
@@ -32,82 +20,30 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
                 PrototypeName = Encoding.UTF8.GetString(reader.ReadBytes(reader.ReadUInt16()));
                 PrototypeId = reader.ReadUInt64();
 
-                #region black magic
-                ProtoSub1_1 = reader.ReadByte();
-                ProtoSub1_2 = reader.ReadByte();
+                References1 = new BlueprintReference[reader.ReadUInt16()];
+                for (int i = 0; i < References1.Length; i++)
+                    References1[i] = new(reader);
 
-                if (ProtoSub1_1 == 0x00 && ProtoSub1_2 == 0x00)
-                {
-                }
-                else if (ProtoSub1_1 == 0x01)
-                {
-                    ProtoSub1_Data2 = reader.ReadUInt64();
-                }
-                else if (ProtoSub1_1 > 0x01)
-                {
-                    ProtoSub1_Data2 = reader.ReadUInt64();
-                    Iduids1 = new BlueprintIduid[ProtoSub1_1 - 1];
-                    for (int i = 0; i < Iduids1.Length; i++)
-                        Iduids1[i] = new(reader);
-                }
+                References2 = new BlueprintReference[reader.ReadInt16()];
+                for (int i = 0; i < References2.Length; i++)
+                    References2[i] = new(reader);
 
-                ProtoSub2_1 = reader.ReadByte();
-                ProtoSub2_2 = reader.ReadByte();
-                ProtoSub3_2 = 0;
-
-                if (ProtoSub2_1 == 0x00 && ProtoSub2_2 == 0x00)
-                {
-                    ProtoSub3_2 = reader.ReadUInt16();          // elements number
-                }
-                else if (ProtoSub2_1 >= 0x01)
-                {
-                    if (ProtoSub2_2 == 0x00)
-                    {
-                        ProtoSub3_1 = reader.ReadByte();        // 0x00
-                        ProtoSub3_2 = reader.ReadUInt16();      // elements number
-                    }
-                    else if (ProtoSub2_2 == 0x01)
-                    {
-                        ProtoSub2_3 = reader.ReadByte();           // 0x00
-                        ProtoSub2_Data2 = reader.ReadUInt64();
-                        ProtoSub3_1 = reader.ReadByte();                // 0x01
-                        if (ProtoSub3_1 == 0x01)
-                        {
-                            ProtoSub3_2 = reader.ReadUInt16();          // elements number
-                        }
-                    }
-                    else if (ProtoSub2_2 > 0x01)
-                    {
-                        ProtoSub2_3 = reader.ReadByte();
-                        Uid = reader.ReadUInt64();
-                        Iduids2 = new BlueprintIduid[((ProtoSub2_3 << 8) | ProtoSub2_2) - 1];
-                        for (int i = 0; i < Iduids2.Length; i++)
-                            Iduids2[i] = new(reader);
-
-                        ProtoSub3_1 = reader.ReadByte();
-                        ProtoSub3_2 = reader.ReadUInt16();       // elements number
-                    }
-                    // proto_sub_2_2
-                }
-                //proto_sub_2_1
-                #endregion
-
-                Entries = new BlueprintEntry[ProtoSub3_2];
+                Entries = new BlueprintEntry[reader.ReadUInt16()];
                 for (int i = 0; i < Entries.Length; i++)
                     Entries[i] = new(reader);
             }
         }
     }
 
-    public class BlueprintIduid
+    public class BlueprintReference
     {
-        public byte Id { get; }
-        public ulong Uid { get; }
+        public ulong Id { get; }
+        public byte Field1 { get; }
 
-        public BlueprintIduid(BinaryReader reader)
+        public BlueprintReference(BinaryReader reader)
         {
-            Id = reader.ReadByte();
-            Uid = reader.ReadUInt64();
+            Id = reader.ReadUInt64();
+            Field1 = reader.ReadByte();
         }
     }
 
@@ -190,5 +126,4 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             }
         }
     }
-
 }

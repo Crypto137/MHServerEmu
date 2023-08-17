@@ -10,7 +10,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         public Dictionary<string, DataDirectory> DataDirectoryDict { get; } = new();
         public Dictionary<string, GType> GTypeDict { get; } = new();
         public Dictionary<string, Curve> CurveDict { get; } = new();
-        //public Dictionary<string, Blueprint> BlueprintDict { get; } = new();
+        public Dictionary<string, Blueprint> BlueprintDict { get; } = new();
 
         public CalligraphyStorage(GpakFile gpakFile)
         {
@@ -57,21 +57,22 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             foreach (GpakEntry entry in curveList)
                 CurveDict.Add(entry.FilePath, new(entry.Data));
 
-            //foreach (GpakEntry entry in blueprintList)
-            //    BlueprintDict.Add(entry.FilePath, new(entry.Data));
+            foreach (GpakEntry entry in blueprintList)
+                BlueprintDict.Add(entry.FilePath, new(entry.Data));
 
             // TODO: defaults
 
             // TODO: prototypes
 
-            Logger.Info($"Parsed {DataDirectoryDict.Count} directories, {GTypeDict.Count} types, {CurveDict.Count} curves");
+            Logger.Info($"Parsed {DataDirectoryDict.Count} directories, {GTypeDict.Count} types, {CurveDict.Count} curves, {BlueprintDict.Count} blueprints");
         }
 
         public override bool Verify()
         {
             return DataDirectoryDict.Count > 0
                 && GTypeDict.Count > 0
-                && CurveDict.Count > 0;
+                && CurveDict.Count > 0
+                && BlueprintDict.Count > 0;
         }
 
         public override void Export()
@@ -92,7 +93,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
                 }
             }
 
-            //SerializeDictAsJson(BlueprintDict);
+            SerializeDictAsJson(BlueprintDict);
         }
     }
 }
