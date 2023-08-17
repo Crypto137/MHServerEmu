@@ -32,7 +32,7 @@ namespace MHServerEmu.Common.Commands
     [CommandGroup("gpak", "Provides commands to interact with GPAK files.")]
     public class GpakCommands : CommandGroup
     {
-        [Command("export", "Exports data from GPAK files.\nUsage: gpak export [entries|data|all]")]
+        [Command("extract", "Extracts entries and/or data from GPAK files.\nUsage: gpak extract [entries|data|all]")]
         public string Extract(string[] @params, FrontendClient client)
         {
             if (client != null)
@@ -42,23 +42,23 @@ namespace MHServerEmu.Common.Commands
             {
                 if (@params[0] == "entries")
                 {
-                    GameDatabase.ExportGpakEntries();
-                    return "Finished exporting GPAK entries";
+                    GameDatabase.ExtractGpakEntries();
+                    return "Finished extracting GPAK entries.";
                 }
                 else if (@params[0] == "data")
                 {
-                    GameDatabase.ExportGpakData();
-                    return "Finished exporting GPAK data";
+                    GameDatabase.ExtractGpakData();
+                    return "Finished extracting GPAK data.";
                 }
                 else if (@params[0] == "all")
                 {
-                    GameDatabase.ExportGpakEntries();
-                    GameDatabase.ExportGpakData();
-                    return "Finished exporting GPAK entries and data";
+                    GameDatabase.ExtractGpakEntries();
+                    GameDatabase.ExtractGpakData();
+                    return "Finished extracting GPAK entries and data.";
                 }
             }
 
-            return "Invalid parameters. Type 'help gpak export' to get help";
+            return "Invalid parameters. Type 'help gpak extract' to get help.";
         }
     }
 }

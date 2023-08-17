@@ -1,6 +1,5 @@
 ﻿using MHServerEmu.Common;
 using MHServerEmu.GameServer.GameData;
-using MHServerEmu.GameServer.GameData.Gpak;
 using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 
 namespace MHServerEmu.GameServer.Regions
@@ -165,7 +164,7 @@ namespace MHServerEmu.GameServer.Regions
 
                     area = new(1, AreaPrototype.XaviersMansionArea, new(), true);
 
-                    district = Resource.DistrictDict["Resource/Districts/XaviersMansion.district"];
+                    district = GameDatabase.Resource.DistrictDict["Resource/Districts/XaviersMansion.district"];
                     for (int i = 0; i < district.Cells.Length; i++)
                         area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeId(district.Cells[i].Name), new()));
 
@@ -218,7 +217,7 @@ namespace MHServerEmu.GameServer.Regions
 
                     area = new(1, AreaPrototype.AsgardiaArea, new(), true);
 
-                    district = Resource.DistrictDict["Resource/Districts/AsgardHubDistrict.district"];
+                    district = GameDatabase.Resource.DistrictDict["Resource/Districts/AsgardHubDistrict.district"];
                     for (int i = 0; i < district.Cells.Length; i++)
                         area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeId(district.Cells[i].Name), new()));
 
@@ -246,7 +245,7 @@ namespace MHServerEmu.GameServer.Regions
 
                     area = new(1, AreaPrototype.GenoshaHUBArea, new(951f, -336f, 0f), true);
 
-                    district = Resource.DistrictDict["Resource/Districts/GenoshaHUB.district"];
+                    district = GameDatabase.Resource.DistrictDict["Resource/Districts/GenoshaHUB.district"];
                     for (int i = 0; i < district.Cells.Length; i++)
                         area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeId(district.Cells[i].Name), new()));
 
@@ -338,7 +337,7 @@ namespace MHServerEmu.GameServer.Regions
                     AreaPrototype raftArea = (AreaPrototype)GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH00Raft/TheRaftNPE/NPERaftArea.prototype");
                     area = new(1, raftArea, new(), true);
 
-                    district = Resource.DistrictDict["Resource/Districts/Raft_District.district"];
+                    district = GameDatabase.Resource.DistrictDict["Resource/Districts/Raft_District.district"];
 
                     for (int i = 0; i < district.Cells.Length; i++)
                         area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeId(district.Cells[i].Name), new()));
@@ -727,7 +726,7 @@ namespace MHServerEmu.GameServer.Regions
 
                     area = new(1, AreaPrototype.XManhattanArea1, new(), true);
 
-                    district = Resource.DistrictDict["Resource/Districts/MidtownStatic/MidtownStatic_A.district"];
+                    district = GameDatabase.Resource.DistrictDict["Resource/Districts/MidtownStatic/MidtownStatic_A.district"];
                     for (int i = 0; i < district.Cells.Length; i++)
                         area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeId(district.Cells[i].Name), new()));
 
@@ -902,7 +901,7 @@ namespace MHServerEmu.GameServer.Regions
 
                     area = new(1, AreaPrototype.XManhattanArea1, new(), true);
 
-                    district = Resource.DistrictDict["Resource/Districts/MidtownStatic/MidtownStatic_A.district"];
+                    district = GameDatabase.Resource.DistrictDict["Resource/Districts/MidtownStatic/MidtownStatic_A.district"];
                     for (int i = 0; i < district.Cells.Length; i++)
                         area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeId(district.Cells[i].Name), new()));
 

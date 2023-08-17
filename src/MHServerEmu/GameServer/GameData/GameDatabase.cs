@@ -11,8 +11,8 @@ namespace MHServerEmu.GameServer.GameData
         private static HashMap _prototypeHashMap;
 
         public static bool IsInitialized { get; private set; }
-        public static GpakFile CalligraphyFile { get; private set; }
-        public static GpakFile ResourceFile { get; private set; }
+        public static CalligraphyStorage Calligraphy { get; private set; }
+        public static ResourceStorage Resource { get; private set; }
 
         public static PropertyInfo[] PropertyInfos { get; private set; }
 
@@ -25,12 +25,10 @@ namespace MHServerEmu.GameServer.GameData
             long startTime = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeMilliseconds();
 
             // Initialize GPAK
-            CalligraphyFile = new("Calligraphy.sip");
-            ResourceFile = new("mu_cdata.sip");
-            Calligraphy.Initialize(CalligraphyFile);
-            Resource.Initialize(ResourceFile);
+            Calligraphy = new(new("Calligraphy.sip"));
+            Resource = new(new("mu_cdata.sip"));
 
-            // Load other datga
+            // Load other data
             _prototypeHashMap = LoadHashMap($"{AssetDirectory}\\PrototypeHashMap.tsv");
 
             PropertyInfos = LoadPropertyInfos($"{AssetDirectory}\\PropertyInfoTable.tsv");
@@ -43,32 +41,36 @@ namespace MHServerEmu.GameServer.GameData
             if (VerifyData())
             {
                 long loadTime = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeMilliseconds() - startTime;
-                Logger.Info($"Finished loading in {loadTime} ms");
+                Logger.Info($"Finished initializing game database in {loadTime} ms");
                 IsInitialized = true;
             }
             else
             {
-                Logger.Fatal("Failed to initialize database");
+                Logger.Fatal("Failed to initialize game database");
                 IsInitialized = false;
             }
         }
 
-        public static void ExportGpakEntries()
+        public static void ExtractGpakEntries()
         {
-            Logger.Info("Exporting Calligraphy entries...");
-            CalligraphyFile.ExportEntries("Calligraphy.tsv");
-            Logger.Info("Exporting Resource entries...");
-            ResourceFile.ExportEntries("mu_cdata.tsv");
-            Logger.Info("Finished exporting GPAK entries");
+            Logger.Info("Extracting Calligraphy entries...");
+            GpakFile calligraphyFile = new("Calligraphy.sip", true);
+            calligraphyFile.ExtractEntries("Calligraphy.tsv");
+
+            Logger.Info("Extracting Resource entries...");
+            GpakFile resourceFile = new("mu_cdata.sip", true);
+            resourceFile.ExtractEntries("mu_cdata.tsv");
         }
 
-        public static void ExportGpakData()
+        public static void ExtractGpakData()
         {
-            Logger.Info("Exporting Calligraphy data...");
-            CalligraphyFile.ExportData();
-            Logger.Info("Exporting Resource data...");
-            ResourceFile.ExportData();
-            Logger.Info("Finished exporting GPAK data");
+            Logger.Info("Extracting Calligraphy data...");
+            GpakFile calligraphyFile = new("Calligraphy.sip", true);
+            calligraphyFile.ExtractData();
+
+            Logger.Info("Extracting Resource data...");
+            GpakFile resourceFile = new("mu_cdata.sip", true);
+            resourceFile.ExtractData();
         }
 
         public static string GetPrototypePath(ulong id) => _prototypeHashMap.GetForward(id);
@@ -156,8 +158,8 @@ namespace MHServerEmu.GameServer.GameData
         private static bool VerifyData()
         {
             return _prototypeHashMap.Count > 0
-                && CalligraphyFile.Entries.Length > 0
-                && ResourceFile.Entries.Length > 0
+                && Calligraphy.Verify()
+                && Resource.Verify()
                 && PropertyInfos.Length > 0
                 && GlobalEnumRefTable.Length > 0
                 && ResourceEnumRefTable.Length > 0

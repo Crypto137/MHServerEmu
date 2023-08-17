@@ -1,5 +1,4 @@
-﻿using System.IO;
-using System.Text;
+﻿using System.Text;
 using K4os.Compression.LZ4;
 using MHServerEmu.Common;
 
@@ -14,14 +13,12 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         public int Field1 { get; }
         public GpakEntry[] Entries { get; } = Array.Empty<GpakEntry>();
 
-        public GpakFile(string gpakFileName)
+        public GpakFile(string gpakFileName, bool silent = false)
         {
             string path = $"{GpakDirectory}\\{gpakFileName}";
 
             if (File.Exists(path))
             {
-                Logger.Trace($"Loading {gpakFileName}...");
-
                 using (FileStream fileStream = File.OpenRead(path))
                 {
                     byte[] buffer = new byte[4096];
@@ -41,8 +38,8 @@ namespace MHServerEmu.GameServer.GameData.Gpak
                         int compressedSize = ReadInt(fileStream, buffer);
                         int uncompressedSize = ReadInt(fileStream, buffer);
 
-                        if (compressedSize == 0) Logger.Warn($"Compressed size for {Path.GetFileName(filePath)} is 0!");
-                        if (uncompressedSize == 0) Logger.Warn($"Uncompressed size for {Path.GetFileName(filePath)} is 0!");
+                        if (compressedSize == 0 && !silent) Logger.Warn($"Compressed size for {Path.GetFileName(filePath)} is 0!");
+                        if (uncompressedSize == 0 && !silent) Logger.Warn($"Uncompressed size for {Path.GetFileName(filePath)} is 0!");
 
                         Entries[i] = new(id, filePath, field2, offset, compressedSize, uncompressedSize);
                     }
@@ -58,15 +55,15 @@ namespace MHServerEmu.GameServer.GameData.Gpak
                     }
                 }
 
-                Logger.Info($"Loaded {Entries.Length} GPAK entries from {gpakFileName}");
+                if (!silent) Logger.Info($"Loaded {Entries.Length} GPAK entries from {gpakFileName}");
             }
             else
             {
-                Logger.Error($"{gpakFileName} not found");
+                if (!silent) Logger.Error($"{gpakFileName} not found");
             }
         }
 
-        public void ExportEntries(string fileName)
+        public void ExtractEntries(string fileName)
         {
             using (StreamWriter streamWriter = new($"{GpakDirectory}\\{fileName}"))
             {
@@ -78,7 +75,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             }
         }
 
-        public void ExportData()
+        public void ExtractData()
         {
             foreach (GpakEntry entry in Entries)
             {

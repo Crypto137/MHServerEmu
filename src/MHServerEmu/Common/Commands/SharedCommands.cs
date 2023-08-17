@@ -1,34 +1,31 @@
-﻿using MHServerEmu.GameServer.GameData.Gpak;
+﻿using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.Common.Commands
 {
-    public class SharedCommands
+    [CommandGroup("lookup", "Searches for prototype id by name.\nUsage: lookup [costume] [pattern]")]
+    public class LookupCommands : CommandGroup
     {
-        [CommandGroup("lookup", "Searches for prototype id by name.\nUsage: lookup [costume] [pattern]")]
-        public class ServerCommands : CommandGroup
+        [Command("costume", "Usage: lookup costume [pattern]")]
+        public string Costume(string[] @params, FrontendClient client)
         {
-            [Command("costume", "Usage: lookup costume [pattern]")]
-            public string Costume(string[] @params, FrontendClient client)
+            if (@params == null) return Fallback();
+
+            List<GDirectoryPrototypeEntry> matches = new();
+
+            if (@params.Length == 0) return "Invalid arguments. Type 'help lookup costume' to get help.";
+
+            string pattern = @params[0].ToLower();
+
+            foreach (GDirectoryPrototypeEntry entry in GameDatabase.Calligraphy.DataDirectoryDict["Calligraphy/Prototype.directory"].Entries)
             {
-                if (@params == null) return Fallback();
-
-                List<GDirectoryPrototypeEntry> matches = new();
-
-                if (@params.Length == 0) return "Invalid arguments. Type 'help lookup costume' to get help.";
-
-                string pattern = @params[0].ToLower();
-
-                foreach (GDirectoryPrototypeEntry entry in Calligraphy.DataDirectoryDict["Calligraphy/Prototype.directory"].Entries)
-                {
-                    if (entry.Name.Contains("Entity\\Items\\Costumes\\Prototypes\\") && entry.Name.ToLower().Contains(pattern))
-                        matches.Add(entry);
-                }
-
-                return matches.Aggregate(matches.Count >= 1 ? "Costume Matches:\n" : "No match found.",
-                    (current, match) => $"{current}[{match.Id1}] {Path.GetRelativePath("Entity\\Items\\Costumes\\Prototypes\\", match.Name)}\n");
+                if (entry.Name.Contains("Entity\\Items\\Costumes\\Prototypes\\") && entry.Name.ToLower().Contains(pattern))
+                    matches.Add(entry);
             }
+
+            return matches.Aggregate(matches.Count >= 1 ? "Costume Matches:\n" : "No match found.",
+                (current, match) => $"{current}[{match.Id1}] {Path.GetRelativePath("Entity\\Items\\Costumes\\Prototypes\\", match.Name)}\n");
         }
     }
 }

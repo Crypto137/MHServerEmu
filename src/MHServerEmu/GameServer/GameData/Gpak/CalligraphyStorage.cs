@@ -1,19 +1,18 @@
-﻿using System.Text.Json;
-using MHServerEmu.Common;
+﻿using MHServerEmu.Common;
 using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 
 namespace MHServerEmu.GameServer.GameData.Gpak
 {
-    public static class Calligraphy
+    public class CalligraphyStorage : GpakStorage
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public static readonly Dictionary<string, DataDirectory> DataDirectoryDict = new();
-        public static readonly Dictionary<string, GType> GTypeDict = new();
-        public static readonly Dictionary<string, Curve> CurveDict = new();
-        //public static readonly Dictionary<string, Blueprint> BlueprintDict = new();
+        public Dictionary<string, DataDirectory> DataDirectoryDict { get; } = new();
+        public Dictionary<string, GType> GTypeDict { get; } = new();
+        public Dictionary<string, Curve> CurveDict { get; } = new();
+        //public Dictionary<string, Blueprint> BlueprintDict { get; } = new();
 
-        public static void Initialize(GpakFile gpakFile)
+        public CalligraphyStorage(GpakFile gpakFile)
         {
             // Sort GpakEntries by type
             List<GpakEntry> directoryList = new();
@@ -68,7 +67,14 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             Logger.Info($"Parsed {DataDirectoryDict.Count} directories, {GTypeDict.Count} types, {CurveDict.Count} curves");
         }
 
-        public static void Export()
+        public override bool Verify()
+        {
+            return DataDirectoryDict.Count > 0
+                && GTypeDict.Count > 0
+                && CurveDict.Count > 0;
+        }
+
+        public override void Export()
         {
             SerializeDictAsJson(DataDirectoryDict);
             SerializeDictAsJson(GTypeDict);
@@ -87,23 +93,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             }
 
             //SerializeDictAsJson(BlueprintDict);
-        }
-
-        private static void SerializeDictAsJson<T>(Dictionary<string, T> dict)
-        {
-            JsonSerializerOptions jsonOptions = new();
-            jsonOptions.WriteIndented = true;
-
-            jsonOptions.Converters.Add(new DataDirectoryEntryConverter());
-
-            foreach (var kvp in dict)
-            {
-                string path = $"{Directory.GetCurrentDirectory()}\\Assets\\GPAK\\Export\\{kvp.Key}.json";
-                string dir = Path.GetDirectoryName(path);
-                if (Directory.Exists(dir) == false) Directory.CreateDirectory(dir);
-
-                File.WriteAllText(path, JsonSerializer.Serialize((object)kvp.Value, jsonOptions));
-            }
         }
     }
 }
