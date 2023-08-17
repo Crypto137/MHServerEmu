@@ -1,5 +1,5 @@
-﻿using MHServerEmu.GameServer.Data.Gpak;
-using MHServerEmu.GameServer.Data.Gpak.FileFormats;
+﻿using MHServerEmu.GameServer.GameData.Gpak;
+using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.Common.Commands

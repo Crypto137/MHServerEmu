@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using MHServerEmu.Common;
 
-namespace MHServerEmu.GameServer.Data.Gpak.FileFormats
+namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
     public enum DataDirectoryHeader
     {

@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Gazillion;
 using Google.ProtocolBuffers;
-using MHServerEmu.GameServer.Data;
+using MHServerEmu.GameServer.GameData;
 
 namespace MHServerEmu.GameServer.Common
 {

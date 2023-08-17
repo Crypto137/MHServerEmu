@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace MHServerEmu.GameServer.Data.Gpak.FileFormats
+namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
     // It's actually called Type, but we're calling it GType to avoid confusion with C# stuff
     public class GType

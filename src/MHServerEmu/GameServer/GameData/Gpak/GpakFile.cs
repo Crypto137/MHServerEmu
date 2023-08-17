@@ -3,7 +3,7 @@ using System.Text;
 using K4os.Compression.LZ4;
 using MHServerEmu.Common;
 
-namespace MHServerEmu.GameServer.Data.Gpak
+namespace MHServerEmu.GameServer.GameData.Gpak
 {
     public class GpakFile
     {

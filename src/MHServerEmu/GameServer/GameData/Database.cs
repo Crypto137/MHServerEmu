@@ -1,7 +1,7 @@
 ﻿using MHServerEmu.Common;
-using MHServerEmu.GameServer.Data.Gpak;
+using MHServerEmu.GameServer.GameData.Gpak;
 
-namespace MHServerEmu.GameServer.Data
+namespace MHServerEmu.GameServer.GameData
 {
     public static class Database    // TODO: Rename this to GameDatabase to match the game?
     {

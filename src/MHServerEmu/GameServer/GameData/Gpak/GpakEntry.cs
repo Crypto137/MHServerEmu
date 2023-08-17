@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MHServerEmu.GameServer.Data.Gpak
+namespace MHServerEmu.GameServer.GameData.Gpak
 {
     public class GpakEntry
     {

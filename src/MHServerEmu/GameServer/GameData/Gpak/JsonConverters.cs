@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using MHServerEmu.GameServer.Data.Gpak.FileFormats;
+using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 
-namespace MHServerEmu.GameServer.Data.Gpak
+namespace MHServerEmu.GameServer.GameData.Gpak
 {
     // Contains converters needed to correctly serialize all fields to JSON in interface dictionaries
 

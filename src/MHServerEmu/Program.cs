@@ -1,7 +1,7 @@
 ﻿using MHServerEmu.Common;
 using MHServerEmu.Common.Commands;
 using MHServerEmu.Common.Config;
-using MHServerEmu.GameServer.Data;
+using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.Frontend.Accounts;
 using MHServerEmu.GameServer.Regions;
 using MHServerEmu.Networking;

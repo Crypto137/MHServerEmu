@@ -6,7 +6,7 @@ using MHServerEmu.Common.Config;
 using MHServerEmu.GameServer.Entities;
 using MHServerEmu.GameServer.Entities.Avatars;
 using MHServerEmu.GameServer.Powers;
-using MHServerEmu.GameServer.Data;
+using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.Common;
 
 namespace MHServerEmu.GameServer.Regions

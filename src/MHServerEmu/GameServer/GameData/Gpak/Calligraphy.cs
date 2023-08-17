@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
 using MHServerEmu.Common;
-using MHServerEmu.GameServer.Data.Gpak.FileFormats;
+using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 
-namespace MHServerEmu.GameServer.Data.Gpak
+namespace MHServerEmu.GameServer.GameData.Gpak
 {
     public static class Calligraphy
     {

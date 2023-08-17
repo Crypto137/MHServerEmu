@@ -1,4 +1,4 @@
-﻿using MHServerEmu.GameServer.Data;
+﻿using MHServerEmu.GameServer.GameData;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.Common.Commands

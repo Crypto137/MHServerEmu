@@ -1,7 +1,7 @@
 ﻿using MHServerEmu.Common;
-using MHServerEmu.GameServer.Data;
-using MHServerEmu.GameServer.Data.Gpak;
-using MHServerEmu.GameServer.Data.Gpak.FileFormats;
+using MHServerEmu.GameServer.GameData;
+using MHServerEmu.GameServer.GameData.Gpak;
+using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 
 namespace MHServerEmu.GameServer.Regions
 {
