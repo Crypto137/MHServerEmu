@@ -27,7 +27,7 @@ namespace MHServerEmu
 
             Logger.Info("MHServerEmu starting...");
 
-            if (Database.IsInitialized == false || AccountManager.IsInitialized == false || RegionManager.IsInitialized == false)
+            if (GameDatabase.IsInitialized == false || AccountManager.IsInitialized == false || RegionManager.IsInitialized == false)
             {
                 Console.ReadKey();
                 return;

@@ -75,7 +75,7 @@ namespace MHServerEmu.GameServer.Regions
                         new(10, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototype.AvengersTowerHubArea, new(), true);
-                    area.AddCell(new(1, Database.GetPrototypeId("Resource/Cells/DistrictCells/Avengers_Tower/AvengersTower_HUB.cell"), new()));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeId("Resource/Cells/DistrictCells/Avengers_Tower/AvengersTower_HUB.cell"), new()));
 
                     region.AddArea(area);
 
@@ -114,7 +114,7 @@ namespace MHServerEmu.GameServer.Regions
                         new(10, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototype.NPEAvengersTowerHubArea, new(), true);
-                    area.AddCell(new(1, Database.GetPrototypeId("Resource/Cells/DistrictCells/Avengers_Tower/AvengersTowerNPE_HUB.cell"), new()));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeId("Resource/Cells/DistrictCells/Avengers_Tower/AvengersTowerNPE_HUB.cell"), new()));
 
                     region.AddArea(area);
 
@@ -139,7 +139,7 @@ namespace MHServerEmu.GameServer.Regions
                         new(10, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototype.TrainingRoomSHIELDArea, new(), true);
-                    area.AddCell(new(1, Database.GetPrototypeId("Resource/Cells/DistrictCells/Training_Rooms/TrainingRoom_SHIELD_B.cell"), new()));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeId("Resource/Cells/DistrictCells/Training_Rooms/TrainingRoom_SHIELD_B.cell"), new()));
 
                     region.AddArea(area);
 
@@ -167,7 +167,7 @@ namespace MHServerEmu.GameServer.Regions
 
                     district = Resource.DistrictDict["Resource/Districts/XaviersMansion.district"];
                     for (int i = 0; i < district.Cells.Length; i++)
-                        area.AddCell(new((uint)i + 1, Database.GetPrototypeId(district.Cells[i].Name), new()));
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeId(district.Cells[i].Name), new()));
 
                     region.AddArea(area);
 
@@ -192,7 +192,7 @@ namespace MHServerEmu.GameServer.Regions
                         new(49, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototype.HelicarrierArea, new(), true);
-                    area.AddCell(new(1, Database.GetPrototypeId("Resource/Cells/DistrictCells/Helicarrier/Helicarrier_HUB.cell"), new()));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeId("Resource/Cells/DistrictCells/Helicarrier/Helicarrier_HUB.cell"), new()));
 
                     region.AddArea(area);
 
@@ -220,7 +220,7 @@ namespace MHServerEmu.GameServer.Regions
 
                     district = Resource.DistrictDict["Resource/Districts/AsgardHubDistrict.district"];
                     for (int i = 0; i < district.Cells.Length; i++)
-                        area.AddCell(new((uint)i + 1, Database.GetPrototypeId(district.Cells[i].Name), new()));
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeId(district.Cells[i].Name), new()));
 
                     region.AddArea(area);
 
@@ -248,7 +248,7 @@ namespace MHServerEmu.GameServer.Regions
 
                     district = Resource.DistrictDict["Resource/Districts/GenoshaHUB.district"];
                     for (int i = 0; i < district.Cells.Length; i++)
-                        area.AddCell(new((uint)i + 1, Database.GetPrototypeId(district.Cells[i].Name), new()));
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeId(district.Cells[i].Name), new()));
 
                     region.AddArea(area);
 
@@ -285,7 +285,7 @@ namespace MHServerEmu.GameServer.Regions
                         new(63, DifficultyTier.Heroic));
 
                     area = new(1, AreaPrototype.DangerRoomHubArea, new(), true);
-                    area.AddCell(new(1, Database.GetPrototypeId("Resource/Cells/EndGame/EndlessDungeon/DangerRoom_LaunchTerminal.cell"), new()));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeId("Resource/Cells/EndGame/EndlessDungeon/DangerRoom_LaunchTerminal.cell"), new()));
 
                     region.AddArea(area);
 
@@ -310,11 +310,11 @@ namespace MHServerEmu.GameServer.Regions
                         new(60, DifficultyTier.Normal));
 
                     area = new(2, AreaPrototype.InvasionSafeAbodeArea2, new(1152f, 0f, 0f), true);
-                    area.AddCell(new(1, Database.GetPrototypeId("Resource/Cells/SecretInvasion/MadripoorInvasion/Invasion_SafehouseWithin.cell"), new()));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeId("Resource/Cells/SecretInvasion/MadripoorInvasion/Invasion_SafehouseWithin.cell"), new()));
                     region.AddArea(area);
 
                     area = new(1, AreaPrototype.InvasionSafeAbodeArea1, new(-1152f, 0f, 0f), true);
-                    area.AddCell(new(2, Database.GetPrototypeId("Resource/Cells/SecretInvasion/MadripoorInvasion/Invasion_Safehouse.cell"), new()));
+                    area.AddCell(new(2, GameDatabase.GetPrototypeId("Resource/Cells/SecretInvasion/MadripoorInvasion/Invasion_Safehouse.cell"), new()));
                     region.AddArea(area);
 
                     region.EntrancePosition = new(893f, 0f, 60f);
@@ -335,13 +335,13 @@ namespace MHServerEmu.GameServer.Regions
                         new(8064.0f, 12672.0f, 1152.0f),
                         new(60, DifficultyTier.Normal));
 
-                    AreaPrototype raftArea = (AreaPrototype)Database.GetPrototypeId("Regions/StoryRevamp/CH00Raft/TheRaftNPE/NPERaftArea.prototype");
+                    AreaPrototype raftArea = (AreaPrototype)GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH00Raft/TheRaftNPE/NPERaftArea.prototype");
                     area = new(1, raftArea, new(), true);
 
                     district = Resource.DistrictDict["Resource/Districts/Raft_District.district"];
 
                     for (int i = 0; i < district.Cells.Length; i++)
-                        area.AddCell(new((uint)i + 1, Database.GetPrototypeId(district.Cells[i].Name), new()));
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeId(district.Cells[i].Name), new()));
 
                     region.AddArea(area);
 
@@ -365,49 +365,49 @@ namespace MHServerEmu.GameServer.Regions
 
                     string Savage = "Resource/Cells/Savagelands/";
 
-                    area = new(1, (AreaPrototype)Database.GetPrototypeId("Regions/StoryRevamp/CH07SavageLand/Areas/DinoJungle/DinoJungleArea.prototype"), new(), true);
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH07SavageLand/Areas/DinoJungle/DinoJungleArea.prototype"), new(), true);
 
-                    area.AddCell(new(85, Database.GetPrototypeId(Savage + "Dino_Jungle_Trans/Dino_Jungle_NESW_Entry_A.cell"), new(-5760.0f, 2304.0f, 0.0f)));
-                    area.AddCell(new(103, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_A.cell"), new(-5760.0f, 9216.0f, 0.0f)));
-                    area.AddCell(new(82, Database.GetPrototypeId(Savage + "Dino_Jungle_B/Dino_Jungle_B_NESW_B.cell"), new(-12672.0f, 2304.0f, 0.0f)));
-                    area.AddCell(new(114, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NSW_A.cell"), new(-8064.0f, 13824.0f, 0.0f)));
-                    area.AddCell(new(90, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_B.cell"), new(-8064.0f, 4608.0f, 0.0f)));
-                    area.AddCell(new(106, Database.GetPrototypeId(Savage + "Dino_Jungle_B/Dino_Jungle_B_NESW_A.cell"), new(-12672.0f, 11520.0f, 0.0f)));
-                    area.AddCell(new(88, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_C.cell"), new(-12672.0f, 4608.0f, 0.0f)));
-                    area.AddCell(new(83, Database.GetPrototypeId(Savage + "Dino_Jungle_Trans/Dino_Jungle_SacredValley_Entry.cell"), new(-10368.0f, 2304.0f, 0.0f)));
-                    area.AddCell(new(89, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_C.cell"), new(-10368.0f, 4608.0f, 0.0f)));
-                    area.AddCell(new(116, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_FILLER_A.cell"), new(-3456.0f, 13824.0f, 0.0f)));
-                    area.AddCell(new(84, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_C.cell"), new(-8064.0f, 2304.0f, 0.0f)));
-                    area.AddCell(new(108, Database.GetPrototypeId(Savage + "Dino_Jungle_C/Dino_Jungle_Village_B.cell"), new(-8064.0f, 11520.0f, 0.0f)));
-                    area.AddCell(new(102, Database.GetPrototypeId(Savage + "Dino_Jungle_C/Dino_Jungle_Village_A.cell"), new(-8064.0f, 9216.0f, 0.0f)));
-                    area.AddCell(new(107, Database.GetPrototypeId(Savage + "Dino_Jungle_C/Dino_Jungle_Village_C.cell"), new(-10368.0f, 11520.0f, 0.0f)));
-                    area.AddCell(new(97, Database.GetPrototypeId(Savage + "Dino_Jungle_C/Dino_Jungle_C_NESW_A.cell"), new(-5760.0f, 6912.0f, 0.0f)));
-                    area.AddCell(new(95, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_C.cell"), new(-10368.0f, 6912.0f, 0.0f)));
-                    area.AddCell(new(96, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_A.cell"), new(-8064.0f, 6912.0f, 0.0f)));
-                    area.AddCell(new(94, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_B.cell"), new(-12672.0f, 6912.0f, 0.0f)));
-                    area.AddCell(new(101, Database.GetPrototypeId(Savage + "Dino_Jungle_C/Dino_Jungle_Village_D.cell"), new(-10368.0f, 9216.0f, 0.0f)));
-                    area.AddCell(new(91, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_A.cell"), new(-5760.0f, 4608.0f, 0.0f)));
-                    area.AddCell(new(100, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_A.cell"), new(-12672.0f, 9216.0f, 0.0f)));
-                    area.AddCell(new(109, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESWdNE_A.cell"), new(-5760.0f, 11520.0f, 0.0f)));
-                    area.AddCell(new(113, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NSW_A.cell"), new(-10368.0f, 13824.0f, 0.0f)));
-                    area.AddCell(new(81, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, 2304.0f, 0.0f)));
-                    area.AddCell(new(112, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NSW_A.cell"), new(-12672.0f, 13824.0f, 0.0f)));
-                    area.AddCell(new(93, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, 6912.0f, 0.0f)));
-                    area.AddCell(new(87, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, 4608.0f, 0.0f)));
-                    area.AddCell(new(105, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, 11520.0f, 0.0f)));
-                    area.AddCell(new(99, Database.GetPrototypeId(Savage + "Dino_Jungle_C/Dino_Jungle_JeepWreck.cell"), new(-14976.0f, 9216.0f, 0.0f)));
-                    area.AddCell(new(111, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NW_A.cell"), new(-14976.0f, 13824.0f, 0.0f)));
-                    area.AddCell(new(86, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, 2304.0f, 0.0f)));
-                    area.AddCell(new(92, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, 4608.0f, 0.0f)));
-                    area.AddCell(new(98, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, 6912.0f, 0.0f)));
-                    area.AddCell(new(104, Database.GetPrototypeId(Savage + "Dino_Jungle_Trans/Dino_Jungle_DinoGrave_Entry.cell"), new(-3456.0f, 9216.0f, 0.0f)));
-                    area.AddCell(new(115, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_SW_A.cell"), new(-5760.0f, 13824.0f, 0.0f)));
-                    area.AddCell(new(110, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_SW_A.cell"), new(-3456.0f, 11520.0f, 0.0f)));
+                    area.AddCell(new(85, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_Trans/Dino_Jungle_NESW_Entry_A.cell"), new(-5760.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(103, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_A.cell"), new(-5760.0f, 9216.0f, 0.0f)));
+                    area.AddCell(new(82, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_B/Dino_Jungle_B_NESW_B.cell"), new(-12672.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(114, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NSW_A.cell"), new(-8064.0f, 13824.0f, 0.0f)));
+                    area.AddCell(new(90, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_B.cell"), new(-8064.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(106, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_B/Dino_Jungle_B_NESW_A.cell"), new(-12672.0f, 11520.0f, 0.0f)));
+                    area.AddCell(new(88, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_C.cell"), new(-12672.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(83, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_Trans/Dino_Jungle_SacredValley_Entry.cell"), new(-10368.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(89, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_C.cell"), new(-10368.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(116, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_FILLER_A.cell"), new(-3456.0f, 13824.0f, 0.0f)));
+                    area.AddCell(new(84, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_C.cell"), new(-8064.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(108, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_C/Dino_Jungle_Village_B.cell"), new(-8064.0f, 11520.0f, 0.0f)));
+                    area.AddCell(new(102, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_C/Dino_Jungle_Village_A.cell"), new(-8064.0f, 9216.0f, 0.0f)));
+                    area.AddCell(new(107, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_C/Dino_Jungle_Village_C.cell"), new(-10368.0f, 11520.0f, 0.0f)));
+                    area.AddCell(new(97, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_C/Dino_Jungle_C_NESW_A.cell"), new(-5760.0f, 6912.0f, 0.0f)));
+                    area.AddCell(new(95, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_C.cell"), new(-10368.0f, 6912.0f, 0.0f)));
+                    area.AddCell(new(96, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_A.cell"), new(-8064.0f, 6912.0f, 0.0f)));
+                    area.AddCell(new(94, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_B.cell"), new(-12672.0f, 6912.0f, 0.0f)));
+                    area.AddCell(new(101, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_C/Dino_Jungle_Village_D.cell"), new(-10368.0f, 9216.0f, 0.0f)));
+                    area.AddCell(new(91, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_A.cell"), new(-5760.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(100, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_A.cell"), new(-12672.0f, 9216.0f, 0.0f)));
+                    area.AddCell(new(109, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESWdNE_A.cell"), new(-5760.0f, 11520.0f, 0.0f)));
+                    area.AddCell(new(113, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NSW_A.cell"), new(-10368.0f, 13824.0f, 0.0f)));
+                    area.AddCell(new(81, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(112, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NSW_A.cell"), new(-12672.0f, 13824.0f, 0.0f)));
+                    area.AddCell(new(93, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, 6912.0f, 0.0f)));
+                    area.AddCell(new(87, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(105, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, 11520.0f, 0.0f)));
+                    area.AddCell(new(99, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_C/Dino_Jungle_JeepWreck.cell"), new(-14976.0f, 9216.0f, 0.0f)));
+                    area.AddCell(new(111, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NW_A.cell"), new(-14976.0f, 13824.0f, 0.0f)));
+                    area.AddCell(new(86, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(92, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(98, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, 6912.0f, 0.0f)));
+                    area.AddCell(new(104, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_Trans/Dino_Jungle_DinoGrave_Entry.cell"), new(-3456.0f, 9216.0f, 0.0f)));
+                    area.AddCell(new(115, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_SW_A.cell"), new(-5760.0f, 13824.0f, 0.0f)));
+                    area.AddCell(new(110, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_SW_A.cell"), new(-3456.0f, 11520.0f, 0.0f)));
                     region.AddArea(area);
 
-                    ulong fillerDino = Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_FILLER_A.cell");
+                    ulong fillerDino = GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_FILLER_A.cell");
                     
-                    area = new(24, (AreaPrototype)Database.GetPrototypeId("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
+                    area = new(24, (AreaPrototype)GameDatabase.GetPrototypeId("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
                     // 117 - 208
                     uint areaid = 117;
                     float y;
@@ -433,104 +433,104 @@ namespace MHServerEmu.GameServer.Regions
 
                     region.AddArea(area);
 
-                    area = new(2, (AreaPrototype)Database.GetPrototypeId("Regions/StoryRevamp/CH07SavageLand/Areas/TransitionAreas/RiverTransitionWestArea.prototype"), new(), false);
-                    area.AddCell(new(75, Database.GetPrototypeId(Savage + "Savagelands_Trans/Dino_Jungle_SuperRiver_F.cell"), new(-14976.0f, 0.0f, 0.0f)));
-                    area.AddCell(new(76, Database.GetPrototypeId(Savage + "Savagelands_Trans/Dino_Jungle_SuperRiver_E.cell"), new(-12672.0f, 0.0f, 0.0f)));
-                    area.AddCell(new(77, Database.GetPrototypeId(Savage + "Savagelands_Trans/Dino_Jungle_SuperRiver_B.cell"), new(-10368.0f, 0.0f, 0.0f)));
-                    area.AddCell(new(78, Database.GetPrototypeId(Savage + "Savagelands_Trans/Dino_Jungle_SuperRiver_E.cell"), new(-8064.0f, 0.0f, 0.0f)));
-                    area.AddCell(new(79, Database.GetPrototypeId(Savage + "Savagelands_Trans/Dino_Jungle_SuperRiver_C.cell"), new(-5760.0f, 0.0f, 0.0f)));
-                    area.AddCell(new(80, Database.GetPrototypeId(Savage + "Savagelands_Trans/Dino_Jungle_SuperRiver_A.cell"), new(-3456.0f, 0.0f, 0.0f)));
+                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH07SavageLand/Areas/TransitionAreas/RiverTransitionWestArea.prototype"), new(), false);
+                    area.AddCell(new(75, GameDatabase.GetPrototypeId(Savage + "Savagelands_Trans/Dino_Jungle_SuperRiver_F.cell"), new(-14976.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(76, GameDatabase.GetPrototypeId(Savage + "Savagelands_Trans/Dino_Jungle_SuperRiver_E.cell"), new(-12672.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(77, GameDatabase.GetPrototypeId(Savage + "Savagelands_Trans/Dino_Jungle_SuperRiver_B.cell"), new(-10368.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(78, GameDatabase.GetPrototypeId(Savage + "Savagelands_Trans/Dino_Jungle_SuperRiver_E.cell"), new(-8064.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(79, GameDatabase.GetPrototypeId(Savage + "Savagelands_Trans/Dino_Jungle_SuperRiver_C.cell"), new(-5760.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(80, GameDatabase.GetPrototypeId(Savage + "Savagelands_Trans/Dino_Jungle_SuperRiver_A.cell"), new(-3456.0f, 0.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(18, (AreaPrototype)Database.GetPrototypeId("Regions/StoryRevamp/CH07SavageLand/Areas/BroodJungle/BroodJungleArea.prototype"), new(), false);
-                    area.AddCell(new(90, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_B.cell"), new(-8064.0f, 4608.0f, 0.0f)));
-                    area.AddCell(new(65, Database.GetPrototypeId(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_3L3_B.cell"), new(-10368.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(49, Database.GetPrototypeId(Savage + "Brood_Jungle_Trans/Brood_Jungle_SCInstEntry.cell"), new(-5760.0f, -11520.0f, 0.0f)));
-                    area.AddCell(new(73, Database.GetPrototypeId(Savage + "Dino_Jungle_C/Dino_Jungle_MiniVillage.cell"), new(-5760.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(55, Database.GetPrototypeId(Savage + "Brood_Jungle_Trans/Brood_Jungle_SCStationEntry_A.cell"), new(-5760.0f, -9216.0f, 0.0f)));
-                    area.AddCell(new(71, Database.GetPrototypeId(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_1x2_B.cell"), new(-10368.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(70, Database.GetPrototypeId(Savage + "Brood_Jungle_C/Brood_Jungle_ScienceSpire.cell"), new(-12672.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(60, Database.GetPrototypeId(Savage + "Brood_Jungle_Trans/Jungle_Brood_Caves_Entry_A.cell"), new(-8064.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(58, Database.GetPrototypeId(Savage + "Brood_Jungle_Trans/Brood_Jungle_SHIELD_A.cell"), new(-12672.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(66, Database.GetPrototypeId(Savage + "Brood_Jungle_C/Brood_Jungle_C_NESW_A.cell"), new(-8064.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(64, Database.GetPrototypeId(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_3L3_C.cell"), new(-12672.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(48, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESWdSE_A.cell"), new(-8064.0f, -11520.0f, 0.0f)));
-                    area.AddCell(new(72, Database.GetPrototypeId(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_1x2_A.cell"), new(-8064.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(40, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NES_A.cell"), new(-12672.0f, -13824.0f, 0.0f)));
-                    area.AddCell(new(61, Database.GetPrototypeId(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_2x1_A.cell"), new(-5760.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(59, Database.GetPrototypeId(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_3L3_A.cell"), new(-10368.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(67, Database.GetPrototypeId(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_2x1_B.cell"), new(-5760.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(46, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESWdNE_A.cell"), new(-12672.0f, -11520.0f, 0.0f)));
-                    area.AddCell(new(47, Database.GetPrototypeId(Savage + "Brood_Jungle_Trans/Brood_Jungle_SCTowerEntry_A.cell"), new(-10368.0f, -11520.0f, 0.0f)));
-                    area.AddCell(new(54, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESWdSW_A.cell"), new(-8064.0f, -9216.0f, 0.0f)));
-                    area.AddCell(new(69, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(45, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, -11520.0f, 0.0f)));
-                    area.AddCell(new(63, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(51, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, -9216.0f, 0.0f)));
-                    area.AddCell(new(57, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(52, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESWdNW_A.cell"), new(-12672.0f, -9216.0f, 0.0f)));
-                    area.AddCell(new(50, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESWcN_A.cell"), new(-3456.0f, -11520.0f, 0.0f)));
-                    area.AddCell(new(74, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(42, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NES_A.cell"), new(-8064.0f, -13824.0f, 0.0f)));
-                    area.AddCell(new(56, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, -9216.0f, 0.0f)));
-                    area.AddCell(new(68, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(62, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(43, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NES_A.cell"), new(-5760.0f, -13824.0f, 0.0f)));
-                    area.AddCell(new(53, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NES_A.cell"), new(-10368.0f, -9216.0f, 0.0f)));
-                    area.AddCell(new(41, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NES_A.cell"), new(-10368.0f, -13824.0f, 0.0f)));
-                    area.AddCell(new(44, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_ES_A.cell"), new(-3456.0f, -13824.0f, 0.0f)));
-                    area.AddCell(new(39, Database.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NE_A.cell"), new(-14976.0f, -13824.0f, 0.0f)));
+                    area = new(18, (AreaPrototype)GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH07SavageLand/Areas/BroodJungle/BroodJungleArea.prototype"), new(), false);
+                    area.AddCell(new(90, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_B.cell"), new(-8064.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(65, GameDatabase.GetPrototypeId(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_3L3_B.cell"), new(-10368.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(49, GameDatabase.GetPrototypeId(Savage + "Brood_Jungle_Trans/Brood_Jungle_SCInstEntry.cell"), new(-5760.0f, -11520.0f, 0.0f)));
+                    area.AddCell(new(73, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_C/Dino_Jungle_MiniVillage.cell"), new(-5760.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(55, GameDatabase.GetPrototypeId(Savage + "Brood_Jungle_Trans/Brood_Jungle_SCStationEntry_A.cell"), new(-5760.0f, -9216.0f, 0.0f)));
+                    area.AddCell(new(71, GameDatabase.GetPrototypeId(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_1x2_B.cell"), new(-10368.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(70, GameDatabase.GetPrototypeId(Savage + "Brood_Jungle_C/Brood_Jungle_ScienceSpire.cell"), new(-12672.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(60, GameDatabase.GetPrototypeId(Savage + "Brood_Jungle_Trans/Jungle_Brood_Caves_Entry_A.cell"), new(-8064.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(58, GameDatabase.GetPrototypeId(Savage + "Brood_Jungle_Trans/Brood_Jungle_SHIELD_A.cell"), new(-12672.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(66, GameDatabase.GetPrototypeId(Savage + "Brood_Jungle_C/Brood_Jungle_C_NESW_A.cell"), new(-8064.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(64, GameDatabase.GetPrototypeId(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_3L3_C.cell"), new(-12672.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(48, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESWdSE_A.cell"), new(-8064.0f, -11520.0f, 0.0f)));
+                    area.AddCell(new(72, GameDatabase.GetPrototypeId(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_1x2_A.cell"), new(-8064.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(40, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NES_A.cell"), new(-12672.0f, -13824.0f, 0.0f)));
+                    area.AddCell(new(61, GameDatabase.GetPrototypeId(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_2x1_A.cell"), new(-5760.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(59, GameDatabase.GetPrototypeId(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_3L3_A.cell"), new(-10368.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(67, GameDatabase.GetPrototypeId(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_2x1_B.cell"), new(-5760.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(46, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESWdNE_A.cell"), new(-12672.0f, -11520.0f, 0.0f)));
+                    area.AddCell(new(47, GameDatabase.GetPrototypeId(Savage + "Brood_Jungle_Trans/Brood_Jungle_SCTowerEntry_A.cell"), new(-10368.0f, -11520.0f, 0.0f)));
+                    area.AddCell(new(54, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESWdSW_A.cell"), new(-8064.0f, -9216.0f, 0.0f)));
+                    area.AddCell(new(69, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(45, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, -11520.0f, 0.0f)));
+                    area.AddCell(new(63, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(51, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, -9216.0f, 0.0f)));
+                    area.AddCell(new(57, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(52, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESWdNW_A.cell"), new(-12672.0f, -9216.0f, 0.0f)));
+                    area.AddCell(new(50, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESWcN_A.cell"), new(-3456.0f, -11520.0f, 0.0f)));
+                    area.AddCell(new(74, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(42, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NES_A.cell"), new(-8064.0f, -13824.0f, 0.0f)));
+                    area.AddCell(new(56, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, -9216.0f, 0.0f)));
+                    area.AddCell(new(68, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(62, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(43, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NES_A.cell"), new(-5760.0f, -13824.0f, 0.0f)));
+                    area.AddCell(new(53, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NES_A.cell"), new(-10368.0f, -9216.0f, 0.0f)));
+                    area.AddCell(new(41, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NES_A.cell"), new(-10368.0f, -13824.0f, 0.0f)));
+                    area.AddCell(new(44, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_ES_A.cell"), new(-3456.0f, -13824.0f, 0.0f)));
+                    area.AddCell(new(39, GameDatabase.GetPrototypeId(Savage + "Dino_Jungle_A/Dino_Jungle_A_NE_A.cell"), new(-14976.0f, -13824.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(21, (AreaPrototype)Database.GetPrototypeId("Regions/StoryRevamp/CH07SavageLand/Areas/TransitionAreas/RopeBridgeNorthArea.prototype"), new(), false);
-                    area.AddCell(new(38, Database.GetPrototypeId(Savage + "RopeBridge_Trans/RopeBridge_NS_A.cell"), new(-1152.0f, -11520.0f, 0.0f)));
+                    area = new(21, (AreaPrototype)GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH07SavageLand/Areas/TransitionAreas/RopeBridgeNorthArea.prototype"), new(), false);
+                    area.AddCell(new(38, GameDatabase.GetPrototypeId(Savage + "RopeBridge_Trans/RopeBridge_NS_A.cell"), new(-1152.0f, -11520.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(22, (AreaPrototype)Database.GetPrototypeId("Regions/StoryRevamp/CH07SavageLand/Areas/TransitionAreas/JungleToMarshSN.prototype"), new(), false);
-                    area.AddCell(new(37, Database.GetPrototypeId(Savage + "Savagelands_Trans/JungleToMarsh_Trans_SN_A.cell"), new(1152.0f, -11520.0f, 0.0f)));
+                    area = new(22, (AreaPrototype)GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH07SavageLand/Areas/TransitionAreas/JungleToMarshSN.prototype"), new(), false);
+                    area.AddCell(new(37, GameDatabase.GetPrototypeId(Savage + "Savagelands_Trans/JungleToMarsh_Trans_SN_A.cell"), new(1152.0f, -11520.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(23, (AreaPrototype)Database.GetPrototypeId("Regions/StoryRevamp/CH07SavageLand/Areas/MutateMarsh/MutateMarshArea.prototype"), new(), false);
-                    area.AddCell(new(20, Database.GetPrototypeId(Savage + "Marsh_C/Marsh_C_NESW_Island_1x1.cell"), new(5760.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(11, Database.GetPrototypeId(Savage + "Marsh_B/Marsh_B_NESW_A.cell"), new(12672.0f, -11520.0f, 0.0f)));
-                    area.AddCell(new(27, Database.GetPrototypeId(Savage + "Marsh_C/Marsh_C_NESW_B.cell"), new(8064.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(15, Database.GetPrototypeId(Savage + "Marsh_Trans/Marsh_NESW_SabretoothEntry_A.cell"), new(8064.0f, -9216.0f, 0.0f)));
-                    area.AddCell(new(16, Database.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NESW_B.cell"), new(10368.0f, -9216.0f, 0.0f)));
-                    area.AddCell(new(8, Database.GetPrototypeId(Savage + "Marsh_B/Marsh_B_NESW_B.cell"), new(5760.0f, -11520.0f, 0.0f)));
-                    area.AddCell(new(10, Database.GetPrototypeId(Savage + "Marsh_Trans/Marsh_Mutate_Caves_Entry_A.cell"), new(10368.0f, -11520.0f, 0.0f)));
-                    area.AddCell(new(26, Database.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NESW_A.cell"), new(5760.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(21, Database.GetPrototypeId(Savage + "Marsh_C/Marsh_C_NESW_Island_1x2_B.cell"), new(8064.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(22, Database.GetPrototypeId(Savage + "Marsh_C/Marsh_C_NESW_Island_1x2_A.cell"), new(10368.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(14, Database.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NESW_C.cell"), new(5760.0f, -9216.0f, 0.0f)));
-                    area.AddCell(new(17, Database.GetPrototypeId(Savage + "Marsh_C/Marsh_C_NESW_Island_A.cell"), new(12672.0f, -9216.0f, 0.0f)));
-                    area.AddCell(new(23, Database.GetPrototypeId(Savage + "Marsh_C/Marsh_C_NESW_Island_B.cell"), new(12672.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(9, Database.GetPrototypeId(Savage + "Marsh_B/Marsh_B_NESW_C.cell"), new(8064.0f, -11520.0f, 0.0f)));
-                    area.AddCell(new(29, Database.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NESW_C.cell"), new(12672.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(28, Database.GetPrototypeId(Savage + "Marsh_C/Marsh_C_NESW_A.cell"), new(10368.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(33, Database.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NSW_A.cell"), new(8064.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(35, Database.GetPrototypeId(Savage + "Marsh_Trans/Marsh_NSW_SCInstEntry.cell"), new(12672.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(34, Database.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NSW_A.cell"), new(10368.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(2, Database.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NES_A.cell"), new(5760.0f, -13824.0f, 0.0f)));
-                    area.AddCell(new(32, Database.GetPrototypeId(Savage + "Marsh_Trans/Marsh_NSW_SCInstEntry_B.cell"), new(5760.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(7, Database.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NESWcS_A.cell"), new(3456.0f, -11520.0f, 0.0f)));
-                    area.AddCell(new(19, Database.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NEW_A.cell"), new(3456.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(25, Database.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NEW_A.cell"), new(3456.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(13, Database.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NEW_A.cell"), new(3456.0f, -9216.0f, 0.0f)));
-                    area.AddCell(new(31, Database.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NW_A.cell"), new(3456.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(18, Database.GetPrototypeId(Savage + "Marsh_A/Marsh_A_ESW_A.cell"), new(14976.0f, -9216.0f, 0.0f)));
-                    area.AddCell(new(30, Database.GetPrototypeId(Savage + "Marsh_A/Marsh_A_ESW_A.cell"), new(14976.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(24, Database.GetPrototypeId(Savage + "Marsh_A/Marsh_A_ESW_A.cell"), new(14976.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(12, Database.GetPrototypeId(Savage + "Marsh_Trans/Marsh_ESW_SCInstEntry.cell"), new(14976.0f, -11520.0f, 0.0f)));
-                    area.AddCell(new(36, Database.GetPrototypeId(Savage + "Marsh_A/Marsh_A_SW_A.cell"), new(14976.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(5, Database.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NES_A.cell"), new(12672.0f, -13824.0f, 0.0f)));
-                    area.AddCell(new(4, Database.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NES_A.cell"), new(10368.0f, -13824.0f, 0.0f)));
-                    area.AddCell(new(3, Database.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NES_A.cell"), new(8064.0f, -13824.0f, 0.0f)));
-                    area.AddCell(new(6, Database.GetPrototypeId(Savage + "Marsh_A/Marsh_A_ES_A.cell"), new(14976.0f, -13824.0f, 0.0f)));
-                    area.AddCell(new(1, Database.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NE_A.cell"), new(3456.0f, -13824.0f, 0.0f)));
+                    area = new(23, (AreaPrototype)GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH07SavageLand/Areas/MutateMarsh/MutateMarshArea.prototype"), new(), false);
+                    area.AddCell(new(20, GameDatabase.GetPrototypeId(Savage + "Marsh_C/Marsh_C_NESW_Island_1x1.cell"), new(5760.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(11, GameDatabase.GetPrototypeId(Savage + "Marsh_B/Marsh_B_NESW_A.cell"), new(12672.0f, -11520.0f, 0.0f)));
+                    area.AddCell(new(27, GameDatabase.GetPrototypeId(Savage + "Marsh_C/Marsh_C_NESW_B.cell"), new(8064.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(15, GameDatabase.GetPrototypeId(Savage + "Marsh_Trans/Marsh_NESW_SabretoothEntry_A.cell"), new(8064.0f, -9216.0f, 0.0f)));
+                    area.AddCell(new(16, GameDatabase.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NESW_B.cell"), new(10368.0f, -9216.0f, 0.0f)));
+                    area.AddCell(new(8, GameDatabase.GetPrototypeId(Savage + "Marsh_B/Marsh_B_NESW_B.cell"), new(5760.0f, -11520.0f, 0.0f)));
+                    area.AddCell(new(10, GameDatabase.GetPrototypeId(Savage + "Marsh_Trans/Marsh_Mutate_Caves_Entry_A.cell"), new(10368.0f, -11520.0f, 0.0f)));
+                    area.AddCell(new(26, GameDatabase.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NESW_A.cell"), new(5760.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(21, GameDatabase.GetPrototypeId(Savage + "Marsh_C/Marsh_C_NESW_Island_1x2_B.cell"), new(8064.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(22, GameDatabase.GetPrototypeId(Savage + "Marsh_C/Marsh_C_NESW_Island_1x2_A.cell"), new(10368.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(14, GameDatabase.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NESW_C.cell"), new(5760.0f, -9216.0f, 0.0f)));
+                    area.AddCell(new(17, GameDatabase.GetPrototypeId(Savage + "Marsh_C/Marsh_C_NESW_Island_A.cell"), new(12672.0f, -9216.0f, 0.0f)));
+                    area.AddCell(new(23, GameDatabase.GetPrototypeId(Savage + "Marsh_C/Marsh_C_NESW_Island_B.cell"), new(12672.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(9, GameDatabase.GetPrototypeId(Savage + "Marsh_B/Marsh_B_NESW_C.cell"), new(8064.0f, -11520.0f, 0.0f)));
+                    area.AddCell(new(29, GameDatabase.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NESW_C.cell"), new(12672.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(28, GameDatabase.GetPrototypeId(Savage + "Marsh_C/Marsh_C_NESW_A.cell"), new(10368.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(33, GameDatabase.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NSW_A.cell"), new(8064.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(35, GameDatabase.GetPrototypeId(Savage + "Marsh_Trans/Marsh_NSW_SCInstEntry.cell"), new(12672.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(34, GameDatabase.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NSW_A.cell"), new(10368.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(2, GameDatabase.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NES_A.cell"), new(5760.0f, -13824.0f, 0.0f)));
+                    area.AddCell(new(32, GameDatabase.GetPrototypeId(Savage + "Marsh_Trans/Marsh_NSW_SCInstEntry_B.cell"), new(5760.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(7, GameDatabase.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NESWcS_A.cell"), new(3456.0f, -11520.0f, 0.0f)));
+                    area.AddCell(new(19, GameDatabase.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NEW_A.cell"), new(3456.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(25, GameDatabase.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NEW_A.cell"), new(3456.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(13, GameDatabase.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NEW_A.cell"), new(3456.0f, -9216.0f, 0.0f)));
+                    area.AddCell(new(31, GameDatabase.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NW_A.cell"), new(3456.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(18, GameDatabase.GetPrototypeId(Savage + "Marsh_A/Marsh_A_ESW_A.cell"), new(14976.0f, -9216.0f, 0.0f)));
+                    area.AddCell(new(30, GameDatabase.GetPrototypeId(Savage + "Marsh_A/Marsh_A_ESW_A.cell"), new(14976.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(24, GameDatabase.GetPrototypeId(Savage + "Marsh_A/Marsh_A_ESW_A.cell"), new(14976.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(12, GameDatabase.GetPrototypeId(Savage + "Marsh_Trans/Marsh_ESW_SCInstEntry.cell"), new(14976.0f, -11520.0f, 0.0f)));
+                    area.AddCell(new(36, GameDatabase.GetPrototypeId(Savage + "Marsh_A/Marsh_A_SW_A.cell"), new(14976.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(5, GameDatabase.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NES_A.cell"), new(12672.0f, -13824.0f, 0.0f)));
+                    area.AddCell(new(4, GameDatabase.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NES_A.cell"), new(10368.0f, -13824.0f, 0.0f)));
+                    area.AddCell(new(3, GameDatabase.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NES_A.cell"), new(8064.0f, -13824.0f, 0.0f)));
+                    area.AddCell(new(6, GameDatabase.GetPrototypeId(Savage + "Marsh_A/Marsh_A_ES_A.cell"), new(14976.0f, -13824.0f, 0.0f)));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeId(Savage + "Marsh_A/Marsh_A_NE_A.cell"), new(3456.0f, -13824.0f, 0.0f)));
                     region.AddArea(area);
 
-                    ulong fillerMarch = Database.GetPrototypeId(Savage + "Marsh_A/Marsh_A_FILLER_A.cell");
-                    area = new(25, (AreaPrototype)Database.GetPrototypeId("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
+                    ulong fillerMarch = GameDatabase.GetPrototypeId(Savage + "Marsh_A/Marsh_A_FILLER_A.cell");
+                    area = new(25, (AreaPrototype)GameDatabase.GetPrototypeId("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
                    
                     areaid = 209;
                     for (uint i = 0; i < 6; i++)
@@ -570,30 +570,30 @@ namespace MHServerEmu.GameServer.Regions
                         new(11, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototype.DailyGSubwayFactoryGen1Area, new(-3456.5f, -7424f, 0f), true);
-                    area.AddCell(new(13, Database.GetPrototypeId("Resource/Cells/EndGame/DangerDailies/ShockerSubway/Daily_ShockerSubway_A_E_A.cell"), new()));
+                    area.AddCell(new(13, GameDatabase.GetPrototypeId("Resource/Cells/EndGame/DangerDailies/ShockerSubway/Daily_ShockerSubway_A_E_A.cell"), new()));
                     region.AddArea(area);
 
                     area = new(2, AreaPrototype.DailyGSubwayFactoryGen1Area, new(-3456.5f, -3072.001f, 0f), false);
-                    area.AddCell(new(12, Database.GetPrototypeId("Resource/Cells/Hells_Kitchen_01/ShockerSubway/ShockerSubway_A/ShockerSubway_A_NW_A.cell"), new()));
+                    area.AddCell(new(12, GameDatabase.GetPrototypeId("Resource/Cells/Hells_Kitchen_01/ShockerSubway/ShockerSubway_A/ShockerSubway_A_NW_A.cell"), new()));
                     region.AddArea(area);
 
                     area = new(3, AreaPrototype.DailyGSubwayFactoryGen1Area, new(-128.5f, -3072.001f, 0f), false);
-                    area.AddCell(new(8, Database.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_NES_A.cell"), new()));
-                    area.AddCell(new(9, Database.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_B/Factory_B_ES_A.cell"), new(2304f, 0f, 0f)));
-                    area.AddCell(new(11, Database.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_ESW_A.cell"), new(2304f, 2304f, 0f)));
+                    area.AddCell(new(8, GameDatabase.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_NES_A.cell"), new()));
+                    area.AddCell(new(9, GameDatabase.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_B/Factory_B_ES_A.cell"), new(2304f, 0f, 0f)));
+                    area.AddCell(new(11, GameDatabase.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_ESW_A.cell"), new(2304f, 2304f, 0f)));
                     region.AddArea(area);
 
                     area = new(4, AreaPrototype.DailyGSubwayFactoryGen1Area, new(2175.5f, 1535.999f, 0f), false);
-                    area.AddCell(new(2, Database.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_NEW_A.cell"), new()));
-                    area.AddCell(new(3, Database.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_S_A.cell"), new(2304f, 0f, 0f)));
-                    area.AddCell(new(4, Database.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_EW_A.cell"), new(0f, 2304f, 0f)));
-                    area.AddCell(new(7, Database.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_FILLER_A.cell"), new(2304f, 2304f, 0f)));
-                    area.AddCell(new(5, Database.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_B/Factory_B_NW_A.cell"), new(0f, 4608f, 0f)));
-                    area.AddCell(new(6, Database.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_B/Factory_B_ES_A.cell"), new(2304f, 4608f, 0f)));
+                    area.AddCell(new(2, GameDatabase.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_NEW_A.cell"), new()));
+                    area.AddCell(new(3, GameDatabase.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_S_A.cell"), new(2304f, 0f, 0f)));
+                    area.AddCell(new(4, GameDatabase.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_EW_A.cell"), new(0f, 2304f, 0f)));
+                    area.AddCell(new(7, GameDatabase.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_FILLER_A.cell"), new(2304f, 2304f, 0f)));
+                    area.AddCell(new(5, GameDatabase.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_B/Factory_B_NW_A.cell"), new(0f, 4608f, 0f)));
+                    area.AddCell(new(6, GameDatabase.GetPrototypeId("Resource/Cells/ReuseableInstances/Factory_B/Factory_B_ES_A.cell"), new(2304f, 4608f, 0f)));
                     region.AddArea(area);
 
                     area = new(5, AreaPrototype.DailyGSubwayFactoryGen1Area, new(4480.5044f, 8448f, 0f), false);
-                    area.AddCell(new(1, Database.GetPrototypeId("Resource/Cells/EndGame/DangerDailies/ShockerSubway/Daily_Shocker_Boss_A.cell"), new()));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeId("Resource/Cells/EndGame/DangerDailies/ShockerSubway/Daily_Shocker_Boss_A.cell"), new()));
                     region.AddArea(area);
 
                     region.EntrancePosition = new(-3376.5f, -8016f, 56f);
@@ -616,45 +616,45 @@ namespace MHServerEmu.GameServer.Regions
 
                     string Rzoo = "Resource/Cells/Bronx_Zoo/";
                     
-                    area = new(1, (AreaPrototype) Database.GetPrototypeId("Regions/EndGame/OneShotMissions/NonChapterBound/BronxZoo/ZooAreas/ZooArea1SN.prototype"), new(), true);
+                    area = new(1, (AreaPrototype) GameDatabase.GetPrototypeId("Regions/EndGame/OneShotMissions/NonChapterBound/BronxZoo/ZooAreas/ZooArea1SN.prototype"), new(), true);
 
-                    area.AddCell(new(24, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_NE_Entry_A.cell"), new(-1024.0f, -7488.0f, 0.0f)));
-                    area.AddCell(new(9, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_NEW_Entry_A.cell"), new(-1024.0f, -5184.0f, 0.0f)));
-                    area.AddCell(new(13, Database.GetPrototypeId(Rzoo+ "Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NEW_A.cell"), new(-1024.0f, -2880.0f, 0.0f))); // Bronx_Zoo_A/Bronx_Zoo_A_NEW_B.cell
-                    area.AddCell(new(14, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_TR_Stadium_Entry_A.cell"), new(-1024.0f, -576.0f, 0.0f)));
-                    area.AddCell(new(22, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_NES_Entry_A.cell"), new(1280.0f, -7488.0f, 0.0f)));
-                    area.AddCell(new(3, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_NESW_Attractions_A/Bronx_Zoo_FoodCourt_NESW_A.cell"), new(1280.0f, -5184.0f, 0.0f)));
-                    area.AddCell(new(5, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_NESW_Attractions_A/Bronx_Zoo_Carousel_NESW_A.cell"), new(1280.0f, -2880.0f, 0.0f)));
-                    area.AddCell(new(11, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NSW_B.cell"), new(1280.0f, -576.0f, 0.0f)));
+                    area.AddCell(new(24, GameDatabase.GetPrototypeId(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_NE_Entry_A.cell"), new(-1024.0f, -7488.0f, 0.0f)));
+                    area.AddCell(new(9, GameDatabase.GetPrototypeId(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_NEW_Entry_A.cell"), new(-1024.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(13, GameDatabase.GetPrototypeId(Rzoo+ "Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NEW_A.cell"), new(-1024.0f, -2880.0f, 0.0f))); // Bronx_Zoo_A/Bronx_Zoo_A_NEW_B.cell
+                    area.AddCell(new(14, GameDatabase.GetPrototypeId(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_TR_Stadium_Entry_A.cell"), new(-1024.0f, -576.0f, 0.0f)));
+                    area.AddCell(new(22, GameDatabase.GetPrototypeId(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_NES_Entry_A.cell"), new(1280.0f, -7488.0f, 0.0f)));
+                    area.AddCell(new(3, GameDatabase.GetPrototypeId(Rzoo+"Bronx_Zoo_NESW_Attractions_A/Bronx_Zoo_FoodCourt_NESW_A.cell"), new(1280.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(5, GameDatabase.GetPrototypeId(Rzoo+"Bronx_Zoo_NESW_Attractions_A/Bronx_Zoo_Carousel_NESW_A.cell"), new(1280.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(11, GameDatabase.GetPrototypeId(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NSW_B.cell"), new(1280.0f, -576.0f, 0.0f)));
 
-                    area.AddCell(new(19, Database.GetPrototypeId(Rzoo+ "Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NES_A.cell"), new(3584.0f, -7488.0f, 0.0f)));//Bronx_Zoo_A/Bronx_Zoo_A_NES_B.cell
-                    area.AddCell(new(21, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NES_A.cell"), new(5888.0f, -7488.0f, 0.0f)));
-                    area.AddCell(new(20, Database.GetPrototypeId(Rzoo+ "Bronx_Zoo_A/Bronx_Zoo_A_NES_B.cell"), new(8192.0f, -7488.0f, 0.0f)));//Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NES_A.cell
-                    area.AddCell(new(23, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_TR_Employee_Entry_A.cell"), new(10496.0f, -7488.0f, 0.0f)));  
+                    area.AddCell(new(19, GameDatabase.GetPrototypeId(Rzoo+ "Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NES_A.cell"), new(3584.0f, -7488.0f, 0.0f)));//Bronx_Zoo_A/Bronx_Zoo_A_NES_B.cell
+                    area.AddCell(new(21, GameDatabase.GetPrototypeId(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NES_A.cell"), new(5888.0f, -7488.0f, 0.0f)));
+                    area.AddCell(new(20, GameDatabase.GetPrototypeId(Rzoo+ "Bronx_Zoo_A/Bronx_Zoo_A_NES_B.cell"), new(8192.0f, -7488.0f, 0.0f)));//Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NES_A.cell
+                    area.AddCell(new(23, GameDatabase.GetPrototypeId(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_TR_Employee_Entry_A.cell"), new(10496.0f, -7488.0f, 0.0f)));  
 
-                    area.AddCell(new(1, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NESW_A.cell"), new(8192.0f, -2880.0f, 0.0f)));
-                    area.AddCell(new(4, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_NESW_Attractions_A/Bronx_Zoo_Theater_NESW_A.cell"), new(8192.0f, -5184.0f, 0.0f)));                    
-                    area.AddCell(new(6, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NSW_A.cell"), new(5888.0f, -576.0f, 0.0f)));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeId(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NESW_A.cell"), new(8192.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(4, GameDatabase.GetPrototypeId(Rzoo+"Bronx_Zoo_NESW_Attractions_A/Bronx_Zoo_Theater_NESW_A.cell"), new(8192.0f, -5184.0f, 0.0f)));                    
+                    area.AddCell(new(6, GameDatabase.GetPrototypeId(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NSW_A.cell"), new(5888.0f, -576.0f, 0.0f)));
 
-                    area.AddCell(new(7, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_TopLeft_A.cell"), new(5888.0f, -5184.0f, 0.0f)));
-                    area.AddCell(new(12, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_TopRight_A.cell"), new(5888.0f, -2880.0f, 0.0f)));
-                    area.AddCell(new(2, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_BotLeft_A.cell"), new(3584.0f, -5184.0f, 0.0f)));                    
-                    area.AddCell(new(15, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_BotRight_A.cell"), new(3584.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(7, GameDatabase.GetPrototypeId(Rzoo+"Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_TopLeft_A.cell"), new(5888.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(12, GameDatabase.GetPrototypeId(Rzoo+"Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_TopRight_A.cell"), new(5888.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(2, GameDatabase.GetPrototypeId(Rzoo+"Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_BotLeft_A.cell"), new(3584.0f, -5184.0f, 0.0f)));                    
+                    area.AddCell(new(15, GameDatabase.GetPrototypeId(Rzoo+"Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_BotRight_A.cell"), new(3584.0f, -2880.0f, 0.0f)));
                     
-                    area.AddCell(new(8, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NSW_B.cell"), new(8192.0f, -576.0f, 0.0f)));                 
-                    area.AddCell(new(10, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NSW_A.cell"), new(3584.0f, -576.0f, 0.0f)));                    
+                    area.AddCell(new(8, GameDatabase.GetPrototypeId(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NSW_B.cell"), new(8192.0f, -576.0f, 0.0f)));                 
+                    area.AddCell(new(10, GameDatabase.GetPrototypeId(Rzoo+"Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NSW_A.cell"), new(3584.0f, -576.0f, 0.0f)));                    
                                         
-                    area.AddCell(new(16, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NESWcN_A.cell"), new(10496.0f, -5184.0f, 0.0f))); 
-                    area.AddCell(new(17, Database.GetPrototypeId(Rzoo+ "Bronx_Zoo_A/Bronx_Zoo_A_NESWdNE_A.cell"), new(10496.0f, -2880.0f, 0.0f))); // Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_ESW_A
-                    area.AddCell(new(18, Database.GetPrototypeId(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_TR_Aquarium_Entry_A.cell"), new(10496.0f, -576.0f, 0.0f)));
+                    area.AddCell(new(16, GameDatabase.GetPrototypeId(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NESWcN_A.cell"), new(10496.0f, -5184.0f, 0.0f))); 
+                    area.AddCell(new(17, GameDatabase.GetPrototypeId(Rzoo+ "Bronx_Zoo_A/Bronx_Zoo_A_NESWdNE_A.cell"), new(10496.0f, -2880.0f, 0.0f))); // Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_ESW_A
+                    area.AddCell(new(18, GameDatabase.GetPrototypeId(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_TR_Aquarium_Entry_A.cell"), new(10496.0f, -576.0f, 0.0f)));
                   
                     region.AddArea(area);
 
-                    ulong filler = Database.GetPrototypeId(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_FILLER_A.cell");
+                    ulong filler = GameDatabase.GetPrototypeId(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_FILLER_A.cell");
 
                     // fillers for ZooArea1SN
 
-                    area = new(10, (AreaPrototype)Database.GetPrototypeId("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
+                    area = new(10, (AreaPrototype)GameDatabase.GetPrototypeId("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
                     area.AddCell(new(201, filler, new(-1024.0f, -9792.0f, 0.0f)));
                     area.AddCell(new(202, filler, new(10496.0f, 1728.0f, 0.0f)));
                     area.AddCell(new(203, filler, new(1280.0f, -9792.0f, 0.0f)));
@@ -678,21 +678,21 @@ namespace MHServerEmu.GameServer.Regions
                     area.AddCell(new(221, filler, new(-3328.0f, -9792.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(2, (AreaPrototype) Database.GetPrototypeId("Regions/EndGame/OneShotMissions/NonChapterBound/BronxZoo/ZooAreas/ZooArea2.prototype"), new(), false);
-                    area.AddCell(new(122, Database.GetPrototypeId(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_CagedCivisMission_A.cell"), new(15104.0f, -5184.0f, 0.0f)));
-                    area.AddCell(new(125, Database.GetPrototypeId(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_NSW_JungleExit_A.cell"), new(15104.0f, -2880.0f, 0.0f)));
-                    area.AddCell(new(121, Database.GetPrototypeId(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_NESWcS_A.cell"), new(12800.0f, -5184.0f, 0.0f)));
-                    area.AddCell(new(124, Database.GetPrototypeId(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_NW_JungleExit_A.cell"), new(12800.0f, -2880.0f, 0.0f)));
-                    area.AddCell(new(123, Database.GetPrototypeId(Rzoo + "Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_ESW_A.cell"), new(17408.0f, -5184.0f, 0.0f)));
-                    area.AddCell(new(126, Database.GetPrototypeId(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_SW_JungleExit_A.cell"), new(17408.0f, -2880.0f, 0.0f)));
-                    area.AddCell(new(119, Database.GetPrototypeId(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_NES_B.cell"), new(15104.0f, -7488.0f, 0.0f))); // Bronx_Zoo_A/Bronx_Zoo_A_NES_B.cell
-                    area.AddCell(new(120, Database.GetPrototypeId(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_ES_A.cell"), new(17408.0f, -7488.0f, 0.0f)));
-                    area.AddCell(new(118, Database.GetPrototypeId(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_NE_A.cell"), new(12800.0f, -7488.0f, 0.0f)));
+                    area = new(2, (AreaPrototype) GameDatabase.GetPrototypeId("Regions/EndGame/OneShotMissions/NonChapterBound/BronxZoo/ZooAreas/ZooArea2.prototype"), new(), false);
+                    area.AddCell(new(122, GameDatabase.GetPrototypeId(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_CagedCivisMission_A.cell"), new(15104.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(125, GameDatabase.GetPrototypeId(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_NSW_JungleExit_A.cell"), new(15104.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(121, GameDatabase.GetPrototypeId(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_NESWcS_A.cell"), new(12800.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(124, GameDatabase.GetPrototypeId(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_NW_JungleExit_A.cell"), new(12800.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(123, GameDatabase.GetPrototypeId(Rzoo + "Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_ESW_A.cell"), new(17408.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(126, GameDatabase.GetPrototypeId(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_SW_JungleExit_A.cell"), new(17408.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(119, GameDatabase.GetPrototypeId(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_NES_B.cell"), new(15104.0f, -7488.0f, 0.0f))); // Bronx_Zoo_A/Bronx_Zoo_A_NES_B.cell
+                    area.AddCell(new(120, GameDatabase.GetPrototypeId(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_ES_A.cell"), new(17408.0f, -7488.0f, 0.0f)));
+                    area.AddCell(new(118, GameDatabase.GetPrototypeId(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_NE_A.cell"), new(12800.0f, -7488.0f, 0.0f)));
                     region.AddArea(area);
 
                     // fillers for ZooArea2
 
-                    area = new(11, (AreaPrototype) Database.GetPrototypeId("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
+                    area = new(11, (AreaPrototype) GameDatabase.GetPrototypeId("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
                     area.AddCell(new(222, filler, new(17408.0f, -576.0f, 0.0f)));
                     area.AddCell(new(223, filler, new(15104.0f, -9792.0f, 0.0f)));
                     area.AddCell(new(224, filler, new(15104.0f, -576.0f, 0.0f)));
@@ -729,7 +729,7 @@ namespace MHServerEmu.GameServer.Regions
 
                     district = Resource.DistrictDict["Resource/Districts/MidtownStatic/MidtownStatic_A.district"];
                     for (int i = 0; i < district.Cells.Length; i++)
-                        area.AddCell(new((uint)i + 1, Database.GetPrototypeId(district.Cells[i].Name), new()));
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeId(district.Cells[i].Name), new()));
 
                     region.AddArea(area);
 
@@ -904,7 +904,7 @@ namespace MHServerEmu.GameServer.Regions
 
                     district = Resource.DistrictDict["Resource/Districts/MidtownStatic/MidtownStatic_A.district"];
                     for (int i = 0; i < district.Cells.Length; i++)
-                        area.AddCell(new((uint)i + 1, Database.GetPrototypeId(district.Cells[i].Name), new()));
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeId(district.Cells[i].Name), new()));
 
                     region.AddArea(area);
 

@@ -11,7 +11,7 @@ namespace MHServerEmu.GameServer.Common
 
         public ulong Id { get; set; }
         public ulong Value { get; set; }
-        public PropertyInfo Info { get => Database.PropertyInfos[_propertyInfoIndex]; }
+        public PropertyInfo Info { get => GameDatabase.PropertyInfos[_propertyInfoIndex]; }
 
         public Property(CodedInputStream stream)
         {
@@ -52,7 +52,7 @@ namespace MHServerEmu.GameServer.Common
             {
                 streamWriter.WriteLine($"Id: 0x{Id.ToString("X")}");
                 streamWriter.WriteLine($"Value: 0x{Value.ToString("X")}");
-                streamWriter.WriteLine($"PropertyInfo: {Database.PropertyInfos[_propertyInfoIndex]}");
+                streamWriter.WriteLine($"PropertyInfo: {GameDatabase.PropertyInfos[_propertyInfoIndex]}");
                 streamWriter.Flush();
 
                 return Encoding.UTF8.GetString(memoryStream.ToArray());

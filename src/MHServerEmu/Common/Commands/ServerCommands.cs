@@ -42,18 +42,18 @@ namespace MHServerEmu.Common.Commands
             {
                 if (@params[0] == "entries")
                 {
-                    Database.ExportGpakEntries();
+                    GameDatabase.ExportGpakEntries();
                     return "Finished exporting GPAK entries";
                 }
                 else if (@params[0] == "data")
                 {
-                    Database.ExportGpakData();
+                    GameDatabase.ExportGpakData();
                     return "Finished exporting GPAK data";
                 }
                 else if (@params[0] == "all")
                 {
-                    Database.ExportGpakEntries();
-                    Database.ExportGpakData();
+                    GameDatabase.ExportGpakEntries();
+                    GameDatabase.ExportGpakData();
                     return "Finished exporting GPAK entries and data";
                 }
             }

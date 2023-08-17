@@ -165,9 +165,9 @@ namespace MHServerEmu.GameServer.Regions
                         {
                             if (property.Info.Name == "CostumeCurrent" && ConfigManager.PlayerData.CostumeOverride != 0)
                             {
-                                for (int i = 0; i < Database.GlobalEnumRefTable.Length; i++)
+                                for (int i = 0; i < GameDatabase.GlobalEnumRefTable.Length; i++)
                                 {
-                                    if (Database.GlobalEnumRefTable[i] == ConfigManager.PlayerData.CostumeOverride)
+                                    if (GameDatabase.GlobalEnumRefTable[i] == ConfigManager.PlayerData.CostumeOverride)
                                     {
                                         property.Value = (ulong)i;
                                         break;

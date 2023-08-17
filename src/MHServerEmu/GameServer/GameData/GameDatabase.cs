@@ -3,7 +3,7 @@ using MHServerEmu.GameServer.GameData.Gpak;
 
 namespace MHServerEmu.GameServer.GameData
 {
-    public static class Database    // TODO: Rename this to GameDatabase to match the game?
+    public static class GameDatabase
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly string AssetDirectory = $"{Directory.GetCurrentDirectory()}\\Assets";
@@ -20,7 +20,7 @@ namespace MHServerEmu.GameServer.GameData
         public static ulong[] ResourceEnumRefTable { get; private set; }
         public static ulong[] PropertyIdPowerRefTable { get; private set; }
 
-        static Database()
+        static GameDatabase()
         {
             long startTime = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeMilliseconds();
 
