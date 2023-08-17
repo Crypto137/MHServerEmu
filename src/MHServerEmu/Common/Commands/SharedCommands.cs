@@ -20,7 +20,7 @@ namespace MHServerEmu.Common.Commands
 
                 string pattern = @params[0].ToLower();
 
-                foreach (GDirectoryPrototypeEntry entry in Calligraphy.GDirectoryDict["Calligraphy/Prototype.directory"].Entries)
+                foreach (GDirectoryPrototypeEntry entry in Calligraphy.DataDirectoryDict["Calligraphy/Prototype.directory"].Entries)
                 {
                     if (entry.Name.Contains("Entity\\Items\\Costumes\\Prototypes\\") && entry.Name.ToLower().Contains(pattern))
                         matches.Add(entry);

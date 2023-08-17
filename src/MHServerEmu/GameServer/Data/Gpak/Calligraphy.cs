@@ -8,7 +8,7 @@ namespace MHServerEmu.GameServer.Data.Gpak
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public static readonly Dictionary<string, GDirectory> GDirectoryDict = new();
+        public static readonly Dictionary<string, DataDirectory> DataDirectoryDict = new();
         public static readonly Dictionary<string, GType> GTypeDict = new();
         public static readonly Dictionary<string, Curve> CurveDict = new();
         //public static readonly Dictionary<string, Blueprint> BlueprintDict = new();
@@ -50,7 +50,7 @@ namespace MHServerEmu.GameServer.Data.Gpak
 
             // Parse all entires in order by type
             foreach (GpakEntry entry in directoryList)
-                GDirectoryDict.Add(entry.FilePath, new(entry.Data));
+                DataDirectoryDict.Add(entry.FilePath, new(entry.Data));
 
             foreach (GpakEntry entry in typeList)
                 GTypeDict.Add(entry.FilePath, new(entry.Data));
@@ -65,12 +65,12 @@ namespace MHServerEmu.GameServer.Data.Gpak
 
             // TODO: prototypes
 
-            Logger.Info($"Parsed {GDirectoryDict.Count} directories, {GTypeDict.Count} types, {CurveDict.Count} curves");
+            Logger.Info($"Parsed {DataDirectoryDict.Count} directories, {GTypeDict.Count} types, {CurveDict.Count} curves");
         }
 
         public static void Export()
         {
-            SerializeDictAsJson(GDirectoryDict);
+            SerializeDictAsJson(DataDirectoryDict);
             SerializeDictAsJson(GTypeDict);
 
             foreach (var kvp in CurveDict)
@@ -94,7 +94,7 @@ namespace MHServerEmu.GameServer.Data.Gpak
             JsonSerializerOptions jsonOptions = new();
             jsonOptions.WriteIndented = true;
 
-            jsonOptions.Converters.Add(new GDirectoryEntryConverter());
+            jsonOptions.Converters.Add(new DataDirectoryEntryConverter());
 
             foreach (var kvp in dict)
             {

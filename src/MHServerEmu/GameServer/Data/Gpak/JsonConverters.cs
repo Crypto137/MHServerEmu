@@ -6,19 +6,19 @@ namespace MHServerEmu.GameServer.Data.Gpak
 {
     // Contains converters needed to correctly serialize all fields to JSON in interface dictionaries
 
-    public class GDirectoryEntryConverter : JsonConverter<IGDirectoryEntry>
+    public class DataDirectoryEntryConverter : JsonConverter<IDataDirectoryEntry>
     {
-        public override IGDirectoryEntry Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override IDataDirectoryEntry Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             throw new NotImplementedException();
         }
 
-        public override void Write(Utf8JsonWriter writer, IGDirectoryEntry value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, IDataDirectoryEntry value, JsonSerializerOptions options)
         {
             switch (value)
             {
                 case null:
-                    JsonSerializer.Serialize(writer, (IGDirectoryEntry)null, options);
+                    JsonSerializer.Serialize(writer, (IDataDirectoryEntry)null, options);
                     break;
 
                 default:

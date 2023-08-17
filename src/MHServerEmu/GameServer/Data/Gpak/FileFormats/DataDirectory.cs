@@ -3,8 +3,7 @@ using MHServerEmu.Common;
 
 namespace MHServerEmu.GameServer.Data.Gpak.FileFormats
 {
-    // It's actually called Directory, but we're calling it GDirectory to avoid confusion with C# stuff
-    public enum GDirectoryHeader
+    public enum DataDirectoryHeader
     {
         Blueprint = 0xB524442,      // BDR
         Curve = 0xB524443,          // CDR
@@ -13,34 +12,34 @@ namespace MHServerEmu.GameServer.Data.Gpak.FileFormats
         Prototype = 0xB524450       // PDR
     }
 
-    public class GDirectory
+    public class DataDirectory
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public GDirectoryHeader Header { get; }
-        public IGDirectoryEntry[] Entries { get; }
+        public DataDirectoryHeader Header { get; }
+        public IDataDirectoryEntry[] Entries { get; }
 
-        public GDirectory(byte[] data)
+        public DataDirectory(byte[] data)
         {
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = (GDirectoryHeader)reader.ReadUInt32();
-                Entries = new IGDirectoryEntry[reader.ReadUInt32()];
+                Header = (DataDirectoryHeader)reader.ReadUInt32();
+                Entries = new IDataDirectoryEntry[reader.ReadUInt32()];
 
                 switch (Header)
                 {
-                    case GDirectoryHeader.Blueprint:
-                    case GDirectoryHeader.Curve:
-                    case GDirectoryHeader.Type:
+                    case DataDirectoryHeader.Blueprint:
+                    case DataDirectoryHeader.Curve:
+                    case DataDirectoryHeader.Type:
                         for (int i = 0; i < Entries.Length; i++)
                             Entries[i] = new GDirectoryGenericEntry(reader);
                         break;
-                    case GDirectoryHeader.Replacement:
+                    case DataDirectoryHeader.Replacement:
                         for (int i = 0; i < Entries.Length; i++)
                             Entries[i] = new GDirectoryReplacementEntry(reader);
                         break;
-                    case GDirectoryHeader.Prototype:
+                    case DataDirectoryHeader.Prototype:
                         for (int i = 0; i < Entries.Length; i++)
                             Entries[i] = new GDirectoryPrototypeEntry(reader);
                         break;
@@ -51,14 +50,14 @@ namespace MHServerEmu.GameServer.Data.Gpak.FileFormats
         }
     }
 
-    public interface IGDirectoryEntry
+    public interface IDataDirectoryEntry
     {
         public ulong Id1 { get; }
         public ulong Id2 { get; }
         public string Name { get; }
     }
 
-    public class GDirectoryGenericEntry : IGDirectoryEntry      // BDR, CDR, and TDR share the same structure
+    public class GDirectoryGenericEntry : IDataDirectoryEntry      // BDR, CDR, and TDR share the same structure
     {
         public ulong Id1 { get; }
         public ulong Id2 { get; }
@@ -74,7 +73,7 @@ namespace MHServerEmu.GameServer.Data.Gpak.FileFormats
         }
     }
 
-    public class GDirectoryReplacementEntry : IGDirectoryEntry  // RDR
+    public class GDirectoryReplacementEntry : IDataDirectoryEntry  // RDR
     {
         public ulong Id1 { get; }
         public ulong Id2 { get; }
@@ -88,7 +87,7 @@ namespace MHServerEmu.GameServer.Data.Gpak.FileFormats
         }
     }
 
-    public class GDirectoryPrototypeEntry : IGDirectoryEntry    // PDR
+    public class GDirectoryPrototypeEntry : IDataDirectoryEntry    // PDR
     {
         public ulong Id1 { get; }
         public ulong Id2 { get; }
