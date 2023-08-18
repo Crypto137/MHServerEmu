@@ -27,6 +27,7 @@ namespace MHServerEmu.GameServer.Regions
             RegionDict.Add(RegionPrototype.BronxZooRegionL60, LoadRegionData(RegionPrototype.BronxZooRegionL60));
             RegionDict.Add(RegionPrototype.XManhattanRegion1to60, LoadRegionData(RegionPrototype.XManhattanRegion1to60));
             RegionDict.Add(RegionPrototype.XManhattanRegion60Cosmic, LoadRegionData(RegionPrototype.XManhattanRegion60Cosmic));
+            RegionDict.Add(RegionPrototype.CH0301MadripoorRegion, LoadRegionData(RegionPrototype.CH0301MadripoorRegion));
             RegionDict.Add(RegionPrototype.CH0701SavagelandRegion, LoadRegionData(RegionPrototype.CH0701SavagelandRegion));
 
             Logger.Info($"Loaded data for {RegionDict.Count} regions");
@@ -197,7 +198,7 @@ namespace MHServerEmu.GameServer.Regions
 
                     region.EntrancePosition = new(-405.75f, 1274.125f, 56f);
                     region.EntranceOrientation = new(0.78125f, 0f, 0f);
-                    region.WaypointPosition = new(-405.75f, 1274.125f, 56f);
+                    region.WaypointPosition = new(0.0f, 740.0f, 56f); // fixed
                     region.WaypointOrientation = new();
 
                     break;
@@ -348,6 +349,213 @@ namespace MHServerEmu.GameServer.Regions
                     region.EntranceOrientation = new(3.1415f, 0f, 0f); ;
                     region.WaypointPosition = new(0.0f, 2304.0f, 0.0f);
                     region.WaypointOrientation = new(0f, 0f, 0f);
+                    break;
+
+                case RegionPrototype.CH0301MadripoorRegion:
+                    archiveData = new byte[] {
+                    };
+                    region = new(RegionPrototype.CH0301MadripoorRegion,
+                        1154146333179719680,
+                        1883928786,
+                        archiveData,
+                        new(-10368.0f, -33408.0f, -1156.0f),
+                        new(8064.0f, 31104.0f, 1156.0f),
+                        new(60, DifficultyTier.Normal));
+
+                    string Madripoor = "Resource/Cells/Madripoor/";
+                    string MadripoorArea = "Regions/StoryRevamp/CH03Madripoor/";
+
+                    area = new(1, (AreaPrototype) GameDatabase.GetPrototypeId(MadripoorArea + "Beach/BeachArea.prototype"), new(), false);
+                    area.AddCell(new(93, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Cove_C/Madripoor_SuperPier_A_X1_Y0.cell"), new(0.0f, -20736.0f, -4.0f)));
+                    area.AddCell(new(87, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Cove_C/Madripoor_Beach_C_NESW_A.cell"), new(0.0f, -25344.0f, -4.0f)));
+                    area.AddCell(new(84, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Cove_C/Madripoor_Beach_C_NESW_B.cell"), new(0.0f, -27648.0f, -4.0f)));
+                    area.AddCell(new(90, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Cove_C/Madripoor_Beach_C_NESW_C.cell"), new(0.0f, -23040.0f, -4.0f)));
+                    area.AddCell(new(96, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Cove_C/Madripoor_SuperPier_A_X1_Y1.cell"), new(0.0f, -18432.0f, -4.0f)));
+                    area.AddCell(new(99, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Cove_A/Madripoor_Beach_A_NESWcE_A.cell"), new(0.0f, -16128.0f, -4.0f)));
+                    area.AddCell(new(83, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Trans/Beach_NEW_SCShipwreckEntry.cell"), new(-2304.0f, -27648.0f, -4.0f)));
+                    area.AddCell(new(89, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Cove_B/Madripoor_Beach_B_NEW_A.cell"), new(-2304.0f, -23040.0f, -4.0f)));
+                    area.AddCell(new(95, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Cove_C/Madripoor_SuperPier_A_X0_Y1.cell"), new(-2304.0f, -18432.0f, -4.0f)));
+                    area.AddCell(new(92, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Cove_C/Madripoor_SuperPier_A_X0_Y0.cell"), new(-2304.0f, -20736.0f, -4.0f)));
+                    area.AddCell(new(86, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Cove_A/Madripoor_Beach_A_NEW_A.cell"), new(-2304.0f, -25344.0f, -4.0f)));
+                    area.AddCell(new(98, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Cove_B/Madripoor_Beach_B_NW_A.cell"), new(-2304.0f, -16128.0f, -4.0f)));
+                    area.AddCell(new(97, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Cove_A/Madripoor_Beach_A_ESW_A.cell"), new(2304.0f, -18432.0f, -4.0f)));
+                    area.AddCell(new(88, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Cove_A/Madripoor_Beach_A_ESW_B.cell"), new(2304.0f, -25344.0f, -4.0f)));
+                    area.AddCell(new(85, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Cove_B/Madripoor_Beach_B_ESW_A.cell"), new(2304.0f, -27648.0f, -4.0f)));
+                    area.AddCell(new(91, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Trans/Madripoor_Beach_ESW_CaveEntryA.cell"), new(2304.0f, -23040.0f, -4.0f)));
+                    area.AddCell(new(94, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Trans/Madripoor_Beach_ESW_CaveEntryB.cell"), new(2304.0f, -20736.0f, -4.0f)));
+                    area.AddCell(new(100, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Cove_B/Madripoor_Beach_B_SW_A.cell"), new(2304.0f, -16128.0f, -4.0f)));
+                    area.AddCell(new(81, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Cove_C/Madripoor_Beach_C_Defense_A.cell"), new(0.0f, -29952.0f, -4.0f)));
+                    area.AddCell(new(82, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Cove_A/Madripoor_Beach_A_ES_A.cell"), new(2304.0f, -29952.0f, -4.0f)));
+                    area.AddCell(new(80, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Trans/Madripoor_Entry_B.cell"), new(-2304.0f, -29952.0f, -4.0f)));
+                    region.AddArea(area);
+
+                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeId(MadripoorArea + "Beach/BeachHydraOutpostArea.prototype"), new(), false);
+                    area.AddCell(new(79, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Trans/Beach_BaseEntry_EW_A.cell"), new(3.0f, -13824.0f, -4.0f)));
+                    region.AddArea(area);
+
+                    area = new(3, (AreaPrototype)GameDatabase.GetPrototypeId(MadripoorArea + "BambooForest/HydraOutpostToForestArea.prototype"), new(), false);
+                    area.AddCell(new(78, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Trans/Bamboo_Wide_BaseEntry_EW_A.cell"), new(0.0f, -11520.0f, -4.0f)));
+                    region.AddArea(area);
+
+                    area = new(4, (AreaPrototype) GameDatabase.GetPrototypeId(MadripoorArea + "BambooForest/BambooForestArea.prototype"), new(), false);
+                    area.AddCell(new(70, GameDatabase.GetPrototypeId(Madripoor + "Bamboo_Forest_Wide_C/Bamboo_Village_X1_Y1_A.cell"), new(-2304.0f, -4608.0f, -4.0f)));
+                    area.AddCell(new(71, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Trans/Bamboo_GroveEntry_NESW_A.cell"), new(0.0f, -4608.0f, -4.0f)));
+                    area.AddCell(new(65, GameDatabase.GetPrototypeId(Madripoor + "Bamboo_Forest_Wide_C/Bamboo_Village_X1_Y0_A.cell"), new(-2304.0f, -6912.0f, -4.0f)));
+                    area.AddCell(new(69, GameDatabase.GetPrototypeId(Madripoor + "Bamboo_Forest_Wide_C/Bamboo_Village_X0_Y1_A.cell"), new(-4608.0f, -4608.0f, -4.0f)));
+                    area.AddCell(new(66, GameDatabase.GetPrototypeId(Madripoor + "Bamboo_Forest_C/Bamboo_Forest_POI_NESW_A.cell"), new(0.0f, -6912.0f, -4.0f)));
+                    area.AddCell(new(64, GameDatabase.GetPrototypeId(Madripoor + "Bamboo_Forest_Wide_C/Bamboo_Village_X0_Y0_A.cell"), new(-4608.0f, -6912.0f, -4.0f)));
+                    area.AddCell(new(76, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Trans/Bamboo_Forest_Wide_A_NESWcE_B.cell"), new(0.0f, -2304.0f, -4.0f)));
+                    area.AddCell(new(75, GameDatabase.GetPrototypeId(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_NSW_A.cell"), new(-2304.0f, -2304.0f, -4.0f)));
+                    area.AddCell(new(74, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Trans/Bamboo_Wide_SCVillageEntry_A.cell"), new(-4608.0f, -2304.0f, -4.0f)));
+                    area.AddCell(new(63, GameDatabase.GetPrototypeId(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_NEW_A.cell"), new(-6912.0f, -6912.0f, -4.0f)));
+                    area.AddCell(new(68, GameDatabase.GetPrototypeId(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_NEW_A.cell"), new(-6912.0f, -4608.0f, -4.0f)));
+                    area.AddCell(new(73, GameDatabase.GetPrototypeId(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_NW_A.cell"), new(-6912.0f, -2304.0f, -4.0f)));
+                    area.AddCell(new(67, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Trans/Bamboo_Wide_SCDojoEntry_ESW_A.cell"), new(2304.0f, -6912.0f, -4.0f)));
+                    area.AddCell(new(72, GameDatabase.GetPrototypeId(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_ESW_B.cell"), new(2304.0f, -4608.0f, -4.0f)));
+                    area.AddCell(new(77, GameDatabase.GetPrototypeId(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_SW_A.cell"), new(2304.0f, -2304.0f, -4.0f)));
+                    area.AddCell(new(61, GameDatabase.GetPrototypeId(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_NESWcW_A.cell"), new(0.0f, -9216.0f, -4.0f)));
+                    area.AddCell(new(59, GameDatabase.GetPrototypeId(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_NES_B.cell"), new(-4608.0f, -9216.0f, -4.0f)));
+                    area.AddCell(new(60, GameDatabase.GetPrototypeId(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_NES_A.cell"), new(-2304.0f, -9216.0f, -4.0f)));
+                    area.AddCell(new(62, GameDatabase.GetPrototypeId(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_ES_A.cell"), new(2304.0f, -9216.0f, -4.0f)));
+                    area.AddCell(new(58, GameDatabase.GetPrototypeId(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_NE_A.cell"), new(-6912.0f, -9216.0f, -4.0f)));
+                    region.AddArea(area);
+
+                    area = new(5, (AreaPrototype)GameDatabase.GetPrototypeId(MadripoorArea + "BambooForest/ForestToGladesArea.prototype"), new(), false);
+                    area.AddCell(new(57, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Trans/Bamboo_Wide_GladesEntry_EW_A.cell"), new(0.0f, 0.0f, -4.0f)));
+                    region.AddArea(area);
+
+                    area = new(6, (AreaPrototype)GameDatabase.GetPrototypeId(MadripoorArea + "Cove/GladesToCoveArea.prototype"), new(), false);
+                    area.AddCell(new(56, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Trans/Cove_GladesEntry_EW_A.cell"), new(0.0f, 2304.0f, -4.0f)));
+                    region.AddArea(area);
+
+                    area = new(7, (AreaPrototype)GameDatabase.GetPrototypeId(MadripoorArea + "Cove/CoveArea.prototype"), new(), false);
+                    area.AddCell(new(51, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Shore_C/Madripoor_Shore_Grotto_Entry_A.cell"), new(0.0f, 11520.0f, -4.0f)));
+                    area.AddCell(new(48, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Shore_C/Madripoor_SuperShore_A_X0_Y1.cell"), new(0.0f, 9216.0f, -4.0f)));
+                    area.AddCell(new(45, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Shore_C/Madripoor_SuperShore_A_X0_Y0.cell"), new(0.0f, 6912.0f, -4.0f)));
+                    area.AddCell(new(53, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_NW_A.cell"), new(-2304.0f, 13824.0f, -4.0f)));
+                    area.AddCell(new(54, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_NESWcE_A.cell"), new(0.0f, 13824.0f, -4.0f)));
+                    area.AddCell(new(44, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_NEW_B.cell"), new(-2304.0f, 6912.0f, -4.0f)));
+                    area.AddCell(new(47, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_NEW_A.cell"), new(-2304.0f, 9216.0f, -4.0f)));
+                    area.AddCell(new(50, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_NEW_A.cell"), new(-2304.0f, 11520.0f, -4.0f)));
+                    area.AddCell(new(46, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Shore_C/Madripoor_SuperShore_A_X1_Y0.cell"), new(2304.0f, 6912.0f, -4.0f)));
+                    area.AddCell(new(49, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Shore_C/Madripoor_SuperShore_A_X1_Y1.cell"), new(2304.0f, 9216.0f, -4.0f)));
+                    area.AddCell(new(52, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Trans/Shore_ESW_SCIslandEntry.cell"), new(2304.0f, 11520.0f, -4.0f)));
+                    area.AddCell(new(55, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_SW_A.cell"), new(2304.0f, 13824.0f, -4.0f)));
+                    area.AddCell(new(42, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_NESWcW_A.cell"), new(0.0f, 4608.0f, -4.0f)));
+                    area.AddCell(new(43, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_ES_A.cell"), new(2304.0f, 4608.0f, -4.0f)));
+                    area.AddCell(new(41, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_NE_A.cell"), new(-2304.0f, 4608.0f, -4.0f)));
+                    region.AddArea(area);
+
+                    area = new(8, (AreaPrototype)GameDatabase.GetPrototypeId(MadripoorArea + "LowTown/WasteTreatmentArea1.prototype"), new(), false);
+                    area.AddCell(new(40, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Trans/Waste_Treatment_EW_C_Trans.cell"), new(0.0f, 16128.0f, -4.0f)));
+                    region.AddArea(area);
+
+                    area = new(9, (AreaPrototype)GameDatabase.GetPrototypeId(MadripoorArea + "LowTown/WasteTreatmentArea2.prototype"), new(), false);
+                    area.AddCell(new(39, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Trans/Waste_Treatment_EW_A_Trans.cell"), new(0.0f, 18432.0f, 4.0f)));
+                    region.AddArea(area);
+
+                    area = new(10, (AreaPrototype)GameDatabase.GetPrototypeId(MadripoorArea + "LowTown/LowTownArea1.prototype"), new(), true);
+                    area.AddCell(new(38, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Lower_C/Madripoor_Lower_C_SW_A.cell"), new(0.0f, 20736.0f, 4.0f)));
+                    region.AddArea(area);
+                    
+                    area = new(11, (AreaPrototype)GameDatabase.GetPrototypeId(MadripoorArea + "LowTown/LowTownArea2.prototype"), new(), false);
+                    area.AddCell(new(34, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NE_A.cell"), new(-4608.0f, 20736.0f, 4.0f)));
+                    area.AddCell(new(37, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Trans/LowTown_SCAlleyEntry_N_A.cell"), new(-2304.0f, 23040.0f, 4.0f)));
+                    area.AddCell(new(35, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Lower_B/Madripoor_Lower_B_NS_A.cell"), new(-2304.0f, 20736.0f, 4.0f)));
+                    area.AddCell(new(36, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NEW_B.cell"), new(-4608.0f, 23040.0f, 4.0f)));
+                    region.AddArea(area);
+
+                    ulong fillerLower = GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_FILLER_A.cell");
+
+                    area = new(20, (AreaPrototype) GameDatabase.GetPrototypeId("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
+                    area.AddCell(new(101, fillerLower, new(-6912.0f, 23040.0f, 4.0f)));
+                    area.AddCell(new(102, fillerLower, new(-4608.0f, 32256.0f, 4.0f)));
+                    area.AddCell(new(103, fillerLower, new(-6912.0f, 32256.0f, 4.0f)));
+                    area.AddCell(new(104, fillerLower, new(-9216.0f, 32256.0f, 4.0f)));
+                    area.AddCell(new(105, fillerLower, new(-9216.0f, 29952.0f, 4.0f)));
+                    area.AddCell(new(106, fillerLower, new(-9216.0f, 27648.0f, 4.0f)));
+                    area.AddCell(new(107, fillerLower, new(-9216.0f, 25344.0f, 4.0f)));
+                    area.AddCell(new(108, fillerLower, new(-2304.0f, 32256.0f, 4.0f)));
+                    area.AddCell(new(109, fillerLower, new(-9216.0f, 23040.0f, 4.0f)));
+                    area.AddCell(new(128, fillerLower, new(2304.0f, 32256.0f, 4.0f)));
+                    area.AddCell(new(129, fillerLower, new(0.0f, 25344.0f, 4.0f)));
+                    area.AddCell(new(130, fillerLower, new(0.0f, 32256.0f, 4.0f)));
+                    area.AddCell(new(131, fillerLower, new(2304.0f, 25344.0f, 4.0f)));
+                    area.AddCell(new(132, fillerLower, new(4608.0f, 25344.0f, 4.0f)));
+                    area.AddCell(new(133, fillerLower, new(4608.0f, 27648.0f, 4.0f)));
+                    area.AddCell(new(134, fillerLower, new(4608.0f, 32256.0f, 4.0f)));
+                    area.AddCell(new(135, fillerLower, new(0.0f, 23040.0f, 4.0f)));
+                    area.AddCell(new(136, fillerLower, new(2304.0f, 18432.0f, 4.0f)));
+                    area.AddCell(new(137, fillerLower, new(2304.0f, 20736.0f, 4.0f)));
+                    area.AddCell(new(138, fillerLower, new(2304.0f, 23040.0f, 4.0f)));
+                    area.AddCell(new(139, fillerLower, new(-2304.0f, 18432.0f, 4.0f)));
+                    area.AddCell(new(140, fillerLower, new(-4608.0f, 18432.0f, 4.0f)));
+                    area.AddCell(new(141, fillerLower, new(-6912.0f, 20736.0f, 4.0f)));
+                    area.AddCell(new(142, fillerLower, new(-6912.0f, 18432.0f, 4.0f)));
+                    region.AddArea(area);
+
+                    ulong fillerShore = GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_FILLER_A.cell");
+
+                    area = new(21, (AreaPrototype)GameDatabase.GetPrototypeId("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
+                    area.AddCell(new(110, fillerShore, new(-2304.0f, 2304.0f, -4.0f)));
+                    area.AddCell(new(111, fillerShore, new(2304.0f, 16128.0f, -4.0f)));
+                    area.AddCell(new(112, fillerShore, new(2304.0f, 2304.0f, -4.0f)));
+                    area.AddCell(new(113, fillerShore, new(-2304.0f, 16128.0f, -4.0f)));
+                    area.AddCell(new(114, fillerShore, new(4608.0f, 2304.0f, -4.0f)));
+                    area.AddCell(new(115, fillerShore, new(-4608.0f, 16128.0f, -4.0f)));
+                    area.AddCell(new(116, fillerShore, new(4608.0f, 4608.0f, -4.0f)));
+                    area.AddCell(new(117, fillerShore, new(-4608.0f, 13824.0f, -4.0f)));
+                    area.AddCell(new(118, fillerShore, new(4608.0f, 6912.0f, -4.0f)));
+                    area.AddCell(new(119, fillerShore, new(-4608.0f, 11520.0f, -4.0f)));
+                    area.AddCell(new(120, fillerShore, new(4608.0f, 9216.0f, -4.0f)));
+                    area.AddCell(new(121, fillerShore, new(-4608.0f, 9216.0f, -4.0f)));
+                    area.AddCell(new(122, fillerShore, new(4608.0f, 11520.0f, -4.0f)));
+                    area.AddCell(new(123, fillerShore, new(-4608.0f, 6912.0f, -4.0f)));
+                    area.AddCell(new(124, fillerShore, new(4608.0f, 13824.0f, -4.0f)));
+                    area.AddCell(new(125, fillerShore, new(-4608.0f, 4608.0f, -4.0f)));
+                    area.AddCell(new(126, fillerShore, new(4608.0f, 16128.0f, -4.0f)));
+                    area.AddCell(new(127, fillerShore, new(-4608.0f, 2304.0f, -4.0f)));
+                    region.AddArea(area);
+
+
+                    area = new(22, (AreaPrototype)GameDatabase.GetPrototypeId(MadripoorArea + "LowTown/LowTownArea3.prototype"), new(), false);
+                    area.AddCell(new(28, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NE_A.cell"), new(-6912.0f, 25344.0f, 4.0f)));
+                    area.AddCell(new(32, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NW_A.cell"), new(-6912.0f, 29952.0f, 4.0f)));
+                    area.AddCell(new(30, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Lower_C/Madripoor_Lower_BobaTeaPOI_A.cell"), new(-6912.0f, 27648.0f, 4.0f)));
+                    area.AddCell(new(33, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_SW_A.cell"), new(-4608.0f, 29952.0f, 4.0f)));
+                    area.AddCell(new(31, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Trans/Madripoor_ESW_SCInstEntry.cell"), new(-4608.0f, 27648.0f, 4.0f)));
+                    area.AddCell(new(29, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NESW_A.cell"), new(-4608.0f, 25344.0f, 4.0f)));
+                    region.AddArea(area);
+
+                    area = new(23, (AreaPrototype)GameDatabase.GetPrototypeId(MadripoorArea + "LowTown/LowTownPrincessBarArea.prototype"), new(), false);
+                    area.AddCell(new(27, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Trans/Madripoor_Lower_PrincessBar.cell"), new(-2304.0f, 25344.0f, 4.0f))); 
+                    region.AddArea(area);
+
+                    area = new(24, (AreaPrototype)GameDatabase.GetPrototypeId(MadripoorArea + "LowTown/LowTownArea4.prototype"), new(), false);
+                    area.AddCell(new(23, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_ES_A.cell"), new(2304.0f, 27648.0f, 4.0f)));
+                    area.AddCell(new(22, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NES_A.cell"), new(0.0f, 27648.0f, 4.0f)));
+                    area.AddCell(new(24, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Trans/LowTown_SCForgottenEntry_A.cell"), new(-2304.0f, 29952.0f, 4.0f)));
+                    area.AddCell(new(25, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NW_A.cell"), new(0.0f, 29952.0f, 4.0f)));
+                    area.AddCell(new(21, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NEW_A.cell"), new(-2304.0f, 27648.0f, 4.0f)));
+                    area.AddCell(new(26, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NSW_B.cell"), new(2304.0f, 29952.0f, 4.0f)));
+                    region.AddArea(area);
+
+                    area = new(25, (AreaPrototype)GameDatabase.GetPrototypeId(MadripoorArea + "LowTown/LowTownInterArea.prototype"), new(), false);
+                    area.AddCell(new(20, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Trans/LowTown_To_High_NS_Exit_A.cell"), new(4608.0f, 29952.0f, 4.0f)));
+                    region.AddArea(area);
+
+                    area = new(26, (AreaPrototype)GameDatabase.GetPrototypeId(MadripoorArea + "LowTown/LowTownToTowerArea.prototype"), new(), false);
+                    area.AddCell(new(19, GameDatabase.GetPrototypeId(Madripoor + "Madripoor_Trans/LowTown_To_High_S_Inter_A.cell"), new(6912.0f, 29952.0f, 4.0f)));
+                    region.AddArea(area);
+
+
+                    region.EntrancePosition = new(0.0f, 18432.0f, 4.0f);
+                    region.EntranceOrientation = new(); ;
+                    // Beach WaypointPosition -2050.0f, -29787.0f, -4.0f
+                    // BambooForest WaypointPosition -240.0f, -7142.0f, -4.0f
+                    // LowTown WaypointPosition 0.0f, 18432.0f, 4.0f
+                    region.WaypointPosition = new(0.0f, 18432.0f, 4.0f); 
+                    region.WaypointOrientation = new();
                     break;
 
                 case RegionPrototype.CH0701SavagelandRegion:
