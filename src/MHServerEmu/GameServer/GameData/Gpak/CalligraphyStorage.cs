@@ -77,6 +77,9 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
         public override void Export()
         {
+            _jsonSerializerOptions.Converters.Add(new DataDirectoryEntryConverter());
+            _jsonSerializerOptions.Converters.Add(new BlueprintConverter(DataDirectoryDict));
+
             SerializeDictAsJson(DataDirectoryDict);
             SerializeDictAsJson(GTypeDict);
 
