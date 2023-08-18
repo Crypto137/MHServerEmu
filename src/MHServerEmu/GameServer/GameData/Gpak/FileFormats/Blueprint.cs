@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using MHServerEmu.Common;
 
 namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
@@ -53,16 +54,19 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 
     public class BlueprintEntry
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public enum BlueprintEntryType1 : byte
         {
-            C = 0x43,
-            P = 0x50,
+            A = 0x41,   // asset?
             B = 0x42,
-            R = 0x52,
-            A = 0x41,
+            C = 0x43,   // curve?
             D = 0x44,
             L = 0x4c,
-            S = 0x53
+            P = 0x50,   // prototype?
+            R = 0x52,
+            S = 0x53,
+            T = 0x54
         }
 
         public enum BlueprintEntryType2 : byte
@@ -85,57 +89,46 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             Type1 = (BlueprintEntryType1)reader.ReadByte();
             Type2 = (BlueprintEntryType2)reader.ReadByte();
 
-            if (Type1 == BlueprintEntryType1.P && Type2 == BlueprintEntryType2.S)
+            switch (Type1)
             {
-                TypeSpecificId = reader.ReadUInt64();
-                //TypeSpecificIdName = prototypeIdDict[TypeSpecificId];
-            }
-            else if (Type1 == BlueprintEntryType1.C && Type2 == BlueprintEntryType2.S)
-            {
-                TypeSpecificId = reader.ReadUInt64();
-                //TypeSpecificIdName = "not a prototype? (CS)";
+                case BlueprintEntryType1.A:
+                    TypeSpecificId = reader.ReadUInt64();
 
-            }
-            else if (Type1 == BlueprintEntryType1.B && Type2 == BlueprintEntryType2.S)
-            {
-                // nothing
-            }
-            else if (Type1 == BlueprintEntryType1.L && Type2 == BlueprintEntryType2.S)
-            {
-                // nothing
-            }
-            else if (Type1 == BlueprintEntryType1.A && Type2 == BlueprintEntryType2.S)
-            {
-                TypeSpecificId = reader.ReadUInt64();
-                //TypeSpecificIdName = "not a prototype? (AS)";
-            }
-            else if (Type1 == BlueprintEntryType1.D && Type2 == BlueprintEntryType2.S)
-            {
-                // nothing
-            }
-            else if (Type1 == BlueprintEntryType1.R && Type2 == BlueprintEntryType2.S)
-            {
-                TypeSpecificId = reader.ReadUInt64();
-                //TypeSpecificIdName = "not a prototype? (RS)";
-            }
-            else if (Type1 == BlueprintEntryType1.P && Type2 == BlueprintEntryType2.L)
-            {
-                TypeSpecificId = reader.ReadUInt64();
-                //TypeSpecificIdName = prototypeIdDict[TypeSpecificId];
-            }
-            else if (Type1 == BlueprintEntryType1.A && Type2 == BlueprintEntryType2.L)
-            {
-                TypeSpecificId = reader.ReadUInt64();
-                //TypeSpecificIdName = "not a prototype? (AL)";
-            }
-            else if (Type1 == BlueprintEntryType1.R && Type2 == BlueprintEntryType2.L)
-            {
-                TypeSpecificId = reader.ReadUInt64();
-                //TypeSpecificIdName = prototypeIdDict[TypeSpecificId];
-            }
-            else if (Type1 == BlueprintEntryType1.S && Type2 == BlueprintEntryType2.S)
-            {
-                // nothing
+                    /* if (Type2 == BlueprintEntryType2.L)
+                        TypeSpecificIdName = "not a prototype? (AL)";
+                    else if (Type2 == BlueprintEntryType2.S)
+                        TypeSpecificIdName = "not a prototype? (AS)"; */
+
+                    break;
+
+                case BlueprintEntryType1.C:
+                    TypeSpecificId = reader.ReadUInt64();
+                    if (Type2 == BlueprintEntryType2.L) Logger.Warn("Found CL");    // there are no CL entries in any of our data
+
+                    /* if (Type2 == BlueprintEntryType2.S)
+                        TypeSpecificIdName = "not a prototype? (CS)"; */
+
+                    break;
+
+                case BlueprintEntryType1.P:
+                    TypeSpecificId = reader.ReadUInt64();
+                    //TypeSpecificIdName = prototypeIdDict[TypeSpecificId];
+
+                    break;
+
+                case BlueprintEntryType1.R:
+                    TypeSpecificId = reader.ReadUInt64();
+
+                    /* if (Type2 == BlueprintEntryType2.L)
+                        TypeSpecificIdName = prototypeIdDict[TypeSpecificId]
+                    else if (Type2 == BlueprintEntryType2.S)
+                        TypeSpecificIdName = "not a prototype? (RS)"; */
+
+                    break;
+
+                default:
+                    // other types don't have ids
+                    break;
             }
         }
     }
