@@ -29,6 +29,7 @@ namespace MHServerEmu.GameServer.Regions
             RegionDict.Add(RegionPrototype.XManhattanRegion60Cosmic, LoadRegionData(RegionPrototype.XManhattanRegion60Cosmic));
             RegionDict.Add(RegionPrototype.CH0301MadripoorRegion, LoadRegionData(RegionPrototype.CH0301MadripoorRegion));
             RegionDict.Add(RegionPrototype.CH0701SavagelandRegion, LoadRegionData(RegionPrototype.CH0701SavagelandRegion));
+            RegionDict.Add(RegionPrototype.CH0904SiegePCZRegion, LoadRegionData(RegionPrototype.CH0904SiegePCZRegion)); 
 
             Logger.Info($"Loaded data for {RegionDict.Count} regions");
 
@@ -761,6 +762,76 @@ namespace MHServerEmu.GameServer.Regions
                     region.WaypointPosition = new(-6100.0f, 2210.0f, -10.0f);
                     region.WaypointOrientation = new();
 
+                    break;
+
+               case RegionPrototype.CH0904SiegePCZRegion:
+                    archiveData = new byte[] {
+                    };
+
+                    region = new(RegionPrototype.CH0904SiegePCZRegion,
+                        1154146333179744256,
+                        1901487720,
+                        archiveData,
+                        new(-9216.0f, -9216.0f, -1152.0f),
+                        new(9216.0f, 9216.0f, 1152.0f),
+                        new(60, DifficultyTier.Normal));
+
+                    string SiegeCity = "Resource/Cells/Asgard/SiegePCZ/SiegeCity/";
+                    area = new(1, (AreaPrototype) GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH09Asgard/Areas/Asgard/LowerAsgard/SiegeS2NCityArea.prototype"), new(), true);
+                    area.AddCell(new(26, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_Super/SiegeCity_SuperFour_X0Y1_A.cell"), new(1152.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(35, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_A/SiegeCity_A_FILLER_A.cell"), new(-5760.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(3, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCityTrans/Estate_TR_Entry_NES_A.cell"), new(1152.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(19, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_S2N_B/SiegeCityS2N_B_NESW_B.cell"), new(-1152.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(7, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_S2N_B/SiegeCityS2N_B_NESW_A.cell"), new(-1152.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(15, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_S2N_C/SiegeCityS2N_C_NESW_A.cell"), new(3456.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(13, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_Super/SiegeCity_Super_VerticalTop_A.cell"), new(-1152.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(21, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_Super/SiegeCity_SuperFour_X1Y0_A.cell"), new(3456.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(20, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_Super/SiegeCity_SuperFour_X0Y0_A.cell"), new(1152.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(36, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_A/SiegeCity_A_FILLER_A.cell"), new(5760.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(14, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCityTrans/SiegeCity_WP_NESW_A.cell"), new(1152.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(30, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCityTrans/SiegeCity_POI_Ship_B.cell"), new(-3456.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(12, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_Super/SiegeCity_Super_VerticalBot_A.cell"), new(-3456.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(8, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_A/SiegeCity_A_NESW_A.cell"), new(1152.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(25, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_A/SiegeCity_A_NESW_B.cell"), new(-1152.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(27, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_Super/SiegeCity_SuperFour_X1Y1_A.cell"), new(3456.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(18, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_A/SiegeCity_A_NESWdES_A.cell"), new(-3456.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(32, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_S2N_D/SiegeCityS2N_D_NSW_C.cell"), new(1152.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(31, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCityTrans/Restaurant_TR_Entry_NSW_A.cell"), new(-1152.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(33, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_S2N_D/SiegeCityS2N_D_NSW_B.cell"), new(3456.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(6, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_A/SiegeCity_A_NESWdSW_A.cell"), new(-3456.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(24, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_A/SiegeCity_A_NESWdSW_A.cell"), new(-3456.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(11, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_A/SiegeCity_A_NEW_C.cell"), new(-5760.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(29, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_S2N_D/SiegeCityS2N_D_NW_A.cell"), new(-5760.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(17, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_S2N_D/SiegeCityS2N_D_NW_B.cell"), new(-5760.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(9, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_A/SiegeCity_A_NESWdNW_B.cell"), new(3456.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(16, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_S2N_D/SiegeCityS2N_D_ESW_A.cell"), new(5760.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(22, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_S2N_C/SiegeCityS2N_C_ESW_A.cell"), new(5760.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(28, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCityTrans/SiegeCity_POI_Ship_A.cell"), new(5760.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(34, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCityTrans/SiegeCity_OM_DoorDefense_A.cell"), new(5760.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(2, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_A/SiegeCity_A_NES_C.cell"), new(-1152.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(10, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_S2N_D/SiegeCityS2N_D_ES_B.cell"), new(5760.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(4, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_S2N_D/SiegeCityS2N_D_ES_A.cell"), new(3456.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(23, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCityTrans/SiegeCity_Entry_A.cell"), new(-5760.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(5, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_A/SiegeCity_A_NE_A.cell"), new(-5760.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_A/SiegeCity_A_NE_B.cell"), new(-3456.0f, -5760.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    ulong fillerSiege = GameDatabase.GetPrototypeId(SiegeCity + "SiegeCity_A/SiegeCity_A_FILLER_A.cell");
+
+                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeId("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
+
+                    areaid = 37;
+                    for (uint i = 0; i < 8; i++)
+                        for (uint j = 0; j < 8; j++)
+                            if (i == 0 || j == 0 || i == 7 || j == 7)
+                                area.AddCell(new(areaid++, fillerSiege, new(-8064.0f + i * 2304.0f, -8064.0f + j * 2304.0f, 0.0f)));
+
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(-5760.0f, 3456.0f, 0.0f);
+                    region.EntranceOrientation = new();
+                    region.WaypointPosition = new(-5760.0f, 3456.0f, 0.0f);
+                    region.WaypointOrientation = new();
                     break;
 
                 case RegionPrototype.DailyGShockerSubwayRegionL60:
