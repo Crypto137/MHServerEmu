@@ -30,7 +30,7 @@ namespace MHServerEmu.GameServer.Entities
         public ulong LocField11 { get; set; }
         public Vector2 LocField12 { get; set; }
         public uint LocNaviPath { get; set; }
-        public NaviVector[] LocNaviVectors { get; set; } = Array.Empty<NaviVector>();
+        public LocomotionPathNode[] LocomotionPathNodes { get; set; } = Array.Empty<LocomotionPathNode>();
         public uint UnknownSetting { get; set; }
 
         public EnterGameWorldArchive(byte[] data)
@@ -70,9 +70,9 @@ namespace MHServerEmu.GameServer.Entities
                 if ((LocFlags & 0x20) > 0)
                 {
                     LocNaviPath = stream.ReadRawVarint32();
-                    LocNaviVectors = new NaviVector[stream.ReadRawVarint64()];
-                    for (int i = 0; i < LocNaviVectors.Length; i++)
-                        LocNaviVectors[i] = new(stream);
+                    LocomotionPathNodes = new LocomotionPathNode[stream.ReadRawVarint64()];
+                    for (int i = 0; i < LocomotionPathNodes.Length; i++)
+                        LocomotionPathNodes[i] = new(stream);
                 }
             }
 
@@ -100,7 +100,7 @@ namespace MHServerEmu.GameServer.Entities
             LocField9 = locField9;
 
             LocNaviPath = 0;
-            LocNaviVectors = new NaviVector[0];
+            LocomotionPathNodes = new LocomotionPathNode[0];
             UnknownSetting = 1;
         }
 
@@ -134,8 +134,8 @@ namespace MHServerEmu.GameServer.Entities
                     if ((LocFlags & 0x20) > 0)
                     {
                         stream.WriteRawVarint32(LocNaviPath);
-                        stream.WriteRawVarint64((ulong)LocNaviVectors.Length);
-                        foreach (NaviVector naviVector in LocNaviVectors) stream.WriteRawBytes(naviVector.Encode());
+                        stream.WriteRawVarint64((ulong)LocomotionPathNodes.Length);
+                        foreach (LocomotionPathNode naviVector in LocomotionPathNodes) stream.WriteRawBytes(naviVector.Encode());
                     }
                 }
 
@@ -164,7 +164,7 @@ namespace MHServerEmu.GameServer.Entities
                 streamWriter.WriteLine($"LocField11: 0x{LocField11.ToString("X")}");
                 streamWriter.WriteLine($"LocField12: {LocField12}");
                 streamWriter.WriteLine($"LocNaviPath: 0x{LocNaviPath.ToString("X")}");
-                for (int i = 0; i < LocNaviVectors.Length; i++) streamWriter.WriteLine($"LocNaviVector{i}: {LocNaviVectors[i]}");
+                for (int i = 0; i < LocomotionPathNodes.Length; i++) streamWriter.WriteLine($"LocomotionPathNode{i}: {LocomotionPathNodes[i]}");
                 streamWriter.WriteLine($"UnknownSetting: 0x{UnknownSetting.ToString("X")}");
 
                 streamWriter.Flush();
