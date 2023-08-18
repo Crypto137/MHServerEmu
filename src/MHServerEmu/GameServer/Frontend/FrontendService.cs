@@ -27,7 +27,6 @@ namespace MHServerEmu.GameServer.Frontend
                 case FrontendProtocolMessage.ClientCredentials:
                     Logger.Info($"Received ClientCredentials on muxId {muxId}");
                     ClientCredentials clientCredentials = ClientCredentials.ParseFrom(message.Content);
-                    //Logger.Trace(clientCredentials.ToString());
 
                     if (_sessionDict.ContainsKey(clientCredentials.Sessionid))
                     {
@@ -37,7 +36,6 @@ namespace MHServerEmu.GameServer.Frontend
                         try
                         {
                             decryptedToken = Cryptography.DecryptToken(clientCredentials.EncryptedToken.ToByteArray(), session.Key, clientCredentials.Iv.ToByteArray());
-                            //Logger.Trace($"Decrypted token for sessionId {session.Id}: {decryptedToken.ToHexString()}");
                         }
                         catch
                         {
@@ -93,7 +91,6 @@ namespace MHServerEmu.GameServer.Frontend
                 case FrontendProtocolMessage.InitialClientHandshake:
                     InitialClientHandshake initialClientHandshake = InitialClientHandshake.ParseFrom(message.Content);
                     Logger.Info($"Received InitialClientHandshake for {initialClientHandshake.ServerType} on muxId {muxId}");
-                    //Logger.Trace(initialClientHandshake.ToString());
 
                     if (initialClientHandshake.ServerType == PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND)
                     {
@@ -107,12 +104,9 @@ namespace MHServerEmu.GameServer.Frontend
                             NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build().ToByteArray()));
 
                         client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageAchievementDatabaseDump.bin"));
-                        //client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageEntityEnterGameWorld.bin"));
 
-                        var chatBroadcastMessage = ChatBroadcastMessage.CreateBuilder()
+                        var chatBroadcastMessage = ChatBroadcastMessage.CreateBuilder()         // Send MOTD
                             .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS)
-                            //.SetFromPlayerName("System")
-                            //.SetTheMessage(ChatMessage.CreateBuilder().SetBody("Operation Omega is now active. Will you fight to defend S.H.I.E.L.D.?  Or will you support the evil HYDRA?"))
                             .SetFromPlayerName(ConfigManager.GroupingManager.MotdPlayerName)
                             .SetTheMessage(ChatMessage.CreateBuilder().SetBody(ConfigManager.GroupingManager.MotdText))
                             .SetPrestigeLevel(ConfigManager.GroupingManager.MotdPrestigeLevel)
@@ -153,9 +147,12 @@ namespace MHServerEmu.GameServer.Frontend
 
             if (account != null)
             {
-                ClientSession session = new(HashHelper.GenerateUniqueRandomId(_sessionDict), account);
-                _sessionDict.Add(session.Id, session);
-                return session;
+                lock (this)     // lock session creation to prevent async weirdness
+                {
+                    ClientSession session = new(HashHelper.GenerateUniqueRandomId(_sessionDict), account);
+                    _sessionDict.Add(session.Id, session);
+                    return session;
+                }
             }
             else
             {

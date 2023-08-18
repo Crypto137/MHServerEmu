@@ -87,15 +87,13 @@ namespace MHServerEmu.Networking
             {
                 case FrontendProtocolMessage.LoginDataPB:
                     var loginDataPB = LoginDataPB.ParseFrom(message.Content);
-                    byte[] authTicket;
-
                     ClientSession session = _frontendService.CreateSessionFromLoginDataPB(loginDataPB, out ErrorCode? errorCode);
 
                     if (session != null)  // Send an AuthTicket if we were able to create a session
                     {
                         Logger.Info($"Sending AuthTicket for sessionId {session.Id}");
 
-                        authTicket = AuthTicket.CreateBuilder()
+                        byte[] authTicket = AuthTicket.CreateBuilder()
                             .SetSessionKey(ByteString.CopyFrom(session.Key))
                             .SetSessionToken(ByteString.CopyFrom(session.Token))
                             .SetSessionId(session.Id)

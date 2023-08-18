@@ -10,13 +10,6 @@ namespace MHServerEmu.GameServer.Frontend
         public byte[] Token { get; }
         public Account Account { get; }
 
-        public ClientSession(ulong id)
-        {
-            Id = id;
-            Key = Cryptography.GenerateAesKey();
-            Token = Cryptography.GenerateToken();
-        }
-
         public ClientSession(ulong id, Account account)
         {
             Id = id;
