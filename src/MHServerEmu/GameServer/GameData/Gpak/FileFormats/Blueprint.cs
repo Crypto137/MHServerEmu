@@ -8,7 +8,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         public uint Header { get; }
         public string PrototypeName { get; }
         public ulong PrototypeId { get; }
-        //public string PrototypeIdName { get; }
         public BlueprintReference[] References1 { get; }
         public BlueprintReference[] References2 { get; }
         public BlueprintEntry[] Entries { get; }
@@ -21,7 +20,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
                 Header = reader.ReadUInt32();
                 PrototypeName = Encoding.UTF8.GetString(reader.ReadBytes(reader.ReadUInt16()));
                 PrototypeId = reader.ReadUInt64();
-                //PrototypeIdName = prototypeIdDict[PrototypeId];
 
                 References1 = new BlueprintReference[reader.ReadUInt16()];
                 for (int i = 0; i < References1.Length; i++)
@@ -41,13 +39,11 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
     public class BlueprintReference
     {
         public ulong Id { get; }
-        //public string IdName { get; }
         public byte Field1 { get; }
 
         public BlueprintReference(BinaryReader reader)
         {
             Id = reader.ReadUInt64();
-            //IdName = prototypeIdDict[Id];
             Field1 = reader.ReadByte();
         }
     }
@@ -80,7 +76,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         public BlueprintEntryType1 Type1 { get; }
         public BlueprintEntryType2 Type2 { get; }
         public ulong TypeSpecificId { get; }
-        //public string TypeSpecificIdName { get; }
 
         public BlueprintEntry(BinaryReader reader)
         {
@@ -89,41 +84,16 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             Type1 = (BlueprintEntryType1)reader.ReadByte();
             Type2 = (BlueprintEntryType2)reader.ReadByte();
 
+            if (Type1 == BlueprintEntryType1.C && Type2 == BlueprintEntryType2.L)
+                Logger.Warn("Found CL");    // there are no CL entries in any of our data
+
             switch (Type1)
             {
                 case BlueprintEntryType1.A:
-                    TypeSpecificId = reader.ReadUInt64();
-
-                    /* if (Type2 == BlueprintEntryType2.L)
-                        TypeSpecificIdName = "not a prototype? (AL)";
-                    else if (Type2 == BlueprintEntryType2.S)
-                        TypeSpecificIdName = "not a prototype? (AS)"; */
-
-                    break;
-
                 case BlueprintEntryType1.C:
-                    TypeSpecificId = reader.ReadUInt64();
-                    if (Type2 == BlueprintEntryType2.L) Logger.Warn("Found CL");    // there are no CL entries in any of our data
-
-                    /* if (Type2 == BlueprintEntryType2.S)
-                        TypeSpecificIdName = "not a prototype? (CS)"; */
-
-                    break;
-
                 case BlueprintEntryType1.P:
-                    TypeSpecificId = reader.ReadUInt64();
-                    //TypeSpecificIdName = prototypeIdDict[TypeSpecificId];
-
-                    break;
-
                 case BlueprintEntryType1.R:
                     TypeSpecificId = reader.ReadUInt64();
-
-                    /* if (Type2 == BlueprintEntryType2.L)
-                        TypeSpecificIdName = prototypeIdDict[TypeSpecificId]
-                    else if (Type2 == BlueprintEntryType2.S)
-                        TypeSpecificIdName = "not a prototype? (RS)"; */
-
                     break;
 
                 default:
