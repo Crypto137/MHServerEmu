@@ -3,6 +3,7 @@ using Google.ProtocolBuffers;
 using Gazillion;
 using MHServerEmu.Common;
 using MHServerEmu.GameServer.Frontend;
+using MHServerEmu.Common.Config;
 
 namespace MHServerEmu.Networking
 {
@@ -97,8 +98,8 @@ namespace MHServerEmu.Networking
                             .SetSessionKey(ByteString.CopyFrom(session.Key))
                             .SetSessionToken(ByteString.CopyFrom(session.Token))
                             .SetSessionId(session.Id)
-                            .SetFrontendServer("localhost")
-                            .SetFrontendPort("4306")
+                            .SetFrontendServer(ConfigManager.Frontend.BindIP)
+                            .SetFrontendPort(ConfigManager.Frontend.Port)
                             .SetSuccess(true)
                             .Build().ToByteArray();
 
