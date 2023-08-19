@@ -31,9 +31,9 @@ namespace MHServerEmu.GameServer.GameInstances
                             .SetRoomType(chatMessageIn.RoomType)
                             .SetFromPlayerName(ConfigManager.PlayerData.PlayerName)
                             .SetTheMessage(chatMessageIn.TheMessage)
-                            .Build().ToByteArray();
+                            .Build();
 
-                        client.SendMessage(2, new(GroupingManagerMessage.ChatNormalMessage, chatMessageOut));
+                        client.SendMessage(2, new(chatMessageOut));
                     }
 
                     break;

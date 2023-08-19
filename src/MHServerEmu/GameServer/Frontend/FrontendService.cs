@@ -53,23 +53,23 @@ namespace MHServerEmu.GameServer.Frontend
                             {
                                 Logger.Info("Responding with LoginQueueStatus message");
 
-                                byte[] response = LoginQueueStatus.CreateBuilder()
+                                var response = LoginQueueStatus.CreateBuilder()
                                     .SetPlaceInLine(ConfigManager.Frontend.QueuePlaceInLine)
                                     .SetNumberOfPlayersInLine(ConfigManager.Frontend.QueueNumberOfPlayersInLine)
-                                    .Build().ToByteArray();
+                                    .Build();
 
-                                client.SendMessage(muxId, new(FrontendProtocolMessage.LoginQueueStatus, response));
+                                client.SendMessage(muxId, new(response));
                             }
                             else
                             {
                                 Logger.Info("Responding with SessionEncryptionChanged message");
 
-                                byte[] response = SessionEncryptionChanged.CreateBuilder()
+                                var response = SessionEncryptionChanged.CreateBuilder()
                                     .SetRandomNumberIndex(0)
                                     .SetEncryptedRandomNumber(ByteString.Empty)
-                                    .Build().ToByteArray();
+                                    .Build();
 
-                                client.SendMessage(muxId, new(FrontendProtocolMessage.SessionEncryptionChanged, response));
+                                client.SendMessage(muxId, new(response));
                             }
                         }
                         else
@@ -100,8 +100,7 @@ namespace MHServerEmu.GameServer.Frontend
                     {
                         client.FinishedGroupingManagerFrontendHandshake = true;
 
-                        client.SendMessage(muxId, new(GameServerToClientMessage.NetMessageQueueLoadingScreen,
-                            NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build().ToByteArray()));
+                        client.SendMessage(muxId, new(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build()));
 
                         client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageAchievementDatabaseDump.bin"));
 
@@ -110,9 +109,9 @@ namespace MHServerEmu.GameServer.Frontend
                             .SetFromPlayerName(ConfigManager.GroupingManager.MotdPlayerName)
                             .SetTheMessage(ChatMessage.CreateBuilder().SetBody(ConfigManager.GroupingManager.MotdText))
                             .SetPrestigeLevel(ConfigManager.GroupingManager.MotdPrestigeLevel)
-                            .Build().ToByteArray();
+                            .Build();
 
-                        client.SendMessage(2, new(GroupingManagerMessage.ChatBroadcastMessage, chatBroadcastMessage));
+                        client.SendMessage(2, new(chatBroadcastMessage));
 
                         // Send hardcoded region loading data after initial handshakes finish
                         client.SendMultipleMessages(1, RegionLoader.GetBeginLoadingMessages(client.CurrentRegion, client.CurrentAvatar));

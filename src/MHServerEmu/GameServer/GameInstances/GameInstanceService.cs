@@ -19,7 +19,7 @@ namespace MHServerEmu.GameServer.GameInstances
 
         public void Handle(FrontendClient client, ushort muxId, GameMessage message)
         {
-            byte[] response;
+            IMessage response;
             switch ((ClientToGameServerMessage)message.Id)
             {
                 case ClientToGameServerMessage.NetMessageReadyForGameJoin:
@@ -36,16 +36,14 @@ namespace MHServerEmu.GameServer.GameInstances
                     }
 
                     Logger.Info("Responding with NetMessageReadyAndLoggedIn");
-                    response = NetMessageReadyAndLoggedIn.CreateBuilder()
-                        .Build().ToByteArray();
-                    client.SendMessage(muxId, new(GameServerToClientMessage.NetMessageReadyAndLoggedIn, response));
+                    client.SendMessage(muxId, new(NetMessageReadyAndLoggedIn.DefaultInstance)); // add report defect (bug) config here
 
                     Logger.Info("Responding with NetMessageInitialTimeSync");
                     response = NetMessageInitialTimeSync.CreateBuilder()
                         .SetGameTimeServerSent(161351679299542)     // dumped
                         .SetDateTimeServerSent(1509657957345525)    // dumped
-                        .Build().ToByteArray();
-                    client.SendMessage(muxId, new(GameServerToClientMessage.NetMessageInitialTimeSync, response));
+                        .Build();
+                    client.SendMessage(muxId, new(response));
 
                     break;
 
@@ -68,9 +66,9 @@ namespace MHServerEmu.GameServer.GameInstances
                         .SetDialation(0.0f)
                         .SetGametimeDialationStarted(_gameServerManager.GetGameTime())
                         .SetDatetimeDialationStarted(_gameServerManager.GetDateTime())
-                        .Build().ToByteArray();
+                        .Build();
 
-                    //client.SendMessage(1, new(GameServerToClientMessage.NetMessageSyncTimeReply, response));
+                    //client.SendMessage(1, new(response));
                     break;
 
                 case ClientToGameServerMessage.NetMessagePing:
@@ -97,9 +95,9 @@ namespace MHServerEmu.GameServer.GameInstances
                         .SetInvLocContainerEntityId(tryInventoryMoveMessage.ToInventoryOwnerId)
                         .SetInvLocInventoryPrototypeId(tryInventoryMoveMessage.ToInventoryPrototype)
                         .SetInvLocSlot(tryInventoryMoveMessage.ToSlot)
-                        .Build().ToByteArray();
+                        .Build();
 
-                    client.SendMessage(1, new(GameServerToClientMessage.NetMessageInventoryMove, inventoryMoveMessage));
+                    client.SendMessage(1, new(inventoryMoveMessage));
                     break;
 
                 case ClientToGameServerMessage.NetMessageUseWaypoint:
@@ -160,14 +158,14 @@ namespace MHServerEmu.GameServer.GameInstances
                     Logger.Info($"Received NetMessageGetCatalog");
                     var dumpedCatalog = NetMessageCatalogItems.ParseFrom(PacketHelper.LoadMessagesFromPacketFile("NetMessageCatalogItems.bin")[0].Content);
 
-                    byte[] catalog = NetMessageCatalogItems.CreateBuilder()
+                    var catalog = NetMessageCatalogItems.CreateBuilder()
                         .MergeFrom(dumpedCatalog)
                         .SetTimestampSeconds(_gameServerManager.GetDateTime() / 1000000)
                         .SetTimestampMicroseconds(_gameServerManager.GetDateTime())
                         .SetClientmustdownloadimages(false)
-                        .Build().ToByteArray();
+                        .Build();
 
-                    client.SendMessage(1, new(GameServerToClientMessage.NetMessageCatalogItems, catalog));
+                    client.SendMessage(1, new(catalog));
                     break;
 
                 case ClientToGameServerMessage.NetMessageUpdateAvatarState:

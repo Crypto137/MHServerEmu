@@ -20,31 +20,29 @@ namespace MHServerEmu.GameServer.Regions
             List<GameMessage> messageList = new();
 
             // Add server info messages
-            messageList.Add(new(GameServerToClientMessage.NetMessageMarkFirstGameFrame, NetMessageMarkFirstGameFrame.CreateBuilder()
+            messageList.Add(new(NetMessageMarkFirstGameFrame.CreateBuilder()
                 .SetCurrentservergametime(161351682950)
                 .SetCurrentservergameid(1150669705055451881)
                 .SetGamestarttime(1)
-                .Build().ToByteArray()));
+                .Build()));
 
-            messageList.Add(new(GameServerToClientMessage.NetMessageServerVersion, NetMessageServerVersion.CreateBuilder()
-                .SetVersion("1.52.0.1700")
-                .Build().ToByteArray()));
+            messageList.Add(new(NetMessageServerVersion.CreateBuilder().SetVersion("1.52.0.1700").Build()));
 
             messageList.Add(PacketHelper.LoadMessagesFromPacketFile("NetMessageLiveTuningUpdate.bin")[0]);
-            messageList.Add(new(GameServerToClientMessage.NetMessageReadyForTimeSync, NetMessageReadyForTimeSync.DefaultInstance.ToByteArray()));
+            messageList.Add(new(NetMessageReadyForTimeSync.DefaultInstance));
 
             // Load local player data
             if (loadEntities) messageList.AddRange(LoadLocalPlayerDataMessages(avatar));
-            messageList.Add(new(GameServerToClientMessage.NetMessageReadyAndLoadedOnGameServer, NetMessageReadyAndLoadedOnGameServer.DefaultInstance.ToByteArray()));
+            messageList.Add(new(NetMessageReadyAndLoadedOnGameServer.DefaultInstance));
 
             // Load region data
             messageList.AddRange(RegionManager.GetRegion(regionPrototype).GetLoadingMessages(1150669705055451881));
 
             // Create waypoint entity
-            messageList.Add(new(GameServerToClientMessage.NetMessageEntityCreate, NetMessageEntityCreate.CreateBuilder()
+            messageList.Add(new(NetMessageEntityCreate.CreateBuilder()
                 .SetBaseData(ByteString.CopyFrom(Convert.FromHexString("200C839F01200020")))
                 .SetArchiveData(ByteString.CopyFrom(Convert.FromHexString("20F4C10206000000CD80018880FCFF99BF968110CCC00202CC800302CD40D58280DE868098044DA1A1A4FE0399C00183B8030000000000")))
-                .Build().ToByteArray()));
+                .Build()));
 
             return messageList.ToArray();
         }
@@ -56,23 +54,21 @@ namespace MHServerEmu.GameServer.Regions
             Region region = RegionManager.GetRegion(regionPrototype);
 
             EnterGameWorldArchive avatarEnterGameWorldArchive = new((ulong)avatar, region.EntrancePosition, region.EntranceOrientation.X, 350f);
-
-            messageList.Add(new(GameServerToClientMessage.NetMessageEntityEnterGameWorld,
-                NetMessageEntityEnterGameWorld.CreateBuilder()
+            messageList.Add(new(NetMessageEntityEnterGameWorld.CreateBuilder()
                 .SetArchiveData(ByteString.CopyFrom(avatarEnterGameWorldArchive.Encode()))
-                .Build().ToByteArray()));
+                .Build()));
 
             // Put waypoint entity in the game world
             EnterGameWorldArchive waypointEnterGameWorldArchiveData = new(12, region.WaypointPosition, region.WaypointOrientation.X);
-
-            messageList.Add(new(GameServerToClientMessage.NetMessageEntityEnterGameWorld,
-                NetMessageEntityEnterGameWorld.CreateBuilder().SetArchiveData(ByteString.CopyFrom(waypointEnterGameWorldArchiveData.Encode())).Build().ToByteArray()));
+            messageList.Add(new(NetMessageEntityEnterGameWorld.CreateBuilder()
+                .SetArchiveData(ByteString.CopyFrom(waypointEnterGameWorldArchiveData.Encode()))
+                .Build()));
 
             // Load power collection
             messageList.AddRange(PowerLoader.LoadAvatarPowerCollection(avatar).ToList());
 
             // Dequeue loading screen
-            messageList.Add(new(GameServerToClientMessage.NetMessageDequeueLoadingScreen, NetMessageDequeueLoadingScreen.DefaultInstance.ToByteArray()));
+            messageList.Add(new(NetMessageDequeueLoadingScreen.DefaultInstance));
 
             return messageList.ToArray();
         }
@@ -107,9 +103,9 @@ namespace MHServerEmu.GameServer.Regions
                     .SetIsDifficultySliderEnabled(ConfigManager.GameOptions.IsDifficultySliderEnabled)
                     .SetOrbisTrophiesEnabled(ConfigManager.GameOptions.OrbisTrophiesEnabled)
                     .SetPlatformType(8))
-                .Build().ToByteArray();
+                .Build();
 
-            messageList.Add(new(GameServerToClientMessage.NetMessageLocalPlayer, localPlayerMessage));
+            messageList.Add(new(localPlayerMessage));
 
             GameMessage[] localPlayerEntityCreateMessages = PacketHelper.LoadMessagesFromPacketFile("LocalPlayerEntityCreateMessages.bin");
             ulong replacementInventorySlot = 100;   // 100 here because no hero occupies slot 100, this to check that we have successfully swapped heroes
@@ -128,9 +124,9 @@ namespace MHServerEmu.GameServer.Regions
                     var customEntityCreateMessage = NetMessageEntityCreate.CreateBuilder()
                         .SetBaseData(ByteString.CopyFrom(baseData.Encode()))
                         .SetArchiveData(ByteString.CopyFrom(player.Encode()))
-                        .Build().ToByteArray();
+                        .Build();
 
-                    messageList.Add(new(GameServerToClientMessage.NetMessageEntityCreate, customEntityCreateMessage));
+                    messageList.Add(new(customEntityCreateMessage));
                 }
                 else
                 {
@@ -180,9 +176,9 @@ namespace MHServerEmu.GameServer.Regions
                     var customEntityCreateMessage = NetMessageEntityCreate.CreateBuilder()
                         .SetBaseData(ByteString.CopyFrom(baseData.Encode()))
                         .SetArchiveData(ByteString.CopyFrom(avatar.Encode()))
-                        .Build().ToByteArray();
+                        .Build();
 
-                    messageList.Add(new(GameServerToClientMessage.NetMessageEntityCreate, customEntityCreateMessage));
+                    messageList.Add(new(customEntityCreateMessage));
                 }
             }
 

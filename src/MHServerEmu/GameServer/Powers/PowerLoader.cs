@@ -36,9 +36,7 @@ namespace MHServerEmu.GameServer.Powers
                             .Build());
                     }
 
-                    messageList.Add(new(GameServerToClientMessage.NetMessageAssignPowerCollection, NetMessageAssignPowerCollection.CreateBuilder()
-                        .AddRangePower(powerList)
-                        .Build().ToByteArray()));
+                    messageList.Add(new(NetMessageAssignPowerCollection.CreateBuilder().AddRangePower(powerList).Build()));
                 }
                 else
                 {
@@ -50,11 +48,11 @@ namespace MHServerEmu.GameServer.Powers
                 {
                     foreach (ulong propertyId in Enum.GetValues(propertyEnumType))
                     {
-                        messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                        messageList.Add(new(NetMessageSetProperty.CreateBuilder()
                             .SetReplicationId(((ulong)Enum.Parse(typeof(HardcodedAvatarReplicationId), avatarName)))
                             .SetPropertyId(propertyId)
                             .SetValueBits(2)
-                            .Build().ToByteArray()));
+                            .Build()));
                     }
                 }
                 else
@@ -70,19 +68,19 @@ namespace MHServerEmu.GameServer.Powers
             // TODO: figure out property ids that unlock power panels for other heroes
             if (avatar == HardcodedAvatarEntity.BlackCat)
             {
-                messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                messageList.Add(new(NetMessageSetProperty.CreateBuilder()
                     .SetReplicationId(9078507)
                     .SetPropertyId(52364730) // This Id unlocks Grapple Swing Line on the UI Panel
                     .SetValueBits(2)
-                    .Build().ToByteArray()));
+                    .Build()));
             }
             else if (avatar == HardcodedAvatarEntity.Thor)   
             {
-                messageList.Add(new(GameServerToClientMessage.NetMessageSetProperty, NetMessageSetProperty.CreateBuilder()
+                messageList.Add(new(NetMessageSetProperty.CreateBuilder()
                     .SetReplicationId((ulong)HardcodedAvatarReplicationId.Thor)
                     .SetPropertyId(18863546) // no idea why this loads Thors power panel
                     .SetValueBits(2)
-                    .Build().ToByteArray()));
+                    .Build()));
             }
 
             /* Dumped PowerCollection for Black Cat

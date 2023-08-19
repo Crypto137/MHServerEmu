@@ -40,17 +40,17 @@ namespace MHServerEmu.GameServer.Regions
             List<GameMessage> messageList = new();
 
             // Before changing to the actual destination region the game seems to first change into a transitional region
-            messageList.Add(new(GameServerToClientMessage.NetMessageRegionChange, NetMessageRegionChange.CreateBuilder()
+            messageList.Add(new(NetMessageRegionChange.CreateBuilder()
                 .SetRegionId(0)
                 .SetServerGameId(0)
                 .SetClearingAllInterest(false)
-                .Build().ToByteArray()));
+                .Build()));
 
-            messageList.Add(new(GameServerToClientMessage.NetMessageQueueLoadingScreen, NetMessageQueueLoadingScreen.CreateBuilder()
+            messageList.Add(new(NetMessageQueueLoadingScreen.CreateBuilder()
                 .SetRegionPrototypeId((ulong)Prototype)
-                .Build().ToByteArray()));
+                .Build()));
 
-            messageList.Add(new(GameServerToClientMessage.NetMessageRegionChange, NetMessageRegionChange.CreateBuilder()
+            messageList.Add(new(NetMessageRegionChange.CreateBuilder()
                 .SetRegionPrototypeId((ulong)Prototype)
                 .SetServerGameId(serverGameId)
                 .SetClearingAllInterest(false)
@@ -59,14 +59,14 @@ namespace MHServerEmu.GameServer.Regions
                 .SetCreateRegionParams(CreateParams.ToNetStruct())
                 .SetRegionMin(Min.ToNetStructPoint3())
                 .SetRegionMax(Max.ToNetStructPoint3())
-                .Build().ToByteArray()));
+                .Build()));
 
             // mission updates and entity creation happens here
 
             // why is there a second NetMessageQueueLoadingScreen?
-            messageList.Add(new(GameServerToClientMessage.NetMessageQueueLoadingScreen, NetMessageQueueLoadingScreen.CreateBuilder()
+            messageList.Add(new(NetMessageQueueLoadingScreen.CreateBuilder()
                 .SetRegionPrototypeId((ulong)Prototype)
-                .Build().ToByteArray()));
+                .Build()));
 
             // TODO: prefetch other regions
 
@@ -81,7 +81,7 @@ namespace MHServerEmu.GameServer.Regions
 
                 foreach (Cell cell in area.CellList)
                 {
-                    messageList.Add(new(GameServerToClientMessage.NetMessageCellCreate, NetMessageCellCreate.CreateBuilder()
+                    messageList.Add(new(NetMessageCellCreate.CreateBuilder()
                         .SetAreaId(area.Id)
                         .SetCellId(cell.Id)
                         .SetCellPrototypeId(cell.PrototypeId)
@@ -89,7 +89,7 @@ namespace MHServerEmu.GameServer.Regions
                         .SetCellRandomSeed(RandomSeed)
                         .SetBufferwidth(0)
                         .SetOverrideLocationName(0)
-                        .Build().ToByteArray()));
+                        .Build()));
                 }
             }
 
@@ -97,9 +97,9 @@ namespace MHServerEmu.GameServer.Regions
                 .SetFlags(1)
                 .Build().ToByteArray()));
 
-            messageList.Add(new(GameServerToClientMessage.NetMessageUpdateMiniMap, NetMessageUpdateMiniMap.CreateBuilder()
+            messageList.Add(new(NetMessageUpdateMiniMap.CreateBuilder()
                 .SetArchiveData(ByteString.CopyFrom(new byte[] { 0xEF, 0x01, 0x81 }))
-                .Build().ToByteArray()));
+                .Build()));
 
             return messageList.ToArray();
         }

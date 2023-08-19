@@ -157,9 +157,9 @@ namespace MHServerEmu.Common.Commands
                 .SetFromPlayerName(ConfigManager.GroupingManager.MotdPlayerName)
                 .SetTheMessage(ChatMessage.CreateBuilder().SetBody(output))
                 .SetPrestigeLevel(6)
-                .Build().ToByteArray();
+                .Build();
 
-            client.SendMessage(2, new(GroupingManagerMessage.ChatNormalMessage, chatMessage));
+            client.SendMessage(2, new(chatMessage));
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Google.ProtocolBuffers;
 
 namespace MHServerEmu.Networking
 {
@@ -13,22 +13,10 @@ namespace MHServerEmu.Networking
             Content = content;
         }
 
-        public GameMessage(FrontendProtocolMessage id, byte[] content)
+        public GameMessage(IMessage message)
         {
-            Id = (byte)id;
-            Content = content;
-        }
-
-        public GameMessage(GameServerToClientMessage id, byte[] content)
-        {
-            Id = (byte)id;
-            Content = content;
-        }
-
-        public GameMessage(GroupingManagerMessage id, byte[] content)
-        {
-            Id = (byte)id;
-            Content = content;
+            Id = ProtocolDispatchTable.GetMessageId(message);
+            Content = message.ToByteArray();
         }
     }
 }
