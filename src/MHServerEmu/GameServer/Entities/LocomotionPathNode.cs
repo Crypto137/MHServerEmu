@@ -8,15 +8,15 @@ namespace MHServerEmu.GameServer.Entities
     public class LocomotionPathNode
     {
         public Vector3 Vertex { get; set; }
-        public ulong VertexSideRadius { get; set; }  // zigzag int
+        public int VertexSideRadius { get; set; }  // zigzag int
 
         public LocomotionPathNode(CodedInputStream stream)
         {
             Vertex = new(stream.ReadRawFloat(3), stream.ReadRawFloat(3), stream.ReadRawFloat(3));
-            VertexSideRadius = stream.ReadRawVarint64();
+            VertexSideRadius = stream.ReadRawInt32();
         }
 
-        public LocomotionPathNode(Vector3 vertex, ulong vertexSideRadius)
+        public LocomotionPathNode(Vector3 vertex, int vertexSideRadius)
         {
             Vertex = vertex;
             VertexSideRadius = vertexSideRadius;
@@ -29,7 +29,7 @@ namespace MHServerEmu.GameServer.Entities
                 CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
 
                 stream.WriteRawBytes(Vertex.Encode());
-                stream.WriteRawVarint64(VertexSideRadius);
+                stream.WriteRawInt32(VertexSideRadius);
 
                 stream.Flush();
                 return memoryStream.ToArray();

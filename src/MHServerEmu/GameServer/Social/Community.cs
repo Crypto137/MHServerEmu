@@ -22,6 +22,12 @@ namespace MHServerEmu.GameServer.Social
 
             if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
             GmBool = boolDecoder.ReadBool();
+            if (GmBool)
+            {
+                throw new("GmBool parsing not implemented.");
+                // ulong
+                // int
+            }
 
             UnknownString = stream.ReadRawString();
 

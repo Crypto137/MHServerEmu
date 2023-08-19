@@ -11,13 +11,13 @@ namespace MHServerEmu.GameServer.Social
         public ulong Field2 { get; set; }   // PrototypeDataRef
         public ulong Field3 { get; set; }   // PrototypeDataRef
         public ulong Field4 { get; set; }   // uchar
-        public ulong Field5 { get; set; }   // int
+        public int Field5 { get; set; }
         public string Field6 { get; set; }  // name again
         public string Field7 { get; set; }  // ??
         public ulong Field8 { get; set; }   // u64
         public ulong Field9 { get; set; }   // u64
-        public ulong Field10 { get; set; }  // int (>> 1)
-        public ulong Field11 { get; set; }  // int
+        public int Field10 { get; set; }
+        public int Field11 { get; set; }
 
         public Friend(CodedInputStream stream)
         {
@@ -26,17 +26,17 @@ namespace MHServerEmu.GameServer.Social
             Field2 = stream.ReadRawVarint64();
             Field3 = stream.ReadRawVarint64();
             Field4 = stream.ReadRawVarint64();
-            Field5 = stream.ReadRawVarint64();
+            Field5 = stream.ReadRawInt32();
             Field6 = stream.ReadRawString();
             Field7 = stream.ReadRawString();
             Field8 = stream.ReadRawVarint64();
             Field9 = stream.ReadRawVarint64();
-            Field10 = stream.ReadRawVarint64();
-            Field11 = stream.ReadRawVarint64();
+            Field10 = stream.ReadRawInt32();
+            Field11 = stream.ReadRawInt32();
         }
 
-        public Friend(string field0, ulong field1, ulong field2, ulong field3, ulong field4, ulong field5,
-            string field6, string field7, ulong field8, ulong field9, ulong field10, ulong field11)
+        public Friend(string field0, ulong field1, ulong field2, ulong field3, ulong field4, int field5,
+            string field6, string field7, ulong field8, ulong field9, int field10, int field11)
         {
             Field0 = field0;
             Field1 = field1;
@@ -63,13 +63,13 @@ namespace MHServerEmu.GameServer.Social
                 stream.WriteRawVarint64(Field2);
                 stream.WriteRawVarint64(Field3);
                 stream.WriteRawVarint64(Field4);
-                stream.WriteRawVarint64(Field5);
+                stream.WriteRawInt32(Field5);
                 stream.WriteRawString(Field6);
                 stream.WriteRawString(Field7);
                 stream.WriteRawVarint64(Field8);
                 stream.WriteRawVarint64(Field9);
-                stream.WriteRawVarint64(Field10);
-                stream.WriteRawVarint64(Field11);
+                stream.WriteRawInt32(Field10);
+                stream.WriteRawInt32(Field11);
 
                 stream.Flush();
                 return memoryStream.ToArray();

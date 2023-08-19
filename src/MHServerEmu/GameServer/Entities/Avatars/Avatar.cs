@@ -11,7 +11,7 @@ namespace MHServerEmu.GameServer.Entities.Avatars
     {
         public PrototypeCollectionEntry[] UnknownPrototypes { get; set; }
         public Condition[] Conditions { get; set; }
-        public ulong UnknownPowerVar { get; set; }
+        public int UnknownPowerVar { get; set; }
         public ReplicatedString PlayerName { get; set; }
         public ulong OwnerPlayerDbId { get; set; }
         public string GuildName { get; set; }
@@ -35,7 +35,7 @@ namespace MHServerEmu.GameServer.Entities.Avatars
                 Conditions[i] = new(stream);
 
             // Gazillion::PowerCollection::SerializeRecordCount
-            UnknownPowerVar = stream.ReadRawVarint64();     // 0xBBE83080 ZigZag int UnknownPowerVar => 0x5DF41840 float??? 2.38991475105286
+            UnknownPowerVar = stream.ReadRawInt32();
             // Gazillion::Agent::Serialize End
             PlayerName = new(stream);
             OwnerPlayerDbId = stream.ReadRawVarint64();
@@ -59,7 +59,7 @@ namespace MHServerEmu.GameServer.Entities.Avatars
                 AbilityKeyMappings[i] = new(stream, boolDecoder);
         }
 
-        public Avatar(Condition[] conditions, ulong unknownPowerVar, ReplicatedString playerName, ulong ownerPlayerDbId,
+        public Avatar(Condition[] conditions, int unknownPowerVar, ReplicatedString playerName, ulong ownerPlayerDbId,
             string guildName, bool isRuntimeInfo, AbilityKeyMapping[] abilityKeyMappings)
         {
             Conditions = conditions;
@@ -100,7 +100,7 @@ namespace MHServerEmu.GameServer.Entities.Avatars
                 stream.WriteRawVarint64((ulong)Conditions.Length);
                 foreach (Condition condition in Conditions) stream.WriteRawBytes(condition.Encode());
 
-                stream.WriteRawVarint64(UnknownPowerVar);
+                stream.WriteRawInt32(UnknownPowerVar);
                 stream.WriteRawBytes(PlayerName.Encode());
                 stream.WriteRawVarint64(OwnerPlayerDbId);
                 stream.WriteRawString(GuildName);

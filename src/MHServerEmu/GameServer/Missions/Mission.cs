@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoding;
+using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.GameServer.Missions
 {
@@ -10,7 +11,7 @@ namespace MHServerEmu.GameServer.Missions
         public ulong State { get; set; }
         public ulong GameTime { get; set; }
         public ulong PrototypeGuid { get; set; }
-        public ulong Random { get; set; }   // zigzag or float?
+        public int Random { get; set; }
         public Objective[] Objectives { get; set; }
         public ulong Participant { get; set; }
         public ulong ParticipantOwnerEntityId { get; set; }
@@ -22,7 +23,7 @@ namespace MHServerEmu.GameServer.Missions
             State = stream.ReadRawVarint64();
             GameTime = stream.ReadRawVarint64();
             PrototypeGuid = stream.ReadRawVarint64();
-            Random = stream.ReadRawVarint64();
+            Random = stream.ReadRawInt32();
             Objectives = new Objective[stream.ReadRawVarint64()];
             for (int i = 0; i < Objectives.Length; i++)
                 Objectives[i] = new(stream);
@@ -56,7 +57,7 @@ namespace MHServerEmu.GameServer.Missions
                 stream.WriteRawVarint64(State);
                 stream.WriteRawVarint64(GameTime);
                 stream.WriteRawVarint64(PrototypeGuid);
-                stream.WriteRawVarint64(Random);
+                stream.WriteRawInt32(Random);
                 stream.WriteRawVarint64((ulong)Objectives.Length);
                 foreach (Objective objective in Objectives)
                     stream.WriteRawBytes(objective.Encode());

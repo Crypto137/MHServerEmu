@@ -7,7 +7,7 @@ namespace MHServerEmu.GameServer.Powers
 {
     public class Condition
     {
-        public ulong Flags { get; set; }
+        public ulong FieldFlags { get; set; }
         public ulong Id { get; set; }
         public ulong CreatorId { get; set; }
         public ulong UltimateCreatorId { get; set; }
@@ -15,40 +15,40 @@ namespace MHServerEmu.GameServer.Powers
         public ulong CreatorPowerPrototypeRef { get; set; }
         public ulong UnknownSize { get; set; }
         public ulong AssetId { get; set; }
-        public ulong StartTime { get; set; }    // zigzag
-        public ulong PauseTime { get; set; }
-        public ulong Field10 { get; set; }      // time3
-        public ulong UpdateInterval { get; set; }   // zigzag int
+        public int StartTime { get; set; }
+        public int PauseTime { get; set; }
+        public int TimeRemaining { get; set; }  // 7200000 == 2 hours
+        public int UpdateInterval { get; set; }
         public ulong PropertyCollectionReplicationId { get; set; }
         public Property[] Properties { get; set; }
         public uint Field13 { get; set; }
 
         public Condition(CodedInputStream stream)
         {
-            Flags = stream.ReadRawVarint64();
+            FieldFlags = stream.ReadRawVarint64();
             Id = stream.ReadRawVarint64();
-            if ((Flags & 0x1) == 0) CreatorId = stream.ReadRawVarint64();
-            if ((Flags & 0x2) == 0) UltimateCreatorId = stream.ReadRawVarint64();
-            if ((Flags & 0x4) == 0) ConditionPrototypeRef = stream.ReadRawVarint64();
-            if ((Flags & 0x8) == 0) CreatorPowerPrototypeRef = stream.ReadRawVarint64();
-            if ((Flags & 0x10) > 0) UnknownSize = stream.ReadRawVarint64();
+            if ((FieldFlags & 0x1) == 0) CreatorId = stream.ReadRawVarint64();
+            if ((FieldFlags & 0x2) == 0) UltimateCreatorId = stream.ReadRawVarint64();
+            if ((FieldFlags & 0x4) == 0) ConditionPrototypeRef = stream.ReadRawVarint64();
+            if ((FieldFlags & 0x8) == 0) CreatorPowerPrototypeRef = stream.ReadRawVarint64();
+            if ((FieldFlags & 0x10) > 0) UnknownSize = stream.ReadRawVarint64();
 
-            if ((Flags & 0x200) > 0)
+            if ((FieldFlags & 0x200) > 0)
             {
                 AssetId = stream.ReadRawVarint64();     // MarvelPlayer_BlackCat
-                StartTime = stream.ReadRawVarint64();   // zigzag
+                StartTime = stream.ReadRawInt32();
             }
 
-            if ((Flags & 0x40) > 0) PauseTime = stream.ReadRawVarint64();
-            if ((Flags & 0x80) > 0) Field10 = stream.ReadRawVarint64();
-            if ((Flags & 0x400) > 0) UpdateInterval = stream.ReadRawVarint64();
+            if ((FieldFlags & 0x40) > 0) PauseTime = stream.ReadRawInt32();
+            if ((FieldFlags & 0x80) > 0) TimeRemaining = stream.ReadRawInt32();
+            if ((FieldFlags & 0x400) > 0) UpdateInterval = stream.ReadRawInt32();
             
             PropertyCollectionReplicationId = stream.ReadRawVarint64();
             Properties = new Property[stream.ReadRawUInt32()];
             for (int i = 0; i < Properties.Length; i++)
                 Properties[i] = new(stream);
 
-            if ((Flags & 0x800) > 0) Field13 = stream.ReadRawVarint32();
+            if ((FieldFlags & 0x800) > 0) Field13 = stream.ReadRawVarint32();
         }
 
         public Condition()
@@ -61,29 +61,29 @@ namespace MHServerEmu.GameServer.Powers
             {
                 CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
 
-                stream.WriteRawVarint64(Flags);
+                stream.WriteRawVarint64(FieldFlags);
                 stream.WriteRawVarint64(Id);
-                if ((Flags & 0x1) == 0) stream.WriteRawVarint64(CreatorId);
-                if ((Flags & 0x2) == 0) stream.WriteRawVarint64(UltimateCreatorId);
-                if ((Flags & 0x4) == 0) stream.WriteRawVarint64(ConditionPrototypeRef);
-                if ((Flags & 0x8) == 0) stream.WriteRawVarint64(CreatorPowerPrototypeRef);
-                if ((Flags & 0x10) > 0) stream.WriteRawVarint64(UnknownSize);
+                if ((FieldFlags & 0x1) == 0) stream.WriteRawVarint64(CreatorId);
+                if ((FieldFlags & 0x2) == 0) stream.WriteRawVarint64(UltimateCreatorId);
+                if ((FieldFlags & 0x4) == 0) stream.WriteRawVarint64(ConditionPrototypeRef);
+                if ((FieldFlags & 0x8) == 0) stream.WriteRawVarint64(CreatorPowerPrototypeRef);
+                if ((FieldFlags & 0x10) > 0) stream.WriteRawVarint64(UnknownSize);
 
-                if ((Flags & 0x200) > 0)
+                if ((FieldFlags & 0x200) > 0)
                 {
                     stream.WriteRawVarint64(AssetId);
-                    stream.WriteRawVarint64(StartTime);
+                    stream.WriteRawInt32(StartTime);
                 }
 
-                if ((Flags & 0x40) > 0) stream.WriteRawVarint64(PauseTime);
-                if ((Flags & 0x80) > 0) stream.WriteRawVarint64(Field10);
-                if ((Flags & 0x400) > 0) stream.WriteRawVarint64(UpdateInterval);
+                if ((FieldFlags & 0x40) > 0) stream.WriteRawInt32(PauseTime);
+                if ((FieldFlags & 0x80) > 0) stream.WriteRawInt32(TimeRemaining);
+                if ((FieldFlags & 0x400) > 0) stream.WriteRawInt32(UpdateInterval);
 
                 stream.WriteRawVarint64(PropertyCollectionReplicationId);
                 stream.WriteRawUInt32((uint)Properties.Length);
                 foreach (Property property in Properties) stream.WriteRawBytes(property.Encode());
 
-                if ((Flags & 0x800) > 0) stream.WriteRawVarint32(Field13);
+                if ((FieldFlags & 0x800) > 0) stream.WriteRawVarint32(Field13);
 
                 stream.Flush();
                 return memoryStream.ToArray();
@@ -95,7 +95,7 @@ namespace MHServerEmu.GameServer.Powers
             using (MemoryStream memoryStream = new())
             using (StreamWriter streamWriter = new(memoryStream))
             {
-                streamWriter.WriteLine($"Flags: 0x{Flags.ToString("X")}");
+                streamWriter.WriteLine($"FieldFlags: 0x{FieldFlags.ToString("X")}");
                 streamWriter.WriteLine($"Id: 0x{Id.ToString("X")}");
                 streamWriter.WriteLine($"CreatorId: 0x{CreatorId.ToString("X")}");
                 streamWriter.WriteLine($"UltimateCreatorId: 0x{UltimateCreatorId.ToString("X")}");
@@ -105,7 +105,7 @@ namespace MHServerEmu.GameServer.Powers
                 streamWriter.WriteLine($"AssetId: 0x{AssetId.ToString("X")}");
                 streamWriter.WriteLine($"StartTime: 0x{StartTime.ToString("X")}");
                 streamWriter.WriteLine($"PauseTime: 0x{PauseTime.ToString("X")}");
-                streamWriter.WriteLine($"Field10: 0x{Field10.ToString("X")}");
+                streamWriter.WriteLine($"TimeRemaining: 0x{TimeRemaining.ToString("X")}");
                 streamWriter.WriteLine($"PropertyCollectionReplicationId: 0x{PropertyCollectionReplicationId.ToString("X")}");
                 for (int i = 0; i < Properties.Length; i++) streamWriter.WriteLine($"Property{i}: {Properties[i]}");
                 streamWriter.WriteLine($"Field13: 0x{Field13.ToString("X")}");

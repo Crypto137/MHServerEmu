@@ -1,12 +1,13 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoding;
+using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.GameServer.Entities.Avatars
 {
     public class AbilityKeyMapping
     {
-        public ulong PowerSpecIndex { get; set; }   // int zigzag
+        public int PowerSpecIndex { get; set; }
         public bool ShouldPersist { get; set; }
         public ulong AssociatedTransformMode { get; set; }  // EnumProperty
         public ulong Slot0 { get; set; }    // EnumProperty
@@ -15,7 +16,7 @@ namespace MHServerEmu.GameServer.Entities.Avatars
 
         public AbilityKeyMapping(CodedInputStream stream, BoolDecoder boolDecoder)
         {
-            PowerSpecIndex = stream.ReadRawVarint64();
+            PowerSpecIndex = stream.ReadRawInt32();
 
             if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
             ShouldPersist = boolDecoder.ReadBool();
@@ -29,7 +30,7 @@ namespace MHServerEmu.GameServer.Entities.Avatars
                 PowerSlots[i] = stream.ReadRawVarint64();
         }
 
-        public AbilityKeyMapping(ulong powerSpecIndex, bool shouldPersist, ulong associatedTransformMode, ulong slot0, ulong slot1, ulong[] powerSlots)
+        public AbilityKeyMapping(int powerSpecIndex, bool shouldPersist, ulong associatedTransformMode, ulong slot0, ulong slot1, ulong[] powerSlots)
         {
             PowerSpecIndex = powerSpecIndex;
             ShouldPersist = shouldPersist;
@@ -45,7 +46,7 @@ namespace MHServerEmu.GameServer.Entities.Avatars
             {
                 CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
 
-                stream.WriteRawVarint64(PowerSpecIndex);
+                stream.WriteRawInt32(PowerSpecIndex);
 
                 byte bitBuffer = boolEncoder.GetBitBuffer();             // ShouldPersist
                 if (bitBuffer != 0) stream.WriteRawByte(bitBuffer);

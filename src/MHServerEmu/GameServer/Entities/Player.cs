@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common;
 using MHServerEmu.Common.Encoding;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.Achievements;
@@ -13,8 +12,6 @@ namespace MHServerEmu.GameServer.Entities
 {
     public class Player : Entity
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public ulong EnumValue { get; set; }
         public Mission[] Missions { get; set; }
         public Quest[] Quests { get; set; }
