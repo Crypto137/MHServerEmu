@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using Gazillion;
 using MHServerEmu.Common;
+using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.Networking
 {

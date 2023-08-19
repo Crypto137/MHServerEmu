@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common;
 using MHServerEmu.Common.Encoding;
+using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.GameServer.Social
 {
