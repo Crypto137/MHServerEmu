@@ -108,7 +108,7 @@ namespace MHServerEmu.GameServer.Regions
             messageList.Add(new(localPlayerMessage));
 
             GameMessage[] localPlayerEntityCreateMessages = PacketHelper.LoadMessagesFromPacketFile("LocalPlayerEntityCreateMessages.bin");
-            ulong replacementInventorySlot = 100;   // 100 here because no hero occupies slot 100, this to check that we have successfully swapped heroes
+            uint replacementInventorySlot = 100;   // 100 here because no hero occupies slot 100, this to check that we have successfully swapped heroes
 
             foreach (GameMessage message in localPlayerEntityCreateMessages)
             {
@@ -137,14 +137,14 @@ namespace MHServerEmu.GameServer.Regions
                     {
                         if (baseData.EntityId == (ulong)avatarEntityId)
                         {
-                            replacementInventorySlot = baseData.DynamicFields[5];
-                            baseData.DynamicFields[4] = 273;    // put selected avatar in PlayerAvatarInPlay
-                            baseData.DynamicFields[5] = 0;      // set avatar entity inventory slot to 0
+                            replacementInventorySlot = baseData.InvLocPrev.Slot;
+                            baseData.InvLocPrev.InventoryPrototypeId = 273;         // put selected avatar in PlayerAvatarInPlay
+                            baseData.InvLocPrev.Slot = 0;                           // set avatar entity inventory slot to 0
                         }
                         else if (baseData.EntityId == (ulong)HardcodedAvatarEntity.BlackCat)
                         {
-                            baseData.DynamicFields[4] = 169;                        // put Black Cat in PlayerAvatarLibrary 
-                            baseData.DynamicFields[5] = replacementInventorySlot;   // set Black Cat slot to the one previously occupied by the hero who replaces her
+                            baseData.InvLocPrev.InventoryPrototypeId = 169;         // put Black Cat in PlayerAvatarLibrary 
+                            baseData.InvLocPrev.Slot = replacementInventorySlot;    // set Black Cat slot to the one previously occupied by the hero who replaces her
 
                             // Black Cat goes last in the hardcoded messages, so this should always be assigned last
                             if (replacementInventorySlot == 0) Logger.Warn("replacementInventorySlot is 100! Check the hardcoded avatar entity data");

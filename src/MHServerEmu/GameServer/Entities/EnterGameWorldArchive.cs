@@ -39,9 +39,7 @@ namespace MHServerEmu.GameServer.Entities
 
             if ((FieldFlags & 0x800) > 0) EnumEntityPrototype = stream.ReadRawVarint64();
 
-            Position = new(stream.ReadRawFloat(3),
-                stream.ReadRawFloat(3),
-                stream.ReadRawFloat(3));
+            Position = new(stream, 3);
 
             if ((FieldFlags & 0x1) > 0)
                 Orientation = new(stream.ReadRawFloat(6), stream.ReadRawFloat(6), stream.ReadRawFloat(6));
@@ -82,7 +80,7 @@ namespace MHServerEmu.GameServer.Entities
 
                 stream.WriteRawVarint64(ReplicationPolicy);
                 stream.WriteRawVarint64(EntityId);
-                stream.WriteRawVarint64((ulong)FieldFlags);
+                stream.WriteRawVarint32(FieldFlags);
 
                 if ((FieldFlags & 0x800) > 0) stream.WriteRawVarint64(EnumEntityPrototype);
                 stream.WriteRawBytes(Position.Encode(3));
