@@ -16,7 +16,7 @@ namespace MHServerEmu.GameServer.Entities
         public uint PathNodeUInt { get; set; }
         public LocomotionPathNode[] LocomotionPathNodes { get; set; } = Array.Empty<LocomotionPathNode>();
 
-        public LocomotionState(CodedInputStream stream, int fieldFlags)
+        public LocomotionState(CodedInputStream stream, uint fieldFlags)
         {
             if ((fieldFlags & 0x8) > 0) LocomotionFlags = stream.ReadRawVarint64();
             if ((fieldFlags & 0x10) > 0) Method = stream.ReadRawVarint32();
@@ -52,7 +52,7 @@ namespace MHServerEmu.GameServer.Entities
             LocomotionPathNodes = locomotionPathNodes;
         }
 
-        public byte[] Encode(int fieldFlags)
+        public byte[] Encode(uint fieldFlags)
         {
             using (MemoryStream memoryStream = new())
             {

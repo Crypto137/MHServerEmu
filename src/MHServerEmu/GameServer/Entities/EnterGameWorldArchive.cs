@@ -18,8 +18,8 @@ namespace MHServerEmu.GameServer.Entities
 
         public ulong ReplicationPolicy { get; }
         public ulong EntityId { get; set; }
-        public int FieldFlags { get; set; }
-        public int LocMsgFlags { get; set; }
+        public uint FieldFlags { get; set; }
+        public uint LocMsgFlags { get; set; }
         public ulong EnumEntityPrototype { get; set; }
         public Vector3 Position { get; set; }
         public Vector3 Orientation { get; set; }
@@ -33,7 +33,7 @@ namespace MHServerEmu.GameServer.Entities
             ReplicationPolicy = stream.ReadRawVarint64();
             EntityId = stream.ReadRawVarint64();
 
-            FieldFlags = (int)stream.ReadRawVarint64();
+            FieldFlags = stream.ReadRawVarint32();
             LocMsgFlags = FieldFlags >> 12;
 
             if ((FieldFlags & 0x800) > 0) EnumEntityPrototype = stream.ReadRawVarint64();
