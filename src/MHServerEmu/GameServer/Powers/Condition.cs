@@ -7,31 +7,31 @@ namespace MHServerEmu.GameServer.Powers
 {
     public class Condition
     {
-        public ulong FieldFlags { get; set; }
+        public uint FieldFlags { get; set; }
         public ulong Id { get; set; }
         public ulong CreatorId { get; set; }
         public ulong UltimateCreatorId { get; set; }
-        public ulong ConditionPrototypeRef { get; set; }
-        public ulong CreatorPowerPrototypeRef { get; set; }
-        public ulong UnknownSize { get; set; }
+        public ulong ConditionPrototypeRef { get; set; }    // enum
+        public ulong CreatorPowerPrototypeRef { get; set; } // enum
+        public uint Index { get; set; }
         public ulong AssetId { get; set; }
         public int StartTime { get; set; }
         public int PauseTime { get; set; }
         public int TimeRemaining { get; set; }  // 7200000 == 2 hours
         public int UpdateInterval { get; set; }
-        public ulong PropertyCollectionReplicationId { get; set; }
+        public uint PropertyCollectionReplicationId { get; set; }
         public Property[] Properties { get; set; }
         public uint Field13 { get; set; }
 
         public Condition(CodedInputStream stream)
         {
-            FieldFlags = stream.ReadRawVarint64();
+            FieldFlags = stream.ReadRawVarint32();
             Id = stream.ReadRawVarint64();
             if ((FieldFlags & 0x1) == 0) CreatorId = stream.ReadRawVarint64();
             if ((FieldFlags & 0x2) == 0) UltimateCreatorId = stream.ReadRawVarint64();
             if ((FieldFlags & 0x4) == 0) ConditionPrototypeRef = stream.ReadRawVarint64();
             if ((FieldFlags & 0x8) == 0) CreatorPowerPrototypeRef = stream.ReadRawVarint64();
-            if ((FieldFlags & 0x10) > 0) UnknownSize = stream.ReadRawVarint64();
+            if ((FieldFlags & 0x10) > 0) Index = stream.ReadRawVarint32();
 
             if ((FieldFlags & 0x200) > 0)
             {
@@ -43,7 +43,7 @@ namespace MHServerEmu.GameServer.Powers
             if ((FieldFlags & 0x80) > 0) TimeRemaining = stream.ReadRawInt32();
             if ((FieldFlags & 0x400) > 0) UpdateInterval = stream.ReadRawInt32();
             
-            PropertyCollectionReplicationId = stream.ReadRawVarint64();
+            PropertyCollectionReplicationId = stream.ReadRawVarint32();
             Properties = new Property[stream.ReadRawUInt32()];
             for (int i = 0; i < Properties.Length; i++)
                 Properties[i] = new(stream);
@@ -67,7 +67,7 @@ namespace MHServerEmu.GameServer.Powers
                 if ((FieldFlags & 0x2) == 0) stream.WriteRawVarint64(UltimateCreatorId);
                 if ((FieldFlags & 0x4) == 0) stream.WriteRawVarint64(ConditionPrototypeRef);
                 if ((FieldFlags & 0x8) == 0) stream.WriteRawVarint64(CreatorPowerPrototypeRef);
-                if ((FieldFlags & 0x10) > 0) stream.WriteRawVarint64(UnknownSize);
+                if ((FieldFlags & 0x10) > 0) stream.WriteRawVarint64(Index);
 
                 if ((FieldFlags & 0x200) > 0)
                 {
@@ -79,7 +79,7 @@ namespace MHServerEmu.GameServer.Powers
                 if ((FieldFlags & 0x80) > 0) stream.WriteRawInt32(TimeRemaining);
                 if ((FieldFlags & 0x400) > 0) stream.WriteRawInt32(UpdateInterval);
 
-                stream.WriteRawVarint64(PropertyCollectionReplicationId);
+                stream.WriteRawVarint32(PropertyCollectionReplicationId);
                 stream.WriteRawUInt32((uint)Properties.Length);
                 foreach (Property property in Properties) stream.WriteRawBytes(property.Encode());
 
@@ -101,7 +101,7 @@ namespace MHServerEmu.GameServer.Powers
                 streamWriter.WriteLine($"UltimateCreatorId: 0x{UltimateCreatorId.ToString("X")}");
                 streamWriter.WriteLine($"ConditionPrototypeRef: 0x{ConditionPrototypeRef.ToString("X")}");
                 streamWriter.WriteLine($"CreatorPowerPrototypeRef: 0x{CreatorPowerPrototypeRef.ToString("X")}");
-                streamWriter.WriteLine($"UnknownSize: 0x{UnknownSize.ToString("X")}");
+                streamWriter.WriteLine($"Index: 0x{Index.ToString("X")}");
                 streamWriter.WriteLine($"AssetId: 0x{AssetId.ToString("X")}");
                 streamWriter.WriteLine($"StartTime: 0x{StartTime.ToString("X")}");
                 streamWriter.WriteLine($"PauseTime: 0x{PauseTime.ToString("X")}");
