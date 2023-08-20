@@ -161,14 +161,14 @@ namespace MHServerEmu.GameServer.Regions
                         {
                             if (property.Info.Name == "CostumeCurrent" && ConfigManager.PlayerData.CostumeOverride != 0)
                             {
-                                for (int i = 0; i < GameDatabase.GlobalEnumRefTable.Length; i++)
+                                try
                                 {
-                                    if (GameDatabase.GlobalEnumRefTable[i] == ConfigManager.PlayerData.CostumeOverride)
-                                    {
-                                        property.Value = (ulong)i;
-                                        break;
-                                    }
+                                    property.Value = GameDatabase.PrototypeEnumManager.GetEnumValue(PrototypeEnumType.Property, ConfigManager.PlayerData.CostumeOverride);
                                 }
+                                catch
+                                {
+                                    Logger.Warn($"Failed to get costume prototype enum for id {ConfigManager.PlayerData.CostumeOverride}");
+                                }   
                             }
                         }
                     }

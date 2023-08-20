@@ -16,9 +16,7 @@ namespace MHServerEmu.GameServer.GameData
 
         public static PropertyInfo[] PropertyInfos { get; private set; }
 
-        public static ulong[] GlobalEnumRefTable { get; private set; }
-        public static ulong[] ResourceEnumRefTable { get; private set; }
-        public static ulong[] PropertyIdPowerRefTable { get; private set; }
+        public static PrototypeEnumManager PrototypeEnumManager { get; private set; }
 
         static GameDatabase()
         {
@@ -30,12 +28,8 @@ namespace MHServerEmu.GameServer.GameData
 
             // Load other data
             _prototypeHashMap = LoadHashMap($"{AssetDirectory}\\PrototypeHashMap.tsv");
-
             PropertyInfos = LoadPropertyInfos($"{AssetDirectory}\\PropertyInfoTable.tsv");
-
-            GlobalEnumRefTable = LoadPrototypeEnumRefTable($"{AssetDirectory}\\GlobalEnumRefTable.bin");
-            ResourceEnumRefTable = LoadPrototypeEnumRefTable($"{AssetDirectory}\\ResourceEnumRefTable.bin");
-            PropertyIdPowerRefTable = LoadPrototypeEnumRefTable($"{AssetDirectory}\\PropertyIdPowerRefTable.bin");
+            PrototypeEnumManager = new($"{AssetDirectory}\\PrototypeEnumTables");
 
             // Verify and finish game database initialization
             if (VerifyData())
@@ -136,34 +130,13 @@ namespace MHServerEmu.GameServer.GameData
             return propertyInfoList.ToArray();
         }
 
-        private static ulong[] LoadPrototypeEnumRefTable(string path)
-        {
-            if (File.Exists(path))
-            {
-                using (MemoryStream memoryStream = new(File.ReadAllBytes(path)))
-                using (BinaryReader binaryReader = new(memoryStream))
-                {
-                    ulong[] prototypes = new ulong[memoryStream.Length / 8];
-                    for (int i = 0; i < prototypes.Length; i++) prototypes[i] = binaryReader.ReadUInt64();
-                    return prototypes;
-                }
-            }
-            else
-            {
-                Logger.Error($"Failed to locate {Path.GetFileName(path)}");
-                return Array.Empty<ulong>();
-            }
-        }
-
         private static bool VerifyData()
         {
             return _prototypeHashMap.Count > 0
                 && Calligraphy.Verify()
                 && Resource.Verify()
                 && PropertyInfos.Length > 0
-                && GlobalEnumRefTable.Length > 0
-                && ResourceEnumRefTable.Length > 0
-                && PropertyIdPowerRefTable.Length > 0;
+                && PrototypeEnumManager.Verify();
         }
     }
 }
