@@ -24,6 +24,7 @@ namespace MHServerEmu.GameServer.Regions
             RegionDict.Add(RegionPrototype.InvasionSafeAbodeRegion, LoadRegionData(RegionPrototype.InvasionSafeAbodeRegion));
             RegionDict.Add(RegionPrototype.NPERaftRegion, LoadRegionData(RegionPrototype.NPERaftRegion));
             RegionDict.Add(RegionPrototype.DailyGShockerSubwayRegionL60, LoadRegionData(RegionPrototype.DailyGShockerSubwayRegionL60));
+            RegionDict.Add(RegionPrototype.DailyGSinisterLabRegionL60, LoadRegionData(RegionPrototype.DailyGSinisterLabRegionL60)); 
             RegionDict.Add(RegionPrototype.BronxZooRegionL60, LoadRegionData(RegionPrototype.BronxZooRegionL60));
             RegionDict.Add(RegionPrototype.XManhattanRegion1to60, LoadRegionData(RegionPrototype.XManhattanRegion1to60));
             RegionDict.Add(RegionPrototype.XManhattanRegion60Cosmic, LoadRegionData(RegionPrototype.XManhattanRegion60Cosmic));
@@ -881,6 +882,51 @@ namespace MHServerEmu.GameServer.Regions
 
                     break;
 
+                case RegionPrototype.DailyGSinisterLabRegionL60:
+
+                    archiveData = new byte[] {
+                    };
+
+                    region = new(RegionPrototype.DailyGSinisterLabRegionL60,
+                        1153032329227796490,
+                        1901487720,
+                        archiveData,
+                        new(-1792.0f, -10752.0f, -1792.0f),
+                        new(1792.0f, 10752.0f, 1792.0f),
+                        new(11, DifficultyTier.Normal));
+
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeId("Regions/EndGame/Terminals/Green/SinistersLab/Areas/DailyGSinisterLabEntryArea.prototype"), new(), true);
+                    area.AddCell(new(6, GameDatabase.GetPrototypeId("Resource/Cells/EndGame/DangerDailies/SinisterLab/SinisterLabTerminal_Entry_A.cell"), new(0.0f, -8960.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH07SavageLand/Areas/MutateMarsh/MutateCaves/SinisterLab/SinisterLabBAreaReaverConstruction.prototype"), new(), false);                    
+                    area.AddCell(new(5, GameDatabase.GetPrototypeId("Resource/Cells/Savagelands/SinisterLab/SinisterLab_A/SinisterLab_B.cell"), new(0.0f, -5376.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    area = new(3, (AreaPrototype)GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH07SavageLand/Areas/MutateMarsh/MutateCaves/SinisterLab/SinisterLabDAreaCloneMonitoring.prototype"), new(), false);                    
+                    area.AddCell(new(4, GameDatabase.GetPrototypeId("Resource/Cells/Savagelands/SinisterLab/SinisterLab_A/SinisterLab_D.cell"), new(0.0f, -1792.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    area = new(4, (AreaPrototype)GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH07SavageLand/Areas/MutateMarsh/MutateCaves/SinisterLab/SinisterLabEAreaGeneticResearch.prototype"), new(), false);
+                    area.AddCell(new(3, GameDatabase.GetPrototypeId("Resource/Cells/Savagelands/SinisterLab/SinisterLab_A/SinisterLab_E.cell"), new(0.0f, 1792.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    area = new(5, (AreaPrototype)GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH07SavageLand/Areas/MutateMarsh/MutateCaves/SinisterLab/SinisterLabGAreaCommunications.prototype"), new(), false);
+                    area.AddCell(new(2, GameDatabase.GetPrototypeId("Resource/Cells/Savagelands/SinisterLab/SinisterLab_A/SinisterLab_G.cell"), new(0.0f, 5376.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    area = new(6, (AreaPrototype)GameDatabase.GetPrototypeId("Regions/EndGame/Terminals/Green/SinistersLab/Areas/DailyGSinisterLabBossArea.prototype"), new(), false);
+                    area.AddCell(new(1, GameDatabase.GetPrototypeId("Resource/Cells/EndGame/DangerDailies/SinisterLab/SinisterLabTerminal_Boss_A.cell"), new(0.0f, 8960.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(1000.0f, -10100.0f, 0.0f);
+                    region.EntranceOrientation = new(3.14159f, 0f, 0f);
+                    region.WaypointPosition = new(-500.0f, 6025.0f, 0.0f);
+                    // 0.0f, 10060.0f, 0.0f boss
+                    region.WaypointOrientation = new();
+                    
+                    break;
+                    
                 case RegionPrototype.BronxZooRegionL60:
                     archiveData = new byte[] {
                     };
