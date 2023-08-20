@@ -12,15 +12,15 @@ namespace MHServerEmu.GameServer.Entities
         // player 01B2F8FD06A021F0A301BC40902E9103BC05000001
         // waypoint 010C028043E06BD82AC801
         // something with 0xA0 01BEF8FD06A001B6A501D454902E0094050000
+        // known Flags: 0x02 == mini (waypoint, etc), 0x10A0 == players, 0xA0 == ??
 
-        // known FieldFlags: 0x02 == mini (waypoint, etc), 0x10A0 == players, 0xA0 == ??
+        private const int FieldFlagCount = 16;  // keep flag count a bit higher than we need just in case so we don't miss anything
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public ulong ReplicationPolicy { get; }
         public ulong EntityId { get; set; }
-        public uint FieldFlags { get; set; }
-        public uint LocMsgFlags { get; set; }
+        public bool[] Flags { get; set; }   // mystery flags: 2, 6
         public ulong EnumEntityPrototype { get; set; }
         public Vector3 Position { get; set; }
         public Vector3 Orientation { get; set; }
@@ -34,20 +34,20 @@ namespace MHServerEmu.GameServer.Entities
             ReplicationPolicy = stream.ReadRawVarint64();
             EntityId = stream.ReadRawVarint64();
 
-            FieldFlags = stream.ReadRawVarint32();
-            LocMsgFlags = FieldFlags >> 12;
+            Flags = stream.ReadRawVarint32().ToBoolArray(FieldFlagCount);
+            //LocMsgFlags = Flags >> 12;
 
-            if ((FieldFlags & 0x800) > 0) EnumEntityPrototype = stream.ReadRawVarint64();
+            if (Flags[11]) EnumEntityPrototype = stream.ReadRawVarint64();
 
             Position = new(stream, 3);
 
-            if ((FieldFlags & 0x1) > 0)
+            if (Flags[0])
                 Orientation = new(stream.ReadRawFloat(6), stream.ReadRawFloat(6), stream.ReadRawFloat(6));
             else
                 Orientation = new(stream.ReadRawFloat(6), 0f, 0f);
 
-            if ((FieldFlags & 0x2) == 0) LocomotionState = new(stream, FieldFlags);
-            if ((LocMsgFlags & 0x1) > 0) UnknownSetting = stream.ReadRawVarint32();
+            if (Flags[1] == false) LocomotionState = new(stream, Flags);
+            if (Flags[12]) UnknownSetting = stream.ReadRawVarint32();          // LocMsgFlags[0]
 
             if (stream.IsAtEnd == false) Logger.Warn("Archive contains unknown fields!");
         }
@@ -56,7 +56,7 @@ namespace MHServerEmu.GameServer.Entities
         {
             ReplicationPolicy = 0x01;
             EntityId = entityId;
-            FieldFlags = 0x02;
+            Flags = 0x02u.ToBoolArray(FieldFlagCount);
             Position = position;
             Orientation = new(orientation, 0f, 0f);
         }
@@ -65,7 +65,7 @@ namespace MHServerEmu.GameServer.Entities
         {
             ReplicationPolicy = 0x01;
             EntityId = entityId;
-            FieldFlags = 0x10A0;
+            Flags = 0x10A0u.ToBoolArray(FieldFlagCount);
             Position = position;
             Orientation = new(orientation, 0f, 0f);
             LocomotionState = new(moveSpeed);
@@ -80,18 +80,18 @@ namespace MHServerEmu.GameServer.Entities
 
                 stream.WriteRawVarint64(ReplicationPolicy);
                 stream.WriteRawVarint64(EntityId);
-                stream.WriteRawVarint32(FieldFlags);
+                stream.WriteRawVarint32(Flags.ToUInt32());
 
-                if ((FieldFlags & 0x800) > 0) stream.WriteRawVarint64(EnumEntityPrototype);
+                if (Flags[11]) stream.WriteRawVarint64(EnumEntityPrototype);
                 stream.WriteRawBytes(Position.Encode(3));
 
-                if ((FieldFlags & 0x1) > 0)
+                if (Flags[0])
                     stream.WriteRawBytes(Orientation.Encode(6));
                 else
                     stream.WriteRawFloat(Orientation.X, 6);
 
-                if ((FieldFlags & 0x2) == 0) stream.WriteRawBytes(LocomotionState.Encode(FieldFlags));
-                if ((LocMsgFlags & 0x1) > 0) stream.WriteRawVarint32(UnknownSetting);
+                if (Flags[1] == false) stream.WriteRawBytes(LocomotionState.Encode(Flags));
+                if (Flags[12]) stream.WriteRawVarint32(UnknownSetting);
 
                 stream.Flush();
                 return memoryStream.ToArray();
@@ -105,7 +105,7 @@ namespace MHServerEmu.GameServer.Entities
             {
                 streamWriter.WriteLine($"ReplicationPolicy: 0x{ReplicationPolicy.ToString("X")}");
                 streamWriter.WriteLine($"EntityId: 0x{EntityId.ToString("X")}");
-                streamWriter.WriteLine($"FieldFlags: 0x{FieldFlags.ToString("X")}");
+                for (int i = 0; i < Flags.Length; i++) streamWriter.WriteLine($"Flag{i}: {Flags[i]}");
                 streamWriter.WriteLine($"EnumEntityPrototype: 0x{EnumEntityPrototype.ToString("X")}");
                 streamWriter.WriteLine($"Position: {Position}");
                 streamWriter.WriteLine($"Orientation: {Orientation}");

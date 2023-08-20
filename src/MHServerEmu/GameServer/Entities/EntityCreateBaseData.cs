@@ -7,13 +7,16 @@ namespace MHServerEmu.GameServer.Entities
 {
     public class EntityCreateBaseData
     {
+        private const int FlagCount = 16;  // keep flag count a bit higher than we need just in case so we don't miss anything
+        private const int LocFlagCount = 16;
+
         // Note: in old client builds (July 2014 and earlier) this used to be a protobuf message with a lot of fields.
         // It was probably converted to an archive for optimization reasons.
         public uint ReplicationPolicy { get; set; }
         public ulong EntityId { get; set; }
         public ulong EntityPrototypeEnum { get; set; }
-        public uint Flags { get; set; }         // the original message contained bools, they might have been packed with field flags
-        public uint LocFieldFlags { get; set; }
+        public bool[] Flags { get; set; }         // mystery flags: 2, 10, 12, 13
+        public bool[] LocFlags { get; set; }
         public uint InterestPolicies { get; set; }
         public uint AvatarWorldInstanceId { get; set; }
         public uint DbId { get; set; }
@@ -24,9 +27,9 @@ namespace MHServerEmu.GameServer.Entities
         public ulong SourceEntityId { get; }
         public Vector3 SourcePosition { get; }
         public ulong ActivePowerPrototypeId { get; }
-        public InventoryLocation InvLocPrev { get; }
         public InventoryLocation InvLoc { get; }
-        public ulong[] Vector { get; }
+        public InventoryLocation InvLocPrev { get; }
+        public ulong[] Vector { get; } = Array.Empty<ulong>();
 
         public EntityCreateBaseData(byte[] data)
         {
@@ -35,33 +38,33 @@ namespace MHServerEmu.GameServer.Entities
             ReplicationPolicy = stream.ReadRawVarint32();
             EntityId = stream.ReadRawVarint64();
             EntityPrototypeEnum = stream.ReadRawVarint64();
-            Flags = stream.ReadRawVarint32();
-            LocFieldFlags = stream.ReadRawVarint32();
+            Flags = stream.ReadRawVarint32().ToBoolArray(FlagCount);
+            LocFlags = stream.ReadRawVarint32().ToBoolArray(LocFlagCount);
 
-            if ((Flags & 0x20) > 0) InterestPolicies = stream.ReadRawVarint32();
-            if ((Flags & 0x200) > 0) AvatarWorldInstanceId = stream.ReadRawVarint32();
-            if ((Flags & 0x100) > 0) DbId = stream.ReadRawVarint32();
+            if (Flags[5]) InterestPolicies = stream.ReadRawVarint32();
+            if (Flags[9]) AvatarWorldInstanceId = stream.ReadRawVarint32();
+            if (Flags[8]) DbId = stream.ReadRawVarint32();
 
             // Location
-            if ((Flags & 0x1) > 0)
+            if (Flags[0])
             {
                 Position = new(stream, 3);
 
-                if ((LocFieldFlags & 0x1) > 0)
+                if (LocFlags[0])
                     Orientation = new(stream.ReadRawFloat(6), stream.ReadRawFloat(6), stream.ReadRawFloat(6));
                 else
                     Orientation = new(stream.ReadRawFloat(6), 0f, 0f);
             }
 
-            if ((LocFieldFlags & 0x2) == 0) LocomotionState = new(stream, LocFieldFlags);
-            if ((Flags & 0x800) > 0) BoundsScaleOverride = stream.ReadRawFloat(8);
-            if ((Flags & 0x8) > 0) SourceEntityId = stream.ReadRawVarint64();
-            if ((Flags & 0x10) > 0) SourcePosition = new(stream, 3);
-            if ((Flags & 0x2) > 0) ActivePowerPrototypeId = stream.ReadRawVarint64();
-            if ((Flags & 0x40) > 0) InvLocPrev = new(stream);
-            if ((Flags & 0x80) > 0) InvLoc = new(stream);
+            if (LocFlags[1] == false) LocomotionState = new(stream, LocFlags);
+            if (Flags[11]) BoundsScaleOverride = stream.ReadRawFloat(8);
+            if (Flags[3]) SourceEntityId = stream.ReadRawVarint64();
+            if (Flags[4]) SourcePosition = new(stream, 3);
+            if (Flags[1]) ActivePowerPrototypeId = stream.ReadRawVarint64();
+            if (Flags[6]) InvLoc = new(stream);
+            if (Flags[7]) InvLocPrev = new(stream);
 
-            if ((Flags & 0x4000) > 0)
+            if (Flags[14])
             {
                 Vector = new ulong[stream.ReadRawVarint64()];
                 for (int i = 0; i < Vector.Length; i++)
@@ -82,33 +85,33 @@ namespace MHServerEmu.GameServer.Entities
                 stream.WriteRawVarint32(ReplicationPolicy);
                 stream.WriteRawVarint64(EntityId);
                 stream.WriteRawVarint64(EntityPrototypeEnum);
-                stream.WriteRawVarint32(Flags);
-                stream.WriteRawVarint32(LocFieldFlags);
+                stream.WriteRawVarint32(Flags.ToUInt32());
+                stream.WriteRawVarint32(LocFlags.ToUInt32());
 
-                if ((Flags & 0x20) > 0) stream.WriteRawVarint32(InterestPolicies);
-                if ((Flags & 0x200) > 0) stream.WriteRawVarint32(AvatarWorldInstanceId);
-                if ((Flags & 0x100) > 0) stream.WriteRawVarint32(DbId);
+                if (Flags[5]) stream.WriteRawVarint32(InterestPolicies);
+                if (Flags[9]) stream.WriteRawVarint32(AvatarWorldInstanceId);
+                if (Flags[8]) stream.WriteRawVarint32(DbId);
 
                 // Location
-                if ((Flags & 0x1) > 0)
+                if (Flags[0])
                 {
                     stream.WriteRawBytes(Position.Encode(3));
 
-                    if ((LocFieldFlags & 0x1) > 0)
+                    if (LocFlags[0])
                         stream.WriteRawBytes(Orientation.Encode(6));
                     else
                         stream.WriteRawFloat(Orientation.X, 6);
                 }
 
-                if ((LocFieldFlags & 0x2) == 0) stream.WriteRawBytes(LocomotionState.Encode(LocFieldFlags));
-                if ((Flags & 0x800) > 0) stream.WriteRawFloat(BoundsScaleOverride, 8);
-                if ((Flags & 0x8) > 0) stream.WriteRawVarint64(SourceEntityId);
-                if ((Flags & 0x10) > 0) stream.WriteRawBytes(SourcePosition.Encode(3));
-                if ((Flags & 0x2) > 0) stream.WriteRawVarint64(ActivePowerPrototypeId);
-                if ((Flags & 0x40) > 0) stream.WriteRawBytes(InvLocPrev.Encode());
-                if ((Flags & 0x80) > 0) stream.WriteRawBytes(InvLoc.Encode());
+                if (LocFlags[1] == false) stream.WriteRawBytes(LocomotionState.Encode(LocFlags));
+                if (Flags[11]) stream.WriteRawFloat(BoundsScaleOverride, 8);
+                if (Flags[3]) stream.WriteRawVarint64(SourceEntityId);
+                if (Flags[4]) stream.WriteRawBytes(SourcePosition.Encode(3));
+                if (Flags[1]) stream.WriteRawVarint64(ActivePowerPrototypeId);
+                if (Flags[6]) stream.WriteRawBytes(InvLoc.Encode());
+                if (Flags[7]) stream.WriteRawBytes(InvLocPrev.Encode());
 
-                if ((Flags & 0x4000) > 0)
+                if (Flags[14])
                 {
                     stream.WriteRawVarint64((ulong)Vector.Length);
                     for (int i = 0; i < Vector.Length; i++)
@@ -128,8 +131,8 @@ namespace MHServerEmu.GameServer.Entities
                 streamWriter.WriteLine($"ReplicationPolicy: 0x{ReplicationPolicy.ToString("X")}");
                 streamWriter.WriteLine($"EntityId: 0x{EntityId.ToString("X")}");
                 streamWriter.WriteLine($"EntityPrototypeEnum: 0x{EntityPrototypeEnum.ToString("X")}");
-                streamWriter.WriteLine($"Flags: 0x{Flags.ToString("X")}");
-                streamWriter.WriteLine($"LocFieldFlags: 0x{LocFieldFlags.ToString("X")}");
+                for (int i = 0; i < Flags.Length; i++) streamWriter.WriteLine($"Flag{i}: {Flags[i]}");
+                for (int i = 0; i < LocFlags.Length; i++) streamWriter.WriteLine($"LocFlag{i}: {LocFlags[i]}");
                 streamWriter.WriteLine($"InterestPolicies: 0x{InterestPolicies.ToString("X")}");
                 streamWriter.WriteLine($"AvatarWorldInstanceId: 0x{AvatarWorldInstanceId.ToString("X")}");
                 streamWriter.WriteLine($"DbId: 0x{DbId.ToString("X")}");
@@ -140,8 +143,8 @@ namespace MHServerEmu.GameServer.Entities
                 streamWriter.WriteLine($"SourceEntityId: 0x{SourceEntityId}");
                 streamWriter.WriteLine($"SourcePosition: {SourcePosition}");
                 streamWriter.WriteLine($"ActivePowerPrototypeId: 0x{ActivePowerPrototypeId.ToString("X")}");
-                streamWriter.WriteLine($"InvLocPrev: {InvLocPrev}");
                 streamWriter.WriteLine($"InvLoc: {InvLoc}");
+                streamWriter.WriteLine($"InvLocPrev: {InvLocPrev}");
                 for (int i = 0; i < Vector.Length; i++) streamWriter.WriteLine($"Vector{i}: 0x{Vector[i].ToString("X")}");
 
                 streamWriter.Flush();
