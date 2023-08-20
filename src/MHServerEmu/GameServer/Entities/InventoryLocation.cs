@@ -1,5 +1,7 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
+using MHServerEmu.Common.Extensions;
+using MHServerEmu.GameServer.GameData;
 
 namespace MHServerEmu.GameServer.Entities
 {
@@ -12,7 +14,7 @@ namespace MHServerEmu.GameServer.Entities
         public InventoryLocation(CodedInputStream stream)
         {
             ContainerEntityId = stream.ReadRawVarint64();
-            InventoryPrototypeId = stream.ReadRawVarint64();
+            InventoryPrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Inventory);
             Slot = stream.ReadRawVarint32();
         }
 
@@ -30,7 +32,7 @@ namespace MHServerEmu.GameServer.Entities
                 CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
 
                 stream.WriteRawVarint64(ContainerEntityId);
-                stream.WriteRawVarint64(InventoryPrototypeId);
+                stream.WritePrototypeId(InventoryPrototypeId, PrototypeEnumType.Inventory);
                 stream.WriteRawVarint64(Slot);
 
                 stream.Flush();
@@ -44,7 +46,7 @@ namespace MHServerEmu.GameServer.Entities
             using (StreamWriter streamWriter = new(memoryStream))
             {
                 streamWriter.WriteLine($"ContainerEntityId: 0x{ContainerEntityId.ToString("X")}");
-                streamWriter.WriteLine($"InventoryPrototypeId: 0x{InventoryPrototypeId.ToString("X")}");
+                streamWriter.WriteLine($"InventoryPrototypeId: {GameDatabase.GetPrototypePath(InventoryPrototypeId)}");
                 streamWriter.WriteLine($"Slot: 0x{Slot.ToString("X")}");
 
                 streamWriter.Flush();

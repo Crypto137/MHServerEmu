@@ -39,8 +39,8 @@ namespace MHServerEmu.GameServer.GameData
             }
         }
 
-        public ulong GetPrototypeId(PrototypeEnumType type, ulong enumValue) => _prototypeEnumDict[type][enumValue];
-        public ulong GetEnumValue(PrototypeEnumType type, ulong prototypeId) => _enumLookupDict[type][prototypeId];
+        public ulong GetPrototypeId(ulong enumValue, PrototypeEnumType type) => _prototypeEnumDict[type][enumValue];
+        public ulong GetEnumValue(ulong prototypeId, PrototypeEnumType type) => _enumLookupDict[type][prototypeId];
 
         public bool Verify()
         {

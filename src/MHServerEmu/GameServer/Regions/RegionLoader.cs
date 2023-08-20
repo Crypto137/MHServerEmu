@@ -138,16 +138,16 @@ namespace MHServerEmu.GameServer.Regions
                         if (baseData.EntityId == (ulong)avatarEntityId)
                         {
                             replacementInventorySlot = baseData.InvLoc.Slot;
-                            baseData.InvLoc.InventoryPrototypeId = 273;         // put selected avatar in PlayerAvatarInPlay
-                            baseData.InvLoc.Slot = 0;                           // set avatar entity inventory slot to 0
+                            baseData.InvLoc.InventoryPrototypeId = GameDatabase.GetPrototypeId("Entity/Inventory/PlayerInventories/PlayerAvatarInPlay.prototype");
+                            baseData.InvLoc.Slot = 0;                           // set selected avatar entity inventory slot to 0
                         }
                         else if (baseData.EntityId == (ulong)HardcodedAvatarEntity.BlackCat)
                         {
-                            baseData.InvLoc.InventoryPrototypeId = 169;         // put Black Cat in PlayerAvatarLibrary 
+                            baseData.InvLoc.InventoryPrototypeId = GameDatabase.GetPrototypeId("Entity/Inventory/PlayerInventories/PlayerAvatarLibrary.prototype");
                             baseData.InvLoc.Slot = replacementInventorySlot;    // set Black Cat slot to the one previously occupied by the hero who replaces her
 
                             // Black Cat goes last in the hardcoded messages, so this should always be assigned last
-                            if (replacementInventorySlot == 0) Logger.Warn("replacementInventorySlot is 100! Check the hardcoded avatar entity data");
+                            if (replacementInventorySlot == 100) Logger.Warn("replacementInventorySlot is 100! Check the hardcoded avatar entity data");
                         }
                     }
 
@@ -163,7 +163,7 @@ namespace MHServerEmu.GameServer.Regions
                             {
                                 try
                                 {
-                                    property.Value = GameDatabase.PrototypeEnumManager.GetEnumValue(PrototypeEnumType.Property, ConfigManager.PlayerData.CostumeOverride);
+                                    property.Value = GameDatabase.PrototypeEnumManager.GetEnumValue(ConfigManager.PlayerData.CostumeOverride, PrototypeEnumType.Property);
                                 }
                                 catch
                                 {

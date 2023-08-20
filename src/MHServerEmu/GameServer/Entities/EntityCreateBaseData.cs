@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.Common;
+using MHServerEmu.GameServer.GameData;
 
 namespace MHServerEmu.GameServer.Entities
 {
@@ -14,7 +15,7 @@ namespace MHServerEmu.GameServer.Entities
         // It was probably converted to an archive for optimization reasons.
         public uint ReplicationPolicy { get; set; }
         public ulong EntityId { get; set; }
-        public ulong EntityPrototypeEnum { get; set; }
+        public ulong PrototypeId { get; set; }
         public bool[] Flags { get; set; }         // mystery flags: 2, 10, 12, 13
         public bool[] LocFlags { get; set; }
         public uint InterestPolicies { get; set; }
@@ -37,7 +38,7 @@ namespace MHServerEmu.GameServer.Entities
 
             ReplicationPolicy = stream.ReadRawVarint32();
             EntityId = stream.ReadRawVarint64();
-            EntityPrototypeEnum = stream.ReadRawVarint64();
+            PrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Entity);
             Flags = stream.ReadRawVarint32().ToBoolArray(FlagCount);
             LocFlags = stream.ReadRawVarint32().ToBoolArray(LocFlagCount);
 
@@ -60,7 +61,7 @@ namespace MHServerEmu.GameServer.Entities
             if (Flags[11]) BoundsScaleOverride = stream.ReadRawFloat(8);
             if (Flags[3]) SourceEntityId = stream.ReadRawVarint64();
             if (Flags[4]) SourcePosition = new(stream, 3);
-            if (Flags[1]) ActivePowerPrototypeId = stream.ReadRawVarint64();
+            if (Flags[1]) ActivePowerPrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Power);
             if (Flags[6]) InvLoc = new(stream);
             if (Flags[7]) InvLocPrev = new(stream);
 
@@ -84,7 +85,7 @@ namespace MHServerEmu.GameServer.Entities
 
                 stream.WriteRawVarint32(ReplicationPolicy);
                 stream.WriteRawVarint64(EntityId);
-                stream.WriteRawVarint64(EntityPrototypeEnum);
+                stream.WritePrototypeId(PrototypeId, PrototypeEnumType.Entity);
                 stream.WriteRawVarint32(Flags.ToUInt32());
                 stream.WriteRawVarint32(LocFlags.ToUInt32());
 
@@ -107,7 +108,7 @@ namespace MHServerEmu.GameServer.Entities
                 if (Flags[11]) stream.WriteRawFloat(BoundsScaleOverride, 8);
                 if (Flags[3]) stream.WriteRawVarint64(SourceEntityId);
                 if (Flags[4]) stream.WriteRawBytes(SourcePosition.Encode(3));
-                if (Flags[1]) stream.WriteRawVarint64(ActivePowerPrototypeId);
+                if (Flags[1]) stream.WritePrototypeId(ActivePowerPrototypeId, PrototypeEnumType.Power);
                 if (Flags[6]) stream.WriteRawBytes(InvLoc.Encode());
                 if (Flags[7]) stream.WriteRawBytes(InvLocPrev.Encode());
 
@@ -130,7 +131,7 @@ namespace MHServerEmu.GameServer.Entities
             {
                 streamWriter.WriteLine($"ReplicationPolicy: 0x{ReplicationPolicy.ToString("X")}");
                 streamWriter.WriteLine($"EntityId: 0x{EntityId.ToString("X")}");
-                streamWriter.WriteLine($"EntityPrototypeEnum: 0x{EntityPrototypeEnum.ToString("X")}");
+                streamWriter.WriteLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
                 for (int i = 0; i < Flags.Length; i++) streamWriter.WriteLine($"Flag{i}: {Flags[i]}");
                 for (int i = 0; i < LocFlags.Length; i++) streamWriter.WriteLine($"LocFlag{i}: {LocFlags[i]}");
                 streamWriter.WriteLine($"InterestPolicies: 0x{InterestPolicies.ToString("X")}");
@@ -142,7 +143,7 @@ namespace MHServerEmu.GameServer.Entities
                 streamWriter.WriteLine($"BoundsScaleOverride: {BoundsScaleOverride}");
                 streamWriter.WriteLine($"SourceEntityId: 0x{SourceEntityId}");
                 streamWriter.WriteLine($"SourcePosition: {SourcePosition}");
-                streamWriter.WriteLine($"ActivePowerPrototypeId: 0x{ActivePowerPrototypeId.ToString("X")}");
+                streamWriter.WriteLine($"ActivePowerPrototypeId: {GameDatabase.GetPrototypePath(ActivePowerPrototypeId)}");
                 streamWriter.WriteLine($"InvLoc: {InvLoc}");
                 streamWriter.WriteLine($"InvLocPrev: {InvLocPrev}");
                 for (int i = 0; i < Vector.Length; i++) streamWriter.WriteLine($"Vector{i}: 0x{Vector[i].ToString("X")}");
