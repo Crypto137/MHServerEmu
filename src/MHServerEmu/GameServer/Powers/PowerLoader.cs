@@ -3,6 +3,7 @@ using Gazillion;
 using MHServerEmu.Networking;
 using MHServerEmu.Common;
 using MHServerEmu.GameServer.Entities;
+using MHServerEmu.GameServer.GameData;
 
 namespace MHServerEmu.GameServer.Powers
 {
@@ -43,13 +44,20 @@ namespace MHServerEmu.GameServer.Powers
                     Logger.Warn($"Failed to get power prototype ids for {avatarName}");
                 }
 
-                Type propertyEnumType = typeof(PowerProperties).GetNestedType(avatarName, BindingFlags.Public);
-                if (propertyEnumType != null)
+                // Set properties to unlock powers
+                string propertyIdFilter = (avatar == HardcodedAvatarEntity.MsMarvel)    // check for MsMarvel because her power prototype folder was renamed to CaptainMarvel
+                    ? $"Powers/Player/CaptainMarvel"
+                    : $"Powers/Player/{avatarName}";
+
+                List<ulong> powerPropertyIdList = GameDatabase.PrototypeEnumManager.GetPowerPropertyIdList(propertyIdFilter);
+                powerPropertyIdList.Add((ulong)Enum.Parse(typeof(TravelPowerProperty), avatarName));
+
+                if (powerPropertyIdList.Count > 0)
                 {
-                    foreach (ulong propertyId in Enum.GetValues(propertyEnumType))
+                    foreach (ulong propertyId in powerPropertyIdList)
                     {
                         messageList.Add(new(NetMessageSetProperty.CreateBuilder()
-                            .SetReplicationId(((ulong)Enum.Parse(typeof(HardcodedAvatarReplicationId), avatarName)))
+                            .SetReplicationId((ulong)Enum.Parse(typeof(HardcodedAvatarReplicationId), avatarName))
                             .SetPropertyId(propertyId)
                             .SetValueBits(2)
                             .Build()));

@@ -50,7 +50,19 @@ namespace MHServerEmu.GameServer.GameData
                 && _prototypeEnumDict[PrototypeEnumType.Property].Length > 0;
         }
 
-        private static ulong[] LoadPrototypeEnumTable(string path)
+        public List<ulong> GetPowerPropertyIdList(string filter)
+        {
+            ulong[] powerTable = _prototypeEnumDict[PrototypeEnumType.Power];
+            List<ulong> propertyIdList = new();
+
+            for (int i = 1; i < powerTable.Length; i++)
+                if (GameDatabase.GetPrototypePath(powerTable[i]).Contains(filter))
+                    propertyIdList.Add(DataHelper.ReconstructPowerPropertyIdFromHash((ulong)i));
+
+            return propertyIdList;
+        }
+
+        private ulong[] LoadPrototypeEnumTable(string path)
         {
             if (File.Exists(path))
             {
