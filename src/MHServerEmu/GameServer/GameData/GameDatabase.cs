@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Common;
 using MHServerEmu.GameServer.GameData.Gpak;
+using MHServerEmu.GameServer.Properties;
 
 namespace MHServerEmu.GameServer.GameData
 {

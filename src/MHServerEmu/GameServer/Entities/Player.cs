@@ -7,6 +7,7 @@ using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.Misc;
 using MHServerEmu.GameServer.Missions;
+using MHServerEmu.GameServer.Properties;
 using MHServerEmu.GameServer.Social;
 
 namespace MHServerEmu.GameServer.Entities

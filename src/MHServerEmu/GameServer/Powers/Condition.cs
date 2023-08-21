@@ -1,8 +1,8 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
-using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.GameData;
+using MHServerEmu.GameServer.Properties;
 
 namespace MHServerEmu.GameServer.Powers
 {

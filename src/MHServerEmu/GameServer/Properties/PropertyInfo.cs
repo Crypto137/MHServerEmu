@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MHServerEmu.GameServer.GameData
+namespace MHServerEmu.GameServer.Properties
 {
     public enum PropertyValueType
     {

@@ -3,7 +3,7 @@ using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.GameServer.GameData;
 
-namespace MHServerEmu.GameServer.Common
+namespace MHServerEmu.GameServer.Properties
 {
     public class Property
     {

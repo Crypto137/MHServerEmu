@@ -4,6 +4,7 @@ using MHServerEmu.Common.Encoding;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.Powers;
+using MHServerEmu.GameServer.Properties;
 
 namespace MHServerEmu.GameServer.Entities.Avatars
 {
