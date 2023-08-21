@@ -10,23 +10,21 @@ namespace MHServerEmu.GameServer.Properties
         private int _propertyInfoIndex;
 
         public ulong Id { get; set; }
-        public ulong Value { get; set; }
-        public PropertyInfo Info { get => GameDatabase.PropertyInfos[_propertyInfoIndex]; }
+        public PropertyValue Value { get; set; }
+        public PropertyInfo Info { get => GameDatabase.PropertyInfoTable[_propertyInfoIndex]; }
 
         public Property(CodedInputStream stream)
         {
             Id = stream.ReadRawVarint64();
-            Value = stream.ReadRawVarint64();
-
             CalculatePropertyInfoIndex();
+            CreateValueContainer(stream.ReadRawVarint64());
         }
 
-        public Property(ulong id, ulong value)
+        public Property(ulong id, ulong rawValue)
         {
             Id = id;
-            Value = value;
-
             CalculatePropertyInfoIndex();
+            CreateValueContainer(rawValue);
         }
 
         public byte[] Encode()
@@ -36,14 +34,14 @@ namespace MHServerEmu.GameServer.Properties
                 CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
 
                 stream.WriteRawVarint64(Id);
-                stream.WriteRawVarint64(Value);
+                stream.WriteRawVarint64(Value.RawValue);
 
                 stream.Flush();
                 return memoryStream.ToArray();
             }
         }
 
-        public NetStructProperty ToNetStruct() => NetStructProperty.CreateBuilder().SetId(Id).SetValue(Value).Build();
+        public NetStructProperty ToNetStruct() => NetStructProperty.CreateBuilder().SetId(Id).SetValue(Value.RawValue).Build();
 
         public override string ToString()
         {
@@ -51,10 +49,10 @@ namespace MHServerEmu.GameServer.Properties
             using (StreamWriter streamWriter = new(memoryStream))
             {
                 streamWriter.WriteLine($"Id: 0x{Id.ToString("X")}");
-                streamWriter.WriteLine($"Value: 0x{Value.ToString("X")}");
-                streamWriter.WriteLine($"PropertyInfo: {GameDatabase.PropertyInfos[_propertyInfoIndex]}");
-                streamWriter.Flush();
+                streamWriter.WriteLine($"Value: {Value}");
+                streamWriter.WriteLine($"PropertyInfo: {Info}");
 
+                streamWriter.Flush();
                 return Encoding.UTF8.GetString(memoryStream.ToArray());
             }
         }
@@ -64,6 +62,20 @@ namespace MHServerEmu.GameServer.Properties
             byte[] hiDword = BitConverter.GetBytes((uint)(Id & 0x00000000FFFFFFFF));    // get HIDWORD of propertyId
             Array.Reverse(hiDword);                                                     // reverse to match message data
             _propertyInfoIndex = BitConverter.ToInt32(hiDword) >> 21;                   // shift to get index in the table
+        }
+
+        private void CreateValueContainer(ulong rawValue)
+        {
+            switch (Info.ValueType)
+            {
+                case PropertyValueType.Integer:
+                    Value = new PropertyValueInteger(rawValue);
+                    break;
+
+                default:
+                    Value = new PropertyValue(rawValue);
+                    break;
+            }
         }
     }
 }

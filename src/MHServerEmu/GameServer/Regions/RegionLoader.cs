@@ -163,7 +163,7 @@ namespace MHServerEmu.GameServer.Regions
                             {
                                 try
                                 {
-                                    property.Value = GameDatabase.PrototypeEnumManager.GetEnumValue(ConfigManager.PlayerData.CostumeOverride, PrototypeEnumType.Property);
+                                    property.Value.Set(GameDatabase.PrototypeEnumManager.GetEnumValue(ConfigManager.PlayerData.CostumeOverride, PrototypeEnumType.Property));
                                 }
                                 catch
                                 {
