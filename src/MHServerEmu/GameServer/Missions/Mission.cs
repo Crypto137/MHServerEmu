@@ -2,15 +2,16 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoding;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.GameServer.GameData;
 
 namespace MHServerEmu.GameServer.Missions
 {
     public class Mission
     {
-        public ulong PrototypeId { get; set; }
+        public ulong PrototypeId1 { get; set; }
         public ulong State { get; set; }
         public ulong GameTime { get; set; }
-        public ulong PrototypeGuid { get; set; }
+        public ulong PrototypeId2 { get; set; }
         public int Random { get; set; }
         public Objective[] Objectives { get; set; }
         public ulong Participant { get; set; }
@@ -19,10 +20,10 @@ namespace MHServerEmu.GameServer.Missions
 
         public Mission(CodedInputStream stream, BoolDecoder boolDecoder)
         {
-            PrototypeId = stream.ReadRawVarint64();
+            PrototypeId1 = stream.ReadRawVarint64();
             State = stream.ReadRawVarint64();
             GameTime = stream.ReadRawVarint64();
-            PrototypeGuid = stream.ReadRawVarint64();
+            PrototypeId2 = stream.ReadPrototypeId(GameData.PrototypeEnumType.Property);
             Random = stream.ReadRawInt32();
             Objectives = new Objective[stream.ReadRawVarint64()];
             for (int i = 0; i < Objectives.Length; i++)
@@ -34,13 +35,13 @@ namespace MHServerEmu.GameServer.Missions
             BoolField = boolDecoder.ReadBool();
         }
 
-        public Mission(ulong prototypeId, ulong state, ulong gameTime, ulong prototypeGuid,
+        public Mission(ulong prototypeId1, ulong state, ulong gameTime, ulong prototypeId2,
             Objective[] objectives, ulong participant, ulong participantOwnerEntityId, bool boolField)
         {
-            PrototypeId = prototypeId;
+            PrototypeId1 = prototypeId1;
             State = state;
             GameTime = gameTime;
-            PrototypeGuid = prototypeGuid;
+            PrototypeId2 = prototypeId2;
             Objectives = objectives;
             Participant = participant;
             ParticipantOwnerEntityId = participantOwnerEntityId;
@@ -53,10 +54,10 @@ namespace MHServerEmu.GameServer.Missions
             {
                 CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
 
-                stream.WriteRawVarint64(PrototypeId);
+                stream.WriteRawVarint64(PrototypeId1);
                 stream.WriteRawVarint64(State);
                 stream.WriteRawVarint64(GameTime);
-                stream.WriteRawVarint64(PrototypeGuid);
+                stream.WritePrototypeId(PrototypeId2, GameData.PrototypeEnumType.Property);
                 stream.WriteRawInt32(Random);
                 stream.WriteRawVarint64((ulong)Objectives.Length);
                 foreach (Objective objective in Objectives)
@@ -78,10 +79,10 @@ namespace MHServerEmu.GameServer.Missions
             using (MemoryStream memoryStream = new())
             using (StreamWriter streamWriter = new(memoryStream))
             {
-                streamWriter.WriteLine($"PrototypeId: 0x{PrototypeId.ToString("X")}");
+                streamWriter.WriteLine($"PrototypeId1: 0x{PrototypeId1.ToString("X")}");
                 streamWriter.WriteLine($"State: 0x{State.ToString("X")}");
                 streamWriter.WriteLine($"GameTime: 0x{GameTime.ToString("X")}");
-                streamWriter.WriteLine($"PrototypeGuid: 0x{PrototypeGuid.ToString("X")}");
+                streamWriter.WriteLine($"PrototypeId2: {GameDatabase.GetPrototypePath(PrototypeId2)}");
                 streamWriter.WriteLine($"Random: 0x{Random.ToString("X")}");
                 for (int i = 0; i < Objectives.Length; i++) streamWriter.WriteLine($"Objective{i}: {Objectives[i]}");
                 streamWriter.WriteLine($"Participant: 0x{Participant.ToString("X")}");

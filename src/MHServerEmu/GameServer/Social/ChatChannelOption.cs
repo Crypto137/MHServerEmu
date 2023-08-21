@@ -1,24 +1,26 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoding;
+using MHServerEmu.Common.Extensions;
+using MHServerEmu.GameServer.GameData;
 
 namespace MHServerEmu.GameServer.Social
 {
     public class ChatChannelOption
     {
-        public ulong PrototypeEnum { get; set; }
+        public ulong PrototypeId { get; set; }
         public bool Value { get; set; }
 
         public ChatChannelOption(CodedInputStream stream, BoolDecoder boolDecoder)
         {
-            PrototypeEnum = stream.ReadRawVarint64();
+            PrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Property);
             if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
             Value = boolDecoder.ReadBool();
         }
 
-        public ChatChannelOption(ulong prototypeEnum, bool value)
+        public ChatChannelOption(ulong prototypeId, bool value)
         {
-            PrototypeEnum = prototypeEnum;
+            PrototypeId = prototypeId;
             Value = value;
         }
 
@@ -28,7 +30,7 @@ namespace MHServerEmu.GameServer.Social
             {
                 CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
 
-                stream.WriteRawVarint64(PrototypeEnum);
+                stream.WritePrototypeId(PrototypeId, PrototypeEnumType.Property);
 
                 byte bitBuffer = boolEncoder.GetBitBuffer();             //Value
                 if (bitBuffer != 0) stream.WriteRawByte(bitBuffer);
@@ -43,7 +45,7 @@ namespace MHServerEmu.GameServer.Social
             using (MemoryStream memoryStream = new())
             using (StreamWriter streamWriter = new(memoryStream))
             {
-                streamWriter.WriteLine($"PrototypeEnum: 0x{PrototypeEnum.ToString("X")}");
+                streamWriter.WriteLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
                 streamWriter.WriteLine($"Value: {Value}");
 
                 streamWriter.Flush();

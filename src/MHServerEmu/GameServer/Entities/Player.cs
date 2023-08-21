@@ -4,6 +4,7 @@ using MHServerEmu.Common.Encoding;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.Achievements;
 using MHServerEmu.GameServer.Common;
+using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.Misc;
 using MHServerEmu.GameServer.Missions;
 using MHServerEmu.GameServer.Social;
@@ -12,7 +13,7 @@ namespace MHServerEmu.GameServer.Entities
 {
     public class Player : Entity
     {
-        public ulong EnumValue { get; set; }
+        public ulong PrototypeId { get; set; }
         public Mission[] Missions { get; set; }
         public Quest[] Quests { get; set; }
         public ulong UnknownCollectionRepId { get; set;}
@@ -44,7 +45,7 @@ namespace MHServerEmu.GameServer.Entities
             ReadHeader(stream);
             ReadProperties(stream);
 
-            EnumValue = stream.ReadRawVarint64();
+            PrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Property);
 
             Missions = new Mission[stream.ReadRawVarint64()];
             for (int i = 0; i < Missions.Length; i++)
@@ -73,7 +74,7 @@ namespace MHServerEmu.GameServer.Entities
 
             StashInventories = new ulong[stream.ReadRawVarint64()];
             for (int i = 0; i < StashInventories.Length; i++)
-                StashInventories[i] = stream.ReadRawVarint64();
+                StashInventories[i] = stream.ReadPrototypeId(PrototypeEnumType.Property);
 
             AvailableBadges = new uint[stream.ReadRawVarint64()];
 
@@ -83,7 +84,7 @@ namespace MHServerEmu.GameServer.Entities
 
             ChatChannelOptions2 = new ulong[stream.ReadRawVarint64()];
             for (int i = 0; i < ChatChannelOptions2.Length; i++)
-                ChatChannelOptions2[i] = stream.ReadRawVarint64();
+                ChatChannelOptions2[i] = stream.ReadPrototypeId(PrototypeEnumType.Property);
 
             UnknownOptions = new ulong[stream.ReadRawVarint64()];
             for (int i = 0; i < UnknownOptions.Length; i++)
@@ -104,12 +105,12 @@ namespace MHServerEmu.GameServer.Entities
 
         // note: this is ugly
         public Player(ulong replicationPolicy, ulong replicationId, Property[] properties,
-            ulong enumValue, Mission[] missions, Quest[] quests, ulong unknownCollectionRepId, uint unknownCollectionSize,
+            ulong prototypeId, Mission[] missions, Quest[] quests, ulong unknownCollectionRepId, uint unknownCollectionSize,
             ulong shardId, ReplicatedString replicatedString1, ulong community1, ulong community2, ReplicatedString replicatedString2,
             ulong matchQueueStatus, bool replicationPolicyBool, ulong dateTime, Community community, ulong[] unknownFields)
             : base(replicationPolicy, replicationId, properties, unknownFields)
         {
-            EnumValue = enumValue;
+            PrototypeId = prototypeId;
             Missions = missions;
             Quests = quests;
             UnknownCollectionRepId = unknownCollectionRepId;
@@ -155,7 +156,7 @@ namespace MHServerEmu.GameServer.Entities
                 foreach (Property property in Properties)
                     stream.WriteRawBytes(property.Encode());
 
-                stream.WriteRawVarint64(EnumValue);
+                stream.WritePrototypeId(PrototypeId, PrototypeEnumType.Property);
 
                 stream.WriteRawVarint64((ulong)Missions.Length);
                 foreach (Mission mission in Missions)
@@ -184,7 +185,7 @@ namespace MHServerEmu.GameServer.Entities
                 if (bitBuffer != 0) stream.WriteRawByte(bitBuffer);
 
                 stream.WriteRawVarint64((ulong)StashInventories.Length);
-                foreach (ulong stashInventory in StashInventories) stream.WriteRawVarint64(stashInventory);
+                foreach (ulong stashInventory in StashInventories) stream.WritePrototypeId(stashInventory, PrototypeEnumType.Property);
 
                 stream.WriteRawVarint64((ulong)AvailableBadges.Length);
                 foreach (uint badge in AvailableBadges)
@@ -196,7 +197,7 @@ namespace MHServerEmu.GameServer.Entities
 
                 stream.WriteRawVarint64((ulong)ChatChannelOptions2.Length);
                 foreach (ulong option in ChatChannelOptions2)
-                    stream.WriteRawVarint64(option);
+                    stream.WritePrototypeId(option, PrototypeEnumType.Property);
 
                 stream.WriteRawVarint64((ulong)UnknownOptions.Length);
                 foreach (ulong option in UnknownOptions)
@@ -227,7 +228,7 @@ namespace MHServerEmu.GameServer.Entities
                 streamWriter.WriteLine($"ReplicationPolicy: 0x{ReplicationPolicy.ToString("X")}");
                 streamWriter.WriteLine($"ReplicationId: 0x{ReplicationId.ToString("X")}");
                 for (int i = 0; i < Properties.Length; i++) streamWriter.WriteLine($"Property{i}: {Properties[i]}");
-                streamWriter.WriteLine($"EnumValue: 0x{EnumValue.ToString("X")}");
+                streamWriter.WriteLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
                 for (int i = 0; i < Missions.Length; i++) streamWriter.WriteLine($"Mission{i}: {Missions[i]}");
                 for (int i = 0; i < Quests.Length; i++) streamWriter.WriteLine($"Quest{i}: {Quests[i]}");
 
@@ -244,12 +245,12 @@ namespace MHServerEmu.GameServer.Entities
                 streamWriter.WriteLine($"Community: {Community}");
 
                 streamWriter.WriteLine($"Flag3: {Flag3}");
-                for (int i = 0; i < StashInventories.Length; i++) streamWriter.WriteLine($"StashInventory{i}: 0x{StashInventories[i].ToString("X")}");
+                for (int i = 0; i < StashInventories.Length; i++) streamWriter.WriteLine($"StashInventory{i}: {GameDatabase.GetPrototypePath(StashInventories[i])}");
                 for (int i = 0; i < AvailableBadges.Length; i++) streamWriter.WriteLine($"AvailableBadge{i}: 0x{AvailableBadges[i].ToString("X")}");
 
                 for (int i = 0; i < ChatChannelOptions.Length; i++) streamWriter.WriteLine($"ChatChannelOption{i}: {ChatChannelOptions[i]}");
 
-                for (int i = 0; i < ChatChannelOptions2.Length; i++) streamWriter.WriteLine($"ChatChannelOptions2_{i}: 0x{ChatChannelOptions2[i].ToString("X")}");
+                for (int i = 0; i < ChatChannelOptions2.Length; i++) streamWriter.WriteLine($"ChatChannelOptions2_{i}: {GameDatabase.GetPrototypePath(ChatChannelOptions2[i])}");
 
                 for (int i = 0; i < UnknownOptions.Length; i++) streamWriter.WriteLine($"UnknownOption{i}: 0x{UnknownOptions[i].ToString("X")}");
 
