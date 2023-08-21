@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoding;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.GameServer.GameData;
 
 namespace MHServerEmu.GameServer.Entities.Avatars
 {
@@ -21,13 +22,13 @@ namespace MHServerEmu.GameServer.Entities.Avatars
             if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
             ShouldPersist = boolDecoder.ReadBool();
 
-            AssociatedTransformMode = stream.ReadRawVarint64();
-            Slot0 = stream.ReadRawVarint64();
-            Slot1 = stream.ReadRawVarint64();
+            AssociatedTransformMode = stream.ReadPrototypeId(PrototypeEnumType.Property);
+            Slot0 = stream.ReadPrototypeId(PrototypeEnumType.Property);
+            Slot1 = stream.ReadPrototypeId(PrototypeEnumType.Property);
 
             PowerSlots = new ulong[stream.ReadRawVarint64()];
             for (int i = 0; i < PowerSlots.Length; i++)
-                PowerSlots[i] = stream.ReadRawVarint64();
+                PowerSlots[i] = stream.ReadPrototypeId(PrototypeEnumType.Property);
         }
 
         public AbilityKeyMapping(int powerSpecIndex, bool shouldPersist, ulong associatedTransformMode, ulong slot0, ulong slot1, ulong[] powerSlots)
@@ -51,13 +52,13 @@ namespace MHServerEmu.GameServer.Entities.Avatars
                 byte bitBuffer = boolEncoder.GetBitBuffer();             // ShouldPersist
                 if (bitBuffer != 0) stream.WriteRawByte(bitBuffer);
 
-                stream.WriteRawVarint64(AssociatedTransformMode);
-                stream.WriteRawVarint64(Slot0);
-                stream.WriteRawVarint64(Slot1);
+                stream.WritePrototypeId(AssociatedTransformMode, PrototypeEnumType.Property);
+                stream.WritePrototypeId(Slot0, PrototypeEnumType.Property);
+                stream.WritePrototypeId(Slot1, PrototypeEnumType.Property);
 
                 stream.WriteRawVarint64((ulong)PowerSlots.Length);
                 foreach (ulong powerSlot in PowerSlots)
-                    stream.WriteRawVarint64(powerSlot);
+                    stream.WritePrototypeId(powerSlot, PrototypeEnumType.Property);
 
                 stream.Flush();
                 return memoryStream.ToArray();
@@ -71,10 +72,10 @@ namespace MHServerEmu.GameServer.Entities.Avatars
             {
                 streamWriter.WriteLine($"PowerSpecIndex: 0x{PowerSpecIndex.ToString("X")}");
                 streamWriter.WriteLine($"ShouldPersist: {ShouldPersist}");
-                streamWriter.WriteLine($"AssociatedTransformMode: 0x{AssociatedTransformMode.ToString("X")}");
-                streamWriter.WriteLine($"Slot0: 0x{Slot0.ToString("X")}");
-                streamWriter.WriteLine($"Slot1: 0x{Slot1.ToString("X")}");
-                for (int i = 0; i < PowerSlots.Length; i++) streamWriter.WriteLine($"PowerSlot{i}: 0x{PowerSlots[i].ToString("X")}");
+                streamWriter.WriteLine($"AssociatedTransformMode: {GameDatabase.GetPrototypePath(AssociatedTransformMode)}");
+                streamWriter.WriteLine($"Slot0: {GameDatabase.GetPrototypePath(Slot0)}");
+                streamWriter.WriteLine($"Slot1: {GameDatabase.GetPrototypePath(Slot1)}");
+                for (int i = 0; i < PowerSlots.Length; i++) streamWriter.WriteLine($"PowerSlot{i}: {GameDatabase.GetPrototypePath(PowerSlots[i])}");
 
                 streamWriter.Flush();
                 return Encoding.UTF8.GetString(memoryStream.ToArray());
