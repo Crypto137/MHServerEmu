@@ -30,6 +30,7 @@ namespace MHServerEmu.GameServer.Regions
             RegionDict.Add(RegionPrototype.XManhattanRegion60Cosmic, LoadRegionData(RegionPrototype.XManhattanRegion60Cosmic));
             RegionDict.Add(RegionPrototype.CH0301MadripoorRegion, LoadRegionData(RegionPrototype.CH0301MadripoorRegion));
             RegionDict.Add(RegionPrototype.CH0701SavagelandRegion, LoadRegionData(RegionPrototype.CH0701SavagelandRegion));
+            RegionDict.Add(RegionPrototype.CH0804LatveriaPCZRegion, LoadRegionData(RegionPrototype.CH0804LatveriaPCZRegion));
             RegionDict.Add(RegionPrototype.CH0904SiegePCZRegion, LoadRegionData(RegionPrototype.CH0904SiegePCZRegion)); 
 
             Logger.Info($"Loaded data for {RegionDict.Count} regions");
@@ -761,6 +762,97 @@ namespace MHServerEmu.GameServer.Regions
                     region.EntrancePosition = new(-6100.0f, 2210.0f, 0.0f);
                     region.EntranceOrientation = new(); 
                     region.WaypointPosition = new(-6100.0f, 2210.0f, -10.0f);
+                    region.WaypointOrientation = new();
+
+                    break;
+
+                case RegionPrototype.CH0804LatveriaPCZRegion:
+                    archiveData = new byte[] {
+                    };
+
+                    region = new(RegionPrototype.CH0804LatveriaPCZRegion,
+                        1153032329227796488,
+                        1901487720,
+                        archiveData,
+                        new(-9216.0f, -13824.0f, -1152.0f),
+                        new(9216.0f, 13824.0f, 1152.0f),
+                        new(60, DifficultyTier.Normal));
+
+                    string Latveria = "Resource/Cells/Latveria/";
+                    string LatveriaArea = "Regions/StoryRevamp/CH08Latveria/Areas/Latveria/Doomstadt/";
+
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeId(LatveriaArea + "LatveriaPCZArea1.prototype"), new(), true);
+                    area.AddCell(new(52, GameDatabase.GetPrototypeId(Latveria + "Courtyard_C/Courtyard_SuperBridgeA_X0_Y1.cell"), new(-3456.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(51, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NESW_B.cell"), new(-5760.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(56, GameDatabase.GetPrototypeId(Latveria + "Courtyard_C/Courtyard_SuperBridgeA_X0_Y2.cell"), new(-3456.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(55, GameDatabase.GetPrototypeId(Latveria + "Courtyard_Trans/Courtyard_Objective_NSW_A.cell"), new(-5760.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(50, GameDatabase.GetPrototypeId(Latveria + "Courtyard_Trans/Courtyard_Entry_A.cell"), new(-8064.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(54, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NW_A.cell"), new(-8064.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(53, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NESWcN_A.cell"), new(-1152.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(57, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_SW_A.cell"), new(-1152.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(47, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NES_B.cell"), new(-5760.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(48, GameDatabase.GetPrototypeId(Latveria + "Courtyard_C/Courtyard_SuperBridgeA_X0_Y0.cell"), new(-3456.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(49, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_ES_A.cell"), new(-1152.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(46, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NE_A.cell"), new(-8064.0f, -12672.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeId(LatveriaArea + "LatveriaPCZArea2.prototype"), new(), false);
+                    area.AddCell(new(36, GameDatabase.GetPrototypeId(Latveria + "Courtyard_B/Courtyard_B_NESW_C.cell"), new(5760.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(44, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NSW_B.cell"), new(5760.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(40, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NESW_A.cell"), new(5760.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(39, GameDatabase.GetPrototypeId(Latveria + "Courtyard_Trans/Courtyard_TavernEntry_NESW_A.cell"), new(3456.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(35, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NESW_D.cell"), new(3456.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(43, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NESWcE_A.cell"), new(3456.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(34, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NESWcS_A.cell"), new(1152.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(38, GameDatabase.GetPrototypeId(Latveria + "Courtyard_Trans/Courtyard_Objective_NEW_A.cell"), new(1152.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(42, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NW_A.cell"), new(1152.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(41, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_ESW_A.cell"), new(8064.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(37, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_ESW_B.cell"), new(8064.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(45, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_SW_A.cell"), new(8064.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(31, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NES_A.cell"), new(3456.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(32, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NES_B.cell"), new(5760.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(33, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_ES_A.cell"), new(8064.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(30, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NE_A.cell"), new(1152.0f, -12672.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    area = new(3, (AreaPrototype)GameDatabase.GetPrototypeId(LatveriaArea + "LatveriaPCZArea3.prototype"), new(), false);
+                    area.AddCell(new(23, GameDatabase.GetPrototypeId(Latveria + "Courtyard_C/Courtyard_SuperWallA_X0_Y1.cell"), new(3456.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(15, GameDatabase.GetPrototypeId(Latveria + "Courtyard_B/Courtyard_B_NESW_B.cell"), new(3456.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(24, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NESW_E.cell"), new(5760.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(16, GameDatabase.GetPrototypeId(Latveria + "Courtyard_Trans/Courtyard_Objective_NESW_A.cell"), new(5760.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(20, GameDatabase.GetPrototypeId(Latveria + "Courtyard_B/Courtyard_B_NESW_C.cell"), new(5760.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(28, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NSW_B.cell"), new(5760.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(19, GameDatabase.GetPrototypeId(Latveria + "Courtyard_C/Courtyard_SuperWallA_X0_Y0.cell"), new(3456.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(27, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NESWcE_A.cell"), new(3456.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(14, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NEW_A.cell"), new(1152.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(18, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NEW_B.cell"), new(1152.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(22, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NEW_A.cell"), new(1152.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(26, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NW_A.cell"), new(1152.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(25, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_ESW_B.cell"), new(8064.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(21, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_ESW_A.cell"), new(8064.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(17, GameDatabase.GetPrototypeId(Latveria + "Courtyard_Trans/Courtyard_TRCryptEntry_ESW_A.cell"), new(8064.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(29, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_SW_A.cell"), new(8064.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(11, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NESWcW_A.cell"), new(3456.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(12, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NES_B.cell"), new(5760.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(13, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_ES_A.cell"), new(8064.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(10, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NE_A.cell"), new(1152.0f, -3456.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    area = new(5, (AreaPrototype)GameDatabase.GetPrototypeId(LatveriaArea + "LatveriaPCZArea4.prototype"), new(), false);
+                    area.AddCell(new(5, GameDatabase.GetPrototypeId(Latveria + "Courtyard_SafeArea_A/Courtyard_SafeArea_NESW_A.cell"), new(3456.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(8, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NSW_C.cell"), new(3456.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(4, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NEW_B.cell"), new(1152.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(7, GameDatabase.GetPrototypeId(Latveria + "Courtyard_SafeArea_A/Courtyard_SafeArea_NW_A.cell"), new(1152.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(6, GameDatabase.GetPrototypeId(Latveria + "Courtyard_Trans/Courtyard_Exit_ESW_A.cell"), new(5760.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(9, GameDatabase.GetPrototypeId(Latveria + "Courtyard_SafeArea_A/Courtyard_SafeArea_SW_A.cell"), new(5760.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(2, GameDatabase.GetPrototypeId(Latveria + "Courtyard_A/Courtyard_A_NESWcW_A.cell"), new(3456.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(3, GameDatabase.GetPrototypeId(Latveria + "Courtyard_SafeArea_A/Courtyard_SafeArea_ES_A.cell"), new(5760.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeId(Latveria + "Courtyard_SafeArea_A/Courtyard_SafeArea_NE_A.cell"), new(1152.0f, 8064.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(-8064.0f, -10368.0f, 0.0f);
+                    region.EntranceOrientation = new();
+                    region.WaypointPosition = new(-8064.0f, -10368.0f, 0.0f);
                     region.WaypointOrientation = new();
 
                     break;
