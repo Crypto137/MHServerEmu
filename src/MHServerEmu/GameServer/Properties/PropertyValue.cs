@@ -1,4 +1,5 @@
 ﻿using Google.ProtocolBuffers;
+using MHServerEmu.GameServer.GameData;
 
 namespace MHServerEmu.GameServer.Properties
 {
@@ -32,6 +33,18 @@ namespace MHServerEmu.GameServer.Properties
         public override string ToString() => $"0x{RawValue.ToString("X")}";
     }
 
+    public class PropertyValueBoolean : PropertyValue
+    {
+        public PropertyValueBoolean(ulong rawValue) : base(rawValue)
+        {
+        }
+
+        public override object Get() => Convert.ToBoolean(RawValue);
+        public override void Set(object value) => Convert.ToUInt64((bool)value);
+
+        public override string ToString() => ((bool)Get()).ToString();
+    }
+
     public class PropertyValueInteger : PropertyValue
     {
         public PropertyValueInteger(ulong rawValue) : base(rawValue)
@@ -42,5 +55,17 @@ namespace MHServerEmu.GameServer.Properties
         public override void Set(object value) => RawValue = CodedOutputStream.EncodeZigZag64((int)value);
 
         public override string ToString() => Get().ToString();
+    }
+
+    public class PropertyValuePrototype : PropertyValue
+    {
+        public PropertyValuePrototype(ulong rawValue) : base(rawValue)
+        {
+        }
+
+        public override object Get() => GameDatabase.PrototypeEnumManager.GetPrototypeId(RawValue, PrototypeEnumType.Property);
+        public override void Set(object value) => RawValue = GameDatabase.PrototypeEnumManager.GetEnumValue((ulong)value, PrototypeEnumType.Property);
+
+        public override string ToString() => GameDatabase.GetPrototypePath((ulong)Get());
     }
 }

@@ -68,8 +68,17 @@ namespace MHServerEmu.GameServer.Properties
         {
             switch (Info.ValueType)
             {
+                case PropertyValueType.Boolean:
+                    Value = new PropertyValueBoolean(rawValue);
+                    break;
+
                 case PropertyValueType.Integer:
+                case PropertyValueType.Time:
                     Value = new PropertyValueInteger(rawValue);
+                    break;
+
+                case PropertyValueType.Prototype:
+                    Value = new PropertyValuePrototype(rawValue);
                     break;
 
                 default:

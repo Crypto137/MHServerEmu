@@ -29,7 +29,7 @@ namespace MHServerEmu.GameServer.GameData
 
             // Load other data
             _prototypeHashMap = LoadHashMap($"{AssetDirectory}\\PrototypeHashMap.tsv");
-            PropertyInfoTable = LoadPropertyInfos($"{AssetDirectory}\\PropertyInfoTable.tsv");
+            PropertyInfoTable = LoadPropertyInfoTable($"{AssetDirectory}\\PropertyInfoTable.tsv");
             PrototypeEnumManager = new($"{AssetDirectory}\\PrototypeEnumTables");
 
             // Verify and finish game database initialization
@@ -101,7 +101,7 @@ namespace MHServerEmu.GameServer.GameData
             return hashMap;
         }
 
-        private static PropertyInfo[] LoadPropertyInfos(string path)
+        private static PropertyInfo[] LoadPropertyInfoTable(string path)
         {
             List<PropertyInfo> propertyInfoList = new();
 
