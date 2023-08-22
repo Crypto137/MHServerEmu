@@ -72,6 +72,10 @@ namespace MHServerEmu.GameServer.Properties
                     Value = new PropertyValueBoolean(rawValue);
                     break;
 
+                case PropertyValueType.Float:
+                    Value = new PropertyValueFloat(rawValue);
+                    break;
+
                 case PropertyValueType.Integer:
                 case PropertyValueType.Time:
                     Value = new PropertyValueInteger(rawValue);
@@ -79,6 +83,10 @@ namespace MHServerEmu.GameServer.Properties
 
                 case PropertyValueType.Prototype:
                     Value = new PropertyValuePrototype(rawValue);
+                    break;
+
+                case PropertyValueType.Vector3:
+                    Value = new PropertyValueVector3(rawValue);
                     break;
 
                 default:

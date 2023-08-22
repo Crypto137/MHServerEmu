@@ -1,21 +1,22 @@
 ﻿using Google.ProtocolBuffers;
+using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.GameData;
 
 namespace MHServerEmu.GameServer.Properties
 {
     public enum PropertyValueType
     {
-        Boolean,    // u64
+        Boolean,
         Float,
-        Integer,    // u64
+        Integer,
         Prototype,
         Curve,
         Asset,
         Type6,      // u64
-        Time,       // u64 Gazillion::Time
+        Time,       // Gazillion::Time
         Type8,      // u64
         Type9,      // u64
-        Vector3     // u64
+        Vector3
     }
 
     public class PropertyValue
@@ -45,6 +46,18 @@ namespace MHServerEmu.GameServer.Properties
         public override string ToString() => ((bool)Get()).ToString();
     }
 
+    public class PropertyValueFloat : PropertyValue
+    {
+        public PropertyValueFloat(ulong rawValue) : base(rawValue)
+        {
+        }
+
+        public override object Get() => BitConverter.ToSingle(BitConverter.GetBytes(RawValue));
+        public override void Set(object value) => RawValue = BitConverter.ToUInt64(BitConverter.GetBytes((float)value));
+
+        public override string ToString() => ((float)Get()).ToString();
+    }
+
     public class PropertyValueInteger : PropertyValue
     {
         public PropertyValueInteger(ulong rawValue) : base(rawValue)
@@ -67,5 +80,33 @@ namespace MHServerEmu.GameServer.Properties
         public override void Set(object value) => RawValue = GameDatabase.PrototypeEnumManager.GetEnumValue((ulong)value, PrototypeEnumType.Property);
 
         public override string ToString() => GameDatabase.GetPrototypePath((ulong)Get());
+    }
+
+    public class PropertyValueVector3 : PropertyValue
+    {
+        public PropertyValueVector3(ulong rawValue) : base(rawValue)
+        {
+        }
+
+        public override object Get()
+        {
+            int x = (int)((RawValue >> 42) & 0x1FFFFF);
+            if ((x & 0x10000) != 0)
+                x = (int)((RawValue >> 42) | 0xFFE00000);
+
+            int y = (int)((RawValue >> 21) & 0x1FFFFF);
+            if ((y & 0x10000) != 0)
+                y = (int)((RawValue >> 21) | 0xFFE00000);
+
+            int z = (int)(RawValue & 0x1FFFFF);
+            if ((z & 0x10000) != 0)
+                z = (int)(RawValue | 0xFFE00000);
+
+            return new Vector3(x, y, z);
+        }
+
+        // TODO: set
+
+        public override string ToString() => ((Vector3)Get()).ToString();
     }
 }
