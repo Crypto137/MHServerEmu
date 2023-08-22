@@ -105,7 +105,26 @@ namespace MHServerEmu.GameServer.Properties
             return new Vector3(x, y, z);
         }
 
-        // TODO: set
+        public override void Set(object value)
+        {
+            Vector3 vector = (Vector3)value;
+
+            ulong x = (ulong)vector.X & 0x1FFFFF;
+            if (vector.X < 0)
+                x |= 0x10000;
+            x <<= 42;
+
+            ulong y = (ulong)vector.Y & 0x1FFFFF;
+            if (vector.Y < 0)
+                y |= 0x10000;
+            y <<= 21;
+
+            ulong z = (ulong)vector.Z & 0x1FFFFF;
+            if (vector.Z < 0)
+                x |= 0x10000;
+
+            RawValue = x | y | z;
+        }
 
         public override string ToString() => ((Vector3)Get()).ToString();
     }
