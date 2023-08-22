@@ -1,5 +1,5 @@
-﻿using System.Text;
-using MHServerEmu.Common;
+﻿using MHServerEmu.Common;
+using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
@@ -18,7 +18,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             using (BinaryReader reader = new(stream))
             {
                 Header = reader.ReadUInt32();
-                PrototypeName = Encoding.UTF8.GetString(reader.ReadBytes(reader.ReadUInt16()));
+                PrototypeName = reader.ReadFixedString16();
                 PrototypeId = reader.ReadUInt64();
 
                 References1 = new BlueprintReference[reader.ReadUInt16()];
@@ -80,7 +80,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         public BlueprintEntry(BinaryReader reader)
         {
             Id = reader.ReadUInt64();
-            Name = Encoding.UTF8.GetString(reader.ReadBytes(reader.ReadUInt16()));
+            Name = reader.ReadFixedString16();
             Type1 = (BlueprintEntryType1)reader.ReadByte();
             Type2 = (BlueprintEntryType2)reader.ReadByte();
 

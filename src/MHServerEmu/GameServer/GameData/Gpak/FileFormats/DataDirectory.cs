@@ -1,5 +1,4 @@
-﻿using System.Text;
-using MHServerEmu.Common;
+﻿using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
@@ -14,8 +13,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 
     public class DataDirectory
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public DataDirectoryHeader Header { get; }
         public IDataDirectoryEntry[] Entries { get; }
 
@@ -44,8 +41,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
                             Entries[i] = new DataDirectoryPrototypeEntry(reader);
                         break;
                 }
-
-                //Logger.Trace($"Parsed {Entries.Length} entries from {Header}.directory");
             }
         }
     }
@@ -69,7 +64,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             Id1 = reader.ReadUInt64();
             Id2 = reader.ReadUInt64();
             Field2 = reader.ReadByte();
-            Name = Encoding.UTF8.GetString(reader.ReadBytes(reader.ReadUInt16()));
+            Name = reader.ReadFixedString16();
         }
     }
 
@@ -83,7 +78,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         {
             Id1 = reader.ReadUInt64();
             Id2 = reader.ReadUInt64();
-            Name = Encoding.UTF8.GetString(reader.ReadBytes(reader.ReadUInt16()));
+            Name = reader.ReadFixedString16();
         }
     }
 
@@ -101,7 +96,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             Id2 = reader.ReadUInt64();
             ParentId = reader.ReadUInt64();
             Field3 = reader.ReadByte();
-            Name = Encoding.UTF8.GetString(reader.ReadBytes(reader.ReadUInt16()));
+            Name = reader.ReadFixedString16();
         }
     }
 }

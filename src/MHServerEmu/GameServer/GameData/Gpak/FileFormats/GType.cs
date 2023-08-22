@@ -1,4 +1,4 @@
-﻿using System.Text;
+﻿using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
@@ -34,7 +34,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             Id = reader.ReadUInt64();
             UnknownId = reader.ReadUInt64();
             Field2 = reader.ReadByte();
-            Name = Encoding.UTF8.GetString(reader.ReadBytes(reader.ReadUInt16()));
+            Name = reader.ReadFixedString16();
         }
     }
 }

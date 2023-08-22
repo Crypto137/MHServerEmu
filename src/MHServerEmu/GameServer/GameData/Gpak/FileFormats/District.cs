@@ -1,4 +1,4 @@
-﻿using System.Text;
+﻿using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
@@ -35,7 +35,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         public DistrictCell(BinaryReader reader)
         {
             Type = reader.ReadUInt32();
-            Name = Encoding.UTF8.GetString(reader.ReadBytes(reader.ReadInt32()));
+            Name = reader.ReadFixedString32();
 
             for (int i = 0; i < UnknownZeroes.Length; i++)
                 UnknownZeroes[i] = reader.ReadUInt32();
