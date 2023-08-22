@@ -4,15 +4,11 @@ using MHServerEmu.Common.Encoding;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.Powers;
-using MHServerEmu.GameServer.Properties;
 
 namespace MHServerEmu.GameServer.Entities.Avatars
 {
-    public class Avatar : Entity
+    public class Avatar : WorldEntity
     {
-        public PrototypeCollectionEntry[] UnknownPrototypes { get; set; }
-        public Condition[] Conditions { get; set; }
-        public int UnknownPowerVar { get; set; }
         public ReplicatedString PlayerName { get; set; }
         public ulong OwnerPlayerDbId { get; set; }
         public string GuildName { get; set; }
@@ -24,20 +20,9 @@ namespace MHServerEmu.GameServer.Entities.Avatars
             CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
             BoolDecoder boolDecoder = new();
 
-            ReadHeader(stream);
-            ReadProperties(stream);
+            ReadEntityFields(stream);
+            ReadWorldEntityFields(stream);
 
-            UnknownPrototypes = new PrototypeCollectionEntry[stream.ReadRawVarint64()];
-            for (int i = 0; i < UnknownPrototypes.Length; i++)
-                UnknownPrototypes[i] = new(stream);
-
-            Conditions = new Condition[stream.ReadRawVarint64()];
-            for (int i = 0; i < Conditions.Length; i++)             
-                Conditions[i] = new(stream);
-
-            // Gazillion::PowerCollection::SerializeRecordCount
-            UnknownPowerVar = stream.ReadRawInt32();
-            // Gazillion::Agent::Serialize End
             PlayerName = new(stream);
             OwnerPlayerDbId = stream.ReadRawVarint64();
 
@@ -88,20 +73,9 @@ namespace MHServerEmu.GameServer.Entities.Avatars
                 boolEncoder.Cook();
 
                 // Encode
-                stream.WriteRawVarint64(ReplicationPolicy);
-                stream.WriteRawVarint64(ReplicationId);
+                WriteEntityFields(stream);
+                WriteWorldEntityFields(stream);
 
-                stream.WriteRawBytes(BitConverter.GetBytes(Properties.Length));
-                foreach (Property property in Properties)
-                    stream.WriteRawBytes(property.Encode());
-
-                stream.WriteRawVarint64((ulong)UnknownPrototypes.Length);
-                foreach (PrototypeCollectionEntry entry in UnknownPrototypes) stream.WriteRawBytes(entry.Encode());
-
-                stream.WriteRawVarint64((ulong)Conditions.Length);
-                foreach (Condition condition in Conditions) stream.WriteRawBytes(condition.Encode());
-
-                stream.WriteRawInt32(UnknownPowerVar);
                 stream.WriteRawBytes(PlayerName.Encode());
                 stream.WriteRawVarint64(OwnerPlayerDbId);
                 stream.WriteRawString(GuildName);
@@ -119,22 +93,20 @@ namespace MHServerEmu.GameServer.Entities.Avatars
 
         public override string ToString()
         {
-            using (MemoryStream memoryStream = new())
-            using (StreamWriter streamWriter = new(memoryStream))
+            using (MemoryStream stream = new())
+            using (StreamWriter writer = new(stream))
             {
-                streamWriter.WriteLine($"ReplicationPolicy: 0x{ReplicationPolicy.ToString("X")}");
-                streamWriter.WriteLine($"ReplicationId: 0x{ReplicationId.ToString("X")}");
-                for (int i = 0; i < Properties.Length; i++) streamWriter.WriteLine($"Property{i}: {Properties[i]}");
-                for (int i = 0; i < Conditions.Length; i++) streamWriter.WriteLine($"Condition{i}: {Conditions[i]}");
-                streamWriter.WriteLine($"UnknownPowerVar: 0x{UnknownPowerVar.ToString("X")}");
-                streamWriter.WriteLine($"PlayerName: {PlayerName}");
-                streamWriter.WriteLine($"OwnerPlayerDbId: 0x{OwnerPlayerDbId.ToString("X")}");
-                streamWriter.WriteLine($"GuildName: {GuildName}");
-                streamWriter.WriteLine($"IsRuntimeInfo: {IsRuntimeInfo}");
-                for (int i = 0; i < AbilityKeyMappings.Length; i++) streamWriter.WriteLine($"AbilityKeyMapping{i}: {AbilityKeyMappings[i]}");
+                WriteEntityString(writer);
+                WriteWorldEntityString(writer);
 
-                streamWriter.Flush();
-                return Encoding.UTF8.GetString(memoryStream.ToArray());
+                writer.WriteLine($"PlayerName: {PlayerName}");
+                writer.WriteLine($"OwnerPlayerDbId: 0x{OwnerPlayerDbId.ToString("X")}");
+                writer.WriteLine($"GuildName: {GuildName}");
+                writer.WriteLine($"IsRuntimeInfo: {IsRuntimeInfo}");
+                for (int i = 0; i < AbilityKeyMappings.Length; i++) writer.WriteLine($"AbilityKeyMapping{i}: {AbilityKeyMappings[i]}");
+
+                writer.Flush();
+                return Encoding.UTF8.GetString(stream.ToArray());
             }
         }
     }

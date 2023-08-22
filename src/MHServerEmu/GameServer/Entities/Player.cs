@@ -43,8 +43,7 @@ namespace MHServerEmu.GameServer.Entities
             CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
             BoolDecoder boolDecoder = new();
 
-            ReadHeader(stream);
-            ReadProperties(stream);
+            ReadEntityFields(stream);
 
             PrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Property);
 
@@ -150,12 +149,7 @@ namespace MHServerEmu.GameServer.Entities
                 boolEncoder.Cook();
 
                 // Encode
-                stream.WriteRawVarint64(ReplicationPolicy);
-                stream.WriteRawVarint64(ReplicationId);
-
-                stream.WriteRawBytes(BitConverter.GetBytes(Properties.Length));
-                foreach (Property property in Properties)
-                    stream.WriteRawBytes(property.Encode());
+                WriteEntityFields(stream);
 
                 stream.WritePrototypeId(PrototypeId, PrototypeEnumType.Property);
 
@@ -223,47 +217,45 @@ namespace MHServerEmu.GameServer.Entities
 
         public override string ToString()
         {
-            using (MemoryStream memoryStream = new())
-            using (StreamWriter streamWriter = new(memoryStream))
+            using (MemoryStream stream = new())
+            using (StreamWriter writer = new(stream))
             {
-                streamWriter.WriteLine($"ReplicationPolicy: 0x{ReplicationPolicy.ToString("X")}");
-                streamWriter.WriteLine($"ReplicationId: 0x{ReplicationId.ToString("X")}");
-                for (int i = 0; i < Properties.Length; i++) streamWriter.WriteLine($"Property{i}: {Properties[i]}");
-                streamWriter.WriteLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
-                for (int i = 0; i < Missions.Length; i++) streamWriter.WriteLine($"Mission{i}: {Missions[i]}");
-                for (int i = 0; i < Quests.Length; i++) streamWriter.WriteLine($"Quest{i}: {Quests[i]}");
+                WriteEntityString(writer);
 
-                streamWriter.WriteLine($"UnknownCollectionRepId: 0x{UnknownCollectionRepId.ToString("X")}");
-                streamWriter.WriteLine($"UnknownCollectionSize: 0x{UnknownCollectionSize.ToString("X")}");
-                streamWriter.WriteLine($"ShardId: 0x{ShardId.ToString("X")}");
-                streamWriter.WriteLine($"ReplicatedString1: {ReplicatedString1}");
-                streamWriter.WriteLine($"Community1: 0x{Community1.ToString("X")}");
-                streamWriter.WriteLine($"Community2: 0x{Community2.ToString("X")}");
-                streamWriter.WriteLine($"ReplicatedString2: {ReplicatedString2}");
-                streamWriter.WriteLine($"MatchQueueStatus: 0x{MatchQueueStatus.ToString("X")}");
-                streamWriter.WriteLine($"ReplicationPolicyBool: 0x{DateTime.ToString("X")}");
-                streamWriter.WriteLine($"DateTime: 0x{DateTime.ToString("X")}");
-                streamWriter.WriteLine($"Community: {Community}");
+                writer.WriteLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
+                for (int i = 0; i < Missions.Length; i++) writer.WriteLine($"Mission{i}: {Missions[i]}");
+                for (int i = 0; i < Quests.Length; i++) writer.WriteLine($"Quest{i}: {Quests[i]}");
 
-                streamWriter.WriteLine($"Flag3: {Flag3}");
-                for (int i = 0; i < StashInventories.Length; i++) streamWriter.WriteLine($"StashInventory{i}: {GameDatabase.GetPrototypePath(StashInventories[i])}");
-                for (int i = 0; i < AvailableBadges.Length; i++) streamWriter.WriteLine($"AvailableBadge{i}: 0x{AvailableBadges[i].ToString("X")}");
+                writer.WriteLine($"UnknownCollectionRepId: 0x{UnknownCollectionRepId.ToString("X")}");
+                writer.WriteLine($"UnknownCollectionSize: 0x{UnknownCollectionSize.ToString("X")}");
+                writer.WriteLine($"ShardId: 0x{ShardId.ToString("X")}");
+                writer.WriteLine($"ReplicatedString1: {ReplicatedString1}");
+                writer.WriteLine($"Community1: 0x{Community1.ToString("X")}");
+                writer.WriteLine($"Community2: 0x{Community2.ToString("X")}");
+                writer.WriteLine($"ReplicatedString2: {ReplicatedString2}");
+                writer.WriteLine($"MatchQueueStatus: 0x{MatchQueueStatus.ToString("X")}");
+                writer.WriteLine($"ReplicationPolicyBool: 0x{DateTime.ToString("X")}");
+                writer.WriteLine($"DateTime: 0x{DateTime.ToString("X")}");
+                writer.WriteLine($"Community: {Community}");
 
-                for (int i = 0; i < ChatChannelOptions.Length; i++) streamWriter.WriteLine($"ChatChannelOption{i}: {ChatChannelOptions[i]}");
+                writer.WriteLine($"Flag3: {Flag3}");
+                for (int i = 0; i < StashInventories.Length; i++) writer.WriteLine($"StashInventory{i}: {GameDatabase.GetPrototypePath(StashInventories[i])}");
+                for (int i = 0; i < AvailableBadges.Length; i++) writer.WriteLine($"AvailableBadge{i}: 0x{AvailableBadges[i].ToString("X")}");
 
-                for (int i = 0; i < ChatChannelOptions2.Length; i++) streamWriter.WriteLine($"ChatChannelOptions2_{i}: {GameDatabase.GetPrototypePath(ChatChannelOptions2[i])}");
+                for (int i = 0; i < ChatChannelOptions.Length; i++) writer.WriteLine($"ChatChannelOption{i}: {ChatChannelOptions[i]}");
 
-                for (int i = 0; i < UnknownOptions.Length; i++) streamWriter.WriteLine($"UnknownOption{i}: 0x{UnknownOptions[i].ToString("X")}");
+                for (int i = 0; i < ChatChannelOptions2.Length; i++) writer.WriteLine($"ChatChannelOptions2_{i}: {GameDatabase.GetPrototypePath(ChatChannelOptions2[i])}");
 
-                for (int i = 0; i < EquipmentInvUISlots.Length; i++) streamWriter.WriteLine($"EquipmentInvUISlot{i}: {EquipmentInvUISlots[i]}");
+                for (int i = 0; i < UnknownOptions.Length; i++) writer.WriteLine($"UnknownOption{i}: 0x{UnknownOptions[i].ToString("X")}");
 
-                for (int i = 0; i < AchievementStates.Length; i++) streamWriter.WriteLine($"AchievementState{i}: {AchievementStates[i]}");
+                for (int i = 0; i < EquipmentInvUISlots.Length; i++) writer.WriteLine($"EquipmentInvUISlot{i}: {EquipmentInvUISlots[i]}");
 
-                for (int i = 0; i < StashTabOptions.Length; i++) streamWriter.WriteLine($"StashTabOption{i}: {StashTabOptions[i]}");
+                for (int i = 0; i < AchievementStates.Length; i++) writer.WriteLine($"AchievementState{i}: {AchievementStates[i]}");
 
-                streamWriter.Flush();
+                for (int i = 0; i < StashTabOptions.Length; i++) writer.WriteLine($"StashTabOption{i}: {StashTabOptions[i]}");
 
-                return Encoding.UTF8.GetString(memoryStream.ToArray());
+                writer.Flush();
+                return Encoding.UTF8.GetString(stream.ToArray());
             }
         }
     }

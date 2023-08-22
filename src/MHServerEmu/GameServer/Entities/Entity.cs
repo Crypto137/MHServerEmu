@@ -12,18 +12,15 @@ namespace MHServerEmu.GameServer.Entities
         public Property[] Properties { get; set; }
         public ulong[] UnknownFields { get; set; }
 
-        public Entity()
-        {
-        }
-
         public Entity(byte[] archiveData)
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
 
-            ReadHeader(stream);
-            ReadProperties(stream);
+            ReadEntityFields(stream);
             ReadUnknownFields(stream);
         }
+
+        public Entity() { }
 
         public Entity(ulong replicationPolicy, ulong replicationId, Property[] properties, ulong[] unknownFields)
         {
@@ -39,11 +36,8 @@ namespace MHServerEmu.GameServer.Entities
             {
                 CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
 
-                stream.WriteRawVarint64(ReplicationPolicy);
-                stream.WriteRawVarint64(ReplicationId);
-                stream.WriteRawBytes(BitConverter.GetBytes(Properties.Length));
-                foreach (Property property in Properties) stream.WriteRawBytes(property.Encode());
-                foreach (ulong field in UnknownFields) stream.WriteRawVarint64(field);
+                WriteEntityFields(stream);
+                WriteUnknownFields(stream);
 
                 stream.Flush();
                 return memoryStream.ToArray();
@@ -52,28 +46,22 @@ namespace MHServerEmu.GameServer.Entities
 
         public override string ToString()
         {
-            using (MemoryStream memoryStream = new())
-            using (StreamWriter streamWriter = new(memoryStream))
+            using (MemoryStream stream = new())
+            using (StreamWriter writer = new(stream))
             {
-                streamWriter.WriteLine($"ReplicationPolicy: 0x{ReplicationPolicy.ToString("X")}");
-                streamWriter.WriteLine($"ReplicationId: 0x{ReplicationId.ToString("X")}");
-                for (int i = 0; i < Properties.Length; i++) streamWriter.WriteLine($"Property{i}: {Properties[i]}");
-                for (int i = 0; i < UnknownFields.Length; i++) streamWriter.WriteLine($"UnknownField{i}: 0x{UnknownFields[i].ToString("X")}");
+                WriteEntityString(writer);
+                WriteUnknownFieldString(writer);
 
-                streamWriter.Flush();
-
-                return Encoding.UTF8.GetString(memoryStream.ToArray());
+                writer.Flush();
+                return Encoding.UTF8.GetString(stream.ToArray());
             }
         }
 
-        protected void ReadHeader(CodedInputStream stream)
+        protected void ReadEntityFields(CodedInputStream stream)
         {
             ReplicationPolicy = stream.ReadRawVarint64();
             ReplicationId = stream.ReadRawVarint64();
-        }
 
-        protected void ReadProperties(CodedInputStream stream)
-        {
             Properties = new Property[stream.ReadRawUInt32()];
             for (int i = 0; i < Properties.Length; i++)
             {
@@ -88,6 +76,34 @@ namespace MHServerEmu.GameServer.Entities
             List<ulong> fieldList = new();
             while (!stream.IsAtEnd) fieldList.Add(stream.ReadRawVarint64());
             UnknownFields = fieldList.ToArray();
+        }
+
+        protected void WriteEntityFields(CodedOutputStream stream)
+        {
+            stream.WriteRawVarint64(ReplicationPolicy);
+            stream.WriteRawVarint64(ReplicationId);
+            stream.WriteRawBytes(BitConverter.GetBytes(Properties.Length));
+            foreach (Property property in Properties) stream.WriteRawBytes(property.Encode());
+        }
+
+        protected void WriteUnknownFields(CodedOutputStream stream)
+        {
+            foreach (ulong field in UnknownFields) stream.WriteRawVarint64(field);
+        }
+
+        protected void WriteEntityString(StreamWriter writer)
+        {
+            writer.WriteLine($"ReplicationPolicy: 0x{ReplicationPolicy.ToString("X")}");
+            writer.WriteLine($"ReplicationId: 0x{ReplicationId.ToString("X")}");
+
+            for (int i = 0; i < Properties.Length; i++)
+                writer.WriteLine($"Property{i}: {Properties[i]}");
+        }
+
+        protected void WriteUnknownFieldString(StreamWriter writer)
+        {
+            for (int i = 0; i < UnknownFields.Length; i++)
+                writer.WriteLine($"UnknownField{i}: 0x{UnknownFields[i].ToString("X")}");
         }
     }
 }
