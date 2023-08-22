@@ -7,6 +7,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        //public Dictionary<string, Cell> CellDict { get; } = new();
         public Dictionary<string, District> DistrictDict { get; } = new();
 
         public ResourceStorage(GpakFile gpakFile)
@@ -15,6 +16,10 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             {
                 switch (Path.GetExtension(entry.FilePath))
                 {
+                    //case ".cell":
+                    //    CellDict.Add(entry.FilePath, new(entry.Data));
+                    //    break;                        
+
                     case ".district":
                         DistrictDict.Add(entry.FilePath, new(entry.Data));
                         break;
@@ -31,6 +36,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
         public override void Export()
         {
+            //SerializeDictAsJson(CellDict);
             SerializeDictAsJson(DistrictDict);
         }
     }
