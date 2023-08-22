@@ -73,8 +73,24 @@ namespace MHServerEmu.GameServer.Entities
             }
         }
 
-        public EntityCreateBaseData()
+        public EntityCreateBaseData() { }
+
+        public EntityCreateBaseData(ulong entityId, ulong prototypeId, Vector3 position, Vector3 orientation)
         {
+            ReplicationPolicy = 0x20;
+            EntityId = entityId;
+            PrototypeId = prototypeId;
+            LocomotionState = new(0f);
+
+            Flags = new bool[FlagCount];
+            LocFlags = new bool[LocFlagCount];
+
+            if (position != null && orientation != null)
+            {
+                Position = position;
+                Orientation = orientation;
+                Flags[0] = true;
+            }
         }
 
         public byte[] Encode()

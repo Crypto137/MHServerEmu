@@ -20,7 +20,7 @@ namespace MHServerEmu.GameServer.Properties
             CreateValueContainer(stream.ReadRawVarint64());
         }
 
-        public Property(ulong id, ulong rawValue)
+        public Property(ulong id, ulong rawValue = 0)
         {
             Id = id;
             CalculatePropertyInfoIndex();

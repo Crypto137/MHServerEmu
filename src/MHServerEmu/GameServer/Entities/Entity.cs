@@ -10,7 +10,7 @@ namespace MHServerEmu.GameServer.Entities
         public ulong ReplicationPolicy { get; set; }
         public ulong ReplicationId { get; set; }
         public Property[] Properties { get; set; }
-        public ulong[] UnknownFields { get; set; }
+        public ulong[] UnknownFields { get; set; } = Array.Empty<ulong>();
 
         public Entity(byte[] archiveData)
         {

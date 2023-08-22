@@ -44,6 +44,14 @@ namespace MHServerEmu.GameServer.Regions
                 .SetArchiveData(ByteString.CopyFrom(Convert.FromHexString("20F4C10206000000CD80018880FCFF99BF968110CCC00202CC800302CD40D58280DE868098044DA1A1A4FE0399C00183B8030000000000")))
                 .Build()));
 
+            /*
+            if (regionPrototype == RegionPrototype.NPEAvengersTowerHUBRegion)
+            {
+                messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(0x17, 17149607139718797253, new(588f, 1194f, 369f), new(-1.5625f, 0f, 0f),
+                    0xA0F4, 608, 1, 608, 0x100259F99FFF0008, 1, 11135337283876558073, true)));
+            }
+            */
+
             return messageList.ToArray();
         }
 

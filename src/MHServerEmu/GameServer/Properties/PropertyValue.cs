@@ -36,9 +36,7 @@ namespace MHServerEmu.GameServer.Properties
 
     public class PropertyValueBoolean : PropertyValue
     {
-        public PropertyValueBoolean(ulong rawValue) : base(rawValue)
-        {
-        }
+        public PropertyValueBoolean(ulong rawValue) : base(rawValue) { }
 
         public override object Get() => Convert.ToBoolean(RawValue);
         public override void Set(object value) => Convert.ToUInt64((bool)value);
@@ -48,9 +46,7 @@ namespace MHServerEmu.GameServer.Properties
 
     public class PropertyValueFloat : PropertyValue
     {
-        public PropertyValueFloat(ulong rawValue) : base(rawValue)
-        {
-        }
+        public PropertyValueFloat(ulong rawValue) : base(rawValue) { }
 
         public override object Get() => BitConverter.ToSingle(BitConverter.GetBytes(RawValue));
         public override void Set(object value) => RawValue = BitConverter.ToUInt64(BitConverter.GetBytes((float)value));
@@ -60,9 +56,7 @@ namespace MHServerEmu.GameServer.Properties
 
     public class PropertyValueInteger : PropertyValue
     {
-        public PropertyValueInteger(ulong rawValue) : base(rawValue)
-        {
-        }
+        public PropertyValueInteger(ulong rawValue) : base(rawValue) { }
 
         public override object Get() => CodedInputStream.DecodeZigZag64(RawValue);
         public override void Set(object value) => RawValue = CodedOutputStream.EncodeZigZag64((int)value);
@@ -72,9 +66,7 @@ namespace MHServerEmu.GameServer.Properties
 
     public class PropertyValuePrototype : PropertyValue
     {
-        public PropertyValuePrototype(ulong rawValue) : base(rawValue)
-        {
-        }
+        public PropertyValuePrototype(ulong rawValue) : base(rawValue) { }
 
         public override object Get() => GameDatabase.PrototypeEnumManager.GetPrototypeId(RawValue, PrototypeEnumType.Property);
         public override void Set(object value) => RawValue = GameDatabase.PrototypeEnumManager.GetEnumValue((ulong)value, PrototypeEnumType.Property);
@@ -84,9 +76,7 @@ namespace MHServerEmu.GameServer.Properties
 
     public class PropertyValueVector3 : PropertyValue
     {
-        public PropertyValueVector3(ulong rawValue) : base(rawValue)
-        {
-        }
+        public PropertyValueVector3(ulong rawValue) : base(rawValue) { }
 
         public override object Get()
         {

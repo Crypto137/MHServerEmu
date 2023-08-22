@@ -3,6 +3,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.Powers;
+using MHServerEmu.GameServer.Properties;
 
 namespace MHServerEmu.GameServer.Entities
 {
@@ -22,6 +23,36 @@ namespace MHServerEmu.GameServer.Entities
         }
 
         public WorldEntity() { }
+
+        public WorldEntity(ulong replicationId, Vector3 mapPosition, int health, int mapAreaId,
+            int healthMaxOther, ulong mapRegionId, int mapCellId, ulong contextAreaRef)
+        {
+            ReplicationPolicy = 0x20;
+            ReplicationId = replicationId;
+
+            Properties = new Property[]
+            {
+                new(0x204D),    // MapPosition
+                new(0x203B),    // Health
+                new(0xA04C),    // MapAreaId
+                new(0x203C),    // HealthMaxOther
+                new(0x404D),    // MapRegionId
+                new(0xC04C),    // MapCellId
+                new(0x6019)     // ContextAreaRef
+            };
+
+            Properties[0].Value.Set(mapPosition);
+            Properties[1].Value.Set(health);
+            Properties[2].Value.Set(mapAreaId);
+            Properties[3].Value.Set(healthMaxOther);
+            Properties[4].Value.Set(mapRegionId);
+            Properties[5].Value.Set(mapCellId);
+            Properties[6].Value.Set(contextAreaRef);
+
+            UnknownPrototypes = Array.Empty<PrototypeCollectionEntry>();
+            Conditions = Array.Empty<Condition>();
+            UnknownPowerVar = 0;
+        }
 
         public override byte[] Encode()
         {
