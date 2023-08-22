@@ -1,5 +1,7 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
+using MHServerEmu.Common.Extensions;
+using MHServerEmu.GameServer.GameData;
 
 namespace MHServerEmu.GameServer.Common
 {
@@ -11,7 +13,7 @@ namespace MHServerEmu.GameServer.Common
 
         public PrototypeCollectionEntry(CodedInputStream stream)
         {
-            PrototypeId = stream.ReadRawVarint64();
+            PrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Property);
             Value = stream.ReadRawVarint32();
         }
 
@@ -27,7 +29,7 @@ namespace MHServerEmu.GameServer.Common
             {
                 CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
 
-                stream.WriteRawVarint64(PrototypeId);
+                stream.WritePrototypeId(PrototypeId, PrototypeEnumType.Property);
                 stream.WriteRawVarint32(Value);
 
                 stream.Flush();
@@ -40,7 +42,7 @@ namespace MHServerEmu.GameServer.Common
             using (MemoryStream memoryStream = new())
             using (StreamWriter streamWriter = new(memoryStream))
             {
-                streamWriter.WriteLine($"PrototypeId: 0x{PrototypeId.ToString("X")}");
+                streamWriter.WriteLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
                 streamWriter.WriteLine($"Value: 0x{Value.ToString("X")}");
 
                 streamWriter.Flush();
