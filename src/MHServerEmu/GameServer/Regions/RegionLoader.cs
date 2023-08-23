@@ -163,7 +163,7 @@ namespace MHServerEmu.GameServer.Regions
 
                 messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++, // Hank Pym
                     GameDatabase.GetPrototypeId("Entity/Characters/Vendors/Prototypes/HUB01AvengersTower/ATVendorCrafter.prototype"),
-                    new(-1204f, 1114f, 359.984f), new(359.984f, 0f, 0f),
+                    new(-1204f, 1114f, 359.984f), new(-2.84711f, 0f, 0f),
                     repId++, 608, areaid, 608, region.Id, cellid, area, false)));
 
                 messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++,
