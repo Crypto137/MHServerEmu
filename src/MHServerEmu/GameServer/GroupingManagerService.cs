@@ -4,7 +4,7 @@ using MHServerEmu.Common.Commands;
 using MHServerEmu.Common.Config;
 using MHServerEmu.Networking;
 
-namespace MHServerEmu.GameServer.GameInstances
+namespace MHServerEmu.GameServer
 {
     public class GroupingManagerService : IGameMessageHandler
     {
@@ -14,7 +14,7 @@ namespace MHServerEmu.GameServer.GameInstances
 
         public GroupingManagerService(GameServerManager gameServerManager)
         {
-            _gameServerManager = gameServerManager;   
+            _gameServerManager = gameServerManager;
         }
 
         public void Handle(FrontendClient client, ushort muxId, GameMessage message)

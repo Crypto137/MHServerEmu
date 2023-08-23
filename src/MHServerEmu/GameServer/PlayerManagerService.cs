@@ -4,15 +4,15 @@ using MHServerEmu.Common;
 using MHServerEmu.GameServer.Regions;
 using MHServerEmu.Networking;
 
-namespace MHServerEmu.GameServer.GameInstances
+namespace MHServerEmu.GameServer
 {
-    public class GameInstanceService : IGameMessageHandler
+    public class PlayerManagerService : IGameMessageHandler
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private GameServerManager _gameServerManager;
 
-        public GameInstanceService(GameServerManager gameServerManager)
+        public PlayerManagerService(GameServerManager gameServerManager)
         {
             _gameServerManager = gameServerManager;
         }
