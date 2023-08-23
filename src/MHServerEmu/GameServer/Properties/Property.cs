@@ -8,13 +8,13 @@ namespace MHServerEmu.GameServer.Properties
 {
     public class Property
     {
-        public ulong Id { get; set; }
+        public ulong Id { get; set; }   // The first 11 bits is the actual id, the rest are parameters defined by PropertyInfo
         public PropertyValue Value { get; set; }
         public PropertyInfo Info { get => GameDatabase.PropertyInfoTable[Id >> 53]; }
 
         public Property(CodedInputStream stream)
         {
-            Id = stream.ReadRawVarint64().ReverseBytes();
+            Id = stream.ReadRawVarint64().ReverseBytes();       // Id is reversed so that it can be optimally encoded into varint when all subvalues are 0
             CreateValueContainer(stream.ReadRawVarint64());
         }
 
