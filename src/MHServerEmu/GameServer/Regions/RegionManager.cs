@@ -9,49 +9,53 @@ namespace MHServerEmu.GameServer.Regions
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly Dictionary<RegionPrototype, Region> RegionDict = new();
 
+        private static readonly RegionPrototype[] AvailableRegions = new RegionPrototype[]
+        {
+            RegionPrototype.AvengersTowerHUBRegion,
+            RegionPrototype.NPEAvengersTowerHUBRegion,
+            RegionPrototype.TrainingRoomSHIELDRegion,
+            RegionPrototype.XaviersMansionRegion,
+            RegionPrototype.HelicarrierRegion,
+            RegionPrototype.AsgardiaRegion,
+            RegionPrototype.GenoshaHUBRegion,
+            RegionPrototype.DangerRoomHubRegion,
+            RegionPrototype.InvasionSafeAbodeRegion,
+            RegionPrototype.NPERaftRegion,
+            RegionPrototype.DailyGShockerSubwayRegionL60,
+            RegionPrototype.DailyGSinisterLabRegionL60,
+            RegionPrototype.BronxZooRegionL60,
+            RegionPrototype.XManhattanRegion1to60,
+            RegionPrototype.XManhattanRegion60Cosmic,
+            RegionPrototype.CH0301MadripoorRegion,
+            RegionPrototype.CH0701SavagelandRegion,
+            RegionPrototype.CH0804LatveriaPCZRegion,
+            RegionPrototype.CH0904SiegePCZRegion
+        };
+
         public static bool IsInitialized { get; }
 
         static RegionManager()
         {
-            RegionDict.Add(RegionPrototype.AvengersTowerHUBRegion, LoadRegionData(RegionPrototype.AvengersTowerHUBRegion));
-            RegionDict.Add(RegionPrototype.NPEAvengersTowerHUBRegion, LoadRegionData(RegionPrototype.NPEAvengersTowerHUBRegion));
-            RegionDict.Add(RegionPrototype.TrainingRoomSHIELDRegion, LoadRegionData(RegionPrototype.TrainingRoomSHIELDRegion));
-            RegionDict.Add(RegionPrototype.XaviersMansionRegion, LoadRegionData(RegionPrototype.XaviersMansionRegion));
-            RegionDict.Add(RegionPrototype.HelicarrierRegion, LoadRegionData(RegionPrototype.HelicarrierRegion));
-            RegionDict.Add(RegionPrototype.AsgardiaRegion, LoadRegionData(RegionPrototype.AsgardiaRegion));
-            RegionDict.Add(RegionPrototype.GenoshaHUBRegion, LoadRegionData(RegionPrototype.GenoshaHUBRegion));
-            RegionDict.Add(RegionPrototype.DangerRoomHubRegion, LoadRegionData(RegionPrototype.DangerRoomHubRegion));
-            RegionDict.Add(RegionPrototype.InvasionSafeAbodeRegion, LoadRegionData(RegionPrototype.InvasionSafeAbodeRegion));
-            RegionDict.Add(RegionPrototype.NPERaftRegion, LoadRegionData(RegionPrototype.NPERaftRegion));
-            RegionDict.Add(RegionPrototype.DailyGShockerSubwayRegionL60, LoadRegionData(RegionPrototype.DailyGShockerSubwayRegionL60));
-            RegionDict.Add(RegionPrototype.DailyGSinisterLabRegionL60, LoadRegionData(RegionPrototype.DailyGSinisterLabRegionL60)); 
-            RegionDict.Add(RegionPrototype.BronxZooRegionL60, LoadRegionData(RegionPrototype.BronxZooRegionL60));
-            RegionDict.Add(RegionPrototype.XManhattanRegion1to60, LoadRegionData(RegionPrototype.XManhattanRegion1to60));
-            RegionDict.Add(RegionPrototype.XManhattanRegion60Cosmic, LoadRegionData(RegionPrototype.XManhattanRegion60Cosmic));
-            RegionDict.Add(RegionPrototype.CH0301MadripoorRegion, LoadRegionData(RegionPrototype.CH0301MadripoorRegion));
-            RegionDict.Add(RegionPrototype.CH0701SavagelandRegion, LoadRegionData(RegionPrototype.CH0701SavagelandRegion));
-            RegionDict.Add(RegionPrototype.CH0804LatveriaPCZRegion, LoadRegionData(RegionPrototype.CH0804LatveriaPCZRegion));
-            RegionDict.Add(RegionPrototype.CH0904SiegePCZRegion, LoadRegionData(RegionPrototype.CH0904SiegePCZRegion)); 
-
-            Logger.Info($"Loaded data for {RegionDict.Count} regions");
-
             IsInitialized = true;
         }
 
         public static Region GetRegion(RegionPrototype prototype)
         {
-            if (RegionDict.ContainsKey(prototype))
+            if (IsRegionAvailable(prototype))
             {
+                if (RegionDict.ContainsKey(prototype) == false)
+                    RegionDict.Add(prototype, LoadRegionData(prototype));
+
                 return RegionDict[prototype];
             }
             else
             {
-                Logger.Warn($"Data for region {prototype} is not available, falling back to NPEAvengersTowerHUBRegion");
+                Logger.Warn($"Region {prototype} is not available, falling back to NPEAvengersTowerHUBRegion");
                 return RegionDict[RegionPrototype.NPEAvengersTowerHUBRegion];
             }
         }
 
-        public static bool IsRegionAvailable(RegionPrototype prototype) => RegionDict.ContainsKey(prototype);
+        public static bool IsRegionAvailable(RegionPrototype prototype) => AvailableRegions.Contains(prototype);
 
         private static Region LoadRegionData(RegionPrototype prototype)
         {
