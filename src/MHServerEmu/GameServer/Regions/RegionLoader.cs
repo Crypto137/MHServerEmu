@@ -66,6 +66,118 @@ namespace MHServerEmu.GameServer.Regions
                 .SetArchiveData(ByteString.CopyFrom(avatarEnterGameWorldArchive.Encode()))
                 .Build()));
 
+            if (regionPrototype == RegionPrototype.NPEAvengersTowerHUBRegion)
+            {
+                ulong area = GameDatabase.GetPrototypeId("Regions/HUBRevamp/NPEAvengersTowerHubArea.prototype");
+                int cellid = 1;
+                int areaid = 1;
+                ulong repId = 50000;
+                ulong entityId = 1000; 
+
+                messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++,
+                    GameDatabase.GetPrototypeId("Entity/Characters/NPCs/HubNPCs/SHIELDAgentStanLee.prototype"),
+                    new(588f, 1194f, 369f), new(-1.5625f, 0f, 0f),
+                    repId++, 608, areaid, 608, region.Id, cellid, area, false)));
+
+                messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++,
+                    GameDatabase.GetPrototypeId("Entity/Characters/Vendors/Prototypes/Endgame/TeamSHIELDRepBuffer.prototype"),
+                    new(736f, -352f, 177f), new(-2.15625f, 0f, 0f),
+                    repId++, 608, areaid, 608, region.Id, cellid, area, false)));
+
+                messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++,
+                    GameDatabase.GetPrototypeId("Entity/Characters/NPCs/HubNPCs/MariaHill.prototype"),
+                    new(924.5f, 996f, 369f), new(-2.9375f, 0f, 0f),
+                    repId++, 608, areaid, 608, region.Id, cellid, area, false)));
+
+                messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++, 
+                    GameDatabase.GetPrototypeId("Entity/Characters/NPCs/Objects/AvengersStash.prototype"),
+                    new(1661.25f, -930.745f, 320f + 60f), new(-0.78541f, 0f, 0f),
+                    repId++, 608, areaid, 608, region.Id, cellid, area, false)));
+
+                messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++, 
+                    GameDatabase.GetPrototypeId("Entity/Characters/NPCs/Objects/AvengersStash.prototype"),
+                    new(-208.444f, 1980.73f, 128f + 60f), new(-0.78541f, 0f, 0f),
+                    repId++, 608, areaid, 608, region.Id, cellid, area, false)));
+
+                messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++, 
+                    GameDatabase.GetPrototypeId("Entity/Characters/NPCs/Objects/AvengersStash.prototype"),
+                    new(-292.686f, 1896.49f, 128f + 60f), new(-0.78541f, 0f, 0f),
+                    repId++, 608, areaid, 608, region.Id, cellid, area, false)));
+
+                messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++,
+                    GameDatabase.GetPrototypeId("Entity/Characters/NPCs/Objects/AvengersStash.prototype"),
+                    new(-376.846f, 1808.53f, 128f + 60f), new(-0.78541f, 0f, 0f),
+                    repId++, 608, areaid, 608, region.Id, cellid, area, false)));
+
+                /* messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++, // not work
+                      GameDatabase.GetPrototypeId("Entity/Characters/Vendors/Prototypes/HUB01AvengersTower/CosmicEventVendor.prototype"),
+                      new(1241.92f, -1941.42f, 374f), new(2.45441f, 0f, 0f),
+                      repId++, 608, areaid, 608, region.Id, cellid, area, false)));
+
+
+                  messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++, // not work
+                      GameDatabase.GetPrototypeId("Entity/Characters/NPCs/HubNPCs/SpiderWoman.prototype"),
+                      new(-1376.1f, -1826.57f, 348.681f), new(6.97051f, 0f, 0f),
+                      repId++, 608, areaid, 608, region.Id, cellid, area, false))); */
+
+
+                messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++, // Jarvis
+                    GameDatabase.GetPrototypeId("Entity/Characters/Vendors/Prototypes/HUB01AvengersTower/ATVendorArmor.prototype"),
+                    new(-192.58f, 870.282f, 180.331f), new(3.14164f, 0f, 0f),
+                    repId++, 608, areaid, 608, region.Id, cellid, area, false)));
+
+                messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++,
+                    GameDatabase.GetPrototypeId("Entity/Characters/Vendors/Prototypes/HUB01AvengersTower/ATVendorWeapon.prototype"),
+                    new(-145.725f, 1433.93f, 180.331f), new(-2.84711f, 0f, 0f),
+                    repId++, 608, areaid, 608, region.Id, cellid, area, false)));
+
+                messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++,
+                    GameDatabase.GetPrototypeId("Entity/Characters/NPCs/HubNPCs/SheHulk.prototype"),
+                    new(-1236.28f, 823.592f, 352.324f), new(2.35623f, 0f, 0f),
+                    repId++, 608, areaid, 608, region.Id, cellid, area, false)));
+
+                messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++,
+                    GameDatabase.GetPrototypeId("Entity/Characters/NPCs/HubNPCs/Wonderman.prototype"),
+                    new(-1516.29f, 870.051f, 374f), new(6.28328f, 0f, 0f),
+                    repId++, 608, areaid, 608, region.Id, cellid, area, false)));
+
+                messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++,
+                    GameDatabase.GetPrototypeId("Entity/Characters/Vendors/Prototypes/HUB01AvengersTower/UruForgedVendor.prototype"),
+                    new(-1275.32f, 1110.82f, 304f), new(-0.589058f, 0f, 0f),
+                    repId++, 608, areaid, 608, region.Id, cellid, area, false)));
+
+                messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++,
+                    GameDatabase.GetPrototypeId("Entity/Characters/Vendors/Prototypes/VendorEternitySplinterAdamWarlock.prototype"),
+                    new(463.362f, -828.147f, 180.331f), new(2.35623f, 0f, 0f),
+                    repId++, 608, areaid, 608, region.Id, cellid, area, false)));
+               
+                messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++, // Clea
+                    GameDatabase.GetPrototypeId("Entity/Characters/Vendors/Prototypes/HUB01AvengersTower/ATVendorHardcore.prototype"),
+                    new(2288f, -2720f, 560f), new(-0.687234f, 0f, 0f),
+                    repId++, 608, areaid, 608, region.Id, cellid, area, false)));
+
+                messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++, // War Machine
+                    GameDatabase.GetPrototypeId("Entity/Characters/Vendors/Prototypes/HUB01AvengersTower/ATVendorGuild.prototype"),
+                    new(1504.88f, -1701.76f, 371.813f), new(3.63252f, 0f, 0f),
+                    repId++, 608, areaid, 608, region.Id, cellid, area, false)));
+
+                messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++, // Hank Pym
+                    GameDatabase.GetPrototypeId("Entity/Characters/Vendors/Prototypes/HUB01AvengersTower/ATVendorCrafter.prototype"),
+                    new(-1204f, 1114f, 359.984f), new(-2.84711f, 0f, 0f),
+                    repId++, 608, areaid, 608, region.Id, cellid, area, false)));
+
+                messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++,
+                    GameDatabase.GetPrototypeId("Entity/Characters/Vendors/Prototypes/HUB01AvengersTower/BIFBuxTaker.prototype"),
+                    new(-55.3334f, 240.429f, 136.234f), new(4.01065f, 0f, 0f),
+                    repId++, 608, areaid, 608, region.Id, cellid, area, false)));
+
+                messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++, 
+                    GameDatabase.GetPrototypeId("Entity/Characters/Vendors/Prototypes/HUB01AvengersTower/BIFBuxGiver.prototype"),
+                    new(-120f, 304f, 136), new(4.01027f, 0f, 0f),
+                    repId++, 608, areaid, 608, region.Id, cellid, area, false)));
+
+            }
+
             // Put waypoint entity in the game world
             EnterGameWorldArchive waypointEnterGameWorldArchiveData = new(12, region.WaypointPosition, region.WaypointOrientation.X);
             messageList.Add(new(NetMessageEntityEnterGameWorld.CreateBuilder()
