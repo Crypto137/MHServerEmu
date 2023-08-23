@@ -13,7 +13,7 @@ namespace MHServerEmu.Common.Commands
                 return "You can only invoke this command from the game.";
 
             client.CurrentRegion = RegionPrototype.AvengersTowerHUBRegion;
-            client.SendMultipleMessages(1, RegionLoader.GetBeginLoadingMessages(client.CurrentRegion, client.CurrentAvatar));
+            client.SendMultipleMessages(1, RegionLoader.GetBeginLoadingMessages(client.GameId, client.CurrentRegion, client.CurrentAvatar));
             client.IsLoading = true;
             return "Changing region to Avengers Tower (original)";
         }

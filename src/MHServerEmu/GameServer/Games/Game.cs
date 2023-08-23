@@ -1,7 +1,10 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
+using Gazillion;
 using MHServerEmu.Common;
+using MHServerEmu.Common.Config;
 using MHServerEmu.GameServer.Entities;
+using MHServerEmu.GameServer.Regions;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.GameServer.Games
@@ -57,6 +60,27 @@ namespace MHServerEmu.GameServer.Games
         public void Handle(FrontendClient client, ushort muxId, GameMessage[] messages)
         {
             foreach (GameMessage message in messages) Handle(client, muxId, message);
+        }
+
+        public void AddPlayer(FrontendClient client)
+        {
+            client.GameId = Id;
+
+            client.SendMessage(1, new(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build()));
+
+            client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageAchievementDatabaseDump.bin"));
+
+            var chatBroadcastMessage = ChatBroadcastMessage.CreateBuilder()         // Send MOTD
+                .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS)
+                .SetFromPlayerName(ConfigManager.GroupingManager.MotdPlayerName)
+                .SetTheMessage(ChatMessage.CreateBuilder().SetBody(ConfigManager.GroupingManager.MotdText))
+                .SetPrestigeLevel(ConfigManager.GroupingManager.MotdPrestigeLevel)
+                .Build();
+
+            client.SendMessage(2, new(chatBroadcastMessage));
+
+            client.SendMultipleMessages(1, RegionLoader.GetBeginLoadingMessages(Id, client.CurrentRegion, client.CurrentAvatar));
+            client.IsLoading = true;
         }
     }
 }

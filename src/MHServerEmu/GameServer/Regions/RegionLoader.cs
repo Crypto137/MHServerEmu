@@ -15,7 +15,7 @@ namespace MHServerEmu.GameServer.Regions
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public static GameMessage[] GetBeginLoadingMessages(RegionPrototype regionPrototype, HardcodedAvatarEntity avatar, bool loadEntities = true)
+        public static GameMessage[] GetBeginLoadingMessages(ulong gameId, RegionPrototype regionPrototype, HardcodedAvatarEntity avatar, bool loadEntities = true)
         {
             List<GameMessage> messageList = new();
 
@@ -36,7 +36,7 @@ namespace MHServerEmu.GameServer.Regions
             messageList.Add(new(NetMessageReadyAndLoadedOnGameServer.DefaultInstance));
 
             // Load region data
-            messageList.AddRange(RegionManager.GetRegion(regionPrototype).GetLoadingMessages(1150669705055451881));
+            messageList.AddRange(RegionManager.GetRegion(regionPrototype).GetLoadingMessages(gameId));
 
             // Create waypoint entity
             messageList.Add(new(NetMessageEntityCreate.CreateBuilder()

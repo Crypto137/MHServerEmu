@@ -111,7 +111,7 @@ namespace MHServerEmu.GameServer
                     if (RegionManager.IsRegionAvailable(destinationRegion))
                     {
                         client.CurrentRegion = (RegionPrototype)useWaypointMessage.RegionProtoId;
-                        client.SendMultipleMessages(1, RegionLoader.GetBeginLoadingMessages(client.CurrentRegion, client.CurrentAvatar, false));
+                        client.SendMultipleMessages(1, RegionLoader.GetBeginLoadingMessages(client.GameId, client.CurrentRegion, client.CurrentAvatar, false));
                         client.IsLoading = true;
                     }
                     else

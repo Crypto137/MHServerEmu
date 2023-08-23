@@ -21,6 +21,7 @@ namespace MHServerEmu.Networking
         public bool FinishedPlayerMgrServerFrontendHandshake { get; set; } = false;
         public bool FinishedGroupingManagerFrontendHandshake { get; set; } = false;
         public bool IsLoading { get; set; } = false;
+        public ulong GameId { get; set; }
 
         // TODO: move player data to account
         public Account Account { get; set; }

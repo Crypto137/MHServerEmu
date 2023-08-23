@@ -99,23 +99,7 @@ namespace MHServerEmu.GameServer.Frontend
                     else if (initialClientHandshake.ServerType == PubSubServerTypes.GROUPING_MANAGER_FRONTEND)
                     {
                         client.FinishedGroupingManagerFrontendHandshake = true;
-
-                        client.SendMessage(muxId, new(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build()));
-
-                        client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageAchievementDatabaseDump.bin"));
-
-                        var chatBroadcastMessage = ChatBroadcastMessage.CreateBuilder()         // Send MOTD
-                            .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS)
-                            .SetFromPlayerName(ConfigManager.GroupingManager.MotdPlayerName)
-                            .SetTheMessage(ChatMessage.CreateBuilder().SetBody(ConfigManager.GroupingManager.MotdText))
-                            .SetPrestigeLevel(ConfigManager.GroupingManager.MotdPrestigeLevel)
-                            .Build();
-
-                        client.SendMessage(2, new(chatBroadcastMessage));
-
-                        // Send hardcoded region loading data after initial handshakes finish
-                        client.SendMultipleMessages(1, RegionLoader.GetBeginLoadingMessages(client.CurrentRegion, client.CurrentAvatar));
-                        client.IsLoading = true;
+                        _gameServerManager.GameManager.GetAvailableGame().AddPlayer(client);
                     }
 
                     break;
