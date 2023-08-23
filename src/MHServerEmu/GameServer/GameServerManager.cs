@@ -2,12 +2,15 @@
 using MHServerEmu.Networking;
 using MHServerEmu.GameServer.Frontend;
 using MHServerEmu.GameServer.GameInstances;
+using MHServerEmu.GameServer.Games;
 
 namespace MHServerEmu.GameServer
 {
     public class GameServerManager : IGameMessageHandler
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public GameManager GameManager { get; }
 
         public FrontendService FrontendService { get; }
         public GroupingManagerService GroupingManagerService { get; }
@@ -17,6 +20,8 @@ namespace MHServerEmu.GameServer
 
         public GameServerManager()
         {
+            GameManager = new();
+
             FrontendService = new(this);
             GroupingManagerService = new(this);
             GameInstanceService = new(this);
