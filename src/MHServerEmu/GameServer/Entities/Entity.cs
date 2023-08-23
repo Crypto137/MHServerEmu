@@ -64,11 +64,7 @@ namespace MHServerEmu.GameServer.Entities
 
             Properties = new Property[stream.ReadRawUInt32()];
             for (int i = 0; i < Properties.Length; i++)
-            {
-                ulong id = stream.ReadRawVarint64();
-                ulong value = stream.ReadRawVarint64();
-                Properties[i] = new(id, value);
-            }
+                Properties[i] = new(stream);
         }
 
         protected void ReadUnknownFields(CodedInputStream stream)

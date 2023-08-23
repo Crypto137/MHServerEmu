@@ -32,13 +32,13 @@ namespace MHServerEmu.GameServer.Entities
 
             Properties = new Property[]
             {
-                new(0x204D),    // MapPosition
-                new(0x203B),    // Health
-                new(0xA04C),    // MapAreaId
-                new(0x203C),    // HealthMaxOther
-                new(0x404D),    // MapRegionId
-                new(0xC04C),    // MapCellId
-                new(0x6019)     // ContextAreaRef
+                new(0x4D20000000000000),    // MapPosition
+                new(0x3B20000000000000),    // Health
+                new(0x4CA0000000000000),    // MapAreaId
+                new(0x3C20000000000000),    // HealthMaxOther
+                new(0x4D40000000000000),    // MapRegionId
+                new(0x4CC0000000000000),    // MapCellId
+                new(0x1960000000000000)     // ContextAreaRef
             };
 
             Properties[0].Value.Set(mapPosition);

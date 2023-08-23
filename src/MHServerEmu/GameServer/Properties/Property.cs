@@ -1,29 +1,26 @@
 ﻿using System.Text;
 using Gazillion;
 using Google.ProtocolBuffers;
+using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.GameData;
 
 namespace MHServerEmu.GameServer.Properties
 {
     public class Property
     {
-        private int _propertyInfoIndex;
-
         public ulong Id { get; set; }
         public PropertyValue Value { get; set; }
-        public PropertyInfo Info { get => GameDatabase.PropertyInfoTable[_propertyInfoIndex]; }
+        public PropertyInfo Info { get => GameDatabase.PropertyInfoTable[Id >> 53]; }
 
         public Property(CodedInputStream stream)
         {
-            Id = stream.ReadRawVarint64();
-            CalculatePropertyInfoIndex();
+            Id = stream.ReadRawVarint64().ReverseBytes();
             CreateValueContainer(stream.ReadRawVarint64());
         }
 
         public Property(ulong id, ulong rawValue = 0)
         {
             Id = id;
-            CalculatePropertyInfoIndex();
             CreateValueContainer(rawValue);
         }
 
@@ -33,7 +30,7 @@ namespace MHServerEmu.GameServer.Properties
             {
                 CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
 
-                stream.WriteRawVarint64(Id);
+                stream.WriteRawVarint64(Id.ReverseBytes());
                 stream.WriteRawVarint64(Value.RawValue);
 
                 stream.Flush();
@@ -55,13 +52,6 @@ namespace MHServerEmu.GameServer.Properties
                 streamWriter.Flush();
                 return Encoding.UTF8.GetString(memoryStream.ToArray());
             }
-        }
-
-        private void CalculatePropertyInfoIndex()
-        {
-            byte[] hiDword = BitConverter.GetBytes((uint)(Id & 0x00000000FFFFFFFF));    // get HIDWORD of propertyId
-            Array.Reverse(hiDword);                                                     // reverse to match message data
-            _propertyInfoIndex = BitConverter.ToInt32(hiDword) >> 21;                   // shift to get index in the table
         }
 
         private void CreateValueContainer(ulong rawValue)

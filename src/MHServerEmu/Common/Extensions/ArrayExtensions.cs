@@ -21,6 +21,13 @@ namespace MHServerEmu.Common.Extensions
                 : new byte[] { byteArray[3], byteArray[2], byteArray[1] };
         }
 
+        public static ulong ReverseBytes(this ulong value)
+        {
+            byte[] bytes = BitConverter.GetBytes(value);
+            Array.Reverse(bytes);
+            return BitConverter.ToUInt64(bytes);
+        }
+
         #region uint <-> bool[] conversion
         /* uint mask cheat sheet for getting bools (1 << i)
         0 == 0x1, 1 == 0x2, 2 == 0x4, 3 == 0x8, 4 == 0x10, 5 == 0x20, 6 == 0x40, 7 == 0x80,
