@@ -4,54 +4,49 @@ namespace MHServerEmu.Networking
 {
     public static class ProtocolDispatchTable
     {
-        private static Dictionary<string, Dictionary<string, byte>> _protocolDict = new()
-        {
-            { "AuthMessages.proto", new() },
-            { "BillingCommon.proto", new() },
-            { "ChatCommon.proto", new() },
-            { "ClientToGameServer.proto", new() },
-            { "ClientToGroupingManager.proto", new() },
-            { "CommonMessages.proto", new() },
-            { "FrontendProtocol.proto", new() },
-            { "GameServerToClient.proto", new() },
-            { "GroupingManager.proto", new() },
-            { "Guild.proto", new() },
-            { "MatchCommon.proto", new() },
-            { "PubSubProtocol.proto", new() }
-        };
+        private static Dictionary<Type, Dictionary<byte, string>> _messageNameDict = new();     // For converting Id -> message class name
+        private static Dictionary<string, Dictionary<string, byte>> _messageIdDict = new();     // For converting IMessage -> Id
 
         public static bool IsInitialized { get; private set; }
 
         static ProtocolDispatchTable()
         {
-            ParseMessageEnum(typeof(AuthMessage), _protocolDict["AuthMessages.proto"]);
-            ParseMessageEnum(typeof(BillingCommonMessage), _protocolDict["BillingCommon.proto"]);
-            ParseMessageEnum(typeof(ChatCommonMessage), _protocolDict["ChatCommon.proto"]);
-            ParseMessageEnum(typeof(ClientToGameServerMessage), _protocolDict["ClientToGameServer.proto"]);
-            ParseMessageEnum(typeof(ClientToGroupingManagerMessage), _protocolDict["ClientToGroupingManager.proto"]);
-            ParseMessageEnum(typeof(CommonMessage), _protocolDict["CommonMessages.proto"]);
-            ParseMessageEnum(typeof(FrontendProtocolMessage), _protocolDict["FrontendProtocol.proto"]);
-            ParseMessageEnum(typeof(GameServerToClientMessage), _protocolDict["GameServerToClient.proto"]);
-            ParseMessageEnum(typeof(GroupingManagerMessage), _protocolDict["GroupingManager.proto"]);
-            ParseMessageEnum(typeof(GuildMessage), _protocolDict["Guild.proto"]);
-            ParseMessageEnum(typeof(MatchCommonMessage), _protocolDict["MatchCommon.proto"]);
-            ParseMessageEnum(typeof(PubSubProtocolMessage), _protocolDict["PubSubProtocol.proto"]);
+            ParseMessageEnum(typeof(AuthMessage), "AuthMessages.proto");
+            ParseMessageEnum(typeof(BillingCommonMessage), "BillingCommon.proto");
+            ParseMessageEnum(typeof(ChatCommonMessage), "ChatCommon.proto");
+            ParseMessageEnum(typeof(ClientToGameServerMessage), "ClientToGameServer.proto");
+            ParseMessageEnum(typeof(ClientToGroupingManagerMessage), "ClientToGroupingManager.proto");
+            ParseMessageEnum(typeof(CommonMessage), "CommonMessages.proto");
+            ParseMessageEnum(typeof(FrontendProtocolMessage), "FrontendProtocol.proto");
+            ParseMessageEnum(typeof(GameServerToClientMessage), "GameServerToClient.proto");
+            ParseMessageEnum(typeof(GroupingManagerMessage), "GroupingManager.proto");
+            ParseMessageEnum(typeof(GuildMessage), "Guild.proto");
+            ParseMessageEnum(typeof(MatchCommonMessage), "MatchCommon.proto");
+            ParseMessageEnum(typeof(PubSubProtocolMessage), "PubSubProtocol.proto");
 
             IsInitialized = true;
         }
+
+        public static string GetMessageName(Type enumType, byte id) => _messageNameDict[enumType][id];
 
         public static byte GetMessageId(IMessage message)
         {
             string messageName = message.DescriptorForType.Name;
             string protocolFileName = message.DescriptorForType.File.Name;
-            return _protocolDict[protocolFileName][messageName];
+            return _messageIdDict[protocolFileName][messageName];
         }
 
-        private static void ParseMessageEnum(Type type, Dictionary<string, byte> dict)
+        private static void ParseMessageEnum(Type type, string protocolName)
         {
+            _messageNameDict.Add(type, new());
+            _messageIdDict.Add(protocolName, new());
+
             string[] names = Enum.GetNames(type);
             for (int i = 0; i < names.Length; i++)
-                dict.Add(names[i], (byte)i);
+            {
+                _messageNameDict[type].Add((byte)i, names[i]);
+                _messageIdDict[protocolName].Add(names[i], (byte)i);
+            }
         }
     }
 }
