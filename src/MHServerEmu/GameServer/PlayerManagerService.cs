@@ -77,16 +77,6 @@ namespace MHServerEmu.GameServer
                     //Logger.Trace(parsedPingMessage.ToString());
                     break;
 
-                case ClientToGameServerMessage.NetMessageCellLoaded:
-                    Logger.Info($"Received NetMessageCellLoaded");
-                    if (client.IsLoading)
-                    {
-                        client.SendMultipleMessages(1, RegionLoader.GetFinishLoadingMessages(client.CurrentRegion, client.CurrentAvatar));
-                        client.IsLoading = false;
-                    }
-
-                    break;
-
                 case ClientToGameServerMessage.NetMessageTryInventoryMove:
                     Logger.Info($"Received NetMessageTryInventoryMove");
                     var tryInventoryMoveMessage = NetMessageTryInventoryMove.ParseFrom(message.Content);
@@ -98,27 +88,6 @@ namespace MHServerEmu.GameServer
                         .Build();
 
                     client.SendMessage(1, new(inventoryMoveMessage));
-                    break;
-
-                case ClientToGameServerMessage.NetMessageUseWaypoint:
-                    Logger.Info($"Received NetMessageUseWaypoint message");
-                    var useWaypointMessage = NetMessageUseWaypoint.ParseFrom(message.Content);
-
-                    Logger.Trace(useWaypointMessage.ToString());
-
-                    RegionPrototype destinationRegion = (RegionPrototype)useWaypointMessage.RegionProtoId;
-
-                    if (RegionManager.IsRegionAvailable(destinationRegion))
-                    {
-                        client.CurrentRegion = (RegionPrototype)useWaypointMessage.RegionProtoId;
-                        client.SendMultipleMessages(1, RegionLoader.GetBeginLoadingMessages(client.GameId, client.CurrentRegion, client.CurrentAvatar, false));
-                        client.IsLoading = true;
-                    }
-                    else
-                    {
-                        Logger.Warn($"Cannot go to {destinationRegion}: no data is available");
-                    }
-
                     break;
 
                 case ClientToGameServerMessage.NetMessageSwitchAvatar:
@@ -176,6 +145,12 @@ namespace MHServerEmu.GameServer
                 case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:
                     Logger.Info($"Received NetMessageRequestInterestInAvatarEquipment");
                     var requestInterestInAvatarEquipment = NetMessageRequestInterestInAvatarEquipment.ParseFrom(message.Content);
+                    break;
+
+                case ClientToGameServerMessage.NetMessageCellLoaded:
+                case ClientToGameServerMessage.NetMessageUseWaypoint:
+                    _gameServerManager.GameManager.GetGameById(client.GameId).Handle(client, muxId, message);
+
                     break;
 
                 case ClientToGameServerMessage.NetMessageChat:

@@ -4,11 +4,9 @@ using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 
 namespace MHServerEmu.GameServer.Regions
 {
-    public static class RegionManager
+    public class RegionManager
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private static readonly Dictionary<RegionPrototype, Region> RegionDict = new();
-
         private static readonly RegionPrototype[] AvailableRegions = new RegionPrototype[]
         {
             RegionPrototype.AvengersTowerHUBRegion,
@@ -32,26 +30,26 @@ namespace MHServerEmu.GameServer.Regions
             RegionPrototype.CH0904SiegePCZRegion
         };
 
-        public static bool IsInitialized { get; }
+        private readonly Dictionary<RegionPrototype, Region> _regionDict;
 
-        static RegionManager()
+        public RegionManager()
         {
-            IsInitialized = true;
+            _regionDict = new();
         }
 
-        public static Region GetRegion(RegionPrototype prototype)
+        public Region GetRegion(RegionPrototype prototype)
         {
             if (IsRegionAvailable(prototype))
             {
-                if (RegionDict.ContainsKey(prototype) == false)
-                    RegionDict.Add(prototype, LoadRegionData(prototype));
+                if (_regionDict.ContainsKey(prototype) == false)
+                    _regionDict.Add(prototype, LoadRegionData(prototype));
 
-                return RegionDict[prototype];
+                return _regionDict[prototype];
             }
             else
             {
                 Logger.Warn($"Region {prototype} is not available, falling back to NPEAvengersTowerHUBRegion");
-                return RegionDict[RegionPrototype.NPEAvengersTowerHUBRegion];
+                return _regionDict[RegionPrototype.NPEAvengersTowerHUBRegion];
             }
         }
 

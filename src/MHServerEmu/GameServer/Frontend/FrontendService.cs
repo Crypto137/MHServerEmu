@@ -3,7 +3,6 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Config;
 using MHServerEmu.GameServer.Frontend.Accounts;
-using MHServerEmu.GameServer.Regions;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.GameServer.Frontend
