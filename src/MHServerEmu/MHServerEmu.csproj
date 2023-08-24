@@ -15,6 +15,9 @@
     <Reference Include="Google.ProtocolBuffers">
       <HintPath>..\..\dep\protobuf-csharp\Google.ProtocolBuffers.dll</HintPath>
     </Reference>
+    <Reference Include="INIFileParser">
+      <HintPath>..\..\dep\ini-parser\INIFileParser.dll</HintPath>
+    </Reference>
     <Reference Include="K4os.Compression.LZ4">
       <HintPath>..\..\dep\K4os.Compression.LZ4\K4os.Compression.LZ4.dll</HintPath>
     </Reference>

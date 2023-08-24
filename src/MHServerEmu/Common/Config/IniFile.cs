@@ -1,35 +1,29 @@
-﻿using System.Runtime.InteropServices;
-using System.Text;
+﻿using IniParser;
+using IniParser.Model;
 
 namespace MHServerEmu.Common.Config
 {
     public class IniFile
     {
-        private const int ReadBufferSize = 255;
-
-        [DllImport("kernel32")]
-        private static extern int GetPrivateProfileString(string section, string key, string defaultValue, StringBuilder returnedString, int size, string path);
-        [DllImport("kernel32")]
-        private static extern int GetPrivateProfileInt(string section, string key, int defaultValue, string filePath);
-        [DllImport("kernel32")]
-        private static extern long WritePrivateProfileString(string section, string key, string val, string filePath);
-
         private string _path;
+        private FileIniDataParser _parser;
+        private IniData _iniData;
 
         public IniFile(string path)
         {
             _path = path;
+            _parser = new();
+            _iniData = _parser.ReadFile(_path);
         }
 
-        public string ReadString(string section, string key)
-        {
-            StringBuilder stringBuilder = new(ReadBufferSize);
-            GetPrivateProfileString(section, key, "", stringBuilder, ReadBufferSize, _path);
-            return stringBuilder.ToString();
-        }
-
-        public int ReadInt(string section, string key) => GetPrivateProfileInt(section, key, 0, _path);
+        public string ReadString(string section, string key) => _iniData[section][key];
+        public int ReadInt(string section, string key) => Convert.ToInt32(_iniData[section][key]);
         public bool ReadBool(string section, string key) => Convert.ToBoolean(ReadString(section, key));
-        public void WriteValue(string section, string key, string value) => WritePrivateProfileString(section, key, value, _path);
+
+        public void WriteValue(string section, string key, string value)
+        {
+            _iniData[section][key] = value;
+            _parser.WriteFile(_path, _iniData);
+        }
     }
 }
