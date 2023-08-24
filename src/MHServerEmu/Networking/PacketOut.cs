@@ -42,14 +42,14 @@ namespace MHServerEmu.Networking
                     }
                 }
 
-                using (MemoryStream memoryStream = new())
-                using (BinaryWriter binaryWriter = new(memoryStream))
+                using (MemoryStream stream = new())
+                using (BinaryWriter writer = new(stream))
                 {
-                    binaryWriter.Write(_muxId);
-                    binaryWriter.Write(bodyBuffer.Length.ToUInt24ByteArray());
-                    binaryWriter.Write((byte)_muxCommand);
-                    binaryWriter.Write(bodyBuffer);
-                    return memoryStream.ToArray();
+                    writer.Write(_muxId);
+                    writer.WriteUInt24(bodyBuffer.Length);
+                    writer.Write((byte)_muxCommand);
+                    writer.Write(bodyBuffer);
+                    return stream.ToArray();
                 }
             }
         }

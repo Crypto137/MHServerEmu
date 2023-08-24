@@ -7,6 +7,24 @@ namespace MHServerEmu.Common.Extensions
     {
         #region CodedInputStream
 
+        public static ushort ReadRawUInt16(this CodedInputStream stream)
+        {
+            return BitConverter.ToUInt16(stream.ReadRawBytes(2));
+        }
+
+        public static int ReadRawUInt24(this CodedInputStream stream)
+        {
+            // C# doesn't have native support for UInt24, so we add an extra byte to make it an Int32.
+            // We're using int instead of uint because this is used only for packet sizes, and we can avoid casting it to int later.
+            byte[] bytes = new byte[4];   
+            bytes[0] = stream.ReadRawByte();
+            bytes[1] = stream.ReadRawByte();
+            bytes[2] = stream.ReadRawByte();
+            bytes[3] = 0;
+
+            return BitConverter.ToInt32(bytes);
+        }
+
         public static int ReadRawInt32(this CodedInputStream stream)
         {
             return CodedInputStream.DecodeZigZag32(stream.ReadRawVarint32());

@@ -1,5 +1,6 @@
 ﻿using Google.ProtocolBuffers;
 using MHServerEmu.Common;
+using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.Networking
 {
@@ -23,15 +24,8 @@ namespace MHServerEmu.Networking
         public PacketIn(CodedInputStream stream)
         {
             // Read header (6 bytes)
-            MuxId = BitConverter.ToUInt16(stream.ReadRawBytes(2));
-
-            // Body length is stored as uint24
-            byte[] lengthArray = stream.ReadRawBytes(3);
-            byte[] bodyLengthArray = BitConverter.IsLittleEndian
-                ? new byte[] { lengthArray[0], lengthArray[1], lengthArray[2], 0 }
-                : new byte[] { 0, lengthArray[2], lengthArray[1], lengthArray[0] };
-            int bodyLength = BitConverter.ToInt32(bodyLengthArray);
-
+            MuxId = stream.ReadRawUInt16();
+            int bodyLength = stream.ReadRawUInt24();
             Command = (MuxCommand)stream.ReadRawByte();
 
             // Read messages
