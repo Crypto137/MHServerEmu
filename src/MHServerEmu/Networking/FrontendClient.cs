@@ -14,8 +14,8 @@ namespace MHServerEmu.Networking
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Socket socket;
-        private readonly NetworkStream stream;
+        private readonly Socket _socket;
+        private readonly NetworkStream _stream;
 
         private readonly GameServerManager _gameServerManager;
 
@@ -32,8 +32,8 @@ namespace MHServerEmu.Networking
 
         public FrontendClient(Socket socket, GameServerManager gameServerManager)
         {
-            this.socket = socket;
-            stream = new NetworkStream(socket);
+            _socket = socket;
+            _stream = new NetworkStream(socket);
             _gameServerManager = gameServerManager;
 
             if (RegionManager.IsRegionAvailable(CurrentRegion) == false)
@@ -47,9 +47,9 @@ namespace MHServerEmu.Networking
         {
             try
             {
-                CodedInputStream stream = CodedInputStream.CreateInstance(this.stream);
+                CodedInputStream stream = CodedInputStream.CreateInstance(_stream);
 
-                while (socket.Connected && stream.IsAtEnd == false)
+                while (_socket.Connected && stream.IsAtEnd == false)
                 {
                     Handle(stream);
                 }
@@ -63,7 +63,7 @@ namespace MHServerEmu.Networking
 
         public void Disconnect()
         {
-            socket.Disconnect(false);
+            _socket.Disconnect(false);
         }
 
         public void SendMessage(ushort muxId, GameMessage message)
@@ -137,13 +137,13 @@ namespace MHServerEmu.Networking
         private void Send(PacketOut packet)
         {
             byte[] data = packet.Data;
-            stream.Write(data, 0, data.Length);
+            _stream.Write(data, 0, data.Length);
         }
 
         private void SendRaw(byte[] data)
         {
             Logger.Trace($"OUT: raw {data.Length} bytes");
-            stream.Write(data, 0, data.Length);
+            _stream.Write(data, 0, data.Length);
         }
     }
 }

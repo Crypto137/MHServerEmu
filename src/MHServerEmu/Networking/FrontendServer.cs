@@ -20,7 +20,11 @@ namespace MHServerEmu.Networking
 
         public FrontendServer()
         {
+            // Set up our sockets
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            _socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, true);         // Disable packet coalescing to improve responsiveness
+            _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontLinger, true);   // Don't keep disconnected sockets around
+
             _socket.Bind(new IPEndPoint(IPAddress.Parse(ConfigManager.Frontend.BindIP), int.Parse(ConfigManager.Frontend.Port)));
             _socket.Listen(10);
 
