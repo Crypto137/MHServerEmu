@@ -39,56 +39,61 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
     public class PrototypeDataEntry
     {
         public ulong Id { get; }
-        public byte Zero { get; }
-        public PrototypeDataEntryElement[] Elements1 { get; }
-        public PrototypeDataEntryElement[] Elements2 { get; }
+        public byte Field1 { get; }
+        public PrototypeDataEntryElement[] Elements { get; }
+        public PrototypeDataEntryListElement[] ListElements { get; }
 
         public PrototypeDataEntry(BinaryReader reader)
         {
             Id = reader.ReadUInt64();
-            Zero = reader.ReadByte();
+            Field1 = reader.ReadByte();
 
-            Elements1 = new PrototypeDataEntryElement[reader.ReadUInt16()];
-            for (int i = 0; i < Elements1.Length; i++)
-                Elements1[i] = new(reader);
+            Elements = new PrototypeDataEntryElement[reader.ReadUInt16()];
+            for (int i = 0; i < Elements.Length; i++)
+                Elements[i] = new(reader);
 
-            Elements2 = new PrototypeDataEntryElement[reader.ReadUInt16()];
-            for (int i = 0; i < Elements2.Length; i++)
-                Elements2[i] = new(reader, true);
+            ListElements = new PrototypeDataEntryListElement[reader.ReadUInt16()];
+            for (int i = 0; i < ListElements.Length; i++)
+                ListElements[i] = new(reader);
         }
-
     }
 
     public class PrototypeDataEntryElement
     {
         public ulong Id { get; }
         public byte Type { get; }   //A,B,C,D,P,R,L,S
-        public ulong Value { get; }
-        public PrototypeData[] SubPrototypeData { get; }
+        public object Value { get; }
 
-        public PrototypeDataEntryElement(BinaryReader reader, bool isList = false)
+        public PrototypeDataEntryElement(BinaryReader reader)
         {
             Id = reader.ReadUInt64();
             Type = reader.ReadByte();
 
             if (Type == 0x52)   // R
-            {
-                if (isList)
-                {
-                    SubPrototypeData = new PrototypeData[reader.ReadUInt16()];
-                    for (int i = 0; i < SubPrototypeData.Length; i++)
-                        SubPrototypeData[i] = new(reader);
-                }
-                else
-                {
-                    SubPrototypeData = new PrototypeData[1];
-                    SubPrototypeData[0] = new(reader);
-                }
-
-            }
+                Value = new PrototypeData(reader);
             else
-            {
                 Value = reader.ReadUInt64();
+        }
+    }
+
+    public class PrototypeDataEntryListElement
+    {
+        public ulong Id { get; }
+        public byte Type { get; }   //A,B,C,D,P,R,L,S
+        public object[] Values { get; }
+
+        public PrototypeDataEntryListElement(BinaryReader reader)
+        {
+            Id = reader.ReadUInt64();
+            Type = reader.ReadByte();
+
+            Values = new object[reader.ReadUInt16()];
+            for (int i = 0; i < Values.Length; i++)
+            {
+                if (Type == 0x52)   // R
+                    Values[i] = new PrototypeData(reader);
+                else
+                    Values[i] = reader.ReadUInt64();
             }
         }
     }
