@@ -11,6 +11,8 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         public Dictionary<string, GType> GTypeDict { get; } = new();
         public Dictionary<string, Curve> CurveDict { get; } = new();
         public Dictionary<string, Blueprint> BlueprintDict { get; } = new();
+        public Dictionary<string, Prototype> DefaultsDict { get; } = new();     // defaults are parent prototypes
+        public Dictionary<string, Prototype> PrototypeDict { get; } = new();
 
         public CalligraphyStorage(GpakFile gpakFile)
         {
@@ -47,24 +49,36 @@ namespace MHServerEmu.GameServer.GameData.Gpak
                 }
             }
 
-            // Parse all entires in order by type
+            // Parse all entries in order by type
             foreach (GpakEntry entry in directoryList)
                 DataDirectoryDict.Add(entry.FilePath, new(entry.Data));
+
+            Logger.Info($"Parsed {DataDirectoryDict.Count} directories");
 
             foreach (GpakEntry entry in typeList)
                 GTypeDict.Add(entry.FilePath, new(entry.Data));
 
+            Logger.Info($"Parsed {GTypeDict.Count} types");
+
             foreach (GpakEntry entry in curveList)
                 CurveDict.Add(entry.FilePath, new(entry.Data));
+
+            Logger.Info($"Parsed {CurveDict.Count} curves");
 
             foreach (GpakEntry entry in blueprintList)
                 BlueprintDict.Add(entry.FilePath, new(entry.Data));
 
-            // TODO: defaults
+            Logger.Info($"Parsed {BlueprintDict.Count} blueprints");
 
-            // TODO: prototypes
+            foreach (GpakEntry entry in defaultsList)
+                DefaultsDict.Add(entry.FilePath, new(entry.Data));
 
-            Logger.Info($"Parsed {DataDirectoryDict.Count} directories, {GTypeDict.Count} types, {CurveDict.Count} curves, {BlueprintDict.Count} blueprints");
+            Logger.Info($"Parsed {DefaultsDict.Count} defaults");
+
+            foreach (GpakEntry entry in prototypeList)
+                PrototypeDict.Add(entry.FilePath, new(entry.Data));
+
+            Logger.Info($"Parsed {PrototypeDict.Count} prototypes");
         }
 
         public override bool Verify()
@@ -72,7 +86,9 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             return DataDirectoryDict.Count > 0
                 && GTypeDict.Count > 0
                 && CurveDict.Count > 0
-                && BlueprintDict.Count > 0;
+                && BlueprintDict.Count > 0
+                && DefaultsDict.Count > 0
+                && PrototypeDict.Count > 0;
         }
 
         public override void Export()

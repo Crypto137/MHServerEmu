@@ -21,18 +21,27 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 
     public class PrototypeData
     {
-        public byte Type { get; }
+        public byte Flags { get; }
         public ulong Id { get; }
         public PrototypeDataEntry[] Entries { get; }
 
         public PrototypeData(BinaryReader reader)
         {
-            Type = reader.ReadByte();
-            Id = reader.ReadUInt64();
+            Flags = reader.ReadByte();
 
-            Entries = new PrototypeDataEntry[reader.ReadUInt16()];
-            for (int i = 0; i < Entries.Length; i++)
-                Entries[i] = new(reader);
+            if ((Flags & 0x01) > 0)      // flag0 == contains id
+            {
+                Id = reader.ReadUInt64();
+
+                if ((Flags & 0x02) > 0)  // flag1 == contains data
+                {
+                    Entries = new PrototypeDataEntry[reader.ReadUInt16()];
+                    for (int i = 0; i < Entries.Length; i++)
+                        Entries[i] = new(reader);
+                }
+            }
+
+            // flag2 == ??
         }
     }
 
