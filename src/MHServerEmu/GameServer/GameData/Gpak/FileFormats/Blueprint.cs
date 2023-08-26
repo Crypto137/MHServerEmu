@@ -52,47 +52,28 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public enum BlueprintEntryType1 : byte
-        {
-            A = 0x41,   // asset?
-            B = 0x42,
-            C = 0x43,   // curve?
-            D = 0x44,
-            L = 0x4c,
-            P = 0x50,   // prototype?
-            R = 0x52,
-            S = 0x53,
-            T = 0x54
-        }
-
-        public enum BlueprintEntryType2 : byte
-        {
-            L = 0x4c,
-            S = 0x53
-        }
-
         public ulong Id { get; }
         public string Name { get; }
-        public BlueprintEntryType1 Type1 { get; }
-        public BlueprintEntryType2 Type2 { get; }
+        public CalligraphyValueType ValueType { get; }
+        public CalligraphyContainerType ContainerType { get; }
         public ulong TypeSpecificId { get; }
 
         public BlueprintEntry(BinaryReader reader)
         {
             Id = reader.ReadUInt64();
             Name = reader.ReadFixedString16();
-            Type1 = (BlueprintEntryType1)reader.ReadByte();
-            Type2 = (BlueprintEntryType2)reader.ReadByte();
+            ValueType = (CalligraphyValueType)reader.ReadByte();
+            ContainerType = (CalligraphyContainerType)reader.ReadByte();
 
-            if (Type1 == BlueprintEntryType1.C && Type2 == BlueprintEntryType2.L)
+            if (ValueType == CalligraphyValueType.C && ContainerType == CalligraphyContainerType.L)
                 Logger.Warn("Found CL");    // there are no CL entries in any of our data
 
-            switch (Type1)
+            switch (ValueType)
             {
-                case BlueprintEntryType1.A:
-                case BlueprintEntryType1.C:
-                case BlueprintEntryType1.P:
-                case BlueprintEntryType1.R:
+                case CalligraphyValueType.A:
+                case CalligraphyValueType.C:
+                case CalligraphyValueType.P:
+                case CalligraphyValueType.R:
                     TypeSpecificId = reader.ReadUInt64();
                     break;
 

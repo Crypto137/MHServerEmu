@@ -70,15 +70,15 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
     public class PrototypeDataEntryElement
     {
         public ulong Id { get; }
-        public byte Type { get; }   //A,B,C,D,P,R,L,S
+        public CalligraphyValueType Type { get; }
         public object Value { get; }
 
         public PrototypeDataEntryElement(BinaryReader reader)
         {
             Id = reader.ReadUInt64();
-            Type = reader.ReadByte();
+            Type = (CalligraphyValueType)reader.ReadByte();
 
-            if (Type == 0x52)   // R
+            if (Type == CalligraphyValueType.R)
                 Value = new PrototypeData(reader);
             else
                 Value = reader.ReadUInt64();
@@ -88,18 +88,18 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
     public class PrototypeDataEntryListElement
     {
         public ulong Id { get; }
-        public byte Type { get; }   //A,B,C,D,P,R,L,S
+        public CalligraphyValueType Type { get; }
         public object[] Values { get; }
 
         public PrototypeDataEntryListElement(BinaryReader reader)
         {
             Id = reader.ReadUInt64();
-            Type = reader.ReadByte();
+            Type = (CalligraphyValueType)reader.ReadByte();
 
             Values = new object[reader.ReadUInt16()];
             for (int i = 0; i < Values.Length; i++)
             {
-                if (Type == 0x52)   // R
+                if (Type == CalligraphyValueType.R)
                     Values[i] = new PrototypeData(reader);
                 else
                     Values[i] = reader.ReadUInt64();

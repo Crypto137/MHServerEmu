@@ -50,8 +50,8 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
         {
             public ulong Id { get; }
             public string Name { get; }
-            public char Type1 { get; }
-            public char Type2 { get; }
+            public char ValueType { get; }
+            public char ContainerType { get; }
             public ulong TypeSpecificId { get; }
             public string TypeSpecificIdName { get; }
 
@@ -59,17 +59,17 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
             {
                 Id = entry.Id;
                 Name = entry.Name;
-                Type1 = (char)entry.Type1;
-                Type2 = (char)entry.Type2;
+                ValueType = (char)entry.ValueType;
+                ContainerType = (char)entry.ContainerType;
 
-                switch (Type1)
+                switch (ValueType)
                 {
                     case 'A':
                         TypeSpecificId = entry.TypeSpecificId;
 
-                        if (Type2 == 'L')
+                        if (ContainerType == 'L')
                             TypeSpecificIdName = "unknown id (AL)";
-                        else if (Type2 == 'S')
+                        else if (ContainerType == 'S')
                             TypeSpecificIdName = "unknown id (AS)";
 
                         break;
@@ -88,9 +88,9 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
                     case 'R':
                         TypeSpecificId = entry.TypeSpecificId;
 
-                        if (Type2 == 'L')
+                        if (ContainerType == 'L')
                             TypeSpecificIdName = prototypeDict[TypeSpecificId];
-                        else if (Type2 == 'S')
+                        else if (ContainerType == 'S')
                             TypeSpecificIdName = "unknown (RS)";
 
                         break;
