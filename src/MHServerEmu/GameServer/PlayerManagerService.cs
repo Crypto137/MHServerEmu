@@ -23,17 +23,11 @@ namespace MHServerEmu.GameServer
             switch ((ClientToGameServerMessage)message.Id)
             {
                 case ClientToGameServerMessage.NetMessageReadyForGameJoin:
-
+                    // NetMessageReadyForGameJoin contains a bug where wipesDataIfMismatchedInDb is marked as required but the client doesn't include it
+                    // To avoid an exception we build a partial message from the data we receive
                     Logger.Info($"Received NetMessageReadyForGameJoin");
-                    try
-                    {
-                        var parsedReadyForGameJoin = NetMessageReadyForGameJoin.ParseFrom(message.Content);
-                        Logger.Trace(parsedReadyForGameJoin.ToString());
-                    }
-                    catch (InvalidProtocolBufferException e)
-                    {
-                        Logger.Warn($"Failed to parse NetMessageReadyForGameJoin: {e.Message}");
-                    }
+                    var parsedReadyForGameJoin = NetMessageReadyForGameJoin.CreateBuilder().MergeFrom(message.Content).BuildPartial();
+                    Logger.Trace(parsedReadyForGameJoin.ToString());
 
                     Logger.Info("Responding with NetMessageReadyAndLoggedIn");
                     client.SendMessage(muxId, new(NetMessageReadyAndLoggedIn.DefaultInstance)); // add report defect (bug) config here
