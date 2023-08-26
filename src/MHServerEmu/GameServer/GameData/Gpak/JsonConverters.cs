@@ -63,4 +63,30 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             }
         }
     }
+
+    public class PrototypeConverter : JsonConverter<Prototype>
+    {
+        public PrototypeConverter()
+        {
+        }
+
+        public override Prototype Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Write(Utf8JsonWriter writer, Prototype value, JsonSerializerOptions options)
+        {
+            switch (value)
+            {
+                case null:
+                    JsonSerializer.Serialize(writer, (Prototype)null, options);
+                    break;
+
+                default:
+                    JsonSerializer.Serialize(writer, new PrototypeJson(value), options);
+                    break;
+            }
+        }
+    }
 }

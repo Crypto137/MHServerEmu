@@ -95,6 +95,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         {
             _jsonSerializerOptions.Converters.Add(new DataDirectoryEntryConverter());
             _jsonSerializerOptions.Converters.Add(new BlueprintConverter(DataDirectoryDict));
+            _jsonSerializerOptions.Converters.Add(new PrototypeConverter());
             _jsonSerializerOptions.MaxDepth = 128;  // 64 is not enough for prototypes
 
             SerializeDictAsJson(DataDirectoryDict);
