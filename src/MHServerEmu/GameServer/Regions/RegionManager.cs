@@ -24,6 +24,8 @@ namespace MHServerEmu.GameServer.Regions
             RegionPrototype.BronxZooRegionL60,
             RegionPrototype.XManhattanRegion1to60,
             RegionPrototype.XManhattanRegion60Cosmic,
+            RegionPrototype.CH0101HellsKitchenRegion,
+            RegionPrototype.CH0105NightclubRegion,
             RegionPrototype.CH0301MadripoorRegion,
             RegionPrototype.CH0701SavagelandRegion,
             RegionPrototype.CH0804LatveriaPCZRegion,
@@ -354,6 +356,85 @@ namespace MHServerEmu.GameServer.Regions
                     region.EntranceOrientation = new(3.1415f, 0f, 0f); ;
                     region.WaypointPosition = new(0.0f, 2304.0f, 0.0f);
                     region.WaypointOrientation = new(0f, 0f, 0f);
+                    break;
+
+                case RegionPrototype.CH0101HellsKitchenRegion:
+                    archiveData = new byte[] {
+                    };
+                    region = new(RegionPrototype.CH0101HellsKitchenRegion,
+                        1154146333179711489,
+                        1883928786,
+                        archiveData,
+                        new(-1152.0f, -8064.0f, -1152.0f),
+                        new(14976.0f, 14976.0f, 1152.0f),
+                        new(60, DifficultyTier.Normal));
+
+                    bool North = true;
+
+                    if (North)
+                    {
+                        AreaPrototype CH0102HellsKitchenNorthArea = (AreaPrototype)GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH01HellsKitchen/Brownstones/CH0102HellsKitchenNorthArea.prototype");
+                        area = new(1, CH0102HellsKitchenNorthArea, new(), true);
+
+                        district = GameDatabase.Resource.DistrictDict["Resource/Districts/Hells_Kitchen_Brownstones.district"];
+
+                        for (int i = 0; i < district.Cells.Length; i++)
+                            area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeId(district.Cells[i].Name), new()));
+
+                        region.AddArea(area);
+
+                        region.EntrancePosition = new(3850.0f, 1950.0f, 0.0f);
+                        region.EntranceOrientation = new(3.141592f, 0f, 0f);
+                        region.WaypointPosition = new(3850.0f, 1950.0f, 0.0f);
+                        region.WaypointOrientation = new();
+                    }
+                    // can be only one Area
+                    else
+                    {
+                        AreaPrototype CH0101HellsKitchenSouthArea = (AreaPrototype)GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH01HellsKitchen/Brownstones/CH0101HellsKitchenSouthArea.prototype");
+                        area = new(1, CH0101HellsKitchenSouthArea, new(), true);
+
+                        district = GameDatabase.Resource.DistrictDict["Resource/Districts/Hells_Kitchen_Brownstones_B.district"];
+
+                        for (int i = 0; i < district.Cells.Length; i++)
+                            area.AddCell(new((uint)(i + 1), GameDatabase.GetPrototypeId(district.Cells[i].Name), new()));
+
+                        region.AddArea(area);
+
+                        region.EntrancePosition = new(1236.0f, 950.0f, 0.0f);
+                        region.EntranceOrientation = new(-1.57082f, 0f, 0f);
+                        region.WaypointPosition = new(1236.0f, 950.0f, 0.0f);
+                        region.WaypointOrientation = new(1.57082f, 0f, 0f);
+                    }
+                    break;
+
+                case RegionPrototype.CH0105NightclubRegion:
+                    
+                    archiveData = new byte[] {
+                    };
+                    region = new(RegionPrototype.CH0105NightclubRegion,
+                        1154146333179711492,
+                        1883928786,
+                        archiveData,
+                        new(-5760.0f, 0.0f, -1152.0f),
+                        new(1152.0f, 10368.0f, 1152.0f),
+                        new(60, DifficultyTier.Normal));
+
+                    AreaPrototype Nightclub = (AreaPrototype)GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH01HellsKitchen/Brownstones/Nightclub/CH01NightclubArea.prototype");
+                    area = new(1, Nightclub, new(), true);
+
+                    district = GameDatabase.Resource.DistrictDict["Resource/Districts/Hells_Kitchen_Nightclub.district"];
+
+                    for (int i = 0; i < district.Cells.Length; i++)
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeId(district.Cells[i].Name), new()));
+
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(-4608.0f, 7100.0f, 0.0f);
+                    region.EntranceOrientation = new(-1.5708f, 0f, 0f); ;
+                    region.WaypointPosition = new(-880.0f, 6064.0f, 0.0f);
+                    region.WaypointOrientation = new(2.35623f, 0.0f, 0.0f);
+
                     break;
 
                 case RegionPrototype.CH0301MadripoorRegion:
@@ -1340,3 +1421,4 @@ namespace MHServerEmu.GameServer.Regions
 
     }
 }
+
