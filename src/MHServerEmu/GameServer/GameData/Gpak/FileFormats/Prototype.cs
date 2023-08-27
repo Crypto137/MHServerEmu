@@ -78,10 +78,24 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             Id = reader.ReadUInt64();
             Type = (CalligraphyValueType)reader.ReadByte();
 
-            if (Type == CalligraphyValueType.R)
-                Value = new PrototypeData(reader);
-            else
-                Value = reader.ReadUInt64();
+            switch (Type)
+            {
+                case CalligraphyValueType.B:
+                    Value = Convert.ToBoolean(reader.ReadUInt64());
+                    break;
+                case CalligraphyValueType.D:
+                    Value = reader.ReadDouble();
+                    break;
+                case CalligraphyValueType.L:
+                    Value = reader.ReadInt64();
+                    break;
+                case CalligraphyValueType.R:
+                    Value = new PrototypeData(reader);
+                    break;
+                default:
+                    Value = reader.ReadUInt64();
+                    break;
+            }
         }
     }
 
@@ -99,10 +113,24 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             Values = new object[reader.ReadUInt16()];
             for (int i = 0; i < Values.Length; i++)
             {
-                if (Type == CalligraphyValueType.R)
-                    Values[i] = new PrototypeData(reader);
-                else
-                    Values[i] = reader.ReadUInt64();
+                switch (Type)
+                {
+                    case CalligraphyValueType.B:
+                        Values[i] = Convert.ToBoolean(reader.ReadUInt64());
+                        break;
+                    case CalligraphyValueType.D:
+                        Values[i] = reader.ReadDouble();
+                        break;
+                    case CalligraphyValueType.L:
+                        Values[i] = reader.ReadInt64();
+                        break;
+                    case CalligraphyValueType.R:
+                        Values[i] = new PrototypeData(reader);
+                        break;
+                    default:
+                        Values[i] = reader.ReadUInt64();
+                        break;
+                }
             }
         }
     }

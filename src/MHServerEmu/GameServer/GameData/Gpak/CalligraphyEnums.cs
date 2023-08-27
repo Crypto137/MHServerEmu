@@ -11,11 +11,11 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         A = 0x41,   // asset
         B = 0x42,   // bool
         C = 0x43,   // curve
-        D = 0x44,
-        L = 0x4c,
+        D = 0x44,   // double
+        L = 0x4c,   // long
         P = 0x50,   // prototype
         R = 0x52,
-        S = 0x53,
+        S = 0x53,   // string?
         T = 0x54    // type?
     }
 
