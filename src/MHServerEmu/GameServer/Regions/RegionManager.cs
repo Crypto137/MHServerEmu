@@ -24,6 +24,8 @@ namespace MHServerEmu.GameServer.Regions
             RegionPrototype.BronxZooRegionL60,
             RegionPrototype.XManhattanRegion1to60,
             RegionPrototype.XManhattanRegion60Cosmic,
+            RegionPrototype.UpperMadripoorRegionL60,
+            RegionPrototype.UpperMadripoorRegionL60Cosmic,
             RegionPrototype.CH0101HellsKitchenRegion,
             RegionPrototype.CH0105NightclubRegion,
             RegionPrototype.CH0301MadripoorRegion,
@@ -1208,7 +1210,63 @@ namespace MHServerEmu.GameServer.Regions
                     region.WaypointPosition = new(15104.0f, -3100.0f, 0.0f);
                     region.WaypointOrientation = new();
                     
-                    break;                   
+                    break;
+
+                case RegionPrototype.UpperMadripoorRegionL60:
+
+                    archiveData = new byte[] {
+                    };
+
+                    region = new(RegionPrototype.UpperMadripoorRegionL60,
+                        1154146333179732889,
+                        1883928786,
+                        archiveData, 
+                        new(-1152.0f, -1152.0f, -1152.0f), 
+                        new(21888.0f, 24192.0f, 1152.0f),
+                        new(10, DifficultyTier.Normal));
+
+                    area = new(1, (AreaPrototype) GameDatabase.GetPrototypeId("Regions/Story/CH10SecretInvasion/UpperMadripoor/UpperMadripoorAreaA.prototype"), new(), true);
+
+                    district = GameDatabase.Resource.DistrictDict["Resource/Districts/MadripoorHightownDistrict.district"];
+                    for (int i = 0; i < district.Cells.Length; i++)
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeId(district.Cells[i].Name), new()));
+                    
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(20665.0f, 15910.0f, 0.0f);
+                    region.EntranceOrientation = new(-1.914437f, 0.0f, 0.0f);
+                    region.WaypointPosition = new(20665.0f, 15910.0f, 0.0f);
+                    region.WaypointOrientation = new(1.914437f, 0.0f, 0.0f);
+
+                    break;
+
+                case RegionPrototype.UpperMadripoorRegionL60Cosmic:
+
+                    archiveData = new byte[] {
+                    };
+
+                    region = new(RegionPrototype.UpperMadripoorRegionL60Cosmic,
+                        1154146333179732889,
+                        1883928786,
+                        archiveData,
+                        new(-1152.0f, -1152.0f, -1152.0f),
+                        new(21888.0f, 24192.0f, 1152.0f),
+                        new(63, DifficultyTier.Cosmic));
+
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeId("Regions/Story/CH10SecretInvasion/UpperMadripoor/UpperMadripoorAreaA.prototype"), new(), true);
+
+                    district = GameDatabase.Resource.DistrictDict["Resource/Districts/MadripoorHightownDistrict.district"];
+                    for (int i = 0; i < district.Cells.Length; i++)
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeId(district.Cells[i].Name), new()));
+
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(20665.0f, 15910.0f, 0.0f);
+                    region.EntranceOrientation = new(-1.914437f, 0.0f, 0.0f);
+                    region.WaypointPosition = new(20665.0f, 15910.0f, 0.0f);
+                    region.WaypointOrientation = new(1.914437f, 0.0f, 0.0f);
+
+                    break;
 
                 case RegionPrototype.XManhattanRegion1to60:
 
