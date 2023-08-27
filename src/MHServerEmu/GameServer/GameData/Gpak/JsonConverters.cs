@@ -64,14 +64,16 @@ namespace MHServerEmu.GameServer.GameData.Gpak
     public class PrototypeConverter : JsonConverter<Prototype>
     {
         Dictionary<ulong, string> _prototypeDict;
+        Dictionary<ulong, string> _prototypeFieldDict;
         Dictionary<ulong, string> _curveDict;
         Dictionary<ulong, string> _assetDict;
         Dictionary<ulong, string> _assetTypeDict;
 
-        public PrototypeConverter(Dictionary<ulong, string> prototypeDict, Dictionary<ulong, string> curveDict,
-            Dictionary<ulong, string> assetDict, Dictionary<ulong, string> assetTypeDict)
+        public PrototypeConverter(Dictionary<ulong, string> prototypeDict, Dictionary<ulong, string> prototypeFieldDict,
+            Dictionary<ulong, string> curveDict, Dictionary<ulong, string> assetDict, Dictionary<ulong, string> assetTypeDict)
         {
             _prototypeDict = prototypeDict;
+            _prototypeFieldDict = prototypeFieldDict;
             _curveDict = curveDict;
             _assetDict = assetDict;
             _assetTypeDict = assetTypeDict;
@@ -91,7 +93,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
                     break;
 
                 default:
-                    JsonSerializer.Serialize(writer, new PrototypeJson(value, _prototypeDict, _curveDict, _assetDict, _assetTypeDict), options);
+                    JsonSerializer.Serialize(writer, new PrototypeJson(value, _prototypeDict, _prototypeFieldDict, _curveDict, _assetDict, _assetTypeDict), options);
                     break;
             }
         }

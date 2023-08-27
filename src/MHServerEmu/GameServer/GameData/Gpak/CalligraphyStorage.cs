@@ -116,6 +116,11 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             foreach (IDataDirectoryEntry entry in DataDirectoryDict["Calligraphy/Prototype.directory"].Entries)
                 prototypeDict.Add(entry.Id1, entry.Name);
 
+            Dictionary<ulong, string> prototypeFieldDict = new();
+            foreach (var kvp in BlueprintDict)
+                foreach (BlueprintEntry entry in kvp.Value.Entries)
+                    prototypeFieldDict.Add(entry.Id, entry.Name);
+
             Dictionary<ulong, string> curveDict = new();
             foreach (IDataDirectoryEntry entry in DataDirectoryDict["Calligraphy/Curve.directory"].Entries)
                 curveDict.Add(entry.Id1, entry.Name);
@@ -123,7 +128,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             // Set up json serializer
             _jsonSerializerOptions.Converters.Add(new DataDirectoryEntryConverter());
             _jsonSerializerOptions.Converters.Add(new BlueprintConverter(prototypeDict, curveDict));
-            _jsonSerializerOptions.Converters.Add(new PrototypeConverter(prototypeDict, curveDict, AssetDict, AssetTypeDict));
+            _jsonSerializerOptions.Converters.Add(new PrototypeConverter(prototypeDict, prototypeFieldDict, curveDict, AssetDict, AssetTypeDict));
             _jsonSerializerOptions.MaxDepth = 128;  // 64 is not enough for prototypes
 
             // Serialize and save
