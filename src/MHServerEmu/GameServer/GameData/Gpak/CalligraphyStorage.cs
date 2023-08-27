@@ -93,15 +93,26 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
         public override void Export()
         {
+            // Prepare dictionaries
+            Dictionary<ulong, string> prototypeDict = new() { { 0, "0" } }; // add 0 manually
+            foreach (IDataDirectoryEntry entry in DataDirectoryDict["Calligraphy/Prototype.directory"].Entries)
+                prototypeDict.Add(entry.Id1, entry.Name);
+
+            Dictionary<ulong, string> curveDict = new();
+            foreach (IDataDirectoryEntry entry in DataDirectoryDict["Calligraphy/Curve.directory"].Entries)
+                curveDict.Add(entry.Id1, entry.Name);
+
+            // Set up json serializer
             _jsonSerializerOptions.Converters.Add(new DataDirectoryEntryConverter());
-            _jsonSerializerOptions.Converters.Add(new BlueprintConverter(DataDirectoryDict));
-            _jsonSerializerOptions.Converters.Add(new PrototypeConverter());
+            _jsonSerializerOptions.Converters.Add(new BlueprintConverter(prototypeDict, curveDict));
+            _jsonSerializerOptions.Converters.Add(new PrototypeConverter(prototypeDict, curveDict));
             _jsonSerializerOptions.MaxDepth = 128;  // 64 is not enough for prototypes
 
+            // Serialize and save
             SerializeDictAsJson(DataDirectoryDict);
             SerializeDictAsJson(GTypeDict);
 
-            foreach (var kvp in CurveDict)
+            foreach (var kvp in CurveDict)  // use TSV for curves
             {
                 string path = $"{Directory.GetCurrentDirectory()}\\Assets\\GPAK\\Export\\{kvp.Key}.tsv";
                 string dir = Path.GetDirectoryName(path);
