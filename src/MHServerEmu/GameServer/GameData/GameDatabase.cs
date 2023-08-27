@@ -16,7 +16,6 @@ namespace MHServerEmu.GameServer.GameData
         public static CalligraphyStorage Calligraphy { get; private set; }
         public static ResourceStorage Resource { get; private set; }
 
-        public static Dictionary<ulong, string> AssetDict { get; private set; }
         public static PropertyInfo[] PropertyInfoTable { get; private set; }
 
         public static PrototypeEnumManager PrototypeEnumManager { get; private set; }
@@ -24,8 +23,6 @@ namespace MHServerEmu.GameServer.GameData
         static GameDatabase()
         {
             long startTime = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeMilliseconds();
-
-            AssetDict = LoadDictionary($"{AssetDirectory}\\AssetDictionary.tsv");   // Load this first because it's needed for initializing Calligraphy
 
             // Initialize GPAK
             Calligraphy = new(new("Calligraphy.sip"));
@@ -105,36 +102,6 @@ namespace MHServerEmu.GameServer.GameData
             return hashMap;
         }
 
-        private static Dictionary<ulong, string> LoadDictionary(string path)
-        {
-            Dictionary<ulong, string> dict = new();
-
-            if (File.Exists(path))
-            {
-                using (StreamReader streamReader = new(path))
-                {
-                    string line = streamReader.ReadLine();
-
-                    while (line != null)
-                    {
-                        if (line != "")
-                        {
-                            string[] values = line.Split("\t");
-                            dict.Add(ulong.Parse(values[0]), values[1]);
-                        }
-
-                        line = streamReader.ReadLine();
-                    }
-                }
-            }
-            else
-            {
-                Logger.Warn($"Failed to locate {Path.GetFileName(path)}");
-            }
-
-            return dict;
-        }
-
         private static PropertyInfo[] LoadPropertyInfoTable(string path)
         {
             List<PropertyInfo> propertyInfoList = new();
@@ -170,7 +137,6 @@ namespace MHServerEmu.GameServer.GameData
             return _prototypeHashMap.Count > 0
                 && Calligraphy.Verify()
                 && Resource.Verify()
-                && AssetDict.Count > 0
                 && PropertyInfoTable.Length > 0
                 && PrototypeEnumManager.Verify();
         }
