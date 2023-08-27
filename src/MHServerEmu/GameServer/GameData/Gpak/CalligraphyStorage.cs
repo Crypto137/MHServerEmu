@@ -132,7 +132,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             // Set up json serializer
             _jsonSerializerOptions.Converters.Add(new DataDirectoryEntryConverter());
             _jsonSerializerOptions.Converters.Add(new BlueprintConverter(prototypeDict, curveDict, typeDict));
-            _jsonSerializerOptions.Converters.Add(new PrototypeConverter(prototypeDict, prototypeFieldDict, curveDict, AssetDict, AssetTypeDict));
+            _jsonSerializerOptions.Converters.Add(new PrototypeConverter(prototypeDict, prototypeFieldDict, curveDict, AssetDict, AssetTypeDict, typeDict));
             _jsonSerializerOptions.MaxDepth = 128;  // 64 is not enough for prototypes
 
             // Serialize and save

@@ -14,14 +14,14 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         D = 0x44,   // double
         L = 0x4c,   // long
         P = 0x50,   // prototype
-        R = 0x52,
-        S = 0x53,   // string?
-        T = 0x54    // type?
+        R = 0x52,   // ??? (recursion?)
+        S = 0x53,   // string
+        T = 0x54    // type
     }
 
     public enum CalligraphyContainerType : byte
     {
         L = 0x4c,   // list (A P R T only)
-        S = 0x53    // single?
+        S = 0x53    // single
     }
 }
