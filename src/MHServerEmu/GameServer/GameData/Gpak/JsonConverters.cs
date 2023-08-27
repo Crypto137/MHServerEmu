@@ -32,8 +32,8 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
     public class BlueprintConverter : JsonConverter<Blueprint>
     {
-        Dictionary<ulong, string> _prototypeDict = new();
-        Dictionary<ulong, string> _curveDict = new();
+        Dictionary<ulong, string> _prototypeDict;
+        Dictionary<ulong, string> _curveDict;
 
         public BlueprintConverter(Dictionary<ulong, string> prototypeDict, Dictionary<ulong, string> curveDict)
         {
@@ -63,13 +63,15 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
     public class PrototypeConverter : JsonConverter<Prototype>
     {
-        Dictionary<ulong, string> _prototypeDict = new();
-        Dictionary<ulong, string> _curveDict = new();
+        Dictionary<ulong, string> _prototypeDict;
+        Dictionary<ulong, string> _curveDict;
+        Dictionary<ulong, string> _assetDict;
 
-        public PrototypeConverter(Dictionary<ulong, string> prototypeDict, Dictionary<ulong, string> curveDict)
+        public PrototypeConverter(Dictionary<ulong, string> prototypeDict, Dictionary<ulong, string> curveDict, Dictionary<ulong, string> assetDict)
         {
             _prototypeDict = prototypeDict;
             _curveDict = curveDict;
+            _assetDict = assetDict;
         }
 
         public override Prototype Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -86,7 +88,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
                     break;
 
                 default:
-                    JsonSerializer.Serialize(writer, new PrototypeJson(value, _prototypeDict, _curveDict), options);
+                    JsonSerializer.Serialize(writer, new PrototypeJson(value, _prototypeDict, _curveDict, _assetDict), options);
                     break;
             }
         }
