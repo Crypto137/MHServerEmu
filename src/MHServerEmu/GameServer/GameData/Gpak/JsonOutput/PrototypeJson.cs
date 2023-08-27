@@ -69,6 +69,9 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
                             case 'A':
                                 Value = assetDict[(ulong)element.Value];
                                 break;
+                            case 'B':
+                                Value = Convert.ToBoolean((ulong)element.Value);
+                                break;
                             case 'C':
                                 Value = curveDict[(ulong)element.Value];
                                 break;
@@ -103,6 +106,9 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
                             {
                                 case 'A':
                                     Values[i] = assetDict[(ulong)element.Values[i]];
+                                    break;
+                                case 'B':
+                                    Values[i] = Convert.ToBoolean((ulong)element.Values[i]);
                                     break;
                                 case 'C':
                                     Values[i] = curveDict[(ulong)element.Values[i]];
