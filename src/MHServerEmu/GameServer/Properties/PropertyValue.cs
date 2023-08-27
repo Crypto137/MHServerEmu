@@ -4,19 +4,19 @@ using MHServerEmu.GameServer.GameData;
 
 namespace MHServerEmu.GameServer.Properties
 {
-    public enum PropertyValueType
+    public enum PropertyType
     {
         Boolean,
-        Float,
+        Real,
         Integer,
         Prototype,
         Curve,
         Asset,
-        Type6,      // u64
-        Time,       // Gazillion::Time
-        Type8,      // u64
-        Type9,      // u64
-        Vector3
+        EntityId,
+        Time,
+        Guid,
+        RegionId,
+        Int21Vector3
     }
 
     public class PropertyValue
@@ -44,9 +44,9 @@ namespace MHServerEmu.GameServer.Properties
         public override string ToString() => ((bool)Get()).ToString();
     }
 
-    public class PropertyValueFloat : PropertyValue
+    public class PropertyValueReal : PropertyValue
     {
-        public PropertyValueFloat(ulong rawValue) : base(rawValue) { }
+        public PropertyValueReal(ulong rawValue) : base(rawValue) { }
 
         public override object Get() => BitConverter.ToSingle(BitConverter.GetBytes(RawValue));
         public override void Set(object value) => RawValue = BitConverter.ToUInt64(BitConverter.GetBytes((float)value));
@@ -74,9 +74,11 @@ namespace MHServerEmu.GameServer.Properties
         public override string ToString() => GameDatabase.GetPrototypePath((ulong)Get());
     }
 
-    public class PropertyValueVector3 : PropertyValue
+    public class PropertyValueInt21Vector3 : PropertyValue
     {
-        public PropertyValueVector3(ulong rawValue) : base(rawValue) { }
+        public PropertyValueInt21Vector3(ulong rawValue) : base(rawValue) { }
+
+        // This value type stores xyz of a vector3 as three 21 bit integer numbers
 
         public override object Get()
         {

@@ -117,7 +117,7 @@ namespace MHServerEmu.GameServer.GameData
                         if (line != "")
                         {
                             string[] values = line.Split("\t");
-                            propertyInfoList.Add(new(values[0], (PropertyValueType)Enum.Parse(typeof(PropertyValueType), values[1])));
+                            propertyInfoList.Add(new(values[0], (PropertyType)Enum.Parse(typeof(PropertyType), values[1])));
                         }
 
                         line = streamReader.ReadLine();

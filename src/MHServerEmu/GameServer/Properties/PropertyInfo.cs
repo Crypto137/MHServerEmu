@@ -9,14 +9,14 @@ namespace MHServerEmu.GameServer.Properties
     public class PropertyInfo
     {
         public string Name { get; }
-        public PropertyValueType ValueType { get; }
+        public PropertyType Type { get; }
 
-        public PropertyInfo(string name, PropertyValueType valueType)
+        public PropertyInfo(string name, PropertyType type)
         {
             Name = name;
-            ValueType = valueType;
+            Type = type;
         }
 
-        public override string ToString() => $"{Name} {ValueType}";
+        public override string ToString() => $"{Name} {Type}";
     }
 }

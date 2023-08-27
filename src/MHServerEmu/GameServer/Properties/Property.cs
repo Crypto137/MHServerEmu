@@ -56,27 +56,27 @@ namespace MHServerEmu.GameServer.Properties
 
         private void CreateValueContainer(ulong rawValue)
         {
-            switch (Info.ValueType)
+            switch (Info.Type)
             {
-                case PropertyValueType.Boolean:
+                case PropertyType.Boolean:
                     Value = new PropertyValueBoolean(rawValue);
                     break;
 
-                case PropertyValueType.Float:
-                    Value = new PropertyValueFloat(rawValue);
+                case PropertyType.Real:
+                    Value = new PropertyValueReal(rawValue);
                     break;
 
-                case PropertyValueType.Integer:
-                case PropertyValueType.Time:
+                case PropertyType.Integer:
+                case PropertyType.Time:
                     Value = new PropertyValueInteger(rawValue);
                     break;
 
-                case PropertyValueType.Prototype:
+                case PropertyType.Prototype:
                     Value = new PropertyValuePrototype(rawValue);
                     break;
 
-                case PropertyValueType.Vector3:
-                    Value = new PropertyValueVector3(rawValue);
+                case PropertyType.Int21Vector3:
+                    Value = new PropertyValueInt21Vector3(rawValue);
                     break;
 
                 default:
