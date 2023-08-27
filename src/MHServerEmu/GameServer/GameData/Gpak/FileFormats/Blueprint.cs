@@ -1,16 +1,15 @@
-﻿using MHServerEmu.Common;
-using MHServerEmu.Common.Extensions;
+﻿using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
     public class Blueprint
     {
-        public uint Header { get; }
-        public string PrototypeName { get; }
-        public ulong PrototypeId { get; }
+        public uint Header { get; }                         // BPT + 0x0b
+        public string ClassName { get; }                    // name of the C++ class that handles prototypes that use this blueprint
+        public ulong PrototypeId { get; }                   // .defaults prototype file id
         public BlueprintReference[] References1 { get; }
         public BlueprintReference[] References2 { get; }
-        public BlueprintEntry[] Entries { get; }
+        public BlueprintField[] Fields { get; }             // field definitions for prototypes that use this blueprint
 
         public Blueprint(byte[] data)
         {
@@ -18,7 +17,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             using (BinaryReader reader = new(stream))
             {
                 Header = reader.ReadUInt32();
-                PrototypeName = reader.ReadFixedString16();
+                ClassName = reader.ReadFixedString16();
                 PrototypeId = reader.ReadUInt64();
 
                 References1 = new BlueprintReference[reader.ReadUInt16()];
@@ -29,9 +28,9 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
                 for (int i = 0; i < References2.Length; i++)
                     References2[i] = new(reader);
 
-                Entries = new BlueprintEntry[reader.ReadUInt16()];
-                for (int i = 0; i < Entries.Length; i++)
-                    Entries[i] = new(reader);
+                Fields = new BlueprintField[reader.ReadUInt16()];
+                for (int i = 0; i < Fields.Length; i++)
+                    Fields[i] = new(reader);
             }
         }
     }
@@ -48,25 +47,20 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         }
     }
 
-    public class BlueprintEntry
+    public class BlueprintField
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public ulong Id { get; }
         public string Name { get; }
         public CalligraphyValueType ValueType { get; }
         public CalligraphyContainerType ContainerType { get; }
         public ulong TypeSpecificId { get; }
 
-        public BlueprintEntry(BinaryReader reader)
+        public BlueprintField(BinaryReader reader)
         {
             Id = reader.ReadUInt64();
             Name = reader.ReadFixedString16();
             ValueType = (CalligraphyValueType)reader.ReadByte();
             ContainerType = (CalligraphyContainerType)reader.ReadByte();
-
-            if (ValueType == CalligraphyValueType.C && ContainerType == CalligraphyContainerType.L)
-                Logger.Warn("Found CL");    // there are no CL entries in any of our data
 
             switch (ValueType)
             {

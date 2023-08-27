@@ -5,19 +5,17 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
     public class BlueprintJson
     {
         public uint Header { get; }
-        public string PrototypeName { get; }
-        public ulong PrototypeId { get; }
-        public string PrototypeIdName { get; }
+        public string ClassName { get; }
+        public string PrototypeId { get; }
         public BlueprintReferenceJson[] References1 { get; }
         public BlueprintReferenceJson[] References2 { get; }
-        public BlueprintEntryJson[] Entries { get; }
+        public BlueprintFieldJson[] Fields { get; }
 
         public BlueprintJson(Blueprint blueprint, Dictionary<ulong, string> prototypeDict, Dictionary<ulong, string> curveDict)
         {
             Header = blueprint.Header;
-            PrototypeName = blueprint.PrototypeName;
-            PrototypeId = blueprint.PrototypeId;
-            PrototypeIdName = prototypeDict[PrototypeId];
+            ClassName = blueprint.ClassName;
+            PrototypeId = prototypeDict[blueprint.PrototypeId];
 
             References1 = new BlueprintReferenceJson[blueprint.References1.Length];
             for (int i = 0; i < References1.Length; i++)
@@ -27,72 +25,61 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
             for (int i = 0; i < References2.Length; i++)
                 References2[i] = new(blueprint.References2[i], prototypeDict);
 
-            Entries = new BlueprintEntryJson[blueprint.Entries.Length];
-            for (int i = 0; i < Entries.Length; i++)
-                Entries[i] = new(blueprint.Entries[i], prototypeDict, curveDict);
+            Fields = new BlueprintFieldJson[blueprint.Fields.Length];
+            for (int i = 0; i < Fields.Length; i++)
+                Fields[i] = new(blueprint.Fields[i], prototypeDict, curveDict);
         }
 
         public class BlueprintReferenceJson
         {
-            public ulong Id { get; }
-            public string IdName { get; }
+            public string Id { get; }
             public byte Field1 { get; }
 
-            public BlueprintReferenceJson(BlueprintReference blueprintReference, Dictionary<ulong, string> prototypeDict)
+            public BlueprintReferenceJson(BlueprintReference reference, Dictionary<ulong, string> prototypeDict)
             {
-                Id = blueprintReference.Id;
-                IdName = prototypeDict[Id];
-                Field1 = blueprintReference.Field1;
+                Id = prototypeDict[reference.Id];
+                Field1 = reference.Field1;
             }
         }
 
-        public class BlueprintEntryJson
+        public class BlueprintFieldJson
         {
             public ulong Id { get; }
             public string Name { get; }
             public char ValueType { get; }
             public char ContainerType { get; }
-            public ulong TypeSpecificId { get; }
-            public string TypeSpecificIdName { get; }
+            public string TypeSpecificId { get; }
 
-            public BlueprintEntryJson(BlueprintEntry entry, Dictionary<ulong, string> prototypeDict, Dictionary<ulong, string> curveDict)
+            public BlueprintFieldJson(BlueprintField field, Dictionary<ulong, string> prototypeDict, Dictionary<ulong, string> curveDict)
             {
-                Id = entry.Id;
-                Name = entry.Name;
-                ValueType = (char)entry.ValueType;
-                ContainerType = (char)entry.ContainerType;
+                Id = field.Id;
+                Name = field.Name;
+                ValueType = (char)field.ValueType;
+                ContainerType = (char)field.ContainerType;
 
                 switch (ValueType)
                 {
                     case 'A':
-                        TypeSpecificId = entry.TypeSpecificId;
-
                         if (ContainerType == 'L')
-                            TypeSpecificIdName = "unknown id (AL)";
+                            TypeSpecificId = $"unknown id {field.TypeSpecificId} (AL)";
                         else if (ContainerType == 'S')
-                            TypeSpecificIdName = "unknown id (AS)";
+                            TypeSpecificId = $"unknown id {field.TypeSpecificId} (AS)";
 
                         break;
 
                     case 'C':
-                        TypeSpecificId = entry.TypeSpecificId;
-                        TypeSpecificIdName = curveDict[TypeSpecificId];
-
+                        TypeSpecificId = curveDict[field.TypeSpecificId];
                         break;
-                    case 'P':
-                        TypeSpecificId = entry.TypeSpecificId;
-                        TypeSpecificIdName = prototypeDict[TypeSpecificId];
 
+                    case 'P':
+                        TypeSpecificId = prototypeDict[field.TypeSpecificId];
                         break;
 
                     case 'R':
-                        TypeSpecificId = entry.TypeSpecificId;
-
                         if (ContainerType == 'L')
-                            TypeSpecificIdName = prototypeDict[TypeSpecificId];
+                            TypeSpecificId = prototypeDict[field.TypeSpecificId];
                         else if (ContainerType == 'S')
-                            TypeSpecificIdName = "unknown (RS)";
-
+                            TypeSpecificId = $"unknown id {field.TypeSpecificId} (RS)";
                         break;
 
                     default:

@@ -118,7 +118,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
             Dictionary<ulong, string> prototypeFieldDict = new();
             foreach (var kvp in BlueprintDict)
-                foreach (BlueprintEntry entry in kvp.Value.Entries)
+                foreach (BlueprintField entry in kvp.Value.Fields)
                     prototypeFieldDict.Add(entry.Id, entry.Name);
 
             Dictionary<ulong, string> curveDict = new();
