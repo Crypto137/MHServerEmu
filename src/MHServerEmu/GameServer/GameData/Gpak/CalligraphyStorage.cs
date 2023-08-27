@@ -15,6 +15,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         public Dictionary<string, Prototype> PrototypeDict { get; } = new();
 
         public Dictionary<ulong, string> AssetDict { get; } = new();
+        public Dictionary<ulong, string> AssetTypeDict { get; } = new();
 
         public CalligraphyStorage(GpakFile gpakFile)
         {
@@ -84,12 +85,14 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
             // Asset dictionary
             AssetDict.Add(0, "0");  // add 0 manually
+            AssetTypeDict.Add(0, "0");
 
             foreach (var kvp in GTypeDict)
             {
                 foreach (GTypeEntry entry in kvp.Value.Entries)
                 {
                     AssetDict.Add(entry.Id, entry.Name);
+                    AssetTypeDict.Add(entry.Id, Path.GetFileNameWithoutExtension(kvp.Key));
                 }
             }
 
@@ -120,7 +123,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             // Set up json serializer
             _jsonSerializerOptions.Converters.Add(new DataDirectoryEntryConverter());
             _jsonSerializerOptions.Converters.Add(new BlueprintConverter(prototypeDict, curveDict));
-            _jsonSerializerOptions.Converters.Add(new PrototypeConverter(prototypeDict, curveDict, AssetDict));
+            _jsonSerializerOptions.Converters.Add(new PrototypeConverter(prototypeDict, curveDict, AssetDict, AssetTypeDict));
             _jsonSerializerOptions.MaxDepth = 128;  // 64 is not enough for prototypes
 
             // Serialize and save
