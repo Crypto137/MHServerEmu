@@ -11,7 +11,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
         public BlueprintReferenceJson[] References2 { get; }
         public BlueprintFieldJson[] Fields { get; }
 
-        public BlueprintJson(Blueprint blueprint, Dictionary<ulong, string> prototypeDict, Dictionary<ulong, string> curveDict)
+        public BlueprintJson(Blueprint blueprint, Dictionary<ulong, string> prototypeDict, Dictionary<ulong, string> curveDict, Dictionary<ulong, string> typeDict)
         {
             Header = blueprint.Header;
             ClassName = blueprint.ClassName;
@@ -27,7 +27,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
 
             Fields = new BlueprintFieldJson[blueprint.Fields.Length];
             for (int i = 0; i < Fields.Length; i++)
-                Fields[i] = new(blueprint.Fields[i], prototypeDict, curveDict);
+                Fields[i] = new(blueprint.Fields[i], prototypeDict, curveDict, typeDict);
         }
 
         public class BlueprintReferenceJson
@@ -48,9 +48,9 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
             public string Name { get; }
             public char ValueType { get; }
             public char ContainerType { get; }
-            public string TypeSpecificId { get; }
+            public string ExpectedValue { get; }
 
-            public BlueprintFieldJson(BlueprintField field, Dictionary<ulong, string> prototypeDict, Dictionary<ulong, string> curveDict)
+            public BlueprintFieldJson(BlueprintField field, Dictionary<ulong, string> prototypeDict, Dictionary<ulong, string> curveDict, Dictionary<ulong, string> typeDict)
             {
                 Id = field.Id;
                 Name = field.Name;
@@ -60,30 +60,23 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
                 switch (ValueType)
                 {
                     case 'A':
-                        if (ContainerType == 'L')
-                            TypeSpecificId = $"unknown id {field.TypeSpecificId} (AL)";
-                        else if (ContainerType == 'S')
-                            TypeSpecificId = $"unknown id {field.TypeSpecificId} (AS)";
-
+                        ExpectedValue = typeDict[field.ExpectedValue];
                         break;
 
                     case 'C':
-                        TypeSpecificId = curveDict[field.TypeSpecificId];
+                        ExpectedValue = curveDict[field.ExpectedValue];
                         break;
 
                     case 'P':
-                        TypeSpecificId = prototypeDict[field.TypeSpecificId];
+                        ExpectedValue = prototypeDict[field.ExpectedValue];
                         break;
 
                     case 'R':
-                        if (ContainerType == 'L')
-                            TypeSpecificId = prototypeDict[field.TypeSpecificId];
-                        else if (ContainerType == 'S')
-                            TypeSpecificId = $"unknown id {field.TypeSpecificId} (RS)";
+                        ExpectedValue = prototypeDict[field.ExpectedValue];
                         break;
 
                     default:
-                        // other types don't have ids
+                        // other types don't have expected values
                         break;
                 }
             }

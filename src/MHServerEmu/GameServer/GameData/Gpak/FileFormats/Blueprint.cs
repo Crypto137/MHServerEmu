@@ -53,7 +53,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         public string Name { get; }
         public CalligraphyValueType ValueType { get; }
         public CalligraphyContainerType ContainerType { get; }
-        public ulong TypeSpecificId { get; }
+        public ulong ExpectedValue { get; }
 
         public BlueprintField(BinaryReader reader)
         {
@@ -68,11 +68,11 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
                 case CalligraphyValueType.C:
                 case CalligraphyValueType.P:
                 case CalligraphyValueType.R:
-                    TypeSpecificId = reader.ReadUInt64();
+                    ExpectedValue = reader.ReadUInt64();
                     break;
 
                 default:
-                    // other types don't have ids
+                    // other types don't have expected values
                     break;
             }
         }
