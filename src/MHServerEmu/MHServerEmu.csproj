@@ -24,9 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Assets\AssetDictionary.tsv">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="Assets\GPAK\IMPORTANT">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

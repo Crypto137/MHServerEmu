@@ -89,7 +89,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             {
                 foreach (GTypeEntry entry in kvp.Value.Entries)
                 {
-                    AssetDict.Add(entry.UnknownId, entry.Name);
+                    AssetDict.Add(entry.Id, entry.Name);
                 }
             }
 
