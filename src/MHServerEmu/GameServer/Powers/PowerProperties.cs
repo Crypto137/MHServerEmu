@@ -5,7 +5,7 @@ namespace MHServerEmu.GameServer.Powers
     public enum TravelPowerProperty : ulong
     {
         Angela = 26407866,
-        Antman = 46945210,
+        AntMan = 46945210,
         Beast = 64857018,
         BlackBolt = 36041658,
         BlackCat = 52364218,
