@@ -86,7 +86,7 @@ namespace MHServerEmu.GameServer.GameData.Prototypes
                     case "ReplicateForTransfer":
                         ReplicateForTransfer = (bool)element.Value;
                         break;
-                    case "AggMethod":   // NOTE: enum values here are wrong
+                    case "AggMethod":
                         AggMethod = (AggregationMethod)Enum.Parse(typeof(AggregationMethod), GameDatabase.Calligraphy.AssetDict[(ulong)element.Value]);
                         break;
                     case "Min":

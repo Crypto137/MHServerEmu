@@ -15,8 +15,7 @@
         Int21Vector3
     }
 
-    // note: enum order for DatabasePolicy and AggregationMethod is TBD
-    public enum DatabasePolicy
+    public enum DatabasePolicy  // values are most likely wrong here
     {
         None,
         Infrequent,
@@ -25,10 +24,11 @@
 
     public enum AggregationMethod
     {
-        Sum,
+        None,
         Min,
         Max,
-        Set,
-        Mul
+        Sum,
+        Mul,
+        Set
     }
 }
