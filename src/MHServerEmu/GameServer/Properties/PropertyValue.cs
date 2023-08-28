@@ -4,21 +4,6 @@ using MHServerEmu.GameServer.GameData;
 
 namespace MHServerEmu.GameServer.Properties
 {
-    public enum PropertyType
-    {
-        Boolean,
-        Real,
-        Integer,
-        Prototype,
-        Curve,
-        Asset,
-        EntityId,
-        Time,
-        Guid,
-        RegionId,
-        Int21Vector3
-    }
-
     public class PropertyValue
     {
         public ulong RawValue { get; protected set; }

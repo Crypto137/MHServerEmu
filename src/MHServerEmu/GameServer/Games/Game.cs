@@ -387,7 +387,7 @@ namespace MHServerEmu.GameServer.Games
 
                         foreach (Property property in avatar.Properties)
                         {
-                            if (property.Info.Name == "CostumeCurrent" && ConfigManager.PlayerData.CostumeOverride != 0)
+                            if (property.Enum == PropertyEnum.CostumeCurrent && ConfigManager.PlayerData.CostumeOverride != 0)
                             {
                                 try
                                 {

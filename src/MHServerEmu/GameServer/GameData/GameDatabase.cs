@@ -15,9 +15,6 @@ namespace MHServerEmu.GameServer.GameData
 
         public static CalligraphyStorage Calligraphy { get; private set; }
         public static ResourceStorage Resource { get; private set; }
-
-        public static PropertyInfo[] PropertyInfoTable { get; private set; }
-
         public static PrototypeEnumManager PrototypeEnumManager { get; private set; }
 
         static GameDatabase()
@@ -30,7 +27,6 @@ namespace MHServerEmu.GameServer.GameData
 
             // Load other data
             _prototypeHashMap = LoadHashMap($"{AssetDirectory}\\PrototypeHashMap.tsv");
-            PropertyInfoTable = LoadPropertyInfoTable($"{AssetDirectory}\\PropertyInfoTable.tsv");
             PrototypeEnumManager = new($"{AssetDirectory}\\PrototypeEnumTables");
 
             // Verify and finish game database initialization
@@ -102,42 +98,11 @@ namespace MHServerEmu.GameServer.GameData
             return hashMap;
         }
 
-        private static PropertyInfo[] LoadPropertyInfoTable(string path)
-        {
-            List<PropertyInfo> propertyInfoList = new();
-
-            if (File.Exists(path))
-            {
-                using (StreamReader streamReader = new(path))
-                {
-                    string line = streamReader.ReadLine();
-
-                    while (line != null)
-                    {
-                        if (line != "")
-                        {
-                            string[] values = line.Split("\t");
-                            propertyInfoList.Add(new(values[0], (PropertyType)Enum.Parse(typeof(PropertyType), values[1])));
-                        }
-
-                        line = streamReader.ReadLine();
-                    }
-                }
-            }
-            else
-            {
-                Logger.Error($"Failed to locate {Path.GetFileName(path)}");
-            }
-
-            return propertyInfoList.ToArray();
-        }
-
         private static bool VerifyData()
         {
             return _prototypeHashMap.Count > 0
                 && Calligraphy.Verify()
                 && Resource.Verify()
-                && PropertyInfoTable.Length > 0
                 && PrototypeEnumManager.Verify();
         }
     }
