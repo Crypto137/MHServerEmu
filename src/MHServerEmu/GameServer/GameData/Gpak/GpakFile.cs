@@ -45,13 +45,13 @@ namespace MHServerEmu.GameServer.GameData.Gpak
                     }
 
                     // Entry data
+                    byte[] decodeBuffer = new byte[6000000]; // 6 MB should be enough for the largest file (prototype directory)
                     foreach (GpakEntry entry in Entries)
                     {
-                        byte[] compressedData = new byte[entry.CompressedSize];
-                        byte[] uncompressedData = new byte[entry.UncompressedSize];
-                        fileStream.Read(compressedData, 0, compressedData.Length);
-                        LZ4Codec.Decode(compressedData, uncompressedData);
-                        entry.Data = uncompressedData;
+                        byte[] data = new byte[entry.UncompressedSize];
+                        fileStream.Read(decodeBuffer, 0, entry.CompressedSize);
+                        LZ4Codec.Decode(decodeBuffer, 0, entry.CompressedSize, data, 0, data.Length);
+                        entry.Data = data;
                     }
                 }
 
