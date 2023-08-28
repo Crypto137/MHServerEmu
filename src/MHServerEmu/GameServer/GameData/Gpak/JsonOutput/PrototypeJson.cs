@@ -82,6 +82,9 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
                             case 'R':
                                 Value = new PrototypeDataJson((PrototypeData)element.Value, prototypeDict, prototypeFieldDict, curveDict, assetDict, assetTypeDict, typeDict);
                                 break;
+                            case 'T':
+                                Value = typeDict[(ulong)element.Value];
+                                break;
                             default:
                                 Value = element.Value;
                                 break;
@@ -117,6 +120,9 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
                                     break;
                                 case 'R':
                                     Values[i] = new PrototypeDataJson((PrototypeData)element.Values[i], prototypeDict, prototypeFieldDict, curveDict, assetDict, assetTypeDict, typeDict);
+                                    break;
+                                case 'T':
+                                    Values[i] = typeDict[(ulong)element.Values[i]];
                                     break;
                                 default:
                                     Values[i] = element.Values[i];
