@@ -48,7 +48,7 @@ namespace MHServerEmu.GameServer.Powers
         Nova = 38380474,
         Psylocke = 24769466,
         Punisher = 114820026,
-        RocketRacoon = 37827514,
+        RocketRaccoon = 37827514,
         Rogue = 8188858,
         ScarletWitch = 33330106,
         SheHulk = 48030650,
