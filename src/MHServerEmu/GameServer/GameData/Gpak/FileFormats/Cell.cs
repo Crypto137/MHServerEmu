@@ -6,16 +6,16 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
     public class Cell
     {
         public uint Header { get; }
-        public uint Type1 { get; }
+        public uint Version { get; }
         public uint ClassId { get; }
-        public Aabb Aabb { get; }
-        public uint Type2 { get; }
+        public Aabb Boundbox { get; }
+        public uint Type { get; }
         public uint Walls { get; }
         public uint FillerEdges { get; }
         public uint RoadConnections { get; }
         public string ClientMap { get; }
-        public CellMarker[] InitializeSet { get; }
-        public CellMarker[] MarkerSet { get; }
+        public MarkerPrototype[] InitializeSet { get; }
+        public MarkerPrototype[] MarkerSet { get; }
         public CellNaviPatchSource NaviPatchSource { get; }
         public byte IsOffsetInMapFile { get; }
         public CellHeightMap HeightMap { get; }
@@ -27,22 +27,22 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             using (BinaryReader reader = new(stream))
             {
                 Header = reader.ReadUInt32();
-                Type1 = reader.ReadUInt32();
+                Version = reader.ReadUInt32();
                 ClassId = reader.ReadUInt32();
                 Vector3 max = reader.ReadVector3();
                 Vector3 min = reader.ReadVector3();
-                Aabb = new(max, min);
-                Type2 = reader.ReadUInt32();
+                Boundbox = new(max, min);
+                Type = reader.ReadUInt32();
                 Walls = reader.ReadUInt32();
                 FillerEdges = reader.ReadUInt32();
                 RoadConnections = reader.ReadUInt32();
                 ClientMap = reader.ReadFixedString32();
 
-                InitializeSet = new CellMarker[reader.ReadInt32()];
+                InitializeSet = new MarkerPrototype[reader.ReadInt32()];
                 for (int i = 0; i < InitializeSet.Length; i++)
                     InitializeSet[i] = new(reader);
 
-                MarkerSet = new CellMarker[reader.ReadInt32()];
+                MarkerSet = new MarkerPrototype[reader.ReadInt32()];
                 for (int i = 0; i < MarkerSet.Length; i++)
                     MarkerSet[i] = new(reader);
 
@@ -57,9 +57,61 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         }
     }
 
-    public class CellMarker
+    public class MarkerPrototype
     {
         public uint ProtoNamehash { get; }
+        public Vector3 Position { get; }
+        public Vector3 Rotation { get; }
+
+        public object Marker;
+        public MarkerPrototype(BinaryReader reader)
+        {
+            ProtoNamehash = reader.ReadUInt32();
+
+            if (ProtoNamehash == 3862899546)
+                Marker = new EntityMarkerPrototype(reader);
+            else if (ProtoNamehash == 2901607432)
+                Marker = new CellConnectorMarkerPrototype(reader);
+            else if (ProtoNamehash == 468664301)
+                Marker = new DotCornerMarkerPrototype(reader);
+            else if (ProtoNamehash == 576407411)
+                Marker = new RoadConnectionMarkerPrototype(reader);
+           // else
+           //     ResourceStorage.Logger.Fatal($"Failed read {ProtoNamehash}"); 
+
+            Position = reader.ReadVector3();
+            Rotation = reader.ReadVector3();
+        }
+    }
+    public class RoadConnectionMarkerPrototype
+    {
+        public Vector3 Extents { get; }
+
+        public RoadConnectionMarkerPrototype(BinaryReader reader)
+        {
+            Extents = reader.ReadVector3();
+        }
+    }
+    public class CellConnectorMarkerPrototype
+    {
+        public Vector3 Extents { get; }
+
+        public CellConnectorMarkerPrototype(BinaryReader reader)
+        {
+            Extents = reader.ReadVector3();
+        }
+    }
+    public class DotCornerMarkerPrototype
+    {
+        public Vector3 Extents { get; }
+
+        public DotCornerMarkerPrototype(BinaryReader reader)
+        {
+            Extents = reader.ReadVector3();
+        }
+    }
+    public class EntityMarkerPrototype
+    {
         public ulong EntityGuid { get; }
         public string LastKnownEntityName { get; }
         public ulong Modifier1Guid { get; }
@@ -73,12 +125,9 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         public byte OverrideSnapToFloorValue { get; }
         public ulong FilterGuid { get; }
         public string LastKnownFilterName { get; }
-        public Vector3 Position { get; }
-        public Vector3 Orientation { get; }
 
-        public CellMarker(BinaryReader reader)
+        public EntityMarkerPrototype(BinaryReader reader)
         {
-            ProtoNamehash = reader.ReadUInt32();
             EntityGuid = reader.ReadUInt64();
             LastKnownEntityName = reader.ReadFixedString32();
             Modifier1Guid = reader.ReadUInt64();
@@ -92,8 +141,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             OverrideSnapToFloorValue = reader.ReadByte();
             FilterGuid = reader.ReadUInt64();
             LastKnownFilterName = reader.ReadFixedString32();
-            Position = reader.ReadVector3();
-            Orientation = reader.ReadVector3();
         }
     }
 
@@ -101,8 +148,8 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
     {
         // PatchFragments
         public uint NaviPatchCrc { get; }
-        public CellPatch NaviPatch { get; }
-        public CellPatch PropPatch { get; }
+        public NaviPatchPrototype NaviPatch { get; }
+        public NaviPatchPrototype PropPatch { get; }
         public float PlayableArea { get; }
         public float SpawnableArea { get; }
 
@@ -116,24 +163,24 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         }
     }
 
-    public class CellPatch
+    public class NaviPatchPrototype
     {
         public Vector3[] Points { get; }
-        public CellPatchEdge[] Edges { get; }
+        public NaviPatchEdgePrototype[] Edges { get; }
 
-        public CellPatch(BinaryReader reader)
+        public NaviPatchPrototype(BinaryReader reader)
         {
             Points = new Vector3[reader.ReadUInt32()];
             for (int i = 0; i < Points.Length; i++)
                 Points[i] = reader.ReadVector3();
 
-            Edges = new CellPatchEdge[reader.ReadUInt32()];
+            Edges = new NaviPatchEdgePrototype[reader.ReadUInt32()];
             for (int i = 0; i < Edges.Length; i++)
                 Edges[i] = new(reader);
         }
     }
 
-    public class CellPatchEdge
+    public class NaviPatchEdgePrototype
     {
         public uint ProtoNameHash { get; }
         public uint Index0 { get; }
@@ -141,7 +188,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         public byte[] Flags0 { get; }
         public byte[] Flags1 { get; }
 
-        public CellPatchEdge(BinaryReader reader)
+        public NaviPatchEdgePrototype(BinaryReader reader)
         {
             ProtoNameHash = reader.ReadUInt32();
             Index0 = reader.ReadUInt32();
@@ -161,7 +208,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
     {
         public Vector2 HeightMapSize { get; }
         public ushort[] HeightMapData { get; }
-        public ushort[] HotspotData { get; }
+        public byte[] HotspotData { get; }
 
         public CellHeightMap(BinaryReader reader)
         {
@@ -171,9 +218,9 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             for (int i = 0; i < HeightMapData.Length; i++)
                 HeightMapData[i] = reader.ReadUInt16();
 
-            HotspotData = new ushort[reader.ReadUInt32()];
+            HotspotData = new byte[reader.ReadUInt32()];
             for (int i = 0; i < HotspotData.Length; i++)
-                HotspotData[i] = reader.ReadUInt16();
+                HotspotData[i] = reader.ReadByte();
         }
     }
 }
