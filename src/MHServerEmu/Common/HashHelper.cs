@@ -36,6 +36,14 @@ namespace MHServerEmu.Common
             return BitConverter.ToUInt32(hash);
         }
 
+        public static uint Djb2(string str)
+        {
+            uint hash = 5381;
+            for (int i = 0; i < str.Length; i++)
+                hash = (hash << 5) + hash + ((byte)str[i]);
+            return hash;
+        }
+
         public static ulong HashPath(string path)
         {
             path = path.ToLower();

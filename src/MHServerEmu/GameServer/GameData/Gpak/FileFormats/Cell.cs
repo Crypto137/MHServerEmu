@@ -68,16 +68,16 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 
             switch (hash)
             {
-                case MarkerPrototypeHash.CellConnector:
+                case MarkerPrototypeHash.CellConnectorMarkerPrototype:
                     markerPrototype = new CellConnectorMarkerPrototype(reader);
                     break;
-                case MarkerPrototypeHash.DotCorner:
+                case MarkerPrototypeHash.DotCornerMarkerPrototype:
                     markerPrototype = new DotCornerMarkerPrototype(reader);
                     break;
-                case MarkerPrototypeHash.Entity:
+                case MarkerPrototypeHash.EntityMarkerPrototype:
                     markerPrototype = new EntityMarkerPrototype(reader);
                     break;
-                case MarkerPrototypeHash.RoadConnection:
+                case MarkerPrototypeHash.RoadConnectionMarkerPrototype:
                     markerPrototype = new RoadConnectionMarkerPrototype(reader);
                     break;
                 default:

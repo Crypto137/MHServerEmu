@@ -9,7 +9,7 @@ namespace MHServerEmu.GameServer.GameData.Prototypes.Markers
 
         public CellConnectorMarkerPrototype(BinaryReader reader)
         {
-            ProtoNameHash = MarkerPrototypeHash.CellConnector;
+            ProtoNameHash = MarkerPrototypeHash.CellConnectorMarkerPrototype;
 
             Extents = reader.ReadVector3();
 

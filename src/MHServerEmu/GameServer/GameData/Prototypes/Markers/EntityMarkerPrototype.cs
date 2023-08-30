@@ -20,7 +20,7 @@ namespace MHServerEmu.GameServer.GameData.Prototypes.Markers
 
         public EntityMarkerPrototype(BinaryReader reader)
         {
-            ProtoNameHash = MarkerPrototypeHash.Entity;
+            ProtoNameHash = MarkerPrototypeHash.EntityMarkerPrototype;
 
             EntityGuid = reader.ReadUInt64();
             LastKnownEntityName = reader.ReadFixedString32();

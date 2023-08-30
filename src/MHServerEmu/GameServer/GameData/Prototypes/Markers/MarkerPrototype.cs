@@ -2,12 +2,15 @@
 
 namespace MHServerEmu.GameServer.GameData.Prototypes.Markers
 {
+    /// <summary>
+    /// Precalculated hashes for known marker prototypes.
+    /// </summary>
     public enum MarkerPrototypeHash : uint
     {
-        CellConnector = 2901607432,
-        DotCorner = 468664301,
-        Entity = 3862899546,
-        RoadConnection = 576407411
+        CellConnectorMarkerPrototype = 2901607432,
+        DotCornerMarkerPrototype = 468664301,
+        EntityMarkerPrototype = 3862899546,
+        RoadConnectionMarkerPrototype = 576407411
     }
 
     /// <summary>
@@ -15,7 +18,7 @@ namespace MHServerEmu.GameServer.GameData.Prototypes.Markers
     /// </summary>
     public class MarkerPrototype
     {
-        public MarkerPrototypeHash ProtoNameHash { get; protected set; }
+        public MarkerPrototypeHash ProtoNameHash { get; protected set; }    // DJB hash of the class name
         public Vector3 Position { get; protected set; }
         public Vector3 Rotation { get; protected set; }
     }

@@ -9,7 +9,7 @@ namespace MHServerEmu.GameServer.GameData.Prototypes.Markers
 
         public RoadConnectionMarkerPrototype(BinaryReader reader)
         {
-            ProtoNameHash = MarkerPrototypeHash.RoadConnection;
+            ProtoNameHash = MarkerPrototypeHash.RoadConnectionMarkerPrototype;
 
             Extents = reader.ReadVector3();
 

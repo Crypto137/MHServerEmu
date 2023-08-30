@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Common.Extensions;
+﻿using MHServerEmu.Common;
+using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.Common;
 
 namespace MHServerEmu.GameServer.GameData.Prototypes.Markers
@@ -9,7 +10,7 @@ namespace MHServerEmu.GameServer.GameData.Prototypes.Markers
 
         public DotCornerMarkerPrototype(BinaryReader reader)
         {
-            ProtoNameHash = MarkerPrototypeHash.DotCorner;
+            ProtoNameHash = MarkerPrototypeHash.DotCornerMarkerPrototype;
 
             Extents = reader.ReadVector3();
 
