@@ -15,6 +15,7 @@ namespace MHServerEmu.GameServer.GameData
 
         public static CalligraphyStorage Calligraphy { get; private set; }
         public static ResourceStorage Resource { get; private set; }
+        public static PropertyInfoTable PropertyInfoTable { get; private set; }
         public static PrototypeEnumManager PrototypeEnumManager { get; private set; }
 
         static GameDatabase()
@@ -24,6 +25,9 @@ namespace MHServerEmu.GameServer.GameData
             // Initialize GPAK
             Calligraphy = new(new("Calligraphy.sip"));
             Resource = new(new("mu_cdata.sip"));
+
+            // Initialize derivative GPAK data
+            PropertyInfoTable = new(Calligraphy);
 
             // Load other data
             _prototypeHashMap = LoadHashMap($"{AssetDirectory}\\PrototypeHashMap.tsv");

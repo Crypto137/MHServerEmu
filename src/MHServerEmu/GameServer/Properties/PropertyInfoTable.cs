@@ -1,21 +1,20 @@
 ﻿using MHServerEmu.Common;
 using MHServerEmu.GameServer.GameData;
+using MHServerEmu.GameServer.GameData.Gpak;
 using MHServerEmu.GameServer.GameData.Prototypes;
 
 namespace MHServerEmu.GameServer.Properties
 {
-    public static class PropertyInfoTable
+    public class PropertyInfoTable
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private static Dictionary<PropertyEnum, PropertyInfoPrototype> _propertyInfoDict = new();
+        private Dictionary<PropertyEnum, PropertyInfoPrototype> _propertyInfoDict = new();
 
-        public static bool IsInitialized { get; private set; }
-
-        static PropertyInfoTable()
+        public PropertyInfoTable(CalligraphyStorage calligraphy)
         {
             // Loop through the main property info directory to get most info
-            foreach (var kvp in GameDatabase.Calligraphy.DefaultsDict)
+            foreach (var kvp in calligraphy.DefaultsDict)
             {
                 if (kvp.Key.Contains("Calligraphy/Property/Info"))
                 {
@@ -30,13 +29,13 @@ namespace MHServerEmu.GameServer.Properties
             try
             {
                 _propertyInfoDict.Add(PropertyEnum.DisplayNameOverride,
-                    new(GameDatabase.Calligraphy.PrototypeDict["Calligraphy/Property/Info/DisplayNameOverride.prototype"]));
+                    new(calligraphy.PrototypeDict["Calligraphy/Property/Info/DisplayNameOverride.prototype"]));
 
                 _propertyInfoDict.Add(PropertyEnum.MissileAlwaysCollides,
-                    new(GameDatabase.Calligraphy.DefaultsDict["Calligraphy/Property/Mixin/BewareOfTiger/MissileAlwaysCollides.defaults"]));
+                    new(calligraphy.DefaultsDict["Calligraphy/Property/Mixin/BewareOfTiger/MissileAlwaysCollides.defaults"]));
 
                 _propertyInfoDict.Add(PropertyEnum.StolenPowerAvailable,
-                    new(GameDatabase.Calligraphy.DefaultsDict["Calligraphy/Property/Mixin/BewareOfTiger/StolenPowerAvailable.defaults"]));
+                    new(calligraphy.DefaultsDict["Calligraphy/Property/Mixin/BewareOfTiger/StolenPowerAvailable.defaults"]));
             }
             catch
             {
@@ -44,18 +43,13 @@ namespace MHServerEmu.GameServer.Properties
             }
 
             // Finish initialization
-            if (_propertyInfoDict.Count > 0)
-            {
+            if (Verify())
                 Logger.Info($"Loaded info for {_propertyInfoDict.Count} properties");
-                IsInitialized = true;
-            }
             else
-            {
                 Logger.Fatal("Failed to initialize PropertyInfoTable");
-                IsInitialized = false;
-            }
         }
 
-        public static PropertyInfoPrototype GetPropertyInfo(PropertyEnum property) => _propertyInfoDict[property];
+        public bool Verify() => _propertyInfoDict.Count > 0;
+        public PropertyInfoPrototype GetInfo(PropertyEnum property) => _propertyInfoDict[property];
     }
 }

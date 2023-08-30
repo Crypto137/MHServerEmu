@@ -2,6 +2,7 @@
 using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.GameData.Prototypes;
 
 namespace MHServerEmu.GameServer.Properties
@@ -11,17 +12,19 @@ namespace MHServerEmu.GameServer.Properties
         public ulong Id { get; set; }   // The first 11 bits is the actual id, the rest are parameters defined by PropertyInfo
         public PropertyValue Value { get; set; }
         public PropertyEnum Enum { get => (PropertyEnum)(Id >> 53); }
-        public PropertyInfoPrototype Info { get => PropertyInfoTable.GetPropertyInfo(Enum); }
+        public PropertyInfoPrototype Info { get; }
 
         public Property(CodedInputStream stream)
         {
             Id = stream.ReadRawVarint64().ReverseBytes();       // Id is reversed so that it can be optimally encoded into varint when all subvalues are 0
+            Info = GameDatabase.PropertyInfoTable.GetInfo(Enum);
             CreateValueContainer(stream.ReadRawVarint64());
         }
 
         public Property(ulong id, ulong rawValue = 0)
         {
             Id = id;
+            Info = GameDatabase.PropertyInfoTable.GetInfo(Enum);
             CreateValueContainer(rawValue);
         }
 
