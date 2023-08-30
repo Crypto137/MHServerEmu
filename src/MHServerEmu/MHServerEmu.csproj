@@ -21,6 +21,9 @@
     <Reference Include="K4os.Compression.LZ4">
       <HintPath>..\..\dep\K4os.Compression.LZ4\K4os.Compression.LZ4.dll</HintPath>
     </Reference>
+    <Reference Include="System.IO.Hashing">
+      <HintPath>..\..\dep\System.IO.Hashing\System.IO.Hashing.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
@@ -31,9 +34,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Assets\PrototypeEnumTables\Power.bin">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\PrototypeHashMap.tsv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Assets\Packets\DangerRoomBeginLoading.bin">

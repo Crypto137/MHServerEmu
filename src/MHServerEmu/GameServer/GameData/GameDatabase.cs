@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Common;
 using MHServerEmu.GameServer.GameData.Gpak;
+using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 using MHServerEmu.GameServer.Properties;
 
 namespace MHServerEmu.GameServer.GameData
@@ -27,10 +28,10 @@ namespace MHServerEmu.GameServer.GameData
             Resource = new(new("mu_cdata.sip"));
 
             // Initialize derivative GPAK data
+            _prototypeHashMap = InitializePrototypeHashMap(Calligraphy, Resource);
             PropertyInfoTable = new(Calligraphy);
 
             // Load other data
-            _prototypeHashMap = LoadHashMap($"{AssetDirectory}\\PrototypeHashMap.tsv");
             PrototypeEnumManager = new($"{AssetDirectory}\\PrototypeEnumTables");
 
             // Verify and finish game database initialization
@@ -72,31 +73,19 @@ namespace MHServerEmu.GameServer.GameData
         public static string GetPrototypePath(ulong id) => _prototypeHashMap.GetForward(id);
         public static ulong GetPrototypeId(string path) => _prototypeHashMap.GetReverse(path);
 
-        private static HashMap LoadHashMap(string path)
+        private static HashMap InitializePrototypeHashMap(CalligraphyStorage calligraphy, ResourceStorage resource)
         {
             HashMap hashMap = new();
 
-            if (File.Exists(path))
+            if (calligraphy.PrototypeDirectory != null && resource.DirectoryDict.Count > 0)
             {
-                using (StreamReader streamReader = new(path))
-                {
-                    string line = streamReader.ReadLine();
+                hashMap.Add(0, "");
 
-                    while (line != null)
-                    {
-                        if (line != "")
-                        {
-                            string[] values = line.Split("\t");
-                            hashMap.Add(ulong.Parse(values[0]), values[1]);
-                        }
+                foreach (DataDirectoryPrototypeEntry entry in calligraphy.PrototypeDirectory.Entries)
+                    hashMap.Add(entry.Id1, entry.Name.Replace('\\', '/'));
 
-                        line = streamReader.ReadLine();
-                    }
-                }
-            }
-            else
-            {
-                Logger.Warn($"Failed to locate {Path.GetFileName(path)}");
+                foreach (var kvp in resource.DirectoryDict)
+                    hashMap.Add(kvp.Key, kvp.Value);
             }
 
             return hashMap;

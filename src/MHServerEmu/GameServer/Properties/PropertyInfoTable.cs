@@ -46,7 +46,7 @@ namespace MHServerEmu.GameServer.Properties
             if (Verify())
                 Logger.Info($"Loaded info for {_propertyInfoDict.Count} properties");
             else
-                Logger.Fatal("Failed to initialize PropertyInfoTable");
+                Logger.Error("Failed to initialize PropertyInfoTable");
         }
 
         public bool Verify() => _propertyInfoDict.Count > 0;
