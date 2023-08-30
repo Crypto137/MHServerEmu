@@ -1,10 +1,15 @@
-﻿using MHServerEmu.Common.Extensions;
+﻿using MHServerEmu.Common;
+using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.Common;
+using MHServerEmu.GameServer.GameData.Prototypes;
+using MHServerEmu.GameServer.GameData.Prototypes.Markers;
 
 namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
     public class Cell
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public uint Header { get; }
         public uint Version { get; }
         public uint ClassId { get; }
@@ -40,11 +45,11 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 
                 InitializeSet = new MarkerPrototype[reader.ReadInt32()];
                 for (int i = 0; i < InitializeSet.Length; i++)
-                    InitializeSet[i] = new(reader);
+                    InitializeSet[i] = ReadMarkerPrototype(reader);
 
                 MarkerSet = new MarkerPrototype[reader.ReadInt32()];
                 for (int i = 0; i < MarkerSet.Length; i++)
-                    MarkerSet[i] = new(reader);
+                    MarkerSet[i] = ReadMarkerPrototype(reader);
 
                 NaviPatchSource = new(reader);
                 IsOffsetInMapFile = reader.ReadByte();
@@ -55,92 +60,33 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
                     HotspotPrototypes[i] = reader.ReadUInt64();
             }
         }
-    }
 
-    public class MarkerPrototype
-    {
-        public uint ProtoNamehash { get; }
-        public Vector3 Position { get; }
-        public Vector3 Rotation { get; }
-
-        public object Marker;
-        public MarkerPrototype(BinaryReader reader)
+        private MarkerPrototype ReadMarkerPrototype(BinaryReader reader)
         {
-            ProtoNamehash = reader.ReadUInt32();
+            MarkerPrototype markerPrototype;
+            MarkerPrototypeHash hash = (MarkerPrototypeHash)reader.ReadUInt32();
 
-            if (ProtoNamehash == 3862899546)
-                Marker = new EntityMarkerPrototype(reader);
-            else if (ProtoNamehash == 2901607432)
-                Marker = new CellConnectorMarkerPrototype(reader);
-            else if (ProtoNamehash == 468664301)
-                Marker = new DotCornerMarkerPrototype(reader);
-            else if (ProtoNamehash == 576407411)
-                Marker = new RoadConnectionMarkerPrototype(reader);
-           // else
-           //     ResourceStorage.Logger.Fatal($"Failed read {ProtoNamehash}"); 
+            switch (hash)
+            {
+                case MarkerPrototypeHash.CellConnector:
+                    markerPrototype = new CellConnectorMarkerPrototype(reader);
+                    break;
+                case MarkerPrototypeHash.DotCorner:
+                    markerPrototype = new DotCornerMarkerPrototype(reader);
+                    break;
+                case MarkerPrototypeHash.Entity:
+                    markerPrototype = new EntityMarkerPrototype(reader);
+                    break;
+                case MarkerPrototypeHash.RoadConnection:
+                    markerPrototype = new RoadConnectionMarkerPrototype(reader);
+                    break;
+                default:
+                    markerPrototype = null;
+                    Logger.Warn($"Unknown MarkerPrototypeHash {(uint)hash}");   // Warn if there's some other MarkerPrototype type we don't know about
+                    break;
+            }
 
-            Position = reader.ReadVector3();
-            Rotation = reader.ReadVector3();
-        }
-    }
-    public class RoadConnectionMarkerPrototype
-    {
-        public Vector3 Extents { get; }
-
-        public RoadConnectionMarkerPrototype(BinaryReader reader)
-        {
-            Extents = reader.ReadVector3();
-        }
-    }
-    public class CellConnectorMarkerPrototype
-    {
-        public Vector3 Extents { get; }
-
-        public CellConnectorMarkerPrototype(BinaryReader reader)
-        {
-            Extents = reader.ReadVector3();
-        }
-    }
-    public class DotCornerMarkerPrototype
-    {
-        public Vector3 Extents { get; }
-
-        public DotCornerMarkerPrototype(BinaryReader reader)
-        {
-            Extents = reader.ReadVector3();
-        }
-    }
-    public class EntityMarkerPrototype
-    {
-        public ulong EntityGuid { get; }
-        public string LastKnownEntityName { get; }
-        public ulong Modifier1Guid { get; }
-        public string Modifier1Text { get; }
-        public ulong Modifier2Guid { get; }
-        public string Modifier2Text { get; }
-        public ulong Modifier3Guid { get; }
-        public string Modifier3Text { get; }
-        public uint EncounterSpawnPhase { get; }
-        public byte OverrideSnapToFloor { get; }
-        public byte OverrideSnapToFloorValue { get; }
-        public ulong FilterGuid { get; }
-        public string LastKnownFilterName { get; }
-
-        public EntityMarkerPrototype(BinaryReader reader)
-        {
-            EntityGuid = reader.ReadUInt64();
-            LastKnownEntityName = reader.ReadFixedString32();
-            Modifier1Guid = reader.ReadUInt64();
-            if (Modifier1Guid != 0) Modifier1Text = reader.ReadFixedString32();
-            Modifier2Guid = reader.ReadUInt64();
-            if (Modifier2Guid != 0) Modifier2Text = reader.ReadFixedString32();
-            Modifier3Guid = reader.ReadUInt64();
-            if (Modifier3Guid != 0) Modifier3Text = reader.ReadFixedString32();
-            EncounterSpawnPhase = reader.ReadUInt32();
-            OverrideSnapToFloor = reader.ReadByte();
-            OverrideSnapToFloorValue = reader.ReadByte();
-            FilterGuid = reader.ReadUInt64();
-            LastKnownFilterName = reader.ReadFixedString32();
+            return markerPrototype;
         }
     }
 
@@ -160,47 +106,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             PropPatch = new(reader);
             PlayableArea = reader.ReadSingle();
             SpawnableArea = reader.ReadSingle();
-        }
-    }
-
-    public class NaviPatchPrototype
-    {
-        public Vector3[] Points { get; }
-        public NaviPatchEdgePrototype[] Edges { get; }
-
-        public NaviPatchPrototype(BinaryReader reader)
-        {
-            Points = new Vector3[reader.ReadUInt32()];
-            for (int i = 0; i < Points.Length; i++)
-                Points[i] = reader.ReadVector3();
-
-            Edges = new NaviPatchEdgePrototype[reader.ReadUInt32()];
-            for (int i = 0; i < Edges.Length; i++)
-                Edges[i] = new(reader);
-        }
-    }
-
-    public class NaviPatchEdgePrototype
-    {
-        public uint ProtoNameHash { get; }
-        public uint Index0 { get; }
-        public uint Index1 { get; }
-        public byte[] Flags0 { get; }
-        public byte[] Flags1 { get; }
-
-        public NaviPatchEdgePrototype(BinaryReader reader)
-        {
-            ProtoNameHash = reader.ReadUInt32();
-            Index0 = reader.ReadUInt32();
-            Index1 = reader.ReadUInt32();
-
-            Flags0 = new byte[reader.ReadUInt32()];
-            for (int i = 0; i < Flags0.Length; i++)
-                Flags0[i] = reader.ReadByte();
-
-            Flags1 = new byte[reader.ReadUInt32()];
-            for (int i = 0; i < Flags1.Length; i++)
-                Flags1[i] = reader.ReadByte();
         }
     }
 
