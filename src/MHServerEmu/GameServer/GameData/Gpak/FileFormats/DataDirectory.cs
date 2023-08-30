@@ -11,6 +11,13 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         Prototype = 0xB524450       // PDR
     }
 
+    public interface IDataDirectoryEntry
+    {
+        public ulong Id1 { get; }
+        public ulong Id2 { get; }
+        public string Name { get; }
+    }
+
     public class DataDirectory
     {
         public DataDirectoryHeader Header { get; }
@@ -45,13 +52,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         }
     }
 
-    public interface IDataDirectoryEntry
-    {
-        public ulong Id1 { get; }
-        public ulong Id2 { get; }
-        public string Name { get; }
-    }
-
     public class DataDirectoryGenericEntry : IDataDirectoryEntry      // BDR, CDR, and TDR share the same structure
     {
         public ulong Id1 { get; }
@@ -64,20 +64,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             Id1 = reader.ReadUInt64();
             Id2 = reader.ReadUInt64();
             Field2 = reader.ReadByte();
-            Name = reader.ReadFixedString16();
-        }
-    }
-
-    public class DataDirectoryReplacementEntry : IDataDirectoryEntry  // RDR
-    {
-        public ulong Id1 { get; }
-        public ulong Id2 { get; }
-        public string Name { get; }
-
-        public DataDirectoryReplacementEntry(BinaryReader reader)
-        {
-            Id1 = reader.ReadUInt64();
-            Id2 = reader.ReadUInt64();
             Name = reader.ReadFixedString16();
         }
     }
@@ -96,6 +82,20 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             Id2 = reader.ReadUInt64();
             ParentId = reader.ReadUInt64();
             Field3 = reader.ReadByte();
+            Name = reader.ReadFixedString16();
+        }
+    }
+
+    public class DataDirectoryReplacementEntry : IDataDirectoryEntry  // RDR
+    {
+        public ulong Id1 { get; }
+        public ulong Id2 { get; }
+        public string Name { get; }
+
+        public DataDirectoryReplacementEntry(BinaryReader reader)
+        {
+            Id1 = reader.ReadUInt64();
+            Id2 = reader.ReadUInt64();
             Name = reader.ReadFixedString16();
         }
     }
