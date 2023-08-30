@@ -31,6 +31,7 @@ namespace MHServerEmu.GameServer.Regions
             RegionPrototype.CH0301MadripoorRegion,
             RegionPrototype.CH0701SavagelandRegion,
             RegionPrototype.CH0804LatveriaPCZRegion,
+            RegionPrototype.CH0901NorwayPCZRegion,
             RegionPrototype.CH0904SiegePCZRegion
         };
 
@@ -942,7 +943,205 @@ namespace MHServerEmu.GameServer.Regions
 
                     break;
 
-               case RegionPrototype.CH0904SiegePCZRegion:
+               case RegionPrototype.CH0901NorwayPCZRegion:
+                    archiveData = new byte[] {
+                    };
+
+                    region = new(RegionPrototype.CH0901NorwayPCZRegion,
+                        1154146333179744257,
+                        1901487720,
+                        archiveData,
+                        new(-13824.0f, -18432.0f, -1152.0f),
+                        new(13824.0f, 18432.0f, 1152.0f),
+                        new(60, DifficultyTier.Normal));
+
+                    string Norway = "Resource/Cells/Asgard/Norway/";
+
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH09Asgard/Areas/Norway/NorwayPCZAreaA.prototype"), new(), true);
+                    area.AddCell(new(58, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_NESW_B.cell"), new(1152.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(50, GameDatabase.GetPrototypeId(Norway + "Norway_Trans/Norway_ROAD_ES_A.cell"), new(-3456.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(49, GameDatabase.GetPrototypeId(Norway + "Norway_Trans/Norway_ROAD_NW_A.cell"), new(-5760.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(56, GameDatabase.GetPrototypeId(Norway + "Norway_C/Norway_OM_SHIELDOutpost_B.cell"), new(-3456.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(72, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(3456.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(62, GameDatabase.GetPrototypeId(Norway + "Norway_Trans/Norway_ROAD_NS_A.cell"), new(-3456.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(51, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_NESW_A.cell"), new(-1152.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(61, GameDatabase.GetPrototypeId(Norway + "Norway_C/Norway_OM_BossEvent_A.cell"), new(-5760.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(71, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-1152.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(55, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_NESW_A.cell"), new(-5760.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(52, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_NESW_B.cell"), new(1152.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(43, GameDatabase.GetPrototypeId(Norway + "Norway_C/Norway_C_NESW_Entry_A.cell"), new(-5760.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(63, GameDatabase.GetPrototypeId(Norway + "Norway_Trans/Norway_ROAD_ESW_A.cell"), new(-1152.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(57, GameDatabase.GetPrototypeId(Norway + "Norway_C/Norway_OM_SHIELDOutpost_A.cell"), new(-1152.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(64, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_NESWdNE_A.cell"), new(1152.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(69, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_NESWcE_A.cell"), new(-1152.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(67, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_NSW_A.cell"), new(-5760.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(68, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_NSW_A.cell"), new(-3456.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(46, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_NESWdSW_A.cell"), new(1152.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(60, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_NEW_A.cell"), new(-8064.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(48, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_NEW_A.cell"), new(-8064.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(54, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_NEW_A.cell"), new(-8064.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(42, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_NEW_A.cell"), new(-8064.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(66, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_NW_A.cell"), new(-8064.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(44, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_NESWdNW_A.cell"), new(-3456.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(59, GameDatabase.GetPrototypeId(Norway + "Norway_C/Norway_TR_Entry_Portal_C.cell"), new(3456.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(53, GameDatabase.GetPrototypeId(Norway + "Norway_C/Norway_TR_Entry_Portal_B.cell"), new(3456.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(47, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_ESW_A.cell"), new(3456.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(70, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_SW_A.cell"), new(1152.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(38, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_NES_A.cell"), new(-5760.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(65, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_SW_A.cell"), new(3456.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(45, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_NES_B.cell"), new(-1152.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(39, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_ES_A.cell"), new(-3456.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(41, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_ES_A.cell"), new(3456.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(40, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_NE_A.cell"), new(1152.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(37, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_NE_A.cell"), new(-8064.0f, -12672.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH09Asgard/Areas/Norway/NorwayPCZAreaC.prototype"), new(), false);
+                    area.AddCell(new(9, GameDatabase.GetPrototypeId(Norway + "Norway_C/Norway_Super_PyreOMEvent_A.cell"), new(1152.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(17, GameDatabase.GetPrototypeId(Norway + "Norway_C/Norway_C_NESW_B.cell"), new(5760.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(35, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-3456.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(3, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_NES_A.cell"), new(1152.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(16, GameDatabase.GetPrototypeId(Norway + "Norway_Trans/Norway_ROAD_ES_A.cell"), new(3456.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(8, GameDatabase.GetPrototypeId(Norway + "Norway_Trans/Norway_ROAD_NW_A.cell"), new(-1152.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(28, GameDatabase.GetPrototypeId(Norway + "Norway_Trans/Norway_Asgard_Entry_A.cell"), new(3456.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(22, GameDatabase.GetPrototypeId(Norway + "Norway_Trans/Norway_ROAD_EW_B.cell"), new(3456.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(10, GameDatabase.GetPrototypeId(Norway + "Norway_C/Norway_C_NESW_A.cell"), new(3456.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(21, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_NESW_A.cell"), new(1152.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(23, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_NESW_B.cell"), new(5760.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(14, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_NESW_A.cell"), new(-1152.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(29, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_NESW_A.cell"), new(5760.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(20, GameDatabase.GetPrototypeId(Norway + "Norway_Trans/Norway_Event_AreaC_A.cell"), new(-1152.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(36, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-1152.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(15, GameDatabase.GetPrototypeId(Norway + "Norway_C/Norway_Super_PyreOMEvent_B.cell"), new(1152.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(11, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_NESW_B.cell"), new(5760.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(27, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_NESWdES_A.cell"), new(1152.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(32, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_NSW_A.cell"), new(3456.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(26, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_NSW_A.cell"), new(-1152.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(33, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_NSW_A.cell"), new(5760.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(7, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_NEW_A.cell"), new(-3456.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(13, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_NEW_A.cell"), new(-3456.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(19, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_NEW_A.cell"), new(-3456.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(25, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_NW_A.cell"), new(-3456.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(31, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_NW_A.cell"), new(1152.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(18, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_ESW_A.cell"), new(8064.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(24, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_ESW_A.cell"), new(8064.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(12, GameDatabase.GetPrototypeId(Norway + "Norway_C/Norway_DarkForest_Entry.cell"), new(8064.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(30, GameDatabase.GetPrototypeId(Norway + "Norway_C/Norway_TR_Entry_Portal.cell"), new(8064.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(34, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_SW_A.cell"), new(8064.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(2, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_NESWcW_A.cell"), new(-1152.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(4, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_NES_A.cell"), new(3456.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(5, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_NES_B.cell"), new(5760.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(6, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_ES_A.cell"), new(8064.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_NE_A.cell"), new(-3456.0f, 1152.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    area = new(3, (AreaPrototype)GameDatabase.GetPrototypeId("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
+                    area.AddCell(new(73, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-8064.0f, -14976.0f, 0.0f)));
+                    area.AddCell(new(74, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-5760.0f, -14976.0f, 0.0f)));
+                    area.AddCell(new(75, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-3456.0f, -14976.0f, 0.0f)));
+                    area.AddCell(new(76, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-1152.0f, -14976.0f, 0.0f)));
+                    area.AddCell(new(77, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(1152.0f, -14976.0f, 0.0f)));
+                    area.AddCell(new(78, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-5760.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(79, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(3456.0f, -14976.0f, 0.0f)));
+                    area.AddCell(new(80, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-8064.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(81, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(5760.0f, -14976.0f, 0.0f)));
+                    area.AddCell(new(82, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-10368.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(83, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(8064.0f, -14976.0f, 0.0f)));
+                    area.AddCell(new(84, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-12672.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(85, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(5760.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(86, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-10368.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(87, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(5760.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(88, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-10368.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(89, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(5760.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(90, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-10368.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(91, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(5760.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(92, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-10368.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(93, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(5760.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(94, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-10368.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(95, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(5760.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(96, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-10368.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(97, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-10368.0f, -14976.0f, 0.0f)));
+                    area.AddCell(new(98, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-10368.0f, -17280.0f, 0.0f)));
+                    area.AddCell(new(99, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-8064.0f, -17280.0f, 0.0f)));
+                    area.AddCell(new(100, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-5760.0f, -17280.0f, 0.0f)));
+                    area.AddCell(new(101, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-3456.0f, -17280.0f, 0.0f)));
+                    area.AddCell(new(102, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-1152.0f, -17280.0f, 0.0f)));
+                    area.AddCell(new(103, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(1152.0f, -17280.0f, 0.0f)));
+                    area.AddCell(new(104, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-5760.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(105, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(3456.0f, -17280.0f, 0.0f)));
+                    area.AddCell(new(106, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-8064.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(107, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(5760.0f, -17280.0f, 0.0f)));
+                    area.AddCell(new(108, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-10368.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(109, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(8064.0f, -17280.0f, 0.0f)));
+                    area.AddCell(new(110, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-12672.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(111, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(8064.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(112, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-12672.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(113, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(8064.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(114, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-12672.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(115, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(8064.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(116, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-12672.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(117, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(8064.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(118, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-12672.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(119, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(8064.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(120, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-12672.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(121, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(8064.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(122, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-12672.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(123, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-12672.0f, -14976.0f, 0.0f)));
+                    area.AddCell(new(124, GameDatabase.GetPrototypeId(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-12672.0f, -17280.0f, 0.0f)));
+                    area.AddCell(new(125, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(8064.0f, 14976.0f, 0.0f)));
+                    area.AddCell(new(126, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(5760.0f, 14976.0f, 0.0f)));
+                    area.AddCell(new(127, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(3456.0f, 14976.0f, 0.0f)));
+                    area.AddCell(new(128, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(1152.0f, 14976.0f, 0.0f)));
+                    area.AddCell(new(129, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-1152.0f, 14976.0f, 0.0f)));
+                    area.AddCell(new(130, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-3456.0f, 14976.0f, 0.0f)));
+                    area.AddCell(new(131, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(10368.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(132, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-5760.0f, 14976.0f, 0.0f)));
+                    area.AddCell(new(133, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(12672.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(134, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-8064.0f, 14976.0f, 0.0f)));
+                    area.AddCell(new(135, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(10368.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(136, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-5760.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(137, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(10368.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(138, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-5760.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(139, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(10368.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(140, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-5760.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(141, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(10368.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(142, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-5760.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(143, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(10368.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(144, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(10368.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(145, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(10368.0f, 14976.0f, 0.0f)));
+                    area.AddCell(new(146, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(10368.0f, 17280.0f, 0.0f)));
+                    area.AddCell(new(147, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(8064.0f, 17280.0f, 0.0f)));
+                    area.AddCell(new(148, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(5760.0f, 17280.0f, 0.0f)));
+                    area.AddCell(new(149, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(3456.0f, 17280.0f, 0.0f)));
+                    area.AddCell(new(150, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(1152.0f, 17280.0f, 0.0f)));
+                    area.AddCell(new(151, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-1152.0f, 17280.0f, 0.0f)));
+                    area.AddCell(new(152, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-3456.0f, 17280.0f, 0.0f)));
+                    area.AddCell(new(153, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(10368.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(154, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-5760.0f, 17280.0f, 0.0f)));
+                    area.AddCell(new(155, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(12672.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(156, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-8064.0f, 17280.0f, 0.0f)));
+                    area.AddCell(new(157, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(12672.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(158, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-8064.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(159, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(12672.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(160, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-8064.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(161, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(12672.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(162, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-8064.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(163, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(12672.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(164, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-8064.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(165, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(12672.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(166, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(12672.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(167, GameDatabase.GetPrototypeId(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(12672.0f, 14976.0f, 0.0f)));
+                    area.AddCell(new(168, GameDatabase.GetPrototypeId(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(12672.0f, 17280.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(-5648.0f, -10752.0f, 0.0f);
+                    region.EntranceOrientation = new();
+                    region.WaypointPosition = new(-5648.0f, -10752.0f, 0.0f); 
+                    region.WaypointOrientation = new(3.141640f, 0.0f, 0.0f);
+
+                    break;
+
+                case RegionPrototype.CH0904SiegePCZRegion:
                     archiveData = new byte[] {
                     };
 
@@ -1479,4 +1678,3 @@ namespace MHServerEmu.GameServer.Regions
 
     }
 }
-
