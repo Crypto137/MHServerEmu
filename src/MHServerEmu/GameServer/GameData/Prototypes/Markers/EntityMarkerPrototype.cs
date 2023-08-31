@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Common.Extensions;
+using MHServerEmu.GameServer.GameData.Gpak;
 
 namespace MHServerEmu.GameServer.GameData.Prototypes.Markers
 {
@@ -20,7 +21,7 @@ namespace MHServerEmu.GameServer.GameData.Prototypes.Markers
 
         public EntityMarkerPrototype(BinaryReader reader)
         {
-            ProtoNameHash = MarkerPrototypeHash.EntityMarkerPrototype;
+            ProtoNameHash = ResourcePrototypeHash.EntityMarkerPrototype;
 
             EntityGuid = reader.ReadUInt64();
             LastKnownEntityName = reader.ReadFixedString32();

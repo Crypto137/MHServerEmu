@@ -64,25 +64,25 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         private MarkerPrototype ReadMarkerPrototype(BinaryReader reader)
         {
             MarkerPrototype markerPrototype;
-            MarkerPrototypeHash hash = (MarkerPrototypeHash)reader.ReadUInt32();
+            ResourcePrototypeHash hash = (ResourcePrototypeHash)reader.ReadUInt32();
 
             switch (hash)
             {
-                case MarkerPrototypeHash.CellConnectorMarkerPrototype:
+                case ResourcePrototypeHash.CellConnectorMarkerPrototype:
                     markerPrototype = new CellConnectorMarkerPrototype(reader);
                     break;
-                case MarkerPrototypeHash.DotCornerMarkerPrototype:
+                case ResourcePrototypeHash.DotCornerMarkerPrototype:
                     markerPrototype = new DotCornerMarkerPrototype(reader);
                     break;
-                case MarkerPrototypeHash.EntityMarkerPrototype:
+                case ResourcePrototypeHash.EntityMarkerPrototype:
                     markerPrototype = new EntityMarkerPrototype(reader);
                     break;
-                case MarkerPrototypeHash.RoadConnectionMarkerPrototype:
+                case ResourcePrototypeHash.RoadConnectionMarkerPrototype:
                     markerPrototype = new RoadConnectionMarkerPrototype(reader);
                     break;
                 default:
                     markerPrototype = null;
-                    Logger.Warn($"Unknown MarkerPrototypeHash {(uint)hash}");   // Warn if there's some other MarkerPrototype type we don't know about
+                    Logger.Warn($"Unknown MarkerPrototypeHash {(uint)hash}");   // Warn if there's a hash for a type we didn't expect
                     break;
             }
 

@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.Common;
+using MHServerEmu.GameServer.GameData.Gpak;
 
 namespace MHServerEmu.GameServer.GameData.Prototypes.Markers
 {
@@ -9,7 +10,7 @@ namespace MHServerEmu.GameServer.GameData.Prototypes.Markers
 
         public CellConnectorMarkerPrototype(BinaryReader reader)
         {
-            ProtoNameHash = MarkerPrototypeHash.CellConnectorMarkerPrototype;
+            ProtoNameHash = ResourcePrototypeHash.CellConnectorMarkerPrototype;
 
             Extents = reader.ReadVector3();
 
