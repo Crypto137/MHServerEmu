@@ -31,4 +31,12 @@
         Mul,
         Set
     }
+
+    public enum PropertyParamType
+    {
+        Invalid = -1,
+        Integer = 0,
+        Asset = 1,
+        Prototype = 2
+    }
 }
