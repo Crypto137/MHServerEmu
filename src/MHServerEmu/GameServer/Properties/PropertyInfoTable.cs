@@ -1,5 +1,4 @@
 ﻿using MHServerEmu.Common;
-using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.GameData.Gpak;
 using MHServerEmu.GameServer.GameData.Prototypes;
 
@@ -13,6 +12,8 @@ namespace MHServerEmu.GameServer.Properties
 
         public PropertyInfoTable(CalligraphyStorage calligraphy)
         {
+            Dictionary<PropertyEnum, PropertyPrototype> mixinDict = new();
+
             // Loop through the main property info directory to get most info
             foreach (var kvp in calligraphy.DefaultsDict)
             {
@@ -22,6 +23,13 @@ namespace MHServerEmu.GameServer.Properties
                     PropertyInfoPrototype prototype = new(kvp.Value);
 
                     _propertyInfoDict.Add(property, prototype);
+                }
+                else if (kvp.Key.Contains("Calligraphy/Property/Mixin") && kvp.Key.Contains("Prop.defaults"))   // param mixin information is stored in PropertyPrototypes
+                {
+                    string fileName = Path.GetFileNameWithoutExtension(kvp.Key);
+                    PropertyEnum property = (PropertyEnum)Enum.Parse(typeof(PropertyEnum), fileName.Substring(0, fileName.Length - 4));
+                    PropertyPrototype mixin = new(kvp.Value);
+                    mixinDict.Add(property, mixin);
                 }
             }
 
@@ -41,6 +49,10 @@ namespace MHServerEmu.GameServer.Properties
             {
                 Logger.Warn("Failed to manually add additional property info");
             }
+
+            // Add mixin information to PropertyInfo
+            foreach (var kvp in mixinDict)
+                _propertyInfoDict[kvp.Key].Mixin = kvp.Value;
 
             // Finish initialization
             if (Verify())

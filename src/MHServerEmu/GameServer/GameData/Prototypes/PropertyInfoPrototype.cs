@@ -5,6 +5,8 @@ namespace MHServerEmu.GameServer.GameData.Prototypes
 {
     public class PropertyInfoPrototype
     {
+        public PropertyPrototype Mixin { get; set; }                   // contains mixin param information
+
         public object Eval { get; }                             // R
         public bool SerializePowerToPowerPayload { get; }
         public bool SerializeConditionSrcToCondition { get; }

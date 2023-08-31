@@ -8,6 +8,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 {
     public enum CalligraphyValueType : byte
     {
+        None = 0x00,
         A = 0x41,   // asset
         B = 0x42,   // bool
         C = 0x43,   // curve
