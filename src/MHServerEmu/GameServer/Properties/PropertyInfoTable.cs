@@ -15,20 +15,20 @@ namespace MHServerEmu.GameServer.Properties
             Dictionary<PropertyEnum, PropertyPrototype> mixinDict = new();
 
             // Loop through the main property info directory to get most info
-            foreach (var kvp in calligraphy.DefaultsDict)
+            foreach (var kvp in calligraphy.BlueprintDict)
             {
-                if (kvp.Key.Contains("Calligraphy/Property/Info"))
+                if (kvp.Key.Contains("Property/Info"))
                 {
                     PropertyEnum property = (PropertyEnum)Enum.Parse(typeof(PropertyEnum), Path.GetFileNameWithoutExtension(kvp.Key));
-                    PropertyInfoPrototype prototype = new(kvp.Value);
+                    PropertyInfoPrototype prototype = new(calligraphy.GetBlueprintPrototype(kvp.Key));
 
                     _propertyInfoDict.Add(property, prototype);
                 }
-                else if (kvp.Key.Contains("Calligraphy/Property/Mixin") && kvp.Key.Contains("Prop.defaults"))   // param mixin information is stored in PropertyPrototypes
+                else if (kvp.Key.Contains("Property/Mixin") && kvp.Key.Contains("Prop.blueprint"))   // param mixin information is stored in PropertyPrototypes
                 {
                     string fileName = Path.GetFileNameWithoutExtension(kvp.Key);
                     PropertyEnum property = (PropertyEnum)Enum.Parse(typeof(PropertyEnum), fileName.Substring(0, fileName.Length - 4));
-                    PropertyPrototype mixin = new(kvp.Value);
+                    PropertyPrototype mixin = new(calligraphy.GetBlueprintPrototype(kvp.Key));
                     mixinDict.Add(property, mixin);
                 }
             }
@@ -37,13 +37,13 @@ namespace MHServerEmu.GameServer.Properties
             try
             {
                 _propertyInfoDict.Add(PropertyEnum.DisplayNameOverride,
-                    new(calligraphy.PrototypeDict["Calligraphy/Property/Info/DisplayNameOverride.prototype"]));
+                    new(calligraphy.PrototypeDict["Property/Info/DisplayNameOverride.prototype"]));
 
                 _propertyInfoDict.Add(PropertyEnum.MissileAlwaysCollides,
-                    new(calligraphy.DefaultsDict["Calligraphy/Property/Mixin/BewareOfTiger/MissileAlwaysCollides.defaults"]));
+                    new(calligraphy.GetBlueprintPrototype("Property/Mixin/BewareOfTiger/MissileAlwaysCollides.blueprint")));
 
                 _propertyInfoDict.Add(PropertyEnum.StolenPowerAvailable,
-                    new(calligraphy.DefaultsDict["Calligraphy/Property/Mixin/BewareOfTiger/StolenPowerAvailable.defaults"]));
+                    new(calligraphy.GetBlueprintPrototype("Property/Mixin/BewareOfTiger/StolenPowerAvailable.blueprint")));
             }
             catch
             {

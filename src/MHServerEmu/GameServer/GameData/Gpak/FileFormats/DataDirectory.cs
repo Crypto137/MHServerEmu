@@ -15,13 +15,14 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
     {
         public ulong Id1 { get; }
         public ulong Id2 { get; }
-        public string Name { get; }
+        public string FilePath { get; }
     }
 
     public class DataDirectory
     {
         public DataDirectoryHeader Header { get; }
         public IDataDirectoryEntry[] Entries { get; }
+        public Dictionary<ulong, IDataDirectoryEntry> EntryDict { get; } = new();
 
         public DataDirectory(byte[] data)
         {
@@ -48,6 +49,9 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
                             Entries[i] = new DataDirectoryPrototypeEntry(reader);
                         break;
                 }
+
+                foreach (IDataDirectoryEntry entry in Entries)
+                    EntryDict.Add(entry.Id1, entry);
             }
         }
     }
@@ -57,14 +61,14 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         public ulong Id1 { get; }
         public ulong Id2 { get; }
         public byte Field2 { get; }
-        public string Name { get; }
+        public string FilePath { get; }
 
         public DataDirectoryGenericEntry(BinaryReader reader)
         {
             Id1 = reader.ReadUInt64();
             Id2 = reader.ReadUInt64();
             Field2 = reader.ReadByte();
-            Name = reader.ReadFixedString16();
+            FilePath = reader.ReadFixedString16().Replace('\\', '/');
         }
     }
 
@@ -74,7 +78,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         public ulong Id2 { get; }
         public ulong ParentId { get; }
         public byte Field3 { get; }
-        public string Name { get; }
+        public string FilePath { get; }
 
         public DataDirectoryPrototypeEntry(BinaryReader reader)
         {
@@ -82,7 +86,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             Id2 = reader.ReadUInt64();
             ParentId = reader.ReadUInt64();
             Field3 = reader.ReadByte();
-            Name = reader.ReadFixedString16();
+            FilePath = reader.ReadFixedString16().Replace('\\', '/');
         }
     }
 
@@ -90,13 +94,13 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
     {
         public ulong Id1 { get; }
         public ulong Id2 { get; }
-        public string Name { get; }
+        public string FilePath { get; }
 
         public DataDirectoryReplacementEntry(BinaryReader reader)
         {
             Id1 = reader.ReadUInt64();
             Id2 = reader.ReadUInt64();
-            Name = reader.ReadFixedString16();
+            FilePath = reader.ReadFixedString16().Replace('\\', '/');
         }
     }
 }

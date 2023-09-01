@@ -20,12 +20,12 @@ namespace MHServerEmu.Common.Commands
 
             foreach (DataDirectoryPrototypeEntry entry in GameDatabase.Calligraphy.PrototypeDirectory.Entries)
             {
-                if (entry.Name.Contains("Entity\\Items\\Costumes\\Prototypes\\") && entry.Name.ToLower().Contains(pattern))
+                if (entry.FilePath.Contains("Entity/Items/Costumes/Prototypes/") && entry.FilePath.ToLower().Contains(pattern))
                     matches.Add(entry);
             }
 
             return matches.Aggregate(matches.Count >= 1 ? "Costume Matches:\n" : "No match found.",
-                (current, match) => $"{current}[{match.Id1}] {Path.GetRelativePath("Entity\\Items\\Costumes\\Prototypes\\", match.Name)}\n");
+                (current, match) => $"{current}[{match.Id1}] {Path.GetRelativePath("Entity/Items/Costumes/Prototypes/", match.FilePath)}\n");
         }
     }
 }

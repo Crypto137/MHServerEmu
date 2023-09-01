@@ -82,7 +82,7 @@ namespace MHServerEmu.GameServer.GameData
                 hashMap.Add(0, "");
 
                 foreach (DataDirectoryPrototypeEntry entry in calligraphy.PrototypeDirectory.Entries)
-                    hashMap.Add(entry.Id1, entry.Name.Replace('\\', '/'));
+                    hashMap.Add(entry.Id1, entry.FilePath);
 
                 foreach (var kvp in resource.DirectoryDict)
                     hashMap.Add(kvp.Key, kvp.Value);

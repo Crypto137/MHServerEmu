@@ -87,6 +87,16 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             }
         }
 
+        public Dictionary<string, byte[]> ToDictionary()
+        {
+            Dictionary<string, byte[]> dict = new();
+
+            foreach (GpakEntry entry in Entries)
+                dict.Add(entry.FilePath, entry.Data);
+
+            return dict;
+        }
+
         private int ReadInt(FileStream fileStream, byte[] buffer)
         {
             fileStream.Read(buffer, 0, 4);
