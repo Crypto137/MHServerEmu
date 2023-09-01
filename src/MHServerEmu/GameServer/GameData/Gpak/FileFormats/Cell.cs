@@ -8,8 +8,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
     public class Cell
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public uint Header { get; }
         public uint Version { get; }
         public uint ClassId { get; }
@@ -21,7 +19,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         public string ClientMap { get; }
         public MarkerPrototype[] InitializeSet { get; }
         public MarkerPrototype[] MarkerSet { get; }
-        public CellNaviPatchSource NaviPatchSource { get; }
+        public NaviPatchSourcePrototype NaviPatchSource { get; }
         public byte IsOffsetInMapFile { get; }
         public CellHeightMap HeightMap { get; }
         public ulong[] HotspotPrototypes { get; }
@@ -81,31 +79,10 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
                     markerPrototype = new RoadConnectionMarkerPrototype(reader);
                     break;
                 default:
-                    markerPrototype = null;
-                    Logger.Warn($"Unknown MarkerPrototypeHash {(uint)hash}");   // Warn if there's a hash for a type we didn't expect
-                    break;
+                    throw new($"Unknown MarkerPrototypeHash {(uint)hash}");   // Throw an exception if there's a hash for a type we didn't expect
             }
 
             return markerPrototype;
-        }
-    }
-
-    public class CellNaviPatchSource
-    {
-        // PatchFragments
-        public uint NaviPatchCrc { get; }
-        public NaviPatchPrototype NaviPatch { get; }
-        public NaviPatchPrototype PropPatch { get; }
-        public float PlayableArea { get; }
-        public float SpawnableArea { get; }
-
-        public CellNaviPatchSource(BinaryReader reader)
-        {
-            NaviPatchCrc = reader.ReadUInt32();
-            NaviPatch = new(reader);
-            PropPatch = new(reader);
-            PlayableArea = reader.ReadSingle();
-            SpawnableArea = reader.ReadSingle();
         }
     }
 
