@@ -14,6 +14,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         public Dictionary<string, Encounter> EncounterDict { get; } = new();
         public Dictionary<string, PropSet> PropSetDict { get; } = new();
         public Dictionary<string, Prop> PropDict { get; } = new();
+        public Dictionary<string, UI> UIDict { get; } = new();
 
         public ResourceStorage(GpakFile gpakFile)
         {
@@ -38,6 +39,9 @@ namespace MHServerEmu.GameServer.GameData.Gpak
                     case ".prop":
                         PropDict.Add(entry.FilePath, new(entry.Data));
                         break;
+                    case ".ui":
+                        UIDict.Add(entry.FilePath, new(entry.Data));
+                        break;
                 }
             }
 
@@ -46,6 +50,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             Logger.Info($"Parsed {EncounterDict.Count} encounters");
             Logger.Info($"Parsed {PropSetDict.Count} prop sets");
             Logger.Info($"Parsed {PropDict.Count} props");
+            Logger.Info($"Parsed {UIDict.Count} UIs");
         }
 
         public override bool Verify()
@@ -54,7 +59,8 @@ namespace MHServerEmu.GameServer.GameData.Gpak
                 && DistrictDict.Count > 0
                 && EncounterDict.Count > 0
                 && PropSetDict.Count > 0
-                && PropDict.Count > 0;
+                && PropDict.Count > 0
+                && UIDict.Count > 0;
         }
 
         public override void Export()
@@ -64,6 +70,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             SerializeDictAsJson(EncounterDict);
             SerializeDictAsJson(PropSetDict);
             SerializeDictAsJson(PropDict);
+            SerializeDictAsJson(UIDict);
         }
     }
 }

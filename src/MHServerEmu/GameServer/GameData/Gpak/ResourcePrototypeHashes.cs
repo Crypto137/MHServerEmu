@@ -5,6 +5,7 @@
     /// </summary>
     public enum ResourcePrototypeHash : uint
     {
+        None = 0,
         CellConnectorMarkerPrototype = 2901607432,
         DotCornerMarkerPrototype = 468664301,
         EntityMarkerPrototype = 3862899546,
@@ -15,6 +16,8 @@
         PathNodePrototype = 908860270,
         PropSetTypeListPrototype = 1819714054,
         PropSetTypeEntryPrototype = 2348267420,
-        ProceduralPropGroupPrototype = 2480167290
+        ProceduralPropGroupPrototype = 2480167290,
+        StretchedPanelPrototype = 805156721,
+        AnchoredPanelPrototype = 1255662575
     }
 }

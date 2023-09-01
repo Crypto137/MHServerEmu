@@ -14,6 +14,11 @@ namespace MHServerEmu.Common.Extensions
             return System.Text.Encoding.UTF8.GetString(reader.ReadBytes(reader.ReadInt32()));
         }
 
+        public static Vector2 ReadVector2(this BinaryReader reader)
+        {
+            return new Vector2(reader.ReadSingle(), reader.ReadSingle());
+        }
+
         public static Vector3 ReadVector3(this BinaryReader reader)
         {
             return new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
