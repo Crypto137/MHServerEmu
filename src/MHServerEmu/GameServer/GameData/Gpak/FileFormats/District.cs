@@ -1,12 +1,17 @@
 ﻿using MHServerEmu.Common.Extensions;
+using MHServerEmu.GameServer.Common;
+using MHServerEmu.GameServer.GameData.Prototypes.Markers;
 
 namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
     public class District
     {
         public uint Header { get; }
-        public uint[] Types { get; }
-        public DistrictCell[] Cells { get; }
+        public uint Version { get; }
+        public uint ClassId { get; }
+        public ResourceMarkerPrototype[] CellMarkerSet { get; }
+        public MarkerPrototype[] MarkerSet { get; }                 // size is always 0 in all of our files
+        public PathNodeSetPrototype[] PathCollection { get; }       // PathCollectionPrototype
 
         public District(byte[] data)
         {
@@ -14,31 +19,66 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             using (BinaryReader reader = new(stream))
             {
                 Header = reader.ReadUInt32();
+                Version = reader.ReadUInt32();
+                ClassId = reader.ReadUInt32();
 
-                Types = new uint[reader.ReadUInt32()];
-                for (int i = 0; i < Types.Length; i++)
-                    Types[i] = reader.ReadUInt32();
+                CellMarkerSet = new ResourceMarkerPrototype[reader.ReadUInt32()];
+                for (int i = 0; i < CellMarkerSet.Length; i++)
+                    CellMarkerSet[i] = (ResourceMarkerPrototype)ReadMarkerPrototype(reader);
 
-                Cells = new DistrictCell[reader.ReadUInt32()];
-                for (int i = 0; i < Cells.Length; i++)
-                    Cells[i] = new(reader);
+                MarkerSet = new MarkerPrototype[reader.ReadUInt32()];
+                for (int i = 0; i < MarkerSet.Length; i++)
+                    MarkerSet[i] = ReadMarkerPrototype(reader);
+
+                PathCollection = new PathNodeSetPrototype[reader.ReadUInt32()];
+                for (int i = 0; i < PathCollection.Length; i++)
+                    PathCollection[i] = new(reader);    
             }
+        }
+
+        private MarkerPrototype ReadMarkerPrototype(BinaryReader reader)
+        {
+            MarkerPrototype markerPrototype;
+            ResourcePrototypeHash hash = (ResourcePrototypeHash)reader.ReadUInt32();
+
+            if (hash == ResourcePrototypeHash.ResourceMarkerPrototype)
+                markerPrototype = new ResourceMarkerPrototype(reader);
+            else
+                throw new($"Unknown ResourcePrototypeHash {(uint)hash}");   // Throw an exception if there's a hash for a type we didn't expect
+
+            return markerPrototype;
         }
     }
 
-    public class DistrictCell
+    public class PathNodeSetPrototype
     {
-        public uint Type { get; }
-        public string Name { get; }
-        public uint[] UnknownZeroes { get; } = new uint[6];
+        public ResourcePrototypeHash ProtoNameHash { get; }
+        public ushort Group { get; }
+        public PathNodePrototype[] PathNodes { get; }
+        public ushort NumNodes { get; }
 
-        public DistrictCell(BinaryReader reader)
+        public PathNodeSetPrototype(BinaryReader reader)
         {
-            Type = reader.ReadUInt32();
-            Name = reader.ReadFixedString32();
+            ProtoNameHash = (ResourcePrototypeHash)reader.ReadUInt32();
+            Group = reader.ReadUInt16();
 
-            for (int i = 0; i < UnknownZeroes.Length; i++)
-                UnknownZeroes[i] = reader.ReadUInt32();
+            PathNodes = new PathNodePrototype[reader.ReadUInt32()];
+            for (int i = 0; i < PathNodes.Length; i++)
+                PathNodes[i] = new(reader);
+
+            NumNodes = reader.ReadUInt16();
+        }
+    }
+
+    public class PathNodePrototype
+    {
+        public ResourcePrototypeHash ProtoNameHash { get; }
+        public Vector3 Position { get; }
+
+        public PathNodePrototype(BinaryReader reader)
+        {
+            ProtoNameHash = (ResourcePrototypeHash)reader.ReadUInt32();
+            Position = reader.ReadVector3();
         }
     }
 }
