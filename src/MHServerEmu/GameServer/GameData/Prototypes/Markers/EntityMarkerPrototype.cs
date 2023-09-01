@@ -1,22 +1,36 @@
-﻿using MHServerEmu.Common.Extensions;
+﻿using System.Text.Json.Serialization;
+using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.GameData.Gpak;
 
 namespace MHServerEmu.GameServer.GameData.Prototypes.Markers
 {
     public class EntityMarkerPrototype : MarkerPrototype
     {
+        [JsonPropertyOrder(2)]
         public ulong EntityGuid { get; }
+        [JsonPropertyOrder(3)]
         public string LastKnownEntityName { get; }
+        [JsonPropertyOrder(4)]
         public ulong Modifier1Guid { get; }
+        [JsonPropertyOrder(5)]
         public string Modifier1Text { get; }
+        [JsonPropertyOrder(6)]
         public ulong Modifier2Guid { get; }
+        [JsonPropertyOrder(7)]
         public string Modifier2Text { get; }
+        [JsonPropertyOrder(8)]
         public ulong Modifier3Guid { get; }
+        [JsonPropertyOrder(9)]
         public string Modifier3Text { get; }
+        [JsonPropertyOrder(10)]
         public uint EncounterSpawnPhase { get; }
+        [JsonPropertyOrder(11)]
         public byte OverrideSnapToFloor { get; }
+        [JsonPropertyOrder(12)]
         public byte OverrideSnapToFloorValue { get; }
+        [JsonPropertyOrder(13)]
         public ulong FilterGuid { get; }
+        [JsonPropertyOrder(14)]
         public string LastKnownFilterName { get; }
 
         public EntityMarkerPrototype(BinaryReader reader)

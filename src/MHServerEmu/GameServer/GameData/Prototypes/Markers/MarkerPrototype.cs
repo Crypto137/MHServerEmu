@@ -1,4 +1,5 @@
-﻿using MHServerEmu.GameServer.Common;
+﻿using System.Text.Json.Serialization;
+using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.GameData.Gpak;
 
 namespace MHServerEmu.GameServer.GameData.Prototypes.Markers
@@ -8,8 +9,11 @@ namespace MHServerEmu.GameServer.GameData.Prototypes.Markers
     /// </summary>
     public class MarkerPrototype
     {
+        [JsonPropertyOrder(1), JsonConverter(typeof(JsonStringEnumConverter))]
         public ResourcePrototypeHash ProtoNameHash { get; protected set; }    // DJB hash of the class name
+        [JsonPropertyOrder(15)]
         public Vector3 Position { get; protected set; }
+        [JsonPropertyOrder(16)]
         public Vector3 Rotation { get; protected set; }
     }
 }
