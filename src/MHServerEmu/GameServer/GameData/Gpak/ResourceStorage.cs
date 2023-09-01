@@ -65,6 +65,10 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
         public override void Export()
         {
+            // Set up json serializer
+            _jsonSerializerOptions.Converters.Add(new MarkerPrototypeConverter());
+            _jsonSerializerOptions.Converters.Add(new UIPanelPrototypeConverter());
+
             SerializeDictAsJson(CellDict);
             SerializeDictAsJson(DistrictDict);
             SerializeDictAsJson(EncounterDict);

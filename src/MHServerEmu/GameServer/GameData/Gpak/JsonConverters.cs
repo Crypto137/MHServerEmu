@@ -2,6 +2,7 @@
 using System.Text.Json.Serialization;
 using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 using MHServerEmu.GameServer.GameData.Gpak.JsonOutput;
+using MHServerEmu.GameServer.GameData.Prototypes.Markers;
 
 namespace MHServerEmu.GameServer.GameData.Gpak
 {
@@ -80,20 +81,19 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         }
     }
 
-    /* Example of a converter for serializing interface implementing classes
-    public class DataDirectoryEntryConverter : JsonConverter<IDataDirectoryEntry>
+    public class MarkerPrototypeConverter : JsonConverter<MarkerPrototype>
     {
-        public override IDataDirectoryEntry Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override MarkerPrototype Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             throw new NotImplementedException();
         }
 
-        public override void Write(Utf8JsonWriter writer, IDataDirectoryEntry value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, MarkerPrototype value, JsonSerializerOptions options)
         {
             switch (value)
             {
                 case null:
-                    JsonSerializer.Serialize(writer, (IDataDirectoryEntry)null, options);
+                    JsonSerializer.Serialize(writer, (MarkerPrototype)null, options);
                     break;
 
                 default:
@@ -103,5 +103,27 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             }
         }
     }
-    */
+
+    public class UIPanelPrototypeConverter : JsonConverter<UIPanelPrototype>
+    {
+        public override UIPanelPrototype Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Write(Utf8JsonWriter writer, UIPanelPrototype value, JsonSerializerOptions options)
+        {
+            switch (value)
+            {
+                case null:
+                    JsonSerializer.Serialize(writer, (UIPanelPrototype)null, options);
+                    break;
+
+                default:
+                    var type = value.GetType();
+                    JsonSerializer.Serialize(writer, value, type, options);
+                    break;
+            }
+        }
+    }
 }
