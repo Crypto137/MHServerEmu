@@ -79,7 +79,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
                     markerPrototype = new RoadConnectionMarkerPrototype(reader);
                     break;
                 default:
-                    throw new($"Unknown MarkerPrototypeHash {(uint)hash}");   // Throw an exception if there's a hash for a type we didn't expect
+                    throw new($"Unknown ResourcePrototypeHash {(uint)hash}");   // Throw an exception if there's a hash for a type we didn't expect
             }
 
             return markerPrototype;
