@@ -26,11 +26,13 @@ namespace MHServerEmu.GameServer.Regions
             RegionPrototype.XManhattanRegion60Cosmic,
             RegionPrototype.UpperMadripoorRegionL60,
             RegionPrototype.UpperMadripoorRegionL60Cosmic,
+            RegionPrototype.UltronRaidRegionGreen,
             RegionPrototype.CH0101HellsKitchenRegion,
             RegionPrototype.CH0105NightclubRegion,
             RegionPrototype.CH0301MadripoorRegion,
             RegionPrototype.CH0701SavagelandRegion,
             RegionPrototype.CH0804LatveriaPCZRegion,
+            RegionPrototype.CH0808DoomCastleRegion,
             RegionPrototype.CH0901NorwayPCZRegion,
             RegionPrototype.CH0904SiegePCZRegion
         };
@@ -943,6 +945,79 @@ namespace MHServerEmu.GameServer.Regions
 
                     break;
 
+               case RegionPrototype.CH0808DoomCastleRegion:
+                    archiveData = new byte[] {
+                    };
+
+                    region = new(RegionPrototype.CH0808DoomCastleRegion,
+                        1153032329227798536,
+                        1901487720,
+                        archiveData,
+                        new(-9216.0f, -21120.0f, -3008.0f),
+                        new(9216.0f, 21120.0f, 3008.0f),
+                        new(60, DifficultyTier.Normal));
+
+                    string Castle = "Resource/Cells/Latveria/Doomstadt_Castle_A/";
+                    string CastleArea = "Regions/StoryRevamp/CH08Latveria/Areas/Latveria/CastleDoom/";
+                    uint cellid = 1;
+                    areaid = 1;
+
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeId(CastleArea + "Exterior/CastleExteriorAreaAEntry.prototype"), new(), true);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeId(Castle + "Latveria_Castle_Exterior_A.cell"), new(6912.0f, -18816.0f, 192.0f)));
+                    region.AddArea(area);
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeId(CastleArea + "Exterior/CastleExteriorAreaD.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeId(Castle + "Latveria_Castle_Exterior_D.cell"), new(6912.0f, -14208.0f, 704.0f)));
+                    region.AddArea(area);
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeId(CastleArea + "Exterior/CastleExteriorAreaF.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeId(Castle + "Latveria_Castle_Exterior_F.cell"), new(6912.0f, -9600.0f, 704.0f)));
+                    region.AddArea(area);
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeId(CastleArea + "Exterior/CastleExteriorBossArea.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeId(Castle + "Latveria_Castle_Exterior_Boss.cell"), new(6912.0f, -4992.0f, 192.0f)));
+                    region.AddArea(area);
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeId(CastleArea + "Exterior/CastleExteriorArrayArea.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeId(Castle + "Latveria_Castle_Exterior_Array.cell"), new(6912.0f, -384.0f, 192.0f)));
+                    region.AddArea(area);
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeId(CastleArea + "Exterior/CastleExteriorAreaGBridge.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeId(Castle + "Latveria_Castle_Ext_G_Bridge.cell"), new(6912.0f, 4224.0f, 192.0f)));
+                    region.AddArea(area);
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeId(CastleArea + "Interior/CastleInteriorAreaA.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeId(Castle + "Latveria_Castle_Interior_A.cell"), new(6912.0f, 8832.0f, 320.0f)));
+                    region.AddArea(area);
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeId(CastleArea + "Interior/CastleInteriorAreaB.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeId(Castle + "Latveria_Castle_Interior_B.cell"), new(6912.0f, 13440.0f, 320.0f)));
+                    region.AddArea(area);
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeId(CastleArea + "Interior/CastleInteriorAreaC.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeId(Castle + "Latveria_Castle_Interior_C.cell"), new(6912.0f, 18048.0f, 320.0f)));
+                    region.AddArea(area);
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeId(CastleArea + "Interior/CastleDoomBotEstablishingArea.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeId(Castle + "Latveria_Castle_Interior_D2.cell"), new(2304.0f, 18816.0f, 320.0f)));
+                    region.AddArea(area);
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeId(CastleArea + "Interior/CastleDoomBotFactoryArea.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeId(Castle + "Latveria_Castle_Interior_D.cell"), new(-2304.0f, 18816.0f, 320.0f)));
+                    region.AddArea(area);
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeId(CastleArea + "Interior/CastleInteriorAreaE.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeId(Castle + "Latveria_Castle_Interior_E.cell"), new(-6912.0f, 18816.0f, 320.0f)));
+                    region.AddArea(area);
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeId(CastleArea + "Interior/CastleInteriorAreaF.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeId(Castle + "Latveria_Castle_Interior_F.cell"), new(-6912.0f, 14208.0f, 320.0f)));
+                    region.AddArea(area);
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeId(CastleArea + "Interior/CastleInteriorPowerGenArea.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeId(Castle + "Latveria_Castle_Interior_G.cell"), new(-2304.0f, 14208.0f, 320.0f)));
+                    region.AddArea(area);
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeId(CastleArea + "Interior/CastleInteriorAreaH.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeId(Castle + "Latveria_Castle_Interior_H.cell"), new(2304.0f, 14208.0f, 320.0f)));
+                    region.AddArea(area);
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeId(CastleArea + "Interior/CastleElevatorToDoomArea.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeId(Castle + "Latveria_Castle_Interior_I_2.cell"), new(2304.0f, 9600.0f, -704.0f)));
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(6016.0f, -18464.0f, 192.0f);
+                    region.EntranceOrientation = new(-2.35623f, 0.0f, 0.0f);
+                    region.WaypointPosition = new(6016.0f, -18464.0f, 192.0f);
+                    region.WaypointOrientation = new(2.35623f, 0.0f, 0.0f);
+
+                    break;
+
                case RegionPrototype.CH0901NorwayPCZRegion:
                     archiveData = new byte[] {
                     };
@@ -1411,6 +1486,35 @@ namespace MHServerEmu.GameServer.Regions
                     
                     break;
 
+                case RegionPrototype.UltronRaidRegionGreen:
+                    archiveData = new byte[] {
+                    };
+
+                    region = new(RegionPrototype.UltronRaidRegionGreen,
+                        1154146333179736985,
+                        1883928786,
+                        archiveData,
+                        new(-1152.0f, -1152.0f, -1152.0f),
+                        new(19584.0f, 19584.0f, 1152.0f),
+                        new(60, DifficultyTier.Normal));                    
+
+                    AreaPrototype CentralPark = (AreaPrototype)GameDatabase.GetPrototypeId("Regions/EndGame/TierX/UltronGameMode/UltronRaidMainArea.prototype");
+                    area = new(1, CentralPark, new(), true);
+
+                    district = GameDatabase.Resource.DistrictDict["Resource/Districts/CentralParkUltronDistrict.district"];
+
+                    for (int i = 0; i < district.Cells.Length; i++)
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeId(district.Cells[i].Name), new()));
+
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(4900.0f, 100.0f, 0.0f);
+                    region.EntranceOrientation = new(1.570796f, 0.0f, 0.0f); 
+                    region.WaypointPosition =  new(16428.0f, 11820.0f, 0.0f);
+                    region.WaypointOrientation = new(1.570796f, 0.0f, 0.0f);
+
+                    break;
+
                 case RegionPrototype.UpperMadripoorRegionL60:
 
                     archiveData = new byte[] {
@@ -1678,3 +1782,4 @@ namespace MHServerEmu.GameServer.Regions
 
     }
 }
+
