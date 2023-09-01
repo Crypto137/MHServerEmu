@@ -13,6 +13,18 @@ namespace MHServerEmu.GameServer.GameData
 
         public int Count { get => _forwardDict.Count; }
 
+        public HashMap()
+        {
+            _forwardDict = new();
+            _reverseDict = new();
+        }
+
+        public HashMap(int capacity)
+        {
+            _forwardDict = new(capacity);
+            _reverseDict = new(capacity);
+        }
+
         public void Add(ulong key, string value)
         {
             _forwardDict.Add(key, value);

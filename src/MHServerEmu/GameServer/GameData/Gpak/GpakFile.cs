@@ -89,7 +89,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
         public Dictionary<string, byte[]> ToDictionary()
         {
-            Dictionary<string, byte[]> dict = new();
+            Dictionary<string, byte[]> dict = new(Entries.Length);
 
             foreach (GpakEntry entry in Entries)
                 dict.Add(entry.FilePath, entry.Data);

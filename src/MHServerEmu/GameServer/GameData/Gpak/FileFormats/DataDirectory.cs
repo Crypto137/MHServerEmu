@@ -22,7 +22,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
     {
         public DataDirectoryHeader Header { get; }
         public IDataDirectoryEntry[] Entries { get; }
-        public Dictionary<ulong, IDataDirectoryEntry> EntryDict { get; } = new();
+        public Dictionary<ulong, IDataDirectoryEntry> EntryDict { get; }
 
         public DataDirectory(byte[] data)
         {
@@ -50,6 +50,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
                         break;
                 }
 
+                EntryDict = new(Entries.Length);
                 foreach (IDataDirectoryEntry entry in Entries)
                     EntryDict.Add(entry.Id1, entry);
             }

@@ -75,10 +75,11 @@ namespace MHServerEmu.GameServer.GameData
 
         private static HashMap InitializePrototypeHashMap(CalligraphyStorage calligraphy, ResourceStorage resource)
         {
-            HashMap hashMap = new();
+            HashMap hashMap;
 
             if (calligraphy.PrototypeDirectory != null && resource.DirectoryDict.Count > 0)
             {
+                hashMap = new(calligraphy.PrototypeDirectory.Entries.Length + resource.DirectoryDict.Count);
                 hashMap.Add(0, "");
 
                 foreach (DataDirectoryPrototypeEntry entry in calligraphy.PrototypeDirectory.Entries)
@@ -86,6 +87,10 @@ namespace MHServerEmu.GameServer.GameData
 
                 foreach (var kvp in resource.DirectoryDict)
                     hashMap.Add(kvp.Key, kvp.Value);
+            }
+            else
+            {
+                hashMap = new();
             }
 
             return hashMap;

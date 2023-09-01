@@ -14,10 +14,10 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         public DataDirectory PrototypeDirectory { get; }
         public DataDirectory ReplacementDirectory { get; }
 
-        public Dictionary<string, GType> GTypeDict { get; } = new();
-        public Dictionary<string, Curve> CurveDict { get; } = new();
-        public Dictionary<string, Blueprint> BlueprintDict { get; } = new();
-        public Dictionary<string, Prototype> PrototypeDict { get; } = new();
+        public Dictionary<string, GType> GTypeDict { get; }
+        public Dictionary<string, Curve> CurveDict { get; }
+        public Dictionary<string, Blueprint> BlueprintDict { get; }
+        public Dictionary<string, Prototype> PrototypeDict { get; }
 
         public Dictionary<ulong, string> AssetDict { get; } = new();
         public Dictionary<ulong, string> AssetTypeDict { get; } = new();
@@ -33,24 +33,24 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             PrototypeDirectory = new(gpakDict["Calligraphy/Prototype.directory"]);
             ReplacementDirectory = new(gpakDict["Calligraphy/Replacement.directory"]);
 
+            GTypeDict = new(GTypeDirectory.Entries.Length);
             foreach (DataDirectoryGenericEntry entry in GTypeDirectory.Entries)
                 GTypeDict.Add(entry.FilePath, new(gpakDict[$"Calligraphy/{entry.FilePath}"]));
-
             Logger.Info($"Parsed {GTypeDict.Count} types");
 
+            CurveDict = new(CurveDirectory.Entries.Length);
             foreach (DataDirectoryGenericEntry entry in CurveDirectory.Entries)
                 CurveDict.Add(entry.FilePath, new(gpakDict[$"Calligraphy/{entry.FilePath}"]));
-
             Logger.Info($"Parsed {CurveDict.Count} curves");
 
+            BlueprintDict = new(BlueprintDirectory.Entries.Length);
             foreach (DataDirectoryGenericEntry entry in BlueprintDirectory.Entries)
                 BlueprintDict.Add(entry.FilePath, new(gpakDict[$"Calligraphy/{entry.FilePath}"]));
-
             Logger.Info($"Parsed {BlueprintDict.Count} blueprints");
 
+            PrototypeDict = new(PrototypeDirectory.Entries.Length);
             foreach (DataDirectoryPrototypeEntry entry in PrototypeDirectory.Entries)
                 PrototypeDict.Add(entry.FilePath, new(gpakDict[$"Calligraphy/{entry.FilePath}"]));
-
             Logger.Info($"Parsed {PrototypeDict.Count} prototypes");
 
             // Asset dictionary
