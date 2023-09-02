@@ -9,9 +9,11 @@ namespace MHServerEmu.GameServer.Properties
 {
     public class Property
     {
-        public ulong Id { get; set; }   // The first 11 bits is the actual id, the rest are parameters defined by PropertyInfo
+        public const int MaxParamBits = 53;     // The first 11 bits is the actual id, the rest are parameters defined by PropertyInfo
+
+        public ulong Id { get; set; }   
         public PropertyValue Value { get; set; }
-        public PropertyEnum Enum { get => (PropertyEnum)(Id >> 53); }
+        public PropertyEnum Enum { get => (PropertyEnum)(Id >> MaxParamBits); }
         public PropertyInfoPrototype Info { get; }
 
         public Property(CodedInputStream stream)
