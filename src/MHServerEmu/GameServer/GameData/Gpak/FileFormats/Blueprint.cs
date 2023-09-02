@@ -9,7 +9,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         public ulong PrototypeId { get; }                   // .defaults prototype file id
         public BlueprintReference[] References1 { get; }
         public BlueprintReference[] References2 { get; }
-        public BlueprintField[] Fields { get; }             // field definitions for prototypes that use this blueprint
+        public Dictionary<ulong, BlueprintField> FieldDict { get; }     // field definitions for prototypes that use this blueprint             
 
         public Blueprint(byte[] data)
         {
@@ -28,9 +28,10 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
                 for (int i = 0; i < References2.Length; i++)
                     References2[i] = new(reader);
 
-                Fields = new BlueprintField[reader.ReadUInt16()];
-                for (int i = 0; i < Fields.Length; i++)
-                    Fields[i] = new(reader);
+                ushort fieldCount = reader.ReadUInt16();
+                FieldDict = new(fieldCount);
+                for (int i = 0; i < fieldCount; i++)
+                    FieldDict.Add(reader.ReadUInt64(), new(reader));
             }
         }
     }
@@ -49,7 +50,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 
     public class BlueprintField
     {
-        public ulong Id { get; }
         public string Name { get; }
         public CalligraphyValueType ValueType { get; }
         public CalligraphyContainerType ContainerType { get; }
@@ -57,7 +57,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 
         public BlueprintField(BinaryReader reader)
         {
-            Id = reader.ReadUInt64();
             Name = reader.ReadFixedString16();
             ValueType = (CalligraphyValueType)reader.ReadByte();
             ContainerType = (CalligraphyContainerType)reader.ReadByte();

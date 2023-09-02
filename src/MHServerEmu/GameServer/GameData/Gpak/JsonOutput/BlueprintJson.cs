@@ -9,7 +9,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
         public string PrototypeId { get; }
         public BlueprintReferenceJson[] References1 { get; }
         public BlueprintReferenceJson[] References2 { get; }
-        public BlueprintFieldJson[] Fields { get; }
+        public Dictionary<ulong, BlueprintFieldJson> FieldDict { get; }
 
         public BlueprintJson(Blueprint blueprint, DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir)
         {
@@ -25,9 +25,11 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
             for (int i = 0; i < References2.Length; i++)
                 References2[i] = new(blueprint.References2[i], prototypeDir);
 
-            Fields = new BlueprintFieldJson[blueprint.Fields.Length];
-            for (int i = 0; i < Fields.Length; i++)
-                Fields[i] = new(blueprint.Fields[i], prototypeDir, curveDir, typeDir);
+            FieldDict = new(blueprint.FieldDict.Count);
+            foreach (var kvp in blueprint.FieldDict)
+            {
+                FieldDict.Add(kvp.Key, new(kvp.Value, prototypeDir, curveDir, typeDir));
+            }
         }
 
         public class BlueprintReferenceJson
@@ -44,7 +46,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
 
         public class BlueprintFieldJson
         {
-            public ulong Id { get; }
             public string Name { get; }
             public char ValueType { get; }
             public char ContainerType { get; }
@@ -52,7 +53,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
 
             public BlueprintFieldJson(BlueprintField field, DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir)
             {
-                Id = field.Id;
                 Name = field.Name;
                 ValueType = (char)field.ValueType;
                 ContainerType = (char)field.ContainerType;

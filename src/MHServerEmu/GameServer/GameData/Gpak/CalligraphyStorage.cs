@@ -13,9 +13,10 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         public DataDirectory PrototypeDirectory { get; }
         public DataDirectory ReplacementDirectory { get; }
 
-        public Dictionary<ulong, string> AssetDict { get; } = new();
-        public Dictionary<ulong, string> AssetTypeDict { get; } = new();
-        public Dictionary<ulong, string> PrototypeFieldDict { get; } = new();
+        public Dictionary<Prototype, Blueprint> PrototypeBlueprintDict { get; }     // .defaults prototype -> blueprint
+        public Dictionary<ulong, string> AssetDict { get; } = new();                // asset id -> name
+        public Dictionary<ulong, string> AssetTypeDict { get; } = new();            // asset id -> type
+        public Dictionary<ulong, string> PrototypeFieldDict { get; } = new();       // blueprint entry key -> field name
 
         public CalligraphyStorage(GpakFile gpakFile)
         {
@@ -51,6 +52,11 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             Logger.Info($"Parsed {PrototypeDirectory.Entries.Length} prototypes");
 
             // Initialize supplementary dictionaries
+            PrototypeBlueprintDict = new(BlueprintDirectory.Entries.Length);
+            foreach (DataDirectoryBlueprintEntry entry in BlueprintDirectory.Entries)
+                PrototypeBlueprintDict.Add(GetPrototype(entry.Blueprint.PrototypeId), entry.Blueprint);
+
+            // Assets
             AssetDict.Add(0, "0");  // add 0 manually
             AssetTypeDict.Add(0, "0");
 
@@ -67,11 +73,11 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
             // Prototype fields
             foreach (DataDirectoryBlueprintEntry dirEntry in BlueprintDirectory.Entries)
-                foreach (BlueprintField entry in dirEntry.Blueprint.Fields)
-                    PrototypeFieldDict.Add(entry.Id, entry.Name);
+                foreach (var kvp in dirEntry.Blueprint.FieldDict)
+                    PrototypeFieldDict.Add(kvp.Key, kvp.Value.Name);
         }
 
-
+        // Accessors for various data files
         public GType GetGType(ulong id) => ((DataDirectoryGTypeEntry)GTypeDirectory.IdDict[id]).GType;
         public GType GetGType(string path) => ((DataDirectoryGTypeEntry)GTypeDirectory.FilePathDict[path]).GType;
         public Curve GetCurve(ulong id) => ((DataDirectoryCurveEntry)CurveDirectory.IdDict[id]).Curve;
