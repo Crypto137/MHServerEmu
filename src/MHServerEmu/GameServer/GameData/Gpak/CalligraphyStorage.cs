@@ -87,19 +87,18 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         public Prototype GetPrototype(ulong id) => ((DataDirectoryPrototypeEntry)PrototypeDirectory.IdDict[id]).Prototype;
         public Prototype GetPrototype(string path) => ((DataDirectoryPrototypeEntry)PrototypeDirectory.FilePathDict[path]).Prototype;
 
-        public Prototype GetBlueprintPrototype(string blueprintPath)
+        public Prototype GetBlueprintPrototype(Blueprint blueprint) => GetPrototype(blueprint.PrototypeId);
+        public Prototype GetBlueprintPrototype(ulong blueprintId) => GetBlueprintPrototype(GetBlueprint(blueprintId));
+        public Prototype GetBlueprintPrototype(string blueprintPath) => GetBlueprintPrototype(GetBlueprint(blueprintPath));
+
+        public Blueprint GetPrototypeBlueprint(Prototype prototype)
         {
-            if (BlueprintDirectory.FilePathDict.ContainsKey(blueprintPath))
-            {
-                string prototypePath = PrototypeDirectory.IdDict[GetBlueprint(blueprintPath).PrototypeId].FilePath;
-                return GetPrototype(prototypePath);
-            }
-            else
-            {
-                Logger.Warn($"Cannot find blueprint {blueprintPath}");
-                return null;
-            }
+            if (prototype.Data.ParentId == 0) return PrototypeBlueprintDict[prototype];     // use this prototype as a key if it's a .defaults prototype
+            return PrototypeBlueprintDict[GetPrototype(prototype.Data.ParentId)];           // get .defaults to use as a key if it's a child prototype
         }
+
+        public Blueprint GetPrototypeBlueprint(ulong prototypeId) => GetPrototypeBlueprint(GetPrototype(prototypeId));
+        public Blueprint GetPrototypeBlueprint(string prototypePath) => GetPrototypeBlueprint(GetPrototype(prototypePath));
 
         public override bool Verify()
         {

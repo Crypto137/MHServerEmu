@@ -23,11 +23,12 @@ namespace MHServerEmu.GameServer.GameData.Prototypes
 
         public PropertyPrototype(Prototype prototype)
         {
+            Blueprint blueprint = GameDatabase.Calligraphy.GetPrototypeBlueprint(prototype);
             Array.Fill(ParamValueTypes, PropertyParamType.Invalid);
 
             foreach (PrototypeDataEntryElement element in prototype.Data.Entries[0].Elements)
             {
-                switch (GameDatabase.Calligraphy.PrototypeFieldDict[element.Id])
+                switch (blueprint.FieldDict[element.Id].Name)
                 {
                     case "Value":
                         ValueType = element.Type;

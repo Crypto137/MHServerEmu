@@ -22,16 +22,16 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
     public class PrototypeData
     {
         public byte Flags { get; }
-        public ulong Id { get; }
+        public ulong ParentId { get; }  // 0 for .defaults
         public PrototypeDataEntry[] Entries { get; }
 
         public PrototypeData(BinaryReader reader)
         {
             Flags = reader.ReadByte();
 
-            if ((Flags & 0x01) > 0)      // flag0 == contains id
+            if ((Flags & 0x01) > 0)      // flag0 == contains parent id
             {
-                Id = reader.ReadUInt64();
+                ParentId = reader.ReadUInt64();
 
                 if ((Flags & 0x02) > 0)  // flag1 == contains data
                 {

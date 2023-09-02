@@ -17,14 +17,14 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
         public class PrototypeDataJson
         {
             public byte Flags { get; }
-            public string Id { get; }
+            public string ParentId { get; }
             public PrototypeDataEntryJson[] Entries { get; }
 
             public PrototypeDataJson(PrototypeData data, DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir,
                 Dictionary<ulong, string> prototypeFieldDict, Dictionary<ulong, string> assetDict, Dictionary<ulong, string> assetTypeDict)
             {
                 Flags = data.Flags;
-                Id = (data.Id != 0) ? prototypeDir.IdDict[data.Id].FilePath : "";
+                ParentId = (data.ParentId != 0) ? prototypeDir.IdDict[data.ParentId].FilePath : "";
 
                 if (data.Entries != null)
                 {
