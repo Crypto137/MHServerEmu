@@ -30,7 +30,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
                 {
                     case DataDirectoryHeader.Type:
                         for (int i = 0; i < Entries.Length; i++)
-                            Entries[i] = new DataDirectoryGTypeEntry(reader);
+                            Entries[i] = new DataDirectoryAssetTypeEntry(reader);
                         break;
                     case DataDirectoryHeader.Curve:
                         for (int i = 0; i < Entries.Length; i++)
@@ -80,12 +80,12 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         }
     }
 
-    public class DataDirectoryGTypeEntry : DataDirectoryEntry   // TDR
+    public class DataDirectoryAssetTypeEntry : DataDirectoryEntry   // TDR
     {
         public byte Field2 { get; }
-        public GType GType { get; set; }
+        public AssetType AssetType { get; set; }
 
-        public DataDirectoryGTypeEntry(BinaryReader reader)
+        public DataDirectoryAssetTypeEntry(BinaryReader reader)
         {
             Id1 = reader.ReadUInt64();
             Id2 = reader.ReadUInt64();

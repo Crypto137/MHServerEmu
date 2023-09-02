@@ -7,7 +7,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public DataDirectory GTypeDirectory { get; }
+        public DataDirectory AssetTypeDirectory { get; }
         public DataDirectory CurveDirectory { get; }
         public DataDirectory BlueprintDirectory { get; }
         public DataDirectory PrototypeDirectory { get; }
@@ -24,7 +24,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             var gpakDict = gpakFile.ToDictionary();
 
             // Initialize directories
-            GTypeDirectory = new(gpakDict["Calligraphy/Type.directory"]);
+            AssetTypeDirectory = new(gpakDict["Calligraphy/Type.directory"]);
             CurveDirectory = new(gpakDict["Calligraphy/Curve.directory"]);
             BlueprintDirectory = new(gpakDict["Calligraphy/Blueprint.directory"]);
             PrototypeDirectory = new(gpakDict["Calligraphy/Prototype.directory"]);
@@ -32,9 +32,9 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
             // Populate directories with data from GPAK
             // GType
-            foreach (DataDirectoryGTypeEntry entry in GTypeDirectory.Entries)
-                entry.GType = new(gpakDict[$"Calligraphy/{entry.FilePath}"]);
-            Logger.Info($"Parsed {GTypeDirectory.Entries.Length} types");
+            foreach (DataDirectoryAssetTypeEntry entry in AssetTypeDirectory.Entries)
+                entry.AssetType = new(gpakDict[$"Calligraphy/{entry.FilePath}"]);
+            Logger.Info($"Parsed {AssetTypeDirectory.Entries.Length} asset types");
 
             // Curve
             foreach (DataDirectoryCurveEntry entry in CurveDirectory.Entries)
@@ -60,12 +60,12 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             AssetDict.Add(0, "0");  // add 0 manually
             AssetTypeDict.Add(0, "0");
 
-            foreach (DataDirectoryGTypeEntry dirEntry in GTypeDirectory.Entries)
+            foreach (DataDirectoryAssetTypeEntry dirEntry in AssetTypeDirectory.Entries)
             {
-                foreach (GTypeEntry entry in dirEntry.GType.Entries)
+                foreach (AssetTypeEntry entry in dirEntry.AssetType.Entries)
                 {
-                    AssetDict.Add(entry.Id, entry.Name);
-                    AssetTypeDict.Add(entry.Id, Path.GetFileNameWithoutExtension(dirEntry.FilePath));
+                    AssetDict.Add(entry.Id1, entry.Name);
+                    AssetTypeDict.Add(entry.Id1, Path.GetFileNameWithoutExtension(dirEntry.FilePath));
                 }
             }
 
@@ -78,8 +78,8 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         }
 
         // Accessors for various data files
-        public GType GetGType(ulong id) => ((DataDirectoryGTypeEntry)GTypeDirectory.IdDict[id]).GType;
-        public GType GetGType(string path) => ((DataDirectoryGTypeEntry)GTypeDirectory.FilePathDict[path]).GType;
+        public AssetType GetAssetType(ulong id) => ((DataDirectoryAssetTypeEntry)AssetTypeDirectory.IdDict[id]).AssetType;
+        public AssetType GetAssetType(string path) => ((DataDirectoryAssetTypeEntry)AssetTypeDirectory.FilePathDict[path]).AssetType;
         public Curve GetCurve(ulong id) => ((DataDirectoryCurveEntry)CurveDirectory.IdDict[id]).Curve;
         public Curve GetCurve(string path) => ((DataDirectoryCurveEntry)CurveDirectory.FilePathDict[path]).Curve;
         public Blueprint GetBlueprint(ulong id) => ((DataDirectoryBlueprintEntry)BlueprintDirectory.IdDict[id]).Blueprint;
@@ -102,25 +102,27 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
         public override bool Verify()
         {
-            return GTypeDirectory.Entries.Length > 0
+            return AssetTypeDirectory.Entries.Length > 0
                 && CurveDirectory.Entries.Length > 0
                 && BlueprintDirectory.Entries.Length > 0
                 && PrototypeDirectory.Entries.Length > 0
                 && ReplacementDirectory.Entries.Length > 0;
         }
 
+        #region Export
+
         public override void Export()
         {
             // Set up json serializer
-            _jsonSerializerOptions.Converters.Add(new BlueprintConverter(PrototypeDirectory, CurveDirectory, GTypeDirectory));
-            _jsonSerializerOptions.Converters.Add(new PrototypeConverter(PrototypeDirectory, CurveDirectory, GTypeDirectory, PrototypeFieldDict, AssetDict, AssetTypeDict));
+            _jsonSerializerOptions.Converters.Add(new BlueprintConverter(PrototypeDirectory, CurveDirectory, AssetTypeDirectory));
+            _jsonSerializerOptions.Converters.Add(new PrototypeConverter(PrototypeDirectory, CurveDirectory, AssetTypeDirectory, PrototypeFieldDict, AssetDict, AssetTypeDict));
             _jsonSerializerOptions.MaxDepth = 128;  // 64 is not enough for prototypes
 
             // Build dictionaries out of directories for compatibility with the old JSON export
             // Exporting isn't performance / memory critical, so it should be fine
-            Dictionary<string, GType> gtypeDict = new(GTypeDirectory.Entries.Length);
-            foreach (DataDirectoryGTypeEntry entry in GTypeDirectory.Entries)
-                gtypeDict.Add($"Calligraphy/{entry.FilePath}", entry.GType);
+            Dictionary<string, AssetType> gtypeDict = new(AssetTypeDirectory.Entries.Length);
+            foreach (DataDirectoryAssetTypeEntry entry in AssetTypeDirectory.Entries)
+                gtypeDict.Add($"Calligraphy/{entry.FilePath}", entry.AssetType);
 
             Dictionary<string, Blueprint> blueprintDict = new(BlueprintDirectory.Entries.Length);
             foreach (DataDirectoryBlueprintEntry entry in BlueprintDirectory.Entries)
@@ -145,7 +147,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
             using (StreamWriter writer = new($"{dir}\\Type.directory.tsv"))
             {
-                foreach (DataDirectoryGTypeEntry entry in GTypeDirectory.Entries)
+                foreach (DataDirectoryAssetTypeEntry entry in AssetTypeDirectory.Entries)
                     writer.WriteLine($"{entry.Id1}\t{entry.Id2}\t{entry.Field2}\t{entry.FilePath}");
             }
 
@@ -189,5 +191,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
                 }
             }
         }
+
+        #endregion
     }
 }

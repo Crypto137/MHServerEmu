@@ -2,19 +2,18 @@
 
 namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
-    // It's actually called Type, but we're calling it GType to avoid confusion with C# stuff
-    public class GType
+    public class AssetType
     {
         public uint Header { get; }
-        public GTypeEntry[] Entries { get; }
+        public AssetTypeEntry[] Entries { get; }
 
-        public GType(byte[] data)
+        public AssetType(byte[] data)
         {
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
                 Header = reader.ReadUInt32();
-                Entries = new GTypeEntry[reader.ReadUInt16()];
+                Entries = new AssetTypeEntry[reader.ReadUInt16()];
 
                 for (int i = 0; i < Entries.Length; i++)
                     Entries[i] = new(reader);
@@ -22,17 +21,17 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         }
     }
 
-    public class GTypeEntry
+    public class AssetTypeEntry
     {
-        public ulong Id { get; }
-        public ulong UnknownId { get; }
+        public ulong Id1 { get; }
+        public ulong Id2 { get; }
         public byte Field2 { get; }
         public string Name { get; }
 
-        public GTypeEntry(BinaryReader reader)
+        public AssetTypeEntry(BinaryReader reader)
         {
-            Id = reader.ReadUInt64();
-            UnknownId = reader.ReadUInt64();
+            Id1 = reader.ReadUInt64();
+            Id2 = reader.ReadUInt64();
             Field2 = reader.ReadByte();
             Name = reader.ReadFixedString16();
         }
