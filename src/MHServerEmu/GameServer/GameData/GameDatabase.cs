@@ -29,10 +29,8 @@ namespace MHServerEmu.GameServer.GameData
 
             // Initialize derivative GPAK data
             _prototypeHashMap = InitializePrototypeHashMap(Calligraphy, Resource);
+            PrototypeEnumManager = new($"{AssetDirectory}\\PrototypeEnumTables");       // this needs to be initialized before PropertyInfoTable
             PropertyInfoTable = new(Calligraphy);
-
-            // Load other data
-            PrototypeEnumManager = new($"{AssetDirectory}\\PrototypeEnumTables");
 
             // Verify and finish game database initialization
             if (VerifyData())

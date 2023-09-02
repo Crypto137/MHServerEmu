@@ -13,5 +13,7 @@
 
             return bit;
         }
+
+        public static int HighestBitSet(int value) => HighestBitSet((ulong)value);
     }
 }

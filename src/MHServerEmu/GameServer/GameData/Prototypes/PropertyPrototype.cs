@@ -1,4 +1,5 @@
-﻿using MHServerEmu.GameServer.GameData.Gpak;
+﻿using MHServerEmu.Common;
+using MHServerEmu.GameServer.GameData.Gpak;
 using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 using MHServerEmu.GameServer.Properties;
 
@@ -17,14 +18,13 @@ namespace MHServerEmu.GameServer.GameData.Prototypes
 
         public CalligraphyValueType ValueType { get; }
         public object DefaultValue { get; }
-        public byte ParamCount { get; } = 0;
-        public PropertyParamType[] ParamValueTypes { get; } = new PropertyParamType[MaxParamCount];
-        public object[] ParamDefaultValues { get; } = new object[MaxParamCount];
+        public int ParamCount { get; } = 0;
+        public PropertyParam[] Params { get; } = new PropertyParam[MaxParamCount];
 
         public PropertyPrototype(Prototype prototype)
         {
             Blueprint blueprint = GameDatabase.Calligraphy.GetPrototypeBlueprint(prototype);
-            Array.Fill(ParamValueTypes, PropertyParamType.Invalid);
+            Array.Fill(Params, new());
 
             foreach (PrototypeDataEntryElement element in prototype.Data.Entries[0].Elements)
             {
@@ -35,26 +35,76 @@ namespace MHServerEmu.GameServer.GameData.Prototypes
                         DefaultValue = element.Value;
                         break;
                     case "Param0":
-                        ParamValueTypes[0] = ParamTypeDict[element.Type];
-                        ParamDefaultValues[0] = element.Value;
+                        SetParamType(0, ParamTypeDict[element.Type], blueprint.FieldDict[element.Id].ExpectedValue, element.Value);
                         break;
                     case "Param1":
-                        ParamValueTypes[1] = ParamTypeDict[element.Type];
-                        ParamDefaultValues[1] = element.Value;
+                        SetParamType(1, ParamTypeDict[element.Type], blueprint.FieldDict[element.Id].ExpectedValue, element.Value);
                         break;
                     case "Param2":
-                        ParamValueTypes[2] = ParamTypeDict[element.Type];
-                        ParamDefaultValues[2] = element.Value;
+                        SetParamType(2, ParamTypeDict[element.Type], blueprint.FieldDict[element.Id].ExpectedValue, element.Value);
                         break;
                     case "Param3":
-                        ParamValueTypes[3] = ParamTypeDict[element.Type];
-                        ParamDefaultValues[3] = element.Value;
+                        SetParamType(3, ParamTypeDict[element.Type], blueprint.FieldDict[element.Id].ExpectedValue, element.Value);
                         break;
                 }
             }
 
-            for (int i = 0; i < ParamValueTypes.Length; i++)
-                if (ParamValueTypes[i] != PropertyParamType.Invalid) ParamCount++; 
+            int bitCount = 0;
+            int integerParamCount = 0;
+            for (int i = 0; i < Params.Length; i++)
+            {
+                if (Params[i].Type != PropertyParamType.Invalid)
+                {
+                    ParamCount++;
+
+                    switch (Params[i].Type)
+                    {
+                        case PropertyParamType.Integer:
+                            integerParamCount++;
+                            break;
+                        case PropertyParamType.Asset:
+                        case PropertyParamType.Prototype:
+                            Params[i].Size = MathHelper.HighestBitSet(Params[i].ValueMax) + 1;
+                            bitCount += Params[i].Size;
+                            break;
+                    }
+                }
+            }
+
+            if (integerParamCount > 0)
+            {
+                int freeBits = Property.MaxParamBits - bitCount;
+                for (int i = 0; i < Params.Length; i++)
+                {
+                    if (Params[i].Type == PropertyParamType.Integer)
+                    {
+                        int size = freeBits / integerParamCount;
+                        Params[i].Size = size;
+                        Params[i].ValueMax = (1 << size) - 1;
+                    }
+                }
+            }
         }
+
+        private void SetParamType(int index, PropertyParamType type, ulong expectedValue, object defaultValue)
+        {
+            Params[index].Type = type;
+            Params[index].DefaultValue = defaultValue;
+
+            if (type == PropertyParamType.Asset)
+                Params[index].ValueMax = GameDatabase.Calligraphy.GetAssetType(expectedValue).GetMaxEnumValue();
+            else if (type == PropertyParamType.Prototype)
+                Params[index].ValueMax = GameDatabase.PrototypeEnumManager.GetMaxEnumValue();
+        }
+
+    }
+
+    public class PropertyParam
+    {
+        public PropertyParamType Type { get; set; } = PropertyParamType.Invalid;
+        public object DefaultValue { get; set; } = 0;
+        public int ValueMax { get; set; } = 0;
+        public int Offset { get; set; } = 0;
+        public int Size { get; set; } = 0;
     }
 }

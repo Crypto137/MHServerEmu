@@ -41,6 +41,7 @@ namespace MHServerEmu.GameServer.GameData
 
         public ulong GetPrototypeId(ulong enumValue, PrototypeEnumType type) => _prototypeEnumDict[type][enumValue];
         public ulong GetEnumValue(ulong prototypeId, PrototypeEnumType type) => _enumLookupDict[type][prototypeId];
+        public int GetMaxEnumValue() => _enumLookupDict[PrototypeEnumType.Property].Count - 1;
 
         public bool Verify()
         {

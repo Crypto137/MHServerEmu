@@ -19,6 +19,8 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
                     Entries[i] = new(reader);
             }
         }
+
+        public int GetMaxEnumValue() => Entries.Length - 1;
     }
 
     public class AssetTypeEntry
