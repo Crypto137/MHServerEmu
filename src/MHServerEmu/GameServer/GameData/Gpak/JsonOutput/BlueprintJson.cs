@@ -15,7 +15,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
         {
             Header = blueprint.Header;
             ClassName = blueprint.ClassName;
-            PrototypeId = (blueprint.PrototypeId != 0) ? prototypeDir.EntryDict[blueprint.PrototypeId].FilePath : "";
+            PrototypeId = (blueprint.PrototypeId != 0) ? prototypeDir.IdDict[blueprint.PrototypeId].FilePath : "";
 
             References1 = new BlueprintReferenceJson[blueprint.References1.Length];
             for (int i = 0; i < References1.Length; i++)
@@ -37,7 +37,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
 
             public BlueprintReferenceJson(BlueprintReference reference, DataDirectory prototypeDir)
             {
-                Id = (reference.Id != 0) ? prototypeDir.EntryDict[reference.Id].FilePath : "";
+                Id = (reference.Id != 0) ? prototypeDir.IdDict[reference.Id].FilePath : "";
                 Field1 = reference.Field1;
             }
         }
@@ -60,16 +60,16 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
                 switch (ValueType)
                 {
                     case 'A':
-                        ExpectedValue = typeDir.EntryDict[field.ExpectedValue].FilePath;
+                        ExpectedValue = typeDir.IdDict[field.ExpectedValue].FilePath;
                         break;
 
                     case 'C':
-                        ExpectedValue = curveDir.EntryDict[field.ExpectedValue].FilePath;
+                        ExpectedValue = curveDir.IdDict[field.ExpectedValue].FilePath;
                         break;
 
                     case 'P':
                     case 'R':
-                        ExpectedValue = (field.ExpectedValue != 0) ? prototypeDir.EntryDict[field.ExpectedValue].FilePath : "";
+                        ExpectedValue = (field.ExpectedValue != 0) ? prototypeDir.IdDict[field.ExpectedValue].FilePath : "";
                         break;
 
                     default:

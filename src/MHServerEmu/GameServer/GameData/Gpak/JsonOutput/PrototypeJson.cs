@@ -24,7 +24,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
                 Dictionary<ulong, string> prototypeFieldDict, Dictionary<ulong, string> assetDict, Dictionary<ulong, string> assetTypeDict)
             {
                 Flags = data.Flags;
-                Id = (data.Id != 0) ? prototypeDir.EntryDict[data.Id].FilePath : "";
+                Id = (data.Id != 0) ? prototypeDir.IdDict[data.Id].FilePath : "";
 
                 if (data.Entries != null)
                 {
@@ -44,7 +44,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
                 public PrototypeDataEntryJson(PrototypeDataEntry entry, DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir,
                     Dictionary<ulong, string> prototypeFieldDict, Dictionary<ulong, string> assetDict, Dictionary<ulong, string> assetTypeDict)
                 {
-                    Id = (entry.Id != 0) ? prototypeDir.EntryDict[entry.Id].FilePath : "";
+                    Id = (entry.Id != 0) ? prototypeDir.IdDict[entry.Id].FilePath : "";
                     Field1 = entry.Field1;
 
                     Elements = new PrototypeDataEntryElementJson[entry.Elements.Length];
@@ -74,16 +74,16 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
                                 Value = $"{assetDict[(ulong)element.Value]} ({assetTypeDict[(ulong)element.Value]})";
                                 break;
                             case 'C':
-                                Value = curveDir.EntryDict[(ulong)element.Value].FilePath;
+                                Value = curveDir.IdDict[(ulong)element.Value].FilePath;
                                 break;
                             case 'P':
-                                Value = ((ulong)element.Value != 0) ? prototypeDir.EntryDict[(ulong)element.Value].FilePath : "";
+                                Value = ((ulong)element.Value != 0) ? prototypeDir.IdDict[(ulong)element.Value].FilePath : "";
                                 break;
                             case 'R':
                                 Value = new PrototypeDataJson((PrototypeData)element.Value, prototypeDir, curveDir, typeDir, prototypeFieldDict, assetDict, assetTypeDict);
                                 break;
                             case 'T':
-                                Value = typeDir.EntryDict[(ulong)element.Value].FilePath;
+                                Value = typeDir.IdDict[(ulong)element.Value].FilePath;
                                 break;
                             default:
                                 Value = element.Value;
@@ -113,16 +113,16 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
                                     Values[i] = $"{assetDict[(ulong)element.Values[i]]} ({assetTypeDict[(ulong)element.Values[i]]}";
                                     break;
                                 case 'C':
-                                    Values[i] = curveDir.EntryDict[(ulong)element.Values[i]].FilePath;
+                                    Values[i] = curveDir.IdDict[(ulong)element.Values[i]].FilePath;
                                     break;
                                 case 'P':
-                                    Values[i] = ((ulong)element.Values[i] != 0) ? prototypeDir.EntryDict[(ulong)element.Values[i]].FilePath : "";
+                                    Values[i] = ((ulong)element.Values[i] != 0) ? prototypeDir.IdDict[(ulong)element.Values[i]].FilePath : "";
                                     break;
                                 case 'R':
                                     Values[i] = new PrototypeDataJson((PrototypeData)element.Values[i], prototypeDir, curveDir, typeDir, prototypeFieldDict, assetDict, assetTypeDict);
                                     break;
                                 case 'T':
-                                    Values[i] = typeDir.EntryDict[(ulong)element.Values[i]].FilePath;
+                                    Values[i] = typeDir.IdDict[(ulong)element.Values[i]].FilePath;
                                     break;
                                 default:
                                     Values[i] = element.Values[i];
