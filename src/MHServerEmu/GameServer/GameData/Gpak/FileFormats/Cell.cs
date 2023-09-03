@@ -6,7 +6,7 @@ using MHServerEmu.GameServer.GameData.Prototypes.Markers;
 
 namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
-    public class Cell
+    public class CellPrototype
     {
         public uint Header { get; }
         public uint Version { get; }
@@ -24,7 +24,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         public CellHeightMap HeightMap { get; }
         public ulong[] HotspotPrototypes { get; }
 
-        public Cell(byte[] data)
+        public CellPrototype(byte[] data)
         {
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))

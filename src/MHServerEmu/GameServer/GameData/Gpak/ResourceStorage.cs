@@ -9,7 +9,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
         public Dictionary<ulong, string> DirectoryDict { get; } = new();
 
-        public Dictionary<string, Cell> CellDict { get; } = new();
+        public Dictionary<string, CellPrototype> CellDict { get; } = new();
         public Dictionary<string, District> DistrictDict { get; } = new();
         public Dictionary<string, Encounter> EncounterDict { get; } = new();
         public Dictionary<string, PropSet> PropSetDict { get; } = new();
