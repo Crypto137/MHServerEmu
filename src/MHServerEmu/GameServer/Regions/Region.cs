@@ -64,9 +64,7 @@ namespace MHServerEmu.GameServer.Regions
             // mission updates and entity creation happens here
 
             // why is there a second NetMessageQueueLoadingScreen?
-            messageList.Add(new(NetMessageQueueLoadingScreen.CreateBuilder()
-                .SetRegionPrototypeId((ulong)Prototype)
-                .Build()));
+            messageList.Add(new(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId((ulong)Prototype).Build()));
 
             // TODO: prefetch other regions
 
@@ -81,24 +79,26 @@ namespace MHServerEmu.GameServer.Regions
 
                 foreach (Cell cell in area.CellList)
                 {
-                    messageList.Add(new(NetMessageCellCreate.CreateBuilder()
+                    var builder = NetMessageCellCreate.CreateBuilder()
                         .SetAreaId(area.Id)
                         .SetCellId(cell.Id)
                         .SetCellPrototypeId(cell.PrototypeId)
                         .SetPositionInArea(cell.PositionInArea.ToNetStructPoint3())
                         .SetCellRandomSeed(RandomSeed)
                         .SetBufferwidth(0)
-                        .SetOverrideLocationName(0)
-                        .Build()));
+                        .SetOverrideLocationName(0);
+
+                    foreach (ReservedSpawn reservedSpawn in cell.EncounterList)
+                        builder.AddEncounters(reservedSpawn.ToNetStruct());
+
+                    messageList.Add(new(builder.Build()));
                 }
             }
 
-            messageList.Add(new((byte)GameServerToClientMessage.NetMessageEnvironmentUpdate, NetMessageEnvironmentUpdate.CreateBuilder()
-                .SetFlags(1)
-                .Build().ToByteArray()));
+            messageList.Add(new(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build()));
 
             messageList.Add(new(NetMessageUpdateMiniMap.CreateBuilder()
-                .SetArchiveData(ByteString.CopyFrom(new byte[] { 0xEF, 0x01, 0x81 }))
+                .SetArchiveData(ByteString.CopyFrom(Convert.FromHexString("EF0181")))
                 .Build()));
 
             return messageList.ToArray();

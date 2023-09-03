@@ -127,6 +127,7 @@ namespace MHServerEmu.GameServer.Regions
 
                     area = new(1, AreaPrototype.NPEAvengersTowerHubArea, new(), true);
                     area.AddCell(new(1, GameDatabase.GetPrototypeId("Resource/Cells/DistrictCells/Avengers_Tower/AvengersTowerNPE_HUB.cell"), new()));
+                    area.CellList[0].AddEncounter(605211710028059265, 5, true);
 
                     region.AddArea(area);
 
