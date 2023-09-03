@@ -23,7 +23,7 @@ namespace MHServerEmu.GameServer.Missions
             PrototypeId1 = stream.ReadRawVarint64();
             State = stream.ReadRawVarint64();
             GameTime = stream.ReadRawVarint64();
-            PrototypeId2 = stream.ReadPrototypeId(GameData.PrototypeEnumType.Property);
+            PrototypeId2 = stream.ReadPrototypeId(GameData.PrototypeEnumType.All);
             Random = stream.ReadRawInt32();
             Objectives = new Objective[stream.ReadRawVarint64()];
             for (int i = 0; i < Objectives.Length; i++)
@@ -57,7 +57,7 @@ namespace MHServerEmu.GameServer.Missions
                 stream.WriteRawVarint64(PrototypeId1);
                 stream.WriteRawVarint64(State);
                 stream.WriteRawVarint64(GameTime);
-                stream.WritePrototypeId(PrototypeId2, GameData.PrototypeEnumType.Property);
+                stream.WritePrototypeId(PrototypeId2, GameData.PrototypeEnumType.All);
                 stream.WriteRawInt32(Random);
                 stream.WriteRawVarint64((ulong)Objectives.Length);
                 foreach (Objective objective in Objectives)

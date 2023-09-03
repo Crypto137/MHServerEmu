@@ -1,6 +1,5 @@
 ﻿using MHServerEmu.Common;
 using MHServerEmu.GameServer.GameData.Gpak;
-using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 using MHServerEmu.GameServer.Properties;
 
 namespace MHServerEmu.GameServer.GameData
@@ -8,16 +7,13 @@ namespace MHServerEmu.GameServer.GameData
     public static class GameDatabase
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private static readonly string AssetDirectory = $"{Directory.GetCurrentDirectory()}\\Assets";
-
-        private static HashMap _prototypeHashMap;
 
         public static bool IsInitialized { get; private set; }
 
         public static CalligraphyStorage Calligraphy { get; private set; }
         public static ResourceStorage Resource { get; private set; }
+        public static PrototypeRefManager PrototypeRefManager { get; private set; }
         public static PropertyInfoTable PropertyInfoTable { get; private set; }
-        public static PrototypeEnumManager PrototypeEnumManager { get; private set; }
 
         static GameDatabase()
         {
@@ -28,8 +24,7 @@ namespace MHServerEmu.GameServer.GameData
             Resource = new(new("mu_cdata.sip"));
 
             // Initialize derivative GPAK data
-            _prototypeHashMap = InitializePrototypeHashMap(Calligraphy, Resource);
-            PrototypeEnumManager = new(_prototypeHashMap);       // this needs to be initialized before PropertyInfoTable
+            PrototypeRefManager = new(Calligraphy, Resource);       // this needs to be initialized before PropertyInfoTable
             PropertyInfoTable = new(Calligraphy);
 
             // Verify and finish game database initialization
@@ -68,38 +63,18 @@ namespace MHServerEmu.GameServer.GameData
             resourceFile.ExtractData();
         }
 
-        public static string GetPrototypePath(ulong id) => _prototypeHashMap.GetForward(id);
-        public static ulong GetPrototypeId(string path) => _prototypeHashMap.GetReverse(path);
-
-        private static HashMap InitializePrototypeHashMap(CalligraphyStorage calligraphy, ResourceStorage resource)
-        {
-            HashMap hashMap;
-
-            if (calligraphy.PrototypeDirectory != null && resource.DirectoryDict.Count > 0)
-            {
-                hashMap = new(calligraphy.PrototypeDirectory.Entries.Length + resource.DirectoryDict.Count);
-                hashMap.Add(0, "");
-
-                foreach (DataDirectoryPrototypeEntry entry in calligraphy.PrototypeDirectory.Entries)
-                    hashMap.Add(entry.Id1, entry.FilePath);
-
-                foreach (var kvp in resource.DirectoryDict)
-                    hashMap.Add(kvp.Key, kvp.Value);
-            }
-            else
-            {
-                hashMap = new();
-            }
-
-            return hashMap;
-        }
+        // Helper methods for shorter access to PrototypeRefManager
+        public static string GetPrototypePath(ulong id) => PrototypeRefManager.GetPrototypePath(id);
+        public static ulong GetPrototypeId(string path) => PrototypeRefManager.GetPrototypeId(path);
+        public static ulong GetPrototypeId(ulong enumValue, PrototypeEnumType type) => PrototypeRefManager.GetPrototypeId(enumValue, type);
+        public static ulong GetPrototypeEnumValue(ulong prototypeId, PrototypeEnumType type) => PrototypeRefManager.GetEnumValue(prototypeId, type);
 
         private static bool VerifyData()
         {
-            return _prototypeHashMap.Count > 0
-                && Calligraphy.Verify()
+            return Calligraphy.Verify()
                 && Resource.Verify()
-                && PrototypeEnumManager.Verify();
+                && PrototypeRefManager.Verify()
+                && PropertyInfoTable.Verify();
         }
     }
 }

@@ -13,7 +13,7 @@ namespace MHServerEmu.GameServer.Social
 
         public ChatChannelOption(CodedInputStream stream, BoolDecoder boolDecoder)
         {
-            PrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Property);
+            PrototypeId = stream.ReadPrototypeId(PrototypeEnumType.All);
             if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
             Value = boolDecoder.ReadBool();
         }
@@ -30,7 +30,7 @@ namespace MHServerEmu.GameServer.Social
             {
                 CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
 
-                stream.WritePrototypeId(PrototypeId, PrototypeEnumType.Property);
+                stream.WritePrototypeId(PrototypeId, PrototypeEnumType.All);
 
                 byte bitBuffer = boolEncoder.GetBitBuffer();             //Value
                 if (bitBuffer != 0) stream.WriteRawByte(bitBuffer);

@@ -32,8 +32,8 @@ namespace MHServerEmu.GameServer.Powers
             Id = stream.ReadRawVarint64();
             if (Flags[0] == false) CreatorId = stream.ReadRawVarint64();
             if (Flags[1] == false) UltimateCreatorId = stream.ReadRawVarint64();
-            if (Flags[2] == false) ConditionPrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Property);
-            if (Flags[3] == false) CreatorPowerPrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Property);
+            if (Flags[2] == false) ConditionPrototypeId = stream.ReadPrototypeId(PrototypeEnumType.All);
+            if (Flags[3] == false) CreatorPowerPrototypeId = stream.ReadPrototypeId(PrototypeEnumType.All);
             if (Flags[4]) Index = stream.ReadRawVarint32();
 
             if (Flags[9])
@@ -68,8 +68,8 @@ namespace MHServerEmu.GameServer.Powers
                 stream.WriteRawVarint64(Id);
                 if (Flags[0] == false) stream.WriteRawVarint64(CreatorId);
                 if (Flags[1] == false) stream.WriteRawVarint64(UltimateCreatorId);
-                if (Flags[2] == false) stream.WritePrototypeId(ConditionPrototypeId, PrototypeEnumType.Property);
-                if (Flags[3] == false) stream.WritePrototypeId(CreatorPowerPrototypeId, PrototypeEnumType.Property);
+                if (Flags[2] == false) stream.WritePrototypeId(ConditionPrototypeId, PrototypeEnumType.All);
+                if (Flags[3] == false) stream.WritePrototypeId(CreatorPowerPrototypeId, PrototypeEnumType.All);
                 if (Flags[4]) stream.WriteRawVarint64(Index);
 
                 if (Flags[9])

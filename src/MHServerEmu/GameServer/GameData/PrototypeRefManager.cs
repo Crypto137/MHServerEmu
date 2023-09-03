@@ -1,17 +1,18 @@
 ﻿using MHServerEmu.Common;
+using MHServerEmu.GameServer.GameData.Gpak;
 using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 
 namespace MHServerEmu.GameServer.GameData
 {
     public enum PrototypeEnumType
     {
+        All,
         Entity,
         Inventory,
-        Power,
-        Property
+        Power
     }
 
-    public class PrototypeEnumManager
+    public class PrototypeRefManager
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -74,16 +75,20 @@ namespace MHServerEmu.GameServer.GameData
 
         #endregion
 
+        private HashMap _prototypeHashMap;
         private Dictionary<PrototypeEnumType, ulong[]> _prototypeEnumDict;                  // For enum -> prototypeId conversion
         private Dictionary<PrototypeEnumType, Dictionary<ulong, ulong>> _enumLookupDict;    // For prototypeId -> enum conversion
 
-        public PrototypeEnumManager(HashMap hashMap)
+        public PrototypeRefManager(CalligraphyStorage calligraphy, ResourceStorage resource)
         {
+            // Generate a hash map for all prototypes (Calligraphy + Resource)
+            _prototypeHashMap = InitializePrototypeHashMap(calligraphy, resource);
+
             // Enumerate prototypes
             _prototypeEnumDict = new();
 
-            ulong[] allEnumValues = hashMap.Enumerate();
-            _prototypeEnumDict.Add(PrototypeEnumType.Property, allEnumValues);
+            ulong[] allEnumValues = _prototypeHashMap.Enumerate();          // Prototype enum is an array of sorted prototype hashes where id's index in the array is its enum value
+            _prototypeEnumDict.Add(PrototypeEnumType.All, allEnumValues);
 
             // Enumerated hashmap is already sorted, so we just need to filter prototypes according to their blueprint classes
             List<ulong> entityList = new() { 0 };
@@ -92,9 +97,9 @@ namespace MHServerEmu.GameServer.GameData
 
             for (int i = 0; i < allEnumValues.Length; i++)
             {
-                if (GameDatabase.Calligraphy.IsCalligraphyPrototype(allEnumValues[i]))   // skip resource prototype ids
+                if (calligraphy.IsCalligraphyPrototype(allEnumValues[i]))   // skip resource prototype ids
                 {
-                    Blueprint blueprint = GameDatabase.Calligraphy.GetPrototypeBlueprint(allEnumValues[i]);
+                    Blueprint blueprint = calligraphy.GetPrototypeBlueprint(allEnumValues[i]);
 
                     if (EntityClasses.Contains(blueprint.ClassName))
                         entityList.Add(allEnumValues[i]);
@@ -120,16 +125,20 @@ namespace MHServerEmu.GameServer.GameData
             }
         }
 
+        public string GetPrototypePath(ulong id) => _prototypeHashMap.GetForward(id);
+        public ulong GetPrototypeId(string path) => _prototypeHashMap.GetReverse(path);
+
         public ulong GetPrototypeId(ulong enumValue, PrototypeEnumType type) => _prototypeEnumDict[type][enumValue];
         public ulong GetEnumValue(ulong prototypeId, PrototypeEnumType type) => _enumLookupDict[type][prototypeId];
-        public int GetMaxEnumValue() => _enumLookupDict[PrototypeEnumType.Property].Count - 1;
+        public int GetMaxEnumValue() => _enumLookupDict[PrototypeEnumType.All].Count - 1;
 
         public bool Verify()
         {
-            return _prototypeEnumDict[PrototypeEnumType.Entity].Length > 0
+            return _prototypeHashMap.Count > 0
+                && _prototypeEnumDict[PrototypeEnumType.All].Length > 0
+                && _prototypeEnumDict[PrototypeEnumType.Entity].Length > 0
                 && _prototypeEnumDict[PrototypeEnumType.Inventory].Length > 0
-                && _prototypeEnumDict[PrototypeEnumType.Power].Length > 0
-                && _prototypeEnumDict[PrototypeEnumType.Property].Length > 0;
+                && _prototypeEnumDict[PrototypeEnumType.Power].Length > 0;
         }
 
         public List<ulong> GetPowerPropertyIdList(string filter)
@@ -142,6 +151,29 @@ namespace MHServerEmu.GameServer.GameData
                     propertyIdList.Add(DataHelper.ReconstructPowerPropertyIdFromHash((ulong)i));
 
             return propertyIdList;
+        }
+
+        private static HashMap InitializePrototypeHashMap(CalligraphyStorage calligraphy, ResourceStorage resource)
+        {
+            HashMap hashMap;
+
+            if (calligraphy.PrototypeDirectory != null && resource.DirectoryDict.Count > 0)
+            {
+                hashMap = new(calligraphy.PrototypeDirectory.Entries.Length + resource.DirectoryDict.Count);
+                hashMap.Add(0, "");
+
+                foreach (DataDirectoryPrototypeEntry entry in calligraphy.PrototypeDirectory.Entries)
+                    hashMap.Add(entry.Id1, entry.FilePath);
+
+                foreach (var kvp in resource.DirectoryDict)
+                    hashMap.Add(kvp.Key, kvp.Value);
+            }
+            else
+            {
+                hashMap = new();
+            }
+
+            return hashMap;
         }
     }
 }

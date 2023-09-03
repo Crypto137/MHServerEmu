@@ -13,7 +13,7 @@ namespace MHServerEmu.GameServer.Misc
         public EquipmentInvUISlot(CodedInputStream stream)
         {
             Index = stream.ReadRawVarint64();
-            PrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Property);
+            PrototypeId = stream.ReadPrototypeId(PrototypeEnumType.All);
         }
 
         public EquipmentInvUISlot(ulong index, ulong prototypeId)
@@ -29,7 +29,7 @@ namespace MHServerEmu.GameServer.Misc
                 CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
 
                 stream.WriteRawVarint64(Index);
-                stream.WritePrototypeId(PrototypeId, PrototypeEnumType.Property);
+                stream.WritePrototypeId(PrototypeId, PrototypeEnumType.All);
 
                 stream.Flush();
                 return memoryStream.ToArray();

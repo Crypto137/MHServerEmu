@@ -45,7 +45,7 @@ namespace MHServerEmu.GameServer.Entities
 
             ReadEntityFields(stream);
 
-            PrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Property);
+            PrototypeId = stream.ReadPrototypeId(PrototypeEnumType.All);
 
             Missions = new Mission[stream.ReadRawVarint64()];
             for (int i = 0; i < Missions.Length; i++)
@@ -74,7 +74,7 @@ namespace MHServerEmu.GameServer.Entities
 
             StashInventories = new ulong[stream.ReadRawVarint64()];
             for (int i = 0; i < StashInventories.Length; i++)
-                StashInventories[i] = stream.ReadPrototypeId(PrototypeEnumType.Property);
+                StashInventories[i] = stream.ReadPrototypeId(PrototypeEnumType.All);
 
             AvailableBadges = new uint[stream.ReadRawVarint64()];
 
@@ -84,7 +84,7 @@ namespace MHServerEmu.GameServer.Entities
 
             ChatChannelOptions2 = new ulong[stream.ReadRawVarint64()];
             for (int i = 0; i < ChatChannelOptions2.Length; i++)
-                ChatChannelOptions2[i] = stream.ReadPrototypeId(PrototypeEnumType.Property);
+                ChatChannelOptions2[i] = stream.ReadPrototypeId(PrototypeEnumType.All);
 
             UnknownOptions = new ulong[stream.ReadRawVarint64()];
             for (int i = 0; i < UnknownOptions.Length; i++)
@@ -151,7 +151,7 @@ namespace MHServerEmu.GameServer.Entities
                 // Encode
                 WriteEntityFields(stream);
 
-                stream.WritePrototypeId(PrototypeId, PrototypeEnumType.Property);
+                stream.WritePrototypeId(PrototypeId, PrototypeEnumType.All);
 
                 stream.WriteRawVarint64((ulong)Missions.Length);
                 foreach (Mission mission in Missions)
@@ -180,7 +180,7 @@ namespace MHServerEmu.GameServer.Entities
                 if (bitBuffer != 0) stream.WriteRawByte(bitBuffer);
 
                 stream.WriteRawVarint64((ulong)StashInventories.Length);
-                foreach (ulong stashInventory in StashInventories) stream.WritePrototypeId(stashInventory, PrototypeEnumType.Property);
+                foreach (ulong stashInventory in StashInventories) stream.WritePrototypeId(stashInventory, PrototypeEnumType.All);
 
                 stream.WriteRawVarint64((ulong)AvailableBadges.Length);
                 foreach (uint badge in AvailableBadges)
@@ -192,7 +192,7 @@ namespace MHServerEmu.GameServer.Entities
 
                 stream.WriteRawVarint64((ulong)ChatChannelOptions2.Length);
                 foreach (ulong option in ChatChannelOptions2)
-                    stream.WritePrototypeId(option, PrototypeEnumType.Property);
+                    stream.WritePrototypeId(option, PrototypeEnumType.All);
 
                 stream.WriteRawVarint64((ulong)UnknownOptions.Length);
                 foreach (ulong option in UnknownOptions)

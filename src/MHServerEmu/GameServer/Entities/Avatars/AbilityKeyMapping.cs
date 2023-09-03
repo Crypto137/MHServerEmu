@@ -22,13 +22,13 @@ namespace MHServerEmu.GameServer.Entities.Avatars
             if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
             ShouldPersist = boolDecoder.ReadBool();
 
-            AssociatedTransformMode = stream.ReadPrototypeId(PrototypeEnumType.Property);
-            Slot0 = stream.ReadPrototypeId(PrototypeEnumType.Property);
-            Slot1 = stream.ReadPrototypeId(PrototypeEnumType.Property);
+            AssociatedTransformMode = stream.ReadPrototypeId(PrototypeEnumType.All);
+            Slot0 = stream.ReadPrototypeId(PrototypeEnumType.All);
+            Slot1 = stream.ReadPrototypeId(PrototypeEnumType.All);
 
             PowerSlots = new ulong[stream.ReadRawVarint64()];
             for (int i = 0; i < PowerSlots.Length; i++)
-                PowerSlots[i] = stream.ReadPrototypeId(PrototypeEnumType.Property);
+                PowerSlots[i] = stream.ReadPrototypeId(PrototypeEnumType.All);
         }
 
         public AbilityKeyMapping(int powerSpecIndex, bool shouldPersist, ulong associatedTransformMode, ulong slot0, ulong slot1, ulong[] powerSlots)
@@ -52,13 +52,13 @@ namespace MHServerEmu.GameServer.Entities.Avatars
                 byte bitBuffer = boolEncoder.GetBitBuffer();             // ShouldPersist
                 if (bitBuffer != 0) stream.WriteRawByte(bitBuffer);
 
-                stream.WritePrototypeId(AssociatedTransformMode, PrototypeEnumType.Property);
-                stream.WritePrototypeId(Slot0, PrototypeEnumType.Property);
-                stream.WritePrototypeId(Slot1, PrototypeEnumType.Property);
+                stream.WritePrototypeId(AssociatedTransformMode, PrototypeEnumType.All);
+                stream.WritePrototypeId(Slot0, PrototypeEnumType.All);
+                stream.WritePrototypeId(Slot1, PrototypeEnumType.All);
 
                 stream.WriteRawVarint64((ulong)PowerSlots.Length);
                 foreach (ulong powerSlot in PowerSlots)
-                    stream.WritePrototypeId(powerSlot, PrototypeEnumType.Property);
+                    stream.WritePrototypeId(powerSlot, PrototypeEnumType.All);
 
                 stream.Flush();
                 return memoryStream.ToArray();

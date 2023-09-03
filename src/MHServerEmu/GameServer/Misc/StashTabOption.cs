@@ -15,7 +15,7 @@ namespace MHServerEmu.GameServer.Misc
 
         public StashTabOption(CodedInputStream stream)
         {
-            PrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Property);
+            PrototypeId = stream.ReadPrototypeId(PrototypeEnumType.All);
             Name = stream.ReadRawString();
             AssetRef = stream.ReadRawVarint64();
             Field2 = stream.ReadRawInt32();
@@ -37,7 +37,7 @@ namespace MHServerEmu.GameServer.Misc
             {
                 CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
 
-                stream.WritePrototypeId(PrototypeId, PrototypeEnumType.Property);
+                stream.WritePrototypeId(PrototypeId, PrototypeEnumType.All);
                 stream.WriteRawString(Name);
                 stream.WriteRawVarint64(AssetRef);
                 stream.WriteRawInt32(Field2);

@@ -13,7 +13,7 @@ namespace MHServerEmu.GameServer.Common
 
         public PrototypeCollectionEntry(CodedInputStream stream)
         {
-            PrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Property);
+            PrototypeId = stream.ReadPrototypeId(PrototypeEnumType.All);
             Value = stream.ReadRawVarint32();
         }
 
@@ -29,7 +29,7 @@ namespace MHServerEmu.GameServer.Common
             {
                 CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
 
-                stream.WritePrototypeId(PrototypeId, PrototypeEnumType.Property);
+                stream.WritePrototypeId(PrototypeId, PrototypeEnumType.All);
                 stream.WriteRawVarint32(Value);
 
                 stream.Flush();
