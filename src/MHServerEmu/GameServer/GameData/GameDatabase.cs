@@ -17,26 +17,35 @@ namespace MHServerEmu.GameServer.GameData
 
         static GameDatabase()
         {
-            long startTime = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeMilliseconds();
-
-            // Initialize GPAK
-            Calligraphy = new(new("Calligraphy.sip"));
-            Resource = new(new("mu_cdata.sip"));
-
-            // Initialize derivative GPAK data
-            PrototypeRefManager = new(Calligraphy, Resource);       // this needs to be initialized before PropertyInfoTable
-            PropertyInfoTable = new(Calligraphy);
-
-            // Verify and finish game database initialization
-            if (VerifyData())
+            if (File.Exists($"{Directory.GetCurrentDirectory()}\\Assets\\GPAK\\Calligraphy.sip") && File.Exists($"{Directory.GetCurrentDirectory()}\\Assets\\GPAK\\mu_cdata.sip"))
             {
-                long loadTime = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeMilliseconds() - startTime;
-                Logger.Info($"Finished initializing game database in {loadTime} ms");
-                IsInitialized = true;
+                Logger.Info("Initializing game database...");
+                long startTime = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeMilliseconds();
+
+                // Initialize GPAK
+                Calligraphy = new(new("Calligraphy.sip"));
+                Resource = new(new("mu_cdata.sip"));
+
+                // Initialize GPAK derivative data
+                PrototypeRefManager = new(Calligraphy, Resource);       // this needs to be initialized before PropertyInfoTable
+                PropertyInfoTable = new(Calligraphy);
+
+                // Verify and finish game database initialization
+                if (VerifyData())
+                {
+                    long loadTime = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeMilliseconds() - startTime;
+                    Logger.Info($"Finished initializing game database in {loadTime} ms");
+                    IsInitialized = true;
+                }
+                else
+                {
+                    Logger.Fatal("Failed to initialize game database");
+                    IsInitialized = false;
+                }
             }
             else
             {
-                Logger.Fatal("Failed to initialize game database");
+                Logger.Fatal("Calligraphy.sip and/or mu_cdata.sip are missing! Make sure you copied these files to Assets\\GPAK\\.");
                 IsInitialized = false;
             }
         }
