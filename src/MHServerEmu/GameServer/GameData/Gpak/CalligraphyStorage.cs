@@ -93,8 +93,9 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
         public Blueprint GetPrototypeBlueprint(Prototype prototype)
         {
-            if (prototype.Data.ParentId == 0) return PrototypeBlueprintDict[prototype];     // use this prototype as a key if it's a .defaults prototype
-            return PrototypeBlueprintDict[GetPrototype(prototype.Data.ParentId)];           // get .defaults to use as a key if it's a child prototype
+            while (prototype.Data.ParentId != 0)                        // Go up until we get to the parentless prototype (.defaults)
+                prototype = GetPrototype(prototype.Data.ParentId);
+            return PrototypeBlueprintDict[prototype];                   // Use .defaults prototype as a key to get the blueprint for it
         }
 
         public Blueprint GetPrototypeBlueprint(ulong prototypeId) => GetPrototypeBlueprint(GetPrototype(prototypeId));
