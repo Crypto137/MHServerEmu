@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Common;
+using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 
 namespace MHServerEmu.GameServer.GameData
 {
@@ -14,19 +15,99 @@ namespace MHServerEmu.GameServer.GameData
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        #region Enum Filters
+
+        private static readonly string[] EntityClasses = new string[]
+        {
+            "EntityPrototype",
+            "AgentPrototype",
+            "AgentTeamUpPrototype",
+            "OrbPrototype",
+            "AvatarPrototype",
+            "CharacterTokenPrototype",
+            "HotspotPrototype",
+            "MissilePrototype",
+            "ItemPrototype",
+            "BagItemPrototype",
+            "CostumePrototype",
+            "CraftingIngredientPrototype",
+            "CostumeCorePrototype",
+            "CraftingRecipePrototype",
+            "ArmorPrototype",
+            "ArtifactPrototype",
+            "LegendaryPrototype",
+            "MedalPrototype",
+            "RelicPrototype",
+            "TeamUpGearPrototype",
+            "PlayerPrototype",
+            "TransitionPrototype",
+            "PropPrototype",
+            "SmartPropPrototype",
+            "WorldEntityPrototype",
+            "DestructiblePropPrototype",
+            "PvPPrototype",
+            "MatchMetaGamePrototype",
+            "MissionMetaGamePrototype",
+            "MetaGamePrototype",
+            "SpawnerPrototype",
+            "KismetSequenceEntityPrototype",
+            "InventoryStashTokenPrototype",
+            "EmoteTokenPrototype",
+            "DestructibleSmartPropPrototype"
+        };
+
+        private static readonly string[] PowerClasses = new string[]
+        {
+            "PowerPrototype",
+            "MissilePowerPrototype",
+            "SummonPowerPrototype",
+            "SituationalPowerPrototype",
+            "MovementPowerPrototype",
+            "SpecializationPowerPrototype"
+        };
+
+        private static readonly string[] InventoryClasses = new string[]
+        {
+            "InventoryPrototype",
+            "PlayerStashInventoryPrototype"
+        };
+
+        #endregion
+
         private Dictionary<PrototypeEnumType, ulong[]> _prototypeEnumDict;                  // For enum -> prototypeId conversion
         private Dictionary<PrototypeEnumType, Dictionary<ulong, ulong>> _enumLookupDict;    // For prototypeId -> enum conversion
 
-        public PrototypeEnumManager(string propertyEnumTableDirectoryPath)
+        public PrototypeEnumManager(HashMap hashMap)
         {
-            // Load prototype enums from external files (TODO: derive enums from prototypeIds instead)
-            _prototypeEnumDict = new()
+            // Enumerate prototypes
+            _prototypeEnumDict = new();
+
+            ulong[] allEnumValues = hashMap.Enumerate();
+            _prototypeEnumDict.Add(PrototypeEnumType.Property, allEnumValues);
+
+            // Enumerated hashmap is already sorted, so we just need to filter prototypes according to their blueprint classes
+            List<ulong> entityList = new() { 0 };
+            List<ulong> inventoryList = new() { 0 };
+            List<ulong> powerList = new() { 0 };
+
+            for (int i = 0; i < allEnumValues.Length; i++)
             {
-                { PrototypeEnumType.Entity, LoadPrototypeEnumTable($"{propertyEnumTableDirectoryPath}\\Entity.bin") },         // formerly ResourceEnumRefTable
-                { PrototypeEnumType.Inventory, LoadPrototypeEnumTable($"{propertyEnumTableDirectoryPath}\\Inventory.bin") },
-                { PrototypeEnumType.Power, LoadPrototypeEnumTable($"{propertyEnumTableDirectoryPath}\\Power.bin") },           // formerly PropertyIdPowerRefTable
-                { PrototypeEnumType.Property, LoadPrototypeEnumTable($"{propertyEnumTableDirectoryPath}\\Property.bin") },     // formerly GlobalEnumRefTable
-            };
+                if (GameDatabase.Calligraphy.IsCalligraphyPrototype(allEnumValues[i]))   // skip resource prototype ids
+                {
+                    Blueprint blueprint = GameDatabase.Calligraphy.GetPrototypeBlueprint(allEnumValues[i]);
+
+                    if (EntityClasses.Contains(blueprint.ClassName))
+                        entityList.Add(allEnumValues[i]);
+                    else if (InventoryClasses.Contains(blueprint.ClassName))
+                        inventoryList.Add(allEnumValues[i]);
+                    else if (PowerClasses.Contains(blueprint.ClassName))
+                        powerList.Add(allEnumValues[i]);
+                }
+            }
+
+            _prototypeEnumDict.Add(PrototypeEnumType.Entity, entityList.ToArray());
+            _prototypeEnumDict.Add(PrototypeEnumType.Inventory, inventoryList.ToArray());
+            _prototypeEnumDict.Add(PrototypeEnumType.Power, powerList.ToArray());
 
             // Create a dictionary to quickly look up enums from prototypeIds
             _enumLookupDict = new();
@@ -61,25 +142,6 @@ namespace MHServerEmu.GameServer.GameData
                     propertyIdList.Add(DataHelper.ReconstructPowerPropertyIdFromHash((ulong)i));
 
             return propertyIdList;
-        }
-
-        private ulong[] LoadPrototypeEnumTable(string path)
-        {
-            if (File.Exists(path))
-            {
-                using (MemoryStream memoryStream = new(File.ReadAllBytes(path)))
-                using (BinaryReader binaryReader = new(memoryStream))
-                {
-                    ulong[] prototypes = new ulong[memoryStream.Length / 8];
-                    for (int i = 0; i < prototypes.Length; i++) prototypes[i] = binaryReader.ReadUInt64();
-                    return prototypes;
-                }
-            }
-            else
-            {
-                Logger.Error($"Failed to locate {Path.GetFileName(path)}");
-                return Array.Empty<ulong>();
-            }
         }
     }
 }

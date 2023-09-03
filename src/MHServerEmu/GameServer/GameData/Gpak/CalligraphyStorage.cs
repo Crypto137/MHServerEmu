@@ -101,6 +101,9 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         public Blueprint GetPrototypeBlueprint(ulong prototypeId) => GetPrototypeBlueprint(GetPrototype(prototypeId));
         public Blueprint GetPrototypeBlueprint(string prototypePath) => GetPrototypeBlueprint(GetPrototype(prototypePath));
 
+        // Helper methods
+        public bool IsCalligraphyPrototype(ulong prototypeId) => PrototypeDirectory.IdDict.TryGetValue(prototypeId, out DataDirectoryEntry entry);  // TryGetValue is apparently faster than ContainsKey
+
         public override bool Verify()
         {
             return AssetTypeDirectory.Entries.Length > 0

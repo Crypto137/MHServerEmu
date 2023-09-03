@@ -33,5 +33,21 @@ namespace MHServerEmu.GameServer.GameData
 
         public string GetForward(ulong key) => _forwardDict[key];
         public ulong GetReverse(string value) => _reverseDict[value];
+
+        public ulong[] Enumerate()
+        {
+            ulong[] enumValues = new ulong[_forwardDict.Count];
+
+            int i = 0;
+            foreach (ulong key in _forwardDict.Keys)
+            {
+                enumValues[i] = key;
+                i++;
+            }
+
+            Array.Sort(enumValues);
+
+            return enumValues;
+        }
     }
 }
