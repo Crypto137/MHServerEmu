@@ -117,20 +117,6 @@ namespace MHServerEmu.GameServer
 
                     break;
 
-                case ClientToGameServerMessage.NetMessageGetCatalog:
-                    Logger.Info($"Received NetMessageGetCatalog");
-                    var dumpedCatalog = NetMessageCatalogItems.ParseFrom(PacketHelper.LoadMessagesFromPacketFile("NetMessageCatalogItems.bin")[0].Content);
-
-                    var catalog = NetMessageCatalogItems.CreateBuilder()
-                        .MergeFrom(dumpedCatalog)
-                        .SetTimestampSeconds(_gameServerManager.GetDateTime() / 1000000)
-                        .SetTimestampMicroseconds(_gameServerManager.GetDateTime())
-                        .SetClientmustdownloadimages(false)
-                        .Build();
-
-                    client.SendMessage(1, new(catalog));
-                    break;
-
                 case ClientToGameServerMessage.NetMessageUpdateAvatarState:
                     //Logger.Trace($"Received NetMessageUpdateAvatarState");
                     var updateAvatarState = NetMessageUpdateAvatarState.ParseFrom(message.Content);
@@ -147,8 +133,22 @@ namespace MHServerEmu.GameServer
 
                     break;
 
+                // Grouping Manager messages
                 case ClientToGameServerMessage.NetMessageChat:
+                case ClientToGameServerMessage.NetMessageTell:
+                case ClientToGameServerMessage.NetMessageReportPlayer:
+                case ClientToGameServerMessage.NetMessageChatBanVote:
                     _gameServerManager.GroupingManagerService.Handle(client, muxId, message);
+                    break;
+
+                // Billing messages
+                case ClientToGameServerMessage.NetMessageGetCatalog:
+                case ClientToGameServerMessage.NetMessageGetCurrencyBalance:
+                case ClientToGameServerMessage.NetMessageBuyItemFromCatalog:
+                case ClientToGameServerMessage.NetMessageBuyGiftForOtherPlayer:
+                case ClientToGameServerMessage.NetMessagePurchaseUnlock:
+                case ClientToGameServerMessage.NetMessageGetGiftHistory:
+                    _gameServerManager.BillingService.Handle(client, muxId, message);
                     break;
 
                 default:

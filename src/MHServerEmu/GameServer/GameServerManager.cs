@@ -14,6 +14,7 @@ namespace MHServerEmu.GameServer
         public FrontendService FrontendService { get; }
         public GroupingManagerService GroupingManagerService { get; }
         public PlayerManagerService PlayerManagerService { get; }
+        public BillingService BillingService { get; }
 
         public long StartTime { get; }      // Used for calculating game time 
 
@@ -24,6 +25,7 @@ namespace MHServerEmu.GameServer
             FrontendService = new(this);
             GroupingManagerService = new(this);
             PlayerManagerService = new(this);
+            BillingService = new(this);
 
             StartTime = GetDateTime();
         }
