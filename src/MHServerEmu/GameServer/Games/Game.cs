@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Numerics;
 using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common;
@@ -176,120 +177,157 @@ namespace MHServerEmu.GameServer.Games
                 .SetArchiveData(ByteString.CopyFrom(avatarEnterGameWorldArchive.Encode()))
                 .Build()));
 
-            CellPrototype Entry;
-            EntityMarkerPrototype npc;
             ulong area;
-            int cellid;
+            int cellid = 1;
             int areaid = 1;
             ulong repId = 50000;
             ulong entityId = 1000;
+            Common.Vector3 areaOrigin = new();
 
-            if (regionPrototype == RegionPrototype.AsgardiaRegion)
-            {
-                area = GameDatabase.GetPrototypeId("Regions/HUBS/AsgardiaHUB/AsgardiaArea.prototype");
-
-                District district = GameDatabase.Resource.DistrictDict["Resource/Districts/AsgardHubDistrict.district"];
-                for (cellid = 0; cellid < district.CellMarkerSet.Length; cellid++)
-                {
-                    Entry = GameDatabase.Resource.CellDict[district.CellMarkerSet[cellid].Resource];
-
-                    for (int i = 0; i < Entry.MarkerSet.Length; i++)
-                    {
-                        if (Entry.MarkerSet[i] is EntityMarkerPrototype) { 
-                            npc = (EntityMarkerPrototype)Entry.MarkerSet[i];
-                            string marker = npc.LastKnownEntityName;
-                            if (marker.Contains("Entity/Characters/"))
-                                messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++,
-                                    GameDatabase.GetPrototypeId(marker),
-                                    new(npc.Position.X, npc.Position.Y, npc.Position.Z + 60f), npc.Rotation,
-                                    repId++, 608, areaid, 608, region.Id, cellid, area, false)));
-                        }
-                    }
-                }
-            }
-
-            if (regionPrototype == RegionPrototype.XaviersMansionRegion)
-            {
-                area = GameDatabase.GetPrototypeId("Regions/HUBS/XaviersMansion/XaviersMansionArea.prototype");
-
-                District district = GameDatabase.Resource.DistrictDict["Resource/Districts/XaviersMansion.district"];
-                for (cellid = 0; cellid < district.CellMarkerSet.Length; cellid++)
-                {
-                    Entry = GameDatabase.Resource.CellDict[district.CellMarkerSet[cellid].Resource];
-
-                    for (int i = 0; i < Entry.MarkerSet.Length; i++)
-                    {
-                        if (Entry.MarkerSet[i] is EntityMarkerPrototype)
-                        {
-                            npc = (EntityMarkerPrototype)Entry.MarkerSet[i];
-                            string marker = npc.LastKnownEntityName;
-                            float stashfix = 60.0f;
-                            if (marker.Contains("XMansionEngineerCrafter")) // Wrong Prototype in cell!!!
-                                marker = "Entity/Characters/Vendors/Prototypes/HUB02Xmansion/XMansionVendorCrafter.prototype";
-                            if (marker.Contains("VendorScientist"))  // again wrong Prototype in cell!!!
-                                marker = "Entity/Characters/Vendors/Prototypes/HUB04Asgard/AsgardVendorEnchanter.prototype";
-                            if (marker.Contains("Stash") && npc.Position.Z == -208.0f) stashfix = +13f; // fix 
-                            if (marker.Contains("Magik")) continue; // TODO fixme
-                            if (marker.Contains("Entity/Characters/"))
-                                messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++,
-                                    GameDatabase.GetPrototypeId(marker),
-                                    new(npc.Position.X, npc.Position.Y, npc.Position.Z + stashfix), npc.Rotation,
-                                    repId++, 608, areaid, 608, region.Id, cellid, area, false)));
-                        }
-                    }
-                }
-            }
-
-            if (regionPrototype == RegionPrototype.NPEAvengersTowerHUBRegion)
-            {
-                area = GameDatabase.GetPrototypeId("Regions/HUBRevamp/NPEAvengersTowerHubArea.prototype");
-                cellid = 1;
-
-                Entry = GameDatabase.Resource.CellDict["Resource/Cells/DistrictCells/Avengers_Tower/AvengersTowerNPE_HUB.cell"];
-
+            void MarkersAdd(CellPrototype Entry, bool AddProp = false)
+            {                
                 for (int i = 0; i < Entry.MarkerSet.Length; i++)
                 {
-                    switch (i)
+                    if (Entry.MarkerSet[i] is EntityMarkerPrototype)
                     {
-                        case 1: // MariaHill
-                        case 3: // VendorEnchanter
-                        case 4: // Jarvis
-                        case 5: // Hank Pym
-                        case 6: // War Machine
-                        case 7: // Clea
-                        case 8: // ATVendorWeapon
-                        case 13: // BIFBuxGiver
-                        case 14: // BIFBuxTaker
-                        // case 16: // CosmicEventVendor Invisible
-                        // case 28: // GambitMTXStore Invisible
-                        // case 33: // Coulson Blocking controll
-                        case 34: // Dum Dum
-                        case 35: // SheHulk
-                        case 36: // StanLee
-                        case 37: // Spider Woman
-                        case 38: // UruForgedVendor
-                        case 39: // Adam Warlock
-                        case 41: // Wonderman
-                            npc = (EntityMarkerPrototype)Entry.MarkerSet[i]; 
+                        EntityMarkerPrototype npc = (EntityMarkerPrototype)Entry.MarkerSet[i];
+                        float zfix = 0.0f;
+                        string marker = npc.LastKnownEntityName;
+
+                        if (marker.Contains("DestructibleGarbageCanCity")) continue;
+                        if (marker.Contains("GLFLieutenant")) continue; // Blocking controll
+                        if (marker.Contains("Coulson")) continue; //  Blocking controll
+                        if (marker.Contains("GambitMTXStore")) continue; // Invisible
+                        if (marker.Contains("CosmicEventVendor")) continue; // Invisible
+                        if (marker.Contains("Magik")) continue; // TODO fixme
+                        if (marker.Contains("XMansionEngineerCrafter")) // Wrong Prototype in cell!!!
+                            marker = "Entity/Characters/Vendors/Prototypes/HUB02Xmansion/XMansionVendorCrafter.prototype";
+                        if (marker.Contains("VendorScientist"))  // again wrong Prototype in cell!!!
+                            marker = "Entity/Characters/Vendors/Prototypes/HUB04Asgard/AsgardVendorEnchanter.prototype";
+                        
+                        if (marker.Contains("Entity/Characters/") || (AddProp && marker.Contains("Entity/Props/")))
+                        {
+                            if (marker.Contains("Stash"))
+                            {
+                                zfix = 60.0f;
+                                if (npc.Position.Z == -208.0f) zfix = +13f; // fix 
+                            }
+
+                            if (marker.Contains("DestructibleWarehouseCrateA")) zfix = +20f;                            
+
                             messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++,
-                                GameDatabase.GetPrototypeId(npc.LastKnownEntityName),
-                                npc.Position, npc.Rotation,
+                                GameDatabase.GetPrototypeId(marker),
+                                new(npc.Position.X + areaOrigin.X, npc.Position.Y + areaOrigin.Y, npc.Position.Z + areaOrigin.Z + zfix), npc.Rotation,
                                 repId++, 608, areaid, 608, region.Id, cellid, area, false)));
-                            break;
-                        case 9: case 10: case 11: case 12: // Stash
-                            npc = (EntityMarkerPrototype)Entry.MarkerSet[i];
-                            messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++,
-                                GameDatabase.GetPrototypeId(npc.LastKnownEntityName),
-                                new(npc.Position.X, npc.Position.Y, npc.Position.Z + 60f), npc.Rotation,
-                                repId++, 608, areaid, 608, region.Id, cellid, area, false)));
-                            break;
+                        }
                     }
                 }
+            }
 
-                messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++,
-                    GameDatabase.GetPrototypeId("Entity/Characters/Vendors/Prototypes/Endgame/TeamSHIELDRepBuffer.prototype"),
-                    new(736f, -352f, 177f), new(-2.15625f, 0f, 0f),
-                    repId++, 608, areaid, 608, region.Id, cellid, area, false)));  
+            void MarkersAddDistrict(string path, bool AddProp = false)
+            {
+                District district = GameDatabase.Resource.DistrictDict[path];
+                for (cellid = 0; cellid < district.CellMarkerSet.Length; cellid++)
+                    MarkersAdd(GameDatabase.Resource.CellDict[district.CellMarkerSet[cellid].Resource], AddProp);                   
+            }
+
+            switch (regionPrototype)
+            {
+                case RegionPrototype.AsgardiaRegion:
+
+                    area = (ulong)AreaPrototype.AsgardiaArea;
+                    MarkersAddDistrict("Resource/Districts/AsgardHubDistrict.district");
+
+                    break;
+
+                case RegionPrototype.XManhattanRegion1to60:
+                case RegionPrototype.XManhattanRegion60Cosmic:
+            
+                    area = (ulong)AreaPrototype.XManhattanArea1;
+                    MarkersAddDistrict("Resource/Districts/MidtownStatic/MidtownStatic_A.district");
+
+                    break;
+
+                case RegionPrototype.HelicarrierRegion:
+            
+                    area = (ulong)AreaPrototype.HelicarrierArea;
+                    MarkersAdd(GameDatabase.Resource.CellDict["Resource/Cells/DistrictCells/Helicarrier/Helicarrier_HUB.cell"]);
+
+                    break;
+
+                case RegionPrototype.TrainingRoomSHIELDRegion:
+            
+                    area = (ulong)AreaPrototype.TrainingRoomSHIELDArea;
+                    MarkersAdd(GameDatabase.Resource.CellDict["Resource/Cells/DistrictCells/Training_Rooms/TrainingRoom_SHIELD_B.cell"], true);
+
+                    break;
+
+                case RegionPrototype.DangerRoomHubRegion:
+            
+                    area = (ulong)AreaPrototype.DangerRoomHubArea;
+                    MarkersAdd(GameDatabase.Resource.CellDict["Resource/Cells/EndGame/EndlessDungeon/DangerRoom_LaunchTerminal.cell"]);
+
+                    break;
+
+                case RegionPrototype.GenoshaHUBRegion:
+                    
+                    area = (ulong)AreaPrototype.GenoshaHUBArea;
+                    areaOrigin = region.AreaList[0].Origin;
+                    MarkersAddDistrict("Resource/Districts/GenoshaHUB.district");
+
+                    break;
+
+                case RegionPrototype.XaviersMansionRegion:
+            
+                    area = (ulong)AreaPrototype.XaviersMansionArea;
+                    MarkersAddDistrict("Resource/Districts/XaviersMansion.district");                   
+
+                    break;
+
+                case RegionPrototype.CH0701SavagelandRegion:
+
+                    area = GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH07SavageLand/Areas/DinoJungle/DinoJungleArea.prototype");
+
+                    Area areaL = region.AreaList[0];
+                    for(int i = 11; i < 14; i++)
+                    {
+                        cellid = (int)areaL.CellList[i].Id;
+                        areaOrigin = areaL.CellList[i].PositionInArea;
+                        MarkersAdd(GameDatabase.Resource.CellDict[GameDatabase.GetPrototypePath(areaL.CellList[i].PrototypeId)]);
+                    }
+
+                    break;
+
+                case RegionPrototype.AvengersTowerHUBRegion:
+
+                    area = (ulong)AreaPrototype.AvengersTowerHubArea;
+                    MarkersAdd(GameDatabase.Resource.CellDict["Resource/Cells/DistrictCells/Avengers_Tower/AvengersTower_HUB.cell"]);
+
+                    break;
+
+                case RegionPrototype.NPEAvengersTowerHUBRegion:
+            
+                    area = (ulong)AreaPrototype.NPEAvengersTowerHubArea;
+                    MarkersAdd(GameDatabase.Resource.CellDict["Resource/Cells/DistrictCells/Avengers_Tower/AvengersTowerNPE_HUB.cell"]);
+
+                    /* Encounter PopulationMarker = GameDatabase.Resource.EncounterDict["Resource/Encounters/Discoveries/Social_BenUrich_JessicaJones.encounter"];
+                       npc = (EntityMarkerPrototype)PopulationMarker.MarkerSet[0]; // BenUrich
+                       messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++,
+                           GameDatabase.GetPrototypeId(npc.LastKnownEntityName),
+                           new(npc.Position.X - 464, npc.Position.Y, npc.Position.Z + 192), npc.Rotation,
+                           repId++, 608, areaid, 608, region.Id, cellid, area, false)));
+                       npc = (EntityMarkerPrototype)PopulationMarker.MarkerSet[2]; // JessicaJones
+                       messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++,
+                           GameDatabase.GetPrototypeId(npc.LastKnownEntityName),
+                           new(npc.Position.X - 464, npc.Position.Y, npc.Position.Z + 192), npc.Rotation,
+                           repId++, 608, areaid, 608, region.Id, cellid, area, false)));*/
+
+                    messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++,
+                        GameDatabase.GetPrototypeId("Entity/Characters/Vendors/Prototypes/Endgame/TeamSHIELDRepBuffer.prototype"),
+                        new(736f, -352f, 177f), new(-2.15625f, 0f, 0f),
+                        repId++, 608, areaid, 608, region.Id, cellid, area, false)));
+
+                    break;
 
             }
 
