@@ -46,6 +46,15 @@ namespace MHServerEmu.GameServer.Properties
 
         public NetStructProperty ToNetStruct() => NetStructProperty.CreateBuilder().SetId(Id).SetValue(Value.RawValue).Build();
 
+        public NetMessageSetProperty ToNetMessageSetProperty(ulong replicationId)
+        {
+            return NetMessageSetProperty.CreateBuilder()
+                .SetReplicationId(replicationId)
+                .SetPropertyId(Id.ReverseBytes())
+                .SetValueBits(Value.RawValue)
+                .Build();
+        }
+
         public override string ToString()
         {
             using (MemoryStream memoryStream = new())
