@@ -12,9 +12,10 @@ namespace MHServerEmu.Auth
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private string _url;
-        private FrontendService _frontendService;
-        private CancellationTokenSource _cancellationTokenSource;
+        private readonly string _url;
+        private readonly FrontendService _frontendService;
+        private readonly CancellationTokenSource _cancellationTokenSource;
+
         private HttpListener _listener;
 
         public AuthServer(int port, FrontendService frontendService)
