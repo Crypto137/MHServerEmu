@@ -4,32 +4,12 @@ using Gazillion;
 using MHServerEmu.Common;
 using MHServerEmu.GameServer.Frontend;
 using MHServerEmu.Common.Config;
+using MHServerEmu.Networking;
 
-namespace MHServerEmu.Networking
+namespace MHServerEmu.Auth
 {
     public class AuthServer
     {
-        public enum ErrorCode
-        {
-            IncorrectUsernameOrPassword1 = 401,
-            AccountBanned = 402,
-            IncorrectUsernameOrPassword2 = 403,
-            CouldNotReachAuthServer = 404,
-            EmailNotVerified = 405,
-            UnableToConnect1 = 406,
-            NeedToAcceptLegal = 407,
-            PatchRequired = 409,
-            AccountArchived = 411,
-            PasswordExpired = 412,
-            UnableToConnect2 = 413,
-            UnableToConnect3 = 414,
-            UnableToConenct4 = 415,
-            UnableToConnect5 = 416,
-            AgeRestricted = 417,
-            UnableToConnect6 = 418,
-            TemporarilyUnavailable = 503
-        }
-
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private const string ServerHost = "localhost";
@@ -88,7 +68,7 @@ namespace MHServerEmu.Networking
             {
                 case FrontendProtocolMessage.LoginDataPB:
                     var loginDataPB = LoginDataPB.ParseFrom(message.Content);
-                    ClientSession session = _frontendService.CreateSessionFromLoginDataPB(loginDataPB, out ErrorCode? errorCode);
+                    ClientSession session = _frontendService.CreateSessionFromLoginDataPB(loginDataPB, out AuthErrorCode? errorCode);
 
                     if (session != null)  // Send an AuthTicket if we were able to create a session
                     {
@@ -119,8 +99,7 @@ namespace MHServerEmu.Networking
                         response.KeepAlive = false;
                         response.ContentType = "application/octet-stream";
                         response.ContentLength64 = buffer.Length;
-
-                        await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+                        await response.OutputStream.WriteAsync(buffer);
                     }
                     else
                     {

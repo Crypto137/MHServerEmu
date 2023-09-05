@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using MHServerEmu.Auth;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Commands;
 using MHServerEmu.Common.Config;
@@ -37,7 +38,7 @@ namespace MHServerEmu
             Thread frontendServerThread = new(_frontendServer.Run) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
             frontendServerThread.Start();            
             
-            _authServer = new AuthServer(8080, _frontendServer.FrontendService);
+            _authServer = new(8080, _frontendServer.FrontendService);
 
             while (true)
             {

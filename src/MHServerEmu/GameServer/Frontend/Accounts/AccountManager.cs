@@ -1,8 +1,7 @@
 ﻿using System.Text.Json;
 using Gazillion;
+using MHServerEmu.Auth;
 using MHServerEmu.Common;
-using MHServerEmu.Networking;
-using static MHServerEmu.Networking.AuthServer;
 
 namespace MHServerEmu.GameServer.Frontend.Accounts
 {
@@ -28,13 +27,13 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             IsInitialized = true;
         }
 
-        public static Account GetAccountByEmail(string email, string password, out ErrorCode? errorCode)
+        public static Account GetAccountByEmail(string email, string password, out AuthErrorCode? errorCode)
         {
             errorCode = null;
 
             if (_emailAccountDict.ContainsKey(email) == false)
             {
-                errorCode = ErrorCode.IncorrectUsernameOrPassword1;
+                errorCode = AuthErrorCode.IncorrectUsernameOrPassword1;
                 return null;
             }
 
@@ -44,17 +43,17 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             {
                 if (account.IsBanned)
                 {
-                    errorCode = ErrorCode.AccountBanned;
+                    errorCode = AuthErrorCode.AccountBanned;
                     return null;
                 }
                 else if (account.IsArchived)
                 {
-                    errorCode = ErrorCode.AccountArchived;
+                    errorCode = AuthErrorCode.AccountArchived;
                     return null;
                 }
                 else if (account.IsPasswordExpired)
                 {
-                    errorCode = ErrorCode.PasswordExpired;
+                    errorCode = AuthErrorCode.PasswordExpired;
                     return null;
                 }
                 else
@@ -64,12 +63,12 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             }
             else
             {
-                errorCode = ErrorCode.IncorrectUsernameOrPassword1;
+                errorCode = AuthErrorCode.IncorrectUsernameOrPassword1;
                 return null;
             }
         }
 
-        public static Account GetAccountByLoginDataPB(LoginDataPB loginDataPB, out ErrorCode? errorCode)
+        public static Account GetAccountByLoginDataPB(LoginDataPB loginDataPB, out AuthErrorCode? errorCode)
         {
             string email = loginDataPB.EmailAddress.ToLower();
             return GetAccountByEmail(email, loginDataPB.Password, out errorCode);

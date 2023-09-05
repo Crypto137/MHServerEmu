@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
+using MHServerEmu.Auth;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Config;
 using MHServerEmu.GameServer.Frontend.Accounts;
@@ -114,7 +115,7 @@ namespace MHServerEmu.GameServer.Frontend
             foreach (GameMessage message in messages) Handle(client, muxId, message);
         }
 
-        public ClientSession CreateSessionFromLoginDataPB(LoginDataPB loginDataPB, out AuthServer.ErrorCode? errorCode)
+        public ClientSession CreateSessionFromLoginDataPB(LoginDataPB loginDataPB, out AuthErrorCode? errorCode)
         {
             Account account;
             if (ConfigManager.Frontend.BypassAuth)
