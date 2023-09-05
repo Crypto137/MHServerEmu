@@ -6,6 +6,12 @@ namespace MHServerEmu.Common.Commands
     [CommandGroup("server", "Allows you to control the servers.")]
     public class ServerCommands : CommandGroup
     {
+        [Command("info", "Usage: server info")]
+        public string Info(string[] @params, FrontendClient client)
+        {
+            return $"Server Information\nUptime: {DateTime.Now - Program.StartupTime:hh\\:mm\\:ss}\nSessions: {Program.FrontendServer.FrontendService.SessionCount}";
+        }
+
         [Command("shutdown", "Usage: server shutdown")]
         public string Shutdown(string[] @params, FrontendClient client)
         {

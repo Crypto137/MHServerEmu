@@ -21,6 +21,8 @@ namespace MHServerEmu.GameServer.Frontend
         private Dictionary<ulong, ClientSession> _sessionDict = new();
         private Dictionary<ulong, FrontendClient> _clientDict = new();
 
+        public int SessionCount { get => _sessionDict.Count; }
+
         public FrontendService(GameServerManager gameServerManager)
         {
             _gameServerManager = gameServerManager;
