@@ -12,17 +12,26 @@ namespace MHServerEmu
     class Program
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+        public static readonly DateTime StartupTime = DateTime.Now;
 
-        public static AuthServer _authServer;
-        public static FrontendServer _frontendServer;
+        public static FrontendServer FrontendServer { get; private set; }
+        public static AuthServer AuthServer { get; private set; }
+
+        public static Thread FrontendServerThread { get; private set; }
+        public static Thread AuthServerThread { get; private set; }
 
         static void Main(string[] args)
         {
+            // Watch for unhandled exceptions
+            AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
+
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+
             PrintBanner();  
 
             if (ConfigManager.IsInitialized == false)
             {
-                Console.ReadKey();
+                Console.ReadLine();
                 return;
             }
 
@@ -30,15 +39,13 @@ namespace MHServerEmu
 
             if (ProtocolDispatchTable.IsInitialized == false || GameDatabase.IsInitialized == false || AccountManager.IsInitialized == false)
             {
-                Console.ReadKey();
+                Console.ReadLine();
                 return;
             }
 
-            _frontendServer = new FrontendServer();
-            Thread frontendServerThread = new(_frontendServer.Run) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
-            frontendServerThread.Start();            
-            
-            _authServer = new(8080, _frontendServer.FrontendService);
+            StartServers();
+
+            Logger.Info("Type '!commands' for a list of available commands");
 
             while (true)
             {
@@ -49,7 +56,18 @@ namespace MHServerEmu
 
         public static void Shutdown()
         {
-            _frontendServer.Shutdown();
+            if (AuthServer != null)
+            {
+                Logger.Info("Shutting down AuthServer...");
+                AuthServer.Shutdown();
+            }
+
+            if (FrontendServer != null)
+            {
+                Logger.Info("Shutting down FrontendServer...");
+                FrontendServer.Shutdown();
+            }
+
             Environment.Exit(0);
         }
 
@@ -65,5 +83,47 @@ namespace MHServerEmu
             Console.WriteLine();
             Console.ResetColor();
         }
+
+        private static void UnhandledExceptionHandler(object sender, UnhandledExceptionEventArgs e)
+        {
+            if (e.IsTerminating)
+                Logger.Fatal($"MHServerEmu terminating because of unhandled exception: {e}");
+            else
+                Logger.Error($"Caught unhandled exception: {e}");
+
+            Console.ReadLine();
+        }
+
+        #region Server Control
+
+        private static void StartServers()
+        {
+            StartFrontendServer();
+            StartAuthServer();
+        }
+
+        private static bool StartFrontendServer()
+        {
+            if (FrontendServer != null) return false;
+
+            FrontendServer = new FrontendServer();
+            FrontendServerThread = new(FrontendServer.Run) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
+            FrontendServerThread.Start();
+
+            return true;
+        }
+
+        private static bool StartAuthServer()
+        {
+            if (AuthServer != null) return false;
+
+            AuthServer = new(8080, FrontendServer.FrontendService);
+            AuthServerThread = new(AuthServer.Run) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
+            AuthServerThread.Start();
+
+            return true;
+        }
+
+        #endregion
     }
 }

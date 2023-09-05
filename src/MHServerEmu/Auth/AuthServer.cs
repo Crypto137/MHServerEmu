@@ -12,49 +12,71 @@ namespace MHServerEmu.Auth
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private const string ServerHost = "localhost";
-
+        private string _url;
         private FrontendService _frontendService;
+        private CancellationTokenSource _cancellationTokenSource;
         private HttpListener _listener;
 
         public AuthServer(int port, FrontendService frontendService)
         {
+            _url = $"http://localhost:{port}/";
             _frontendService = frontendService;
-
-            string url = $"http://{ServerHost}:{port}/";
-
-            // Create an http server and start listening for incoming connections
-            _listener = new HttpListener();
-            _listener.Prefixes.Add(url);
-            _listener.Start();
-
-            new Thread(() => HandleIncomingConnections()).Start();
-
-            Logger.Info($"AuthServer is listening on {url}...");
+            _cancellationTokenSource = new();
         }
 
-        private async void HandleIncomingConnections()
+        public async void Run()
         {
+            // Create an http server and start listening for incoming connections
+            _listener = new HttpListener();
+            _listener.Prefixes.Add(_url);
+            _listener.Start();
+
+            Logger.Info($"AuthServer is listening on {_url}...");
+
             while (true)
             {
-                // Wait for a connection and get request and response from it
-                HttpListenerContext context = await _listener.GetContextAsync();
-                HttpListenerRequest request = context.Request;
-                HttpListenerResponse response = context.Response;
-
-                if (request.UserAgent == "Secret Identity Studios Http Client")     // Ignore requests from other user agents
+                try
                 {
-                    if (request.HttpMethod == "POST" && request.Url.LocalPath == "/Login/IndexPB")
-                        HandleMessage(request, response);
+                    // Wait for a connection and get request and response from it
+                    HttpListenerContext context = await _listener.GetContextAsync().WaitAsync(_cancellationTokenSource.Token);
+                    HttpListenerRequest request = context.Request;
+                    HttpListenerResponse response = context.Response;
+
+                    if (request.UserAgent == "Secret Identity Studios Http Client")     // Ignore requests from other user agents
+                    {
+                        if (request.HttpMethod == "POST" && request.Url.LocalPath == "/Login/IndexPB")
+                            HandleMessage(request, response);
+                        else
+                            Logger.Warn($"Received {request.HttpMethod} to {request.Url.LocalPath} from a game client on {request.RemoteEndPoint}");
+                    }
                     else
-                        Logger.Warn($"Received {request.HttpMethod} to {request.Url.LocalPath} from a game client on {request.RemoteEndPoint}");
-                }
-                else
-                {
-                    Logger.Warn($"Received {request.HttpMethod} to {request.Url.LocalPath} from an unknown UserAgent on {request.RemoteEndPoint}. UserAgent information: {request.UserAgent}");
-                }
+                    {
+                        Logger.Warn($"Received {request.HttpMethod} to {request.Url.LocalPath} from an unknown UserAgent on {request.RemoteEndPoint}. UserAgent information: {request.UserAgent}");
+                    }
 
-                response.Close();
+                    response.Close();
+                }
+                catch (TaskCanceledException e)
+                {
+                    return;     // Stop handling connections
+                }
+                catch (Exception e)
+                {
+                    Logger.Error($"Unhandled exception: {e}");
+                }
+            }
+        }
+
+        public void Shutdown()
+        {
+            if (_listener.IsListening == false) return;
+
+            if (_listener != null)
+            {
+                // Cancel listening for context and close the listener
+                _cancellationTokenSource.Cancel();
+                _listener.Close();
+                _listener = null;
             }
         }
 

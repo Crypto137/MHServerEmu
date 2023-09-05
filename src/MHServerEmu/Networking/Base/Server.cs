@@ -243,11 +243,7 @@ namespace MHServerEmu.Networking.Base
             if (IsListening == false) return;
 
             // Close the listener socket.
-            if (_listener != null)
-            {
-                _listener.Close();
-                _listener = null;
-            }
+            if (_listener != null) _listener.Close();
 
             // Disconnect the clients.
             foreach (var connectionKvp in _connectionDict.ToList())     // Use ToList() so we don't get collection modified exception here
