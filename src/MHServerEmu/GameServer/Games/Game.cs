@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Numerics;
+using System.Globalization;
 using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common;
@@ -39,7 +39,9 @@ namespace MHServerEmu.GameServer.Games
             RegionManager = new();
             PlayerDict = new();
 
-            new Thread(() => Update()).Start();     // Start main game loop
+            // Start main game loop
+            Thread gameThread = new(Update) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
+            gameThread.Start();
         }
 
         public void Update()
