@@ -60,10 +60,14 @@ namespace MHServerEmu.Common.Commands
                     switch (@params[1].ToLower())
                     {
                         case "chatnormalmessage":
+                            string message = @params[2];
+                            for (int i = 3; i < @params.Length; i++)
+                                message += " " + @params[i];
+
                             var chatMessage = ChatNormalMessage.CreateBuilder()
                                 .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
                                 .SetFromPlayerName(ConfigManager.GroupingManager.MotdPlayerName)
-                                .SetTheMessage(ChatMessage.CreateBuilder().SetBody(@params[2]))
+                                .SetTheMessage(ChatMessage.CreateBuilder().SetBody(message))
                                 .SetPrestigeLevel(6)
                                 .Build();
 
