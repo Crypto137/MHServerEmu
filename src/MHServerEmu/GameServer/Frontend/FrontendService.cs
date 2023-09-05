@@ -74,14 +74,14 @@ namespace MHServerEmu.GameServer.Frontend
                         else
                         {
                             Logger.Warn($"Failed to verify token for sessionId {session.Id}, disconnecting client");
-                            client.Disconnect();
+                            client.Connection.Disconnect();
                         }
 
                     }
                     else
                     {
                         Logger.Warn($"SessionId {clientCredentials.Sessionid} not found, disconnecting client");
-                        client.Disconnect();
+                        client.Connection.Disconnect();
                         return;
                     }
 

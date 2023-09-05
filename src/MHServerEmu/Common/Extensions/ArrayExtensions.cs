@@ -8,6 +8,15 @@ namespace MHServerEmu.Common.Extensions
 {
     public static class ArrayExtensions
     {
+        public static IEnumerable<T> Enumerate<T>(this T[] array, int start, int count)
+        {
+            if (array == null)
+                throw new ArgumentNullException("array");
+
+            for (int i = 0; i < count; i++)
+                yield return array[start + i];
+        }
+
         public static string ToHexString(this byte[] byteArray)
         {
             return byteArray.Aggregate("", (current, b) => current + b.ToString("X2"));

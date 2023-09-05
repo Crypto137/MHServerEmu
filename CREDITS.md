@@ -14,6 +14,8 @@
 
 - Denys Smirnov for his [protod](https://github.com/dennwc/protod) tool that has been invaluable for reverse engineering the network protocol.
 
+- mooege and diiis for inspiration.
+
 - Black Cat for her abilities of math and cheating death.
 
 - All the people who worked on the game in any capacity.
