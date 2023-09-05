@@ -30,6 +30,14 @@ namespace MHServerEmu.GameServer.Properties
             CreateValueContainer(rawValue);
         }
 
+        public Property(PropertyEnum enumid, object value)
+        {
+            Id = (ulong)enumid << MaxParamBits;
+            Info = GameDatabase.PropertyInfoTable.GetInfo(Enum);
+            CreateValueContainer(0);
+            Value.Set(value);
+        }
+
         public byte[] Encode()
         {
             using (MemoryStream memoryStream = new())
