@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Common;
+﻿using System.Text;
+using MHServerEmu.Common;
 using MHServerEmu.GameServer.Frontend.Accounts;
 
 namespace MHServerEmu.GameServer.Frontend
@@ -20,7 +21,7 @@ namespace MHServerEmu.GameServer.Frontend
 
         public byte[] Key { get; set; }
         public byte[] Token { get; }
-        public DateTime CreationDateTime { get; }
+        public DateTime CreationTime { get; }
 
         public ClientSession(ulong id, Account account, string downloader, string locale)
         {
@@ -31,7 +32,23 @@ namespace MHServerEmu.GameServer.Frontend
 
             Key = Cryptography.GenerateAesKey();
             Token = Cryptography.GenerateToken();
-            CreationDateTime = DateTime.Now;
+            CreationTime = DateTime.Now;
+        }
+
+        public override string ToString()
+        {
+            using (MemoryStream stream = new())
+            using (StreamWriter writer = new(stream))
+            {
+                writer.WriteLine($"SessionId: {Id}");
+                writer.WriteLine($"Account: {Account.Email}");
+                writer.WriteLine($"Downloader: {Downloader}");
+                writer.WriteLine($"Locale: {Locale}");
+                writer.WriteLine($"Online Time: {DateTime.Now - CreationTime:hh\\:mm\\:ss}");
+
+                writer.Flush();
+                return Encoding.UTF8.GetString(stream.ToArray());
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using MHServerEmu.GameServer.GameData;
+﻿using MHServerEmu.GameServer.Frontend;
+using MHServerEmu.GameServer.GameData;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.Common.Commands
@@ -18,6 +19,33 @@ namespace MHServerEmu.Common.Commands
             Program.Shutdown();
             return string.Empty;
         }
+    }
+
+    [CommandGroup("client", "Allows you to interact with clients.")]
+    public class ClientCommands : CommandGroup
+    {
+        [Command("info", "Usage: client info [sessionId]")]
+        public string Info(string[] @params, FrontendClient client)
+        {
+            if (@params == null || @params.Length == 0) return "Invalid arguments. Type 'help client info' to get help.";
+
+            if (ulong.TryParse(@params[0], out ulong sessionId))
+            {
+                if (Program.FrontendServer.FrontendService.TryGetClientSession(sessionId, out ClientSession session))
+                {
+                    return session.ToString();
+                }
+                else
+                {
+                    return $"SessionId {sessionId} not found";
+                }
+            }
+            else
+            {
+                return $"Failed to parse sessionId {@params[0]}";
+            }
+        }
+
     }
 
     [CommandGroup("packet", "Provides commands to interact with packet files.")]
