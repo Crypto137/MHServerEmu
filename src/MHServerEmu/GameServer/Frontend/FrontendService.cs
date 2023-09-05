@@ -157,7 +157,8 @@ namespace MHServerEmu.GameServer.Frontend
             }   
         }
 
-        public bool TryGetClientSession(ulong sessionId, out ClientSession session) => _sessionDict.TryGetValue(sessionId, out session);
+        public bool TryGetSession(ulong sessionId, out ClientSession session) => _sessionDict.TryGetValue(sessionId, out session);
+        public bool TryGetClient(ulong sessionId, out FrontendClient client) => _clientDict.TryGetValue(sessionId, out client);
 
         public void OnClientDisconnect(object sender, ConnectionEventArgs e)
         {

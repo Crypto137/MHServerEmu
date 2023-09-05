@@ -1,4 +1,6 @@
-﻿using MHServerEmu.GameServer.Frontend;
+﻿using Gazillion;
+using MHServerEmu.Common.Config;
+using MHServerEmu.GameServer.Frontend;
 using MHServerEmu.GameServer.GameData;
 using MHServerEmu.Networking;
 
@@ -31,13 +33,52 @@ namespace MHServerEmu.Common.Commands
 
             if (ulong.TryParse(@params[0], out ulong sessionId))
             {
-                if (Program.FrontendServer.FrontendService.TryGetClientSession(sessionId, out ClientSession session))
+                if (Program.FrontendServer.FrontendService.TryGetSession(sessionId, out ClientSession session))
                 {
                     return session.ToString();
                 }
                 else
                 {
                     return $"SessionId {sessionId} not found";
+                }
+            }
+            else
+            {
+                return $"Failed to parse sessionId {@params[0]}";
+            }
+        }
+
+        [Command("send", "Usage: client send [sessionId] [messageName] [messageContent]")]
+        public string Send(string[] @params, FrontendClient client)
+        {
+            if (@params == null || @params.Length < 3) return "Invalid arguments. Type 'help client send' to get help.";
+
+            if (ulong.TryParse(@params[0], out ulong sessionId))
+            {
+                if (Program.FrontendServer.FrontendService.TryGetClient(sessionId, out FrontendClient target))
+                {
+                    switch (@params[1].ToLower())
+                    {
+                        case "chatnormalmessage":
+                            var chatMessage = ChatNormalMessage.CreateBuilder()
+                                .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
+                                .SetFromPlayerName(ConfigManager.GroupingManager.MotdPlayerName)
+                                .SetTheMessage(ChatMessage.CreateBuilder().SetBody(@params[2]))
+                                .SetPrestigeLevel(6)
+                                .Build();
+
+                            target.SendMessage(2, new(chatMessage));
+                            break;
+
+                        default:
+                            return $"Unsupported message {@params[1]}";
+                    }
+
+                    return string.Empty;
+                }
+                else
+                {
+                    return $"Client for sessionId {sessionId} not found";
                 }
             }
             else
