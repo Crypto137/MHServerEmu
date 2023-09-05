@@ -75,6 +75,7 @@ namespace MHServerEmu.GameServer.GameData
         // Helper methods for shorter access to PrototypeRefManager
         public static string GetPrototypePath(ulong id) => PrototypeRefManager.GetPrototypePath(id);
         public static ulong GetPrototypeId(string path) => PrototypeRefManager.GetPrototypeId(path);
+        public static ulong GetPrototypeId(ulong guid) => PrototypeRefManager.GetPrototypeId(guid);
         public static ulong GetPrototypeId(ulong enumValue, PrototypeEnumType type) => PrototypeRefManager.GetPrototypeId(enumValue, type);
         public static ulong GetPrototypeEnumValue(ulong prototypeId, PrototypeEnumType type) => PrototypeRefManager.GetEnumValue(prototypeId, type);
 

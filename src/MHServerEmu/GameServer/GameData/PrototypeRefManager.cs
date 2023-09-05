@@ -75,14 +75,26 @@ namespace MHServerEmu.GameServer.GameData
 
         #endregion
 
-        private HashMap _prototypeHashMap;
-        private Dictionary<PrototypeEnumType, ulong[]> _prototypeEnumDict;                  // For enum -> prototypeId conversion
-        private Dictionary<PrototypeEnumType, Dictionary<ulong, ulong>> _enumLookupDict;    // For prototypeId -> enum conversion
+        private HashMap _prototypeHashMap;                                                  // PrototypeId <-> FilePath
+        private Dictionary<ulong, ulong> _prototypeGuidDict;                                // PrototypeGuid -> PrototypeId
+        private Dictionary<PrototypeEnumType, ulong[]> _prototypeEnumDict;                  // EnumValue -> PrototypeId
+        private Dictionary<PrototypeEnumType, Dictionary<ulong, ulong>> _enumLookupDict;    // PrototypeId -> EnumValue
 
         public PrototypeRefManager(CalligraphyStorage calligraphy, ResourceStorage resource)
         {
-            // Generate a hash map for all prototypes (Calligraphy + Resource)
-            _prototypeHashMap = InitializePrototypeHashMap(calligraphy, resource);
+            // Generate a hash map for all prototypes (Calligraphy + Resource) and fill _prototypeGuidDict
+            _prototypeHashMap = new(calligraphy.PrototypeDirectory.Entries.Length + resource.DirectoryDict.Count);
+            _prototypeHashMap.Add(0, "");
+            _prototypeGuidDict = new(calligraphy.PrototypeDirectory.Entries.Length);
+
+            foreach (DataDirectoryPrototypeEntry entry in calligraphy.PrototypeDirectory.Entries)
+            {
+                _prototypeHashMap.Add(entry.Id, entry.FilePath);
+                _prototypeGuidDict.Add(entry.Guid, entry.Id);
+            }
+
+            foreach (var kvp in resource.DirectoryDict)
+                _prototypeHashMap.Add(kvp.Key, kvp.Value);
 
             // Enumerate prototypes
             _prototypeEnumDict = new();
@@ -127,7 +139,7 @@ namespace MHServerEmu.GameServer.GameData
 
         public string GetPrototypePath(ulong id) => _prototypeHashMap.GetForward(id);
         public ulong GetPrototypeId(string path) => _prototypeHashMap.GetReverse(path);
-
+        public ulong GetPrototypeId(ulong guid) => _prototypeGuidDict[guid];
         public ulong GetPrototypeId(ulong enumValue, PrototypeEnumType type) => _prototypeEnumDict[type][enumValue];
         public ulong GetEnumValue(ulong prototypeId, PrototypeEnumType type) => _enumLookupDict[type][prototypeId];
         public int GetMaxEnumValue() => _enumLookupDict[PrototypeEnumType.All].Count - 1;
@@ -151,29 +163,6 @@ namespace MHServerEmu.GameServer.GameData
                     propertyIdList.Add(DataHelper.ReconstructPowerPropertyIdFromHash((ulong)i));
 
             return propertyIdList;
-        }
-
-        private static HashMap InitializePrototypeHashMap(CalligraphyStorage calligraphy, ResourceStorage resource)
-        {
-            HashMap hashMap;
-
-            if (calligraphy.PrototypeDirectory != null && resource.DirectoryDict.Count > 0)
-            {
-                hashMap = new(calligraphy.PrototypeDirectory.Entries.Length + resource.DirectoryDict.Count);
-                hashMap.Add(0, "");
-
-                foreach (DataDirectoryPrototypeEntry entry in calligraphy.PrototypeDirectory.Entries)
-                    hashMap.Add(entry.Id1, entry.FilePath);
-
-                foreach (var kvp in resource.DirectoryDict)
-                    hashMap.Add(kvp.Key, kvp.Value);
-            }
-            else
-            {
-                hashMap = new();
-            }
-
-            return hashMap;
         }
     }
 }

@@ -25,7 +25,7 @@ namespace MHServerEmu.Common.Commands
             }
 
             return matches.Aggregate(matches.Count >= 1 ? "Costume Matches:\n" : "No match found.",
-                (current, match) => $"{current}[{match.Id1}] {Path.GetRelativePath("Entity/Items/Costumes/Prototypes/", match.FilePath)}\n");
+                (current, match) => $"{current}[{match.Id}] {Path.GetRelativePath("Entity/Items/Costumes/Prototypes/", match.FilePath)}\n");
         }
     }
 }
