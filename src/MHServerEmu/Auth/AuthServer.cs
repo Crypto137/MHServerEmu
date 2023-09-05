@@ -44,24 +44,24 @@ namespace MHServerEmu.Auth
 
                 if (request.UserAgent == "Secret Identity Studios Http Client")     // Ignore requests from other user agents
                 {
-                    if (request.HttpMethod == "POST")
-                        HandleMessage(request.InputStream, response);
+                    if (request.HttpMethod == "POST" && request.Url.LocalPath == "/Login/IndexPB")
+                        HandleMessage(request, response);
                     else
-                        Logger.Warn($"Received {request.HttpMethod} from the game client");
+                        Logger.Warn($"Received {request.HttpMethod} to {request.Url.LocalPath} from a game client on {request.RemoteEndPoint}");
                 }
                 else
                 {
-                    Logger.Warn($"Received {request.HttpMethod} from an unknown UserAgent: {request.UserAgent}");
+                    Logger.Warn($"Received {request.HttpMethod} to {request.Url.LocalPath} from an unknown UserAgent on {request.RemoteEndPoint}. UserAgent information: {request.UserAgent}");
                 }
 
                 response.Close();
             }
         }
 
-        private async void HandleMessage(Stream inputStream, HttpListenerResponse response)
+        private async void HandleMessage(HttpListenerRequest request, HttpListenerResponse response)
         {
             // Parse message from POST
-            CodedInputStream stream = CodedInputStream.CreateInstance(inputStream);
+            CodedInputStream stream = CodedInputStream.CreateInstance(request.InputStream);
             GameMessage message = new((byte)stream.ReadRawVarint64(), stream.ReadRawBytes((int)stream.ReadRawVarint64()));
 
             switch ((FrontendProtocolMessage)message.Id)
@@ -72,7 +72,7 @@ namespace MHServerEmu.Auth
 
                     if (session != null)  // Send an AuthTicket if we were able to create a session
                     {
-                        Logger.Info($"Sending AuthTicket for sessionId {session.Id}");
+                        Logger.Info($"Sending AuthTicket for sessionId {session.Id} to the game client on {request.RemoteEndPoint}");
 
                         byte[] authTicket = AuthTicket.CreateBuilder()
                             .SetSessionKey(ByteString.CopyFrom(session.Key))
@@ -103,7 +103,7 @@ namespace MHServerEmu.Auth
                     }
                     else
                     {
-                        Logger.Info($"Authentication failed ({errorCode})");
+                        Logger.Info($"Authentication for the game client on {request.RemoteEndPoint} failed ({errorCode})");
                         response.StatusCode = (int)errorCode;
                     }
 
