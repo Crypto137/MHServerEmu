@@ -32,22 +32,14 @@ namespace MHServerEmu.GameServer.Entities
 
             Properties = new Property[]
             {
-                new(0x4D20000000000000),    // MapPosition
-                new(0x3B20000000000000),    // Health
-                new(0x4CA0000000000000),    // MapAreaId
-                new(0x3C20000000000000),    // HealthMaxOther
-                new(0x4D40000000000000),    // MapRegionId
-                new(0x4CC0000000000000),    // MapCellId
-                new(0x1960000000000000)     // ContextAreaRef
+                new(PropertyEnum.MapPosition, mapPosition), 
+                new(PropertyEnum.Health, health),
+                new(PropertyEnum.MapAreaId, mapAreaId),
+                new(PropertyEnum.HealthMaxOther, healthMaxOther),
+                new(PropertyEnum.MapRegionId, mapRegionId),
+                new(PropertyEnum.MapCellId, mapCellId),
+                new(PropertyEnum.ContextAreaRef, contextAreaRef)
             };
-
-            Properties[0].Value.Set(mapPosition);
-            Properties[1].Value.Set(health);
-            Properties[2].Value.Set(mapAreaId);
-            Properties[3].Value.Set(healthMaxOther);
-            Properties[4].Value.Set(mapRegionId);
-            Properties[5].Value.Set(mapCellId);
-            Properties[6].Value.Set(contextAreaRef);
 
             UnknownPrototypes = Array.Empty<PrototypeCollectionEntry>();
             Conditions = Array.Empty<Condition>();
