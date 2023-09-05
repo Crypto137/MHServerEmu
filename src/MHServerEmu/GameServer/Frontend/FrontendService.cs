@@ -5,6 +5,7 @@ using MHServerEmu.Common;
 using MHServerEmu.Common.Config;
 using MHServerEmu.GameServer.Frontend.Accounts;
 using MHServerEmu.Networking;
+using MHServerEmu.Networking.Base;
 
 namespace MHServerEmu.GameServer.Frontend
 {
@@ -13,7 +14,12 @@ namespace MHServerEmu.GameServer.Frontend
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private GameServerManager _gameServerManager;
-        private Dictionary<ulong, ClientSession> _sessionDict = new();      // todo: session management (invalidate old sessions, remove session when a client disconnects, etc.)
+
+        // Use a lock object instead of this to prevent deadlocks
+        // More info: https://learn.microsoft.com/en-us/archive/msdn-magazine/2003/january/net-column-safe-thread-synchronization
+        private object _sessionLock = new();     
+        private Dictionary<ulong, ClientSession> _sessionDict = new();
+        private Dictionary<ulong, FrontendClient> _clientDict = new();
 
         public FrontendService(GameServerManager gameServerManager)
         {
@@ -39,14 +45,20 @@ namespace MHServerEmu.GameServer.Frontend
                         }
                         catch
                         {
+                            lock (_sessionLock) _sessionDict.Remove(session.Id);    // invalidate session after a failed login attempt
                             Logger.Warn($"Failed to decrypt token for sessionId {session.Id}");
                         }
 
                         if (decryptedToken != null && Cryptography.VerifyToken(decryptedToken, session.Token))
                         {
                             Logger.Info($"Verified client for sessionId {session.Id}");
-                            client.Account = session.Account;   // assign account to the client if the token is valid
-                            _sessionDict.Remove(session.Id);
+
+                            // assign account to the client if the token is valid
+                            lock (_sessionLock)
+                            {
+                                client.AssignSession(session);
+                                _clientDict.Add(session.Id, client);
+                            }
 
                             // Generate response
                             if (ConfigManager.Frontend.SimulateQueue)
@@ -130,9 +142,9 @@ namespace MHServerEmu.GameServer.Frontend
 
             if (account != null)
             {
-                lock (this)     // lock session creation to prevent async weirdness
+                lock (_sessionLock)     // Create a new session if login data is valid
                 {
-                    ClientSession session = new(HashHelper.GenerateUniqueRandomId(_sessionDict), account);
+                    ClientSession session = new(HashHelper.GenerateUniqueRandomId(_sessionDict), account, loginDataPB.ClientDownloader, loginDataPB.Locale);
                     _sessionDict.Add(session.Id, session);
                     return session;
                 }
@@ -141,6 +153,26 @@ namespace MHServerEmu.GameServer.Frontend
             {
                 return null;
             }   
+        }
+
+        public void OnClientDisconnect(object sender, ConnectionEventArgs e)
+        {
+            FrontendClient client = e.Connection.Client as FrontendClient;
+
+            if (client.Session == null)
+            {
+                Logger.Info("Client disconnected");
+            }
+            else
+            {
+                lock (_sessionLock)
+                {
+                    _sessionDict.Remove(client.Session.Id);
+                    _clientDict.Remove(client.Session.Id);
+                }
+
+                Logger.Info($"Client disconnected (sessionId {client.Session.Id})");
+            }
         }
     }
 }

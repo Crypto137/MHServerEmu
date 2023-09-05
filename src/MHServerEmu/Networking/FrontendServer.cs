@@ -10,14 +10,16 @@ namespace MHServerEmu.Networking
     {
         private new static readonly Logger Logger = LogManager.CreateLogger();  // Hide the Server.Logger so that this logger can show the actual server as log source.
 
-        private GameServerManager _gameServerManager = new();
+        private GameServerManager _gameServerManager;
 
         public FrontendService FrontendService { get => _gameServerManager.FrontendService; }
 
         public FrontendServer()
         {
+            _gameServerManager = new();
+
             OnConnect += FrontendServer_OnConnect;
-            OnDisconnect += FrontendServer_OnDisconnect;
+            OnDisconnect += FrontendService.OnClientDisconnect;
             DataReceived += FrontendServer_DataReceived;
             DataSent += (sender, e) => { };
         }
@@ -30,13 +32,8 @@ namespace MHServerEmu.Networking
 
         private void FrontendServer_OnConnect(object sender, ConnectionEventArgs e)
         {
-            Logger.Info($"Client connected: {e.Connection}");
+            Logger.Info($"Client connected from {e.Connection}");
             e.Connection.Client = new FrontendClient(e.Connection, _gameServerManager);
-        }
-
-        private void FrontendServer_OnDisconnect(object sender, ConnectionEventArgs e)
-        {
-            Logger.Info($"Client disconnected {e.Connection}");
         }
 
         private void FrontendServer_DataReceived(object sender, ConnectionDataEventArgs e)

@@ -3,7 +3,7 @@ using MHServerEmu.Common;
 using MHServerEmu.Common.Config;
 using MHServerEmu.GameServer;
 using MHServerEmu.GameServer.Entities;
-using MHServerEmu.GameServer.Frontend.Accounts;
+using MHServerEmu.GameServer.Frontend;
 using MHServerEmu.GameServer.Games;
 using MHServerEmu.GameServer.Regions;
 using MHServerEmu.Networking.Base;
@@ -13,19 +13,20 @@ namespace MHServerEmu.Networking
     public class FrontendClient : IClient
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+        private readonly GameServerManager _gameServerManager;
 
         public Connection Connection { get; set; }
 
-        private readonly GameServerManager _gameServerManager;
-
+        // State
+        public ClientSession Session { get; private set; } = null;
         public bool FinishedPlayerMgrServerFrontendHandshake { get; set; } = false;
         public bool FinishedGroupingManagerFrontendHandshake { get; set; } = false;
         public bool IsLoading { get; set; } = false;
         public ulong GameId { get; set; }
-
-        // TODO: move player data to account
         public Game CurrentGame { get => _gameServerManager.GameManager.GetGameById(GameId); }
-        public Account Account { get; set; }
+
+        // Data
+        // TODO: move player data to account
         public RegionPrototype CurrentRegion { get; set; } = ConfigManager.PlayerData.StartingRegion;
         public HardcodedAvatarEntity CurrentAvatar { get; set; } = ConfigManager.PlayerData.StartingAvatar;
 
@@ -68,9 +69,16 @@ namespace MHServerEmu.Networking
 
                 case MuxCommand.Message:
                     _gameServerManager.Handle(this, packet.MuxId, packet.Messages);
-
                     break;
             }
+        }
+
+        public void AssignSession(ClientSession session)
+        {
+            if (Session == null)
+                Session = session;
+            else
+                Logger.Warn($"Failed to assign sessionId {session.Id} to a client: sessionId {Session.Id} is already assigned to this client");
         }
 
         public void SendMessage(ushort muxId, GameMessage message)
