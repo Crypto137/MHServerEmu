@@ -151,6 +151,10 @@ namespace MHServerEmu.GameServer
                     _gameServerManager.BillingService.Handle(client, muxId, message);
                     break;
 
+                case ClientToGameServerMessage.NetMessageGracefulDisconnect:
+                    client.Connection.Disconnect();
+                    break;
+
                 default:
                     Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
                     break;
