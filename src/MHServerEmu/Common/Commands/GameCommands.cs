@@ -68,8 +68,6 @@ namespace MHServerEmu.Common.Commands
             if (ConfigManager.Frontend.BypassAuth) return "Disable BypassAuth to use this command";
 
             client.Session.Account.PlayerData.PlayerName = @params[0];
-            AccountManager.SavePlayerData();
-
             return $"Changing player name to {@params[0]}. Relog for changes to take effect.";
         }
 
@@ -83,7 +81,6 @@ namespace MHServerEmu.Common.Commands
             if (Enum.TryParse(typeof(HardcodedAvatarEntity), @params[0], true, out object avatar))
             {
                 client.Session.Account.PlayerData.Avatar = (HardcodedAvatarEntity)avatar;
-                AccountManager.SavePlayerData();
                 return $"Changing avatar to {client.Session.Account.PlayerData.Avatar}. Relog for changes to take effect.";
             }
             else
@@ -102,7 +99,6 @@ namespace MHServerEmu.Common.Commands
             if (Enum.TryParse(typeof(RegionPrototype), @params[0], true, out object region))
             {
                 client.Session.Account.PlayerData.Region = (RegionPrototype)region;
-                AccountManager.SavePlayerData();
                 return $"Changing starting region to {client.Session.Account.PlayerData.Region}. Relog for changes to take effect.";
             }
             else
@@ -125,8 +121,6 @@ namespace MHServerEmu.Common.Commands
                 string costumeName = Path.GetFileNameWithoutExtension(GameDatabase.GetPrototypePath(costumePrototypeId));
 
                 client.Session.Account.PlayerData.CostumeOverride = costumePrototypeId;
-                AccountManager.SavePlayerData();
-
                 return $"Changing costume to {costumeName}. Relog for changes to take effect.";
             }
             catch

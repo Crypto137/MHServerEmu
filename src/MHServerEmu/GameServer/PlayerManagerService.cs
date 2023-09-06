@@ -100,7 +100,6 @@ namespace MHServerEmu.GameServer
                         if (Enum.TryParse(typeof(HardcodedAvatarEntity), avatarName, true, out object avatar))
                         {
                             client.Session.Account.PlayerData.Avatar = (HardcodedAvatarEntity)avatar;
-                            AccountManager.SavePlayerData();
 
                             var chatMessage = ChatNormalMessage.CreateBuilder()
                                 .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
