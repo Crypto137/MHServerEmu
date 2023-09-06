@@ -63,7 +63,7 @@ namespace MHServerEmu.GameServer.Powers
         Ultron = 33764282,
         Venom = 30725050,
         Vision = 66110394,
-        WarMarchine = 43946938,
+        WarMachine = 43946938,
         WinterSoldier = 6783930,
         Wolverine = 66114490,
         X23 = 6718394
