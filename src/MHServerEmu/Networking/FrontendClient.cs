@@ -17,7 +17,6 @@ namespace MHServerEmu.Networking
 
         public Connection Connection { get; set; }
 
-        // State
         public ClientSession Session { get; private set; } = null;
         public bool FinishedPlayerMgrServerFrontendHandshake { get; set; } = false;
         public bool FinishedGroupingManagerFrontendHandshake { get; set; } = false;
@@ -25,21 +24,10 @@ namespace MHServerEmu.Networking
         public ulong GameId { get; set; }
         public Game CurrentGame { get => _gameServerManager.GameManager.GetGameById(GameId); }
 
-        // Data
-        // TODO: move player data to account
-        public RegionPrototype CurrentRegion { get; set; } = ConfigManager.PlayerData.StartingRegion;
-        public HardcodedAvatarEntity CurrentAvatar { get; set; } = ConfigManager.PlayerData.StartingAvatar;
-
         public FrontendClient(Connection connection, GameServerManager gameServerManager)
         {
             Connection = connection;
             _gameServerManager = gameServerManager;
-
-            if (RegionManager.IsRegionAvailable(CurrentRegion) == false)
-            {
-                Logger.Warn($"No data is available for {CurrentRegion}, falling back to NPEAvengersTowerHUBRegion");
-                CurrentRegion = RegionPrototype.NPEAvengersTowerHUBRegion;
-            }
         }
 
         public void Parse(ConnectionDataEventArgs e)
@@ -76,9 +64,19 @@ namespace MHServerEmu.Networking
         public void AssignSession(ClientSession session)
         {
             if (Session == null)
+            {
                 Session = session;
+
+                if (RegionManager.IsRegionAvailable(Session.Account.PlayerData.Region) == false)
+                {
+                    Logger.Warn($"No data is available for {Session.Account.PlayerData.Region}, falling back to NPEAvengersTowerHUBRegion");
+                    Session.Account.PlayerData.Region = RegionPrototype.NPEAvengersTowerHUBRegion;
+                }
+            }
             else
+            {
                 Logger.Warn($"Failed to assign sessionId {session.Id} to a client: sessionId {Session.Id} is already assigned to this client");
+            }
         }
 
         public void SendMessage(ushort muxId, GameMessage message)

@@ -42,7 +42,7 @@ namespace MHServerEmu.Common.Commands
                 property.Value.Set(costumePrototypeId);
 
                 // Get replication id for the client avatar
-                ulong replicationId = (ulong)Enum.Parse(typeof(HardcodedAvatarReplicationId), Enum.GetName(typeof(HardcodedAvatarEntity), client.CurrentAvatar));
+                ulong replicationId = (ulong)Enum.Parse(typeof(HardcodedAvatarReplicationId), Enum.GetName(typeof(HardcodedAvatarEntity), client.Session.Account.PlayerData.Avatar));
 
                 // Send NetMessageSetProperty message
                 client.SendMessage(1, new(property.ToNetMessageSetProperty(replicationId)));

@@ -7,6 +7,7 @@ using MHServerEmu.Common;
 using MHServerEmu.Common.Config;
 using MHServerEmu.GameServer.Entities;
 using MHServerEmu.GameServer.Entities.Avatars;
+using MHServerEmu.GameServer.Frontend.Accounts;
 using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 using MHServerEmu.GameServer.GameData.Prototypes.Markers;
@@ -74,7 +75,7 @@ namespace MHServerEmu.GameServer.Games
                     Logger.Info($"Received NetMessageCellLoaded");
                     if (client.IsLoading)
                     {
-                        client.SendMultipleMessages(1, GetFinishLoadingMessages(client.CurrentRegion, client.CurrentAvatar));
+                        client.SendMultipleMessages(1, GetFinishLoadingMessages(client.Session.Account.PlayerData));
                         client.IsLoading = false;
                     }
 
@@ -123,20 +124,20 @@ namespace MHServerEmu.GameServer.Games
 
             client.SendMessage(2, new(chatBroadcastMessage));
 
-            client.SendMultipleMessages(1, GetBeginLoadingMessages(client.CurrentRegion, client.CurrentAvatar));
+            client.SendMultipleMessages(1, GetBeginLoadingMessages(client.Session.Account.PlayerData));
             client.IsLoading = true;
         }
 
         public void MovePlayerToRegion(FrontendClient client, RegionPrototype region)
         {
-            client.CurrentRegion = region;
-            client.SendMultipleMessages(1, GetBeginLoadingMessages(client.CurrentRegion, client.CurrentAvatar, false));
+            client.Session.Account.PlayerData.Region = region;
+            client.SendMultipleMessages(1, GetBeginLoadingMessages(client.Session.Account.PlayerData, false));
             client.IsLoading = true;
         }
 
         #region Region Loading
 
-        private GameMessage[] GetBeginLoadingMessages(RegionPrototype regionPrototype, HardcodedAvatarEntity avatar, bool loadEntities = true)
+        private GameMessage[] GetBeginLoadingMessages(PlayerData playerData, bool loadEntities = true)
         {
             List<GameMessage> messageList = new();
 
@@ -153,11 +154,11 @@ namespace MHServerEmu.GameServer.Games
             messageList.Add(new(NetMessageReadyForTimeSync.DefaultInstance));
 
             // Load local player data
-            if (loadEntities) messageList.AddRange(LoadLocalPlayerDataMessages(avatar));
+            if (loadEntities) messageList.AddRange(LoadLocalPlayerDataMessages(playerData));
             messageList.Add(new(NetMessageReadyAndLoadedOnGameServer.DefaultInstance));
 
             // Load region data
-            messageList.AddRange(RegionManager.GetRegion(regionPrototype).GetLoadingMessages(Id));
+            messageList.AddRange(RegionManager.GetRegion(playerData.Region).GetLoadingMessages(Id));
 
             // Create waypoint entity
             messageList.Add(new(NetMessageEntityCreate.CreateBuilder()
@@ -168,13 +169,13 @@ namespace MHServerEmu.GameServer.Games
             return messageList.ToArray();
         }
 
-        private GameMessage[] GetFinishLoadingMessages(RegionPrototype regionPrototype, HardcodedAvatarEntity avatar)
+        private GameMessage[] GetFinishLoadingMessages(PlayerData playerData)
         {
             List<GameMessage> messageList = new();
 
-            Region region = RegionManager.GetRegion(regionPrototype);
+            Region region = RegionManager.GetRegion(playerData.Region);
 
-            EnterGameWorldArchive avatarEnterGameWorldArchive = new((ulong)avatar, region.EntrancePosition, region.EntranceOrientation.X, 350f);
+            EnterGameWorldArchive avatarEnterGameWorldArchive = new((ulong)playerData.Avatar, region.EntrancePosition, region.EntranceOrientation.X, 350f);
             messageList.Add(new(NetMessageEntityEnterGameWorld.CreateBuilder()
                 .SetArchiveData(ByteString.CopyFrom(avatarEnterGameWorldArchive.Encode()))
                 .Build()));
@@ -229,7 +230,7 @@ namespace MHServerEmu.GameServer.Games
                     MarkersAdd(GameDatabase.Resource.CellDict[district.CellMarkerSet[cellid].Resource], cellid+1, AddProp);                   
             }
 
-            switch (regionPrototype)
+            switch (playerData.Region)
             {
                 case RegionPrototype.AsgardiaRegion:
 
@@ -388,7 +389,7 @@ namespace MHServerEmu.GameServer.Games
                 .Build()));
 
             // Load power collection
-            messageList.AddRange(PowerLoader.LoadAvatarPowerCollection(avatar).ToList());
+            messageList.AddRange(PowerLoader.LoadAvatarPowerCollection(playerData.Avatar).ToList());
 
             // Dequeue loading screen
             messageList.Add(new(NetMessageDequeueLoadingScreen.DefaultInstance));
@@ -396,7 +397,7 @@ namespace MHServerEmu.GameServer.Games
             return messageList.ToArray();
         }
 
-        private GameMessage[] LoadLocalPlayerDataMessages(HardcodedAvatarEntity avatarEntityId)
+        private GameMessage[] LoadLocalPlayerDataMessages(PlayerData playerData)
         {
             List<GameMessage> messageList = new();
 
@@ -456,9 +457,9 @@ namespace MHServerEmu.GameServer.Games
                     Avatar avatar = new(entityCreateMessage.ArchiveData.ToByteArray());
 
                     // modify base data
-                    if (avatarEntityId != HardcodedAvatarEntity.BlackCat)
+                    if (playerData.Avatar != HardcodedAvatarEntity.BlackCat)
                     {
-                        if (baseData.EntityId == (ulong)avatarEntityId)
+                        if (baseData.EntityId == (ulong)playerData.Avatar)
                         {
                             replacementInventorySlot = baseData.InvLoc.Slot;
                             baseData.InvLoc.InventoryPrototypeId = GameDatabase.GetPrototypeId("Entity/Inventory/PlayerInventories/PlayerAvatarInPlay.prototype");
@@ -474,15 +475,15 @@ namespace MHServerEmu.GameServer.Games
                         }
                     }
 
-                    if (baseData.EntityId == (ulong)avatarEntityId)
+                    if (baseData.EntityId == (ulong)playerData.Avatar)
                     {
                         // modify avatar data here
 
-                        avatar.PlayerName.Text = ConfigManager.PlayerData.PlayerName;
+                        avatar.PlayerName.Text = playerData.PlayerName;
 
                         foreach (Property property in avatar.Properties)
                         {
-                            if (property.Enum == PropertyEnum.CostumeCurrent && ConfigManager.PlayerData.CostumeOverride != 0)
+                            if (property.Enum == PropertyEnum.CostumeCurrent && playerData.CostumeOverride != 0)
                             {
                                 try
                                 {
