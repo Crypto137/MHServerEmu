@@ -20,6 +20,8 @@ This server emulator is currently in early stages of development. Currently it f
 
 - Rudimentary implementation of hero powers.
 
+- Basic multiplayer functionality: handling multiple clients, remote connections, chat.
+
 ## Setup
 
 See [Setup.md](https://github.com/Crypto137/MHServerEmu/blob/master/docs/Setup.md) for information on how to set the server up. Please note that since MHServerEmu is still in early stages in development, the process is currently not particularly user friendly.
