@@ -14,6 +14,7 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
         public bool IsArchived { get; set; }
         public bool IsPasswordExpired { get; set; }
 
+        [JsonIgnore]
         public PlayerData PlayerData { get => AccountManager.GetPlayerData(Id); }
 
         public Account(ulong id, string email, string password)
