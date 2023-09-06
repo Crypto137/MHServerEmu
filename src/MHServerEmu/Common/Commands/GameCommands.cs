@@ -1,4 +1,6 @@
-﻿using MHServerEmu.GameServer.Entities;
+﻿using MHServerEmu.Common.Config;
+using MHServerEmu.GameServer.Entities;
+using MHServerEmu.GameServer.Frontend.Accounts;
 using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.Properties;
 using MHServerEmu.GameServer.Regions;
@@ -52,6 +54,85 @@ namespace MHServerEmu.Common.Commands
             {
                 return $"Failed to parse costume id {@params[0]}.";
             }            
+        }
+    }
+
+    [CommandGroup("player", "Changes player data for this account.")]
+    public class PlayerCommand : CommandGroup
+    {
+        [Command("name", "Usage: player name")]
+        public string Name(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+            if (@params.Length == 0) return "Invalid arguments. Type 'help player name' to get help.";
+            if (ConfigManager.Frontend.BypassAuth) return "Disable BypassAuth to use this command";
+
+            client.Session.Account.PlayerData.PlayerName = @params[0];
+            AccountManager.SavePlayerData();
+
+            return $"Changing player name to {@params[0]}. Relog for changes to take effect.";
+        }
+
+        [Command("avatar", "Usage: player avatar [avatar]")]
+        public string Avatar(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+            if (@params.Length == 0) return "Invalid arguments. Type 'help player avatar' to get help.";
+            if (ConfigManager.Frontend.BypassAuth) return "Disable BypassAuth to use this command";
+
+            if (Enum.TryParse(typeof(HardcodedAvatarEntity), @params[0], true, out object avatar))
+            {
+                client.Session.Account.PlayerData.Avatar = (HardcodedAvatarEntity)avatar;
+                AccountManager.SavePlayerData();
+                return $"Changing avatar to {client.Session.Account.PlayerData.Avatar}. Relog for changes to take effect.";
+            }
+            else
+            {
+                return $"Failed to change player avatar to {@params[0]}";
+            }
+        }
+
+        [Command("region", "Usage: player region")]
+        public string Region(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+            if (@params.Length == 0) return "Invalid arguments. Type 'help player region' to get help.";
+            if (ConfigManager.Frontend.BypassAuth) return "Disable BypassAuth to use this command";
+
+            if (Enum.TryParse(typeof(RegionPrototype), @params[0], true, out object region))
+            {
+                client.Session.Account.PlayerData.Region = (RegionPrototype)region;
+                AccountManager.SavePlayerData();
+                return $"Changing starting region to {client.Session.Account.PlayerData.Region}. Relog for changes to take effect.";
+            }
+            else
+            {
+                return $"Failed to change starting region to {@params[0]}";
+            }
+        }
+
+        [Command("costume", "Usage: server info")]
+        public string Costume(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+            if (@params.Length == 0) return "Invalid arguments. Type 'help player costume' to get help.";
+            if (ConfigManager.Frontend.BypassAuth) return "Disable BypassAuth to use this command";
+
+            try
+            {
+                // Try to parse costume prototype id from command
+                ulong costumePrototypeId = ulong.Parse(@params[0]);
+                string costumeName = Path.GetFileNameWithoutExtension(GameDatabase.GetPrototypePath(costumePrototypeId));
+
+                client.Session.Account.PlayerData.CostumeOverride = costumePrototypeId;
+                AccountManager.SavePlayerData();
+
+                return $"Changing costume to {costumeName}. Relog for changes to take effect.";
+            }
+            catch
+            {
+                return $"Failed to parse costume id {@params[0]}.";
+            }
         }
     }
 }

@@ -487,7 +487,7 @@ namespace MHServerEmu.GameServer.Games
                             {
                                 try
                                 {
-                                    property.Value.Set(ConfigManager.PlayerData.CostumeOverride);
+                                    property.Value.Set(playerData.CostumeOverride);
                                 }
                                 catch
                                 {

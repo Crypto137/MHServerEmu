@@ -239,7 +239,7 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             File.WriteAllText(AccountFilePath, serializedAccounts);           
         }
 
-        private static void SavePlayerData()
+        public static void SavePlayerData()
         {
             if (Directory.Exists(SavedDataDirectory) == false) Directory.CreateDirectory(SavedDataDirectory);
 
