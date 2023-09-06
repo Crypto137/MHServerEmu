@@ -33,7 +33,7 @@ namespace MHServerEmu.GameServer
                             .SetTheMessage(chatMessageIn.TheMessage)
                             .Build();
 
-                        client.SendMessage(2, new(chatMessageOut));
+                        _gameServerManager.FrontendService.BroadcastMessage(2, new(chatMessageOut));
                     }
 
                     break;

@@ -179,5 +179,14 @@ namespace MHServerEmu.GameServer.Frontend
                 Logger.Info($"Client disconnected (sessionId {client.Session.Id})");
             }
         }
+
+        public void BroadcastMessage(ushort muxId, GameMessage message)
+        {
+            lock (_sessionLock)
+            {
+                foreach (var kvp in _clientDict)
+                    kvp.Value.SendMessage(muxId, message);
+            }
+        }
     }
 }
