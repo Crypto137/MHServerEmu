@@ -231,22 +231,20 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
 
         private static void SaveAccounts()
         {
-            if (Directory.Exists(SavedDataDirectory) == false) Directory.CreateDirectory(SavedDataDirectory);
-
-            string serializedAccounts;
-            lock (_accountLock) serializedAccounts = JsonSerializer.Serialize(_accountList);
-
-            File.WriteAllText(AccountFilePath, serializedAccounts);           
+            lock (_accountLock)
+            {
+                if (Directory.Exists(SavedDataDirectory) == false) Directory.CreateDirectory(SavedDataDirectory);
+                File.WriteAllText(AccountFilePath, JsonSerializer.Serialize(_accountList));
+            }
         }
 
         public static void SavePlayerData()
         {
-            if (Directory.Exists(SavedDataDirectory) == false) Directory.CreateDirectory(SavedDataDirectory);
-
-            string serializedPlayerData;
-            lock (_accountLock) serializedPlayerData = JsonSerializer.Serialize(_playerDataDict);
-
-            File.WriteAllText(PlayerDataFilePath, serializedPlayerData);
+            lock (_accountLock)
+            {
+                if (Directory.Exists(SavedDataDirectory) == false) Directory.CreateDirectory(SavedDataDirectory);
+                File.WriteAllText(PlayerDataFilePath, JsonSerializer.Serialize(_playerDataDict));
+            }           
         }
     }
 }
