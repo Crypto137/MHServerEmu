@@ -1,7 +1,10 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common;
-using MHServerEmu.GameServer.Regions;
+using MHServerEmu.Common.Config;
+using MHServerEmu.GameServer.Entities;
+using MHServerEmu.GameServer.Entities.Avatars;
+using MHServerEmu.GameServer.Frontend.Accounts;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.GameServer
@@ -88,6 +91,27 @@ namespace MHServerEmu.GameServer
                     Logger.Info($"Received NetMessageSwitchAvatar");
                     var switchAvatarMessage = NetMessageSwitchAvatar.ParseFrom(message.Content);
                     Logger.Trace(switchAvatarMessage.ToString());
+
+                    // A hack for changing starting avatar without using chat commands
+                    if (ConfigManager.Frontend.BypassAuth == false)
+                    {
+                        string avatarName = Enum.GetName(typeof(AvatarPrototype), switchAvatarMessage.AvatarPrototypeId);
+
+                        if (Enum.TryParse(typeof(HardcodedAvatarEntity), avatarName, true, out object avatar))
+                        {
+                            client.Session.Account.PlayerData.Avatar = (HardcodedAvatarEntity)avatar;
+                            AccountManager.SavePlayerData();
+
+                            var chatMessage = ChatNormalMessage.CreateBuilder()
+                                .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
+                                .SetFromPlayerName(ConfigManager.GroupingManager.MotdPlayerName)
+                                .SetTheMessage(ChatMessage.CreateBuilder().SetBody($"Changing avatar to {client.Session.Account.PlayerData.Avatar}. Relog for changes to take effect."))
+                                .SetPrestigeLevel(6)
+                                .Build();
+
+                            client.SendMessage(2, new(chatMessage));
+                        }
+                    }
 
                     /* WIP - Hardcoded Black Cat -> Thor -> requires triggering an avatar swap back to Black Cat to move Thor again  
                     List<GameMessage> messageList = new();
