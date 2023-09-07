@@ -175,7 +175,7 @@ namespace MHServerEmu.GameServer
                     break;
 
                 case ClientToGameServerMessage.NetMessageGracefulDisconnect:
-                    client.Connection.Disconnect();
+                    client.SendMuxDisconnect(1);
                     break;
 
                 default:
