@@ -1,5 +1,5 @@
-﻿using MHServerEmu.Common;
-using MHServerEmu.Common.Config;
+﻿using MHServerEmu.Common.Config;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer;
 using MHServerEmu.GameServer.Frontend;
 using MHServerEmu.Networking.Base;

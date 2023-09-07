@@ -1,10 +1,9 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common;
 using MHServerEmu.Common.Config;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.Entities;
 using MHServerEmu.GameServer.Entities.Avatars;
-using MHServerEmu.GameServer.Frontend.Accounts;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.GameServer

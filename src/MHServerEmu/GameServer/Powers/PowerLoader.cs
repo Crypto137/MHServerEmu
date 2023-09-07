@@ -1,9 +1,9 @@
 ﻿using System.Reflection;
 using Gazillion;
-using MHServerEmu.Networking;
-using MHServerEmu.Common;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.Entities;
 using MHServerEmu.GameServer.GameData;
+using MHServerEmu.Networking;
 
 namespace MHServerEmu.GameServer.Powers
 {

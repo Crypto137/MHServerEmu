@@ -1,4 +1,5 @@
 ﻿using System;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.Entities;
 using MHServerEmu.GameServer.Regions;
 

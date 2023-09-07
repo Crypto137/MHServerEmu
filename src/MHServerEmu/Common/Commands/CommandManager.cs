@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using Gazillion;
 using MHServerEmu.Common.Config;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.Common.Commands

@@ -1,8 +1,8 @@
 ﻿using System.Reflection;
 using Google.ProtocolBuffers;
 using Gazillion;
-using MHServerEmu.Common;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.Common.Logging;
 
 namespace MHServerEmu.Networking
 {

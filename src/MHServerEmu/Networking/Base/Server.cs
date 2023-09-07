@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Net.Sockets;
-using MHServerEmu.Common;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.Common.Logging;
 
 namespace MHServerEmu.Networking.Base
 {

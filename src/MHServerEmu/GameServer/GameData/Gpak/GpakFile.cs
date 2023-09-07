@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using K4os.Compression.LZ4;
-using MHServerEmu.Common;
+using MHServerEmu.Common.Logging;
 
 namespace MHServerEmu.GameServer.GameData.Gpak
 {

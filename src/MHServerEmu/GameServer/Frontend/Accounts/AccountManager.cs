@@ -3,6 +3,7 @@ using Gazillion;
 using MHServerEmu.Auth;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Config;
+using MHServerEmu.Common.Logging;
 
 namespace MHServerEmu.GameServer.Frontend.Accounts
 {

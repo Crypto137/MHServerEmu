@@ -1,9 +1,9 @@
 ﻿using System.Net;
 using Google.ProtocolBuffers;
 using Gazillion;
-using MHServerEmu.Common;
-using MHServerEmu.GameServer.Frontend;
 using MHServerEmu.Common.Config;
+using MHServerEmu.Common.Logging;
+using MHServerEmu.GameServer.Frontend;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.Auth

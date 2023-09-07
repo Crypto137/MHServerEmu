@@ -3,6 +3,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Auth;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Config;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.Frontend.Accounts;
 using MHServerEmu.Networking;
 using MHServerEmu.Networking.Base;

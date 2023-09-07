@@ -1,4 +1,4 @@
-﻿using MHServerEmu.Common;
+﻿using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 

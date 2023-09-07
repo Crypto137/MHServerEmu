@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Common.Config.Sections;
+using MHServerEmu.Common.Logging;
 
 namespace MHServerEmu.Common.Config
 {

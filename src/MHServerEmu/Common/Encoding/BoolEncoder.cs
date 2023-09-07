@@ -1,4 +1,4 @@
-﻿using MHServerEmu.Common;
+﻿using MHServerEmu.Common.Logging;
 
 namespace MHServerEmu.Common.Encoding
 {

@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using Gazillion;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.Entities;
 using MHServerEmu.Networking;
 

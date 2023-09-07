@@ -1,8 +1,8 @@
 ﻿using System.Globalization;
 using MHServerEmu.Auth;
-using MHServerEmu.Common;
 using MHServerEmu.Common.Commands;
 using MHServerEmu.Common.Config;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.Frontend.Accounts;
 using MHServerEmu.Networking;
