@@ -20,6 +20,10 @@ namespace MHServerEmu.Common.Commands
 
         public virtual string Handle(string parameters, FrontendClient client = null)
         {
+            // Check if the user has enough privileges to access the command group
+            if (client != null && GroupAttribute.MinUserLevel > client.Session.Account.UserLevel)
+                return "You don't have enough privileges to invoke this command.";
+
             string[] @params = null;
             CommandAttribute target = null;
 
@@ -34,6 +38,10 @@ namespace MHServerEmu.Common.Commands
 
                 if (target != GetDefaultSubcommand()) @params = @params.Skip(1).ToArray();
             }
+
+            // Check if the user has enough privileges to invoke the command
+            if (client != null && target.MinUserLevel > client.Session.Account.UserLevel)
+                return "You don't have enough privileges to invoke this command.";
 
             return (string)_commandDict[target].Invoke(this, new object[] { @params, client });
         }
@@ -56,7 +64,8 @@ namespace MHServerEmu.Common.Commands
 
             foreach (var kvp in _commandDict)
             {
-                if (kvp.Key.Name.Trim() == string.Empty) continue;      // Skip fallback command
+                if (kvp.Key.Name.Trim() == string.Empty) continue;                                          // Skip fallback command
+                if (client != null && kvp.Key.MinUserLevel > client.Session.Account.UserLevel) continue;    // Skip commands that are not available for this account's user level
                 output = $"{output}{kvp.Key.Name}, ";
             }
 
@@ -91,11 +100,11 @@ namespace MHServerEmu.Common.Commands
                 if (attributes.Length == 0) continue;
                 if (method.Name.ToLower() == "fallback") continue;
 
-                _commandDict.Add(new DefaultCommand(), method);
+                _commandDict.Add(new DefaultCommand(GroupAttribute.MinUserLevel), method);
                 return;
             }
 
-            _commandDict.Add(new DefaultCommand(), GetType().GetMethod("Fallback"));
+            _commandDict.Add(new DefaultCommand(GroupAttribute.MinUserLevel), GetType().GetMethod("Fallback"));
         }
     }
 }

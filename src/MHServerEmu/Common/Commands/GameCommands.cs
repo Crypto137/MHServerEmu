@@ -8,14 +8,13 @@ using MHServerEmu.Networking;
 
 namespace MHServerEmu.Common.Commands
 {
-    [CommandGroup("tower", "Changes region to Avengers Tower (original).")]
+    [CommandGroup("tower", "Changes region to Avengers Tower (original).", AccountUserLevel.User)]
     public class TowerCommand : CommandGroup
     {
-        [DefaultCommand]
+        [DefaultCommand(AccountUserLevel.User)]
         public string Tower(string[] @params, FrontendClient client)
         {
-            if (client == null)
-                return "You can only invoke this command from the game.";
+            if (client == null) return "You can only invoke this command from the game.";
 
             client.CurrentGame.MovePlayerToRegion(client, RegionPrototype.AvengersTowerHUBRegion);
 
@@ -23,15 +22,13 @@ namespace MHServerEmu.Common.Commands
         }
     }
 
-    [CommandGroup("costume", "Changes costume.")]
+    [CommandGroup("costume", "Changes costume.", AccountUserLevel.Admin)]
     public class CostumeCommand : CommandGroup
     {
-        [DefaultCommand]
+        [DefaultCommand(AccountUserLevel.Admin)]
         public string Costume(string[] @params, FrontendClient client)
         {
-            if (client == null)
-                return "You can only invoke this command from the game.";
-
+            if (client == null) return "You can only invoke this command from the game.";
             if (@params.Length == 0) return "Invalid arguments. Type 'help costume' to get help.";
 
             try
@@ -57,10 +54,10 @@ namespace MHServerEmu.Common.Commands
         }
     }
 
-    [CommandGroup("player", "Changes player data for this account.")]
+    [CommandGroup("player", "Changes player data for this account.", AccountUserLevel.User)]
     public class PlayerCommand : CommandGroup
     {
-        [Command("name", "Usage: player name")]
+        [Command("name", "Usage: player name", AccountUserLevel.User)]
         public string Name(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -71,7 +68,7 @@ namespace MHServerEmu.Common.Commands
             return $"Changing player name to {@params[0]}. Relog for changes to take effect.";
         }
 
-        [Command("avatar", "Usage: player avatar [avatar]")]
+        [Command("avatar", "Usage: player avatar [avatar]", AccountUserLevel.User)]
         public string Avatar(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -89,7 +86,7 @@ namespace MHServerEmu.Common.Commands
             }
         }
 
-        [Command("region", "Usage: player region")]
+        [Command("region", "Usage: player region", AccountUserLevel.User)]
         public string Region(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -107,7 +104,7 @@ namespace MHServerEmu.Common.Commands
             }
         }
 
-        [Command("costume", "Usage: server info")]
+        [Command("costume", "Usage: player costume", AccountUserLevel.User)]
         public string Costume(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";

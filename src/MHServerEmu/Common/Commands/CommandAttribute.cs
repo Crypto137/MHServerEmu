@@ -1,41 +1,41 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MHServerEmu.GameServer.Frontend.Accounts;
 
 namespace MHServerEmu.Common.Commands
 {
     [AttributeUsage(AttributeTargets.Class)]
     public class CommandGroupAttribute : Attribute
     {
-        public string Name { get; private set; }
-        public string Help { get; private set; }
+        public string Name { get; }
+        public string Help { get; }
+        public AccountUserLevel MinUserLevel { get; }
 
-        public CommandGroupAttribute(string name, string help)
+        public CommandGroupAttribute(string name, string help, AccountUserLevel minUserLevel = AccountUserLevel.User)
         {
             Name = name.ToLower();
             Help = help;
+            MinUserLevel = minUserLevel;
         }
     }
 
     [AttributeUsage(AttributeTargets.Method)]
     public class CommandAttribute : Attribute
     {
-        public string Name { get; private set; }
-        public string Help { get; private set; }
+        public string Name { get; }
+        public string Help { get; }
+        public AccountUserLevel MinUserLevel { get; }
 
-        public CommandAttribute(string name, string help)
+        public CommandAttribute(string name, string help, AccountUserLevel minUserLevel = AccountUserLevel.User)
         {
             Name = name;
             Help = help;
+            MinUserLevel = minUserLevel;
         }
     }
 
     [AttributeUsage(AttributeTargets.Method)]
     public class DefaultCommand : CommandAttribute
     {
-        public DefaultCommand() : base("", "")
+        public DefaultCommand(AccountUserLevel minUserLevel = AccountUserLevel.User) : base("", "", minUserLevel)
         {
         }
     }

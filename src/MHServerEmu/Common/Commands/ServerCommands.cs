@@ -1,21 +1,22 @@
 ﻿using Gazillion;
 using MHServerEmu.Common.Config;
 using MHServerEmu.GameServer.Frontend;
+using MHServerEmu.GameServer.Frontend.Accounts;
 using MHServerEmu.GameServer.GameData;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.Common.Commands
 {
-    [CommandGroup("server", "Allows you to control the servers.")]
+    [CommandGroup("server", "Allows you to interact with the server.", AccountUserLevel.User)]
     public class ServerCommands : CommandGroup
     {
-        [Command("info", "Usage: server info")]
+        [Command("info", "Usage: server info", AccountUserLevel.User)]
         public string Info(string[] @params, FrontendClient client)
         {
             return $"Server Information\nUptime: {DateTime.Now - Program.StartupTime:hh\\:mm\\:ss}\nSessions: {Program.FrontendServer.FrontendService.SessionCount}";
         }
 
-        [Command("shutdown", "Usage: server shutdown")]
+        [Command("shutdown", "Usage: server shutdown", AccountUserLevel.Admin)]
         public string Shutdown(string[] @params, FrontendClient client)
         {
             Program.Shutdown();
@@ -23,10 +24,10 @@ namespace MHServerEmu.Common.Commands
         }
     }
 
-    [CommandGroup("client", "Allows you to interact with clients.")]
+    [CommandGroup("client", "Allows you to interact with clients.", AccountUserLevel.Admin)]
     public class ClientCommands : CommandGroup
     {
-        [Command("info", "Usage: client info [sessionId]")]
+        [Command("info", "Usage: client info [sessionId]", AccountUserLevel.Admin)]
         public string Info(string[] @params, FrontendClient client)
         {
             if (@params == null || @params.Length == 0) return "Invalid arguments. Type 'help client info' to get help.";
@@ -48,7 +49,7 @@ namespace MHServerEmu.Common.Commands
             }
         }
 
-        [Command("send", "Usage: client send [sessionId] [messageName] [messageContent]")]
+        [Command("send", "Usage: client send [sessionId] [messageName] [messageContent]", AccountUserLevel.Admin)]
         public string Send(string[] @params, FrontendClient client)
         {
             if (@params == null || @params.Length < 3) return "Invalid arguments. Type 'help client send' to get help.";
@@ -93,10 +94,10 @@ namespace MHServerEmu.Common.Commands
 
     }
 
-    [CommandGroup("packet", "Provides commands to interact with packet files.")]
+    [CommandGroup("packet", "Provides commands to interact with packet files.", AccountUserLevel.Admin)]
     public class PacketCommands : CommandGroup
     {
-        [Command("parse", "Parses messages from all packets\nUsage: packet parse")]
+        [Command("parse", "Parses messages from all packets\nUsage: packet parse", AccountUserLevel.Admin)]
         public string Extract(string[] @params, FrontendClient client)
         {
             if (client != null)
@@ -108,10 +109,10 @@ namespace MHServerEmu.Common.Commands
         }
     }
 
-    [CommandGroup("gpak", "Provides commands to interact with GPAK files.")]
+    [CommandGroup("gpak", "Provides commands to interact with GPAK files.", AccountUserLevel.Admin)]
     public class GpakCommands : CommandGroup
     {
-        [Command("extract", "Extracts entries and/or data from GPAK files.\nUsage: gpak extract [entries|data|all]")]
+        [Command("extract", "Extracts entries and/or data from GPAK files.\nUsage: gpak extract [entries|data|all]", AccountUserLevel.Admin)]
         public string Extract(string[] @params, FrontendClient client)
         {
             if (client != null)

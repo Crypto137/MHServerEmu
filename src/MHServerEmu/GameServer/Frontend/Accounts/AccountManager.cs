@@ -24,8 +24,8 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
         private static Dictionary<string, Account> _emailAccountDict = new();
         private static Dictionary<ulong, PlayerData> _playerDataDict = new();
 
-        public static Account DefaultAccount = new(0, "default@account.mh", "123");
-        public static PlayerData DefaultPlayerData = new(0, ConfigManager.PlayerData.PlayerName,
+        public static readonly Account DefaultAccount = new(0, "default@account.mh", "123", AccountUserLevel.Admin);
+        public static readonly PlayerData DefaultPlayerData = new(0, ConfigManager.PlayerData.PlayerName,
             ConfigManager.PlayerData.StartingRegion, ConfigManager.PlayerData.StartingAvatar, ConfigManager.PlayerData.CostumeOverride);
 
         public static bool IsInitialized { get; private set; }
@@ -138,6 +138,21 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             else
             {
                 return $"Failed to change password: account {email} not found.";
+            }
+        }
+
+        public static string SetAccountUserLevel(string email, AccountUserLevel userLevel)
+        {
+            if (_emailAccountDict.ContainsKey(email))
+            {
+                Account account = _emailAccountDict[email];
+                account.UserLevel = userLevel;
+                SaveAccounts();
+                return $"Successfully set user level for account {email} to {userLevel}.";
+            }
+            else
+            {
+                return $"Failed to set user level: account {email} not found.";
             }
         }
 
