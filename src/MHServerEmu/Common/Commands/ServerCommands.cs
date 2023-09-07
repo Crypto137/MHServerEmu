@@ -49,6 +49,30 @@ namespace MHServerEmu.Common.Commands
             }
         }
 
+        [Command("kick", "Usage: client kick [sessionId]", AccountUserLevel.Moderator)]
+        public string Kick(string[] @params, FrontendClient client)
+        {
+            if (@params == null || @params.Length == 0) return "Invalid arguments. Type 'help client kick' to get help.";
+
+            if (ulong.TryParse(@params[0], out ulong sessionId))
+            {
+                if (Program.FrontendServer.FrontendService.TryGetClient(sessionId, out FrontendClient target))
+                {
+                    string email = target.Session.Account.Email;
+                    target.Connection.Disconnect();
+                    return $"Kicked {sessionId} ({email})";
+                }
+                else
+                {
+                    return $"SessionId {sessionId} not found";
+                }
+            }
+            else
+            {
+                return $"Failed to parse sessionId {@params[0]}";
+            }
+        }
+
         [Command("send", "Usage: client send [sessionId] [messageName] [messageContent]", AccountUserLevel.Admin)]
         public string Send(string[] @params, FrontendClient client)
         {
