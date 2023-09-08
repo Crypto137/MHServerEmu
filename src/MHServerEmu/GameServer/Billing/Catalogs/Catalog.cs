@@ -5,6 +5,8 @@ namespace MHServerEmu.GameServer.Billing.Catalogs
 {
     public class Catalog
     {
+        private Dictionary<long, CatalogEntry> _entryDict;
+
         public long TimestampSeconds { get; set; }
         public long TimestampMicroseconds { get; set; }
         public CatalogEntry[] Entries { get; set; }
@@ -19,6 +21,8 @@ namespace MHServerEmu.GameServer.Billing.Catalogs
             Entries = entries;
             Urls = urls;
             ClientMustDownloadImages = clientMustDownloadImages;
+
+            GenerateEntryDict();
         }
 
         public Catalog(NetMessageCatalogItems catalogItems)
@@ -35,16 +39,17 @@ namespace MHServerEmu.GameServer.Billing.Catalogs
                 Urls[i] = new(catalogItems.UrlsList[i]);
 
             ClientMustDownloadImages = catalogItems.Clientmustdownloadimages;
+
+            GenerateEntryDict();
         }
 
         public CatalogEntry GetEntry(long skuId)
         {
-            foreach (CatalogEntry entry in Entries)
-                if (entry.SkuId == skuId) return entry;
-
-            return null;
+            if (_entryDict.TryGetValue(skuId, out CatalogEntry entry))
+                return entry;
+            else
+                return null;
         }
-
         public NetMessageCatalogItems ToNetMessageCatalogItems(bool clientMustDownloadImages)
         {
             DateTimeOffset timestamp = (DateTimeOffset)DateTime.UtcNow;
@@ -64,6 +69,13 @@ namespace MHServerEmu.GameServer.Billing.Catalogs
                 .AddRangeUrls(urls)
                 .SetClientmustdownloadimages(clientMustDownloadImages)
                 .Build();
+        }
+
+        private void GenerateEntryDict()
+        {
+            _entryDict = new(Entries.Length);
+            foreach (CatalogEntry entry in Entries)
+                _entryDict.Add(entry.SkuId, entry);
         }
     }
 }
