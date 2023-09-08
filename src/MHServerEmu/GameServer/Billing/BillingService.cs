@@ -1,6 +1,9 @@
 ﻿using Gazillion;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.Billing.Catalogs;
+using MHServerEmu.GameServer.Entities;
+using MHServerEmu.GameServer.GameData;
+using MHServerEmu.GameServer.Properties;
 using MHServerEmu.Networking;
 using System.Text.Json;
 
@@ -44,6 +47,24 @@ namespace MHServerEmu.GameServer.Billing
                     Logger.Info($"Received NetMessageBuyItemFromCatalog");
                     var buyItemMessage = NetMessageBuyItemFromCatalog.ParseFrom(message.Content);
                     Logger.Trace(buyItemMessage.ToString());
+
+                    // HACK: change costume when a player "buys" a costume
+                    CatalogEntry entry = _catalog.GetEntry(buyItemMessage.SkuId);
+                    if (entry != null && entry.GuidItems.Length > 0)
+                    {
+                        string prototypePath = GameDatabase.GetPrototypePath(entry.GuidItems[0].ItemPrototypeRuntimeIdForClient);
+                        if (prototypePath.Contains("Entity/Items/Costumes/Prototypes/"))
+                        {
+                            // Create a new CostumeCurrent property for the purchased costume
+                            Property property = new(PropertyEnum.CostumeCurrent, entry.GuidItems[0].ItemPrototypeRuntimeIdForClient);
+
+                            // Get replication id for the client avatar
+                            ulong replicationId = (ulong)Enum.Parse(typeof(HardcodedAvatarReplicationId), Enum.GetName(typeof(HardcodedAvatarEntity), client.Session.Account.PlayerData.Avatar));
+
+                            // Send NetMessageSetProperty message
+                            client.SendMessage(1, new(property.ToNetMessageSetProperty(replicationId)));
+                        }
+                    }
 
                     client.SendMessage(muxId, new(NetMessageBuyItemFromCatalogResponse.CreateBuilder()
                         .SetDidSucceed(true)

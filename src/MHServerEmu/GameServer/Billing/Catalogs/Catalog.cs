@@ -37,6 +37,14 @@ namespace MHServerEmu.GameServer.Billing.Catalogs
             ClientMustDownloadImages = catalogItems.Clientmustdownloadimages;
         }
 
+        public CatalogEntry GetEntry(long skuId)
+        {
+            foreach (CatalogEntry entry in Entries)
+                if (entry.SkuId == skuId) return entry;
+
+            return null;
+        }
+
         public NetMessageCatalogItems ToNetMessageCatalogItems(bool clientMustDownloadImages)
         {
             DateTimeOffset timestamp = (DateTimeOffset)DateTime.UtcNow;
