@@ -25,7 +25,7 @@ namespace MHServerEmu.Common.Commands
     [CommandGroup("costume", "Changes costume.", AccountUserLevel.Admin)]
     public class CostumeCommand : CommandGroup
     {
-        [DefaultCommand(AccountUserLevel.Admin)]
+        [DefaultCommand(AccountUserLevel.User)]
         public string Costume(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -34,18 +34,25 @@ namespace MHServerEmu.Common.Commands
             try
             {
                 // Try to parse costume prototype id from command
-                ulong costumePrototypeId = ulong.Parse(@params[0]);
+                ulong prototypeId = ulong.Parse(@params[0]);
+                string prototypePath = GameDatabase.GetPrototypePath(prototypeId);
 
-                // Create a new CostumeCurrent property
-                Property property = new(0x19e0000000000000, 0);
-                property.Value.Set(costumePrototypeId);
+                if (prototypePath.Contains("Entity/Items/Costumes/Prototypes/"))
+                {
+                    // Create a new CostumeCurrent property for the purchased costume
+                    Property property = new(PropertyEnum.CostumeCurrent, prototypeId);
 
-                // Get replication id for the client avatar
-                ulong replicationId = (ulong)Enum.Parse(typeof(HardcodedAvatarReplicationId), Enum.GetName(typeof(HardcodedAvatarEntity), client.Session.Account.PlayerData.Avatar));
+                    // Get replication id for the client avatar
+                    ulong replicationId = (ulong)Enum.Parse(typeof(HardcodedAvatarReplicationId), Enum.GetName(typeof(HardcodedAvatarEntity), client.Session.Account.PlayerData.Avatar));
 
-                // Send NetMessageSetProperty message
-                client.SendMessage(1, new(property.ToNetMessageSetProperty(replicationId)));
-                return $"Changing costume to {GameDatabase.GetPrototypePath(costumePrototypeId)}";
+                    // Send NetMessageSetProperty message
+                    client.SendMessage(1, new(property.ToNetMessageSetProperty(replicationId)));
+                    return $"Changing costume to {GameDatabase.GetPrototypePath(prototypeId)}";
+                }
+                else
+                {
+                    return $"{prototypeId} is not a costume prototype id";
+                }
             }
             catch
             {
