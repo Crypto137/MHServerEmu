@@ -2,7 +2,7 @@
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Networking;
 
-namespace MHServerEmu.GameServer
+namespace MHServerEmu.GameServer.Billing
 {
     public class BillingService : IGameMessageHandler
     {

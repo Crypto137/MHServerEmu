@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Common.Logging;
+using MHServerEmu.GameServer.Billing;
 using MHServerEmu.GameServer.Frontend;
 using MHServerEmu.GameServer.Games;
 using MHServerEmu.Networking;

@@ -1,0 +1,24 @@
+﻿using System.Text.Json.Serialization;
+using Gazillion;
+
+namespace MHServerEmu.GameServer.Billing.Catalogs
+{
+    public class CatalogEntryTypeModifier
+    {
+        public string Name { get; set; }
+        public int Order { get; set; }
+
+        [JsonConstructor]
+        public CatalogEntryTypeModifier(string name, int order)
+        {
+            Name = name;
+            Order = order;
+        }
+
+        public CatalogEntryTypeModifier(MHCatalogEntryTypeModifier catalogEntryTypeModifier)
+        {
+            Name = catalogEntryTypeModifier.Name;
+            Order = catalogEntryTypeModifier.Order;
+        }
+    }
+}
