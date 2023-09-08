@@ -20,5 +20,7 @@ namespace MHServerEmu.GameServer.Billing.Catalogs
             Type = bannerUrl.Type;
             Url = bannerUrl.Url;
         }
+
+        public MHBannerUrl ToNetStruct() => MHBannerUrl.CreateBuilder().SetType(Type).SetUrl(Url).Build();
     }
 }

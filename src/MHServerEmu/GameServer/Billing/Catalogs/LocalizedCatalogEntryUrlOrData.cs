@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using Google.ProtocolBuffers;
 using Gazillion;
 
 namespace MHServerEmu.GameServer.Billing.Catalogs
@@ -22,6 +23,15 @@ namespace MHServerEmu.GameServer.Billing.Catalogs
             LanguageId = localizedCatalogEntryUrlOrData.LanguageId;
             Url = localizedCatalogEntryUrlOrData.Url;
             ImageData = localizedCatalogEntryUrlOrData.Imagedata.ToByteArray();
+        }
+
+        public MHLocalizedCatalogEntryUrlOrData ToNetStruct()
+        {
+            return MHLocalizedCatalogEntryUrlOrData.CreateBuilder()
+                .SetLanguageId(LanguageId)
+                .SetUrl(Url)
+                .SetImagedata(ByteString.CopyFrom(ImageData))
+                .Build();
         }
     }
 }

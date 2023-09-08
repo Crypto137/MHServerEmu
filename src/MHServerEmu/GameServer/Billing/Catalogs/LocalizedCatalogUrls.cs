@@ -30,5 +30,19 @@ namespace MHServerEmu.GameServer.Billing.Catalogs
 
             StoreRealMoneyUrl = localizedCatalogUrls.StoreRealMoneyUrl;
         }
+
+        public MHLocalizedCatalogUrls ToNetStruct()
+        {
+            var bannerUrls = new MHBannerUrl[StoreBannerPageUrls.Length];
+            for (int i = 0; i < bannerUrls.Length; i++)
+                bannerUrls[i] = StoreBannerPageUrls[i].ToNetStruct();
+
+            return MHLocalizedCatalogUrls.CreateBuilder()
+                .SetLocaleId(LocaleId)
+                .SetStoreHomePageUrl(StoreHomePageUrl)
+                .AddRangeStoreBannerPageUrls(bannerUrls)
+                .SetStoreRealMoneyUrl(StoreRealMoneyUrl)
+                .Build();
+        }
     }
 }

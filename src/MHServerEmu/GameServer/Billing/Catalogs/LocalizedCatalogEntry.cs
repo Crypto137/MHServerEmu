@@ -29,5 +29,16 @@ namespace MHServerEmu.GameServer.Billing.Catalogs
             ReleaseDate = localizedCatalogEntry.ReleaseDate;
             ItemPrice = localizedCatalogEntry.ItemPrice;
         }
+
+        public MHLocalizedCatalogEntry ToNetStruct()
+        {
+            return MHLocalizedCatalogEntry.CreateBuilder()
+                .SetLanguageId(LanguageId)
+                .SetDescription(Description)
+                .SetTitle(Title)
+                .SetReleaseDate(ReleaseDate)
+                .SetItemPrice(ItemPrice)
+                .Build();
+        }
     }
 }

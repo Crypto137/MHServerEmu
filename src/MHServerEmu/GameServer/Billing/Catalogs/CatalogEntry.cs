@@ -15,12 +15,12 @@ namespace MHServerEmu.GameServer.Billing.Catalogs
         public CatalogEntryTypeModifier[] TypeModifiers { get; set; }
 
         [JsonConstructor]
-        public CatalogEntry(long skuId, CatalogGuidEntry[] guidItems, CatalogGuidEntry[] additionalGuidItem, LocalizedCatalogEntry[] localizedEntries,
+        public CatalogEntry(long skuId, CatalogGuidEntry[] guidItems, CatalogGuidEntry[] additionalGuidItems, LocalizedCatalogEntry[] localizedEntries,
             LocalizedCatalogEntryUrlOrData[] infoUrls, LocalizedCatalogEntryUrlOrData[] contentData, CatalogEntryType type, CatalogEntryTypeModifier[] typeModifiers)
         {
             SkuId = skuId;
             GuidItems = guidItems;
-            AdditionalGuidItems = additionalGuidItem;
+            AdditionalGuidItems = additionalGuidItems;
             LocalizedEntries = localizedEntries;
             InfoUrls = infoUrls;
             ContentData = contentData;
@@ -57,6 +57,44 @@ namespace MHServerEmu.GameServer.Billing.Catalogs
             TypeModifiers = new CatalogEntryTypeModifier[entry.TypeModifierCount];
             for (int i = 0; i < TypeModifiers.Length; i++)
                 TypeModifiers[i] = new(entry.TypeModifierList[i]);
+        }
+
+        public MarvelHeroesCatalogEntry ToNetStruct()
+        {
+            var guidItems = new MHCatalogGuidEntry[GuidItems.Length];
+            for (int i = 0; i < guidItems.Length; i++)
+                guidItems[i] = GuidItems[i].ToNetStruct();
+
+            var additionalGuidItems = new MHCatalogGuidEntry[AdditionalGuidItems.Length];
+            for (int i = 0; i < additionalGuidItems.Length; i++)
+                additionalGuidItems[i] = AdditionalGuidItems[i].ToNetStruct();
+
+            var localizedEntries = new MHLocalizedCatalogEntry[LocalizedEntries.Length];
+            for (int i = 0; i < localizedEntries.Length; i++)
+                localizedEntries[i] = LocalizedEntries[i].ToNetStruct();
+
+            var infoUrls = new MHLocalizedCatalogEntryUrlOrData[InfoUrls.Length];
+            for (int i = 0; i < infoUrls.Length; i++)
+                infoUrls[i] = InfoUrls[i].ToNetStruct();
+
+            var contentData = new MHLocalizedCatalogEntryUrlOrData[ContentData.Length];
+            for (int i = 0; i < contentData.Length; i++)
+                contentData[i] = ContentData[i].ToNetStruct();
+
+            var typeModifiers = new MHCatalogEntryTypeModifier[TypeModifiers.Length];
+            for (int i = 0; i < typeModifiers.Length; i++)
+                typeModifiers[i] = TypeModifiers[i].ToNetStruct();
+
+            return MarvelHeroesCatalogEntry.CreateBuilder()
+                .SetSkuId(SkuId)
+                .AddRangeGuidItems(guidItems)
+                .AddRangeAdditionalGuidItems(additionalGuidItems)
+                .AddRangeLocalizedEntries(localizedEntries)
+                .AddRangeInfourls(infoUrls)
+                .AddRangeContentdata(contentData)
+                .SetType(Type.ToNetStruct())
+                .AddRangeTypeModifier(typeModifiers)
+                .Build();
         }
     }
 }

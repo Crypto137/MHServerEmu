@@ -23,5 +23,14 @@ namespace MHServerEmu.GameServer.Billing.Catalogs
             ItemPrototypeRuntimeIdForClient = catalogGuidEntry.ItemPrototypeRuntimeIdForClient;
             Quantity = catalogGuidEntry.Quantity;
         }
+
+        public MHCatalogGuidEntry ToNetStruct()
+        {
+            return MHCatalogGuidEntry.CreateBuilder()
+                .SetPrototypeGuid(PrototypeGuid)
+                .SetItemPrototypeRuntimeIdForClient(ItemPrototypeRuntimeIdForClient)
+                .SetQuantity(Quantity)
+                .Build();
+        }
     }
 }

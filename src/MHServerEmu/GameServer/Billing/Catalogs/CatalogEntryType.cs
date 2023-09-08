@@ -20,5 +20,13 @@ namespace MHServerEmu.GameServer.Billing.Catalogs
             Name = catalogEntryType.Name;
             Order = catalogEntryType.Order;
         }
+
+        public MHCatalogEntryType ToNetStruct()
+        {
+            return MHCatalogEntryType.CreateBuilder()
+                .SetName(Name)
+                .SetOrder(Order)
+                .Build();
+        }
     }
 }

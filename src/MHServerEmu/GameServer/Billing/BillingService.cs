@@ -1,6 +1,8 @@
 ﻿using Gazillion;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.GameServer.Billing.Catalogs;
 using MHServerEmu.Networking;
+using System.Text.Json;
 
 namespace MHServerEmu.GameServer.Billing
 {
@@ -10,11 +12,14 @@ namespace MHServerEmu.GameServer.Billing
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private GameServerManager _gameServerManager;
+        private readonly GameServerManager _gameServerManager;
+        private readonly Catalog _catalog;
 
         public BillingService(GameServerManager gameServerManager)
         {
             _gameServerManager = gameServerManager;
+            _catalog = JsonSerializer.Deserialize<Catalog>(File.ReadAllText($"{Directory.GetCurrentDirectory()}\\Assets\\Catalog.json"));
+            Logger.Info($"Initialized store catalog with {_catalog.Entries.Length} entries");
         }
 
         public void Handle(FrontendClient client, ushort muxId, GameMessage message)
@@ -23,16 +28,7 @@ namespace MHServerEmu.GameServer.Billing
             {
                 case ClientToGameServerMessage.NetMessageGetCatalog:
                     Logger.Info($"Received NetMessageGetCatalog");
-                    var dumpedCatalog = NetMessageCatalogItems.ParseFrom(PacketHelper.LoadMessagesFromPacketFile("NetMessageCatalogItems.bin")[0].Content);
-
-                    var catalog = NetMessageCatalogItems.CreateBuilder()
-                        .MergeFrom(dumpedCatalog)
-                        .SetTimestampSeconds(_gameServerManager.GetDateTime() / 1000000)
-                        .SetTimestampMicroseconds(_gameServerManager.GetDateTime())
-                        .SetClientmustdownloadimages(false)
-                        .Build();
-
-                    client.SendMessage(muxId, new(catalog));
+                    client.SendMessage(muxId, new(_catalog.ToNetMessageCatalogItems(false)));
                     break;
 
                 case ClientToGameServerMessage.NetMessageGetCurrencyBalance:
