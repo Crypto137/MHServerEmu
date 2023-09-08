@@ -1,15 +1,12 @@
 ﻿using MHServerEmu.Common.Config.Sections;
-using MHServerEmu.Common.Logging;
 
 namespace MHServerEmu.Common.Config
 {
     public static class ConfigManager
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public static bool IsInitialized { get; private set; }
 
-        public static ServerConfig Server { get; }
+        public static LoggingConfig Logging { get; }
         public static PlayerDataConfig PlayerData { get; }
         public static FrontendConfig Frontend { get; }
         public static GroupingManagerConfig GroupingManager { get; }
@@ -23,7 +20,7 @@ namespace MHServerEmu.Common.Config
             {
                 IniFile configFile = new(path);
 
-                Server = new(configFile);
+                Logging = new(configFile);
                 PlayerData = new(configFile);
                 Frontend = new(configFile);
                 GroupingManager = new(configFile);
@@ -33,8 +30,10 @@ namespace MHServerEmu.Common.Config
             }
             else
             {
-                Server = new();         // initialize default server config so that logging still works
-                Logger.Fatal("Failed to initialize config");
+                // Write to console manually because loggers require config to initialize
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Failed to initialize config");
+                Console.ResetColor();
                 IsInitialized = false;
             }
         }

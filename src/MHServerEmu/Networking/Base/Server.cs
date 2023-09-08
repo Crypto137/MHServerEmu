@@ -83,7 +83,7 @@ namespace MHServerEmu.Networking.Base
             catch (NullReferenceException) { }  // We get this after issuing server shutdown, don't need to do anything about it
             catch (Exception e)
             {
-                Logger.Debug($"AcceptCallback exception: {e}");
+                Logger.DebugException(e, "AcceptCallback");
             }
         }
 
@@ -116,7 +116,7 @@ namespace MHServerEmu.Networking.Base
             }
             catch (Exception e)
             {
-                Logger.Debug($"ReceiveCallback exception: {e}");
+                Logger.DebugException(e, "ReceiveCallback");
             }
         }
 
@@ -156,7 +156,7 @@ namespace MHServerEmu.Networking.Base
             }
             catch (Exception e)
             {
-                Logger.Debug($"Send exception: {e}");
+                Logger.DebugException(e, "Send");
             }
 
             return totalBytesSent;

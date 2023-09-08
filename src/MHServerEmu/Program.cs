@@ -3,6 +3,7 @@ using MHServerEmu.Auth;
 using MHServerEmu.Common.Commands;
 using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Common.Logging.Targets;
 using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.Frontend.Accounts;
 using MHServerEmu.Networking;
@@ -22,21 +23,23 @@ namespace MHServerEmu
 
         static void Main(string[] args)
         {
-            // Watch for unhandled exceptions
-            AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
-
-            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+            AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;    // Watch for unhandled exceptions
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;         // Make sure thread culture is invariant
 
             PrintBanner();  
 
+            // Initialize config and loggers before doing anything else
             if (ConfigManager.IsInitialized == false)
             {
                 Console.ReadLine();
                 return;
             }
 
+            InitLoggers();
+
             Logger.Info("MHServerEmu starting...");
 
+            // Initialize everything else and start the servers
             if (ProtocolDispatchTable.IsInitialized == false || GameDatabase.IsInitialized == false || AccountManager.IsInitialized == false)
             {
                 Console.ReadLine();
@@ -45,8 +48,8 @@ namespace MHServerEmu
 
             StartServers();
 
+            // Begin processing console input
             Logger.Info("Type '!commands' for a list of available commands");
-
             while (true)
             {
                 string input = Console.ReadLine();
@@ -86,12 +89,26 @@ namespace MHServerEmu
 
         private static void UnhandledExceptionHandler(object sender, UnhandledExceptionEventArgs e)
         {
+            Exception ex = e.ExceptionObject as Exception;
+
             if (e.IsTerminating)
-                Logger.Fatal($"MHServerEmu terminating because of unhandled exception: {e}");
+                Logger.FatalException(ex, "MHServerEmu terminating because of unhandled exception.");
             else
-                Logger.Error($"Caught unhandled exception: {e}");
+                Logger.ErrorException(ex, "Caught unhandled exception.");
 
             Console.ReadLine();
+        }
+
+        private static void InitLoggers()
+        {
+            LogManager.Enabled = ConfigManager.Logging.EnableLogging;
+
+            // Attach console log target
+            if (ConfigManager.Logging.EnableConsole)
+                LogManager.AttachLogTarget(new ConsoleTarget(ConfigManager.Logging.ConsoleIncludeTimestamps,
+                    ConfigManager.Logging.ConsoleMinLevel, ConfigManager.Logging.ConsoleMaxLevel));
+
+            // TODO: file log target
         }
 
         #region Server Control
