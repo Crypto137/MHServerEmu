@@ -58,7 +58,7 @@ namespace MHServerEmu.GameServer.Properties
         {
             return NetMessageSetProperty.CreateBuilder()
                 .SetReplicationId(replicationId)
-                .SetPropertyId(Id.ReverseBytes())
+                .SetPropertyId(Id.ReverseBits())
                 .SetValueBits(Value.RawValue)
                 .Build();
         }
