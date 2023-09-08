@@ -1,4 +1,6 @@
-﻿namespace MHServerEmu.Common.Extensions
+﻿using System.Collections;
+
+namespace MHServerEmu.Common.Extensions
 {
     public static class ArrayExtensions
     {
@@ -21,6 +23,25 @@
             byte[] bytes = BitConverter.GetBytes(value);
             Array.Reverse(bytes);
             return BitConverter.ToUInt64(bytes);
+        }
+
+        public static ulong ReverseBits(this ulong value)
+        {
+            BitArray array = new(BitConverter.GetBytes(value));
+
+            int length = array.Length;
+            int mid = length / 2;
+
+            for (int i = 0; i < mid; i++)
+            {
+                bool bit = array[i];
+                array[i] = array[length - i - 1];
+                array[length - i - 1] = bit;
+            }
+
+            byte[] reversedValue = new byte[8];
+            array.CopyTo(reversedValue, 0);
+            return BitConverter.ToUInt64(reversedValue);
         }
 
         #region uint <-> bool[] conversion
