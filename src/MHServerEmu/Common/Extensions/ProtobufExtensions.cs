@@ -1,4 +1,5 @@
-﻿using Google.ProtocolBuffers;
+﻿using System.Text;
+using Google.ProtocolBuffers;
 using MHServerEmu.GameServer.GameData;
 
 namespace MHServerEmu.Common.Extensions
@@ -44,7 +45,7 @@ namespace MHServerEmu.Common.Extensions
         public static string ReadRawString(this CodedInputStream stream)
         {
             int length = (int)stream.ReadRawVarint32();
-            return System.Text.Encoding.UTF8.GetString(stream.ReadRawBytes(length));
+            return Encoding.UTF8.GetString(stream.ReadRawBytes(length));
         }
 
         public static ulong ReadPrototypeId(this CodedInputStream stream, PrototypeEnumType enumType)
@@ -74,7 +75,7 @@ namespace MHServerEmu.Common.Extensions
 
         public static void WriteRawString(this CodedOutputStream stream, string value)
         {
-            byte[] rawBytes = System.Text.Encoding.UTF8.GetBytes(value);
+            byte[] rawBytes = Encoding.UTF8.GetBytes(value);
             stream.WriteRawVarint64((ulong)rawBytes.Length);
             stream.WriteRawBytes(rawBytes);
         }

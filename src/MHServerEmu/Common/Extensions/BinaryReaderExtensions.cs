@@ -1,4 +1,5 @@
-﻿using MHServerEmu.GameServer.Common;
+﻿using System.Text;
+using MHServerEmu.GameServer.Common;
 
 namespace MHServerEmu.Common.Extensions
 {
@@ -6,12 +7,12 @@ namespace MHServerEmu.Common.Extensions
     {
         public static string ReadFixedString16(this BinaryReader reader)
         {
-            return System.Text.Encoding.UTF8.GetString(reader.ReadBytes(reader.ReadUInt16()));
+            return Encoding.UTF8.GetString(reader.ReadBytes(reader.ReadUInt16()));
         }
 
         public static string ReadFixedString32(this BinaryReader reader)
         {
-            return System.Text.Encoding.UTF8.GetString(reader.ReadBytes(reader.ReadInt32()));
+            return Encoding.UTF8.GetString(reader.ReadBytes(reader.ReadInt32()));
         }
 
         public static Vector2 ReadVector2(this BinaryReader reader)

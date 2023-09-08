@@ -1,6 +1,6 @@
 ﻿using MHServerEmu.Common.Logging;
 
-namespace MHServerEmu.Common.Encoding
+namespace MHServerEmu.Common.Encoders
 {
     public class BoolEncoder
     {

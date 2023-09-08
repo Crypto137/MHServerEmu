@@ -1,5 +1,5 @@
-﻿using System.Security.Cryptography;
-using System.IO.Hashing;
+﻿using System.Text;
+using System.Security.Cryptography;
 
 namespace MHServerEmu.Common
 {
@@ -30,11 +30,13 @@ namespace MHServerEmu.Common
             return (b << 16) | a;
         }
 
-        public static uint Crc32(string str)
+        public static uint Crc32(byte[] bytes)
         {
-            byte[] hash = System.IO.Hashing.Crc32.Hash(System.Text.Encoding.UTF8.GetBytes(str));
+            byte[] hash = System.IO.Hashing.Crc32.Hash(bytes);
             return BitConverter.ToUInt32(hash);
         }
+
+        public static uint Crc32(string str) => Crc32(Encoding.UTF8.GetBytes(str));
 
         public static uint Djb2(string str)
         {
