@@ -23,24 +23,16 @@ namespace MHServerEmu.GameServer.Billing.Catalogs
         {
             LocaleId = localizedCatalogUrls.LocaleId;
             StoreHomePageUrl = localizedCatalogUrls.StoreHomePageUrl;
-
-            StoreBannerPageUrls = new BannerUrl[localizedCatalogUrls.StoreBannerPageUrlsCount];
-            for (int i = 0; i < StoreBannerPageUrls.Length; i++)
-                StoreBannerPageUrls[i] = new(localizedCatalogUrls.StoreBannerPageUrlsList[i]);
-
+            StoreBannerPageUrls = localizedCatalogUrls.StoreBannerPageUrlsList.Select(storeBannerPageUrl => new BannerUrl(storeBannerPageUrl)).ToArray();
             StoreRealMoneyUrl = localizedCatalogUrls.StoreRealMoneyUrl;
         }
 
         public MHLocalizedCatalogUrls ToNetStruct()
         {
-            var bannerUrls = new MHBannerUrl[StoreBannerPageUrls.Length];
-            for (int i = 0; i < bannerUrls.Length; i++)
-                bannerUrls[i] = StoreBannerPageUrls[i].ToNetStruct();
-
             return MHLocalizedCatalogUrls.CreateBuilder()
                 .SetLocaleId(LocaleId)
                 .SetStoreHomePageUrl(StoreHomePageUrl)
-                .AddRangeStoreBannerPageUrls(bannerUrls)
+                .AddRangeStoreBannerPageUrls(StoreBannerPageUrls.Select(storeBannerPageUrl => storeBannerPageUrl.ToNetStruct()))
                 .SetStoreRealMoneyUrl(StoreRealMoneyUrl)
                 .Build();
         }

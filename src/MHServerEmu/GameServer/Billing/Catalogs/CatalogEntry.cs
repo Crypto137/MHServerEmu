@@ -31,69 +31,26 @@ namespace MHServerEmu.GameServer.Billing.Catalogs
         public CatalogEntry(MarvelHeroesCatalogEntry entry)
         {
             SkuId = entry.SkuId;
-
-            GuidItems = new CatalogGuidEntry[entry.GuidItemsCount];
-            for (int i = 0; i < GuidItems.Length; i++)
-                GuidItems[i] = new(entry.GuidItemsList[i]);
-
-            AdditionalGuidItems = new CatalogGuidEntry[entry.AdditionalGuidItemsCount];
-            for (int i = 0; i < AdditionalGuidItems.Length; i++)
-                AdditionalGuidItems[i] = new(entry.AdditionalGuidItemsList[i]);
-
-            LocalizedEntries = new LocalizedCatalogEntry[entry.LocalizedEntriesCount];
-            for (int i = 0; i < LocalizedEntries.Length; i++)
-                LocalizedEntries[i] = new(entry.LocalizedEntriesList[i]);
-
-            InfoUrls = new LocalizedCatalogEntryUrlOrData[entry.InfourlsCount];
-            for (int i = 0; i < InfoUrls.Length; i++)
-                InfoUrls[i] = new(entry.InfourlsList[i]);
-
-            ContentData = new LocalizedCatalogEntryUrlOrData[entry.ContentdataCount];
-            for (int i = 0; i < ContentData.Length; i++)
-                ContentData[i] = new(entry.ContentdataList[i]);
-
+            GuidItems = entry.GuidItemsList.Select(guidItem => new CatalogGuidEntry(guidItem)).ToArray();
+            AdditionalGuidItems = entry.AdditionalGuidItemsList.Select(additionalGuidItem => new CatalogGuidEntry(additionalGuidItem)).ToArray();
+            LocalizedEntries = entry.LocalizedEntriesList.Select(localizedEntry => new LocalizedCatalogEntry(localizedEntry)).ToArray();
+            InfoUrls = entry.InfourlsList.Select(infoUrl => new LocalizedCatalogEntryUrlOrData(infoUrl)).ToArray();
+            ContentData = entry.ContentdataList.Select(contentData => new LocalizedCatalogEntryUrlOrData(contentData)).ToArray();
             Type = new(entry.Type);
-
-            TypeModifiers = new CatalogEntryTypeModifier[entry.TypeModifierCount];
-            for (int i = 0; i < TypeModifiers.Length; i++)
-                TypeModifiers[i] = new(entry.TypeModifierList[i]);
+            TypeModifiers = entry.TypeModifierList.Select(typeModifier => new CatalogEntryTypeModifier(typeModifier)).ToArray();
         }
 
         public MarvelHeroesCatalogEntry ToNetStruct()
         {
-            var guidItems = new MHCatalogGuidEntry[GuidItems.Length];
-            for (int i = 0; i < guidItems.Length; i++)
-                guidItems[i] = GuidItems[i].ToNetStruct();
-
-            var additionalGuidItems = new MHCatalogGuidEntry[AdditionalGuidItems.Length];
-            for (int i = 0; i < additionalGuidItems.Length; i++)
-                additionalGuidItems[i] = AdditionalGuidItems[i].ToNetStruct();
-
-            var localizedEntries = new MHLocalizedCatalogEntry[LocalizedEntries.Length];
-            for (int i = 0; i < localizedEntries.Length; i++)
-                localizedEntries[i] = LocalizedEntries[i].ToNetStruct();
-
-            var infoUrls = new MHLocalizedCatalogEntryUrlOrData[InfoUrls.Length];
-            for (int i = 0; i < infoUrls.Length; i++)
-                infoUrls[i] = InfoUrls[i].ToNetStruct();
-
-            var contentData = new MHLocalizedCatalogEntryUrlOrData[ContentData.Length];
-            for (int i = 0; i < contentData.Length; i++)
-                contentData[i] = ContentData[i].ToNetStruct();
-
-            var typeModifiers = new MHCatalogEntryTypeModifier[TypeModifiers.Length];
-            for (int i = 0; i < typeModifiers.Length; i++)
-                typeModifiers[i] = TypeModifiers[i].ToNetStruct();
-
             return MarvelHeroesCatalogEntry.CreateBuilder()
                 .SetSkuId(SkuId)
-                .AddRangeGuidItems(guidItems)
-                .AddRangeAdditionalGuidItems(additionalGuidItems)
-                .AddRangeLocalizedEntries(localizedEntries)
-                .AddRangeInfourls(infoUrls)
-                .AddRangeContentdata(contentData)
+                .AddRangeGuidItems(GuidItems.Select(guidItem => guidItem.ToNetStruct()))
+                .AddRangeAdditionalGuidItems(AdditionalGuidItems.Select(additionalGuidItem => additionalGuidItem.ToNetStruct()))
+                .AddRangeLocalizedEntries(LocalizedEntries.Select(localizedEntry => localizedEntry.ToNetStruct()))
+                .AddRangeInfourls(InfoUrls.Select(infoUrl => infoUrl.ToNetStruct()))
+                .AddRangeContentdata(ContentData.Select(contentData => contentData.ToNetStruct()))
                 .SetType(Type.ToNetStruct())
-                .AddRangeTypeModifier(typeModifiers)
+                .AddRangeTypeModifier(TypeModifiers.Select(typeModifier => typeModifier.ToNetStruct()))
                 .Build();
         }
     }

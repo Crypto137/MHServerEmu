@@ -29,15 +29,8 @@ namespace MHServerEmu.GameServer.Billing.Catalogs
         {
             TimestampSeconds = catalogItems.TimestampSeconds;
             TimestampMicroseconds = catalogItems.TimestampMicroseconds;
-
-            Entries = new CatalogEntry[catalogItems.EntriesCount];
-            for (int i = 0; i < Entries.Length; i++)
-                Entries[i] = new(catalogItems.EntriesList[i]);
-
-            Urls = new LocalizedCatalogUrls[catalogItems.UrlsCount];
-            for (int i = 0; i < Urls.Length; i++)
-                Urls[i] = new(catalogItems.UrlsList[i]);
-
+            Entries = catalogItems.EntriesList.Select(entry => new CatalogEntry(entry)).ToArray();
+            Urls = catalogItems.UrlsList.Select(url => new LocalizedCatalogUrls(url)).ToArray();
             ClientMustDownloadImages = catalogItems.Clientmustdownloadimages;
 
             GenerateEntryDict();
@@ -54,19 +47,11 @@ namespace MHServerEmu.GameServer.Billing.Catalogs
         {
             DateTimeOffset timestamp = (DateTimeOffset)DateTime.UtcNow;
 
-            var entries = new MarvelHeroesCatalogEntry[Entries.Length];
-            for (int i = 0; i < entries.Length; i++)
-                entries[i] = Entries[i].ToNetStruct();
-
-            var urls = new MHLocalizedCatalogUrls[Urls.Length];
-            for (int i = 0; i < urls.Length; i++)
-                urls[i] = Urls[i].ToNetStruct();
-
             return NetMessageCatalogItems.CreateBuilder()
                 .SetTimestampSeconds(timestamp.ToUnixTimeSeconds())
                 .SetTimestampMicroseconds(timestamp.Millisecond * 1000)
-                .AddRangeEntries(entries)
-                .AddRangeUrls(urls)
+                .AddRangeEntries(Entries.Select(entry => entry.ToNetStruct()))
+                .AddRangeUrls(Urls.Select(url => url.ToNetStruct()))
                 .SetClientmustdownloadimages(clientMustDownloadImages)
                 .Build();
         }
