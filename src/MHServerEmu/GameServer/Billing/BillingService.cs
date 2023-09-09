@@ -21,7 +21,7 @@ namespace MHServerEmu.GameServer.Billing
         public BillingService(GameServerManager gameServerManager)
         {
             _gameServerManager = gameServerManager;
-            _catalog = JsonSerializer.Deserialize<Catalog>(File.ReadAllText($"{Directory.GetCurrentDirectory()}\\Assets\\Catalog.json"));
+            _catalog = JsonSerializer.Deserialize<Catalog>(File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Catalog.json")));
             Logger.Info($"Initialized store catalog with {_catalog.Entries.Length} entries");
         }
 

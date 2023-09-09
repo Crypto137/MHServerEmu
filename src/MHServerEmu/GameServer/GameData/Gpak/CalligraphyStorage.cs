@@ -146,34 +146,34 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
         private void ExportDataDirectories()
         {
-            string dir = $"{Directory.GetCurrentDirectory()}\\Assets\\GPAK\\Export\\Calligraphy\\";
+            string dir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "GPAK", "Export", "Calligraphy");
             if (Directory.Exists(dir) == false) Directory.CreateDirectory(dir);
 
-            using (StreamWriter writer = new($"{dir}\\Type.directory.tsv"))
+            using (StreamWriter writer = new(Path.Combine(dir, "Type.directory.tsv")))
             {
                 foreach (DataDirectoryAssetTypeEntry entry in AssetTypeDirectory.Entries)
                     writer.WriteLine($"{entry.Id}\t{entry.Guid}\t{entry.Field2}\t{entry.FilePath}");
             }
 
-            using (StreamWriter writer = new($"{dir}\\Curve.directory.tsv"))
+            using (StreamWriter writer = new(Path.Combine(dir, "Curve.directory.tsv")))
             {
                 foreach (DataDirectoryCurveEntry entry in CurveDirectory.Entries)
                     writer.WriteLine($"{entry.Id}\t{entry.Guid}\t{entry.Field2}\t{entry.FilePath}");
             }
 
-            using (StreamWriter writer = new($"{dir}\\Blueprint.directory.tsv"))
+            using (StreamWriter writer = new(Path.Combine(dir, "Blueprint.directory.tsv")))
             {
                 foreach (DataDirectoryBlueprintEntry entry in BlueprintDirectory.Entries)
                     writer.WriteLine($"{entry.Id}\t{entry.Guid}\t{entry.Field2}\t{entry.FilePath}");
             }
 
-            using (StreamWriter writer = new($"{dir}\\Prototype.directory.tsv"))
+            using (StreamWriter writer = new(Path.Combine(dir, "Prototype.directory.tsv")))
             {
                 foreach (DataDirectoryPrototypeEntry entry in PrototypeDirectory.Entries)
                     writer.WriteLine($"{entry.Id}\t{entry.Guid}\t{entry.ParentId}\t{entry.Field3}\t{entry.FilePath}");
             }
 
-            using (StreamWriter writer = new($"{dir}\\Replacement.directory.tsv"))
+            using (StreamWriter writer = new(Path.Combine(dir, "Replacement.directory.tsv")))
             {
                 foreach (DataDirectoryEntry entry in ReplacementDirectory.Entries)
                     writer.WriteLine($"{entry.Id}\t{entry.Guid}\t{entry.FilePath}");
@@ -184,7 +184,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         {
             foreach (DataDirectoryCurveEntry dirEntry in CurveDirectory.Entries)  // use TSV for curves
             {
-                string path = $"{Directory.GetCurrentDirectory()}\\Assets\\GPAK\\Export\\Calligraphy\\{dirEntry.FilePath}.tsv";
+                string path = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "GPAK", "Export", "Calligraphy", $"{dirEntry.FilePath}.tsv");
                 string dir = Path.GetDirectoryName(path);
                 if (Directory.Exists(dir) == false) Directory.CreateDirectory(dir);
 

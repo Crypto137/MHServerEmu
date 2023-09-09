@@ -14,7 +14,7 @@ namespace MHServerEmu.Common.Config
 
         static ConfigManager()
         {
-            string path = $"{Directory.GetCurrentDirectory()}\\Config.ini";
+            string path = Path.Combine(Directory.GetCurrentDirectory(), "Config.ini");
 
             if (File.Exists(path))
             {

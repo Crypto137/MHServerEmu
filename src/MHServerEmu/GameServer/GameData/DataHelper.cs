@@ -16,7 +16,7 @@ namespace MHServerEmu.GameServer.GameData
             CodedInputStream stream = CodedInputStream.CreateInstance(data);
 
             int count = 0;
-            using (StreamWriter streamWriter = new($"{Directory.GetCurrentDirectory()}\\{outputFileName}"))
+            using (StreamWriter streamWriter = new(Path.Combine(Directory.GetCurrentDirectory(), outputFileName)))
             {
                 while (!stream.IsAtEnd)
                 {
@@ -34,7 +34,7 @@ namespace MHServerEmu.GameServer.GameData
             {
                 if (messages[i].Id == (byte)GameServerToClientMessage.NetMessageEntityCreate)
                 {
-                    using (StreamWriter streamWriter = new($"{Directory.GetCurrentDirectory()}\\{i}_entityCreate.txt"))
+                    using (StreamWriter streamWriter = new(Path.Combine(Directory.GetCurrentDirectory(), $"{i}_entityCreate.txt")))
                     {
                         var entityCreateMessage = NetMessageEntityCreate.ParseFrom(messages[i].Content);
                         EntityCreateBaseData baseData = new(entityCreateMessage.BaseData.ToByteArray());
@@ -47,19 +47,6 @@ namespace MHServerEmu.GameServer.GameData
                         streamWriter.WriteLine(archiveData.ToString());
                     }
                 }
-                /*
-                else if (messages[i].Id == (byte)GameServerToClientMessage.NetMessageEntityEnterGameWorld)
-                {
-                    using (StreamWriter streamWriter = new($"{Directory.GetCurrentDirectory()}\\{i}_entityEnterGameWorld.txt"))
-                    {
-                        var entityEnterGameWorldMessage = NetMessageEntityEnterGameWorld.ParseFrom(messages[i].Content);
-                        EntityEnterGameWorldArchiveData archiveData = new(entityEnterGameWorldMessage.ArchiveData.ToByteArray());
-
-                        streamWriter.WriteLine("archiveData:");
-                        streamWriter.WriteLine(archiveData.ToString());
-                    }
-                }
-                */
             }
         }
 

@@ -7,7 +7,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
     public class GpakFile
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private static readonly string GpakDirectory = $"{Directory.GetCurrentDirectory()}\\Assets\\GPAK";
+        private static readonly string GpakDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "GPAK");
 
         public int Header { get; }  // KAPG
         public int Field1 { get; }
@@ -15,7 +15,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
         public GpakFile(string gpakFileName, bool silent = false)
         {
-            string path = $"{GpakDirectory}\\{gpakFileName}";
+            string path = Path.Combine(GpakDirectory, gpakFileName);
 
             if (File.Exists(path))
             {
@@ -65,7 +65,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
         public void ExtractEntries(string fileName)
         {
-            using (StreamWriter streamWriter = new($"{GpakDirectory}\\{fileName}"))
+            using (StreamWriter streamWriter = new(Path.Combine(GpakDirectory, fileName)))
             {
                 foreach (GpakEntry entry in Entries)
                 {
@@ -79,11 +79,11 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         {
             foreach (GpakEntry entry in Entries)
             {
-                string uncompressedFilePath = $"{GpakDirectory}\\{entry.FilePath}";
+                string uncompressedFilePath = Path.Combine(GpakDirectory, entry.FilePath);
                 string uncompressedFileDirectory = Path.GetDirectoryName(uncompressedFilePath);
 
                 if (Directory.Exists(uncompressedFileDirectory) == false) Directory.CreateDirectory(uncompressedFileDirectory);
-                File.WriteAllBytes($"{GpakDirectory}\\{entry.FilePath}", entry.Data);
+                File.WriteAllBytes(Path.Combine(GpakDirectory, entry.FilePath), entry.Data);
             }
         }
 

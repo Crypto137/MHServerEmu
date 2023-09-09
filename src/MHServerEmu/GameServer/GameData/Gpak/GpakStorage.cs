@@ -20,7 +20,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         {
             foreach (var kvp in dict)
             {
-                string path = $"{Directory.GetCurrentDirectory()}\\Assets\\GPAK\\Export\\{kvp.Key}.json";
+                string path = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "GPAK", "Export", $"{kvp.Key}.json");
                 string dir = Path.GetDirectoryName(path);
                 if (Directory.Exists(dir) == false) Directory.CreateDirectory(dir);
 

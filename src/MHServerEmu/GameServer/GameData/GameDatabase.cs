@@ -17,7 +17,8 @@ namespace MHServerEmu.GameServer.GameData
 
         static GameDatabase()
         {
-            if (File.Exists($"{Directory.GetCurrentDirectory()}\\Assets\\GPAK\\Calligraphy.sip") && File.Exists($"{Directory.GetCurrentDirectory()}\\Assets\\GPAK\\mu_cdata.sip"))
+            string gpakDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "GPAK");
+            if (File.Exists(Path.Combine(gpakDir, "Calligraphy.sip")) && File.Exists(Path.Combine(gpakDir, "mu_cdata.sip")))
             {
                 Logger.Info("Initializing game database...");
                 long startTime = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeMilliseconds();
@@ -45,7 +46,7 @@ namespace MHServerEmu.GameServer.GameData
             }
             else
             {
-                Logger.Fatal("Calligraphy.sip and/or mu_cdata.sip are missing! Make sure you copied these files to Assets\\GPAK\\.");
+                Logger.Fatal($"Calligraphy.sip and/or mu_cdata.sip are missing! Make sure you copied these files to {gpakDir}.");
                 IsInitialized = false;
             }
         }

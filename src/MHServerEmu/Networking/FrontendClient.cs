@@ -105,7 +105,7 @@ namespace MHServerEmu.Networking
 
         public void SendPacketFromFile(string fileName)
         {
-            string path = $"{Directory.GetCurrentDirectory()}\\Assets\\Packets\\{fileName}";
+            string path = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Packets", fileName);
 
             if (File.Exists(path))
             {

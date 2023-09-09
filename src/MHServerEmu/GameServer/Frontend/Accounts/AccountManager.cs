@@ -14,9 +14,9 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private static readonly string SavedDataDirectory = $"{Directory.GetCurrentDirectory()}\\SavedData";
-        private static readonly string AccountFilePath = $"{SavedDataDirectory}\\Accounts.json";
-        private static readonly string PlayerDataFilePath = $"{SavedDataDirectory}\\PlayerData.json";
+        private static readonly string SavedDataDirectory = Path.Combine(Directory.GetCurrentDirectory(), "SavedData");
+        private static readonly string AccountFilePath = Path.Combine(SavedDataDirectory, "Accounts.json");
+        private static readonly string PlayerDataFilePath = Path.Combine(SavedDataDirectory, "PlayerData.json");
 
         private static object _accountLock = new();
 
