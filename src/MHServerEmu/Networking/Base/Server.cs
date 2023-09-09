@@ -38,9 +38,9 @@ namespace MHServerEmu.Networking.Base
 
             // Create a new TCP socket and set it up
             _listener = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            _listener.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, true);       // Disable packet coalescing to improve responsiveness
-            _listener.LingerState = new(false, 0);                                                  // Don't keep disconnected sockets around
-            // SetSocketOption for DontLinger doesn't seem to work on Linux, so we use the LingerState property instead
+            _listener.NoDelay = true;                   // Disable packet coalescing to improve responsiveness
+            _listener.LingerState = new(false, 0);      // Don't keep disconnected sockets around
+            // SetSocketOption for DontLinger doesn't seem to work on Linux, so we use properties instead
 
             // Bind the listener socket
             try
