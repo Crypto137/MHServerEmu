@@ -22,6 +22,8 @@ namespace MHServerEmu.GameServer.Games
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly GameServerManager _gameServerManager;
+
         public const int TickRate = 20;                 // Ticks per second based on client behavior
         public const long TickTime = 1000 / TickRate;   // ms per tick
 
@@ -32,8 +34,10 @@ namespace MHServerEmu.GameServer.Games
         public RegionManager RegionManager { get; }
         public ConcurrentDictionary<FrontendClient, Player> PlayerDict { get; }
 
-        public Game(ulong id)
+        public Game(GameServerManager gameServerManager, ulong id)
         {
+            _gameServerManager = gameServerManager;
+
             _tickWatch = new();
 
             Id = id;
@@ -114,6 +118,7 @@ namespace MHServerEmu.GameServer.Games
             client.SendMessage(1, new(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build()));
 
             client.SendMultipleMessages(1, PacketHelper.LoadMessagesFromPacketFile("NetMessageAchievementDatabaseDump.bin"));
+            //client.SendMessage(1, new(_gameServerManager.AchievementDatabase.ToNetMessageAchievementDatabaseDump()));
 
             var chatBroadcastMessage = ChatBroadcastMessage.CreateBuilder()         // Send MOTD
                 .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS)

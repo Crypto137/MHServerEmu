@@ -7,17 +7,19 @@ namespace MHServerEmu.GameServer.Games
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly GameServerManager _gameServerManager;
         private Dictionary<ulong, Game> _gameDict = new();
 
-        public GameManager()
+        public GameManager(GameServerManager gameServerManager)
         {
+            _gameServerManager = gameServerManager;
             CreateGame();
         }
 
         public void CreateGame()
         {
             ulong id = HashHelper.GenerateUniqueRandomId(_gameDict);
-            _gameDict.Add(id, new(id));
+            _gameDict.Add(id, new(_gameServerManager, id));
         }
 
         public Game GetGameById(ulong id)

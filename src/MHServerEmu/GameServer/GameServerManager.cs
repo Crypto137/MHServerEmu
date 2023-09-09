@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Common.Logging;
+using MHServerEmu.GameServer.Achievements;
 using MHServerEmu.GameServer.Billing;
 using MHServerEmu.GameServer.Frontend;
 using MHServerEmu.GameServer.Games;
@@ -9,6 +10,8 @@ namespace MHServerEmu.GameServer
     public class GameServerManager : IGameMessageHandler
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public AchievementDatabase AchievementDatabase { get; }
 
         public GameManager GameManager { get; }
 
@@ -21,8 +24,29 @@ namespace MHServerEmu.GameServer
 
         public GameServerManager()
         {
-            GameManager = new();
+            // Initialize achievement database
+            /*
+            var achievementDatabaseDump = NetMessageAchievementDatabaseDump.ParseFrom(PacketHelper.LoadMessagesFromPacketFile("NetMessageAchievementDatabaseDump.bin")[0].Content);
+            using (MemoryStream input = new(achievementDatabaseDump.CompressedAchievementDatabaseDump.ToByteArray()))
+            using (MemoryStream output = new())
+            using (InflaterInputStream inflater = new(input))
+            {
+                inflater.CopyTo(output);
+                AchievementDatabase = new(AchievementDatabaseDump.ParseFrom(output.ToArray()));
 
+                //File.WriteAllBytes(Path.Combine(Directory.GetCurrentDirectory(), "originalDump.bin"), achievementDatabaseDump.ToByteArray());
+                //File.WriteAllBytes(Path.Combine(Directory.GetCurrentDirectory(), "newDump.bin"), achievementDatabase.ToNetMessageAchievementDatabaseDump().ToByteArray());
+                //File.WriteAllText(Path.Combine(Directory.GetCurrentDirectory(), "Achievements.json"), JsonSerializer.Serialize(achievementDatabase, new JsonSerializerOptions() { WriteIndented = true }));
+                //File.WriteAllText(Path.Combine(Directory.GetCurrentDirectory(), "AchievementInfos.json"), JsonSerializer.Serialize(achievementDatabase.AchievementInfos));
+                //File.WriteAllText(Path.Combine(Directory.GetCurrentDirectory(), "achievements.txt"), achievementDatabase.ToString());
+                //File.WriteAllBytes(Path.Combine(Directory.GetCurrentDirectory(), "achievementStringBuffer.bin"), achievementDatabase.LocalizedAchievementStringBuffer.ToByteArray());
+            }
+            */
+
+            // Initialize game manager
+            GameManager = new(this);
+
+            // Initialize services
             FrontendService = new(this);
             GroupingManagerService = new(this);
             PlayerManagerService = new(this);
