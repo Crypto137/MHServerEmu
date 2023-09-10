@@ -42,15 +42,10 @@ namespace MHServerEmu.GameServer.Missions
 
         public override string ToString()
         {
-            using (MemoryStream memoryStream = new())
-            using (StreamWriter streamWriter = new(memoryStream))
-            {
-                streamWriter.WriteLine($"PrototypeId: 0x{PrototypeId.ToString("X")}");
-                for (int i = 0; i < Fields.Length; i++) streamWriter.WriteLine($"Field{i}: 0x{Fields[i].ToString("X")}");
-
-                streamWriter.Flush();
-                return Encoding.UTF8.GetString(memoryStream.ToArray());
-            }
+            StringBuilder sb = new();
+            sb.AppendLine($"PrototypeId: 0x{PrototypeId:X}");
+            for (int i = 0; i < Fields.Length; i++) sb.AppendLine($"Field{i}: 0x{Fields[i]:X}");
+            return sb.ToString();
         }
     }
 }

@@ -65,22 +65,17 @@ namespace MHServerEmu.GameServer.Missions
 
         public override string ToString()
         {
-            using (MemoryStream memoryStream = new())
-            using (StreamWriter streamWriter = new(memoryStream))
-            {
-                streamWriter.WriteLine($"Index1: 0x{Index1.ToString("X")}");
-                streamWriter.WriteLine($"Index2: 0x{Index2.ToString("X")}");
-                streamWriter.WriteLine($"State: 0x{State.ToString("X")}");
-                streamWriter.WriteLine($"Time: 0x{Time.ToString("X")}");
-                streamWriter.WriteLine($"Field4: 0x{Field4.ToString("X")}");
-                streamWriter.WriteLine($"Field5: 0x{Field5.ToString("X")}");
-                streamWriter.WriteLine($"Field6: 0x{Field6.ToString("X")}");
-                streamWriter.WriteLine($"Field7: 0x{Field7.ToString("X")}");
-                streamWriter.WriteLine($"Field8: 0x{Field8.ToString("X")}");
-
-                streamWriter.Flush();
-                return Encoding.UTF8.GetString(memoryStream.ToArray());
-            }
+            StringBuilder sb = new();
+            sb.AppendLine($"Index1: 0x{Index1:X}");
+            sb.AppendLine($"Index2: 0x{Index2:X}");
+            sb.AppendLine($"State: 0x{State:X}");
+            sb.AppendLine($"Time: 0x{Time:X}");
+            sb.AppendLine($"Field4: 0x{Field4:X}");
+            sb.AppendLine($"Field5: 0x{Field5:X}");
+            sb.AppendLine($"Field6: 0x{Field6:X}");
+            sb.AppendLine($"Field7: 0x{Field7:X}");
+            sb.AppendLine($"Field8: 0x{Field8:X}");
+            return sb.ToString();
         }
     }
 }

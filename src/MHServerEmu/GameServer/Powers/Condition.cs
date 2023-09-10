@@ -95,27 +95,23 @@ namespace MHServerEmu.GameServer.Powers
 
         public override string ToString()
         {
-            using (MemoryStream memoryStream = new())
-            using (StreamWriter streamWriter = new(memoryStream))
-            {
-                for (int i = 0; i < Flags.Length; i++) streamWriter.WriteLine($"Flag{i}: {Flags[i]}");
-                streamWriter.WriteLine($"Id: 0x{Id.ToString("X")}");
-                streamWriter.WriteLine($"CreatorId: 0x{CreatorId.ToString("X")}");
-                streamWriter.WriteLine($"UltimateCreatorId: 0x{UltimateCreatorId.ToString("X")}");
-                streamWriter.WriteLine($"ConditionPrototypeId: {GameDatabase.GetPrototypePath(ConditionPrototypeId)}");
-                streamWriter.WriteLine($"CreatorPowerPrototypeId: {GameDatabase.GetPrototypePath(CreatorPowerPrototypeId)}");
-                streamWriter.WriteLine($"Index: 0x{Index.ToString("X")}");
-                streamWriter.WriteLine($"AssetId: 0x{AssetId.ToString("X")}");
-                streamWriter.WriteLine($"StartTime: 0x{StartTime.ToString("X")}");
-                streamWriter.WriteLine($"PauseTime: 0x{PauseTime.ToString("X")}");
-                streamWriter.WriteLine($"TimeRemaining: 0x{TimeRemaining.ToString("X")}");
-                streamWriter.WriteLine($"PropertyCollectionReplicationId: 0x{PropertyCollectionReplicationId.ToString("X")}");
-                for (int i = 0; i < Properties.Length; i++) streamWriter.WriteLine($"Property{i}: {Properties[i]}");
-                streamWriter.WriteLine($"Field13: 0x{Field13.ToString("X")}");
+            StringBuilder sb = new();
+            for (int i = 0; i < Flags.Length; i++) sb.AppendLine($"Flag{i}: {Flags[i]}");
+            sb.AppendLine($"Id: 0x{Id:X}");
+            sb.AppendLine($"CreatorId: 0x{CreatorId:X}");
+            sb.AppendLine($"UltimateCreatorId: 0x{UltimateCreatorId:X}");
+            sb.AppendLine($"ConditionPrototypeId: {GameDatabase.GetPrototypePath(ConditionPrototypeId)}");
+            sb.AppendLine($"CreatorPowerPrototypeId: {GameDatabase.GetPrototypePath(CreatorPowerPrototypeId)}");
+            sb.AppendLine($"Index: 0x{Index:X}");
+            sb.AppendLine($"AssetId: 0x{AssetId:X}");
+            sb.AppendLine($"StartTime: 0x{StartTime:X}");
+            sb.AppendLine($"PauseTime: 0x{PauseTime:X}");
+            sb.AppendLine($"TimeRemaining: 0x{TimeRemaining:X}");
+            sb.AppendLine($"PropertyCollectionReplicationId: 0x{PropertyCollectionReplicationId:X}");
+            for (int i = 0; i < Properties.Length; i++) sb.AppendLine($"Property{i}: {Properties[i]}");
+            sb.AppendLine($"Field13: 0x{Field13:X}");
 
-                streamWriter.Flush();
-                return Encoding.UTF8.GetString(memoryStream.ToArray());
-            }
+            return sb.ToString();
         }
     }
 }

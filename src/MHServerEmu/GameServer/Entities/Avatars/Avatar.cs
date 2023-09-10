@@ -93,21 +93,17 @@ namespace MHServerEmu.GameServer.Entities.Avatars
 
         public override string ToString()
         {
-            using (MemoryStream stream = new())
-            using (StreamWriter writer = new(stream))
-            {
-                WriteEntityString(writer);
-                WriteWorldEntityString(writer);
+            StringBuilder sb = new();
+            WriteEntityString(sb);
+            WriteWorldEntityString(sb);
 
-                writer.WriteLine($"PlayerName: {PlayerName}");
-                writer.WriteLine($"OwnerPlayerDbId: 0x{OwnerPlayerDbId.ToString("X")}");
-                writer.WriteLine($"GuildName: {GuildName}");
-                writer.WriteLine($"IsRuntimeInfo: {IsRuntimeInfo}");
-                for (int i = 0; i < AbilityKeyMappings.Length; i++) writer.WriteLine($"AbilityKeyMapping{i}: {AbilityKeyMappings[i]}");
+            sb.AppendLine($"PlayerName: {PlayerName}");
+            sb.AppendLine($"OwnerPlayerDbId: 0x{OwnerPlayerDbId:X}");
+            sb.AppendLine($"GuildName: {GuildName}");
+            sb.AppendLine($"IsRuntimeInfo: {IsRuntimeInfo}");
+            for (int i = 0; i < AbilityKeyMappings.Length; i++) sb.AppendLine($"AbilityKeyMapping{i}: {AbilityKeyMappings[i]}");
 
-                writer.Flush();
-                return Encoding.UTF8.GetString(stream.ToArray());
-            }
+            return sb.ToString();
         }
     }
 }

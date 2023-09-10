@@ -63,16 +63,11 @@ namespace MHServerEmu.GameServer.Entities
 
         public override string ToString()
         {
-            using (MemoryStream stream = new())
-            using (StreamWriter writer = new(stream))
-            {
-                WriteEntityString(writer);
-                WriteWorldEntityString(writer);
-                WriteUnknownFieldString(writer);
-
-                writer.Flush();
-                return Encoding.UTF8.GetString(stream.ToArray());
-            }
+            StringBuilder sb = new();
+            WriteEntityString(sb);
+            WriteWorldEntityString(sb);
+            WriteUnknownFieldString(sb);
+            return sb.ToString();
         }
 
         protected void ReadWorldEntityFields(CodedInputStream stream)
@@ -102,15 +97,15 @@ namespace MHServerEmu.GameServer.Entities
             stream.WriteRawInt32(UnknownPowerVar);
         }
 
-        protected void WriteWorldEntityString(StreamWriter writer)
+        protected void WriteWorldEntityString(StringBuilder sb)
         {
             for (int i = 0; i < UnknownPrototypes.Length; i++)
-                writer.WriteLine($"UnknownPrototype{i}: {UnknownPrototypes[i]}");
+                sb.AppendLine($"UnknownPrototype{i}: {UnknownPrototypes[i]}");
 
             for (int i = 0; i < Conditions.Length; i++)
-                writer.WriteLine($"Condition{i}: {Conditions[i]}");
+                sb.AppendLine($"Condition{i}: {Conditions[i]}");
 
-            writer.WriteLine($"UnknownPowerVar: 0x{UnknownPowerVar.ToString("X")}");
+            sb.AppendLine($"UnknownPowerVar: 0x{UnknownPowerVar:X}");
         }
     }
 }

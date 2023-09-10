@@ -67,19 +67,14 @@ namespace MHServerEmu.GameServer.Entities.Avatars
 
         public override string ToString()
         {
-            using (MemoryStream memoryStream = new())
-            using (StreamWriter streamWriter = new(memoryStream))
-            {
-                streamWriter.WriteLine($"PowerSpecIndex: 0x{PowerSpecIndex.ToString("X")}");
-                streamWriter.WriteLine($"ShouldPersist: {ShouldPersist}");
-                streamWriter.WriteLine($"AssociatedTransformMode: {GameDatabase.GetPrototypePath(AssociatedTransformMode)}");
-                streamWriter.WriteLine($"Slot0: {GameDatabase.GetPrototypePath(Slot0)}");
-                streamWriter.WriteLine($"Slot1: {GameDatabase.GetPrototypePath(Slot1)}");
-                for (int i = 0; i < PowerSlots.Length; i++) streamWriter.WriteLine($"PowerSlot{i}: {GameDatabase.GetPrototypePath(PowerSlots[i])}");
-
-                streamWriter.Flush();
-                return Encoding.UTF8.GetString(memoryStream.ToArray());
-            }
+            StringBuilder sb = new();
+            sb.AppendLine($"PowerSpecIndex: 0x{PowerSpecIndex:X}");
+            sb.AppendLine($"ShouldPersist: {ShouldPersist}");
+            sb.AppendLine($"AssociatedTransformMode: {GameDatabase.GetPrototypePath(AssociatedTransformMode)}");
+            sb.AppendLine($"Slot0: {GameDatabase.GetPrototypePath(Slot0)}");
+            sb.AppendLine($"Slot1: {GameDatabase.GetPrototypePath(Slot1)}");
+            for (int i = 0; i < PowerSlots.Length; i++) sb.AppendLine($"PowerSlot{i}: {GameDatabase.GetPrototypePath(PowerSlots[i])}");
+            return sb.ToString();
         }
     }
 }

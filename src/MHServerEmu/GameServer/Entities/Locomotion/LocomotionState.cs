@@ -79,21 +79,16 @@ namespace MHServerEmu.GameServer.Entities.Locomotion
 
         public override string ToString()
         {
-            using (MemoryStream memoryStream = new())
-            using (StreamWriter streamWriter = new(memoryStream))
-            {
-                streamWriter.WriteLine($"LocomotionFlags: 0x{LocomotionFlags.ToString("X")}");
-                streamWriter.WriteLine($"Method: 0x{Method.ToString("X")}");
-                streamWriter.WriteLine($"MoveSpeed: {MoveSpeed}");
-                streamWriter.WriteLine($"Height: 0x{Height.ToString("X")}");
-                streamWriter.WriteLine($"FollowEntityId: 0x{FollowEntityId.ToString("X")}");
-                streamWriter.WriteLine($"FollowEntityRange: {FollowEntityRange}");
-                streamWriter.WriteLine($"PathNodeUInt: 0x{PathNodeUInt.ToString("X")}");
-                for (int i = 0; i < LocomotionPathNodes.Length; i++) streamWriter.WriteLine($"LocomotionPathNode{i}: {LocomotionPathNodes[i]}");
-
-                streamWriter.Flush();
-                return Encoding.UTF8.GetString(memoryStream.ToArray());
-            }
+            StringBuilder sb = new();
+            sb.AppendLine($"LocomotionFlags: 0x{LocomotionFlags:X}");
+            sb.AppendLine($"Method: 0x{Method:X}");
+            sb.AppendLine($"MoveSpeed: {MoveSpeed}");
+            sb.AppendLine($"Height: 0x{Height:X}");
+            sb.AppendLine($"FollowEntityId: 0x{FollowEntityId:X}");
+            sb.AppendLine($"FollowEntityRange: {FollowEntityRange}");
+            sb.AppendLine($"PathNodeUInt: 0x{PathNodeUInt:X}");
+            for (int i = 0; i < LocomotionPathNodes.Length; i++) sb.AppendLine($"LocomotionPathNode{i}: {LocomotionPathNodes[i]}");
+            return sb.ToString();
         }
     }
 }

@@ -143,32 +143,26 @@ namespace MHServerEmu.GameServer.Entities
 
         public override string ToString()
         {
-            using (MemoryStream memoryStream = new())
-            using (StreamWriter streamWriter = new(memoryStream))
-            {
-                streamWriter.WriteLine($"ReplicationPolicy: 0x{ReplicationPolicy.ToString("X")}");
-                streamWriter.WriteLine($"EntityId: 0x{EntityId.ToString("X")}");
-                streamWriter.WriteLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
-                for (int i = 0; i < Flags.Length; i++) streamWriter.WriteLine($"Flag{i}: {Flags[i]}");
-                for (int i = 0; i < LocFlags.Length; i++) streamWriter.WriteLine($"LocFlag{i}: {LocFlags[i]}");
-                streamWriter.WriteLine($"InterestPolicies: 0x{InterestPolicies.ToString("X")}");
-                streamWriter.WriteLine($"AvatarWorldInstanceId: 0x{AvatarWorldInstanceId.ToString("X")}");
-                streamWriter.WriteLine($"DbId: 0x{DbId.ToString("X")}");
-                streamWriter.WriteLine($"Position: {Position}");
-                streamWriter.WriteLine($"Orientation: {Orientation}");
-                streamWriter.WriteLine($"LocomotionState: {LocomotionState}");
-                streamWriter.WriteLine($"BoundsScaleOverride: {BoundsScaleOverride}");
-                streamWriter.WriteLine($"SourceEntityId: 0x{SourceEntityId}");
-                streamWriter.WriteLine($"SourcePosition: {SourcePosition}");
-                streamWriter.WriteLine($"ActivePowerPrototypeId: {GameDatabase.GetPrototypePath(ActivePowerPrototypeId)}");
-                streamWriter.WriteLine($"InvLoc: {InvLoc}");
-                streamWriter.WriteLine($"InvLocPrev: {InvLocPrev}");
-                for (int i = 0; i < Vector.Length; i++) streamWriter.WriteLine($"Vector{i}: 0x{Vector[i].ToString("X")}");
-
-                streamWriter.Flush();
-
-                return Encoding.UTF8.GetString(memoryStream.ToArray());
-            }
+            StringBuilder sb = new();
+            sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
+            sb.AppendLine($"EntityId: 0x{EntityId:X}");
+            sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
+            for (int i = 0; i < Flags.Length; i++) sb.AppendLine($"Flag{i}: {Flags[i]}");
+            for (int i = 0; i < LocFlags.Length; i++) sb.AppendLine($"LocFlag{i}: {LocFlags[i]}");
+            sb.AppendLine($"InterestPolicies: 0x{InterestPolicies:X}");
+            sb.AppendLine($"AvatarWorldInstanceId: 0x{AvatarWorldInstanceId:X}");
+            sb.AppendLine($"DbId: 0x{DbId:X}");
+            sb.AppendLine($"Position: {Position}");
+            sb.AppendLine($"Orientation: {Orientation}");
+            sb.AppendLine($"LocomotionState: {LocomotionState}");
+            sb.AppendLine($"BoundsScaleOverride: {BoundsScaleOverride}");
+            sb.AppendLine($"SourceEntityId: 0x{SourceEntityId}");
+            sb.AppendLine($"SourcePosition: {SourcePosition}");
+            sb.AppendLine($"ActivePowerPrototypeId: {GameDatabase.GetPrototypePath(ActivePowerPrototypeId)}");
+            sb.AppendLine($"InvLoc: {InvLoc}");
+            sb.AppendLine($"InvLocPrev: {InvLocPrev}");
+            for (int i = 0; i < Vector.Length; i++) sb.AppendLine($"Vector{i}: 0x{Vector[i]:X}");
+            return sb.ToString();
         }
     }
 }

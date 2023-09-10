@@ -65,16 +65,12 @@ namespace MHServerEmu.GameServer.Properties
 
         public override string ToString()
         {
-            using (MemoryStream memoryStream = new())
-            using (StreamWriter streamWriter = new(memoryStream))
-            {
-                streamWriter.WriteLine($"Id: 0x{Id.ToString("X")}");
-                streamWriter.WriteLine($"Value: {Value}");
-                streamWriter.WriteLine($"PropertyType: {Info.Type}");
-
-                streamWriter.Flush();
-                return Encoding.UTF8.GetString(memoryStream.ToArray());
-            }
+            StringBuilder sb = new();
+            sb.AppendLine($"Id: 0x{Id:X}");
+            sb.AppendLine($"Enum: {Enum}");
+            sb.AppendLine($"Value: {Value}");
+            sb.AppendLine($"PropertyType: {Info.Type}");
+            return sb.ToString();
         }
 
         private void CreateValueContainer(ulong rawValue)

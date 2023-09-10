@@ -37,15 +37,10 @@ namespace MHServerEmu.GameServer.Common
 
         public override string ToString()
         {
-            using (MemoryStream memoryStream = new())
-            using (StreamWriter streamWriter = new(memoryStream))
-            {
-                streamWriter.WriteLine($"ReplicationId: 0x{ReplicationId.ToString("X")}");
-                streamWriter.WriteLine($"Text: {Text}");
-
-                streamWriter.Flush();
-                return Encoding.UTF8.GetString(memoryStream.ToArray());
-            }
+            StringBuilder sb = new();
+            sb.AppendLine($"ReplicationId: 0x{ReplicationId:X}");
+            sb.AppendLine($"Text: {Text}");
+            return sb.ToString();
         }
     }
 }

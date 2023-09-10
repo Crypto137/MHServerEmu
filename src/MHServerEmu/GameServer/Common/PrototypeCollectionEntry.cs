@@ -39,15 +39,10 @@ namespace MHServerEmu.GameServer.Common
 
         public override string ToString()
         {
-            using (MemoryStream memoryStream = new())
-            using (StreamWriter streamWriter = new(memoryStream))
-            {
-                streamWriter.WriteLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
-                streamWriter.WriteLine($"Value: 0x{Value.ToString("X")}");
-
-                streamWriter.Flush();
-                return Encoding.UTF8.GetString(memoryStream.ToArray());
-            }
+            StringBuilder sb = new();
+            sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
+            sb.AppendLine($"Value: 0x{Value:X}");
+            return sb.ToString();
         }
     }
 }

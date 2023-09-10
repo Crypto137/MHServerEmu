@@ -1,5 +1,5 @@
-﻿using Google.ProtocolBuffers;
-using System.Text;
+﻿using System.Text;
+using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.GameData;
 
@@ -50,18 +50,13 @@ namespace MHServerEmu.GameServer.Misc
 
         public override string ToString()
         {
-            using (MemoryStream memoryStream = new())
-            using (StreamWriter streamWriter = new(memoryStream))
-            {
-                streamWriter.WriteLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
-                streamWriter.WriteLine($"Name: {Name}");
-                streamWriter.WriteLine($"AssetRef: 0x{AssetRef.ToString("X")}");
-                streamWriter.WriteLine($"Field2: 0x{Field2}");
-                streamWriter.WriteLine($"Field3: 0x{Field3}");
-
-                streamWriter.Flush();
-                return Encoding.UTF8.GetString(memoryStream.ToArray());
-            }
+            StringBuilder sb = new();
+            sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
+            sb.AppendLine($"Name: {Name}");
+            sb.AppendLine($"AssetRef: 0x{AssetRef:X}");
+            sb.AppendLine($"Field2: 0x{Field2}");
+            sb.AppendLine($"Field3: 0x{Field3}");
+            return sb.ToString();
         }
     }
 }

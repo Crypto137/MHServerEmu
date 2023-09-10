@@ -7,7 +7,7 @@ namespace MHServerEmu.GameServer.Entities
 {
     public class Entity
     {
-        public ulong ReplicationPolicy { get; set; }
+        public uint ReplicationPolicy { get; set; }
         public ulong ReplicationId { get; set; }
         public Property[] Properties { get; set; }
         public ulong[] UnknownFields { get; set; } = Array.Empty<ulong>();
@@ -22,7 +22,7 @@ namespace MHServerEmu.GameServer.Entities
 
         public Entity() { }
 
-        public Entity(ulong replicationPolicy, ulong replicationId, Property[] properties, ulong[] unknownFields)
+        public Entity(uint replicationPolicy, ulong replicationId, Property[] properties, ulong[] unknownFields)
         {
             ReplicationPolicy = replicationPolicy;
             ReplicationId = replicationId;
@@ -46,20 +46,15 @@ namespace MHServerEmu.GameServer.Entities
 
         public override string ToString()
         {
-            using (MemoryStream stream = new())
-            using (StreamWriter writer = new(stream))
-            {
-                WriteEntityString(writer);
-                WriteUnknownFieldString(writer);
-
-                writer.Flush();
-                return Encoding.UTF8.GetString(stream.ToArray());
-            }
+            StringBuilder sb = new();
+            WriteEntityString(sb);
+            WriteUnknownFieldString(sb);
+            return sb.ToString();
         }
 
         protected void ReadEntityFields(CodedInputStream stream)
         {
-            ReplicationPolicy = stream.ReadRawVarint64();
+            ReplicationPolicy = stream.ReadRawVarint32();
             ReplicationId = stream.ReadRawVarint64();
 
             Properties = new Property[stream.ReadRawUInt32()];
@@ -76,7 +71,7 @@ namespace MHServerEmu.GameServer.Entities
 
         protected void WriteEntityFields(CodedOutputStream stream)
         {
-            stream.WriteRawVarint64(ReplicationPolicy);
+            stream.WriteRawVarint32(ReplicationPolicy);
             stream.WriteRawVarint64(ReplicationId);
             stream.WriteRawBytes(BitConverter.GetBytes(Properties.Length));
             foreach (Property property in Properties) stream.WriteRawBytes(property.Encode());
@@ -87,19 +82,19 @@ namespace MHServerEmu.GameServer.Entities
             foreach (ulong field in UnknownFields) stream.WriteRawVarint64(field);
         }
 
-        protected void WriteEntityString(StreamWriter writer)
+        protected void WriteEntityString(StringBuilder sb)
         {
-            writer.WriteLine($"ReplicationPolicy: 0x{ReplicationPolicy.ToString("X")}");
-            writer.WriteLine($"ReplicationId: 0x{ReplicationId.ToString("X")}");
+            sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
+            sb.AppendLine($"ReplicationId: 0x{ReplicationId:X}");
 
             for (int i = 0; i < Properties.Length; i++)
-                writer.WriteLine($"Property{i}: {Properties[i]}");
+                sb.AppendLine($"Property{i}: {Properties[i]}");
         }
 
-        protected void WriteUnknownFieldString(StreamWriter writer)
+        protected void WriteUnknownFieldString(StringBuilder sb)
         {
             for (int i = 0; i < UnknownFields.Length; i++)
-                writer.WriteLine($"UnknownField{i}: 0x{UnknownFields[i].ToString("X")}");
+                sb.AppendLine($"UnknownField{i}: 0x{UnknownFields[i]:X}");
         }
     }
 }

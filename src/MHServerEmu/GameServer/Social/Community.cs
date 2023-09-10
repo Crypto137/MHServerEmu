@@ -88,19 +88,15 @@ namespace MHServerEmu.GameServer.Social
 
         public override string ToString()
         {
-            using (MemoryStream memoryStream = new())
-            using (StreamWriter streamWriter = new(memoryStream))
-            {
-                streamWriter.WriteLine($"ReplicationId: {ReplicationId}");
-                streamWriter.WriteLine($"Field1: 0x{Field1.ToString("X")}");
-                streamWriter.WriteLine($"GmBool: {GmBool}");
-                streamWriter.WriteLine($"UnknownString: {UnknownString}");
-                streamWriter.WriteLine($"Flag3: {Flag3}");
-                for (int i = 0; i < Captions.Length; i++) streamWriter.WriteLine($"Caption{i}: {Captions[i]}");
-                for (int i = 0; i < Friends.Length; i++) streamWriter.WriteLine($"Friend{i}: {Friends[i]}");
-                streamWriter.Flush();
-                return Encoding.UTF8.GetString(memoryStream.ToArray());
-            }
+            StringBuilder sb = new();
+            sb.AppendLine($"ReplicationId: {ReplicationId}");
+            sb.AppendLine($"Field1: 0x{Field1:X}");
+            sb.AppendLine($"GmBool: {GmBool}");
+            sb.AppendLine($"UnknownString: {UnknownString}");
+            sb.AppendLine($"Flag3: {Flag3}");
+            for (int i = 0; i < Captions.Length; i++) sb.AppendLine($"Caption{i}: {Captions[i]}");
+            for (int i = 0; i < Friends.Length; i++) sb.AppendLine($"Friend{i}: {Friends[i]}");
+            return sb.ToString();
         }
     }
 }

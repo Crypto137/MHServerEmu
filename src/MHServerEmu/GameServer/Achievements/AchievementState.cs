@@ -40,16 +40,11 @@ namespace MHServerEmu.GameServer.Achievements
 
         public override string ToString()
         {
-            using (MemoryStream memoryStream = new())
-            using (StreamWriter streamWriter = new(memoryStream))
-            {
-                streamWriter.WriteLine($"Id: 0x{AchievementId.ToString("X")}");
-                streamWriter.WriteLine($"Count: 0x{Count.ToString("X")}");
-                streamWriter.WriteLine($"CompletionDate: 0x{CompletionDate.ToString("X")}");
-
-                streamWriter.Flush();
-                return Encoding.UTF8.GetString(memoryStream.ToArray());
-            }
+            StringBuilder sb = new();
+            sb.AppendLine($"Id: 0x{AchievementId:X}");
+            sb.AppendLine($"Count: 0x{Count:X}");
+            sb.AppendLine($"CompletionDate: 0x{CompletionDate:X}");
+            return sb.ToString();
         }
     }
 }

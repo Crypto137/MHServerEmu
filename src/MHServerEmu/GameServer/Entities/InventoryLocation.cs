@@ -42,16 +42,11 @@ namespace MHServerEmu.GameServer.Entities
 
         public override string ToString()
         {
-            using (MemoryStream memoryStream = new())
-            using (StreamWriter streamWriter = new(memoryStream))
-            {
-                streamWriter.WriteLine($"ContainerEntityId: 0x{ContainerEntityId.ToString("X")}");
-                streamWriter.WriteLine($"InventoryPrototypeId: {GameDatabase.GetPrototypePath(InventoryPrototypeId)}");
-                streamWriter.WriteLine($"Slot: 0x{Slot.ToString("X")}");
-
-                streamWriter.Flush();
-                return Encoding.UTF8.GetString(memoryStream.ToArray());
-            }
+            StringBuilder sb = new();
+            sb.AppendLine($"ContainerEntityId: 0x{ContainerEntityId:X}");
+            sb.AppendLine($"InventoryPrototypeId: {GameDatabase.GetPrototypePath(InventoryPrototypeId)}");
+            sb.AppendLine($"Slot: 0x{Slot:X}");
+            return sb.ToString();
         }
     }
 }

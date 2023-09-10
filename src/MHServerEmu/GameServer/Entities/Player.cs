@@ -104,7 +104,7 @@ namespace MHServerEmu.GameServer.Entities
         }
 
         // note: this is ugly
-        public Player(ulong replicationPolicy, ulong replicationId, Property[] properties,
+        public Player(uint replicationPolicy, ulong replicationId, Property[] properties,
             ulong prototypeId, Mission[] missions, Quest[] quests, ulong unknownCollectionRepId, uint unknownCollectionSize,
             ulong shardId, ReplicatedString replicatedString1, ulong community1, ulong community2, ReplicatedString replicatedString2,
             ulong matchQueueStatus, bool replicationPolicyBool, ulong dateTime, Community community, ulong[] unknownFields)
@@ -217,46 +217,34 @@ namespace MHServerEmu.GameServer.Entities
 
         public override string ToString()
         {
-            using (MemoryStream stream = new())
-            using (StreamWriter writer = new(stream))
-            {
-                WriteEntityString(writer);
+            StringBuilder sb = new();
+            WriteEntityString(sb);
 
-                writer.WriteLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
-                for (int i = 0; i < Missions.Length; i++) writer.WriteLine($"Mission{i}: {Missions[i]}");
-                for (int i = 0; i < Quests.Length; i++) writer.WriteLine($"Quest{i}: {Quests[i]}");
+            sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
+            for (int i = 0; i < Missions.Length; i++) sb.AppendLine($"Mission{i}: {Missions[i]}");
+            for (int i = 0; i < Quests.Length; i++) sb.AppendLine($"Quest{i}: {Quests[i]}");
+            sb.AppendLine($"UnknownCollectionRepId: 0x{UnknownCollectionRepId:X}");
+            sb.AppendLine($"UnknownCollectionSize: 0x{UnknownCollectionSize:X}");
+            sb.AppendLine($"ShardId: 0x{ShardId:X}");
+            sb.AppendLine($"ReplicatedString1: {ReplicatedString1}");
+            sb.AppendLine($"Community1: 0x{Community1:X}");
+            sb.AppendLine($"Community2: 0x{Community2:X}");
+            sb.AppendLine($"ReplicatedString2: {ReplicatedString2}");
+            sb.AppendLine($"MatchQueueStatus: 0x{MatchQueueStatus:X}");
+            sb.AppendLine($"ReplicationPolicyBool: {ReplicationPolicyBool}");
+            sb.AppendLine($"DateTime: 0x{DateTime:X}");
+            sb.AppendLine($"Community: {Community}");
+            sb.AppendLine($"Flag3: {Flag3}");
+            for (int i = 0; i < StashInventories.Length; i++) sb.AppendLine($"StashInventory{i}: {GameDatabase.GetPrototypePath(StashInventories[i])}");
+            for (int i = 0; i < AvailableBadges.Length; i++) sb.AppendLine($"AvailableBadge{i}: 0x{AvailableBadges[i]:X}");
+            for (int i = 0; i < ChatChannelOptions.Length; i++) sb.AppendLine($"ChatChannelOption{i}: {ChatChannelOptions[i]}");
+            for (int i = 0; i < ChatChannelOptions2.Length; i++) sb.AppendLine($"ChatChannelOptions2_{i}: {GameDatabase.GetPrototypePath(ChatChannelOptions2[i])}");
+            for (int i = 0; i < UnknownOptions.Length; i++) sb.AppendLine($"UnknownOption{i}: 0x{UnknownOptions[i]:X}");
+            for (int i = 0; i < EquipmentInvUISlots.Length; i++) sb.AppendLine($"EquipmentInvUISlot{i}: {EquipmentInvUISlots[i]}");
+            for (int i = 0; i < AchievementStates.Length; i++) sb.AppendLine($"AchievementState{i}: {AchievementStates[i]}");
+            for (int i = 0; i < StashTabOptions.Length; i++) sb.AppendLine($"StashTabOption{i}: {StashTabOptions[i]}");
 
-                writer.WriteLine($"UnknownCollectionRepId: 0x{UnknownCollectionRepId.ToString("X")}");
-                writer.WriteLine($"UnknownCollectionSize: 0x{UnknownCollectionSize.ToString("X")}");
-                writer.WriteLine($"ShardId: 0x{ShardId.ToString("X")}");
-                writer.WriteLine($"ReplicatedString1: {ReplicatedString1}");
-                writer.WriteLine($"Community1: 0x{Community1.ToString("X")}");
-                writer.WriteLine($"Community2: 0x{Community2.ToString("X")}");
-                writer.WriteLine($"ReplicatedString2: {ReplicatedString2}");
-                writer.WriteLine($"MatchQueueStatus: 0x{MatchQueueStatus.ToString("X")}");
-                writer.WriteLine($"ReplicationPolicyBool: 0x{DateTime.ToString("X")}");
-                writer.WriteLine($"DateTime: 0x{DateTime.ToString("X")}");
-                writer.WriteLine($"Community: {Community}");
-
-                writer.WriteLine($"Flag3: {Flag3}");
-                for (int i = 0; i < StashInventories.Length; i++) writer.WriteLine($"StashInventory{i}: {GameDatabase.GetPrototypePath(StashInventories[i])}");
-                for (int i = 0; i < AvailableBadges.Length; i++) writer.WriteLine($"AvailableBadge{i}: 0x{AvailableBadges[i].ToString("X")}");
-
-                for (int i = 0; i < ChatChannelOptions.Length; i++) writer.WriteLine($"ChatChannelOption{i}: {ChatChannelOptions[i]}");
-
-                for (int i = 0; i < ChatChannelOptions2.Length; i++) writer.WriteLine($"ChatChannelOptions2_{i}: {GameDatabase.GetPrototypePath(ChatChannelOptions2[i])}");
-
-                for (int i = 0; i < UnknownOptions.Length; i++) writer.WriteLine($"UnknownOption{i}: 0x{UnknownOptions[i].ToString("X")}");
-
-                for (int i = 0; i < EquipmentInvUISlots.Length; i++) writer.WriteLine($"EquipmentInvUISlot{i}: {EquipmentInvUISlots[i]}");
-
-                for (int i = 0; i < AchievementStates.Length; i++) writer.WriteLine($"AchievementState{i}: {AchievementStates[i]}");
-
-                for (int i = 0; i < StashTabOptions.Length; i++) writer.WriteLine($"StashTabOption{i}: {StashTabOptions[i]}");
-
-                writer.Flush();
-                return Encoding.UTF8.GetString(stream.ToArray());
-            }
+            return sb.ToString();
         }
     }
 }

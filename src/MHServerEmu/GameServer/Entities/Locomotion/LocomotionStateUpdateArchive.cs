@@ -60,21 +60,15 @@ namespace MHServerEmu.GameServer.Entities.Locomotion
 
         public override string ToString()
         {
-            using (MemoryStream stream = new())
-            using (StreamWriter writer = new(stream))
-            {
-                writer.WriteLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
-                writer.WriteLine($"EntityId: 0x{EntityId:X}");
-                for (int i = 0; i < LocFlags.Length; i++) writer.WriteLine($"LocFlag{i}: {LocFlags[i]}");
-                writer.WriteLine($"PrototypeId: 0x{PrototypeId:X}");
-                writer.WriteLine($"Position: {Position}");
-                writer.WriteLine($"Orientation: {Orientation}");
-                writer.WriteLine($"LocomotionState: {LocomotionState}");
-
-                writer.Flush();
-                return Encoding.UTF8.GetString(stream.ToArray());
-            }
+            StringBuilder sb = new();
+            sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
+            sb.AppendLine($"EntityId: 0x{EntityId:X}");
+            for (int i = 0; i < LocFlags.Length; i++) sb.AppendLine($"LocFlag{i}: {LocFlags[i]}");
+            sb.AppendLine($"PrototypeId: 0x{PrototypeId:X}");
+            sb.AppendLine($"Position: {Position}");
+            sb.AppendLine($"Orientation: {Orientation}");
+            sb.AppendLine($"LocomotionState: {LocomotionState}");
+            return sb.ToString();
         }
-
     }
 }

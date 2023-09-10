@@ -78,25 +78,20 @@ namespace MHServerEmu.GameServer.Social
 
         public override string ToString()
         {
-            using (MemoryStream memoryStream = new())
-            using (StreamWriter streamWriter = new(memoryStream))
-            {
-                streamWriter.WriteLine($"Field0: {Field0}");
-                streamWriter.WriteLine($"Field1: 0x{Field1.ToString("X")}");
-                streamWriter.WriteLine($"Field2: 0x{Field2.ToString("X")}");
-                streamWriter.WriteLine($"Field3: 0x{Field3.ToString("X")}");
-                streamWriter.WriteLine($"Field4: 0x{Field4.ToString("X")}");
-                streamWriter.WriteLine($"Field5: 0x{Field5.ToString("X")}");
-                streamWriter.WriteLine($"Field6: {Field6}");
-                streamWriter.WriteLine($"Field7: {Field7}");
-                streamWriter.WriteLine($"Field8: 0x{Field8.ToString("X")}");
-                streamWriter.WriteLine($"Field9: 0x{Field9.ToString("X")}");
-                streamWriter.WriteLine($"Field10: 0x{Field10.ToString("X")}");
-                streamWriter.WriteLine($"Field11: 0x{Field11.ToString("X")}");
-
-                streamWriter.Flush();
-                return Encoding.UTF8.GetString(memoryStream.ToArray());
-            }
+            StringBuilder sb = new();
+            sb.AppendLine($"Field0: {Field0}");
+            sb.AppendLine($"Field1: 0x{Field1:X}");
+            sb.AppendLine($"Field2: 0x{Field2:X}");
+            sb.AppendLine($"Field3: 0x{Field3:X}");
+            sb.AppendLine($"Field4: 0x{Field4:X}");
+            sb.AppendLine($"Field5: 0x{Field5:X}");
+            sb.AppendLine($"Field6: {Field6}");
+            sb.AppendLine($"Field7: {Field7}");
+            sb.AppendLine($"Field8: 0x{Field8:X}");
+            sb.AppendLine($"Field9: 0x{Field9:X}");
+            sb.AppendLine($"Field10: 0x{Field10:X}");
+            sb.AppendLine($"Field11: 0x{Field11:X}");
+            return sb.ToString();
         }
     }
 }
