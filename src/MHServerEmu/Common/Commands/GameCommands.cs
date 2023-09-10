@@ -22,49 +22,10 @@ namespace MHServerEmu.Common.Commands
         }
     }
 
-    [CommandGroup("costume", "Changes costume.", AccountUserLevel.Admin)]
-    public class CostumeCommand : CommandGroup
-    {
-        [DefaultCommand(AccountUserLevel.User)]
-        public string Costume(string[] @params, FrontendClient client)
-        {
-            if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help costume' to get help.";
-
-            try
-            {
-                // Try to parse costume prototype id from command
-                ulong prototypeId = ulong.Parse(@params[0]);
-                string prototypePath = GameDatabase.GetPrototypePath(prototypeId);
-
-                if (prototypePath.Contains("Entity/Items/Costumes/Prototypes/"))
-                {
-                    // Create a new CostumeCurrent property for the purchased costume
-                    Property property = new(PropertyEnum.CostumeCurrent, prototypeId);
-
-                    // Get replication id for the client avatar
-                    ulong replicationId = (ulong)Enum.Parse(typeof(HardcodedAvatarReplicationId), Enum.GetName(typeof(HardcodedAvatarEntity), client.Session.Account.PlayerData.Avatar));
-
-                    // Send NetMessageSetProperty message
-                    client.SendMessage(1, new(property.ToNetMessageSetProperty(replicationId)));
-                    return $"Changing costume to {GameDatabase.GetPrototypePath(prototypeId)}";
-                }
-                else
-                {
-                    return $"{prototypeId} is not a costume prototype id";
-                }
-            }
-            catch
-            {
-                return $"Failed to parse costume id {@params[0]}.";
-            }            
-        }
-    }
-
     [CommandGroup("player", "Changes player data for this account.", AccountUserLevel.User)]
     public class PlayerCommand : CommandGroup
     {
-        [Command("name", "Usage: player name", AccountUserLevel.User)]
+        [Command("name", "Changes player name.\nUsage: player name", AccountUserLevel.User)]
         public string Name(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -75,7 +36,7 @@ namespace MHServerEmu.Common.Commands
             return $"Changing player name to {@params[0]}. Relog for changes to take effect.";
         }
 
-        [Command("avatar", "Usage: player avatar [avatar]", AccountUserLevel.User)]
+        [Command("avatar", "Changes player avatar.\nUsage: player avatar [avatar]", AccountUserLevel.User)]
         public string Avatar(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -93,7 +54,7 @@ namespace MHServerEmu.Common.Commands
             }
         }
 
-        [Command("region", "Usage: player region", AccountUserLevel.User)]
+        [Command("region", "Changes player starting region.\nUsage: player region", AccountUserLevel.User)]
         public string Region(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -111,21 +72,37 @@ namespace MHServerEmu.Common.Commands
             }
         }
 
-        [Command("costume", "Usage: player costume", AccountUserLevel.User)]
+        [Command("costume", "Changes costume override.\nUsage: player costume [prototypeId]", AccountUserLevel.User)]
         public string Costume(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
             if (@params.Length == 0) return "Invalid arguments. Type 'help player costume' to get help.";
-            if (ConfigManager.Frontend.BypassAuth) return "Disable BypassAuth to use this command";
 
             try
             {
                 // Try to parse costume prototype id from command
-                ulong costumePrototypeId = ulong.Parse(@params[0]);
-                string costumeName = Path.GetFileNameWithoutExtension(GameDatabase.GetPrototypePath(costumePrototypeId));
+                ulong prototypeId = ulong.Parse(@params[0]);
+                string prototypePath = GameDatabase.GetPrototypePath(prototypeId);
 
-                client.Session.Account.PlayerData.CostumeOverride = costumePrototypeId;
-                return $"Changing costume to {costumeName}. Relog for changes to take effect.";
+                if (prototypeId == 0 || prototypePath.Contains("Entity/Items/Costumes/Prototypes/"))
+                {
+                    // Create a new CostumeCurrent property for the purchased costume
+                    Property property = new(PropertyEnum.CostumeCurrent, prototypeId);
+
+                    // Get replication id for the client avatar
+                    ulong replicationId = (ulong)Enum.Parse(typeof(HardcodedAvatarReplicationId), Enum.GetName(typeof(HardcodedAvatarEntity), client.Session.Account.PlayerData.Avatar));
+
+                    // Update account data if needed
+                    if (ConfigManager.Frontend.BypassAuth == false) client.Session.Account.PlayerData.CostumeOverride = prototypeId;
+
+                    // Send NetMessageSetProperty message
+                    client.SendMessage(1, new(property.ToNetMessageSetProperty(replicationId)));
+                    return $"Changing costume to {GameDatabase.GetPrototypePath(prototypeId)}";
+                }
+                else
+                {
+                    return $"{prototypeId} is not a costume prototype id";
+                }
             }
             catch
             {

@@ -1,4 +1,5 @@
 ﻿using Gazillion;
+using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.Billing.Catalogs;
 using MHServerEmu.GameServer.Entities;
@@ -60,6 +61,9 @@ namespace MHServerEmu.GameServer.Billing
 
                             // Get replication id for the client avatar
                             ulong replicationId = (ulong)Enum.Parse(typeof(HardcodedAvatarReplicationId), Enum.GetName(typeof(HardcodedAvatarEntity), client.Session.Account.PlayerData.Avatar));
+
+                            // Update account data if needed
+                            if (ConfigManager.Frontend.BypassAuth == false) client.Session.Account.PlayerData.CostumeOverride = entry.GuidItems[0].ItemPrototypeRuntimeIdForClient;
 
                             // Send NetMessageSetProperty message
                             client.SendMessage(1, new(property.ToNetMessageSetProperty(replicationId)));
