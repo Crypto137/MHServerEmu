@@ -147,8 +147,15 @@ namespace MHServerEmu.GameServer.Entities
             sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
             sb.AppendLine($"EntityId: 0x{EntityId:X}");
             sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
-            for (int i = 0; i < Flags.Length; i++) sb.AppendLine($"Flag{i}: {Flags[i]}");
-            for (int i = 0; i < LocFlags.Length; i++) sb.AppendLine($"LocFlag{i}: {LocFlags[i]}");
+
+            sb.Append("Flags: ");
+            for (int i = 0; i < Flags.Length; i++) if (Flags[i]) sb.Append($"{i} ");
+            sb.AppendLine();
+
+            sb.Append("LocFlags: ");
+            for (int i = 0; i < LocFlags.Length; i++) if (LocFlags[i]) sb.Append($"{i} ");
+            sb.AppendLine();
+
             sb.AppendLine($"InterestPolicies: 0x{InterestPolicies:X}");
             sb.AppendLine($"AvatarWorldInstanceId: 0x{AvatarWorldInstanceId:X}");
             sb.AppendLine($"DbId: 0x{DbId:X}");

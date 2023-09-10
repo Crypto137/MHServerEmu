@@ -105,7 +105,11 @@ namespace MHServerEmu.GameServer.Entities
             StringBuilder sb = new();
             sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
             sb.AppendLine($"EntityId: 0x{EntityId:X}");
-            for (int i = 0; i < Flags.Length; i++) sb.AppendLine($"Flag{i}: {Flags[i]}");
+
+            sb.Append("Flags: ");
+            for (int i = 0; i < Flags.Length; i++) if (Flags[i]) sb.Append($"{i} ");
+            sb.AppendLine();
+
             sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
             sb.AppendLine($"Position: {Position}");
             sb.AppendLine($"Orientation: {Orientation}");

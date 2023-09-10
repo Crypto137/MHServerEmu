@@ -96,7 +96,11 @@ namespace MHServerEmu.GameServer.Powers
         public override string ToString()
         {
             StringBuilder sb = new();
-            for (int i = 0; i < Flags.Length; i++) sb.AppendLine($"Flag{i}: {Flags[i]}");
+
+            sb.Append("Flags: ");
+            for (int i = 0; i < Flags.Length; i++) if (Flags[i]) sb.Append($"{i} ");
+            sb.AppendLine();
+
             sb.AppendLine($"Id: 0x{Id:X}");
             sb.AppendLine($"CreatorId: 0x{CreatorId:X}");
             sb.AppendLine($"UltimateCreatorId: 0x{UltimateCreatorId:X}");
