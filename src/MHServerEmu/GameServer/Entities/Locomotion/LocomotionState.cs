@@ -3,7 +3,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.Common;
 
-namespace MHServerEmu.GameServer.Entities
+namespace MHServerEmu.GameServer.Entities.Locomotion
 {
     public class LocomotionState
     {

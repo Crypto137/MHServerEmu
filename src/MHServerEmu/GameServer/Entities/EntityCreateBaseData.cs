@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.Common;
+using MHServerEmu.GameServer.Entities.Locomotion;
 using MHServerEmu.GameServer.GameData;
 
 namespace MHServerEmu.GameServer.Entities
