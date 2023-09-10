@@ -23,6 +23,15 @@ namespace MHServerEmu.GameServer.Billing
         {
             _gameServerManager = gameServerManager;
             _catalog = JsonSerializer.Deserialize<Catalog>(File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Catalog.json")));
+
+            // Apply a patch to the catalog if there's one
+            string patchPath = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "CatalogPatch.json");
+            if (File.Exists(patchPath))
+            {
+                CatalogEntry[] catalogPatch = JsonSerializer.Deserialize<CatalogEntry[]>(File.ReadAllText(patchPath));
+                _catalog.ApplyPatch(catalogPatch);
+            }
+
             Logger.Info($"Initialized store catalog with {_catalog.Entries.Length} entries");
         }
 

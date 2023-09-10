@@ -40,6 +40,24 @@ namespace MHServerEmu.GameServer.Billing.Catalogs
             TypeModifiers = entry.TypeModifierList.Select(typeModifier => new CatalogEntryTypeModifier(typeModifier)).ToArray();
         }
 
+        /// <summary>
+        /// Creates a new costume catalog entry.
+        /// </summary>
+        /// <param name="skuId">Catalog entry SKU id.</param>
+        /// <param name="prototypeId">Costume prototype id.</param>
+        /// <param name="text">Text to use for title and description.</param>
+        public CatalogEntry(long skuId, ulong prototypeId, string text, long price)
+        {
+            SkuId = skuId;
+            GuidItems = new CatalogGuidEntry[] { new(0, prototypeId, 1) };
+            AdditionalGuidItems = Array.Empty<CatalogGuidEntry>();
+            LocalizedEntries = new LocalizedCatalogEntry[] { new("en_us", text, text, "", price) };
+            InfoUrls = Array.Empty<LocalizedCatalogEntryUrlOrData>();
+            ContentData = Array.Empty<LocalizedCatalogEntryUrlOrData>();
+            Type = new("Costume", 1);
+            TypeModifiers = new CatalogEntryTypeModifier[] { new("Giftable", 1) };
+        }
+
         public MarvelHeroesCatalogEntry ToNetStruct()
         {
             return MarvelHeroesCatalogEntry.CreateBuilder()

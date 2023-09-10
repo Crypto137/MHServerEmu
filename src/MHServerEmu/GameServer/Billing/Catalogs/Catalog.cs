@@ -43,6 +43,16 @@ namespace MHServerEmu.GameServer.Billing.Catalogs
             else
                 return null;
         }
+
+        public void ApplyPatch(CatalogEntry[] newEntries)
+        {
+            CatalogEntry[] patchedEntries = new CatalogEntry[Entries.Length + newEntries.Length];
+            Array.Copy(Entries, patchedEntries, Entries.Length);
+            Array.Copy(newEntries, 0, patchedEntries, Entries.Length, newEntries.Length);
+            Entries = patchedEntries;
+            GenerateEntryDict();
+        }
+
         public NetMessageCatalogItems ToNetMessageCatalogItems(bool clientMustDownloadImages)
         {
             DateTimeOffset timestamp = (DateTimeOffset)DateTime.UtcNow;
