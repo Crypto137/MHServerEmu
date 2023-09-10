@@ -140,8 +140,13 @@ namespace MHServerEmu.GameServer
                     break;
 
                 case ClientToGameServerMessage.NetMessageUpdateAvatarState:
-                    //Logger.Trace($"Received NetMessageUpdateAvatarState");
-                    var updateAvatarState = NetMessageUpdateAvatarState.ParseFrom(message.Content);
+                    /* UpdateAvatarState spam
+                    var updateAvatarStateMessage = NetMessageUpdateAvatarState.ParseFrom(message.Content);
+                    UpdateAvatarStateArchive avatarState = new(updateAvatarStateMessage.ArchiveData.ToByteArray());
+                    //Logger.Trace(avatarState.ToString());
+                    Logger.Trace(avatarState.Position.ToString());
+                    */
+
                     break;
 
                 case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:

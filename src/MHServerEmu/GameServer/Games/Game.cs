@@ -270,7 +270,7 @@ namespace MHServerEmu.GameServer.Games
                         if (Entry.MarkerSet[i] is EntityMarkerPrototype)
                         {
                             EntityMarkerPrototype npc = (EntityMarkerPrototype)Entry.MarkerSet[i];
-                            Logger.Warn($"[{i}].EntityGuid = {npc.EntityGuid}");
+                            Logger.Trace($"[{i}].EntityGuid = {npc.EntityGuid}");
                             switch (npc.EntityGuid)
                             {
                                 case 9760489745388478121: // EncounterTinyV12                                    
