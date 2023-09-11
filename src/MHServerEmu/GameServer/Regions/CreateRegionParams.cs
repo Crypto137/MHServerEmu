@@ -2,13 +2,6 @@
 
 namespace MHServerEmu.GameServer.Regions
 {
-    public enum DifficultyTier : ulong
-    {
-        Normal = 18016845980090109785,
-        Heroic = 7540373722300157771,
-        Cosmic = 586640101754933627
-    }
-
     public class CreateRegionParams
     {
         public uint Level { get; set; }

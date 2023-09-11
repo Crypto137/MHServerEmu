@@ -1560,7 +1560,7 @@ namespace MHServerEmu.GameServer.Regions
                         archiveData,
                         new(-1152.0f, -1152.0f, -1152.0f),
                         new(21888.0f, 24192.0f, 1152.0f),
-                        new(63, DifficultyTier.Cosmic));
+                        new(63, DifficultyTier.Superheroic));
 
                     area = new(1, (AreaPrototype)GameDatabase.GetPrototypeId("Regions/Story/CH10SecretInvasion/UpperMadripoor/UpperMadripoorAreaA.prototype"), new(), true);
 
@@ -1763,7 +1763,7 @@ namespace MHServerEmu.GameServer.Regions
                         archiveData,
                         new(-1152f, -1152f, -1152f),
                         new(12672f, 12672f, 1152f),
-                        new(63, DifficultyTier.Cosmic));
+                        new(63, DifficultyTier.Superheroic));
 
 
                     area = new(1, AreaPrototype.XManhattanArea1, new(), true);

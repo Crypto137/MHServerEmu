@@ -1,11 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MHServerEmu.GameServer.Regions
+﻿namespace MHServerEmu.GameServer.Regions
 {
+    public enum DifficultyTier : ulong
+    {
+        Normal = 18016845980090109785,
+        Heroic = 7540373722300157771,
+        Superheroic = 586640101754933627,   // interpreted as Cosmic by the 1.52 client
+        Cosmic = 1087474643293441873,
+        Omega1 = 424700179461639950
+    }
+
     public enum RegionPrototype : ulong
     {
         // Hubs
