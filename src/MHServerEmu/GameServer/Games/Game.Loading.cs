@@ -326,9 +326,11 @@ namespace MHServerEmu.GameServer.Games
 
                     foreach (Property property in player.PropertyCollection.List)
                     {
-                        // Unlock starter avatars
+                        // Unlock starter avatars and set levels to 60
                         if (property.Enum == PropertyEnum.AvatarUnlock && (AvatarUnlockType)property.Value.Get() == AvatarUnlockType.Starter)
                             property.Value.Set((int)AvatarUnlockType.Type3);
+                        else if (property.Enum == PropertyEnum.AvatarLibraryLevel)
+                            property.Value.Set(60);
                     }
 
                     var customEntityCreateMessage = NetMessageEntityCreate.CreateBuilder()
@@ -367,29 +369,41 @@ namespace MHServerEmu.GameServer.Games
 
                         avatar.PlayerName.Text = playerData.PlayerName;
 
+                        bool hasCostumeCurrent = false;
                         bool hasCharacterLevel = false;
                         bool hasCombatLevel = false;
 
                         foreach (Property property in avatar.PropertyCollection.List)
                         {
-                            if (property.Enum == PropertyEnum.CostumeCurrent && playerData.CostumeOverride != 0)
+                            switch (property.Enum)
                             {
-                                try
-                                {
-                                    property.Value.Set(playerData.CostumeOverride);
-                                }
-                                catch
-                                {
-                                    Logger.Warn($"Failed to get costume prototype enum for id {ConfigManager.PlayerData.CostumeOverride}");
-                                }
+                                case PropertyEnum.CostumeCurrent:
+                                    if (playerData.CostumeOverride != 0)
+                                    {
+                                        try
+                                        {
+                                            property.Value.Set(playerData.CostumeOverride);
+                                        }
+                                        catch
+                                        {
+                                            Logger.Warn($"Failed to get costume prototype enum for id {ConfigManager.PlayerData.CostumeOverride}");
+                                        }
+                                    }
+                                    hasCostumeCurrent = true;
+                                    break;
+                                case PropertyEnum.CharacterLevel:
+                                    property.Value.Set(60);
+                                    hasCharacterLevel = true;
+                                    break;
+                                case PropertyEnum.CombatLevel:
+                                    property.Value.Set(60);
+                                    hasCombatLevel = true;
+                                    break;
                             }
-                            else if (property.Enum == PropertyEnum.CharacterLevel)
-                                hasCharacterLevel = true;
-                            else if (property.Enum == PropertyEnum.CombatLevel)
-                                hasCombatLevel = true;
                         }
 
-                        // Add level properties
+                        // Create properties if not found
+                        if (hasCostumeCurrent == false) avatar.PropertyCollection.List.Add(new(PropertyEnum.CostumeCurrent, playerData.CostumeOverride));
                         if (hasCharacterLevel == false) avatar.PropertyCollection.List.Add(new(PropertyEnum.CharacterLevel, 60));
                         if (hasCombatLevel == false) avatar.PropertyCollection.List.Add(new(PropertyEnum.CombatLevel, 60));
                     }
