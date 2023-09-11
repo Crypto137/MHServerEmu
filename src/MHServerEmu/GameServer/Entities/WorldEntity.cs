@@ -28,18 +28,17 @@ namespace MHServerEmu.GameServer.Entities
             int healthMaxOther, ulong mapRegionId, int mapCellId, ulong contextAreaRef)
         {
             ReplicationPolicy = 0x20;
-            ReplicationId = replicationId;
 
-            Properties = new Property[]
+            PropertyCollection = new(replicationId, new()
             {
-                new(PropertyEnum.MapPosition, mapPosition), 
+                new(PropertyEnum.MapPosition, mapPosition),
                 new(PropertyEnum.Health, health),
                 new(PropertyEnum.MapAreaId, mapAreaId),
                 new(PropertyEnum.HealthMaxOther, healthMaxOther),
                 new(PropertyEnum.MapRegionId, mapRegionId),
                 new(PropertyEnum.MapCellId, mapCellId),
                 new(PropertyEnum.ContextAreaRef, contextAreaRef)
-            };
+            });
 
             UnknownPrototypes = Array.Empty<PrototypeCollectionEntry>();
             Conditions = Array.Empty<Condition>();
@@ -48,16 +47,16 @@ namespace MHServerEmu.GameServer.Entities
 
         public override byte[] Encode()
         {
-            using (MemoryStream memoryStream = new())
+            using (MemoryStream ms = new())
             {
-                CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
+                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                WriteEntityFields(stream);
-                WriteWorldEntityFields(stream);
-                WriteUnknownFields(stream);
+                WriteEntityFields(cos);
+                WriteWorldEntityFields(cos);
+                WriteUnknownFields(cos);
 
-                stream.Flush();
-                return memoryStream.ToArray();
+                cos.Flush();
+                return ms.ToArray();
             }
         }
 

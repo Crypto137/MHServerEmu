@@ -360,7 +360,7 @@ namespace MHServerEmu.GameServer.Games
 
                         avatar.PlayerName.Text = playerData.PlayerName;
 
-                        foreach (Property property in avatar.Properties)
+                        foreach (Property property in avatar.PropertyCollection.PropertyList)
                         {
                             if (property.Enum == PropertyEnum.CostumeCurrent && playerData.CostumeOverride != 0)
                             {

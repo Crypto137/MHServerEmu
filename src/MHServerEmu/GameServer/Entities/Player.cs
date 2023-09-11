@@ -104,11 +104,11 @@ namespace MHServerEmu.GameServer.Entities
         }
 
         // note: this is ugly
-        public Player(uint replicationPolicy, ulong replicationId, Property[] properties,
+        public Player(uint replicationPolicy, ReplicatedPropertyCollection propertyCollection,
             ulong prototypeId, Mission[] missions, Quest[] quests, ulong unknownCollectionRepId, uint unknownCollectionSize,
             ulong shardId, ReplicatedString replicatedString1, ulong community1, ulong community2, ReplicatedString replicatedString2,
             ulong matchQueueStatus, bool replicationPolicyBool, ulong dateTime, Community community, ulong[] unknownFields)
-            : base(replicationPolicy, replicationId, properties, unknownFields)
+            : base(replicationPolicy, propertyCollection, unknownFields)
         {
             PrototypeId = prototypeId;
             Missions = missions;

@@ -22,8 +22,7 @@ namespace MHServerEmu.GameServer.Powers
         public int PauseTime { get; set; }
         public int TimeRemaining { get; set; }  // 7200000 == 2 hours
         public int UpdateInterval { get; set; }
-        public uint PropertyCollectionReplicationId { get; set; }
-        public Property[] Properties { get; set; }
+        public ReplicatedPropertyCollection PropertyCollection { get; set; }
         public uint Field13 { get; set; }
 
         public Condition(CodedInputStream stream)
@@ -45,11 +44,8 @@ namespace MHServerEmu.GameServer.Powers
             if (Flags[6]) PauseTime = stream.ReadRawInt32();
             if (Flags[7]) TimeRemaining = stream.ReadRawInt32();
             if (Flags[10]) UpdateInterval = stream.ReadRawInt32();
-            
-            PropertyCollectionReplicationId = stream.ReadRawVarint32();
-            Properties = new Property[stream.ReadRawUInt32()];
-            for (int i = 0; i < Properties.Length; i++)
-                Properties[i] = new(stream);
+
+            PropertyCollection = new(stream);
 
             if (Flags[11]) Field13 = stream.ReadRawVarint32();
         }
@@ -60,36 +56,32 @@ namespace MHServerEmu.GameServer.Powers
 
         public byte[] Encode()
         {
-            using (MemoryStream memoryStream = new())
+            using (MemoryStream ms = new())
             {
-                CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
+                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                stream.WriteRawVarint32(Flags.ToUInt32());
-                stream.WriteRawVarint64(Id);
-                if (Flags[0] == false) stream.WriteRawVarint64(CreatorId);
-                if (Flags[1] == false) stream.WriteRawVarint64(UltimateCreatorId);
-                if (Flags[2] == false) stream.WritePrototypeId(ConditionPrototypeId, PrototypeEnumType.All);
-                if (Flags[3] == false) stream.WritePrototypeId(CreatorPowerPrototypeId, PrototypeEnumType.All);
-                if (Flags[4]) stream.WriteRawVarint64(Index);
+                cos.WriteRawVarint32(Flags.ToUInt32());
+                cos.WriteRawVarint64(Id);
+                if (Flags[0] == false) cos.WriteRawVarint64(CreatorId);
+                if (Flags[1] == false) cos.WriteRawVarint64(UltimateCreatorId);
+                if (Flags[2] == false) cos.WritePrototypeId(ConditionPrototypeId, PrototypeEnumType.All);
+                if (Flags[3] == false) cos.WritePrototypeId(CreatorPowerPrototypeId, PrototypeEnumType.All);
+                if (Flags[4]) cos.WriteRawVarint64(Index);
 
                 if (Flags[9])
                 {
-                    stream.WriteRawVarint64(AssetId);
-                    stream.WriteRawInt32(StartTime);
+                    cos.WriteRawVarint64(AssetId);
+                    cos.WriteRawInt32(StartTime);
                 }
 
-                if (Flags[6]) stream.WriteRawInt32(PauseTime);
-                if (Flags[7]) stream.WriteRawInt32(TimeRemaining);
-                if (Flags[10]) stream.WriteRawInt32(UpdateInterval);
+                if (Flags[6]) cos.WriteRawInt32(PauseTime);
+                if (Flags[7]) cos.WriteRawInt32(TimeRemaining);
+                if (Flags[10]) cos.WriteRawInt32(UpdateInterval);
+                cos.WriteRawBytes(PropertyCollection.Encode());
+                if (Flags[11]) cos.WriteRawVarint32(Field13);
 
-                stream.WriteRawVarint32(PropertyCollectionReplicationId);
-                stream.WriteRawUInt32((uint)Properties.Length);
-                foreach (Property property in Properties) stream.WriteRawBytes(property.Encode());
-
-                if (Flags[11]) stream.WriteRawVarint32(Field13);
-
-                stream.Flush();
-                return memoryStream.ToArray();
+                cos.Flush();
+                return ms.ToArray();
             }
         }
 
@@ -111,8 +103,7 @@ namespace MHServerEmu.GameServer.Powers
             sb.AppendLine($"StartTime: 0x{StartTime:X}");
             sb.AppendLine($"PauseTime: 0x{PauseTime:X}");
             sb.AppendLine($"TimeRemaining: 0x{TimeRemaining:X}");
-            sb.AppendLine($"PropertyCollectionReplicationId: 0x{PropertyCollectionReplicationId:X}");
-            for (int i = 0; i < Properties.Length; i++) sb.AppendLine($"Property{i}: {Properties[i]}");
+            sb.AppendLine($"PropertyCollection: {PropertyCollection}");
             sb.AppendLine($"Field13: 0x{Field13:X}");
 
             return sb.ToString();

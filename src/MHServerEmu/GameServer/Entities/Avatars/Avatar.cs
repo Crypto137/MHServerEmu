@@ -59,9 +59,9 @@ namespace MHServerEmu.GameServer.Entities.Avatars
 
         public override byte[] Encode()
         {
-            using (MemoryStream memoryStream = new())
+            using (MemoryStream ms = new())
             {
-                CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
+                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
                 // Prepare bool encoder
                 BoolEncoder boolEncoder = new();
@@ -73,21 +73,21 @@ namespace MHServerEmu.GameServer.Entities.Avatars
                 boolEncoder.Cook();
 
                 // Encode
-                WriteEntityFields(stream);
-                WriteWorldEntityFields(stream);
+                WriteEntityFields(cos);
+                WriteWorldEntityFields(cos);
 
-                stream.WriteRawBytes(PlayerName.Encode());
-                stream.WriteRawVarint64(OwnerPlayerDbId);
-                stream.WriteRawString(GuildName);
+                cos.WriteRawBytes(PlayerName.Encode());
+                cos.WriteRawVarint64(OwnerPlayerDbId);
+                cos.WriteRawString(GuildName);
 
                 bitBuffer = boolEncoder.GetBitBuffer();             // IsRuntimeInfo
-                if (bitBuffer != 0) stream.WriteRawByte(bitBuffer);
+                if (bitBuffer != 0) cos.WriteRawByte(bitBuffer);
 
-                stream.WriteRawVarint64((ulong)AbilityKeyMappings.Length);
-                foreach (AbilityKeyMapping keyMap in AbilityKeyMappings) stream.WriteRawBytes(keyMap.Encode(boolEncoder));
+                cos.WriteRawVarint64((ulong)AbilityKeyMappings.Length);
+                foreach (AbilityKeyMapping keyMap in AbilityKeyMappings) cos.WriteRawBytes(keyMap.Encode(boolEncoder));
 
-                stream.Flush();
-                return memoryStream.ToArray();
+                cos.Flush();
+                return ms.ToArray();
             }
         }
 
