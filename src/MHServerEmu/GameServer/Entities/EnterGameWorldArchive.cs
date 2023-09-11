@@ -76,27 +76,27 @@ namespace MHServerEmu.GameServer.Entities
 
         public byte[] Encode()
         {
-            using (MemoryStream memoryStream = new())
+            using (MemoryStream ms = new())
             {
-                CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
+                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                stream.WriteRawVarint64(ReplicationPolicy);
-                stream.WriteRawVarint64(EntityId);
-                stream.WriteRawVarint32(Flags.ToUInt32());
+                cos.WriteRawVarint64(ReplicationPolicy);
+                cos.WriteRawVarint64(EntityId);
+                cos.WriteRawVarint32(Flags.ToUInt32());
 
-                if (Flags[11]) stream.WritePrototypeId(PrototypeId, PrototypeEnumType.Entity);
-                stream.WriteRawBytes(Position.Encode(3));
+                if (Flags[11]) cos.WritePrototypeId(PrototypeId, PrototypeEnumType.Entity);
+                cos.WriteRawBytes(Position.Encode(3));
 
                 if (Flags[0])
-                    stream.WriteRawBytes(Orientation.Encode(6));
+                    cos.WriteRawBytes(Orientation.Encode(6));
                 else
-                    stream.WriteRawFloat(Orientation.X, 6);
+                    cos.WriteRawFloat(Orientation.X, 6);
 
-                if (Flags[1] == false) stream.WriteRawBytes(LocomotionState.Encode(Flags));
-                if (Flags[12]) stream.WriteRawVarint32(UnknownSetting);
+                if (Flags[1] == false) cos.WriteRawBytes(LocomotionState.Encode(Flags));
+                if (Flags[12]) cos.WriteRawVarint32(UnknownSetting);
 
-                stream.Flush();
-                return memoryStream.ToArray();
+                cos.Flush();
+                return ms.ToArray();
             }
         }
 

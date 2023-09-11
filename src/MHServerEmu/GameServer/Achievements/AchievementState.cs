@@ -25,16 +25,16 @@ namespace MHServerEmu.GameServer.Achievements
 
         public byte[] Encode()
         {
-            using (MemoryStream memoryStream = new())
+            using (MemoryStream ms = new())
             {
-                CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
+                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                stream.WriteRawVarint64(AchievementId);
-                stream.WriteRawVarint64(Count);
-                stream.WriteRawVarint64(CompletionDate);
+                cos.WriteRawVarint64(AchievementId);
+                cos.WriteRawVarint64(Count);
+                cos.WriteRawVarint64(CompletionDate);
 
-                stream.Flush();
-                return memoryStream.ToArray();
+                cos.Flush();
+                return ms.ToArray();
             }
         }
 

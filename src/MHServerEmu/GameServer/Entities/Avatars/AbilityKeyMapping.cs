@@ -43,25 +43,25 @@ namespace MHServerEmu.GameServer.Entities.Avatars
 
         public byte[] Encode(BoolEncoder boolEncoder)
         {
-            using (MemoryStream memoryStream = new())
+            using (MemoryStream ms = new())
             {
-                CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
+                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                stream.WriteRawInt32(PowerSpecIndex);
+                cos.WriteRawInt32(PowerSpecIndex);
 
                 byte bitBuffer = boolEncoder.GetBitBuffer();             // ShouldPersist
-                if (bitBuffer != 0) stream.WriteRawByte(bitBuffer);
+                if (bitBuffer != 0) cos.WriteRawByte(bitBuffer);
 
-                stream.WritePrototypeId(AssociatedTransformMode, PrototypeEnumType.All);
-                stream.WritePrototypeId(Slot0, PrototypeEnumType.All);
-                stream.WritePrototypeId(Slot1, PrototypeEnumType.All);
+                cos.WritePrototypeId(AssociatedTransformMode, PrototypeEnumType.All);
+                cos.WritePrototypeId(Slot0, PrototypeEnumType.All);
+                cos.WritePrototypeId(Slot1, PrototypeEnumType.All);
 
-                stream.WriteRawVarint64((ulong)PowerSlots.Length);
+                cos.WriteRawVarint64((ulong)PowerSlots.Length);
                 foreach (ulong powerSlot in PowerSlots)
-                    stream.WritePrototypeId(powerSlot, PrototypeEnumType.All);
+                    cos.WritePrototypeId(powerSlot, PrototypeEnumType.All);
 
-                stream.Flush();
-                return memoryStream.ToArray();
+                cos.Flush();
+                return ms.ToArray();
             }
         }
 

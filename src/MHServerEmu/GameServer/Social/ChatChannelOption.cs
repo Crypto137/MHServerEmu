@@ -26,17 +26,17 @@ namespace MHServerEmu.GameServer.Social
 
         public byte[] Encode(BoolEncoder boolEncoder)
         {
-            using (MemoryStream memoryStream = new())
+            using (MemoryStream ms = new())
             {
-                CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
+                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                stream.WritePrototypeId(PrototypeId, PrototypeEnumType.All);
+                cos.WritePrototypeId(PrototypeId, PrototypeEnumType.All);
 
                 byte bitBuffer = boolEncoder.GetBitBuffer();             //Value
-                if (bitBuffer != 0) stream.WriteRawByte(bitBuffer);
+                if (bitBuffer != 0) cos.WriteRawByte(bitBuffer);
 
-                stream.Flush();
-                return memoryStream.ToArray();
+                cos.Flush();
+                return ms.ToArray();
             }
         }
 

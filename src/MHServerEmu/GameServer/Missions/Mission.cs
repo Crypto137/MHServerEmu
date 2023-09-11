@@ -50,27 +50,27 @@ namespace MHServerEmu.GameServer.Missions
 
         public byte[] Encode(BoolEncoder boolEncoder)
         {
-            using (MemoryStream memoryStream = new())
+            using (MemoryStream ms = new())
             {
-                CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
+                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                stream.WriteRawVarint64(PrototypeId1);
-                stream.WriteRawVarint64(State);
-                stream.WriteRawVarint64(GameTime);
-                stream.WritePrototypeId(PrototypeId2, PrototypeEnumType.All);
-                stream.WriteRawInt32(Random);
-                stream.WriteRawVarint64((ulong)Objectives.Length);
+                cos.WriteRawVarint64(PrototypeId1);
+                cos.WriteRawVarint64(State);
+                cos.WriteRawVarint64(GameTime);
+                cos.WritePrototypeId(PrototypeId2, PrototypeEnumType.All);
+                cos.WriteRawInt32(Random);
+                cos.WriteRawVarint64((ulong)Objectives.Length);
                 foreach (Objective objective in Objectives)
-                    stream.WriteRawBytes(objective.Encode());
-                stream.WriteRawVarint64(Participant);
-                stream.WriteRawVarint64(ParticipantOwnerEntityId);
+                    cos.WriteRawBytes(objective.Encode());
+                cos.WriteRawVarint64(Participant);
+                cos.WriteRawVarint64(ParticipantOwnerEntityId);
 
                 byte bitBuffer = boolEncoder.GetBitBuffer();             //BoolField
                 if (bitBuffer != 0)
-                    stream.WriteRawByte(bitBuffer);
+                    cos.WriteRawByte(bitBuffer);
 
-                stream.Flush();
-                return memoryStream.ToArray();
+                cos.Flush();
+                return ms.ToArray();
             }
         }
 

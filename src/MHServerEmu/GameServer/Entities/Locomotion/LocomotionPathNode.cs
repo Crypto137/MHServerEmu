@@ -24,15 +24,15 @@ namespace MHServerEmu.GameServer.Entities.Locomotion
 
         public byte[] Encode()
         {
-            using (MemoryStream memoryStream = new())
+            using (MemoryStream ms = new())
             {
-                CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
+                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                stream.WriteRawBytes(Vertex.Encode());
-                stream.WriteRawInt32(VertexSideRadius);
+                cos.WriteRawBytes(Vertex.Encode());
+                cos.WriteRawInt32(VertexSideRadius);
 
-                stream.Flush();
-                return memoryStream.ToArray();
+                cos.Flush();
+                return ms.ToArray();
             }
         }
 

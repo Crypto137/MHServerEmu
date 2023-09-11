@@ -42,25 +42,25 @@ namespace MHServerEmu.GameServer.Entities.Avatars
 
         public byte[] Encode()
         {
-            using (MemoryStream memoryStream = new())
+            using (MemoryStream ms = new())
             {
-                CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
+                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                stream.WriteRawVarint32(ReplicationPolicy);
-                stream.WriteRawInt32(AvatarIndex);
-                stream.WriteRawVarint64(EntityId);
-                stream.WriteRawVarint32(Convert.ToUInt32(IsUsingGamepadInput));
-                stream.WriteRawVarint32(AvatarWorldInstanceId);
-                stream.WriteRawVarint32(LocFlags.ToUInt32());
-                stream.WriteRawBytes(Position.Encode());
+                cos.WriteRawVarint32(ReplicationPolicy);
+                cos.WriteRawInt32(AvatarIndex);
+                cos.WriteRawVarint64(EntityId);
+                cos.WriteRawVarint32(Convert.ToUInt32(IsUsingGamepadInput));
+                cos.WriteRawVarint32(AvatarWorldInstanceId);
+                cos.WriteRawVarint32(LocFlags.ToUInt32());
+                cos.WriteRawBytes(Position.Encode());
                 if (LocFlags[0])
-                    stream.WriteRawBytes(Orientation.Encode(6));
+                    cos.WriteRawBytes(Orientation.Encode(6));
                 else
-                    stream.WriteRawFloat(Orientation.X, 6);
-                stream.WriteRawBytes(LocomotionState.Encode(LocFlags));
+                    cos.WriteRawFloat(Orientation.X, 6);
+                cos.WriteRawBytes(LocomotionState.Encode(LocFlags));
 
-                stream.Flush();
-                return memoryStream.ToArray();
+                cos.Flush();
+                return ms.ToArray();
             }
         }
 

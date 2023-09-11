@@ -60,29 +60,29 @@ namespace MHServerEmu.GameServer.Social
 
         public byte[] Encode(BoolEncoder boolEncoder)
         {
-            using (MemoryStream memoryStream = new())
+            using (MemoryStream ms = new())
             {
-                CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
+                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
                 byte bitBuffer;
 
-                stream.WriteRawVarint64(ReplicationId);
-                stream.WriteRawVarint64(Field1);
+                cos.WriteRawVarint64(ReplicationId);
+                cos.WriteRawVarint64(Field1);
 
                 bitBuffer = boolEncoder.GetBitBuffer();             //GmBool
-                if (bitBuffer != 0) stream.WriteRawByte(bitBuffer);
+                if (bitBuffer != 0) cos.WriteRawByte(bitBuffer);
 
-                stream.WriteRawString(UnknownString);
+                cos.WriteRawString(UnknownString);
 
                 bitBuffer = boolEncoder.GetBitBuffer();             //Flag3
-                if (bitBuffer != 0) stream.WriteRawByte(bitBuffer);
+                if (bitBuffer != 0) cos.WriteRawByte(bitBuffer);
 
-                stream.WriteRawInt32(Captions.Length);
-                foreach (string caption in Captions) stream.WriteRawString(caption);
-                stream.WriteRawInt32(Friends.Length);
-                foreach (Friend friend in Friends) stream.WriteRawBytes(friend.Encode());
+                cos.WriteRawInt32(Captions.Length);
+                foreach (string caption in Captions) cos.WriteRawString(caption);
+                cos.WriteRawInt32(Friends.Length);
+                foreach (Friend friend in Friends) cos.WriteRawBytes(friend.Encode());
 
-                stream.Flush();
-                return memoryStream.ToArray();
+                cos.Flush();
+                return ms.ToArray();
             }
         }
 

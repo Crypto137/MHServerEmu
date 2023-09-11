@@ -54,25 +54,25 @@ namespace MHServerEmu.GameServer.Social
 
         public byte[] Encode()
         {
-            using (MemoryStream memoryStream = new())
+            using (MemoryStream ms = new())
             {
-                CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
+                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                stream.WriteRawString(Field0);
-                stream.WriteRawVarint64(Field1);
-                stream.WriteRawVarint64(Field2);
-                stream.WriteRawVarint64(Field3);
-                stream.WriteRawVarint64(Field4);
-                stream.WriteRawInt32(Field5);
-                stream.WriteRawString(Field6);
-                stream.WriteRawString(Field7);
-                stream.WriteRawVarint64(Field8);
-                stream.WriteRawVarint64(Field9);
-                stream.WriteRawInt32(Field10);
-                stream.WriteRawInt32(Field11);
+                cos.WriteRawString(Field0);
+                cos.WriteRawVarint64(Field1);
+                cos.WriteRawVarint64(Field2);
+                cos.WriteRawVarint64(Field3);
+                cos.WriteRawVarint64(Field4);
+                cos.WriteRawInt32(Field5);
+                cos.WriteRawString(Field6);
+                cos.WriteRawString(Field7);
+                cos.WriteRawVarint64(Field8);
+                cos.WriteRawVarint64(Field9);
+                cos.WriteRawInt32(Field10);
+                cos.WriteRawInt32(Field11);
 
-                stream.Flush();
-                return memoryStream.ToArray();
+                cos.Flush();
+                return ms.ToArray();
             }
         }
 

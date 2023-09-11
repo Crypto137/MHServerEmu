@@ -38,23 +38,23 @@ namespace MHServerEmu.GameServer.Entities.Locomotion
 
         public byte[] Encode()
         {
-            using (MemoryStream memoryStream = new())
+            using (MemoryStream ms = new())
             {
-                CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
+                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                stream.WriteRawVarint32(ReplicationPolicy);
-                stream.WriteRawVarint64(EntityId);
-                stream.WriteRawVarint32(LocFlags.ToUInt32());
-                if (LocFlags[11]) stream.WritePrototypeId(PrototypeId, PrototypeEnumType.Entity);
-                stream.WriteRawBytes(Position.Encode());
+                cos.WriteRawVarint32(ReplicationPolicy);
+                cos.WriteRawVarint64(EntityId);
+                cos.WriteRawVarint32(LocFlags.ToUInt32());
+                if (LocFlags[11]) cos.WritePrototypeId(PrototypeId, PrototypeEnumType.Entity);
+                cos.WriteRawBytes(Position.Encode());
                 if (LocFlags[0])
-                    stream.WriteRawBytes(Orientation.Encode(6));
+                    cos.WriteRawBytes(Orientation.Encode(6));
                 else
-                    stream.WriteRawFloat(Orientation.X, 6);
-                stream.WriteRawBytes(LocomotionState.Encode(LocFlags));
+                    cos.WriteRawFloat(Orientation.X, 6);
+                cos.WriteRawBytes(LocomotionState.Encode(LocFlags));
 
-                stream.Flush();
-                return memoryStream.ToArray();
+                cos.Flush();
+                return ms.ToArray();
             }
         }
 

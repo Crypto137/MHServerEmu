@@ -35,16 +35,16 @@ namespace MHServerEmu.GameServer.Common
 
         public byte[] Encode(int precision = 3)
         {
-            using (MemoryStream memoryStream = new())
+            using (MemoryStream ms = new())
             {
-                CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
+                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                stream.WriteRawFloat(X, precision);
-                stream.WriteRawFloat(Y, precision);
-                stream.WriteRawFloat(Z, precision);
+                cos.WriteRawFloat(X, precision);
+                cos.WriteRawFloat(Y, precision);
+                cos.WriteRawFloat(Z, precision);
 
-                stream.Flush();
-                return memoryStream.ToArray();
+                cos.Flush();
+                return ms.ToArray();
             }
         }
 

@@ -129,9 +129,9 @@ namespace MHServerEmu.GameServer.Entities
 
         public override byte[] Encode()
         {
-            using (MemoryStream memoryStream = new())
+            using (MemoryStream ms = new())
             {
-                CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
+                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
                 // Prepare bool encoder
                 BoolEncoder boolEncoder = new();
@@ -149,69 +149,69 @@ namespace MHServerEmu.GameServer.Entities
                 boolEncoder.Cook();
 
                 // Encode
-                WriteEntityFields(stream);
+                WriteEntityFields(cos);
 
-                stream.WritePrototypeId(PrototypeId, PrototypeEnumType.All);
+                cos.WritePrototypeId(PrototypeId, PrototypeEnumType.All);
 
-                stream.WriteRawVarint64((ulong)Missions.Length);
+                cos.WriteRawVarint64((ulong)Missions.Length);
                 foreach (Mission mission in Missions)
-                    stream.WriteRawBytes(mission.Encode(boolEncoder));
+                    cos.WriteRawBytes(mission.Encode(boolEncoder));
 
-                stream.WriteRawInt32(Quests.Length);
+                cos.WriteRawInt32(Quests.Length);
                 foreach (Quest quest in Quests)
-                    stream.WriteRawBytes(quest.Encode());
+                    cos.WriteRawBytes(quest.Encode());
 
-                stream.WriteRawVarint64(UnknownCollectionRepId);
-                stream.WriteRawUInt32(UnknownCollectionSize);
-                stream.WriteRawVarint64(ShardId);
-                stream.WriteRawBytes(ReplicatedString1.Encode());
-                stream.WriteRawVarint64(Community1);
-                stream.WriteRawVarint64(Community2);
-                stream.WriteRawBytes(ReplicatedString2.Encode());
-                stream.WriteRawVarint64(MatchQueueStatus);
+                cos.WriteRawVarint64(UnknownCollectionRepId);
+                cos.WriteRawUInt32(UnknownCollectionSize);
+                cos.WriteRawVarint64(ShardId);
+                cos.WriteRawBytes(ReplicatedString1.Encode());
+                cos.WriteRawVarint64(Community1);
+                cos.WriteRawVarint64(Community2);
+                cos.WriteRawBytes(ReplicatedString2.Encode());
+                cos.WriteRawVarint64(MatchQueueStatus);
 
                 bitBuffer = boolEncoder.GetBitBuffer();             //ReplicationPolicyBool
-                if (bitBuffer != 0) stream.WriteRawByte(bitBuffer);
+                if (bitBuffer != 0) cos.WriteRawByte(bitBuffer);
 
-                stream.WriteRawVarint64(DateTime);
-                stream.WriteRawBytes(Community.Encode(boolEncoder));
+                cos.WriteRawVarint64(DateTime);
+                cos.WriteRawBytes(Community.Encode(boolEncoder));
 
                 bitBuffer = boolEncoder.GetBitBuffer();             //Flag3
-                if (bitBuffer != 0) stream.WriteRawByte(bitBuffer);
+                if (bitBuffer != 0) cos.WriteRawByte(bitBuffer);
 
-                stream.WriteRawVarint64((ulong)StashInventories.Length);
-                foreach (ulong stashInventory in StashInventories) stream.WritePrototypeId(stashInventory, PrototypeEnumType.All);
+                cos.WriteRawVarint64((ulong)StashInventories.Length);
+                foreach (ulong stashInventory in StashInventories) cos.WritePrototypeId(stashInventory, PrototypeEnumType.All);
 
-                stream.WriteRawVarint64((ulong)AvailableBadges.Length);
+                cos.WriteRawVarint64((ulong)AvailableBadges.Length);
                 foreach (uint badge in AvailableBadges)
-                    stream.WriteRawVarint64(badge);
+                    cos.WriteRawVarint64(badge);
 
-                stream.WriteRawVarint64((ulong)ChatChannelOptions.Length);
+                cos.WriteRawVarint64((ulong)ChatChannelOptions.Length);
                 foreach (ChatChannelOption option in ChatChannelOptions)
-                    stream.WriteRawBytes(option.Encode(boolEncoder));
+                    cos.WriteRawBytes(option.Encode(boolEncoder));
 
-                stream.WriteRawVarint64((ulong)ChatChannelOptions2.Length);
+                cos.WriteRawVarint64((ulong)ChatChannelOptions2.Length);
                 foreach (ulong option in ChatChannelOptions2)
-                    stream.WritePrototypeId(option, PrototypeEnumType.All);
+                    cos.WritePrototypeId(option, PrototypeEnumType.All);
 
-                stream.WriteRawVarint64((ulong)UnknownOptions.Length);
+                cos.WriteRawVarint64((ulong)UnknownOptions.Length);
                 foreach (ulong option in UnknownOptions)
-                    stream.WriteRawVarint64(option);
+                    cos.WriteRawVarint64(option);
 
-                stream.WriteRawVarint64((ulong)EquipmentInvUISlots.Length);
+                cos.WriteRawVarint64((ulong)EquipmentInvUISlots.Length);
                 foreach (EquipmentInvUISlot slot in EquipmentInvUISlots)
-                    stream.WriteRawBytes(slot.Encode());
+                    cos.WriteRawBytes(slot.Encode());
 
-                stream.WriteRawVarint64((ulong)AchievementStates.Length);
+                cos.WriteRawVarint64((ulong)AchievementStates.Length);
                 foreach (AchievementState state in AchievementStates)
-                    stream.WriteRawBytes(state.Encode());
+                    cos.WriteRawBytes(state.Encode());
 
-                stream.WriteRawVarint64((ulong)StashTabOptions.Length);
+                cos.WriteRawVarint64((ulong)StashTabOptions.Length);
                 foreach (StashTabOption option in StashTabOptions)
-                    stream.WriteRawBytes(option.Encode());
+                    cos.WriteRawBytes(option.Encode());
 
-                stream.Flush();
-                return memoryStream.ToArray();
+                cos.Flush();
+                return ms.ToArray();
             }
         }
 

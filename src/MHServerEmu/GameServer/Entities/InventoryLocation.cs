@@ -27,16 +27,16 @@ namespace MHServerEmu.GameServer.Entities
 
         public byte[] Encode()
         {
-            using (MemoryStream memoryStream = new())
+            using (MemoryStream ms = new())
             {
-                CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
+                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                stream.WriteRawVarint64(ContainerEntityId);
-                stream.WritePrototypeId(InventoryPrototypeId, PrototypeEnumType.Inventory);
-                stream.WriteRawVarint64(Slot);
+                cos.WriteRawVarint64(ContainerEntityId);
+                cos.WritePrototypeId(InventoryPrototypeId, PrototypeEnumType.Inventory);
+                cos.WriteRawVarint64(Slot);
 
-                stream.Flush();
-                return memoryStream.ToArray();
+                cos.Flush();
+                return ms.ToArray();
             }
         }
 

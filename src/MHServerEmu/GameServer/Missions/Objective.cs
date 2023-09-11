@@ -44,22 +44,22 @@ namespace MHServerEmu.GameServer.Missions
 
         public byte[] Encode()
         {
-            using (MemoryStream memoryStream = new ())
+            using (MemoryStream ms = new ())
             {
-                CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
+                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                stream.WriteRawVarint64(Index1);
-                stream.WriteRawVarint64(Index2);
-                stream.WriteRawVarint64(State);
-                stream.WriteRawVarint64(Time);
-                stream.WriteRawVarint64(Field4);
-                stream.WriteRawVarint64(Field5);
-                stream.WriteRawVarint64(Field6);
-                stream.WriteRawVarint64(Field7);
-                stream.WriteRawVarint64(Field8);
+                cos.WriteRawVarint64(Index1);
+                cos.WriteRawVarint64(Index2);
+                cos.WriteRawVarint64(State);
+                cos.WriteRawVarint64(Time);
+                cos.WriteRawVarint64(Field4);
+                cos.WriteRawVarint64(Field5);
+                cos.WriteRawVarint64(Field6);
+                cos.WriteRawVarint64(Field7);
+                cos.WriteRawVarint64(Field8);
 
-                stream.Flush();
-                return memoryStream.ToArray();
+                cos.Flush();
+                return ms.ToArray();
             }
         }
 

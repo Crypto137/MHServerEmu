@@ -33,18 +33,18 @@ namespace MHServerEmu.GameServer.Misc
 
         public byte[] Encode()
         {
-            using (MemoryStream memoryStream = new())
+            using (MemoryStream ms = new())
             {
-                CodedOutputStream stream = CodedOutputStream.CreateInstance(memoryStream);
+                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                stream.WritePrototypeId(PrototypeId, PrototypeEnumType.All);
-                stream.WriteRawString(Name);
-                stream.WriteRawVarint64(AssetRef);
-                stream.WriteRawInt32(Field2);
-                stream.WriteRawInt32(Field3);
+                cos.WritePrototypeId(PrototypeId, PrototypeEnumType.All);
+                cos.WriteRawString(Name);
+                cos.WriteRawVarint64(AssetRef);
+                cos.WriteRawInt32(Field2);
+                cos.WriteRawInt32(Field3);
 
-                stream.Flush();
-                return memoryStream.ToArray();
+                cos.Flush();
+                return ms.ToArray();
             }
         }
 

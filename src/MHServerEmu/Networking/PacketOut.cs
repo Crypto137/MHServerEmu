@@ -21,19 +21,19 @@ namespace MHServerEmu.Networking
                 {
                     if (_messageList.Count > 0)
                     {
-                        using (MemoryStream memoryStream = new())
+                        using (MemoryStream ms = new())
                         {
-                            CodedOutputStream outputStream = CodedOutputStream.CreateInstance(memoryStream);
+                            CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
                             foreach (GameMessage message in _messageList)
                             {
-                                outputStream.WriteRawVarint64(message.Id);
-                                outputStream.WriteRawVarint64((ulong)message.Content.Length);
-                                outputStream.WriteRawBytes(message.Content);
+                                cos.WriteRawVarint64(message.Id);
+                                cos.WriteRawVarint64((ulong)message.Content.Length);
+                                cos.WriteRawBytes(message.Content);
                             }
 
-                            outputStream.Flush();
-                            bodyBuffer = memoryStream.ToArray();
+                            cos.Flush();
+                            bodyBuffer = ms.ToArray();
                         }
                     }
                     else
