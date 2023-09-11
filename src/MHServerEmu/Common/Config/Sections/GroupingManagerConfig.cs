@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MHServerEmu.Common.Config.Sections
+﻿namespace MHServerEmu.Common.Config.Sections
 {
     public class GroupingManagerConfig
     {
@@ -12,9 +10,9 @@ namespace MHServerEmu.Common.Config.Sections
         
         public GroupingManagerConfig(IniFile configFile)
         {
-            MotdPlayerName = configFile.ReadString(Section, "MotdPlayerName"); ;
-            MotdText = configFile.ReadString(Section, "MotdText");
-            MotdPrestigeLevel = configFile.ReadInt(Section, "MotdPrestigeLevel"); ;
+            MotdPlayerName = configFile.ReadString(Section, nameof(MotdPlayerName));
+            MotdText = configFile.ReadString(Section, nameof(MotdText));
+            MotdPrestigeLevel = configFile.ReadInt(Section, nameof(MotdPrestigeLevel));
         }
     }
 }

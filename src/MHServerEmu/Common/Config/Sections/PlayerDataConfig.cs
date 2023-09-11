@@ -1,6 +1,4 @@
-﻿using System;
-using MHServerEmu.Common.Logging;
-using MHServerEmu.GameServer.Entities;
+﻿using MHServerEmu.GameServer.Entities;
 using MHServerEmu.GameServer.Regions;
 
 namespace MHServerEmu.Common.Config.Sections
@@ -8,7 +6,6 @@ namespace MHServerEmu.Common.Config.Sections
     public class PlayerDataConfig
     {
         private const string Section = "PlayerData";
-        private static readonly Logger Logger = LogManager.CreateLogger();
 
         public string PlayerName { get; }
         public RegionPrototype StartingRegion { get; }
@@ -17,36 +14,25 @@ namespace MHServerEmu.Common.Config.Sections
 
         public PlayerDataConfig(IniFile configFile)
         {
-            PlayerName = configFile.ReadString(Section, "PlayerName");
-
-            string startingRegion = configFile.ReadString(Section, "StartingRegion");
-            string startingAvatar = configFile.ReadString(Section, "StartingAvatar");
+            PlayerName = configFile.ReadString(Section, nameof(PlayerName));
 
             // StartingRegion
-            try
-            {
-                StartingRegion = (RegionPrototype)Enum.Parse(typeof(RegionPrototype), startingRegion);
-            }
-            catch (Exception e)
-            {
-                Logger.Error(e.Message);
-                Logger.Error($"Failed to parse StartingRegion {startingRegion}, falling back to NPEAvengersTowerHUBRegion");
+            string startingRegion = configFile.ReadString(Section, nameof(StartingRegion));
+
+            if (Enum.TryParse(typeof(RegionPrototype), startingRegion, out object regionPrototypeEnum))
+                StartingRegion = (RegionPrototype)regionPrototypeEnum;
+            else
                 StartingRegion = RegionPrototype.NPEAvengersTowerHUBRegion;
-            }
 
             // StartingHero
-            try
-            {
-                StartingAvatar = (HardcodedAvatarEntity)Enum.Parse(typeof(HardcodedAvatarEntity), startingAvatar);
-            }
-            catch (Exception e)
-            {
-                Logger.Error(e.Message);
-                Logger.Error($"Failed to parse HardcodedAvatarEntity {startingAvatar}, falling back to BlackCat");
-                StartingAvatar = HardcodedAvatarEntity.BlackCat;
-            }
+            string startingAvatar = configFile.ReadString(Section, nameof(StartingAvatar));
 
-            CostumeOverride = Convert.ToUInt64(configFile.ReadString(Section, "CostumeOverride"));
+            if (Enum.TryParse(typeof(HardcodedAvatarEntity), startingAvatar, out object avatarEntityEnum))
+                StartingAvatar = (HardcodedAvatarEntity)avatarEntityEnum;
+            else
+                StartingAvatar = HardcodedAvatarEntity.BlackCat;
+
+            CostumeOverride = Convert.ToUInt64(configFile.ReadString(Section, nameof(CostumeOverride)));
         }
     }
 }

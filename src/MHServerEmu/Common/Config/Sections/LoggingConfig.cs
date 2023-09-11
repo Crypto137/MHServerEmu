@@ -15,12 +15,12 @@ namespace MHServerEmu.Common.Config.Sections
 
         public LoggingConfig(IniFile configFile)
         {
-            EnableLogging = configFile.ReadBool(Section, "EnableLogging");
+            EnableLogging = configFile.ReadBool(Section, nameof(EnableLogging));
 
-            EnableConsole = configFile.ReadBool(Section, "EnableConsole");
-            ConsoleIncludeTimestamps = configFile.ReadBool(Section, "ConsoleIncludeTimestamps");
-            ConsoleMinLevel = (Logger.Level)configFile.ReadInt(Section, "ConsoleMinLevel");
-            ConsoleMaxLevel = (Logger.Level)configFile.ReadInt(Section, "ConsoleMaxLevel");
+            EnableConsole = configFile.ReadBool(Section, nameof(EnableConsole));
+            ConsoleIncludeTimestamps = configFile.ReadBool(Section, nameof(ConsoleIncludeTimestamps));
+            ConsoleMinLevel = (Logger.Level)configFile.ReadInt(Section, nameof(ConsoleMinLevel));
+            ConsoleMaxLevel = (Logger.Level)configFile.ReadInt(Section, nameof(ConsoleMaxLevel));
         }
     }
 }
