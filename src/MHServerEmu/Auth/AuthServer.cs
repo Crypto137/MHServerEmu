@@ -104,6 +104,8 @@ namespace MHServerEmu.Auth
                             .SetFrontendServer(ConfigManager.Frontend.PublicAddress)
                             .SetFrontendPort(ConfigManager.Frontend.Port)
                             .SetPlatformTicket("")
+                            .SetHasnews(ConfigManager.Frontend.ShowNewsOnLogin)
+                            .SetNewsurl(ConfigManager.Frontend.NewsUrl)
                             .SetSuccess(true)
                             .Build().ToByteArray();
 
