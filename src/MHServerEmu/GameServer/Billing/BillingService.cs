@@ -12,8 +12,6 @@ namespace MHServerEmu.GameServer.Billing
 {
     public class BillingService : IGameMessageHandler
     {
-        private const int CurrencyBalance = 9000;
-
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly GameServerManager _gameServerManager;
@@ -24,12 +22,28 @@ namespace MHServerEmu.GameServer.Billing
             _gameServerManager = gameServerManager;
             _catalog = JsonSerializer.Deserialize<Catalog>(File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Catalog.json")));
 
-            // Apply a patch to the catalog if there's one
-            string patchPath = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "CatalogPatch.json");
-            if (File.Exists(patchPath))
+            // Apply a patch to the catalog if it's enabled and there's one
+            if (ConfigManager.Billing.ApplyCatalogPatch)
             {
-                CatalogEntry[] catalogPatch = JsonSerializer.Deserialize<CatalogEntry[]>(File.ReadAllText(patchPath));
-                _catalog.ApplyPatch(catalogPatch);
+                string patchPath = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "CatalogPatch.json");
+                if (File.Exists(patchPath))
+                {
+                    CatalogEntry[] catalogPatch = JsonSerializer.Deserialize<CatalogEntry[]>(File.ReadAllText(patchPath));
+                    _catalog.ApplyPatch(catalogPatch);
+                }
+            }
+
+            // Override store urls if enabled
+            if (ConfigManager.Billing.OverrideStoreUrls)
+            {
+                _catalog.Urls[0].StoreHomePageUrl = ConfigManager.Billing.StoreHomePageUrl;
+                _catalog.Urls[0].StoreBannerPageUrls[0].Url = ConfigManager.Billing.StoreHomeBannerPageUrl;
+                _catalog.Urls[0].StoreBannerPageUrls[1].Url = ConfigManager.Billing.StoreHeroesBannerPageUrl;
+                _catalog.Urls[0].StoreBannerPageUrls[2].Url = ConfigManager.Billing.StoreCostumesBannerPageUrl;
+                _catalog.Urls[0].StoreBannerPageUrls[3].Url = ConfigManager.Billing.StoreBoostsBannerPageUrl;
+                _catalog.Urls[0].StoreBannerPageUrls[4].Url = ConfigManager.Billing.StoreChestsBannerPageUrl;
+                _catalog.Urls[0].StoreBannerPageUrls[5].Url = ConfigManager.Billing.StoreSpecialsBannerPageUrl;
+                _catalog.Urls[0].StoreRealMoneyUrl = ConfigManager.Billing.StoreRealMoneyUrl;
             }
 
             Logger.Info($"Initialized store catalog with {_catalog.Entries.Length} entries");
@@ -48,7 +62,7 @@ namespace MHServerEmu.GameServer.Billing
                     Logger.Info($"Received NetMessageGetCurrencyBalance");
 
                     client.SendMessage(muxId, new(NetMessageGetCurrencyBalanceResponse.CreateBuilder()
-                        .SetCurrencyBalance(CurrencyBalance)
+                        .SetCurrencyBalance(ConfigManager.Billing.CurrencyBalance)
                         .Build()));
 
                     break;
@@ -81,7 +95,7 @@ namespace MHServerEmu.GameServer.Billing
 
                     client.SendMessage(muxId, new(NetMessageBuyItemFromCatalogResponse.CreateBuilder()
                         .SetDidSucceed(true)
-                        .SetCurrentCurrencyBalance(CurrencyBalance)
+                        .SetCurrentCurrencyBalance(ConfigManager.Billing.CurrencyBalance)
                         .SetErrorcode(BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS)
                         .SetSkuId(buyItemMessage.SkuId)
                         .Build()));
