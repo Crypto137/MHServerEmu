@@ -7,7 +7,7 @@ namespace MHServerEmu.GameServer.Properties
     public class ReplicatedPropertyCollection
     {
         public ulong ReplicationId { get; set; }
-        public List<Property> PropertyList { get; set; } = new();
+        public List<Property> List { get; set; } = new();
 
         public ReplicatedPropertyCollection(CodedInputStream stream)
         {
@@ -15,13 +15,13 @@ namespace MHServerEmu.GameServer.Properties
 
             uint propertyCount = stream.ReadRawUInt32();
             for (int i = 0; i < propertyCount; i++)
-                PropertyList.Add(new(stream));
+                List.Add(new(stream));
         }
 
         public ReplicatedPropertyCollection(ulong replicationId, List<Property> propertyList = null)
         {
             ReplicationId = replicationId;
-            if (propertyList != null) PropertyList.AddRange(propertyList);
+            if (propertyList != null) List.AddRange(propertyList);
         }
 
         public byte[] Encode()
@@ -30,8 +30,8 @@ namespace MHServerEmu.GameServer.Properties
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
                 cos.WriteRawVarint64(ReplicationId);
-                cos.WriteRawUInt32((uint)PropertyList.Count);
-                foreach (Property property in PropertyList) cos.WriteRawBytes(property.Encode());
+                cos.WriteRawUInt32((uint)List.Count);
+                foreach (Property property in List) cos.WriteRawBytes(property.Encode());
 
                 cos.Flush();
                 return ms.ToArray();
@@ -42,7 +42,7 @@ namespace MHServerEmu.GameServer.Properties
         {
             StringBuilder sb = new();
             sb.AppendLine($"ReplicationId: 0x{ReplicationId:X}");
-            for (int i = 0; i < PropertyList.Count; i++) sb.AppendLine($"Property{i}: {PropertyList[i]}");
+            for (int i = 0; i < List.Count; i++) sb.AppendLine($"Property{i}: {List[i]}");
             return sb.ToString();
         }
     }

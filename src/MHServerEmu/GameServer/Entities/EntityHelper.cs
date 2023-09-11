@@ -31,8 +31,8 @@ namespace MHServerEmu.GameServer.Entities
 
             WorldEntity worldEntity = new(replicationId, position, health, mapAreaId, healthMaxOther, mapRegionId, mapCellId, contextAreaRef);
 
-            worldEntity.PropertyCollection.PropertyList.Add(new(PropertyEnum.CharacterLevel, CharacterLevel)); 
-            worldEntity.PropertyCollection.PropertyList.Add(new(PropertyEnum.CombatLevel, CombatLevel)); // zero effect
+            worldEntity.PropertyCollection.List.Add(new(PropertyEnum.CharacterLevel, CharacterLevel)); 
+            worldEntity.PropertyCollection.List.Add(new(PropertyEnum.CombatLevel, CombatLevel)); // zero effect
 
             byte[] archiveData = worldEntity.Encode();
 

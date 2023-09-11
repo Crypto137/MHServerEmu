@@ -324,7 +324,7 @@ namespace MHServerEmu.GameServer.Games
 
                     // edit player data here
 
-                    foreach (Property property in player.PropertyCollection.PropertyList)
+                    foreach (Property property in player.PropertyCollection.List)
                     {
                         // Unlock starter avatars
                         if (property.Enum == PropertyEnum.AvatarUnlock && (AvatarUnlockType)property.Value.Get() == AvatarUnlockType.Starter)
@@ -370,7 +370,7 @@ namespace MHServerEmu.GameServer.Games
                         bool hasCharacterLevel = false;
                         bool hasCombatLevel = false;
 
-                        foreach (Property property in avatar.PropertyCollection.PropertyList)
+                        foreach (Property property in avatar.PropertyCollection.List)
                         {
                             if (property.Enum == PropertyEnum.CostumeCurrent && playerData.CostumeOverride != 0)
                             {
@@ -390,8 +390,8 @@ namespace MHServerEmu.GameServer.Games
                         }
 
                         // Add level properties
-                        if (hasCharacterLevel == false) avatar.PropertyCollection.PropertyList.Add(new(PropertyEnum.CharacterLevel, 60));
-                        if (hasCombatLevel == false) avatar.PropertyCollection.PropertyList.Add(new(PropertyEnum.CombatLevel, 60));
+                        if (hasCharacterLevel == false) avatar.PropertyCollection.List.Add(new(PropertyEnum.CharacterLevel, 60));
+                        if (hasCombatLevel == false) avatar.PropertyCollection.List.Add(new(PropertyEnum.CombatLevel, 60));
                     }
 
                     var customEntityCreateMessage = NetMessageEntityCreate.CreateBuilder()
