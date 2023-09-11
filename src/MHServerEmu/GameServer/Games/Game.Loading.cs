@@ -324,6 +324,13 @@ namespace MHServerEmu.GameServer.Games
 
                     // edit player data here
 
+                    foreach (Property property in player.PropertyCollection.PropertyList)
+                    {
+                        // Unlock starter avatars
+                        if (property.Enum == PropertyEnum.AvatarUnlock && (AvatarUnlockType)property.Value.Get() == AvatarUnlockType.Starter)
+                            property.Value.Set((int)AvatarUnlockType.Type3);
+                    }
+
                     var customEntityCreateMessage = NetMessageEntityCreate.CreateBuilder()
                         .SetBaseData(ByteString.CopyFrom(baseData.Encode()))
                         .SetArchiveData(ByteString.CopyFrom(player.Encode()))
@@ -360,6 +367,9 @@ namespace MHServerEmu.GameServer.Games
 
                         avatar.PlayerName.Text = playerData.PlayerName;
 
+                        bool hasCharacterLevel = false;
+                        bool hasCombatLevel = false;
+
                         foreach (Property property in avatar.PropertyCollection.PropertyList)
                         {
                             if (property.Enum == PropertyEnum.CostumeCurrent && playerData.CostumeOverride != 0)
@@ -373,7 +383,15 @@ namespace MHServerEmu.GameServer.Games
                                     Logger.Warn($"Failed to get costume prototype enum for id {ConfigManager.PlayerData.CostumeOverride}");
                                 }
                             }
+                            else if (property.Enum == PropertyEnum.CharacterLevel)
+                                hasCharacterLevel = true;
+                            else if (property.Enum == PropertyEnum.CombatLevel)
+                                hasCombatLevel = true;
                         }
+
+                        // Add level properties
+                        if (hasCharacterLevel == false) avatar.PropertyCollection.PropertyList.Add(new(PropertyEnum.CharacterLevel, 60));
+                        if (hasCombatLevel == false) avatar.PropertyCollection.PropertyList.Add(new(PropertyEnum.CombatLevel, 60));
                     }
 
                     var customEntityCreateMessage = NetMessageEntityCreate.CreateBuilder()

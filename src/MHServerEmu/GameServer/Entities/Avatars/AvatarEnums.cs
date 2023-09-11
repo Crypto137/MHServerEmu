@@ -1,11 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MHServerEmu.GameServer.Entities.Avatars
+﻿namespace MHServerEmu.GameServer.Entities.Avatars
 {
+    public enum AvatarUnlockType : long
+    {
+        None,
+        Starter,
+        Type2,
+        Type3,
+        Type4,
+        Type5,
+        Type6
+    }
+
     public enum AvatarPrototype : ulong
     {
         Angela = 13124420519155930214,
