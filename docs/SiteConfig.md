@@ -6,7 +6,7 @@ Some versions of the game refuse to start without a SiteConfig. In some of those
 
 ## Fields
 
-These fields were extracted from version 1.52.0.1700. You can get the exact fields and their default values for a specific version from a game process memory dump.
+These fields were extracted from version 1.52.0.1700. You can get the exact fields and their default values for a specific version from a game process memory dump. Where possible the default values were filled in with information from an archived test center SiteConfig.
 
 | Name                                | Type | Default Value                                                                                     | Note                                                         |
 | ----------------------------------- | ---- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
@@ -60,6 +60,6 @@ Some fields are only present in early versions of the game.
 | ------------------------------- | ---- | ---------------------------------- | ---- |
 | ReportDefectHost                | str  |                                    |      |
 | ReportDefectUrl                 | str  | /BugAndFeatureWebService/NewDefect |      |
-| ReportDefectPort                | str  |                                    |      |
+| ReportDefectPort                | int  |                                    |      |
 | UsePlaytestOnlyCommands         | bool |                                    |      |
 | BitRaiderAccountRegistrationUrl | str  |                                    |      |
