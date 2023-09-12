@@ -1,6 +1,7 @@
 ﻿using Google.ProtocolBuffers;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer;
+using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.Frontend;
 using MHServerEmu.GameServer.Games;
 using MHServerEmu.GameServer.Regions;
@@ -21,6 +22,10 @@ namespace MHServerEmu.Networking
         public bool IsLoading { get; set; } = false;
         public ulong GameId { get; set; }
         public Game CurrentGame { get => _gameServerManager.GameManager.GetGameById(GameId); }
+
+
+        // temp until we get proper avatar entity handling
+        public Vector3 LastPosition { get; set; }
 
         public FrontendClient(Connection connection, GameServerManager gameServerManager)
         {

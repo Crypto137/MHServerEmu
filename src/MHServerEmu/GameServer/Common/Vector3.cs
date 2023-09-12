@@ -33,6 +33,13 @@ namespace MHServerEmu.GameServer.Common
             Z = stream.ReadRawFloat(precision);
         }
 
+        public Vector3(NetStructPoint3 point3)
+        {
+            X = point3.X;
+            Y = point3.Y;
+            Z = point3.Z;
+        }
+
         public byte[] Encode(int precision = 3)
         {
             using (MemoryStream ms = new())

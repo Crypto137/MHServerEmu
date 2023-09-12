@@ -7,6 +7,7 @@ using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.Entities;
 using MHServerEmu.GameServer.Entities.Avatars;
+using MHServerEmu.GameServer.Powers;
 using MHServerEmu.GameServer.Regions;
 using MHServerEmu.Networking;
 
@@ -69,9 +70,11 @@ namespace MHServerEmu.GameServer.Games
             switch ((ClientToGameServerMessage)message.Id)
             {
                 case ClientToGameServerMessage.NetMessageUpdateAvatarState:
-                    /* UpdateAvatarState spam
                     var updateAvatarStateMessage = NetMessageUpdateAvatarState.ParseFrom(message.Content);
                     UpdateAvatarStateArchive avatarState = new(updateAvatarStateMessage.ArchiveData.ToByteArray());
+                    client.LastPosition = avatarState.Position;
+
+                    /* Logger spam
                     //Logger.Trace(avatarState.ToString());
                     Logger.Trace(avatarState.Position.ToString());
                     */
@@ -85,6 +88,18 @@ namespace MHServerEmu.GameServer.Games
                         client.SendMultipleMessages(1, GetFinishLoadingMessages(client.Session.Account.PlayerData));
                         client.IsLoading = false;
                     }
+
+                    break;
+
+                case ClientToGameServerMessage.NetMessageTryActivatePower:
+                    
+                    /* ActivatePower using TryActivatePower data
+                    var tryActivatePowerMessage = NetMessageTryActivatePower.ParseFrom(message.Content);
+                    ActivatePowerArchive activatePowerArchive = new(tryActivatePowerMessage, client.LastPosition);
+                    client.SendMessage(muxId, new(NetMessageActivatePower.CreateBuilder()
+                        .SetArchiveData(ByteString.CopyFrom(activatePowerArchive.Encode()))
+                        .Build()));
+                    */
 
                     break;
 
