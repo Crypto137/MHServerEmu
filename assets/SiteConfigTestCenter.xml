@@ -1,0 +1,25 @@
+<config>
+	<str name="AuthServerAddress" value="auth.testcenter.marvelheroes.com"/>
+	<str name="AuthServerUrl" value="/AuthServer/Login/IndexPB"/>
+	<str name="CrashReportHost" value="auth.testcenter.marvelheroes.com"/>
+	<str name="CrashReportUrl" value="/CrashDumpFrontend/Multipart/ProcessCrashReport"/>
+	<int name="CrashReportPort" value="80"/>
+	<str name="VerifyFailureHost" value="hq-sis01-qa01.hq-california.com"/>
+	<str name="VerifyFailureUrl" value="/CrashDumpFrontend/Multipart/ProcessVerifyReport"/>
+	<int name="VerifyFailurePort" value="80"/>
+	<str name="ReportDefectHost" value="auth.testcenter.marvelheroes.com"/>
+	<str name="ReportDefectUrl" value="/BugAndFeatureWebService/Home/NewDefect"/>
+	<int name="ReportDefectPort" value="80"/>
+	<str name="ReportSuggestionHost" value="auth.testcenter.marvelheroes.com"/>
+	<str name="ReportSuggestionUrl" value="/BugAndFeatureWebService/Home/NewSuggestion"/>
+	<int name="ReportSuggestionPort" value="80"/>
+	<str name="SteamMicroTransactionCompleteHost" value="partner.testcenter.marvelheroes.com"/>
+	<str name="SteamMicroTransactionCompleteUrl" value="/steam/finalize"/>
+	<str name="SteamMicroTransactionCompletePort" value="443"/>
+	<str name="SteamMicroTransactionCompleteUseSsl" value="True"/>
+	<str name="AccountWebsiteUrl" value="https://testcenter.marvelheroes.com/"/>
+	<str name="AccountRegistrationUrl" value="https://login.testcenter.marvelheroes.com/registration.php?pcode="/>
+	<str name="SteamAccountRegistrationUrl" value="https://login.testcenter.marvelheroes.com/registration.php?pcode=steam"/>
+	<str name="BitRaiderAccountRegistrationUrl" value="https://login.testcenter.marvelheroes.com/registration.php?pcode="/>
+	<str name="DriverUpdateURL" value="https://testcenter.marvelheroes.com/support/drivers"/>
+</config>

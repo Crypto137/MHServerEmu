@@ -3,25 +3,25 @@
 	<str name="AuthServerAddress" value="localhost" />
 	<str name="AuthServerUrl" value="/AuthServer/Login/IndexPB" />
 	<str name="AuthServerTicketUrl" value="" />
-	<str name="AuthServerPort" value="443" />
-	<str name="CrashReportHost" value="hq-gar-dev01" />
-	<str name="CrashReportUrl" value="/MinidumpWebService/Home/ProcessPostedDump" />
-	<str name="CrashReportPort" value="" />
-	<str name="VerifyFailureHost" value="localhost" />
-	<str name="VerifyFailureUrl" value="" />
-	<str name="VerifyFailurePort" value="" />
-	<str name="ReportSuggestionHost" value="" />
+	<int name="AuthServerPort" value="443" />
+	<str name="CrashReportHost" value="auth.marvelheroes.com" />
+	<str name="CrashReportUrl" value="/CrashDumpFrontend/Multipart/ProcessCrashReport" />
+	<int name="CrashReportPort" value="80" />
+	<str name="VerifyFailureHost" value="hq-sis01-qa01.hq-california.com" />
+	<str name="VerifyFailureUrl" value="/CrashDumpFrontend/Multipart/ProcessVerifyReport" />
+	<int name="VerifyFailurePort" value="80" />
+	<str name="ReportSuggestionHost" value="auth.marvelheroes.com" />
 	<str name="ReportSuggestionUrl" value="/BugAndFeatureWebService/NewSuggestion" />
-	<str name="ReportSuggestionPort" value="" />
+	<int name="ReportSuggestionPort" value="80" />
 	<str name="OnCloseUrl" value="" />
 	<str name="OnCloseUrlSteam" value="" />
 	<str name="AccountWebsiteUrl" value="https://www.marvelheroes.com" />
 	<str name="AccountRegistrationUrl" value="https://login.marvelheroes.com/registration.php?pcode=" />
 	<str name="SteamAccountRegistrationUrl" value="https://login.marvelheroes.com/registration.php?pcode=steam" />
 	<str name="SteamMicroTransactionCompleteHost" value="partner.marvelheroes.com" />
-	<str name="SteamMicroTransactionCompletePort" value="" />
 	<str name="SteamMicroTransactionCompleteUrl" value="/steam/finalize" />
-	<bool name="SteamMicroTransactionCompleteUseSsl" value="false" />
+	<str name="SteamMicroTransactionCompletePort" value="443" />
+	<str name="SteamMicroTransactionCompleteUseSsl" value="true" />
 	<str name="DriverUpdateURL" value="https://marvelheroes.com/support/drivers" />
 	<bool name="AllowNonSteamStoreInSteamBuild" value="true" />
 	<str name="InGameHelpURL" value="https://d5.parature.com/ics/support/default.asp?deptID=15144" />
