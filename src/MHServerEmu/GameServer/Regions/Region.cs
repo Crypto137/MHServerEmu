@@ -50,16 +50,22 @@ namespace MHServerEmu.GameServer.Regions
                 .SetRegionPrototypeId((ulong)Prototype)
                 .Build()));
 
-            messageList.Add(new(NetMessageRegionChange.CreateBuilder()
-                .SetRegionPrototypeId((ulong)Prototype)
+            var regionChangeBuilder = NetMessageRegionChange.CreateBuilder()
+                .SetRegionId(Id)
                 .SetServerGameId(serverGameId)
                 .SetClearingAllInterest(false)
-                .SetRegionId(Id)
+                .SetRegionPrototypeId((ulong)Prototype)
                 .SetRegionRandomSeed(RandomSeed)
-                .SetCreateRegionParams(CreateParams.ToNetStruct())
                 .SetRegionMin(Min.ToNetStructPoint3())
                 .SetRegionMax(Max.ToNetStructPoint3())
-                .Build()));
+                .SetCreateRegionParams(CreateParams.ToNetStruct());
+
+            // can add EntitiesToDestroy here
+
+            // empty archive data seems to cause region loading to hang for some time
+            if (ArchiveData.Length > 0) regionChangeBuilder.SetArchiveData(ByteString.CopyFrom(ArchiveData));
+
+            messageList.Add(new(regionChangeBuilder.Build()));
 
             // mission updates and entity creation happens here
 
