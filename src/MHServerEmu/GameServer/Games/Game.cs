@@ -66,7 +66,6 @@ namespace MHServerEmu.GameServer.Games
 
         public void Handle(FrontendClient client, ushort muxId, GameMessage message)
         {
-            IMessage response;
             switch ((ClientToGameServerMessage)message.Id)
             {
                 case ClientToGameServerMessage.NetMessageUpdateAvatarState:

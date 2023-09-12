@@ -57,7 +57,7 @@ namespace MHServerEmu.Auth
 
                     response.Close();
                 }
-                catch (TaskCanceledException e)
+                catch (TaskCanceledException)
                 {
                     return;     // Stop handling connections
                 }
