@@ -7,6 +7,7 @@ using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.Entities;
 using MHServerEmu.GameServer.Entities.Avatars;
+using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.Powers;
 using MHServerEmu.GameServer.Regions;
 using MHServerEmu.Networking;
@@ -92,14 +93,29 @@ namespace MHServerEmu.GameServer.Games
                     break;
 
                 case ClientToGameServerMessage.NetMessageTryActivatePower:
-                    
                     /* ActivatePower using TryActivatePower data
-                    var tryActivatePowerMessage = NetMessageTryActivatePower.ParseFrom(message.Content);
+                    var tryActivatePower = NetMessageTryActivatePower.ParseFrom(message.Content);
                     ActivatePowerArchive activatePowerArchive = new(tryActivatePowerMessage, client.LastPosition);
                     client.SendMessage(muxId, new(NetMessageActivatePower.CreateBuilder()
                         .SetArchiveData(ByteString.CopyFrom(activatePowerArchive.Encode()))
                         .Build()));
                     */
+
+                    var tryActivatePower = NetMessageTryActivatePower.ParseFrom(message.Content);
+                    Logger.Trace($"Received TryActivatePower for {GameDatabase.GetPrototypePath(tryActivatePower.PowerPrototypeId)}");
+                    //Logger.Trace(tryActivatePower.ToString());
+
+                    PowerResultArchive archive = new(tryActivatePower);
+                    client.SendMessage(muxId, new(NetMessagePowerResult.CreateBuilder()
+                        .SetArchiveData(ByteString.CopyFrom(archive.Encode()))
+                        .Build()));
+
+                    break;
+
+                case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer:
+                    var continuousPowerUpdate = NetMessageContinuousPowerUpdateToServer.ParseFrom(message.Content);
+                    Logger.Trace($"Received ContinuousPowerUpdate for {GameDatabase.GetPrototypePath(continuousPowerUpdate.PowerPrototypeId)}");
+                    //Logger.Trace(continuousPowerUpdate.ToString());
 
                     break;
 
