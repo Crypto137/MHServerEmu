@@ -94,7 +94,7 @@ namespace MHServerEmu.GameServer.GameData.Prototypes
             if (type == PropertyParamType.Asset)
                 Params[index].ValueMax = GameDatabase.Calligraphy.GetAssetType(expectedValue).GetMaxEnumValue();
             else if (type == PropertyParamType.Prototype)
-                Params[index].ValueMax = GameDatabase.PrototypeRefManager.GetMaxEnumValue();
+                Params[index].ValueMax = GameDatabase.PrototypeRefManager.MaxEnumValue;
         }
 
     }

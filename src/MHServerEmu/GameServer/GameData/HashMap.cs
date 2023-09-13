@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MHServerEmu.GameServer.GameData
+﻿namespace MHServerEmu.GameServer.GameData
 {
     public class HashMap
     {
-        private Dictionary<ulong, string> _forwardDict { get; } = new();
-        private Dictionary<string, ulong> _reverseDict { get; } = new();
+        private readonly Dictionary<ulong, string> _forwardDict;
+        private readonly Dictionary<string, ulong> _reverseDict;
 
         public int Count { get => _forwardDict.Count; }
 
@@ -32,7 +26,9 @@ namespace MHServerEmu.GameServer.GameData
         }
 
         public string GetForward(ulong key) => _forwardDict[key];
+        public bool TryGetForward(ulong key, out string value) => _forwardDict.TryGetValue(key, out value);
         public ulong GetReverse(string value) => _reverseDict[value];
+        public bool TryGetReverse(string value, out ulong key) => _reverseDict.TryGetValue(value, out key);
 
         public ulong[] Enumerate()
         {

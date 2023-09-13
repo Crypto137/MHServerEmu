@@ -80,6 +80,8 @@ namespace MHServerEmu.GameServer.GameData
         private Dictionary<PrototypeEnumType, ulong[]> _prototypeEnumDict;                  // EnumValue -> PrototypeId
         private Dictionary<PrototypeEnumType, Dictionary<ulong, ulong>> _enumLookupDict;    // PrototypeId -> EnumValue
 
+        public int MaxEnumValue { get => _enumLookupDict[PrototypeEnumType.All].Count - 1; }
+
         public PrototypeRefManager(CalligraphyStorage calligraphy, ResourceStorage resource)
         {
             // Generate a hash map for all prototypes (Calligraphy + Resource) and fill _prototypeGuidDict
@@ -137,12 +139,32 @@ namespace MHServerEmu.GameServer.GameData
             }
         }
 
+        // Direct get methods for internal server use (we trust this input to be valid)
         public string GetPrototypePath(ulong id) => _prototypeHashMap.GetForward(id);
         public ulong GetPrototypeId(string path) => _prototypeHashMap.GetReverse(path);
         public ulong GetPrototypeId(ulong guid) => _prototypeGuidDict[guid];
         public ulong GetPrototypeId(ulong enumValue, PrototypeEnumType type) => _prototypeEnumDict[type][enumValue];
         public ulong GetEnumValue(ulong prototypeId, PrototypeEnumType type) => _enumLookupDict[type][prototypeId];
-        public int GetMaxEnumValue() => _enumLookupDict[PrototypeEnumType.All].Count - 1;
+
+        // TryGet methods for handling client input (we don't trust clients)
+        public bool TryGetPrototypePath(ulong id, out string path) => _prototypeHashMap.TryGetForward(id, out path);
+        public bool TryGetPrototypeId(string path, out ulong id) => _prototypeHashMap.TryGetReverse(path, out id);
+        public bool TryGetPrototypeId(ulong guid, out ulong id) => _prototypeGuidDict.TryGetValue(guid, out id);
+        public bool TryGetPrototypeId(ulong enumValue, PrototypeEnumType type, out ulong id)
+        {
+            if ((int)enumValue < _prototypeEnumDict[type].Length)
+            {
+                id = _prototypeEnumDict[type][enumValue];
+                return true;
+            }
+            else
+            {
+                id = 0;
+                return false;
+            }
+        }
+        public bool TryGetEnumValue(ulong prototypeId, PrototypeEnumType type, out ulong enumValue) => _enumLookupDict[type].TryGetValue(prototypeId, out enumValue);
+
 
         public bool Verify()
         {

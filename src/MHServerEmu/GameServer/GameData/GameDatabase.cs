@@ -80,6 +80,12 @@ namespace MHServerEmu.GameServer.GameData
         public static ulong GetPrototypeId(ulong enumValue, PrototypeEnumType type) => PrototypeRefManager.GetPrototypeId(enumValue, type);
         public static ulong GetPrototypeEnumValue(ulong prototypeId, PrototypeEnumType type) => PrototypeRefManager.GetEnumValue(prototypeId, type);
 
+        public static bool TryGetPrototypePath(ulong id, out string path) => PrototypeRefManager.TryGetPrototypePath(id, out path);
+        public static bool TryGetPrototypeId(string path, out ulong id) => PrototypeRefManager.TryGetPrototypeId(path, out id);
+        public static bool TryGetPrototypeId(ulong guid, out ulong id) => PrototypeRefManager.TryGetPrototypeId(guid, out id);
+        public static bool TryGetPrototypeId(ulong enumValue, PrototypeEnumType type, out ulong id) => PrototypeRefManager.TryGetPrototypeId(enumValue, type, out id);
+        public static bool TryGetPrototypeEnumValue(ulong prototypeId, PrototypeEnumType type, out ulong enumValue) => PrototypeRefManager.TryGetEnumValue(prototypeId, type, out enumValue);
+
         private static bool VerifyData()
         {
             return Calligraphy.Verify()
