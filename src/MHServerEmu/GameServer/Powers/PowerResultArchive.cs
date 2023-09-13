@@ -13,7 +13,7 @@ namespace MHServerEmu.GameServer.Powers
 
         public uint ReplicationPolicy { get; set; }
         public bool[] Flags { get; set; }
-        public ulong PowerPrototype { get; set; }
+        public ulong PowerPrototypeId { get; set; }
         public ulong TargetId { get; set; }
         public ulong PowerOwnerId { get; set; }
         public ulong UltimateOwnerId { get; set; }
@@ -32,7 +32,7 @@ namespace MHServerEmu.GameServer.Powers
 
             ReplicationPolicy = stream.ReadRawVarint32();
             Flags = stream.ReadRawVarint32().ToBoolArray(FlagCount);
-            PowerPrototype = stream.ReadPrototypeId(PrototypeEnumType.Power);
+            PowerPrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Power);
             TargetId = stream.ReadRawVarint64();
 
             if (Flags[1])
@@ -60,7 +60,7 @@ namespace MHServerEmu.GameServer.Powers
             // damage test
             ReplicationPolicy = 0x1;
             Flags = 0u.ToBoolArray(FlagCount);
-            PowerPrototype = tryActivatePower.PowerPrototypeId;
+            PowerPrototypeId = tryActivatePower.PowerPrototypeId;
             TargetId = tryActivatePower.IdTargetEntity;
             PowerOwnerId = tryActivatePower.IdUserEntity;
             Flags[3] = true;    // UltimateOwnerId same as PowerOwnerId
@@ -83,7 +83,7 @@ namespace MHServerEmu.GameServer.Powers
             // damage test
             ReplicationPolicy = 0x1;
             Flags = 0u.ToBoolArray(FlagCount);
-            PowerPrototype = continuousPowerUpdate.PowerPrototypeId;
+            PowerPrototypeId = continuousPowerUpdate.PowerPrototypeId;
             TargetId = continuousPowerUpdate.IdTargetEntity;
             Flags[3] = true;    // UltimateOwnerId same as PowerOwnerId
 
@@ -110,7 +110,7 @@ namespace MHServerEmu.GameServer.Powers
 
                 cos.WriteRawVarint32(ReplicationPolicy);
                 cos.WriteRawVarint32(Flags.ToUInt32());
-                cos.WritePrototypeId(PowerPrototype, PrototypeEnumType.Power);
+                cos.WritePrototypeId(PowerPrototypeId, PrototypeEnumType.Power);
                 cos.WriteRawVarint64(TargetId);
                 if (Flags[1] == false && Flags[0] == false) cos.WriteRawVarint64(PowerOwnerId);
                 if (Flags[3] == false && Flags[2] == false) cos.WriteRawVarint64(UltimateOwnerId);
@@ -137,7 +137,7 @@ namespace MHServerEmu.GameServer.Powers
             for (int i = 0; i < Flags.Length; i++) if (Flags[i]) sb.Append($"{i} ");
             sb.AppendLine();
 
-            sb.AppendLine($"PowerPrototype: {GameDatabase.GetPrototypePath(PowerPrototype)}");
+            sb.AppendLine($"PowerPrototype: {GameDatabase.GetPrototypePath(PowerPrototypeId)}");
             sb.AppendLine($"TargetId: {TargetId}");
             sb.AppendLine($"PowerOwnerId: {PowerOwnerId}");
             sb.AppendLine($"UltimateOwnerId: {UltimateOwnerId}");

@@ -112,6 +112,21 @@ namespace MHServerEmu.GameServer.Games
 
                     break;
 
+                case ClientToGameServerMessage.NetMessagePowerRelease:
+                    var powerRelease = NetMessagePowerRelease.ParseFrom(message.Content);
+                    Logger.Trace($"Received PowerRelease for {GameDatabase.GetPrototypePath(powerRelease.PowerPrototypeId)}");
+                    break;
+
+                case ClientToGameServerMessage.NetMessageTryCancelPower:
+                    var tryCancelPower = NetMessageTryCancelPower.ParseFrom(message.Content);
+                    Logger.Trace($"Received TryCancelPower for {GameDatabase.GetPrototypePath(tryCancelPower.PowerPrototypeId)}");
+                    break;
+
+                case ClientToGameServerMessage.NetMessageTryCancelActivePower:
+                    var tryCancelActivePower = NetMessageTryCancelActivePower.ParseFrom(message.Content);
+                    Logger.Trace("Received TryCancelActivePower");
+                    break;
+
                 case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer:
                     var continuousPowerUpdate = NetMessageContinuousPowerUpdateToServer.ParseFrom(message.Content);
                     Logger.Trace($"Received ContinuousPowerUpdate for {GameDatabase.GetPrototypePath(continuousPowerUpdate.PowerPrototypeId)}");

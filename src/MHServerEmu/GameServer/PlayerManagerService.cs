@@ -74,6 +74,9 @@ namespace MHServerEmu.GameServer
                 case ClientToGameServerMessage.NetMessageUpdateAvatarState:
                 case ClientToGameServerMessage.NetMessageCellLoaded:
                 case ClientToGameServerMessage.NetMessageTryActivatePower:
+                case ClientToGameServerMessage.NetMessagePowerRelease:
+                case ClientToGameServerMessage.NetMessageTryCancelPower:
+                case ClientToGameServerMessage.NetMessageTryCancelActivePower:
                 case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer:
                 case ClientToGameServerMessage.NetMessageTryInventoryMove:
                 case ClientToGameServerMessage.NetMessageSwitchAvatar:
