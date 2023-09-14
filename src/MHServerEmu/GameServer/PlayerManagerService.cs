@@ -1,5 +1,4 @@
 ﻿using Gazillion;
-using Google.ProtocolBuffers;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Networking;
 
@@ -18,36 +17,35 @@ namespace MHServerEmu.GameServer
 
         public void Handle(FrontendClient client, ushort muxId, GameMessage message)
         {
-            IMessage response;
             switch ((ClientToGameServerMessage)message.Id)
             {
                 case ClientToGameServerMessage.NetMessageReadyForGameJoin:
                     // NetMessageReadyForGameJoin contains a bug where wipesDataIfMismatchedInDb is marked as required but the client doesn't include it
                     // To avoid an exception we build a partial message from the data we receive
-                    Logger.Info($"Received NetMessageReadyForGameJoin");
+                    Logger.Info($"Received NetMessageReadyForGameJoin (sessionId {client.Session.Id})");
                     var parsedReadyForGameJoin = NetMessageReadyForGameJoin.CreateBuilder().MergeFrom(message.Content).BuildPartial();
                     Logger.Trace(parsedReadyForGameJoin.ToString());
 
-                    Logger.Info("Responding with NetMessageReadyAndLoggedIn");
+                    // Log the player in
+                    Logger.Info($"Logging in player (sessionId {client.Session.Id})");
                     client.SendMessage(muxId, new(NetMessageReadyAndLoggedIn.DefaultInstance)); // add report defect (bug) config here
 
-                    Logger.Info("Responding with NetMessageInitialTimeSync");
-                    response = NetMessageInitialTimeSync.CreateBuilder()
-                        .SetGameTimeServerSent(161351679299542)     // dumped
-                        .SetDateTimeServerSent(1509657957345525)    // dumped
-                        .Build();
-                    client.SendMessage(muxId, new(response));
+                    // Sync time
+                    client.SendMessage(muxId, new(NetMessageInitialTimeSync.CreateBuilder()
+                        .SetGameTimeServerSent(161351679299542)     // dumped - Gazillion time?
+                        .SetDateTimeServerSent(1509657957345525)    // dumped - unix time stamp in microseconds
+                        .Build()));
 
                     break;
 
                 case ClientToGameServerMessage.NetMessageSyncTimeRequest:
+                    /* NOTE: this is old experimental code
                     Logger.Info($"Received NetMessageSyncTimeRequest");
                     var parsedSyncTimeRequestMessage = NetMessageSyncTimeRequest.ParseFrom(message.Content);
                     Logger.Trace(parsedSyncTimeRequestMessage.ToString());
 
-                    //Logger.Info("Responding with NetMessageSyncTimeReply");
-
-                    response = NetMessageSyncTimeReply.CreateBuilder()
+                    Logger.Info("Sending NetMessageSyncTimeReply");
+                    client.SendMessage(muxId, new(NetMessageSyncTimeReply.CreateBuilder()
                         .SetGameTimeClientSent(parsedSyncTimeRequestMessage.GameTimeClientSent)
                         .SetGameTimeServerReceived(_gameServerManager.GetGameTime())
                         .SetGameTimeServerSent(_gameServerManager.GetGameTime())
@@ -56,18 +54,28 @@ namespace MHServerEmu.GameServer
                         .SetDateTimeServerReceived(_gameServerManager.GetDateTime())
                         .SetDateTimeServerSent(_gameServerManager.GetDateTime())
 
-                        .SetDialation(0.0f)
-                        .SetGametimeDialationStarted(_gameServerManager.GetGameTime())
-                        .SetDatetimeDialationStarted(_gameServerManager.GetDateTime())
-                        .Build();
+                        .SetDialation(1.0f)
+                        .SetGametimeDialationStarted(0)
+                        .SetDatetimeDialationStarted(0)
+                        .Build()));
+                    */
 
-                    //client.SendMessage(1, new(response));
                     break;
 
                 case ClientToGameServerMessage.NetMessagePing:
+                    /*
                     Logger.Info($"Received NetMessagePing");
                     var parsedPingMessage = NetMessagePing.ParseFrom(message.Content);
-                    //Logger.Trace(parsedPingMessage.ToString());
+                    Logger.Trace(parsedPingMessage.ToString());
+                    */
+                    break;
+
+                case ClientToGameServerMessage.NetMessageFPS:
+                    /*
+                    Logger.Info("Received FPS");
+                    var fps = NetMessageFPS.ParseFrom(message.Content);
+                    Logger.Trace(fps.ToString());
+                    */
                     break;
 
                 // Game messages
