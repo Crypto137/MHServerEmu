@@ -43,9 +43,9 @@ namespace MHServerEmu.GameServer.Entities
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"ContainerEntityId: 0x{ContainerEntityId:X}");
+            sb.AppendLine($"ContainerEntityId: {ContainerEntityId}");
             sb.AppendLine($"InventoryPrototypeId: {GameDatabase.GetPrototypePath(InventoryPrototypeId)}");
-            sb.AppendLine($"Slot: 0x{Slot:X}");
+            sb.AppendLine($"Slot: {Slot}");
             return sb.ToString();
         }
     }

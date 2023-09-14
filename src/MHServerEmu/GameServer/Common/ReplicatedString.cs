@@ -38,7 +38,7 @@ namespace MHServerEmu.GameServer.Common
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"ReplicationId: 0x{ReplicationId:X}");
+            sb.AppendLine($"ReplicationId: {ReplicationId}");
             sb.AppendLine($"Text: {Text}");
             return sb.ToString();
         }

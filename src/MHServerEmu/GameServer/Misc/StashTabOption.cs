@@ -53,7 +53,7 @@ namespace MHServerEmu.GameServer.Misc
             StringBuilder sb = new();
             sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
             sb.AppendLine($"Name: {Name}");
-            sb.AppendLine($"AssetRef: 0x{AssetRef:X}");
+            sb.AppendLine($"AssetRef: {AssetRef}");
             sb.AppendLine($"Field2: 0x{Field2}");
             sb.AppendLine($"Field3: 0x{Field3}");
             return sb.ToString();

@@ -136,16 +136,16 @@ namespace MHServerEmu.GameServer.Powers
             for (int i = 0; i < Flags.Length; i++) if (Flags[i]) sb.Append($"{i} ");
             sb.AppendLine();
 
-            sb.AppendLine($"IdUserEntity: 0x{IdUserEntity:X}");
-            sb.AppendLine($"IdTargetEntity: 0x{IdTargetEntity:X}");
+            sb.AppendLine($"IdUserEntity: {IdUserEntity}");
+            sb.AppendLine($"IdTargetEntity: {IdTargetEntity}");
             sb.AppendLine($"PowerPrototypeId: {GameDatabase.GetPrototypePath(PowerPrototypeId)}");
             sb.AppendLine($"TriggeringPowerPrototypeId: {GameDatabase.GetPrototypePath(TriggeringPowerPrototypeId)}");
             sb.AppendLine($"UserPosition: {UserPosition}");
             sb.AppendLine($"TargetPosition: {TargetPosition}");
-            sb.AppendLine($"MovementTimeMS: 0x{MovementTimeMS:X}");
-            sb.AppendLine($"UnknownTimeMS: 0x{UnknownTimeMS:X}");
-            sb.AppendLine($"PowerRandomSeed: 0x{PowerRandomSeed:X}");
-            sb.AppendLine($"FXRandomSeed: 0x{FXRandomSeed:X}");
+            sb.AppendLine($"MovementTimeMS: {MovementTimeMS}");
+            sb.AppendLine($"UnknownTimeMS: {UnknownTimeMS}");
+            sb.AppendLine($"PowerRandomSeed: {PowerRandomSeed}");
+            sb.AppendLine($"FXRandomSeed: {FXRandomSeed}");
 
             return sb.ToString();
         }

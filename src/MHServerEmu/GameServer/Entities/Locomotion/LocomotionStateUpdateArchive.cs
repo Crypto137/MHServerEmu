@@ -62,13 +62,13 @@ namespace MHServerEmu.GameServer.Entities.Locomotion
         {
             StringBuilder sb = new();
             sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
-            sb.AppendLine($"EntityId: 0x{EntityId:X}");
+            sb.AppendLine($"EntityId: {EntityId}");
 
             sb.Append("LocFlags: ");
             for (int i = 0; i < LocFlags.Length; i++) if (LocFlags[i]) sb.Append($"{i} ");
             sb.AppendLine();
 
-            sb.AppendLine($"PrototypeId: 0x{PrototypeId:X}");
+            sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
             sb.AppendLine($"Position: {Position}");
             sb.AppendLine($"Orientation: {Orientation}");
             sb.AppendLine($"LocomotionState: {LocomotionState}");

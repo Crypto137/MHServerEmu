@@ -39,7 +39,7 @@ namespace MHServerEmu.GameServer.Misc
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"Index: 0x{Index:X}");
+            sb.AppendLine($"Index: {Index}");
             sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
             return sb.ToString();
         }

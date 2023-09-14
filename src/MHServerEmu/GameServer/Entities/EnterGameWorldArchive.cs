@@ -104,7 +104,7 @@ namespace MHServerEmu.GameServer.Entities
         {
             StringBuilder sb = new();
             sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
-            sb.AppendLine($"EntityId: 0x{EntityId:X}");
+            sb.AppendLine($"EntityId: {EntityId}");
 
             sb.Append("Flags: ");
             for (int i = 0; i < Flags.Length; i++) if (Flags[i]) sb.Append($"{i} ");

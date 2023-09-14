@@ -51,8 +51,8 @@ namespace MHServerEmu.GameServer.Achievements
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"Id: 0x{Id:X}");
-            sb.AppendLine($"Count: 0x{Count:X}");
+            sb.AppendLine($"Id: {Id}");
+            sb.AppendLine($"Count: {Count}");
             sb.AppendLine($"CompletionDate: 0x{CompletedDate:X}");
             return sb.ToString();
         }

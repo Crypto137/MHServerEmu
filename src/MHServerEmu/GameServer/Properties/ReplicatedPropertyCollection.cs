@@ -41,7 +41,7 @@ namespace MHServerEmu.GameServer.Properties
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"ReplicationId: 0x{ReplicationId:X}");
+            sb.AppendLine($"ReplicationId: {ReplicationId}");
             for (int i = 0; i < List.Count; i++) sb.AppendLine($"Property{i}: {List[i]}");
             return sb.ToString();
         }

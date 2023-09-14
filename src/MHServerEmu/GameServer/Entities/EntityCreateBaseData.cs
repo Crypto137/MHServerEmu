@@ -145,7 +145,7 @@ namespace MHServerEmu.GameServer.Entities
         {
             StringBuilder sb = new();
             sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
-            sb.AppendLine($"EntityId: 0x{EntityId:X}");
+            sb.AppendLine($"EntityId: {EntityId}");
             sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
 
             sb.Append("Flags: ");
@@ -157,13 +157,13 @@ namespace MHServerEmu.GameServer.Entities
             sb.AppendLine();
 
             sb.AppendLine($"InterestPolicies: 0x{InterestPolicies:X}");
-            sb.AppendLine($"AvatarWorldInstanceId: 0x{AvatarWorldInstanceId:X}");
-            sb.AppendLine($"DbId: 0x{DbId:X}");
+            sb.AppendLine($"AvatarWorldInstanceId: {AvatarWorldInstanceId}");
+            sb.AppendLine($"DbId: {DbId}");
             sb.AppendLine($"Position: {Position}");
             sb.AppendLine($"Orientation: {Orientation}");
             sb.AppendLine($"LocomotionState: {LocomotionState}");
             sb.AppendLine($"BoundsScaleOverride: {BoundsScaleOverride}");
-            sb.AppendLine($"SourceEntityId: 0x{SourceEntityId}");
+            sb.AppendLine($"SourceEntityId: {SourceEntityId}");
             sb.AppendLine($"SourcePosition: {SourcePosition}");
             sb.AppendLine($"ActivePowerPrototypeId: {GameDatabase.GetPrototypePath(ActivePowerPrototypeId)}");
             sb.AppendLine($"InvLoc: {InvLoc}");

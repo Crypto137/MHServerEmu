@@ -225,7 +225,7 @@ namespace MHServerEmu.GameServer.Entities
             for (int i = 0; i < Quests.Length; i++) sb.AppendLine($"Quest{i}: {Quests[i]}");
             sb.AppendLine($"UnknownCollectionRepId: 0x{UnknownCollectionRepId:X}");
             sb.AppendLine($"UnknownCollectionSize: 0x{UnknownCollectionSize:X}");
-            sb.AppendLine($"ShardId: 0x{ShardId:X}");
+            sb.AppendLine($"ShardId: {ShardId}");
             sb.AppendLine($"ReplicatedString1: {ReplicatedString1}");
             sb.AppendLine($"Community1: 0x{Community1:X}");
             sb.AppendLine($"Community2: 0x{Community2:X}");

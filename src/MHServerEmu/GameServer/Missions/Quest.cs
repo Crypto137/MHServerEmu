@@ -1,28 +1,29 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
+using MHServerEmu.GameServer.GameData;
 
 namespace MHServerEmu.GameServer.Missions
 {
     public class Quest
     {
-        public ulong PrototypeId { get; set; }
-        public ulong[] Fields { get; set; }
+        public ulong PrototypeGuid { get; set; }
+        public ulong[] SubPrototypeGuids { get; set; }
 
         public Quest(CodedInputStream stream)
         {
-            PrototypeId = stream.ReadRawVarint64();
+            PrototypeGuid = stream.ReadRawVarint64();
 
-            Fields = new ulong[stream.ReadRawVarint64()];
-            for (int i = 0; i < Fields.Length; i++)
+            SubPrototypeGuids = new ulong[stream.ReadRawVarint64()];
+            for (int i = 0; i < SubPrototypeGuids.Length; i++)
             {
-                Fields[i] = stream.ReadRawVarint64();
+                SubPrototypeGuids[i] = stream.ReadRawVarint64();
             }
         }
 
-        public Quest(ulong prototypeId, ulong[] fields)
+        public Quest(ulong prototypeGuid, ulong[] subPrototypeGuids)
         {
-            PrototypeId = prototypeId;
-            Fields = fields;
+            PrototypeGuid = prototypeGuid;
+            SubPrototypeGuids = subPrototypeGuids;
         }
 
         public byte[] Encode()
@@ -31,9 +32,9 @@ namespace MHServerEmu.GameServer.Missions
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                cos.WriteRawVarint64(PrototypeId);
-                cos.WriteRawVarint64((ulong)Fields.Length);
-                foreach (ulong field in Fields) cos.WriteRawVarint64(field);
+                cos.WriteRawVarint64(PrototypeGuid);
+                cos.WriteRawVarint64((ulong)SubPrototypeGuids.Length);
+                foreach (ulong subPrototypeGuid in SubPrototypeGuids) cos.WriteRawVarint64(subPrototypeGuid);
 
                 cos.Flush();
                 return ms.ToArray();
@@ -43,8 +44,8 @@ namespace MHServerEmu.GameServer.Missions
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"PrototypeId: 0x{PrototypeId:X}");
-            for (int i = 0; i < Fields.Length; i++) sb.AppendLine($"Field{i}: 0x{Fields[i]:X}");
+            sb.AppendLine($"PrototypeGuid: {GameDatabase.GetPrototypePath(GameDatabase.GetPrototypeId(PrototypeGuid))}");
+            for (int i = 0; i < SubPrototypeGuids.Length; i++) sb.AppendLine($"SubPrototypeGuid{i}: {GameDatabase.GetPrototypePath(GameDatabase.GetPrototypeId(SubPrototypeGuids[i]))}");
             return sb.ToString();
         }
     }

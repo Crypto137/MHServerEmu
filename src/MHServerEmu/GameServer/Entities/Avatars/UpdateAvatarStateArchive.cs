@@ -69,9 +69,9 @@ namespace MHServerEmu.GameServer.Entities.Avatars
             StringBuilder sb = new();
             sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
             sb.AppendLine($"AvatarIndex: {AvatarIndex}");
-            sb.AppendLine($"EntityId: 0x{EntityId:X}");
+            sb.AppendLine($"EntityId: {EntityId}");
             sb.AppendLine($"IsUsingGamepadInput: {IsUsingGamepadInput}");
-            sb.AppendLine($"AvatarWorldInstanceId: 0x{AvatarWorldInstanceId:X}");
+            sb.AppendLine($"AvatarWorldInstanceId: {AvatarWorldInstanceId}");
 
             sb.Append("LocFlags: ");
             for (int i = 0; i < LocFlags.Length; i++) if (LocFlags[i]) sb.Append($"{i} ");
