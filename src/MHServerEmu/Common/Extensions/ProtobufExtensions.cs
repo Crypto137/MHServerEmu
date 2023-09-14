@@ -31,6 +31,11 @@ namespace MHServerEmu.Common.Extensions
             return CodedInputStream.DecodeZigZag32(stream.ReadRawVarint32());
         }
 
+        public static long ReadRawInt64(this CodedInputStream stream)
+        {
+            return CodedInputStream.DecodeZigZag64(stream.ReadRawVarint64());
+        }
+
         public static uint ReadRawUInt32(this CodedInputStream stream)
         {
             return BitConverter.ToUInt32(stream.ReadRawBytes(4));
@@ -60,6 +65,11 @@ namespace MHServerEmu.Common.Extensions
         public static void WriteRawInt32(this CodedOutputStream stream, int value)
         {
             stream.WriteRawVarint32(CodedOutputStream.EncodeZigZag32(value));
+        }
+
+        public static void WriteRawInt64(this CodedOutputStream stream, long value)
+        {
+            stream.WriteRawVarint64(CodedOutputStream.EncodeZigZag64(value));
         }
 
         public static void WriteRawUInt32(this CodedOutputStream stream, uint value)
