@@ -38,6 +38,13 @@ namespace MHServerEmu.GameServer.Properties
             Value.Set(value);
         }
 
+        public Property(NetMessageSetProperty setPropertyMessage)
+        {
+            Id = setPropertyMessage.PropertyId.ReverseBits();
+            Info = GameDatabase.PropertyInfoTable.GetInfo(Enum);
+            CreateValueContainer(setPropertyMessage.ValueBits);
+        }
+
         public byte[] Encode()
         {
             using (MemoryStream ms = new())
