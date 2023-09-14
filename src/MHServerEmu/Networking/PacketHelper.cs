@@ -154,7 +154,8 @@ namespace MHServerEmu.Networking
                                 break;
 
                             case NetMessageRegionChange regionChange:
-                                writer.WriteLine($"ArchiveData: {regionChange.ArchiveData.ToByteArray().ToHexString()}");
+                                writer.WriteLine(protobufMessage);
+                                writer.WriteLine($"ArchiveDataHex: {regionChange.ArchiveData.ToByteArray().ToHexString()}");
                                 break;
 
                             case NetMessageEntityEnterGameWorld entityEnterGameWorld:
@@ -182,7 +183,7 @@ namespace MHServerEmu.Networking
                                 break;
 
                             case NetMessageUpdateMiniMap updateMiniMap:
-                                writer.WriteLine($"ArchiveData: {updateMiniMap.ArchiveData.ToByteArray().ToHexString()}");
+                                writer.WriteLine($"ArchiveDataHex: {updateMiniMap.ArchiveData.ToByteArray().ToHexString()}");
                                 break;
                         }
                     }
