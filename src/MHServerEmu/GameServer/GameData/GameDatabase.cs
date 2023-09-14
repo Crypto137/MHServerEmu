@@ -1,5 +1,7 @@
-﻿using MHServerEmu.Common.Logging;
+﻿using System.Text.Json;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.GameData.Gpak;
+using MHServerEmu.GameServer.GameData.LiveTuning;
 using MHServerEmu.GameServer.Properties;
 
 namespace MHServerEmu.GameServer.GameData
@@ -14,6 +16,7 @@ namespace MHServerEmu.GameServer.GameData
         public static ResourceStorage Resource { get; private set; }
         public static PrototypeRefManager PrototypeRefManager { get; private set; }
         public static PropertyInfoTable PropertyInfoTable { get; private set; }
+        public static List<LiveTuningSetting> LiveTuningSettingList { get; private set; }
 
         static GameDatabase()
         {
@@ -30,6 +33,10 @@ namespace MHServerEmu.GameServer.GameData
                 // Initialize GPAK derivative data
                 PrototypeRefManager = new(Calligraphy, Resource);       // this needs to be initialized before PropertyInfoTable
                 PropertyInfoTable = new(Calligraphy);
+
+                // Load live tuning
+                LiveTuningSettingList = JsonSerializer.Deserialize<List<LiveTuningSetting>>(File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Assets", "LiveTuning.json")));
+                Logger.Info($"Loaded {LiveTuningSettingList.Count} live tuning settings");
 
                 // Verify and finish game database initialization
                 if (VerifyData())

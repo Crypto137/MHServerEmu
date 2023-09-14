@@ -29,7 +29,12 @@ namespace MHServerEmu.GameServer.Games
 
             messageList.Add(new(NetMessageServerVersion.CreateBuilder().SetVersion("1.52.0.1700").Build()));
 
-            messageList.Add(PacketHelper.LoadMessagesFromPacketFile("NetMessageLiveTuningUpdate.bin")[0]);
+            messageList.Add(new(NetMessageLiveTuningUpdate.CreateBuilder()
+                .AddRangeTuningTypeKeyValueSettings(GameDatabase.LiveTuningSettingList.Select(setting => setting.ToNetStructProtoEnumValue()))
+                .Build()));
+
+            NetMessageLiveTuningUpdate.CreateBuilder().AddRangeTuningTypeKeyValueSettings(GameDatabase.LiveTuningSettingList.Select(setting => setting.ToNetStructProtoEnumValue()));
+
             messageList.Add(new(NetMessageReadyForTimeSync.DefaultInstance));
 
             // Load local player data
