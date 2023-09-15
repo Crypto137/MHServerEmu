@@ -34,7 +34,8 @@ namespace MHServerEmu.GameServer.Regions
             RegionPrototype.CH0804LatveriaPCZRegion,
             RegionPrototype.CH0808DoomCastleRegion,
             RegionPrototype.CH0901NorwayPCZRegion,
-            RegionPrototype.CH0904SiegePCZRegion
+            RegionPrototype.CH0904SiegePCZRegion,
+            RegionPrototype.CosmicDoopSectorSpaceRegion
         };
 
         private readonly Dictionary<RegionPrototype, Region> _regionDict;
@@ -1518,6 +1519,50 @@ namespace MHServerEmu.GameServer.Regions
                     region.EntranceOrientation = new(1.570796f, 0.0f, 0.0f); 
                     region.WaypointPosition =  new(16428.0f, 11820.0f, 0.0f);
                     region.WaypointOrientation = new(1.570796f, 0.0f, 0.0f);
+
+                    break;
+
+                case RegionPrototype.CosmicDoopSectorSpaceRegion:
+                    archiveData = new byte[] {
+                    };
+
+                    region = new(RegionPrototype.CosmicDoopSectorSpaceRegion,
+                        1154146333179745894,
+                        1883928786,
+                        archiveData,
+                        new(-3456.0f, -8064.0f, -1152.0f),
+                        new(3456.0f, 8064.0f, 1152.0f),
+                        new(60, DifficultyTier.Normal));
+
+                    string DoopSector = "Resource/Cells/EndGame/CosmicDoopSector/";
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeId("Regions/EndGame/Special/CosmicDoopSectorSpace/CosmicDoopSectorSpaceAreaA.prototype"), new(), true);
+                    area.AddCell(new(13, GameDatabase.GetPrototypeId(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NESW_A.cell"), new(0.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(16, GameDatabase.GetPrototypeId(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NESW_B.cell"), new(0.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(7, GameDatabase.GetPrototypeId(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NESW_C.cell"), new(0.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(19, GameDatabase.GetPrototypeId(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NESW_B.cell"), new(0.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(10, GameDatabase.GetPrototypeId(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NESW_A.cell"), new(0.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(18, GameDatabase.GetPrototypeId(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NEW_A.cell"), new(-2304.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(22, GameDatabase.GetPrototypeId(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NSW_A.cell"), new(0.0f, 6912.0f, 0.0f)));
+                    area.AddCell(new(6, GameDatabase.GetPrototypeId(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NEW_A.cell"), new(-2304.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(12, GameDatabase.GetPrototypeId(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NEW_A.cell"), new(-2304.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(15, GameDatabase.GetPrototypeId(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NEW_A.cell"), new(-2304.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(9, GameDatabase.GetPrototypeId(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NEW_A.cell"), new(-2304.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(21, GameDatabase.GetPrototypeId(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NW_A.cell"), new(-2304.0f, 6912.0f, 0.0f)));
+                    area.AddCell(new(14, GameDatabase.GetPrototypeId(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_ESW_A.cell"), new(2304.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(11, GameDatabase.GetPrototypeId(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_ESW_A.cell"), new(2304.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(20, GameDatabase.GetPrototypeId(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_ESW_A.cell"), new(2304.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(8, GameDatabase.GetPrototypeId(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_ESW_A.cell"), new(2304.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(17, GameDatabase.GetPrototypeId(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_ESW_A.cell"), new(2304.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(23, GameDatabase.GetPrototypeId(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_SW_A.cell"), new(2304.0f, 6912.0f, 0.0f)));
+                    area.AddCell(new(4, GameDatabase.GetPrototypeId(DoopSector + "CosmicDoopSectorTrans/CosmicDoopSector_Entry_A.cell"), new(0.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(5, GameDatabase.GetPrototypeId(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_ES_A.cell"), new(2304.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(3, GameDatabase.GetPrototypeId(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NE_A.cell"), new(-2304.0f, -6912.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(0.0f, -6912.0f, 0.0f);
+                    region.EntranceOrientation = new();
+                    region.WaypointPosition = new(0.0f, -6912.0f, 0.0f);
+                    region.WaypointOrientation = new();
 
                     break;
 
