@@ -19,12 +19,11 @@ namespace MHServerEmu.Networking
         public ClientSession Session { get; private set; } = null;
         public bool FinishedPlayerMgrServerFrontendHandshake { get; set; } = false;
         public bool FinishedGroupingManagerFrontendHandshake { get; set; } = false;
-        public bool IsLoading { get; set; } = false;
         public ulong GameId { get; set; }
         public Game CurrentGame { get => _gameServerManager.GameManager.GetGameById(GameId); }
 
-
-        // temp until we get proper avatar entity handling
+        // Temporarily store state here instead of Game
+        public bool IsLoading { get; set; } = false;
         public Vector3 LastPosition { get; set; }
 
         public FrontendClient(Connection connection, GameServerManager gameServerManager)
