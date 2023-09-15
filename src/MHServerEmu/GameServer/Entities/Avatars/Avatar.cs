@@ -3,6 +3,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.Common;
+using MHServerEmu.GameServer.Misc;
 using MHServerEmu.GameServer.Powers;
 
 namespace MHServerEmu.GameServer.Entities.Avatars
@@ -13,6 +14,7 @@ namespace MHServerEmu.GameServer.Entities.Avatars
         public ulong OwnerPlayerDbId { get; set; }
         public string GuildName { get; set; }
         public bool IsRuntimeInfo { get; set; }
+        public ReplicationRuntimeInfo ReplicationRuntimeInfo { get; set; }
         public AbilityKeyMapping[] AbilityKeyMappings { get; set; }
 
         public Avatar(byte[] archiveData)
@@ -27,18 +29,12 @@ namespace MHServerEmu.GameServer.Entities.Avatars
             OwnerPlayerDbId = stream.ReadRawVarint64();
 
             GuildName = stream.ReadRawString();
-            //Gazillion::GuildMember::SerializeReplicationRuntimeInfo
 
+            //Gazillion::GuildMember::SerializeReplicationRuntimeInfo
             if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
             IsRuntimeInfo = boolDecoder.ReadBool();
 
-            if (IsRuntimeInfo)
-            {
-                throw new("RuntimeInfo decoding not implemented!");
-                // u64
-                // string
-                // int zigzag
-            }
+            if (IsRuntimeInfo) ReplicationRuntimeInfo = new(stream);
 
             AbilityKeyMappings = new AbilityKeyMapping[stream.ReadRawVarint64()];
             for (int i = 0; i < AbilityKeyMappings.Length; i++)
@@ -82,6 +78,8 @@ namespace MHServerEmu.GameServer.Entities.Avatars
 
                 bitBuffer = boolEncoder.GetBitBuffer();             // IsRuntimeInfo
                 if (bitBuffer != 0) cos.WriteRawByte(bitBuffer);
+
+                if (IsRuntimeInfo) cos.WriteRawBytes(ReplicationRuntimeInfo.Encode());
 
                 cos.WriteRawVarint64((ulong)AbilityKeyMappings.Length);
                 foreach (AbilityKeyMapping keyMap in AbilityKeyMappings) cos.WriteRawBytes(keyMap.Encode(boolEncoder));
