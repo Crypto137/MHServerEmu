@@ -23,7 +23,7 @@ namespace MHServerEmu.GameServer.Games
 
         private readonly object _gameLock = new();
         private readonly Queue<QueuedGameMessage> _messageQueue = new();
-        private readonly Dictionary<FrontendClient, Queue<QueuedGameMessage>> _responseQueueDict = new();
+        private readonly Dictionary<FrontendClient, List<GameMessage>> _responseListDict = new();
         private readonly Stopwatch _tickWatch = new();
 
         private readonly GameServerManager _gameServerManager;
@@ -53,7 +53,16 @@ namespace MHServerEmu.GameServer.Games
 
                 lock (_gameLock)     // lock to prevent state from being modified mid-update
                 {
-                    ProcessMessageQueue();
+                    // Handle all queued messages
+                    while (_messageQueue.Count > 0)
+                        HandleQueuedMessage(_messageQueue.Dequeue());
+
+                    // Send responses to all clients
+                    foreach (var kvp in _responseListDict)
+                        kvp.Key.SendMultipleMessages(1, kvp.Value);     // no GroupingManager messages should be here, so we can assume that muxId for all messages is 1
+
+                    // Clear response list dict
+                    _responseListDict.Clear();
                 }
 
                 _tickWatch.Stop();
@@ -83,23 +92,7 @@ namespace MHServerEmu.GameServer.Games
             lock (_gameLock)
             {
                 client.GameId = Id;
-
-                EnqueueResponse(client, 1, new(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build()));
-                EnqueueResponse(client, 1, new(_gameServerManager.AchievementDatabase.ToNetMessageAchievementDatabaseDump()));
-                // NetMessageQueryIsRegionAvailable regionPrototype: 9833127629697912670 should go in the same packet as AchievementDatabaseDump
-
-                // Send MOTD - this should be in the GroupingManagerService
-                var chatBroadcastMessage = ChatBroadcastMessage.CreateBuilder()
-                    .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS)
-                    .SetFromPlayerName(ConfigManager.GroupingManager.MotdPlayerName)
-                    .SetTheMessage(ChatMessage.CreateBuilder().SetBody(ConfigManager.GroupingManager.MotdText))
-                    .SetPrestigeLevel(ConfigManager.GroupingManager.MotdPrestigeLevel)
-                    .Build();
-
-                EnqueueResponse(client, 2, new(chatBroadcastMessage));
-
-                EnqueueResponses(client, 1, GetBeginLoadingMessages(client.Session.Account.PlayerData));
-                client.IsLoading = true;
+                EnqueueResponses(client, GetBeginLoadingMessages(client.Session.Account.PlayerData));
             }
         }
 
@@ -108,60 +101,28 @@ namespace MHServerEmu.GameServer.Games
             lock (_gameLock)
             {
                 client.Session.Account.PlayerData.Region = region;
-                EnqueueResponses(client, 1, GetBeginLoadingMessages(client.Session.Account.PlayerData, false));
+                EnqueueResponses(client, GetBeginLoadingMessages(client.Session.Account.PlayerData, false));
                 client.IsLoading = true;
             }
         }
 
         #region Message Queue
 
-        private void ProcessMessageQueue()
+        private void EnqueueResponse(FrontendClient client, GameMessage message)
         {
-            // Handle all queued messages
-            while (_messageQueue.Count > 0)
-                HandleQueuedMessage(_messageQueue.Dequeue());
-
-            // Send responses to all clients
-            foreach (var kvp in _responseQueueDict)
-            {
-                List<GameMessage> playerManagerResponseList = new();
-                List<GameMessage> groupingManagerResponseList = new();
-
-                while (_responseQueueDict[kvp.Key].Count > 0)
-                {
-                    QueuedGameMessage queuedGameMessage = _responseQueueDict[kvp.Key].Dequeue();
-                    if (queuedGameMessage.MuxId == 1)
-                        playerManagerResponseList.Add(queuedGameMessage.Message);
-                    else if (queuedGameMessage.MuxId == 2)
-                        groupingManagerResponseList.Add(queuedGameMessage.Message); // this should be handled by the GroupingManagerService
-                }
-
-                // Only send update if there are messages to send
-                if (playerManagerResponseList.Count > 0) kvp.Key.SendMultipleMessages(1, playerManagerResponseList);
-                if (groupingManagerResponseList.Count > 0) kvp.Key.SendMultipleMessages(2, groupingManagerResponseList);
-            }
-
-            // Clear response queue dict
-            _responseQueueDict.Clear();
+            if (_responseListDict.TryGetValue(client, out _) == false) _responseListDict.Add(client, new());
+            _responseListDict[client].Add(message);
         }
 
-        private void EnqueueResponse(FrontendClient client, ushort muxId, GameMessage message)
+        private void EnqueueResponses(FrontendClient client, IEnumerable<GameMessage> messages)
         {
-            if (_responseQueueDict.TryGetValue(client, out _) == false) _responseQueueDict.Add(client, new());
-            _responseQueueDict[client].Enqueue(new(client, muxId, message));
-        }
-
-        private void EnqueueResponses(FrontendClient client, ushort muxId, IEnumerable<GameMessage> messages)
-        {
-            if (_responseQueueDict.TryGetValue(client, out _) == false) _responseQueueDict.Add(client, new());
-            foreach (GameMessage message in messages)
-                _responseQueueDict[client].Enqueue(new(client, muxId, message));
+            if (_responseListDict.TryGetValue(client, out _) == false) _responseListDict.Add(client, new());
+            _responseListDict[client].AddRange(messages);                
         }
 
         private void HandleQueuedMessage(QueuedGameMessage queuedMessage)
         {
             FrontendClient client = queuedMessage.Client;
-            ushort muxId = queuedMessage.MuxId;
             GameMessage message = queuedMessage.Message;
 
             string powerPrototypePath;
@@ -184,7 +145,7 @@ namespace MHServerEmu.GameServer.Games
                     Logger.Info($"Received NetMessageCellLoaded");
                     if (client.IsLoading)
                     {
-                        EnqueueResponses(client, muxId, GetFinishLoadingMessages(client.Session.Account.PlayerData));
+                        EnqueueResponses(client, GetFinishLoadingMessages(client.Session.Account.PlayerData));
                         client.IsLoading = false;
                     }
 
@@ -209,7 +170,7 @@ namespace MHServerEmu.GameServer.Games
                     //Logger.Trace(tryActivatePower.ToString());
 
                     PowerResultArchive archive = new(tryActivatePower);
-                    EnqueueResponse(client, muxId, new(NetMessagePowerResult.CreateBuilder()
+                    EnqueueResponse(client, new(NetMessagePowerResult.CreateBuilder()
                         .SetArchiveData(ByteString.CopyFrom(archive.Encode()))
                         .Build()));
 
@@ -256,7 +217,7 @@ namespace MHServerEmu.GameServer.Games
                     Logger.Info($"Received NetMessageTryInventoryMove");
                     var tryInventoryMoveMessage = NetMessageTryInventoryMove.ParseFrom(message.Content);
 
-                    EnqueueResponse(client, muxId, new(NetMessageInventoryMove.CreateBuilder()
+                    EnqueueResponse(client, new(NetMessageInventoryMove.CreateBuilder()
                         .SetEntityId(tryInventoryMoveMessage.ItemId)
                         .SetInvLocContainerEntityId(tryInventoryMoveMessage.ToInventoryOwnerId)
                         .SetInvLocInventoryPrototypeId(tryInventoryMoveMessage.ToInventoryPrototype)
@@ -277,12 +238,7 @@ namespace MHServerEmu.GameServer.Games
                         if (Enum.TryParse(typeof(HardcodedAvatarEntity), avatarName, true, out object avatar))
                         {
                             client.Session.Account.PlayerData.Avatar = (HardcodedAvatarEntity)avatar;
-                            EnqueueResponse(client, 2, new(ChatNormalMessage.CreateBuilder()
-                                .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
-                                .SetFromPlayerName(ConfigManager.GroupingManager.MotdPlayerName)
-                                .SetTheMessage(ChatMessage.CreateBuilder().SetBody($"Changing avatar to {client.Session.Account.PlayerData.Avatar}. Relog for changes to take effect."))
-                                .SetPrestigeLevel(6)
-                                .Build()));
+                            _gameServerManager.GroupingManagerService.SendMetagameMessage(client, $"Changing avatar to {client.Session.Account.PlayerData.Avatar}. Relog for changes to take effect.");
                         }
                     }
 

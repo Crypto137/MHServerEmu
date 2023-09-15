@@ -58,5 +58,25 @@ namespace MHServerEmu.GameServer
         {
             foreach (GameMessage message in messages) Handle(client, muxId, message);
         }
+
+        public void SendMotd(FrontendClient client)
+        {
+            client.SendMessage(2, new(ChatBroadcastMessage.CreateBuilder()
+                .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS)
+                .SetFromPlayerName(ConfigManager.GroupingManager.MotdPlayerName)
+                .SetTheMessage(ChatMessage.CreateBuilder().SetBody(ConfigManager.GroupingManager.MotdText))
+                .SetPrestigeLevel(ConfigManager.GroupingManager.MotdPrestigeLevel)
+                .Build()));
+        }
+
+        public void SendMetagameMessage(FrontendClient client, string text)
+        {
+            client.SendMessage(2, new(ChatNormalMessage.CreateBuilder()
+                .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
+                .SetFromPlayerName(ConfigManager.GroupingManager.MotdPlayerName)
+                .SetTheMessage(ChatMessage.CreateBuilder().SetBody(text))
+                .SetPrestigeLevel(ConfigManager.GroupingManager.MotdPrestigeLevel)
+                .Build()));
+        }
     }
 }
