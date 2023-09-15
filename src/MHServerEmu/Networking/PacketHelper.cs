@@ -6,6 +6,9 @@ using MHServerEmu.GameServer.Entities;
 using MHServerEmu.GameServer.Entities.Locomotion;
 using MHServerEmu.GameServer.Powers;
 using MHServerEmu.GameServer.Properties;
+using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
+using MHServerEmu.GameServer.GameData;
+using MHServerEmu.GameServer.Entities.Avatars;
 
 namespace MHServerEmu.Networking
 {
@@ -128,8 +131,12 @@ namespace MHServerEmu.Networking
         {
             using (StreamWriter writer = new(outputPath))
             {
+                int packetCount = 0;
+
                 foreach (GameMessage message in packet.Messages)
                 {
+                    writer.Write($"[{packetCount++}] ");
+
                     string messageName = (packet.MuxId == 1) 
                         ? ((GameServerToClientMessage)message.Id).ToString()
                         : ((GroupingManagerMessage)message.Id).ToString();
@@ -149,8 +156,35 @@ namespace MHServerEmu.Networking
                                 break;
 
                             case NetMessageEntityCreate entityCreate:
-                                writer.WriteLine($"BaseData: {new EntityCreateBaseData(entityCreate.BaseData.ToByteArray())}");
-                                writer.WriteLine($"ArchiveData: {new Entity(entityCreate.ArchiveData.ToByteArray())}");
+                                // Parse base data
+                                EntityCreateBaseData baseData = new(entityCreate.BaseData.ToByteArray());
+                                writer.WriteLine($"BaseData: {baseData}");
+
+                                // Get blueprint for this entity
+                                Blueprint blueprint = GameDatabase.Calligraphy.GetPrototypeBlueprint(baseData.PrototypeId);
+                                writer.WriteLine($"Blueprint: {blueprint.ClassName}");
+
+                                // Parse entity depending on its blueprint class
+                                switch (blueprint.ClassName)
+                                {
+                                    case "EntityPrototype":
+                                        writer.WriteLine($"ArchiveData: {new Entity(entityCreate.ArchiveData.ToByteArray())}");
+                                        break;
+
+                                    case "WorldEntityPrototype":
+                                    case "AgentPrototype":
+                                        writer.WriteLine($"ArchiveData: {new WorldEntity(entityCreate.ArchiveData.ToByteArray())}");
+                                        break;
+
+                                    case "AvatarPrototype":
+                                        writer.WriteLine($"ArchiveData: {new Avatar(entityCreate.ArchiveData.ToByteArray())}");
+                                        break;
+
+                                    case "PlayerPrototype":
+                                        writer.WriteLine($"ArchiveData: {new Player(entityCreate.ArchiveData.ToByteArray())}");
+                                        break;
+                                }
+                                
                                 break;
 
                             case NetMessageRegionChange regionChange:
@@ -187,9 +221,10 @@ namespace MHServerEmu.Networking
                                 break;
                         }
                     }
-                    catch
+                    catch (Exception e)
                     {
                         Logger.Warn($"Failed to deserialize {messageName} ({Path.GetFileName(outputPath)})");
+                        Logger.Trace(e.ToString());
                         writer.WriteLine("Failed to deserialize");
                     }
 
