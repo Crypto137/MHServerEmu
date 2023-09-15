@@ -22,6 +22,20 @@ namespace MHServerEmu.Common.Commands
         }
     }
 
+    [CommandGroup("doop", "Travel to Cosmic Doop Sector.", AccountUserLevel.User)]
+    public class DoopCommand : CommandGroup
+    {
+        [DefaultCommand(AccountUserLevel.User)]
+        public string Doop(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            client.CurrentGame.MovePlayerToRegion(client, RegionPrototype.CosmicDoopSectorSpaceRegion);
+
+            return "Travel to Cosmic Doop Sector";
+        }
+    }
+
     [CommandGroup("player", "Changes player data for this account.", AccountUserLevel.User)]
     public class PlayerCommand : CommandGroup
     {

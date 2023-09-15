@@ -112,6 +112,9 @@
         HoloSimARegion1to60 = 1851384890999315356,              // S.H.I.E.L.D. Holo-Sim
         XmansionNWSRegionUnbanded = 17669583277812293411,       // X-Defense
         SurturRaidRegionGreen = 943404224811899020,             // Muspelheim Raid
-        AxisRaidRegionGreen = 10186536050085467400              // Axis Raid
+        AxisRaidRegionGreen = 10186536050085467400,              // Axis Raid
+
+        // Special
+        CosmicDoopSectorSpaceRegion = 8744981792306700722       // Cosmic Doop Sector Space
     }
 }

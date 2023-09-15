@@ -11,6 +11,8 @@ using MHServerEmu.GameServer.Powers;
 using MHServerEmu.GameServer.Properties;
 using MHServerEmu.GameServer.Regions;
 using MHServerEmu.Networking;
+using System.Numerics;
+using System.Drawing;
 
 namespace MHServerEmu.GameServer.Games
 {
@@ -135,6 +137,105 @@ namespace MHServerEmu.GameServer.Games
 
                     area = (ulong)AreaPrototype.HelicarrierArea;
                     MarkersAdd(GameDatabase.Resource.CellDict["Resource/Cells/DistrictCells/Helicarrier/Helicarrier_HUB.cell"], cellid);
+
+                    break;
+
+                case RegionPrototype.CosmicDoopSectorSpaceRegion:
+
+                    area = GameDatabase.GetPrototypeId("Regions/EndGame/Special/CosmicDoopSectorSpace/CosmicDoopSectorSpaceAreaA.prototype");
+                    ulong[] doop = new ulong[]
+                    {
+                        8886032254367441193, // CosmicDoopRangedMinion
+                        905954195879503067, // CosmicDoopMeleeMinionLargeAggro
+                        11242103498987545924, // CosmicDoopRangedMinionLargeAggro
+                        1173113805575694864, // CosmicDoopDoopZoneMiniBossVariantLargeAggro
+                        8852879594302677942, // CosmicDoopOverlordLargeAggro
+                        10884818398647164828 // CosmicDoopDoopZone
+                    };
+
+                    static Vector3[] DrawCirclePoints(float radius, int numPoints)
+                    {
+                        Vector3[] points = new Vector3[numPoints];
+
+                        double angle = 2 * Math.PI / numPoints;
+
+                        for (int i = 0; i < numPoints; i++)
+                        {
+                            float x = (float)(radius * Math.Cos(i * angle));
+                            float y = (float)(radius * Math.Sin(i * angle));
+                            float z = (float)(i * angle);
+                            points[i] = new Vector3(x, y, z);
+                        }
+
+                        return points;
+                    }
+
+                    Vector3[] Doops = DrawCirclePoints(400.0f, 5);
+
+                    void AddSmallDoop(Vector3 PosOrient, Common.Vector3 SpawnPos)
+                    {
+                        Common.Vector3 pos = new(SpawnPos.X + PosOrient.X, SpawnPos.Y + PosOrient.Y, SpawnPos.Z);
+                        messageList.Add(new(EntityHelper.SpawnEntityEnemy(entityId++,
+                                            doop[2],
+                                            pos, new(PosOrient.Z, 0, 0),
+                                            repId++, 608, areaid, 608, region.Id, cellid, area, false, 60, 60)));
+                    }
+
+                    void DrawGroupDoops(Common.Vector3 SpawnPos)
+                    {
+                        for (int i = 0; i < Doops.Count(); i++)
+                        {
+                            AddSmallDoop(Doops[i], SpawnPos);
+                        }
+                    }
+                    ulong bossEntity;
+                    ulong bossRep = repId;
+                    Area areaDoop = region.AreaList[0];
+                    for (int j = 0; j < region.AreaList[0].CellList.Count; j++)
+                    {
+                        cellid = (int)areaDoop.CellList[j].Id;
+                        areaOrigin = areaDoop.CellList[j].PositionInArea;
+                        CellPrototype Cell = GameDatabase.Resource.CellDict[GameDatabase.GetPrototypePath(areaDoop.CellList[j].PrototypeId)];
+                        int num = 0;
+                        for (int i = 0; i < Cell.MarkerSet.Length; i++)
+                        {
+                            if (Cell.MarkerSet[i] is EntityMarkerPrototype)
+                            {                                
+                                EntityMarkerPrototype npc = (EntityMarkerPrototype)Cell.MarkerSet[i];
+                                Common.Vector3 pos = new(npc.Position.X + areaOrigin.X, npc.Position.Y + areaOrigin.Y, npc.Position.Z + areaOrigin.Z);
+                                switch (npc.EntityGuid)
+                                {
+                                    case 2888059748704716317: // EncounterSmall
+                                        num++;                  
+                                        if (num == 1)
+                                            messageList.Add(new(EntityHelper.SpawnEntityEnemy(entityId++,
+                                                doop[3],
+                                                pos, npc.Rotation,
+                                                repId++, 608, areaid, 608, region.Id, cellid, area, false, 60, 60)));
+                                        else
+                                            DrawGroupDoops(pos);
+
+                                        break;
+
+                                    case 13880579250584290847: // EncounterMedium
+                                        bossEntity = entityId;
+                                        bossRep = repId;
+                                        messageList.Add(new(EntityHelper.SpawnEntityEnemy(entityId++,
+                                            doop[4],
+                                            pos, npc.Rotation,
+                                            repId++, 608, areaid, 608, region.Id, cellid, area, false, 60, 60)));
+
+                                        break;
+
+                                }
+                            }
+                        }
+                    }
+                    
+                    Property SetProperty = new(PropertyEnum.Health, 600);
+                    messageList.Add(
+                        new(SetProperty.ToNetMessageSetProperty(bossRep))
+                    );
 
                     break;
 
