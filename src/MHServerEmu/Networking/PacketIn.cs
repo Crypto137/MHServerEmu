@@ -49,7 +49,7 @@ namespace MHServerEmu.Networking
                 }
                 else
                 {
-                    Logger.Warn($"Received empty message packet on {MuxId}");
+                    Logger.Warn($"Received empty data packet on {MuxId}");
                 }
             }
         }
@@ -57,7 +57,7 @@ namespace MHServerEmu.Networking
         public PacketOut ToPacketOut()
         {
             PacketOut packetOut = new(MuxId, Command);
-            foreach (GameMessage message in Messages) packetOut.AddMessage(message);
+            packetOut.AddMessages(Messages);
             return packetOut;
         }
     }

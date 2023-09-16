@@ -4,8 +4,8 @@ namespace MHServerEmu.Networking
 {
     public static class ProtocolDispatchTable
     {
-        private static Dictionary<Type, Dictionary<byte, string>> _messageNameDict = new();     // For converting Id -> message class name
-        private static Dictionary<string, Dictionary<string, byte>> _messageIdDict = new();     // For converting IMessage -> Id
+        private static readonly Dictionary<Type, Dictionary<byte, string>> MessageNameDict = new();     // Id -> message class name
+        private static readonly Dictionary<string, Dictionary<string, byte>> MessageIdDict = new();     // IMessage -> Id
 
         public static bool IsInitialized { get; private set; }
 
@@ -27,25 +27,19 @@ namespace MHServerEmu.Networking
             IsInitialized = true;
         }
 
-        public static string GetMessageName(Type enumType, byte id) => _messageNameDict[enumType][id];
-
-        public static byte GetMessageId(IMessage message)
-        {
-            string messageName = message.DescriptorForType.Name;
-            string protocolFileName = message.DescriptorForType.File.Name;
-            return _messageIdDict[protocolFileName][messageName];
-        }
+        public static string GetMessageName(Type enumType, byte id) => MessageNameDict[enumType][id];
+        public static byte GetMessageId(IMessage message) => MessageIdDict[message.DescriptorForType.File.Name][message.DescriptorForType.Name];
 
         private static void ParseMessageEnum(Type type, string protocolName)
         {
-            _messageNameDict.Add(type, new());
-            _messageIdDict.Add(protocolName, new());
+            MessageNameDict.Add(type, new());
+            MessageIdDict.Add(protocolName, new());
 
             string[] names = Enum.GetNames(type);
             for (int i = 0; i < names.Length; i++)
             {
-                _messageNameDict[type].Add((byte)i, names[i]);
-                _messageIdDict[protocolName].Add(names[i], (byte)i);
+                MessageNameDict[type].Add((byte)i, names[i]);
+                MessageIdDict[protocolName].Add(names[i], (byte)i);
             }
         }
     }
