@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MHServerEmu.Networking
+﻿namespace MHServerEmu.Networking
 {
     public interface IGameMessageHandler
     {

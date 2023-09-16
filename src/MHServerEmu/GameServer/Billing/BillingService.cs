@@ -69,7 +69,7 @@ namespace MHServerEmu.GameServer.Billing
 
                 case ClientToGameServerMessage.NetMessageBuyItemFromCatalog:
                     Logger.Info($"Received NetMessageBuyItemFromCatalog");
-                    var buyItemMessage = NetMessageBuyItemFromCatalog.ParseFrom(message.Content);
+                    var buyItemMessage = NetMessageBuyItemFromCatalog.ParseFrom(message.Payload);
                     Logger.Trace(buyItemMessage.ToString());
 
                     // HACK: change costume when a player "buys" a costume

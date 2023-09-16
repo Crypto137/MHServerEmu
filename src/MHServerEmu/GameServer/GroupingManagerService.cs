@@ -22,7 +22,7 @@ namespace MHServerEmu.GameServer
             switch ((ClientToGameServerMessage)message.Id)
             {
                 case ClientToGameServerMessage.NetMessageChat:
-                    var chatMessageIn = NetMessageChat.ParseFrom(message.Content);
+                    var chatMessageIn = NetMessageChat.ParseFrom(message.Payload);
 
                     if (CommandManager.TryParse(chatMessageIn.TheMessage.Body, client) == false)
                     {

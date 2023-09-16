@@ -130,7 +130,7 @@ namespace MHServerEmu.GameServer.Games
             switch ((ClientToGameServerMessage)message.Id)
             {
                 case ClientToGameServerMessage.NetMessageUpdateAvatarState:
-                    var updateAvatarStateMessage = NetMessageUpdateAvatarState.ParseFrom(message.Content);
+                    var updateAvatarStateMessage = NetMessageUpdateAvatarState.ParseFrom(message.Payload);
                     UpdateAvatarStateArchive avatarState = new(updateAvatarStateMessage.ArchiveData.ToByteArray());
                     client.LastPosition = avatarState.Position;
 
@@ -160,7 +160,7 @@ namespace MHServerEmu.GameServer.Games
                         .Build()));
                     */
 
-                    var tryActivatePower = NetMessageTryActivatePower.ParseFrom(message.Content);
+                    var tryActivatePower = NetMessageTryActivatePower.ParseFrom(message.Payload);
 
                     if (GameDatabase.TryGetPrototypePath(tryActivatePower.PowerPrototypeId, out powerPrototypePath))
                         Logger.Trace($"Received TryActivatePower for {powerPrototypePath}");
@@ -177,7 +177,7 @@ namespace MHServerEmu.GameServer.Games
                     break;
 
                 case ClientToGameServerMessage.NetMessagePowerRelease:
-                    var powerRelease = NetMessagePowerRelease.ParseFrom(message.Content);
+                    var powerRelease = NetMessagePowerRelease.ParseFrom(message.Payload);
 
                     if (GameDatabase.TryGetPrototypePath(powerRelease.PowerPrototypeId, out powerPrototypePath))
                         Logger.Trace($"Received PowerRelease for {powerPrototypePath}");
@@ -187,7 +187,7 @@ namespace MHServerEmu.GameServer.Games
                     break;
 
                 case ClientToGameServerMessage.NetMessageTryCancelPower:
-                    var tryCancelPower = NetMessageTryCancelPower.ParseFrom(message.Content);
+                    var tryCancelPower = NetMessageTryCancelPower.ParseFrom(message.Payload);
 
                     if (GameDatabase.TryGetPrototypePath(tryCancelPower.PowerPrototypeId, out powerPrototypePath))
                         Logger.Trace($"Received TryCancelPower for {powerPrototypePath}");
@@ -197,12 +197,12 @@ namespace MHServerEmu.GameServer.Games
                     break;
 
                 case ClientToGameServerMessage.NetMessageTryCancelActivePower:
-                    var tryCancelActivePower = NetMessageTryCancelActivePower.ParseFrom(message.Content);
+                    var tryCancelActivePower = NetMessageTryCancelActivePower.ParseFrom(message.Payload);
                     Logger.Trace("Received TryCancelActivePower");
                     break;
 
                 case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer:
-                    var continuousPowerUpdate = NetMessageContinuousPowerUpdateToServer.ParseFrom(message.Content);
+                    var continuousPowerUpdate = NetMessageContinuousPowerUpdateToServer.ParseFrom(message.Payload);
 
                     if (GameDatabase.TryGetPrototypePath(continuousPowerUpdate.PowerPrototypeId, out powerPrototypePath))
                         Logger.Trace($"Received ContinuousPowerUpdate for {powerPrototypePath}");
@@ -215,7 +215,7 @@ namespace MHServerEmu.GameServer.Games
 
                 case ClientToGameServerMessage.NetMessageTryInventoryMove:
                     Logger.Info($"Received NetMessageTryInventoryMove");
-                    var tryInventoryMoveMessage = NetMessageTryInventoryMove.ParseFrom(message.Content);
+                    var tryInventoryMoveMessage = NetMessageTryInventoryMove.ParseFrom(message.Payload);
 
                     EnqueueResponse(client, new(NetMessageInventoryMove.CreateBuilder()
                         .SetEntityId(tryInventoryMoveMessage.ItemId)
@@ -227,7 +227,7 @@ namespace MHServerEmu.GameServer.Games
 
                 case ClientToGameServerMessage.NetMessageSwitchAvatar:
                     Logger.Info($"Received NetMessageSwitchAvatar");
-                    var switchAvatarMessage = NetMessageSwitchAvatar.ParseFrom(message.Content);
+                    var switchAvatarMessage = NetMessageSwitchAvatar.ParseFrom(message.Payload);
                     Logger.Trace(switchAvatarMessage.ToString());
 
                     // A hack for changing starting avatar without using chat commands
@@ -273,7 +273,7 @@ namespace MHServerEmu.GameServer.Games
 
                 case ClientToGameServerMessage.NetMessageUseWaypoint:
                     Logger.Info($"Received NetMessageUseWaypoint message");
-                    var useWaypointMessage = NetMessageUseWaypoint.ParseFrom(message.Content);
+                    var useWaypointMessage = NetMessageUseWaypoint.ParseFrom(message.Payload);
 
                     Logger.Trace(useWaypointMessage.ToString());
 
@@ -288,7 +288,7 @@ namespace MHServerEmu.GameServer.Games
 
                 case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:
                     Logger.Info($"Received NetMessageRequestInterestInAvatarEquipment");
-                    var requestInterestInAvatarEquipment = NetMessageRequestInterestInAvatarEquipment.ParseFrom(message.Content);
+                    var requestInterestInAvatarEquipment = NetMessageRequestInterestInAvatarEquipment.ParseFrom(message.Payload);
                     break;
 
                 default:

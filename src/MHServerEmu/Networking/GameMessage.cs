@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
-using Gazillion;
 using Google.ProtocolBuffers;
+using Gazillion;
 
 namespace MHServerEmu.Networking
 {
@@ -9,27 +9,27 @@ namespace MHServerEmu.Networking
         private static readonly Assembly LibGazillionAssembly = typeof(NetMessageReadyAndLoggedIn).Assembly;
 
         public byte Id { get; }
-        public byte[] Content { get; }
+        public byte[] Payload { get; }
 
-        public GameMessage(byte id, byte[] content)
+        public GameMessage(byte id, byte[] payload)
         {
             Id = id;
-            Content = content;
+            Payload = payload;
         }
 
         public GameMessage(IMessage message)
         {
             Id = ProtocolDispatchTable.GetMessageId(message);
-            Content = message.ToByteArray();
+            Payload = message.ToByteArray();
         }
 
         public IMessage Deserialize(Type enumType)
         {
             string messageName = ProtocolDispatchTable.GetMessageName(enumType, Id);
 
-            Type type = LibGazillionAssembly.GetType($"Gazillion.{messageName}") ?? throw new();
-            MethodInfo method = type.GetMethod("ParseFrom", BindingFlags.Static | BindingFlags.Public, new Type[] { typeof(byte[]) }) ?? throw new();
-            IMessage message = (IMessage)method.Invoke(null, new object[] { Content });
+            Type type = LibGazillionAssembly.GetType($"Gazillion.{messageName}") ?? throw new("Message type is null.");
+            MethodInfo method = type.GetMethod("ParseFrom", BindingFlags.Static | BindingFlags.Public, new Type[] { typeof(byte[]) }) ?? throw new("Message ParseFrom method is null.");
+            IMessage message = (IMessage)method.Invoke(null, new object[] { Payload });
 
             return message;
         }

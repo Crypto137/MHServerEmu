@@ -35,7 +35,7 @@ namespace MHServerEmu.GameServer.Frontend
             {
                 case FrontendProtocolMessage.ClientCredentials:
                     Logger.Info($"Received ClientCredentials on muxId {muxId}");
-                    ClientCredentials clientCredentials = ClientCredentials.ParseFrom(message.Content);
+                    ClientCredentials clientCredentials = ClientCredentials.ParseFrom(message.Payload);
 
                     if (_sessionDict.ContainsKey(clientCredentials.Sessionid))
                     {
@@ -104,7 +104,7 @@ namespace MHServerEmu.GameServer.Frontend
                     break;
 
                 case FrontendProtocolMessage.InitialClientHandshake:
-                    InitialClientHandshake initialClientHandshake = InitialClientHandshake.ParseFrom(message.Content);
+                    InitialClientHandshake initialClientHandshake = InitialClientHandshake.ParseFrom(message.Payload);
                     Logger.Info($"Received InitialClientHandshake for {initialClientHandshake.ServerType} on muxId {muxId}");
 
                     // These handshakes should probably be handled by PlayerManagerService and GroupingManagerService. They should probably also track clients on their own.

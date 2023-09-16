@@ -421,7 +421,7 @@ namespace MHServerEmu.GameServer.Games
 
             foreach (GameMessage message in localPlayerEntityCreateMessages)
             {
-                var entityCreateMessage = NetMessageEntityCreate.ParseFrom(message.Content);
+                var entityCreateMessage = NetMessageEntityCreate.ParseFrom(message.Payload);
                 EntityCreateBaseData baseData = new(entityCreateMessage.BaseData.ToByteArray());
 
                 if (baseData.EntityId == 14646212)      // Player entity

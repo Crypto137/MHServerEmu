@@ -36,7 +36,7 @@ namespace MHServerEmu.GameServer.GameData
                 {
                     using (StreamWriter streamWriter = new(Path.Combine(Directory.GetCurrentDirectory(), $"{i}_entityCreate.txt")))
                     {
-                        var entityCreateMessage = NetMessageEntityCreate.ParseFrom(messages[i].Content);
+                        var entityCreateMessage = NetMessageEntityCreate.ParseFrom(messages[i].Payload);
                         EntityCreateBaseData baseData = new(entityCreateMessage.BaseData.ToByteArray());
                         Entity archiveData = new(entityCreateMessage.ArchiveData.ToByteArray());
 

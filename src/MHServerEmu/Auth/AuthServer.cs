@@ -90,7 +90,7 @@ namespace MHServerEmu.Auth
             switch ((FrontendProtocolMessage)message.Id)
             {
                 case FrontendProtocolMessage.LoginDataPB:
-                    var loginDataPB = LoginDataPB.ParseFrom(message.Content);
+                    var loginDataPB = LoginDataPB.ParseFrom(message.Payload);
                     ClientSession session = _frontendService.CreateSessionFromLoginDataPB(loginDataPB, out AuthErrorCode? errorCode);
 
                     if (session != null)  // Send an AuthTicket if we were able to create a session

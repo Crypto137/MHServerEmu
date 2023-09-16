@@ -23,7 +23,7 @@ namespace MHServerEmu.GameServer
                     // NetMessageReadyForGameJoin contains a bug where wipesDataIfMismatchedInDb is marked as required but the client doesn't include it
                     // To avoid an exception we build a partial message from the data we receive
                     Logger.Info($"Received NetMessageReadyForGameJoin (sessionId {client.Session.Id})");
-                    var parsedReadyForGameJoin = NetMessageReadyForGameJoin.CreateBuilder().MergeFrom(message.Content).BuildPartial();
+                    var parsedReadyForGameJoin = NetMessageReadyForGameJoin.CreateBuilder().MergeFrom(message.Payload).BuildPartial();
                     Logger.Trace(parsedReadyForGameJoin.ToString());
 
                     // Log the player in
