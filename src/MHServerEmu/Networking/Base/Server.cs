@@ -36,11 +36,12 @@ namespace MHServerEmu.Networking.Base
             if (_disposed) throw new ObjectDisposedException(GetType().Name, "Server has been disposed.");
             if (IsListening) throw new InvalidOperationException("Server is already listening.");
 
-            // Create a new TCP socket and set it up
-            _listener = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            _listener.NoDelay = true;                   // Disable packet coalescing to improve responsiveness
-            _listener.LingerState = new(false, 0);      // Don't keep disconnected sockets around
-            // SetSocketOption for DontLinger doesn't seem to work on Linux, so we use properties instead
+            // Create a new TCP socket and set it up (note: SetSocketOption for DontLinger doesn't seem to work on Linux, so we use properties)
+            _listener = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
+            {
+                NoDelay = true,                 // Disable packet coalescing to improve responsiveness
+                LingerState = new(false, 0)     // Don't keep disconnected sockets around
+            };
 
             // Bind the listener socket
             try
@@ -84,7 +85,7 @@ namespace MHServerEmu.Networking.Base
             catch (NullReferenceException) { }  // We get this after issuing server shutdown, don't need to do anything about it
             catch (Exception e)
             {
-                Logger.DebugException(e, "AcceptCallback");
+                Logger.DebugException(e, nameof(AcceptCallback));
             }
         }
 
@@ -117,14 +118,14 @@ namespace MHServerEmu.Networking.Base
             }
             catch (Exception e)
             {
-                Logger.DebugException(e, "ReceiveCallback");
+                Logger.DebugException(e, nameof(ReceiveCallback));
             }
         }
 
         public virtual int Send(Connection connection, IEnumerable<byte> data, SocketFlags flags)
         {
-            if (connection == null) throw new ArgumentNullException("connection");
-            if (data == null) throw new ArgumentNullException("data");
+            if (connection == null) throw new ArgumentNullException(nameof(connection));
+            if (data == null) throw new ArgumentNullException(nameof(data));
 
             byte[] buffer = data.ToArray();
             return Send(connection, buffer, 0, buffer.Length, SocketFlags.None);
@@ -132,8 +133,8 @@ namespace MHServerEmu.Networking.Base
 
         public virtual int Send(Connection connection, byte[] buffer, int start, int count, SocketFlags flags)
         {
-            if (connection == null) throw new ArgumentNullException("connection");
-            if (buffer == null) throw new ArgumentNullException("buffer");
+            if (connection == null) throw new ArgumentNullException(nameof(connection));
+            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
 
             int totalBytesSent = 0;
             int bytesRemaining = buffer.Length;
@@ -157,7 +158,7 @@ namespace MHServerEmu.Networking.Base
             }
             catch (Exception e)
             {
-                Logger.DebugException(e, "Send");
+                Logger.DebugException(e, nameof(Send));
             }
 
             return totalBytesSent;
@@ -223,7 +224,7 @@ namespace MHServerEmu.Networking.Base
 
         public virtual void Disconnect(Connection connection)
         {
-            if (connection == null) throw new ArgumentNullException("connection");
+            if (connection == null) throw new ArgumentNullException(nameof(connection));
             if (connection.IsConnected == false) return;
 
             connection.Socket.Disconnect(false);

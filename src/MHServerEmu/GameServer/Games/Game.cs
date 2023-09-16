@@ -59,7 +59,7 @@ namespace MHServerEmu.GameServer.Games
 
                     // Send responses to all clients
                     foreach (var kvp in _responseListDict)
-                        kvp.Key.SendMultipleMessages(1, kvp.Value);     // no GroupingManager messages should be here, so we can assume that muxId for all messages is 1
+                        kvp.Key.SendMessages(1, kvp.Value);     // no GroupingManager messages should be here, so we can assume that muxId for all messages is 1
 
                     // Clear response list dict
                     _responseListDict.Clear();
@@ -238,7 +238,7 @@ namespace MHServerEmu.GameServer.Games
                         if (Enum.TryParse(typeof(HardcodedAvatarEntity), avatarName, true, out object avatar))
                         {
                             client.Session.Account.PlayerData.Avatar = (HardcodedAvatarEntity)avatar;
-                            _gameServerManager.GroupingManagerService.SendMetagameMessage(client, $"Changing avatar to {client.Session.Account.PlayerData.Avatar}. Relog for changes to take effect.");
+                            _gameServerManager.GroupingManagerService.SendMetagameChatMessage(client, $"Changing avatar to {client.Session.Account.PlayerData.Avatar}. Relog for changes to take effect.");
                         }
                     }
 

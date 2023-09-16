@@ -6,8 +6,7 @@
 
         public ConnectionEventArgs(Connection connection)
         {
-            if (connection == null) throw new ArgumentNullException("connection");
-            Connection = connection;
+            Connection = connection ?? throw new ArgumentNullException(nameof(connection));
         }
 
         public override string ToString()

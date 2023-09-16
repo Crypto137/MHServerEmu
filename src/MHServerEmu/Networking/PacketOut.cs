@@ -8,9 +8,9 @@ namespace MHServerEmu.Networking
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private ushort _muxId;
-        private MuxCommand _muxCommand;
-        private List<GameMessage> _messageList = new();
+        private readonly ushort _muxId;
+        private readonly MuxCommand _muxCommand;
+        private readonly List<GameMessage> _messageList = new();
 
         public byte[] Data
         {
@@ -60,9 +60,7 @@ namespace MHServerEmu.Networking
             _muxCommand = command;
         }
 
-        public void AddMessage(GameMessage message)
-        {
-            _messageList.Add(message);
-        }
+        public void AddMessage(GameMessage message) => _messageList.Add(message);
+        public void AddMessages(IEnumerable<GameMessage> messages) => _messageList.AddRange(messages);
     }
 }

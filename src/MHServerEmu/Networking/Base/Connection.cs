@@ -22,11 +22,8 @@ namespace MHServerEmu.Networking.Base
 
         public Connection(Server server, Socket socket)
         {
-            if (server == null) throw new ArgumentNullException("server");
-            if (socket == null) throw new ArgumentNullException("socket");
-
-            _server = server;
-            Socket = socket;
+            _server = server ?? throw new ArgumentNullException(nameof(server));
+            Socket = socket ?? throw new ArgumentNullException(nameof(socket));
         }
 
         /// <summary>
@@ -54,7 +51,7 @@ namespace MHServerEmu.Networking.Base
         /// <returns>Returns count of sent bytes.</returns>
         public int Send(PacketOut packet)
         {
-            if (packet == null) throw new ArgumentNullException("packet");
+            if (packet == null) throw new ArgumentNullException(nameof(packet));
             return Send(packet.Data);
         }
 
@@ -65,7 +62,7 @@ namespace MHServerEmu.Networking.Base
         /// <returns>Returns count of sent bytes.</returns>
         public int Send(byte[] buffer)
         {
-            if (buffer == null) throw new ArgumentNullException("buffer");
+            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
             return Send(buffer, 0, buffer.Length, SocketFlags.None);
         }
 
@@ -78,7 +75,7 @@ namespace MHServerEmu.Networking.Base
         /// <returns>Returns count of sent bytes.</returns>
         public int Send(byte[] buffer, SocketFlags flags)
         {
-            if (buffer == null) throw new ArgumentNullException("buffer");
+            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
             return Send(buffer, 0, buffer.Length, flags);
         }
 
@@ -91,7 +88,7 @@ namespace MHServerEmu.Networking.Base
         /// <returns>Returns count of sent bytes.</returns>
         public int Send(byte[] buffer, int start, int count)
         {
-            if (buffer == null) throw new ArgumentNullException("buffer");
+            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
             return Send(buffer, start, count, SocketFlags.None);
         }
 
@@ -105,7 +102,7 @@ namespace MHServerEmu.Networking.Base
         /// <returns>Returns count of sent bytes.</returns>
         public int Send(byte[] buffer, int start, int count, SocketFlags flags)
         {
-            if (buffer == null) throw new ArgumentNullException("buffer");
+            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
             return _server.Send(this, buffer, start, count, flags);
         }
 
@@ -116,7 +113,7 @@ namespace MHServerEmu.Networking.Base
         /// <returns>Returns count of sent bytes.</returns>
         public int Send(IEnumerable<byte> data)
         {
-            if (data == null) throw new ArgumentNullException("data");
+            if (data == null) throw new ArgumentNullException(nameof(data));
             return Send(data, SocketFlags.None);
         }
 
@@ -128,7 +125,7 @@ namespace MHServerEmu.Networking.Base
         /// <returns>Returns count of sent bytes.</returns>
         public int Send(IEnumerable<byte> data, SocketFlags flags)
         {
-            if (data == null) throw new ArgumentNullException("data");
+            if (data == null) throw new ArgumentNullException(nameof(data));
             return _server.Send(this, data, flags);
         }
 

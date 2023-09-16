@@ -92,19 +92,11 @@ namespace MHServerEmu.Networking
             Connection.Send(packet);
         }
 
-        public void SendMultipleMessages(ushort muxId, GameMessage[] messages)
+        public void SendMessages(ushort muxId, IEnumerable<GameMessage> messages)
         {
             PacketOut packet = new(muxId, MuxCommand.Message);
-            foreach (GameMessage message in messages)
-            {
-                packet.AddMessage(message);
-            }
+            packet.AddMessages(messages);
             Connection.Send(packet);
-        }
-
-        public void SendMultipleMessages(ushort muxId, List<GameMessage> messageList)
-        {
-            SendMultipleMessages(muxId, messageList.ToArray());
         }
 
         public void SendPacketFromFile(string fileName)

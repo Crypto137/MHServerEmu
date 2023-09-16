@@ -10,7 +10,7 @@ namespace MHServerEmu.Networking
     {
         private new static readonly Logger Logger = LogManager.CreateLogger();  // Hide the Server.Logger so that this logger can show the actual server as log source.
 
-        private GameServerManager _gameServerManager;
+        private readonly GameServerManager _gameServerManager;
 
         public FrontendService FrontendService { get => _gameServerManager.FrontendService; }
 
@@ -38,8 +38,7 @@ namespace MHServerEmu.Networking
 
         private void FrontendServer_DataReceived(object sender, ConnectionDataEventArgs e)
         {
-            Connection connection = e.Connection as Connection;
-            ((FrontendClient)connection.Client).Parse(e);
+            ((FrontendClient)e.Connection.Client).Parse(e);
         }
     }
 }

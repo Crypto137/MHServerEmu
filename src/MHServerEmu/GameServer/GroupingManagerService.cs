@@ -69,7 +69,7 @@ namespace MHServerEmu.GameServer
                 .Build()));
         }
 
-        public void SendMetagameMessage(FrontendClient client, string text)
+        public void SendMetagameChatMessage(FrontendClient client, string text)
         {
             client.SendMessage(2, new(ChatNormalMessage.CreateBuilder()
                 .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
