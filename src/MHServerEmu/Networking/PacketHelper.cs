@@ -27,7 +27,7 @@ namespace MHServerEmu.Networking
                 CodedInputStream stream = CodedInputStream.CreateInstance(File.ReadAllBytes(path));
                 PacketIn packet = new(stream);
 
-                if (packet.Command == MuxCommand.Message)
+                if (packet.Command == MuxCommand.Data)
                 {
                     ParseServerMessagesFromPacket(packet, Path.Combine(PacketDirectory, $"{Path.GetFileNameWithoutExtension(path)}_parsed.txt"));
                 }
@@ -69,7 +69,7 @@ namespace MHServerEmu.Networking
                 {
                     PacketIn packet = new(stream);
 
-                    if (packet.Command == MuxCommand.Message)
+                    if (packet.Command == MuxCommand.Data)
                     {
                         ParseServerMessagesFromPacket(packet, Path.Combine(PacketDirectory, $"{Path.GetFileNameWithoutExtension(path)}_packet{packetCount}_parsed.txt"));
                         packetCount++;
@@ -95,7 +95,7 @@ namespace MHServerEmu.Networking
                 {
                     PacketIn packet = new(stream);
 
-                    if (packet.Command == MuxCommand.Message)
+                    if (packet.Command == MuxCommand.Data)
                     {
                         byte[] rawPacket = packet.ToPacketOut().Data;
                         File.WriteAllBytes(Path.Combine(PacketDirectory, $"{Path.GetFileNameWithoutExtension(path)}_packet{packetCount}_raw.bin"), rawPacket);

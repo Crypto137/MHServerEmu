@@ -7,10 +7,10 @@ namespace MHServerEmu.Networking
     public enum MuxCommand
     {
         Connect = 0x01,
-        Accept = 0x02,
+        ConnectAck = 0x02,
         Disconnect = 0x03,
-        Insert = 0x04,
-        Message = 0x05
+        ConnectWithData = 0x04,
+        Data = 0x05
     }
 
     public class PacketIn
@@ -29,7 +29,7 @@ namespace MHServerEmu.Networking
             Command = (MuxCommand)stream.ReadRawByte();
 
             // Read messages
-            if (Command == MuxCommand.Message)
+            if (Command == MuxCommand.Data)
             {
                 if (bodyLength > 0)
                 {

@@ -17,7 +17,7 @@ namespace MHServerEmu.Networking
             get
             {
                 byte[] bodyBuffer = Array.Empty<byte>();
-                if (_muxCommand == MuxCommand.Message)
+                if (_muxCommand == MuxCommand.Data)
                 {
                     if (_messageList.Count > 0)
                     {
@@ -38,7 +38,7 @@ namespace MHServerEmu.Networking
                     }
                     else
                     {
-                        Logger.Warn("Message packet contains no messages!");
+                        Logger.Warn("Data packet contains no messages!");
                     }
                 }
 

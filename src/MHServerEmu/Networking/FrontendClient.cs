@@ -41,10 +41,10 @@ namespace MHServerEmu.Networking
             {
                 case MuxCommand.Connect:
                     Logger.Info($"Accepting connection for muxId {packet.MuxId}");
-                    Connection.Send(new PacketOut(packet.MuxId, MuxCommand.Accept));
+                    Connection.Send(new PacketOut(packet.MuxId, MuxCommand.ConnectAck));
                     break;
 
-                case MuxCommand.Accept:
+                case MuxCommand.ConnectAck:
                     Logger.Warn($"Received accept for muxId {packet.MuxId}. Is this supposed to happen?");
                     break;
 
@@ -52,11 +52,11 @@ namespace MHServerEmu.Networking
                     Logger.Info($"Received disconnect for muxId {packet.MuxId}");
                     break;
 
-                case MuxCommand.Insert:
-                    Logger.Warn($"Received insert for muxId {packet.MuxId}. Is this supposed to happen?");
+                case MuxCommand.ConnectWithData:
+                    Logger.Warn($"Received connectdata for muxId {packet.MuxId}. Is this supposed to happen?");
                     break;
 
-                case MuxCommand.Message:
+                case MuxCommand.Data:
                     _gameServerManager.Handle(this, packet.MuxId, packet.Messages);
                     break;
             }
@@ -87,14 +87,14 @@ namespace MHServerEmu.Networking
 
         public void SendMessage(ushort muxId, GameMessage message)
         {
-            PacketOut packet = new(muxId, MuxCommand.Message);
+            PacketOut packet = new(muxId, MuxCommand.Data);
             packet.AddMessage(message);
             Connection.Send(packet);
         }
 
         public void SendMessages(ushort muxId, IEnumerable<GameMessage> messages)
         {
-            PacketOut packet = new(muxId, MuxCommand.Message);
+            PacketOut packet = new(muxId, MuxCommand.Data);
             packet.AddMessages(messages);
             Connection.Send(packet);
         }
