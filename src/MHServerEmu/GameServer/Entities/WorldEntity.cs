@@ -9,9 +9,10 @@ namespace MHServerEmu.GameServer.Entities
 {
     public class WorldEntity : Entity
     {
-        public PrototypeCollectionEntry[] UnknownPrototypes { get; set; }
-        public Condition[] Conditions { get; set; }
-        public int UnknownPowerVar { get; set; }
+        public PrototypeCollectionEntry[] PrototypeCollection { get; set; }
+        public Condition[] ConditionCollection { get; set; }
+        public PowerCollectionRecord[] PowerCollection { get; set; }
+        public int UnkEvent { get; set; }
 
         public WorldEntity(byte[] archiveData)
         {
@@ -40,9 +41,10 @@ namespace MHServerEmu.GameServer.Entities
                 new(PropertyEnum.ContextAreaRef, contextAreaRef)
             });
 
-            UnknownPrototypes = Array.Empty<PrototypeCollectionEntry>();
-            Conditions = Array.Empty<Condition>();
-            UnknownPowerVar = 0;
+            PrototypeCollection = Array.Empty<PrototypeCollectionEntry>();
+            ConditionCollection = Array.Empty<Condition>();
+            PowerCollection = Array.Empty<PowerCollectionRecord>();
+            UnkEvent = 0;
         }
 
         public override byte[] Encode()
@@ -71,40 +73,66 @@ namespace MHServerEmu.GameServer.Entities
 
         protected void ReadWorldEntityFields(CodedInputStream stream)
         {
-            UnknownPrototypes = new PrototypeCollectionEntry[stream.ReadRawVarint64()];
-            for (int i = 0; i < UnknownPrototypes.Length; i++)
-                UnknownPrototypes[i] = new(stream);
+            PrototypeCollection = new PrototypeCollectionEntry[stream.ReadRawVarint64()];
+            for (int i = 0; i < PrototypeCollection.Length; i++)
+                PrototypeCollection[i] = new(stream);
 
-            Conditions = new Condition[stream.ReadRawVarint64()];
-            for (int i = 0; i < Conditions.Length; i++)
-                Conditions[i] = new(stream);
+            ConditionCollection = new Condition[stream.ReadRawVarint64()];
+            for (int i = 0; i < ConditionCollection.Length; i++)
+                ConditionCollection[i] = new(stream);
 
             // Gazillion::PowerCollection::SerializeRecordCount
-            UnknownPowerVar = stream.ReadRawInt32();
+            if ((ReplicationPolicy & 0x1) > 0)
+            {
+                PowerCollection = new PowerCollectionRecord[stream.ReadRawVarint32()];
+                if (PowerCollection.Length > 0)
+                {
+                    // Records after the first one may require the previous record to get values from
+                    PowerCollection[0] = new(stream, null);
+                    for (int i = 1; i < PowerCollection.Length; i++)
+                        PowerCollection[i] = new(stream, PowerCollection[i - 1]);
+                }
+            }
+            else
+            {
+                PowerCollection = Array.Empty<PowerCollectionRecord>();
+            }
+
+            UnkEvent = stream.ReadRawInt32();
         }
 
         protected void WriteWorldEntityFields(CodedOutputStream stream)
         {
-            stream.WriteRawVarint64((ulong)UnknownPrototypes.Length);
-            foreach (PrototypeCollectionEntry entry in UnknownPrototypes)
+            stream.WriteRawVarint64((ulong)PrototypeCollection.Length);
+            foreach (PrototypeCollectionEntry entry in PrototypeCollection)
                 stream.WriteRawBytes(entry.Encode());
 
-            stream.WriteRawVarint64((ulong)Conditions.Length);
-            foreach (Condition condition in Conditions)
+            stream.WriteRawVarint64((ulong)ConditionCollection.Length);
+            foreach (Condition condition in ConditionCollection)
                 stream.WriteRawBytes(condition.Encode());
 
-            stream.WriteRawInt32(UnknownPowerVar);
+            if ((ReplicationPolicy & 0x1) > 0)
+            {
+                stream.WriteRawVarint32((uint)PowerCollection.Length);
+                for (int i = 0; i < PowerCollection.Length; i++)
+                    stream.WriteRawBytes(PowerCollection[i].Encode());
+            }
+
+            stream.WriteRawInt32(UnkEvent);
         }
 
         protected void WriteWorldEntityString(StringBuilder sb)
         {
-            for (int i = 0; i < UnknownPrototypes.Length; i++)
-                sb.AppendLine($"UnknownPrototype{i}: {UnknownPrototypes[i]}");
+            for (int i = 0; i < PrototypeCollection.Length; i++)
+                sb.AppendLine($"PrototypeCollection{i}: {PrototypeCollection[i]}");
 
-            for (int i = 0; i < Conditions.Length; i++)
-                sb.AppendLine($"Condition{i}: {Conditions[i]}");
+            for (int i = 0; i < ConditionCollection.Length; i++)
+                sb.AppendLine($"ConditionCollection{i}: {ConditionCollection[i]}");
 
-            sb.AppendLine($"UnknownPowerVar: 0x{UnknownPowerVar:X}");
+            for (int i = 0; i < PowerCollection.Length; i++)
+                sb.AppendLine($"PowerCollection{i}: {PowerCollection[i]}");
+
+            sb.AppendLine($"UnkEvent: {UnkEvent}");
         }
     }
 }
