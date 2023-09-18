@@ -45,25 +45,10 @@
     <None Update="Assets\LiveTuning.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\Packets\DangerRoomBeginLoading.bin">
+    <None Update="Assets\Packets\NetMessageEntityCreateAvatars.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\Packets\DangerRoomFinishLoading.bin">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\Packets\LocalPlayerEntityCreateMessages.bin">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\Packets\MidtownBeginLoading.bin">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\Packets\MidtownFinishLoading.bin">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\Packets\AvengersTowerFinishLoading.bin">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\Packets\AvengersTowerBeginLoading.bin">
+    <None Update="Assets\Packets\NetMessageEntityCreatePlayer.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Config.ini">
