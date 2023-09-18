@@ -15,11 +15,11 @@
         Int21Vector3
     }
 
-    public enum DatabasePolicy  // values are most likely wrong here
+    public enum DatabasePolicy  // Frequent and Infrequent seem to be treated the same by the DBPolicyTable enum
     {
         None,
-        Infrequent,
-        Frequent
+        Frequent,
+        Infrequent
     }
 
     public enum AggregationMethod

@@ -37,73 +37,73 @@ namespace MHServerEmu.GameServer.GameData.Prototypes
             {
                 switch (GameDatabase.Calligraphy.PrototypeFieldDict[element.Id])
                 {
-                    case "Eval":
+                    case nameof(Eval):
                         Eval = element.Value;
                         break;
-                    case "SerializePowerToPowerPayload":
+                    case nameof(SerializePowerToPowerPayload):
                         SerializePowerToPowerPayload = (bool)element.Value;
                         break;
-                    case "SerializeConditionSrcToCondition":
+                    case nameof(SerializeConditionSrcToCondition):
                         SerializeConditionSrcToCondition = (bool)element.Value;
                         break;
-                    case "Type":
+                    case nameof(Type):
                         Type = (PropertyType)Enum.Parse(typeof(PropertyType), GameDatabase.Calligraphy.AssetDict[(ulong)element.Value]);
                         break;
-                    case "ReplicateToTrader":
+                    case nameof(ReplicateToTrader):
                         ReplicateToTrader = (bool)element.Value;
                         break;
-                    case "ReplicateToDatabase": // NOTE: enum values here are wrong
+                    case nameof(ReplicateToDatabase):
                         ReplicateToDatabase = (DatabasePolicy)Enum.Parse(typeof(DatabasePolicy), GameDatabase.Calligraphy.AssetDict[(ulong)element.Value]);
                         break;
-                    case "ClientOnly":
+                    case nameof(ClientOnly):
                         ClientOnly = (bool)element.Value;
                         break;
-                    case "ReplicateToProximity":
+                    case nameof(ReplicateToProximity):
                         ReplicateToProximity = (bool)element.Value;
                         break;
-                    case "TruncatePropertyValueToInt":
+                    case nameof(TruncatePropertyValueToInt):
                         TruncatePropertyValueToInt = (bool)element.Value;
                         break;
-                    case "ReplicateToOwner":
+                    case nameof(ReplicateToOwner):
                         ReplicateToOwner = (bool)element.Value;
                         break;
-                    case "ValueDisplayFormat":
+                    case nameof(ValueDisplayFormat):
                         ValueDisplayFormat = (ulong)element.Value;
                         break;
-                    case "ReplicateToDatabaseAllowedOnItems":
+                    case nameof(ReplicateToDatabaseAllowedOnItems):
                         ReplicateToDatabaseAllowedOnItems = (bool)element.Value;
                         break;
-                    case "CurveDefault":
+                    case nameof(CurveDefault):
                         CurveDefault = (double)element.Value;
                         break;
-                    case "SerializeEntityToPowerPayload":
+                    case nameof(SerializeEntityToPowerPayload):
                         SerializeEntityToPowerPayload = (bool)element.Value;
                         break;
-                    case "EvalAlwaysCalculates":
+                    case nameof(EvalAlwaysCalculates):
                         EvalAlwaysCalculates = (bool)element.Value;
                         break;
-                    case "ReplicateToParty":
+                    case nameof(ReplicateToParty):
                         ReplicateToParty = (bool)element.Value;
                         break;
-                    case "ReplicateForTransfer":
+                    case nameof(ReplicateForTransfer):
                         ReplicateForTransfer = (bool)element.Value;
                         break;
-                    case "AggMethod":
+                    case nameof(AggMethod):
                         AggMethod = (AggregationMethod)Enum.Parse(typeof(AggregationMethod), GameDatabase.Calligraphy.AssetDict[(ulong)element.Value]);
                         break;
-                    case "Min":
+                    case nameof(Min):
                         Min = (double)element.Value;
                         break;
-                    case "Max":
+                    case nameof(Max):
                         Max = (double)element.Value;
                         break;
-                    case "TooltipText":
+                    case nameof(TooltipText):
                         TooltipText = (ulong)element.Value;
                         break;
-                    case "ReplicateToDiscovery":
+                    case nameof(ReplicateToDiscovery):
                         ReplicateToDiscovery = (bool)element.Value;
                         break;
-                    case "Version":
+                    case nameof(Version):
                         Version = (long)element.Value;
                         break;
                 }
