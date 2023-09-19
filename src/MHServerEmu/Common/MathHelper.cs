@@ -5,12 +5,8 @@
         public static int HighestBitSet(ulong value)
         {
             int bit = 0;
-            while (value > 0)
-            {
-                value >>= 1;
+            while ((value >>= 1) > 0)
                 bit++;
-            }
-
             return bit;
         }
 
