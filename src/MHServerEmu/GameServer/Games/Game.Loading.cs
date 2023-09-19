@@ -448,6 +448,19 @@ namespace MHServerEmu.GameServer.Games
                         break;
                 }
             }
+           
+            Social.CommunityMember friend = player.Community.CommunityMembers[0];
+            friend.MemberName = "Brevik"; 
+            friend.Slots = new Social.AvatarSlotInfo[1];
+            friend.Slots[0] = new(15769648016960461069, 4881398219179434365, 60, 6);
+            friend.OnlineStatus = 1;
+            friend.RegionRef = 10434222419069901867;
+            friend = player.Community.CommunityMembers[1];
+            friend.OnlineStatus = 1;
+            friend.MemberName = "Tony Stark";
+            friend.Slots = new Social.AvatarSlotInfo[1];
+            friend.Slots[0] = new(421791326977791218, 7150542631074405762, 60, 5);
+            friend.RegionRef = (ulong)RegionPrototype.NPEAvengersTowerHUBRegion;
 
             messageList.Add(new(NetMessageEntityCreate.CreateBuilder()
                 .SetBaseData(ByteString.CopyFrom(playerBaseData.Encode()))

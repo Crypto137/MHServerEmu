@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System;
+using System.Reflection.Metadata.Ecma335;
+using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
@@ -20,15 +22,20 @@ namespace MHServerEmu.GameServer.Entities
         public ulong UnknownCollectionRepId { get; set;}
         public uint UnknownCollectionSize { get; set; }
         public ulong ShardId { get; set; }
-        public ReplicatedString ReplicatedString1 { get; set; }
-        public ulong Community1 { get; set; }
-        public ulong Community2 { get; set; }
-        public ReplicatedString ReplicatedString2 { get; set; }
+        public ReplicatedString Name { get; set; }
+        public ulong ConsoleAccountId1 { get; set; }
+        public ulong ConsoleAccountId2 { get; set; }
+        public ReplicatedString UnkName { get; set; }
         public ulong MatchQueueStatus { get; set; }
-        public bool ReplicationPolicyBool { get; set; }
-        public ulong DateTime { get; set; }
+        public bool EmailVerified { get; set; }
+        public ulong AccountCreationTimestamp { get; set; }
+        public ulong PartyRepId { get; set; }
+        public ulong PartyId { get; set; }
+        public string UnknownString { get; set; }
+        public bool IsGuidInfo { get; set; } 
+        public bool IsCommunity { get; set; }
         public Community Community { get; set; }
-        public bool Flag3 { get; set; }
+        public bool UnkBool { get; set; }
         public ulong[] StashInventories { get; set; }
         public uint[] AvailableBadges { get; set; }
         public ChatChannelOption[] ChatChannelOptions { get; set; }
@@ -56,21 +63,41 @@ namespace MHServerEmu.GameServer.Entities
 
             UnknownCollectionRepId = stream.ReadRawVarint64();
             UnknownCollectionSize = stream.ReadRawUInt32();
+
             ShardId = stream.ReadRawVarint64();
-            ReplicatedString1 = new(stream);
-            Community1 = stream.ReadRawVarint64();
-            Community2 = stream.ReadRawVarint64();
-            ReplicatedString2 = new(stream);
+            Name = new(stream);
+            ConsoleAccountId1 = stream.ReadRawVarint64();
+            ConsoleAccountId2 = stream.ReadRawVarint64();
+            UnkName = new(stream);
             MatchQueueStatus = stream.ReadRawVarint64();
 
             if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
-            ReplicationPolicyBool = boolDecoder.ReadBool();
+            EmailVerified = boolDecoder.ReadBool();
 
-            DateTime = stream.ReadRawVarint64();
-            Community = new(stream, boolDecoder);
+            AccountCreationTimestamp = stream.ReadRawVarint64();
+
+            PartyRepId = stream.ReadRawVarint64();
+            PartyId = stream.ReadRawVarint64();
+            
+            if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
+            IsGuidInfo = boolDecoder.ReadBool();
+            if (IsGuidInfo) // GuildMember::SerializeReplicationRuntimeInfo
+            {
+                throw new("IsGuidInfo parsing not implemented.");
+                // ulong GuildId
+                // string GuildList
+                // int GuildMembership
+            }
+
+            UnknownString = stream.ReadRawString();
 
             if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
-            Flag3 = boolDecoder.ReadBool();
+            IsCommunity = boolDecoder.ReadBool();
+            if (IsCommunity)
+                Community = new(stream);
+
+            if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
+            UnkBool = boolDecoder.ReadBool();
 
             StashInventories = new ulong[stream.ReadRawVarint64()];
             for (int i = 0; i < StashInventories.Length; i++)
@@ -105,24 +132,25 @@ namespace MHServerEmu.GameServer.Entities
 
         // note: this is ugly
         public Player(uint replicationPolicy, ReplicatedPropertyCollection propertyCollection,
-            ulong prototypeId, Mission[] missions, Quest[] quests, ulong unknownCollectionRepId, uint unknownCollectionSize,
-            ulong shardId, ReplicatedString replicatedString1, ulong community1, ulong community2, ReplicatedString replicatedString2,
-            ulong matchQueueStatus, bool replicationPolicyBool, ulong dateTime, Community community, ulong[] unknownFields)
+            ulong prototypeId, Mission[] missions, Quest[] quests, 
+            ulong shardId, ReplicatedString playerName, ReplicatedString unkName,
+            ulong matchQueueStatus, bool emailVerified, ulong accountCreationTimestamp, 
+            Community community, ulong[] unknownFields)
             : base(replicationPolicy, propertyCollection, unknownFields)
         {
             PrototypeId = prototypeId;
             Missions = missions;
             Quests = quests;
-            UnknownCollectionRepId = unknownCollectionRepId;
-            UnknownCollectionSize = unknownCollectionSize;
+            UnknownCollectionRepId = 0;
+            UnknownCollectionSize = 0;
             ShardId = shardId;
-            ReplicatedString1 = replicatedString1;
-            Community1 = community1;
-            Community2 = community2;
-            ReplicatedString2 = replicatedString2;
+            Name = playerName;
+            ConsoleAccountId1 = 0;
+            ConsoleAccountId2 = 0;
+            UnkName = unkName;
             MatchQueueStatus = matchQueueStatus;
-            ReplicationPolicyBool = replicationPolicyBool;
-            DateTime = dateTime;
+            EmailVerified = emailVerified;
+            AccountCreationTimestamp = accountCreationTimestamp;
             Community = community;
             UnknownFields = unknownFields;
         }
@@ -139,10 +167,10 @@ namespace MHServerEmu.GameServer.Entities
 
                 foreach (Mission mission in Missions)
                     boolEncoder.WriteBool(mission.BoolField);
-                boolEncoder.WriteBool(ReplicationPolicyBool);
-                boolEncoder.WriteBool(Community.GmBool);
-                boolEncoder.WriteBool(Community.Flag3);
-                boolEncoder.WriteBool(Flag3);
+                boolEncoder.WriteBool(EmailVerified);
+                boolEncoder.WriteBool(IsGuidInfo);
+                boolEncoder.WriteBool(IsCommunity);
+                boolEncoder.WriteBool(UnkBool);
                 foreach (ChatChannelOption option in ChatChannelOptions)
                     boolEncoder.WriteBool(option.Value);
 
@@ -164,19 +192,33 @@ namespace MHServerEmu.GameServer.Entities
                 cos.WriteRawVarint64(UnknownCollectionRepId);
                 cos.WriteRawUInt32(UnknownCollectionSize);
                 cos.WriteRawVarint64(ShardId);
-                cos.WriteRawBytes(ReplicatedString1.Encode());
-                cos.WriteRawVarint64(Community1);
-                cos.WriteRawVarint64(Community2);
-                cos.WriteRawBytes(ReplicatedString2.Encode());
+                cos.WriteRawBytes(Name.Encode());
+                cos.WriteRawVarint64(ConsoleAccountId1);
+                cos.WriteRawVarint64(ConsoleAccountId2);
+                cos.WriteRawBytes(UnkName.Encode());
                 cos.WriteRawVarint64(MatchQueueStatus);
 
-                bitBuffer = boolEncoder.GetBitBuffer();             //ReplicationPolicyBool
+                bitBuffer = boolEncoder.GetBitBuffer();             // EmailVerified
                 if (bitBuffer != 0) cos.WriteRawByte(bitBuffer);
 
-                cos.WriteRawVarint64(DateTime);
-                cos.WriteRawBytes(Community.Encode(boolEncoder));
+                cos.WriteRawVarint64(AccountCreationTimestamp);
 
-                bitBuffer = boolEncoder.GetBitBuffer();             //Flag3
+                cos.WriteRawVarint64(PartyRepId);
+                cos.WriteRawVarint64(PartyId);
+
+                bitBuffer = boolEncoder.GetBitBuffer();             // IsGuidInfo
+                if (bitBuffer != 0) cos.WriteRawByte(bitBuffer);
+
+                cos.WriteRawString(UnknownString);
+
+                bitBuffer = boolEncoder.GetBitBuffer();             // IsCommunity
+                if (bitBuffer != 0)
+                {
+                    cos.WriteRawByte(bitBuffer);
+                    cos.WriteRawBytes(Community.Encode());
+                }
+
+                bitBuffer = boolEncoder.GetBitBuffer();             // UnkBool
                 if (bitBuffer != 0) cos.WriteRawByte(bitBuffer);
 
                 cos.WriteRawVarint64((ulong)StashInventories.Length);
@@ -226,15 +268,18 @@ namespace MHServerEmu.GameServer.Entities
             sb.AppendLine($"UnknownCollectionRepId: 0x{UnknownCollectionRepId:X}");
             sb.AppendLine($"UnknownCollectionSize: 0x{UnknownCollectionSize:X}");
             sb.AppendLine($"ShardId: {ShardId}");
-            sb.AppendLine($"ReplicatedString1: {ReplicatedString1}");
-            sb.AppendLine($"Community1: 0x{Community1:X}");
-            sb.AppendLine($"Community2: 0x{Community2:X}");
-            sb.AppendLine($"ReplicatedString2: {ReplicatedString2}");
+            sb.AppendLine($"Name: {Name}");
+            sb.AppendLine($"ConsoleAccountId1: 0x{ConsoleAccountId1:X}");
+            sb.AppendLine($"ConsoleAccountId2: 0x{ConsoleAccountId2:X}");
+            sb.AppendLine($"UnkName: {UnkName}");
             sb.AppendLine($"MatchQueueStatus: 0x{MatchQueueStatus:X}");
-            sb.AppendLine($"ReplicationPolicyBool: {ReplicationPolicyBool}");
-            sb.AppendLine($"DateTime: 0x{DateTime:X}");
+            sb.AppendLine($"EmailVerified: {EmailVerified}");
+            sb.AppendLine($"AccountCreationTimestamp: 0x{AccountCreationTimestamp:X}");
+            sb.AppendLine($"IsGuidInfo: {IsGuidInfo}");
+            sb.AppendLine($"UnknownString: {UnknownString}");
+            sb.AppendLine($"IsCommunity: {IsCommunity}");
             sb.AppendLine($"Community: {Community}");
-            sb.AppendLine($"Flag3: {Flag3}");
+            sb.AppendLine($"UnkBool: {UnkBool}");
             for (int i = 0; i < StashInventories.Length; i++) sb.AppendLine($"StashInventory{i}: {GameDatabase.GetPrototypePath(StashInventories[i])}");
             for (int i = 0; i < AvailableBadges.Length; i++) sb.AppendLine($"AvailableBadge{i}: 0x{AvailableBadges[i]:X}");
             for (int i = 0; i < ChatChannelOptions.Length; i++) sb.AppendLine($"ChatChannelOption{i}: {ChatChannelOptions[i]}");

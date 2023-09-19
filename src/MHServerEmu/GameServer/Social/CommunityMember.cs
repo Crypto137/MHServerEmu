@@ -1,0 +1,162 @@
+﻿using System.Text;
+using Google.ProtocolBuffers;
+using MHServerEmu.Common.Extensions;
+using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
+using MHServerEmu.GameServer.GameData;
+using MHServerEmu.GameServer.Misc;
+using MHServerEmu.GameServer.Missions;
+using static ICSharpCode.SharpZipLib.Zip.ExtendedUnixData;
+using static System.Reflection.Metadata.BlobBuilder;
+
+namespace MHServerEmu.GameServer.Social
+{
+    public class AvatarSlotInfo
+    {
+        public ulong AvatarRef { get; set; }
+        public ulong CostumeRef { get; set; }
+        public int AvatarLevel { get; set; }
+        public int PrestigeLevel { get; set; }
+
+        public AvatarSlotInfo(CodedInputStream stream) {
+            AvatarRef = stream.ReadPrototypeId(PrototypeEnumType.All);
+            CostumeRef = stream.ReadPrototypeId(PrototypeEnumType.All);
+            AvatarLevel = stream.ReadRawInt32();
+            PrestigeLevel = stream.ReadRawInt32();
+        }
+
+        public AvatarSlotInfo(ulong avatarRef, ulong costumeRef, int avatarLevel, int prestigeLevel)
+        {
+            AvatarRef = avatarRef;
+            CostumeRef = costumeRef;
+            AvatarLevel = avatarLevel;
+            PrestigeLevel = prestigeLevel;
+        }
+
+        public byte[] Encode()
+        {
+            using (MemoryStream ms = new())
+            {
+                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+
+                cos.WritePrototypeId(AvatarRef, PrototypeEnumType.All);
+                cos.WritePrototypeId(CostumeRef, PrototypeEnumType.All);
+                cos.WriteRawInt32(AvatarLevel);
+                cos.WriteRawInt32(PrestigeLevel);
+
+                cos.Flush();
+                return ms.ToArray();
+            }
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new();
+
+            sb.AppendLine($"AvatarRef: {GameDatabase.GetPrototypePath(AvatarRef)}");
+            sb.AppendLine($"CostumeRef: {GameDatabase.GetPrototypePath(CostumeRef)}");
+            sb.AppendLine($"AvatarLevel: {AvatarLevel}");
+            sb.AppendLine($"PrestigeLevel: {PrestigeLevel}");
+            return sb.ToString();
+        }
+    }
+    public class CommunityMember
+    {
+        public string Name { get; set; }
+        public ulong DbId { get; set; }
+        public ulong RegionRef { get; set; }
+        public ulong DifficultyRef { get; set; }
+        public AvatarSlotInfo[] Slots { get; set; }
+        public int OnlineStatus { get; set; }
+        public string MemberName { get; set; }
+        public string UnkName { get; set; }
+        public ulong ConsoleAccountId_1 { get; set; }   
+        public ulong ConsoleAccountId_2 { get; set; }
+        public int[] ArchiveCircleIds { get; set; }
+
+        public CommunityMember(CodedInputStream stream)
+        {
+            Name = stream.ReadRawString();
+            DbId = stream.ReadRawVarint64();
+            RegionRef = stream.ReadPrototypeId(PrototypeEnumType.All);
+            DifficultyRef = stream.ReadPrototypeId(PrototypeEnumType.All);
+            Slots = new AvatarSlotInfo[stream.ReadRawByte()];  
+            for (int i = 0; i < Slots.Length; i++)
+            {
+                Slots[i] = new(stream);
+            }
+            OnlineStatus = stream.ReadRawInt32();
+            MemberName = stream.ReadRawString();
+            UnkName = stream.ReadRawString();
+            ConsoleAccountId_1 = stream.ReadRawVarint64();
+            ConsoleAccountId_2 = stream.ReadRawVarint64();
+            ArchiveCircleIds = new int[stream.ReadRawInt32()];
+            for (int i = 0; i < ArchiveCircleIds.Length; i++)
+            {
+                ArchiveCircleIds[i] = stream.ReadRawInt32();
+            }
+        }
+
+        public CommunityMember(string name, ulong dbId, ulong regionRef, ulong difficultyRef, 
+            AvatarSlotInfo[] slots, int onlineStatus, string unkName, int[] archiveCircleIds)
+        {
+            Name = name;
+            DbId = dbId;
+            RegionRef = regionRef;
+            DifficultyRef = difficultyRef;
+            Slots = slots;
+            OnlineStatus = onlineStatus;
+            MemberName = name;
+            UnkName = unkName;
+            ConsoleAccountId_1 = 0;
+            ConsoleAccountId_2 = 0;
+            ArchiveCircleIds = archiveCircleIds;
+        }
+
+        public byte[] Encode()
+        {
+            using (MemoryStream ms = new())
+            {
+                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+
+                cos.WriteRawString(Name);
+                cos.WriteRawVarint64(DbId);
+                cos.WriteRawVarint64(RegionRef);
+                cos.WriteRawVarint64(DifficultyRef);
+
+                cos.WriteRawByte((byte)Slots.Length);
+                foreach (AvatarSlotInfo slot in Slots)
+                    cos.WriteRawBytes(slot.Encode());
+
+                cos.WriteRawInt32(OnlineStatus);
+                cos.WriteRawString(MemberName);
+                cos.WriteRawString(UnkName);
+                cos.WriteRawVarint64(ConsoleAccountId_1);
+                cos.WriteRawVarint64(ConsoleAccountId_2);
+
+                cos.WriteRawInt32(ArchiveCircleIds.Length);
+                foreach (ulong CircleId in ArchiveCircleIds)
+                    cos.WriteRawVarint64(CircleId);
+
+                cos.Flush();
+                return ms.ToArray();
+            }
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new();
+            sb.AppendLine($"Name: {Name}");
+            sb.AppendLine($"DbId: 0x{DbId:X}");
+            sb.AppendLine($"RegionRef: {GameDatabase.GetPrototypePath(RegionRef)}");
+            sb.AppendLine($"DifficultyRef: {GameDatabase.GetPrototypePath(DifficultyRef)}");
+            for (int i = 0; i < Slots.Length; i++) sb.AppendLine($"Slot{i}: {Slots[i]}");
+            sb.AppendLine($"OnlineStatus: {OnlineStatus}");
+            sb.AppendLine($"MemberName: {MemberName}");
+            sb.AppendLine($"UnkName: {UnkName}");
+            sb.AppendLine($"ConsoleAccountId_1: 0x{ConsoleAccountId_1:X}");
+            sb.AppendLine($"ConsoleAccountId_2: 0x{ConsoleAccountId_2:X}");
+            for (int i = 0; i < ArchiveCircleIds.Length; i++) sb.AppendLine($"ArchiveCircleId{i}: {ArchiveCircleIds[i]}");
+            return sb.ToString();
+        }
+    }
+}
