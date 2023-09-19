@@ -4,8 +4,8 @@ using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.Achievements;
 using MHServerEmu.GameServer.Common;
+using MHServerEmu.GameServer.Entities.Options;
 using MHServerEmu.GameServer.GameData;
-using MHServerEmu.GameServer.Misc;
 using MHServerEmu.GameServer.Missions;
 using MHServerEmu.GameServer.Properties;
 using MHServerEmu.GameServer.Social;
@@ -37,10 +37,7 @@ namespace MHServerEmu.GameServer.Entities
         public bool UnkBool { get; set; }
         public ulong[] StashInventories { get; set; }
         public uint[] AvailableBadges { get; set; }
-        public ChatChannelOption[] ChatChannelOptions { get; set; }
-        public ulong[] ChatChannelOptions2 { get; set; }
-        public ulong[] UnknownOptions { get; set; }
-        public EquipmentInvUISlot[] EquipmentInvUISlots { get; set; }
+        public GameplayOptions GameplayOptions { get; set; }
         public AchievementState[] AchievementStates { get; set; }
         public StashTabOption[] StashTabOptions { get; set; }
 
@@ -97,21 +94,7 @@ namespace MHServerEmu.GameServer.Entities
 
             AvailableBadges = new uint[stream.ReadRawVarint64()];
 
-            ChatChannelOptions = new ChatChannelOption[stream.ReadRawVarint64()];
-            for (int i = 0; i < ChatChannelOptions.Length; i++)
-                ChatChannelOptions[i] = new(stream, boolDecoder);
-
-            ChatChannelOptions2 = new ulong[stream.ReadRawVarint64()];
-            for (int i = 0; i < ChatChannelOptions2.Length; i++)
-                ChatChannelOptions2[i] = stream.ReadPrototypeId(PrototypeEnumType.All);
-
-            UnknownOptions = new ulong[stream.ReadRawVarint64()];
-            for (int i = 0; i < UnknownOptions.Length; i++)
-                UnknownOptions[i] = stream.ReadRawVarint64();
-
-            EquipmentInvUISlots = new EquipmentInvUISlot[stream.ReadRawVarint64()];
-            for (int i = 0; i < EquipmentInvUISlots.Length; i++)
-                EquipmentInvUISlots[i] = new(stream);
+            GameplayOptions = new(stream, boolDecoder);
 
             AchievementStates = new AchievementState[stream.ReadRawVarint64()];
             for (int i = 0; i < AchievementStates.Length; i++)
@@ -124,12 +107,15 @@ namespace MHServerEmu.GameServer.Entities
 
         // note: this is ugly
         public Player(uint replicationPolicy, ReplicatedPropertyCollection propertyCollection,
-            ulong prototypeId, Mission[] missions, Quest[] quests, 
+            ulong prototypeId, Mission[] missions, Quest[] quests,
             ulong shardId, ReplicatedString playerName, ReplicatedString unkName,
-            ulong matchQueueStatus, bool emailVerified, ulong accountCreationTimestamp, 
-            Community community, ulong[] unknownFields)
-            : base(replicationPolicy, propertyCollection, unknownFields)
+            ulong matchQueueStatus, bool emailVerified, ulong accountCreationTimestamp,
+            Community community, bool unkBool, ulong[] stashInventories, uint[] availableBadges,
+            GameplayOptions gameplayOptions, AchievementState[] achievementStates, StashTabOption[] stashTabOptions)
         {
+            ReplicationPolicy = replicationPolicy;
+            PropertyCollection = propertyCollection;
+
             PrototypeId = prototypeId;
             Missions = missions;
             Quests = quests;
@@ -144,7 +130,12 @@ namespace MHServerEmu.GameServer.Entities
             EmailVerified = emailVerified;
             AccountCreationTimestamp = accountCreationTimestamp;
             Community = community;
-            UnknownFields = unknownFields;
+            UnkBool = unkBool;
+            StashInventories = stashInventories;
+            AvailableBadges = availableBadges;
+            GameplayOptions = gameplayOptions;
+            AchievementStates = achievementStates;
+            StashTabOptions = stashTabOptions;
         }
 
         public override byte[] Encode()
@@ -163,8 +154,8 @@ namespace MHServerEmu.GameServer.Entities
                 boolEncoder.WriteBool(HasGuildInfo);
                 boolEncoder.WriteBool(HasCommunity);
                 boolEncoder.WriteBool(UnkBool);
-                foreach (ChatChannelOption option in ChatChannelOptions)
-                    boolEncoder.WriteBool(option.Value);
+                foreach (ChatChannelFilter filter in GameplayOptions.ChatChannelFilters)
+                    boolEncoder.WriteBool(filter.IsSubscribed);
 
                 boolEncoder.Cook();
 
@@ -220,21 +211,7 @@ namespace MHServerEmu.GameServer.Entities
                 foreach (uint badge in AvailableBadges)
                     cos.WriteRawVarint64(badge);
 
-                cos.WriteRawVarint64((ulong)ChatChannelOptions.Length);
-                foreach (ChatChannelOption option in ChatChannelOptions)
-                    cos.WriteRawBytes(option.Encode(boolEncoder));
-
-                cos.WriteRawVarint64((ulong)ChatChannelOptions2.Length);
-                foreach (ulong option in ChatChannelOptions2)
-                    cos.WritePrototypeId(option, PrototypeEnumType.All);
-
-                cos.WriteRawVarint64((ulong)UnknownOptions.Length);
-                foreach (ulong option in UnknownOptions)
-                    cos.WriteRawVarint64(option);
-
-                cos.WriteRawVarint64((ulong)EquipmentInvUISlots.Length);
-                foreach (EquipmentInvUISlot slot in EquipmentInvUISlots)
-                    cos.WriteRawBytes(slot.Encode());
+                cos.WriteRawBytes(GameplayOptions.Encode(boolEncoder));
 
                 cos.WriteRawVarint64((ulong)AchievementStates.Length);
                 foreach (AchievementState state in AchievementStates)
@@ -275,10 +252,7 @@ namespace MHServerEmu.GameServer.Entities
             sb.AppendLine($"UnkBool: {UnkBool}");
             for (int i = 0; i < StashInventories.Length; i++) sb.AppendLine($"StashInventory{i}: {GameDatabase.GetPrototypePath(StashInventories[i])}");
             for (int i = 0; i < AvailableBadges.Length; i++) sb.AppendLine($"AvailableBadge{i}: 0x{AvailableBadges[i]:X}");
-            for (int i = 0; i < ChatChannelOptions.Length; i++) sb.AppendLine($"ChatChannelOption{i}: {ChatChannelOptions[i]}");
-            for (int i = 0; i < ChatChannelOptions2.Length; i++) sb.AppendLine($"ChatChannelOptions2_{i}: {GameDatabase.GetPrototypePath(ChatChannelOptions2[i])}");
-            for (int i = 0; i < UnknownOptions.Length; i++) sb.AppendLine($"UnknownOption{i}: 0x{UnknownOptions[i]:X}");
-            for (int i = 0; i < EquipmentInvUISlots.Length; i++) sb.AppendLine($"EquipmentInvUISlot{i}: {EquipmentInvUISlots[i]}");
+            sb.AppendLine($"GameplayOptions: {GameplayOptions}");
             for (int i = 0; i < AchievementStates.Length; i++) sb.AppendLine($"AchievementState{i}: {AchievementStates[i]}");
             for (int i = 0; i < StashTabOptions.Length; i++) sb.AppendLine($"StashTabOption{i}: {StashTabOptions[i]}");
 

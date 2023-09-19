@@ -3,7 +3,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.GameData;
 
-namespace MHServerEmu.GameServer.Misc
+namespace MHServerEmu.GameServer.Entities.Options
 {
     public class StashTabOption
     {
