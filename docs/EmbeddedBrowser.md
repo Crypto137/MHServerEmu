@@ -26,7 +26,7 @@ Calls are generally made with onclick events (e.g. ```<a onclick="myApi.OpenCata
 | Costumes     | CostumesPage  |
 | Items        | BoostsPage    |
 | Team Ups     | TeamUpsPage   |
-| Cards        |               |
+| Cards        | ChestsPage    |
 | Specials     | SpecialsPage  |
 | Bundles      | BundlesPage   |
 
