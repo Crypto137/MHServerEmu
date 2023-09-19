@@ -48,6 +48,14 @@ namespace MHServerEmu.GameServer
 
                     break;
 
+                case ClientToGameServerMessage.NetMessageTell:
+                    var tellMessage = NetMessageTell.ParseFrom(message.Payload);
+                    Logger.Trace($"Received tell for {tellMessage.TargetPlayerName}");
+
+                    // Respond with an error for now
+                    client.SendMessage(2, new(ChatErrorMessage.CreateBuilder().SetErrorMessage(ChatErrorMessages.CHAT_ERROR_NO_SUCH_USER).Build()));
+                    break;
+
                 default:
                     Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
                     break;
