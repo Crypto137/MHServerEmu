@@ -35,7 +35,7 @@ namespace MHServerEmu.GameServer.Social
                 cos.WriteRawInt32(CircleNames.Length);
                 foreach (string circleName in CircleNames) cos.WriteRawString(circleName);
                 cos.WriteRawInt32(CommunityMembers.Length);
-                foreach (CommunityMember CommunityMember in CommunityMembers) cos.WriteRawBytes(CommunityMember.Encode());
+                foreach (CommunityMember communityMember in CommunityMembers) cos.WriteRawBytes(communityMember.Encode());
 
                 cos.Flush();
                 return ms.ToArray();

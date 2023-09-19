@@ -5,6 +5,13 @@ using MHServerEmu.GameServer.GameData;
 
 namespace MHServerEmu.GameServer.Social
 {
+    public enum CommunityMemberOnlineStatus
+    {
+        Status0,
+        Online,
+        Offline
+    }
+
     public class CommunityMember
     {
         public string Name { get; set; }
@@ -12,7 +19,7 @@ namespace MHServerEmu.GameServer.Social
         public ulong RegionRef { get; set; }
         public ulong DifficultyRef { get; set; }
         public AvatarSlotInfo[] Slots { get; set; }
-        public int OnlineStatus { get; set; }
+        public CommunityMemberOnlineStatus OnlineStatus { get; set; }
         public string MemberName { get; set; }
         public string UnkName { get; set; }
         public ulong ConsoleAccountId1 { get; set; }   
@@ -28,7 +35,7 @@ namespace MHServerEmu.GameServer.Social
             Slots = new AvatarSlotInfo[stream.ReadRawByte()];  
             for (int i = 0; i < Slots.Length; i++)
                 Slots[i] = new(stream);
-            OnlineStatus = stream.ReadRawInt32();
+            OnlineStatus = (CommunityMemberOnlineStatus)stream.ReadRawInt32();
             MemberName = stream.ReadRawString();
             UnkName = stream.ReadRawString();
             ConsoleAccountId1 = stream.ReadRawVarint64();
@@ -39,7 +46,7 @@ namespace MHServerEmu.GameServer.Social
         }
 
         public CommunityMember(string name, ulong dbId, ulong regionRef, ulong difficultyRef, 
-            AvatarSlotInfo[] slots, int onlineStatus, string unkName, int[] archiveCircleIds)
+            AvatarSlotInfo[] slots, CommunityMemberOnlineStatus onlineStatus, string unkName, int[] archiveCircleIds)
         {
             Name = name;
             DbId = dbId;
@@ -69,15 +76,15 @@ namespace MHServerEmu.GameServer.Social
                 foreach (AvatarSlotInfo slot in Slots)
                     cos.WriteRawBytes(slot.Encode());
 
-                cos.WriteRawInt32(OnlineStatus);
+                cos.WriteRawInt32((int)OnlineStatus);
                 cos.WriteRawString(MemberName);
                 cos.WriteRawString(UnkName);
                 cos.WriteRawVarint64(ConsoleAccountId1);
                 cos.WriteRawVarint64(ConsoleAccountId2);
 
                 cos.WriteRawInt32(ArchiveCircleIds.Length);
-                foreach (ulong circleId in ArchiveCircleIds)
-                    cos.WriteRawVarint64(circleId);
+                foreach (int circleId in ArchiveCircleIds)
+                    cos.WriteRawInt32(circleId);
 
                 cos.Flush();
                 return ms.ToArray();
