@@ -7,7 +7,7 @@ namespace MHServerEmu.GameServer.Social
     public class Community
     {
         public string[] CircleNames { get; set; } // CommunityCircle
-        public CommunityMember[] CommunityMembers { get; set; }
+        public List<CommunityMember> CommunityMemberList { get; set; }
 
         public Community(CodedInputStream stream)
         {
@@ -15,15 +15,16 @@ namespace MHServerEmu.GameServer.Social
             for (int i = 0; i < CircleNames.Length; i++)
                 CircleNames[i] = stream.ReadRawString();
 
-            CommunityMembers = new CommunityMember[stream.ReadRawInt32()];
-            for (int i = 0; i < CommunityMembers.Length; i++)
-                CommunityMembers[i] = new(stream);
+            CommunityMemberList = new();
+            int communityMemberCount = stream.ReadRawInt32();
+            for (int i = 0; i < communityMemberCount; i++)
+                CommunityMemberList.Add(new(stream));
         }
 
-        public Community(string[] circleNames, CommunityMember[] communityMembers)
+        public Community(string[] circleNames, List<CommunityMember> communityMemberList)
         {
             CircleNames = circleNames;
-            CommunityMembers = communityMembers;
+            CommunityMemberList = communityMemberList;
         }
 
         public byte[] Encode()
@@ -34,8 +35,8 @@ namespace MHServerEmu.GameServer.Social
   
                 cos.WriteRawInt32(CircleNames.Length);
                 foreach (string circleName in CircleNames) cos.WriteRawString(circleName);
-                cos.WriteRawInt32(CommunityMembers.Length);
-                foreach (CommunityMember communityMember in CommunityMembers) cos.WriteRawBytes(communityMember.Encode());
+                cos.WriteRawInt32(CommunityMemberList.Count);
+                foreach (CommunityMember communityMember in CommunityMemberList) cos.WriteRawBytes(communityMember.Encode());
 
                 cos.Flush();
                 return ms.ToArray();
@@ -46,7 +47,7 @@ namespace MHServerEmu.GameServer.Social
         {
             StringBuilder sb = new();
             for (int i = 0; i < CircleNames.Length; i++) sb.AppendLine($"CircleName{i}: {CircleNames[i]}");
-            for (int i = 0; i < CommunityMembers.Length; i++) sb.AppendLine($"CommunityMember{i}: {CommunityMembers[i]}");
+            for (int i = 0; i < CommunityMemberList.Count; i++) sb.AppendLine($"CommunityMember{i}: {CommunityMemberList[i]}");
             return sb.ToString();
         }
     }
