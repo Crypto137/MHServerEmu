@@ -3,8 +3,8 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.Common;
-using MHServerEmu.GameServer.Misc;
 using MHServerEmu.GameServer.Powers;
+using MHServerEmu.GameServer.Social;
 
 namespace MHServerEmu.GameServer.Entities.Avatars
 {
@@ -14,7 +14,7 @@ namespace MHServerEmu.GameServer.Entities.Avatars
         public ulong OwnerPlayerDbId { get; set; }
         public string GuildName { get; set; }
         public bool IsRuntimeInfo { get; set; }
-        public ReplicationRuntimeInfo ReplicationRuntimeInfo { get; set; }
+        public GuildMemberReplicationRuntimeInfo ReplicationRuntimeInfo { get; set; }
         public AbilityKeyMapping[] AbilityKeyMappings { get; set; }
 
         public Avatar(byte[] archiveData)
@@ -42,7 +42,7 @@ namespace MHServerEmu.GameServer.Entities.Avatars
         }
 
         public Avatar(PrototypeCollectionEntry[] prototypeCollection, Condition[] conditionCollection, PowerCollectionRecord[] powerCollection, int unkEvent,
-            ReplicatedString playerName, ulong ownerPlayerDbId, string guildName, bool isRuntimeInfo, ReplicationRuntimeInfo replicationRuntimeInfo, AbilityKeyMapping[] abilityKeyMappings)
+            ReplicatedString playerName, ulong ownerPlayerDbId, string guildName, bool isRuntimeInfo, GuildMemberReplicationRuntimeInfo replicationRuntimeInfo, AbilityKeyMapping[] abilityKeyMappings)
         {
             PrototypeCollection = prototypeCollection;
             ConditionCollection = conditionCollection;
