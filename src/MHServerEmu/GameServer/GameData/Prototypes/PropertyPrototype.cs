@@ -35,16 +35,16 @@ namespace MHServerEmu.GameServer.GameData.Prototypes
                         DefaultValue = element.Value;
                         break;
                     case "Param0":
-                        SetParamType(0, ParamTypeDict[element.Type], blueprint.FieldDict[element.Id].ExpectedValue, element.Value);
+                        SetParamType(0, ParamTypeDict[element.Type], blueprint.FieldDict[element.Id].Subtype, element.Value);
                         break;
                     case "Param1":
-                        SetParamType(1, ParamTypeDict[element.Type], blueprint.FieldDict[element.Id].ExpectedValue, element.Value);
+                        SetParamType(1, ParamTypeDict[element.Type], blueprint.FieldDict[element.Id].Subtype, element.Value);
                         break;
                     case "Param2":
-                        SetParamType(2, ParamTypeDict[element.Type], blueprint.FieldDict[element.Id].ExpectedValue, element.Value);
+                        SetParamType(2, ParamTypeDict[element.Type], blueprint.FieldDict[element.Id].Subtype, element.Value);
                         break;
                     case "Param3":
-                        SetParamType(3, ParamTypeDict[element.Type], blueprint.FieldDict[element.Id].ExpectedValue, element.Value);
+                        SetParamType(3, ParamTypeDict[element.Type], blueprint.FieldDict[element.Id].Subtype, element.Value);
                         break;
                 }
             }
@@ -86,13 +86,13 @@ namespace MHServerEmu.GameServer.GameData.Prototypes
             }
         }
 
-        private void SetParamType(int index, PropertyParamType type, ulong expectedValue, object defaultValue)
+        private void SetParamType(int index, PropertyParamType type, ulong subtype, object defaultValue)
         {
             Params[index].Type = type;
             Params[index].DefaultValue = defaultValue;
 
             if (type == PropertyParamType.Asset)
-                Params[index].ValueMax = GameDatabase.Calligraphy.GetAssetType(expectedValue).GetMaxEnumValue();
+                Params[index].ValueMax = GameDatabase.Calligraphy.GetAssetType(subtype).GetMaxEnumValue();
             else if (type == PropertyParamType.Prototype)
                 Params[index].ValueMax = GameDatabase.PrototypeRefManager.MaxEnumValue;
         }

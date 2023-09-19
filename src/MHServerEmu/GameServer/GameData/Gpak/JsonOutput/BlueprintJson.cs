@@ -49,7 +49,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
             public string Name { get; }
             public char ValueType { get; }
             public char ContainerType { get; }
-            public string ExpectedValue { get; }
+            public string Subtype { get; }
 
             public BlueprintFieldJson(BlueprintField field, DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir)
             {
@@ -59,21 +59,19 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
 
                 switch (ValueType)
                 {
+                    // Only these types have subtypes
                     case 'A':
-                        ExpectedValue = typeDir.IdDict[field.ExpectedValue].FilePath;
+                        Subtype = typeDir.IdDict[field.Subtype].FilePath;
                         break;
 
                     case 'C':
-                        ExpectedValue = curveDir.IdDict[field.ExpectedValue].FilePath;
+                        Subtype = curveDir.IdDict[field.Subtype].FilePath;
                         break;
 
+                    // Both P and R have prototypes as their subtypes
                     case 'P':
                     case 'R':
-                        ExpectedValue = (field.ExpectedValue != 0) ? prototypeDir.IdDict[field.ExpectedValue].FilePath : "";
-                        break;
-
-                    default:
-                        // other types don't have expected values
+                        Subtype = (field.Subtype != 0) ? prototypeDir.IdDict[field.Subtype].FilePath : "";
                         break;
                 }
             }

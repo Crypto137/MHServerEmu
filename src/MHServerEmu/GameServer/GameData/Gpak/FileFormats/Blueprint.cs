@@ -53,7 +53,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         public string Name { get; }
         public CalligraphyValueType ValueType { get; }
         public CalligraphyContainerType ContainerType { get; }
-        public ulong ExpectedValue { get; }
+        public ulong Subtype { get; }
 
         public BlueprintField(BinaryReader reader)
         {
@@ -63,15 +63,12 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 
             switch (ValueType)
             {
+                // Only these types have subtypes
                 case CalligraphyValueType.A:
                 case CalligraphyValueType.C:
                 case CalligraphyValueType.P:
                 case CalligraphyValueType.R:
-                    ExpectedValue = reader.ReadUInt64();
-                    break;
-
-                default:
-                    // other types don't have expected values
+                    Subtype = reader.ReadUInt64();
                     break;
             }
         }
