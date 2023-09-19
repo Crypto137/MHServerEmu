@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.GameServer.Entities.Options;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.GameServer
@@ -113,6 +114,10 @@ namespace MHServerEmu.GameServer
 
                 case ClientToGameServerMessage.NetMessageGracefulDisconnect:
                     client.SendMuxDisconnect(1);
+                    break;
+
+                case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:
+                    Logger.Trace(new GameplayOptions(NetMessageSetPlayerGameplayOptions.ParseFrom(message.Payload).OptionsData).ToString());
                     break;
 
                 default:

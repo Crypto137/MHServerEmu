@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
+using Gazillion;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.GameData;
@@ -24,6 +25,12 @@ namespace MHServerEmu.GameServer.Entities.Options
             IsSubscribed = isSubscribed;
         }
 
+        public ChatChannelFilter(NetStructChatChannelFilterState netStruct)
+        {
+            ChannelProtoId = netStruct.ChannelProtoId;
+            IsSubscribed = netStruct.IsSubscribed;
+        }
+
         public byte[] Encode(BoolEncoder boolEncoder)
         {
             using (MemoryStream ms = new())
@@ -39,6 +46,8 @@ namespace MHServerEmu.GameServer.Entities.Options
                 return ms.ToArray();
             }
         }
+
+        public NetStructChatChannelFilterState ToNetStruct() => NetStructChatChannelFilterState.CreateBuilder().SetChannelProtoId(ChannelProtoId).SetIsSubscribed(IsSubscribed).Build();
 
         public override string ToString()
         {

@@ -1,8 +1,10 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
+using Gazillion;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.GameData;
+using MHServerEmu.GameServer.Loot;
 
 namespace MHServerEmu.GameServer.Entities.Options
 {
@@ -33,7 +35,7 @@ namespace MHServerEmu.GameServer.Entities.Options
     {
         public ChatChannelFilter[] ChatChannelFilters { get; set; } // ChatChannelFilterMap
         public ulong[] ChatTabChannels { get; set; }                // ChatTabState
-        public int[] OptionSettings { get; set; }
+        public ulong[] OptionSettings { get; set; }
         public ArmorRarityVaporizeThreshold[] ArmorRarityVaporizeThresholds { get; set; }
 
         public GameplayOptions(CodedInputStream stream, BoolDecoder boolDecoder)
@@ -46,21 +48,32 @@ namespace MHServerEmu.GameServer.Entities.Options
             for (int i = 0; i < ChatTabChannels.Length; i++)
                 ChatTabChannels[i] = stream.ReadPrototypeId(PrototypeEnumType.All);
 
-            OptionSettings = new int[stream.ReadRawVarint64()];
+            OptionSettings = new ulong[stream.ReadRawVarint64()];
             for (int i = 0; i < OptionSettings.Length; i++)
-                OptionSettings[i] = stream.ReadRawInt32();
+                OptionSettings[i] = stream.ReadRawVarint64();
 
             ArmorRarityVaporizeThresholds = new ArmorRarityVaporizeThreshold[stream.ReadRawVarint64()];
             for (int i = 0; i < ArmorRarityVaporizeThresholds.Length; i++)
                 ArmorRarityVaporizeThresholds[i] = new(stream);
         }
 
-        public GameplayOptions(ChatChannelFilter[] chatChannelFilters, ulong[] chatTabChannels, int[] optionSettings, ArmorRarityVaporizeThreshold[] armorRarityVaporizeThresholds)
+        public GameplayOptions(ChatChannelFilter[] chatChannelFilters, ulong[] chatTabChannels, ulong[] optionSettings, ArmorRarityVaporizeThreshold[] armorRarityVaporizeThresholds)
         {
             ChatChannelFilters = chatChannelFilters;
             ChatTabChannels = chatTabChannels;
             OptionSettings = optionSettings;
             ArmorRarityVaporizeThresholds = armorRarityVaporizeThresholds;
+        }
+
+        public GameplayOptions(NetStructGameplayOptions netStruct)
+        {
+            ChatChannelFilters = netStruct.ChatChannelFiltersMapList.Select(filter => new ChatChannelFilter(filter)).ToArray();
+            ChatTabChannels = netStruct.ChatTabChannelsArrayList.Select(channel => channel.ChannelProtoId).ToArray();
+            OptionSettings = netStruct.OptionSettingsList.ToArray();
+
+            ArmorRarityVaporizeThresholds = new ArmorRarityVaporizeThreshold[netStruct.ArmorRarityVaporizeThresholdProtoIdCount];
+            for (int i = 0; i < ArmorRarityVaporizeThresholds.Length; i++)
+                ArmorRarityVaporizeThresholds[i] = new((EquipmentInvUISlot)(i + 1), netStruct.ArmorRarityVaporizeThresholdProtoIdList[i]);
         }
 
         public byte[] Encode(BoolEncoder boolEncoder)
@@ -88,6 +101,16 @@ namespace MHServerEmu.GameServer.Entities.Options
                 cos.Flush();
                 return ms.ToArray();
             }
+        }
+
+        public NetStructGameplayOptions ToNetStruct()
+        {
+            return NetStructGameplayOptions.CreateBuilder()
+                .AddRangeOptionSettings(OptionSettings)
+                .AddRangeChatChannelFiltersMap(ChatChannelFilters.Select(filter => filter.ToNetStruct()))
+                .AddRangeChatTabChannelsArray(ChatTabChannels.Select(channel => NetStructChatTabState.CreateBuilder().SetChannelProtoId(channel).Build()))
+                .AddRangeArmorRarityVaporizeThresholdProtoId(ArmorRarityVaporizeThresholds.Select(threshold => threshold.RarityPrototypeId))
+                .Build();
         }
 
         public override string ToString()
