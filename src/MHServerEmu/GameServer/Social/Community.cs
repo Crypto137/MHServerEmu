@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.GameServer.Social
@@ -14,15 +13,11 @@ namespace MHServerEmu.GameServer.Social
         {
             CircleNames = new string[stream.ReadRawInt32()];
             for (int i = 0; i < CircleNames.Length; i++)
-            {
                 CircleNames[i] = stream.ReadRawString();
-            }
 
             CommunityMembers = new CommunityMember[stream.ReadRawInt32()];
             for (int i = 0; i < CommunityMembers.Length; i++)
-            {
                 CommunityMembers[i] = new(stream);
-            }
         }
 
         public Community(string[] circleNames, CommunityMember[] communityMembers)

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
+﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
@@ -32,8 +30,9 @@ namespace MHServerEmu.GameServer.Entities
         public ulong PartyRepId { get; set; }
         public ulong PartyId { get; set; }
         public string UnknownString { get; set; }
-        public bool IsGuidInfo { get; set; } 
-        public bool IsCommunity { get; set; }
+        public bool HasGuildInfo { get; set; }
+        public GuildMemberReplicationRuntimeInfo GuildInfo { get; set; }
+        public bool HasCommunity { get; set; }
         public Community Community { get; set; }
         public bool UnkBool { get; set; }
         public ulong[] StashInventories { get; set; }
@@ -80,21 +79,14 @@ namespace MHServerEmu.GameServer.Entities
             PartyId = stream.ReadRawVarint64();
             
             if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
-            IsGuidInfo = boolDecoder.ReadBool();
-            if (IsGuidInfo) // GuildMember::SerializeReplicationRuntimeInfo
-            {
-                throw new("IsGuidInfo parsing not implemented.");
-                // ulong GuildId
-                // string GuildList
-                // int GuildMembership
-            }
+            HasGuildInfo = boolDecoder.ReadBool();
+            if (HasGuildInfo) GuildInfo = new(stream);      // GuildMember::SerializeReplicationRuntimeInfo
 
             UnknownString = stream.ReadRawString();
 
             if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
-            IsCommunity = boolDecoder.ReadBool();
-            if (IsCommunity)
-                Community = new(stream);
+            HasCommunity = boolDecoder.ReadBool();
+            if (HasCommunity) Community = new(stream);
 
             if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
             UnkBool = boolDecoder.ReadBool();
@@ -168,8 +160,8 @@ namespace MHServerEmu.GameServer.Entities
                 foreach (Mission mission in Missions)
                     boolEncoder.WriteBool(mission.BoolField);
                 boolEncoder.WriteBool(EmailVerified);
-                boolEncoder.WriteBool(IsGuidInfo);
-                boolEncoder.WriteBool(IsCommunity);
+                boolEncoder.WriteBool(HasGuildInfo);
+                boolEncoder.WriteBool(HasCommunity);
                 boolEncoder.WriteBool(UnkBool);
                 foreach (ChatChannelOption option in ChatChannelOptions)
                     boolEncoder.WriteBool(option.Value);
@@ -206,17 +198,17 @@ namespace MHServerEmu.GameServer.Entities
                 cos.WriteRawVarint64(PartyRepId);
                 cos.WriteRawVarint64(PartyId);
 
-                bitBuffer = boolEncoder.GetBitBuffer();             // IsGuidInfo
+                bitBuffer = boolEncoder.GetBitBuffer();             // HasGuildInfo
                 if (bitBuffer != 0) cos.WriteRawByte(bitBuffer);
+
+                if (HasGuildInfo) cos.WriteRawBytes(GuildInfo.Encode());
 
                 cos.WriteRawString(UnknownString);
 
-                bitBuffer = boolEncoder.GetBitBuffer();             // IsCommunity
-                if (bitBuffer != 0)
-                {
-                    cos.WriteRawByte(bitBuffer);
-                    cos.WriteRawBytes(Community.Encode());
-                }
+                bitBuffer = boolEncoder.GetBitBuffer();             // HasCommunity
+                if (bitBuffer != 0) cos.WriteRawByte(bitBuffer);
+
+                if (HasCommunity) cos.WriteRawBytes(Community.Encode());
 
                 bitBuffer = boolEncoder.GetBitBuffer();             // UnkBool
                 if (bitBuffer != 0) cos.WriteRawByte(bitBuffer);
@@ -275,9 +267,10 @@ namespace MHServerEmu.GameServer.Entities
             sb.AppendLine($"MatchQueueStatus: 0x{MatchQueueStatus:X}");
             sb.AppendLine($"EmailVerified: {EmailVerified}");
             sb.AppendLine($"AccountCreationTimestamp: 0x{AccountCreationTimestamp:X}");
-            sb.AppendLine($"IsGuidInfo: {IsGuidInfo}");
+            sb.AppendLine($"HasGuildInfo: {HasGuildInfo}");
+            sb.AppendLine($"GuildInfo: {GuildInfo}");
             sb.AppendLine($"UnknownString: {UnknownString}");
-            sb.AppendLine($"IsCommunity: {IsCommunity}");
+            sb.AppendLine($"HasCommunity: {HasCommunity}");
             sb.AppendLine($"Community: {Community}");
             sb.AppendLine($"UnkBool: {UnkBool}");
             for (int i = 0; i < StashInventories.Length; i++) sb.AppendLine($"StashInventory{i}: {GameDatabase.GetPrototypePath(StashInventories[i])}");
