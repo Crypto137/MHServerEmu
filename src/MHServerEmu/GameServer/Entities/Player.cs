@@ -149,7 +149,7 @@ namespace MHServerEmu.GameServer.Entities
                 byte bitBuffer;
 
                 foreach (Mission mission in Missions)
-                    boolEncoder.WriteBool(mission.BoolField);
+                    boolEncoder.WriteBool(mission.Suspended);
                 boolEncoder.WriteBool(EmailVerified);
                 boolEncoder.WriteBool(HasGuildInfo);
                 boolEncoder.WriteBool(HasCommunity);
