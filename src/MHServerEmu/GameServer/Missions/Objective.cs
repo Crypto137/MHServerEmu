@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
+using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.GameServer.Missions
 {
@@ -7,9 +8,9 @@ namespace MHServerEmu.GameServer.Missions
     {
         public ulong ObjectivesIndex { get; set; }
         public ulong ObjectiveIndex { get; set; }   // NetMessageMissionObjectiveUpdate
-        public ulong ObjectiveState { get; set; }
+        public int ObjectiveState { get; set; }
         public ulong ObjectiveStateExpireTime { get; set; }
-        public ulong InteractedEntities { get; set; }
+        public ulong InteractedEntities { get; set; }   // array ?
         public ulong CurrentCount { get; set; }
         public ulong RequiredCount { get; set; }
         public ulong FailCurrentCount { get; set; }
@@ -17,9 +18,9 @@ namespace MHServerEmu.GameServer.Missions
 
         public Objective(CodedInputStream stream)
         {
-            ObjectivesIndex = stream.ReadRawVarint64();
-            ObjectiveIndex = stream.ReadRawVarint64();
-            ObjectiveState = stream.ReadRawVarint64();
+            ObjectivesIndex = stream.ReadRawByte();
+            ObjectiveIndex = stream.ReadRawByte();
+            ObjectiveState = stream.ReadRawInt32();
             ObjectiveStateExpireTime = stream.ReadRawVarint64();
             InteractedEntities = stream.ReadRawVarint64();
             CurrentCount = stream.ReadRawVarint64();
@@ -28,7 +29,7 @@ namespace MHServerEmu.GameServer.Missions
             FailRequiredCount = stream.ReadRawVarint64();
         }
 
-        public Objective(ulong objectiveIndex, ulong objectiveState, ulong objectiveStateExpireTime,
+        public Objective(ulong objectiveIndex, int objectiveState, ulong objectiveStateExpireTime,
             ulong interactedEntities, ulong currentCount, ulong requiredCount, ulong failCurrentCount, 
             ulong failRequiredCount)
         {
@@ -49,9 +50,9 @@ namespace MHServerEmu.GameServer.Missions
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                cos.WriteRawVarint64(ObjectivesIndex);
-                cos.WriteRawVarint64(ObjectiveIndex);
-                cos.WriteRawVarint64(ObjectiveState);
+                cos.WriteRawByte((byte)ObjectivesIndex);
+                cos.WriteRawByte((byte)ObjectiveIndex);
+                cos.WriteRawInt32(ObjectiveState);
                 cos.WriteRawVarint64(ObjectiveStateExpireTime);
                 cos.WriteRawVarint64(InteractedEntities);
                 cos.WriteRawVarint64(CurrentCount);
