@@ -14,7 +14,7 @@ namespace MHServerEmu.GameServer.Missions
     {
         public ulong PrototypeId { get; set; }
         public Mission[] Missions { get; set; }
-        public Quest[] Quests { get; set; }
+        public LegendaryMissionBlacklists[] LegendaryMissionBlacklists { get; set; }
 
         public MissionManager(CodedInputStream stream, BoolDecoder boolDecoder)
         {
@@ -23,16 +23,16 @@ namespace MHServerEmu.GameServer.Missions
             Missions = new Mission[stream.ReadRawVarint64()];
             for (int i = 0; i < Missions.Length; i++)
                 Missions[i] = new(stream, boolDecoder);
-            Quests = new Quest[stream.ReadRawInt32()];
-            for (int i = 0; i < Quests.Length; i++)
-                Quests[i] = new(stream);
+            LegendaryMissionBlacklists = new LegendaryMissionBlacklists[stream.ReadRawInt32()];
+            for (int i = 0; i < LegendaryMissionBlacklists.Length; i++)
+                LegendaryMissionBlacklists[i] = new(stream);
         }
 
-        public MissionManager(ulong prototypeId, Mission[] missions, Quest[] quests)
+        public MissionManager(ulong prototypeId, Mission[] missions, LegendaryMissionBlacklists[] legendaryMissionBlacklists)
         {
             PrototypeId = prototypeId;
             Missions = missions;
-            Quests = quests;
+            LegendaryMissionBlacklists = legendaryMissionBlacklists;
         }
 
         public void EncodeBool(BoolEncoder boolEncoder)
@@ -53,8 +53,8 @@ namespace MHServerEmu.GameServer.Missions
                 foreach (Mission mission in Missions)
                     cos.WriteRawBytes(mission.Encode(boolEncoder));
 
-                cos.WriteRawInt32(Quests.Length);
-                foreach (Quest quest in Quests)
+                cos.WriteRawInt32(LegendaryMissionBlacklists.Length);
+                foreach (LegendaryMissionBlacklists quest in LegendaryMissionBlacklists)
                     cos.WriteRawBytes(quest.Encode());
 
                 cos.Flush();
@@ -67,8 +67,10 @@ namespace MHServerEmu.GameServer.Missions
             StringBuilder sb = new();
 
             sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
-            for (int i = 0; i < Missions.Length; i++) sb.AppendLine($"Mission{i}: {Missions[i]}");
-            for (int i = 0; i < Quests.Length; i++) sb.AppendLine($"Quest{i}: {Quests[i]}");
+            for (int i = 0; i < Missions.Length; i++) 
+                sb.AppendLine($"Mission{i}: {Missions[i]}");
+            for (int i = 0; i < LegendaryMissionBlacklists.Length; i++) 
+                sb.AppendLine($"LegendaryMissionBlacklists{i}: {LegendaryMissionBlacklists[i]}");
 
             return sb.ToString();
         }

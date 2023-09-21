@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.IO;
+using System.Text;
 using Google.ProtocolBuffers;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using MHServerEmu.Common.Encoders;
@@ -16,8 +17,7 @@ namespace MHServerEmu.GameServer.Entities
     public class Player : Entity
     {
         public MissionManager MissionManager { get; set; }
-        public ulong UnknownCollectionRepId { get; set;}
-        public uint UnknownCollectionSize { get; set; }
+        public ReplicatedPropertyCollection AvatarPropertyCollection { get; set; }
         public ulong ShardId { get; set; }
         public ReplicatedString Name { get; set; }
         public ulong ConsoleAccountId1 { get; set; }
@@ -49,8 +49,7 @@ namespace MHServerEmu.GameServer.Entities
 
             MissionManager = new(stream, boolDecoder);
 
-            UnknownCollectionRepId = stream.ReadRawVarint64();
-            UnknownCollectionSize = stream.ReadRawUInt32();
+            AvatarPropertyCollection = new(stream);
 
             ShardId = stream.ReadRawVarint64();
             Name = new(stream);
@@ -99,7 +98,7 @@ namespace MHServerEmu.GameServer.Entities
 
         // note: this is ugly
         public Player(uint replicationPolicy, ReplicatedPropertyCollection propertyCollection,
-            MissionManager missionManager,
+            MissionManager missionManager, ReplicatedPropertyCollection avatarProperties,
             ulong shardId, ReplicatedString playerName, ReplicatedString unkName,
             ulong matchQueueStatus, bool emailVerified, ulong accountCreationTimestamp,
             Community community, bool unkBool, ulong[] stashInventories, uint[] availableBadges,
@@ -109,8 +108,7 @@ namespace MHServerEmu.GameServer.Entities
             PropertyCollection = propertyCollection;
 
             MissionManager = missionManager;
-            UnknownCollectionRepId = 0;
-            UnknownCollectionSize = 0;
+            AvatarPropertyCollection = avatarProperties;
             ShardId = shardId;
             Name = playerName;
             ConsoleAccountId1 = 0;
@@ -153,9 +151,8 @@ namespace MHServerEmu.GameServer.Entities
                 WriteEntityFields(cos);
 
                 cos.WriteRawBytes(MissionManager.Encode(boolEncoder));
+                cos.WriteRawBytes(AvatarPropertyCollection.Encode());
 
-                cos.WriteRawVarint64(UnknownCollectionRepId);
-                cos.WriteRawUInt32(UnknownCollectionSize);
                 cos.WriteRawVarint64(ShardId);
                 cos.WriteRawBytes(Name.Encode());
                 cos.WriteRawVarint64(ConsoleAccountId1);
@@ -214,8 +211,7 @@ namespace MHServerEmu.GameServer.Entities
             WriteEntityString(sb);
 
             sb.AppendLine($"MissionManager: {MissionManager}");
-            sb.AppendLine($"UnknownCollectionRepId: 0x{UnknownCollectionRepId:X}");
-            sb.AppendLine($"UnknownCollectionSize: 0x{UnknownCollectionSize:X}");
+            sb.AppendLine($"AvatarPropertyCollection: {AvatarPropertyCollection}");
             sb.AppendLine($"ShardId: {ShardId}");
             sb.AppendLine($"Name: {Name}");
             sb.AppendLine($"ConsoleAccountId1: 0x{ConsoleAccountId1:X}");
