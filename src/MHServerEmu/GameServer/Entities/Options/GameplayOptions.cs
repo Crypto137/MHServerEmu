@@ -5,6 +5,7 @@ using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.Loot;
+using MHServerEmu.GameServer.Missions;
 
 namespace MHServerEmu.GameServer.Entities.Options
 {
@@ -74,6 +75,12 @@ namespace MHServerEmu.GameServer.Entities.Options
             ArmorRarityVaporizeThresholds = new ArmorRarityVaporizeThreshold[netStruct.ArmorRarityVaporizeThresholdProtoIdCount];
             for (int i = 0; i < ArmorRarityVaporizeThresholds.Length; i++)
                 ArmorRarityVaporizeThresholds[i] = new((EquipmentInvUISlot)(i + 1), netStruct.ArmorRarityVaporizeThresholdProtoIdList[i]);
+        }
+
+        public void EncodeBool(BoolEncoder boolEncoder)
+        {
+            foreach (ChatChannelFilter filter in ChatChannelFilters)
+                boolEncoder.WriteBool(filter.IsSubscribed);
         }
 
         public byte[] Encode(BoolEncoder boolEncoder)

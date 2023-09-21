@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
+using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.Achievements;
@@ -14,9 +15,7 @@ namespace MHServerEmu.GameServer.Entities
 {
     public class Player : Entity
     {
-        public ulong PrototypeId { get; set; }
-        public Mission[] Missions { get; set; }
-        public Quest[] Quests { get; set; }
+        public MissionManager MissionManager { get; set; }
         public ulong UnknownCollectionRepId { get; set;}
         public uint UnknownCollectionSize { get; set; }
         public ulong ShardId { get; set; }
@@ -48,14 +47,7 @@ namespace MHServerEmu.GameServer.Entities
 
             ReadEntityFields(stream);
 
-            PrototypeId = stream.ReadPrototypeId(PrototypeEnumType.All);
-
-            Missions = new Mission[stream.ReadRawVarint64()];
-            for (int i = 0; i < Missions.Length; i++)
-                Missions[i] = new(stream, boolDecoder);
-            Quests = new Quest[stream.ReadRawInt32()];
-            for (int i = 0; i < Quests.Length; i++)
-                Quests[i] = new(stream);
+            MissionManager = new(stream, boolDecoder);
 
             UnknownCollectionRepId = stream.ReadRawVarint64();
             UnknownCollectionSize = stream.ReadRawUInt32();
@@ -107,7 +99,7 @@ namespace MHServerEmu.GameServer.Entities
 
         // note: this is ugly
         public Player(uint replicationPolicy, ReplicatedPropertyCollection propertyCollection,
-            ulong prototypeId, Mission[] missions, Quest[] quests,
+            MissionManager missionManager,
             ulong shardId, ReplicatedString playerName, ReplicatedString unkName,
             ulong matchQueueStatus, bool emailVerified, ulong accountCreationTimestamp,
             Community community, bool unkBool, ulong[] stashInventories, uint[] availableBadges,
@@ -116,9 +108,7 @@ namespace MHServerEmu.GameServer.Entities
             ReplicationPolicy = replicationPolicy;
             PropertyCollection = propertyCollection;
 
-            PrototypeId = prototypeId;
-            Missions = missions;
-            Quests = quests;
+            MissionManager = missionManager;
             UnknownCollectionRepId = 0;
             UnknownCollectionSize = 0;
             ShardId = shardId;
@@ -148,29 +138,21 @@ namespace MHServerEmu.GameServer.Entities
                 BoolEncoder boolEncoder = new();
                 byte bitBuffer;
 
-                foreach (Mission mission in Missions)
-                    boolEncoder.WriteBool(mission.Suspended);
+                MissionManager.EncodeBool(boolEncoder);
+
                 boolEncoder.WriteBool(EmailVerified);
                 boolEncoder.WriteBool(HasGuildInfo);
                 boolEncoder.WriteBool(HasCommunity);
                 boolEncoder.WriteBool(UnkBool);
-                foreach (ChatChannelFilter filter in GameplayOptions.ChatChannelFilters)
-                    boolEncoder.WriteBool(filter.IsSubscribed);
+
+                GameplayOptions.EncodeBool(boolEncoder);
 
                 boolEncoder.Cook();
 
                 // Encode
                 WriteEntityFields(cos);
 
-                cos.WritePrototypeId(PrototypeId, PrototypeEnumType.All);
-
-                cos.WriteRawVarint64((ulong)Missions.Length);
-                foreach (Mission mission in Missions)
-                    cos.WriteRawBytes(mission.Encode(boolEncoder));
-
-                cos.WriteRawInt32(Quests.Length);
-                foreach (Quest quest in Quests)
-                    cos.WriteRawBytes(quest.Encode());
+                cos.WriteRawBytes(MissionManager.Encode(boolEncoder));
 
                 cos.WriteRawVarint64(UnknownCollectionRepId);
                 cos.WriteRawUInt32(UnknownCollectionSize);
@@ -231,9 +213,7 @@ namespace MHServerEmu.GameServer.Entities
             StringBuilder sb = new();
             WriteEntityString(sb);
 
-            sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
-            for (int i = 0; i < Missions.Length; i++) sb.AppendLine($"Mission{i}: {Missions[i]}");
-            for (int i = 0; i < Quests.Length; i++) sb.AppendLine($"Quest{i}: {Quests[i]}");
+            sb.AppendLine($"MissionManager: {MissionManager}");
             sb.AppendLine($"UnknownCollectionRepId: 0x{UnknownCollectionRepId:X}");
             sb.AppendLine($"UnknownCollectionSize: 0x{UnknownCollectionSize:X}");
             sb.AppendLine($"ShardId: {ShardId}");
