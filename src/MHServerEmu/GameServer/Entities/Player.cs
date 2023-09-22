@@ -1,7 +1,5 @@
-﻿using System.IO;
-using System.Text;
+﻿using System.Text;
 using Google.ProtocolBuffers;
-using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.Achievements;
@@ -48,7 +46,6 @@ namespace MHServerEmu.GameServer.Entities
             ReadEntityFields(stream);
 
             MissionManager = new(stream, boolDecoder);
-
             AvatarPropertyCollection = new(stream);
 
             ShardId = stream.ReadRawVarint64();
@@ -136,14 +133,14 @@ namespace MHServerEmu.GameServer.Entities
                 BoolEncoder boolEncoder = new();
                 byte bitBuffer;
 
-                MissionManager.EncodeBool(boolEncoder);
+                MissionManager.WriteBools(boolEncoder);
 
                 boolEncoder.WriteBool(EmailVerified);
                 boolEncoder.WriteBool(HasGuildInfo);
                 boolEncoder.WriteBool(HasCommunity);
                 boolEncoder.WriteBool(UnkBool);
 
-                GameplayOptions.EncodeBool(boolEncoder);
+                GameplayOptions.WriteBools(boolEncoder);
 
                 boolEncoder.Cook();
 

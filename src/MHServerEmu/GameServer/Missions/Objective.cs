@@ -4,16 +4,10 @@ using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.GameServer.Missions
 {
-    public struct InteractionTag
-    {
-        public ulong EntityId;
-        public ulong RegionId;
-        public ulong GameTime; // not used
-    }
     public class Objective
     {
         public ulong ObjectivesIndex { get; set; }
-        public ulong ObjectiveIndex { get; set; }   // NetMessageMissionObjectiveUpdate
+        public ulong ObjectiveIndex { get; set; }                   // NetMessageMissionObjectiveUpdate
         public int ObjectiveState { get; set; }
         public ulong ObjectiveStateExpireTime { get; set; }
         public InteractionTag[] InteractedEntities { get; set; }
@@ -28,11 +22,11 @@ namespace MHServerEmu.GameServer.Missions
             ObjectiveIndex = stream.ReadRawByte();
             ObjectiveState = stream.ReadRawInt32();
             ObjectiveStateExpireTime = stream.ReadRawVarint64();
+
             InteractedEntities = new InteractionTag[stream.ReadRawVarint64()];
-            for (int i = 0; i < InteractedEntities.Length; i++) { 
-                InteractedEntities[i].EntityId = stream.ReadRawVarint64();
-                InteractedEntities[i].RegionId = stream.ReadRawVarint64();
-            }
+            for (int i = 0; i < InteractedEntities.Length; i++)
+                InteractedEntities[i] = new(stream);
+
             CurrentCount = stream.ReadRawVarint64();
             RequiredCount = stream.ReadRawVarint64();
             FailCurrentCount = stream.ReadRawVarint64();
@@ -65,11 +59,7 @@ namespace MHServerEmu.GameServer.Missions
                 cos.WriteRawInt32(ObjectiveState);
                 cos.WriteRawVarint64(ObjectiveStateExpireTime);
                 cos.WriteRawVarint64((ulong)InteractedEntities.Length);
-                foreach (InteractionTag Tag in InteractedEntities)
-                {
-                    cos.WriteRawVarint64(Tag.EntityId);
-                    cos.WriteRawVarint64(Tag.RegionId);
-                }
+                foreach (InteractionTag tag in InteractedEntities) cos.WriteRawBytes(tag.Encode());
                 cos.WriteRawVarint64(CurrentCount);
                 cos.WriteRawVarint64(RequiredCount);
                 cos.WriteRawVarint64(FailCurrentCount);
@@ -83,11 +73,11 @@ namespace MHServerEmu.GameServer.Missions
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"Index: 0x{ObjectivesIndex:X}");
+            sb.AppendLine($"ObjectivesIndex: 0x{ObjectivesIndex:X}");
             sb.AppendLine($"ObjectiveIndex: 0x{ObjectiveIndex:X}");
             sb.AppendLine($"ObjectiveState: 0x{ObjectiveState:X}");
             sb.AppendLine($"ObjectiveStateExpireTime: 0x{ObjectiveStateExpireTime:X}");
-            sb.AppendLine($"InteractedEntities: {InteractedEntities.Length}");
+            for (int i = 0; i < InteractedEntities.Length; i++) sb.AppendLine($"InteractedEntity{i}: {InteractedEntities[i]}");
             sb.AppendLine($"CurrentCount: 0x{CurrentCount:X}");
             sb.AppendLine($"RequiredCount: 0x{RequiredCount:X}");
             sb.AppendLine($"FailCurrentCount: 0x{FailCurrentCount:X}");
