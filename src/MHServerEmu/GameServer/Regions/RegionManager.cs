@@ -30,6 +30,7 @@ namespace MHServerEmu.GameServer.Regions
             RegionPrototype.UltronRaidRegionGreen,
             RegionPrototype.CH0101HellsKitchenRegion,
             RegionPrototype.CH0105NightclubRegion,
+            RegionPrototype.CH0201ShippingYardRegion,
             RegionPrototype.CH0301MadripoorRegion,
             RegionPrototype.CH0701SavagelandRegion,
             RegionPrototype.CH0804LatveriaPCZRegion,
@@ -447,6 +448,33 @@ namespace MHServerEmu.GameServer.Regions
                     region.EntranceOrientation = new(-1.5708f, 0f, 0f); ;
                     region.WaypointPosition = new(-880.0f, 6064.0f, 0.0f);
                     region.WaypointOrientation = new(2.35623f, 0.0f, 0.0f);
+
+                    break;
+
+                case RegionPrototype.CH0201ShippingYardRegion:
+                    archiveData = new byte[] {
+                    };
+                    region = new(RegionPrototype.CH0201ShippingYardRegion,
+                        1154146333179715585,
+                        1883928786,
+                        archiveData, 
+                        new(-1152.0f, -1152.0f, -1152.0f),
+                        new(12672.0f, 14976.0f, 1152.0f),
+                        new(60, DifficultyTier.Normal));
+
+                    AreaPrototype ShippingYard = (AreaPrototype)GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH02JerseyDocks/Areas/CH0201ShippingArea.prototype");
+                    area = new(1, ShippingYard, new(), true);
+
+                    district = GameDatabase.Resource.DistrictDict["Resource/Districts/Story/Ch02JerseyDocks/Ch02_JerseyDocks_Storage_Dist.district"];
+
+                    for (int i = 0; i < district.CellMarkerSet.Length; i++)
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeId(district.CellMarkerSet[i].Resource), new()));
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(48.0f, 4944.0f, 48.0f);
+                    region.EntranceOrientation = new(-0.392705f, 0.0f, 0.0f); 
+                    region.WaypointPosition = new(368.0f, 5040.0f, 0.0f);
+                    region.WaypointOrientation = new(1.57082f, 0.0f, 0.0f);
 
                     break;
 
