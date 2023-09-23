@@ -71,6 +71,7 @@ namespace MHServerEmu.GameServer.Games
                 .Build()));
 
             ulong area;
+            CellPrototype Entry;
             int cellid = 1;
             int areaid = 1;
             ulong repId = 50000;
@@ -87,7 +88,9 @@ namespace MHServerEmu.GameServer.Games
                         float zfix = 0.0f;
                         string marker = npc.LastKnownEntityName;
 
+                        if (marker.Contains("Throwables")) continue; // Blocking controll
                         if (marker.Contains("DestructibleGarbageCanCity")) continue;
+                        
                         if (marker.Contains("GLFLieutenant")) continue; // Blocking controll
                         if (marker.Contains("Coulson")) continue; //  Blocking controll
                         if (marker.Contains("GambitMTXStore")) continue; // Invisible
@@ -126,6 +129,15 @@ namespace MHServerEmu.GameServer.Games
 
                     area = (ulong)AreaPrototype.AsgardiaArea;
                     MarkersAddDistrict("Resource/Districts/AsgardHubDistrict.district");
+
+                    break;
+
+                case RegionPrototype.BrooklynPatrolRegionL60:
+                    areaid = 2;
+                    areaOrigin = new(1152.0f, 0.0f, 0.0f);
+                    area = GameDatabase.GetPrototypeId("Regions/EndGame/TierX/PatrolBrooklyn/Areas/DocksPatrolBridgeTransitionNS.prototype");
+                    Entry = GameDatabase.Resource.CellDict["Resource/Cells/EndGame/BrooklynDocksPatrol/DocksPatrol_BridgeA_Center_A.cell"];
+                    MarkersAdd(Entry, 18, true);
 
                     break;
 
@@ -246,7 +258,7 @@ namespace MHServerEmu.GameServer.Games
                 case RegionPrototype.TrainingRoomSHIELDRegion:
 
                     area = (ulong)AreaPrototype.TrainingRoomSHIELDArea;
-                    CellPrototype Entry = GameDatabase.Resource.CellDict["Resource/Cells/DistrictCells/Training_Rooms/TrainingRoom_SHIELD_B.cell"];
+                    Entry = GameDatabase.Resource.CellDict["Resource/Cells/DistrictCells/Training_Rooms/TrainingRoom_SHIELD_B.cell"];
                     MarkersAdd(Entry, cellid, true);
 
                     cellid = 1;
