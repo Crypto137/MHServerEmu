@@ -24,11 +24,13 @@ namespace MHServerEmu.GameServer.Regions
             RegionPrototype.BronxZooRegionL60,
             RegionPrototype.XManhattanRegion1to60,
             RegionPrototype.XManhattanRegion60Cosmic,
+            RegionPrototype.BrooklynPatrolRegionL60,
             RegionPrototype.UpperMadripoorRegionL60,
             RegionPrototype.UpperMadripoorRegionL60Cosmic,
             RegionPrototype.UltronRaidRegionGreen,
             RegionPrototype.CH0101HellsKitchenRegion,
             RegionPrototype.CH0105NightclubRegion,
+            RegionPrototype.CH0201ShippingYardRegion,
             RegionPrototype.CH0301MadripoorRegion,
             RegionPrototype.CH0701SavagelandRegion,
             RegionPrototype.CH0804LatveriaPCZRegion,
@@ -446,6 +448,33 @@ namespace MHServerEmu.GameServer.Regions
                     region.EntranceOrientation = new(-1.5708f, 0f, 0f); ;
                     region.WaypointPosition = new(-880.0f, 6064.0f, 0.0f);
                     region.WaypointOrientation = new(2.35623f, 0.0f, 0.0f);
+
+                    break;
+
+                case RegionPrototype.CH0201ShippingYardRegion:
+                    archiveData = new byte[] {
+                    };
+                    region = new(RegionPrototype.CH0201ShippingYardRegion,
+                        1154146333179715585,
+                        1883928786,
+                        archiveData, 
+                        new(-1152.0f, -1152.0f, -1152.0f),
+                        new(12672.0f, 14976.0f, 1152.0f),
+                        new(60, DifficultyTier.Normal));
+
+                    AreaPrototype ShippingYard = (AreaPrototype)GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH02JerseyDocks/Areas/CH0201ShippingArea.prototype");
+                    area = new(1, ShippingYard, new(), true);
+
+                    district = GameDatabase.Resource.DistrictDict["Resource/Districts/Story/Ch02JerseyDocks/Ch02_JerseyDocks_Storage_Dist.district"];
+
+                    for (int i = 0; i < district.CellMarkerSet.Length; i++)
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeId(district.CellMarkerSet[i].Resource), new()));
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(48.0f, 4944.0f, 48.0f);
+                    region.EntranceOrientation = new(-0.392705f, 0.0f, 0.0f); 
+                    region.WaypointPosition = new(368.0f, 5040.0f, 0.0f);
+                    region.WaypointOrientation = new(1.57082f, 0.0f, 0.0f);
 
                     break;
 
@@ -1563,6 +1592,107 @@ namespace MHServerEmu.GameServer.Regions
                     region.EntranceOrientation = new();
                     region.WaypointPosition = new(0.0f, -6912.0f, 0.0f);
                     region.WaypointOrientation = new();
+
+                    break;
+
+                case RegionPrototype.BrooklynPatrolRegionL60:
+
+                    archiveData = new byte[] {
+                    };
+
+                    region = new(RegionPrototype.BrooklynPatrolRegionL60,
+                        1154146333179728793,
+                        1883928786,
+                        archiveData,
+                        new(-11520.0f, -8064.0f, -1152.0f),
+                        new(11520.0f, 8064.0f, 1152.0f),
+                        new(10, DifficultyTier.Normal));
+
+                    string DocksPatrol = "Resource/Cells/EndGame/BrooklynDocksPatrol/";
+                    string Shipping_C = "Resource/Cells/Brooklyn/Shipping_C/";
+
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeId("Regions/EndGame/TierX/PatrolBrooklyn/Areas/DocksPatrolAreaA.prototype"), new(), true);
+                    area.AddCell(new(22, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_Dockyard_A/DP_Dockyard_A_ES_A.cell"), new(8064.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(30, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_WareSuper_C_Bot.cell"), new(5760.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(21, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_WareSuper_B_Top.cell"), new(5760.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(29, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_Dockyard_A/DP_Dockyard_A_NW_A.cell"), new(3456.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(20, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_WareSuper_B_Bot.cell"), new(3456.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(28, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_WareSuper_Top_A.cell"), new(8064.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(31, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_WareSuper_C_Top.cell"), new(8064.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(25, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_Dockyard_A/DP_Dockyard_A_ESW_A.cell"), new(8064.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(26, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_WareSuper_Bot_A.cell"), new(3456.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(24, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_FoodTrucks_A.cell"), new(5760.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(23, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_Dockyard_A/DP_Dockyard_A_NESW_A.cell"), new(3456.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(27, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_WareSuper_Center_A.cell"), new(5760.0f, 2304.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeId("Regions/EndGame/TierX/PatrolBrooklyn/Areas/DocksPatrolBridgeTransitionNS.prototype"), new(), false);
+                    area.AddCell(new(17, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_BridgeA_Left_A.cell"), new(1152.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(18, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_BridgeA_Center_A.cell"), new(1152.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(19, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_BridgeA_Right_A.cell"), new(1152.0f, 2304.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    area = new(4, (AreaPrototype)GameDatabase.GetPrototypeId("Regions/EndGame/TierX/PatrolBrooklyn/Areas/DocksPatrolAreaB.prototype"), new(), false);
+                    area.AddCell(new(1, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_NE_A.cell"), new(-8064.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(9, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_NEW_A.cell"), new(-8064.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(4, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_ES_A.cell"), new(-1152.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(2, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_NES_A.cell"), new(-5760.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(3, GameDatabase.GetPrototypeId(DocksPatrol + "DP_Shipping_A_NES_B.cell"), new(-3456.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(13, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_CargoShip_A_1.cell"), new(-8064.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(5, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_NEW_A.cell"), new(-8064.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(15, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_CargoShip_A_3.cell"), new(-3456.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(14, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_CargoShip_A_0.cell"), new(-5760.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(16, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_NSW_A.cell"), new(-1152.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(12, GameDatabase.GetPrototypeId(Shipping_C + "Shipping_AIMSub_X1_Y0_A.cell"), new(-1152.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(7, GameDatabase.GetPrototypeId(Shipping_C + "Shipping_CrateWorld_X1_Y0_A.cell"), new(-3456.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(11, GameDatabase.GetPrototypeId(Shipping_C + "Shipping_AIMSub_X0_Y0_A.cell"), new(-3456.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(10, GameDatabase.GetPrototypeId(Shipping_C + "DocksPatrol_CrateWorld_X0_Y1_A.cell"), new(-5760.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(6, GameDatabase.GetPrototypeId(Shipping_C + "DocksPatrol_CrateWorld_X0_Y0_A.cell"), new(-5760.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(8, GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_NESW_A.cell"), new(-1152.0f, -2304.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    // Filler
+                    ulong Dockyard_Filler = GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_Dockyard_A/DP_Dockyard_A_FILLER_A.cell");
+                    ulong Shipping_Filler = GameDatabase.GetPrototypeId(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_FILLER_A.cell");
+
+                    area = new(5, (AreaPrototype)GameDatabase.GetPrototypeId("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
+                    area.AddCell(new(32, Dockyard_Filler, new(3456.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(33, Dockyard_Filler, new(8064.0f, 6912.0f, 0.0f)));
+                    area.AddCell(new(34, Dockyard_Filler, new(5760.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(35, Dockyard_Filler, new(5760.0f, 6912.0f, 0.0f)));
+                    area.AddCell(new(36, Dockyard_Filler, new(8064.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(37, Dockyard_Filler, new(3456.0f, 6912.0f, 0.0f)));
+                    area.AddCell(new(38, Dockyard_Filler, new(10368.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(39, Dockyard_Filler, new(1152.0f, 6912.0f, 0.0f)));
+                    area.AddCell(new(40, Dockyard_Filler, new(10368.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(41, Dockyard_Filler, new(1152.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(42, Dockyard_Filler, new(10368.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(43, Dockyard_Filler, new(10368.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(44, Dockyard_Filler, new(10368.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(45, Dockyard_Filler, new(10368.0f, 6912.0f, 0.0f)));
+                    area.AddCell(new(46, Dockyard_Filler, new(1152.0f, -4608.0f, 0.0f)));
+
+                    area.AddCell(new(47, Shipping_Filler, new(-8064.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(48, Shipping_Filler, new(-1152.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(49, Shipping_Filler, new(-5760.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(50, Shipping_Filler, new(-3456.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(51, Shipping_Filler, new(-3456.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(52, Shipping_Filler, new(-5760.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(53, Shipping_Filler, new(-1152.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(54, Shipping_Filler, new(-8064.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(55, Shipping_Filler, new(1152.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(56, Shipping_Filler, new(-10368.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(57, Shipping_Filler, new(-10368.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(58, Shipping_Filler, new(-10368.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(59, Shipping_Filler, new(-10368.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(60, Shipping_Filler, new(-10368.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(61, Shipping_Filler, new(-10368.0f, -6912.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(1152.0f, 0.0f, 0.0f);
+                    region.EntranceOrientation = new(0f, 0f, 0f);
+                    region.WaypointPosition = new(1152.0f, 0.0f, 0.0f);
+                    region.WaypointOrientation = new(1.57082f, 0f, 0f);
 
                     break;
 
