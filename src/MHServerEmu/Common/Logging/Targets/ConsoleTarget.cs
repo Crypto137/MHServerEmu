@@ -2,12 +2,7 @@
 {
     public class ConsoleTarget : LogTarget
     {
-        public ConsoleTarget(bool includeTimestamps, Logger.Level minimumLevel, Logger.Level maximumLevel)
-        {
-            IncludeTimestamps = includeTimestamps;
-            MinimumLevel = minimumLevel;
-            MaximumLevel = maximumLevel;
-        }
+        public ConsoleTarget(bool includeTimestamps, Logger.Level minimumLevel, Logger.Level maximumLevel) : base(includeTimestamps, minimumLevel, maximumLevel) { }
 
         public override void LogMessage(Logger.Level level, string logger, string message)
         {

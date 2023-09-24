@@ -108,7 +108,11 @@ namespace MHServerEmu
                 LogManager.AttachLogTarget(new ConsoleTarget(ConfigManager.Logging.ConsoleIncludeTimestamps,
                     ConfigManager.Logging.ConsoleMinLevel, ConfigManager.Logging.ConsoleMaxLevel));
 
-            // TODO: file log target
+            // Attach file log target
+            if (ConfigManager.Logging.EnableFile)
+                LogManager.AttachLogTarget(new FileTarget(ConfigManager.Logging.FileIncludeTimestamps,
+                    ConfigManager.Logging.FileMinLevel, ConfigManager.Logging.FileMaxLevel,
+                    $"MHServerEmu_{StartupTime:yyyy-dd-MM_HH.mm.ss}.log", false));
         }
 
         #region Server Control
