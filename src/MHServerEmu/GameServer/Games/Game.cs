@@ -238,7 +238,7 @@ namespace MHServerEmu.GameServer.Games
                         if (Enum.TryParse(typeof(HardcodedAvatarEntity), avatarName, true, out object avatar))
                         {
                             client.Session.Account.PlayerData.Avatar = (HardcodedAvatarEntity)avatar;
-                            _gameServerManager.GroupingManagerService.SendMetagameChatMessage(client, $"Changing avatar to {client.Session.Account.PlayerData.Avatar}. Relog for changes to take effect.");
+                            GroupingManagerService.SendMetagameChatMessage(client, $"Changing avatar to {client.Session.Account.PlayerData.Avatar}. Relog for changes to take effect.");
                         }
                     }
 

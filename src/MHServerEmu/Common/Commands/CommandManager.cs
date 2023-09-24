@@ -2,6 +2,7 @@
 using Gazillion;
 using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.GameServer;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.Common.Commands
@@ -154,14 +155,7 @@ namespace MHServerEmu.Common.Commands
 
         private static void SendClientResponse(string output, FrontendClient client)
         {
-            var chatMessage = ChatNormalMessage.CreateBuilder()
-                .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
-                .SetFromPlayerName(ConfigManager.GroupingManager.MotdPlayerName)
-                .SetTheMessage(ChatMessage.CreateBuilder().SetBody(output))
-                .SetPrestigeLevel(6)
-                .Build();
-
-            client.SendMessage(2, new(chatMessage));
+            GroupingManagerService.SendMetagameChatMessage(client, output);
         }
     }
 }

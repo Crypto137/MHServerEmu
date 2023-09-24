@@ -77,7 +77,7 @@ namespace MHServerEmu.GameServer
                 .Build()));
         }
 
-        public void SendMetagameChatMessage(FrontendClient client, string text)
+        public static void SendMetagameChatMessage(FrontendClient client, string text)
         {
             client.SendMessage(2, new(ChatNormalMessage.CreateBuilder()
                 .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
@@ -85,6 +85,26 @@ namespace MHServerEmu.GameServer
                 .SetTheMessage(ChatMessage.CreateBuilder().SetBody(text))
                 .SetPrestigeLevel(ConfigManager.GroupingManager.MotdPrestigeLevel)
                 .Build()));
+        }
+
+        public static void SendMetagameChatMessages(FrontendClient client, IEnumerable<string> texts)
+        {
+            List<GameMessage> messageList = new();
+            bool headerIsSet = false;               // Flag to add player name to the header (first) message
+
+            foreach (string text in texts)
+            {
+                messageList.Add(new(ChatNormalMessage.CreateBuilder()
+                    .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
+                    .SetFromPlayerName(headerIsSet ? string.Empty : ConfigManager.GroupingManager.MotdPlayerName)
+                    .SetTheMessage(ChatMessage.CreateBuilder().SetBody(text))
+                    .SetPrestigeLevel(ConfigManager.GroupingManager.MotdPrestigeLevel)
+                    .Build()));
+
+                headerIsSet = true;
+            }
+
+            client.SendMessages(2, messageList);
         }
     }
 }
