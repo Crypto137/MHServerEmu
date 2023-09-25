@@ -144,6 +144,20 @@ namespace MHServerEmu.GameServer.Frontend
 
         public ClientSession CreateSessionFromLoginDataPB(LoginDataPB loginDataPB, out AuthErrorCode? errorCode)
         {
+            // Check client version
+            if (loginDataPB.Version != GameServerManager.GameVersion)
+            {
+                Logger.Warn($"Client version mismatch ({loginDataPB.Version} instead of {GameServerManager.GameVersion})");
+
+                // Fail auth if version mismatch is not allowed
+                if (ConfigManager.Frontend.AllowClientVersionMismatch == false)
+                {
+                    errorCode = AuthErrorCode.PatchRequired;
+                    return null;
+                }
+            }
+
+            // Verify credentials
             Account account;
             if (ConfigManager.Frontend.BypassAuth)
             {
@@ -155,9 +169,10 @@ namespace MHServerEmu.GameServer.Frontend
                 account = AccountManager.GetAccountByLoginDataPB(loginDataPB, out errorCode);
             }
 
+            // Create a new session if login data is valid
             if (account != null)
             {
-                lock (_sessionLock)     // Create a new session if login data is valid
+                lock (_sessionLock)
                 {
                     ClientSession session = new(HashHelper.GenerateUniqueRandomId(_sessionDict), account, loginDataPB.ClientDownloader, loginDataPB.Locale);
                     _sessionDict.Add(session.Id, session);

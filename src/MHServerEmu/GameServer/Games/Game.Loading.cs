@@ -33,7 +33,7 @@ namespace MHServerEmu.GameServer.Games
                 .SetGamestarttime(1)
                 .Build()));
 
-            messageList.Add(new(NetMessageServerVersion.CreateBuilder().SetVersion("1.52.0.1700").Build()));
+            messageList.Add(new(NetMessageServerVersion.CreateBuilder().SetVersion(GameServerManager.GameVersion).Build()));
 
             messageList.Add(new(NetMessageLiveTuningUpdate.CreateBuilder()
                 .AddRangeTuningTypeKeyValueSettings(GameDatabase.LiveTuningSettingList.Select(setting => setting.ToNetStructProtoEnumValue()))

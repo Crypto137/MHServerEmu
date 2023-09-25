@@ -1,6 +1,4 @@
-﻿using Gazillion;
-using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
-using MHServerEmu.Common.Logging;
+﻿using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.Achievements;
 using MHServerEmu.GameServer.Billing;
 using MHServerEmu.GameServer.Frontend;
@@ -11,6 +9,8 @@ namespace MHServerEmu.GameServer
 {
     public class GameServerManager : IGameMessageHandler
     {
+        public const string GameVersion = "1.52.0.1700";
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public AchievementDatabase AchievementDatabase { get; }
