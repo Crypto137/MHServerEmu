@@ -10,8 +10,7 @@ namespace MHServerEmu.Common
         public static byte[] HashPassword(string password, out byte[] salt)
         {
             salt = RandomNumberGenerator.GetBytes(PasswordKeySize);
-            byte[] hash = Rfc2898DeriveBytes.Pbkdf2(password, salt, PasswordIterationCount, HashAlgorithmName.SHA512, PasswordKeySize);
-            return hash;
+            return Rfc2898DeriveBytes.Pbkdf2(password, salt, PasswordIterationCount, HashAlgorithmName.SHA512, PasswordKeySize);
         }
 
         public static bool VerifyPassword(string password, byte[] hash, byte[] salt)
@@ -20,11 +19,12 @@ namespace MHServerEmu.Common
             return CryptographicOperations.FixedTimeEquals(hashToCompare, hash);
         }
 
-        public static byte[] GenerateToken()
+        public static byte[] GenerateToken(int size = 32)
         {
             // The game uses AES-256 CBC encryption for tokens.
-            // AuthServer sends a token and a session key, and when the client connects to FES it adds IV, encrypts the token and sends it
-            return RandomNumberGenerator.GetBytes(256);
+            // AuthServer sends a token and a session key, and when the client connects to a FES it adds IV, encrypts the token and sends it.
+            // The encrypted token in the dump we have is 48 bytes. We can get a similar token by encrypting 32 bytes of random data.
+            return RandomNumberGenerator.GetBytes(size);
         }
 
         public static byte[] GenerateAesKey(int size = 256)
@@ -39,7 +39,6 @@ namespace MHServerEmu.Common
 
         public static byte[] DecryptToken(byte[] token, byte[] key, byte[] iv)
         {
-            byte[] decryptedToken;
             using (Aes aesAlgorithm = Aes.Create())
             {
                 aesAlgorithm.Key = key;
@@ -48,19 +47,13 @@ namespace MHServerEmu.Common
                 ICryptoTransform decryptor = aesAlgorithm.CreateDecryptor();
 
                 using (MemoryStream memoryStream = new(token))
+                using (CryptoStream cryptoStream = new(memoryStream, decryptor, CryptoStreamMode.Read))
+                using (MemoryStream decryptionBuffer = new())
                 {
-                    using (CryptoStream cryptoStream = new(memoryStream, decryptor, CryptoStreamMode.Read))
-                    {
-                        using (MemoryStream decryptionBuffer = new())
-                        {
-                            cryptoStream.CopyTo(decryptionBuffer);
-                            decryptedToken = decryptionBuffer.ToArray();
-                        }
-                    }
+                    cryptoStream.CopyTo(decryptionBuffer);
+                    return decryptionBuffer.ToArray();
                 }
             }
-
-            return decryptedToken;
         }
 
         public static bool VerifyToken(byte[] credentialsToken, byte[] sessionToken)
