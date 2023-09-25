@@ -2,22 +2,30 @@
 {
     public class ConsoleTarget : LogTarget
     {
+        private readonly object _writeLock = new();
+
         public ConsoleTarget(bool includeTimestamps, Logger.Level minimumLevel, Logger.Level maximumLevel) : base(includeTimestamps, minimumLevel, maximumLevel) { }
 
         public override void LogMessage(Logger.Level level, string logger, string message)
         {
-            SetForegroundColor(level);
-            string timestamp = IncludeTimestamps ? $"[{DateTime.Now:yyyy.MM.dd HH:mm:ss.fff}] " : "";
-            Console.WriteLine($"{timestamp}[{level,5}] [{logger}] {message}");
-            Console.ResetColor();
+            lock (_writeLock)
+            {
+                SetForegroundColor(level);
+                string timestamp = IncludeTimestamps ? $"[{DateTime.Now:yyyy.MM.dd HH:mm:ss.fff}] " : "";
+                Console.WriteLine($"{timestamp}[{level,5}] [{logger}] {message}");
+                Console.ResetColor();
+            }
         }
 
         public override void LogException(Logger.Level level, string logger, string message, Exception exception)
         {
-            SetForegroundColor(level);
-            string timestamp = IncludeTimestamps ? $"[{DateTime.Now:yyyy.MM.dd HH:mm:ss.fff}] " : "";
-            Console.WriteLine($"{timestamp}[{level,5}] [{logger}] {message} - [Exception] {exception}");
-            Console.ResetColor();
+            lock (_writeLock)
+            {
+                SetForegroundColor(level);
+                string timestamp = IncludeTimestamps ? $"[{DateTime.Now:yyyy.MM.dd HH:mm:ss.fff}] " : "";
+                Console.WriteLine($"{timestamp}[{level,5}] [{logger}] {message} - [Exception] {exception}");
+                Console.ResetColor();
+            }
         }
 
         private static void SetForegroundColor(Logger.Level level)
