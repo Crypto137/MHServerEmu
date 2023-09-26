@@ -15,7 +15,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         public Dictionary<string, Encounter> EncounterDict { get; } = new();
         public Dictionary<string, PropSet> PropSetDict { get; } = new();
         public Dictionary<string, Prop> PropDict { get; } = new();
-        public Dictionary<string, UI> UIDict { get; } = new();
+        public Dictionary<string, FileFormats.UI> UIDict { get; } = new();
 
         public ResourceStorage(GpakFile gpakFile)
         {
