@@ -70,6 +70,14 @@ namespace MHServerEmu.GameServer.Properties
                 .Build();
         }
 
+        public NetMessageRemoveProperty ToNetMessageRemoveProperty(ulong replicationId)
+        {
+            return NetMessageRemoveProperty.CreateBuilder()
+                .SetReplicationId(replicationId)
+                .SetPropertyId(Id.ReverseBits())
+                .Build();
+        }
+
         public override string ToString()
         {
             StringBuilder sb = new();

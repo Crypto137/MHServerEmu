@@ -70,6 +70,7 @@ namespace MHServerEmu.GameServer.Games
                 .SetArchiveData(ByteString.CopyFrom(avatarEnterGameWorldArchive.Encode()))
                 .Build()));
 
+            bool OnlyThrowablePoliceCar = false;
             ulong area;
             CellPrototype Entry;
             int cellid = 1;
@@ -88,7 +89,7 @@ namespace MHServerEmu.GameServer.Games
                         float zfix = 0.0f;
                         string marker = npc.LastKnownEntityName;
 
-                        if (marker.Contains("Throwables")) continue; // Blocking controll
+                       // if (marker.Contains("Throwables")) continue; // Blocking controll
                         if (marker.Contains("DestructibleGarbageCanCity")) continue;
                         
                         if (marker.Contains("GLFLieutenant")) continue; // Blocking controll
@@ -99,6 +100,8 @@ namespace MHServerEmu.GameServer.Games
 
                         if (marker.Contains("Entity/Characters/") || (AddProp && marker.Contains("Entity/Props/")))
                         {
+                            if (AddProp && OnlyThrowablePoliceCar && marker.Contains("Entity/Props/") && !marker.Contains("ThrowablePoliceCar")) continue;
+
                             if (marker.Contains("Stash"))
                             {
                                 zfix = 60.0f;
@@ -133,10 +136,12 @@ namespace MHServerEmu.GameServer.Games
                     break;
 
                 case RegionPrototype.BrooklynPatrolRegionL60:
+
                     areaid = 2;
                     areaOrigin = new(1152.0f, 0.0f, 0.0f);
                     area = GameDatabase.GetPrototypeId("Regions/EndGame/TierX/PatrolBrooklyn/Areas/DocksPatrolBridgeTransitionNS.prototype");
                     Entry = GameDatabase.Resource.CellDict["Resource/Cells/EndGame/BrooklynDocksPatrol/DocksPatrol_BridgeA_Center_A.cell"];
+                    OnlyThrowablePoliceCar = true;
                     MarkersAdd(Entry, 18, true);
 
                     break;
@@ -149,11 +154,45 @@ namespace MHServerEmu.GameServer.Games
 
                     break;
 
+                case RegionPrototype.CH0101HellsKitchenRegion:
+                    area = (ulong) GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH01HellsKitchen/Brownstones/CH0102HellsKitchenNorthArea.prototype");
+                    OnlyThrowablePoliceCar = true;
+                    MarkersAddDistrict("Resource/Districts/Hells_Kitchen_Brownstones.district",true);
+
+                    break;
+
                 case RegionPrototype.HelicarrierRegion:
 
                     area = (ulong)AreaPrototype.HelicarrierArea;
                     MarkersAdd(GameDatabase.Resource.CellDict["Resource/Cells/DistrictCells/Helicarrier/Helicarrier_HUB.cell"], cellid);
 
+                    break;
+
+                case RegionPrototype.HoloSimARegion1to60:
+
+                    area = GameDatabase.GetPrototypeId("Regions/EndGame/TierX/HoloSim/HoloSimAArea.prototype");
+                    Entry = GameDatabase.Resource.CellDict["Resource/Cells/EndGame/DR_Survival_A.cell"];
+                    MarkersAdd(Entry, cellid);
+
+                    cellid = 1;
+                    for (int i = 0; i < Entry.MarkerSet.Length; i++)
+                    {
+                        if (Entry.MarkerSet[i] is EntityMarkerPrototype)
+                        {
+                            EntityMarkerPrototype npc = (EntityMarkerPrototype)Entry.MarkerSet[i];
+
+                            switch (npc.EntityGuid)
+                            {
+                                case 17602051469318245682:// EncounterOpenMissionSmallV10
+                                case 292473193813839029: // EncounterOpenMissionLargeV1                                    
+                                    messageList.Add(new(EntityHelper.SpawnEntityEnemy(entityId++,
+                                        GameDatabase.GetPrototypeId("Entity/Props/Throwables/ThrowablePoliceCar.prototype"),
+                                        npc.Position, npc.Rotation,
+                                        repId++, 100, areaid, 100, region.Id, cellid, area, false, 1, 1)));
+                                    break;
+                            }
+                        }
+                    }
                     break;
 
                 case RegionPrototype.CosmicDoopSectorSpaceRegion:
