@@ -27,12 +27,24 @@ namespace MHServerEmu.GameServer.UI
 
                 switch (className)
                 {
-                    case "UIWidgetMissionTextPrototype":
-                        UISyncData[i] = new UIWidgetMissionText(widgetR, contextR, areas, stream);
+                    case "UIWidgetButtonPrototype":
+                        UISyncData[i] = new UIWidgetButton(widgetR, contextR, areas, stream);
+                        break;
+
+                    case "UIWidgetEntityIconsSyncDataPrototype":
+                        UISyncData[i] = new UIWidgetEntityIconsSyncData(widgetR, contextR, areas, stream, boolDecoder);
                         break;
 
                     case "UIWidgetGenericFractionPrototype":
                         UISyncData[i] = new UIWidgetGenericFraction(widgetR, contextR, areas, stream, boolDecoder);
+                        break;
+
+                    case "UIWidgetMissionTextPrototype":
+                        UISyncData[i] = new UIWidgetMissionText(widgetR, contextR, areas, stream);
+                        break;
+
+                    case "UIWidgetReadyCheckPrototype":
+                        UISyncData[i] = new UIWidgetReadyCheck(widgetR, contextR, areas, stream);
                         break;
 
                     default:
