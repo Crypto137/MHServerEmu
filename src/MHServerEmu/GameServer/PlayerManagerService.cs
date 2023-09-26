@@ -88,9 +88,9 @@ namespace MHServerEmu.GameServer
                 case ClientToGameServerMessage.NetMessageTryCancelActivePower:
                 case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer:
                 case ClientToGameServerMessage.NetMessageTryInventoryMove:
-                case ClientToGameServerMessage.NetMessageSwitchAvatar:
                 case ClientToGameServerMessage.NetMessageThrowInteraction:
                 case ClientToGameServerMessage.NetMessageUseWaypoint:
+                case ClientToGameServerMessage.NetMessageSwitchAvatar:
                 case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:
                     _gameServerManager.GameManager.GetGameById(client.GameId).Handle(client, muxId, message);
                     break;

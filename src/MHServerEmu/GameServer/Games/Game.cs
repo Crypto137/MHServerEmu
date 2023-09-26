@@ -1,9 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
-using Gazillion;
 using Google.ProtocolBuffers;
+using Gazillion;
 using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.Entities;
@@ -61,10 +60,10 @@ namespace MHServerEmu.GameServer.Games
                         HandleQueuedMessage(_messageQueue.Dequeue());
 
                     // Handle Events
-                    foreach (var _event in _eventList)
-                        HandleEvent(_event);
+                    foreach (GameEvent @event in _eventList)
+                        HandleEvent(@event);
                     if (_eventList.Count > 0)
-                        _eventList.RemoveAll(item => !item.IsRunning);
+                        _eventList.RemoveAll(@event => @event.IsRunning == false);
 
                     // Send responses to all clients
                     foreach (var kvp in _responseListDict)
@@ -129,110 +128,6 @@ namespace MHServerEmu.GameServer.Games
             _responseListDict[client].AddRange(messages);                
         }
 
-        public void AddEvent(FrontendClient client, EventEnum eventId, long timeMs, ulong data)
-        {
-            _eventList.Add(new(client, eventId, timeMs, data));
-        }
-        private void HandleEvent(GameEvent eventQueue)
-        {
-            FrontendClient client = eventQueue.Client;
-            EventEnum eventId = eventQueue.Event;
-            ulong data = eventQueue.Data;
-
-            if (!eventQueue.IsExpired())
-                return; 
-
-            switch (eventId)
-            {
-                case EventEnum.StartThrowing:
-
-                    ulong IdTarget = data;
-                    // TODO: Player.Avatar.SetThrowObject(IdTarget)
-                    // TODO: ThrowObject = Player.EntityManager.GetEntity(IdTarget)
-
-                    ulong AvatarEntityId = (ulong)client.Session.Account.PlayerData.Avatar;
-                    // TODO: AvatarRepId = Player.EntityManager.GetEntity(AvatarEntityId).RepId
-                    ulong AvatarRepId = (ulong)Enum.Parse(typeof(HardcodedAvatarReplicationId), Enum.GetName(typeof(HardcodedAvatarEntity), client.Session.Account.PlayerData.Avatar));
-                    
-                    Property SetProperty = new(PropertyEnum.ThrowableOriginatorEntity, IdTarget);
-                    EnqueueResponse(client, new(SetProperty.ToNetMessageSetProperty(AvatarRepId)));
-
-                    // ThrowObject.Prototype.WorldEntity.UnrealClass
-                    SetProperty = new(PropertyEnum.ThrowableOriginatorAssetRef, 9953069070637601478); // MarvelDestructible_Throwable_PoliceCar
-                    EnqueueResponse(client, new(SetProperty.ToNetMessageSetProperty(AvatarRepId)));
-
-                    // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
-                    EnqueueResponse(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
-                    .SetEntityId(AvatarEntityId)
-                    .SetPowerProtoId(5387918100020273380) // Powers/Environment/ThrowablePowers/Vehicles/ThrownPoliceCarCancelPower.prototype
-                    .SetPowerRank(0)
-                    .SetCharacterLevel(60) // TODO: Player.Avatar.GetProperty(PropertyEnum.CharacterLevel)
-                    .SetCombatLevel(60) // TODO: Player.Avatar.GetProperty(PropertyEnum.CombatLevel)
-                    .SetItemLevel(1)
-                    .SetItemVariation(1)
-                    .Build()));
-
-                    // ThrowObject.Prototype.ThrowablePowerProp.Value
-                    EnqueueResponse(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
-                    .SetEntityId(AvatarEntityId)
-                    .SetPowerProtoId(13813867126636027518) // Powers/Environment/ThrowablePowers/Vehicles/ThrownPoliceCarPower.prototype
-                    .SetPowerRank(0)
-                    .SetCharacterLevel(60)
-                    .SetCombatLevel(60)
-                    .SetItemLevel(1)
-                    .SetItemVariation(1)
-                    .Build()));
-
-                    EnqueueResponse(client, new(NetMessageEntityDestroy.CreateBuilder()
-                    .SetIdEntity(IdTarget)
-                    .Build()));
-
-                    Logger.Trace($"Event StartThrowing");
-
-                    break;
-
-                case EventEnum.EndThrowing:
-
-                    AvatarEntityId = (ulong)client.Session.Account.PlayerData.Avatar;
-                    
-                    AvatarRepId = (ulong)Enum.Parse(typeof(HardcodedAvatarReplicationId), Enum.GetName(typeof(HardcodedAvatarEntity), client.Session.Account.PlayerData.Avatar));
-                    // TODO: AvatarRepId = Player.EntityManager.GetEntity(AvatarEntityId).RepId
-
-                    Property RemoveProperty = new(PropertyEnum.ThrowableOriginatorEntity, (ulong)0);
-                    EnqueueResponse(client, new(RemoveProperty.ToNetMessageRemoveProperty(AvatarRepId)));
-                    RemoveProperty = new(PropertyEnum.ThrowableOriginatorAssetRef, (ulong)0);
-                    EnqueueResponse(client, new(RemoveProperty.ToNetMessageRemoveProperty(AvatarRepId)));
-
-                    // TODO: ThrowObject = Player.Avatar.GetThrowObject
-
-                    // ThrowObject.Prototype.ThrowablePowerProp.Value
-                    EnqueueResponse(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
-                    .SetEntityId(AvatarEntityId)
-                    .SetPowerProtoId(13813867126636027518) // ThrownPoliceCarPower
-                    .Build()));
-
-                    // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
-                    EnqueueResponse(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
-                    .SetEntityId(AvatarEntityId)
-                    .SetPowerProtoId(5387918100020273380) // ThrownPoliceCarCancelPower
-                    .Build()));
-
-                    Logger.Trace($"Event EndThrowing");
-
-                    if (GameDatabase.GetPrototypePath(data).Contains("CancelPower")) // ThrownPoliceCarCancelPower
-                    {
-                        // TODO: CreateEntity for ThrowObject
-                        Logger.Trace($"Event ThrownPoliceCarCancelPower");
-                    }
-                   
-                    break;
-
-            }
-
-            eventQueue.IsRunning = false;
-
-        }
-
         private void HandleQueuedMessage(QueuedGameMessage queuedMessage)
         {
             FrontendClient client = queuedMessage.Client;
@@ -251,17 +146,6 @@ namespace MHServerEmu.GameServer.Games
                     //Logger.Trace(avatarState.ToString())
                     Logger.Trace(avatarState.Position.ToString());
                     ;*/
-
-                    break;
-
-                case ClientToGameServerMessage.NetMessageThrowInteraction: 
-                    
-                    var throwInteraction = NetMessageThrowInteraction.ParseFrom(message.Payload);
-                    var IdTarget = throwInteraction.IdTarget;
-                    var AvatarIndex = throwInteraction.AvatarIndex;
-                    Logger.Trace($"Received NetMessageThrowInteraction Avatar[{AvatarIndex}] Target[{IdTarget}]");
-
-                    AddEvent(client, EventEnum.StartThrowing, 0, IdTarget);                  
 
                     break;
 
@@ -359,6 +243,17 @@ namespace MHServerEmu.GameServer.Games
                         .Build()));
                     break;
 
+                case ClientToGameServerMessage.NetMessageThrowInteraction:
+
+                    var throwInteraction = NetMessageThrowInteraction.ParseFrom(message.Payload);
+                    ulong idTarget = throwInteraction.IdTarget;
+                    int avatarIndex = throwInteraction.AvatarIndex;
+                    Logger.Trace($"Received NetMessageThrowInteraction Avatar[{avatarIndex}] Target[{idTarget}]");
+
+                    AddEvent(client, EventEnum.StartThrowing, 0, idTarget);
+
+                    break;
+
                 case ClientToGameServerMessage.NetMessageSwitchAvatar:
                     Logger.Info($"Received NetMessageSwitchAvatar");
                     var switchAvatarMessage = NetMessageSwitchAvatar.ParseFrom(message.Payload);
@@ -429,6 +324,114 @@ namespace MHServerEmu.GameServer.Games
                     Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
                     break;
             }
+        }
+
+        #endregion
+
+        #region Events
+
+        public void AddEvent(FrontendClient client, EventEnum eventId, long timeMs, ulong data)
+        {
+            _eventList.Add(new(client, eventId, timeMs, data));
+        }
+
+        private void HandleEvent(GameEvent queuedEvent)
+        {
+            FrontendClient client = queuedEvent.Client;
+            EventEnum eventId = queuedEvent.Event;
+            ulong data = queuedEvent.Data;
+
+            if (!queuedEvent.IsExpired())
+                return;
+
+            switch (eventId)
+            {
+                case EventEnum.StartThrowing:
+
+                    ulong idTarget = data;
+                    // TODO: Player.Avatar.SetThrowObject(idTarget)
+                    // TODO: ThrowObject = Player.EntityManager.GetEntity(idTarget)
+
+                    ulong avatarEntityId = (ulong)client.Session.Account.PlayerData.Avatar;
+                    // TODO: avatarRepId = Player.EntityManager.GetEntity(avatarEntityId).RepId
+                    ulong avatarRepId = (ulong)Enum.Parse(typeof(HardcodedAvatarReplicationId), Enum.GetName(typeof(HardcodedAvatarEntity), client.Session.Account.PlayerData.Avatar));
+
+                    Property property = new(PropertyEnum.ThrowableOriginatorEntity, idTarget);
+                    EnqueueResponse(client, new(property.ToNetMessageSetProperty(avatarRepId)));
+
+                    // ThrowObject.Prototype.WorldEntity.UnrealClass
+                    property = new(PropertyEnum.ThrowableOriginatorAssetRef, 9953069070637601478); // MarvelDestructible_Throwable_PoliceCar
+                    EnqueueResponse(client, new(property.ToNetMessageSetProperty(avatarRepId)));
+
+                    // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
+                    EnqueueResponse(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                        .SetEntityId(avatarEntityId)
+                        .SetPowerProtoId(5387918100020273380) // Powers/Environment/ThrowablePowers/Vehicles/ThrownPoliceCarCancelPower.prototype
+                        .SetPowerRank(0)
+                        .SetCharacterLevel(60) // TODO: Player.Avatar.GetProperty(PropertyEnum.CharacterLevel)
+                        .SetCombatLevel(60) // TODO: Player.Avatar.GetProperty(PropertyEnum.CombatLevel)
+                        .SetItemLevel(1)
+                        .SetItemVariation(1)
+                        .Build()));
+
+                    // ThrowObject.Prototype.ThrowablePowerProp.Value
+                    EnqueueResponse(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                        .SetEntityId(avatarEntityId)
+                        .SetPowerProtoId(13813867126636027518) // Powers/Environment/ThrowablePowers/Vehicles/ThrownPoliceCarPower.prototype
+                        .SetPowerRank(0)
+                        .SetCharacterLevel(60)
+                        .SetCombatLevel(60)
+                        .SetItemLevel(1)
+                        .SetItemVariation(1)
+                        .Build()));
+
+                    EnqueueResponse(client, new(NetMessageEntityDestroy.CreateBuilder()
+                        .SetIdEntity(idTarget)
+                        .Build()));
+
+                    Logger.Trace($"Event StartThrowing");
+
+                    break;
+
+                case EventEnum.EndThrowing:
+
+                    avatarEntityId = (ulong)client.Session.Account.PlayerData.Avatar;
+
+                    avatarRepId = (ulong)Enum.Parse(typeof(HardcodedAvatarReplicationId), Enum.GetName(typeof(HardcodedAvatarEntity), client.Session.Account.PlayerData.Avatar));
+                    // TODO: avatarRepId = Player.EntityManager.GetEntity(AvatarEntityId).RepId
+
+                    property = new(PropertyEnum.ThrowableOriginatorEntity, 0ul);
+                    EnqueueResponse(client, new(property.ToNetMessageRemoveProperty(avatarRepId)));
+                    property = new(PropertyEnum.ThrowableOriginatorAssetRef, 0ul);
+                    EnqueueResponse(client, new(property.ToNetMessageRemoveProperty(avatarRepId)));
+
+                    // TODO: ThrowObject = Player.Avatar.GetThrowObject
+
+                    // ThrowObject.Prototype.ThrowablePowerProp.Value
+                    EnqueueResponse(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
+                        .SetEntityId(avatarEntityId)
+                        .SetPowerProtoId(13813867126636027518) // ThrownPoliceCarPower
+                        .Build()));
+
+                    // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
+                    EnqueueResponse(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
+                        .SetEntityId(avatarEntityId)
+                        .SetPowerProtoId(5387918100020273380) // ThrownPoliceCarCancelPower
+                        .Build()));
+
+                    Logger.Trace("Event EndThrowing");
+
+                    if (GameDatabase.GetPrototypePath(data).Contains("CancelPower")) // ThrownPoliceCarCancelPower
+                    {
+                        // TODO: CreateEntity for ThrowObject
+                        Logger.Trace("Event ThrownPoliceCarCancelPower");
+                    }
+
+                    break;
+
+            }
+
+            queuedEvent.IsRunning = false;
         }
 
         #endregion
