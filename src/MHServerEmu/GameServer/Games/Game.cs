@@ -175,13 +175,18 @@ namespace MHServerEmu.GameServer.Games
                     else
                         Logger.Trace($"Received TryActivatePower for invalid prototype id {tryActivatePower.PowerPrototypeId}");
 
-                    if (GameDatabase.GetPrototypePath(tryActivatePower.PowerPrototypeId).Contains("ThrowablePowers/"))
+                    if (powerPrototypePath.Contains("ThrowablePowers/"))
                     {
                         // TODO: GetPrototype(tryActivatePower.PowerPrototypeId).Power.AnimationTimeMS
                         long AnimationTimeMS = 1033; 
                         AddEvent(client, EventEnum.EndThrowing, AnimationTimeMS, tryActivatePower.PowerPrototypeId);
                         Logger.Trace($"AddEvent EndThrowing for {tryActivatePower.PowerPrototypeId}");
                         break;  
+                    }
+
+                    if (powerPrototypePath.Contains("TravelPower/")) 
+                    {
+                        AddEvent(client, EventEnum.StartTravel, 0, tryActivatePower.PowerPrototypeId);
                     }
 
                     //Logger.Trace(tryActivatePower.ToString());
@@ -211,6 +216,11 @@ namespace MHServerEmu.GameServer.Games
                         Logger.Trace($"Received TryCancelPower for {powerPrototypePath}");
                     else
                         Logger.Trace($"Received TryCancelPower for invalid prototype id {tryCancelPower.PowerPrototypeId}");
+
+                    if (powerPrototypePath.Contains("TravelPower/"))
+                    {
+                        AddEvent(client, EventEnum.EndTravel, 0, tryCancelPower.PowerPrototypeId);
+                    }
 
                     break;
 
@@ -346,13 +356,95 @@ namespace MHServerEmu.GameServer.Games
 
             switch (eventId)
             {
+                case EventEnum.StartTravel:
+
+                    ulong avatarEntityId = (ulong)client.Session.Account.PlayerData.Avatar;
+
+                    switch (data)
+                    {              
+                        case 534644109020894342: // GhostRiderRide
+                            Logger.Trace($"EventStart GhostRiderRide");
+
+                            // Player.Avatar.EvalOnCreate.AssignProp.ProcProp.Param1 
+                            AddConditionArchive conditionArchive = new(avatarEntityId, 666, 55, data, 0);   // TODO: generate and save Condition.Id                        
+
+                            EnqueueResponse(client, new(NetMessageAddCondition.CreateBuilder()
+                                .SetArchiveData(ByteString.CopyFrom(conditionArchive.Encode()))
+                                .Build()));
+                            
+                            EnqueueResponse(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                                .SetEntityId(avatarEntityId)
+                                .SetPowerProtoId(1023796862002271777) // Powers/Player/GhostRider/RideBikeHotspotsEnd.prototype
+                                .SetPowerRank(0)
+                                .SetCharacterLevel(60)
+                                .SetCombatLevel(60)
+                                .SetItemLevel(1)
+                                .SetItemVariation(1)
+                                .Build()));
+
+                            break;
+
+                        case 12091550505432716326: // WolverineRide
+                        case 13293849182765716371: // DeadpoolRide
+                        case 873351779127923638: // NickFuryRide
+                        case 5296410749208826696: // CyclopsRide
+                        case 767029628138689650: // BlackWidowRide
+                        case 9306725620939166275: // BladeRide
+                            Logger.Trace($"EventStart Ride");
+                            conditionArchive = new(avatarEntityId, 667, 55, data, 0);
+                            EnqueueResponse(client, new(NetMessageAddCondition.CreateBuilder()
+                                .SetArchiveData(ByteString.CopyFrom(conditionArchive.Encode()))
+                                .Build()));
+                            break;
+
+                    }
+
+                    break;
+
+                case EventEnum.EndTravel:
+
+                    avatarEntityId = (ulong)client.Session.Account.PlayerData.Avatar;
+
+                    switch (data)
+                    {
+                        case 534644109020894342: // GhostRiderRide
+                            Logger.Trace($"EventEnd GhostRiderRide");
+
+                            EnqueueResponse(client, new(NetMessageDeleteCondition.CreateBuilder()
+                                .SetIdEntity(avatarEntityId)
+                                .SetKey(666)
+                                .Build()));
+
+                            EnqueueResponse(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
+                                .SetEntityId(avatarEntityId)
+                                .SetPowerProtoId(1023796862002271777) // RideBikeHotspotsEnd
+                                .Build()));
+
+                            break;
+
+                        case 13293849182765716371: // DeadpoolRide
+                        case 12091550505432716326: // WolverineRide
+                        case 873351779127923638: // NickFuryRide
+                        case 5296410749208826696: // CyclopsRide
+                        case 767029628138689650: // BlackWidowRide
+                        case 9306725620939166275: // BladeRide
+                            Logger.Trace($"EventEnd Ride");
+                            EnqueueResponse(client, new(NetMessageDeleteCondition.CreateBuilder()
+                                .SetIdEntity(avatarEntityId)
+                                .SetKey(667)
+                                .Build()));
+
+                            break;
+                    }
+
+                    break;
                 case EventEnum.StartThrowing:
 
                     ulong idTarget = data;
                     // TODO: Player.Avatar.SetThrowObject(idTarget)
                     // TODO: ThrowObject = Player.EntityManager.GetEntity(idTarget)
 
-                    ulong avatarEntityId = (ulong)client.Session.Account.PlayerData.Avatar;
+                    avatarEntityId = (ulong)client.Session.Account.PlayerData.Avatar;
                     // TODO: avatarRepId = Player.EntityManager.GetEntity(avatarEntityId).RepId
                     ulong avatarRepId = (ulong)Enum.Parse(typeof(HardcodedAvatarReplicationId), Enum.GetName(typeof(HardcodedAvatarEntity), client.Session.Account.PlayerData.Avatar));
 
