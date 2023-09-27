@@ -5,7 +5,9 @@ namespace MHServerEmu.GameServer.Games
     public enum EventEnum
     {
         StartThrowing,
-        EndThrowing
+        EndThrowing,
+        StartTravel,
+        EndTravel
     }
 
     public class GameEvent
