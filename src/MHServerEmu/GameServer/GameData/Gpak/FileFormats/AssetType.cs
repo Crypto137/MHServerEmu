@@ -4,7 +4,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
     public class AssetType
     {
-        public uint Header { get; }
+        public FileHeader Header { get; }
         public AssetTypeEntry[] Entries { get; }
 
         public AssetType(byte[] data)
@@ -12,7 +12,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = reader.ReadUInt32();
+                Header = reader.ReadHeader();
                 Entries = new AssetTypeEntry[reader.ReadUInt16()];
 
                 for (int i = 0; i < Entries.Length; i++)

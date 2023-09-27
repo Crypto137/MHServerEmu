@@ -4,7 +4,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
     public class Blueprint
     {
-        public uint Header { get; }                                     // BPT + 0x0b
+        public FileHeader Header { get; }                               // BPT
         public string RuntimeBinding { get; }                           // Name of the C++ class that handles prototypes that use this blueprint
         public ulong DefaultPrototypeId { get; }                        // .defaults prototype file id
         public BlueprintReference[] Parents { get; }
@@ -16,7 +16,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = reader.ReadUInt32();
+                Header = reader.ReadHeader();
                 RuntimeBinding = reader.ReadFixedString16();
                 DefaultPrototypeId = reader.ReadUInt64();
 

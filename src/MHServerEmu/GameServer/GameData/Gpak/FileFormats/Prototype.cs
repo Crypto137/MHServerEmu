@@ -1,11 +1,10 @@
-﻿using MHServerEmu.Common;
-using MHServerEmu.Common.Extensions;
+﻿using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
     public class Prototype
     {
-        public uint Header { get; }
+        public FileHeader Header { get; }
         public PrototypeData Data { get; }
 
         public Prototype(byte[] data)
@@ -13,7 +12,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = reader.ReadUInt32();
+                Header = reader.ReadHeader();
                 Data = new(reader);
             }
         }

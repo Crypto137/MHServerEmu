@@ -4,7 +4,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
 {
     public class PrototypeJson
     {
-        public uint Header { get; }
+        public FileHeader Header { get; }
         public PrototypeDataJson Data { get; }
 
         public PrototypeJson(Prototype prototype, DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir,

@@ -4,7 +4,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
 {
     public class BlueprintJson
     {
-        public uint Header { get; }
+        public FileHeader Header { get; }
         public string RuntimeBinding { get; }
         public string DefaultPrototypeId { get; }
         public BlueprintReferenceJson[] Parents { get; }

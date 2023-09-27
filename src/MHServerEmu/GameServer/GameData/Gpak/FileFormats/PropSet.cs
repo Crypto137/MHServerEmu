@@ -4,7 +4,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
     public class PropSet
     {
-        public uint Header { get; }
+        public FileHeader Header { get; }
         public uint Version { get; }
         public uint ClassId { get; }
         public PropSetTypeListPrototype[] PropShapeLists { get; }
@@ -15,7 +15,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = reader.ReadUInt32();
+                Header = reader.ReadHeader();
                 Version = reader.ReadUInt32();
                 ClassId = reader.ReadUInt32();
 

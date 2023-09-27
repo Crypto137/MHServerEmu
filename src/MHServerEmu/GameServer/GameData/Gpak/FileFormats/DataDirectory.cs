@@ -2,18 +2,9 @@
 
 namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
-    public enum DataDirectoryHeader
-    {
-        Blueprint = 0xB524442,      // BDR
-        Curve = 0xB524443,          // CDR
-        Type = 0xB524454,           // TDR
-        Replacement = 0xB524452,    // RDR
-        Prototype = 0xB524450       // PDR
-    }
-
     public class DataDirectory
     {
-        public DataDirectoryHeader Header { get; }
+        public FileHeader Header { get; }
         public DataDirectoryEntry[] Entries { get; }
         public Dictionary<ulong, DataDirectoryEntry> IdDict { get; }
         public Dictionary<string, DataDirectoryEntry> FilePathDict { get; }
@@ -23,28 +14,28 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = (DataDirectoryHeader)reader.ReadUInt32();
+                Header = reader.ReadHeader();
                 Entries = new DataDirectoryEntry[reader.ReadUInt32()];
 
-                switch (Header)
+                switch (Header.Magic)
                 {
-                    case DataDirectoryHeader.Type:
+                    case "TDR":     // Type
                         for (int i = 0; i < Entries.Length; i++)
                             Entries[i] = new DataDirectoryAssetTypeEntry(reader);
                         break;
-                    case DataDirectoryHeader.Curve:
+                    case "CDR":     // Curve
                         for (int i = 0; i < Entries.Length; i++)
                             Entries[i] = new DataDirectoryCurveEntry(reader);
                         break;
-                    case DataDirectoryHeader.Blueprint:
+                    case "BDR":     // Blueprint
                         for (int i = 0; i < Entries.Length; i++)
                             Entries[i] = new DataDirectoryBlueprintEntry(reader);
                         break;
-                    case DataDirectoryHeader.Replacement:
+                    case "RDR":     // Replacement
                         for (int i = 0; i < Entries.Length; i++)
                             Entries[i] = new DataDirectoryEntry(reader);
                         break;
-                    case DataDirectoryHeader.Prototype:
+                    case "PDR":     // Prototype
                         for (int i = 0; i < Entries.Length; i++)
                             Entries[i] = new DataDirectoryPrototypeEntry(reader);
                         break;
@@ -54,7 +45,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
                 foreach (DataDirectoryEntry entry in Entries)
                     IdDict.Add(entry.Id, entry);
 
-                if (Header != DataDirectoryHeader.Replacement)  // Replacement directory contains duplicate strings, so we can't build a second dictionary out of it
+                if (Header.Magic != "RDR")  // Replacement directory contains duplicate strings, so we can't build a second dictionary out of it
                 {
                     FilePathDict = new(Entries.Length);
                     foreach (DataDirectoryEntry entry in Entries)
