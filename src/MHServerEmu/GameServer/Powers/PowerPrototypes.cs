@@ -4962,7 +4962,7 @@ namespace MHServerEmu.GameServer.Powers
             ChanneledConeHotspotEffect = 2330902428345178012,
             ShrapnelCone = 2869617156349104601,
             Lunge = 2912488946723262194,
-            UltimateSentinelPartThrownPower = 2961108097274288676,
+            //   UltimateSentinelPartThrownPower = 2961108097274288676, // NetMessagePowerCollectionAssignPower block controll for Thrown
             ElectromagneticCooldownResets = 3529357450121387057,
             UltimateSentinelSmashExplosion = 3769039763564140955,
             RapidFire = 3790998875808862349,
