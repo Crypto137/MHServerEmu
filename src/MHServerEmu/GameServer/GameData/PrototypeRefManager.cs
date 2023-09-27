@@ -115,11 +115,11 @@ namespace MHServerEmu.GameServer.GameData
                 {
                     Blueprint blueprint = calligraphy.GetPrototypeBlueprint(allEnumValues[i]);
 
-                    if (EntityClasses.Contains(blueprint.ClassName))
+                    if (EntityClasses.Contains(blueprint.RuntimeBinding))
                         entityList.Add(allEnumValues[i]);
-                    else if (InventoryClasses.Contains(blueprint.ClassName))
+                    else if (InventoryClasses.Contains(blueprint.RuntimeBinding))
                         inventoryList.Add(allEnumValues[i]);
-                    else if (PowerClasses.Contains(blueprint.ClassName))
+                    else if (PowerClasses.Contains(blueprint.RuntimeBinding))
                         powerList.Add(allEnumValues[i]);
                 }
             }

@@ -5,31 +5,29 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
     public class BlueprintJson
     {
         public uint Header { get; }
-        public string ClassName { get; }
-        public string PrototypeId { get; }
-        public BlueprintReferenceJson[] References1 { get; }
-        public BlueprintReferenceJson[] References2 { get; }
-        public Dictionary<ulong, BlueprintFieldJson> FieldDict { get; }
+        public string RuntimeBinding { get; }
+        public string DefaultPrototypeId { get; }
+        public BlueprintReferenceJson[] Parents { get; }
+        public BlueprintReferenceJson[] ContributingBlueprints { get; }
+        public BlueprintMemberJson[] Members { get; }
 
         public BlueprintJson(Blueprint blueprint, DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir)
         {
             Header = blueprint.Header;
-            ClassName = blueprint.ClassName;
-            PrototypeId = (blueprint.PrototypeId != 0) ? prototypeDir.IdDict[blueprint.PrototypeId].FilePath : "";
+            RuntimeBinding = blueprint.RuntimeBinding;
+            DefaultPrototypeId = (blueprint.DefaultPrototypeId != 0) ? prototypeDir.IdDict[blueprint.DefaultPrototypeId].FilePath : "";
 
-            References1 = new BlueprintReferenceJson[blueprint.References1.Length];
-            for (int i = 0; i < References1.Length; i++)
-                References1[i] = new(blueprint.References1[i], prototypeDir);
+            Parents = new BlueprintReferenceJson[blueprint.Parents.Length];
+            for (int i = 0; i < Parents.Length; i++)
+                Parents[i] = new(blueprint.Parents[i], prototypeDir);
 
-            References2 = new BlueprintReferenceJson[blueprint.References2.Length];
-            for (int i = 0; i < References2.Length; i++)
-                References2[i] = new(blueprint.References2[i], prototypeDir);
+            ContributingBlueprints = new BlueprintReferenceJson[blueprint.ContributingBlueprints.Length];
+            for (int i = 0; i < ContributingBlueprints.Length; i++)
+                ContributingBlueprints[i] = new(blueprint.ContributingBlueprints[i], prototypeDir);
 
-            FieldDict = new(blueprint.FieldDict.Count);
-            foreach (var kvp in blueprint.FieldDict)
-            {
-                FieldDict.Add(kvp.Key, new(kvp.Value, prototypeDir, curveDir, typeDir));
-            }
+            Members = new BlueprintMemberJson[blueprint.Members.Length];
+            for (int i = 0; i < Members.Length; i++)
+                Members[i] = new(blueprint.Members[i], prototypeDir, curveDir, typeDir);
         }
 
         public class BlueprintReferenceJson
@@ -44,34 +42,36 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
             }
         }
 
-        public class BlueprintFieldJson
+        public class BlueprintMemberJson
         {
-            public string Name { get; }
+            public ulong FieldId { get; }
+            public string FieldName { get; }
             public char ValueType { get; }
             public char ContainerType { get; }
             public string Subtype { get; }
 
-            public BlueprintFieldJson(BlueprintField field, DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir)
+            public BlueprintMemberJson(BlueprintMember member, DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir)
             {
-                Name = field.Name;
-                ValueType = (char)field.ValueType;
-                ContainerType = (char)field.ContainerType;
+                FieldId = member.FieldId;
+                FieldName = member.FieldName;
+                ValueType = (char)member.ValueType;
+                ContainerType = (char)member.ContainerType;
 
                 switch (ValueType)
                 {
                     // Only these types have subtypes
                     case 'A':
-                        Subtype = typeDir.IdDict[field.Subtype].FilePath;
+                        Subtype = typeDir.IdDict[member.Subtype].FilePath;
                         break;
 
                     case 'C':
-                        Subtype = curveDir.IdDict[field.Subtype].FilePath;
+                        Subtype = curveDir.IdDict[member.Subtype].FilePath;
                         break;
 
                     // Both P and R have prototypes as their subtypes
                     case 'P':
                     case 'R':
-                        Subtype = (field.Subtype != 0) ? prototypeDir.IdDict[field.Subtype].FilePath : "";
+                        Subtype = (member.Subtype != 0) ? prototypeDir.IdDict[member.Subtype].FilePath : "";
                         break;
                 }
             }

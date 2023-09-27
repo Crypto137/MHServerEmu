@@ -54,7 +54,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             // Initialize supplementary dictionaries
             PrototypeBlueprintDict = new(BlueprintDirectory.Entries.Length);
             foreach (DataDirectoryBlueprintEntry entry in BlueprintDirectory.Entries)
-                PrototypeBlueprintDict.Add(GetPrototype(entry.Blueprint.PrototypeId), entry.Blueprint);
+                PrototypeBlueprintDict.Add(GetPrototype(entry.Blueprint.DefaultPrototypeId), entry.Blueprint);
 
             // Assets
             AssetDict.Add(0, "0");  // add 0 manually
@@ -73,8 +73,8 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
             // Prototype fields
             foreach (DataDirectoryBlueprintEntry dirEntry in BlueprintDirectory.Entries)
-                foreach (var kvp in dirEntry.Blueprint.FieldDict)
-                    PrototypeFieldDict.Add(kvp.Key, kvp.Value.Name);
+                foreach (BlueprintMember member in dirEntry.Blueprint.Members)
+                    PrototypeFieldDict.Add(member.FieldId, member.FieldName);
         }
 
         // Accessors for various data files
@@ -87,7 +87,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         public Prototype GetPrototype(ulong id) => ((DataDirectoryPrototypeEntry)PrototypeDirectory.IdDict[id]).Prototype;
         public Prototype GetPrototype(string path) => ((DataDirectoryPrototypeEntry)PrototypeDirectory.FilePathDict[path]).Prototype;
 
-        public Prototype GetBlueprintPrototype(Blueprint blueprint) => GetPrototype(blueprint.PrototypeId);
+        public Prototype GetBlueprintPrototype(Blueprint blueprint) => GetPrototype(blueprint.DefaultPrototypeId);
         public Prototype GetBlueprintPrototype(ulong blueprintId) => GetBlueprintPrototype(GetBlueprint(blueprintId));
         public Prototype GetBlueprintPrototype(string blueprintPath) => GetBlueprintPrototype(GetBlueprint(blueprintPath));
 

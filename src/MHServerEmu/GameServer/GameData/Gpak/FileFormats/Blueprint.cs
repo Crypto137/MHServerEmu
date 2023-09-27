@@ -4,12 +4,12 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
     public class Blueprint
     {
-        public uint Header { get; }                         // BPT + 0x0b
-        public string ClassName { get; }                    // name of the C++ class that handles prototypes that use this blueprint
-        public ulong PrototypeId { get; }                   // .defaults prototype file id
-        public BlueprintReference[] References1 { get; }
-        public BlueprintReference[] References2 { get; }
-        public Dictionary<ulong, BlueprintField> FieldDict { get; }     // field definitions for prototypes that use this blueprint             
+        public uint Header { get; }                                     // BPT + 0x0b
+        public string RuntimeBinding { get; }                           // Name of the C++ class that handles prototypes that use this blueprint
+        public ulong DefaultPrototypeId { get; }                        // .defaults prototype file id
+        public BlueprintReference[] Parents { get; }
+        public BlueprintReference[] ContributingBlueprints { get; }
+        public BlueprintMember[] Members { get; }                       // Field definitions for prototypes that use this blueprint  
 
         public Blueprint(byte[] data)
         {
@@ -17,22 +17,26 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             using (BinaryReader reader = new(stream))
             {
                 Header = reader.ReadUInt32();
-                ClassName = reader.ReadFixedString16();
-                PrototypeId = reader.ReadUInt64();
+                RuntimeBinding = reader.ReadFixedString16();
+                DefaultPrototypeId = reader.ReadUInt64();
 
-                References1 = new BlueprintReference[reader.ReadUInt16()];
-                for (int i = 0; i < References1.Length; i++)
-                    References1[i] = new(reader);
+                Parents = new BlueprintReference[reader.ReadUInt16()];
+                for (int i = 0; i < Parents.Length; i++)
+                    Parents[i] = new(reader);
 
-                References2 = new BlueprintReference[reader.ReadInt16()];
-                for (int i = 0; i < References2.Length; i++)
-                    References2[i] = new(reader);
+                ContributingBlueprints = new BlueprintReference[reader.ReadInt16()];
+                for (int i = 0; i < ContributingBlueprints.Length; i++)
+                    ContributingBlueprints[i] = new(reader);
 
-                ushort fieldCount = reader.ReadUInt16();
-                FieldDict = new(fieldCount);
-                for (int i = 0; i < fieldCount; i++)
-                    FieldDict.Add(reader.ReadUInt64(), new(reader));
+                Members = new BlueprintMember[reader.ReadUInt16()];
+                for (int i = 0; i < Members.Length; i++)
+                    Members[i] = new(reader);
             }
+        }
+
+        public BlueprintMember GetMember(ulong id)
+        {
+            return Members.First(member => member.FieldId == id);
         }
     }
 
@@ -48,16 +52,18 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         }
     }
 
-    public class BlueprintField
+    public class BlueprintMember
     {
-        public string Name { get; }
+        public ulong FieldId { get; }
+        public string FieldName { get; }
         public CalligraphyValueType ValueType { get; }
         public CalligraphyContainerType ContainerType { get; }
         public ulong Subtype { get; }
 
-        public BlueprintField(BinaryReader reader)
+        public BlueprintMember(BinaryReader reader)
         {
-            Name = reader.ReadFixedString16();
+            FieldId = reader.ReadUInt64();
+            FieldName = reader.ReadFixedString16();
             ValueType = (CalligraphyValueType)reader.ReadByte();
             ContainerType = (CalligraphyContainerType)reader.ReadByte();
 
