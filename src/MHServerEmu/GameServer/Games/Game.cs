@@ -178,8 +178,8 @@ namespace MHServerEmu.GameServer.Games
                     if (powerPrototypePath.Contains("ThrowablePowers/"))
                     {
                         // TODO: GetPrototype(tryActivatePower.PowerPrototypeId).Power.AnimationTimeMS
-                        long AnimationTimeMS = 1033; 
-                        AddEvent(client, EventEnum.EndThrowing, AnimationTimeMS, tryActivatePower.PowerPrototypeId);
+                        long animationTimeMS = 1033; 
+                        AddEvent(client, EventEnum.EndThrowing, animationTimeMS, tryActivatePower.PowerPrototypeId);
                         Logger.Trace($"AddEvent EndThrowing for {tryActivatePower.PowerPrototypeId}");
                         break;  
                     }

@@ -25,13 +25,15 @@ namespace MHServerEmu.GameServer.Powers
         {
             ReplicationPolicy = 239;
             EntityId = entityId;
-            
-            Condition = new();
-            Condition.Id = id;
-            Condition.Flags = flags.ToBoolArray(16);
-            Condition.CreatorPowerPrototypeId = prototypeId;
-            Condition.StartTime = startTime;
-            Condition.PropertyCollection = new(0);
+
+            Condition = new()
+            {
+                Id = id,
+                Flags = flags.ToBoolArray(16),
+                CreatorPowerPrototypeId = prototypeId,
+                StartTime = startTime,
+                PropertyCollection = new(0)
+            };
         }
 
         public byte[] Encode()
