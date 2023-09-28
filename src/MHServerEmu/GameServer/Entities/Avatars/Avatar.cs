@@ -41,10 +41,10 @@ namespace MHServerEmu.GameServer.Entities.Avatars
                 AbilityKeyMappings[i] = new(stream, boolDecoder);
         }
 
-        public Avatar(PrototypeCollectionEntry[] prototypeCollection, Condition[] conditionCollection, PowerCollectionRecord[] powerCollection, int unkEvent,
+        public Avatar(EntityTrackingContextMap[] trackingContextMap, Condition[] conditionCollection, PowerCollectionRecord[] powerCollection, int unkEvent,
             ReplicatedString playerName, ulong ownerPlayerDbId, string guildName, bool hasGuildInfo, GuildMemberReplicationRuntimeInfo guildInfo, AbilityKeyMapping[] abilityKeyMappings)
         {
-            PrototypeCollection = prototypeCollection;
+            TrackingContextMap = trackingContextMap;
             ConditionCollection = conditionCollection;
             PowerCollection = powerCollection;
             UnkEvent = unkEvent;

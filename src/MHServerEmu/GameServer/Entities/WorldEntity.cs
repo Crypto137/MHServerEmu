@@ -9,7 +9,7 @@ namespace MHServerEmu.GameServer.Entities
 {
     public class WorldEntity : Entity
     {
-        public PrototypeCollectionEntry[] PrototypeCollection { get; set; }
+        public EntityTrackingContextMap[] TrackingContextMap { get; set; }
         public Condition[] ConditionCollection { get; set; }
         public PowerCollectionRecord[] PowerCollection { get; set; }
         public int UnkEvent { get; set; }
@@ -41,7 +41,7 @@ namespace MHServerEmu.GameServer.Entities
                 new(PropertyEnum.ContextAreaRef, contextAreaRef)
             });
 
-            PrototypeCollection = Array.Empty<PrototypeCollectionEntry>();
+            TrackingContextMap = Array.Empty<EntityTrackingContextMap>();
             ConditionCollection = Array.Empty<Condition>();
             PowerCollection = Array.Empty<PowerCollectionRecord>();
             UnkEvent = 0;
@@ -73,9 +73,9 @@ namespace MHServerEmu.GameServer.Entities
 
         protected void ReadWorldEntityFields(CodedInputStream stream)
         {
-            PrototypeCollection = new PrototypeCollectionEntry[stream.ReadRawVarint64()];
-            for (int i = 0; i < PrototypeCollection.Length; i++)
-                PrototypeCollection[i] = new(stream);
+            TrackingContextMap = new EntityTrackingContextMap[stream.ReadRawVarint64()];
+            for (int i = 0; i < TrackingContextMap.Length; i++)
+                TrackingContextMap[i] = new(stream);
 
             ConditionCollection = new Condition[stream.ReadRawVarint64()];
             for (int i = 0; i < ConditionCollection.Length; i++)
@@ -103,8 +103,8 @@ namespace MHServerEmu.GameServer.Entities
 
         protected void WriteWorldEntityFields(CodedOutputStream stream)
         {
-            stream.WriteRawVarint64((ulong)PrototypeCollection.Length);
-            foreach (PrototypeCollectionEntry entry in PrototypeCollection)
+            stream.WriteRawVarint64((ulong)TrackingContextMap.Length);
+            foreach (EntityTrackingContextMap entry in TrackingContextMap)
                 stream.WriteRawBytes(entry.Encode());
 
             stream.WriteRawVarint64((ulong)ConditionCollection.Length);
@@ -123,8 +123,8 @@ namespace MHServerEmu.GameServer.Entities
 
         protected void WriteWorldEntityString(StringBuilder sb)
         {
-            for (int i = 0; i < PrototypeCollection.Length; i++)
-                sb.AppendLine($"PrototypeCollection{i}: {PrototypeCollection[i]}");
+            for (int i = 0; i < TrackingContextMap.Length; i++)
+                sb.AppendLine($"TrackingContextMap{i}: {TrackingContextMap[i]}");
 
             for (int i = 0; i < ConditionCollection.Length; i++)
                 sb.AppendLine($"ConditionCollection{i}: {ConditionCollection[i]}");
