@@ -16,20 +16,20 @@ namespace MHServerEmu.GameServer.Properties
             Dictionary<PropertyEnum, PropertyPrototype> mixinDict = new();
 
             // Loop through the main property info directory to get most info
-            foreach (DataDirectoryBlueprintEntry dirEntry in calligraphy.BlueprintDirectory.Entries)
+            foreach (DataDirectoryBlueprintRecord record in calligraphy.BlueprintDirectory.Records)
             {
-                if (dirEntry.FilePath.Contains("Property/Info"))
+                if (record.FilePath.Contains("Property/Info"))
                 {
-                    PropertyEnum property = (PropertyEnum)Enum.Parse(typeof(PropertyEnum), Path.GetFileNameWithoutExtension(dirEntry.FilePath));
-                    PropertyInfoPrototype prototype = new(calligraphy.GetBlueprintPrototype(dirEntry.FilePath));
+                    PropertyEnum property = (PropertyEnum)Enum.Parse(typeof(PropertyEnum), Path.GetFileNameWithoutExtension(record.FilePath));
+                    PropertyInfoPrototype prototype = new(calligraphy.GetBlueprintPrototype(record.FilePath));
 
                     _propertyInfoDict.Add(property, prototype);
                 }
-                else if (dirEntry.FilePath.Contains("Property/Mixin") && dirEntry.FilePath.Contains("Prop.blueprint"))   // param mixin information is stored in PropertyPrototypes
+                else if (record.FilePath.Contains("Property/Mixin") && record.FilePath.Contains("Prop.blueprint"))   // param mixin information is stored in PropertyPrototypes
                 {
-                    string fileName = Path.GetFileNameWithoutExtension(dirEntry.FilePath);
+                    string fileName = Path.GetFileNameWithoutExtension(record.FilePath);
                     PropertyEnum property = (PropertyEnum)Enum.Parse(typeof(PropertyEnum), fileName.Substring(0, fileName.Length - 4)); // -4 to remove Prop at the end
-                    PropertyPrototype mixin = new(calligraphy.GetBlueprintPrototype(dirEntry.FilePath));
+                    PropertyPrototype mixin = new(calligraphy.GetBlueprintPrototype(record.FilePath));
                     mixinDict.Add(property, mixin);
                 }
             }

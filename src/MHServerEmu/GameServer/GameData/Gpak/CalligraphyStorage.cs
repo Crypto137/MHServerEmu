@@ -7,8 +7,8 @@ namespace MHServerEmu.GameServer.GameData.Gpak
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public DataDirectory AssetTypeDirectory { get; }
         public DataDirectory CurveDirectory { get; }
+        public DataDirectory AssetTypeDirectory { get; }
         public DataDirectory BlueprintDirectory { get; }
         public DataDirectory PrototypeDirectory { get; }
         public DataDirectory ReplacementDirectory { get; }
@@ -24,68 +24,68 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             var gpakDict = gpakFile.ToDictionary();
 
             // Initialize directories
-            AssetTypeDirectory = new(gpakDict["Calligraphy/Type.directory"]);
             CurveDirectory = new(gpakDict["Calligraphy/Curve.directory"]);
+            AssetTypeDirectory = new(gpakDict["Calligraphy/Type.directory"]);
             BlueprintDirectory = new(gpakDict["Calligraphy/Blueprint.directory"]);
             PrototypeDirectory = new(gpakDict["Calligraphy/Prototype.directory"]);
             ReplacementDirectory = new(gpakDict["Calligraphy/Replacement.directory"]);
 
             // Populate directories with data from GPAK
-            // GType
-            foreach (DataDirectoryAssetTypeEntry entry in AssetTypeDirectory.Entries)
-                entry.AssetType = new(gpakDict[$"Calligraphy/{entry.FilePath}"]);
-            Logger.Info($"Parsed {AssetTypeDirectory.Entries.Length} asset types");
-
             // Curve
-            foreach (DataDirectoryCurveEntry entry in CurveDirectory.Entries)
-                entry.Curve = new(gpakDict[$"Calligraphy/{entry.FilePath}"]);
-            Logger.Info($"Parsed {CurveDirectory.Entries.Length} curves");
+            foreach (DataDirectoryCurveRecord record in CurveDirectory.Records)
+                record.Curve = new(gpakDict[$"Calligraphy/{record.FilePath}"]);
+            Logger.Info($"Parsed {CurveDirectory.Records.Length} curves");
+
+            // AssetType
+            foreach (DataDirectoryAssetTypeRecord record in AssetTypeDirectory.Records)
+                record.AssetType = new(gpakDict[$"Calligraphy/{record.FilePath}"]);
+            Logger.Info($"Parsed {AssetTypeDirectory.Records.Length} asset types");
 
             // Blueprint
-            foreach (DataDirectoryBlueprintEntry entry in BlueprintDirectory.Entries)
-                entry.Blueprint = new(gpakDict[$"Calligraphy/{entry.FilePath}"]);
-            Logger.Info($"Parsed {BlueprintDirectory.Entries.Length} blueprints");
+            foreach (DataDirectoryBlueprintRecord record in BlueprintDirectory.Records)
+                record.Blueprint = new(gpakDict[$"Calligraphy/{record.FilePath}"]);
+            Logger.Info($"Parsed {BlueprintDirectory.Records.Length} blueprints");
 
             // Prototype
-            foreach (DataDirectoryPrototypeEntry entry in PrototypeDirectory.Entries)
-                entry.Prototype = new(gpakDict[$"Calligraphy/{entry.FilePath}"]);
-            Logger.Info($"Parsed {PrototypeDirectory.Entries.Length} prototypes");
+            foreach (DataDirectoryPrototypeRecord record in PrototypeDirectory.Records)
+                record.Prototype = new(gpakDict[$"Calligraphy/{record.FilePath}"]);
+            Logger.Info($"Parsed {PrototypeDirectory.Records.Length} prototypes");
 
             // Initialize supplementary dictionaries
-            PrototypeBlueprintDict = new(BlueprintDirectory.Entries.Length);
-            foreach (DataDirectoryBlueprintEntry entry in BlueprintDirectory.Entries)
-                PrototypeBlueprintDict.Add(GetPrototype(entry.Blueprint.DefaultPrototypeId), entry.Blueprint);
+            PrototypeBlueprintDict = new(BlueprintDirectory.Records.Length);
+            foreach (DataDirectoryBlueprintRecord record in BlueprintDirectory.Records)
+                PrototypeBlueprintDict.Add(GetPrototype(record.Blueprint.DefaultPrototypeId), record.Blueprint);
 
             // Assets
             AssetDict.Add(0, "0");  // add 0 manually
             AssetTypeDict.Add(0, "0");
 
-            foreach (DataDirectoryAssetTypeEntry dirEntry in AssetTypeDirectory.Entries)
+            foreach (DataDirectoryAssetTypeRecord record in AssetTypeDirectory.Records)
             {
-                foreach (AssetTypeEntry entry in dirEntry.AssetType.Entries)
+                foreach (AssetTypeEntry entry in record.AssetType.Entries)
                 {
                     AssetDict.Add(entry.Id1, entry.Name);
-                    AssetTypeDict.Add(entry.Id1, Path.GetFileNameWithoutExtension(dirEntry.FilePath));
+                    AssetTypeDict.Add(entry.Id1, Path.GetFileNameWithoutExtension(record.FilePath));
                 }
             }
 
             Logger.Info($"Loaded {AssetDict.Count} asset references");
 
             // Prototype fields
-            foreach (DataDirectoryBlueprintEntry dirEntry in BlueprintDirectory.Entries)
-                foreach (BlueprintMember member in dirEntry.Blueprint.Members)
+            foreach (DataDirectoryBlueprintRecord record in BlueprintDirectory.Records)
+                foreach (BlueprintMember member in record.Blueprint.Members)
                     PrototypeFieldDict.Add(member.FieldId, member.FieldName);
         }
 
         // Accessors for various data files
-        public AssetType GetAssetType(ulong id) => ((DataDirectoryAssetTypeEntry)AssetTypeDirectory.IdDict[id]).AssetType;
-        public AssetType GetAssetType(string path) => ((DataDirectoryAssetTypeEntry)AssetTypeDirectory.FilePathDict[path]).AssetType;
-        public Curve GetCurve(ulong id) => ((DataDirectoryCurveEntry)CurveDirectory.IdDict[id]).Curve;
-        public Curve GetCurve(string path) => ((DataDirectoryCurveEntry)CurveDirectory.FilePathDict[path]).Curve;
-        public Blueprint GetBlueprint(ulong id) => ((DataDirectoryBlueprintEntry)BlueprintDirectory.IdDict[id]).Blueprint;
-        public Blueprint GetBlueprint(string path) => ((DataDirectoryBlueprintEntry)BlueprintDirectory.FilePathDict[path]).Blueprint;
-        public Prototype GetPrototype(ulong id) => ((DataDirectoryPrototypeEntry)PrototypeDirectory.IdDict[id]).Prototype;
-        public Prototype GetPrototype(string path) => ((DataDirectoryPrototypeEntry)PrototypeDirectory.FilePathDict[path]).Prototype;
+        public AssetType GetAssetType(ulong id) => ((DataDirectoryAssetTypeRecord)AssetTypeDirectory.IdDict[id]).AssetType;
+        public AssetType GetAssetType(string path) => ((DataDirectoryAssetTypeRecord)AssetTypeDirectory.FilePathDict[path]).AssetType;
+        public Curve GetCurve(ulong id) => ((DataDirectoryCurveRecord)CurveDirectory.IdDict[id]).Curve;
+        public Curve GetCurve(string path) => ((DataDirectoryCurveRecord)CurveDirectory.FilePathDict[path]).Curve;
+        public Blueprint GetBlueprint(ulong id) => ((DataDirectoryBlueprintRecord)BlueprintDirectory.IdDict[id]).Blueprint;
+        public Blueprint GetBlueprint(string path) => ((DataDirectoryBlueprintRecord)BlueprintDirectory.FilePathDict[path]).Blueprint;
+        public Prototype GetPrototype(ulong id) => ((DataDirectoryPrototypeRecord)PrototypeDirectory.IdDict[id]).Prototype;
+        public Prototype GetPrototype(string path) => ((DataDirectoryPrototypeRecord)PrototypeDirectory.FilePathDict[path]).Prototype;
 
         public Prototype GetBlueprintPrototype(Blueprint blueprint) => GetPrototype(blueprint.DefaultPrototypeId);
         public Prototype GetBlueprintPrototype(ulong blueprintId) => GetBlueprintPrototype(GetBlueprint(blueprintId));
@@ -102,15 +102,15 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         public Blueprint GetPrototypeBlueprint(string prototypePath) => GetPrototypeBlueprint(GetPrototype(prototypePath));
 
         // Helper methods
-        public bool IsCalligraphyPrototype(ulong prototypeId) => PrototypeDirectory.IdDict.TryGetValue(prototypeId, out DataDirectoryEntry entry);  // TryGetValue is apparently faster than ContainsKey
+        public bool IsCalligraphyPrototype(ulong prototypeId) => PrototypeDirectory.IdDict.TryGetValue(prototypeId, out IDataRecord record);  // TryGetValue is apparently faster than ContainsKey
 
         public override bool Verify()
         {
-            return AssetTypeDirectory.Entries.Length > 0
-                && CurveDirectory.Entries.Length > 0
-                && BlueprintDirectory.Entries.Length > 0
-                && PrototypeDirectory.Entries.Length > 0
-                && ReplacementDirectory.Entries.Length > 0;
+            return AssetTypeDirectory.Records.Length > 0
+                && CurveDirectory.Records.Length > 0
+                && BlueprintDirectory.Records.Length > 0
+                && PrototypeDirectory.Records.Length > 0
+                && ReplacementDirectory.Records.Length > 0;
         }
 
         #region Export
@@ -124,21 +124,21 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
             // Build dictionaries out of directories for compatibility with the old JSON export
             // Exporting isn't performance / memory critical, so it should be fine
-            Dictionary<string, AssetType> gtypeDict = new(AssetTypeDirectory.Entries.Length);
-            foreach (DataDirectoryAssetTypeEntry entry in AssetTypeDirectory.Entries)
-                gtypeDict.Add($"Calligraphy/{entry.FilePath}", entry.AssetType);
+            Dictionary<string, AssetType> assetTypeDict = new(AssetTypeDirectory.Records.Length);
+            foreach (DataDirectoryAssetTypeRecord record in AssetTypeDirectory.Records)
+                assetTypeDict.Add($"Calligraphy/{record.FilePath}", record.AssetType);
 
-            Dictionary<string, Blueprint> blueprintDict = new(BlueprintDirectory.Entries.Length);
-            foreach (DataDirectoryBlueprintEntry entry in BlueprintDirectory.Entries)
-                blueprintDict.Add($"Calligraphy/{entry.FilePath}", entry.Blueprint);
+            Dictionary<string, Blueprint> blueprintDict = new(BlueprintDirectory.Records.Length);
+            foreach (DataDirectoryBlueprintRecord record in BlueprintDirectory.Records)
+                blueprintDict.Add($"Calligraphy/{record.FilePath}", record.Blueprint);
 
-            Dictionary<string, Prototype> prototypeDict = new(PrototypeDirectory.Entries.Length);
-            foreach (DataDirectoryPrototypeEntry entry in PrototypeDirectory.Entries)
-                prototypeDict.Add($"Calligraphy/{entry.FilePath}", entry.Prototype);
+            Dictionary<string, Prototype> prototypeDict = new(PrototypeDirectory.Records.Length);
+            foreach (DataDirectoryPrototypeRecord record in PrototypeDirectory.Records)
+                prototypeDict.Add($"Calligraphy/{record.FilePath}", record.Prototype);
 
             // Serialize and save
             ExportDataDirectories();
-            SerializeDictAsJson(gtypeDict);
+            SerializeDictAsJson(assetTypeDict);
             ExportCurveDict();
             SerializeDictAsJson(blueprintDict);
             SerializeDictAsJson(prototypeDict);
@@ -149,48 +149,48 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             string dir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "GPAK", "Export", "Calligraphy");
             if (Directory.Exists(dir) == false) Directory.CreateDirectory(dir);
 
-            using (StreamWriter writer = new(Path.Combine(dir, "Type.directory.tsv")))
-            {
-                foreach (DataDirectoryAssetTypeEntry entry in AssetTypeDirectory.Entries)
-                    writer.WriteLine($"{entry.Id}\t{entry.Guid}\t{entry.Field2}\t{entry.FilePath}");
-            }
-
             using (StreamWriter writer = new(Path.Combine(dir, "Curve.directory.tsv")))
             {
-                foreach (DataDirectoryCurveEntry entry in CurveDirectory.Entries)
-                    writer.WriteLine($"{entry.Id}\t{entry.Guid}\t{entry.Field2}\t{entry.FilePath}");
+                foreach (DataDirectoryCurveRecord record in CurveDirectory.Records)
+                    writer.WriteLine($"{record.Id}\t{record.Guid}\t{record.ByteField}\t{record.FilePath}");
+            }
+
+            using (StreamWriter writer = new(Path.Combine(dir, "Type.directory.tsv")))
+            {
+                foreach (DataDirectoryAssetTypeRecord record in AssetTypeDirectory.Records)
+                    writer.WriteLine($"{record.Id}\t{record.Guid}\t{record.ByteField}\t{record.FilePath}");
             }
 
             using (StreamWriter writer = new(Path.Combine(dir, "Blueprint.directory.tsv")))
             {
-                foreach (DataDirectoryBlueprintEntry entry in BlueprintDirectory.Entries)
-                    writer.WriteLine($"{entry.Id}\t{entry.Guid}\t{entry.Field2}\t{entry.FilePath}");
+                foreach (DataDirectoryBlueprintRecord record in BlueprintDirectory.Records)
+                    writer.WriteLine($"{record.Id}\t{record.Guid}\t{record.ByteField}\t{record.FilePath}");
             }
 
             using (StreamWriter writer = new(Path.Combine(dir, "Prototype.directory.tsv")))
             {
-                foreach (DataDirectoryPrototypeEntry entry in PrototypeDirectory.Entries)
-                    writer.WriteLine($"{entry.Id}\t{entry.Guid}\t{entry.ParentId}\t{entry.Field3}\t{entry.FilePath}");
+                foreach (DataDirectoryPrototypeRecord record in PrototypeDirectory.Records)
+                    writer.WriteLine($"{record.Id}\t{record.Guid}\t{record.ParentId}\t{record.ByteField}\t{record.FilePath}");
             }
 
             using (StreamWriter writer = new(Path.Combine(dir, "Replacement.directory.tsv")))
             {
-                foreach (DataDirectoryEntry entry in ReplacementDirectory.Entries)
-                    writer.WriteLine($"{entry.Id}\t{entry.Guid}\t{entry.FilePath}");
+                foreach (DataDirectoryReplacementRecord record in ReplacementDirectory.Records)
+                    writer.WriteLine($"{record.OldGuid}\t{record.NewGuid}\t{record.Name}");
             }
         }
 
         private void ExportCurveDict()
         {
-            foreach (DataDirectoryCurveEntry dirEntry in CurveDirectory.Entries)  // use TSV for curves
+            foreach (DataDirectoryCurveRecord record in CurveDirectory.Records)  // use TSV for curves
             {
-                string path = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "GPAK", "Export", "Calligraphy", $"{dirEntry.FilePath}.tsv");
+                string path = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "GPAK", "Export", "Calligraphy", $"{record.FilePath}.tsv");
                 string dir = Path.GetDirectoryName(path);
                 if (Directory.Exists(dir) == false) Directory.CreateDirectory(dir);
 
                 using (StreamWriter sw = new(path))
                 {
-                    foreach (double value in dirEntry.Curve.Entries)
+                    foreach (double value in record.Curve.Entries)
                         sw.WriteLine(value);
                 }
             }

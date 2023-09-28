@@ -16,13 +16,13 @@ namespace MHServerEmu.Common.Commands
             if (@params.Length == 0) return "Invalid arguments. Type 'help lookup costume' to get help.";
 
             // Find matches for the given pattern
-            List<DataDirectoryPrototypeEntry> matchList = new();
+            List<DataDirectoryPrototypeRecord> matchList = new();
             string pattern = @params[0].ToLower();
 
-            foreach (DataDirectoryPrototypeEntry entry in GameDatabase.Calligraphy.PrototypeDirectory.Entries)
+            foreach (DataDirectoryPrototypeRecord record in GameDatabase.Calligraphy.PrototypeDirectory.Records)
             {
-                if (entry.FilePath.Contains("Entity/Items/Costumes/Prototypes/") && entry.FilePath.ToLower().Contains(pattern))
-                    matchList.Add(entry);
+                if (record.FilePath.Contains("Entity/Items/Costumes/Prototypes/") && record.FilePath.ToLower().Contains(pattern))
+                    matchList.Add(record);
             }
 
             // Output
@@ -36,16 +36,16 @@ namespace MHServerEmu.Common.Commands
             if (@params.Length == 0) return "Invalid arguments. Type 'help lookup region' to get help.";
 
             // Find matches for the given pattern
-            List<DataDirectoryPrototypeEntry> matchList = new();
+            List<DataDirectoryPrototypeRecord> matchList = new();
             string pattern = @params[0].ToLower();
 
-            foreach (DataDirectoryPrototypeEntry entry in GameDatabase.Calligraphy.PrototypeDirectory.Entries)
+            foreach (DataDirectoryPrototypeRecord record in GameDatabase.Calligraphy.PrototypeDirectory.Records)
             {
-                if (entry.FilePath.Contains("Regions/"))
+                if (record.FilePath.Contains("Regions/"))
                 {
-                    string fileName = Path.GetFileName(entry.FilePath);
+                    string fileName = Path.GetFileName(record.FilePath);
                     if (fileName.Contains("Region") && Path.GetExtension(fileName) == ".prototype" && fileName.ToLower().Contains(pattern))
-                        matchList.Add(entry);
+                        matchList.Add(record);
                 }
             }
 
@@ -53,7 +53,7 @@ namespace MHServerEmu.Common.Commands
             return OutputPrototypeLookup(matchList, "Regions/", client);
         }
 
-        private static string OutputPrototypeLookup(List<DataDirectoryPrototypeEntry> matchList, string rootDirectory, FrontendClient client)
+        private static string OutputPrototypeLookup(List<DataDirectoryPrototypeRecord> matchList, string rootDirectory, FrontendClient client)
         {
             if (matchList.Count > 0)
             {

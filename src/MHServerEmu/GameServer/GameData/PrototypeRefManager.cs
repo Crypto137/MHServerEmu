@@ -85,14 +85,14 @@ namespace MHServerEmu.GameServer.GameData
         public PrototypeRefManager(CalligraphyStorage calligraphy, ResourceStorage resource)
         {
             // Generate a hash map for all prototypes (Calligraphy + Resource) and fill _prototypeGuidDict
-            _prototypeHashMap = new(calligraphy.PrototypeDirectory.Entries.Length + resource.DirectoryDict.Count);
+            _prototypeHashMap = new(calligraphy.PrototypeDirectory.Records.Length + resource.DirectoryDict.Count);
             _prototypeHashMap.Add(0, "");
-            _prototypeGuidDict = new(calligraphy.PrototypeDirectory.Entries.Length);
+            _prototypeGuidDict = new(calligraphy.PrototypeDirectory.Records.Length);
 
-            foreach (DataDirectoryPrototypeEntry entry in calligraphy.PrototypeDirectory.Entries)
+            foreach (DataDirectoryPrototypeRecord record in calligraphy.PrototypeDirectory.Records)
             {
-                _prototypeHashMap.Add(entry.Id, entry.FilePath);
-                _prototypeGuidDict.Add(entry.Guid, entry.Id);
+                _prototypeHashMap.Add(record.Id, record.FilePath);
+                _prototypeGuidDict.Add(record.Guid, record.Id);
             }
 
             foreach (var kvp in resource.DirectoryDict)
