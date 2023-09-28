@@ -17,7 +17,9 @@ namespace MHServerEmu.GameServer.Entities
             CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
             ReadEntityFields(stream);
             ReadWorldEntityFields(stream);
+
             TransitionName = stream.ReadRawString();
+
             Destinations = new Destination[stream.ReadRawVarint64()];
             for (int i = 0; i < Destinations.Length; i++)
                 Destinations[i] = new(stream);
@@ -80,8 +82,8 @@ namespace MHServerEmu.GameServer.Entities
         public ulong NameId { get; set; }
         public ulong RegionId { get; set; }
         public Vector3 Position { get; set; }
-        public ulong UnkId_1 { get; set; }
-        public ulong UnkId_2 { get; set; }
+        public ulong UnkId1 { get; set; }
+        public ulong UnkId2 { get; set; }
 
         public Destination(CodedInputStream stream)
         {
@@ -105,13 +107,13 @@ namespace MHServerEmu.GameServer.Entities
             float z = stream.ReadRawFloat32();
             Position = new Vector3(x, y, z);
 
-            UnkId_1 = stream.ReadRawVarint64();
-            UnkId_2 = stream.ReadRawVarint64();
+            UnkId1 = stream.ReadRawVarint64();
+            UnkId2 = stream.ReadRawVarint64();
         }
 
         public Destination(int type, ulong region, ulong area, ulong cell, ulong entity, ulong target, 
             int unk2, string name, ulong nameId, ulong regionId, 
-            Vector3 position, ulong unkId_1, ulong unkId_2)
+            Vector3 position, ulong unkId1, ulong unkId2)
         {
             Type = type;
             Region = region;
@@ -124,8 +126,8 @@ namespace MHServerEmu.GameServer.Entities
             NameId = nameId;
             RegionId = regionId;
             Position = position;
-            UnkId_1 = unkId_1;
-            UnkId_2 = unkId_2;
+            UnkId1 = unkId1;
+            UnkId2 = unkId2;
         }
 
         public byte[] Encode()
@@ -153,8 +155,8 @@ namespace MHServerEmu.GameServer.Entities
                 cos.WriteRawFloat32(Position.Y);
                 cos.WriteRawFloat32(Position.Z);
 
-                cos.WriteRawVarint64(UnkId_1);
-                cos.WriteRawVarint64(UnkId_2);
+                cos.WriteRawVarint64(UnkId1);
+                cos.WriteRawVarint64(UnkId2);
 
                 cos.Flush();
                 return ms.ToArray();
@@ -175,8 +177,8 @@ namespace MHServerEmu.GameServer.Entities
             sb.AppendLine($"NameId: {NameId}");
             sb.AppendLine($"RegionId: {RegionId}");
             sb.AppendLine($"Position: {Position}");
-            sb.AppendLine($"UnkId_1: {UnkId_1}");
-            sb.AppendLine($"UnkId_2: {UnkId_2}");
+            sb.AppendLine($"UnkId1: {UnkId1}");
+            sb.AppendLine($"UnkId2: {UnkId2}");
 
             return sb.ToString();
         }

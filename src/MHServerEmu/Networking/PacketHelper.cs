@@ -193,8 +193,8 @@ namespace MHServerEmu.Networking
 
                             case NetMessageRegionChange regionChange:
                                 writer.WriteLine(protobufMessage);
-                                if (regionChange.ArchiveData.Length>0)
-                                writer.WriteLine($"ArchiveDataHex: {new RegionArchive(regionChange.ArchiveData.ToByteArray())}");
+                                if (regionChange.ArchiveData.Length > 0)
+                                    writer.WriteLine($"ArchiveDataHex: {new RegionArchive(regionChange.ArchiveData.ToByteArray())}");
                                 break;
 
                             case NetMessageEntityEnterGameWorld entityEnterGameWorld:
