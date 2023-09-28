@@ -390,6 +390,7 @@ namespace MHServerEmu.GameServer.Games
                         case 5296410749208826696: // CyclopsRide
                         case 767029628138689650: // BlackWidowRide
                         case 9306725620939166275: // BladeRide
+                        case 11107518290032726948: // AntmanFlight
                             Logger.Trace($"EventStart Ride");
                             conditionArchive = new(avatarEntityId, 667, 55, data, 0);
                             EnqueueResponse(client, new(NetMessageAddCondition.CreateBuilder()
@@ -428,6 +429,7 @@ namespace MHServerEmu.GameServer.Games
                         case 5296410749208826696: // CyclopsRide
                         case 767029628138689650: // BlackWidowRide
                         case 9306725620939166275: // BladeRide
+                        case 11107518290032726948: // AntmanFlight
                             Logger.Trace($"EventEnd Ride");
                             EnqueueResponse(client, new(NetMessageDeleteCondition.CreateBuilder()
                                 .SetIdEntity(avatarEntityId)
