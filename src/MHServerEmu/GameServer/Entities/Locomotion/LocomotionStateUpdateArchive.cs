@@ -30,7 +30,7 @@ namespace MHServerEmu.GameServer.Entities.Locomotion
             if (LocFlags[0])
                 Orientation = new(stream, 6);
             else
-                Orientation = new(stream.ReadRawFloat(6), 0f, 0f);
+                Orientation = new(stream.ReadRawZigZagFloat(6), 0f, 0f);
             LocomotionState = new(stream, LocFlags);
         }
 
@@ -50,7 +50,7 @@ namespace MHServerEmu.GameServer.Entities.Locomotion
                 if (LocFlags[0])
                     cos.WriteRawBytes(Orientation.Encode(6));
                 else
-                    cos.WriteRawFloat(Orientation.X, 6);
+                    cos.WriteRawZigZagFloat(Orientation.X, 6);
                 cos.WriteRawBytes(LocomotionState.Encode(LocFlags));
 
                 cos.Flush();

@@ -183,13 +183,18 @@ namespace MHServerEmu.Networking
                                     case "PlayerPrototype":
                                         writer.WriteLine($"ArchiveData: {new Player(entityCreate.ArchiveData.ToByteArray())}");
                                         break;
+
+                                    case "TransitionPrototype":
+                                        writer.WriteLine($"ArchiveData: {new Transition(entityCreate.ArchiveData.ToByteArray())}");
+                                        break;
                                 }
                                 
                                 break;
 
                             case NetMessageRegionChange regionChange:
                                 writer.WriteLine(protobufMessage);
-                                writer.WriteLine($"ArchiveDataHex: {regionChange.ArchiveData.ToByteArray().ToHexString()}");
+                                if (regionChange.ArchiveData.Length > 0)
+                                    writer.WriteLine($"ArchiveDataHex: {new RegionArchive(regionChange.ArchiveData.ToByteArray())}");
                                 break;
 
                             case NetMessageEntityEnterGameWorld entityEnterGameWorld:

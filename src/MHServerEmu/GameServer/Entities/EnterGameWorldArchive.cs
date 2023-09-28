@@ -44,9 +44,9 @@ namespace MHServerEmu.GameServer.Entities
             Position = new(stream, 3);
 
             if (Flags[0])
-                Orientation = new(stream.ReadRawFloat(6), stream.ReadRawFloat(6), stream.ReadRawFloat(6));
+                Orientation = new(stream.ReadRawZigZagFloat(6), stream.ReadRawZigZagFloat(6), stream.ReadRawZigZagFloat(6));
             else
-                Orientation = new(stream.ReadRawFloat(6), 0f, 0f);
+                Orientation = new(stream.ReadRawZigZagFloat(6), 0f, 0f);
 
             if (Flags[1] == false) LocomotionState = new(stream, Flags);
             if (Flags[12]) UnknownSetting = stream.ReadRawVarint32();          // LocMsgFlags[0]
@@ -90,7 +90,7 @@ namespace MHServerEmu.GameServer.Entities
                 if (Flags[0])
                     cos.WriteRawBytes(Orientation.Encode(6));
                 else
-                    cos.WriteRawFloat(Orientation.X, 6);
+                    cos.WriteRawZigZagFloat(Orientation.X, 6);
 
                 if (Flags[1] == false) cos.WriteRawBytes(LocomotionState.Encode(Flags));
                 if (Flags[12]) cos.WriteRawVarint32(UnknownSetting);

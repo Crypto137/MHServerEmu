@@ -23,8 +23,8 @@ namespace MHServerEmu.GameServer.Common
 
         public Vector2(CodedInputStream stream, int precision = 3)
         {
-            X = stream.ReadRawFloat(precision);
-            Y = stream.ReadRawFloat(precision);
+            X = stream.ReadRawZigZagFloat(precision);
+            Y = stream.ReadRawZigZagFloat(precision);
         }
 
         public byte[] Encode(int precision = 3)
@@ -33,8 +33,8 @@ namespace MHServerEmu.GameServer.Common
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                cos.WriteRawFloat(X, precision);
-                cos.WriteRawFloat(Y, precision);
+                cos.WriteRawZigZagFloat(X, precision);
+                cos.WriteRawZigZagFloat(Y, precision);
 
                 cos.Flush();
                 return ms.ToArray();
