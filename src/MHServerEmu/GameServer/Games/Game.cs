@@ -128,29 +128,6 @@ namespace MHServerEmu.GameServer.Games
             _responseListDict[client].AddRange(messages);                
         }
 
-        private void TrawerPower(FrontendClient client, ulong PowerId)
-        {
-            uint delta = 65; // TODO: Sync server-client
-            switch (PowerId)
-            {   // Power.AnimationContactTimePercent
-                case 534644109020894342: // GhostRiderRide
-                case 12091550505432716326: // WolverineRide
-                case 13293849182765716371: // DeadpoolRide
-                case 873351779127923638: // NickFuryRide
-                case 5296410749208826696: // CyclopsRide
-                case 767029628138689650: // BlackWidowRide
-                case 9306725620939166275: // BladeRide
-                    AddEvent(client, EventEnum.StartTravel, 100 - delta, PowerId);
-                    break;
-                case 11107518290032726948: // AntmanFlight
-                    AddEvent(client, EventEnum.StartTravel, 210 - delta, PowerId);
-                    break;
-                case 7832265728311563071: // ThingFlight
-                    AddEvent(client, EventEnum.StartTravel, 235 - delta, PowerId);
-                    break;
-            }
-        }
-
         private void HandleQueuedMessage(QueuedGameMessage queuedMessage)
         {
             FrontendClient client = queuedMessage.Client;
@@ -259,7 +236,7 @@ namespace MHServerEmu.GameServer.Games
                         Logger.Trace($"Received ContinuousPowerUpdate for invalid prototype id {continuousPowerUpdate.PowerPrototypeId}");
 
                     if (powerPrototypePath.Contains("TravelPower/"))
-                        TrawerPower(client, continuousPowerUpdate.PowerPrototypeId);
+                        HandleTravelPower(client, continuousPowerUpdate.PowerPrototypeId);
                     // Logger.Trace(continuousPowerUpdate.ToString());
 
                     break;
@@ -551,6 +528,29 @@ namespace MHServerEmu.GameServer.Games
             }
 
             queuedEvent.IsRunning = false;
+        }
+
+        private void HandleTravelPower(FrontendClient client, ulong PowerId)
+        {
+            uint delta = 65; // TODO: Sync server-client
+            switch (PowerId)
+            {   // Power.AnimationContactTimePercent
+                case 534644109020894342:    // GhostRiderRide
+                case 12091550505432716326:  // WolverineRide
+                case 13293849182765716371:  // DeadpoolRide
+                case 873351779127923638:    // NickFuryRide
+                case 5296410749208826696:   // CyclopsRide
+                case 767029628138689650:    // BlackWidowRide
+                case 9306725620939166275:   // BladeRide
+                    AddEvent(client, EventEnum.StartTravel, 100 - delta, PowerId);
+                    break;
+                case 11107518290032726948:  // AntmanFlight
+                    AddEvent(client, EventEnum.StartTravel, 210 - delta, PowerId);
+                    break;
+                case 7832265728311563071:   // ThingFlight
+                    AddEvent(client, EventEnum.StartTravel, 235 - delta, PowerId);
+                    break;
+            }
         }
 
         #endregion
