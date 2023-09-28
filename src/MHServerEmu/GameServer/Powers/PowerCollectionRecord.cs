@@ -43,7 +43,7 @@ namespace MHServerEmu.GameServer.Powers
                 CombatLevel = stream.ReadRawVarint32();
 
             ItemLevel = Flags[7] ? 1 : stream.ReadRawVarint32();
-            ItemVariation = Flags[8] ? 1.0f : BitConverter.ToSingle(BitConverter.GetBytes(stream.ReadRawVarint32()));
+            ItemVariation = Flags[8] ? 1.0f : stream.ReadRawFloat32();
             Field7 = Flags[0] ? 1 : stream.ReadRawVarint32();
         }
 
@@ -61,7 +61,7 @@ namespace MHServerEmu.GameServer.Powers
                 if (Flags[2] == false && Flags[3] == false) cos.WriteRawVarint32(CharacterLevel);
                 if (Flags[4] == false && Flags[5] == false && Flags[6] == false) cos.WriteRawVarint32(CombatLevel);
                 if (Flags[7] == false) cos.WriteRawVarint32(ItemLevel);
-                if (Flags[8] == false) cos.WriteRawVarint32(BitConverter.ToUInt32(BitConverter.GetBytes(ItemVariation)));
+                if (Flags[8] == false) cos.WriteRawFloat32(ItemVariation);
                 if (Flags[0] == false) cos.WriteRawVarint32(Field7);
 
                 cos.Flush();
