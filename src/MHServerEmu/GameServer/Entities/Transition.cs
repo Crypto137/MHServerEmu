@@ -25,11 +25,11 @@ namespace MHServerEmu.GameServer.Entities
                 Destinations[i] = new(stream);
         }
 
-        public Transition(PrototypeCollectionEntry[] prototypeCollection, Condition[] conditionCollection,
+        public Transition(EntityTrackingContextMap[] trackingContextMap, Condition[] conditionCollection,
             PowerCollectionRecord[] powerCollection, int unkEvent, 
             string transitionName, Destination[] destinations)
         {
-            PrototypeCollection = prototypeCollection;
+            TrackingContextMap = trackingContextMap;
             ConditionCollection = conditionCollection;
             PowerCollection = powerCollection;
             UnkEvent = unkEvent;
