@@ -34,7 +34,12 @@ namespace MHServerEmu.GameServer.Properties
         public PropertyValueReal(ulong rawValue) : base(rawValue) { }
 
         public override object Get() => BitConverter.ToSingle(BitConverter.GetBytes(RawValue));
-        public override void Set(object value) => RawValue = BitConverter.ToUInt64(BitConverter.GetBytes((float)value));
+        public override void Set(object value)
+        {
+            byte[] bytes = new byte[8];
+            BitConverter.GetBytes((float)value).CopyTo(bytes, 0);
+            RawValue = BitConverter.ToUInt64(bytes);
+        }
 
         public override string ToString() => ((float)Get()).ToString();
     }
