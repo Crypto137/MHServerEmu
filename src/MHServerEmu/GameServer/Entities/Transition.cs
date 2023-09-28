@@ -102,9 +102,9 @@ namespace MHServerEmu.GameServer.Entities
 
             RegionId = stream.ReadRawVarint64();
 
-            float x = stream.ReadRawFloat32(); 
-            float y = stream.ReadRawFloat32();
-            float z = stream.ReadRawFloat32();
+            float x = stream.ReadRawFloat(); 
+            float y = stream.ReadRawFloat();
+            float z = stream.ReadRawFloat();
             Position = new Vector3(x, y, z);
 
             UnkId1 = stream.ReadRawVarint64();
@@ -151,9 +151,9 @@ namespace MHServerEmu.GameServer.Entities
 
                 cos.WriteRawVarint64(RegionId);
 
-                cos.WriteRawFloat32(Position.X);
-                cos.WriteRawFloat32(Position.Y);
-                cos.WriteRawFloat32(Position.Z);
+                cos.WriteRawFloat(Position.X);
+                cos.WriteRawFloat(Position.Y);
+                cos.WriteRawFloat(Position.Z);
 
                 cos.WriteRawVarint64(UnkId1);
                 cos.WriteRawVarint64(UnkId2);

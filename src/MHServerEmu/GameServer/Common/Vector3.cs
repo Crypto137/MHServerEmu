@@ -28,9 +28,9 @@ namespace MHServerEmu.GameServer.Common
 
         public Vector3(CodedInputStream stream, int precision = 3)
         {
-            X = stream.ReadRawFloat(precision);
-            Y = stream.ReadRawFloat(precision);
-            Z = stream.ReadRawFloat(precision);
+            X = stream.ReadRawZigZagFloat(precision);
+            Y = stream.ReadRawZigZagFloat(precision);
+            Z = stream.ReadRawZigZagFloat(precision);
         }
 
         public Vector3(NetStructPoint3 point3)
@@ -46,9 +46,9 @@ namespace MHServerEmu.GameServer.Common
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                cos.WriteRawFloat(X, precision);
-                cos.WriteRawFloat(Y, precision);
-                cos.WriteRawFloat(Z, precision);
+                cos.WriteRawZigZagFloat(X, precision);
+                cos.WriteRawZigZagFloat(Y, precision);
+                cos.WriteRawZigZagFloat(Z, precision);
 
                 cos.Flush();
                 return ms.ToArray();

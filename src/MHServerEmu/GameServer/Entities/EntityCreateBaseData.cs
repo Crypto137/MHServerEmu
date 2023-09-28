@@ -53,13 +53,13 @@ namespace MHServerEmu.GameServer.Entities
                 Position = new(stream, 3);
 
                 if (LocFlags[0])
-                    Orientation = new(stream.ReadRawFloat(6), stream.ReadRawFloat(6), stream.ReadRawFloat(6));
+                    Orientation = new(stream.ReadRawZigZagFloat(6), stream.ReadRawZigZagFloat(6), stream.ReadRawZigZagFloat(6));
                 else
-                    Orientation = new(stream.ReadRawFloat(6), 0f, 0f);
+                    Orientation = new(stream.ReadRawZigZagFloat(6), 0f, 0f);
             }
 
             if (LocFlags[1] == false) LocomotionState = new(stream, LocFlags);
-            if (Flags[11]) BoundsScaleOverride = stream.ReadRawFloat(8);
+            if (Flags[11]) BoundsScaleOverride = stream.ReadRawZigZagFloat(8);
             if (Flags[3]) SourceEntityId = stream.ReadRawVarint64();
             if (Flags[4]) SourcePosition = new(stream, 3);
             if (Flags[1]) ActivePowerPrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Power);
@@ -118,11 +118,11 @@ namespace MHServerEmu.GameServer.Entities
                     if (LocFlags[0])
                         cos.WriteRawBytes(Orientation.Encode(6));
                     else
-                        cos.WriteRawFloat(Orientation.X, 6);
+                        cos.WriteRawZigZagFloat(Orientation.X, 6);
                 }
 
                 if (LocFlags[1] == false) cos.WriteRawBytes(LocomotionState.Encode(LocFlags));
-                if (Flags[11]) cos.WriteRawFloat(BoundsScaleOverride, 8);
+                if (Flags[11]) cos.WriteRawZigZagFloat(BoundsScaleOverride, 8);
                 if (Flags[3]) cos.WriteRawVarint64(SourceEntityId);
                 if (Flags[4]) cos.WriteRawBytes(SourcePosition.Encode(3));
                 if (Flags[1]) cos.WritePrototypeId(ActivePowerPrototypeId, PrototypeEnumType.Power);

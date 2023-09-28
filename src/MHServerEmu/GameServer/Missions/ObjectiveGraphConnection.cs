@@ -14,7 +14,7 @@ namespace MHServerEmu.GameServer.Missions
         {
             Node0 = stream.ReadRawInt32();
             Node1 = stream.ReadRawInt32();
-            Distance = stream.ReadRawFloat32();
+            Distance = stream.ReadRawFloat();
         }
 
         public ObjectiveGraphConnection() { }
@@ -27,7 +27,7 @@ namespace MHServerEmu.GameServer.Missions
 
                 cos.WriteRawInt32(Node0);
                 cos.WriteRawInt32(Node1);
-                cos.WriteRawFloat32(Distance);
+                cos.WriteRawFloat(Distance);
 
                 cos.Flush();
                 return ms.ToArray();

@@ -20,10 +20,10 @@ namespace MHServerEmu.GameServer.Entities.Locomotion
         {
             if (flags[3]) LocomotionFlags = stream.ReadRawVarint64();
             if (flags[4]) Method = stream.ReadRawVarint32();
-            if (flags[7]) MoveSpeed = stream.ReadRawFloat(0);
+            if (flags[7]) MoveSpeed = stream.ReadRawZigZagFloat(0);
             if (flags[8]) Height = stream.ReadRawVarint32();
             if (flags[9]) FollowEntityId = stream.ReadRawVarint64();
-            if (flags[10]) FollowEntityRange = new(stream.ReadRawFloat(0), stream.ReadRawFloat(0));
+            if (flags[10]) FollowEntityRange = new(stream.ReadRawZigZagFloat(0), stream.ReadRawZigZagFloat(0));
 
             if (flags[5])
             {
@@ -60,7 +60,7 @@ namespace MHServerEmu.GameServer.Entities.Locomotion
 
                 if (flags[3]) cos.WriteRawVarint64(LocomotionFlags);
                 if (flags[4]) cos.WriteRawVarint32(Method);
-                if (flags[7]) cos.WriteRawFloat(MoveSpeed, 0);
+                if (flags[7]) cos.WriteRawZigZagFloat(MoveSpeed, 0);
                 if (flags[8]) cos.WriteRawVarint32(Height);
                 if (flags[9]) cos.WriteRawVarint64(FollowEntityId);
                 if (flags[10]) cos.WriteRawBytes(FollowEntityRange.Encode(0));
