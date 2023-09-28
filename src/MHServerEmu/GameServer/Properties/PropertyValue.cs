@@ -24,7 +24,7 @@ namespace MHServerEmu.GameServer.Properties
         public PropertyValueBoolean(ulong rawValue) : base(rawValue) { }
 
         public override object Get() => Convert.ToBoolean(RawValue);
-        public override void Set(object value) => Convert.ToUInt64((bool)value);
+        public override void Set(object value) => RawValue = Convert.ToUInt64((bool)value);
 
         public override string ToString() => ((bool)Get()).ToString();
     }
