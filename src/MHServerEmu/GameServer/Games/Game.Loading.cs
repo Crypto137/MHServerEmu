@@ -22,7 +22,7 @@ namespace MHServerEmu.GameServer.Games
         private static readonly NetMessageEntityCreate PlayerMessage = NetMessageEntityCreate.ParseFrom(PacketHelper.LoadMessagesFromPacketFile("NetMessageEntityCreatePlayer.bin")[0].Payload);
         private static readonly NetMessageEntityCreate[] AvatarMessages = PacketHelper.LoadMessagesFromPacketFile("NetMessageEntityCreateAvatars.bin").Select(message => NetMessageEntityCreate.ParseFrom(message.Payload)).ToArray();
 
-        private GameMessage[] GetBeginLoadingMessages(PlayerData playerData, bool loadEntities = true)
+        private GameMessage[] GetBeginLoadingMessages(PlayerData playerData)
         {
             List<GameMessage> messageList = new();
 
@@ -44,7 +44,7 @@ namespace MHServerEmu.GameServer.Games
             messageList.Add(new(NetMessageReadyForTimeSync.DefaultInstance));
 
             // Load local player data
-            if (loadEntities) messageList.AddRange(LoadPlayerEntityMessages(playerData));
+            messageList.AddRange(LoadPlayerEntityMessages(playerData));
             messageList.Add(new(NetMessageReadyAndLoadedOnGameServer.DefaultInstance));
 
             // Load region data
@@ -604,6 +604,15 @@ namespace MHServerEmu.GameServer.Games
             }
 
             return messageList.ToArray();
+        }
+
+        public GameMessage[] GetExitGameMessages()
+        {
+            return new GameMessage[]
+            {
+                new(NetMessageBeginExitGame.DefaultInstance),
+                new(NetMessageRegionChange.CreateBuilder().SetRegionId(0).SetServerGameId(0).SetClearingAllInterest(true).Build())
+            };
         }
     }
 }

@@ -108,8 +108,9 @@ namespace MHServerEmu.GameServer.Games
         {
             lock (_gameLock)
             {
+                EnqueueResponses(client, GetExitGameMessages());
                 client.Session.Account.PlayerData.Region = region;
-                EnqueueResponses(client, GetBeginLoadingMessages(client.Session.Account.PlayerData, false));
+                EnqueueResponses(client, GetBeginLoadingMessages(client.Session.Account.PlayerData));
                 client.IsLoading = true;
             }
         }
@@ -270,15 +271,13 @@ namespace MHServerEmu.GameServer.Games
                     Logger.Trace(switchAvatarMessage.ToString());
 
                     // A hack for changing starting avatar without using chat commands
-                    if (ConfigManager.Frontend.BypassAuth == false)
-                    {
-                        string avatarName = Enum.GetName(typeof(AvatarPrototype), switchAvatarMessage.AvatarPrototypeId);
+                    string avatarName = Enum.GetName(typeof(AvatarPrototype), switchAvatarMessage.AvatarPrototypeId);
 
-                        if (Enum.TryParse(typeof(HardcodedAvatarEntity), avatarName, true, out object avatar))
-                        {
-                            client.Session.Account.PlayerData.Avatar = (HardcodedAvatarEntity)avatar;
-                            GroupingManagerService.SendMetagameChatMessage(client, $"Changing avatar to {client.Session.Account.PlayerData.Avatar}. Relog for changes to take effect.");
-                        }
+                    if (Enum.TryParse(typeof(HardcodedAvatarEntity), avatarName, true, out object avatar))
+                    {
+                        client.Session.Account.PlayerData.Avatar = (HardcodedAvatarEntity)avatar;
+                        GroupingManagerService.SendMetagameChatMessage(client, $"Changing avatar to {client.Session.Account.PlayerData.Avatar}.");
+                        MovePlayerToRegion(client, client.Session.Account.PlayerData.Region);
                     }
 
                     /* Old experimental code
