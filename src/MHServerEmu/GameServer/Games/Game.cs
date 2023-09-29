@@ -275,6 +275,7 @@ namespace MHServerEmu.GameServer.Games
 
                     if (Enum.TryParse(typeof(HardcodedAvatarEntity), avatarName, true, out object avatar))
                     {
+                        client.Session.Account.PlayerData.CostumeOverride = 0;  // reset costume on avatar switch
                         client.Session.Account.PlayerData.Avatar = (HardcodedAvatarEntity)avatar;
                         GroupingManagerService.SendMetagameChatMessage(client, $"Changing avatar to {client.Session.Account.PlayerData.Avatar}.");
                         MovePlayerToRegion(client, client.Session.Account.PlayerData.Region);
