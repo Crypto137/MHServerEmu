@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
+using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.Entities.Locomotion;
@@ -23,11 +24,15 @@ namespace MHServerEmu.GameServer.Entities.Avatars
         public UpdateAvatarStateArchive(byte[] data)
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(data);
+            BoolDecoder boolDecoder = new();
 
             ReplicationPolicy = stream.ReadRawVarint32();
             AvatarIndex = stream.ReadRawInt32();
             EntityId = stream.ReadRawVarint64();
-            IsUsingGamepadInput = Convert.ToBoolean(stream.ReadRawVarint32());
+
+            if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
+            IsUsingGamepadInput = boolDecoder.ReadBool();
+
             AvatarWorldInstanceId = stream.ReadRawVarint32();
             LocFlags = stream.ReadRawVarint32().ToBoolArray(LocFlagCount);
             Position = new(stream, 3);
@@ -46,10 +51,19 @@ namespace MHServerEmu.GameServer.Entities.Avatars
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
+                // Prepare bool encoder
+                BoolEncoder boolEncoder = new();
+                boolEncoder.WriteBool(IsUsingGamepadInput);
+                boolEncoder.Cook();
+
+                // Encode
                 cos.WriteRawVarint32(ReplicationPolicy);
                 cos.WriteRawInt32(AvatarIndex);
                 cos.WriteRawVarint64(EntityId);
-                cos.WriteRawVarint32(Convert.ToUInt32(IsUsingGamepadInput));
+
+                byte bitBuffer = boolEncoder.GetBitBuffer();        // IsUsingGamepadInput
+                if (bitBuffer != 0) cos.WriteRawByte(bitBuffer);
+
                 cos.WriteRawVarint32(AvatarWorldInstanceId);
                 cos.WriteRawVarint32(LocFlags.ToUInt32());
                 cos.WriteRawBytes(Position.Encode());
