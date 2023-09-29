@@ -534,6 +534,10 @@ namespace MHServerEmu.GameServer.Games
                     Logger.Trace($"Event Start EmmaDiamondForm");
 
                     ulong emmaCostume = client.Session.Account.PlayerData.CostumeOverride;
+
+                    // 0 is the same as the default costume, but it's not a valid prototype id
+                    if (emmaCostume == 0) emmaCostume = GameDatabase.GetPrototypeId("Entity/Items/Costumes/Prototypes/EmmaFrost/Modern.prototype");
+                    
                     ulong asset = (ulong)emmaCostume.GetPrototype().Data.GetEntry(BlueprintId.Costume).GetField(FieldId.CostumeUnrealClass).Value;
                     conditionArchive.Condition.EngineAssetGuid = asset;  // MarvelPlayer_EmmaFrost_Modern
 
