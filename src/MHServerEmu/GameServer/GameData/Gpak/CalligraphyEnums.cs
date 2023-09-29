@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MHServerEmu.GameServer.GameData.Gpak
+﻿namespace MHServerEmu.GameServer.GameData.Gpak
 {
+    // Type enums
+
     public enum CalligraphyValueType : byte
     {
         A = 0x41,   // asset
@@ -23,5 +19,22 @@ namespace MHServerEmu.GameServer.GameData.Gpak
     {
         L = 0x4c,   // list (A P R T only)
         S = 0x53    // single
+    }
+
+
+    // Enums for specific data for easy access
+
+    public enum BlueprintId : ulong
+    {
+        WorldEntity = 7901305308382563236,
+        ThrowablePowerProp = 8706319841384272336,
+        ThrowableRestorePowerProp = 1483936524176856276,
+        Costume = 10774581141289766864
+    }
+
+    public enum FieldId : ulong
+    {
+        UnrealClass = 9963296804083405606,
+        CostumeUnrealClass = 3331018908052953682,
     }
 }

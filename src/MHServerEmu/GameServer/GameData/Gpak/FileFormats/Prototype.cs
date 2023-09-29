@@ -42,6 +42,9 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 
             // flag2 == ??
         }
+
+        public PrototypeDataEntry GetEntry(ulong blueprintId) => Entries.FirstOrDefault(entry => entry.Id == blueprintId);
+        public PrototypeDataEntry GetEntry(BlueprintId blueprintId) => GetEntry((ulong)blueprintId);
     }
 
     public class PrototypeDataEntry
@@ -64,6 +67,9 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             for (int i = 0; i < ListElements.Length; i++)
                 ListElements[i] = new(reader);
         }
+
+        public PrototypeDataEntryElement GetField(ulong fieldId) => Elements.FirstOrDefault(field => field.Id == fieldId);
+        public PrototypeDataEntryElement GetField(FieldId fieldId) => GetField((ulong)fieldId);
     }
 
     public class PrototypeDataEntryElement

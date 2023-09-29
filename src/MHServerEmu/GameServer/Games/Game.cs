@@ -457,9 +457,9 @@ namespace MHServerEmu.GameServer.Games
                     EnqueueResponse(client, new(property.ToNetMessageSetProperty(avatarRepId)));
 
                     // ThrowObject.Prototype.WorldEntity.UnrealClass
-                    // ulong UnrealClass = (ulong)ThrowObject.Prototype().Entry(BlueprintId.WorldEntity).Field(MemberId.UnrealClass).Value;
-                    ulong UnrealClass = 9953069070637601478;
-                    property = new(PropertyEnum.ThrowableOriginatorAssetRef, UnrealClass); // MarvelDestructible_Throwable_PoliceCar
+                    // ulong unrealClass = (ulong)throwObject.GetPrototype().Data.GetEntry(BlueprintId.WorldEntity).GetField(FieldId.UnrealClass).Value;
+                    ulong unrealClass = 9953069070637601478;
+                    property = new(PropertyEnum.ThrowableOriginatorAssetRef, unrealClass); // MarvelDestructible_Throwable_PoliceCar
                     EnqueueResponse(client, new(property.ToNetMessageSetProperty(avatarRepId)));
 
                     // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
@@ -528,13 +528,13 @@ namespace MHServerEmu.GameServer.Games
 
                 case EventEnum.StartEmmaDiamondForm:
 
-                    ulong DiamondFormCondition = (ulong)PowerPrototypes.EmmaFrost.DiamondFormCondition;
-                    conditionArchive = new((ulong)client.Session.Account.PlayerData.Avatar, 111, 567, DiamondFormCondition, 0); 
+                    ulong diamondFormCondition = (ulong)PowerPrototypes.EmmaFrost.DiamondFormCondition;
+                    conditionArchive = new((ulong)client.Session.Account.PlayerData.Avatar, 111, 567, diamondFormCondition, 0); 
 
                     Logger.Trace($"Event Start EmmaDiamondForm");
 
-                    ulong EmmaCostume = client.Session.Account.PlayerData.CostumeOverride;
-                    ulong asset = (ulong)EmmaCostume.Prototype().Entry(BlueprintId.Costume).Field(MemberId.CostumeUnrealClass).Value;
+                    ulong emmaCostume = client.Session.Account.PlayerData.CostumeOverride;
+                    ulong asset = (ulong)emmaCostume.GetPrototype().Data.GetEntry(BlueprintId.Costume).GetField(FieldId.CostumeUnrealClass).Value;
                     conditionArchive.Condition.EngineAssetGuid = asset;  // MarvelPlayer_EmmaFrost_Modern
 
                     EnqueueResponse(client, new(NetMessageAddCondition.CreateBuilder()
