@@ -104,7 +104,7 @@ namespace MHServerEmu.GameServer.Regions
             messageList.Add(new(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build()));
 
             messageList.Add(new(NetMessageUpdateMiniMap.CreateBuilder()
-                .SetArchiveData(ByteString.CopyFrom(Convert.FromHexString("EF0181")))
+                .SetArchiveData(ByteString.CopyFrom(Convert.FromHexString(RegionManager.RegionIsHub(Prototype) ? "EF0181" : "")))
                 .Build()));
 
             return messageList.ToArray();

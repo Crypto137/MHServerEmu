@@ -41,6 +41,19 @@ namespace MHServerEmu.GameServer.Regions
             RegionPrototype.CosmicDoopSectorSpaceRegion
         };
 
+        // TODO: Determine if a region is a hub from its prototype
+        private static readonly RegionPrototype[] HubRegions = new RegionPrototype[]
+        {
+            RegionPrototype.AvengersTowerHUBRegion,
+            RegionPrototype.NPEAvengersTowerHUBRegion,
+            RegionPrototype.TrainingRoomSHIELDRegion,
+            RegionPrototype.XaviersMansionRegion,
+            RegionPrototype.HelicarrierRegion,
+            RegionPrototype.AsgardiaRegion,
+            RegionPrototype.GenoshaHUBRegion,
+            RegionPrototype.DangerRoomHubRegion
+        };
+
         private readonly Dictionary<RegionPrototype, Region> _regionDict;
 
         public RegionManager()
@@ -65,6 +78,7 @@ namespace MHServerEmu.GameServer.Regions
         }
 
         public static bool IsRegionAvailable(RegionPrototype prototype) => AvailableRegions.Contains(prototype);
+        public static bool RegionIsHub(RegionPrototype prototype) => HubRegions.Contains(prototype);
 
         private static Region LoadRegionData(RegionPrototype prototype)
         {
