@@ -7,7 +7,9 @@ namespace MHServerEmu.GameServer.Games
         StartThrowing,
         EndThrowing,
         StartTravel,
-        EndTravel
+        EndTravel,
+        StartEmmaDiamondForm,
+        EndEmmaDiamondForm
     }
 
     public class GameEvent

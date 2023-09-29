@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Globalization;
 using Google.ProtocolBuffers;
 using Gazillion;
-using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.Entities;
 using MHServerEmu.GameServer.Entities.Avatars;
@@ -12,6 +11,7 @@ using MHServerEmu.GameServer.Powers;
 using MHServerEmu.GameServer.Properties;
 using MHServerEmu.GameServer.Regions;
 using MHServerEmu.Networking;
+using MHServerEmu.GameServer.GameData.Gpak;
 
 namespace MHServerEmu.GameServer.Games
 {
@@ -184,8 +184,12 @@ namespace MHServerEmu.GameServer.Games
                         Logger.Trace($"AddEvent EndThrowing for {tryActivatePower.PowerPrototypeId}");
                         break;  
                     }
-
-                   // if (powerPrototypePath.Contains("TravelPower/")) 
+                    if (tryActivatePower.PowerPrototypeId == 3750547876903523675)  // DiamondHeart
+                    {                //  3458821934631491033 // DiamondStrike     
+                        AddEvent(client, EventEnum.StartEmmaDiamondForm, 0, tryActivatePower.PowerPrototypeId);
+                        AddEvent(client, EventEnum.EndEmmaDiamondForm, 20000, tryActivatePower.PowerPrototypeId);
+                    }
+                    // if (powerPrototypePath.Contains("TravelPower/")) 
                     //    TrawerPower(client, tryActivatePower.PowerPrototypeId);
 
                     //Logger.Trace(tryActivatePower.ToString());
@@ -354,19 +358,19 @@ namespace MHServerEmu.GameServer.Games
             if (!queuedEvent.IsExpired())
                 return;
 
+            AddConditionArchive conditionArchive;
+            ulong avatarEntityId = (ulong)client.Session.Account.PlayerData.Avatar;
+
             switch (eventId)
             {
                 case EventEnum.StartTravel:
 
-                    ulong avatarEntityId = (ulong)client.Session.Account.PlayerData.Avatar;
-
                     switch (data)
-                    {              
-                        case 534644109020894342: // GhostRiderRide
+                    {
+                        case (ulong)PowerPrototypes.GhostRider.GhostRiderRide:
                             Logger.Trace($"EventStart GhostRiderRide");
-
                             // Player.Avatar.EvalOnCreate.AssignProp.ProcProp.Param1 
-                            AddConditionArchive conditionArchive = new(avatarEntityId, 666, 55, data, 0);   // TODO: generate and save Condition.Id                        
+                            conditionArchive = new(avatarEntityId, 666, 55, data, 0);   // TODO: generate and save Condition.Id                        
 
                             EnqueueResponse(client, new(NetMessageAddCondition.CreateBuilder()
                                 .SetArchiveData(ByteString.CopyFrom(conditionArchive.Encode()))
@@ -374,7 +378,7 @@ namespace MHServerEmu.GameServer.Games
                             
                             EnqueueResponse(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
                                 .SetEntityId(avatarEntityId)
-                                .SetPowerProtoId(1023796862002271777) // Powers/Player/GhostRider/RideBikeHotspotsEnd.prototype
+                                .SetPowerProtoId((ulong)PowerPrototypes.GhostRider.RideBikeHotspotsEnd)
                                 .SetPowerRank(0)
                                 .SetCharacterLevel(60)
                                 .SetCombatLevel(60)
@@ -384,14 +388,14 @@ namespace MHServerEmu.GameServer.Games
 
                             break;
 
-                        case 12091550505432716326: // WolverineRide
-                        case 13293849182765716371: // DeadpoolRide
-                        case 873351779127923638: // NickFuryRide
-                        case 5296410749208826696: // CyclopsRide
-                        case 767029628138689650: // BlackWidowRide
-                        case 9306725620939166275: // BladeRide
-                        case 11107518290032726948: // AntmanFlight
-                        case 7832265728311563071: // ThingFlight
+                        case (ulong)PowerPrototypes.Wolverine.WolverineRide:
+                        case (ulong)PowerPrototypes.Deadpool.DeadpoolRide:
+                        case (ulong)PowerPrototypes.NickFury.NickFuryRide:
+                        case (ulong)PowerPrototypes.Cyclops.CyclopsRide:
+                        case (ulong)PowerPrototypes.BlackWidow.BlackWidowRide:
+                        case (ulong)PowerPrototypes.Blade.BladeRide:
+                        case (ulong)PowerPrototypes.AntMan.AntmanFlight:
+                        case (ulong)PowerPrototypes.Thing.ThingFlight:
                             Logger.Trace($"EventStart Ride");
                             conditionArchive = new(avatarEntityId, 667, 55, data, 0);
                             EnqueueResponse(client, new(NetMessageAddCondition.CreateBuilder()
@@ -405,11 +409,9 @@ namespace MHServerEmu.GameServer.Games
 
                 case EventEnum.EndTravel:
 
-                    avatarEntityId = (ulong)client.Session.Account.PlayerData.Avatar;
-
                     switch (data)
                     {
-                        case 534644109020894342: // GhostRiderRide
+                        case (ulong)PowerPrototypes.GhostRider.GhostRiderRide:
                             Logger.Trace($"EventEnd GhostRiderRide");
 
                             EnqueueResponse(client, new(NetMessageDeleteCondition.CreateBuilder()
@@ -419,19 +421,19 @@ namespace MHServerEmu.GameServer.Games
 
                             EnqueueResponse(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
                                 .SetEntityId(avatarEntityId)
-                                .SetPowerProtoId(1023796862002271777) // RideBikeHotspotsEnd
+                                .SetPowerProtoId((ulong)PowerPrototypes.GhostRider.RideBikeHotspotsEnd) 
                                 .Build()));
 
                             break;
 
-                        case 13293849182765716371: // DeadpoolRide
-                        case 12091550505432716326: // WolverineRide
-                        case 873351779127923638: // NickFuryRide
-                        case 5296410749208826696: // CyclopsRide
-                        case 767029628138689650: // BlackWidowRide
-                        case 9306725620939166275: // BladeRide
-                        case 11107518290032726948: // AntmanFlight
-                        case 7832265728311563071: // ThingFlight
+                        case (ulong)PowerPrototypes.Wolverine.WolverineRide:
+                        case (ulong)PowerPrototypes.Deadpool.DeadpoolRide:
+                        case (ulong)PowerPrototypes.NickFury.NickFuryRide:
+                        case (ulong)PowerPrototypes.Cyclops.CyclopsRide:
+                        case (ulong)PowerPrototypes.BlackWidow.BlackWidowRide:
+                        case (ulong)PowerPrototypes.Blade.BladeRide:
+                        case (ulong)PowerPrototypes.AntMan.AntmanFlight:
+                        case (ulong)PowerPrototypes.Thing.ThingFlight:
                             Logger.Trace($"EventEnd Ride");
                             EnqueueResponse(client, new(NetMessageDeleteCondition.CreateBuilder()
                                 .SetIdEntity(avatarEntityId)
@@ -448,7 +450,6 @@ namespace MHServerEmu.GameServer.Games
                     // TODO: Player.Avatar.SetThrowObject(idTarget)
                     // TODO: ThrowObject = Player.EntityManager.GetEntity(idTarget)
 
-                    avatarEntityId = (ulong)client.Session.Account.PlayerData.Avatar;
                     // TODO: avatarRepId = Player.EntityManager.GetEntity(avatarEntityId).RepId
                     ulong avatarRepId = (ulong)Enum.Parse(typeof(HardcodedAvatarReplicationId), Enum.GetName(typeof(HardcodedAvatarEntity), client.Session.Account.PlayerData.Avatar));
 
@@ -456,7 +457,9 @@ namespace MHServerEmu.GameServer.Games
                     EnqueueResponse(client, new(property.ToNetMessageSetProperty(avatarRepId)));
 
                     // ThrowObject.Prototype.WorldEntity.UnrealClass
-                    property = new(PropertyEnum.ThrowableOriginatorAssetRef, 9953069070637601478); // MarvelDestructible_Throwable_PoliceCar
+                    // ulong unrealClass = (ulong)throwObject.GetPrototype().Data.GetEntry(BlueprintId.WorldEntity).GetField(FieldId.UnrealClass).Value;
+                    ulong unrealClass = 9953069070637601478;
+                    property = new(PropertyEnum.ThrowableOriginatorAssetRef, unrealClass); // MarvelDestructible_Throwable_PoliceCar
                     EnqueueResponse(client, new(property.ToNetMessageSetProperty(avatarRepId)));
 
                     // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
@@ -491,8 +494,6 @@ namespace MHServerEmu.GameServer.Games
 
                 case EventEnum.EndThrowing:
 
-                    avatarEntityId = (ulong)client.Session.Account.PlayerData.Avatar;
-
                     avatarRepId = (ulong)Enum.Parse(typeof(HardcodedAvatarReplicationId), Enum.GetName(typeof(HardcodedAvatarEntity), client.Session.Account.PlayerData.Avatar));
                     // TODO: avatarRepId = Player.EntityManager.GetEntity(AvatarEntityId).RepId
 
@@ -525,6 +526,35 @@ namespace MHServerEmu.GameServer.Games
 
                     break;
 
+                case EventEnum.StartEmmaDiamondForm:
+
+                    ulong diamondFormCondition = (ulong)PowerPrototypes.EmmaFrost.DiamondFormCondition;
+                    conditionArchive = new((ulong)client.Session.Account.PlayerData.Avatar, 111, 567, diamondFormCondition, 0); 
+
+                    Logger.Trace($"Event Start EmmaDiamondForm");
+
+                    ulong emmaCostume = client.Session.Account.PlayerData.CostumeOverride;
+
+                    // 0 is the same as the default costume, but it's not a valid prototype id
+                    if (emmaCostume == 0) emmaCostume = GameDatabase.GetPrototypeId("Entity/Items/Costumes/Prototypes/EmmaFrost/Modern.prototype");
+                    
+                    ulong asset = (ulong)emmaCostume.GetPrototype().Data.GetEntry(BlueprintId.Costume).GetField(FieldId.CostumeUnrealClass).Value;
+                    conditionArchive.Condition.EngineAssetGuid = asset;  // MarvelPlayer_EmmaFrost_Modern
+
+                    EnqueueResponse(client, new(NetMessageAddCondition.CreateBuilder()
+                         .SetArchiveData(ByteString.CopyFrom(conditionArchive.Encode()))
+                         .Build()));
+
+                    break;
+
+                case EventEnum.EndEmmaDiamondForm:
+                    // TODO: DiamondFormDeactivate = PowerPrototypes.EmmaFrost.DiamondFormDeactivate;
+                    EnqueueResponse(client, new(NetMessageEntityDestroy.CreateBuilder()
+                        .SetIdEntity(111)
+                        .Build()));
+                    Logger.Trace($"Event End EmmaDiamondForm");  
+
+                    break;
             }
 
             queuedEvent.IsRunning = false;
@@ -535,19 +565,19 @@ namespace MHServerEmu.GameServer.Games
             uint delta = 65; // TODO: Sync server-client
             switch (PowerId)
             {   // Power.AnimationContactTimePercent
-                case 534644109020894342:    // GhostRiderRide
-                case 12091550505432716326:  // WolverineRide
-                case 13293849182765716371:  // DeadpoolRide
-                case 873351779127923638:    // NickFuryRide
-                case 5296410749208826696:   // CyclopsRide
-                case 767029628138689650:    // BlackWidowRide
-                case 9306725620939166275:   // BladeRide
+                case (ulong)PowerPrototypes.GhostRider.GhostRiderRide:
+                case (ulong)PowerPrototypes.Wolverine.WolverineRide:
+                case (ulong)PowerPrototypes.Deadpool.DeadpoolRide:
+                case (ulong)PowerPrototypes.NickFury.NickFuryRide:
+                case (ulong)PowerPrototypes.Cyclops.CyclopsRide:
+                case (ulong)PowerPrototypes.BlackWidow.BlackWidowRide:
+                case (ulong)PowerPrototypes.Blade.BladeRide:
                     AddEvent(client, EventEnum.StartTravel, 100 - delta, PowerId);
                     break;
-                case 11107518290032726948:  // AntmanFlight
+                case (ulong)PowerPrototypes.AntMan.AntmanFlight:
                     AddEvent(client, EventEnum.StartTravel, 210 - delta, PowerId);
                     break;
-                case 7832265728311563071:   // ThingFlight
+                case (ulong)PowerPrototypes.Thing.ThingFlight:
                     AddEvent(client, EventEnum.StartTravel, 235 - delta, PowerId);
                     break;
             }
