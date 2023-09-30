@@ -30,15 +30,20 @@
 
             uint timestamp = (uint)((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds();
 
-            ulong guid = 0;
-            guid |= (ulong)type << 56;
-            guid |= (ulong)reserved << 48;
-            guid |= (ulong)timestamp << 16;
-            guid |= _count++;
+            ulong id = 0;
+            id |= (ulong)type << 56;
+            id |= (ulong)reserved << 48;
+            id |= (ulong)timestamp << 16;
+            id |= _count++;
 
-            return guid;
+            return id;
         }
 
+        /// <summary>
+        /// Parse type, timestamp, and other data from an encoded ulong id.
+        /// </summary>
+        /// <param name="id">An id encoded as ulong.</param>
+        /// <returns>A struct that contains parsed values.</returns>
         public static Id Parse(ulong id)
         {
             IdType type = (IdType)(id >> 56);

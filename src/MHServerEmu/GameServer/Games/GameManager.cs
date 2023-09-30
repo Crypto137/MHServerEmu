@@ -18,7 +18,7 @@ namespace MHServerEmu.GameServer.Games
 
         public void CreateGame()
         {
-            ulong id = HashHelper.GenerateUniqueRandomId(_gameDict);
+            ulong id = IdGenerator.Generate(IdType.Game);
             _gameDict.Add(id, new(_gameServerManager, id));
         }
 

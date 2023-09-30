@@ -93,7 +93,7 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
                     lock (_accountLock)
                     {
                         // Create a new account
-                        Account account = new(HashHelper.GenerateUniqueRandomId(_idAccountDict), email, password);
+                        Account account = new(IdGenerator.Generate(IdType.Account), email, password);
                         _accountList.Add(account);
                         _idAccountDict.Add(account.Id, account);
                         _emailAccountDict.Add(account.Email, account);

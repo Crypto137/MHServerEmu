@@ -174,7 +174,7 @@ namespace MHServerEmu.GameServer.Frontend
             {
                 lock (_sessionLock)
                 {
-                    ClientSession session = new(HashHelper.GenerateUniqueRandomId(_sessionDict), account, loginDataPB.ClientDownloader, loginDataPB.Locale);
+                    ClientSession session = new(IdGenerator.Generate(IdType.Session), account, loginDataPB.ClientDownloader, loginDataPB.Locale);
                     _sessionDict.Add(session.Id, session);
                     return session;
                 }
