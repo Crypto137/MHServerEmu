@@ -8,7 +8,7 @@ using MHServerEmu.GameServer.Social;
 
 namespace MHServerEmu.GameServer.Entities.Avatars
 {
-    public class Avatar : WorldEntity
+    public class Avatar : Agent
     {
         public ReplicatedString PlayerName { get; set; }
         public ulong OwnerPlayerDbId { get; set; }
