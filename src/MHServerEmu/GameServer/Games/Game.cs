@@ -184,11 +184,18 @@ namespace MHServerEmu.GameServer.Games
                         Logger.Trace($"AddEvent EndThrowing for {tryActivatePower.PowerPrototypeId}");
                         break;  
                     }
-                    if (tryActivatePower.PowerPrototypeId == 3750547876903523675)  // DiamondHeart
+
+                    if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.EmmaFrost.DiamondHeart) 
                     {                //  3458821934631491033 // DiamondStrike     
                         AddEvent(client, EventEnum.StartEmmaDiamondForm, 0, tryActivatePower.PowerPrototypeId);
                         AddEvent(client, EventEnum.EndEmmaDiamondForm, 20000, tryActivatePower.PowerPrototypeId);
                     }
+                    if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.Magik.Ultimate)
+                    {
+                        AddEvent(client, EventEnum.StartMagikUltimate, 0, tryActivatePower.TargetPosition);
+                        AddEvent(client, EventEnum.EndMagikUltimate, 20000, 0u);
+                    }
+
                     // if (powerPrototypePath.Contains("TravelPower/")) 
                     //    TrawerPower(client, tryActivatePower.PowerPrototypeId);
 
@@ -344,7 +351,7 @@ namespace MHServerEmu.GameServer.Games
 
         #region Events
 
-        public void AddEvent(FrontendClient client, EventEnum eventId, long timeMs, ulong data)
+        public void AddEvent(FrontendClient client, EventEnum eventId, long timeMs, object data)
         {
             _eventList.Add(new(client, eventId, timeMs, data));
         }
@@ -353,7 +360,7 @@ namespace MHServerEmu.GameServer.Games
         {
             FrontendClient client = queuedEvent.Client;
             EventEnum eventId = queuedEvent.Event;
-            ulong data = queuedEvent.Data;
+            ulong powerId;
 
             if (!queuedEvent.IsExpired())
                 return;
@@ -365,12 +372,13 @@ namespace MHServerEmu.GameServer.Games
             {
                 case EventEnum.StartTravel:
 
-                    switch (data)
+                    powerId = (ulong)queuedEvent.Data;
+                    switch (powerId)
                     {
                         case (ulong)PowerPrototypes.GhostRider.GhostRiderRide:
                             Logger.Trace($"EventStart GhostRiderRide");
                             // Player.Avatar.EvalOnCreate.AssignProp.ProcProp.Param1 
-                            conditionArchive = new(avatarEntityId, 666, 55, data, 0);   // TODO: generate and save Condition.Id                        
+                            conditionArchive = new(avatarEntityId, 666, 55, powerId, 0);   // TODO: generate and save Condition.Id                        
 
                             EnqueueResponse(client, new(NetMessageAddCondition.CreateBuilder()
                                 .SetArchiveData(ByteString.CopyFrom(conditionArchive.Encode()))
@@ -397,7 +405,7 @@ namespace MHServerEmu.GameServer.Games
                         case (ulong)PowerPrototypes.AntMan.AntmanFlight:
                         case (ulong)PowerPrototypes.Thing.ThingFlight:
                             Logger.Trace($"EventStart Ride");
-                            conditionArchive = new(avatarEntityId, 667, 55, data, 0);
+                            conditionArchive = new(avatarEntityId, 667, 55, powerId, 0);
                             EnqueueResponse(client, new(NetMessageAddCondition.CreateBuilder()
                                 .SetArchiveData(ByteString.CopyFrom(conditionArchive.Encode()))
                                 .Build()));
@@ -408,8 +416,8 @@ namespace MHServerEmu.GameServer.Games
                     break;
 
                 case EventEnum.EndTravel:
-
-                    switch (data)
+                    powerId = (ulong)queuedEvent.Data;
+                    switch (powerId)
                     {
                         case (ulong)PowerPrototypes.GhostRider.GhostRiderRide:
                             Logger.Trace($"EventEnd GhostRiderRide");
@@ -444,9 +452,10 @@ namespace MHServerEmu.GameServer.Games
                     }
 
                     break;
+
                 case EventEnum.StartThrowing:
 
-                    ulong idTarget = data;
+                    ulong idTarget = (ulong)queuedEvent.Data;
                     // TODO: Player.Avatar.SetThrowObject(idTarget)
                     // TODO: ThrowObject = Player.EntityManager.GetEntity(idTarget)
 
@@ -493,7 +502,7 @@ namespace MHServerEmu.GameServer.Games
                     break;
 
                 case EventEnum.EndThrowing:
-
+                    powerId = (ulong)queuedEvent.Data;
                     avatarRepId = (ulong)Enum.Parse(typeof(HardcodedAvatarReplicationId), Enum.GetName(typeof(HardcodedAvatarEntity), client.Session.Account.PlayerData.Avatar));
                     // TODO: avatarRepId = Player.EntityManager.GetEntity(AvatarEntityId).RepId
 
@@ -518,7 +527,7 @@ namespace MHServerEmu.GameServer.Games
 
                     Logger.Trace("Event EndThrowing");
 
-                    if (GameDatabase.GetPrototypePath(data).Contains("CancelPower")) // ThrownPoliceCarCancelPower
+                    if (GameDatabase.GetPrototypePath(powerId).Contains("CancelPower")) // ThrownPoliceCarCancelPower
                     {
                         // TODO: CreateEntity for ThrowObject
                         Logger.Trace("Event ThrownPoliceCarCancelPower");
@@ -552,7 +561,62 @@ namespace MHServerEmu.GameServer.Games
                     EnqueueResponse(client, new(NetMessageEntityDestroy.CreateBuilder()
                         .SetIdEntity(111)
                         .Build()));
-                    Logger.Trace($"Event End EmmaDiamondForm");  
+                    Logger.Trace($"EventEnd EmmaDiamondForm");  
+
+                    break;
+
+                case EventEnum.StartMagikUltimate:
+                    NetStructPoint3 position = (NetStructPoint3)queuedEvent.Data;
+
+                    Logger.Trace($"EventStart Magik Ultimate");
+
+                    conditionArchive = new(avatarEntityId, 777, 183, (ulong)PowerPrototypes.Magik.Ultimate, 0);
+                    conditionArchive.Condition.Duration = 20000;
+
+                    EnqueueResponse(client, new(NetMessageAddCondition.CreateBuilder()
+                        .SetArchiveData(ByteString.CopyFrom(conditionArchive.Encode()))
+                        .Build()));
+
+                    ulong arenaEntityId = 6000;
+                    ulong areanRepId = 6600;
+
+                    EnqueueResponse(client, new(EntityHelper.SpawnEmpyEntity(
+                        arenaEntityId, (ulong)PowerPrototypes.Magik.UltimateArea,
+                        new(position.X, position.Y, position.Z), new(), areanRepId)));
+
+                    EnqueueResponse(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                        .SetEntityId(arenaEntityId)
+                        .SetPowerProtoId((ulong)PowerPrototypes.Magik.UltimateHotspotEffect) 
+                        .SetPowerRank(0)
+                        .SetCharacterLevel(60)
+                        .SetCombatLevel(60)
+                        .SetItemLevel(1)
+                        .SetItemVariation(1)
+                        .Build()));
+
+                    property = new(PropertyEnum.AttachedToEntityId, avatarEntityId);
+                    EnqueueResponse(client, new(property.ToNetMessageSetProperty(areanRepId)));
+
+                    break;
+
+                case EventEnum.EndMagikUltimate:
+                    Logger.Trace($"EventEnd Magik Ultimate");
+
+                    EnqueueResponse(client, new(NetMessageDeleteCondition.CreateBuilder()
+                        .SetIdEntity(avatarEntityId)
+                        .SetKey(777)
+                        .Build()));
+
+                    arenaEntityId = 6000;
+
+                    EnqueueResponse(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
+                        .SetEntityId(arenaEntityId)
+                        .SetPowerProtoId((ulong)PowerPrototypes.Magik.UltimateHotspotEffect) 
+                        .Build()));
+
+                    EnqueueResponse(client, new(NetMessageEntityDestroy.CreateBuilder()
+                        .SetIdEntity(arenaEntityId)
+                        .Build()));
 
                     break;
             }

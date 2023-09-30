@@ -73,7 +73,7 @@ namespace MHServerEmu.GameServer.Powers
                 Position = new(tryActivatePower.TargetPosition);
                 Flags[5] = true;
 
-                Damage0 = 100;
+                if (TargetId != PowerOwnerId) Damage0 = 100;
                 Flags[6] = true;
             }
         }

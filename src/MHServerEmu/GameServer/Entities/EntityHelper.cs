@@ -41,6 +41,20 @@ namespace MHServerEmu.GameServer.Entities
                 .SetArchiveData(ByteString.CopyFrom(archiveData))
                 .Build();
         }
+        public static NetMessageEntityCreate SpawnEmpyEntity(ulong entityId, ulong prototypeId, Vector3 position, Vector3 orientation,
+            ulong replicationId)
+        {
+            byte[] baseData = new EntityCreateBaseData(entityId, prototypeId, position, orientation).Encode();
+
+            WorldEntity worldEntity = new(1, replicationId);
+
+            byte[] archiveData = worldEntity.Encode();
+
+            return NetMessageEntityCreate.CreateBuilder()
+                .SetBaseData(ByteString.CopyFrom(baseData))
+                .SetArchiveData(ByteString.CopyFrom(archiveData))
+                .Build();
+        }
     }
 
 }

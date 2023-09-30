@@ -9,7 +9,9 @@ namespace MHServerEmu.GameServer.Games
         StartTravel,
         EndTravel,
         StartEmmaDiamondForm,
-        EndEmmaDiamondForm
+        EndEmmaDiamondForm,
+        StartMagikUltimate,
+        EndMagikUltimate
     }
 
     public class GameEvent
@@ -20,9 +22,9 @@ namespace MHServerEmu.GameServer.Games
         public FrontendClient Client { get; }
         public EventEnum Event { get; }
         public bool IsRunning { get; set; }
-        public ulong Data { get; set; }
+        public object Data { get; set; }
 
-        public GameEvent(FrontendClient client, EventEnum gameEvent, long lifetimeMs, ulong data)
+        public GameEvent(FrontendClient client, EventEnum gameEvent, long lifetimeMs, object data)
         {
             _creationTime = DateTime.Now;
             _lifetime = TimeSpan.FromMilliseconds(lifetimeMs);
