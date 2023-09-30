@@ -25,6 +25,16 @@ namespace MHServerEmu.GameServer.Entities
 
         public WorldEntity() { }
 
+        public WorldEntity(uint replicationPolicy, ulong replicationId)
+        {
+            ReplicationPolicy = replicationPolicy;
+            PropertyCollection = new(replicationId);
+            TrackingContextMap = Array.Empty<EntityTrackingContextMap>();
+            ConditionCollection = Array.Empty<Condition>();
+            PowerCollection = Array.Empty<PowerCollectionRecord>();
+            UnkEvent = 0;
+        }
+
         public WorldEntity(ulong replicationId, Vector3 mapPosition, int health, int mapAreaId,
             int healthMaxOther, ulong mapRegionId, int mapCellId, ulong contextAreaRef)
         {
