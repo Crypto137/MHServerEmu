@@ -2,67 +2,67 @@
 
 namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
 {
-    public class PrototypeJson
+    public class PrototypeFileJson
     {
         public FileHeader Header { get; }
-        public PrototypeDataJson Data { get; }
+        public PrototypeJson Prototype { get; }
 
-        public PrototypeJson(Prototype prototype, DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir,
+        public PrototypeFileJson(PrototypeFile prototypeFile, DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir,
             Dictionary<ulong, string> prototypeFieldDict, Dictionary<ulong, string> assetDict, Dictionary<ulong, string> assetTypeDict)
         {
-            Header = prototype.Header;
-            Data = new(prototype.Data, prototypeDir, curveDir, typeDir, prototypeFieldDict, assetDict, assetTypeDict);
+            Header = prototypeFile.Header;
+            Prototype = new(prototypeFile.Prototype, prototypeDir, curveDir, typeDir, prototypeFieldDict, assetDict, assetTypeDict);
         }
 
-        public class PrototypeDataJson
+        public class PrototypeJson
         {
             public byte Flags { get; }
             public string ParentId { get; }
-            public PrototypeDataEntryJson[] Entries { get; }
+            public PrototypeEntryJson[] Entries { get; }
 
-            public PrototypeDataJson(PrototypeData data, DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir,
+            public PrototypeJson(Prototype prototype, DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir,
                 Dictionary<ulong, string> prototypeFieldDict, Dictionary<ulong, string> assetDict, Dictionary<ulong, string> assetTypeDict)
             {
-                Flags = data.Flags;
-                ParentId = (data.ParentId != 0) ? prototypeDir.IdDict[data.ParentId].FilePath : "";
+                Flags = prototype.Flags;
+                ParentId = (prototype.ParentId != 0) ? prototypeDir.IdDict[prototype.ParentId].FilePath : "";
 
-                if (data.Entries != null)
+                if (prototype.Entries != null)
                 {
-                    Entries = new PrototypeDataEntryJson[data.Entries.Length];
+                    Entries = new PrototypeEntryJson[prototype.Entries.Length];
                     for (int i = 0; i < Entries.Length; i++)
-                        Entries[i] = new(data.Entries[i], prototypeDir, curveDir, typeDir, prototypeFieldDict, assetDict, assetTypeDict);
+                        Entries[i] = new(prototype.Entries[i], prototypeDir, curveDir, typeDir, prototypeFieldDict, assetDict, assetTypeDict);
                 }
             }
 
-            public class PrototypeDataEntryJson
+            public class PrototypeEntryJson
             {
                 public string Id { get; }
                 public byte Field1 { get; }
-                public PrototypeDataEntryElementJson[] Elements { get; }
-                public PrototypeDataEntryListElementJson[] ListElements { get; }
+                public PrototypeEntryElementJson[] Elements { get; }
+                public PrototypeEntryListElementJson[] ListElements { get; }
 
-                public PrototypeDataEntryJson(PrototypeDataEntry entry, DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir,
+                public PrototypeEntryJson(PrototypeEntry entry, DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir,
                     Dictionary<ulong, string> prototypeFieldDict, Dictionary<ulong, string> assetDict, Dictionary<ulong, string> assetTypeDict)
                 {
                     Id = (entry.Id != 0) ? prototypeDir.IdDict[entry.Id].FilePath : "";
                     Field1 = entry.Field1;
 
-                    Elements = new PrototypeDataEntryElementJson[entry.Elements.Length];
+                    Elements = new PrototypeEntryElementJson[entry.Elements.Length];
                     for (int i = 0; i < Elements.Length; i++)
                         Elements[i] = new(entry.Elements[i], prototypeDir, curveDir, typeDir, prototypeFieldDict, assetDict, assetTypeDict);
 
-                    ListElements = new PrototypeDataEntryListElementJson[entry.ListElements.Length];
+                    ListElements = new PrototypeEntryListElementJson[entry.ListElements.Length];
                     for (int i = 0; i < ListElements.Length; i++)
                         ListElements[i] = new(entry.ListElements[i], prototypeDir, curveDir, typeDir, prototypeFieldDict, assetDict, assetTypeDict);
                 }
 
-                public class PrototypeDataEntryElementJson
+                public class PrototypeEntryElementJson
                 {
                     public string Id { get; }
                     public char Type { get; }
                     public object Value { get; }
 
-                    public PrototypeDataEntryElementJson(PrototypeDataEntryElement element, DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir,
+                    public PrototypeEntryElementJson(PrototypeEntryElement element, DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir,
                         Dictionary<ulong, string> prototypeFieldDict, Dictionary<ulong, string> assetDict, Dictionary<ulong, string> assetTypeDict)
                     {
                         Id = (element.Id != 0) ? prototypeFieldDict[element.Id] : "";
@@ -80,7 +80,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
                                 Value = ((ulong)element.Value != 0) ? prototypeDir.IdDict[(ulong)element.Value].FilePath : "";
                                 break;
                             case 'R':
-                                Value = new PrototypeDataJson((PrototypeData)element.Value, prototypeDir, curveDir, typeDir, prototypeFieldDict, assetDict, assetTypeDict);
+                                Value = new PrototypeJson((Prototype)element.Value, prototypeDir, curveDir, typeDir, prototypeFieldDict, assetDict, assetTypeDict);
                                 break;
                             case 'T':
                                 Value = typeDir.IdDict[(ulong)element.Value].FilePath;
@@ -92,13 +92,13 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
                     }
                 }
 
-                public class PrototypeDataEntryListElementJson
+                public class PrototypeEntryListElementJson
                 {
                     public string Id { get; }
                     public char Type { get; }
                     public object[] Values { get; }
 
-                    public PrototypeDataEntryListElementJson(PrototypeDataEntryListElement element, DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir,
+                    public PrototypeEntryListElementJson(PrototypeEntryListElement element, DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir,
                         Dictionary<ulong, string> prototypeFieldDict, Dictionary<ulong, string> assetDict, Dictionary<ulong, string> assetTypeDict)
                     {
                         Id = prototypeFieldDict[element.Id];
@@ -119,7 +119,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
                                     Values[i] = ((ulong)element.Values[i] != 0) ? prototypeDir.IdDict[(ulong)element.Values[i]].FilePath : "";
                                     break;
                                 case 'R':
-                                    Values[i] = new PrototypeDataJson((PrototypeData)element.Values[i], prototypeDir, curveDir, typeDir, prototypeFieldDict, assetDict, assetTypeDict);
+                                    Values[i] = new PrototypeJson((Prototype)element.Values[i], prototypeDir, curveDir, typeDir, prototypeFieldDict, assetDict, assetTypeDict);
                                     break;
                                 case 'T':
                                     Values[i] = typeDir.IdDict[(ulong)element.Values[i]].FilePath;

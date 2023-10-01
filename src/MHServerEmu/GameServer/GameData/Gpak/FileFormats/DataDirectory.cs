@@ -134,7 +134,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         public byte ByteField { get; }
         public string FilePath { get; }
 
-        public Prototype Prototype { get; set; }
+        public PrototypeFile PrototypeFile { get; set; }
 
         public DataDirectoryPrototypeRecord(BinaryReader reader)
         {

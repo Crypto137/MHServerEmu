@@ -33,7 +33,7 @@ namespace MHServerEmu.GameServer.GameData.Prototypes
 
         public PropertyInfoPrototype(Prototype prototype)
         {
-            foreach (PrototypeDataEntryElement element in prototype.Data.Entries[0].Elements)
+            foreach (PrototypeEntryElement element in prototype.Entries[0].Elements)
             {
                 switch (GameDatabase.Calligraphy.PrototypeFieldDict[element.Id])
                 {

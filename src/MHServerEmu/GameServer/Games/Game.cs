@@ -466,7 +466,7 @@ namespace MHServerEmu.GameServer.Games
                     EnqueueResponse(client, new(property.ToNetMessageSetProperty(avatarRepId)));
 
                     // ThrowObject.Prototype.WorldEntity.UnrealClass
-                    // ulong unrealClass = (ulong)throwObject.GetPrototype().Data.GetEntry(BlueprintId.WorldEntity).GetField(FieldId.UnrealClass).Value;
+                    // ulong unrealClass = (ulong)throwObject.GetPrototype().GetEntry(BlueprintId.WorldEntity).GetField(FieldId.UnrealClass).Value;
                     ulong unrealClass = 9953069070637601478;
                     property = new(PropertyEnum.ThrowableOriginatorAssetRef, unrealClass); // MarvelDestructible_Throwable_PoliceCar
                     EnqueueResponse(client, new(property.ToNetMessageSetProperty(avatarRepId)));
@@ -547,7 +547,7 @@ namespace MHServerEmu.GameServer.Games
                     // 0 is the same as the default costume, but it's not a valid prototype id
                     if (emmaCostume == 0) emmaCostume = GameDatabase.GetPrototypeId("Entity/Items/Costumes/Prototypes/EmmaFrost/Modern.prototype");
                     
-                    ulong asset = (ulong)emmaCostume.GetPrototype().Data.GetEntry(BlueprintId.Costume).GetField(FieldId.CostumeUnrealClass).Value;
+                    ulong asset = (ulong)emmaCostume.GetPrototype().GetEntry(BlueprintId.Costume).GetField(FieldId.CostumeUnrealClass).Value;
                     conditionArchive.Condition.EngineAssetGuid = asset;  // MarvelPlayer_EmmaFrost_Modern
 
                     EnqueueResponse(client, new(NetMessageAddCondition.CreateBuilder()

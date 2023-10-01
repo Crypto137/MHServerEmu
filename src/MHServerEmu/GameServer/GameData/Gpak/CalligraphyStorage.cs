@@ -48,8 +48,8 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
             // Prototype
             foreach (DataDirectoryPrototypeRecord record in PrototypeDirectory.Records)
-                record.Prototype = new(gpakDict[$"Calligraphy/{record.FilePath}"]);
-            Logger.Info($"Parsed {PrototypeDirectory.Records.Length} prototypes");
+                record.PrototypeFile = new(gpakDict[$"Calligraphy/{record.FilePath}"]);
+            Logger.Info($"Parsed {PrototypeDirectory.Records.Length} prototype files");
 
             // Initialize supplementary dictionaries
             PrototypeBlueprintDict = new(BlueprintDirectory.Records.Length);
@@ -84,18 +84,18 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         public Curve GetCurve(string path) => ((DataDirectoryCurveRecord)CurveDirectory.FilePathDict[path]).Curve;
         public Blueprint GetBlueprint(ulong id) => ((DataDirectoryBlueprintRecord)BlueprintDirectory.IdDict[id]).Blueprint;
         public Blueprint GetBlueprint(string path) => ((DataDirectoryBlueprintRecord)BlueprintDirectory.FilePathDict[path]).Blueprint;
-        public Prototype GetPrototype(ulong id) => ((DataDirectoryPrototypeRecord)PrototypeDirectory.IdDict[id]).Prototype;
-        public Prototype GetPrototype(string path) => ((DataDirectoryPrototypeRecord)PrototypeDirectory.FilePathDict[path]).Prototype;
+        public Prototype GetPrototype(ulong id) => ((DataDirectoryPrototypeRecord)PrototypeDirectory.IdDict[id]).PrototypeFile.Prototype;
+        public Prototype GetPrototype(string path) => ((DataDirectoryPrototypeRecord)PrototypeDirectory.FilePathDict[path]).PrototypeFile.Prototype;
 
-        public Prototype GetBlueprintPrototype(Blueprint blueprint) => GetPrototype(blueprint.DefaultPrototypeId);
-        public Prototype GetBlueprintPrototype(ulong blueprintId) => GetBlueprintPrototype(GetBlueprint(blueprintId));
-        public Prototype GetBlueprintPrototype(string blueprintPath) => GetBlueprintPrototype(GetBlueprint(blueprintPath));
+        public Prototype GetBlueprintDefaultPrototype(Blueprint blueprint) => GetPrototype(blueprint.DefaultPrototypeId);
+        public Prototype GetBlueprintDefaultPrototype(ulong blueprintId) => GetBlueprintDefaultPrototype(GetBlueprint(blueprintId));
+        public Prototype GetBlueprintDefaultPrototype(string blueprintPath) => GetBlueprintDefaultPrototype(GetBlueprint(blueprintPath));
 
         public Blueprint GetPrototypeBlueprint(Prototype prototype)
         {
-            while (prototype.Data.ParentId != 0)                        // Go up until we get to the parentless prototype (.defaults)
-                prototype = GetPrototype(prototype.Data.ParentId);
-            return PrototypeBlueprintDict[prototype];                   // Use .defaults prototype as a key to get the blueprint for it
+            while (prototype.ParentId != 0)                     // Go up until we get to the parentless prototype (.defaults)
+                prototype = GetPrototype(prototype.ParentId);
+            return PrototypeBlueprintDict[prototype];           // Use .defaults prototype as a key to get the blueprint for it
         }
 
         public Blueprint GetPrototypeBlueprint(ulong prototypeId) => GetPrototypeBlueprint(GetPrototype(prototypeId));
@@ -119,7 +119,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         {
             // Set up json serializer
             _jsonSerializerOptions.Converters.Add(new BlueprintConverter(PrototypeDirectory, CurveDirectory, AssetTypeDirectory));
-            _jsonSerializerOptions.Converters.Add(new PrototypeConverter(PrototypeDirectory, CurveDirectory, AssetTypeDirectory, PrototypeFieldDict, AssetDict, AssetTypeDict));
+            _jsonSerializerOptions.Converters.Add(new PrototypeFileConverter(PrototypeDirectory, CurveDirectory, AssetTypeDirectory, PrototypeFieldDict, AssetDict, AssetTypeDict));
             _jsonSerializerOptions.MaxDepth = 128;  // 64 is not enough for prototypes
 
             // Build dictionaries out of directories for compatibility with the old JSON export
@@ -132,16 +132,16 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             foreach (DataDirectoryBlueprintRecord record in BlueprintDirectory.Records)
                 blueprintDict.Add($"Calligraphy/{record.FilePath}", record.Blueprint);
 
-            Dictionary<string, Prototype> prototypeDict = new(PrototypeDirectory.Records.Length);
+            Dictionary<string, PrototypeFile> prototypeFileDict = new(PrototypeDirectory.Records.Length);
             foreach (DataDirectoryPrototypeRecord record in PrototypeDirectory.Records)
-                prototypeDict.Add($"Calligraphy/{record.FilePath}", record.Prototype);
+                prototypeFileDict.Add($"Calligraphy/{record.FilePath}", record.PrototypeFile);
 
             // Serialize and save
             ExportDataDirectories();
             SerializeDictAsJson(assetTypeDict);
             ExportCurveDict();
             SerializeDictAsJson(blueprintDict);
-            SerializeDictAsJson(prototypeDict);
+            SerializeDictAsJson(prototypeFileDict);
         }
 
         private void ExportDataDirectories()

@@ -26,7 +26,7 @@ namespace MHServerEmu.GameServer.GameData.Prototypes
             Blueprint blueprint = GameDatabase.Calligraphy.GetPrototypeBlueprint(prototype);
             Array.Fill(Params, new());
 
-            foreach (PrototypeDataEntryElement element in prototype.Data.Entries[0].Elements)
+            foreach (PrototypeEntryElement element in prototype.Entries[0].Elements)
             {
                 BlueprintMember blueprintMember = blueprint.GetMember(element.Id);
 

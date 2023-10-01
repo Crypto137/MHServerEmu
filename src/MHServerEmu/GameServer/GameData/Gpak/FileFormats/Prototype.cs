@@ -2,29 +2,29 @@
 
 namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
-    public class Prototype
+    public class PrototypeFile
     {
         public FileHeader Header { get; }
-        public PrototypeData Data { get; }
+        public Prototype Prototype { get; }
 
-        public Prototype(byte[] data)
+        public PrototypeFile(byte[] data)
         {
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
                 Header = reader.ReadHeader();
-                Data = new(reader);
+                Prototype = new(reader);
             }
         }
     }
 
-    public class PrototypeData
+    public class Prototype
     {
         public byte Flags { get; }
         public ulong ParentId { get; }  // 0 for .defaults
-        public PrototypeDataEntry[] Entries { get; }
+        public PrototypeEntry[] Entries { get; }
 
-        public PrototypeData(BinaryReader reader)
+        public Prototype(BinaryReader reader)
         {
             Flags = reader.ReadByte();
 
@@ -34,7 +34,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 
                 if ((Flags & 0x02) > 0)  // flag1 == contains data
                 {
-                    Entries = new PrototypeDataEntry[reader.ReadUInt16()];
+                    Entries = new PrototypeEntry[reader.ReadUInt16()];
                     for (int i = 0; i < Entries.Length; i++)
                         Entries[i] = new(reader);
                 }
@@ -43,42 +43,42 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             // flag2 == ??
         }
 
-        public PrototypeDataEntry GetEntry(ulong blueprintId) => Entries.FirstOrDefault(entry => entry.Id == blueprintId);
-        public PrototypeDataEntry GetEntry(BlueprintId blueprintId) => GetEntry((ulong)blueprintId);
+        public PrototypeEntry GetEntry(ulong blueprintId) => Entries.FirstOrDefault(entry => entry.Id == blueprintId);
+        public PrototypeEntry GetEntry(BlueprintId blueprintId) => GetEntry((ulong)blueprintId);
     }
 
-    public class PrototypeDataEntry
+    public class PrototypeEntry
     {
         public ulong Id { get; }
         public byte Field1 { get; }
-        public PrototypeDataEntryElement[] Elements { get; }
-        public PrototypeDataEntryListElement[] ListElements { get; }
+        public PrototypeEntryElement[] Elements { get; }
+        public PrototypeEntryListElement[] ListElements { get; }
 
-        public PrototypeDataEntry(BinaryReader reader)
+        public PrototypeEntry(BinaryReader reader)
         {
             Id = reader.ReadUInt64();
             Field1 = reader.ReadByte();
 
-            Elements = new PrototypeDataEntryElement[reader.ReadUInt16()];
+            Elements = new PrototypeEntryElement[reader.ReadUInt16()];
             for (int i = 0; i < Elements.Length; i++)
                 Elements[i] = new(reader);
 
-            ListElements = new PrototypeDataEntryListElement[reader.ReadUInt16()];
+            ListElements = new PrototypeEntryListElement[reader.ReadUInt16()];
             for (int i = 0; i < ListElements.Length; i++)
                 ListElements[i] = new(reader);
         }
 
-        public PrototypeDataEntryElement GetField(ulong fieldId) => Elements.FirstOrDefault(field => field.Id == fieldId);
-        public PrototypeDataEntryElement GetField(FieldId fieldId) => GetField((ulong)fieldId);
+        public PrototypeEntryElement GetField(ulong fieldId) => Elements.FirstOrDefault(field => field.Id == fieldId);
+        public PrototypeEntryElement GetField(FieldId fieldId) => GetField((ulong)fieldId);
     }
 
-    public class PrototypeDataEntryElement
+    public class PrototypeEntryElement
     {
         public ulong Id { get; }
         public CalligraphyValueType Type { get; }
         public object Value { get; }
 
-        public PrototypeDataEntryElement(BinaryReader reader)
+        public PrototypeEntryElement(BinaryReader reader)
         {
             Id = reader.ReadUInt64();
             Type = (CalligraphyValueType)reader.ReadByte();
@@ -95,7 +95,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
                     Value = reader.ReadInt64();
                     break;
                 case CalligraphyValueType.R:
-                    Value = new PrototypeData(reader);
+                    Value = new Prototype(reader);
                     break;
                 default:
                     Value = reader.ReadUInt64();
@@ -104,13 +104,13 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         }
     }
 
-    public class PrototypeDataEntryListElement
+    public class PrototypeEntryListElement
     {
         public ulong Id { get; }
         public CalligraphyValueType Type { get; }
         public object[] Values { get; }
 
-        public PrototypeDataEntryListElement(BinaryReader reader)
+        public PrototypeEntryListElement(BinaryReader reader)
         {
             Id = reader.ReadUInt64();
             Type = (CalligraphyValueType)reader.ReadByte();
@@ -130,7 +130,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
                         Values[i] = reader.ReadInt64();
                         break;
                     case CalligraphyValueType.R:
-                        Values[i] = new PrototypeData(reader);
+                        Values[i] = new Prototype(reader);
                         break;
                     default:
                         Values[i] = reader.ReadUInt64();

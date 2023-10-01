@@ -21,7 +21,7 @@ namespace MHServerEmu.GameServer.Properties
                 if (record.FilePath.Contains("Property/Info"))
                 {
                     PropertyEnum property = (PropertyEnum)Enum.Parse(typeof(PropertyEnum), Path.GetFileNameWithoutExtension(record.FilePath));
-                    PropertyInfoPrototype prototype = new(calligraphy.GetBlueprintPrototype(record.FilePath));
+                    PropertyInfoPrototype prototype = new(calligraphy.GetBlueprintDefaultPrototype(record.FilePath));
 
                     _propertyInfoDict.Add(property, prototype);
                 }
@@ -29,7 +29,7 @@ namespace MHServerEmu.GameServer.Properties
                 {
                     string fileName = Path.GetFileNameWithoutExtension(record.FilePath);
                     PropertyEnum property = (PropertyEnum)Enum.Parse(typeof(PropertyEnum), fileName.Substring(0, fileName.Length - 4)); // -4 to remove Prop at the end
-                    PropertyPrototype mixin = new(calligraphy.GetBlueprintPrototype(record.FilePath));
+                    PropertyPrototype mixin = new(calligraphy.GetBlueprintDefaultPrototype(record.FilePath));
                     mixinDict.Add(property, mixin);
                 }
             }
@@ -41,10 +41,10 @@ namespace MHServerEmu.GameServer.Properties
                     new(calligraphy.GetPrototype("Property/Info/DisplayNameOverride.prototype")));
 
                 _propertyInfoDict.Add(PropertyEnum.MissileAlwaysCollides,
-                    new(calligraphy.GetBlueprintPrototype("Property/Mixin/BewareOfTiger/MissileAlwaysCollides.blueprint")));
+                    new(calligraphy.GetBlueprintDefaultPrototype("Property/Mixin/BewareOfTiger/MissileAlwaysCollides.blueprint")));
 
                 _propertyInfoDict.Add(PropertyEnum.StolenPowerAvailable,
-                    new(calligraphy.GetBlueprintPrototype("Property/Mixin/BewareOfTiger/StolenPowerAvailable.blueprint")));
+                    new(calligraphy.GetBlueprintDefaultPrototype("Property/Mixin/BewareOfTiger/StolenPowerAvailable.blueprint")));
             }
             catch
             {

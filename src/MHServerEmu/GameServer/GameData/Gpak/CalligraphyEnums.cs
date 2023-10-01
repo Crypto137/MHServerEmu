@@ -10,7 +10,7 @@
         D = 0x44,   // double
         L = 0x4c,   // long
         P = 0x50,   // prototype
-        R = 0x52,   // ??? (recursion?)
+        R = 0x52,   // ??? (embedded / anonymous prototype)
         S = 0x53,   // string
         T = 0x54    // type
     }

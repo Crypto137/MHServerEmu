@@ -41,7 +41,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         }
     }
 
-    public class PrototypeConverter : JsonConverter<Prototype>
+    public class PrototypeFileConverter : JsonConverter<PrototypeFile>
     {
         private DataDirectory _prototypeDir;
         private DataDirectory _curveDir;
@@ -51,7 +51,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         private Dictionary<ulong, string> _assetTypeDict;
 
 
-        public PrototypeConverter(DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir,
+        public PrototypeFileConverter(DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir,
             Dictionary<ulong, string> prototypeFieldDict, Dictionary<ulong, string> assetDict, Dictionary<ulong, string> assetTypeDict)
         {
             _prototypeDir = prototypeDir;
@@ -62,21 +62,21 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             _assetTypeDict = assetTypeDict;
         }
 
-        public override Prototype Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override PrototypeFile Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             throw new NotImplementedException();
         }
 
-        public override void Write(Utf8JsonWriter writer, Prototype value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, PrototypeFile value, JsonSerializerOptions options)
         {
             switch (value)
             {
                 case null:
-                    JsonSerializer.Serialize(writer, (Prototype)null, options);
+                    JsonSerializer.Serialize(writer, (PrototypeFile)null, options);
                     break;
 
                 default:
-                    JsonSerializer.Serialize(writer, new PrototypeJson(value, _prototypeDir, _curveDir, _typeDir, _prototypeFieldDict, _assetDict, _assetTypeDict), options);
+                    JsonSerializer.Serialize(writer, new PrototypeFileJson(value, _prototypeDir, _curveDir, _typeDir, _prototypeFieldDict, _assetDict, _assetTypeDict), options);
                     break;
             }
         }
