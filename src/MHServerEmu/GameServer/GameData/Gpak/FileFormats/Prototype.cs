@@ -50,14 +50,14 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
     public class PrototypeEntry
     {
         public ulong Id { get; }
-        public byte Field1 { get; }
+        public byte ByteField { get; }
         public PrototypeEntryElement[] Elements { get; }
         public PrototypeEntryListElement[] ListElements { get; }
 
         public PrototypeEntry(BinaryReader reader)
         {
             Id = reader.ReadUInt64();
-            Field1 = reader.ReadByte();
+            ByteField = reader.ReadByte();
 
             Elements = new PrototypeEntryElement[reader.ReadUInt16()];
             for (int i = 0; i < Elements.Length; i++)

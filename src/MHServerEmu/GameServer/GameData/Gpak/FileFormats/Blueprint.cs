@@ -43,12 +43,12 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
     public class BlueprintReference
     {
         public ulong Id { get; }
-        public byte Field1 { get; }
+        public byte ByteField { get; }
 
         public BlueprintReference(BinaryReader reader)
         {
             Id = reader.ReadUInt64();
-            Field1 = reader.ReadByte();
+            ByteField = reader.ReadByte();
         }
     }
 

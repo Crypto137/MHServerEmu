@@ -37,7 +37,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
             public class PrototypeEntryJson
             {
                 public string Id { get; }
-                public byte Field1 { get; }
+                public byte ByteField { get; }
                 public PrototypeEntryElementJson[] Elements { get; }
                 public PrototypeEntryListElementJson[] ListElements { get; }
 
@@ -45,7 +45,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
                     Dictionary<ulong, string> prototypeFieldDict, Dictionary<ulong, string> assetDict, Dictionary<ulong, string> assetTypeDict)
                 {
                     Id = (entry.Id != 0) ? prototypeDir.IdDict[entry.Id].FilePath : "";
-                    Field1 = entry.Field1;
+                    ByteField = entry.ByteField;
 
                     Elements = new PrototypeEntryElementJson[entry.Elements.Length];
                     for (int i = 0; i < Elements.Length; i++)

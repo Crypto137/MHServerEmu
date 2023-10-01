@@ -33,12 +33,12 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
         public class BlueprintReferenceJson
         {
             public string Id { get; }
-            public byte Field1 { get; }
+            public byte ByteField { get; }
 
             public BlueprintReferenceJson(BlueprintReference reference, DataDirectory prototypeDir)
             {
                 Id = (reference.Id != 0) ? prototypeDir.IdDict[reference.Id].FilePath : "";
-                Field1 = reference.Field1;
+                ByteField = reference.ByteField;
             }
         }
 

@@ -27,14 +27,14 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
     {
         public ulong Id1 { get; }
         public ulong Id2 { get; }
-        public byte Field2 { get; }
+        public byte ByteField { get; }
         public string Name { get; }
 
         public AssetTypeEntry(BinaryReader reader)
         {
             Id1 = reader.ReadUInt64();
             Id2 = reader.ReadUInt64();
-            Field2 = reader.ReadByte();
+            ByteField = reader.ReadByte();
             Name = reader.ReadFixedString16();
         }
     }
