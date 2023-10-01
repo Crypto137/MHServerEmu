@@ -103,8 +103,12 @@ namespace MHServerEmu.GameServer.Regions
 
             messageList.Add(new(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build()));
 
+            // Mini map
+            MiniMapArchive miniMap = new(RegionManager.RegionIsHub(Prototype)); // Reveal map by default for hubs
+            if (miniMap.IsRevealAll == false) miniMap.Map = Array.Empty<byte>();
+
             messageList.Add(new(NetMessageUpdateMiniMap.CreateBuilder()
-                .SetArchiveData(ByteString.CopyFrom(Convert.FromHexString(RegionManager.RegionIsHub(Prototype) ? "EF0181" : "")))
+                .SetArchiveData(ByteString.CopyFrom(miniMap.Encode()))
                 .Build()));
 
             return messageList.ToArray();
