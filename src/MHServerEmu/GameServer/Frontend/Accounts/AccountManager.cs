@@ -84,7 +84,7 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
                     // Create a new account and save it to the database
                     DBAccount account = new(email, playerName, password);
 
-                    if (DBManager.SaveAccount(account))
+                    if (DBManager.CreateAccount(account))
                         return $"Created a new account: {email} ({playerName}).";
                     else
                         return "Failed to create account due to a database error.";

@@ -35,6 +35,39 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             }
         }
 
+        public static bool CreateAccount(DBAccount account)
+        {
+            using (SQLiteConnection connection = new(ConnectionString))
+            {
+                connection.Open();
+
+                // Use a transaction to make sure all data is saved
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        connection.Execute(@"INSERT INTO Account (Id, Email, PlayerName, PasswordHash, Salt, UserLevel, IsBanned, IsArchived, IsPasswordExpired)
+                            VALUES (@Id, @Email, @PlayerName, @PasswordHash, @Salt, @UserLevel, @IsBanned, @IsArchived, @IsPasswordExpired)", account, transaction);
+
+                        connection.Execute(@"INSERT INTO Player (AccountId, RawRegion, RawAvatar)
+                            VALUES (@AccountId, @RawRegion, @RawAvatar)", account.Player, transaction);
+
+                        connection.Execute(@"INSERT INTO Avatar (AccountId, RawPrototype, RawCostume)
+                            VALUES (@AccountId, @RawPrototype, @RawCostume)", account.Avatars, transaction);
+
+                        transaction.Commit();
+                        return true;
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.ErrorException(e, nameof(CreateAccount));
+                        transaction.Rollback();
+                        return false;
+                    }
+                }
+            }
+        }
+
         public static bool SaveAccount(DBAccount account)
         {
             using (SQLiteConnection connection = new(ConnectionString))
@@ -46,21 +79,19 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
                 {
                     try
                     {
-                        connection.Execute(@"INSERT OR REPLACE INTO Account (Id, Email, PlayerName, PasswordHash, Salt, UserLevel, IsBanned, IsArchived, IsPasswordExpired)
-                            VALUES (@Id, @Email, @PlayerName, @PasswordHash, @Salt, @UserLevel, @IsBanned, @IsArchived, @IsPasswordExpired)", account, transaction);
+                        connection.Execute(@"UPDATE Account SET Email=@Email, PlayerName=@PlayerName, PasswordHash=@PasswordHash, Salt=@Salt, UserLevel=@UserLevel,
+                            IsBanned=IsBanned, IsArchived=IsArchived, IsPasswordExpired=@IsPasswordExpired WHERE Id=@Id", account, transaction);
 
-                        connection.Execute(@"INSERT OR REPLACE INTO Player (AccountId, RawRegion, RawAvatar)
-                            VALUES (@AccountId, @RawRegion, @RawAvatar)", account.Player, transaction);
+                        connection.Execute(@"UPDATE Player SET RawRegion=@RawRegion, RawAvatar=@RawAvatar WHERE AccountId=@AccountId", account.Player, transaction);
 
-                        connection.Execute(@"INSERT OR REPLACE INTO Avatar (AccountId, RawPrototype, RawCostume)
-                            VALUES (@AccountId, @RawPrototype, @RawCostume)", account.Avatars, transaction);
+                        connection.Execute(@"UPDATE Avatar SET RawCostume=@RawCostume WHERE AccountId=@AccountId AND RawPrototype=@RawPrototype", account.Avatars, transaction);
 
                         transaction.Commit();
                         return true;
                     }
                     catch (Exception e)
                     {
-                        Logger.ErrorException(e, "SaveAccount failed");
+                        Logger.ErrorException(e, nameof(SaveAccount));
                         transaction.Rollback();
                         return false;
                     }
