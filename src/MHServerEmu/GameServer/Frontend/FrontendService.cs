@@ -5,6 +5,7 @@ using MHServerEmu.Common;
 using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.Frontend.Accounts;
+using MHServerEmu.GameServer.Frontend.Accounts.DBModels;
 using MHServerEmu.Networking;
 using MHServerEmu.Networking.Base;
 
@@ -158,7 +159,7 @@ namespace MHServerEmu.GameServer.Frontend
             }
 
             // Verify credentials
-            Account account;
+            DBAccount account;
             if (ConfigManager.Frontend.BypassAuth)
             {
                 account = AccountManager.DefaultAccount;
@@ -204,7 +205,7 @@ namespace MHServerEmu.GameServer.Frontend
                     _clientDict.Remove(client.Session.Id);
                 }
 
-                if (ConfigManager.Frontend.BypassAuth == false) AccountManager.SavePlayerData();
+                if (ConfigManager.Frontend.BypassAuth == false) DBManager.SaveAccount(client.Session.Account);
 
                 Logger.Info($"Client disconnected (sessionId {client.Session.Id})");
             }

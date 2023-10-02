@@ -3,6 +3,7 @@ using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.Billing.Catalogs;
 using MHServerEmu.GameServer.Entities;
+using MHServerEmu.GameServer.Entities.Avatars;
 using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.Properties;
 using MHServerEmu.Networking;
@@ -83,10 +84,10 @@ namespace MHServerEmu.GameServer.Billing
                             Property property = new(PropertyEnum.CostumeCurrent, entry.GuidItems[0].ItemPrototypeRuntimeIdForClient);
 
                             // Get replication id for the client avatar
-                            ulong replicationId = (ulong)Enum.Parse(typeof(HardcodedAvatarReplicationId), Enum.GetName(typeof(HardcodedAvatarEntity), client.Session.Account.PlayerData.Avatar));
+                            ulong replicationId = (ulong)client.Session.Account.Player.Avatar.ToReplicationId();
 
                             // Update account data
-                            client.Session.Account.PlayerData.CostumeOverride = entry.GuidItems[0].ItemPrototypeRuntimeIdForClient;
+                            client.Session.Account.CurrentAvatar.Costume = entry.GuidItems[0].ItemPrototypeRuntimeIdForClient;
 
                             // Send NetMessageSetProperty message
                             client.SendMessage(1, new(property.ToNetMessageSetProperty(replicationId)));

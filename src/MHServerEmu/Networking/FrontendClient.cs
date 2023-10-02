@@ -68,10 +68,10 @@ namespace MHServerEmu.Networking
             {
                 Session = session;
 
-                if (RegionManager.IsRegionAvailable(Session.Account.PlayerData.Region) == false)
+                if (RegionManager.IsRegionAvailable(Session.Account.Player.Region) == false)
                 {
-                    Logger.Warn($"No data is available for {Session.Account.PlayerData.Region}, falling back to NPEAvengersTowerHUBRegion");
-                    Session.Account.PlayerData.Region = RegionPrototype.NPEAvengersTowerHUBRegion;
+                    Logger.Warn($"No data is available for {Session.Account.Player.Region}, falling back to NPEAvengersTowerHUBRegion");
+                    Session.Account.Player.Region = RegionPrototype.NPEAvengersTowerHUBRegion;
                 }
             }
             else

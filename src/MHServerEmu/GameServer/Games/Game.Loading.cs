@@ -4,7 +4,7 @@ using MHServerEmu.Common.Config;
 using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.Entities;
 using MHServerEmu.GameServer.Entities.Avatars;
-using MHServerEmu.GameServer.Frontend.Accounts;
+using MHServerEmu.GameServer.Frontend.Accounts.DBModels;
 using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 using MHServerEmu.GameServer.GameData.Prototypes.Markers;
@@ -22,7 +22,7 @@ namespace MHServerEmu.GameServer.Games
         private static readonly NetMessageEntityCreate PlayerMessage = NetMessageEntityCreate.ParseFrom(PacketHelper.LoadMessagesFromPacketFile("NetMessageEntityCreatePlayer.bin")[0].Payload);
         private static readonly NetMessageEntityCreate[] AvatarMessages = PacketHelper.LoadMessagesFromPacketFile("NetMessageEntityCreateAvatars.bin").Select(message => NetMessageEntityCreate.ParseFrom(message.Payload)).ToArray();
 
-        private GameMessage[] GetBeginLoadingMessages(PlayerData playerData)
+        private GameMessage[] GetBeginLoadingMessages(DBAccount account)
         {
             List<GameMessage> messageList = new();
 
@@ -44,11 +44,11 @@ namespace MHServerEmu.GameServer.Games
             messageList.Add(new(NetMessageReadyForTimeSync.DefaultInstance));
 
             // Load local player data
-            messageList.AddRange(LoadPlayerEntityMessages(playerData));
+            messageList.AddRange(LoadPlayerEntityMessages(account));
             messageList.Add(new(NetMessageReadyAndLoadedOnGameServer.DefaultInstance));
 
             // Load region data
-            messageList.AddRange(RegionManager.GetRegion(playerData.Region).GetLoadingMessages(Id));
+            messageList.AddRange(RegionManager.GetRegion(account.Player.Region).GetLoadingMessages(Id));
 
             // Create waypoint entity
             messageList.Add(new(NetMessageEntityCreate.CreateBuilder()
@@ -59,13 +59,13 @@ namespace MHServerEmu.GameServer.Games
             return messageList.ToArray();
         }
 
-        private GameMessage[] GetFinishLoadingMessages(PlayerData playerData)
+        private GameMessage[] GetFinishLoadingMessages(DBAccount account)
         {
             List<GameMessage> messageList = new();
 
-            Region region = RegionManager.GetRegion(playerData.Region);
+            Region region = RegionManager.GetRegion(account.Player.Region);
 
-            EnterGameWorldArchive avatarEnterGameWorldArchive = new((ulong)playerData.Avatar, region.EntrancePosition, region.EntranceOrientation.X, 350f);
+            EnterGameWorldArchive avatarEnterGameWorldArchive = new((ulong)account.Player.Avatar.ToEntityId(), region.EntrancePosition, region.EntranceOrientation.X, 350f);
             messageList.Add(new(NetMessageEntityEnterGameWorld.CreateBuilder()
                 .SetArchiveData(ByteString.CopyFrom(avatarEnterGameWorldArchive.Encode()))
                 .Build()));
@@ -126,7 +126,7 @@ namespace MHServerEmu.GameServer.Games
                     MarkersAdd(GameDatabase.Resource.CellDict[district.CellMarkerSet[cellid].Resource], cellid + 1, AddProp);
             }
 
-            switch (playerData.Region)
+            switch (account.Player.Region)
             {
                 case RegionPrototype.AsgardiaRegion:
 
@@ -429,7 +429,7 @@ namespace MHServerEmu.GameServer.Games
                 .Build()));
 
             // Load power collection
-            messageList.AddRange(PowerLoader.LoadAvatarPowerCollection(playerData.Avatar).ToList());
+            messageList.AddRange(PowerLoader.LoadAvatarPowerCollection(account.Player.Avatar.ToEntityId()).ToList());
 
             // Dequeue loading screen
             messageList.Add(new(NetMessageDequeueLoadingScreen.DefaultInstance));
@@ -437,7 +437,7 @@ namespace MHServerEmu.GameServer.Games
             return messageList.ToArray();
         }
 
-        private GameMessage[] LoadPlayerEntityMessages(PlayerData playerData)
+        private GameMessage[] LoadPlayerEntityMessages(DBAccount account)
         {
             List<GameMessage> messageList = new();
 
@@ -536,9 +536,11 @@ namespace MHServerEmu.GameServer.Games
                 Avatar avatar = new(entityCreateMessage.ArchiveData.ToByteArray());
 
                 // Modify base data
-                if (playerData.Avatar != HardcodedAvatarEntity.BlackCat)
+                HardcodedAvatarEntity playerAvatarEntityId = account.Player.Avatar.ToEntityId();
+
+                if (playerAvatarEntityId != HardcodedAvatarEntity.BlackCat)
                 {
-                    if (baseData.EntityId == (ulong)playerData.Avatar)
+                    if (baseData.EntityId == (ulong)playerAvatarEntityId)
                     {
                         replacementInventorySlot = baseData.InvLoc.Slot;
                         baseData.InvLoc.InventoryPrototypeId = GameDatabase.GetPrototypeId("Entity/Inventory/PlayerInventories/PlayerAvatarInPlay.prototype");
@@ -554,11 +556,11 @@ namespace MHServerEmu.GameServer.Games
                     }
                 }
 
-                if (baseData.EntityId == (ulong)playerData.Avatar)
+                if (baseData.EntityId == (ulong)playerAvatarEntityId)
                 {
                     // modify avatar data here
 
-                    avatar.PlayerName.Text = playerData.PlayerName;
+                    avatar.PlayerName.Text = account.PlayerName;
 
                     bool hasCostumeCurrent = false;
                     bool hasCharacterLevel = false;
@@ -571,11 +573,11 @@ namespace MHServerEmu.GameServer.Games
                             case PropertyEnum.CostumeCurrent:
                                 try
                                 {
-                                    property.Value.Set(playerData.CostumeOverride);
+                                    property.Value.Set(account.CurrentAvatar.Costume);
                                 }
                                 catch
                                 {
-                                    Logger.Warn($"Failed to get costume prototype enum for id {ConfigManager.PlayerData.CostumeOverride}");
+                                    Logger.Warn($"Failed to get costume prototype enum for id {account.CurrentAvatar.Costume}");
                                     property.Value.Set(0ul);
                                 }
                                 hasCostumeCurrent = true;
@@ -592,7 +594,7 @@ namespace MHServerEmu.GameServer.Games
                     }
 
                     // Create properties if not found
-                    if (hasCostumeCurrent == false) avatar.PropertyCollection.List.Add(new(PropertyEnum.CostumeCurrent, playerData.CostumeOverride));
+                    if (hasCostumeCurrent == false) avatar.PropertyCollection.List.Add(new(PropertyEnum.CostumeCurrent, account.CurrentAvatar.Costume));
                     if (hasCharacterLevel == false) avatar.PropertyCollection.List.Add(new(PropertyEnum.CharacterLevel, 60));
                     if (hasCombatLevel == false) avatar.PropertyCollection.List.Add(new(PropertyEnum.CombatLevel, 60));
                 }

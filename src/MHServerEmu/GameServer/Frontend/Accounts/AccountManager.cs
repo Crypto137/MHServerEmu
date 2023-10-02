@@ -1,12 +1,19 @@
-﻿using System.Text.Json;
-using Gazillion;
+﻿using Gazillion;
 using MHServerEmu.Auth;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.GameServer.Frontend.Accounts.DBModels;
 
 namespace MHServerEmu.GameServer.Frontend.Accounts
 {
+    public enum AccountUserLevel : byte
+    {
+        User,
+        Moderator,
+        Admin
+    }
+
     public static class AccountManager
     {
         private const int MinimumPasswordLength = 3;
@@ -14,40 +21,24 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private static readonly string SavedDataDirectory = Path.Combine(Directory.GetCurrentDirectory(), "SavedData");
-        private static readonly string AccountFilePath = Path.Combine(SavedDataDirectory, "Accounts.json");
-        private static readonly string PlayerDataFilePath = Path.Combine(SavedDataDirectory, "PlayerData.json");
-
-        private static object _accountLock = new();
-
-        private static List<Account> _accountList = new();
-        private static Dictionary<ulong, Account> _idAccountDict = new();
-        private static Dictionary<string, Account> _emailAccountDict = new();
-        private static Dictionary<ulong, PlayerData> _playerDataDict = new();
-
-        public static readonly Account DefaultAccount = new(0, "default@account.mh", "123", AccountUserLevel.Admin);
-        public static readonly PlayerData DefaultPlayerData = new(0, ConfigManager.PlayerData.PlayerName,
-            ConfigManager.PlayerData.StartingRegion, ConfigManager.PlayerData.StartingAvatar, ConfigManager.PlayerData.CostumeOverride);
+        public static readonly DBAccount DefaultAccount = new(ConfigManager.PlayerData.PlayerName, ConfigManager.PlayerData.StartingRegion, ConfigManager.PlayerData.StartingAvatar);
 
         public static bool IsInitialized { get; private set; }
 
         static AccountManager()
         {
-            LoadAccounts();
             IsInitialized = true;
         }
 
-        public static Account GetAccountByEmail(string email, string password, out AuthErrorCode? errorCode)
+        public static DBAccount GetAccountByEmail(string email, string password, out AuthErrorCode? errorCode)
         {
             errorCode = null;
 
-            if (_emailAccountDict.ContainsKey(email) == false)
+            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
             {
                 errorCode = AuthErrorCode.IncorrectUsernameOrPassword1;
                 return null;
             }
-
-            Account account = _emailAccountDict[email];
 
             if (Cryptography.VerifyPassword(password, account.PasswordHash, account.Salt))
             {
@@ -78,34 +69,25 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             }
         }
 
-        public static Account GetAccountByLoginDataPB(LoginDataPB loginDataPB, out AuthErrorCode? errorCode)
+        public static DBAccount GetAccountByLoginDataPB(LoginDataPB loginDataPB, out AuthErrorCode? errorCode)
         {
             string email = loginDataPB.EmailAddress.ToLower();
             return GetAccountByEmail(email, loginDataPB.Password, out errorCode);
         }
 
-        public static string CreateAccount(string email, string password)
+        public static string CreateAccount(string email, string playerName, string password)
         {
-            if (_emailAccountDict.ContainsKey(email) == false)
+            if (DBManager.TryQueryAccountByEmail(email, out _) == false)
             {
                 if (password.Length >= MinimumPasswordLength && password.Length <= MaximumPasswordLength)
                 {
-                    lock (_accountLock)
-                    {
-                        // Create a new account
-                        Account account = new(IdGenerator.Generate(IdType.Account), email, password);
-                        _accountList.Add(account);
-                        _idAccountDict.Add(account.Id, account);
-                        _emailAccountDict.Add(account.Email, account);
-                        
-                        // Create new player data for this account
-                        _playerDataDict.Add(account.Id, new(account.Id));
-                    }
+                    // Create a new account and save it to the database
+                    DBAccount account = new(email, playerName, password);
 
-                    SaveAccounts();
-                    SavePlayerData();
-
-                    return $"Created a new account: {email}.";
+                    if (DBManager.SaveAccount(account))
+                        return $"Created a new account: {email} ({playerName}).";
+                    else
+                        return "Failed to create account due to a database error.";
                 }
                 else
                 {
@@ -120,15 +102,14 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
 
         public static string ChangeAccountPassword(string email, string newPassword)
         {
-            if (_emailAccountDict.ContainsKey(email))
+            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account))
             {
                 if (newPassword.Length >= MinimumPasswordLength && newPassword.Length <= MaximumPasswordLength)
                 {
-                    Account account = _emailAccountDict[email];
                     account.PasswordHash = Cryptography.HashPassword(newPassword, out byte[] salt);
                     account.Salt = salt;
                     account.IsPasswordExpired = false;
-                    SaveAccounts();
+                    DBManager.SaveAccount(account);
                     return $"Successfully changed password for account {email}.";
                 }
                 else
@@ -144,11 +125,10 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
 
         public static string SetAccountUserLevel(string email, AccountUserLevel userLevel)
         {
-            if (_emailAccountDict.ContainsKey(email))
+            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account))
             {
-                Account account = _emailAccountDict[email];
                 account.UserLevel = userLevel;
-                SaveAccounts();
+                DBManager.SaveAccount(account);
                 return $"Successfully set user level for account {email} to {userLevel}.";
             }
             else
@@ -159,12 +139,12 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
 
         public static string BanAccount(string email)
         {
-            if (_emailAccountDict.ContainsKey(email))
+            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account))
             {
-                if (_emailAccountDict[email].IsBanned == false)
+                if (account.IsBanned == false)
                 {
-                    _emailAccountDict[email].IsBanned = true;
-                    SaveAccounts();
+                    account.IsBanned = true;
+                    DBManager.SaveAccount(account);
                     return $"Successfully banned account {email}.";
                 }
                 else
@@ -180,12 +160,12 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
 
         public static string UnbanAccount(string email)
         {
-            if (_emailAccountDict.ContainsKey(email))
+            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account))
             {
-                if (_emailAccountDict[email].IsBanned)
+                if (account.IsBanned)
                 {
-                    _emailAccountDict[email].IsBanned = false;
-                    SaveAccounts();
+                    account.IsBanned = false;
+                    DBManager.SaveAccount(account);
                     return $"Successfully unbanned account {email}.";
                 }
                 else
@@ -197,70 +177,6 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             {
                 return $"Cannot unban {email}: account not found.";
             }
-        }
-
-        public static PlayerData GetPlayerData(ulong accountId)
-        {
-            if (accountId == 0)
-                return DefaultPlayerData;
-            else if (_playerDataDict.TryGetValue(accountId, out PlayerData playerData))
-                return playerData;
-            else
-            {
-                Logger.Warn($"PlayerData for accountId not found, creating new PlayerData");
-                lock (_accountLock) _playerDataDict.Add(accountId, new(accountId));
-                SavePlayerData();
-                return _playerDataDict[accountId];
-            }
-        }
-
-        private static void LoadAccounts()
-        {
-            if (_accountList.Count == 0)
-            {
-                if (Directory.Exists(SavedDataDirectory) == false) Directory.CreateDirectory(SavedDataDirectory);
-
-                if (File.Exists(AccountFilePath))
-                {
-                    lock (_accountLock)
-                    {
-                        _accountList = JsonSerializer.Deserialize<List<Account>>(File.ReadAllText(AccountFilePath));
-
-                        if (File.Exists(PlayerDataFilePath))
-                            _playerDataDict = JsonSerializer.Deserialize<Dictionary<ulong, PlayerData>>(File.ReadAllText(PlayerDataFilePath));
-
-                        foreach (Account account in _accountList)
-                        {
-                            _idAccountDict.Add(account.Id, account);
-                            _emailAccountDict.Add(account.Email, account);
-                        }
-                    }
-
-                    Logger.Info($"Loaded {_accountList.Count} accounts");
-                }
-            }
-            else
-            {
-                Logger.Warn("Failed to load accounts: accounts are already loaded!");
-            }
-        }
-
-        private static void SaveAccounts()
-        {
-            lock (_accountLock)
-            {
-                if (Directory.Exists(SavedDataDirectory) == false) Directory.CreateDirectory(SavedDataDirectory);
-                File.WriteAllText(AccountFilePath, JsonSerializer.Serialize(_accountList));
-            }
-        }
-
-        public static void SavePlayerData()
-        {
-            lock (_accountLock)
-            {
-                if (Directory.Exists(SavedDataDirectory) == false) Directory.CreateDirectory(SavedDataDirectory);
-                File.WriteAllText(PlayerDataFilePath, JsonSerializer.Serialize(_playerDataDict));
-            }           
         }
     }
 }

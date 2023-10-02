@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.GameServer.Entities;
+using MHServerEmu.GameServer.Entities.Avatars;
 using MHServerEmu.GameServer.Regions;
 
 namespace MHServerEmu.Common.Config.Sections
@@ -9,8 +10,7 @@ namespace MHServerEmu.Common.Config.Sections
 
         public string PlayerName { get; }
         public RegionPrototype StartingRegion { get; }
-        public HardcodedAvatarEntity StartingAvatar { get; }
-        public ulong CostumeOverride { get; }
+        public AvatarPrototype StartingAvatar { get; }
 
         public PlayerDataConfig(IniFile configFile)
         {
@@ -27,12 +27,10 @@ namespace MHServerEmu.Common.Config.Sections
             // StartingHero
             string startingAvatar = configFile.ReadString(Section, nameof(StartingAvatar));
 
-            if (Enum.TryParse(typeof(HardcodedAvatarEntity), startingAvatar, out object avatarEntityEnum))
-                StartingAvatar = (HardcodedAvatarEntity)avatarEntityEnum;
+            if (Enum.TryParse(typeof(AvatarPrototype), startingAvatar, out object avatarEntityEnum))
+                StartingAvatar = (AvatarPrototype)avatarEntityEnum;
             else
-                StartingAvatar = HardcodedAvatarEntity.BlackCat;
-
-            CostumeOverride = Convert.ToUInt64(configFile.ReadString(Section, nameof(CostumeOverride)));
+                StartingAvatar = AvatarPrototype.BlackCat;
         }
     }
 }

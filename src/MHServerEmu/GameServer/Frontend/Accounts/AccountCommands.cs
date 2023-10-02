@@ -1,19 +1,20 @@
-﻿using MHServerEmu.Auth;
+﻿using System.Text;
+using MHServerEmu.Auth;
 using MHServerEmu.Common.Commands;
+using MHServerEmu.GameServer.Frontend.Accounts.DBModels;
 using MHServerEmu.Networking;
-using System.Text;
 
 namespace MHServerEmu.GameServer.Frontend.Accounts
 {
     [CommandGroup("account", "Allows you to manage accounts.", AccountUserLevel.User)]
     public class AccountCommands : CommandGroup
     {
-        [Command("create", "Creates a new account.\nUsage: account create [email] [password]", AccountUserLevel.User)]
+        [Command("create", "Creates a new account.\nUsage: account create [email] [playerName] [password]", AccountUserLevel.User)]
         public string Create(string[] @params, FrontendClient client)
         {
             if (@params == null) return Fallback();
-            if (@params.Length < 2) return "Invalid arguments. Type 'help account create' to get help.";
-            return AccountManager.CreateAccount(@params[0].ToLower(), @params[1]);
+            if (@params.Length < 3) return "Invalid arguments. Type 'help account create' to get help.";
+            return AccountManager.CreateAccount(@params[0].ToLower(), @params[1], @params[2]);
         }
 
         [Command("password", "Changes password for the specified account.\nUsage: account password [email] [password]", AccountUserLevel.User)]
@@ -53,7 +54,7 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             if (@params == null) return Fallback();
             if (@params.Length < 2) return "Invalid arguments. Type 'help account verify' to get help.";
 
-            Account account = AccountManager.GetAccountByEmail(@params[0].ToLower(), @params[1], out AuthErrorCode? errorCode);
+            DBAccount account = AccountManager.GetAccountByEmail(@params[0].ToLower(), @params[1], out AuthErrorCode? errorCode);
 
             if (account != null)
                 return "Account credentials are valid.";

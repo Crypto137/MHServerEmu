@@ -38,7 +38,7 @@ namespace MHServerEmu.GameServer
 
                             var chatMessageOut = ChatNormalMessage.CreateBuilder()
                                 .SetRoomType(chatMessageIn.RoomType)
-                                .SetFromPlayerName(client.Session.Account.PlayerData.PlayerName)
+                                .SetFromPlayerName(client.Session.Account.PlayerName)
                                 .SetTheMessage(chatMessageIn.TheMessage)
                                 .Build();
 

@@ -100,7 +100,7 @@ namespace MHServerEmu.GameServer.Games
             lock (_gameLock)
             {
                 client.GameId = Id;
-                EnqueueResponses(client, GetBeginLoadingMessages(client.Session.Account.PlayerData));
+                EnqueueResponses(client, GetBeginLoadingMessages(client.Session.Account));
             }
         }
 
@@ -109,8 +109,8 @@ namespace MHServerEmu.GameServer.Games
             lock (_gameLock)
             {
                 EnqueueResponses(client, GetExitGameMessages());
-                client.Session.Account.PlayerData.Region = region;
-                EnqueueResponses(client, GetBeginLoadingMessages(client.Session.Account.PlayerData));
+                client.Session.Account.Player.Region = region;
+                EnqueueResponses(client, GetBeginLoadingMessages(client.Session.Account));
                 client.IsLoading = true;
             }
         }
@@ -154,7 +154,7 @@ namespace MHServerEmu.GameServer.Games
                     Logger.Info($"Received NetMessageCellLoaded");
                     if (client.IsLoading)
                     {
-                        EnqueueResponses(client, GetFinishLoadingMessages(client.Session.Account.PlayerData));
+                        EnqueueResponses(client, GetFinishLoadingMessages(client.Session.Account));
                         client.IsLoading = false;
                     }
 
@@ -281,16 +281,11 @@ namespace MHServerEmu.GameServer.Games
                     var switchAvatarMessage = NetMessageSwitchAvatar.ParseFrom(message.Payload);
                     Logger.Trace(switchAvatarMessage.ToString());
 
-                    // A hack for changing starting avatar without using chat commands
-                    string avatarName = Enum.GetName(typeof(AvatarPrototype), switchAvatarMessage.AvatarPrototypeId);
-
-                    if (Enum.TryParse(typeof(HardcodedAvatarEntity), avatarName, true, out object avatar))
-                    {
-                        client.Session.Account.PlayerData.CostumeOverride = 0;  // reset costume on avatar switch
-                        client.Session.Account.PlayerData.Avatar = (HardcodedAvatarEntity)avatar;
-                        GroupingManagerService.SendMetagameChatMessage(client, $"Changing avatar to {client.Session.Account.PlayerData.Avatar}.");
-                        MovePlayerToRegion(client, client.Session.Account.PlayerData.Region);
-                    }
+                    // A hack for changing avatar in-game
+                    //client.Session.Account.CurrentAvatar.Costume = 0;  // reset costume on avatar switch
+                    client.Session.Account.Player.Avatar = (AvatarPrototype)switchAvatarMessage.AvatarPrototypeId;
+                    GroupingManagerService.SendMetagameChatMessage(client, $"Changing avatar to {client.Session.Account.Player.Avatar}.");
+                    MovePlayerToRegion(client, client.Session.Account.Player.Region);
 
                     /* Old experimental code
                     // WIP - Hardcoded Black Cat -> Thor -> requires triggering an avatar swap back to Black Cat to move Thor again  
@@ -366,7 +361,7 @@ namespace MHServerEmu.GameServer.Games
                 return;
 
             AddConditionArchive conditionArchive;
-            ulong avatarEntityId = (ulong)client.Session.Account.PlayerData.Avatar;
+            ulong avatarEntityId = (ulong)client.Session.Account.Player.Avatar;
 
             switch (eventId)
             {
@@ -460,7 +455,7 @@ namespace MHServerEmu.GameServer.Games
                     // TODO: ThrowObject = Player.EntityManager.GetEntity(idTarget)
 
                     // TODO: avatarRepId = Player.EntityManager.GetEntity(avatarEntityId).RepId
-                    ulong avatarRepId = (ulong)Enum.Parse(typeof(HardcodedAvatarReplicationId), Enum.GetName(typeof(HardcodedAvatarEntity), client.Session.Account.PlayerData.Avatar));
+                    ulong avatarRepId = (ulong)client.Session.Account.Player.Avatar.ToReplicationId();
 
                     Property property = new(PropertyEnum.ThrowableOriginatorEntity, idTarget);
                     EnqueueResponse(client, new(property.ToNetMessageSetProperty(avatarRepId)));
@@ -503,7 +498,7 @@ namespace MHServerEmu.GameServer.Games
 
                 case EventEnum.EndThrowing:
                     powerId = (ulong)queuedEvent.Data;
-                    avatarRepId = (ulong)Enum.Parse(typeof(HardcodedAvatarReplicationId), Enum.GetName(typeof(HardcodedAvatarEntity), client.Session.Account.PlayerData.Avatar));
+                    avatarRepId = (ulong)client.Session.Account.Player.Avatar.ToReplicationId();
                     // TODO: avatarRepId = Player.EntityManager.GetEntity(AvatarEntityId).RepId
 
                     property = new(PropertyEnum.ThrowableOriginatorEntity, 0ul);
@@ -538,11 +533,11 @@ namespace MHServerEmu.GameServer.Games
                 case EventEnum.StartEmmaDiamondForm:
 
                     ulong diamondFormCondition = (ulong)PowerPrototypes.EmmaFrost.DiamondFormCondition;
-                    conditionArchive = new((ulong)client.Session.Account.PlayerData.Avatar, 111, 567, diamondFormCondition, 0); 
+                    conditionArchive = new((ulong)client.Session.Account.Player.Avatar.ToEntityId(), 111, 567, diamondFormCondition, 0); 
 
                     Logger.Trace($"Event Start EmmaDiamondForm");
 
-                    ulong emmaCostume = client.Session.Account.PlayerData.CostumeOverride;
+                    ulong emmaCostume = client.Session.Account.CurrentAvatar.Costume;
 
                     // 0 is the same as the default costume, but it's not a valid prototype id
                     if (emmaCostume == 0) emmaCostume = GameDatabase.GetPrototypeId("Entity/Items/Costumes/Prototypes/EmmaFrost/Modern.prototype");

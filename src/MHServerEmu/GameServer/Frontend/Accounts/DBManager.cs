@@ -35,7 +35,7 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             }
         }
 
-        public static void SaveAccount(DBAccount account)
+        public static bool SaveAccount(DBAccount account)
         {
             using (SQLiteConnection connection = new(ConnectionString))
             {
@@ -46,21 +46,23 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
                 {
                     try
                     {
-                        connection.Execute(@"INSERT INTO Account (Id, Email, PlayerName, PasswordHash, Salt, UserLevel, IsBanned, IsArchived, IsPasswordExpired)
+                        connection.Execute(@"INSERT OR REPLACE INTO Account (Id, Email, PlayerName, PasswordHash, Salt, UserLevel, IsBanned, IsArchived, IsPasswordExpired)
                             VALUES (@Id, @Email, @PlayerName, @PasswordHash, @Salt, @UserLevel, @IsBanned, @IsArchived, @IsPasswordExpired)", account, transaction);
 
-                        connection.Execute(@"INSERT INTO Player (AccountId, RawRegion, RawAvatar)
-                            VALUES (@AccountId), @RawRegion, @RawAvatar)", account.Player, transaction);
+                        connection.Execute(@"INSERT OR REPLACE INTO Player (AccountId, RawRegion, RawAvatar)
+                            VALUES (@AccountId, @RawRegion, @RawAvatar)", account.Player, transaction);
 
-                        connection.Execute(@"INSERT INTO Avatar (AccountId, RawPrototype, RawCostume)
+                        connection.Execute(@"INSERT OR REPLACE INTO Avatar (AccountId, RawPrototype, RawCostume)
                             VALUES (@AccountId, @RawPrototype, @RawCostume)", account.Avatars, transaction);
 
                         transaction.Commit();
+                        return true;
                     }
                     catch (Exception e)
                     {
                         Logger.ErrorException(e, "SaveAccount failed");
                         transaction.Rollback();
+                        return false;
                     }
                 }
             }
