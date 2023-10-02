@@ -102,16 +102,22 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
 
         public static string ChangeAccountPlayerName(string email, string playerName)
         {
-            if (DBManager.QueryIsPlayerNameTaken(playerName) == false)
+            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account))
             {
-                DBManager.TryQueryAccountByEmail(email, out DBAccount account);
-                account.PlayerName = playerName;
-                DBManager.SaveAccount(account);
-                return $"Successfully changed player name for account {email} to {playerName}.";
+                if (DBManager.QueryIsPlayerNameTaken(playerName) == false)
+                {
+                    account.PlayerName = playerName;
+                    DBManager.SaveAccount(account);
+                    return $"Successfully changed player name for account {email} to {playerName}.";
+                }
+                else
+                {
+                    return $"Failed to change player name: the name {playerName} is already taken.";
+                }
             }
             else
             {
-                return $"Failed to change player name: the name {playerName} is already taken.";
+                return $"Failed to change player name: account {email} not found.";
             }
         }
 
