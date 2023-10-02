@@ -17,6 +17,12 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
 
         #region Queries
 
+        /// <summary>
+        /// Queries an account from the database by its email.
+        /// </summary>
+        /// <param name="email">Email to query.</param>
+        /// <param name="account">Account or null.</param>
+        /// <returns>IsSuccess</returns>
         public static bool TryQueryAccountByEmail(string email, out DBAccount account)
         {
             using (SQLiteConnection connection = new(ConnectionString))
@@ -37,6 +43,11 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             }
         }
 
+        /// <summary>
+        /// Queries if the specified player name is already taken.
+        /// </summary>
+        /// <param name="playerName">Name to check.</param>
+        /// <returns>IsTaken</returns>
         public static bool QueryIsPlayerNameTaken(string playerName)
         {
             using (SQLiteConnection connection = new(ConnectionString))
@@ -51,6 +62,11 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
 
         #region Executes
 
+        /// <summary>
+        /// Inserts a new account with all of its data into the database.
+        /// </summary>
+        /// <param name="account">Account to insert.</param>
+        /// <returns>IsSuccess</returns>
         public static bool CreateAccount(DBAccount account)
         {
             using (SQLiteConnection connection = new(ConnectionString))
@@ -84,6 +100,11 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             }
         }
 
+        /// <summary>
+        /// Updates the Account table in the database with the provided account.
+        /// </summary>
+        /// <param name="account">Account to update.</param>
+        /// <returns>IsSuccess</returns>
         public static bool SaveAccount(DBAccount account)
         {
             using (SQLiteConnection connection = new(ConnectionString))
@@ -102,6 +123,11 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             }
         }
 
+        /// <summary>
+        /// Updates the Player and Avatar tables in the database with the data from the provided account.
+        /// </summary>
+        /// <param name="account"></param>
+        /// <returns>IsSuccess</returns>
         public static bool SaveAccountData(DBAccount account)
         {
             using (SQLiteConnection connection = new(ConnectionString))
@@ -129,6 +155,9 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             }
         }
 
+        /// <summary>
+        /// Creates test accounts for testing.
+        /// </summary>
         public static void CreateTestAccounts()
         {
             List<DBAccount> accountList = new()
@@ -145,6 +174,11 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
 
         #endregion
 
+        /// <summary>
+        /// Loads account data for the specified account and maps relations.
+        /// </summary>
+        /// <param name="connection">Database connection for querying.</param>
+        /// <param name="account">Account to get data for.</param>
         private static void LoadAccountData(SQLiteConnection connection, DBAccount account)
         {
             var @params = new { AccountId = account.Id };
