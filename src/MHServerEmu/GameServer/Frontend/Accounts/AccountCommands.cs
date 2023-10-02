@@ -17,6 +17,20 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             return AccountManager.CreateAccount(@params[0].ToLower(), @params[1], @params[2]);
         }
 
+        [Command("playername", "Changes player name for the specified account.\nUsage: account playername [email] [playername]", AccountUserLevel.User)]
+        public string PlayerName(string[] @params, FrontendClient client)
+        {
+            if (@params == null) return Fallback();
+            if (@params.Length < 2) return "Invalid arguments. Type 'help account playername' to get help.";
+
+            string email = @params[0].ToLower();
+
+            if (client.Session.Account.UserLevel < AccountUserLevel.Moderator && email != client.Session.Account.Email)
+                return "You are allowed to change player name only for your own account.";
+            else
+                return AccountManager.ChangeAccountPlayerName(email, @params[1]);
+        }
+
         [Command("password", "Changes password for the specified account.\nUsage: account password [email] [password]", AccountUserLevel.User)]
         public string Password(string[] @params, FrontendClient client)
         {

@@ -40,17 +40,6 @@ namespace MHServerEmu.Common.Commands
     [CommandGroup("player", "Changes player data for this account.", AccountUserLevel.User)]
     public class PlayerCommand : CommandGroup
     {
-        [Command("name", "Changes player name.\nUsage: player name", AccountUserLevel.User)]
-        public string Name(string[] @params, FrontendClient client)
-        {
-            if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help player name' to get help.";
-            if (ConfigManager.Frontend.BypassAuth) return "Disable BypassAuth to use this command";
-
-            client.Session.Account.PlayerName = @params[0];
-            return $"Changing player name to {@params[0]}. Relog for changes to take effect.";
-        }
-
         [Command("avatar", "Changes player avatar.\nUsage: player avatar [avatar]", AccountUserLevel.User)]
         public string Avatar(string[] @params, FrontendClient client)
         {

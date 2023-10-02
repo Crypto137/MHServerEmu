@@ -100,6 +100,21 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             }
         }
 
+        public static string ChangeAccountPlayerName(string email, string playerName)
+        {
+            if (DBManager.QueryIsPlayerNameTaken(playerName) == false)
+            {
+                DBManager.TryQueryAccountByEmail(email, out DBAccount account);
+                account.PlayerName = playerName;
+                DBManager.SaveAccount(account);
+                return $"Successfully changed player name for account {email} to {playerName}.";
+            }
+            else
+            {
+                return $"Failed to change player name: the name {playerName} is already taken.";
+            }
+        }
+
         public static string ChangeAccountPassword(string email, string newPassword)
         {
             if (DBManager.TryQueryAccountByEmail(email, out DBAccount account))
