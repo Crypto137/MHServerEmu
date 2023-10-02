@@ -205,7 +205,7 @@ namespace MHServerEmu.GameServer.Frontend
                     _clientDict.Remove(client.Session.Id);
                 }
 
-                if (ConfigManager.Frontend.BypassAuth == false) DBManager.SaveAccount(client.Session.Account);
+                if (ConfigManager.Frontend.BypassAuth == false) DBManager.SaveAccountData(client.Session.Account);
 
                 Logger.Info($"Client disconnected (sessionId {client.Session.Id})");
             }

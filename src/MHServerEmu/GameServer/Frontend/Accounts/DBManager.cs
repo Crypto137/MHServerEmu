@@ -15,6 +15,8 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             ConnectionString = $"Data Source={Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Account.db")}";
         }
 
+        #region Queries
+
         public static bool TryQueryAccountByEmail(string email, out DBAccount account)
         {
             using (SQLiteConnection connection = new(ConnectionString))
@@ -34,6 +36,20 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
                 }
             }
         }
+
+        public static bool QueryIsPlayerNameTaken(string playerName)
+        {
+            using (SQLiteConnection connection = new(ConnectionString))
+            {
+                // This check is case insensitive (COLLATE NOCASE)
+                var results = connection.Query<string>("SELECT PlayerName FROM Account WHERE PlayerName = @PlayerName COLLATE NOCASE", new { PlayerName = playerName });
+                return results.Any();
+            }
+        }
+
+        #endregion
+
+        #region Executes
 
         public static bool CreateAccount(DBAccount account)
         {
@@ -72,6 +88,24 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
         {
             using (SQLiteConnection connection = new(ConnectionString))
             {
+                try
+                {
+                    connection.Execute(@"UPDATE Account SET Email=@Email, PlayerName=@PlayerName, PasswordHash=@PasswordHash, Salt=@Salt, UserLevel=@UserLevel,
+                        IsBanned=IsBanned, IsArchived=IsArchived, IsPasswordExpired=@IsPasswordExpired WHERE Id=@Id", account);
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    Logger.ErrorException(e, nameof(SaveAccount));
+                    return false;
+                }
+            }
+        }
+
+        public static bool SaveAccountData(DBAccount account)
+        {
+            using (SQLiteConnection connection = new(ConnectionString))
+            {
                 connection.Open();
 
                 // Use a transaction to make sure all data is saved
@@ -79,11 +113,7 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
                 {
                     try
                     {
-                        connection.Execute(@"UPDATE Account SET Email=@Email, PlayerName=@PlayerName, PasswordHash=@PasswordHash, Salt=@Salt, UserLevel=@UserLevel,
-                            IsBanned=IsBanned, IsArchived=IsArchived, IsPasswordExpired=@IsPasswordExpired WHERE Id=@Id", account, transaction);
-
                         connection.Execute(@"UPDATE Player SET RawRegion=@RawRegion, RawAvatar=@RawAvatar WHERE AccountId=@AccountId", account.Player, transaction);
-
                         connection.Execute(@"UPDATE Avatar SET RawCostume=@RawCostume WHERE AccountId=@AccountId AND RawPrototype=@RawPrototype", account.Avatars, transaction);
 
                         transaction.Commit();
@@ -91,7 +121,7 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
                     }
                     catch (Exception e)
                     {
-                        Logger.ErrorException(e, nameof(SaveAccount));
+                        Logger.ErrorException(e, nameof(SaveAccountData));
                         transaction.Rollback();
                         return false;
                     }
@@ -99,7 +129,7 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             }
         }
 
-        public static void CreateAndSaveTestAccounts()
+        public static void CreateTestAccounts()
         {
             List<DBAccount> accountList = new()
             {
@@ -110,8 +140,10 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
                 new("test5@test.com", "TestPlayer5", "123")
             };
 
-            accountList.ForEach(account => SaveAccount(account));
+            accountList.ForEach(account => CreateAccount(account));
         }
+
+        #endregion
 
         private static void LoadAccountData(SQLiteConnection connection, DBAccount account)
         {
