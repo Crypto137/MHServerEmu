@@ -17,8 +17,8 @@ namespace MHServerEmu.Networking
         public Connection Connection { get; set; }
 
         public ClientSession Session { get; private set; } = null;
-        public bool FinishedPlayerMgrServerFrontendHandshake { get; set; } = false;
-        public bool FinishedGroupingManagerFrontendHandshake { get; set; } = false;
+        public bool FinishedPlayerManagerHandshake { get; set; } = false;
+        public bool FinishedGroupingManagerHandshake { get; set; } = false;
         public ulong GameId { get; set; }
         public Game CurrentGame { get => _gameServerManager.GameManager.GetGameById(GameId); }
 
