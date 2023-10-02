@@ -361,7 +361,7 @@ namespace MHServerEmu.GameServer.Games
                 return;
 
             AddConditionArchive conditionArchive;
-            ulong avatarEntityId = (ulong)client.Session.Account.Player.Avatar;
+            ulong avatarEntityId = (ulong)client.Session.Account.Player.Avatar.ToEntityId();
 
             switch (eventId)
             {
