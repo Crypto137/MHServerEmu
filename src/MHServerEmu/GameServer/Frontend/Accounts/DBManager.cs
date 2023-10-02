@@ -10,9 +10,12 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly string ConnectionString;
 
+        public static bool IsInitialized { get; }
+
         static DBManager()
         {
             ConnectionString = $"Data Source={Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Account.db")}";
+            IsInitialized = true;
         }
 
         #region Queries
@@ -67,7 +70,7 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
         /// </summary>
         /// <param name="account">Account to insert.</param>
         /// <returns>IsSuccess</returns>
-        public static bool CreateAccount(DBAccount account)
+        public static bool InsertAccount(DBAccount account)
         {
             using (SQLiteConnection connection = new(ConnectionString))
             {
@@ -92,7 +95,7 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
                     }
                     catch (Exception e)
                     {
-                        Logger.ErrorException(e, nameof(CreateAccount));
+                        Logger.ErrorException(e, nameof(InsertAccount));
                         transaction.Rollback();
                         return false;
                     }
@@ -105,19 +108,19 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
         /// </summary>
         /// <param name="account">Account to update.</param>
         /// <returns>IsSuccess</returns>
-        public static bool SaveAccount(DBAccount account)
+        public static bool UpdateAccount(DBAccount account)
         {
             using (SQLiteConnection connection = new(ConnectionString))
             {
                 try
                 {
                     connection.Execute(@"UPDATE Account SET Email=@Email, PlayerName=@PlayerName, PasswordHash=@PasswordHash, Salt=@Salt, UserLevel=@UserLevel,
-                        IsBanned=IsBanned, IsArchived=IsArchived, IsPasswordExpired=@IsPasswordExpired WHERE Id=@Id", account);
+                        IsBanned=@IsBanned, IsArchived=@IsArchived, IsPasswordExpired=@IsPasswordExpired WHERE Id=@Id", account);
                     return true;
                 }
                 catch (Exception e)
                 {
-                    Logger.ErrorException(e, nameof(SaveAccount));
+                    Logger.ErrorException(e, nameof(UpdateAccount));
                     return false;
                 }
             }
@@ -128,7 +131,7 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
         /// </summary>
         /// <param name="account"></param>
         /// <returns>IsSuccess</returns>
-        public static bool SaveAccountData(DBAccount account)
+        public static bool UpdateAccountData(DBAccount account)
         {
             using (SQLiteConnection connection = new(ConnectionString))
             {
@@ -147,7 +150,7 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
                     }
                     catch (Exception e)
                     {
-                        Logger.ErrorException(e, nameof(SaveAccountData));
+                        Logger.ErrorException(e, nameof(UpdateAccountData));
                         transaction.Rollback();
                         return false;
                     }
@@ -156,7 +159,7 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
         }
 
         /// <summary>
-        /// Creates test accounts for testing.
+        /// Creates and inserts test accounts into the database for testing.
         /// </summary>
         public static void CreateTestAccounts()
         {
@@ -169,7 +172,7 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
                 new("test5@test.com", "TestPlayer5", "123")
             };
 
-            accountList.ForEach(account => CreateAccount(account));
+            accountList.ForEach(account => InsertAccount(account));
         }
 
         #endregion

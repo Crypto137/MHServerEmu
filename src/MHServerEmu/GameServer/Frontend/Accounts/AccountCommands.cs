@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Gazillion;
 using MHServerEmu.Auth;
 using MHServerEmu.Common.Commands;
 using MHServerEmu.GameServer.Frontend.Accounts.DBModels;
@@ -68,12 +69,13 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             if (@params == null) return Fallback();
             if (@params.Length < 2) return "Invalid arguments. Type 'help account verify' to get help.";
 
-            DBAccount account = AccountManager.GetAccountByEmail(@params[0].ToLower(), @params[1], out AuthErrorCode? errorCode);
+            var loginDataPB = LoginDataPB.CreateBuilder().SetEmailAddress(@params[0].ToLower()).SetPassword(@params[1]).Build();
+            AuthStatusCode statusCode = AccountManager.TryGetAccountByLoginDataPB(loginDataPB, out _);
 
-            if (account != null)
+            if (statusCode == AuthStatusCode.Success)
                 return "Account credentials are valid.";
             else
-                return $"Account credentials are NOT valid: {errorCode}!";
+                return $"Account credentials are NOT valid: {statusCode}!";
         }
 
         [Command("ban", "Bans the specified account.\nUsage: account ban [email]", AccountUserLevel.Moderator)]

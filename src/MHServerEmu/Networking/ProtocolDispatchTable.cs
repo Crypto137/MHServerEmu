@@ -7,7 +7,7 @@ namespace MHServerEmu.Networking
         private static readonly Dictionary<Type, Dictionary<byte, string>> MessageNameDict = new();     // Id -> message class name
         private static readonly Dictionary<string, Dictionary<string, byte>> MessageIdDict = new();     // IMessage -> Id
 
-        public static bool IsInitialized { get; private set; }
+        public static bool IsInitialized { get; }
 
         static ProtocolDispatchTable()
         {

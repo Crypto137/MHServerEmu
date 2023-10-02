@@ -10,7 +10,7 @@ namespace MHServerEmu.GameServer.GameData
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public static bool IsInitialized { get; private set; }
+        public static bool IsInitialized { get; }
 
         public static CalligraphyStorage Calligraphy { get; private set; }
         public static ResourceStorage Resource { get; private set; }

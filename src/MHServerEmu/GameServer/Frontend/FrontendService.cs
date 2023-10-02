@@ -19,9 +19,9 @@ namespace MHServerEmu.GameServer.Frontend
 
         // Use a lock object instead of this to prevent deadlocks
         // More info: https://learn.microsoft.com/en-us/archive/msdn-magazine/2003/january/net-column-safe-thread-synchronization
-        private object _sessionLock = new();     
-        private Dictionary<ulong, ClientSession> _sessionDict = new();
-        private Dictionary<ulong, FrontendClient> _clientDict = new();
+        private readonly object _sessionLock = new();     
+        private readonly Dictionary<ulong, ClientSession> _sessionDict = new();
+        private readonly Dictionary<ulong, FrontendClient> _clientDict = new();
 
         public int SessionCount { get => _sessionDict.Count; }
 
@@ -143,8 +143,10 @@ namespace MHServerEmu.GameServer.Frontend
             foreach (GameMessage message in messages) Handle(client, muxId, message);
         }
 
-        public ClientSession CreateSessionFromLoginDataPB(LoginDataPB loginDataPB, out AuthErrorCode? errorCode)
+        public AuthStatusCode TryCreateSessionFromLoginDataPB(LoginDataPB loginDataPB, out ClientSession session)
         {
+            session = null;
+            
             // Check client version
             if (loginDataPB.Version != GameServerManager.GameVersion)
             {
@@ -152,38 +154,34 @@ namespace MHServerEmu.GameServer.Frontend
 
                 // Fail auth if version mismatch is not allowed
                 if (ConfigManager.Frontend.AllowClientVersionMismatch == false)
-                {
-                    errorCode = AuthErrorCode.PatchRequired;
-                    return null;
-                }
+                    return AuthStatusCode.PatchRequired;
             }
 
             // Verify credentials
             DBAccount account;
-            if (ConfigManager.Frontend.BypassAuth)
+            AuthStatusCode statusCode;
+
+            if (ConfigManager.Frontend.BypassAuth)  // Auth always succeeds when BypassAuth is set to true
             {
                 account = AccountManager.DefaultAccount;
-                errorCode = null;
+                statusCode = AuthStatusCode.Success;
             }
-            else
+            else                                    // Check credentials with AccountManager
             {
-                account = AccountManager.GetAccountByLoginDataPB(loginDataPB, out errorCode);
+                statusCode = AccountManager.TryGetAccountByLoginDataPB(loginDataPB, out account);
             }
 
             // Create a new session if login data is valid
-            if (account != null)
+            if (statusCode == AuthStatusCode.Success)
             {
                 lock (_sessionLock)
                 {
-                    ClientSession session = new(IdGenerator.Generate(IdType.Session), account, loginDataPB.ClientDownloader, loginDataPB.Locale);
+                    session = new(IdGenerator.Generate(IdType.Session), account, loginDataPB.ClientDownloader, loginDataPB.Locale);
                     _sessionDict.Add(session.Id, session);
-                    return session;
                 }
             }
-            else
-            {
-                return null;
-            }   
+
+            return statusCode;
         }
 
         public bool TryGetSession(ulong sessionId, out ClientSession session) => _sessionDict.TryGetValue(sessionId, out session);
@@ -205,7 +203,7 @@ namespace MHServerEmu.GameServer.Frontend
                     _clientDict.Remove(client.Session.Id);
                 }
 
-                if (ConfigManager.Frontend.BypassAuth == false) DBManager.SaveAccountData(client.Session.Account);
+                if (ConfigManager.Frontend.BypassAuth == false) DBManager.UpdateAccountData(client.Session.Account);
 
                 Logger.Info($"Client disconnected (sessionId {client.Session.Id})");
             }
