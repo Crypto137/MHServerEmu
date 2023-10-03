@@ -1,7 +1,8 @@
 ﻿namespace MHServerEmu.Auth
 {
-    public enum AuthErrorCode
+    public enum AuthStatusCode
     {
+        Success = 200,
         IncorrectUsernameOrPassword1 = 401,
         AccountBanned = 402,
         IncorrectUsernameOrPassword2 = 403,

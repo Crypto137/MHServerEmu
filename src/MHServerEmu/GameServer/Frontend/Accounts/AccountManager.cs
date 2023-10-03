@@ -1,266 +1,151 @@
-﻿using System.Text.Json;
-using Gazillion;
+﻿using Gazillion;
 using MHServerEmu.Auth;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Config;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.GameServer.Frontend.Accounts.DBModels;
 
 namespace MHServerEmu.GameServer.Frontend.Accounts
 {
+    public enum AccountUserLevel : byte
+    {
+        User,
+        Moderator,
+        Admin
+    }
+
     public static class AccountManager
     {
         private const int MinimumPasswordLength = 3;
         private const int MaximumPasswordLength = 64;
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
+        public static readonly DBAccount DefaultAccount = new(ConfigManager.PlayerData.PlayerName, ConfigManager.PlayerData.StartingRegion, ConfigManager.PlayerData.StartingAvatar);
 
-        private static readonly string SavedDataDirectory = Path.Combine(Directory.GetCurrentDirectory(), "SavedData");
-        private static readonly string AccountFilePath = Path.Combine(SavedDataDirectory, "Accounts.json");
-        private static readonly string PlayerDataFilePath = Path.Combine(SavedDataDirectory, "PlayerData.json");
-
-        private static object _accountLock = new();
-
-        private static List<Account> _accountList = new();
-        private static Dictionary<ulong, Account> _idAccountDict = new();
-        private static Dictionary<string, Account> _emailAccountDict = new();
-        private static Dictionary<ulong, PlayerData> _playerDataDict = new();
-
-        public static readonly Account DefaultAccount = new(0, "default@account.mh", "123", AccountUserLevel.Admin);
-        public static readonly PlayerData DefaultPlayerData = new(0, ConfigManager.PlayerData.PlayerName,
-            ConfigManager.PlayerData.StartingRegion, ConfigManager.PlayerData.StartingAvatar, ConfigManager.PlayerData.CostumeOverride);
-
-        public static bool IsInitialized { get; private set; }
+        public static bool IsInitialized { get; }
 
         static AccountManager()
         {
-            LoadAccounts();
-            IsInitialized = true;
+            IsInitialized = DBManager.IsInitialized;
         }
 
-        public static Account GetAccountByEmail(string email, string password, out AuthErrorCode? errorCode)
+        public static AuthStatusCode TryGetAccountByLoginDataPB(LoginDataPB loginDataPB, out DBAccount account)
         {
-            errorCode = null;
+            account = null;
 
-            if (_emailAccountDict.ContainsKey(email) == false)
-            {
-                errorCode = AuthErrorCode.IncorrectUsernameOrPassword1;
-                return null;
-            }
-
-            Account account = _emailAccountDict[email];
-
-            if (Cryptography.VerifyPassword(password, account.PasswordHash, account.Salt))
-            {
-                if (account.IsBanned)
-                {
-                    errorCode = AuthErrorCode.AccountBanned;
-                    return null;
-                }
-                else if (account.IsArchived)
-                {
-                    errorCode = AuthErrorCode.AccountArchived;
-                    return null;
-                }
-                else if (account.IsPasswordExpired)
-                {
-                    errorCode = AuthErrorCode.PasswordExpired;
-                    return null;
-                }
-                else
-                {
-                    return account;
-                }
-            }
-            else
-            {
-                errorCode = AuthErrorCode.IncorrectUsernameOrPassword1;
-                return null;
-            }
-        }
-
-        public static Account GetAccountByLoginDataPB(LoginDataPB loginDataPB, out AuthErrorCode? errorCode)
-        {
+            // Try to query an account to check
             string email = loginDataPB.EmailAddress.ToLower();
-            return GetAccountByEmail(email, loginDataPB.Password, out errorCode);
+            if (DBManager.TryQueryAccountByEmail(email, out DBAccount accountToCheck) == false)
+                return AuthStatusCode.IncorrectUsernameOrPassword1;
+
+            // Check the account we queried
+            if (Cryptography.VerifyPassword(loginDataPB.Password, accountToCheck.PasswordHash, accountToCheck.Salt) == false)
+                return AuthStatusCode.IncorrectUsernameOrPassword1;
+
+            if (accountToCheck.IsBanned) return AuthStatusCode.AccountBanned;
+            if (accountToCheck.IsArchived) return AuthStatusCode.AccountArchived;
+            if (accountToCheck.IsPasswordExpired) return AuthStatusCode.PasswordExpired;
+
+            // Output the account and return success if everything is okay
+            account = accountToCheck;
+            return AuthStatusCode.Success;
         }
 
-        public static string CreateAccount(string email, string password)
+        public static bool TryGetAccountByEmail(string email, out DBAccount account) => DBManager.TryQueryAccountByEmail(email, out account);
+
+        public static string CreateAccount(string email, string playerName, string password)
         {
-            if (_emailAccountDict.ContainsKey(email) == false)
-            {
-                if (password.Length >= MinimumPasswordLength && password.Length <= MaximumPasswordLength)
-                {
-                    lock (_accountLock)
-                    {
-                        // Create a new account
-                        Account account = new(IdGenerator.Generate(IdType.Account), email, password);
-                        _accountList.Add(account);
-                        _idAccountDict.Add(account.Id, account);
-                        _emailAccountDict.Add(account.Email, account);
-                        
-                        // Create new player data for this account
-                        _playerDataDict.Add(account.Id, new(account.Id));
-                    }
+            // Checks to make sure we can create an account with the provided data
+            if (DBManager.TryQueryAccountByEmail(email, out _))
+                return $"Failed to create account: email {email} is already used by another account.";
 
-                    SaveAccounts();
-                    SavePlayerData();
+            if (DBManager.QueryIsPlayerNameTaken(playerName))
+                return $"Failed to create account: name {playerName} is already used by another account.";
 
-                    return $"Created a new account: {email}.";
-                }
-                else
-                {
-                    return $"Failed to create account: password must between {MinimumPasswordLength} and {MaximumPasswordLength} characters long";
-                }
-            }
+            if ((password.Length >= MinimumPasswordLength && password.Length <= MaximumPasswordLength) == false)
+                return $"Failed to create account: password must between {MinimumPasswordLength} and {MaximumPasswordLength} characters long.";
+
+            // Create a new account and insert it into the database
+            DBAccount account = new(email, playerName, password);
+
+            if (DBManager.InsertAccount(account))
+                return $"Created a new account: {email} ({playerName}).";
             else
-            {
-                return $"Failed to create account: email {email} is already used by another account";
-            }
+                return "Failed to create account: database error.";
+        }
+
+        public static string ChangeAccountPlayerName(string email, string playerName)
+        {
+            // Checks to make sure we can use the provided email and player name
+            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
+                return $"Failed to change player name: account {email} not found.";
+            
+            if (DBManager.QueryIsPlayerNameTaken(playerName))
+                return $"Failed to change player name: the name {playerName} is already taken.";
+
+            // Update player name
+            account.PlayerName = playerName;
+            DBManager.UpdateAccount(account);
+            return $"Successfully changed player name for account {email} to {playerName}.";
         }
 
         public static string ChangeAccountPassword(string email, string newPassword)
         {
-            if (_emailAccountDict.ContainsKey(email))
-            {
-                if (newPassword.Length >= MinimumPasswordLength && newPassword.Length <= MaximumPasswordLength)
-                {
-                    Account account = _emailAccountDict[email];
-                    account.PasswordHash = Cryptography.HashPassword(newPassword, out byte[] salt);
-                    account.Salt = salt;
-                    account.IsPasswordExpired = false;
-                    SaveAccounts();
-                    return $"Successfully changed password for account {email}.";
-                }
-                else
-                {
-                    return $"Failed to change password: password must between {MinimumPasswordLength} and {MaximumPasswordLength} characters long.";
-                }
-            }
-            else
-            {
+            // Checks to make sure we can use the provided email and password
+            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
                 return $"Failed to change password: account {email} not found.";
-            }
+
+            if ((newPassword.Length >= MinimumPasswordLength && newPassword.Length <= MaximumPasswordLength) == false)
+                return $"Failed to change password: password must between {MinimumPasswordLength} and {MaximumPasswordLength} characters long.";
+
+            // Update password
+            account.PasswordHash = Cryptography.HashPassword(newPassword, out byte[] salt);
+            account.Salt = salt;
+            account.IsPasswordExpired = false;
+            DBManager.UpdateAccount(account);
+            return $"Successfully changed password for account {email}.";
         }
 
         public static string SetAccountUserLevel(string email, AccountUserLevel userLevel)
         {
-            if (_emailAccountDict.ContainsKey(email))
-            {
-                Account account = _emailAccountDict[email];
-                account.UserLevel = userLevel;
-                SaveAccounts();
-                return $"Successfully set user level for account {email} to {userLevel}.";
-            }
-            else
-            {
+            // Make sure the specified account exists
+            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
                 return $"Failed to set user level: account {email} not found.";
-            }
+
+            // Update user level
+            account.UserLevel = userLevel;
+            DBManager.UpdateAccount(account);
+            return $"Successfully set user level for account {email} to {userLevel}.";
         }
+
+        // Ban and unban are separate methods to make sure we don't accidentally ban or unban someone we didn't intend to.
 
         public static string BanAccount(string email)
         {
-            if (_emailAccountDict.ContainsKey(email))
-            {
-                if (_emailAccountDict[email].IsBanned == false)
-                {
-                    _emailAccountDict[email].IsBanned = true;
-                    SaveAccounts();
-                    return $"Successfully banned account {email}.";
-                }
-                else
-                {
-                    return $"Account {email} is already banned.";
-                }
-            }
-            else
-            {
-                return $"Cannot ban {email}: account not found.";
-            }
+            // Checks to make sure we can ban the specified account
+            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
+                return $"Failed to ban: account {email} not found.";
+
+            if (account.IsBanned)
+                return $"Failed to ban: account {email} is already banned.";
+
+            // Ban the account
+            account.IsBanned = true;
+            DBManager.UpdateAccount(account);
+            return $"Successfully banned account {email}.";
         }
 
         public static string UnbanAccount(string email)
         {
-            if (_emailAccountDict.ContainsKey(email))
-            {
-                if (_emailAccountDict[email].IsBanned)
-                {
-                    _emailAccountDict[email].IsBanned = false;
-                    SaveAccounts();
-                    return $"Successfully unbanned account {email}.";
-                }
-                else
-                {
-                    return $"Account {email} is not banned.";
-                }
-            }
-            else
-            {
-                return $"Cannot unban {email}: account not found.";
-            }
-        }
+            // Checks to make sure we can ban the specified account
+            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
+                return $"Failed to unban: account {email} not found.";
 
-        public static PlayerData GetPlayerData(ulong accountId)
-        {
-            if (accountId == 0)
-                return DefaultPlayerData;
-            else if (_playerDataDict.TryGetValue(accountId, out PlayerData playerData))
-                return playerData;
-            else
-            {
-                Logger.Warn($"PlayerData for accountId not found, creating new PlayerData");
-                lock (_accountLock) _playerDataDict.Add(accountId, new(accountId));
-                SavePlayerData();
-                return _playerDataDict[accountId];
-            }
-        }
+            if (account.IsBanned == false)
+                return $"Failed to unban: account {email} is not banned.";
 
-        private static void LoadAccounts()
-        {
-            if (_accountList.Count == 0)
-            {
-                if (Directory.Exists(SavedDataDirectory) == false) Directory.CreateDirectory(SavedDataDirectory);
-
-                if (File.Exists(AccountFilePath))
-                {
-                    lock (_accountLock)
-                    {
-                        _accountList = JsonSerializer.Deserialize<List<Account>>(File.ReadAllText(AccountFilePath));
-
-                        if (File.Exists(PlayerDataFilePath))
-                            _playerDataDict = JsonSerializer.Deserialize<Dictionary<ulong, PlayerData>>(File.ReadAllText(PlayerDataFilePath));
-
-                        foreach (Account account in _accountList)
-                        {
-                            _idAccountDict.Add(account.Id, account);
-                            _emailAccountDict.Add(account.Email, account);
-                        }
-                    }
-
-                    Logger.Info($"Loaded {_accountList.Count} accounts");
-                }
-            }
-            else
-            {
-                Logger.Warn("Failed to load accounts: accounts are already loaded!");
-            }
-        }
-
-        private static void SaveAccounts()
-        {
-            lock (_accountLock)
-            {
-                if (Directory.Exists(SavedDataDirectory) == false) Directory.CreateDirectory(SavedDataDirectory);
-                File.WriteAllText(AccountFilePath, JsonSerializer.Serialize(_accountList));
-            }
-        }
-
-        public static void SavePlayerData()
-        {
-            lock (_accountLock)
-            {
-                if (Directory.Exists(SavedDataDirectory) == false) Directory.CreateDirectory(SavedDataDirectory);
-                File.WriteAllText(PlayerDataFilePath, JsonSerializer.Serialize(_playerDataDict));
-            }           
+            // Unban the account
+            account.IsBanned = false;
+            DBManager.UpdateAccount(account);
+            return $"Successfully unbanned account {email}.";
         }
     }
 }

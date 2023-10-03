@@ -46,7 +46,7 @@ namespace MHServerEmu.GameServer
             switch (muxId)
             {
                 case 1:
-                    if (client.FinishedPlayerMgrServerFrontendHandshake)
+                    if (client.FinishedPlayerManagerHandshake)
                         PlayerManagerService.Handle(client, muxId, message);
                     else
                         FrontendService.Handle(client, muxId, message);
@@ -54,7 +54,7 @@ namespace MHServerEmu.GameServer
                     break;
 
                 case 2:
-                    if (client.FinishedGroupingManagerFrontendHandshake)
+                    if (client.FinishedGroupingManagerHandshake)
                         GroupingManagerService.Handle(client, muxId, message);
                     else
                         FrontendService.Handle(client, muxId, message);
@@ -72,7 +72,7 @@ namespace MHServerEmu.GameServer
             switch (muxId)
             {
                 case 1:
-                    if (client.FinishedPlayerMgrServerFrontendHandshake)
+                    if (client.FinishedPlayerManagerHandshake)
                         PlayerManagerService.Handle(client, muxId, messages);
                     else
                         FrontendService.Handle(client, muxId, messages);
@@ -80,7 +80,7 @@ namespace MHServerEmu.GameServer
                     break;
 
                 case 2:
-                    if (client.FinishedGroupingManagerFrontendHandshake)
+                    if (client.FinishedGroupingManagerHandshake)
                         GroupingManagerService.Handle(client, muxId, messages);
                     else
                         FrontendService.Handle(client, muxId, messages);

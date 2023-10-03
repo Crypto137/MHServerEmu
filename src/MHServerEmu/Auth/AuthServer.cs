@@ -91,9 +91,9 @@ namespace MHServerEmu.Auth
             {
                 case FrontendProtocolMessage.LoginDataPB:
                     var loginDataPB = LoginDataPB.ParseFrom(message.Payload);
-                    ClientSession session = _frontendService.CreateSessionFromLoginDataPB(loginDataPB, out AuthErrorCode? errorCode);
+                    AuthStatusCode statusCode = _frontendService.TryCreateSessionFromLoginDataPB(loginDataPB, out ClientSession session);
 
-                    if (session != null)  // Send an AuthTicket if we were able to create a session
+                    if (statusCode == AuthStatusCode.Success)  // Send an AuthTicket if we were able to create a session
                     {
                         Logger.Info($"Sending AuthTicket for sessionId {session.Id} to the game client on {request.RemoteEndPoint}");
 
@@ -129,8 +129,8 @@ namespace MHServerEmu.Auth
                     }
                     else
                     {
-                        Logger.Info($"Authentication for the game client on {request.RemoteEndPoint} failed ({errorCode})");
-                        response.StatusCode = (int)errorCode;
+                        Logger.Info($"Authentication for the game client on {request.RemoteEndPoint} failed ({statusCode})");
+                        response.StatusCode = (int)statusCode;
                     }
 
                     break;

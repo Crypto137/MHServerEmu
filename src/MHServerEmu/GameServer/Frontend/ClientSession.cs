@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using MHServerEmu.Common;
-using MHServerEmu.GameServer.Frontend.Accounts;
+using MHServerEmu.GameServer.Frontend.Accounts.DBModels;
 
 namespace MHServerEmu.GameServer.Frontend
 {
@@ -15,7 +15,7 @@ namespace MHServerEmu.GameServer.Frontend
     public class ClientSession
     {
         public ulong Id { get; set; }
-        public Account Account { get; }
+        public DBAccount Account { get; }
         public ClientDownloader Downloader { get; private set; }
         public string Locale { get; private set; }
 
@@ -23,7 +23,7 @@ namespace MHServerEmu.GameServer.Frontend
         public byte[] Token { get; }
         public DateTime CreationTime { get; }
 
-        public ClientSession(ulong id, Account account, string downloader, string locale)
+        public ClientSession(ulong id, DBAccount account, string downloader, string locale)
         {
             Id = id;
             Account = account;
@@ -41,7 +41,7 @@ namespace MHServerEmu.GameServer.Frontend
             using (StreamWriter writer = new(stream))
             {
                 writer.WriteLine($"SessionId: {Id}");
-                writer.WriteLine($"Account: {Account.Email}");
+                writer.WriteLine($"Account: {Account.Email} ({Account.PlayerName})");
                 writer.WriteLine($"Downloader: {Downloader}");
                 writer.WriteLine($"Locale: {Locale}");
                 writer.WriteLine($"Online Time: {DateTime.Now - CreationTime:hh\\:mm\\:ss}");

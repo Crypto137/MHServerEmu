@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Common.Config;
 using MHServerEmu.GameServer.Entities;
+using MHServerEmu.GameServer.Entities.Avatars;
 using MHServerEmu.GameServer.Frontend.Accounts;
 using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.Properties;
@@ -39,17 +40,6 @@ namespace MHServerEmu.Common.Commands
     [CommandGroup("player", "Changes player data for this account.", AccountUserLevel.User)]
     public class PlayerCommand : CommandGroup
     {
-        [Command("name", "Changes player name.\nUsage: player name", AccountUserLevel.User)]
-        public string Name(string[] @params, FrontendClient client)
-        {
-            if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help player name' to get help.";
-            if (ConfigManager.Frontend.BypassAuth) return "Disable BypassAuth to use this command";
-
-            client.Session.Account.PlayerData.PlayerName = @params[0];
-            return $"Changing player name to {@params[0]}. Relog for changes to take effect.";
-        }
-
         [Command("avatar", "Changes player avatar.\nUsage: player avatar [avatar]", AccountUserLevel.User)]
         public string Avatar(string[] @params, FrontendClient client)
         {
@@ -57,10 +47,10 @@ namespace MHServerEmu.Common.Commands
             if (@params.Length == 0) return "Invalid arguments. Type 'help player avatar' to get help.";
             if (ConfigManager.Frontend.BypassAuth) return "Disable BypassAuth to use this command";
 
-            if (Enum.TryParse(typeof(HardcodedAvatarEntity), @params[0], true, out object avatar))
+            if (Enum.TryParse(typeof(AvatarPrototype), @params[0], true, out object avatar))
             {
-                client.Session.Account.PlayerData.Avatar = (HardcodedAvatarEntity)avatar;
-                return $"Changing avatar to {client.Session.Account.PlayerData.Avatar}. Relog for changes to take effect.";
+                client.Session.Account.Player.Avatar = (AvatarPrototype)avatar;
+                return $"Changing avatar to {client.Session.Account.Player.Avatar}. Relog for changes to take effect.";
             }
             else
             {
@@ -77,8 +67,8 @@ namespace MHServerEmu.Common.Commands
 
             if (Enum.TryParse(typeof(RegionPrototype), @params[0], true, out object region))
             {
-                client.Session.Account.PlayerData.Region = (RegionPrototype)region;
-                return $"Changing starting region to {client.Session.Account.PlayerData.Region}. Relog for changes to take effect.";
+                client.Session.Account.Player.Region = (RegionPrototype)region;
+                return $"Changing starting region to {client.Session.Account.Player.Region}. Relog for changes to take effect.";
             }
             else
             {
@@ -104,10 +94,10 @@ namespace MHServerEmu.Common.Commands
                     Property property = new(PropertyEnum.CostumeCurrent, prototypeId);
 
                     // Get replication id for the client avatar
-                    ulong replicationId = (ulong)Enum.Parse(typeof(HardcodedAvatarReplicationId), Enum.GetName(typeof(HardcodedAvatarEntity), client.Session.Account.PlayerData.Avatar));
+                    ulong replicationId = (ulong)client.Session.Account.Player.Avatar.ToReplicationId();
 
                     // Update account data if needed
-                    if (ConfigManager.Frontend.BypassAuth == false) client.Session.Account.PlayerData.CostumeOverride = prototypeId;
+                    if (ConfigManager.Frontend.BypassAuth == false) client.Session.Account.CurrentAvatar.Costume = prototypeId;
 
                     // Send NetMessageSetProperty message
                     client.SendMessage(1, new(property.ToNetMessageSetProperty(replicationId)));

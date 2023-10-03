@@ -5,6 +5,7 @@ using MHServerEmu.Common;
 using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.Frontend.Accounts;
+using MHServerEmu.GameServer.Frontend.Accounts.DBModels;
 using MHServerEmu.Networking;
 using MHServerEmu.Networking.Base;
 
@@ -18,9 +19,9 @@ namespace MHServerEmu.GameServer.Frontend
 
         // Use a lock object instead of this to prevent deadlocks
         // More info: https://learn.microsoft.com/en-us/archive/msdn-magazine/2003/january/net-column-safe-thread-synchronization
-        private object _sessionLock = new();     
-        private Dictionary<ulong, ClientSession> _sessionDict = new();
-        private Dictionary<ulong, FrontendClient> _clientDict = new();
+        private readonly object _sessionLock = new();     
+        private readonly Dictionary<ulong, ClientSession> _sessionDict = new();
+        private readonly Dictionary<ulong, FrontendClient> _clientDict = new();
 
         public int SessionCount { get => _sessionDict.Count; }
 
@@ -108,9 +109,9 @@ namespace MHServerEmu.GameServer.Frontend
                     Logger.Info($"Received InitialClientHandshake for {initialClientHandshake.ServerType} on muxId {muxId}");
 
                     // These handshakes should probably be handled by PlayerManagerService and GroupingManagerService. They should probably also track clients on their own.
-                    if (initialClientHandshake.ServerType == PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND && client.FinishedPlayerMgrServerFrontendHandshake == false)
+                    if (initialClientHandshake.ServerType == PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND && client.FinishedPlayerManagerHandshake == false)
                     {
-                        client.FinishedPlayerMgrServerFrontendHandshake = true;
+                        client.FinishedPlayerManagerHandshake = true;
                         
                         // Queue loading
                         client.IsLoading = true;
@@ -119,16 +120,20 @@ namespace MHServerEmu.GameServer.Frontend
                         // Send achievement database
                         client.SendMessage(1, new(_gameServerManager.AchievementDatabase.ToNetMessageAchievementDatabaseDump()));
                         // NetMessageQueryIsRegionAvailable regionPrototype: 9833127629697912670 should go in the same packet as AchievementDatabaseDump
+                    }
+                    else if (initialClientHandshake.ServerType == PubSubServerTypes.GROUPING_MANAGER_FRONTEND && client.FinishedGroupingManagerHandshake == false)
+                    {
+                        client.FinishedGroupingManagerHandshake = true;
+                    }
 
-                        // Add player to a game
+                    // Add the player to a game when both handshakes are finished
+                    // Adding the player early can cause GroupingManager handshake to not finish properly, which leads to the chat not working
+                    if (client.FinishedPlayerManagerHandshake && client.FinishedGroupingManagerHandshake)
+                    {
+                        _gameServerManager.GroupingManagerService.SendMotd(client);
                         _gameServerManager.GameManager.GetAvailableGame().AddPlayer(client);
                     }
-                    else if (initialClientHandshake.ServerType == PubSubServerTypes.GROUPING_MANAGER_FRONTEND && client.FinishedGroupingManagerFrontendHandshake == false)
-                    {
-                        client.FinishedGroupingManagerFrontendHandshake = true;
-                        _gameServerManager.GroupingManagerService.SendMotd(client);
-                    }
-
+                        
                     break;
 
                 default:
@@ -142,8 +147,10 @@ namespace MHServerEmu.GameServer.Frontend
             foreach (GameMessage message in messages) Handle(client, muxId, message);
         }
 
-        public ClientSession CreateSessionFromLoginDataPB(LoginDataPB loginDataPB, out AuthErrorCode? errorCode)
+        public AuthStatusCode TryCreateSessionFromLoginDataPB(LoginDataPB loginDataPB, out ClientSession session)
         {
+            session = null;
+            
             // Check client version
             if (loginDataPB.Version != GameServerManager.GameVersion)
             {
@@ -151,38 +158,34 @@ namespace MHServerEmu.GameServer.Frontend
 
                 // Fail auth if version mismatch is not allowed
                 if (ConfigManager.Frontend.AllowClientVersionMismatch == false)
-                {
-                    errorCode = AuthErrorCode.PatchRequired;
-                    return null;
-                }
+                    return AuthStatusCode.PatchRequired;
             }
 
             // Verify credentials
-            Account account;
-            if (ConfigManager.Frontend.BypassAuth)
+            DBAccount account;
+            AuthStatusCode statusCode;
+
+            if (ConfigManager.Frontend.BypassAuth)  // Auth always succeeds when BypassAuth is set to true
             {
                 account = AccountManager.DefaultAccount;
-                errorCode = null;
+                statusCode = AuthStatusCode.Success;
             }
-            else
+            else                                    // Check credentials with AccountManager
             {
-                account = AccountManager.GetAccountByLoginDataPB(loginDataPB, out errorCode);
+                statusCode = AccountManager.TryGetAccountByLoginDataPB(loginDataPB, out account);
             }
 
             // Create a new session if login data is valid
-            if (account != null)
+            if (statusCode == AuthStatusCode.Success)
             {
                 lock (_sessionLock)
                 {
-                    ClientSession session = new(IdGenerator.Generate(IdType.Session), account, loginDataPB.ClientDownloader, loginDataPB.Locale);
+                    session = new(IdGenerator.Generate(IdType.Session), account, loginDataPB.ClientDownloader, loginDataPB.Locale);
                     _sessionDict.Add(session.Id, session);
-                    return session;
                 }
             }
-            else
-            {
-                return null;
-            }   
+
+            return statusCode;
         }
 
         public bool TryGetSession(ulong sessionId, out ClientSession session) => _sessionDict.TryGetValue(sessionId, out session);
@@ -204,7 +207,7 @@ namespace MHServerEmu.GameServer.Frontend
                     _clientDict.Remove(client.Session.Id);
                 }
 
-                if (ConfigManager.Frontend.BypassAuth == false) AccountManager.SavePlayerData();
+                if (ConfigManager.Frontend.BypassAuth == false) DBManager.UpdateAccountData(client.Session.Account);
 
                 Logger.Info($"Client disconnected (sessionId {client.Session.Id})");
             }

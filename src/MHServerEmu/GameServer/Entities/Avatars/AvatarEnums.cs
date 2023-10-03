@@ -77,4 +77,17 @@
         Wolverine = 13237838511939982809,
         X23 = 7643048032188437211
     }
+
+    public static class AvatarPrototypeEnumExtension
+    {
+        public static HardcodedAvatarEntity ToEntityId(this AvatarPrototype prototype)
+        {
+            return (HardcodedAvatarEntity)Enum.Parse(typeof(HardcodedAvatarEntity), Enum.GetName(typeof(AvatarPrototype), prototype));
+        }
+
+        public static HardcodedAvatarReplicationId ToReplicationId(this AvatarPrototype prototype)
+        {
+            return (HardcodedAvatarReplicationId)Enum.Parse(typeof(HardcodedAvatarReplicationId), Enum.GetName(typeof(AvatarPrototype), prototype));
+        }
+    }
 }
