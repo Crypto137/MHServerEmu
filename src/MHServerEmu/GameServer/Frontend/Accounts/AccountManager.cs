@@ -29,38 +29,24 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
 
         public static AuthStatusCode TryGetAccountByLoginDataPB(LoginDataPB loginDataPB, out DBAccount account)
         {
+            account = null;
+
+            // Try to query an account to check
             string email = loginDataPB.EmailAddress.ToLower();
-
-            if (DBManager.TryQueryAccountByEmail(email, out account) == false)
+            if (DBManager.TryQueryAccountByEmail(email, out DBAccount accountToCheck) == false)
                 return AuthStatusCode.IncorrectUsernameOrPassword1;
 
-            if (Cryptography.VerifyPassword(loginDataPB.Password, account.PasswordHash, account.Salt))
-            {
-                if (account.IsBanned)
-                {
-                    account = null;
-                    return AuthStatusCode.AccountBanned;
-                }
-                else if (account.IsArchived)
-                {
-                    account = null;
-                    return AuthStatusCode.AccountArchived;
-                }
-                else if (account.IsPasswordExpired)
-                {
-                    account = null;
-                    return AuthStatusCode.PasswordExpired;
-                }
-                else
-                {
-                    return AuthStatusCode.Success;
-                }
-            }
-            else
-            {
-                account = null;
+            // Check the account we queried
+            if (Cryptography.VerifyPassword(loginDataPB.Password, accountToCheck.PasswordHash, accountToCheck.Salt) == false)
                 return AuthStatusCode.IncorrectUsernameOrPassword1;
-            }
+
+            if (accountToCheck.IsBanned) return AuthStatusCode.AccountBanned;
+            if (accountToCheck.IsArchived) return AuthStatusCode.AccountArchived;
+            if (accountToCheck.IsPasswordExpired) return AuthStatusCode.PasswordExpired;
+
+            // Output the account and return success if everything is okay
+            account = accountToCheck;
+            return AuthStatusCode.Success;
         }
 
         public static bool TryGetAccountByEmail(string email, out DBAccount account) => DBManager.TryQueryAccountByEmail(email, out account);
