@@ -26,7 +26,7 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
 
             string email = @params[0].ToLower();
 
-            if (client.Session.Account.UserLevel < AccountUserLevel.Moderator && email != client.Session.Account.Email)
+            if (client != null && client.Session.Account.UserLevel < AccountUserLevel.Moderator && email != client.Session.Account.Email)
                 return "You are allowed to change player name only for your own account.";
             else
                 return AccountManager.ChangeAccountPlayerName(email, @params[1]);
@@ -40,7 +40,7 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
 
             string email = @params[0].ToLower();
 
-            if (client.Session.Account.UserLevel < AccountUserLevel.Moderator && email != client.Session.Account.Email)
+            if (client != null && client.Session.Account.UserLevel < AccountUserLevel.Moderator && email != client.Session.Account.Email)
                 return "You are allowed to change password only for your own account.";
             else
                 return AccountManager.ChangeAccountPassword(email, @params[1]);

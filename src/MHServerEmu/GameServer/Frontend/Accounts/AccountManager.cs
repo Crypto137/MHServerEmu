@@ -67,127 +67,99 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
 
         public static string CreateAccount(string email, string playerName, string password)
         {
-            if (DBManager.TryQueryAccountByEmail(email, out _) == false)
-            {
-                if (password.Length >= MinimumPasswordLength && password.Length <= MaximumPasswordLength)
-                {
-                    // Create a new account and insert it into the database
-                    DBAccount account = new(email, playerName, password);
+            // Checks to make sure we can create an account with the provided data
+            if (DBManager.TryQueryAccountByEmail(email, out _))
+                return $"Failed to create account: email {email} is already used by another account.";
 
-                    if (DBManager.InsertAccount(account))
-                        return $"Created a new account: {email} ({playerName}).";
-                    else
-                        return "Failed to create account due to a database error.";
-                }
-                else
-                {
-                    return $"Failed to create account: password must between {MinimumPasswordLength} and {MaximumPasswordLength} characters long";
-                }
-            }
+            if (DBManager.QueryIsPlayerNameTaken(playerName))
+                return $"Failed to create account: name {playerName} is already used by another account.";
+
+            if ((password.Length >= MinimumPasswordLength && password.Length <= MaximumPasswordLength) == false)
+                return $"Failed to create account: password must between {MinimumPasswordLength} and {MaximumPasswordLength} characters long.";
+
+            // Create a new account and insert it into the database
+            DBAccount account = new(email, playerName, password);
+
+            if (DBManager.InsertAccount(account))
+                return $"Created a new account: {email} ({playerName}).";
             else
-            {
-                return $"Failed to create account: email {email} is already used by another account";
-            }
+                return "Failed to create account: database error.";
         }
 
         public static string ChangeAccountPlayerName(string email, string playerName)
         {
-            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account))
-            {
-                if (DBManager.QueryIsPlayerNameTaken(playerName) == false)
-                {
-                    account.PlayerName = playerName;
-                    DBManager.UpdateAccount(account);
-                    return $"Successfully changed player name for account {email} to {playerName}.";
-                }
-                else
-                {
-                    return $"Failed to change player name: the name {playerName} is already taken.";
-                }
-            }
-            else
-            {
+            // Checks to make sure we can use the provided email and player name
+            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
                 return $"Failed to change player name: account {email} not found.";
-            }
+            
+            if (DBManager.QueryIsPlayerNameTaken(playerName))
+                return $"Failed to change player name: the name {playerName} is already taken.";
+
+            // Update player name
+            account.PlayerName = playerName;
+            DBManager.UpdateAccount(account);
+            return $"Successfully changed player name for account {email} to {playerName}.";
         }
 
         public static string ChangeAccountPassword(string email, string newPassword)
         {
-            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account))
-            {
-                if (newPassword.Length >= MinimumPasswordLength && newPassword.Length <= MaximumPasswordLength)
-                {
-                    account.PasswordHash = Cryptography.HashPassword(newPassword, out byte[] salt);
-                    account.Salt = salt;
-                    account.IsPasswordExpired = false;
-                    DBManager.UpdateAccount(account);
-                    return $"Successfully changed password for account {email}.";
-                }
-                else
-                {
-                    return $"Failed to change password: password must between {MinimumPasswordLength} and {MaximumPasswordLength} characters long.";
-                }
-            }
-            else
-            {
+            // Checks to make sure we can use the provided email and password
+            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
                 return $"Failed to change password: account {email} not found.";
-            }
+
+            if ((newPassword.Length >= MinimumPasswordLength && newPassword.Length <= MaximumPasswordLength) == false)
+                return $"Failed to change password: password must between {MinimumPasswordLength} and {MaximumPasswordLength} characters long.";
+
+            // Update password
+            account.PasswordHash = Cryptography.HashPassword(newPassword, out byte[] salt);
+            account.Salt = salt;
+            account.IsPasswordExpired = false;
+            DBManager.UpdateAccount(account);
+            return $"Successfully changed password for account {email}.";
         }
 
         public static string SetAccountUserLevel(string email, AccountUserLevel userLevel)
         {
-            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account))
-            {
-                account.UserLevel = userLevel;
-                DBManager.UpdateAccount(account);
-                return $"Successfully set user level for account {email} to {userLevel}.";
-            }
-            else
-            {
+            // Make sure the specified account exists
+            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
                 return $"Failed to set user level: account {email} not found.";
-            }
+
+            // Update user level
+            account.UserLevel = userLevel;
+            DBManager.UpdateAccount(account);
+            return $"Successfully set user level for account {email} to {userLevel}.";
         }
+
+        // Ban and unban are separate methods to make sure we don't accidentally ban or unban someone we didn't intend to.
 
         public static string BanAccount(string email)
         {
-            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account))
-            {
-                if (account.IsBanned == false)
-                {
-                    account.IsBanned = true;
-                    DBManager.UpdateAccount(account);
-                    return $"Successfully banned account {email}.";
-                }
-                else
-                {
-                    return $"Account {email} is already banned.";
-                }
-            }
-            else
-            {
-                return $"Cannot ban {email}: account not found.";
-            }
+            // Checks to make sure we can ban the specified account
+            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
+                return $"Failed to ban: account {email} not found.";
+
+            if (account.IsBanned)
+                return $"Failed to ban: account {email} is already banned.";
+
+            // Ban the account
+            account.IsBanned = true;
+            DBManager.UpdateAccount(account);
+            return $"Successfully banned account {email}.";
         }
 
         public static string UnbanAccount(string email)
         {
-            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account))
-            {
-                if (account.IsBanned)
-                {
-                    account.IsBanned = false;
-                    DBManager.UpdateAccount(account);
-                    return $"Successfully unbanned account {email}.";
-                }
-                else
-                {
-                    return $"Account {email} is not banned.";
-                }
-            }
-            else
-            {
-                return $"Cannot unban {email}: account not found.";
-            }
+            // Checks to make sure we can ban the specified account
+            if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
+                return $"Failed to unban: account {email} not found.";
+
+            if (account.IsBanned == false)
+                return $"Failed to unban: account {email} is not banned.";
+
+            // Unban the account
+            account.IsBanned = false;
+            DBManager.UpdateAccount(account);
+            return $"Successfully unbanned account {email}.";
         }
     }
 }
