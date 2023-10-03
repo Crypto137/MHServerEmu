@@ -4,7 +4,7 @@ The in-game store and the community news window use a CEF-based web browser that
 
 ## API Calls
 
-Calls are generally made with onclick events (e.g. ```<a onclick="myApi.OpenCatalogToItem('HeroesPage', '')">```). You can find an example of a store home page [here](https://github.com/Crypto137/MHServerEmu/tree/master/assets/store/mhgame_store_home).
+Calls are generally made with onclick events (e.g. ```<a onclick="myApi.OpenCatalogToItem('HeroesPage', '')">```). You can find an example of a store home page [here](./../assets/store/mhgame_store_home).
 
 | Call                                                   | Description                                                                                                   |
 | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
