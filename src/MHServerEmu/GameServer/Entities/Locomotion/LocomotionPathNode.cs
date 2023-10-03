@@ -12,7 +12,7 @@ namespace MHServerEmu.GameServer.Entities.Locomotion
 
         public LocomotionPathNode(CodedInputStream stream)
         {
-            Vertex = new(stream.ReadRawZigZagFloat(3), stream.ReadRawZigZagFloat(3), stream.ReadRawZigZagFloat(3));
+            Vertex = new(stream, 3);
             VertexSideRadius = stream.ReadRawInt32();
         }
 

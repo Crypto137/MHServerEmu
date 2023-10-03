@@ -23,6 +23,12 @@ namespace MHServerEmu.Networking
             Payload = message.ToByteArray();
         }
 
+        public GameMessage(CodedInputStream stream)
+        {
+            Id = (byte)stream.ReadRawVarint32();
+            Payload = stream.ReadRawBytes((int)stream.ReadRawVarint32());
+        }
+
         public IMessage Deserialize(Type enumType)
         {
             string messageName = ProtocolDispatchTable.GetMessageName(enumType, Id);

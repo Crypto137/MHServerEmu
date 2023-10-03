@@ -1,5 +1,4 @@
 ﻿using MHServerEmu.Common.Config;
-using MHServerEmu.GameServer.Entities;
 using MHServerEmu.GameServer.Entities.Avatars;
 using MHServerEmu.GameServer.Frontend.Accounts;
 using MHServerEmu.GameServer.GameData;

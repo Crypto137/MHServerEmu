@@ -37,18 +37,13 @@ namespace MHServerEmu.GameServer.Frontend
 
         public override string ToString()
         {
-            using (MemoryStream stream = new())
-            using (StreamWriter writer = new(stream))
-            {
-                writer.WriteLine($"SessionId: {Id}");
-                writer.WriteLine($"Account: {Account.Email} ({Account.PlayerName})");
-                writer.WriteLine($"Downloader: {Downloader}");
-                writer.WriteLine($"Locale: {Locale}");
-                writer.WriteLine($"Online Time: {DateTime.Now - CreationTime:hh\\:mm\\:ss}");
-
-                writer.Flush();
-                return Encoding.UTF8.GetString(stream.ToArray());
-            }
+            StringBuilder sb = new();
+            sb.AppendLine($"SessionId: {Id}");
+            sb.AppendLine($"Account: {Account}");
+            sb.AppendLine($"Downloader: {Downloader}");
+            sb.AppendLine($"Locale: {Locale}");
+            sb.AppendLine($"Online Time: {DateTime.Now - CreationTime:hh\\:mm\\:ss}");
+            return sb.ToString();
         }
     }
 }

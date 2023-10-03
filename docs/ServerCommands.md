@@ -2,7 +2,7 @@
 
 To see an up to date list of all commands, type !commands in the server console or the in-game chat. When invoking a command from in-game your account has to meet the user level requirement for the command.
 
-## Shared Commands
+## General Commands
 
 | Command                   | Description                                   | User Level |
 | ------------------------- | --------------------------------------------- | ---------- |
@@ -11,11 +11,11 @@ To see an up to date list of all commands, type !commands in the server console 
 | !lookup costume [pattern] | Looks up a costume prototype.                 | All        |
 | !lookup region [pattern]  | Looks up a region prototype                   | All        |
 
-## Server Commands
+## Account Commands
 
 | Command                                         | Description                                                                                                   | User Level |
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ---------- |
-| !account create [email] [playerName] [passowrd] | Creates a new account using the specified information. Email and player name must be unique for each account. | All        |
+| !account create [email] [playerName] [password] | Creates a new account using the specified information. Email and player name must be unique for each account. | All        |
 | !account playername [email] [playername]        | Changes player name for the specified account. Regular users can change name only for their own account.      | All        |
 | !account password [email] [newPassword]         | Changes password for the specified account. Regular users can change password only for their own account.     | All        |
 | !account userlevel [0\|1\|2]                    | Sets user level for the specified account to user (0), moderator (1), or admin (2).                           | Admin      |

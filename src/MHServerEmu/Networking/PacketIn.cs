@@ -31,26 +31,19 @@ namespace MHServerEmu.Networking
             // Read messages
             if (Command == MuxCommand.Data)
             {
-                if (bodyLength > 0)
-                {
-                    List<GameMessage> messageList = new();
-
-                    CodedInputStream messageInputStream = CodedInputStream.CreateInstance(stream.ReadRawBytes(bodyLength));
-
-                    while (!messageInputStream.IsAtEnd)
-                    {
-                        byte messageId = (byte)messageInputStream.ReadRawVarint64();
-                        int messageSize = (int)messageInputStream.ReadRawVarint64();
-                        byte[] messageContent = messageInputStream.ReadRawBytes(messageSize);
-                        messageList.Add(new(messageId, messageContent));
-                    }
-
-                    Messages = messageList.ToArray();
-                }
-                else
+                if (bodyLength <= 0)
                 {
                     Logger.Warn($"Received empty data packet on {MuxId}");
+                    return;
                 }
+
+                List<GameMessage> messageList = new();
+                CodedInputStream messageInputStream = CodedInputStream.CreateInstance(stream.ReadRawBytes(bodyLength));
+
+                while (messageInputStream.IsAtEnd == false)
+                    messageList.Add(new(messageInputStream));
+
+                Messages = messageList.ToArray();
             }
         }
 
