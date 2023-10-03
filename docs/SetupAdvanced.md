@@ -34,7 +34,7 @@ Please keep in mind that MHServerEmu is experimental software still heavily in d
 
 ## Setting Up In-Game Store and News
 
-The client an embedded web browser for some of its UI panels. MHServerEmu provides some options that allow you to make use of this feature.
+The client uses an embedded web browser for some of its UI panels. MHServerEmu provides some options that allow you to make use of this feature.
 
 1. Copy the [mhgame_store_home](./../assets/store/mhgame_store_home/) folder provided in this repository to `Apache24\htdocs`.
 
