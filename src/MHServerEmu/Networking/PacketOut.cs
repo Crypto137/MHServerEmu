@@ -27,8 +27,8 @@ namespace MHServerEmu.Networking
 
                             foreach (GameMessage message in _messageList)
                             {
-                                cos.WriteRawVarint64(message.Id);
-                                cos.WriteRawVarint64((ulong)message.Payload.Length);
+                                cos.WriteRawVarint32(message.Id);
+                                cos.WriteRawVarint32((uint)message.Payload.Length);
                                 cos.WriteRawBytes(message.Payload);
                             }
 

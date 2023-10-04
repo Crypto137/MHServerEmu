@@ -34,11 +34,11 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             // Try to query an account to check
             string email = loginDataPB.EmailAddress.ToLower();
             if (DBManager.TryQueryAccountByEmail(email, out DBAccount accountToCheck) == false)
-                return AuthStatusCode.IncorrectUsernameOrPassword1;
+                return AuthStatusCode.IncorrectUsernameOrPassword401;
 
             // Check the account we queried
             if (Cryptography.VerifyPassword(loginDataPB.Password, accountToCheck.PasswordHash, accountToCheck.Salt) == false)
-                return AuthStatusCode.IncorrectUsernameOrPassword1;
+                return AuthStatusCode.IncorrectUsernameOrPassword401;
 
             if (accountToCheck.IsBanned) return AuthStatusCode.AccountBanned;
             if (accountToCheck.IsArchived) return AuthStatusCode.AccountArchived;

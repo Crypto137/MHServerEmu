@@ -65,14 +65,14 @@ namespace MHServerEmu.GameServer.Frontend
 
                     Logger.Info($"Verified client for sessionId {session.Id} - account {session.Account}");
 
-                    // assign account to the client if the token is valid
+                    // Assign account to the client if the token is valid
                     lock (_sessionLock)
                     {
                         client.AssignSession(session);
                         _clientDict.Add(session.Id, client);
                     }
 
-                    // Generate response
+                    // Respond
                     if (ConfigManager.Frontend.SimulateQueue)
                     {
                         Logger.Info("Responding with LoginQueueStatus message");

@@ -3,22 +3,22 @@
     public enum AuthStatusCode
     {
         Success = 200,
-        IncorrectUsernameOrPassword1 = 401,
+        IncorrectUsernameOrPassword401 = 401,
         AccountBanned = 402,
-        IncorrectUsernameOrPassword2 = 403,
+        IncorrectUsernameOrPassword403 = 403,
         CouldNotReachAuthServer = 404,
         EmailNotVerified = 405,
-        UnableToConnect1 = 406,
+        UnableToConnect406 = 406,
         NeedToAcceptLegal = 407,
         PatchRequired = 409,
         AccountArchived = 411,
         PasswordExpired = 412,
-        UnableToConnect2 = 413,
-        UnableToConnect3 = 414,
-        UnableToConnect4 = 415,
-        UnableToConnect5 = 416,
+        UnableToConnect413 = 413,
+        UnableToConnect414 = 414,
+        UnableToConnect415 = 415,
+        UnableToConnect416 = 416,
         AgeRestricted = 417,
-        UnableToConnect6 = 418,
+        UnableToConnect418 = 418,
         TemporarilyUnavailable = 503
     }
 }
