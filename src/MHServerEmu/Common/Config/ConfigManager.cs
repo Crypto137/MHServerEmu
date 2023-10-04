@@ -12,6 +12,7 @@ namespace MHServerEmu.Common.Config
         public static GroupingManagerConfig GroupingManager { get; }
         public static GameOptionsConfig GameOptions { get; }
         public static BillingConfig Billing { get; }
+        public static WebApiConfig WebApi { get; }
 
         static ConfigManager()
         {
@@ -27,6 +28,7 @@ namespace MHServerEmu.Common.Config
                 GroupingManager = new(configFile);
                 GameOptions = new(configFile);
                 Billing = new(configFile);
+                WebApi = new(configFile);
 
                 IsInitialized = true;
             }

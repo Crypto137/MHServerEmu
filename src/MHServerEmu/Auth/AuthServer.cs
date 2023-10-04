@@ -87,9 +87,10 @@ namespace MHServerEmu.Auth
                 case "GET":
                     if (request.Url.LocalPath == "/favicon.ico") return;     // Ignore favicon requests
 
+                    // We shouldn't be getting GET requests from game clients
                     if (requestIsFromGameClient)
-                        Logger.Warn($"Received {request.HttpMethod} to {request.Url.LocalPath} from a game client on {request.RemoteEndPoint}");    // We shouldn't be getting GET requests from game clients
-                    else
+                        Logger.Warn($"Received {request.HttpMethod} to {request.Url.LocalPath} from a game client on {request.RemoteEndPoint}");
+                    else if (ConfigManager.WebApi.EnableWebApi)
                         HandleWebApiRequest(request, response);     // This is a potential web API request
 
                     break;
@@ -194,7 +195,7 @@ namespace MHServerEmu.Auth
 
         private async void HandleWebApiRequest(HttpListenerRequest request, HttpListenerResponse response)
         {
-            byte[] buffer = Array.Empty<byte>();
+            byte[] buffer;
 
             switch (request.Url.LocalPath)
             {
