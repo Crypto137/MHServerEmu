@@ -1,4 +1,6 @@
-﻿using System.Net;
+﻿using System.Collections.Specialized;
+using System.Net;
+using System.Web;
 using Google.ProtocolBuffers;
 using Gazillion;
 using MHServerEmu.Auth.WebApi;
@@ -82,34 +84,42 @@ namespace MHServerEmu.Auth
         {
             bool requestIsFromGameClient = (request.UserAgent == "Secret Identity Studios Http Client");
 
+            // We should be getting only GET and POST
             switch (request.HttpMethod)
             {
                 case "GET":
                     if (request.Url.LocalPath == "/favicon.ico") return;     // Ignore favicon requests
 
-                    // We shouldn't be getting GET requests from game clients
-                    if (requestIsFromGameClient)
-                        Logger.Warn($"Received {request.HttpMethod} to {request.Url.LocalPath} from a game client on {request.RemoteEndPoint}");
-                    else if (ConfigManager.WebApi.EnableWebApi)
-                        HandleWebApiRequest(request, response);     // This is a potential web API request
+                    // Web API get requests
+                    if (requestIsFromGameClient == false && ConfigManager.WebApi.EnableWebApi)
+                    {
+                        HandleWebApiRequest(request, response);
+                        return;
+                    }
 
                     break;
 
                 case "POST":
-                    // Accept POST requests only from game clients
-                    if (requestIsFromGameClient)
+                    // Client auth messages
+                    if (requestIsFromGameClient && request.Url.LocalPath == "/Login/IndexPB")
+                    {
                         HandleMessage(request, response);
-                    else
-                        Logger.Warn($"Received {request.HttpMethod} to {request.Url.LocalPath} from an unknown UserAgent on {request.RemoteEndPoint}. UserAgent information: {request.UserAgent}");
+                        return;
+                    }
+                    
+                    // Web API post requests
+                    if (requestIsFromGameClient == false && ConfigManager.WebApi.EnableWebApi)
+                    {
+                        HandleWebApiRequest(request, response);
+                        return;
+                    }
 
-                    break;
-
-                default:
-                    // We shouldn't be getting any other request methods
-                    string source = requestIsFromGameClient ? "a game client" : $"an unknown UserAgent ({request.UserAgent})";
-                    Logger.Warn($"Received {request.HttpMethod} to {request.Url.LocalPath} from {source} on {request.RemoteEndPoint}");
                     break;
             }
+
+            // Display a warning for unhandled requests
+            string source = requestIsFromGameClient ? "a game client" : $"an unknown UserAgent ({request.UserAgent})";
+            Logger.Warn($"Received unhandled {request.HttpMethod} to {request.Url.LocalPath} from {source} on {request.RemoteEndPoint}");
         }
 
         /// <summary>
@@ -196,6 +206,12 @@ namespace MHServerEmu.Auth
         private async void HandleWebApiRequest(HttpListenerRequest request, HttpListenerResponse response)
         {
             byte[] buffer;
+            NameValueCollection queryString = null;
+
+            // Parse query string from POST requests
+            if (request.HttpMethod == "POST")
+                using (StreamReader reader = new(request.InputStream))
+                    queryString = HttpUtility.ParseQueryString(reader.ReadToEnd());
 
             switch (request.Url.LocalPath)
             {
@@ -204,7 +220,7 @@ namespace MHServerEmu.Auth
                     return;
 
                 case "/AccountManagement/Create":
-                    buffer = _webApiHandler.HandleRequest(WebApiRequest.AccountCreate, request.QueryString);
+                    buffer = _webApiHandler.HandleRequest(WebApiRequest.AccountCreate, queryString);
                     break;
             }
 

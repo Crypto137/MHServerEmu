@@ -36,7 +36,7 @@ namespace MHServerEmu.Auth.WebApi
         private byte[] HandleAccountCreateRequest(NameValueCollection queryString)
         {
             // Show account creation form when no parameters are specified in the query string
-            if (queryString.HasKeys() == false) return Encoding.UTF8.GetBytes(AccountCreateFormHtml);
+            if (queryString == null) return Encoding.UTF8.GetBytes(AccountCreateFormHtml);
 
             // Check input
             if ((FieldIsValid(queryString["email"]) && FieldIsValid(queryString["playerName"]) && FieldIsValid(queryString["password"])) == false)

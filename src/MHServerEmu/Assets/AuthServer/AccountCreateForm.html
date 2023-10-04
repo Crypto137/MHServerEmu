@@ -7,14 +7,14 @@
 </head>
 <body>
 	<div style="width: 100%; height: 100%; text-align: center;">
-		<form>
+		<form method="POST">
 			<h1>Create Account</h1>
 			<label for="email">Email</label><br>
-			<input type="text" id="email" name="email"><br><br>
+			<input type="text" id="email" name="email" required><br><br>
 			<label for="playerName">Player Name</label><br>
-			<input type="text" id="playerName" name="playerName"><br><br>
+			<input type="text" id="playerName" name="playerName" required><br><br>
 			<label for="password">Password</label><br>
-			<input type="password" id="password" name="password"><br><br>
+			<input type="password" id="password" name="password" minlength="3" maxlength="64" required><br><br>
 			<input type="submit" value="Submit">
 		</form>
 	</div>
