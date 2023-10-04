@@ -1,6 +1,6 @@
 # Embedded Browser
 
-The in-game store and the community news window use a CEF-based web browser that can load HTML pages. These pages can interact with the UI via a JavaScript API.
+Some of the in-game UI panels (TOS popup on login, store, community news) use a CEF-based web browser that can load HTML pages. These pages can interact with the UI via a JavaScript API.
 
 ## API Calls
 
@@ -13,9 +13,10 @@ Calls are generally made with onclick events (e.g. ```<a onclick="myApi.OpenCata
 | myApi.UpdateWalletBalance()                            | Sends a NetMessageGetCurrencyBalance to the server.                                                           |
 | myApi.BuyBundleFromJS(string skuId)                    |                                                                                                               |
 | myApi.ReloadAddGPage()                                 |                                                                                                               |
-| myApi.OpenExternalBrowserFromJS(string url)            | Opens a URL in the user's default web browser (news only).                                                    |
+| myApi.OpenExternalBrowserFromJS(string url)            | Opens a URL in the user's default web browser (TOS and news only).                                            |
 | myApi.OpenNewsUrl(string url)                          | Opens a popup in the news window (news V2 only).                                                              |
 | myApi.CloseNewsUrl()                                   | Closes the news window popup (news V2 only).                                                                  |
+| myApi.CloseLegalDoc(bool accepted)                     | Closes the TOS popup.                                                                                         |
 
 ## Store Page Names
 
@@ -32,13 +33,17 @@ Calls are generally made with onclick events (e.g. ```<a onclick="myApi.OpenCata
 
 ## Frame Sizes
 
-- Home Page: 974x528
+The actual viewable area is slightly smaller than these.
 
-- Banner: 748x110
+- TOS Popup: 500x400
 
-- Add G: 1050x700
+- Store Home Page: 974x528
 
-- Bundles: 880x569
+- Store Banner: 748x110
+
+- Store Add G: 1050x700
+
+- Store Bundles: 880x569
 
 - Community News (Version 1): 954x641
 

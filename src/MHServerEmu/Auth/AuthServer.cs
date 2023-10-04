@@ -109,6 +109,15 @@ namespace MHServerEmu.Auth
             {
                 case FrontendProtocolMessage.LoginDataPB:
                     var loginDataPB = LoginDataPB.ParseFrom(message.Payload);
+
+                    // Send a TOS popup when the client uses tos@test.com as email
+                    if (loginDataPB.EmailAddress.ToLower() == "tos@test.com")
+                    {
+                        SendTosPopup(response);
+                        return;
+                    }
+
+                    // Try to create a new session from the data we received
                     AuthStatusCode statusCode = _frontendService.TryCreateSessionFromLoginDataPB(loginDataPB, out ClientSession session);
 
                     // Respond with an error if session creation didn't succeed
@@ -151,6 +160,20 @@ namespace MHServerEmu.Auth
                     Logger.Warn($"Received unknown messageId {message.Id}");
                     break;
             }
+        }
+
+        private async void SendTosPopup(HttpListenerResponse response)
+        {
+            byte[] buffer = new GameMessage(AuthTicket.CreateBuilder()
+                .SetSessionId(0)
+                .SetTosurl("http://localhost/tos")  // The client adds &locale=en_us to this url (or another locale code)
+                .Build()).Encode();
+
+            response.StatusCode = (int)AuthStatusCode.NeedToAcceptLegal;
+            response.KeepAlive = false;
+            response.ContentType = "application/octet-stream";
+            response.ContentLength64 = buffer.Length;
+            await response.OutputStream.WriteAsync(buffer);
         }
     }
 }
