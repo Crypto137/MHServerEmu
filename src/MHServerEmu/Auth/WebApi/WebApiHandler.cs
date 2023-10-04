@@ -44,9 +44,9 @@ namespace MHServerEmu.Auth.WebApi
             if ((FieldIsValid(queryString["email"]) && FieldIsValid(queryString["playerName"]) && FieldIsValid(queryString["password"])) == false)
                 return GenerateResponse("Error", "Input is not valid.");
 
-            string accountManagerOutput = AccountManager.CreateAccount(queryString["email"].ToLower(), queryString["playerName"], queryString["password"]);
-            Logger.Trace(accountManagerOutput);
-            return GenerateResponse("Create Account", accountManagerOutput);
+            bool success = AccountManager.CreateAccount(queryString["email"].ToLower(), queryString["playerName"], queryString["password"], out string message);
+            Logger.Trace(message);
+            return GenerateResponse(success ? "Success" : "Error", message);
         }
 
         private byte[] HandleServerStatusRequest()

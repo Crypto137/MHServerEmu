@@ -15,7 +15,9 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
         {
             if (@params == null) return Fallback();
             if (@params.Length < 3) return "Invalid arguments. Type 'help account create' to get help.";
-            return AccountManager.CreateAccount(@params[0].ToLower(), @params[1], @params[2]);
+
+            AccountManager.CreateAccount(@params[0].ToLower(), @params[1], @params[2], out string message);
+            return message;
         }
 
         [Command("playername", "Changes player name for the specified account.\nUsage: account playername [email] [playername]", AccountUserLevel.User)]
@@ -28,8 +30,9 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
 
             if (client != null && client.Session.Account.UserLevel < AccountUserLevel.Moderator && email != client.Session.Account.Email)
                 return "You are allowed to change player name only for your own account.";
-            else
-                return AccountManager.ChangeAccountPlayerName(email, @params[1]);
+                
+            AccountManager.ChangeAccountPlayerName(email, @params[1], out string message);
+            return message;
         }
 
         [Command("password", "Changes password for the specified account.\nUsage: account password [email] [password]", AccountUserLevel.User)]
@@ -42,8 +45,9 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
 
             if (client != null && client.Session.Account.UserLevel < AccountUserLevel.Moderator && email != client.Session.Account.Email)
                 return "You are allowed to change password only for your own account.";
-            else
-                return AccountManager.ChangeAccountPassword(email, @params[1]);
+
+            AccountManager.ChangeAccountPassword(email, @params[1], out string message);
+            return message;
         }
 
         [Command("userlevel", "Changes user level for the specified account.\nUsage: account userlevel [email] [0|1|2]", AccountUserLevel.Admin)]
@@ -55,7 +59,8 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             if (byte.TryParse(@params[1], out byte userLevel))
             {
                 if (userLevel > 2) return "Invalid arguments. Type 'help account userlevel' to get help.";
-                return AccountManager.SetAccountUserLevel(@params[0].ToLower(), (AccountUserLevel)userLevel);
+                AccountManager.SetAccountUserLevel(@params[0].ToLower(), (AccountUserLevel)userLevel, out string message);
+                return message;
             }
             else
             {
@@ -83,7 +88,9 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
         {
             if (@params == null) return Fallback();
             if (@params.Length == 0) return "Invalid arguments. Type 'help account ban' to get help.";
-            return AccountManager.BanAccount(@params[0].ToLower());
+
+            AccountManager.BanAccount(@params[0].ToLower(), out string message);
+            return message;
         }
 
         [Command("unban", "Unbans the specified account.\nUsage: account unban [email]", AccountUserLevel.Moderator)]
@@ -91,7 +98,9 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
         {
             if (@params == null) return Fallback();
             if (@params.Length == 0) return "Invalid arguments. Type 'help account unban' to get help.";
-            return AccountManager.UnbanAccount(@params[0].ToLower());
+
+            AccountManager.UnbanAccount(@params[0].ToLower(), out string message);
+            return message;
         }
 
         [Command("info", "Shows information for the logged in account.\nUsage: account info", AccountUserLevel.User)]
@@ -102,6 +111,7 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             StringBuilder sb = new();
             sb.Append($"Account Info:\n");
             sb.Append($"Email: {client.Session.Account.Email}\n");
+            sb.Append($"PlayerName: {client.Session.Account.PlayerName}\n");
             sb.Append($"UserLevel: {client.Session.Account.UserLevel}\n");
             sb.Append($"IsBanned: {client.Session.Account.IsArchived}\n");
             sb.Append($"IsArchived: {client.Session.Account.IsArchived}\n");
