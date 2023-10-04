@@ -74,6 +74,11 @@ namespace MHServerEmu
             Environment.Exit(0);
         }
 
+        public static string GetServerStatus()
+        {
+            return $"Server Status\nUptime: {DateTime.Now - StartupTime:hh\\:mm\\:ss}\nSessions: {FrontendServer.FrontendService.SessionCount}";
+        }
+
         private static void PrintBanner()
         {
             Console.ForegroundColor = ConsoleColor.Yellow;

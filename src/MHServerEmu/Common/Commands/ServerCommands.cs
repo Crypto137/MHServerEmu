@@ -10,10 +10,10 @@ namespace MHServerEmu.Common.Commands
     [CommandGroup("server", "Allows you to interact with the server.", AccountUserLevel.User)]
     public class ServerCommands : CommandGroup
     {
-        [Command("info", "Usage: server info", AccountUserLevel.User)]
+        [Command("status", "Usage: server status", AccountUserLevel.User)]
         public string Info(string[] @params, FrontendClient client)
         {
-            return $"Server Information\nUptime: {DateTime.Now - Program.StartupTime:hh\\:mm\\:ss}\nSessions: {Program.FrontendServer.FrontendService.SessionCount}";
+            return Program.GetServerStatus();
         }
 
         [Command("shutdown", "Usage: server shutdown", AccountUserLevel.Admin)]

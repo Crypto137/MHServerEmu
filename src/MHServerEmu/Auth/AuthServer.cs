@@ -222,6 +222,10 @@ namespace MHServerEmu.Auth
                 case "/AccountManagement/Create":
                     buffer = _webApiHandler.HandleRequest(WebApiRequest.AccountCreate, queryString);
                     break;
+
+                case "/ServerStatus":
+                    buffer = _webApiHandler.HandleRequest(WebApiRequest.ServerStatus, queryString);
+                    break;
             }
 
             await response.OutputStream.WriteAsync(buffer);

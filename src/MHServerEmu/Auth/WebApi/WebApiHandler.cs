@@ -7,7 +7,8 @@ namespace MHServerEmu.Auth.WebApi
 {
     public enum WebApiRequest
     {
-        AccountCreate
+        AccountCreate,
+        ServerStatus
     }
 
     public class WebApiHandler
@@ -29,6 +30,7 @@ namespace MHServerEmu.Auth.WebApi
             switch (request)
             {
                 case WebApiRequest.AccountCreate: return HandleAccountCreateRequest(queryString);
+                case WebApiRequest.ServerStatus: return HandleServerStatusRequest();
                 default: Logger.Warn($"Unhandled request {request}"); return Array.Empty<byte>();
             }
         }
@@ -45,6 +47,11 @@ namespace MHServerEmu.Auth.WebApi
             string accountManagerOutput = AccountManager.CreateAccount(queryString["email"].ToLower(), queryString["playerName"], queryString["password"]);
             Logger.Trace(accountManagerOutput);
             return GenerateResponse("Create Account", accountManagerOutput);
+        }
+
+        private byte[] HandleServerStatusRequest()
+        {
+            return GenerateResponse("Server Status", Program.GetServerStatus());
         }
 
         private byte[] GenerateResponse(string title, string text)

@@ -28,7 +28,7 @@ To see an up to date list of all commands, type !commands in the server console 
 
 | Command                                                 | Description                                       | User Level |
 | ------------------------------------------------------- | ------------------------------------------------- | ---------- |
-| !server info                                            | Shows server information.                         | All        |
+| !server status                                          | Shows server status information.                  | All        |
 | !server shutdown                                        | Shuts down the server.                            | Admin      |
 | !client info [sessionId]                                | Show information about the specified client.      | Admin      |
 | !client kick [sessionId]                                | Kicks the specified client from the server.       | Moderator  |
