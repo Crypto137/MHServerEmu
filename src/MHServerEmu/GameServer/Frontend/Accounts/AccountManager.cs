@@ -1,4 +1,5 @@
-﻿using Gazillion;
+﻿using System.Text.RegularExpressions;
+using Gazillion;
 using MHServerEmu.Auth;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Config;
@@ -60,6 +61,9 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             if (DBManager.QueryIsPlayerNameTaken(playerName))
                 return $"Failed to create account: name {playerName} is already used by another account.";
 
+            if (CheckPlayerName(playerName) == false)
+                return "Failed to create account: names may contain only alphanumeric characters.";
+
             if ((password.Length >= MinimumPasswordLength && password.Length <= MaximumPasswordLength) == false)
                 return $"Failed to create account: password must between {MinimumPasswordLength} and {MaximumPasswordLength} characters long.";
 
@@ -79,7 +83,10 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
                 return $"Failed to change player name: account {email} not found.";
             
             if (DBManager.QueryIsPlayerNameTaken(playerName))
-                return $"Failed to change player name: the name {playerName} is already taken.";
+                return $"Failed to change player name: name {playerName} is already used by another account.";
+
+            if (CheckPlayerName(playerName) == false)
+                return "Failed to change player name: names may contain only alphanumeric characters.";
 
             // Update player name
             account.PlayerName = playerName;
@@ -147,5 +154,7 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             DBManager.UpdateAccount(account);
             return $"Successfully unbanned account {email}.";
         }
+
+        private static bool CheckPlayerName(string playerName) => Regex.Match(playerName, "^[a-zA-Z0-9]+$").Success;
     }
 }
