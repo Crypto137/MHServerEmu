@@ -23,12 +23,12 @@ namespace MHServerEmu.GameServer
                 case ClientToGameServerMessage.NetMessageReadyForGameJoin:
                     // NetMessageReadyForGameJoin contains a bug where wipesDataIfMismatchedInDb is marked as required but the client doesn't include it
                     // To avoid an exception we build a partial message from the data we receive
-                    Logger.Info($"Received NetMessageReadyForGameJoin (sessionId {client.Session.Id})");
+                    Logger.Info($"Received NetMessageReadyForGameJoin from {client.Session.Account}");
                     var parsedReadyForGameJoin = NetMessageReadyForGameJoin.CreateBuilder().MergeFrom(message.Payload).BuildPartial();
                     Logger.Trace(parsedReadyForGameJoin.ToString());
 
                     // Log the player in
-                    Logger.Info($"Logging in player (sessionId {client.Session.Id})");
+                    Logger.Info($"Logging in player {client.Session.Account}");
                     client.SendMessage(muxId, new(NetMessageReadyAndLoggedIn.DefaultInstance)); // add report defect (bug) config here
 
                     // Sync time
@@ -114,7 +114,7 @@ namespace MHServerEmu.GameServer
                     break;
 
                 case ClientToGameServerMessage.NetMessageGracefulDisconnect:
-                    client.SendMuxDisconnect(1);
+                    client.SendMessage(muxId, new(NetMessageGracefulDisconnectAck.DefaultInstance));
                     break;
 
                 case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:

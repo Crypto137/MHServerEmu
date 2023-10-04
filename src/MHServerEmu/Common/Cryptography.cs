@@ -37,7 +37,7 @@ namespace MHServerEmu.Common
             }
         }
 
-        public static byte[] DecryptToken(byte[] token, byte[] key, byte[] iv)
+        public static bool TryDecryptToken(byte[] encryptedToken, byte[] key, byte[] iv, out byte[] decryptedToken)
         {
             using (Aes aesAlgorithm = Aes.Create())
             {
@@ -46,12 +46,21 @@ namespace MHServerEmu.Common
 
                 ICryptoTransform decryptor = aesAlgorithm.CreateDecryptor();
 
-                using (MemoryStream memoryStream = new(token))
-                using (CryptoStream cryptoStream = new(memoryStream, decryptor, CryptoStreamMode.Read))
-                using (MemoryStream decryptionBuffer = new())
+                try
                 {
-                    cryptoStream.CopyTo(decryptionBuffer);
-                    return decryptionBuffer.ToArray();
+                    using (MemoryStream memoryStream = new(encryptedToken))
+                    using (CryptoStream cryptoStream = new(memoryStream, decryptor, CryptoStreamMode.Read))
+                    using (MemoryStream decryptionBuffer = new())
+                    {
+                        cryptoStream.CopyTo(decryptionBuffer);
+                        decryptedToken = decryptionBuffer.ToArray();
+                        return true;
+                    }
+                }
+                catch
+                {
+                    decryptedToken = null;
+                    return false;
                 }
             }
         }

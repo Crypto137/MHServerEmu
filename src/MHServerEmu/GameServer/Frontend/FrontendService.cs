@@ -17,8 +17,6 @@ namespace MHServerEmu.GameServer.Frontend
 
         private GameServerManager _gameServerManager;
 
-        // Use a lock object instead of this to prevent deadlocks
-        // More info: https://learn.microsoft.com/en-us/archive/msdn-magazine/2003/january/net-column-safe-thread-synchronization
         private readonly object _sessionLock = new();     
         private readonly Dictionary<ulong, ClientSession> _sessionDict = new();
         private readonly Dictionary<ulong, FrontendClient> _clientDict = new();
@@ -38,68 +36,58 @@ namespace MHServerEmu.GameServer.Frontend
                     Logger.Info($"Received ClientCredentials on muxId {muxId}");
                     ClientCredentials clientCredentials = ClientCredentials.ParseFrom(message.Payload);
 
-                    if (_sessionDict.ContainsKey(clientCredentials.Sessionid))
-                    {
-                        ClientSession session = _sessionDict[clientCredentials.Sessionid];
-                        byte[] decryptedToken = null;
-
-                        try
-                        {
-                            decryptedToken = Cryptography.DecryptToken(clientCredentials.EncryptedToken.ToByteArray(), session.Key, clientCredentials.Iv.ToByteArray());
-                        }
-                        catch
-                        {
-                            lock (_sessionLock) _sessionDict.Remove(session.Id);    // invalidate session after a failed login attempt
-                            Logger.Warn($"Failed to decrypt token for sessionId {session.Id}");
-                        }
-
-                        if (decryptedToken != null && Cryptography.VerifyToken(decryptedToken, session.Token))
-                        {
-                            Logger.Info($"Verified client for sessionId {session.Id}");
-
-                            // assign account to the client if the token is valid
-                            lock (_sessionLock)
-                            {
-                                client.AssignSession(session);
-                                _clientDict.Add(session.Id, client);
-                            }
-
-                            // Generate response
-                            if (ConfigManager.Frontend.SimulateQueue)
-                            {
-                                Logger.Info("Responding with LoginQueueStatus message");
-
-                                var response = LoginQueueStatus.CreateBuilder()
-                                    .SetPlaceInLine(ConfigManager.Frontend.QueuePlaceInLine)
-                                    .SetNumberOfPlayersInLine(ConfigManager.Frontend.QueueNumberOfPlayersInLine)
-                                    .Build();
-
-                                client.SendMessage(muxId, new(response));
-                            }
-                            else
-                            {
-                                Logger.Info("Responding with SessionEncryptionChanged message");
-
-                                var response = SessionEncryptionChanged.CreateBuilder()
-                                    .SetRandomNumberIndex(0)
-                                    .SetEncryptedRandomNumber(ByteString.Empty)
-                                    .Build();
-
-                                client.SendMessage(muxId, new(response));
-                            }
-                        }
-                        else
-                        {
-                            Logger.Warn($"Failed to verify token for sessionId {session.Id}, disconnecting client");
-                            client.Connection.Disconnect();
-                        }
-
-                    }
-                    else
+                    // Check if the session exists
+                    if (_sessionDict.TryGetValue(clientCredentials.Sessionid, out ClientSession session) == false)
                     {
                         Logger.Warn($"SessionId {clientCredentials.Sessionid} not found, disconnecting client");
                         client.Connection.Disconnect();
                         return;
+                    }
+
+                    // Try to decrypt the token
+                    if (Cryptography.TryDecryptToken(clientCredentials.EncryptedToken.ToByteArray(), session.Key,
+                        clientCredentials.Iv.ToByteArray(), out byte[] decryptedToken) == false)
+                    {
+                        Logger.Warn($"Failed to decrypt token for sessionId {session.Id}, disconnecting client");
+                        lock (_sessionLock) _sessionDict.Remove(session.Id);    // invalidate session after a failed login attempt
+                        client.Connection.Disconnect();
+                        return;
+                    }
+
+                    // Verify the token
+                    if (Cryptography.VerifyToken(decryptedToken, session.Token) == false)
+                    {
+                        Logger.Warn($"Failed to verify token for sessionId {session.Id}, disconnecting client");
+                        lock (_sessionLock) _sessionDict.Remove(session.Id);    // invalidate session after a failed login attempt
+                        client.Connection.Disconnect();
+                        return;
+                    }
+
+                    Logger.Info($"Verified client for sessionId {session.Id} - account {session.Account}");
+
+                    // assign account to the client if the token is valid
+                    lock (_sessionLock)
+                    {
+                        client.AssignSession(session);
+                        _clientDict.Add(session.Id, client);
+                    }
+
+                    // Generate response
+                    if (ConfigManager.Frontend.SimulateQueue)
+                    {
+                        Logger.Info("Responding with LoginQueueStatus message");
+                        client.SendMessage(muxId, new(LoginQueueStatus.CreateBuilder()
+                            .SetPlaceInLine(ConfigManager.Frontend.QueuePlaceInLine)
+                            .SetNumberOfPlayersInLine(ConfigManager.Frontend.QueueNumberOfPlayersInLine)
+                            .Build()));
+                    }
+                    else
+                    {
+                        Logger.Info("Responding with SessionEncryptionChanged message");
+                        client.SendMessage(muxId, new(SessionEncryptionChanged.CreateBuilder()
+                            .SetRandomNumberIndex(0)
+                            .SetEncryptedRandomNumber(ByteString.Empty)
+                            .Build()));
                     }
 
                     break;
@@ -209,7 +197,7 @@ namespace MHServerEmu.GameServer.Frontend
 
                 if (ConfigManager.Frontend.BypassAuth == false) DBManager.UpdateAccountData(client.Session.Account);
 
-                Logger.Info($"Client disconnected (sessionId {client.Session.Id})");
+                Logger.Info($"Client disconnected - account {client.Session.Account}");
             }
         }
 
