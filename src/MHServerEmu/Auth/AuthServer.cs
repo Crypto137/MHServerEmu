@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using Google.ProtocolBuffers;
 using Gazillion;
+using MHServerEmu.Auth.WebApi;
 using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.Frontend;
@@ -15,6 +16,7 @@ namespace MHServerEmu.Auth
         private readonly string _url;
         private readonly FrontendService _frontendService;
         private readonly CancellationTokenSource _cancellationTokenSource;
+        private readonly WebApiHandler _webApiHandler;
 
         private HttpListener _listener;
 
@@ -23,6 +25,7 @@ namespace MHServerEmu.Auth
             _url = $"http://localhost:{port}/";
             _frontendService = frontendService;
             _cancellationTokenSource = new();
+            _webApiHandler = new();
         }
 
         public async void Run()
@@ -77,22 +80,35 @@ namespace MHServerEmu.Auth
         /// <param name="response">HTTP listener response.</param>
         private void HandleRequest(HttpListenerRequest request, HttpListenerResponse response)
         {
-            // Ignore requests from other user agents (e.g. web browsers)
-            if (request.UserAgent != "Secret Identity Studios Http Client")
-            {
-                Logger.Warn($"Received {request.HttpMethod} to {request.Url.LocalPath} from an unknown UserAgent on {request.RemoteEndPoint}. UserAgent information: {request.UserAgent}");
-                return;
-            }
+            bool requestIsFromGameClient = (request.UserAgent == "Secret Identity Studios Http Client");
 
-            // Ignore non-POST requests and unknown endpoints
-            if ((request.HttpMethod == "POST" && request.Url.LocalPath == "/Login/IndexPB") == false)
+            switch (request.HttpMethod)
             {
-                Logger.Warn($"Received {request.HttpMethod} to {request.Url.LocalPath} from a game client on {request.RemoteEndPoint}");
-                return;
-            }
+                case "GET":
+                    if (request.Url.LocalPath == "/favicon.ico") return;     // Ignore favicon requests
 
-            // Handle auth messages
-            HandleMessage(request, response);
+                    if (requestIsFromGameClient)
+                        Logger.Warn($"Received {request.HttpMethod} to {request.Url.LocalPath} from a game client on {request.RemoteEndPoint}");    // We shouldn't be getting GET requests from game clients
+                    else
+                        HandleWebApiRequest(request, response);     // This is a potential web API request
+
+                    break;
+
+                case "POST":
+                    // Accept POST requests only from game clients
+                    if (requestIsFromGameClient)
+                        HandleMessage(request, response);
+                    else
+                        Logger.Warn($"Received {request.HttpMethod} to {request.Url.LocalPath} from an unknown UserAgent on {request.RemoteEndPoint}. UserAgent information: {request.UserAgent}");
+
+                    break;
+
+                default:
+                    // We shouldn't be getting any other request methods
+                    string source = requestIsFromGameClient ? "a game client" : $"an unknown UserAgent ({request.UserAgent})";
+                    Logger.Warn($"Received {request.HttpMethod} to {request.Url.LocalPath} from {source} on {request.RemoteEndPoint}");
+                    break;
+            }
         }
 
         /// <summary>
@@ -173,6 +189,24 @@ namespace MHServerEmu.Auth
             response.KeepAlive = false;
             response.ContentType = "application/octet-stream";
             response.ContentLength64 = buffer.Length;
+            await response.OutputStream.WriteAsync(buffer);
+        }
+
+        private async void HandleWebApiRequest(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            byte[] buffer = Array.Empty<byte>();
+
+            switch (request.Url.LocalPath)
+            {
+                default:
+                    Logger.Warn($"Received unknown web API request:\nRequest: {request.Url.LocalPath}\nRemoteEndPoint: {request.RemoteEndPoint}\nUserAgent: {request.UserAgent}");
+                    return;
+
+                case "/AccountManagement/Create":
+                    buffer = _webApiHandler.HandleRequest(WebApiRequest.AccountCreate, request.QueryString);
+                    break;
+            }
+
             await response.OutputStream.WriteAsync(buffer);
         }
     }
