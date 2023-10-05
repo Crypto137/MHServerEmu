@@ -157,7 +157,7 @@ namespace MHServerEmu.Networking
 
                             case NetMessageEntityCreate entityCreate:
                                 // Parse base data
-                                EntityCreateBaseData baseData = new(entityCreate.BaseData.ToByteArray());
+                                EntityBaseData baseData = new(entityCreate.BaseData.ToByteArray());
                                 writer.WriteLine($"BaseData: {baseData}");
 
                                 // Get blueprint for this entity
@@ -168,24 +168,31 @@ namespace MHServerEmu.Networking
                                 switch (blueprint.RuntimeBinding)
                                 {
                                     case "EntityPrototype":
-                                        writer.WriteLine($"ArchiveData: {new Entity(entityCreate.ArchiveData.ToByteArray())}");
+                                        writer.WriteLine($"ArchiveData: {new Entity(baseData, entityCreate.ArchiveData.ToByteArray())}");
                                         break;
 
                                     case "WorldEntityPrototype":
+                                        writer.WriteLine($"ArchiveData: {new WorldEntity(baseData, entityCreate.ArchiveData.ToByteArray())}");
+                                        break;
+
                                     case "AgentPrototype":
-                                        writer.WriteLine($"ArchiveData: {new WorldEntity(entityCreate.ArchiveData.ToByteArray())}");
+                                        writer.WriteLine($"ArchiveData: {new Agent(baseData, entityCreate.ArchiveData.ToByteArray())}");
                                         break;
 
                                     case "AvatarPrototype":
-                                        writer.WriteLine($"ArchiveData: {new Avatar(entityCreate.ArchiveData.ToByteArray())}");
+                                        writer.WriteLine($"ArchiveData: {new Avatar(baseData, entityCreate.ArchiveData.ToByteArray())}");
                                         break;
 
                                     case "PlayerPrototype":
-                                        writer.WriteLine($"ArchiveData: {new Player(entityCreate.ArchiveData.ToByteArray())}");
+                                        writer.WriteLine($"ArchiveData: {new Player(baseData, entityCreate.ArchiveData.ToByteArray())}");
                                         break;
 
                                     case "TransitionPrototype":
-                                        writer.WriteLine($"ArchiveData: {new Transition(entityCreate.ArchiveData.ToByteArray())}");
+                                        writer.WriteLine($"ArchiveData: {new Transition(baseData, entityCreate.ArchiveData.ToByteArray())}");
+                                        break;
+
+                                    default:
+                                        writer.WriteLine($"ArchiveData: unsupported entity ({blueprint.RuntimeBinding})");
                                         break;
                                 }
                                 

@@ -575,7 +575,7 @@ namespace MHServerEmu.GameServer.Games
                     ulong arenaEntityId = 6000;
                     ulong areanRepId = 6600;
 
-                    EnqueueResponse(client, new(EntityHelper.SpawnEmpyEntity(
+                    EnqueueResponse(client, new(EntityHelper.SpawnEmptyEntity(
                         arenaEntityId, (ulong)PowerPrototypes.Magik.UltimateArea,
                         new(position.X, position.Y, position.Z), new(), areanRepId)));
 

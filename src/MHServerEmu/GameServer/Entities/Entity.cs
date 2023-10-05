@@ -1,17 +1,21 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
+using Gazillion;
 using MHServerEmu.GameServer.Properties;
 
 namespace MHServerEmu.GameServer.Entities
 {
     public class Entity
     {
+        public EntityBaseData BaseData { get; set; }
+
         public uint ReplicationPolicy { get; set; }
         public ReplicatedPropertyCollection PropertyCollection { get; set; }
         public ulong[] UnknownFields { get; set; } = Array.Empty<ulong>();
 
-        public Entity(byte[] archiveData)
+        public Entity(EntityBaseData baseData, byte[] archiveData)
         {
+            BaseData = baseData;
             CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
 
             ReadEntityFields(stream);
@@ -20,8 +24,9 @@ namespace MHServerEmu.GameServer.Entities
 
         public Entity() { }
 
-        public Entity(uint replicationPolicy, ReplicatedPropertyCollection propertyCollection, ulong[] unknownFields)
+        public Entity(EntityBaseData baseData, uint replicationPolicy, ReplicatedPropertyCollection propertyCollection, ulong[] unknownFields)
         {
+            BaseData = baseData;
             ReplicationPolicy = replicationPolicy;
             PropertyCollection = propertyCollection;
             UnknownFields = unknownFields;
@@ -39,6 +44,14 @@ namespace MHServerEmu.GameServer.Entities
                 cos.Flush();
                 return ms.ToArray();
             }
+        }
+
+        public NetMessageEntityCreate ToNetMessageEntityCreate()
+        {
+            return NetMessageEntityCreate.CreateBuilder()
+                .SetBaseData(ByteString.CopyFrom(BaseData.Encode()))
+                .SetArchiveData(ByteString.CopyFrom(Encode()))
+                .Build();
         }
 
         public override string ToString()

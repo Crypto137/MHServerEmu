@@ -14,8 +14,9 @@ namespace MHServerEmu.GameServer.Entities
         public PowerCollectionRecord[] PowerCollection { get; set; }
         public int UnkEvent { get; set; }
 
-        public WorldEntity(byte[] archiveData)
+        public WorldEntity(EntityBaseData baseData, byte[] archiveData)
         {
+            BaseData = baseData;
             CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
 
             ReadEntityFields(stream);
@@ -25,8 +26,9 @@ namespace MHServerEmu.GameServer.Entities
 
         public WorldEntity() { }
 
-        public WorldEntity(uint replicationPolicy, ulong replicationId)
+        public WorldEntity(EntityBaseData baseData, uint replicationPolicy, ulong replicationId)
         {
+            BaseData = baseData;
             ReplicationPolicy = replicationPolicy;
             PropertyCollection = new(replicationId);
             TrackingContextMap = Array.Empty<EntityTrackingContextMap>();
@@ -35,9 +37,10 @@ namespace MHServerEmu.GameServer.Entities
             UnkEvent = 0;
         }
 
-        public WorldEntity(ulong replicationId, Vector3 mapPosition, int health, int mapAreaId,
+        public WorldEntity(EntityBaseData baseData, ulong replicationId, Vector3 mapPosition, int health, int mapAreaId,
             int healthMaxOther, ulong mapRegionId, int mapCellId, ulong contextAreaRef)
         {
+            BaseData = baseData;
             ReplicationPolicy = 0x20;
 
             PropertyCollection = new(replicationId, new()

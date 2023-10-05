@@ -7,7 +7,7 @@ using MHServerEmu.GameServer.GameData;
 
 namespace MHServerEmu.GameServer.Entities
 {
-    public class EntityCreateBaseData
+    public class EntityBaseData
     {
         private const int FlagCount = 16;  // keep flag count a bit higher than we need just in case so we don't miss anything
         private const int LocFlagCount = 16;
@@ -33,7 +33,7 @@ namespace MHServerEmu.GameServer.Entities
         public InventoryLocation InvLocPrev { get; }
         public ulong[] Vector { get; } = Array.Empty<ulong>();
 
-        public EntityCreateBaseData(byte[] data)
+        public EntityBaseData(byte[] data)
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(data);
 
@@ -74,9 +74,9 @@ namespace MHServerEmu.GameServer.Entities
             }
         }
 
-        public EntityCreateBaseData() { }
+        public EntityBaseData() { }
 
-        public EntityCreateBaseData(ulong entityId, ulong prototypeId, Vector3 position, Vector3 orientation)
+        public EntityBaseData(ulong entityId, ulong prototypeId, Vector3 position, Vector3 orientation)
         {
             ReplicationPolicy = 0x20;
             EntityId = entityId;

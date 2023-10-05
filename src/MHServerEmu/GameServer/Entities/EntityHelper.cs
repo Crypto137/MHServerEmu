@@ -1,5 +1,4 @@
-﻿using Google.ProtocolBuffers;
-using Gazillion;
+﻿using Gazillion;
 using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.Properties;
 
@@ -10,52 +9,37 @@ namespace MHServerEmu.GameServer.Entities
         public static NetMessageEntityCreate GenerateEntityCreateMessage(ulong entityId, ulong prototypeId, Vector3 position, Vector3 orientation,
             ulong replicationId, int health, int mapAreaId, int healthMaxOther, ulong mapRegionId, int mapCellId, ulong contextAreaRef, bool requiresEnterGameWorld)
         {
-            byte[] baseData = (requiresEnterGameWorld == false)
-                ? new EntityCreateBaseData(entityId, prototypeId, position, orientation).Encode()
-                : new EntityCreateBaseData(entityId, prototypeId, null, null).Encode();
+            EntityBaseData baseData = (requiresEnterGameWorld == false)
+                ? new EntityBaseData(entityId, prototypeId, position, orientation)
+                : new EntityBaseData(entityId, prototypeId, null, null);
 
-            byte[] archiveData = new WorldEntity(replicationId, position, health, mapAreaId, healthMaxOther, mapRegionId, mapCellId, contextAreaRef).Encode();
-
-            return NetMessageEntityCreate.CreateBuilder()
-                .SetBaseData(ByteString.CopyFrom(baseData))
-                .SetArchiveData(ByteString.CopyFrom(archiveData))
-                .Build();
+            WorldEntity worldEntity = new WorldEntity(baseData, replicationId, position, health, mapAreaId, healthMaxOther, mapRegionId, mapCellId, contextAreaRef);
+            return worldEntity.ToNetMessageEntityCreate();
         }
+
         public static NetMessageEntityCreate SpawnEntityEnemy(ulong entityId, ulong prototypeId, Vector3 position, Vector3 orientation,
             ulong replicationId, int health, int mapAreaId, int healthMaxOther, ulong mapRegionId, int mapCellId, ulong contextAreaRef, bool requiresEnterGameWorld,
             int CombatLevel, int CharacterLevel)
         {
-            byte[] baseData = (requiresEnterGameWorld == false)
-                ? new EntityCreateBaseData(entityId, prototypeId, position, orientation).Encode()
-                : new EntityCreateBaseData(entityId, prototypeId, null, null).Encode();
+            EntityBaseData baseData = (requiresEnterGameWorld == false)
+                ? new EntityBaseData(entityId, prototypeId, position, orientation)
+                : new EntityBaseData(entityId, prototypeId, null, null);
 
-            WorldEntity worldEntity = new(replicationId, position, health, mapAreaId, healthMaxOther, mapRegionId, mapCellId, contextAreaRef);
+            WorldEntity worldEntity = new(baseData, replicationId, position, health, mapAreaId, healthMaxOther, mapRegionId, mapCellId, contextAreaRef);
 
             worldEntity.PropertyCollection.List.Add(new(PropertyEnum.CharacterLevel, CharacterLevel)); 
             worldEntity.PropertyCollection.List.Add(new(PropertyEnum.CombatLevel, CombatLevel)); // zero effect
 
-            byte[] archiveData = worldEntity.Encode();
-
-            return NetMessageEntityCreate.CreateBuilder()
-                .SetBaseData(ByteString.CopyFrom(baseData))
-                .SetArchiveData(ByteString.CopyFrom(archiveData))
-                .Build();
+            return worldEntity.ToNetMessageEntityCreate();
         }
-        public static NetMessageEntityCreate SpawnEmpyEntity(ulong entityId, ulong prototypeId, Vector3 position, Vector3 orientation,
+
+        public static NetMessageEntityCreate SpawnEmptyEntity(ulong entityId, ulong prototypeId, Vector3 position, Vector3 orientation,
             ulong replicationId)
         {
-            byte[] baseData = new EntityCreateBaseData(entityId, prototypeId, position, orientation).Encode();
-
-            WorldEntity worldEntity = new(1, replicationId);
-
-            byte[] archiveData = worldEntity.Encode();
-
-            return NetMessageEntityCreate.CreateBuilder()
-                .SetBaseData(ByteString.CopyFrom(baseData))
-                .SetArchiveData(ByteString.CopyFrom(archiveData))
-                .Build();
+            EntityBaseData baseData = new EntityBaseData(entityId, prototypeId, position, orientation);
+            WorldEntity worldEntity = new(baseData, 1, replicationId);
+            return worldEntity.ToNetMessageEntityCreate();
         }
     }
-
 }
 

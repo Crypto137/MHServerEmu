@@ -38,8 +38,9 @@ namespace MHServerEmu.GameServer.Entities
         public AchievementState[] AchievementStates { get; set; }
         public StashTabOption[] StashTabOptions { get; set; }
 
-        public Player(byte[] archiveData)
+        public Player(EntityBaseData baseData, byte[] archiveData)
         {
+            BaseData = baseData;
             CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
             BoolDecoder boolDecoder = new();
 
@@ -94,13 +95,14 @@ namespace MHServerEmu.GameServer.Entities
         }
 
         // note: this is ugly
-        public Player(uint replicationPolicy, ReplicatedPropertyCollection propertyCollection,
+        public Player(EntityBaseData baseData, uint replicationPolicy, ReplicatedPropertyCollection propertyCollection,
             MissionManager missionManager, ReplicatedPropertyCollection avatarProperties,
             ulong shardId, ReplicatedString playerName, ReplicatedString unkName,
             ulong matchQueueStatus, bool emailVerified, ulong accountCreationTimestamp,
             Community community, bool unkBool, ulong[] stashInventories, uint[] availableBadges,
             GameplayOptions gameplayOptions, AchievementState[] achievementStates, StashTabOption[] stashTabOptions)
         {
+            BaseData = baseData;
             ReplicationPolicy = replicationPolicy;
             PropertyCollection = propertyCollection;
 

@@ -39,8 +39,6 @@ namespace MHServerEmu.GameServer.Games
                 .AddRangeTuningTypeKeyValueSettings(GameDatabase.LiveTuningSettingList.Select(setting => setting.ToNetStructProtoEnumValue()))
                 .Build()));
 
-            NetMessageLiveTuningUpdate.CreateBuilder().AddRangeTuningTypeKeyValueSettings(GameDatabase.LiveTuningSettingList.Select(setting => setting.ToNetStructProtoEnumValue()));
-
             messageList.Add(new(NetMessageReadyForTimeSync.DefaultInstance));
 
             // Load local player data
@@ -51,10 +49,9 @@ namespace MHServerEmu.GameServer.Games
             messageList.AddRange(RegionManager.GetRegion(account.Player.Region).GetLoadingMessages(Id));
 
             // Create waypoint entity
-            messageList.Add(new(NetMessageEntityCreate.CreateBuilder()
-                .SetBaseData(ByteString.CopyFrom(Convert.FromHexString("200C839F01200020")))
-                .SetArchiveData(ByteString.CopyFrom(Convert.FromHexString("20F4C10206000000CD80018880FCFF99BF968110CCC00202CC800302CD40D58280DE868098044DA1A1A4FE0399C00183B8030000000000")))
-                .Build()));
+            EntityBaseData waypointBaseData = new(Convert.FromHexString("200C839F01200020"));
+            WorldEntity waypoint = new(waypointBaseData, Convert.FromHexString("20F4C10206000000CD80018880FCFF99BF968110CCC00202CC800302CD40D58280DE868098044DA1A1A4FE0399C00183B8030000000000"));
+            messageList.Add(new(waypoint.ToNetMessageEntityCreate()));
 
             return messageList.ToArray();
         }
@@ -474,8 +471,8 @@ namespace MHServerEmu.GameServer.Games
             // For now we're using dumped data as base and changing it where necessary
 
             // Player entity
-            EntityCreateBaseData playerBaseData = new(PlayerMessage.BaseData.ToByteArray());
-            Player player = new(PlayerMessage.ArchiveData.ToByteArray());
+            EntityBaseData playerBaseData = new(PlayerMessage.BaseData.ToByteArray());
+            Player player = new(playerBaseData, PlayerMessage.ArchiveData.ToByteArray());
 
             // edit player data here
 
@@ -522,18 +519,15 @@ namespace MHServerEmu.GameServer.Games
             player.Community.CommunityMemberList.Add(new("Gazillion", 8, 0, 0, Array.Empty<AvatarSlotInfo>(), CommunityMemberOnlineStatus.Offline, "", new int[] { 0 }));
             player.Community.CommunityMemberList.Add(new("FriendlyLawyer", 100, 0, 0, new AvatarSlotInfo[] { new(12394659164528645362, 2844257346122946366, 99, 1) }, CommunityMemberOnlineStatus.Online, "", new int[] { 2 }));
 
-            messageList.Add(new(NetMessageEntityCreate.CreateBuilder()
-                .SetBaseData(ByteString.CopyFrom(playerBaseData.Encode()))
-                .SetArchiveData(ByteString.CopyFrom(player.Encode()))
-                .Build()));
+            messageList.Add(new(player.ToNetMessageEntityCreate()));
 
             // Avatars
             uint replacementInventorySlot = 100;   // 100 here because no hero occupies slot 100, this to check that we have successfully swapped heroes
 
             foreach (NetMessageEntityCreate entityCreateMessage in AvatarMessages)
             {
-                EntityCreateBaseData baseData = new(entityCreateMessage.BaseData.ToByteArray());
-                Avatar avatar = new(entityCreateMessage.ArchiveData.ToByteArray());
+                EntityBaseData baseData = new(entityCreateMessage.BaseData.ToByteArray());
+                Avatar avatar = new(baseData, entityCreateMessage.ArchiveData.ToByteArray());
 
                 // Modify base data
                 HardcodedAvatarEntityId playerAvatarEntityId = account.Player.Avatar.ToEntityId();
@@ -599,10 +593,7 @@ namespace MHServerEmu.GameServer.Games
                     if (hasCombatLevel == false) avatar.PropertyCollection.List.Add(new(PropertyEnum.CombatLevel, 60));
                 }
 
-                messageList.Add(new(NetMessageEntityCreate.CreateBuilder()
-                    .SetBaseData(ByteString.CopyFrom(baseData.Encode()))
-                    .SetArchiveData(ByteString.CopyFrom(avatar.Encode()))
-                    .Build()));
+                messageList.Add(new(avatar.ToNetMessageEntityCreate()));
             }
 
             return messageList.ToArray();

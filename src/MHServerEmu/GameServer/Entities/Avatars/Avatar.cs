@@ -17,8 +17,9 @@ namespace MHServerEmu.GameServer.Entities.Avatars
         public GuildMemberReplicationRuntimeInfo GuildInfo { get; set; }
         public AbilityKeyMapping[] AbilityKeyMappings { get; set; }
 
-        public Avatar(byte[] archiveData)
+        public Avatar(EntityBaseData baseData, byte[] archiveData)
         {
+            BaseData = baseData;
             CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
             BoolDecoder boolDecoder = new();
 
