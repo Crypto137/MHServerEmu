@@ -455,7 +455,7 @@ namespace MHServerEmu.GameServer.Games
                     // TODO: ThrowObject = Player.EntityManager.GetEntity(idTarget)
 
                     // TODO: avatarRepId = Player.EntityManager.GetEntity(avatarEntityId).RepId
-                    ulong avatarRepId = (ulong)client.Session.Account.Player.Avatar.ToReplicationId();
+                    ulong avatarRepId = (ulong)client.Session.Account.Player.Avatar.ToPropertyCollectionReplicationId();
 
                     Property property = new(PropertyEnum.ThrowableOriginatorEntity, idTarget);
                     EnqueueResponse(client, new(property.ToNetMessageSetProperty(avatarRepId)));
@@ -498,7 +498,7 @@ namespace MHServerEmu.GameServer.Games
 
                 case EventEnum.EndThrowing:
                     powerId = (ulong)queuedEvent.Data;
-                    avatarRepId = (ulong)client.Session.Account.Player.Avatar.ToReplicationId();
+                    avatarRepId = (ulong)client.Session.Account.Player.Avatar.ToPropertyCollectionReplicationId();
                     // TODO: avatarRepId = Player.EntityManager.GetEntity(AvatarEntityId).RepId
 
                     property = new(PropertyEnum.ThrowableOriginatorEntity, 0ul);

@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using Gazillion;
 using MHServerEmu.Common.Logging;
-using MHServerEmu.GameServer.Entities;
+using MHServerEmu.GameServer.Entities.Avatars;
 using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.Properties;
 using MHServerEmu.Networking;
@@ -12,16 +12,16 @@ namespace MHServerEmu.GameServer.Powers
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public static GameMessage[] LoadAvatarPowerCollection(HardcodedAvatarEntity avatar)
+        public static GameMessage[] LoadAvatarPowerCollection(HardcodedAvatarEntityId avatar)
         {
             List<GameMessage> messageList = new();
             List<NetMessagePowerCollectionAssignPower> powerList = new();
 
-            string avatarName = Enum.GetName(typeof(HardcodedAvatarEntity), avatar);
+            string avatarName = Enum.GetName(typeof(HardcodedAvatarEntityId), avatar);
 
             if (avatarName != null)
             {
-                ulong replicationId = (ulong)Enum.Parse(typeof(HardcodedAvatarReplicationId), avatarName);
+                ulong replicationId = (ulong)Enum.Parse(typeof(HardcodedAvatarPropertyCollectionReplicationId), avatarName);
 
                 Type powerPrototypeEnumType = typeof(PowerPrototypes).GetNestedType(avatarName, BindingFlags.Public);
                 if (powerPrototypeEnumType != null)
@@ -48,7 +48,7 @@ namespace MHServerEmu.GameServer.Powers
                 }
 
                 // Set properties to unlock powers
-                string propertyIdFilter = (avatar == HardcodedAvatarEntity.MsMarvel)    // check for MsMarvel because her power prototype folder was renamed to CaptainMarvel
+                string propertyIdFilter = (avatar == HardcodedAvatarEntityId.MsMarvel)    // check for MsMarvel because her power prototype folder was renamed to CaptainMarvel
                     ? $"Powers/Player/CaptainMarvel"
                     : $"Powers/Player/{avatarName}";
 

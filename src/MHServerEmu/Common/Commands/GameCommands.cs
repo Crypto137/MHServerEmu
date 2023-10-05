@@ -93,7 +93,7 @@ namespace MHServerEmu.Common.Commands
                     Property property = new(PropertyEnum.CostumeCurrent, prototypeId);
 
                     // Get replication id for the client avatar
-                    ulong replicationId = (ulong)client.Session.Account.Player.Avatar.ToReplicationId();
+                    ulong replicationId = (ulong)client.Session.Account.Player.Avatar.ToPropertyCollectionReplicationId();
 
                     // Update account data if needed
                     if (ConfigManager.Frontend.BypassAuth == false) client.Session.Account.CurrentAvatar.Costume = prototypeId;

@@ -1,5 +1,19 @@
 ﻿namespace MHServerEmu.GameServer.Entities.Avatars
 {
+    public static class AvatarPrototypeEnumExtensions
+    {
+        public static HardcodedAvatarEntityId ToEntityId(this AvatarPrototype prototype)
+        {
+            return (HardcodedAvatarEntityId)Enum.Parse(typeof(HardcodedAvatarEntityId), Enum.GetName(typeof(AvatarPrototype), prototype));
+        }
+
+        public static HardcodedAvatarPropertyCollectionReplicationId ToPropertyCollectionReplicationId(this AvatarPrototype prototype)
+        {
+            return (HardcodedAvatarPropertyCollectionReplicationId)Enum.Parse(typeof(HardcodedAvatarPropertyCollectionReplicationId),
+                Enum.GetName(typeof(AvatarPrototype), prototype));
+        }
+    }
+
     public enum AvatarUnlockType : long
     {
         None,
@@ -78,16 +92,137 @@
         X23 = 7643048032188437211
     }
 
-    public static class AvatarPrototypeEnumExtension
+    public enum HardcodedAvatarEntityId : ulong
     {
-        public static HardcodedAvatarEntity ToEntityId(this AvatarPrototype prototype)
-        {
-            return (HardcodedAvatarEntity)Enum.Parse(typeof(HardcodedAvatarEntity), Enum.GetName(typeof(AvatarPrototype), prototype));
-        }
+        HumanTorch = 14646213,
+        Punisher = 14646214,
+        GreenGoblin = 14646215,
+        Loki = 14646216,
+        Vision = 14646217,
+        Juggernaut = 14646218,
+        BlackBolt = 14646219,
+        Hawkeye = 14646220,
+        CaptainAmerica = 14646221,
+        NickFury = 14646222,
+        Magneto = 14646223,
+        SheHulk = 14646224,
+        ScarletWitch = 14646225,
+        KittyPryde = 14646226,
+        WarMachine = 14646227,
+        Nova = 14646228,
+        Psylocke = 14646229,
+        Gambit = 14646230,
+        Magik = 14646231,
+        Venom = 14646232,
+        Cyclops = 14646233,
+        MrFantastic = 14646234,
+        JeanGrey = 14646235,
+        DoctorStrange = 14646236,
+        Wolverine = 14646237,
+        WinterSoldier = 14646238,
+        Deadpool = 14646239,
+        RocketRaccoon = 14646240,
+        BlackWidow = 14646241,
+        Daredevil = 14646242,
+        Cable = 14646243,
+        IronFist = 14646244,
+        Storm = 14646245,
+        SilverSurfer = 14646246,
+        Elektra = 14646247,
+        Thing = 14646248,
+        Beast = 14646249,
+        Colossus = 14646250,
+        Ultron = 14646251,
+        SquirrelGirl = 14646252,
+        InvisibleWoman = 14646253,
+        Nightcrawler = 14646254,
+        Carnage = 14646255,
+        Rogue = 14646256,
+        Starlord = 14646257,
+        AntMan = 14646258,
+        LukeCage = 14646259,
+        DrDoom = 14646260,
+        MsMarvel = 14646261,
+        Spiderman = 14646262,
+        Taskmaster = 14646263,
+        EmmaFrost = 14646264,
+        Iceman = 14646265,
+        BlackPanther = 14646266,
+        X23 = 14646267,
+        IronMan = 14646268,
+        Hulk = 14646269,
+        Thor = 14646270,
+        Angela = 14646271,
+        GhostRider = 14646272,
+        Blade = 14646273,
+        MoonKnight = 14646274,
+        BlackCat = 14646322
+    }
 
-        public static HardcodedAvatarReplicationId ToReplicationId(this AvatarPrototype prototype)
-        {
-            return (HardcodedAvatarReplicationId)Enum.Parse(typeof(HardcodedAvatarReplicationId), Enum.GetName(typeof(AvatarPrototype), prototype));
-        }
+    public enum HardcodedAvatarPropertyCollectionReplicationId : ulong
+    {
+        HumanTorch = 9078336,
+        Punisher = 9078338,
+        GreenGoblin = 9078340,
+        Loki = 9078342,
+        Vision = 9078344,
+        Juggernaut = 9078346,
+        BlackBolt = 9078348,
+        Hawkeye = 9078350,
+        CaptainAmerica = 9078352,
+        NickFury = 9078354,
+        Magneto = 9078356,
+        SheHulk = 9078358,
+        ScarletWitch = 9078360,
+        KittyPryde = 9078362,
+        WarMachine = 9078364,
+        Nova = 9078366,
+        Psylocke = 9078368,
+        Gambit = 9078370,
+        Magik = 9078372,
+        Venom = 9078374,
+        Cyclops = 9078376,
+        MrFantastic = 9078378,
+        JeanGrey = 9078380,
+        DoctorStrange = 9078382,
+        Wolverine = 9078384,
+        WinterSoldier = 9078386,
+        Deadpool = 9078388,
+        RocketRaccoon = 9078390,
+        BlackWidow = 9078392,
+        Daredevil = 9078394,
+        Cable = 9078396,
+        IronFist = 9078398,
+        Storm = 9078400,
+        SilverSurfer = 9078402,
+        Elektra = 9078404,
+        Thing = 9078406,
+        Beast = 9078408,
+        Colossus = 9078410,
+        Ultron = 9078412,
+        SquirrelGirl = 9078414,
+        InvisibleWoman = 9078416,
+        Nightcrawler = 9078418,
+        Carnage = 9078420,
+        Rogue = 9078422,
+        Starlord = 9078424,
+        AntMan = 9078426,
+        LukeCage = 9078428,
+        DrDoom = 9078430,
+        MsMarvel = 9078432,
+        Spiderman = 9078434,
+        Taskmaster = 9078436,
+        EmmaFrost = 9078438,
+        Iceman = 9078440,
+        BlackPanther = 9078442,
+        X23 = 9078444,
+        IronMan = 9078446,
+        Hulk = 9078448,
+        Thor = 9078450,
+        Angela = 9078452,
+        GhostRider = 9078454,
+        Blade = 9078456,
+        MoonKnight = 9078458,
+        BlackCat = 9078507
     }
 }

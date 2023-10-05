@@ -536,9 +536,9 @@ namespace MHServerEmu.GameServer.Games
                 Avatar avatar = new(entityCreateMessage.ArchiveData.ToByteArray());
 
                 // Modify base data
-                HardcodedAvatarEntity playerAvatarEntityId = account.Player.Avatar.ToEntityId();
+                HardcodedAvatarEntityId playerAvatarEntityId = account.Player.Avatar.ToEntityId();
 
-                if (playerAvatarEntityId != HardcodedAvatarEntity.BlackCat)
+                if (playerAvatarEntityId != HardcodedAvatarEntityId.BlackCat)
                 {
                     if (baseData.EntityId == (ulong)playerAvatarEntityId)
                     {
@@ -546,7 +546,7 @@ namespace MHServerEmu.GameServer.Games
                         baseData.InvLoc.InventoryPrototypeId = GameDatabase.GetPrototypeId("Entity/Inventory/PlayerInventories/PlayerAvatarInPlay.prototype");
                         baseData.InvLoc.Slot = 0;                           // set selected avatar entity inventory slot to 0
                     }
-                    else if (baseData.EntityId == (ulong)HardcodedAvatarEntity.BlackCat)
+                    else if (baseData.EntityId == (ulong)HardcodedAvatarEntityId.BlackCat)
                     {
                         baseData.InvLoc.InventoryPrototypeId = GameDatabase.GetPrototypeId("Entity/Inventory/PlayerInventories/PlayerAvatarLibrary.prototype");
                         baseData.InvLoc.Slot = replacementInventorySlot;    // set Black Cat slot to the one previously occupied by the hero who replaces her

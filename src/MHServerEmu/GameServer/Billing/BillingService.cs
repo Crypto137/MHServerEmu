@@ -84,7 +84,7 @@ namespace MHServerEmu.GameServer.Billing
                             Property property = new(PropertyEnum.CostumeCurrent, entry.GuidItems[0].ItemPrototypeRuntimeIdForClient);
 
                             // Get replication id for the client avatar
-                            ulong replicationId = (ulong)client.Session.Account.Player.Avatar.ToReplicationId();
+                            ulong replicationId = (ulong)client.Session.Account.Player.Avatar.ToPropertyCollectionReplicationId();
 
                             // Update account data
                             client.Session.Account.CurrentAvatar.Costume = entry.GuidItems[0].ItemPrototypeRuntimeIdForClient;
