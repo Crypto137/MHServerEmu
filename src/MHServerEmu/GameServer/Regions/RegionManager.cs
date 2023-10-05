@@ -1,10 +1,11 @@
 ﻿using MHServerEmu.Common.Logging;
+using MHServerEmu.GameServer.Entities;
 using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 
 namespace MHServerEmu.GameServer.Regions
 {
-    public class RegionManager
+    public partial class RegionManager
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly RegionPrototype[] AvailableRegions = new RegionPrototype[]
@@ -54,33 +55,39 @@ namespace MHServerEmu.GameServer.Regions
             RegionPrototype.DangerRoomHubRegion
         };
 
-        private readonly Dictionary<RegionPrototype, Region> _regionDict;
+        private readonly EntityManager _entityManager;
+        private readonly Dictionary<RegionPrototype, Region> _regionDict = new();
 
-        public RegionManager()
+        public RegionManager(EntityManager entityManager)
         {
-            _regionDict = new();
+            _entityManager = entityManager;
         }
 
         public Region GetRegion(RegionPrototype prototype)
         {
             if (IsRegionAvailable(prototype))
             {
-                if (_regionDict.ContainsKey(prototype) == false)
-                    _regionDict.Add(prototype, LoadRegionData(prototype));
+                if (_regionDict.TryGetValue(prototype, out Region region) == false)
+                {
+                    // Generate the region and create entities for it if needed
+                    region = GenerateRegion(prototype);
+                    CreateEntities(region);
+                    _regionDict.Add(prototype, region);
+                }
 
-                return _regionDict[prototype];
+                return region;
             }
             else
             {
                 Logger.Warn($"Region {prototype} is not available, falling back to NPEAvengersTowerHUBRegion");
-                return _regionDict[RegionPrototype.NPEAvengersTowerHUBRegion];
+                return GetRegion(RegionPrototype.NPEAvengersTowerHUBRegion);
             }
         }
 
         public static bool IsRegionAvailable(RegionPrototype prototype) => AvailableRegions.Contains(prototype);
         public static bool RegionIsHub(RegionPrototype prototype) => HubRegions.Contains(prototype);
 
-        private static Region LoadRegionData(RegionPrototype prototype)
+        private static Region GenerateRegion(RegionPrototype prototype)
         {
             // TODO: loading data externally
 
@@ -97,7 +104,6 @@ namespace MHServerEmu.GameServer.Regions
                     };
 
                     region = new(RegionPrototype.AvengersTowerHUBRegion,
-                        1,
                         1488502313,
                         archiveData,
                         new(-5024f, -5024f, -2048f),
@@ -115,7 +121,6 @@ namespace MHServerEmu.GameServer.Regions
                     region.WaypointOrientation = new();
 
                     break;
-
 
                 case RegionPrototype.NPEAvengersTowerHUBRegion:
 
@@ -136,7 +141,7 @@ namespace MHServerEmu.GameServer.Regions
                     };
 
                     region = new(RegionPrototype.NPEAvengersTowerHUBRegion,
-                        1150669705055451881,
+                        //1150669705055451881,
                         1488502313,
                         archiveData,
                         new(-5024f, -5024f, -2048f),
@@ -162,7 +167,7 @@ namespace MHServerEmu.GameServer.Regions
                     };
 
                     region = new(RegionPrototype.TrainingRoomSHIELDRegion,
-                        1153032328761311238,
+                        //1153032328761311238,
                         740100172,
                         archiveData,
                         new(-3250f, -3250f, -3250f),
@@ -186,7 +191,7 @@ namespace MHServerEmu.GameServer.Regions
                     };
 
                     region = new(RegionPrototype.HoloSimARegion1to60,
-                        1153032328761311241,
+                        //1153032328761311241,
                         740100172,
                         archiveData,
                         new(-2432.0f, -2432.0f, -2432.0f),
@@ -211,7 +216,7 @@ namespace MHServerEmu.GameServer.Regions
                     };
 
                     region = new(RegionPrototype.XaviersMansionRegion,
-                        1153032328761311239,
+                        //1153032328761311239,
                         1640169729,
                         archiveData,
                         new(-6144f, -5120f, -1043f),
@@ -244,7 +249,7 @@ namespace MHServerEmu.GameServer.Regions
                     };
 
                     region = new(RegionPrototype.HelicarrierRegion,
-                        1153032354375335949,
+                        //1153032354375335949,
                         1347063143,
                         archiveData,
                         new(-4352f, -4352f, -4352f),
@@ -269,7 +274,7 @@ namespace MHServerEmu.GameServer.Regions
                     };
 
                     region = new(RegionPrototype.AsgardiaRegion,
-                        1153032354375335950,
+                        //1153032354375335950,
                         2119981225,
                         archiveData,
                         new(-1152f, -5760f, -1152f),
@@ -297,7 +302,7 @@ namespace MHServerEmu.GameServer.Regions
                     };
 
                     region = new(RegionPrototype.GenoshaHUBRegion,
-                        1153032328761311240,
+                        //1153032328761311240,
                         1922430980,
                         archiveData,
                         new(-11319f, -12336f, -2304f),
@@ -337,7 +342,7 @@ namespace MHServerEmu.GameServer.Regions
                     };
 
                     region = new(RegionPrototype.DangerRoomHubRegion,
-                        1154146333179728693,
+                        //1154146333179728693,
                         1830444841,
                         archiveData,
                         new(-1664f, -1664f, -1664f),
@@ -362,7 +367,7 @@ namespace MHServerEmu.GameServer.Regions
                     };
 
                     region = new(RegionPrototype.InvasionSafeAbodeRegion,
-                        1153032354375335951,
+                        //1153032354375335951,
                         1038711701,
                         archiveData,
                         new(-2304f, -1152f, -1152f),
@@ -388,7 +393,6 @@ namespace MHServerEmu.GameServer.Regions
                     archiveData = new byte[] {
                     };
                     region = new(RegionPrototype.NPERaftRegion,
-                        1153032354375335951,
                         1038711701,
                         archiveData,
                         new(-1152.0f, 0.0f, -1152.0f),
@@ -415,7 +419,6 @@ namespace MHServerEmu.GameServer.Regions
                     archiveData = new byte[] {
                     };
                     region = new(RegionPrototype.CH0101HellsKitchenRegion,
-                        1154146333179711489,
                         1883928786,
                         archiveData,
                         new(-1152.0f, -8064.0f, -1152.0f),
@@ -466,7 +469,6 @@ namespace MHServerEmu.GameServer.Regions
                     archiveData = new byte[] {
                     };
                     region = new(RegionPrototype.CH0105NightclubRegion,
-                        1154146333179711492,
                         1883928786,
                         archiveData,
                         new(-5760.0f, 0.0f, -1152.0f),
@@ -494,7 +496,6 @@ namespace MHServerEmu.GameServer.Regions
                     archiveData = new byte[] {
                     };
                     region = new(RegionPrototype.CH0201ShippingYardRegion,
-                        1154146333179715585,
                         1883928786,
                         archiveData, 
                         new(-1152.0f, -1152.0f, -1152.0f),
@@ -521,7 +522,6 @@ namespace MHServerEmu.GameServer.Regions
                     archiveData = new byte[] {
                     };
                     region = new(RegionPrototype.CH0301MadripoorRegion,
-                        1154146333179719680,
                         1883928786,
                         archiveData,
                         new(-10368.0f, -33408.0f, -1156.0f),
@@ -729,7 +729,6 @@ namespace MHServerEmu.GameServer.Regions
                     archiveData = new byte[] {
                     };
                     region = new(RegionPrototype.CH0701SavagelandRegion,
-                        1154146333179715584,
                         1038711701,
                         archiveData,
                         new(-20736.0f, -18432.0f, -1152.0f),
@@ -934,7 +933,6 @@ namespace MHServerEmu.GameServer.Regions
                     };
 
                     region = new(RegionPrototype.CH0804LatveriaPCZRegion,
-                        1153032329227796488,
                         1901487720,
                         archiveData,
                         new(-9216.0f, -13824.0f, -1152.0f),
@@ -1025,7 +1023,6 @@ namespace MHServerEmu.GameServer.Regions
                     };
 
                     region = new(RegionPrototype.CH0808DoomCastleRegion,
-                        1153032329227798536,
                         1901487720,
                         archiveData,
                         new(-9216.0f, -21120.0f, -3008.0f),
@@ -1098,7 +1095,6 @@ namespace MHServerEmu.GameServer.Regions
                     };
 
                     region = new(RegionPrototype.CH0901NorwayPCZRegion,
-                        1154146333179744257,
                         1901487720,
                         archiveData,
                         new(-13824.0f, -18432.0f, -1152.0f),
@@ -1296,7 +1292,6 @@ namespace MHServerEmu.GameServer.Regions
                     };
 
                     region = new(RegionPrototype.CH0904SiegePCZRegion,
-                        1154146333179744256,
                         1901487720,
                         archiveData,
                         new(-9216.0f, -9216.0f, -1152.0f),
@@ -1367,7 +1362,6 @@ namespace MHServerEmu.GameServer.Regions
                     };
 
                     region = new(RegionPrototype.DailyGShockerSubwayRegionL60,
-                        1153032329227796483,
                         1901487720,
                         archiveData,
                         new(-5633f, -9600f, -2176f),
@@ -1414,7 +1408,6 @@ namespace MHServerEmu.GameServer.Regions
                     };
 
                     region = new(RegionPrototype.DailyGSinisterLabRegionL60,
-                        1153032329227796490,
                         1901487720,
                         archiveData,
                         new(-1792.0f, -10752.0f, -1792.0f),
@@ -1457,7 +1450,6 @@ namespace MHServerEmu.GameServer.Regions
                     archiveData = new byte[] {
                     };
                     region = new(RegionPrototype.BronxZooRegionL60,
-                        1154146333179731968,
                         1038711701,
                         archiveData,
                         new(-4480.0f, -10944.0f, -1152.0f),
@@ -1566,7 +1558,6 @@ namespace MHServerEmu.GameServer.Regions
                     };
 
                     region = new(RegionPrototype.UltronRaidRegionGreen,
-                        1154146333179736985,
                         1883928786,
                         archiveData,
                         new(-1152.0f, -1152.0f, -1152.0f),
@@ -1595,7 +1586,6 @@ namespace MHServerEmu.GameServer.Regions
                     };
 
                     region = new(RegionPrototype.CosmicDoopSectorSpaceRegion,
-                        1154146333179745894,
                         1883928786,
                         archiveData,
                         new(-3456.0f, -8064.0f, -1152.0f),
@@ -1640,7 +1630,6 @@ namespace MHServerEmu.GameServer.Regions
                     };
 
                     region = new(RegionPrototype.BrooklynPatrolRegionL60,
-                        1154146333179728793,
                         1883928786,
                         archiveData,
                         new(-11520.0f, -8064.0f, -1152.0f),
@@ -1741,7 +1730,6 @@ namespace MHServerEmu.GameServer.Regions
                     };
 
                     region = new(RegionPrototype.UpperMadripoorRegionL60,
-                        1154146333179732889,
                         1883928786,
                         archiveData, 
                         new(-1152.0f, -1152.0f, -1152.0f), 
@@ -1769,7 +1757,6 @@ namespace MHServerEmu.GameServer.Regions
                     };
 
                     region = new(RegionPrototype.UpperMadripoorRegionL60Cosmic,
-                        1154146333179732889,
                         1883928786,
                         archiveData,
                         new(-1152.0f, -1152.0f, -1152.0f),
@@ -1797,7 +1784,6 @@ namespace MHServerEmu.GameServer.Regions
                     };
 
                     region = new(RegionPrototype.XManhattanRegion1to60,
-                        1154146333179724697,
                         1883928786,
                         archiveData,
                         new(-1152f, -1152f, -1152f),
@@ -1972,7 +1958,6 @@ namespace MHServerEmu.GameServer.Regions
                     };
 
                     region = new(RegionPrototype.XManhattanRegion60Cosmic,
-                        1154146333179724697,
                         1883928786,
                         archiveData,
                         new(-1152f, -1152f, -1152f),

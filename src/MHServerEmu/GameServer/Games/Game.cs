@@ -33,11 +33,15 @@ namespace MHServerEmu.GameServer.Games
         private int _tickCount;
 
         public ulong Id { get; }
-        public RegionManager RegionManager { get; } = new();
+        public EntityManager EntityManager { get; }
+        public RegionManager RegionManager { get; }
         public ConcurrentDictionary<FrontendClient, Player> PlayerDict { get; } = new();
 
         public Game(GameServerManager gameServerManager, ulong id)
         {
+            EntityManager = new();
+            RegionManager = new(EntityManager);
+
             _gameServerManager = gameServerManager;
             Id = id;
 
@@ -572,15 +576,17 @@ namespace MHServerEmu.GameServer.Games
                         .SetArchiveData(ByteString.CopyFrom(conditionArchive.Encode()))
                         .Build()));
 
-                    ulong arenaEntityId = 6000;
-                    ulong areanRepId = 6600;
+                    WorldEntity arenaEntity = EntityManager.CreateWorldEntityEmpty(RegionManager.GetRegion(client.Session.Account.Player.Region).Id,
+                        (ulong)PowerPrototypes.Magik.UltimateArea,
+                        new(position.X, position.Y, position.Z), new());
 
-                    EnqueueResponse(client, new(EntityHelper.SpawnEmptyEntity(
-                        arenaEntityId, (ulong)PowerPrototypes.Magik.UltimateArea,
-                        new(position.X, position.Y, position.Z), new(), areanRepId)));
+                    // we need to store this state in the avatar entity instead
+                    client.MagikUltimateEntityId = arenaEntity.BaseData.EntityId;
+
+                    EnqueueResponse(client, new(arenaEntity.ToNetMessageEntityCreate()));
 
                     EnqueueResponse(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
-                        .SetEntityId(arenaEntityId)
+                        .SetEntityId(arenaEntity.BaseData.EntityId)
                         .SetPowerProtoId((ulong)PowerPrototypes.Magik.UltimateHotspotEffect) 
                         .SetPowerRank(0)
                         .SetCharacterLevel(60)
@@ -590,7 +596,7 @@ namespace MHServerEmu.GameServer.Games
                         .Build()));
 
                     property = new(PropertyEnum.AttachedToEntityId, avatarEntityId);
-                    EnqueueResponse(client, new(property.ToNetMessageSetProperty(areanRepId)));
+                    EnqueueResponse(client, new(property.ToNetMessageSetProperty(arenaEntity.PropertyCollection.ReplicationId)));
 
                     break;
 
@@ -602,12 +608,14 @@ namespace MHServerEmu.GameServer.Games
                         .SetKey(777)
                         .Build()));
 
-                    arenaEntityId = 6000;
+                    ulong arenaEntityId = client.MagikUltimateEntityId;
 
                     EnqueueResponse(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
                         .SetEntityId(arenaEntityId)
                         .SetPowerProtoId((ulong)PowerPrototypes.Magik.UltimateHotspotEffect) 
                         .Build()));
+
+                    EntityManager.DestroyEntity(arenaEntityId);
 
                     EnqueueResponse(client, new(NetMessageEntityDestroy.CreateBuilder()
                         .SetIdEntity(arenaEntityId)

@@ -1,13 +1,10 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Config;
-using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.Entities;
 using MHServerEmu.GameServer.Entities.Avatars;
 using MHServerEmu.GameServer.Frontend.Accounts.DBModels;
 using MHServerEmu.GameServer.GameData;
-using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
-using MHServerEmu.GameServer.GameData.Prototypes.Markers;
 using MHServerEmu.GameServer.Powers;
 using MHServerEmu.GameServer.Properties;
 using MHServerEmu.GameServer.Regions;
@@ -18,10 +15,6 @@ namespace MHServerEmu.GameServer.Games
 {
     public partial class Game
     {
-        // Hardcoded messages we use for loading
-        private static readonly NetMessageEntityCreate PlayerMessage = NetMessageEntityCreate.ParseFrom(PacketHelper.LoadMessagesFromPacketFile("NetMessageEntityCreatePlayer.bin")[0].Payload);
-        private static readonly NetMessageEntityCreate[] AvatarMessages = PacketHelper.LoadMessagesFromPacketFile("NetMessageEntityCreateAvatars.bin").Select(message => NetMessageEntityCreate.ParseFrom(message.Payload)).ToArray();
-
         private GameMessage[] GetBeginLoadingMessages(DBAccount account)
         {
             List<GameMessage> messageList = new();
@@ -48,10 +41,8 @@ namespace MHServerEmu.GameServer.Games
             // Load region data
             messageList.AddRange(RegionManager.GetRegion(account.Player.Region).GetLoadingMessages(Id));
 
-            // Create waypoint entity
-            EntityBaseData waypointBaseData = new(Convert.FromHexString("200C839F01200020"));
-            WorldEntity waypoint = new(waypointBaseData, Convert.FromHexString("20F4C10206000000CD80018880FCFF99BF968110CCC00202CC800302CD40D58280DE868098044DA1A1A4FE0399C00183B8030000000000"));
-            messageList.Add(new(waypoint.ToNetMessageEntityCreate()));
+            // Create a waypoint entity
+            messageList.Add(new(EntityManager.Waypoint.ToNetMessageEntityCreate()));
 
             return messageList.ToArray();
         }
@@ -67,357 +58,10 @@ namespace MHServerEmu.GameServer.Games
                 .SetArchiveData(ByteString.CopyFrom(avatarEnterGameWorldArchive.Encode()))
                 .Build()));
 
-            bool OnlyThrowablePoliceCar = false;
-            ulong area;
-            CellPrototype Entry;
-            int cellid = 1;
-            int areaid = 1;
-            ulong repId = 50000;
-            ulong entityId = 1000;
-            Common.Vector3 areaOrigin = new();
-
-            void MarkersAdd(CellPrototype Entry, int cell_id, bool AddProp = false)
-            {
-                for (int i = 0; i < Entry.MarkerSet.Length; i++)
-                {
-                    if (Entry.MarkerSet[i] is EntityMarkerPrototype)
-                    {
-                        EntityMarkerPrototype npc = (EntityMarkerPrototype)Entry.MarkerSet[i];
-                        float zfix = 0.0f;
-                        string marker = npc.LastKnownEntityName;
-
-                       // if (marker.Contains("Throwables")) continue; // Blocking controll
-                        if (marker.Contains("DestructibleGarbageCanCity")) continue;
-                        
-                        if (marker.Contains("GLFLieutenant")) continue; // Blocking controll
-                        if (marker.Contains("Coulson")) continue; //  Blocking controll
-                        if (marker.Contains("GambitMTXStore")) continue; // Invisible
-                        if (marker.Contains("CosmicEventVendor")) continue; // Invisible
-                        if (marker.Contains("Magik")) continue; // TODO fixme
-
-                        if (marker.Contains("Entity/Characters/") || (AddProp && marker.Contains("Entity/Props/")))
-                        {
-                            if (AddProp && OnlyThrowablePoliceCar && marker.Contains("Entity/Props/") && !marker.Contains("ThrowablePoliceCar")) continue;
-
-                            if (marker.Contains("Stash"))
-                            {
-                                zfix = 60.0f;
-                                if (npc.Position.Z == -208.0f) zfix = +13f; // fix 
-                            }
-
-                            if (marker.Contains("DestructibleWarehouseCrateA")) zfix = +20f;
-
-                            messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++,
-                                GameDatabase.GetPrototypeId(npc.EntityGuid),
-                                new(npc.Position.X + areaOrigin.X, npc.Position.Y + areaOrigin.Y, npc.Position.Z + areaOrigin.Z + zfix), npc.Rotation,
-                                repId++, 608, areaid, 608, region.Id, cell_id, area, false)));
-                        }
-                    }
-                }
-            }
-
-            void MarkersAddDistrict(string path, bool AddProp = false)
-            {
-                District district = GameDatabase.Resource.DistrictDict[path];
-                for (cellid = 0; cellid < district.CellMarkerSet.Length; cellid++)
-                    MarkersAdd(GameDatabase.Resource.CellDict[district.CellMarkerSet[cellid].Resource], cellid + 1, AddProp);
-            }
-
-            switch (account.Player.Region)
-            {
-                case RegionPrototype.AsgardiaRegion:
-
-                    area = (ulong)AreaPrototype.AsgardiaArea;
-                    MarkersAddDistrict("Resource/Districts/AsgardHubDistrict.district");
-
-                    break;
-
-                case RegionPrototype.BrooklynPatrolRegionL60:
-
-                    areaid = 2;
-                    areaOrigin = new(1152.0f, 0.0f, 0.0f);
-                    area = GameDatabase.GetPrototypeId("Regions/EndGame/TierX/PatrolBrooklyn/Areas/DocksPatrolBridgeTransitionNS.prototype");
-                    Entry = GameDatabase.Resource.CellDict["Resource/Cells/EndGame/BrooklynDocksPatrol/DocksPatrol_BridgeA_Center_A.cell"];
-                    OnlyThrowablePoliceCar = true;
-                    MarkersAdd(Entry, 18, true);
-
-                    break;
-
-                case RegionPrototype.XManhattanRegion1to60:
-                case RegionPrototype.XManhattanRegion60Cosmic:
-
-                    area = (ulong)AreaPrototype.XManhattanArea1;
-                    MarkersAddDistrict("Resource/Districts/MidtownStatic/MidtownStatic_A.district");
-
-                    break;
-
-                case RegionPrototype.CH0101HellsKitchenRegion:
-                    area = (ulong) GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH01HellsKitchen/Brownstones/CH0102HellsKitchenNorthArea.prototype");
-                    OnlyThrowablePoliceCar = true;
-                    MarkersAddDistrict("Resource/Districts/Hells_Kitchen_Brownstones.district",true);
-
-                    break;
-
-                case RegionPrototype.HelicarrierRegion:
-
-                    area = (ulong)AreaPrototype.HelicarrierArea;
-                    MarkersAdd(GameDatabase.Resource.CellDict["Resource/Cells/DistrictCells/Helicarrier/Helicarrier_HUB.cell"], cellid);
-
-                    break;
-
-                case RegionPrototype.HoloSimARegion1to60:
-
-                    area = GameDatabase.GetPrototypeId("Regions/EndGame/TierX/HoloSim/HoloSimAArea.prototype");
-                    Entry = GameDatabase.Resource.CellDict["Resource/Cells/EndGame/DR_Survival_A.cell"];
-                    MarkersAdd(Entry, cellid);
-
-                    cellid = 1;
-                    for (int i = 0; i < Entry.MarkerSet.Length; i++)
-                    {
-                        if (Entry.MarkerSet[i] is EntityMarkerPrototype)
-                        {
-                            EntityMarkerPrototype npc = (EntityMarkerPrototype)Entry.MarkerSet[i];
-
-                            switch (npc.EntityGuid)
-                            {
-                                case 17602051469318245682:// EncounterOpenMissionSmallV10
-                                case 292473193813839029: // EncounterOpenMissionLargeV1                                    
-                                    messageList.Add(new(EntityHelper.SpawnEntityEnemy(entityId++,
-                                        GameDatabase.GetPrototypeId("Entity/Props/Throwables/ThrowablePoliceCar.prototype"),
-                                        npc.Position, npc.Rotation,
-                                        repId++, 100, areaid, 100, region.Id, cellid, area, false, 1, 1)));
-                                    break;
-                            }
-                        }
-                    }
-                    break;
-
-                case RegionPrototype.CosmicDoopSectorSpaceRegion:
-
-                    area = GameDatabase.GetPrototypeId("Regions/EndGame/Special/CosmicDoopSectorSpace/CosmicDoopSectorSpaceAreaA.prototype");
-                    ulong[] doop = new ulong[]
-                    {
-                        8886032254367441193, // CosmicDoopRangedMinion
-                        905954195879503067, // CosmicDoopMeleeMinionLargeAggro
-                        11242103498987545924, // CosmicDoopRangedMinionLargeAggro
-                        1173113805575694864, // CosmicDoopDoopZoneMiniBossVariantLargeAggro
-                        8852879594302677942, // CosmicDoopOverlordLargeAggro
-                        10884818398647164828 // CosmicDoopDoopZone
-                    };
-
-                    static Vector3[] DrawCirclePoints(float radius, int numPoints)
-                    {
-                        Vector3[] points = new Vector3[numPoints];
-
-                        double angle = 2 * Math.PI / numPoints;
-
-                        for (int i = 0; i < numPoints; i++)
-                        {
-                            float x = (float)(radius * Math.Cos(i * angle));
-                            float y = (float)(radius * Math.Sin(i * angle));
-                            float z = (float)(i * angle);
-                            points[i] = new Vector3(x, y, z);
-                        }
-
-                        return points;
-                    }
-
-                    Vector3[] Doops = DrawCirclePoints(400.0f, 5);
-
-                    void AddSmallDoop(Vector3 PosOrient, Common.Vector3 SpawnPos)
-                    {
-                        Common.Vector3 pos = new(SpawnPos.X + PosOrient.X, SpawnPos.Y + PosOrient.Y, SpawnPos.Z);
-                        messageList.Add(new(EntityHelper.SpawnEntityEnemy(entityId++,
-                                            doop[2],
-                                            pos, new(PosOrient.Z, 0, 0),
-                                            repId++, 608, areaid, 608, region.Id, cellid, area, false, 60, 60)));
-                    }
-
-                    void DrawGroupDoops(Common.Vector3 SpawnPos)
-                    {
-                        for (int i = 0; i < Doops.Count(); i++)
-                        {
-                            AddSmallDoop(Doops[i], SpawnPos);
-                        }
-                    }
-                    ulong bossEntity;
-                    ulong bossRep = repId;
-                    Area areaDoop = region.AreaList[0];
-                    for (int j = 0; j < region.AreaList[0].CellList.Count; j++)
-                    {
-                        cellid = (int)areaDoop.CellList[j].Id;
-                        areaOrigin = areaDoop.CellList[j].PositionInArea;
-                        CellPrototype Cell = GameDatabase.Resource.CellDict[GameDatabase.GetPrototypePath(areaDoop.CellList[j].PrototypeId)];
-                        int num = 0;
-                        for (int i = 0; i < Cell.MarkerSet.Length; i++)
-                        {
-                            if (Cell.MarkerSet[i] is EntityMarkerPrototype)
-                            {                                
-                                EntityMarkerPrototype npc = (EntityMarkerPrototype)Cell.MarkerSet[i];
-                                Common.Vector3 pos = new(npc.Position.X + areaOrigin.X, npc.Position.Y + areaOrigin.Y, npc.Position.Z + areaOrigin.Z);
-                                switch (npc.EntityGuid)
-                                {
-                                    case 2888059748704716317: // EncounterSmall
-                                        num++;                  
-                                        if (num == 1)
-                                            messageList.Add(new(EntityHelper.SpawnEntityEnemy(entityId++,
-                                                doop[3],
-                                                pos, npc.Rotation,
-                                                repId++, 608, areaid, 608, region.Id, cellid, area, false, 60, 60)));
-                                        else
-                                            DrawGroupDoops(pos);
-
-                                        break;
-
-                                    case 13880579250584290847: // EncounterMedium
-                                        bossEntity = entityId;
-                                        bossRep = repId;
-                                        messageList.Add(new(EntityHelper.SpawnEntityEnemy(entityId++,
-                                            doop[4],
-                                            pos, npc.Rotation,
-                                            repId++, 608, areaid, 608, region.Id, cellid, area, false, 60, 60)));
-
-                                        break;
-
-                                }
-                            }
-                        }
-                    }
-                    
-                    Property SetProperty = new(PropertyEnum.Health, 600);
-                    messageList.Add(
-                        new(SetProperty.ToNetMessageSetProperty(bossRep))
-                    );
-
-                    break;
-
-                case RegionPrototype.TrainingRoomSHIELDRegion:
-
-                    area = (ulong)AreaPrototype.TrainingRoomSHIELDArea;
-                    Entry = GameDatabase.Resource.CellDict["Resource/Cells/DistrictCells/Training_Rooms/TrainingRoom_SHIELD_B.cell"];
-                    MarkersAdd(Entry, cellid, true);
-
-                    cellid = 1;
-                    for (int i = 0; i < Entry.MarkerSet.Length; i++)
-                    {
-                        if (Entry.MarkerSet[i] is EntityMarkerPrototype)
-                        {
-                            EntityMarkerPrototype npc = (EntityMarkerPrototype)Entry.MarkerSet[i];
-                            //Logger.Trace($"[{i}].EntityGuid = {npc.EntityGuid}");     // this is slow and causes Game tick time to go over 50 ms on loading
-                            switch (npc.EntityGuid)
-                            {
-                                case 9760489745388478121: // EncounterTinyV12                                    
-                                    messageList.Add(new(EntityHelper.SpawnEntityEnemy(entityId++,
-                                        GameDatabase.GetPrototypeId("Entity/Characters/Mobs/TrainingRoom/TrainingHPDummyBoss.prototype"),
-                                        npc.Position, npc.Rotation,
-                                        repId++, 608, areaid, 608, region.Id, cellid, area, false, 60, 60)));
-                                    break;
-
-                                case 1411432581376189649: // EncounterTinyV13                                    
-                                    messageList.Add(new(EntityHelper.SpawnEntityEnemy(entityId++,
-                                        GameDatabase.GetPrototypeId("Entity/Characters/Mobs/TrainingRoom/TrainingHPDummyRaidBoss.prototype"),
-                                        npc.Position, npc.Rotation,
-                                        repId++, 608, areaid, 608, region.Id, cellid, area, false, 60, 60)));
-                                    break;
-
-                                case 9712873838200498938: // EncounterTinyV14                                    
-                                    messageList.Add(new(EntityHelper.SpawnEntityEnemy(entityId++,
-                                        GameDatabase.GetPrototypeId("Entity/Characters/Mobs/CowsEG/SpearCowD1.prototype"), // why not?
-                                        npc.Position, npc.Rotation, //Entity/Characters/Mobs/TrainingRoom/TrainingDamageDummy.prototype
-                                        repId++, 608, areaid, 608, region.Id, cellid, area, false, 10, 10)));
-                                    break;
-
-                                case 17473025685948150052: // EncounterTinyV15                                    
-                                    messageList.Add(new(EntityHelper.SpawnEntityEnemy(entityId++,
-                                        GameDatabase.GetPrototypeId("Entity/Characters/Mobs/TrainingRoom/TrainingHPDummy.prototype"),
-                                        npc.Position, npc.Rotation,
-                                        repId++, 608, areaid, 608, region.Id, cellid, area, false, 10, 10)));
-                                    break;
-
-                            }
-                        }
-                    }
-                    /* zero effects 
-                    messageList.Add(new(NetMessageAIToggleState.CreateBuilder()
-                        .SetState(true)
-                        .Build())
-                        );
-
-                    messageList.Add(new(NetMessageDamageToggleState.CreateBuilder()
-                        .SetState(false)
-                        .Build())
-                        );
-                    */
-                    break;
-
-                case RegionPrototype.DangerRoomHubRegion:
-
-                    area = (ulong)AreaPrototype.DangerRoomHubArea;
-                    MarkersAdd(GameDatabase.Resource.CellDict["Resource/Cells/EndGame/EndlessDungeon/DangerRoom_LaunchTerminal.cell"], cellid);
-
-                    break;
-
-                case RegionPrototype.GenoshaHUBRegion:
-
-                    area = (ulong)AreaPrototype.GenoshaHUBArea;
-                    areaOrigin = region.AreaList[0].Origin;
-                    MarkersAddDistrict("Resource/Districts/GenoshaHUB.district");
-
-                    break;
-
-                case RegionPrototype.XaviersMansionRegion:
-
-                    area = (ulong)AreaPrototype.XaviersMansionArea;
-                    MarkersAddDistrict("Resource/Districts/XaviersMansion.district");
-
-                    break;
-
-                case RegionPrototype.CH0701SavagelandRegion:
-
-                    area = GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH07SavageLand/Areas/DinoJungle/DinoJungleArea.prototype");
-
-                    Area areaL = region.AreaList[0];
-                    for (int i = 11; i < 14; i++)
-                    {
-                        cellid = (int)areaL.CellList[i].Id;
-                        areaOrigin = areaL.CellList[i].PositionInArea;
-                        MarkersAdd(GameDatabase.Resource.CellDict[GameDatabase.GetPrototypePath(areaL.CellList[i].PrototypeId)], cellid);
-                    }
-
-                    break;
-
-                case RegionPrototype.AvengersTowerHUBRegion:
-
-                    area = (ulong)AreaPrototype.AvengersTowerHubArea;
-                    MarkersAdd(GameDatabase.Resource.CellDict["Resource/Cells/DistrictCells/Avengers_Tower/AvengersTower_HUB.cell"], cellid);
-
-                    break;
-
-                case RegionPrototype.NPEAvengersTowerHUBRegion:
-
-                    area = (ulong)AreaPrototype.NPEAvengersTowerHubArea;
-                    MarkersAdd(GameDatabase.Resource.CellDict["Resource/Cells/DistrictCells/Avengers_Tower/AvengersTowerNPE_HUB.cell"], cellid);
-
-                    /* Encounter PopulationMarker = GameDatabase.Resource.EncounterDict["Resource/Encounters/Discoveries/Social_BenUrich_JessicaJones.encounter"];
-                       npc = (EntityMarkerPrototype)PopulationMarker.MarkerSet[0]; // BenUrich
-                       messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++,
-                           GameDatabase.GetPrototypeId(npc.LastKnownEntityName),
-                           new(npc.Position.X - 464, npc.Position.Y, npc.Position.Z + 192), npc.Rotation,
-                           repId++, 608, areaid, 608, region.Id, cellid, area, false)));
-                       npc = (EntityMarkerPrototype)PopulationMarker.MarkerSet[2]; // JessicaJones
-                       messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++,
-                           GameDatabase.GetPrototypeId(npc.LastKnownEntityName),
-                           new(npc.Position.X - 464, npc.Position.Y, npc.Position.Z + 192), npc.Rotation,
-                           repId++, 608, areaid, 608, region.Id, cellid, area, false)));*/
-
-                    messageList.Add(new(EntityHelper.GenerateEntityCreateMessage(entityId++,
-                        GameDatabase.GetPrototypeId("Entity/Characters/Vendors/Prototypes/Endgame/TeamSHIELDRepBuffer.prototype"),
-                        new(736f, -352f, 177f), new(-2.15625f, 0f, 0f),
-                        repId++, 608, areaid, 608, region.Id, cellid, area, false)));
-
-                    break;
-
-            }
+            WorldEntity[] regionEntities = EntityManager.GetWorldEntitiesForRegion(region.Id);
+            messageList.AddRange(regionEntities.Select(
+                entity => new GameMessage(entity.ToNetMessageEntityCreate())
+            ));
 
             // Put waypoint entity in the game world
             EnterGameWorldArchive waypointEnterGameWorldArchiveData = new(12, region.WaypointPosition, region.WaypointOrientation.X);
@@ -471,8 +115,7 @@ namespace MHServerEmu.GameServer.Games
             // For now we're using dumped data as base and changing it where necessary
 
             // Player entity
-            EntityBaseData playerBaseData = new(PlayerMessage.BaseData.ToByteArray());
-            Player player = new(playerBaseData, PlayerMessage.ArchiveData.ToByteArray());
+            Player player = EntityManager.GetDefaultPlayerEntity();
 
             // edit player data here
 
@@ -524,33 +167,32 @@ namespace MHServerEmu.GameServer.Games
             // Avatars
             uint replacementInventorySlot = 100;   // 100 here because no hero occupies slot 100, this to check that we have successfully swapped heroes
 
-            foreach (NetMessageEntityCreate entityCreateMessage in AvatarMessages)
-            {
-                EntityBaseData baseData = new(entityCreateMessage.BaseData.ToByteArray());
-                Avatar avatar = new(baseData, entityCreateMessage.ArchiveData.ToByteArray());
+            Avatar[] avatars = EntityManager.GetDefaultAvatarEntities();
 
+            foreach (Avatar avatar in avatars)
+            {
                 // Modify base data
                 HardcodedAvatarEntityId playerAvatarEntityId = account.Player.Avatar.ToEntityId();
 
                 if (playerAvatarEntityId != HardcodedAvatarEntityId.BlackCat)
                 {
-                    if (baseData.EntityId == (ulong)playerAvatarEntityId)
+                    if (avatar.BaseData.EntityId == (ulong)playerAvatarEntityId)
                     {
-                        replacementInventorySlot = baseData.InvLoc.Slot;
-                        baseData.InvLoc.InventoryPrototypeId = GameDatabase.GetPrototypeId("Entity/Inventory/PlayerInventories/PlayerAvatarInPlay.prototype");
-                        baseData.InvLoc.Slot = 0;                           // set selected avatar entity inventory slot to 0
+                        replacementInventorySlot = avatar.BaseData.InvLoc.Slot;
+                        avatar.BaseData.InvLoc.InventoryPrototypeId = GameDatabase.GetPrototypeId("Entity/Inventory/PlayerInventories/PlayerAvatarInPlay.prototype");
+                        avatar.BaseData.InvLoc.Slot = 0;                           // set selected avatar entity inventory slot to 0
                     }
-                    else if (baseData.EntityId == (ulong)HardcodedAvatarEntityId.BlackCat)
+                    else if (avatar.BaseData.EntityId == (ulong)HardcodedAvatarEntityId.BlackCat)
                     {
-                        baseData.InvLoc.InventoryPrototypeId = GameDatabase.GetPrototypeId("Entity/Inventory/PlayerInventories/PlayerAvatarLibrary.prototype");
-                        baseData.InvLoc.Slot = replacementInventorySlot;    // set Black Cat slot to the one previously occupied by the hero who replaces her
+                        avatar.BaseData.InvLoc.InventoryPrototypeId = GameDatabase.GetPrototypeId("Entity/Inventory/PlayerInventories/PlayerAvatarLibrary.prototype");
+                        avatar.BaseData.InvLoc.Slot = replacementInventorySlot;    // set Black Cat slot to the one previously occupied by the hero who replaces her
 
                         // Black Cat goes last in the hardcoded messages, so this should always be assigned last
                         if (replacementInventorySlot == 100) Logger.Warn("replacementInventorySlot is 100! Check the hardcoded avatar entity data");
                     }
                 }
 
-                if (baseData.EntityId == (ulong)playerAvatarEntityId)
+                if (avatar.BaseData.EntityId == (ulong)playerAvatarEntityId)
                 {
                     // modify avatar data here
 

@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
+using MHServerEmu.Common;
 using MHServerEmu.GameServer.Common;
 using MHServerEmu.Networking;
 
@@ -22,10 +23,11 @@ namespace MHServerEmu.GameServer.Regions
         public Vector3 WaypointPosition { get; set; }
         public Vector3 WaypointOrientation { get; set; }
 
-        public Region(RegionPrototype prototype, ulong id, int randomSeed, byte[] archiveData, Vector3 min, Vector3 max, CreateRegionParams createParams)
+        public Region(RegionPrototype prototype, int randomSeed, byte[] archiveData, Vector3 min, Vector3 max, CreateRegionParams createParams)
         {
+            Id = IdGenerator.Generate(IdType.Region);
+
             Prototype = prototype;
-            Id = id;
             RandomSeed = randomSeed;
             ArchiveData = archiveData;
             Min = min;

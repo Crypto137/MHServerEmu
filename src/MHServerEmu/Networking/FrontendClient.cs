@@ -25,6 +25,7 @@ namespace MHServerEmu.Networking
         // Temporarily store state here instead of Game
         public bool IsLoading { get; set; } = false;
         public Vector3 LastPosition { get; set; }
+        public ulong MagikUltimateEntityId { get; set; }
 
         public FrontendClient(Connection connection, GameServerManager gameServerManager)
         {

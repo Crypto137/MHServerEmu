@@ -8,6 +8,7 @@ namespace MHServerEmu.GameServer.Entities
     public class Entity
     {
         public EntityBaseData BaseData { get; set; }
+        public ulong RegionId { get; set; } = 0;
 
         public uint ReplicationPolicy { get; set; }
         public ReplicatedPropertyCollection PropertyCollection { get; set; }
