@@ -38,9 +38,8 @@ namespace MHServerEmu.GameServer.Entities
         public AchievementState[] AchievementStates { get; set; }
         public StashTabOption[] StashTabOptions { get; set; }
 
-        public Player(EntityBaseData baseData, byte[] archiveData)
+        public Player(EntityBaseData baseData, byte[] archiveData) : base(baseData)
         {
-            BaseData = baseData;
             CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
             BoolDecoder boolDecoder = new();
 
@@ -100,9 +99,8 @@ namespace MHServerEmu.GameServer.Entities
             ulong shardId, ReplicatedString playerName, ReplicatedString unkName,
             ulong matchQueueStatus, bool emailVerified, ulong accountCreationTimestamp,
             Community community, bool unkBool, ulong[] stashInventories, uint[] availableBadges,
-            GameplayOptions gameplayOptions, AchievementState[] achievementStates, StashTabOption[] stashTabOptions)
+            GameplayOptions gameplayOptions, AchievementState[] achievementStates, StashTabOption[] stashTabOptions) : base(baseData)
         {
-            BaseData = baseData;
             ReplicationPolicy = replicationPolicy;
             PropertyCollection = propertyCollection;
 

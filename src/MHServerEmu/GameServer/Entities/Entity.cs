@@ -22,7 +22,8 @@ namespace MHServerEmu.GameServer.Entities
             ReadUnknownFields(stream);
         }
 
-        public Entity() { }
+        // Base data is required for all entities, so there's no parameterless constructor
+        public Entity(EntityBaseData baseData) { BaseData = baseData; }
 
         public Entity(EntityBaseData baseData, uint replicationPolicy, ReplicatedPropertyCollection propertyCollection, ulong[] unknownFields)
         {

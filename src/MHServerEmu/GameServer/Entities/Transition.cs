@@ -12,9 +12,8 @@ namespace MHServerEmu.GameServer.Entities
         public string TransitionName { get; set; }
         public Destination[] Destinations { get; set; }
 
-        public Transition(EntityBaseData baseData, byte[] archiveData)
+        public Transition(EntityBaseData baseData, byte[] archiveData) : base(baseData)
         {
-            BaseData = baseData;
             CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
             ReadEntityFields(stream);
             ReadWorldEntityFields(stream);
@@ -28,9 +27,8 @@ namespace MHServerEmu.GameServer.Entities
 
         public Transition(EntityBaseData baseData, EntityTrackingContextMap[] trackingContextMap, Condition[] conditionCollection,
             PowerCollectionRecord[] powerCollection, int unkEvent, 
-            string transitionName, Destination[] destinations)
+            string transitionName, Destination[] destinations) : base(baseData)
         {
-            BaseData = baseData;
             TrackingContextMap = trackingContextMap;
             ConditionCollection = conditionCollection;
             PowerCollection = powerCollection;

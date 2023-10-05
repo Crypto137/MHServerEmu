@@ -17,9 +17,8 @@ namespace MHServerEmu.GameServer.Entities.Avatars
         public GuildMemberReplicationRuntimeInfo GuildInfo { get; set; }
         public AbilityKeyMapping[] AbilityKeyMappings { get; set; }
 
-        public Avatar(EntityBaseData baseData, byte[] archiveData)
+        public Avatar(EntityBaseData baseData, byte[] archiveData) : base(baseData)
         {
-            BaseData = baseData;
             CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
             BoolDecoder boolDecoder = new();
 
@@ -42,8 +41,9 @@ namespace MHServerEmu.GameServer.Entities.Avatars
                 AbilityKeyMappings[i] = new(stream, boolDecoder);
         }
 
-        public Avatar(EntityTrackingContextMap[] trackingContextMap, Condition[] conditionCollection, PowerCollectionRecord[] powerCollection, int unkEvent,
+        public Avatar(EntityBaseData baseData, EntityTrackingContextMap[] trackingContextMap, Condition[] conditionCollection, PowerCollectionRecord[] powerCollection, int unkEvent,
             ReplicatedString playerName, ulong ownerPlayerDbId, string guildName, bool hasGuildInfo, GuildMemberReplicationRuntimeInfo guildInfo, AbilityKeyMapping[] abilityKeyMappings)
+            : base(baseData)
         {
             TrackingContextMap = trackingContextMap;
             ConditionCollection = conditionCollection;

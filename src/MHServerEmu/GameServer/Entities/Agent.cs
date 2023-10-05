@@ -5,6 +5,6 @@
     {
         public Agent(EntityBaseData baseData, byte[] archiveData) : base(baseData, archiveData) { }
 
-        public Agent() { }
+        public Agent(EntityBaseData baseData) : base(baseData) { }
     }
 }
