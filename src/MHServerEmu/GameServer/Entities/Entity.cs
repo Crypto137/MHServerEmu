@@ -18,8 +18,8 @@ namespace MHServerEmu.GameServer.Entities
             BaseData = baseData;
             CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
 
-            ReadEntityFields(stream);
-            ReadUnknownFields(stream);
+            DecodeEntityFields(stream);
+            DecodeUnknownFields(stream);
         }
 
         // Base data is required for all entities, so there's no parameterless constructor
@@ -39,8 +39,8 @@ namespace MHServerEmu.GameServer.Entities
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                WriteEntityFields(cos);
-                WriteUnknownFields(cos);
+                EncodeEntityFields(cos);
+                EncodeUnknownFields(cos);
 
                 cos.Flush();
                 return ms.ToArray();
@@ -63,26 +63,26 @@ namespace MHServerEmu.GameServer.Entities
             return sb.ToString();
         }
 
-        protected void ReadEntityFields(CodedInputStream stream)
+        protected void DecodeEntityFields(CodedInputStream stream)
         {
             ReplicationPolicy = stream.ReadRawVarint32();
             PropertyCollection = new(stream);
         }
 
-        protected void ReadUnknownFields(CodedInputStream stream)
+        protected void DecodeUnknownFields(CodedInputStream stream)
         {
             List<ulong> fieldList = new();
             while (!stream.IsAtEnd) fieldList.Add(stream.ReadRawVarint64());
             UnknownFields = fieldList.ToArray();
         }
 
-        protected void WriteEntityFields(CodedOutputStream stream)
+        protected void EncodeEntityFields(CodedOutputStream stream)
         {
             stream.WriteRawVarint32(ReplicationPolicy);
             stream.WriteRawBytes(PropertyCollection.Encode());
         }
 
-        protected void WriteUnknownFields(CodedOutputStream stream)
+        protected void EncodeUnknownFields(CodedOutputStream stream)
         {
             foreach (ulong field in UnknownFields) stream.WriteRawVarint64(field);
         }

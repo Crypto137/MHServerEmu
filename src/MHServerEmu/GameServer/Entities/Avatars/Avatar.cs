@@ -22,8 +22,8 @@ namespace MHServerEmu.GameServer.Entities.Avatars
             CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
             BoolDecoder boolDecoder = new();
 
-            ReadEntityFields(stream);
-            ReadWorldEntityFields(stream);
+            DecodeEntityFields(stream);
+            DecodeWorldEntityFields(stream);
 
             PlayerName = new(stream);
             OwnerPlayerDbId = stream.ReadRawVarint64();
@@ -73,8 +73,8 @@ namespace MHServerEmu.GameServer.Entities.Avatars
                 boolEncoder.Cook();
 
                 // Encode
-                WriteEntityFields(cos);
-                WriteWorldEntityFields(cos);
+                EncodeEntityFields(cos);
+                EncodeWorldEntityFields(cos);
 
                 cos.WriteRawBytes(PlayerName.Encode());
                 cos.WriteRawVarint64(OwnerPlayerDbId);

@@ -15,8 +15,8 @@ namespace MHServerEmu.GameServer.Entities
         public Transition(EntityBaseData baseData, byte[] archiveData) : base(baseData)
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
-            ReadEntityFields(stream);
-            ReadWorldEntityFields(stream);
+            DecodeEntityFields(stream);
+            DecodeWorldEntityFields(stream);
 
             TransitionName = stream.ReadRawString();
 
@@ -44,8 +44,8 @@ namespace MHServerEmu.GameServer.Entities
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
                 // Encode
-                WriteEntityFields(cos);
-                WriteWorldEntityFields(cos);
+                EncodeEntityFields(cos);
+                EncodeWorldEntityFields(cos);
 
                 cos.WriteRawString(TransitionName);
                 cos.WriteRawVarint64((ulong)Destinations.Length);

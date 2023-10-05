@@ -43,7 +43,7 @@ namespace MHServerEmu.GameServer.Entities
             CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
             BoolDecoder boolDecoder = new();
 
-            ReadEntityFields(stream);
+            DecodeEntityFields(stream);
 
             MissionManager = new(stream, boolDecoder);
             AvatarPropertyCollection = new(stream);
@@ -145,7 +145,7 @@ namespace MHServerEmu.GameServer.Entities
                 boolEncoder.Cook();
 
                 // Encode
-                WriteEntityFields(cos);
+                EncodeEntityFields(cos);
 
                 cos.WriteRawBytes(MissionManager.Encode(boolEncoder));
                 cos.WriteRawBytes(AvatarPropertyCollection.Encode());
