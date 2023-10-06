@@ -3,6 +3,7 @@ using Gazillion;
 using MHServerEmu.Auth;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Config;
+using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.Frontend.Accounts.DBModels;
 
 namespace MHServerEmu.GameServer.Frontend.Accounts
@@ -16,9 +17,6 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
 
     public static class AccountManager
     {
-        private const int MinimumPasswordLength = 3;
-        private const int MaximumPasswordLength = 64;
-
         public static readonly DBAccount DefaultAccount = new(ConfigManager.PlayerData.PlayerName, ConfigManager.PlayerData.StartingRegion, ConfigManager.PlayerData.StartingAvatar);
 
         public static bool IsInitialized { get; }
@@ -54,28 +52,34 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
 
         public static bool CreateAccount(string email, string playerName, string password, out string message)
         {
-            // Checks to make sure we can create an account with the provided data
+            // Validate input before doing database queries
+            if (ValidateEmail(email) == false)
+            {
+                message = "Failed to create account: email must not be longer than 320 characters.";
+                return false;
+            }
+
+            if (ValidatePlayerName(playerName) == false)
+            {
+                message = "Failed to create account: names may contain only up to 16 alphanumeric characters.";
+                return false;
+            }
+
+            if (ValidatePassword(password) == false)
+            {
+                message = "Failed to create account: password must between 3 and 64 characters long.";
+                return false;
+            }
+
             if (DBManager.TryQueryAccountByEmail(email, out _))
             {
                 message = $"Failed to create account: email {email} is already used by another account.";
                 return false;
             }
-                
+
             if (DBManager.QueryIsPlayerNameTaken(playerName))
             {
                 message = $"Failed to create account: name {playerName} is already used by another account.";
-                return false;
-            }
-
-            if (CheckPlayerName(playerName) == false)
-            {
-                message = "Failed to create account: names may contain only alphanumeric characters.";
-                return false;
-            }
-
-            if ((password.Length >= MinimumPasswordLength && password.Length <= MaximumPasswordLength) == false)
-            {
-                message = $"Failed to create account: password must between {MinimumPasswordLength} and {MaximumPasswordLength} characters long.";
                 return false;
             }
 
@@ -92,9 +96,17 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             return true;
         }
 
+        // TODO bool ChangeAccountEmail(string oldEmail, string newEmail, out string message)
+
         public static bool ChangeAccountPlayerName(string email, string playerName, out string message)
         {
-            // Checks to make sure we can use the provided email and player name
+            // Validate input before doing database queries
+            if (ValidatePlayerName(playerName) == false)
+            {
+                message = "Failed to change player name: names may contain only up to 16 alphanumeric characters.";
+                return false;
+            }
+
             if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
             {
                 message = $"Failed to change player name: account {email} not found.";
@@ -104,12 +116,6 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             if (DBManager.QueryIsPlayerNameTaken(playerName))
             {
                 message = $"Failed to change player name: name {playerName} is already used by another account.";
-                return false;
-            }
-                
-            if (CheckPlayerName(playerName) == false)
-            {
-                message = "Failed to change player name: names may contain only alphanumeric characters.";
                 return false;
             }
 
@@ -122,16 +128,16 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
 
         public static bool ChangeAccountPassword(string email, string newPassword, out string message)
         {
-            // Checks to make sure we can use the provided email and password
+            // Validate input before doing database queries
+            if (ValidatePassword(newPassword) == false)
+            {
+                message = "Failed to change password: password must between 3 and 64 characters long.";
+                return false;
+            }
+
             if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
             {
                 message = $"Failed to change password: account {email} not found.";
-                return false;
-            }
-                
-            if ((newPassword.Length >= MinimumPasswordLength && newPassword.Length <= MaximumPasswordLength) == false)
-            {
-                message = $"Failed to change password: password must between {MinimumPasswordLength} and {MaximumPasswordLength} characters long.";
                 return false;
             }
 
@@ -206,6 +212,8 @@ namespace MHServerEmu.GameServer.Frontend.Accounts
             return true;
         }
 
-        private static bool CheckPlayerName(string playerName) => Regex.Match(playerName, "^[a-zA-Z0-9]+$").Success;
+        private static bool ValidateEmail(string email) => email.Length.IsWithin(1, 320);  // todo: add regex for email
+        private static bool ValidatePlayerName(string playerName) => Regex.Match(playerName, "^[a-zA-Z0-9]{1,16}$").Success;    // 1-16 alphanumeric characters
+        private static bool ValidatePassword(string password) => password.Length.IsWithin(3, 64);
     }
 }

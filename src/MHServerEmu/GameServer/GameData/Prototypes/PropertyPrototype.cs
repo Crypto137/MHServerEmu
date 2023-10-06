@@ -1,4 +1,4 @@
-﻿using MHServerEmu.Common;
+﻿using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.GameData.Gpak;
 using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 using MHServerEmu.GameServer.Properties;
@@ -66,7 +66,7 @@ namespace MHServerEmu.GameServer.GameData.Prototypes
                             break;
                         case PropertyParamType.Asset:
                         case PropertyParamType.Prototype:
-                            Params[i].Size = MathHelper.HighestBitSet(Params[i].ValueMax) + 1;
+                            Params[i].Size = Params[i].ValueMax.HighestBitSet() + 1;
                             bitCount += Params[i].Size;
                             break;
                     }

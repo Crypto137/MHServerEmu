@@ -41,7 +41,7 @@ namespace MHServerEmu.Auth.WebApi
             if (queryString == null) return Encoding.UTF8.GetBytes(AccountCreateFormHtml);
 
             // Check input
-            if ((FieldIsValid(queryString["email"]) && FieldIsValid(queryString["playerName"]) && FieldIsValid(queryString["password"])) == false)
+            if ((ValidateField(queryString["email"]) && ValidateField(queryString["playerName"]) && ValidateField(queryString["password"])) == false)
                 return GenerateResponse("Error", "Input is not valid.");
 
             bool success = AccountManager.CreateAccount(queryString["email"].ToLower(), queryString["playerName"], queryString["password"], out string message);
@@ -62,6 +62,6 @@ namespace MHServerEmu.Auth.WebApi
             return Encoding.UTF8.GetBytes(sb.ToString());
         }
 
-        private static bool FieldIsValid(string field) => (field != null) && (field.Length > 0);
+        private static bool ValidateField(string field) => string.IsNullOrWhiteSpace(field) == false;
     }
 }
