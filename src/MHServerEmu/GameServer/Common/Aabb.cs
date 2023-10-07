@@ -17,6 +17,9 @@ namespace MHServerEmu.GameServer.Common
             Max = max;
         }
 
+        public float GetWidth() { return Max.X - Min.X; }
+        public float GetLength() { return Max.Y - Min.Y; }
+        public float GetHeight() { return Max.Z - Min.Z; }
         public override string ToString() => $"Min:{Min} Max:{Max}";
     }
 }
