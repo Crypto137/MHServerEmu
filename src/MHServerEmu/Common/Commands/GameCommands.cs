@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Common.Config;
+﻿using Gazillion;
+using MHServerEmu.Common.Config;
 using MHServerEmu.GameServer.Entities.Avatars;
 using MHServerEmu.GameServer.Frontend.Accounts;
 using MHServerEmu.GameServer.GameData;
@@ -111,6 +112,28 @@ namespace MHServerEmu.Common.Commands
             {
                 return $"Failed to parse costume id {@params[0]}.";
             }
+        }
+    }
+
+    [CommandGroup("omega", "Manages the Omega system.", AccountUserLevel.User)]
+    public class OmegaCommand : CommandGroup
+    {
+        [Command("points", "Adds omega points.\nUsage: omega points", AccountUserLevel.User)]
+        public string Points(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+            if (ConfigManager.GameOptions.InfinitySystemEnabled) return "Set InfinitySystemEnabled to false in Config.ini to enable the Omega system.";
+
+            GameMessage[] messages = new GameMessage[]
+            {
+                new(new Property(PropertyEnum.OmegaPoints, 7500).ToNetMessageSetProperty(9078332)),
+                //new(NetMessageOmegaPointGain.CreateBuilder().SetNumPointsGained(7500).SetAvatarId((ulong)client.Session.Account.Player.Avatar.ToEntityId()).Build()),
+                //new(new Property(PropertyEnum.OmegaPointsSpent, 5000).ToNetMessageSetProperty((ulong)client.Session.Account.Player.Avatar.ToEntityId()))
+            };
+
+            client.SendMessages(1, messages);
+
+            return "Setting Omega points to 7500.";
         }
     }
 }

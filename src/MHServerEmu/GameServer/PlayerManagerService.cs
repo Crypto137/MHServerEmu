@@ -93,6 +93,9 @@ namespace MHServerEmu.GameServer
                 case ClientToGameServerMessage.NetMessageUseWaypoint:
                 case ClientToGameServerMessage.NetMessageSwitchAvatar:
                 case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:
+                case ClientToGameServerMessage.NetMessageSelectOmegaBonus:                      // This should be within NetMessageOmegaBonusAllocationCommit only in theory
+                case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:
+                case ClientToGameServerMessage.NetMessageRespecOmegaBonus:
                     _gameServerManager.GameManager.GetGameById(client.GameId).Handle(client, muxId, message);
                     break;
 

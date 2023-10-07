@@ -357,6 +357,11 @@ namespace MHServerEmu.GameServer.Games
                     var requestInterestInAvatarEquipment = NetMessageRequestInterestInAvatarEquipment.ParseFrom(message.Payload);
                     break;
 
+                case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:
+                    var omegaCommit = NetMessageOmegaBonusAllocationCommit.ParseFrom(message.Payload);
+                    Logger.Debug(omegaCommit.ToString());
+                    break;
+
                 default:
                     Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
                     break;
