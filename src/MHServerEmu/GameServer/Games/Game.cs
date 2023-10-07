@@ -243,14 +243,15 @@ namespace MHServerEmu.GameServer.Games
                         }
                         AddEvent(client, EventEnum.EndThrowing, animationTimeMS, tryActivatePower.PowerPrototypeId);                        
                         break;  
-                    }
-
-                    if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.EmmaFrost.DiamondHeart) 
-                    {                //  3458821934631491033 // DiamondStrike     
-                        AddEvent(client, EventEnum.StartEmmaDiamondForm, 0, tryActivatePower.PowerPrototypeId);
-                        AddEvent(client, EventEnum.EndEmmaDiamondForm, 20000, tryActivatePower.PowerPrototypeId);
-                    }
-                    if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.Magik.Ultimate)
+                    } 
+                    else if (powerPrototypePath.Contains("EmmaFrost/"))
+                    {
+                        if (PowerHasKeyword(tryActivatePower.PowerPrototypeId, BlueprintId.DiamondFormActivatePower))
+                            AddEvent(client, EventEnum.DiamondFormActivate, 0, tryActivatePower.PowerPrototypeId);
+                        else if (PowerHasKeyword(tryActivatePower.PowerPrototypeId, BlueprintId.Mental))
+                            AddEvent(client, EventEnum.DiamondFormDeactivate, 0, tryActivatePower.PowerPrototypeId);
+                    } 
+                    else if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.Magik.Ultimate)
                     {
                         AddEvent(client, EventEnum.StartMagikUltimate, 0, tryActivatePower.TargetPosition);
                         AddEvent(client, EventEnum.EndMagikUltimate, 20000, 0u);
@@ -601,7 +602,7 @@ namespace MHServerEmu.GameServer.Games
                     client.IsThrowling = false;
                     break;
 
-                case EventEnum.StartEmmaDiamondForm:
+                case EventEnum.DiamondFormActivate:
 
                     ulong diamondFormCondition = (ulong)PowerPrototypes.EmmaFrost.DiamondFormCondition;
                     conditionArchive = new((ulong)client.Session.Account.Player.Avatar.ToEntityId(), 111, 567, diamondFormCondition, 0); 
@@ -622,8 +623,8 @@ namespace MHServerEmu.GameServer.Games
 
                     break;
 
-                case EventEnum.EndEmmaDiamondForm:
-                    // TODO: DiamondFormDeactivate = PowerPrototypes.EmmaFrost.DiamondFormDeactivate;
+                case EventEnum.DiamondFormDeactivate:
+                    // TODO: get DiamondFormCondition Condition Key
                     EnqueueResponse(client, new(NetMessageDeleteCondition.CreateBuilder()
                       .SetKey(111)
                       .SetIdEntity((ulong)client.Session.Account.Player.Avatar.ToEntityId())
@@ -697,6 +698,18 @@ namespace MHServerEmu.GameServer.Games
             queuedEvent.IsRunning = false;
         }
 
+        private bool PowerHasKeyword(ulong PowerId, BlueprintId Keyword)
+        {
+            PrototypeEntry Power = PowerId.GetPrototype().GetEntry(BlueprintId.Power);
+            if (Power == null) return false;
+            PrototypeEntryListElement Keywords = Power.GetListField(FieldId.Keywords);
+            if (Keywords == null) return false;
+            for (int i = 0; i < Keywords.Values.Length; i++)
+            {
+                if ((ulong)Keywords.Values[i] == (ulong)Keyword) return true;
+            }            
+            return false;
+        }
         private void HandleTravelPower(FrontendClient client, ulong PowerId)
         {
             uint delta = 65; // TODO: Sync server-client

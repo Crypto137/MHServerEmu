@@ -8,8 +8,8 @@ namespace MHServerEmu.GameServer.Games
         EndThrowing,
         StartTravel,
         EndTravel,
-        StartEmmaDiamondForm,
-        EndEmmaDiamondForm,
+        DiamondFormActivate,
+        DiamondFormDeactivate,
         StartMagikUltimate,
         EndMagikUltimate
     }

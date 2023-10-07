@@ -29,14 +29,18 @@
         WorldEntity = 7901305308382563236,
         ThrowablePowerProp = 8706319841384272336,
         ThrowableRestorePowerProp = 1483936524176856276,
-        Power = 6670986634407775621,
         Costume = 10774581141289766864,
         RegionConnectionTarget = 3341826552978477172,
         RegionConnectionNode = 1686863052116070291,
         BoxBounds = 17017764287313678816,
         SphereBounds = 8815641071010845470,
         CapsuleBounds = 3200633985132925828,
-        ObjectSmall = 17525629558829421089        
+        ObjectSmall = 17525629558829421089,
+        // Keywords
+        Power = 6670986634407775621,
+        Physical = 12758986785542509147,
+        Mental = 720980541349630335,
+        DiamondFormActivatePower = 18066325974134561036,
     }
 
     public enum FieldId : ulong
@@ -62,6 +66,7 @@
         // CapsuleBounds
         HeightFromCenter = 12857512594432138519,
         // Power
-        AnimationTimeMS = 185983721281754809
+        AnimationTimeMS = 185983721281754809,
+        Keywords = 17189444542781133794,
     }
 }
