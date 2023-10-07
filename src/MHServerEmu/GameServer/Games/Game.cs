@@ -270,13 +270,30 @@ namespace MHServerEmu.GameServer.Games
                     break;
 
                 case ClientToGameServerMessage.NetMessageThrowInteraction:
-
                     var throwInteraction = NetMessageThrowInteraction.ParseFrom(message.Payload);
                     ulong idTarget = throwInteraction.IdTarget;
                     int avatarIndex = throwInteraction.AvatarIndex;
                     Logger.Trace($"Received NetMessageThrowInteraction Avatar[{avatarIndex}] Target[{idTarget}]");
 
                     AddEvent(client, EventEnum.StartThrowing, 0, idTarget);
+
+                    break;
+
+                case ClientToGameServerMessage.NetMessageUseInteractableObject:
+                    var useObject = NetMessageUseInteractableObject.ParseFrom(message.Payload);
+                    Logger.Trace("Received NetMessageUseInteractableObject");
+
+                    // If UseInteractableObject contains a valid missionPrototypeRef we need to respond with
+                    // NetMessageMissionInteractRelease, or else the client's input will break.
+                    if (useObject.MissionPrototypeRef != 0)
+                    {
+                        if (GameDatabase.TryGetPrototypePath(useObject.MissionPrototypeRef, out string missionPrototype))
+                            Logger.Debug($"NetMessageUseInteractableObject contains missionPrototypeRef:\n{missionPrototype}");
+                        else
+                            Logger.Debug($"NetMessageUseInteractableObject contains unknown missionPrototypeRef");
+
+                        EnqueueResponse(client, new(NetMessageMissionInteractRelease.DefaultInstance));
+                    }
 
                     break;
 

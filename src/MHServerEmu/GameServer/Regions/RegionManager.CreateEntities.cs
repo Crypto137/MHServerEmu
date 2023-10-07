@@ -31,8 +31,8 @@ namespace MHServerEmu.GameServer.Regions
                         // if (marker.Contains("Throwables")) continue; // Blocking control
                         if (marker.Contains("DestructibleGarbageCanCity")) continue;
 
-                        if (marker.Contains("GLFLieutenant")) continue; // Blocking control
-                        if (marker.Contains("Coulson")) continue; //  Blocking control
+                        //if (marker.Contains("GLFLieutenant")) continue; // Blocking control
+                        //if (marker.Contains("Coulson")) continue; //  Blocking control
                         if (marker.Contains("GambitMTXStore")) continue; // Invisible
                         if (marker.Contains("CosmicEventVendor")) continue; // Invisible
                         if (marker.Contains("Magik")) continue; // TODO fixme
