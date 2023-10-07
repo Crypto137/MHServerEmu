@@ -76,7 +76,7 @@ namespace MHServerEmu.GameServer.Entities
 
         public EntityBaseData() { }
 
-        public EntityBaseData(ulong entityId, ulong prototypeId, Vector3 position, Vector3 orientation)
+        public EntityBaseData(ulong entityId, ulong prototypeId, Vector3 position, Vector3 orientation, bool Snap = false)
         {
             ReplicationPolicy = 0x20;
             EntityId = entityId;
@@ -92,6 +92,7 @@ namespace MHServerEmu.GameServer.Entities
                 Orientation = orientation;
                 Flags[0] = true;
             }
+            Flags[10] = Snap;
         }
 
         public byte[] Encode()
