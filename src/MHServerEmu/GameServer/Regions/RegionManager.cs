@@ -72,7 +72,8 @@ namespace MHServerEmu.GameServer.Regions
                 {
                     // Generate the region and create entities for it if needed
                     region = GenerateRegion(prototype);
-                    CreateEntities(region);
+                    ulong entities = CreateEntities(region);
+                    Logger.Debug($"Entities generated = {entities}");
                     _regionDict.Add(prototype, region);
                 }
 
@@ -1479,8 +1480,7 @@ namespace MHServerEmu.GameServer.Regions
 
                     region.EntrancePosition = new(1000.0f, -10100.0f, 0.0f);
                     region.EntranceOrientation = new(3.14159f, 0f, 0f);
-                    region.WaypointPosition = new(-500.0f, 6025.0f, 0.0f);
-                    // 0.0f, 10060.0f, 0.0f boss
+                    region.WaypointPosition = new(-500.0f, 6025.0f, 0.0f);                    
                     region.WaypointOrientation = new();
                     
                     break;

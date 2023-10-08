@@ -186,7 +186,7 @@ namespace MHServerEmu.GameServer.Games
                     {                  
                         Transition teleport = interactableObject as Transition;
                         if (teleport.Destinations.Length == 0) break;
-
+                        Logger.Trace($"Destination entity {teleport.Destinations[0].Entity}");
                         Entity target = EntityManager.FindEntityByDestination(teleport.Destinations[0]);
                         if (target == null) break;
                         Common.Vector3 targetRot = target.BaseData.Orientation;
@@ -196,13 +196,13 @@ namespace MHServerEmu.GameServer.Games
                             target.BaseData.Position.Y + offset * (float)Math.Sin(targetRot.X), 
                             target.BaseData.Position.Z);   
 
-                        Logger.Info($"Teleport to {targetPos}");                        
+                        Logger.Trace($"Teleport to {targetPos}");                        
 
                         Property property = target.PropertyCollection.GetPropertyByEnum(PropertyEnum.MapCellId);
                         uint cellid = (uint)(Int64)property.Value.Get(); 
                         property = target.PropertyCollection.GetPropertyByEnum(PropertyEnum.MapAreaId);
                         uint areaid = (uint)(Int64)property.Value.Get();
-                        Logger.Info($"Teleport to areaid {areaid} cellid {cellid}");
+                        Logger.Trace($"Teleport to areaid {areaid} cellid {cellid}");
                         EnqueueResponse(client, new(NetMessageEntityPosition.CreateBuilder()
                             .SetIdEntity((ulong)client.Session.Account.Player.Avatar.ToEntityId())
                             .SetFlags(64)

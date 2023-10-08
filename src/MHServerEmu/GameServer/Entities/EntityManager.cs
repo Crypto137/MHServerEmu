@@ -22,9 +22,9 @@ namespace MHServerEmu.GameServer.Entities
 
         private ulong _nextEntityId = 1000;
         private ulong _nextReplicationId = 50000;
-
         private ulong GenEntityId() { return _nextEntityId++; }
         private ulong GenReplicationId() { return _nextReplicationId++; }
+        public ulong GetLastEntityId() { return _nextEntityId; }
 
         public WorldEntity Waypoint { get; }
 
@@ -90,19 +90,18 @@ namespace MHServerEmu.GameServer.Entities
             // Logger.Warn($"SpawnDirectTeleport {GameDatabase.GetPrototypePath(targetPrototype)}");
             PrototypeEntry regionConnectionTarget = targetPrototype.GetPrototype().GetEntry(BlueprintId.RegionConnectionTarget);
 
-            PrototypeEntryElement name = regionConnectionTarget.GetField(FieldId.Name);
-            ulong nameid = 0;
-            if (name != null) { nameid = (ulong)name.Value; }
+            ulong cell = regionConnectionTarget.GetFieldDef(FieldId.Cell);
+            if (cell != 0) cell = GameDatabase.GetPrototypeId(cell);
 
             Destination destination = new()
             {
                 Type = 1,   // TODO: Get type for teleport
                 Region = regionPrototype,
-                Area = (ulong)regionConnectionTarget.GetField(FieldId.Area).Value,
-                Cell = GameDatabase.GetPrototypeId(GameDatabase.Calligraphy.AssetDict[(ulong)regionConnectionTarget.GetField(FieldId.Cell).Value]),
+                Area = regionConnectionTarget.GetFieldDef(FieldId.Area),
+                Cell = cell,
                 Entity = (ulong)regionConnectionTarget.GetField(FieldId.Entity).Value,
                 Name = "",
-                NameId = nameid,
+                NameId = regionConnectionTarget.GetFieldDef(FieldId.Name),
                 Target = targetPrototype,
                 Position = new()
             };
@@ -134,6 +133,7 @@ namespace MHServerEmu.GameServer.Entities
             {
                 if (entity.Value.BaseData.PrototypeId == destination.Entity)
                 {
+                    if (destination.Area == 0) return entity.Value;
                     Property property = entity.Value.PropertyCollection.GetPropertyByEnum(PropertyEnum.ContextAreaRef);
                     ulong area = (ulong)property.Value.Get();
                     if (area == destination.Area)

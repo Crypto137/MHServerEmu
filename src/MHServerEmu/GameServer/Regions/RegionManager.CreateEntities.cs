@@ -18,16 +18,16 @@ namespace MHServerEmu.GameServer.Regions
         public ulong targetId;
     }
     public partial class RegionManager
-    {        
-        public float ProjectToFloor(CellPrototype cell,Vector3 areaOrigin, Vector3 position)
-        {     
+    {
+        public float ProjectToFloor(CellPrototype cell, Vector3 areaOrigin, Vector3 position)
+        {
             Vector3 cellPos = position - cell.Boundbox.Min;
             cellPos.X /= cell.Boundbox.GetWidth();
             cellPos.Y /= cell.Boundbox.GetLength();
             int mapX = (int)cell.HeightMap.HeightMapSize.X;
             int mapY = (int)cell.HeightMap.HeightMapSize.Y;
-            int x = Math.Clamp(mapX - 1 - (int) (cellPos.X * mapX), 0, mapX - 1);
-            int y = Math.Clamp(mapY - 1 - (int) (cellPos.Y * mapY), 0, mapY - 1);
+            int x = Math.Clamp(mapX - 1 - (int)(cellPos.X * mapX), 0, mapX - 1);
+            int y = Math.Clamp(mapY - 1 - (int)(cellPos.Y * mapY), 0, mapY - 1);
             short height = (short)cell.HeightMap.HeightMapData[y * mapX + x];
             //Logger.Warn($"Height = [{height}]");           
             return height + areaOrigin.Z;
@@ -38,16 +38,16 @@ namespace MHServerEmu.GameServer.Regions
             PrototypeEntry TestWorldEntity = prototypeId.GetPrototype().GetEntry(BlueprintId.WorldEntity);
             if (TestWorldEntity == null)
             {
-                Logger.Warn($"GetEntityFloor not found WorldEntity = [{prototypeId}] {GameDatabase.GetPrototypePath(prototypeId)}");
+                Logger.Debug($"[GetEntityFloor] WorldEntity not found [{prototypeId}] {GameDatabase.GetPrototypePath(prototypeId)}");
                 return 0f;
             }
             PrototypeEntryElement TestBounds = TestWorldEntity.GetField(FieldId.Bounds);
-            if (TestBounds == null){
-                Logger.Debug($" GetEntityFloor not found Bounds = [{prototypeId}] {GameDatabase.GetPrototypePath(prototypeId)}"); 
+            if (TestBounds == null) {
+                Logger.Trace($"[GetEntityFloor] Bounds not found [{prototypeId}] {GameDatabase.GetPrototypePath(prototypeId)}");
                 return 50f; }
 
             Prototype bounds = (Prototype)TestBounds.Value;
-            float height = 0f;           
+            float height = 0f;
             if (bounds.ParentId == (ulong)BlueprintId.BoxBounds || bounds.ParentId == (ulong)BlueprintId.ObjectSmall)
                 height = (float)(Double)bounds.GetEntry(BlueprintId.BoxBounds).GetField(FieldId.Height).Value;
             else if (bounds.ParentId == (ulong)BlueprintId.SphereBounds)
@@ -61,28 +61,28 @@ namespace MHServerEmu.GameServer.Regions
         public ConnectionsNodesDict BuildConnectionEdges(ulong[] connectionNode)
         {
             var items = new ConnectionsNodesDict();
-            var nodes = new List<TargetObject>(); 
+            var nodes = new List<TargetObject>();
 
             foreach (ulong connection in connectionNode)
             {
                 ulong target = (ulong)connection.GetPrototype().GetEntry(BlueprintId.RegionConnectionNode).GetField(FieldId.Target).Value;
                 PrototypeEntry entryTarget = target.GetPrototype().GetEntry(BlueprintId.RegionConnectionTarget);
-                ulong origin = (ulong)connection.GetPrototype().GetEntry(BlueprintId.RegionConnectionNode).GetField(FieldId.Origin).Value;                
+                ulong origin = (ulong)connection.GetPrototype().GetEntry(BlueprintId.RegionConnectionNode).GetField(FieldId.Origin).Value;
                 PrototypeEntry entryOrigin = origin.GetPrototype().GetEntry(BlueprintId.RegionConnectionTarget);
                 nodes.Add(new TargetObject
                 {
-                    area = (ulong)entryTarget.GetField(FieldId.Area).Value,
+                    area = entryTarget.GetFieldDef(FieldId.Area),
                     entity = GameDatabase.GetGuidId((ulong)entryTarget.GetField(FieldId.Entity).Value),
                     targetId = origin
-                });                
+                });
                 nodes.Add(new TargetObject
                 {
-                    area = (ulong)entryOrigin.GetField(FieldId.Area).Value,
+                    area = entryOrigin.GetFieldDef(FieldId.Area),
                     entity = GameDatabase.GetGuidId((ulong)entryOrigin.GetField(FieldId.Entity).Value),
                     targetId = target
                 });
             }
-           // foreach (var node in nodes) Logger.Warn($"{node.area}, {node.entity}, {node.targetId}"); 
+            //foreach (var node in nodes) Logger.Warn($"{node.area}, {node.entity}, {node.targetId}"); 
 
             var groupedNodes = nodes.GroupBy(node => node.area);
             foreach (var group in groupedNodes)
@@ -97,7 +97,7 @@ namespace MHServerEmu.GameServer.Regions
 
             return items;
         }
-        public void CreateEntities(Region region)
+        public ulong CreateEntities(Region region)
         {
             ulong area;
             CellPrototype entry;
@@ -117,7 +117,7 @@ namespace MHServerEmu.GameServer.Regions
                     {
                         EntityMarkerPrototype npc = (EntityMarkerPrototype)entry.MarkerSet[i];
                         string marker = npc.LastKnownEntityName;
-                        
+
                         if (marker.Contains("GambitMTXStore")) continue; // Invisible
                         if (marker.Contains("CosmicEventVendor")) continue; // Invisible
 
@@ -125,14 +125,22 @@ namespace MHServerEmu.GameServer.Regions
                         {
                             entityPosition = npc.Position + areaOrigin;
                             bool snap = npc.OverrideSnapToFloor == 1;
-                            if (marker.Contains("Entity/Characters/")) snap = false;
-                            if (marker.Contains("Magik")) snap = true;
+                            if (marker.Contains("Entity/Characters/"))
+                            {
+                                snap = false;
+                                if (marker.Contains("Magik")) snap = true;
+                                if (marker.Contains("BloodRoseBarVendor"))
+                                {
+                                    snap = true;
+                                    entityPosition.Z += 50f;
+                                }
+                            }
                             if (snap == false)
                             {
                                 entityPosition.Z = ProjectToFloor(entry, areaOrigin, npc.Position) +
-                                    GetEntityFloor(GameDatabase.GetPrototypeId(npc.EntityGuid));                               
+                                    GetEntityFloor(GameDatabase.GetPrototypeId(npc.EntityGuid));
                             }
-                            
+
                             _entityManager.CreateWorldEntity(
                                 region.Id, GameDatabase.GetPrototypeId(npc.EntityGuid),
                                 entityPosition, npc.Rotation,
@@ -149,7 +157,33 @@ namespace MHServerEmu.GameServer.Regions
                     MarkersAdd(GameDatabase.Resource.CellDict[district.CellMarkerSet[cellid].Resource], cellid + 1, addProp);
             }
 
-            void GenerateDoors(Region region, ConnectionsNodesDict targets, bool addMarkers, bool addProp)
+            void AddTeleports(CellPrototype entry, Area entryArea, ConnectionsNodesDict targets, int cellId)
+            {
+                for (int i = 0; i < entry.InitializeSet.Length; i++)
+                {
+                    if (entry.InitializeSet[i] is EntityMarkerPrototype)
+                    {
+                        EntityMarkerPrototype door = (EntityMarkerPrototype)entry.InitializeSet[i];
+                        if (targets.ContainsKey(area))
+                            if (targets[area].ContainsKey(door.EntityGuid))
+                            {
+                                //Logger.Warn($"EntityGuid = {door.EntityGuid}");
+                                Vector3 position = door.Position + areaOrigin;
+                                float dz = 60f;
+                                if (door.EntityGuid == 14397992695795297083) dz = 0f;
+                                position.Z += dz;
+                                _entityManager.SpawnDirectTeleport(
+                                       (ulong)region.Prototype, GameDatabase.GetPrototypeId(door.EntityGuid),
+                                       position, door.Rotation,
+                                       (int)entryArea.Id, region.Id, cellid, area, false,
+                                       targets[area][door.EntityGuid],
+                                       door.OverrideSnapToFloor > 0);
+                            }
+                    }
+                }
+            }
+
+            void GenerateEntities(Region region, ConnectionsNodesDict targets, bool addMarkers, bool addProp)
             {
                 for (int a = 0; a < region.AreaList.Count; a++)
                 {
@@ -161,32 +195,14 @@ namespace MHServerEmu.GameServer.Regions
                         entry = GameDatabase.Resource.CellDict[GameDatabase.GetPrototypePath(entryArea.CellList[c].PrototypeId)];
                         areaOrigin = entryArea.CellList[c].PositionInArea;
                         if (addMarkers)
-                            MarkersAdd(GameDatabase.Resource.CellDict[GameDatabase.GetPrototypePath(entryArea.CellList[c].PrototypeId)], cellid, addProp);
-                        for (int i = 0; i < entry.InitializeSet.Length; i++)
-                        {
-                            if (entry.InitializeSet[i] is EntityMarkerPrototype)
-                            {
-                                EntityMarkerPrototype door = (EntityMarkerPrototype)entry.InitializeSet[i];
-                                if (targets.ContainsKey(area))
-                                if (targets[area].ContainsKey(door.EntityGuid))
-                                {
-                                      Logger.Warn($"EntityGuid = {door.EntityGuid}");
-                                    Vector3 position = door.Position + areaOrigin;
-                                    float dz = 60f;
-                                    if (door.EntityGuid == 14397992695795297083) dz = 0f;
-                                    position.Z += dz;
-                                    _entityManager.SpawnDirectTeleport(
-                                           (ulong)region.Prototype, GameDatabase.GetPrototypeId(door.EntityGuid),
-                                           position, door.Rotation,
-                                           (int)entryArea.Id, region.Id, cellid, area, false,
-                                           targets[area][door.EntityGuid],
-                                           door.OverrideSnapToFloor > 0);
-                                }
-                            }
-                        }
+                            MarkersAdd(entry, cellid, addProp);
+                        if (targets != null && targets.Count > 0)
+                            AddTeleports(entry, entryArea, targets, cellid);
                     }
                 }
             }
+
+            ulong numEntities = _entityManager.GetLastEntityId();
 
             switch (region.Prototype)
             {
@@ -202,23 +218,38 @@ namespace MHServerEmu.GameServer.Regions
                     areaid = 2;
                     areaOrigin = new(1152.0f, 0.0f, 0.0f);
                     area = GameDatabase.GetPrototypeId("Regions/EndGame/TierX/PatrolBrooklyn/Areas/DocksPatrolBridgeTransitionNS.prototype");
-                    entry = GameDatabase.Resource.CellDict["Resource/Cells/EndGame/BrooklynDocksPatrol/DocksPatrol_BridgeA_Center_A.cell"];                    
+                    entry = GameDatabase.Resource.CellDict["Resource/Cells/EndGame/BrooklynDocksPatrol/DocksPatrol_BridgeA_Center_A.cell"];
                     MarkersAdd(entry, 18, true);
 
                     break;
 
+                case RegionPrototype.UpperMadripoorRegionL60:
+                case RegionPrototype.UpperMadripoorRegionL60Cosmic:
                 case RegionPrototype.XManhattanRegion1to60:
                 case RegionPrototype.XManhattanRegion60Cosmic:
+                case RegionPrototype.UltronRaidRegionGreen:
+                case RegionPrototype.CH0105NightclubRegion:
+                case RegionPrototype.CH0904SiegePCZRegion:
+                    GenerateEntities(region, null, true, true);
 
-                    area = (ulong)AreaPrototype.XManhattanArea1;
-                    MarkersAddDistrict("Resource/Districts/MidtownStatic/MidtownStatic_A.district", true);
+                    break;
 
+                case RegionPrototype.DailyGSinisterLabRegionL60:
+                    // connectionNodes = new ulong[] { 6937597958432367477 };
+                    targets = new ConnectionsNodesDict
+                    {
+                        [11176346407598236282] = new Dictionary<ulong, ulong> {
+                        [7414834759211230489] = 8059231424571188000 , // OpenTransitionMedSoftFlat
+                        [10015913612618892855] = 1605486679378305818 } // OpenTransitionMedSoft2
+                    };
+
+                    GenerateEntities(region, targets, true, true);
                     break;
 
                 case RegionPrototype.CH0101HellsKitchenRegion:
                     connectionNodes = new ulong[] { 14443352045617489679 };
                     targets = BuildConnectionEdges(connectionNodes);
-                    GenerateDoors(region, targets, true, true);
+                    GenerateEntities(region, targets, true, true);
                     break;
 
                 case RegionPrototype.HelicarrierRegion:
@@ -264,7 +295,7 @@ namespace MHServerEmu.GameServer.Regions
                          4075900166737242541 , // DailyBugleRooftopToBossNode
                     };
                     targets = BuildConnectionEdges(connectionNodes);
-                    GenerateDoors(region, targets, true, true);
+                    GenerateEntities(region, targets, true, true);
                     break;
 
                 case RegionPrototype.CosmicDoopSectorSpaceRegion:
@@ -421,7 +452,7 @@ namespace MHServerEmu.GameServer.Regions
 
                     connectionNodes = new ulong[] { 7252811901575568920 };
                     targets = BuildConnectionEdges(connectionNodes);
-                    GenerateDoors(region, targets, true, true);
+                    GenerateEntities(region, targets, true, true);
 
                     break;
 
@@ -481,6 +512,7 @@ namespace MHServerEmu.GameServer.Regions
                     break;
 
             }
+            return _entityManager.GetLastEntityId() - numEntities;
         }
     }
 }

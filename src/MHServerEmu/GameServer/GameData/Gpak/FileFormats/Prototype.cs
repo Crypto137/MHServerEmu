@@ -78,6 +78,12 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             return Elements.FirstOrDefault(field => field.Id == fieldId);
         }
         public PrototypeEntryElement GetField(FieldId fieldId) => GetField((ulong)fieldId);
+        public ulong GetFieldDef(FieldId fieldId, ulong def = 0)
+        {
+            PrototypeEntryElement field = GetField((ulong)fieldId);
+            if (field == null) return def;
+            return (ulong)field.Value;
+        }
         public PrototypeEntryListElement GetListField(ulong fieldId)
         {
             if (ListElements == null) return null;
@@ -91,7 +97,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         public ulong Id { get; }
         public CalligraphyValueType Type { get; }
         public object Value { get; }
-
         public PrototypeEntryElement(BinaryReader reader)
         {
             Id = reader.ReadUInt64();
