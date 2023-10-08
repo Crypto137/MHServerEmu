@@ -6,6 +6,7 @@ using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.Properties;
 using MHServerEmu.GameServer.Regions;
 using MHServerEmu.Networking;
+using System.Numerics;
 
 namespace MHServerEmu.Common.Commands
 {
@@ -34,6 +35,50 @@ namespace MHServerEmu.Common.Commands
             client.CurrentGame.MovePlayerToRegion(client, RegionPrototype.CosmicDoopSectorSpaceRegion);
 
             return "Travel to Cosmic Doop Sector";
+        }
+    }
+
+    [CommandGroup("position", "Current position.", AccountUserLevel.User)]
+    public class PositionCommand : CommandGroup
+    {
+        [DefaultCommand(AccountUserLevel.User)]
+        public string Position(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";            
+
+            return $"Postion: {client.LastPosition}";
+        }
+    }
+
+    [CommandGroup("teleport", "Teleport from/to position.\nExamples:\n teleport x:+1000 (from current position)\n teleport x:100 y:500 z:10 (to new position)", AccountUserLevel.User)]
+    public class TeleportCommand : CommandGroup
+    {
+        [DefaultCommand(AccountUserLevel.User)]
+        public string Teleport(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+            if (@params.Length == 0) return "Invalid arguments. Type 'help teleport' to get help.";
+            
+            float x = 0f, y = 0f, z = 0f;
+            foreach (string param in @params)
+            {
+                if (param.StartsWith("x:"))
+                    float.TryParse(param.AsSpan(2), out x);
+                else if (param.StartsWith("y:"))
+                    float.TryParse(param.AsSpan(2), out y);
+                else if (param.StartsWith("z:"))
+                    float.TryParse(param.AsSpan(2), out z);
+                else
+                    return $"Invalid parameter: {param}";
+            }
+            GameServer.Common.Vector3 teleportPoint = new(x, y, z);
+            if (@params.Length < 3)
+            {
+                teleportPoint += client.LastPosition;
+            }
+
+            client.CurrentGame.EventManager.AddEvent(client, GameServer.Games.EventEnum.ToTeleport, 0, teleportPoint);
+            return $"Teleport to {teleportPoint}";
         }
     }
 

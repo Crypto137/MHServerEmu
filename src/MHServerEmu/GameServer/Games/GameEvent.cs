@@ -4,6 +4,7 @@ namespace MHServerEmu.GameServer.Games
 {
     public enum EventEnum
     {
+        ToTeleport,
         StartThrowing,
         EndThrowing,
         StartTravel,
