@@ -78,17 +78,20 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             return Elements.FirstOrDefault(field => field.Id == fieldId);
         }
         public PrototypeEntryElement GetField(FieldId fieldId) => GetField((ulong)fieldId);
-        public ulong GetFieldDef(FieldId fieldId, ulong def = 0)
+
+        public ulong GetFieldDef(FieldId fieldId)
         {
             PrototypeEntryElement field = GetField((ulong)fieldId);
-            if (field == null) return def;
+            if (field == null) return 0;
             return (ulong)field.Value;
         }
+
         public PrototypeEntryListElement GetListField(ulong fieldId)
         {
             if (ListElements == null) return null;
             return ListElements.FirstOrDefault(field => field.Id == fieldId);
         }
+
         public PrototypeEntryListElement GetListField(FieldId fieldId) => GetListField((ulong)fieldId);
     }
 

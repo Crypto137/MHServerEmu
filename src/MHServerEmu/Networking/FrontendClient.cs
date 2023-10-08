@@ -27,10 +27,10 @@ namespace MHServerEmu.Networking
         public bool IsLoading { get; set; } = false;
         public Vector3 LastPosition { get; set; }
         public ulong MagikUltimateEntityId { get; set; }
-        public bool IsThrowling { get; set; } = false;
-        public ulong TrowlingPower { get; set; }
-        public ulong TrowlingCancelPower { get; set; }
-        public Entity ThrowlingObject { get; set; }
+        public bool IsThrowing { get; set; } = false;
+        public ulong ThrowingPower { get; set; }
+        public ulong ThrowingCancelPower { get; set; }
+        public Entity ThrowingObject { get; set; }
 
         public FrontendClient(Connection connection, GameServerManager gameServerManager)
         {

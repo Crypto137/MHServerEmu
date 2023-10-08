@@ -17,10 +17,7 @@ namespace MHServerEmu.GameServer.Properties
             for (int i = 0; i < propertyCount; i++)
                 List.Add(new(stream));
         }
-        public Property GetPropertyByEnum(PropertyEnum id)
-        {
-            return List.Find(property => property.Enum == id);
-        }
+
         public ReplicatedPropertyCollection(ulong replicationId, List<Property> propertyList = null)
         {
             ReplicationId = replicationId;
@@ -39,6 +36,11 @@ namespace MHServerEmu.GameServer.Properties
                 cos.Flush();
                 return ms.ToArray();
             }
+        }
+
+        public Property GetPropertyByEnum(PropertyEnum id)
+        {
+            return List.Find(property => property.Enum == id);
         }
 
         public override string ToString()

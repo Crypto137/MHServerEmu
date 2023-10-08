@@ -149,9 +149,9 @@ namespace MHServerEmu.GameServer.Games
                     client.LastPosition = avatarState.Position;
 
                     /* Logger spam
-                    //Logger.Trace(avatarState.ToString())*/
-                   // Logger.Trace(avatarState.Position.ToString());
-                    
+                    Logger.Trace(avatarState.ToString())
+                    Logger.Trace(avatarState.Position.ToString());
+                    */
 
                     break;
 
@@ -179,10 +179,7 @@ namespace MHServerEmu.GameServer.Games
                         EnqueueResponse(client, new(NetMessageMissionInteractRelease.DefaultInstance));
                     }
 
-
-                    Entity interactableObject;
-
-                    if (EntityManager.TryGetEntityById(useObject.IdTarget, out interactableObject) && interactableObject is Transition)
+                    if (EntityManager.TryGetEntityById(useObject.IdTarget, out Entity interactableObject) && interactableObject is Transition)
                     {                  
                         Transition teleport = interactableObject as Transition;
                         if (teleport.Destinations.Length == 0) break;
@@ -199,10 +196,11 @@ namespace MHServerEmu.GameServer.Games
                         Logger.Trace($"Teleport to {targetPos}");                        
 
                         Property property = target.PropertyCollection.GetPropertyByEnum(PropertyEnum.MapCellId);
-                        uint cellid = (uint)(Int64)property.Value.Get(); 
+                        uint cellid = (uint)(long)property.Value.Get(); 
                         property = target.PropertyCollection.GetPropertyByEnum(PropertyEnum.MapAreaId);
-                        uint areaid = (uint)(Int64)property.Value.Get();
+                        uint areaid = (uint)(long)property.Value.Get();
                         Logger.Trace($"Teleport to areaid {areaid} cellid {cellid}");
+
                         EnqueueResponse(client, new(NetMessageEntityPosition.CreateBuilder()
                             .SetIdEntity((ulong)client.Session.Account.Player.Avatar.ToEntityId())
                             .SetFlags(64)
@@ -517,31 +515,31 @@ namespace MHServerEmu.GameServer.Games
 
                     ulong idTarget = (ulong)queuedEvent.Data;
 
-                    client.ThrowlingObject = EntityManager.GetEntityById(idTarget);
-                    if (client.ThrowlingObject == null) break;
+                    client.ThrowingObject = EntityManager.GetEntityById(idTarget);
+                    if (client.ThrowingObject == null) break;
 
                     // TODO: avatarRepId = Player.EntityManager.GetEntity(avatarEntityId).RepId
                     ulong avatarRepId = (ulong)client.Session.Account.Player.Avatar.ToPropertyCollectionReplicationId();
 
                     Property property = new(PropertyEnum.ThrowableOriginatorEntity, idTarget);
                     EnqueueResponse(client, new(property.ToNetMessageSetProperty(avatarRepId)));
-                    Logger.Warn($"{GameDatabase.GetPrototypePath(client.ThrowlingObject.BaseData.PrototypeId)}");
+                    Logger.Warn($"{GameDatabase.GetPrototypePath(client.ThrowingObject.BaseData.PrototypeId)}");
                     // ThrowObject.Prototype.WorldEntity.UnrealClass
-                    Prototype throwPrototype = client.ThrowlingObject.BaseData.PrototypeId.GetPrototype();
+                    Prototype throwPrototype = client.ThrowingObject.BaseData.PrototypeId.GetPrototype();
                     PrototypeEntry worldEntity = throwPrototype.GetEntry(BlueprintId.WorldEntity);
                     if (worldEntity == null) break;
                     ulong unrealClass = (ulong)worldEntity.GetField(FieldId.UnrealClass).Value;
-                    client.IsThrowling = true;
+                    client.IsThrowing = true;
                     if (throwPrototype.ParentId != 14997899060839977779) // ThrowableProp
                         throwPrototype = throwPrototype.ParentId.GetPrototype();
                     property = new(PropertyEnum.ThrowableOriginatorAssetRef, unrealClass); // MarvelDestructible_Throwable_PoliceCar
                     EnqueueResponse(client, new(property.ToNetMessageSetProperty(avatarRepId)));
 
                     // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
-                    client.TrowlingCancelPower = (ulong)throwPrototype.GetEntry(BlueprintId.ThrowableRestorePowerProp).Elements[0].Value;
+                    client.ThrowingCancelPower = (ulong)throwPrototype.GetEntry(BlueprintId.ThrowableRestorePowerProp).Elements[0].Value;
                     EnqueueResponse(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
-                        .SetPowerProtoId(client.TrowlingCancelPower) // Powers/Environment/ThrowablePowers/Vehicles/ThrownPoliceCarCancelPower.prototype
+                        .SetPowerProtoId(client.ThrowingCancelPower) // Powers/Environment/ThrowablePowers/Vehicles/ThrownPoliceCarCancelPower.prototype
                         .SetPowerRank(0)
                         .SetCharacterLevel(60) // TODO: Player.Avatar.GetProperty(PropertyEnum.CharacterLevel)
                         .SetCombatLevel(60) // TODO: Player.Avatar.GetProperty(PropertyEnum.CombatLevel)
@@ -550,10 +548,10 @@ namespace MHServerEmu.GameServer.Games
                         .Build()));
 
                     // ThrowObject.Prototype.ThrowablePowerProp.Value
-                    client.TrowlingPower = (ulong)throwPrototype.GetEntry(BlueprintId.ThrowablePowerProp).Elements[0].Value;
+                    client.ThrowingPower = (ulong)throwPrototype.GetEntry(BlueprintId.ThrowablePowerProp).Elements[0].Value;
                     EnqueueResponse(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
-                        .SetPowerProtoId(client.TrowlingPower) // Powers/Environment/ThrowablePowers/Vehicles/ThrownPoliceCarPower.prototype
+                        .SetPowerProtoId(client.ThrowingPower) // Powers/Environment/ThrowablePowers/Vehicles/ThrownPoliceCarPower.prototype
                         .SetPowerRank(0)
                         .SetCharacterLevel(60)
                         .SetCombatLevel(60)
@@ -582,24 +580,24 @@ namespace MHServerEmu.GameServer.Games
                     // ThrowObject.Prototype.ThrowablePowerProp.Value
                     EnqueueResponse(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
-                        .SetPowerProtoId(client.TrowlingPower) // ThrownPoliceCarPower
+                        .SetPowerProtoId(client.ThrowingPower) // ThrownPoliceCarPower
                         .Build()));
 
                     // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
                     EnqueueResponse(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
-                        .SetPowerProtoId(client.TrowlingCancelPower) // ThrownPoliceCarCancelPower
+                        .SetPowerProtoId(client.ThrowingCancelPower) // ThrownPoliceCarCancelPower
                         .Build()));
 
                     Logger.Trace("Event EndThrowing");
 
                     if (GameDatabase.GetPrototypePath(powerId).Contains("CancelPower")) // ThrownPoliceCarCancelPower
                     {     
-                        EnqueueResponse(client, new(client.ThrowlingObject.ToNetMessageEntityCreate()));
+                        EnqueueResponse(client, new(client.ThrowingObject.ToNetMessageEntityCreate()));
                         Logger.Trace("Event ThrownPoliceCarCancelPower");
                     }
-                    client.ThrowlingObject = null;
-                    client.IsThrowling = false;
+                    client.ThrowingObject = null;
+                    client.IsThrowing = false;
                     break;
 
                 case EventEnum.DiamondFormActivate:
@@ -704,12 +702,13 @@ namespace MHServerEmu.GameServer.Games
             if (Power == null) return false;
             PrototypeEntryListElement Keywords = Power.GetListField(FieldId.Keywords);
             if (Keywords == null) return false;
+
             for (int i = 0; i < Keywords.Values.Length; i++)
-            {
                 if ((ulong)Keywords.Values[i] == (ulong)Keyword) return true;
-            }            
+            
             return false;
         }
+
         private void HandleTravelPower(FrontendClient client, ulong PowerId)
         {
             uint delta = 65; // TODO: Sync server-client

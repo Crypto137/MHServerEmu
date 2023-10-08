@@ -127,8 +127,8 @@ namespace MHServerEmu.GameServer.Entities
 
         public Entity GetEntityById(ulong entityId) => _entityDict[entityId];
         public Entity GetEntityByPrototypeId(ulong prototype) => _entityDict.Values.FirstOrDefault(entity => entity.BaseData.PrototypeId == prototype);
-        public Entity FindEntityByDestination(Destination destination) {
-
+        public Entity FindEntityByDestination(Destination destination)
+        {
             foreach (KeyValuePair<ulong, Entity> entity in _entityDict)
             {
                 if (entity.Value.BaseData.PrototypeId == destination.Entity)

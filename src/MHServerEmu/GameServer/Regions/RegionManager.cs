@@ -402,23 +402,23 @@ namespace MHServerEmu.GameServer.Regions
                         new(10240.0f, 10240.0f, 2048.0f),
                         new(20, DifficultyTier.Normal));
 
-                    string DailiBugleArea = "Regions/Operations/Events/DailyBugle/Areas/";
-                    string DailiBugle = "Resource/Cells/EndGame/DangerDailies/DailyBugle/";
+                    string dailyBugleArea = "Regions/Operations/Events/DailyBugle/Areas/";
+                    string dailyBugle = "Resource/Cells/EndGame/DangerDailies/DailyBugle/";
 
-                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeId(DailiBugleArea + "DailyBugleLobbyEntryArea.prototype"), new(), true);
-                    area.AddCell(new(1, GameDatabase.GetPrototypeId(DailiBugle + "DailyBugle_Trans/Daily_DailyBugle_Lobby_Entry_A.cell"), new(0.0f, 0.0f, 0.0f)));
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeId(dailyBugleArea + "DailyBugleLobbyEntryArea.prototype"), new(), true);
+                    area.AddCell(new(1, GameDatabase.GetPrototypeId(dailyBugle + "DailyBugle_Trans/Daily_DailyBugle_Lobby_Entry_A.cell"), new(0.0f, 0.0f, 0.0f)));
                     region.AddArea(area);
-                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeId(DailiBugleArea + "DailyBugleBasementArea.prototype"), new(), false);
-                    area.AddCell(new(2, GameDatabase.GetPrototypeId(DailiBugle + "DailyBugle_A/Daily_DailyBugle_Basement_A.cell"), new(0.0f, 8192.0f, 0.0f)));
+                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeId(dailyBugleArea + "DailyBugleBasementArea.prototype"), new(), false);
+                    area.AddCell(new(2, GameDatabase.GetPrototypeId(dailyBugle + "DailyBugle_A/Daily_DailyBugle_Basement_A.cell"), new(0.0f, 8192.0f, 0.0f)));
                     region.AddArea(area);
-                    area = new(3, (AreaPrototype)GameDatabase.GetPrototypeId(DailiBugleArea + "DailyBugleArchivesArea.prototype"), new(), false);
-                    area.AddCell(new(3, GameDatabase.GetPrototypeId(DailiBugle + "DailyBugle_A/Daily_DailyBugle_Archives_A.cell"), new(8192.0f, -2048.0f, 0.0f)));
+                    area = new(3, (AreaPrototype)GameDatabase.GetPrototypeId(dailyBugleArea + "DailyBugleArchivesArea.prototype"), new(), false);
+                    area.AddCell(new(3, GameDatabase.GetPrototypeId(dailyBugle + "DailyBugle_A/Daily_DailyBugle_Archives_A.cell"), new(8192.0f, -2048.0f, 0.0f)));
                     region.AddArea(area);
-                    area = new(4, (AreaPrototype)GameDatabase.GetPrototypeId(DailiBugleArea + "DailyBugleOfficeArea.prototype"), new(), false);
-                    area.AddCell(new(4, GameDatabase.GetPrototypeId(DailiBugle + "DailyBugle_A/Daily_DailyBugle_Office_A.cell"), new(0.0f, -8192.0f, 0.0f)));
+                    area = new(4, (AreaPrototype)GameDatabase.GetPrototypeId(dailyBugleArea + "DailyBugleOfficeArea.prototype"), new(), false);
+                    area.AddCell(new(4, GameDatabase.GetPrototypeId(dailyBugle + "DailyBugle_A/Daily_DailyBugle_Office_A.cell"), new(0.0f, -8192.0f, 0.0f)));
                     region.AddArea(area);
-                    area = new(5, (AreaPrototype)GameDatabase.GetPrototypeId(DailiBugleArea + "DailyBugleRooftopBossArea.prototype"), new(), false);
-                    area.AddCell(new(5, GameDatabase.GetPrototypeId(DailiBugle + "DailyBugle_Trans/Daily_DailyBugle_Roof_Boss_A.cell"), new(-8192.0f, 0.0f, 0.0f)));
+                    area = new(5, (AreaPrototype)GameDatabase.GetPrototypeId(dailyBugleArea + "DailyBugleRooftopBossArea.prototype"), new(), false);
+                    area.AddCell(new(5, GameDatabase.GetPrototypeId(dailyBugle + "DailyBugle_Trans/Daily_DailyBugle_Roof_Boss_A.cell"), new(-8192.0f, 0.0f, 0.0f)));
                     region.AddArea(area);
 
 
@@ -465,9 +465,9 @@ namespace MHServerEmu.GameServer.Regions
                         new(14976.0f, 14976.0f, 1152.0f),
                         new(60, DifficultyTier.Normal));
 
-                    bool South = true;
+                    bool south = true;
 
-                    if (South)
+                    if (south)
                     {
 
                         AreaPrototype CH0101HellsKitchenSouthArea = (AreaPrototype)GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH01HellsKitchen/Brownstones/CH0101HellsKitchenSouthArea.prototype");

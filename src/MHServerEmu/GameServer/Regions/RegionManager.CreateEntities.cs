@@ -8,22 +8,15 @@ using MHServerEmu.GameServer.Properties;
 
 namespace MHServerEmu.GameServer.Regions
 {
-    using static Dapper.SqlMapper;
-    using ConnectionsNodesDict = Dictionary<ulong, Dictionary<ulong, ulong>>;
+    using ConnectionNodeDict = Dictionary<ulong, Dictionary<ulong, ulong>>;
 
-    public struct TargetObject
-    {
-        public ulong entity;
-        public ulong area;
-        public ulong targetId;
-    }
     public partial class RegionManager
     {
         public float ProjectToFloor(CellPrototype cell, Vector3 areaOrigin, Vector3 position)
         {
             Vector3 cellPos = position - cell.Boundbox.Min;
-            cellPos.X /= cell.Boundbox.GetWidth();
-            cellPos.Y /= cell.Boundbox.GetLength();
+            cellPos.X /= cell.Boundbox.Width;
+            cellPos.Y /= cell.Boundbox.Length;
             int mapX = (int)cell.HeightMap.HeightMapSize.X;
             int mapY = (int)cell.HeightMap.HeightMapSize.Y;
             int x = Math.Clamp(mapX - 1 - (int)(cellPos.X * mapX), 0, mapX - 1);
@@ -32,6 +25,7 @@ namespace MHServerEmu.GameServer.Regions
             //Logger.Warn($"Height = [{height}]");           
             return height + areaOrigin.Z;
         }
+
         public float GetEntityFloor(ulong prototypeId)
         {
             //Logger.Warn($"prototype = [{prototypeId}] {GameDatabase.GetPrototypePath(prototypeId)}");
@@ -49,18 +43,19 @@ namespace MHServerEmu.GameServer.Regions
             Prototype bounds = (Prototype)TestBounds.Value;
             float height = 0f;
             if (bounds.ParentId == (ulong)BlueprintId.BoxBounds || bounds.ParentId == (ulong)BlueprintId.ObjectSmall)
-                height = (float)(Double)bounds.GetEntry(BlueprintId.BoxBounds).GetField(FieldId.Height).Value;
+                height = (float)(double)bounds.GetEntry(BlueprintId.BoxBounds).GetField(FieldId.Height).Value;
             else if (bounds.ParentId == (ulong)BlueprintId.SphereBounds)
-                height = (float)(Double)bounds.GetEntry(BlueprintId.SphereBounds).GetField(FieldId.Radius).Value;
+                height = (float)(double)bounds.GetEntry(BlueprintId.SphereBounds).GetField(FieldId.Radius).Value;
             else if (bounds.ParentId == (ulong)BlueprintId.CapsuleBounds)
-                height = (float)(Double)bounds.GetEntry(BlueprintId.CapsuleBounds).GetField(FieldId.HeightFromCenter).Value * 2f;
+                height = (float)(double)bounds.GetEntry(BlueprintId.CapsuleBounds).GetField(FieldId.HeightFromCenter).Value * 2f;
             else Logger.Warn($"ParentId = {bounds.ParentId}");
 
             return height / 2;
         }
-        public ConnectionsNodesDict BuildConnectionEdges(ulong[] connectionNode)
+
+        public ConnectionNodeDict BuildConnectionEdges(ulong[] connectionNode)
         {
-            var items = new ConnectionsNodesDict();
+            var items = new ConnectionNodeDict();
             var nodes = new List<TargetObject>();
 
             foreach (ulong connection in connectionNode)
@@ -71,27 +66,27 @@ namespace MHServerEmu.GameServer.Regions
                 PrototypeEntry entryOrigin = origin.GetPrototype().GetEntry(BlueprintId.RegionConnectionTarget);
                 nodes.Add(new TargetObject
                 {
-                    area = entryTarget.GetFieldDef(FieldId.Area),
-                    entity = GameDatabase.GetPrototypeGuid((ulong)entryTarget.GetField(FieldId.Entity).Value),
-                    targetId = origin
+                    Area = entryTarget.GetFieldDef(FieldId.Area),
+                    Entity = GameDatabase.GetPrototypeGuid((ulong)entryTarget.GetField(FieldId.Entity).Value),
+                    TargetId = origin
                 });
                 nodes.Add(new TargetObject
                 {
-                    area = entryOrigin.GetFieldDef(FieldId.Area),
-                    entity = GameDatabase.GetPrototypeGuid((ulong)entryOrigin.GetField(FieldId.Entity).Value),
-                    targetId = target
+                    Area = entryOrigin.GetFieldDef(FieldId.Area),
+                    Entity = GameDatabase.GetPrototypeGuid((ulong)entryOrigin.GetField(FieldId.Entity).Value),
+                    TargetId = target
                 });
             }
             //foreach (var node in nodes) Logger.Warn($"{node.area}, {node.entity}, {node.targetId}"); 
 
-            var groupedNodes = nodes.GroupBy(node => node.area);
+            var groupedNodes = nodes.GroupBy(node => node.Area);
             foreach (var group in groupedNodes)
             {
                 var groupItems = new Dictionary<ulong, ulong>();
+
                 foreach (var node in group)
-                {
-                    groupItems[node.entity] = node.targetId;
-                }
+                    groupItems[node.Entity] = node.TargetId;
+
                 items[group.Key] = groupItems;
             }
 
@@ -106,7 +101,7 @@ namespace MHServerEmu.GameServer.Regions
             Vector3 areaOrigin = new();
             Vector3 entityPosition;
             ulong[] connectionNodes;
-            ConnectionsNodesDict targets;
+            ConnectionNodeDict targets;
             EntityMarkerPrototype npc;
 
             void MarkersAdd(CellPrototype entry, int cellId, bool addProp = false)
@@ -157,7 +152,7 @@ namespace MHServerEmu.GameServer.Regions
                     MarkersAdd(GameDatabase.Resource.CellDict[district.CellMarkerSet[cellid].Resource], cellid + 1, addProp);
             }
 
-            void AddTeleports(CellPrototype entry, Area entryArea, ConnectionsNodesDict targets, int cellId)
+            void AddTeleports(CellPrototype entry, Area entryArea, ConnectionNodeDict targets, int cellId)
             {
                 for (int i = 0; i < entry.InitializeSet.Length; i++)
                 {
@@ -183,7 +178,7 @@ namespace MHServerEmu.GameServer.Regions
                 }
             }
 
-            void GenerateEntities(Region region, ConnectionsNodesDict targets, bool addMarkers, bool addProp)
+            void GenerateEntities(Region region, ConnectionNodeDict targets, bool addMarkers, bool addProp)
             {
                 for (int a = 0; a < region.AreaList.Count; a++)
                 {
@@ -236,7 +231,7 @@ namespace MHServerEmu.GameServer.Regions
 
                 case RegionPrototype.DailyGSinisterLabRegionL60:
                     // connectionNodes = new ulong[] { 6937597958432367477 };
-                    targets = new ConnectionsNodesDict
+                    targets = new ConnectionNodeDict
                     {
                         [11176346407598236282] = new Dictionary<ulong, ulong> {
                         [7414834759211230489] = 8059231424571188000 , // OpenTransitionMedSoftFlat
