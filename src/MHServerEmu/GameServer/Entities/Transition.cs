@@ -4,6 +4,7 @@ using MHServerEmu.GameServer.GameData;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.Powers;
+using MHServerEmu.GameServer.Properties;
 
 namespace MHServerEmu.GameServer.Entities
 {
@@ -11,7 +12,27 @@ namespace MHServerEmu.GameServer.Entities
     {
         public string TransitionName { get; set; }
         public Destination[] Destinations { get; set; }
+        public Transition(EntityBaseData baseData, ulong replicationId, ulong mapRegionId, int mapAreaId, int mapCellId, ulong contextAreaRef, 
+            Vector3 mapPosition, Destination destination) : base(baseData)
+        {
+            ReplicationPolicy = 0x21;
+            PropertyCollection = new(replicationId, new()
+            {
+                new(PropertyEnum.MapPosition, mapPosition),
+                new(PropertyEnum.MapAreaId, mapAreaId),
+                new(PropertyEnum.MapRegionId, mapRegionId),
+                new(PropertyEnum.MapCellId, mapCellId),
+                new(PropertyEnum.ContextAreaRef, contextAreaRef)
+            });
+            TrackingContextMap = Array.Empty<EntityTrackingContextMap>();
+            ConditionCollection = Array.Empty<Condition>();
+            PowerCollection = Array.Empty<PowerCollectionRecord>();
+            UnkEvent = 0;
 
+            TransitionName = "";
+            Destinations = new Destination[1];
+            Destinations[0] = destination;
+        }
         public Transition(EntityBaseData baseData, byte[] archiveData) : base(baseData)
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
@@ -85,6 +106,7 @@ namespace MHServerEmu.GameServer.Entities
         public ulong UnkId1 { get; set; }
         public ulong UnkId2 { get; set; }
 
+        public Destination() { }
         public Destination(CodedInputStream stream)
         {
             Type = stream.ReadRawInt32();

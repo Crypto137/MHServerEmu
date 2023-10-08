@@ -12,6 +12,7 @@ using MHServerEmu.GameServer.Properties;
 using MHServerEmu.GameServer.Regions;
 using MHServerEmu.Networking;
 using MHServerEmu.GameServer.GameData.Gpak;
+using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 
 namespace MHServerEmu.GameServer.Games
 {
@@ -148,9 +149,9 @@ namespace MHServerEmu.GameServer.Games
                     client.LastPosition = avatarState.Position;
 
                     /* Logger spam
-                    //Logger.Trace(avatarState.ToString())
+                    Logger.Trace(avatarState.ToString())
                     Logger.Trace(avatarState.Position.ToString());
-                    ;*/
+                    */
 
                     break;
 
@@ -160,6 +161,55 @@ namespace MHServerEmu.GameServer.Games
                     {
                         EnqueueResponses(client, GetFinishLoadingMessages(client.Session.Account));
                         client.IsLoading = false;
+                    }
+
+                    break;
+
+                case ClientToGameServerMessage.NetMessageUseInteractableObject:
+                    var useObject = NetMessageUseInteractableObject.ParseFrom(message.Payload);
+                    Logger.Info($"Received NetMessageUseInteractableObject");
+
+                    if (useObject.MissionPrototypeRef != 0)
+                    {
+                        if (GameDatabase.TryGetPrototypePath(useObject.MissionPrototypeRef, out string missionPrototype))
+                            Logger.Debug($"NetMessageUseInteractableObject contains missionPrototypeRef:\n{missionPrototype}");
+                        else
+                            Logger.Debug($"NetMessageUseInteractableObject contains unknown missionPrototypeRef");
+
+                        EnqueueResponse(client, new(NetMessageMissionInteractRelease.DefaultInstance));
+                    }
+
+                    if (EntityManager.TryGetEntityById(useObject.IdTarget, out Entity interactableObject) && interactableObject is Transition)
+                    {                  
+                        Transition teleport = interactableObject as Transition;
+                        if (teleport.Destinations.Length == 0) break;
+                        Logger.Trace($"Destination entity {teleport.Destinations[0].Entity}");
+                        Entity target = EntityManager.FindEntityByDestination(teleport.Destinations[0]);
+                        if (target == null) break;
+                        Common.Vector3 targetRot = target.BaseData.Orientation;
+                        float offset = 150f;
+                        Common.Vector3 targetPos =  new(
+                            target.BaseData.Position.X + offset * (float)Math.Cos(targetRot.X),
+                            target.BaseData.Position.Y + offset * (float)Math.Sin(targetRot.X), 
+                            target.BaseData.Position.Z);   
+
+                        Logger.Trace($"Teleport to {targetPos}");                        
+
+                        Property property = target.PropertyCollection.GetPropertyByEnum(PropertyEnum.MapCellId);
+                        uint cellid = (uint)(long)property.Value.Get(); 
+                        property = target.PropertyCollection.GetPropertyByEnum(PropertyEnum.MapAreaId);
+                        uint areaid = (uint)(long)property.Value.Get();
+                        Logger.Trace($"Teleport to areaid {areaid} cellid {cellid}");
+
+                        EnqueueResponse(client, new(NetMessageEntityPosition.CreateBuilder()
+                            .SetIdEntity((ulong)client.Session.Account.Player.Avatar.ToEntityId())
+                            .SetFlags(64)
+                            .SetPosition(targetPos.ToNetStructPoint3())
+                            .SetOrientation(targetRot.ToNetStructPoint3())
+                            .SetCellId(cellid)
+                            .SetAreaId(areaid)
+                            .SetEntityPrototypeId((ulong)client.Session.Account.Player.Avatar)
+                            .Build()));
                     }
 
                     break;
@@ -181,20 +231,25 @@ namespace MHServerEmu.GameServer.Games
                         Logger.Trace($"Received TryActivatePower for invalid prototype id {tryActivatePower.PowerPrototypeId}");
 
                     if (powerPrototypePath.Contains("ThrowablePowers/"))
-                    {
-                        // TODO: GetPrototype(tryActivatePower.PowerPrototypeId).Power.AnimationTimeMS
-                        long animationTimeMS = 1033; 
-                        AddEvent(client, EventEnum.EndThrowing, animationTimeMS, tryActivatePower.PowerPrototypeId);
+                    {                                   
                         Logger.Trace($"AddEvent EndThrowing for {tryActivatePower.PowerPrototypeId}");
+                        PrototypeEntry Power = tryActivatePower.PowerPrototypeId.GetPrototype().GetEntry(BlueprintId.Power);
+                        long animationTimeMS = 1100;
+                        if (Power != null) { 
+                            PrototypeEntryElement AnimationTimeMS = Power.GetField(FieldId.AnimationTimeMS);
+                            if (AnimationTimeMS != null) animationTimeMS = (long)AnimationTimeMS.Value; 
+                        }
+                        AddEvent(client, EventEnum.EndThrowing, animationTimeMS, tryActivatePower.PowerPrototypeId);                        
                         break;  
-                    }
-
-                    if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.EmmaFrost.DiamondHeart) 
-                    {                //  3458821934631491033 // DiamondStrike     
-                        AddEvent(client, EventEnum.StartEmmaDiamondForm, 0, tryActivatePower.PowerPrototypeId);
-                        AddEvent(client, EventEnum.EndEmmaDiamondForm, 20000, tryActivatePower.PowerPrototypeId);
-                    }
-                    if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.Magik.Ultimate)
+                    } 
+                    else if (powerPrototypePath.Contains("EmmaFrost/"))
+                    {
+                        if (PowerHasKeyword(tryActivatePower.PowerPrototypeId, BlueprintId.DiamondFormActivatePower))
+                            AddEvent(client, EventEnum.DiamondFormActivate, 0, tryActivatePower.PowerPrototypeId);
+                        else if (PowerHasKeyword(tryActivatePower.PowerPrototypeId, BlueprintId.Mental))
+                            AddEvent(client, EventEnum.DiamondFormDeactivate, 0, tryActivatePower.PowerPrototypeId);
+                    } 
+                    else if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.Magik.Ultimate)
                     {
                         AddEvent(client, EventEnum.StartMagikUltimate, 0, tryActivatePower.TargetPosition);
                         AddEvent(client, EventEnum.EndMagikUltimate, 20000, 0u);
@@ -276,24 +331,6 @@ namespace MHServerEmu.GameServer.Games
                     Logger.Trace($"Received NetMessageThrowInteraction Avatar[{avatarIndex}] Target[{idTarget}]");
 
                     AddEvent(client, EventEnum.StartThrowing, 0, idTarget);
-
-                    break;
-
-                case ClientToGameServerMessage.NetMessageUseInteractableObject:
-                    var useObject = NetMessageUseInteractableObject.ParseFrom(message.Payload);
-                    Logger.Trace("Received NetMessageUseInteractableObject");
-
-                    // If UseInteractableObject contains a valid missionPrototypeRef we need to respond with
-                    // NetMessageMissionInteractRelease, or else the client's input will break.
-                    if (useObject.MissionPrototypeRef != 0)
-                    {
-                        if (GameDatabase.TryGetPrototypePath(useObject.MissionPrototypeRef, out string missionPrototype))
-                            Logger.Debug($"NetMessageUseInteractableObject contains missionPrototypeRef:\n{missionPrototype}");
-                        else
-                            Logger.Debug($"NetMessageUseInteractableObject contains unknown missionPrototypeRef");
-
-                        EnqueueResponse(client, new(NetMessageMissionInteractRelease.DefaultInstance));
-                    }
 
                     break;
 
@@ -477,25 +514,32 @@ namespace MHServerEmu.GameServer.Games
                 case EventEnum.StartThrowing:
 
                     ulong idTarget = (ulong)queuedEvent.Data;
-                    // TODO: Player.Avatar.SetThrowObject(idTarget)
-                    // TODO: ThrowObject = Player.EntityManager.GetEntity(idTarget)
+
+                    client.ThrowingObject = EntityManager.GetEntityById(idTarget);
+                    if (client.ThrowingObject == null) break;
 
                     // TODO: avatarRepId = Player.EntityManager.GetEntity(avatarEntityId).RepId
                     ulong avatarRepId = (ulong)client.Session.Account.Player.Avatar.ToPropertyCollectionReplicationId();
 
                     Property property = new(PropertyEnum.ThrowableOriginatorEntity, idTarget);
                     EnqueueResponse(client, new(property.ToNetMessageSetProperty(avatarRepId)));
-
+                    Logger.Warn($"{GameDatabase.GetPrototypePath(client.ThrowingObject.BaseData.PrototypeId)}");
                     // ThrowObject.Prototype.WorldEntity.UnrealClass
-                    // ulong unrealClass = (ulong)throwObject.GetPrototype().GetEntry(BlueprintId.WorldEntity).GetField(FieldId.UnrealClass).Value;
-                    ulong unrealClass = 9953069070637601478;
+                    Prototype throwPrototype = client.ThrowingObject.BaseData.PrototypeId.GetPrototype();
+                    PrototypeEntry worldEntity = throwPrototype.GetEntry(BlueprintId.WorldEntity);
+                    if (worldEntity == null) break;
+                    ulong unrealClass = (ulong)worldEntity.GetField(FieldId.UnrealClass).Value;
+                    client.IsThrowing = true;
+                    if (throwPrototype.ParentId != 14997899060839977779) // ThrowableProp
+                        throwPrototype = throwPrototype.ParentId.GetPrototype();
                     property = new(PropertyEnum.ThrowableOriginatorAssetRef, unrealClass); // MarvelDestructible_Throwable_PoliceCar
                     EnqueueResponse(client, new(property.ToNetMessageSetProperty(avatarRepId)));
 
                     // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
+                    client.ThrowingCancelPower = (ulong)throwPrototype.GetEntry(BlueprintId.ThrowableRestorePowerProp).Elements[0].Value;
                     EnqueueResponse(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
-                        .SetPowerProtoId(5387918100020273380) // Powers/Environment/ThrowablePowers/Vehicles/ThrownPoliceCarCancelPower.prototype
+                        .SetPowerProtoId(client.ThrowingCancelPower) // Powers/Environment/ThrowablePowers/Vehicles/ThrownPoliceCarCancelPower.prototype
                         .SetPowerRank(0)
                         .SetCharacterLevel(60) // TODO: Player.Avatar.GetProperty(PropertyEnum.CharacterLevel)
                         .SetCombatLevel(60) // TODO: Player.Avatar.GetProperty(PropertyEnum.CombatLevel)
@@ -504,9 +548,10 @@ namespace MHServerEmu.GameServer.Games
                         .Build()));
 
                     // ThrowObject.Prototype.ThrowablePowerProp.Value
+                    client.ThrowingPower = (ulong)throwPrototype.GetEntry(BlueprintId.ThrowablePowerProp).Elements[0].Value;
                     EnqueueResponse(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
-                        .SetPowerProtoId(13813867126636027518) // Powers/Environment/ThrowablePowers/Vehicles/ThrownPoliceCarPower.prototype
+                        .SetPowerProtoId(client.ThrowingPower) // Powers/Environment/ThrowablePowers/Vehicles/ThrownPoliceCarPower.prototype
                         .SetPowerRank(0)
                         .SetCharacterLevel(60)
                         .SetCombatLevel(60)
@@ -531,32 +576,31 @@ namespace MHServerEmu.GameServer.Games
                     EnqueueResponse(client, new(property.ToNetMessageRemoveProperty(avatarRepId)));
                     property = new(PropertyEnum.ThrowableOriginatorAssetRef, 0ul);
                     EnqueueResponse(client, new(property.ToNetMessageRemoveProperty(avatarRepId)));
-
-                    // TODO: ThrowObject = Player.Avatar.GetThrowObject
-
+                    
                     // ThrowObject.Prototype.ThrowablePowerProp.Value
                     EnqueueResponse(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
-                        .SetPowerProtoId(13813867126636027518) // ThrownPoliceCarPower
+                        .SetPowerProtoId(client.ThrowingPower) // ThrownPoliceCarPower
                         .Build()));
 
                     // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
                     EnqueueResponse(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
-                        .SetPowerProtoId(5387918100020273380) // ThrownPoliceCarCancelPower
+                        .SetPowerProtoId(client.ThrowingCancelPower) // ThrownPoliceCarCancelPower
                         .Build()));
 
                     Logger.Trace("Event EndThrowing");
 
                     if (GameDatabase.GetPrototypePath(powerId).Contains("CancelPower")) // ThrownPoliceCarCancelPower
-                    {
-                        // TODO: CreateEntity for ThrowObject
+                    {     
+                        EnqueueResponse(client, new(client.ThrowingObject.ToNetMessageEntityCreate()));
                         Logger.Trace("Event ThrownPoliceCarCancelPower");
                     }
-
+                    client.ThrowingObject = null;
+                    client.IsThrowing = false;
                     break;
 
-                case EventEnum.StartEmmaDiamondForm:
+                case EventEnum.DiamondFormActivate:
 
                     ulong diamondFormCondition = (ulong)PowerPrototypes.EmmaFrost.DiamondFormCondition;
                     conditionArchive = new((ulong)client.Session.Account.Player.Avatar.ToEntityId(), 111, 567, diamondFormCondition, 0); 
@@ -577,11 +621,13 @@ namespace MHServerEmu.GameServer.Games
 
                     break;
 
-                case EventEnum.EndEmmaDiamondForm:
-                    // TODO: DiamondFormDeactivate = PowerPrototypes.EmmaFrost.DiamondFormDeactivate;
-                    EnqueueResponse(client, new(NetMessageEntityDestroy.CreateBuilder()
-                        .SetIdEntity(111)
-                        .Build()));
+                case EventEnum.DiamondFormDeactivate:
+                    // TODO: get DiamondFormCondition Condition Key
+                    EnqueueResponse(client, new(NetMessageDeleteCondition.CreateBuilder()
+                      .SetKey(111)
+                      .SetIdEntity((ulong)client.Session.Account.Player.Avatar.ToEntityId())
+                      .Build()));
+
                     Logger.Trace($"EventEnd EmmaDiamondForm");  
 
                     break;
@@ -598,7 +644,8 @@ namespace MHServerEmu.GameServer.Games
                         .SetArchiveData(ByteString.CopyFrom(conditionArchive.Encode()))
                         .Build()));
 
-                    WorldEntity arenaEntity = EntityManager.CreateWorldEntityEmpty(RegionManager.GetRegion(client.Session.Account.Player.Region).Id,
+                    WorldEntity arenaEntity = EntityManager.CreateWorldEntityEmpty(
+                        RegionManager.GetRegion(client.Session.Account.Player.Region).Id,
                         (ulong)PowerPrototypes.Magik.UltimateArea,
                         new(position.X, position.Y, position.Z), new());
 
@@ -647,6 +694,19 @@ namespace MHServerEmu.GameServer.Games
             }
 
             queuedEvent.IsRunning = false;
+        }
+
+        private bool PowerHasKeyword(ulong PowerId, BlueprintId Keyword)
+        {
+            PrototypeEntry Power = PowerId.GetPrototype().GetEntry(BlueprintId.Power);
+            if (Power == null) return false;
+            PrototypeEntryListElement Keywords = Power.GetListField(FieldId.Keywords);
+            if (Keywords == null) return false;
+
+            for (int i = 0; i < Keywords.Values.Length; i++)
+                if ((ulong)Keywords.Values[i] == (ulong)Keyword) return true;
+            
+            return false;
         }
 
         private void HandleTravelPower(FrontendClient client, ulong PowerId)

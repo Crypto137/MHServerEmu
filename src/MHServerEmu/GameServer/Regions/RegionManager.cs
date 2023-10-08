@@ -39,7 +39,8 @@ namespace MHServerEmu.GameServer.Regions
             RegionPrototype.CH0808DoomCastleRegion,
             RegionPrototype.CH0901NorwayPCZRegion,
             RegionPrototype.CH0904SiegePCZRegion,
-            RegionPrototype.CosmicDoopSectorSpaceRegion
+            RegionPrototype.CosmicDoopSectorSpaceRegion,
+            RegionPrototype.OpDailyBugleRegionL11To60
         };
 
         // TODO: Determine if a region is a hub from its prototype
@@ -71,7 +72,8 @@ namespace MHServerEmu.GameServer.Regions
                 {
                     // Generate the region and create entities for it if needed
                     region = GenerateRegion(prototype);
-                    CreateEntities(region);
+                    ulong entities = CreateEntities(region);
+                    Logger.Debug($"Entities generated = {entities}");
                     _regionDict.Add(prototype, region);
                 }
 
@@ -309,7 +311,7 @@ namespace MHServerEmu.GameServer.Regions
                         new(11319f, 12336f, 2304f),
                         new(60, DifficultyTier.Normal));
 
-                    area = new(1, AreaPrototype.GenoshaHUBArea, new(951f, -336f, 0f), true);
+                    area = new(1, AreaPrototype.GenoshaHUBArea, new(), true);
 
                     district = GameDatabase.Resource.DistrictDict["Resource/Districts/GenoshaHUB.district"];
                     for (int i = 0; i < district.CellMarkerSet.Length; i++)
@@ -319,13 +321,13 @@ namespace MHServerEmu.GameServer.Regions
 
                     /*
                     Area entryArea = new(2, AreaPrototype.GenoshaHUBEntryArea, new(-11049f, -12336f, 0f), false);
-                    area.AddCell(new(18, Database.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/GenoshaEntryArea/GenoshaEntry_X1Y1.cell"), new()));
-                    region.AddArea(entryArea);
-                    */
+                    entryArea.AddCell(new(18, GameDatabase.GetPrototypeId("Resource/Cells/DistrictCells/Genosha/GenoshaEntryArea/GenoshaEntry_X1Y1.cell"), new()));
+                    region.AddArea(entryArea);*/
+                    
 
-                    region.EntrancePosition = new(4434.125f, 2388.875f, -1304f);
+                    region.EntrancePosition = new(3483.125f, 2724.875f, -1304f);
                     region.EntranceOrientation = new(2.046875f, 0.0f, 0.0f);
-                    region.WaypointPosition = new(4434.125f, 2388.875f, -1304f);
+                    region.WaypointPosition = new(3483.125f, 2724.875f, -1304f);
                     region.WaypointOrientation = new();
 
                     break;
@@ -389,6 +391,44 @@ namespace MHServerEmu.GameServer.Regions
 
                     break;
 
+                case RegionPrototype.OpDailyBugleRegionL11To60:
+                    archiveData = new byte[] {
+                    };
+
+                    region = new(RegionPrototype.OpDailyBugleRegionL11To60,
+                        1038711701,
+                        archiveData,
+                        new(-10240.0f,	-10240.0f,	-2048.0f),
+                        new(10240.0f, 10240.0f, 2048.0f),
+                        new(20, DifficultyTier.Normal));
+
+                    string dailyBugleArea = "Regions/Operations/Events/DailyBugle/Areas/";
+                    string dailyBugle = "Resource/Cells/EndGame/DangerDailies/DailyBugle/";
+
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeId(dailyBugleArea + "DailyBugleLobbyEntryArea.prototype"), new(), true);
+                    area.AddCell(new(1, GameDatabase.GetPrototypeId(dailyBugle + "DailyBugle_Trans/Daily_DailyBugle_Lobby_Entry_A.cell"), new(0.0f, 0.0f, 0.0f)));
+                    region.AddArea(area);
+                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeId(dailyBugleArea + "DailyBugleBasementArea.prototype"), new(), false);
+                    area.AddCell(new(2, GameDatabase.GetPrototypeId(dailyBugle + "DailyBugle_A/Daily_DailyBugle_Basement_A.cell"), new(0.0f, 8192.0f, 0.0f)));
+                    region.AddArea(area);
+                    area = new(3, (AreaPrototype)GameDatabase.GetPrototypeId(dailyBugleArea + "DailyBugleArchivesArea.prototype"), new(), false);
+                    area.AddCell(new(3, GameDatabase.GetPrototypeId(dailyBugle + "DailyBugle_A/Daily_DailyBugle_Archives_A.cell"), new(8192.0f, -2048.0f, 0.0f)));
+                    region.AddArea(area);
+                    area = new(4, (AreaPrototype)GameDatabase.GetPrototypeId(dailyBugleArea + "DailyBugleOfficeArea.prototype"), new(), false);
+                    area.AddCell(new(4, GameDatabase.GetPrototypeId(dailyBugle + "DailyBugle_A/Daily_DailyBugle_Office_A.cell"), new(0.0f, -8192.0f, 0.0f)));
+                    region.AddArea(area);
+                    area = new(5, (AreaPrototype)GameDatabase.GetPrototypeId(dailyBugleArea + "DailyBugleRooftopBossArea.prototype"), new(), false);
+                    area.AddCell(new(5, GameDatabase.GetPrototypeId(dailyBugle + "DailyBugle_Trans/Daily_DailyBugle_Roof_Boss_A.cell"), new(-8192.0f, 0.0f, 0.0f)));
+                    region.AddArea(area);
+
+
+                    region.EntrancePosition = new(1152.0f, -1296.0f, 48.0f);
+                    region.EntranceOrientation = new(3.141641f, 0.0f, 0.0f);
+                    region.WaypointPosition = new(1152.0f, -1296.0f, 48.0f);
+                    region.WaypointOrientation = new();
+
+                    break;
+
                 case RegionPrototype.NPERaftRegion:
                     archiveData = new byte[] {
                     };
@@ -425,13 +465,13 @@ namespace MHServerEmu.GameServer.Regions
                         new(14976.0f, 14976.0f, 1152.0f),
                         new(60, DifficultyTier.Normal));
 
-                    bool North = true;
+                    bool south = true;
 
-                    if (North)
+                    if (south)
                     {
-                        AreaPrototype CH0102HellsKitchenNorthArea = (AreaPrototype)GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH01HellsKitchen/Brownstones/CH0102HellsKitchenNorthArea.prototype");
-                        area = new(1, CH0102HellsKitchenNorthArea, new(), true);
 
+                        AreaPrototype CH0101HellsKitchenSouthArea = (AreaPrototype)GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH01HellsKitchen/Brownstones/CH0101HellsKitchenSouthArea.prototype");
+                        area = new(1, CH0101HellsKitchenSouthArea, new(), true);
                         district = GameDatabase.Resource.DistrictDict["Resource/Districts/Hells_Kitchen_Brownstones.district"];
 
                         for (int i = 0; i < district.CellMarkerSet.Length; i++)
@@ -439,17 +479,17 @@ namespace MHServerEmu.GameServer.Regions
 
                         region.AddArea(area);
 
-                        region.EntrancePosition = new(3850.0f, 1950.0f, 0.0f);
+                        region.EntrancePosition = new(5120.0f, 2176.0f, 635.0f);
                         region.EntranceOrientation = new(3.141592f, 0f, 0f);
-                        region.WaypointPosition = new(3850.0f, 1950.0f, 0.0f);
-                        region.WaypointOrientation = new();
+                        region.WaypointPosition = new(5120.0f, 2176.0f, 635.0f);
+                        region.WaypointOrientation = new(1.57082f, 0.0f, 0.0f);
                     }
                     // can be only one Area
                     else
                     {
-                        AreaPrototype CH0101HellsKitchenSouthArea = (AreaPrototype)GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH01HellsKitchen/Brownstones/CH0101HellsKitchenSouthArea.prototype");
-                        area = new(1, CH0101HellsKitchenSouthArea, new(), true);
-
+                        
+                        AreaPrototype CH0102HellsKitchenNorthArea = (AreaPrototype)GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH01HellsKitchen/Brownstones/CH0102HellsKitchenNorthArea.prototype");
+                        area = new(1, CH0102HellsKitchenNorthArea, new(), true);
                         district = GameDatabase.Resource.DistrictDict["Resource/Districts/Hells_Kitchen_Brownstones_B.district"];
 
                         for (int i = 0; i < district.CellMarkerSet.Length; i++)
@@ -1440,8 +1480,7 @@ namespace MHServerEmu.GameServer.Regions
 
                     region.EntrancePosition = new(1000.0f, -10100.0f, 0.0f);
                     region.EntranceOrientation = new(3.14159f, 0f, 0f);
-                    region.WaypointPosition = new(-500.0f, 6025.0f, 0.0f);
-                    // 0.0f, 10060.0f, 0.0f boss
+                    region.WaypointPosition = new(-500.0f, 6025.0f, 0.0f);                    
                     region.WaypointOrientation = new();
                     
                     break;

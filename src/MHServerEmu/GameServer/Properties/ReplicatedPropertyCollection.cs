@@ -38,6 +38,11 @@ namespace MHServerEmu.GameServer.Properties
             }
         }
 
+        public Property GetPropertyByEnum(PropertyEnum id)
+        {
+            return List.Find(property => property.Enum == id);
+        }
+
         public override string ToString()
         {
             StringBuilder sb = new();
