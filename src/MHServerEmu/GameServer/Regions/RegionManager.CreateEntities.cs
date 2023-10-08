@@ -21,7 +21,7 @@ namespace MHServerEmu.GameServer.Regions
             int mapY = (int)cell.HeightMap.HeightMapSize.Y;
             int x = Math.Clamp(mapX - 1 - (int)(cellPos.X * mapX), 0, mapX - 1);
             int y = Math.Clamp(mapY - 1 - (int)(cellPos.Y * mapY), 0, mapY - 1);
-            short height = (short)cell.HeightMap.HeightMapData[y * mapX + x];
+            short height = cell.HeightMap.HeightMapData[y * mapX + x];
             //Logger.Warn($"Height = [{height}]");           
             return height + areaOrigin.Z;
         }

@@ -88,16 +88,16 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
     public class CellHeightMap
     {
         public Vector2 HeightMapSize { get; }
-        public ushort[] HeightMapData { get; }
+        public short[] HeightMapData { get; }
         public byte[] HotspotData { get; }
 
         public CellHeightMap(BinaryReader reader)
         {
             HeightMapSize = new(reader.ReadUInt32(), reader.ReadUInt32());
 
-            HeightMapData = new ushort[reader.ReadUInt32()];
+            HeightMapData = new short[reader.ReadUInt32()];
             for (int i = 0; i < HeightMapData.Length; i++)
-                HeightMapData[i] = reader.ReadUInt16();
+                HeightMapData[i] = reader.ReadInt16();
 
             HotspotData = new byte[reader.ReadUInt32()];
             for (int i = 0; i < HotspotData.Length; i++)
