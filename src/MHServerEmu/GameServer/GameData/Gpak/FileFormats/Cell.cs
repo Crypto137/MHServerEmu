@@ -31,8 +31,8 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
                 Header = reader.ReadHeader();
                 Version = reader.ReadUInt32();
                 ClassId = reader.ReadUInt32();
-                Vector3 max = reader.ReadVector3();
                 Vector3 min = reader.ReadVector3();
+                Vector3 max = reader.ReadVector3();
                 Boundbox = new(max, min);
                 Type = reader.ReadUInt32();
                 Walls = reader.ReadUInt32();
