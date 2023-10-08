@@ -2,6 +2,7 @@
 using System.Text.Json.Serialization;
 using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 using MHServerEmu.GameServer.GameData.Gpak.JsonOutput;
+using MHServerEmu.GameServer.GameData.Prototypes;
 using MHServerEmu.GameServer.GameData.Prototypes.Markers;
 
 namespace MHServerEmu.GameServer.GameData.Gpak
@@ -100,6 +101,29 @@ namespace MHServerEmu.GameServer.GameData.Gpak
                 default:
                     var type = value.GetType();
                     JsonSerializer.Serialize(writer, value, type, options);
+                    break;
+            }
+        }
+    }
+
+    public class NaviPatchPrototypeConverter : JsonConverter<NaviPatchPrototype>
+    {
+        public override NaviPatchPrototype Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Write(Utf8JsonWriter writer, NaviPatchPrototype value, JsonSerializerOptions options)
+        {
+            switch (value)
+            {
+                case null:
+                    JsonSerializer.Serialize(writer, (NaviPatchPrototype)null, options);
+                    break;
+
+                default:
+                    var type = value.GetType();
+                    JsonSerializer.Serialize(writer, new NaviPatchPrototypeJson(value), options);
                     break;
             }
         }
