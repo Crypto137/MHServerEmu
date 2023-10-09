@@ -1,12 +1,11 @@
-﻿using Gazillion;
-using MHServerEmu.Common.Config;
+﻿using MHServerEmu.Common.Config;
+using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.Entities.Avatars;
 using MHServerEmu.GameServer.Frontend.Accounts;
 using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.Properties;
 using MHServerEmu.GameServer.Regions;
 using MHServerEmu.Networking;
-using System.Numerics;
 
 namespace MHServerEmu.Common.Commands
 {
@@ -71,7 +70,9 @@ namespace MHServerEmu.Common.Commands
                 else
                     return $"Invalid parameter: {param}";
             }
-            GameServer.Common.Vector3 teleportPoint = new(x, y, z);
+
+            Vector3 teleportPoint = new(x, y, z);
+
             if (@params.Length < 3)
             {
                 teleportPoint += client.LastPosition;

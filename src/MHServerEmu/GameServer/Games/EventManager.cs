@@ -9,8 +9,6 @@ using MHServerEmu.GameServer.Powers;
 using MHServerEmu.GameServer.Properties;
 using MHServerEmu.Networking;
 using MHServerEmu.GameServer.Entities.Avatars;
-using MHServerEmu.GameServer.Regions;
-using System.Numerics;
 
 namespace MHServerEmu.GameServer.Games
 {
