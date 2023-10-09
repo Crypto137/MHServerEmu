@@ -4,7 +4,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
     public class PrototypeFile
     {
-        public FileHeader Header { get; }
+        public CalligraphyHeader Header { get; }
         public Prototype Prototype { get; }
 
         public PrototypeFile(byte[] data)
@@ -12,7 +12,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = reader.ReadHeader();
+                Header = reader.ReadCalligraphyHeader();
                 Prototype = new(reader);
             }
         }

@@ -4,7 +4,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
     public class StringFile
     {
-        public FileHeader Header { get; }
+        public CalligraphyHeader Header { get; }
         public StringMapEntry[] StringMap { get; }
 
         public StringFile(byte[] data)
@@ -12,7 +12,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = reader.ReadHeader();
+                Header = reader.ReadCalligraphyHeader();
 
                 StringMap = new StringMapEntry[reader.ReadUInt16()];
                 for (int i = 0; i < StringMap.Length; i++)

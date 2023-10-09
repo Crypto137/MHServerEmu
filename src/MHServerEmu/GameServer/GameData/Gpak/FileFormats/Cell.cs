@@ -7,7 +7,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
     public class CellPrototype
     {
-        public FileHeader Header { get; }
+        public CalligraphyHeader Header { get; }
         public uint Version { get; }
         public uint ClassId { get; }
         public Aabb Boundbox { get; }
@@ -28,7 +28,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = reader.ReadHeader();
+                Header = reader.ReadCalligraphyHeader();
                 Version = reader.ReadUInt32();
                 ClassId = reader.ReadUInt32();
                 Vector3 max = reader.ReadVector3();

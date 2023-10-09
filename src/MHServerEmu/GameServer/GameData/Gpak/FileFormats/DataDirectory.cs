@@ -19,7 +19,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 
     public class DataDirectory
     {
-        public FileHeader Header { get; }
+        public CalligraphyHeader Header { get; }
         public DataDirectoryRecord[] Records { get; }
         public Dictionary<ulong, IDataRecord> IdDict { get; }
         public Dictionary<string, IDataRecord> FilePathDict { get; }
@@ -29,7 +29,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = reader.ReadHeader();
+                Header = reader.ReadCalligraphyHeader();
                 Records = new DataDirectoryRecord[reader.ReadUInt32()];
 
                 switch (Header.Magic)

@@ -5,7 +5,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
     public class UI
     {
-        public FileHeader Header { get; }
+        public uint Header { get; }
         public uint Version { get; }
         public uint ClassId { get; }
         public UIPanelPrototype[] UIPanels { get; }
@@ -15,7 +15,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = reader.ReadHeader();
+                Header = reader.ReadUInt32();
                 Version = reader.ReadUInt32();
                 ClassId = reader.ReadUInt32();
 

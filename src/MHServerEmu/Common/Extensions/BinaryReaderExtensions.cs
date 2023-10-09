@@ -6,7 +6,7 @@ namespace MHServerEmu.Common.Extensions
 {
     public static class BinaryReaderExtensions
     {
-        public static FileHeader ReadHeader(this BinaryReader reader)
+        public static CalligraphyHeader ReadCalligraphyHeader(this BinaryReader reader)
         {
             string magic = Encoding.UTF8.GetString(reader.ReadBytes(3));
             byte version = reader.ReadByte();

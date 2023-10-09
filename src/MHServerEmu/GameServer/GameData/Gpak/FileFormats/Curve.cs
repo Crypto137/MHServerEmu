@@ -4,7 +4,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
     public class Curve
     {
-        public FileHeader Header { get; }
+        public CalligraphyHeader Header { get; }
         public double[] Entries { get; }
 
         public Curve(byte[] data)
@@ -12,7 +12,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = reader.ReadHeader();
+                Header = reader.ReadCalligraphyHeader();
                 int startPosition = reader.ReadInt32();
                 Entries = new double[reader.ReadInt32() - startPosition + 1];
 
