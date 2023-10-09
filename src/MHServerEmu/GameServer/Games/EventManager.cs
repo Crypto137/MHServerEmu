@@ -57,6 +57,24 @@ namespace MHServerEmu.GameServer.Games
 
             switch (eventId)
             {
+                case EventEnum.ToTeleport:
+
+                    Common.Vector3 targetPos = (Common.Vector3)queuedEvent.Data;
+                    Common.Vector3 targetRot = new();
+                    uint cellid = 1;
+                    uint areaid = 1;
+                    messageList.Add(new(client, new(NetMessageEntityPosition.CreateBuilder()
+                        .SetIdEntity((ulong)client.Session.Account.Player.Avatar.ToEntityId())
+                        .SetFlags(64)
+                        .SetPosition(targetPos.ToNetStructPoint3())
+                        .SetOrientation(targetRot.ToNetStructPoint3())
+                        .SetCellId(cellid)
+                        .SetAreaId(areaid)
+                        .SetEntityPrototypeId((ulong)client.Session.Account.Player.Avatar)
+                        .Build())));
+                    Logger.Trace($"Teleport to {targetPos}");
+                    break;
+
                 case EventEnum.StartTravel:
 
                     powerId = (ulong)queuedEvent.Data;
