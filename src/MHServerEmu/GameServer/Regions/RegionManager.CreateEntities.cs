@@ -22,7 +22,6 @@ namespace MHServerEmu.GameServer.Regions
             int x = Math.Clamp((int)(cellPos.X * mapX), 0, mapX - 1);
             int y = Math.Clamp((int)(cellPos.Y * mapY), 0, mapY - 1);
             short height = cell.HeightMap.HeightMapData[y * mapX + x];
-            //Logger.Warn($"Height = [{height}]");           
             return height + areaOrigin.Z;
         }
 
@@ -32,13 +31,13 @@ namespace MHServerEmu.GameServer.Regions
             PrototypeEntry TestWorldEntity = prototypeId.GetPrototype().GetEntry(BlueprintId.WorldEntity);
             if (TestWorldEntity == null)
             {
-                Logger.Debug($"[GetEntityFloor] WorldEntity not found [{prototypeId}] {GameDatabase.GetPrototypePath(prototypeId)}");
-                return 0f;
+                //Logger.Debug($"[GetEntityFloor] WorldEntity not found [{prototypeId}] {GameDatabase.GetPrototypePath(prototypeId)}");
+                return 48f;
             }
             PrototypeEntryElement TestBounds = TestWorldEntity.GetField(FieldId.Bounds);
             if (TestBounds == null) {
-                Logger.Trace($"[GetEntityFloor] Bounds not found [{prototypeId}] {GameDatabase.GetPrototypePath(prototypeId)}");
-                return 50f; }
+               // Logger.Trace($"[GetEntityFloor] Bounds not found [{prototypeId}] {GameDatabase.GetPrototypePath(prototypeId)}");
+                return 48f; }
 
             Prototype bounds = (Prototype)TestBounds.Value;
             float height = 0f;
@@ -120,21 +119,11 @@ namespace MHServerEmu.GameServer.Regions
                         {
                             entityPosition = npc.Position + areaOrigin;
                             bool snap = npc.OverrideSnapToFloor == 1;
-                            if (marker.Contains("Entity/Characters/"))
-                            {
-                                snap = false;
-                                if (marker.Contains("Magik")) snap = true;
-                                if (marker.Contains("BloodRoseBarVendor"))
-                                {
-                                    snap = true;
-                                    entityPosition.Z += 50f;
-                                }
-                            }
-                            if (snap == false)
-                            {
-                                entityPosition.Z = ProjectToFloor(entry, areaOrigin, npc.Position) +
-                                    GetEntityFloor(GameDatabase.GetPrototypeId(npc.EntityGuid));
-                            }
+                            if (marker.Contains("Magik")) snap = true;
+
+                            float projectHeight = ProjectToFloor(entry, areaOrigin, npc.Position);
+                                if (entityPosition.Z > projectHeight) entityPosition.Z = projectHeight;
+                                entityPosition.Z += GetEntityFloor(GameDatabase.GetPrototypeId(npc.EntityGuid));
 
                             _entityManager.CreateWorldEntity(
                                 region.Id, GameDatabase.GetPrototypeId(npc.EntityGuid),
@@ -208,16 +197,8 @@ namespace MHServerEmu.GameServer.Regions
 
                     break;
 
+                case RegionPrototype.BronxZooRegionL60:
                 case RegionPrototype.BrooklynPatrolRegionL60:
-
-                    areaid = 2;
-                    areaOrigin = new(1152.0f, 0.0f, 0.0f);
-                    area = GameDatabase.GetPrototypeId("Regions/EndGame/TierX/PatrolBrooklyn/Areas/DocksPatrolBridgeTransitionNS.prototype");
-                    entry = GameDatabase.Resource.CellDict["Resource/Cells/EndGame/BrooklynDocksPatrol/DocksPatrol_BridgeA_Center_A.cell"];
-                    MarkersAdd(entry, 18, true);
-
-                    break;
-
                 case RegionPrototype.UpperMadripoorRegionL60:
                 case RegionPrototype.UpperMadripoorRegionL60Cosmic:
                 case RegionPrototype.XManhattanRegion1to60:
