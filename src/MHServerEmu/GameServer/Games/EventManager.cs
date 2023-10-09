@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.Entities;
 using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 using MHServerEmu.GameServer.GameData.Gpak;
@@ -59,10 +60,12 @@ namespace MHServerEmu.GameServer.Games
             {
                 case EventEnum.ToTeleport:
 
-                    Common.Vector3 targetPos = (Common.Vector3)queuedEvent.Data;
-                    Common.Vector3 targetRot = new();
+                    Vector3 targetPos = (Vector3)queuedEvent.Data;
+                    Vector3 targetRot = new();
+
                     uint cellid = 1;
                     uint areaid = 1;
+
                     messageList.Add(new(client, new(NetMessageEntityPosition.CreateBuilder()
                         .SetIdEntity((ulong)client.Session.Account.Player.Avatar.ToEntityId())
                         .SetFlags(64)
@@ -72,7 +75,10 @@ namespace MHServerEmu.GameServer.Games
                         .SetAreaId(areaid)
                         .SetEntityPrototypeId((ulong)client.Session.Account.Player.Avatar)
                         .Build())));
-                    Logger.Trace($"Teleport to {targetPos}");
+
+                    client.LastPosition = targetPos;
+                    Logger.Trace($"Teleporting to {targetPos}");
+
                     break;
 
                 case EventEnum.StartTravel:

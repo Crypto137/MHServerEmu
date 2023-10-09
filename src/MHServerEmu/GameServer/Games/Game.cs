@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Globalization;
 using Gazillion;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.Entities;
 using MHServerEmu.GameServer.Entities.Avatars;
 using MHServerEmu.GameServer.GameData;
@@ -144,8 +145,6 @@ namespace MHServerEmu.GameServer.Games
             FrontendClient client = queuedMessage.Client;
             GameMessage message = queuedMessage.Message;
 
-            string powerPrototypePath;
-
             switch ((ClientToGameServerMessage)message.Id)
             {
                 case ClientToGameServerMessage.NetMessageUpdateAvatarState:
@@ -191,20 +190,20 @@ namespace MHServerEmu.GameServer.Games
                         Logger.Trace($"Destination entity {teleport.Destinations[0].Entity}");
                         Entity target = EntityManager.FindEntityByDestination(teleport.Destinations[0]);
                         if (target == null) break;
-                        Common.Vector3 targetRot = target.BaseData.Orientation;
+                        Vector3 targetRot = target.BaseData.Orientation;
                         float offset = 150f;
-                        Common.Vector3 targetPos =  new(
+                        Vector3 targetPos = new(
                             target.BaseData.Position.X + offset * (float)Math.Cos(targetRot.X),
                             target.BaseData.Position.Y + offset * (float)Math.Sin(targetRot.X), 
                             target.BaseData.Position.Z);   
 
-                        Logger.Trace($"Teleport to {targetPos}");                        
+                        Logger.Trace($"Teleporting to {targetPos}");                        
 
                         Property property = target.PropertyCollection.GetPropertyByEnum(PropertyEnum.MapCellId);
                         uint cellid = (uint)(long)property.Value.Get(); 
                         property = target.PropertyCollection.GetPropertyByEnum(PropertyEnum.MapAreaId);
                         uint areaid = (uint)(long)property.Value.Get();
-                        Logger.Trace($"Teleport to areaid {areaid} cellid {cellid}");
+                        Logger.Trace($"Teleporting to areaid {areaid} cellid {cellid}");
 
                         EnqueueResponse(client, new(NetMessageEntityPosition.CreateBuilder()
                             .SetIdEntity((ulong)client.Session.Account.Player.Avatar.ToEntityId())
@@ -215,6 +214,8 @@ namespace MHServerEmu.GameServer.Games
                             .SetAreaId(areaid)
                             .SetEntityPrototypeId((ulong)client.Session.Account.Player.Avatar)
                             .Build()));
+
+                        client.LastPosition = targetPos;
                     }
 
                     break;

@@ -37,49 +37,55 @@ namespace MHServerEmu.Common.Commands
         }
     }
 
-    [CommandGroup("position", "Current position.", AccountUserLevel.User)]
+    [CommandGroup("position", "Shows current position.", AccountUserLevel.User)]
     public class PositionCommand : CommandGroup
     {
         [DefaultCommand(AccountUserLevel.User)]
         public string Position(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";            
-
-            return $"Postion: {client.LastPosition}";
+            return $"Current position: {client.LastPosition}";
         }
     }
 
-    [CommandGroup("teleport", "Teleport from/to position.\nExamples:\n teleport x:+1000 (from current position)\n teleport x:100 y:500 z:10 (to new position)", AccountUserLevel.User)]
+    [CommandGroup("tp", "Teleports to position.\nUsage:\ntp x:+1000 (relative to current position)\ntp x100 y500 z10 (absolute position)", AccountUserLevel.User)]
     public class TeleportCommand : CommandGroup
     {
         [DefaultCommand(AccountUserLevel.User)]
         public string Teleport(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help teleport' to get help.";
+            if (@params == null || @params.Length == 0) return "Invalid arguments. Type 'help teleport' to get help.";
             
             float x = 0f, y = 0f, z = 0f;
             foreach (string param in @params)
             {
-                if (param.StartsWith("x:"))
-                    float.TryParse(param.AsSpan(2), out x);
-                else if (param.StartsWith("y:"))
-                    float.TryParse(param.AsSpan(2), out y);
-                else if (param.StartsWith("z:"))
-                    float.TryParse(param.AsSpan(2), out z);
-                else
-                    return $"Invalid parameter: {param}";
+                switch (param[0])
+                {
+                    case 'x':
+                        if (float.TryParse(param.AsSpan(1), out x) == false) x = 0f;
+                        break;
+
+                    case 'y':
+                        if (float.TryParse(param.AsSpan(1), out y) == false) y = 0f;
+                        break;
+
+                    case 'z':
+                        if (float.TryParse(param.AsSpan(1), out z) == false) z = 0f;
+                        break;
+
+                    default:
+                        return $"Invalid parameter: {param}";
+                }                    
             }
 
             Vector3 teleportPoint = new(x, y, z);
 
             if (@params.Length < 3)
-            {
                 teleportPoint += client.LastPosition;
-            }
 
             client.CurrentGame.EventManager.AddEvent(client, GameServer.Games.EventEnum.ToTeleport, 0, teleportPoint);
-            return $"Teleport to {teleportPoint}";
+            return $"Teleporting to {teleportPoint}";
         }
     }
 
