@@ -225,7 +225,7 @@ namespace MHServerEmu.GameServer.Games
                 case ClientToGameServerMessage.NetMessageTryCancelPower:
                 case ClientToGameServerMessage.NetMessageTryCancelActivePower:
                 case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer:
-                    _powerMessageHandler.HandleMessage(client, message);
+                    EnqueueResponses(_powerMessageHandler.HandleMessage(client, message));
 
                     break;
 
