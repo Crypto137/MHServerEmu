@@ -246,7 +246,8 @@ namespace MHServerEmu.GameServer.Games
 
                     if (GameDatabase.GetPrototypePath(powerId).Contains("CancelPower")) // ThrownPoliceCarCancelPower
                     {
-                        messageList.Add(new(client, new(client.ThrowingObject.ToNetMessageEntityCreate())));
+                        if (client.ThrowingObject != null)
+                            messageList.Add(new(client, new(client.ThrowingObject.ToNetMessageEntityCreate())));
                         Logger.Trace("Event ThrownPoliceCarCancelPower");
                     }
                     client.ThrowingObject = null;
