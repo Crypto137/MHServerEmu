@@ -10,10 +10,10 @@ namespace MHServerEmu.GameServer.Entities.Avatars
     {
         public int PowerSpecIndex { get; set; }
         public bool ShouldPersist { get; set; }
-        public ulong AssociatedTransformMode { get; set; }  // EnumProperty
-        public ulong Slot0 { get; set; }    // EnumProperty
-        public ulong Slot1 { get; set; }    // EnumProperty
-        public ulong[] PowerSlots { get; set; } // Gazillion::Serializer::Transfer_PrototypeDataRef_6ul
+        public ulong AssociatedTransformMode { get; set; }  // Prototype
+        public ulong Slot0 { get; set; }                    // Prototype
+        public ulong Slot1 { get; set; }                    // Prototype
+        public ulong[] PowerSlots { get; set; }             // Prototypes
 
         public AbilityKeyMapping(CodedInputStream stream, BoolDecoder boolDecoder)
         {
@@ -41,6 +41,11 @@ namespace MHServerEmu.GameServer.Entities.Avatars
             PowerSlots = powerSlots;            
         }
 
+        public void EncodeBools(BoolEncoder boolEncoder)
+        {
+            boolEncoder.EncodeBool(ShouldPersist);
+        }
+
         public byte[] Encode(BoolEncoder boolEncoder)
         {
             using (MemoryStream ms = new())
@@ -48,10 +53,7 @@ namespace MHServerEmu.GameServer.Entities.Avatars
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
                 cos.WriteRawInt32(PowerSpecIndex);
-
-                byte bitBuffer = boolEncoder.GetBitBuffer();             // ShouldPersist
-                if (bitBuffer != 0) cos.WriteRawByte(bitBuffer);
-
+                boolEncoder.WriteBuffer(cos);   // ShouldPersist
                 cos.WritePrototypeId(AssociatedTransformMode, PrototypeEnumType.All);
                 cos.WritePrototypeId(Slot0, PrototypeEnumType.All);
                 cos.WritePrototypeId(Slot1, PrototypeEnumType.All);

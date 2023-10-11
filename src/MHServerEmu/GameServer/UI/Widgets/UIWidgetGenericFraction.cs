@@ -36,18 +36,16 @@ namespace MHServerEmu.GameServer.UI.Widgets
                 cos.WriteRawInt32(TotalCount);
                 cos.WriteRawVarint64(TimeStart);
                 cos.WriteRawVarint64(TimeEnd);
-
-                byte bitBuffer = boolEncoder.GetBitBuffer();    // TimePaused
-                if (bitBuffer != 0) cos.WriteRawByte(bitBuffer);
+                boolEncoder.WriteBuffer(cos);   // TimePaused
 
                 cos.Flush();
                 return ms.ToArray();
             }
         }
 
-        public override void WriteBools(BoolEncoder boolEncoder)
+        public override void EncodeBools(BoolEncoder boolEncoder)
         {
-            boolEncoder.WriteBool(TimePaused);
+            boolEncoder.EncodeBool(TimePaused);
         }
 
         public override string ToString()

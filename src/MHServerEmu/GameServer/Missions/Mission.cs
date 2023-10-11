@@ -69,9 +69,7 @@ namespace MHServerEmu.GameServer.Missions
                 foreach (ulong Participant in Participants)
                     cos.WriteRawVarint64(Participant);
 
-                byte bitBuffer = boolEncoder.GetBitBuffer(); // Suspended
-                if (bitBuffer != 0)
-                    cos.WriteRawByte(bitBuffer);
+                boolEncoder.WriteBuffer(cos);   // Suspended   
 
                 cos.Flush();
                 return ms.ToArray();

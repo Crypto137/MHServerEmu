@@ -37,8 +37,8 @@ namespace MHServerEmu.GameServer.Powers
 
                 // Prepare bool encoder
                 BoolEncoder boolEncoder = new();
-                MissionManager.WriteBools(boolEncoder);
-                UIDataProvider.WriteBools(boolEncoder);
+                MissionManager.EncodeBools(boolEncoder);
+                UIDataProvider.EncodeBools(boolEncoder);
                 boolEncoder.Cook();
 
                 // Encode

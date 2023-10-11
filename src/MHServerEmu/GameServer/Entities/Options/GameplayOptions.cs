@@ -76,10 +76,10 @@ namespace MHServerEmu.GameServer.Entities.Options
                 ArmorRarityVaporizeThresholds[i] = new((EquipmentInvUISlot)(i + 1), netStruct.ArmorRarityVaporizeThresholdProtoIdList[i]);
         }
 
-        public void WriteBools(BoolEncoder boolEncoder)
+        public void EncodeBools(BoolEncoder boolEncoder)
         {
             foreach (ChatChannelFilter filter in ChatChannelFilters)
-                boolEncoder.WriteBool(filter.IsSubscribed);
+                boolEncoder.EncodeBool(filter.IsSubscribed);
         }
 
         public byte[] Encode(BoolEncoder boolEncoder)

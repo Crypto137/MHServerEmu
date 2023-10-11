@@ -32,10 +32,10 @@ namespace MHServerEmu.GameServer.Missions
             LegendaryMissionBlacklists = legendaryMissionBlacklists;
         }
 
-        public void WriteBools(BoolEncoder boolEncoder)
+        public void EncodeBools(BoolEncoder boolEncoder)
         {
             foreach (Mission mission in Missions)
-                boolEncoder.WriteBool(mission.Suspended);
+                boolEncoder.EncodeBool(mission.Suspended);
         }
 
         public byte[] Encode(BoolEncoder boolEncoder)

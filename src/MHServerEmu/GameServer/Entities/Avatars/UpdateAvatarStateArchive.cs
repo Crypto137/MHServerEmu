@@ -53,17 +53,14 @@ namespace MHServerEmu.GameServer.Entities.Avatars
 
                 // Prepare bool encoder
                 BoolEncoder boolEncoder = new();
-                boolEncoder.WriteBool(IsUsingGamepadInput);
+                boolEncoder.EncodeBool(IsUsingGamepadInput);
                 boolEncoder.Cook();
 
                 // Encode
                 cos.WriteRawVarint32(ReplicationPolicy);
                 cos.WriteRawInt32(AvatarIndex);
                 cos.WriteRawVarint64(EntityId);
-
-                byte bitBuffer = boolEncoder.GetBitBuffer();        // IsUsingGamepadInput
-                if (bitBuffer != 0) cos.WriteRawByte(bitBuffer);
-
+                boolEncoder.WriteBuffer(cos);   // IsUsingGamepadInput  
                 cos.WriteRawVarint32(AvatarWorldInstanceId);
                 cos.WriteRawVarint32(LocFlags.ToUInt32());
                 cos.WriteRawBytes(Position.Encode());

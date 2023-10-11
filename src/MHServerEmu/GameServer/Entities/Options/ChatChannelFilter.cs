@@ -38,9 +38,7 @@ namespace MHServerEmu.GameServer.Entities.Options
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
                 cos.WritePrototypeId(ChannelProtoId, PrototypeEnumType.All);
-
-                byte bitBuffer = boolEncoder.GetBitBuffer();             // IsSubscribed
-                if (bitBuffer != 0) cos.WriteRawByte(bitBuffer);
+                boolEncoder.WriteBuffer(cos);   // IsSubscribed
 
                 cos.Flush();
                 return ms.ToArray();

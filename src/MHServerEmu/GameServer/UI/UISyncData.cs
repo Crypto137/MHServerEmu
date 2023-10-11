@@ -30,7 +30,7 @@ namespace MHServerEmu.GameServer.UI
             }
         }
 
-        public virtual void WriteBools(BoolEncoder boolEncoder) { }
+        public virtual void EncodeBools(BoolEncoder boolEncoder) { }
 
         public override string ToString()
         {

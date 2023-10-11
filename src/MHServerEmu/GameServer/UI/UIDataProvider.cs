@@ -68,10 +68,10 @@ namespace MHServerEmu.GameServer.UI
             }
         }
 
-        public void WriteBools(BoolEncoder boolEncoder)
+        public void EncodeBools(BoolEncoder boolEncoder)
         {
             foreach (UISyncData data in UISyncData)
-                data.WriteBools(boolEncoder);
+                data.EncodeBools(boolEncoder);
         }
 
         public override string ToString()
