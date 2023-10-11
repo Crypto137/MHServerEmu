@@ -17,9 +17,7 @@ namespace MHServerEmu.GameServer.Regions
             BoolDecoder boolDecoder = new();
 
             ReplicationPolicy = stream.ReadRawVarint32();
-
-            if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
-            IsRevealAll = boolDecoder.ReadBool();
+            IsRevealAll = boolDecoder.ReadBool(stream);
 
             // Map buffer is only included when the map is not revealed by default
             if (IsRevealAll == false)

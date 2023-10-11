@@ -31,9 +31,7 @@ namespace MHServerEmu.GameServer.Entities.Avatars
             GuildName = stream.ReadRawString();
 
             //Gazillion::GuildMember::SerializeReplicationRuntimeInfo
-            if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
-            HasGuildInfo = boolDecoder.ReadBool();
-
+            HasGuildInfo = boolDecoder.ReadBool(stream);
             if (HasGuildInfo) GuildInfo = new(stream);
 
             AbilityKeyMappings = new AbilityKeyMapping[stream.ReadRawVarint64()];

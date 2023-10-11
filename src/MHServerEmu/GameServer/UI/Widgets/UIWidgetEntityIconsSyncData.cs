@@ -111,15 +111,9 @@ namespace MHServerEmu.GameServer.UI.Widgets
             State = stream.ReadRawInt32();
             HealthPercent = stream.ReadRawInt32();
             IconIndexForHealthPercentEval = stream.ReadRawInt32();
-
-            if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
-            ForceRefreshEntityHealthPercent = boolDecoder.ReadBool();
-
+            ForceRefreshEntityHealthPercent = boolDecoder.ReadBool(stream);
             EnrageStartTime = stream.ReadRawVarint64();
-
-            if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
-            HasPropertyEntryEval = boolDecoder.ReadBool();
-
+            HasPropertyEntryEval = boolDecoder.ReadBool(stream);
             PropertyEntryIndex = stream.ReadRawInt32();
         }
 

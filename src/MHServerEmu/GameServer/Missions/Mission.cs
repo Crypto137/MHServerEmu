@@ -33,8 +33,7 @@ namespace MHServerEmu.GameServer.Missions
             for (int i = 0; i < Participants.Length; i++)
                 Participants[i] = stream.ReadRawVarint64();
 
-            if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
-            Suspended = boolDecoder.ReadBool();
+            Suspended = boolDecoder.ReadBool(stream);
         }
 
         public Mission(ulong prototypeGuid, ulong state, ulong timeExpireCurrentState, ulong prototypeId,

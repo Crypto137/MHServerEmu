@@ -15,8 +15,7 @@ namespace MHServerEmu.GameServer.Entities.Options
         public ChatChannelFilter(CodedInputStream stream, BoolDecoder boolDecoder)
         {
             ChannelProtoId = stream.ReadPrototypeId(PrototypeEnumType.All);
-            if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
-            IsSubscribed = boolDecoder.ReadBool();
+            IsSubscribed = boolDecoder.ReadBool(stream);
         }
 
         public ChatChannelFilter(ulong channelProtoId, bool isSubscribed)

@@ -19,9 +19,7 @@ namespace MHServerEmu.GameServer.UI.Widgets
             TotalCount = stream.ReadRawInt32();
             TimeStart = stream.ReadRawVarint64();
             TimeEnd = stream.ReadRawVarint64();
-
-            if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
-            TimePaused = boolDecoder.ReadBool();
+            TimePaused = boolDecoder.ReadBool(stream);
         }
 
         public override byte[] Encode(BoolEncoder boolEncoder)

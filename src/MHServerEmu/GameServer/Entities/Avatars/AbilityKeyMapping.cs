@@ -18,10 +18,7 @@ namespace MHServerEmu.GameServer.Entities.Avatars
         public AbilityKeyMapping(CodedInputStream stream, BoolDecoder boolDecoder)
         {
             PowerSpecIndex = stream.ReadRawInt32();
-
-            if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
-            ShouldPersist = boolDecoder.ReadBool();
-
+            ShouldPersist = boolDecoder.ReadBool(stream);
             AssociatedTransformMode = stream.ReadPrototypeId(PrototypeEnumType.All);
             Slot0 = stream.ReadPrototypeId(PrototypeEnumType.All);
             Slot1 = stream.ReadPrototypeId(PrototypeEnumType.All);

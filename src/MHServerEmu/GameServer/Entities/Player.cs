@@ -54,27 +54,21 @@ namespace MHServerEmu.GameServer.Entities
             ConsoleAccountId2 = stream.ReadRawVarint64();
             UnkName = new(stream);
             MatchQueueStatus = stream.ReadRawVarint64();
-
-            if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
-            EmailVerified = boolDecoder.ReadBool();
-
+            EmailVerified = boolDecoder.ReadBool(stream);
             AccountCreationTimestamp = stream.ReadRawVarint64();
 
             PartyRepId = stream.ReadRawVarint64();
             PartyId = stream.ReadRawVarint64();
             
-            if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
-            HasGuildInfo = boolDecoder.ReadBool();
+            HasGuildInfo = boolDecoder.ReadBool(stream);
             if (HasGuildInfo) GuildInfo = new(stream);      // GuildMember::SerializeReplicationRuntimeInfo
 
             UnknownString = stream.ReadRawString();
 
-            if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
-            HasCommunity = boolDecoder.ReadBool();
+            HasCommunity = boolDecoder.ReadBool(stream);
             if (HasCommunity) Community = new(stream);
 
-            if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
-            UnkBool = boolDecoder.ReadBool();
+            UnkBool = boolDecoder.ReadBool(stream);
 
             StashInventories = new ulong[stream.ReadRawVarint64()];
             for (int i = 0; i < StashInventories.Length; i++)

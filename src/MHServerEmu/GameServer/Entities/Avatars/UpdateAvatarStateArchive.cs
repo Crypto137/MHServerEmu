@@ -29,10 +29,7 @@ namespace MHServerEmu.GameServer.Entities.Avatars
             ReplicationPolicy = stream.ReadRawVarint32();
             AvatarIndex = stream.ReadRawInt32();
             EntityId = stream.ReadRawVarint64();
-
-            if (boolDecoder.IsEmpty) boolDecoder.SetBits(stream.ReadRawByte());
-            IsUsingGamepadInput = boolDecoder.ReadBool();
-
+            IsUsingGamepadInput = boolDecoder.ReadBool(stream);
             AvatarWorldInstanceId = stream.ReadRawVarint32();
             LocFlags = stream.ReadRawVarint32().ToBoolArray(LocFlagCount);
             Position = new(stream, 3);
