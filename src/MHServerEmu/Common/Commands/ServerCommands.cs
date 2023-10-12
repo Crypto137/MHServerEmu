@@ -139,26 +139,21 @@ namespace MHServerEmu.Common.Commands
         [Command("extract", "Extracts entries and/or data from GPAK files.\nUsage: gpak extract [entries|data|all]", AccountUserLevel.Admin)]
         public string Extract(string[] @params, FrontendClient client)
         {
-            if (client != null)
-                return "You can only invoke this command from the server console.";
+            if (client != null) return "You can only invoke this command from the server console.";
 
             if (@params != null && @params.Length > 0)
             {
-                if (@params[0] == "entries")
+                switch (@params[0].ToLower())
                 {
-                    GameDatabase.ExtractGpakEntries();
-                    return "Finished extracting GPAK entries.";
-                }
-                else if (@params[0] == "data")
-                {
-                    GameDatabase.ExtractGpakData();
-                    return "Finished extracting GPAK data.";
-                }
-                else if (@params[0] == "all")
-                {
-                    GameDatabase.ExtractGpakEntries();
-                    GameDatabase.ExtractGpakData();
-                    return "Finished extracting GPAK entries and data.";
+                    case "entries":
+                        GameDatabase.ExtractGpak(true, false);
+                        return "Finished extracting GPAK entries.";
+                    case "data":
+                        GameDatabase.ExtractGpak(false, true);
+                        return "Finished extracting GPAK data.";
+                    case "all":
+                        GameDatabase.ExtractGpak(true, true);
+                        return "Finished extracting GPAK entries and data.";
                 }
             }
 

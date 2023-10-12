@@ -10,6 +10,10 @@ namespace MHServerEmu.GameServer.GameData
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private static readonly string GpakDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "GPAK");
+        private static readonly string CalligraphyPath = Path.Combine(GpakDirectory, "Calligraphy.sip");
+        private static readonly string ResourcePath = Path.Combine(GpakDirectory, "mu_cdata.sip");
+
         public static bool IsInitialized { get; }
 
         public static CalligraphyStorage Calligraphy { get; private set; }
@@ -20,72 +24,70 @@ namespace MHServerEmu.GameServer.GameData
 
         static GameDatabase()
         {
-            string gpakDir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "GPAK");
-            if (File.Exists(Path.Combine(gpakDir, "Calligraphy.sip")) && File.Exists(Path.Combine(gpakDir, "mu_cdata.sip")))
+            // Make sure sip files are present
+            if (File.Exists(CalligraphyPath) == false || File.Exists(ResourcePath) == false)
             {
-                Logger.Info("Initializing game database...");
-                long startTime = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeMilliseconds();
-
-                // Initialize GPAK
-                Calligraphy = new(new("Calligraphy.sip"));
-                Resource = new(new("mu_cdata.sip"));
-
-                // Initialize GPAK derivative data
-                PrototypeRefManager = new(Calligraphy, Resource);       // this needs to be initialized before PropertyInfoTable
-                PropertyInfoTable = new(Calligraphy);
-
-                // Load live tuning
-                LiveTuningSettingList = JsonSerializer.Deserialize<List<LiveTuningSetting>>(File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Assets", "LiveTuning.json")));
-                Logger.Info($"Loaded {LiveTuningSettingList.Count} live tuning settings");
-
-                // Verify and finish game database initialization
-                if (VerifyData())
-                {
-                    long loadTime = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeMilliseconds() - startTime;
-                    Logger.Info($"Finished initializing game database in {loadTime} ms");
-                    IsInitialized = true;
-                }
-                else
-                {
-                    Logger.Fatal("Failed to initialize game database");
-                    IsInitialized = false;
-                }
-            }
-            else
-            {
-                Logger.Fatal($"Calligraphy.sip and/or mu_cdata.sip are missing! Make sure you copied these files to {gpakDir}.");
+                Logger.Fatal($"Calligraphy.sip and/or mu_cdata.sip are missing! Make sure you copied these files to {GpakDirectory}.");
                 IsInitialized = false;
+                return;
             }
+
+            Logger.Info("Initializing game database...");
+            DateTime startTime = DateTime.Now;
+
+            // Initialize GPAK and derivative data
+            Calligraphy = new(new GpakFile(CalligraphyPath));
+            Resource = new(new GpakFile(ResourcePath));
+
+            PrototypeRefManager = new(Calligraphy, Resource);       // this needs to be initialized before PropertyInfoTable
+            PropertyInfoTable = new(Calligraphy);
+
+            // Load live tuning
+            LiveTuningSettingList = JsonSerializer.Deserialize<List<LiveTuningSetting>>(File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Assets", "LiveTuning.json")));
+            Logger.Info($"Loaded {LiveTuningSettingList.Count} live tuning settings");
+
+            // Verify
+            if (VerifyData() == false)
+            {
+                Logger.Fatal("Failed to initialize game database");
+                IsInitialized = false;
+                return;
+            }
+
+            // Finish game database initialization
+            long loadTime = (long)(DateTime.Now - startTime).TotalMilliseconds;
+            Logger.Info($"Finished initializing game database in {loadTime} ms");
+            IsInitialized = true;
         }
 
-        public static void ExtractGpakEntries()
+        public static void ExtractGpak(bool extractEntries, bool extractData)
         {
-            Logger.Info("Extracting Calligraphy entries...");
-            GpakFile calligraphyFile = new("Calligraphy.sip", true);
-            calligraphyFile.ExtractEntries("Calligraphy.tsv");
+            GpakFile calligraphyFile = new(CalligraphyPath, true);
+            GpakFile resourceFile = new(ResourcePath, true);
 
-            Logger.Info("Extracting Resource entries...");
-            GpakFile resourceFile = new("mu_cdata.sip", true);
-            resourceFile.ExtractEntries("mu_cdata.tsv");
-        }
+            if (extractEntries)
+            {
+                Logger.Info("Extracting Calligraphy entries...");
+                calligraphyFile.ExtractEntries(Path.Combine(GpakDirectory, "Calligraphy.tsv"));
+                Logger.Info("Extracting Resource entries...");
+                resourceFile.ExtractEntries(Path.Combine(GpakDirectory, "mu_cdata.tsv"));
+            }
 
-        public static void ExtractGpakData()
-        {
-            Logger.Info("Extracting Calligraphy data...");
-            GpakFile calligraphyFile = new("Calligraphy.sip", true);
-            calligraphyFile.ExtractData();
-
-            Logger.Info("Extracting Resource data...");
-            GpakFile resourceFile = new("mu_cdata.sip", true);
-            resourceFile.ExtractData();
+            if (extractData)
+            {
+                Logger.Info("Extracting Calligraphy data...");
+                calligraphyFile.ExtractData(GpakDirectory);
+                Logger.Info("Extracting Resource data...");
+                resourceFile.ExtractData(GpakDirectory);
+            }
         }
 
         // Helper methods for shorter access to PrototypeRefManager
         public static string GetPrototypePath(ulong id) => PrototypeRefManager.GetPrototypePath(id);
         public static ulong GetPrototypeId(string path) => PrototypeRefManager.GetPrototypeId(path);
         public static ulong GetPrototypeId(ulong guid) => PrototypeRefManager.GetPrototypeId(guid);
-        public static ulong GetPrototypeGuid(ulong id) => Calligraphy.PrototypeDirectory.IdDict[id].Guid;
         public static ulong GetPrototypeId(ulong enumValue, PrototypeEnumType type) => PrototypeRefManager.GetPrototypeId(enumValue, type);
+        public static ulong GetPrototypeGuid(ulong id) => Calligraphy.PrototypeDirectory.IdDict[id].Guid;
         public static ulong GetPrototypeEnumValue(ulong prototypeId, PrototypeEnumType type) => PrototypeRefManager.GetEnumValue(prototypeId, type);
 
         public static bool TryGetPrototypePath(ulong id, out string path) => PrototypeRefManager.TryGetPrototypePath(id, out path);

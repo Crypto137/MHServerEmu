@@ -7,83 +7,82 @@ namespace MHServerEmu.GameServer.GameData.Gpak
     public class GpakFile
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private static readonly string GpakDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "GPAK");
 
         public int Header { get; }  // KAPG
-        public int Field1 { get; }
+        public int Version { get; }
         public GpakEntry[] Entries { get; } = Array.Empty<GpakEntry>();
 
-        public GpakFile(string gpakFileName, bool silent = false)
+        public GpakFile(string gpakFilePath, bool silent = false)
         {
-            string path = Path.Combine(GpakDirectory, gpakFileName);
-
-            if (File.Exists(path))
+            // Make sure the specified file exists
+            if (File.Exists(gpakFilePath) == false)
             {
-                using (FileStream fileStream = File.OpenRead(path))
+                if (silent == false) Logger.Error($"{Path.GetFileName(gpakFilePath)} not found");
+                return;
+            }
+
+            // Read GPAK file
+            using (FileStream fileStream = File.OpenRead(gpakFilePath))
+            {
+                byte[] buffer = new byte[1024 * 1024 * 6];  // 6 MB should be enough for the largest file (compressed Prototype.directory)
+
+                // Read GPAK file header
+                Header = ReadInt(fileStream, buffer);
+                Version = ReadInt(fileStream, buffer);
+                Entries = new GpakEntry[ReadInt(fileStream, buffer)];
+
+                // Read metadata for all entries
+                for (int i = 0; i < Entries.Length; i++)
                 {
-                    byte[] buffer = new byte[4096];
+                    ulong id = ReadULong(fileStream, buffer);
+                    string filePath = ReadString(fileStream, buffer, ReadInt(fileStream, buffer));
+                    int modTime = ReadInt(fileStream, buffer);
+                    int offset = ReadInt(fileStream, buffer);
+                    int compressedSize = ReadInt(fileStream, buffer);
+                    int uncompressedSize = ReadInt(fileStream, buffer);
 
-                    // Header
-                    Header = ReadInt(fileStream, buffer);
-                    Field1 = ReadInt(fileStream, buffer);
-                    Entries = new GpakEntry[ReadInt(fileStream, buffer)];
-
-                    // Entry metadata
-                    for (int i = 0; i < Entries.Length; i++)
-                    {
-                        ulong id = ReadULong(fileStream, buffer);
-                        string filePath = ReadString(fileStream, buffer, ReadInt(fileStream, buffer));
-                        int field2 = ReadInt(fileStream, buffer);
-                        int offset = ReadInt(fileStream, buffer);
-                        int compressedSize = ReadInt(fileStream, buffer);
-                        int uncompressedSize = ReadInt(fileStream, buffer);
-
-                        if (compressedSize == 0 && !silent) Logger.Warn($"Compressed size for {Path.GetFileName(filePath)} is 0!");
-                        if (uncompressedSize == 0 && !silent) Logger.Warn($"Uncompressed size for {Path.GetFileName(filePath)} is 0!");
-
-                        Entries[i] = new(id, filePath, field2, offset, compressedSize, uncompressedSize);
-                    }
-
-                    // Entry data
-                    byte[] decodeBuffer = new byte[6000000]; // 6 MB should be enough for the largest file (prototype directory)
-                    foreach (GpakEntry entry in Entries)
-                    {
-                        byte[] data = new byte[entry.UncompressedSize];
-                        fileStream.Read(decodeBuffer, 0, entry.CompressedSize);
-                        LZ4Codec.Decode(decodeBuffer, 0, entry.CompressedSize, data, 0, data.Length);
-                        entry.Data = data;
-                    }
+                    Entries[i] = new(id, filePath, modTime, offset, compressedSize, uncompressedSize);
                 }
 
-                if (!silent) Logger.Info($"Loaded {Entries.Length} GPAK entries from {gpakFileName}");
+                // Decompress the actual data
+                foreach (GpakEntry entry in Entries)
+                {
+                    byte[] data = new byte[entry.UncompressedSize];
+                    fileStream.Read(buffer, 0, entry.CompressedSize);
+                    LZ4Codec.Decode(buffer, 0, entry.CompressedSize, data, 0, data.Length);
+                    entry.Data = data;
+                }
             }
-            else
-            {
-                if (!silent) Logger.Error($"{gpakFileName} not found");
-            }
+
+            if (silent == false) Logger.Info($"Loaded {Entries.Length} GPAK entries from {Path.GetFileName(gpakFilePath)}");
         }
 
-        public void ExtractEntries(string fileName)
+        public void ExtractEntries(string filePath)
         {
-            using (StreamWriter streamWriter = new(Path.Combine(GpakDirectory, fileName)))
+            // Create the directory if needed
+            string directoryName = Path.GetDirectoryName(filePath);
+            if (Directory.Exists(directoryName) == false) Directory.CreateDirectory(directoryName);
+
+            // Write all entries
+            using (StreamWriter streamWriter = new(filePath))
             {
                 foreach (GpakEntry entry in Entries)
                 {
-                    string entryString = $"{entry.Id}\t{entry.FilePath}\t{entry.Field2}\t{entry.Offset}\t{entry.CompressedSize}\t{entry.UncompressedSize}";
+                    string entryString = $"{entry.Id}\t{entry.FilePath}\t{entry.ModTime}\t{entry.Offset}\t{entry.CompressedSize}\t{entry.UncompressedSize}";
                     streamWriter.WriteLine(entryString);
                 }
             }
         }
 
-        public void ExtractData()
+        public void ExtractData(string outputDirectory)
         {
             foreach (GpakEntry entry in Entries)
             {
-                string uncompressedFilePath = Path.Combine(GpakDirectory, entry.FilePath);
-                string uncompressedFileDirectory = Path.GetDirectoryName(uncompressedFilePath);
+                string filePath = Path.Combine(outputDirectory, entry.FilePath);
+                string directory = Path.GetDirectoryName(filePath);                 // GPAK has its own directory structure that we need to keep in mind
 
-                if (Directory.Exists(uncompressedFileDirectory) == false) Directory.CreateDirectory(uncompressedFileDirectory);
-                File.WriteAllBytes(Path.Combine(GpakDirectory, entry.FilePath), entry.Data);
+                if (Directory.Exists(directory) == false) Directory.CreateDirectory(directory);
+                File.WriteAllBytes(filePath, entry.Data);
             }
         }
 
@@ -97,19 +96,19 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             return dict;
         }
 
-        private int ReadInt(FileStream fileStream, byte[] buffer)
+        private static int ReadInt(FileStream fileStream, byte[] buffer)
         {
             fileStream.Read(buffer, 0, 4);
             return BitConverter.ToInt32(buffer, 0);
         }
 
-        private ulong ReadULong(FileStream fileStream, byte[] buffer)
+        private static ulong ReadULong(FileStream fileStream, byte[] buffer)
         {
             fileStream.Read(buffer, 0, 8);
             return BitConverter.ToUInt64(buffer, 0);
         }
 
-        private string ReadString(FileStream fileStream, byte[] buffer, int length)
+        private static string ReadString(FileStream fileStream, byte[] buffer, int length)
         {
             fileStream.Read(buffer, 0, length);
             return Encoding.UTF8.GetString(buffer, 0, length);

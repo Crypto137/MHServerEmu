@@ -55,7 +55,7 @@
     <None Update="Assets\CompressedAchievementDatabaseDump.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\GPAK\IMPORTANT">
+    <None Update="Assets\GPAK\IMPORTANT.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Assets\LiveTuning.json">
