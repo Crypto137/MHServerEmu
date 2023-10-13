@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.GameServer.GameData.Calligraphy;
 using MHServerEmu.GameServer.GameData.Gpak;
 using MHServerEmu.GameServer.GameData.LiveTuning;
 using MHServerEmu.GameServer.Properties;
@@ -21,6 +22,9 @@ namespace MHServerEmu.GameServer.GameData
         public static PrototypeRefManager PrototypeRefManager { get; private set; }
         public static PropertyInfoTable PropertyInfoTable { get; private set; }
         public static List<LiveTuningSetting> LiveTuningSettingList { get; private set; }
+
+        public static DataRefManager StringRefManager { get; private set; } = new();
+        public static DataRefManager AssetTypeRefManager { get; private set; } = new();
 
         static GameDatabase()
         {
@@ -82,7 +86,13 @@ namespace MHServerEmu.GameServer.GameData
             }
         }
 
-        // Helper methods for shorter access to PrototypeRefManager
+        #region Data Access
+
+        public static AssetType GetAssetType(ulong assetId) => Calligraphy.AssetDirectory.GetAssetType(assetId);
+
+        public static string GetAssetName(ulong assetId) => StringRefManager.GetReferenceName(assetId);
+        public static string GetAssetTypeName(ulong assetTypeId) => AssetTypeRefManager.GetReferenceName(assetTypeId);
+
         public static string GetPrototypePath(ulong id) => PrototypeRefManager.GetPrototypePath(id);
         public static ulong GetPrototypeId(string path) => PrototypeRefManager.GetPrototypeId(path);
         public static ulong GetPrototypeId(ulong guid) => PrototypeRefManager.GetPrototypeId(guid);
@@ -95,6 +105,8 @@ namespace MHServerEmu.GameServer.GameData
         public static bool TryGetPrototypeId(ulong guid, out ulong id) => PrototypeRefManager.TryGetPrototypeId(guid, out id);
         public static bool TryGetPrototypeId(ulong enumValue, PrototypeEnumType type, out ulong id) => PrototypeRefManager.TryGetPrototypeId(enumValue, type, out id);
         public static bool TryGetPrototypeEnumValue(ulong prototypeId, PrototypeEnumType type, out ulong enumValue) => PrototypeRefManager.TryGetEnumValue(prototypeId, type, out enumValue);
+
+        #endregion
 
         private static bool VerifyData()
         {

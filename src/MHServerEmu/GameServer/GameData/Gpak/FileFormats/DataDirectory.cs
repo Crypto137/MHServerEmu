@@ -38,10 +38,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
                         for (int i = 0; i < Records.Length; i++)
                             Records[i] = new DataDirectoryCurveRecord(reader);
                         break;
-                    case "TDR":     // Asset Type
-                        for (int i = 0; i < Records.Length; i++)
-                            Records[i] = new DataDirectoryAssetTypeRecord(reader);
-                        break;
                     case "BDR":     // Blueprint
                         for (int i = 0; i < Records.Length; i++)
                             Records[i] = new DataDirectoryBlueprintRecord(reader);
@@ -82,24 +78,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         public Curve Curve { get; set; }
 
         public DataDirectoryCurveRecord(BinaryReader reader)
-        {
-            Id = reader.ReadUInt64();
-            Guid = reader.ReadUInt64();
-            ByteField = reader.ReadByte();
-            FilePath = reader.ReadFixedString16().Replace('\\', '/');
-        }
-    }
-
-    public class DataDirectoryAssetTypeRecord : DataDirectoryRecord, IDataRecord     // TDR
-    {
-        public ulong Id { get; }
-        public ulong Guid { get; }
-        public byte ByteField { get; }
-        public string FilePath { get; }
-
-        public AssetType AssetType { get; set; }
-
-        public DataDirectoryAssetTypeRecord(BinaryReader reader)
         {
             Id = reader.ReadUInt64();
             Guid = reader.ReadUInt64();

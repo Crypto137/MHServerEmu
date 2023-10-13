@@ -11,7 +11,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
         public BlueprintReferenceJson[] ContributingBlueprints { get; }
         public BlueprintMemberJson[] Members { get; }
 
-        public BlueprintJson(Blueprint blueprint, DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir)
+        public BlueprintJson(Blueprint blueprint, DataDirectory prototypeDir, DataDirectory curveDir)
         {
             Header = blueprint.Header;
             RuntimeBinding = blueprint.RuntimeBinding;
@@ -27,7 +27,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
 
             Members = new BlueprintMemberJson[blueprint.Members.Length];
             for (int i = 0; i < Members.Length; i++)
-                Members[i] = new(blueprint.Members[i], prototypeDir, curveDir, typeDir);
+                Members[i] = new(blueprint.Members[i], prototypeDir, curveDir);
         }
 
         public class BlueprintReferenceJson
@@ -50,7 +50,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
             public char ContainerType { get; }
             public string Subtype { get; }
 
-            public BlueprintMemberJson(BlueprintMember member, DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir)
+            public BlueprintMemberJson(BlueprintMember member, DataDirectory prototypeDir, DataDirectory curveDir)
             {
                 FieldId = member.FieldId;
                 FieldName = member.FieldName;
@@ -61,7 +61,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
                 {
                     // Only these types have subtypes
                     case 'A':
-                        Subtype = typeDir.IdDict[member.Subtype].FilePath;
+                        Subtype = GameDatabase.GetAssetTypeName(member.Subtype);
                         break;
 
                     case 'C':

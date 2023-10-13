@@ -1,21 +1,23 @@
-﻿using MHServerEmu.Common.Logging;
+﻿using MHServerEmu.Common.Extensions;
+using MHServerEmu.Common.Logging;
+using MHServerEmu.GameServer.GameData.Calligraphy;
 using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 
 namespace MHServerEmu.GameServer.GameData.Gpak
 {
+    // To be renamed to DataDirectory and combined with ResourceStorage
     public class CalligraphyStorage : GpakStorage
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        public AssetDirectory AssetDirectory { get; private set; }
+
         public DataDirectory CurveDirectory { get; }
-        public DataDirectory AssetTypeDirectory { get; }
         public DataDirectory BlueprintDirectory { get; }
         public DataDirectory PrototypeDirectory { get; }
         public DataDirectory ReplacementDirectory { get; }
 
         public Dictionary<Prototype, Blueprint> PrototypeBlueprintDict { get; }     // .defaults prototype -> blueprint
-        public Dictionary<ulong, string> AssetDict { get; } = new();                // asset id -> name
-        public Dictionary<ulong, string> AssetTypeDict { get; } = new();            // asset id -> type
         public Dictionary<ulong, string> PrototypeFieldDict { get; } = new();       // blueprint entry key -> field name
 
         public CalligraphyStorage(GpakFile gpakFile)
@@ -23,9 +25,25 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             // Convert GPAK file to a dictionary for easy access to all of its entries
             var gpakDict = gpakFile.ToDictionary();
 
+            // Initialize asset directory
+            AssetDirectory = new();
+
+            using (MemoryStream stream = new(gpakDict["Calligraphy/Type.directory"]))
+            using (BinaryReader reader = new(stream))
+            {
+                CalligraphyHeader header = reader.ReadCalligraphyHeader();      // TDR
+                int recordCount = reader.ReadInt32();
+                for (int i = 0; i < recordCount; i++)
+                    ReadTypeDirectoryEntry(reader, gpakDict);
+            }
+
+            Logger.Info($"Parsed {AssetDirectory.AssetCount} assets of {AssetDirectory.AssetTypeCount} types");
+
+
+            // OLD INITIALIZATION - TO BE REVAMPED
+
             // Initialize directories
             CurveDirectory = new(gpakDict["Calligraphy/Curve.directory"]);
-            AssetTypeDirectory = new(gpakDict["Calligraphy/Type.directory"]);
             BlueprintDirectory = new(gpakDict["Calligraphy/Blueprint.directory"]);
             PrototypeDirectory = new(gpakDict["Calligraphy/Prototype.directory"]);
             ReplacementDirectory = new(gpakDict["Calligraphy/Replacement.directory"]);
@@ -35,11 +53,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             foreach (DataDirectoryCurveRecord record in CurveDirectory.Records)
                 record.Curve = new(gpakDict[$"Calligraphy/{record.FilePath}"]);
             Logger.Info($"Parsed {CurveDirectory.Records.Length} curves");
-
-            // AssetType
-            foreach (DataDirectoryAssetTypeRecord record in AssetTypeDirectory.Records)
-                record.AssetType = new(gpakDict[$"Calligraphy/{record.FilePath}"]);
-            Logger.Info($"Parsed {AssetTypeDirectory.Records.Length} asset types");
 
             // Blueprint
             foreach (DataDirectoryBlueprintRecord record in BlueprintDirectory.Records)
@@ -56,30 +69,14 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             foreach (DataDirectoryBlueprintRecord record in BlueprintDirectory.Records)
                 PrototypeBlueprintDict.Add(GetPrototype(record.Blueprint.DefaultPrototypeId), record.Blueprint);
 
-            // Assets
-            AssetDict.Add(0, "0");  // add 0 manually
-            AssetTypeDict.Add(0, "0");
-
-            foreach (DataDirectoryAssetTypeRecord record in AssetTypeDirectory.Records)
-            {
-                foreach (AssetTypeEntry entry in record.AssetType.Entries)
-                {
-                    AssetDict.Add(entry.Id1, entry.Name);
-                    AssetTypeDict.Add(entry.Id1, Path.GetFileNameWithoutExtension(record.FilePath));
-                }
-            }
-
-            Logger.Info($"Loaded {AssetDict.Count} asset references");
-
             // Prototype fields
             foreach (DataDirectoryBlueprintRecord record in BlueprintDirectory.Records)
                 foreach (BlueprintMember member in record.Blueprint.Members)
                     PrototypeFieldDict.Add(member.FieldId, member.FieldName);
         }
 
-        // Accessors for various data files
-        public AssetType GetAssetType(ulong id) => ((DataDirectoryAssetTypeRecord)AssetTypeDirectory.IdDict[id]).AssetType;
-        public AssetType GetAssetType(string path) => ((DataDirectoryAssetTypeRecord)AssetTypeDirectory.FilePathDict[path]).AssetType;
+        #region Data Access
+
         public Curve GetCurve(ulong id) => ((DataDirectoryCurveRecord)CurveDirectory.IdDict[id]).Curve;
         public Curve GetCurve(string path) => ((DataDirectoryCurveRecord)CurveDirectory.FilePathDict[path]).Curve;
         public Blueprint GetBlueprint(ulong id) => ((DataDirectoryBlueprintRecord)BlueprintDirectory.IdDict[id]).Blueprint;
@@ -104,9 +101,28 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         // Helper methods
         public bool IsCalligraphyPrototype(ulong prototypeId) => PrototypeDirectory.IdDict.TryGetValue(prototypeId, out IDataRecord record);  // TryGetValue is apparently faster than ContainsKey
 
+        #endregion
+
+        #region Initialization
+
+        private void ReadTypeDirectoryEntry(BinaryReader reader, Dictionary<string, byte[]> gpakDict)
+        {
+            ulong id = reader.ReadUInt64();
+            ulong guid = reader.ReadUInt64();
+            byte flags = reader.ReadByte();
+            string filePath = reader.ReadFixedString16().Replace('\\', '/');
+
+            LoadedAssetTypeRecord record = AssetDirectory.CreateAssetTypeRecord(id, flags);
+            record.AssetType = new(gpakDict[$"Calligraphy/{filePath}"], AssetDirectory, id);
+            GameDatabase.AssetTypeRefManager.AddDataRef(id, filePath);
+        }
+
+        #endregion
+
+
         public override bool Verify()
         {
-            return AssetTypeDirectory.Records.Length > 0
+            return AssetDirectory.AssetCount > 0
                 && CurveDirectory.Records.Length > 0
                 && BlueprintDirectory.Records.Length > 0
                 && PrototypeDirectory.Records.Length > 0
@@ -118,16 +134,12 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         public override void Export()
         {
             // Set up json serializer
-            _jsonSerializerOptions.Converters.Add(new BlueprintConverter(PrototypeDirectory, CurveDirectory, AssetTypeDirectory));
-            _jsonSerializerOptions.Converters.Add(new PrototypeFileConverter(PrototypeDirectory, CurveDirectory, AssetTypeDirectory, PrototypeFieldDict, AssetDict, AssetTypeDict));
+            _jsonSerializerOptions.Converters.Add(new BlueprintConverter(PrototypeDirectory, CurveDirectory));
+            _jsonSerializerOptions.Converters.Add(new PrototypeFileConverter(PrototypeDirectory, CurveDirectory, PrototypeFieldDict));
             _jsonSerializerOptions.MaxDepth = 128;  // 64 is not enough for prototypes
 
             // Build dictionaries out of directories for compatibility with the old JSON export
             // Exporting isn't performance / memory critical, so it should be fine
-            Dictionary<string, AssetType> assetTypeDict = new(AssetTypeDirectory.Records.Length);
-            foreach (DataDirectoryAssetTypeRecord record in AssetTypeDirectory.Records)
-                assetTypeDict.Add($"Calligraphy/{record.FilePath}", record.AssetType);
-
             Dictionary<string, Blueprint> blueprintDict = new(BlueprintDirectory.Records.Length);
             foreach (DataDirectoryBlueprintRecord record in BlueprintDirectory.Records)
                 blueprintDict.Add($"Calligraphy/{record.FilePath}", record.Blueprint);
@@ -138,7 +150,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
             // Serialize and save
             ExportDataDirectories();
-            SerializeDictAsJson(assetTypeDict);
             ExportCurveDict();
             SerializeDictAsJson(blueprintDict);
             SerializeDictAsJson(prototypeFileDict);
@@ -152,12 +163,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             using (StreamWriter writer = new(Path.Combine(dir, "Curve.directory.tsv")))
             {
                 foreach (DataDirectoryCurveRecord record in CurveDirectory.Records)
-                    writer.WriteLine($"{record.Id}\t{record.Guid}\t{record.ByteField}\t{record.FilePath}");
-            }
-
-            using (StreamWriter writer = new(Path.Combine(dir, "Type.directory.tsv")))
-            {
-                foreach (DataDirectoryAssetTypeRecord record in AssetTypeDirectory.Records)
                     writer.WriteLine($"{record.Id}\t{record.Guid}\t{record.ByteField}\t{record.FilePath}");
             }
 

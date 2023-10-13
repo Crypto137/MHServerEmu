@@ -38,7 +38,7 @@ namespace MHServerEmu.GameServer.GameData.Prototypes
                 switch (GameDatabase.Calligraphy.PrototypeFieldDict[element.Id])
                 {
                     case nameof(AggMethod):
-                        AggMethod = (AggregationMethod)Enum.Parse(typeof(AggregationMethod), GameDatabase.Calligraphy.AssetDict[(ulong)element.Value]);
+                        AggMethod = (AggregationMethod)Enum.Parse(typeof(AggregationMethod), GameDatabase.GetAssetName((ulong)element.Value));
                         break;
                     case nameof(ClientOnly):
                         ClientOnly = (bool)element.Value;
@@ -62,7 +62,7 @@ namespace MHServerEmu.GameServer.GameData.Prototypes
                         ReplicateForTransfer = (bool)element.Value;
                         break;
                     case nameof(ReplicateToDatabase):
-                        ReplicateToDatabase = (DatabasePolicy)Enum.Parse(typeof(DatabasePolicy), GameDatabase.Calligraphy.AssetDict[(ulong)element.Value]);
+                        ReplicateToDatabase = (DatabasePolicy)Enum.Parse(typeof(DatabasePolicy), GameDatabase.GetAssetName((ulong)element.Value));
                         break;
                     case nameof(ReplicateToDatabaseAllowedOnItems):
                         ReplicateToDatabaseAllowedOnItems = (bool)element.Value;
@@ -101,7 +101,7 @@ namespace MHServerEmu.GameServer.GameData.Prototypes
                         TruncatePropertyValueToInt = (bool)element.Value;
                         break;
                     case nameof(Type):
-                        Type = (PropertyType)Enum.Parse(typeof(PropertyType), GameDatabase.Calligraphy.AssetDict[(ulong)element.Value]);
+                        Type = (PropertyType)Enum.Parse(typeof(PropertyType), GameDatabase.GetAssetName((ulong)element.Value));
                         break;
                     case nameof(Version):
                         Version = (long)element.Value;
