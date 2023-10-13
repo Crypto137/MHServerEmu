@@ -5,36 +5,39 @@ namespace MHServerEmu.GameServer.GameData.Calligraphy
 {
     public class AssetType
     {
-        public AssetValue[] Assets { get; }
+        private readonly ulong _guid;
+        private readonly AssetValue[] _assets;
 
-        public AssetType(byte[] data, AssetDirectory assetDirectory, ulong assetTypeId)
+        public AssetType(byte[] data, AssetDirectory assetDirectory, ulong assetTypeId, ulong assetTypeGuid)
         {
+            _guid = assetTypeGuid;
+
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
                 CalligraphyHeader header = reader.ReadCalligraphyHeader();
 
-                Assets = new AssetValue[reader.ReadUInt16()];
-                for (int i = 0; i < Assets.Length; i++)
+                _assets = new AssetValue[reader.ReadUInt16()];
+                for (int i = 0; i < _assets.Length; i++)
                 {
-                    ulong id = reader.ReadUInt64();
-                    ulong guid = reader.ReadUInt64();
+                    ulong assetId = reader.ReadUInt64();
+                    ulong assetGuid = reader.ReadUInt64();
                     byte flags = reader.ReadByte();
                     string name = reader.ReadFixedString16();
 
-                    GameDatabase.StringRefManager.AddDataRef(id, name);
-                    AssetValue assetValue = new(id, guid, flags);
-                    assetDirectory.AddAssetLookup(assetTypeId, id, guid);
+                    GameDatabase.StringRefManager.AddDataRef(assetId, name);
+                    AssetValue assetValue = new(assetId, assetGuid, flags);
+                    assetDirectory.AddAssetLookup(assetTypeId, assetId, assetGuid);
                 }
             }
         }
 
         public AssetValue GetAssetValue(ulong id)
         {
-            return Assets.FirstOrDefault(asset => asset.Id == id);
+            return _assets.FirstOrDefault(asset => asset.Id == id);
         }
 
-        public int GetMaxEnumValue() => Assets.Length - 1;
+        public int GetMaxEnumValue() => _assets.Length - 1;
     }
 
     public readonly struct AssetValue

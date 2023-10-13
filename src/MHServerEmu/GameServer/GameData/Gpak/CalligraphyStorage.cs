@@ -113,7 +113,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             string filePath = reader.ReadFixedString16().Replace('\\', '/');
 
             LoadedAssetTypeRecord record = AssetDirectory.CreateAssetTypeRecord(id, flags);
-            record.AssetType = new(gpakDict[$"Calligraphy/{filePath}"], AssetDirectory, id);
+            record.AssetType = new(gpakDict[$"Calligraphy/{filePath}"], AssetDirectory, id, guid);
             GameDatabase.AssetTypeRefManager.AddDataRef(id, filePath);
         }
 
