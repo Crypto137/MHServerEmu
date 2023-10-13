@@ -46,24 +46,16 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
                         for (int i = 0; i < Records.Length; i++)
                             Records[i] = new DataDirectoryPrototypeRecord(reader);
                         break;
-                    case "RDR":     // Replacement
-                        for (int i = 0; i < Records.Length; i++)
-                            Records[i] = new DataDirectoryReplacementRecord(reader);
-                        break;
                 }
 
-                // Replacement directory doesn't contain any actual data
-                if (Header.Magic != "RDR")  
+                IdDict = new(Records.Length);
+                FilePathDict = new(Records.Length);
+
+                foreach (IDataRecord record in Records)
                 {
-                    IdDict = new(Records.Length);
-                    FilePathDict = new(Records.Length);
-
-                    foreach (IDataRecord record in Records)
-                    {
-                        IdDict.Add(record.Id, record);
-                        FilePathDict.Add(record.FilePath, record);
-                    }   
-                }
+                    IdDict.Add(record.Id, record);
+                    FilePathDict.Add(record.FilePath, record);
+                }   
             }
         }
     }
@@ -121,20 +113,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             ParentId = reader.ReadUInt64();
             ByteField = reader.ReadByte();
             FilePath = reader.ReadFixedString16().Replace('\\', '/');
-        }
-    }
-
-    public class DataDirectoryReplacementRecord : DataDirectoryRecord   // RDR
-    {
-        public ulong OldGuid { get; }
-        public ulong NewGuid { get; }
-        public string Name { get; }
-
-        public DataDirectoryReplacementRecord(BinaryReader reader)
-        {
-            OldGuid = reader.ReadUInt64();
-            NewGuid = reader.ReadUInt64();
-            Name = reader.ReadFixedString16();
         }
     }
 }

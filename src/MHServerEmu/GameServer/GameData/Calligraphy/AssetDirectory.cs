@@ -1,6 +1,4 @@
-﻿using MHServerEmu.Common.Extensions;
-
-namespace MHServerEmu.GameServer.GameData.Calligraphy
+﻿namespace MHServerEmu.GameServer.GameData.Calligraphy
 {
     public class AssetDirectory
     {

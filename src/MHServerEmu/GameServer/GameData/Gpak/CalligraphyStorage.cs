@@ -11,11 +11,11 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public AssetDirectory AssetDirectory { get; private set; }
+        public ReplacementDirectory ReplacementDirectory { get; private set; }
 
         public DataDirectory CurveDirectory { get; }
         public DataDirectory BlueprintDirectory { get; }
         public DataDirectory PrototypeDirectory { get; }
-        public DataDirectory ReplacementDirectory { get; }
 
         public Dictionary<Prototype, Blueprint> PrototypeBlueprintDict { get; }     // .defaults prototype -> blueprint
         public Dictionary<ulong, string> PrototypeFieldDict { get; } = new();       // blueprint entry key -> field name
@@ -39,6 +39,17 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
             Logger.Info($"Parsed {AssetDirectory.AssetCount} assets of {AssetDirectory.AssetTypeCount} types");
 
+            // Initialize replacement directory
+            ReplacementDirectory = new();
+
+            using (MemoryStream stream = new(gpakDict["Calligraphy/Replacement.directory"]))
+            using (BinaryReader reader = new(stream))
+            {
+                CalligraphyHeader header = reader.ReadCalligraphyHeader();      // RDR
+                int recordCount = reader.ReadInt32();
+                for (int i = 0; i < recordCount; i++)
+                    ReadReplacementDirectoryEntry(reader);
+            }
 
             // OLD INITIALIZATION - TO BE REVAMPED
 
@@ -46,7 +57,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             CurveDirectory = new(gpakDict["Calligraphy/Curve.directory"]);
             BlueprintDirectory = new(gpakDict["Calligraphy/Blueprint.directory"]);
             PrototypeDirectory = new(gpakDict["Calligraphy/Prototype.directory"]);
-            ReplacementDirectory = new(gpakDict["Calligraphy/Replacement.directory"]);
 
             // Populate directories with data from GPAK
             // Curve
@@ -117,6 +127,15 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             GameDatabase.AssetTypeRefManager.AddDataRef(id, filePath);
         }
 
+        private void ReadReplacementDirectoryEntry(BinaryReader reader)
+        {
+            ulong oldGuid = reader.ReadUInt64();
+            ulong newGuid = reader.ReadUInt64();
+            string name = reader.ReadFixedString16();
+
+            ReplacementDirectory.AddReplacementRecord(oldGuid, newGuid, name);
+        }
+
         #endregion
 
 
@@ -126,7 +145,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
                 && CurveDirectory.Records.Length > 0
                 && BlueprintDirectory.Records.Length > 0
                 && PrototypeDirectory.Records.Length > 0
-                && ReplacementDirectory.Records.Length > 0;
+                && ReplacementDirectory.RecordCount > 0;
         }
 
         #region Export
@@ -176,12 +195,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             {
                 foreach (DataDirectoryPrototypeRecord record in PrototypeDirectory.Records)
                     writer.WriteLine($"{record.Id}\t{record.Guid}\t{record.ParentId}\t{record.ByteField}\t{record.FilePath}");
-            }
-
-            using (StreamWriter writer = new(Path.Combine(dir, "Replacement.directory.tsv")))
-            {
-                foreach (DataDirectoryReplacementRecord record in ReplacementDirectory.Records)
-                    writer.WriteLine($"{record.OldGuid}\t{record.NewGuid}\t{record.Name}");
             }
         }
 
