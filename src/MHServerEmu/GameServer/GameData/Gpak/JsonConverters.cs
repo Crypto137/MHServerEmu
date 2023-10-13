@@ -12,12 +12,10 @@ namespace MHServerEmu.GameServer.GameData.Gpak
     public class BlueprintConverter : JsonConverter<Blueprint>
     {
         private DataDirectory _prototypeDir;
-        private DataDirectory _curveDir;
 
-        public BlueprintConverter(DataDirectory prototypeDir, DataDirectory curveDir)
+        public BlueprintConverter(DataDirectory prototypeDir)
         {
             _prototypeDir = prototypeDir;
-            _curveDir = curveDir;
         }
 
         public override Blueprint Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -34,7 +32,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
                     break;
 
                 default:
-                    JsonSerializer.Serialize(writer, new BlueprintJson(value, _prototypeDir, _curveDir), options);
+                    JsonSerializer.Serialize(writer, new BlueprintJson(value, _prototypeDir), options);
                     break;
             }
         }
@@ -43,14 +41,12 @@ namespace MHServerEmu.GameServer.GameData.Gpak
     public class PrototypeFileConverter : JsonConverter<PrototypeFile>
     {
         private DataDirectory _prototypeDir;
-        private DataDirectory _curveDir;
         private Dictionary<ulong, string> _prototypeFieldDict;
 
 
-        public PrototypeFileConverter(DataDirectory prototypeDir, DataDirectory curveDir, Dictionary<ulong, string> prototypeFieldDict)
+        public PrototypeFileConverter(DataDirectory prototypeDir, Dictionary<ulong, string> prototypeFieldDict)
         {
             _prototypeDir = prototypeDir;
-            _curveDir = curveDir;
             _prototypeFieldDict = prototypeFieldDict;
         }
 
@@ -68,7 +64,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
                     break;
 
                 default:
-                    JsonSerializer.Serialize(writer, new PrototypeFileJson(value, _prototypeDir, _curveDir, _prototypeFieldDict), options);
+                    JsonSerializer.Serialize(writer, new PrototypeFileJson(value, _prototypeDir, _prototypeFieldDict), options);
                     break;
             }
         }

@@ -11,9 +11,10 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public AssetDirectory AssetDirectory { get; private set; }
+        public CurveDirectory CurveDirectory { get; private set; }
         public ReplacementDirectory ReplacementDirectory { get; private set; }
 
-        public DataDirectory CurveDirectory { get; }
+
         public DataDirectory BlueprintDirectory { get; }
         public DataDirectory PrototypeDirectory { get; }
 
@@ -39,6 +40,20 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
             Logger.Info($"Parsed {AssetDirectory.AssetCount} assets of {AssetDirectory.AssetTypeCount} types");
 
+            // Initialize curve directory
+            CurveDirectory = new();
+
+            using (MemoryStream stream = new(gpakDict["Calligraphy/Curve.directory"]))
+            using (BinaryReader reader = new(stream))
+            {
+                CalligraphyHeader header = reader.ReadCalligraphyHeader();      // CDR
+                int recordCount = reader.ReadInt32();
+                for (int i = 0; i < recordCount; i++)
+                    ReadCurveDirectoryEntry(reader, gpakDict);
+            }
+
+            Logger.Info($"Parsed {CurveDirectory.RecordCount} curves");
+
             // Initialize replacement directory
             ReplacementDirectory = new();
 
@@ -54,16 +69,10 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             // OLD INITIALIZATION - TO BE REVAMPED
 
             // Initialize directories
-            CurveDirectory = new(gpakDict["Calligraphy/Curve.directory"]);
             BlueprintDirectory = new(gpakDict["Calligraphy/Blueprint.directory"]);
             PrototypeDirectory = new(gpakDict["Calligraphy/Prototype.directory"]);
 
             // Populate directories with data from GPAK
-            // Curve
-            foreach (DataDirectoryCurveRecord record in CurveDirectory.Records)
-                record.Curve = new(gpakDict[$"Calligraphy/{record.FilePath}"]);
-            Logger.Info($"Parsed {CurveDirectory.Records.Length} curves");
-
             // Blueprint
             foreach (DataDirectoryBlueprintRecord record in BlueprintDirectory.Records)
                 record.Blueprint = new(gpakDict[$"Calligraphy/{record.FilePath}"]);
@@ -87,8 +96,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
         #region Data Access
 
-        public Curve GetCurve(ulong id) => ((DataDirectoryCurveRecord)CurveDirectory.IdDict[id]).Curve;
-        public Curve GetCurve(string path) => ((DataDirectoryCurveRecord)CurveDirectory.FilePathDict[path]).Curve;
         public Blueprint GetBlueprint(ulong id) => ((DataDirectoryBlueprintRecord)BlueprintDirectory.IdDict[id]).Blueprint;
         public Blueprint GetBlueprint(string path) => ((DataDirectoryBlueprintRecord)BlueprintDirectory.FilePathDict[path]).Blueprint;
         public Prototype GetPrototype(ulong id) => ((DataDirectoryPrototypeRecord)PrototypeDirectory.IdDict[id]).PrototypeFile.Prototype;
@@ -122,9 +129,22 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             byte flags = reader.ReadByte();
             string filePath = reader.ReadFixedString16().Replace('\\', '/');
 
+            GameDatabase.AssetTypeRefManager.AddDataRef(id, filePath);
             LoadedAssetTypeRecord record = AssetDirectory.CreateAssetTypeRecord(id, flags);
             record.AssetType = new(gpakDict[$"Calligraphy/{filePath}"], AssetDirectory, id, guid);
-            GameDatabase.AssetTypeRefManager.AddDataRef(id, filePath);
+            
+        }
+
+        private void ReadCurveDirectoryEntry(BinaryReader reader, Dictionary<string, byte[]> gpakDict)
+        {
+            ulong id = reader.ReadUInt64();
+            ulong guid = reader.ReadUInt64();   // Doesn't seem to be used at all
+            byte flags = reader.ReadByte();
+            string filePath = reader.ReadFixedString16().Replace('\\', '/');
+
+            GameDatabase.CurveRefManager.AddDataRef(id, filePath);
+            CurveRecord record = CurveDirectory.CreateCurveRecord(id, flags);
+            record.Curve = new(gpakDict[$"Calligraphy/{filePath}"]);
         }
 
         private void ReadReplacementDirectoryEntry(BinaryReader reader)
@@ -142,7 +162,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         public override bool Verify()
         {
             return AssetDirectory.AssetCount > 0
-                && CurveDirectory.Records.Length > 0
+                && CurveDirectory.RecordCount > 0
                 && BlueprintDirectory.Records.Length > 0
                 && PrototypeDirectory.Records.Length > 0
                 && ReplacementDirectory.RecordCount > 0;
@@ -153,8 +173,8 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         public override void Export()
         {
             // Set up json serializer
-            _jsonSerializerOptions.Converters.Add(new BlueprintConverter(PrototypeDirectory, CurveDirectory));
-            _jsonSerializerOptions.Converters.Add(new PrototypeFileConverter(PrototypeDirectory, CurveDirectory, PrototypeFieldDict));
+            _jsonSerializerOptions.Converters.Add(new BlueprintConverter(PrototypeDirectory));
+            _jsonSerializerOptions.Converters.Add(new PrototypeFileConverter(PrototypeDirectory, PrototypeFieldDict));
             _jsonSerializerOptions.MaxDepth = 128;  // 64 is not enough for prototypes
 
             // Build dictionaries out of directories for compatibility with the old JSON export
@@ -169,7 +189,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
             // Serialize and save
             ExportDataDirectories();
-            ExportCurveDict();
             SerializeDictAsJson(blueprintDict);
             SerializeDictAsJson(prototypeFileDict);
         }
@@ -178,12 +197,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         {
             string dir = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "GPAK", "Export", "Calligraphy");
             if (Directory.Exists(dir) == false) Directory.CreateDirectory(dir);
-
-            using (StreamWriter writer = new(Path.Combine(dir, "Curve.directory.tsv")))
-            {
-                foreach (DataDirectoryCurveRecord record in CurveDirectory.Records)
-                    writer.WriteLine($"{record.Id}\t{record.Guid}\t{record.ByteField}\t{record.FilePath}");
-            }
 
             using (StreamWriter writer = new(Path.Combine(dir, "Blueprint.directory.tsv")))
             {
@@ -195,22 +208,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             {
                 foreach (DataDirectoryPrototypeRecord record in PrototypeDirectory.Records)
                     writer.WriteLine($"{record.Id}\t{record.Guid}\t{record.ParentId}\t{record.ByteField}\t{record.FilePath}");
-            }
-        }
-
-        private void ExportCurveDict()
-        {
-            foreach (DataDirectoryCurveRecord record in CurveDirectory.Records)  // use TSV for curves
-            {
-                string path = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "GPAK", "Export", "Calligraphy", $"{record.FilePath}.tsv");
-                string dir = Path.GetDirectoryName(path);
-                if (Directory.Exists(dir) == false) Directory.CreateDirectory(dir);
-
-                using (StreamWriter sw = new(path))
-                {
-                    foreach (double value in record.Curve.Entries)
-                        sw.WriteLine(value);
-                }
             }
         }
 

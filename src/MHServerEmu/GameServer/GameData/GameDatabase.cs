@@ -23,8 +23,9 @@ namespace MHServerEmu.GameServer.GameData
         public static PropertyInfoTable PropertyInfoTable { get; private set; }
         public static List<LiveTuningSetting> LiveTuningSettingList { get; private set; }
 
-        public static DataRefManager StringRefManager { get; private set; } = new();
-        public static DataRefManager AssetTypeRefManager { get; private set; } = new();
+        public static DataRefManager StringRefManager { get; } = new();
+        public static DataRefManager AssetTypeRefManager { get; } = new();
+        public static DataRefManager CurveRefManager { get; } = new();
 
         static GameDatabase()
         {
@@ -92,6 +93,7 @@ namespace MHServerEmu.GameServer.GameData
 
         public static string GetAssetName(ulong assetId) => StringRefManager.GetReferenceName(assetId);
         public static string GetAssetTypeName(ulong assetTypeId) => AssetTypeRefManager.GetReferenceName(assetTypeId);
+        public static string GetCurveName(ulong curveId) => CurveRefManager.GetReferenceName(curveId);
 
         public static string GetPrototypePath(ulong id) => PrototypeRefManager.GetPrototypePath(id);
         public static ulong GetPrototypeId(string path) => PrototypeRefManager.GetPrototypeId(path);
