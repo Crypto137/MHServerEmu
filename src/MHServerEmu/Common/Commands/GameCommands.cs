@@ -73,9 +73,9 @@ namespace MHServerEmu.Common.Commands
                 case AvatarPrototype.Thing:
                 case AvatarPrototype.Thor:
                     client.CurrentGame.EventManager.AddEvent(client, GameServer.Games.EventEnum.EmoteDance, 0, avatar);
-                    return $"{client.Session.Account.Player.Avatar} begins to dance";
+                    return $"{avatar} begins to dance";
                 default:
-                    return $"{client.Session.Account.Player.Avatar} doesn't want to dance";                   
+                    return $"{avatar} doesn't want to dance";                   
             }
             
         }
