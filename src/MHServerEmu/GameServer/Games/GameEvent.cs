@@ -4,7 +4,6 @@ namespace MHServerEmu.GameServer.Games
 {
     public enum EventEnum
     {
-        ToTeleport,
         StartThrowing,
         EndThrowing,
         StartTravel,
@@ -12,7 +11,9 @@ namespace MHServerEmu.GameServer.Games
         DiamondFormActivate,
         DiamondFormDeactivate,
         StartMagikUltimate,
-        EndMagikUltimate
+        EndMagikUltimate,
+        ToTeleport,
+        EmoteDance,        
     }
 
     public class GameEvent

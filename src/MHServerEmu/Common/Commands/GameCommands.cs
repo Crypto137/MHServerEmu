@@ -48,6 +48,39 @@ namespace MHServerEmu.Common.Commands
         }
     }
 
+    [CommandGroup("dance", "Performs the Dance emote", AccountUserLevel.User)]
+    public class DanceCommand : CommandGroup
+    {
+        [DefaultCommand(AccountUserLevel.User)]
+        public string Dance(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            AvatarPrototype avatar = client.Session.Account.Player.Avatar;
+            switch (avatar)
+            {
+                case AvatarPrototype.BlackPanther:
+                case AvatarPrototype.BlackWidow:
+                case AvatarPrototype.CaptainAmerica:
+                case AvatarPrototype.Colossus:
+                case AvatarPrototype.EmmaFrost:
+                case AvatarPrototype.Hulk:
+                case AvatarPrototype.IronMan:
+                case AvatarPrototype.RocketRaccoon:
+                case AvatarPrototype.ScarletWitch:
+                case AvatarPrototype.Spiderman:
+                case AvatarPrototype.Storm:
+                case AvatarPrototype.Thing:
+                case AvatarPrototype.Thor:
+                    client.CurrentGame.EventManager.AddEvent(client, GameServer.Games.EventEnum.EmoteDance, 0, avatar);
+                    return $"{avatar} begins to dance";
+                default:
+                    return $"{avatar} doesn't want to dance";                   
+            }
+            
+        }
+    }
+
     [CommandGroup("tp", "Teleports to position.\nUsage:\ntp x:+1000 (relative to current position)\ntp x100 y500 z10 (absolute position)", AccountUserLevel.User)]
     public class TeleportCommand : CommandGroup
     {

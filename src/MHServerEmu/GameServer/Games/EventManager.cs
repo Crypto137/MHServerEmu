@@ -10,6 +10,7 @@ using MHServerEmu.GameServer.Powers;
 using MHServerEmu.GameServer.Properties;
 using MHServerEmu.Networking;
 using MHServerEmu.GameServer.Entities.Avatars;
+using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.GameServer.Games
 {
@@ -58,6 +59,27 @@ namespace MHServerEmu.GameServer.Games
 
             switch (eventId)
             {
+                case EventEnum.EmoteDance:
+
+                    AvatarPrototype avatar = (AvatarPrototype)queuedEvent.Data;
+                    avatarEntityId = (ulong)avatar.ToEntityId();
+                    ActivatePowerArchive archive = new()
+                    {
+                        ReplicationPolicy = 1,
+                        Flags = 202u.ToBoolArray(8),
+                        IdUserEntity = avatarEntityId,
+                        IdTargetEntity = avatarEntityId,
+                        PowerPrototypeId = (ulong)PowerPrototypes.Emotes.EmoteDance,
+                        UserPosition = client.LastPosition,
+                        PowerRandomSeed = 1111,
+                        FXRandomSeed = 1111
+
+                    };
+                    messageList.Add(new(client,new(NetMessageActivatePower.CreateBuilder()
+                         .SetArchiveData(ByteString.CopyFrom(archive.Encode()))
+                         .Build())));
+                    break;
+
                 case EventEnum.ToTeleport:
 
                     Vector3 targetPos = (Vector3)queuedEvent.Data;

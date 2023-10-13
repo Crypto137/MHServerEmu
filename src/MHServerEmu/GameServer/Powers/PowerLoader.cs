@@ -39,7 +39,20 @@ namespace MHServerEmu.GameServer.Powers
                             .SetItemVariation(1)
                             .Build());
                     }
-
+                    // emotes
+                    powerPrototypeEnumType = typeof(PowerPrototypes.Emotes);
+                    foreach (ulong powerProtoId in Enum.GetValues(powerPrototypeEnumType))
+                    {
+                        powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            .SetEntityId((ulong)avatar)
+                            .SetPowerProtoId(powerProtoId)
+                            .SetPowerRank(0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(1)
+                            .Build());
+                    }
                     messageList.Add(new(NetMessageAssignPowerCollection.CreateBuilder().AddRangePower(powerList).Build()));
                 }
                 else
