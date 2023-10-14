@@ -1,7 +1,6 @@
 ﻿using MHServerEmu.GameServer;
 using MHServerEmu.GameServer.Frontend.Accounts;
 using MHServerEmu.GameServer.GameData;
-using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.Common.Commands

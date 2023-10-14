@@ -1,5 +1,5 @@
 ﻿using MHServerEmu.Common.Extensions;
-using MHServerEmu.GameServer.GameData.Gpak;
+using MHServerEmu.GameServer.GameData.Calligraphy;
 
 namespace MHServerEmu.GameServer.GameData.Prototypes
 {

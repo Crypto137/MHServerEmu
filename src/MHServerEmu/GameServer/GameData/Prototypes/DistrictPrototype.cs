@@ -2,9 +2,9 @@
 using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.GameData.Prototypes.Markers;
 
-namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
+namespace MHServerEmu.GameServer.GameData.Prototypes
 {
-    public class District
+    public class DistrictPrototype
     {
         public uint Header { get; }
         public uint Version { get; }
@@ -13,7 +13,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         public MarkerPrototype[] MarkerSet { get; }                 // size is always 0 in all of our files
         public PathNodeSetPrototype[] PathCollection { get; }       // PathCollectionPrototype
 
-        public District(byte[] data)
+        public DistrictPrototype(byte[] data)
         {
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
@@ -32,7 +32,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 
                 PathCollection = new PathNodeSetPrototype[reader.ReadUInt32()];
                 for (int i = 0; i < PathCollection.Length; i++)
-                    PathCollection[i] = new(reader);    
+                    PathCollection[i] = new(reader);
             }
         }
 

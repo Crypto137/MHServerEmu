@@ -1,6 +1,5 @@
 ﻿using System.Text.Json.Serialization;
 using MHServerEmu.GameServer.Common;
-using MHServerEmu.GameServer.GameData.Gpak;
 
 namespace MHServerEmu.GameServer.GameData.Prototypes.Markers
 {

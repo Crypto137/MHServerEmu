@@ -1,7 +1,7 @@
 ﻿using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.Entities;
 using MHServerEmu.GameServer.GameData;
-using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
+using MHServerEmu.GameServer.GameData.Prototypes;
 
 namespace MHServerEmu.GameServer.Regions
 {
@@ -96,7 +96,7 @@ namespace MHServerEmu.GameServer.Regions
             Region region = null;
             byte[] archiveData = Array.Empty<byte>();
             Area area;
-            District district = null;
+            DistrictPrototype district = null;
 
             switch (prototype)
             {

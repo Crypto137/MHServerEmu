@@ -1,6 +1,7 @@
-﻿using MHServerEmu.GameServer.GameData.Prototypes;
+﻿using MHServerEmu.GameServer.GameData.Calligraphy;
+using MHServerEmu.GameServer.GameData.Prototypes;
 
-namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
+namespace MHServerEmu.GameServer.GameData.JsonOutput
 {
     public class PrototypeFileJson
     {
@@ -129,7 +130,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
                                     Values[i] = element.Values[i];
                                     break;
                             }
-                        }                                
+                        }
                     }
                 }
             }

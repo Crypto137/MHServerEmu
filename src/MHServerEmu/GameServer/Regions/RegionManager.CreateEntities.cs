@@ -1,11 +1,10 @@
 ﻿using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.Entities;
-using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 using MHServerEmu.GameServer.GameData.Prototypes.Markers;
 using MHServerEmu.GameServer.GameData;
-using MHServerEmu.GameServer.GameData.Gpak;
 using MHServerEmu.GameServer.Properties;
 using MHServerEmu.GameServer.GameData.Prototypes;
+using MHServerEmu.GameServer.GameData.Calligraphy;
 
 namespace MHServerEmu.GameServer.Regions
 {
@@ -137,7 +136,7 @@ namespace MHServerEmu.GameServer.Regions
 
             void MarkersAddDistrict(string path, bool addProp = false)
             {
-                District district = GameDatabase.Resource.DistrictDict[path];
+                DistrictPrototype district = GameDatabase.Resource.DistrictDict[path];
                 for (cellid = 0; cellid < district.CellMarkerSet.Length; cellid++)
                     MarkersAdd(GameDatabase.Resource.CellDict[district.CellMarkerSet[cellid].Resource], cellid + 1, addProp);
             }
@@ -466,7 +465,7 @@ namespace MHServerEmu.GameServer.Regions
                     area = (ulong)AreaPrototype.NPEAvengersTowerHubArea;
                     MarkersAdd(GameDatabase.Resource.CellDict["Resource/Cells/DistrictCells/Avengers_Tower/AvengersTowerNPE_HUB.cell"], cellid);
 
-                    Encounter PopulationMarker = GameDatabase.Resource.EncounterDict["Resource/Encounters/Discoveries/Social_BenUrich_JessicaJones.encounter"];
+                    EncounterPrototype PopulationMarker = GameDatabase.Resource.EncounterDict["Resource/Encounters/Discoveries/Social_BenUrich_JessicaJones.encounter"];
                     npc = (EntityMarkerPrototype)PopulationMarker.MarkerSet[0]; // BenUrich
                     areaOrigin = new(-464f, 0f, 192f);
                     entityPosition = npc.Position + areaOrigin;

@@ -3,7 +3,6 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.Entities;
-using MHServerEmu.GameServer.GameData.Gpak;
 using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.Powers;
 using MHServerEmu.GameServer.Properties;
@@ -11,6 +10,7 @@ using MHServerEmu.Networking;
 using MHServerEmu.GameServer.Entities.Avatars;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.GameData.Prototypes;
+using MHServerEmu.GameServer.GameData.Calligraphy;
 
 namespace MHServerEmu.GameServer.Games
 {

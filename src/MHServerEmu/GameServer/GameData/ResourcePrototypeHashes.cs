@@ -1,4 +1,4 @@
-﻿namespace MHServerEmu.GameServer.GameData.Gpak
+﻿namespace MHServerEmu.GameServer.GameData
 {
     /// <summary>
     /// Precalculated DJB2 hashes for known resource prototypes.

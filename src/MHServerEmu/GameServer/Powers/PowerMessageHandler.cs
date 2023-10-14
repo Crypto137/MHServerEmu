@@ -1,11 +1,11 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Logging;
-using MHServerEmu.GameServer.GameData.Gpak;
 using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.Games;
 using MHServerEmu.Networking;
 using MHServerEmu.GameServer.GameData.Prototypes;
+using MHServerEmu.GameServer.GameData.Calligraphy;
 
 namespace MHServerEmu.GameServer.Powers
 {

@@ -1,20 +1,17 @@
 ﻿using MHServerEmu.Common.Extensions;
-using MHServerEmu.GameServer.GameData.Prototypes;
+using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.GameData.Prototypes.Markers;
 
-namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
+namespace MHServerEmu.GameServer.GameData.Prototypes
 {
-    public class Encounter
+    public class PropPrototype
     {
         public uint Header { get; }
         public uint Version { get; }
         public uint ClassId { get; }
-        public ulong PopulationMarkerGuid { get; }
-        public string ClientMap { get; }
-        public MarkerPrototype[] MarkerSet { get; }
-        public NaviPatchSourcePrototype NaviPatchSource { get; }
+        public ProceduralPropGroupPrototype[] PropGroups { get; }
 
-        public Encounter(byte[] data)
+        public PropPrototype(byte[] data)
         {
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
@@ -22,15 +19,41 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
                 Header = reader.ReadUInt32();
                 Version = reader.ReadUInt32();
                 ClassId = reader.ReadUInt32();
-                PopulationMarkerGuid = reader.ReadUInt64();
-                ClientMap = reader.ReadFixedString32();
 
-                MarkerSet = new MarkerPrototype[reader.ReadUInt32()];
-                for (int i = 0; i < MarkerSet.Length; i++)
-                    MarkerSet[i] = ReadMarkerPrototype(reader);
-
-                NaviPatchSource = new(reader);
+                PropGroups = new ProceduralPropGroupPrototype[reader.ReadUInt32()];
+                for (int i = 0; i < PropGroups.Length; i++)
+                    PropGroups[i] = new(reader);
             }
+        }
+    }
+
+    public class ProceduralPropGroupPrototype
+    {
+        public ResourcePrototypeHash ProtoNameHash { get; }
+        public string NameId { get; }
+        public string PrefabPath { get; }
+        public Vector3 MarkerPosition { get; }
+        public Vector3 MarkerRotation { get; }
+        public MarkerPrototype[] Objects { get; }   // MarkerSetPrototype
+        public NaviPatchSourcePrototype NaviPatchSource { get; }
+        public ushort RandomRotationDegrees { get; }
+        public ushort RandomPosition { get; }
+
+        public ProceduralPropGroupPrototype(BinaryReader reader)
+        {
+            ProtoNameHash = (ResourcePrototypeHash)reader.ReadUInt32();
+            NameId = reader.ReadFixedString32();
+            PrefabPath = reader.ReadFixedString32();
+            MarkerPosition = reader.ReadVector3();
+            MarkerRotation = reader.ReadVector3();
+
+            Objects = new MarkerPrototype[reader.ReadUInt32()];
+            for (int i = 0; i < Objects.Length; i++)
+                Objects[i] = ReadMarkerPrototype(reader);
+
+            NaviPatchSource = new(reader);
+            RandomRotationDegrees = reader.ReadUInt16();
+            RandomPosition = reader.ReadUInt16();
         }
 
         private MarkerPrototype ReadMarkerPrototype(BinaryReader reader)

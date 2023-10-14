@@ -1,19 +1,21 @@
 ﻿using MHServerEmu.Common;
 using MHServerEmu.Common.Logging;
-using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
+using MHServerEmu.GameServer.GameData.Gpak;
+using MHServerEmu.GameServer.GameData.JsonOutput;
+using MHServerEmu.GameServer.GameData.Prototypes;
 
-namespace MHServerEmu.GameServer.GameData.Gpak
+namespace MHServerEmu.GameServer.GameData
 {
     public class ResourceStorage : GpakStorage
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public Dictionary<string, CellPrototype> CellDict { get; } = new();
-        public Dictionary<string, District> DistrictDict { get; } = new();
-        public Dictionary<string, Encounter> EncounterDict { get; } = new();
-        public Dictionary<string, PropSet> PropSetDict { get; } = new();
-        public Dictionary<string, Prop> PropDict { get; } = new();
-        public Dictionary<string, FileFormats.UI> UIDict { get; } = new();
+        public Dictionary<string, DistrictPrototype> DistrictDict { get; } = new();
+        public Dictionary<string, EncounterPrototype> EncounterDict { get; } = new();
+        public Dictionary<string, PropSetPrototype> PropSetDict { get; } = new();
+        public Dictionary<string, PropPrototype> PropDict { get; } = new();
+        public Dictionary<string, UIPrototype> UIDict { get; } = new();
 
         public ResourceStorage(GpakFile gpakFile)
         {
@@ -26,7 +28,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
                 {
                     case ".cell":
                         CellDict.Add(entry.FilePath, new(entry.Data));
-                        break;                        
+                        break;
                     case ".district":
                         DistrictDict.Add(entry.FilePath, new(entry.Data));
                         break;

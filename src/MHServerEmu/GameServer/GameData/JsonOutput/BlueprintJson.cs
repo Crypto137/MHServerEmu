@@ -1,6 +1,6 @@
 ﻿using MHServerEmu.GameServer.GameData.Calligraphy;
 
-namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
+namespace MHServerEmu.GameServer.GameData.JsonOutput
 {
     public class BlueprintJson
     {
