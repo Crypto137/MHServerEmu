@@ -38,7 +38,10 @@ namespace MHServerEmu.GameServer.GameData.Prototypes
                 switch (GameDatabase.Calligraphy.PrototypeFieldDict[element.Id])
                 {
                     case nameof(AggMethod):
-                        AggMethod = (AggregationMethod)Enum.Parse(typeof(AggregationMethod), GameDatabase.GetAssetName((ulong)element.Value));
+                        // AggMethod is null for some properties
+                        string aggMethod = GameDatabase.GetAssetName((ulong)element.Value);
+                        if (aggMethod == string.Empty) continue;
+                        AggMethod = (AggregationMethod)Enum.Parse(typeof(AggregationMethod), aggMethod);
                         break;
                     case nameof(ClientOnly):
                         ClientOnly = (bool)element.Value;

@@ -20,7 +20,7 @@
         public string GetReferenceName(ulong id)
         {
             if (_referenceDict.TryGetValue(id, out string name) == false)
-                return "0";
+                return string.Empty;
 
             return name;
         }        
