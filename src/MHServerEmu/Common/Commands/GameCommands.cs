@@ -171,7 +171,7 @@ namespace MHServerEmu.Common.Commands
             {
                 // Try to parse costume prototype id from command
                 ulong prototypeId = ulong.Parse(@params[0]);
-                string prototypePath = GameDatabase.GetPrototypePath(prototypeId);
+                string prototypePath = GameDatabase.GetPrototypeName(prototypeId);
 
                 if (prototypeId == 0 || prototypePath.Contains("Entity/Items/Costumes/Prototypes/"))
                 {
@@ -186,7 +186,7 @@ namespace MHServerEmu.Common.Commands
 
                     // Send NetMessageSetProperty message
                     client.SendMessage(1, new(property.ToNetMessageSetProperty(replicationId)));
-                    return $"Changing costume to {GameDatabase.GetPrototypePath(prototypeId)}";
+                    return $"Changing costume to {GameDatabase.GetPrototypeName(prototypeId)}";
                 }
                 else
                 {

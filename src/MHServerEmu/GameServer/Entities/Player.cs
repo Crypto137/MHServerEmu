@@ -208,7 +208,7 @@ namespace MHServerEmu.GameServer.Entities
             sb.AppendLine($"HasCommunity: {HasCommunity}");
             sb.AppendLine($"Community: {Community}");
             sb.AppendLine($"UnkBool: {UnkBool}");
-            for (int i = 0; i < StashInventories.Length; i++) sb.AppendLine($"StashInventory{i}: {GameDatabase.GetPrototypePath(StashInventories[i])}");
+            for (int i = 0; i < StashInventories.Length; i++) sb.AppendLine($"StashInventory{i}: {GameDatabase.GetPrototypeName(StashInventories[i])}");
             for (int i = 0; i < AvailableBadges.Length; i++) sb.AppendLine($"AvailableBadge{i}: 0x{AvailableBadges[i]:X}");
             sb.AppendLine($"GameplayOptions: {GameplayOptions}");
             for (int i = 0; i < AchievementStates.Length; i++) sb.AppendLine($"AchievementState{i}: {AchievementStates[i]}");

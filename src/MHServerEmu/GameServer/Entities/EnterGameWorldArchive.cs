@@ -110,7 +110,7 @@ namespace MHServerEmu.GameServer.Entities
             for (int i = 0; i < Flags.Length; i++) if (Flags[i]) sb.Append($"{i} ");
             sb.AppendLine();
 
-            sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
+            sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypeName(PrototypeId)}");
             sb.AppendLine($"Position: {Position}");
             sb.AppendLine($"Orientation: {Orientation}");
             sb.AppendLine($"LocomotionState: {LocomotionState}");

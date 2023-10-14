@@ -42,8 +42,8 @@ namespace MHServerEmu.GameServer.Missions
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"Category: {GameDatabase.GetPrototypePath(GameDatabase.GetPrototypeId(Category))}");
-            for (int i = 0; i < Missions.Length; i++) sb.AppendLine($"Mission{i}: {GameDatabase.GetPrototypePath(GameDatabase.GetPrototypeId(Missions[i]))}");
+            sb.AppendLine($"Category: {GameDatabase.GetPrototypeName(GameDatabase.GetPrototypeId(Category))}");
+            for (int i = 0; i < Missions.Length; i++) sb.AppendLine($"Mission{i}: {GameDatabase.GetPrototypeName(GameDatabase.GetPrototypeId(Missions[i]))}");
             return sb.ToString();
         }
     }

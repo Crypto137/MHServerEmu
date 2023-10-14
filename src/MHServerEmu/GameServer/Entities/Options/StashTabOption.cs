@@ -51,7 +51,7 @@ namespace MHServerEmu.GameServer.Entities.Options
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
+            sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypeName(PrototypeId)}");
             sb.AppendLine($"Name: {Name}");
             sb.AppendLine($"AssetRef: {AssetRef}");
             sb.AppendLine($"Field2: 0x{Field2}");

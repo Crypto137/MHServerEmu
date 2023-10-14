@@ -8,8 +8,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public Dictionary<ulong, string> DirectoryDict { get; } = new();
-
         public Dictionary<string, CellPrototype> CellDict { get; } = new();
         public Dictionary<string, District> DistrictDict { get; } = new();
         public Dictionary<string, Encounter> EncounterDict { get; } = new();
@@ -21,7 +19,8 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         {
             foreach (GpakEntry entry in gpakFile.Entries)
             {
-                DirectoryDict.Add(HashHelper.HashPath($"&{entry.FilePath.ToLower()}"), entry.FilePath);
+                ulong dataId = HashHelper.HashPath($"&{entry.FilePath.ToLower()}");
+                GameDatabase.PrototypeRefManager.AddDataRef(dataId, entry.FilePath);
 
                 switch (Path.GetExtension(entry.FilePath))
                 {

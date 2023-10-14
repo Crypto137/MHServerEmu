@@ -72,7 +72,7 @@ namespace MHServerEmu.GameServer.Powers
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"PowerPrototypeId: {GameDatabase.GetPrototypePath(PowerPrototypeId)}");
+            sb.AppendLine($"PowerPrototypeId: {GameDatabase.GetPrototypeName(PowerPrototypeId)}");
 
             sb.Append("Flags: ");
             for (int i = 0; i < Flags.Length; i++) if (Flags[i]) sb.Append($"{i} ");

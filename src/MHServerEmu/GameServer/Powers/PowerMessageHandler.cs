@@ -1,11 +1,11 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Logging;
-using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 using MHServerEmu.GameServer.GameData.Gpak;
 using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.Games;
 using MHServerEmu.Networking;
+using MHServerEmu.GameServer.GameData.Prototypes;
 
 namespace MHServerEmu.GameServer.Powers
 {
@@ -37,10 +37,8 @@ namespace MHServerEmu.GameServer.Powers
 
                     var tryActivatePower = NetMessageTryActivatePower.ParseFrom(message.Payload);
 
-                    if (GameDatabase.TryGetPrototypePath(tryActivatePower.PowerPrototypeId, out powerPrototypePath))
-                        Logger.Trace($"Received TryActivatePower for {powerPrototypePath}");
-                    else
-                        Logger.Trace($"Received TryActivatePower for invalid prototype id {tryActivatePower.PowerPrototypeId}");
+                    powerPrototypePath = GameDatabase.GetPrototypeName(tryActivatePower.PowerPrototypeId);
+                    Logger.Trace($"Received TryActivatePower for {powerPrototypePath}");
 
                     if (powerPrototypePath.Contains("ThrowablePowers/"))
                     {
@@ -83,21 +81,14 @@ namespace MHServerEmu.GameServer.Powers
 
                 case ClientToGameServerMessage.NetMessagePowerRelease:
                     var powerRelease = NetMessagePowerRelease.ParseFrom(message.Payload);
-
-                    if (GameDatabase.TryGetPrototypePath(powerRelease.PowerPrototypeId, out powerPrototypePath))
-                        Logger.Trace($"Received PowerRelease for {powerPrototypePath}");
-                    else
-                        Logger.Trace($"Received PowerRelease for invalid prototype id {powerRelease.PowerPrototypeId}");
-
+                    Logger.Trace($"Received PowerRelease for {GameDatabase.GetPrototypeName(powerRelease.PowerPrototypeId)}");
                     break;
 
                 case ClientToGameServerMessage.NetMessageTryCancelPower:
                     var tryCancelPower = NetMessageTryCancelPower.ParseFrom(message.Payload);
 
-                    if (GameDatabase.TryGetPrototypePath(tryCancelPower.PowerPrototypeId, out powerPrototypePath))
-                        Logger.Trace($"Received TryCancelPower for {powerPrototypePath}");
-                    else
-                        Logger.Trace($"Received TryCancelPower for invalid prototype id {tryCancelPower.PowerPrototypeId}");
+                    powerPrototypePath = GameDatabase.GetPrototypeName(tryCancelPower.PowerPrototypeId);
+                    Logger.Trace($"Received TryCancelPower for {powerPrototypePath}");
 
                     if (powerPrototypePath.Contains("TravelPower/"))
                     {
@@ -114,10 +105,8 @@ namespace MHServerEmu.GameServer.Powers
                 case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer:
                     var continuousPowerUpdate = NetMessageContinuousPowerUpdateToServer.ParseFrom(message.Payload);
 
-                    if (GameDatabase.TryGetPrototypePath(continuousPowerUpdate.PowerPrototypeId, out powerPrototypePath))
-                        Logger.Trace($"Received ContinuousPowerUpdate for {powerPrototypePath}");
-                    else
-                        Logger.Trace($"Received ContinuousPowerUpdate for invalid prototype id {continuousPowerUpdate.PowerPrototypeId}");
+                    powerPrototypePath = GameDatabase.GetPrototypeName(continuousPowerUpdate.PowerPrototypeId);
+                    Logger.Trace($"Received ContinuousPowerUpdate for {powerPrototypePath}");
 
                     if (powerPrototypePath.Contains("TravelPower/"))
                         HandleTravelPower(client, continuousPowerUpdate.PowerPrototypeId);

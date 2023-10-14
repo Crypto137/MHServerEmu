@@ -77,7 +77,7 @@ namespace MHServerEmu.GameServer.Billing
                     CatalogEntry entry = _catalog.GetEntry(buyItemMessage.SkuId);
                     if (entry != null && entry.GuidItems.Length > 0)
                     {
-                        string prototypePath = GameDatabase.GetPrototypePath(entry.GuidItems[0].ItemPrototypeRuntimeIdForClient);
+                        string prototypePath = GameDatabase.GetPrototypeName(entry.GuidItems[0].ItemPrototypeRuntimeIdForClient);
                         if (prototypePath.Contains("Entity/Items/Costumes/Prototypes/"))
                         {
                             // Create a new CostumeCurrent property for the purchased costume

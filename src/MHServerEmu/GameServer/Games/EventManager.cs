@@ -3,7 +3,6 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.Entities;
-using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 using MHServerEmu.GameServer.GameData.Gpak;
 using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.Powers;
@@ -11,6 +10,7 @@ using MHServerEmu.GameServer.Properties;
 using MHServerEmu.Networking;
 using MHServerEmu.GameServer.Entities.Avatars;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.GameServer.GameData.Prototypes;
 
 namespace MHServerEmu.GameServer.Games
 {
@@ -198,7 +198,7 @@ namespace MHServerEmu.GameServer.Games
 
                     Property property = new(PropertyEnum.ThrowableOriginatorEntity, idTarget);
                     messageList.Add(new(client, new(property.ToNetMessageSetProperty(avatarRepId))));
-                    Logger.Warn($"{GameDatabase.GetPrototypePath(client.ThrowingObject.BaseData.PrototypeId)}");
+                    Logger.Warn($"{GameDatabase.GetPrototypeName(client.ThrowingObject.BaseData.PrototypeId)}");
                     // ThrowObject.Prototype.WorldEntity.UnrealClass
                     Prototype throwPrototype = client.ThrowingObject.BaseData.PrototypeId.GetPrototype();
                     PrototypeEntry worldEntity = throwPrototype.GetEntry(BlueprintId.WorldEntity);
@@ -266,7 +266,7 @@ namespace MHServerEmu.GameServer.Games
 
                     Logger.Trace("Event EndThrowing");
 
-                    if (GameDatabase.GetPrototypePath(powerId).Contains("CancelPower")) // ThrownPoliceCarCancelPower
+                    if (GameDatabase.GetPrototypeName(powerId).Contains("CancelPower")) // ThrownPoliceCarCancelPower
                     {
                         if (client.ThrowingObject != null)
                             messageList.Add(new(client, new(client.ThrowingObject.ToNetMessageEntityCreate())));

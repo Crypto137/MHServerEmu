@@ -5,6 +5,7 @@ using MHServerEmu.GameServer.GameData.Prototypes.Markers;
 using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.GameData.Gpak;
 using MHServerEmu.GameServer.Properties;
+using MHServerEmu.GameServer.GameData.Prototypes;
 
 namespace MHServerEmu.GameServer.Regions
 {
@@ -66,13 +67,13 @@ namespace MHServerEmu.GameServer.Regions
                 nodes.Add(new TargetObject
                 {
                     Area = entryTarget.GetFieldDef(FieldId.Area),
-                    Entity = GameDatabase.GetPrototypeGuid((ulong)entryTarget.GetField(FieldId.Entity).Value),
+                    Entity = GameDatabase.Calligraphy.GetPrototypeIdByGuid((ulong)entryTarget.GetField(FieldId.Entity).Value),
                     TargetId = origin
                 });
                 nodes.Add(new TargetObject
                 {
                     Area = entryOrigin.GetFieldDef(FieldId.Area),
-                    Entity = GameDatabase.GetPrototypeGuid((ulong)entryOrigin.GetField(FieldId.Entity).Value),
+                    Entity = GameDatabase.Calligraphy.GetPrototypeIdByGuid((ulong)entryOrigin.GetField(FieldId.Entity).Value),
                     TargetId = target
                 });
             }
@@ -176,7 +177,7 @@ namespace MHServerEmu.GameServer.Regions
                     for (int c = 0; c < entryArea.CellList.Count; c++)
                     {
                         cellid = (int)entryArea.CellList[c].Id;
-                        entry = GameDatabase.Resource.CellDict[GameDatabase.GetPrototypePath(entryArea.CellList[c].PrototypeId)];
+                        entry = GameDatabase.Resource.CellDict[GameDatabase.GetPrototypeName(entryArea.CellList[c].PrototypeId)];
                         areaOrigin = entryArea.CellList[c].PositionInArea;
                         if (addMarkers)
                             MarkersAdd(entry, cellid, addProp);
@@ -327,7 +328,7 @@ namespace MHServerEmu.GameServer.Regions
                     {
                         cellid = (int)areaDoop.CellList[j].Id;
                         areaOrigin = areaDoop.CellList[j].PositionInArea;
-                        CellPrototype Cell = GameDatabase.Resource.CellDict[GameDatabase.GetPrototypePath(areaDoop.CellList[j].PrototypeId)];
+                        CellPrototype Cell = GameDatabase.Resource.CellDict[GameDatabase.GetPrototypeName(areaDoop.CellList[j].PrototypeId)];
                         int num = 0;
                         for (int i = 0; i < Cell.MarkerSet.Length; i++)
                         {
@@ -448,7 +449,7 @@ namespace MHServerEmu.GameServer.Regions
                     {
                         cellid = (int)areaL.CellList[i].Id;
                         areaOrigin = areaL.CellList[i].PositionInArea;
-                        MarkersAdd(GameDatabase.Resource.CellDict[GameDatabase.GetPrototypePath(areaL.CellList[i].PrototypeId)], cellid, true);
+                        MarkersAdd(GameDatabase.Resource.CellDict[GameDatabase.GetPrototypeName(areaL.CellList[i].PrototypeId)], cellid, true);
                     }
 
                     break;

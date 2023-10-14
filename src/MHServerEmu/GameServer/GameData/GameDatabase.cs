@@ -26,7 +26,9 @@ namespace MHServerEmu.GameServer.GameData
         public static DataRefManager StringRefManager { get; } = new(false);
         public static DataRefManager CurveRefManager { get; } = new(true);
         public static DataRefManager BlueprintRefManager { get; } = new(true);
-        public static PrototypeRefManager PrototypeRefManager { get; private set; }
+        public static DataRefManager PrototypeRefManager { get; } = new(true);
+
+        public static PrototypeEnumManager PrototypeEnumManager { get; private set; }
 
         static GameDatabase()
         {
@@ -45,7 +47,7 @@ namespace MHServerEmu.GameServer.GameData
             Calligraphy = new(new GpakFile(CalligraphyPath));
             Resource = new(new GpakFile(ResourcePath));
 
-            PrototypeRefManager = new(Calligraphy, Resource);       // this needs to be initialized before PropertyInfoTable
+            PrototypeEnumManager = new();
             PropertyInfoTable = new(Calligraphy);
 
             // Load live tuning
@@ -99,19 +101,13 @@ namespace MHServerEmu.GameServer.GameData
         public static string GetCurveName(ulong curveId) => CurveRefManager.GetReferenceName(curveId);
         public static string GetBlueprintName(ulong blueprintId) => BlueprintRefManager.GetReferenceName(blueprintId);
         public static string GetBlueprintFieldName(ulong fieldId) => StringRefManager.GetReferenceName(fieldId);
+        public static string GetPrototypeName(ulong prototypeId) => PrototypeRefManager.GetReferenceName(prototypeId);
 
-        public static string GetPrototypePath(ulong id) => PrototypeRefManager.GetPrototypePath(id);
-        public static ulong GetPrototypeId(string path) => PrototypeRefManager.GetPrototypeId(path);
-        public static ulong GetPrototypeId(ulong guid) => PrototypeRefManager.GetPrototypeId(guid);
-        public static ulong GetPrototypeId(ulong enumValue, PrototypeEnumType type) => PrototypeRefManager.GetPrototypeId(enumValue, type);
-        public static ulong GetPrototypeGuid(ulong id) => Calligraphy.PrototypeDirectory.IdDict[id].Guid;
-        public static ulong GetPrototypeEnumValue(ulong prototypeId, PrototypeEnumType type) => PrototypeRefManager.GetEnumValue(prototypeId, type);
-
-        public static bool TryGetPrototypePath(ulong id, out string path) => PrototypeRefManager.TryGetPrototypePath(id, out path);
-        public static bool TryGetPrototypeId(string path, out ulong id) => PrototypeRefManager.TryGetPrototypeId(path, out id);
-        public static bool TryGetPrototypeId(ulong guid, out ulong id) => PrototypeRefManager.TryGetPrototypeId(guid, out id);
-        public static bool TryGetPrototypeId(ulong enumValue, PrototypeEnumType type, out ulong id) => PrototypeRefManager.TryGetPrototypeId(enumValue, type, out id);
-        public static bool TryGetPrototypeEnumValue(ulong prototypeId, PrototypeEnumType type, out ulong enumValue) => PrototypeRefManager.TryGetEnumValue(prototypeId, type, out enumValue);
+        public static ulong GetPrototypeId(string name) => PrototypeRefManager.GetDataRefByName(name);
+        public static ulong GetPrototypeId(ulong guid) => Calligraphy.GetPrototypeIdByGuid(guid);
+        public static ulong GetPrototypeId(ulong enumValue, PrototypeEnumType type) => PrototypeEnumManager.GetPrototypeId(enumValue, type);
+        public static ulong GetPrototypeGuid(ulong id) => Calligraphy.GetPrototypeGuid(id);
+        public static ulong GetPrototypeEnumValue(ulong prototypeId, PrototypeEnumType type) => PrototypeEnumManager.GetEnumValue(prototypeId, type);
 
         #endregion
 
@@ -119,7 +115,7 @@ namespace MHServerEmu.GameServer.GameData
         {
             return Calligraphy.Verify()
                 && Resource.Verify()
-                && PrototypeRefManager.Verify()
+                && PrototypeEnumManager.Verify()
                 && PropertyInfoTable.Verify();
         }
     }

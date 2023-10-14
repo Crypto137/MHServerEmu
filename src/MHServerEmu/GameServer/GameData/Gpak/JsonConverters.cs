@@ -12,13 +12,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
     public class BlueprintConverter : JsonConverter<Blueprint>
     {
-        private DataDirectory _prototypeDir;
-
-        public BlueprintConverter(DataDirectory prototypeDir)
-        {
-            _prototypeDir = prototypeDir;
-        }
-
         public override Blueprint Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             throw new NotImplementedException();
@@ -33,7 +26,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
                     break;
 
                 default:
-                    JsonSerializer.Serialize(writer, new BlueprintJson(value, _prototypeDir), options);
+                    JsonSerializer.Serialize(writer, new BlueprintJson(value), options);
                     break;
             }
         }
@@ -41,13 +34,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
     public class PrototypeFileConverter : JsonConverter<PrototypeFile>
     {
-        private DataDirectory _prototypeDir;
-
-        public PrototypeFileConverter(DataDirectory prototypeDir)
-        {
-            _prototypeDir = prototypeDir;
-        }
-
         public override PrototypeFile Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             throw new NotImplementedException();
@@ -62,7 +48,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
                     break;
 
                 default:
-                    JsonSerializer.Serialize(writer, new PrototypeFileJson(value, _prototypeDir), options);
+                    JsonSerializer.Serialize(writer, new PrototypeFileJson(value), options);
                     break;
             }
         }

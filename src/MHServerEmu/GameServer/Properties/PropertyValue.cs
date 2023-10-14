@@ -61,7 +61,7 @@ namespace MHServerEmu.GameServer.Properties
         public override object Get() => GameDatabase.GetPrototypeId(RawValue, PrototypeEnumType.All);
         public override void Set(object value) => RawValue = GameDatabase.GetPrototypeEnumValue((ulong)value, PrototypeEnumType.All);
 
-        public override string ToString() => GameDatabase.GetPrototypePath((ulong)Get());
+        public override string ToString() => GameDatabase.GetPrototypeName((ulong)Get());
     }
 
     public class PropertyValueInt21Vector3 : PropertyValue

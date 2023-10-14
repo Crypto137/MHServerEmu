@@ -69,10 +69,10 @@ namespace MHServerEmu.GameServer.Entities.Avatars
             StringBuilder sb = new();
             sb.AppendLine($"PowerSpecIndex: 0x{PowerSpecIndex:X}");
             sb.AppendLine($"ShouldPersist: {ShouldPersist}");
-            sb.AppendLine($"AssociatedTransformMode: {GameDatabase.GetPrototypePath(AssociatedTransformMode)}");
-            sb.AppendLine($"Slot0: {GameDatabase.GetPrototypePath(Slot0)}");
-            sb.AppendLine($"Slot1: {GameDatabase.GetPrototypePath(Slot1)}");
-            for (int i = 0; i < PowerSlots.Length; i++) sb.AppendLine($"PowerSlot{i}: {GameDatabase.GetPrototypePath(PowerSlots[i])}");
+            sb.AppendLine($"AssociatedTransformMode: {GameDatabase.GetPrototypeName(AssociatedTransformMode)}");
+            sb.AppendLine($"Slot0: {GameDatabase.GetPrototypeName(Slot0)}");
+            sb.AppendLine($"Slot1: {GameDatabase.GetPrototypeName(Slot1)}");
+            for (int i = 0; i < PowerSlots.Length; i++) sb.AppendLine($"PowerSlot{i}: {GameDatabase.GetPrototypeName(PowerSlots[i])}");
             return sb.ToString();
         }
     }

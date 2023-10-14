@@ -1,5 +1,4 @@
 ﻿using MHServerEmu.GameServer.GameData.Calligraphy;
-using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 
 namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
 {
@@ -11,22 +10,22 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
         public BlueprintReferenceJson[] ContributingBlueprints { get; }
         public BlueprintMemberJson[] Members { get; }
 
-        public BlueprintJson(Blueprint blueprint, DataDirectory prototypeDir)
+        public BlueprintJson(Blueprint blueprint)
         {
             RuntimeBinding = blueprint.RuntimeBinding;
-            DefaultPrototypeId = (blueprint.DefaultPrototypeId != 0) ? prototypeDir.IdDict[blueprint.DefaultPrototypeId].FilePath : "";
+            DefaultPrototypeId = GameDatabase.GetPrototypeName(blueprint.DefaultPrototypeId);
 
             Parents = new BlueprintReferenceJson[blueprint.Parents.Length];
             for (int i = 0; i < Parents.Length; i++)
-                Parents[i] = new(blueprint.Parents[i], prototypeDir);
+                Parents[i] = new(blueprint.Parents[i]);
 
             ContributingBlueprints = new BlueprintReferenceJson[blueprint.ContributingBlueprints.Length];
             for (int i = 0; i < ContributingBlueprints.Length; i++)
-                ContributingBlueprints[i] = new(blueprint.ContributingBlueprints[i], prototypeDir);
+                ContributingBlueprints[i] = new(blueprint.ContributingBlueprints[i]);
 
             Members = new BlueprintMemberJson[blueprint.Members.Length];
             for (int i = 0; i < Members.Length; i++)
-                Members[i] = new(blueprint.Members[i], prototypeDir);
+                Members[i] = new(blueprint.Members[i]);
         }
 
         public class BlueprintReferenceJson
@@ -34,9 +33,9 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
             public string Id { get; }
             public byte ByteField { get; }
 
-            public BlueprintReferenceJson(BlueprintReference reference, DataDirectory prototypeDir)
+            public BlueprintReferenceJson(BlueprintReference reference)
             {
-                Id = (reference.Id != 0) ? prototypeDir.IdDict[reference.Id].FilePath : "";
+                Id = GameDatabase.GetPrototypeName(reference.Id);
                 ByteField = reference.ByteField;
             }
         }
@@ -49,7 +48,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
             public char ContainerType { get; }
             public string Subtype { get; }
 
-            public BlueprintMemberJson(BlueprintMember member, DataDirectory prototypeDir)
+            public BlueprintMemberJson(BlueprintMember member)
             {
                 FieldId = member.FieldId;
                 FieldName = member.FieldName;
@@ -70,7 +69,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
                     // Both P and R have prototypes as their subtypes
                     case 'P':
                     case 'R':
-                        Subtype = (member.Subtype != 0) ? prototypeDir.IdDict[member.Subtype].FilePath : "";
+                        Subtype = GameDatabase.GetPrototypeName(member.Subtype);
                         break;
                 }
             }

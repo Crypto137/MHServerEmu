@@ -4,7 +4,7 @@ using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.Entities.Avatars;
 using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.GameData.Gpak;
-using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
+using MHServerEmu.GameServer.GameData.Prototypes;
 using MHServerEmu.GameServer.Properties;
 using MHServerEmu.Networking;
 

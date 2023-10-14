@@ -1,4 +1,4 @@
-﻿using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
+﻿using MHServerEmu.GameServer.GameData.Prototypes;
 
 namespace MHServerEmu.GameServer.GameData
 {

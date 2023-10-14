@@ -47,8 +47,8 @@ namespace MHServerEmu.GameServer.Social
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"AvatarRef: {GameDatabase.GetPrototypePath(AvatarRef)}");
-            sb.AppendLine($"CostumeRef: {GameDatabase.GetPrototypePath(CostumeRef)}");
+            sb.AppendLine($"AvatarRef: {GameDatabase.GetPrototypeName(AvatarRef)}");
+            sb.AppendLine($"CostumeRef: {GameDatabase.GetPrototypeName(CostumeRef)}");
             sb.AppendLine($"AvatarLevel: {AvatarLevel}");
             sb.AppendLine($"PrestigeLevel: {PrestigeLevel}");
             return sb.ToString();
