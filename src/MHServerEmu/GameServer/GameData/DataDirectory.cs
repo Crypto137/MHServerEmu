@@ -8,6 +8,9 @@ using MHServerEmu.GameServer.GameData.Prototypes;
 
 namespace MHServerEmu.GameServer.GameData
 {
+    /// <summary>
+    /// The class that manages all loaded data.
+    /// </summary>
     public class DataDirectory
     {
         private static readonly Logger Logger = LogManager.CreateLogger();

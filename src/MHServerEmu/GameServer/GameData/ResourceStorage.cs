@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Common;
+﻿using System.Text.Json;
+using MHServerEmu.Common;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.GameData.Gpak;
 using MHServerEmu.GameServer.GameData.JsonOutput;
@@ -6,7 +7,7 @@ using MHServerEmu.GameServer.GameData.Prototypes;
 
 namespace MHServerEmu.GameServer.GameData
 {
-    public class ResourceStorage : GpakStorage
+    public class ResourceStorage
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -55,7 +56,7 @@ namespace MHServerEmu.GameServer.GameData
             Logger.Info($"Parsed {UIDict.Count} UIs");
         }
 
-        public override bool Verify()
+        public bool Verify()
         {
             return CellDict.Count > 0
                 && DistrictDict.Count > 0
@@ -65,19 +66,32 @@ namespace MHServerEmu.GameServer.GameData
                 && UIDict.Count > 0;
         }
 
-        public override void Export()
+        public void Export()
         {
             // Set up json serializer
-            _jsonSerializerOptions.Converters.Add(new MarkerPrototypeConverter());
-            _jsonSerializerOptions.Converters.Add(new NaviPatchPrototypeConverter());
-            _jsonSerializerOptions.Converters.Add(new UIPanelPrototypeConverter());
+            JsonSerializerOptions options = new() { WriteIndented = true };
+            options.Converters.Add(new MarkerPrototypeConverter());
+            options.Converters.Add(new NaviPatchPrototypeConverter());
+            options.Converters.Add(new UIPanelPrototypeConverter());
 
-            SerializeDictAsJson(CellDict);
-            SerializeDictAsJson(DistrictDict);
-            SerializeDictAsJson(EncounterDict);
-            SerializeDictAsJson(PropSetDict);
-            SerializeDictAsJson(PropDict);
-            SerializeDictAsJson(UIDict);
+            SerializeDictAsJson(CellDict, options);
+            SerializeDictAsJson(DistrictDict, options);
+            SerializeDictAsJson(EncounterDict, options);
+            SerializeDictAsJson(PropSetDict, options);
+            SerializeDictAsJson(PropDict, options);
+            SerializeDictAsJson(UIDict, options);
+        }
+
+        private void SerializeDictAsJson<T>(Dictionary<string, T> dict, JsonSerializerOptions options)
+        {
+            foreach (var kvp in dict)
+            {
+                string path = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "GPAK", "Export", $"{kvp.Key}.json");
+                string dir = Path.GetDirectoryName(path);
+                if (Directory.Exists(dir) == false) Directory.CreateDirectory(dir);
+
+                File.WriteAllText(path, JsonSerializer.Serialize((object)kvp.Value, options));
+            }
         }
     }
 }
