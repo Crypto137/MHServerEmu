@@ -23,9 +23,9 @@ namespace MHServerEmu.GameServer.GameData
         public static PropertyInfoTable PropertyInfoTable { get; private set; }
         public static List<LiveTuningSetting> LiveTuningSettingList { get; private set; }
 
-        public static DataRefManager StringRefManager { get; } = new();
-        public static DataRefManager AssetTypeRefManager { get; } = new();
-        public static DataRefManager CurveRefManager { get; } = new();
+        public static DataRefManager StringRefManager { get; } = new(false);
+        public static DataRefManager AssetTypeRefManager { get; } = new(true);
+        public static DataRefManager CurveRefManager { get; } = new(true);
 
         static GameDatabase()
         {
