@@ -1,10 +1,10 @@
-﻿using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
+﻿using MHServerEmu.GameServer.GameData.Calligraphy;
+using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 
 namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
 {
     public class BlueprintJson
     {
-        public CalligraphyHeader Header { get; }
         public string RuntimeBinding { get; }
         public string DefaultPrototypeId { get; }
         public BlueprintReferenceJson[] Parents { get; }
@@ -13,7 +13,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
 
         public BlueprintJson(Blueprint blueprint, DataDirectory prototypeDir)
         {
-            Header = blueprint.Header;
             RuntimeBinding = blueprint.RuntimeBinding;
             DefaultPrototypeId = (blueprint.DefaultPrototypeId != 0) ? prototypeDir.IdDict[blueprint.DefaultPrototypeId].FilePath : "";
 

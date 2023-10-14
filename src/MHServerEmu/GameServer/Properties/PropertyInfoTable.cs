@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Common.Logging;
+using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.GameData.Gpak;
 using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 using MHServerEmu.GameServer.GameData.Prototypes;
@@ -16,20 +17,26 @@ namespace MHServerEmu.GameServer.Properties
             Dictionary<PropertyEnum, PropertyPrototype> mixinDict = new();
 
             // Loop through the main property info directory to get most info
-            foreach (DataDirectoryBlueprintRecord record in calligraphy.BlueprintDirectory.Records)
+
+            // hacky reimplementation for compatibility
+            ulong[] blueprintIds = GameDatabase.BlueprintRefManager.Enumerate();
+
+            foreach (ulong blueprintId in blueprintIds)
             {
-                if (record.FilePath.Contains("Property/Info"))
+                string filePath = GameDatabase.GetBlueprintName(blueprintId);
+
+                if (filePath.Contains("Property/Info"))
                 {
-                    PropertyEnum property = (PropertyEnum)Enum.Parse(typeof(PropertyEnum), Path.GetFileNameWithoutExtension(record.FilePath));
-                    PropertyInfoPrototype prototype = new(calligraphy.GetBlueprintDefaultPrototype(record.FilePath));
+                    PropertyEnum property = (PropertyEnum)Enum.Parse(typeof(PropertyEnum), Path.GetFileNameWithoutExtension(filePath));
+                    PropertyInfoPrototype prototype = new(calligraphy.GetBlueprintDefaultPrototype(filePath));
 
                     _propertyInfoDict.Add(property, prototype);
                 }
-                else if (record.FilePath.Contains("Property/Mixin") && record.FilePath.Contains("Prop.blueprint"))   // param mixin information is stored in PropertyPrototypes
+                else if (filePath.Contains("Property/Mixin") && filePath.Contains("Prop.blueprint"))   // param mixin information is stored in PropertyPrototypes
                 {
-                    string fileName = Path.GetFileNameWithoutExtension(record.FilePath);
+                    string fileName = Path.GetFileNameWithoutExtension(filePath);
                     PropertyEnum property = (PropertyEnum)Enum.Parse(typeof(PropertyEnum), fileName.Substring(0, fileName.Length - 4)); // -4 to remove Prop at the end
-                    PropertyPrototype mixin = new(calligraphy.GetBlueprintDefaultPrototype(record.FilePath));
+                    PropertyPrototype mixin = new(calligraphy.GetBlueprintDefaultPrototype(filePath));
                     mixinDict.Add(property, mixin);
                 }
             }

@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Common.Extensions;
+using MHServerEmu.GameServer.GameData.Calligraphy;
 
 namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 {
@@ -34,10 +35,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
 
                 switch (Header.Magic)
                 {
-                    case "BDR":     // Blueprint
-                        for (int i = 0; i < Records.Length; i++)
-                            Records[i] = new DataDirectoryBlueprintRecord(reader);
-                        break;
                     case "PDR":     // Prototype
                         for (int i = 0; i < Records.Length; i++)
                             Records[i] = new DataDirectoryPrototypeRecord(reader);
@@ -53,24 +50,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
                     FilePathDict.Add(record.FilePath, record);
                 }   
             }
-        }
-    }
-
-    public class DataDirectoryBlueprintRecord : DataDirectoryRecord, IDataRecord // BDR
-    {
-        public ulong Id { get; }
-        public ulong Guid { get; }
-        public byte ByteField { get; }
-        public string FilePath { get; }
-
-        public Blueprint Blueprint { get; set; }
-
-        public DataDirectoryBlueprintRecord(BinaryReader reader)
-        {
-            Id = reader.ReadUInt64();
-            Guid = reader.ReadUInt64();
-            ByteField = reader.ReadByte();
-            FilePath = reader.ReadFixedString16().Replace('\\', '/');
         }
     }
 

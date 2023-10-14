@@ -19,13 +19,14 @@ namespace MHServerEmu.GameServer.GameData
 
         public static CalligraphyStorage Calligraphy { get; private set; }
         public static ResourceStorage Resource { get; private set; }
-        public static PrototypeRefManager PrototypeRefManager { get; private set; }
         public static PropertyInfoTable PropertyInfoTable { get; private set; }
         public static List<LiveTuningSetting> LiveTuningSettingList { get; private set; }
 
-        public static DataRefManager StringRefManager { get; } = new(false);
         public static DataRefManager AssetTypeRefManager { get; } = new(true);
+        public static DataRefManager StringRefManager { get; } = new(false);
         public static DataRefManager CurveRefManager { get; } = new(true);
+        public static DataRefManager BlueprintRefManager { get; } = new(true);
+        public static PrototypeRefManager PrototypeRefManager { get; private set; }
 
         static GameDatabase()
         {
@@ -90,10 +91,14 @@ namespace MHServerEmu.GameServer.GameData
         #region Data Access
 
         public static AssetType GetAssetType(ulong assetId) => Calligraphy.AssetDirectory.GetAssetType(assetId);
+        public static Curve GetCurve(ulong curveId) => Calligraphy.CurveDirectory.GetCurve(curveId);
+        public static Blueprint GetBlueprint(ulong blueprintId) => Calligraphy.GetBlueprint(blueprintId);
 
         public static string GetAssetName(ulong assetId) => StringRefManager.GetReferenceName(assetId);
         public static string GetAssetTypeName(ulong assetTypeId) => AssetTypeRefManager.GetReferenceName(assetTypeId);
         public static string GetCurveName(ulong curveId) => CurveRefManager.GetReferenceName(curveId);
+        public static string GetBlueprintName(ulong blueprintId) => BlueprintRefManager.GetReferenceName(blueprintId);
+        public static string GetBlueprintFieldName(ulong fieldId) => StringRefManager.GetReferenceName(fieldId);
 
         public static string GetPrototypePath(ulong id) => PrototypeRefManager.GetPrototypePath(id);
         public static ulong GetPrototypeId(string path) => PrototypeRefManager.GetPrototypeId(path);

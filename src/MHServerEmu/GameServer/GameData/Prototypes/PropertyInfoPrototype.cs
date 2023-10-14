@@ -35,7 +35,7 @@ namespace MHServerEmu.GameServer.GameData.Prototypes
         {
             foreach (PrototypeEntryElement element in prototype.Entries[0].Elements)
             {
-                switch (GameDatabase.Calligraphy.PrototypeFieldDict[element.Id])
+                switch (GameDatabase.GetBlueprintFieldName(element.Id))
                 {
                     case nameof(AggMethod):
                         // AggMethod is null for some properties

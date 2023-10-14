@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using MHServerEmu.GameServer.GameData.Calligraphy;
 using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 using MHServerEmu.GameServer.GameData.Gpak.JsonOutput;
 using MHServerEmu.GameServer.GameData.Prototypes;
@@ -41,13 +42,10 @@ namespace MHServerEmu.GameServer.GameData.Gpak
     public class PrototypeFileConverter : JsonConverter<PrototypeFile>
     {
         private DataDirectory _prototypeDir;
-        private Dictionary<ulong, string> _prototypeFieldDict;
 
-
-        public PrototypeFileConverter(DataDirectory prototypeDir, Dictionary<ulong, string> prototypeFieldDict)
+        public PrototypeFileConverter(DataDirectory prototypeDir)
         {
             _prototypeDir = prototypeDir;
-            _prototypeFieldDict = prototypeFieldDict;
         }
 
         public override PrototypeFile Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -64,7 +62,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
                     break;
 
                 default:
-                    JsonSerializer.Serialize(writer, new PrototypeFileJson(value, _prototypeDir, _prototypeFieldDict), options);
+                    JsonSerializer.Serialize(writer, new PrototypeFileJson(value, _prototypeDir), options);
                     break;
             }
         }
