@@ -23,7 +23,7 @@ namespace MHServerEmu.GameServer.GameData.Prototypes
 
         public PropertyPrototype(Prototype prototype)
         {
-            Blueprint blueprint = GameDatabase.Calligraphy.GetPrototypeBlueprint(prototype);
+            Blueprint blueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(prototype);
             Array.Fill(Params, new());
 
             foreach (PrototypeEntryElement element in prototype.Entries[0].Elements)

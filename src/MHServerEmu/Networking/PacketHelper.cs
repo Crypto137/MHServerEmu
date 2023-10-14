@@ -161,7 +161,7 @@ namespace MHServerEmu.Networking
                                 writer.WriteLine($"BaseData: {baseData}");
 
                                 // Get blueprint for this entity
-                                Blueprint blueprint = GameDatabase.Calligraphy.GetPrototypeBlueprint(baseData.PrototypeId);
+                                Blueprint blueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(baseData.PrototypeId);
                                 writer.WriteLine($"Blueprint: {blueprint.RuntimeBinding}");
 
                                 // Parse entity depending on its blueprint class

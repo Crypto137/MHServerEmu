@@ -17,7 +17,7 @@ namespace MHServerEmu.GameServer.GameData
 
         public static bool IsInitialized { get; }
 
-        public static CalligraphyStorage Calligraphy { get; private set; }
+        public static DataDirectory DataDirectory { get; private set; }
         public static ResourceStorage Resource { get; private set; }
         public static PropertyInfoTable PropertyInfoTable { get; private set; }
         public static List<LiveTuningSetting> LiveTuningSettingList { get; private set; }
@@ -44,11 +44,11 @@ namespace MHServerEmu.GameServer.GameData
             DateTime startTime = DateTime.Now;
 
             // Initialize GPAK and derivative data
-            Calligraphy = new(new GpakFile(CalligraphyPath));
+            DataDirectory = new(new GpakFile(CalligraphyPath));
             Resource = new(new GpakFile(ResourcePath));
 
             PrototypeEnumManager = new();
-            PropertyInfoTable = new(Calligraphy);
+            PropertyInfoTable = new(DataDirectory);
 
             // Load live tuning
             LiveTuningSettingList = JsonSerializer.Deserialize<List<LiveTuningSetting>>(File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Assets", "LiveTuning.json")));
@@ -92,9 +92,9 @@ namespace MHServerEmu.GameServer.GameData
 
         #region Data Access
 
-        public static AssetType GetAssetType(ulong assetId) => Calligraphy.AssetDirectory.GetAssetType(assetId);
-        public static Curve GetCurve(ulong curveId) => Calligraphy.CurveDirectory.GetCurve(curveId);
-        public static Blueprint GetBlueprint(ulong blueprintId) => Calligraphy.GetBlueprint(blueprintId);
+        public static AssetType GetAssetType(ulong assetId) => DataDirectory.AssetDirectory.GetAssetType(assetId);
+        public static Curve GetCurve(ulong curveId) => DataDirectory.CurveDirectory.GetCurve(curveId);
+        public static Blueprint GetBlueprint(ulong blueprintId) => DataDirectory.GetBlueprint(blueprintId);
 
         public static string GetAssetName(ulong assetId) => StringRefManager.GetReferenceName(assetId);
         public static string GetAssetTypeName(ulong assetTypeId) => AssetTypeRefManager.GetReferenceName(assetTypeId);
@@ -104,16 +104,16 @@ namespace MHServerEmu.GameServer.GameData
         public static string GetPrototypeName(ulong prototypeId) => PrototypeRefManager.GetReferenceName(prototypeId);
 
         public static ulong GetPrototypeId(string name) => PrototypeRefManager.GetDataRefByName(name);
-        public static ulong GetPrototypeId(ulong guid) => Calligraphy.GetPrototypeIdByGuid(guid);
+        public static ulong GetPrototypeId(ulong guid) => DataDirectory.GetPrototypeIdByGuid(guid);
         public static ulong GetPrototypeId(ulong enumValue, PrototypeEnumType type) => PrototypeEnumManager.GetPrototypeId(enumValue, type);
-        public static ulong GetPrototypeGuid(ulong id) => Calligraphy.GetPrototypeGuid(id);
+        public static ulong GetPrototypeGuid(ulong id) => DataDirectory.GetPrototypeGuid(id);
         public static ulong GetPrototypeEnumValue(ulong prototypeId, PrototypeEnumType type) => PrototypeEnumManager.GetEnumValue(prototypeId, type);
 
         #endregion
 
         private static bool VerifyData()
         {
-            return Calligraphy.Verify()
+            return DataDirectory.Verify()
                 && Resource.Verify()
                 && PrototypeEnumManager.Verify()
                 && PropertyInfoTable.Verify();

@@ -69,7 +69,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
                             case 'A':
                                 ulong assetId = (ulong)element.Value;
                                 string assetName = GameDatabase.GetAssetName(assetId);
-                                string assetTypeName = GameDatabase.GetAssetTypeName(GameDatabase.Calligraphy.AssetDirectory.GetAssetTypeId(assetId));
+                                string assetTypeName = GameDatabase.GetAssetTypeName(GameDatabase.DataDirectory.AssetDirectory.GetAssetTypeId(assetId));
                                 Value = $"{assetName} ({assetTypeName})";
                                 break;
                             case 'C':
@@ -110,7 +110,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
                                 case 'A':
                                     ulong assetId = (ulong)element.Values[i];
                                     string assetName = GameDatabase.GetAssetName(assetId);
-                                    string assetTypeName = GameDatabase.GetAssetTypeName(GameDatabase.Calligraphy.AssetDirectory.GetAssetTypeId(assetId));
+                                    string assetTypeName = GameDatabase.GetAssetTypeName(GameDatabase.DataDirectory.AssetDirectory.GetAssetTypeId(assetId));
                                     Values[i] = $"{assetName} ({assetTypeName})";
                                     break;
                                 case 'C':

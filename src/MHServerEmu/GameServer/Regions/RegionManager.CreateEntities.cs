@@ -67,13 +67,13 @@ namespace MHServerEmu.GameServer.Regions
                 nodes.Add(new TargetObject
                 {
                     Area = entryTarget.GetFieldDef(FieldId.Area),
-                    Entity = GameDatabase.Calligraphy.GetPrototypeIdByGuid((ulong)entryTarget.GetField(FieldId.Entity).Value),
+                    Entity = GameDatabase.DataDirectory.GetPrototypeIdByGuid((ulong)entryTarget.GetField(FieldId.Entity).Value),
                     TargetId = origin
                 });
                 nodes.Add(new TargetObject
                 {
                     Area = entryOrigin.GetFieldDef(FieldId.Area),
-                    Entity = GameDatabase.Calligraphy.GetPrototypeIdByGuid((ulong)entryOrigin.GetField(FieldId.Entity).Value),
+                    Entity = GameDatabase.DataDirectory.GetPrototypeIdByGuid((ulong)entryOrigin.GetField(FieldId.Entity).Value),
                     TargetId = target
                 });
             }

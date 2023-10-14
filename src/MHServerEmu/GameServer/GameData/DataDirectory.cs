@@ -1,12 +1,13 @@
 ﻿using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.GameData.Calligraphy;
+using MHServerEmu.GameServer.GameData.Gpak;
 using MHServerEmu.GameServer.GameData.Prototypes;
-using static MHServerEmu.Common.IdGenerator;
+using System.Text.Json;
 
-namespace MHServerEmu.GameServer.GameData.Gpak
+namespace MHServerEmu.GameServer.GameData
 {
-    public class CalligraphyStorage : GpakStorage
+    public class DataDirectory
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -22,7 +23,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
         public CurveDirectory CurveDirectory { get; }
         public ReplacementDirectory ReplacementDirectory { get; }
 
-        public CalligraphyStorage(GpakFile gpakFile)
+        public DataDirectory(GpakFile gpakFile)
         {
             // Convert GPAK file to a dictionary for easy access to all of its entries
             var gpakDict = gpakFile.ToDictionary();
@@ -107,7 +108,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
             GameDatabase.AssetTypeRefManager.AddDataRef(dataId, filePath);
             LoadedAssetTypeRecord record = AssetDirectory.CreateAssetTypeRecord(dataId, flags);
             record.AssetType = new(gpakDict[$"Calligraphy/{filePath}"], AssetDirectory, dataId, assetTypeGuid);
-            
+
         }
 
         private void ReadCurveDirectoryEntry(BinaryReader reader, Dictionary<string, byte[]> gpakDict)
@@ -256,7 +257,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
         #region Old Extras
 
-        public override bool Verify()
+        public bool Verify()
         {
             return AssetDirectory.AssetCount > 0
                 && CurveDirectory.RecordCount > 0
@@ -265,12 +266,12 @@ namespace MHServerEmu.GameServer.GameData.Gpak
                 && ReplacementDirectory.RecordCount > 0;
         }
 
-        public override void Export()
+        public void Export()
         {
             // Set up json serializer
-            _jsonSerializerOptions.Converters.Add(new BlueprintConverter());
-            _jsonSerializerOptions.Converters.Add(new PrototypeFileConverter());
-            _jsonSerializerOptions.MaxDepth = 128;  // 64 is not enough for prototypes
+            JsonSerializerOptions jsonSerializerOptions = new() { WriteIndented = true, MaxDepth = 128 };
+            jsonSerializerOptions.Converters.Add(new BlueprintConverter());
+            jsonSerializerOptions.Converters.Add(new PrototypeFileConverter());
 
             // todo: reimplement export
         }

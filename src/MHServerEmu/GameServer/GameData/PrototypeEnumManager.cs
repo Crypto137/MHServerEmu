@@ -1,6 +1,5 @@
 ﻿using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.GameData.Calligraphy;
-using MHServerEmu.GameServer.GameData.Gpak;
 using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 
 namespace MHServerEmu.GameServer.GameData
@@ -98,7 +97,7 @@ namespace MHServerEmu.GameServer.GameData
             List<ulong> inventoryList = new() { 0 };
             List<ulong> powerList = new() { 0 };
 
-            CalligraphyStorage calligraphy = GameDatabase.Calligraphy;
+            DataDirectory calligraphy = GameDatabase.DataDirectory;
 
             for (int i = 0; i < allEnumValues.Length; i++)
             {

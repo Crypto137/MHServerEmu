@@ -1,6 +1,5 @@
 ﻿using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.GameData;
-using MHServerEmu.GameServer.GameData.Gpak;
 using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 using MHServerEmu.GameServer.GameData.Prototypes;
 
@@ -12,7 +11,7 @@ namespace MHServerEmu.GameServer.Properties
 
         private Dictionary<PropertyEnum, PropertyInfoPrototype> _propertyInfoDict = new();
 
-        public PropertyInfoTable(CalligraphyStorage calligraphy)
+        public PropertyInfoTable(DataDirectory calligraphy)
         {
             Dictionary<PropertyEnum, PropertyPrototype> mixinDict = new();
 
