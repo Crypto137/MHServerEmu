@@ -1,5 +1,4 @@
 ﻿using MHServerEmu.Common;
-using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.GameData.Calligraphy;
 
 namespace MHServerEmu.GameServer.GameData
@@ -14,8 +13,6 @@ namespace MHServerEmu.GameServer.GameData
 
     public class PrototypeEnumManager
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         #region Enum Filters
 
         private static readonly string[] EntityClasses = new string[]
@@ -80,7 +77,7 @@ namespace MHServerEmu.GameServer.GameData
 
         public int MaxEnumValue { get => _enumLookupDict[PrototypeEnumType.All].Count - 1; }
 
-        public PrototypeEnumManager()
+        public PrototypeEnumManager(DataDirectory dataDirectory)
         {
             // Enumerate prototypes
             _prototypeEnumDict = new();
@@ -97,13 +94,11 @@ namespace MHServerEmu.GameServer.GameData
             List<ulong> inventoryList = new() { 0 };
             List<ulong> powerList = new() { 0 };
 
-            DataDirectory calligraphy = GameDatabase.DataDirectory;
-
             for (int i = 0; i < allEnumValues.Length; i++)
             {
-                if (calligraphy.IsCalligraphyPrototype(allEnumValues[i]))   // skip resource prototype ids
+                if (dataDirectory.IsCalligraphyPrototype(allEnumValues[i]))   // skip resource prototypes
                 {
-                    Blueprint blueprint = calligraphy.GetPrototypeBlueprint(allEnumValues[i]);
+                    Blueprint blueprint = dataDirectory.GetPrototypeBlueprint(allEnumValues[i]);
 
                     if (EntityClasses.Contains(blueprint.RuntimeBinding))
                         entityList.Add(allEnumValues[i]);
@@ -129,8 +124,8 @@ namespace MHServerEmu.GameServer.GameData
             }
         }
 
-        public ulong GetPrototypeId(ulong enumValue, PrototypeEnumType type) => _prototypeEnumDict[type][enumValue];
-        public ulong GetEnumValue(ulong prototypeId, PrototypeEnumType type) => _enumLookupDict[type][prototypeId];
+        public ulong GetPrototypeFromEnumValue(ulong enumValue, PrototypeEnumType type) => _prototypeEnumDict[type][enumValue];
+        public ulong GetPrototypeEnumValue(ulong prototypeId, PrototypeEnumType type) => _enumLookupDict[type][prototypeId];
 
         public bool Verify()
         {

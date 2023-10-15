@@ -23,14 +23,20 @@ namespace MHServerEmu.GameServer.GameData
 
         private readonly Dictionary<Prototype, Blueprint> _prototypeBlueprintDict = new();  // .defaults prototype -> blueprint
 
+        // Temporary helper class for getting prototype enums until we implement prototype class hierarchy properly
+        private PrototypeEnumManager _prototypeEnumManager; 
+
         public AssetDirectory AssetDirectory { get; }
         public CurveDirectory CurveDirectory { get; }
         public ReplacementDirectory ReplacementDirectory { get; }
 
-        public DataDirectory(GpakFile gpakFile)
+        // Temporary resource storage class
+        public ResourceStorage Resource { get; }
+
+        public DataDirectory(GpakFile calligraphyGpak, GpakFile resourceGpak)
         {
             // Convert GPAK file to a dictionary for easy access to all of its entries
-            var gpakDict = gpakFile.ToDictionary();
+            var gpakDict = calligraphyGpak.ToDictionary();
 
             // Initialize asset directory
             AssetDirectory = new();
@@ -95,6 +101,9 @@ namespace MHServerEmu.GameServer.GameData
                 for (int i = 0; i < recordCount; i++)
                     ReadReplacementDirectoryEntry(reader);
             }
+
+            // Load resources
+            Resource = new(resourceGpak);
 
             // old hierarchy init
             InitializeHierarchyCache();
@@ -196,6 +205,7 @@ namespace MHServerEmu.GameServer.GameData
                 _prototypeBlueprintDict.Add(GetPrototype(kvp.Value.DefaultPrototypeId), kvp.Value);
 
             // enums
+            _prototypeEnumManager = new(this);
         }
 
         #endregion
@@ -247,6 +257,12 @@ namespace MHServerEmu.GameServer.GameData
         }
 
         public Blueprint GetPrototypeBlueprint(ulong prototypeId) => GetPrototypeBlueprint(GetPrototype(prototypeId));
+
+        public ulong GetPrototypeFromEnumValue(ulong enumValue, PrototypeEnumType type) => _prototypeEnumManager.GetPrototypeFromEnumValue(enumValue, type);
+        public ulong GetPrototypeEnumValue(ulong prototypeId, PrototypeEnumType type) => _prototypeEnumManager.GetPrototypeEnumValue(prototypeId, type);
+
+        public List<ulong> GetPowerPropertyIdList(string filter) => _prototypeEnumManager.GetPowerPropertyIdList(filter);   // TO BE REMOVED: temp bruteforcing of power property ids
+
 
         // Helper methods
         public bool IsCalligraphyPrototype(ulong prototypeId)

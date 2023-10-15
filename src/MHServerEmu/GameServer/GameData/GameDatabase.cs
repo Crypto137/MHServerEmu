@@ -18,7 +18,6 @@ namespace MHServerEmu.GameServer.GameData
         public static bool IsInitialized { get; }
 
         public static DataDirectory DataDirectory { get; private set; }
-        public static ResourceStorage Resource { get; private set; }
         public static PropertyInfoTable PropertyInfoTable { get; private set; }
         public static List<LiveTuningSetting> LiveTuningSettingList { get; private set; }
 
@@ -27,8 +26,6 @@ namespace MHServerEmu.GameServer.GameData
         public static DataRefManager CurveRefManager { get; } = new(true);
         public static DataRefManager BlueprintRefManager { get; } = new(true);
         public static DataRefManager PrototypeRefManager { get; } = new(true);
-
-        public static PrototypeEnumManager PrototypeEnumManager { get; private set; }
 
         static GameDatabase()
         {
@@ -43,11 +40,10 @@ namespace MHServerEmu.GameServer.GameData
             Logger.Info("Initializing game database...");
             DateTime startTime = DateTime.Now;
 
-            // Initialize GPAK and derivative data
-            DataDirectory = new(new GpakFile(CalligraphyPath));
-            Resource = new(new GpakFile(ResourcePath));
+            // Initialize DataDirectory
+            DataDirectory = new(new GpakFile(CalligraphyPath), new GpakFile(ResourcePath));
 
-            PrototypeEnumManager = new();
+            // Initialize PropertyInfoTable
             PropertyInfoTable = new(DataDirectory);
 
             // Load live tuning
@@ -105,17 +101,13 @@ namespace MHServerEmu.GameServer.GameData
 
         public static ulong GetPrototypeId(string name) => PrototypeRefManager.GetDataRefByName(name);
         public static ulong GetPrototypeId(ulong guid) => DataDirectory.GetPrototypeIdByGuid(guid);
-        public static ulong GetPrototypeId(ulong enumValue, PrototypeEnumType type) => PrototypeEnumManager.GetPrototypeId(enumValue, type);
         public static ulong GetPrototypeGuid(ulong id) => DataDirectory.GetPrototypeGuid(id);
-        public static ulong GetPrototypeEnumValue(ulong prototypeId, PrototypeEnumType type) => PrototypeEnumManager.GetEnumValue(prototypeId, type);
 
         #endregion
 
         private static bool VerifyData()
         {
             return DataDirectory.Verify()
-                && Resource.Verify()
-                && PrototypeEnumManager.Verify()
                 && PropertyInfoTable.Verify();
         }
     }

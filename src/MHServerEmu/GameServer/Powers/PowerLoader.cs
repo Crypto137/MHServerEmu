@@ -65,7 +65,7 @@ namespace MHServerEmu.GameServer.Powers
                     ? $"Powers/Player/CaptainMarvel"
                     : $"Powers/Player/{avatarName}";
 
-                List<ulong> powerPropertyIdList = GameDatabase.PrototypeEnumManager.GetPowerPropertyIdList(propertyIdFilter);
+                List<ulong> powerPropertyIdList = GameDatabase.DataDirectory.GetPowerPropertyIdList(propertyIdFilter);
                 powerPropertyIdList.Add((ulong)Enum.Parse(typeof(TravelPowerProperty), avatarName));
 
                 if (powerPropertyIdList.Count > 0)
