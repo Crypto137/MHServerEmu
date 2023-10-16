@@ -91,7 +91,7 @@ namespace MHServerEmu.GameServer.Entities
             PrototypeEntry regionConnectionTarget = targetPrototype.GetPrototype().GetEntry(BlueprintId.RegionConnectionTarget);
 
             ulong cell = regionConnectionTarget.GetFieldDef(FieldId.Cell);
-            if (cell != 0) cell = GameDatabase.GetPrototypeId(GameDatabase.GetAssetName(cell));
+            if (cell != 0) cell = GameDatabase.GetDataRefByPrototypeName(GameDatabase.GetAssetName(cell));
 
             Destination destination = new()
             {

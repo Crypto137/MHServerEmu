@@ -21,6 +21,7 @@ namespace MHServerEmu.GameServer.GameData
         public static PropertyInfoTable PropertyInfoTable { get; private set; }
         public static List<LiveTuningSetting> LiveTuningSettingList { get; private set; }
 
+        // DataRef is a unique ulong id that may change across different versions of the game (e.g. resource DataRef is hashed file path).
         public static DataRefManager AssetTypeRefManager { get; } = new(true);
         public static DataRefManager StringRefManager { get; } = new(false);
         public static DataRefManager CurveRefManager { get; } = new(true);
@@ -99,8 +100,13 @@ namespace MHServerEmu.GameServer.GameData
         public static string GetBlueprintFieldName(ulong fieldId) => StringRefManager.GetReferenceName(fieldId);
         public static string GetPrototypeName(ulong prototypeId) => PrototypeRefManager.GetReferenceName(prototypeId);
 
-        public static ulong GetPrototypeId(string name) => PrototypeRefManager.GetDataRefByName(name);
-        public static ulong GetPrototypeId(ulong guid) => DataDirectory.GetPrototypeIdByGuid(guid);
+        public static ulong GetDataRefByPrototypeGuid(ulong guid) => DataDirectory.GetPrototypeDataRefByGuid(guid);
+
+        // GetDataRefByPrototypeName makes GetDataRefByResourceGuid redundant, because the so-called "ResourceGuid" is
+        // actually just prototype name. The client rehashes ResourceGuid on every call of GetDataRefByResourceGuid to
+        // get a prototypeId out of it, and we just use a reverse lookup dictionary in our PrototypeRefManager instead.
+        public static ulong GetDataRefByPrototypeName(string name) => PrototypeRefManager.GetDataRefByName(name);
+
         public static ulong GetPrototypeGuid(ulong id) => DataDirectory.GetPrototypeGuid(id);
 
         #endregion

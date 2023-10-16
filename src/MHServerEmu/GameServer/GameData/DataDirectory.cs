@@ -212,7 +212,7 @@ namespace MHServerEmu.GameServer.GameData
 
         #region Data Access
 
-        public ulong GetPrototypeIdByGuid(ulong guid)
+        public ulong GetPrototypeDataRefByGuid(ulong guid)
         {
             if (_prototypeGuidToIdDict.TryGetValue(guid, out ulong id))
                 return id;

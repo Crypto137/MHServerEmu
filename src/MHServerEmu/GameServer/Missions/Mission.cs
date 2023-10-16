@@ -78,7 +78,7 @@ namespace MHServerEmu.GameServer.Missions
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"PrototypeGuid: {GameDatabase.GetPrototypeName(GameDatabase.GetPrototypeId(PrototypeGuid))}");
+            sb.AppendLine($"PrototypeGuid: {GameDatabase.GetPrototypeName(GameDatabase.GetDataRefByPrototypeGuid(PrototypeGuid))}");
             sb.AppendLine($"State: 0x{State:X}");
             sb.AppendLine($"TimeExpireCurrentState: 0x{TimeExpireCurrentState:X}");
             sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypeName(PrototypeId)}");
