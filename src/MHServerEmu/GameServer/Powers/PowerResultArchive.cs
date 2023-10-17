@@ -137,7 +137,7 @@ namespace MHServerEmu.GameServer.Powers
             for (int i = 0; i < Flags.Length; i++) if (Flags[i]) sb.Append($"{i} ");
             sb.AppendLine();
 
-            sb.AppendLine($"PowerPrototype: {GameDatabase.GetPrototypePath(PowerPrototypeId)}");
+            sb.AppendLine($"PowerPrototype: {GameDatabase.GetPrototypeName(PowerPrototypeId)}");
             sb.AppendLine($"TargetId: {TargetId}");
             sb.AppendLine($"PowerOwnerId: {PowerOwnerId}");
             sb.AppendLine($"UltimateOwnerId: {UltimateOwnerId}");

@@ -1,8 +1,8 @@
 ﻿using MHServerEmu.Common.Extensions;
 
-namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
+namespace MHServerEmu.GameServer.GameData.Prototypes
 {
-    public class PropSet
+    public class PropSetPrototype
     {
         public uint Header { get; }
         public uint Version { get; }
@@ -10,7 +10,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         public PropSetTypeListPrototype[] PropShapeLists { get; }
         public string PropSetPackage { get; }
 
-        public PropSet(byte[] data)
+        public PropSetPrototype(byte[] data)
         {
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))

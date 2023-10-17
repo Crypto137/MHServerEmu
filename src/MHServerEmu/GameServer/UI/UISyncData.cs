@@ -51,8 +51,8 @@ namespace MHServerEmu.GameServer.UI
 
         protected void WriteParentString(StringBuilder sb)
         {
-            sb.AppendLine($"WidgetR: {GameDatabase.GetPrototypePath(WidgetR)}");
-            sb.AppendLine($"ContextR: {GameDatabase.GetPrototypePath(ContextR)}");
+            sb.AppendLine($"WidgetR: {GameDatabase.GetPrototypeName(WidgetR)}");
+            sb.AppendLine($"ContextR: {GameDatabase.GetPrototypeName(ContextR)}");
             for (int i = 0; i < Areas.Length; i++) sb.AppendLine($"Area{i}: {Areas[i]}");
         }
     }

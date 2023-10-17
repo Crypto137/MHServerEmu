@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Common.Extensions;
+using MHServerEmu.GameServer.GameData.Calligraphy;
 
-namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
+namespace MHServerEmu.GameServer.GameData.Prototypes
 {
     public class PrototypeFile
     {

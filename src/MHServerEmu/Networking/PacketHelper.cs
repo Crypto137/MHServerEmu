@@ -3,12 +3,12 @@ using Gazillion;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.Entities;
+using MHServerEmu.GameServer.Entities.Avatars;
 using MHServerEmu.GameServer.Entities.Locomotion;
+using MHServerEmu.GameServer.GameData;
+using MHServerEmu.GameServer.GameData.Calligraphy;
 using MHServerEmu.GameServer.Powers;
 using MHServerEmu.GameServer.Properties;
-using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
-using MHServerEmu.GameServer.GameData;
-using MHServerEmu.GameServer.Entities.Avatars;
 
 namespace MHServerEmu.Networking
 {
@@ -161,7 +161,7 @@ namespace MHServerEmu.Networking
                                 writer.WriteLine($"BaseData: {baseData}");
 
                                 // Get blueprint for this entity
-                                Blueprint blueprint = GameDatabase.Calligraphy.GetPrototypeBlueprint(baseData.PrototypeId);
+                                Blueprint blueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(baseData.PrototypeId);
                                 writer.WriteLine($"Blueprint: {blueprint.RuntimeBinding}");
 
                                 // Parse entity depending on its blueprint class

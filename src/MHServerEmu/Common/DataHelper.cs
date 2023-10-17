@@ -5,7 +5,7 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.Entities;
 using MHServerEmu.Networking;
 
-namespace MHServerEmu.GameServer.GameData
+namespace MHServerEmu.Common
 {
     public static class DataHelper
     {

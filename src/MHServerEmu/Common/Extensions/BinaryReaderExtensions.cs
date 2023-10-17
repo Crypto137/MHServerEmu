@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using MHServerEmu.GameServer.Common;
-using MHServerEmu.GameServer.GameData.Gpak;
+using MHServerEmu.GameServer.GameData.Calligraphy;
 
 namespace MHServerEmu.Common.Extensions
 {

@@ -96,8 +96,8 @@ namespace MHServerEmu.GameServer.Social
             StringBuilder sb = new();
             sb.AppendLine($"Name: {Name}");
             sb.AppendLine($"DbId: 0x{DbId:X}");
-            sb.AppendLine($"RegionRef: {GameDatabase.GetPrototypePath(RegionRef)}");
-            sb.AppendLine($"DifficultyRef: {GameDatabase.GetPrototypePath(DifficultyRef)}");
+            sb.AppendLine($"RegionRef: {GameDatabase.GetPrototypeName(RegionRef)}");
+            sb.AppendLine($"DifficultyRef: {GameDatabase.GetPrototypeName(DifficultyRef)}");
             for (int i = 0; i < Slots.Length; i++) sb.AppendLine($"Slot{i}: {Slots[i]}");
             sb.AppendLine($"OnlineStatus: {OnlineStatus}");
             sb.AppendLine($"MemberName: {MemberName}");

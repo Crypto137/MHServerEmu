@@ -49,7 +49,7 @@ namespace MHServerEmu.GameServer.Entities.Options
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"ChannelProtoId: {GameDatabase.GetPrototypePath(ChannelProtoId)}");
+            sb.AppendLine($"ChannelProtoId: {GameDatabase.GetPrototypeName(ChannelProtoId)}");
             sb.AppendLine($"IsSubscribed: {IsSubscribed}");
             return sb.ToString();
         }

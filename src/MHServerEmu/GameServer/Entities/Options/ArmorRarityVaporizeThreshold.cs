@@ -41,7 +41,7 @@ namespace MHServerEmu.GameServer.Entities.Options
         {
             StringBuilder sb = new();
             sb.AppendLine($"Slot: {Slot}");
-            sb.AppendLine($"RarityPrototypeId: {GameDatabase.GetPrototypePath(RarityPrototypeId)}");
+            sb.AppendLine($"RarityPrototypeId: {GameDatabase.GetPrototypeName(RarityPrototypeId)}");
             return sb.ToString();
         }
     }

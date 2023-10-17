@@ -1,27 +1,15 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
-using MHServerEmu.GameServer.GameData.Gpak.JsonOutput;
+using MHServerEmu.GameServer.GameData.Calligraphy;
 using MHServerEmu.GameServer.GameData.Prototypes;
 using MHServerEmu.GameServer.GameData.Prototypes.Markers;
 
-namespace MHServerEmu.GameServer.GameData.Gpak
+namespace MHServerEmu.GameServer.GameData.JsonOutput
 {
     // Contains converters needed to correctly serialize all fields to JSON in interface dictionaries and add string representations where appropriate
 
     public class BlueprintConverter : JsonConverter<Blueprint>
     {
-        private DataDirectory _prototypeDir;
-        private DataDirectory _curveDir;
-        private DataDirectory _typeDir;
-
-        public BlueprintConverter(DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir)
-        {
-            _prototypeDir = prototypeDir;
-            _curveDir = curveDir;
-            _typeDir = typeDir;
-        }
-
         public override Blueprint Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             throw new NotImplementedException();
@@ -36,7 +24,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
                     break;
 
                 default:
-                    JsonSerializer.Serialize(writer, new BlueprintJson(value, _prototypeDir, _curveDir, _typeDir), options);
+                    JsonSerializer.Serialize(writer, new BlueprintJson(value), options);
                     break;
             }
         }
@@ -44,25 +32,6 @@ namespace MHServerEmu.GameServer.GameData.Gpak
 
     public class PrototypeFileConverter : JsonConverter<PrototypeFile>
     {
-        private DataDirectory _prototypeDir;
-        private DataDirectory _curveDir;
-        private DataDirectory _typeDir;
-        private Dictionary<ulong, string> _prototypeFieldDict;
-        private Dictionary<ulong, string> _assetDict;
-        private Dictionary<ulong, string> _assetTypeDict;
-
-
-        public PrototypeFileConverter(DataDirectory prototypeDir, DataDirectory curveDir, DataDirectory typeDir,
-            Dictionary<ulong, string> prototypeFieldDict, Dictionary<ulong, string> assetDict, Dictionary<ulong, string> assetTypeDict)
-        {
-            _prototypeDir = prototypeDir;
-            _curveDir = curveDir;
-            _typeDir = typeDir;
-            _prototypeFieldDict = prototypeFieldDict;
-            _assetDict = assetDict;
-            _assetTypeDict = assetTypeDict;
-        }
-
         public override PrototypeFile Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             throw new NotImplementedException();
@@ -77,7 +46,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak
                     break;
 
                 default:
-                    JsonSerializer.Serialize(writer, new PrototypeFileJson(value, _prototypeDir, _curveDir, _typeDir, _prototypeFieldDict, _assetDict, _assetTypeDict), options);
+                    JsonSerializer.Serialize(writer, new PrototypeFileJson(value), options);
                     break;
             }
         }

@@ -175,11 +175,7 @@ namespace MHServerEmu.GameServer.Games
 
                     if (useObject.MissionPrototypeRef != 0)
                     {
-                        if (GameDatabase.TryGetPrototypePath(useObject.MissionPrototypeRef, out string missionPrototype))
-                            Logger.Debug($"NetMessageUseInteractableObject contains missionPrototypeRef:\n{missionPrototype}");
-                        else
-                            Logger.Debug($"NetMessageUseInteractableObject contains unknown missionPrototypeRef");
-
+                        Logger.Debug($"NetMessageUseInteractableObject contains missionPrototypeRef:\n{GameDatabase.GetPrototypeName(useObject.MissionPrototypeRef)}");
                         EnqueueResponse(client, new(NetMessageMissionInteractRelease.DefaultInstance));
                     }
 

@@ -23,7 +23,7 @@ namespace MHServerEmu.GameServer.UI
                 for (int j = 0; j < areas.Length; j++)
                     areas[j] = stream.ReadPrototypeId(PrototypeEnumType.All);
 
-                string className = GameDatabase.Calligraphy.GetPrototypeBlueprint(widgetR).RuntimeBinding;
+                string className = GameDatabase.DataDirectory.GetPrototypeBlueprint(widgetR).RuntimeBinding;
 
                 switch (className)
                 {

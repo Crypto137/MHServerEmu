@@ -44,7 +44,7 @@ namespace MHServerEmu.GameServer.Entities
         {
             StringBuilder sb = new();
             sb.AppendLine($"ContainerEntityId: {ContainerEntityId}");
-            sb.AppendLine($"InventoryPrototypeId: {GameDatabase.GetPrototypePath(InventoryPrototypeId)}");
+            sb.AppendLine($"InventoryPrototypeId: {GameDatabase.GetPrototypeName(InventoryPrototypeId)}");
             sb.AppendLine($"Slot: {Slot}");
             return sb.ToString();
         }

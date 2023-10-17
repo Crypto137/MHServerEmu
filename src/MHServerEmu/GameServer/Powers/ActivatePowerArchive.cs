@@ -138,8 +138,8 @@ namespace MHServerEmu.GameServer.Powers
 
             sb.AppendLine($"IdUserEntity: {IdUserEntity}");
             sb.AppendLine($"IdTargetEntity: {IdTargetEntity}");
-            sb.AppendLine($"PowerPrototypeId: {GameDatabase.GetPrototypePath(PowerPrototypeId)}");
-            sb.AppendLine($"TriggeringPowerPrototypeId: {GameDatabase.GetPrototypePath(TriggeringPowerPrototypeId)}");
+            sb.AppendLine($"PowerPrototypeId: {GameDatabase.GetPrototypeName(PowerPrototypeId)}");
+            sb.AppendLine($"TriggeringPowerPrototypeId: {GameDatabase.GetPrototypeName(TriggeringPowerPrototypeId)}");
             sb.AppendLine($"UserPosition: {UserPosition}");
             sb.AppendLine($"TargetPosition: {TargetPosition}");
             sb.AppendLine($"MovementTimeMS: {MovementTimeMS}");

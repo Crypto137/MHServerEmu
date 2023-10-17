@@ -1,9 +1,9 @@
 ﻿using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.Common;
-using MHServerEmu.GameServer.GameData.Prototypes;
+using MHServerEmu.GameServer.GameData.Calligraphy;
 using MHServerEmu.GameServer.GameData.Prototypes.Markers;
 
-namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
+namespace MHServerEmu.GameServer.GameData.Prototypes
 {
     public class CellPrototype
     {

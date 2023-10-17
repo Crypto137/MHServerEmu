@@ -1,10 +1,9 @@
 ﻿using MHServerEmu.Common.Extensions;
 
-namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
+namespace MHServerEmu.GameServer.GameData.Calligraphy
 {
     public class Blueprint
-    {
-        public CalligraphyHeader Header { get; }                        // BPT
+    {                    
         public string RuntimeBinding { get; }                           // Name of the C++ class that handles prototypes that use this blueprint
         public ulong DefaultPrototypeId { get; }                        // .defaults prototype file id
         public BlueprintReference[] Parents { get; }
@@ -16,7 +15,8 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = reader.ReadCalligraphyHeader();
+                CalligraphyHeader header = reader.ReadCalligraphyHeader();  // BPT v11
+
                 RuntimeBinding = reader.ReadFixedString16();
                 DefaultPrototypeId = reader.ReadUInt64();
 

@@ -3,8 +3,8 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.Entities.Avatars;
 using MHServerEmu.GameServer.GameData;
-using MHServerEmu.GameServer.GameData.Gpak;
-using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
+using MHServerEmu.GameServer.GameData.Calligraphy;
+using MHServerEmu.GameServer.GameData.Prototypes;
 using MHServerEmu.GameServer.Properties;
 using MHServerEmu.Networking;
 
@@ -91,7 +91,7 @@ namespace MHServerEmu.GameServer.Entities
             PrototypeEntry regionConnectionTarget = targetPrototype.GetPrototype().GetEntry(BlueprintId.RegionConnectionTarget);
 
             ulong cell = regionConnectionTarget.GetFieldDef(FieldId.Cell);
-            if (cell != 0) cell = GameDatabase.GetPrototypeId(GameDatabase.Calligraphy.AssetDict[cell]);
+            if (cell != 0) cell = GameDatabase.GetPrototypeRefByName(GameDatabase.GetAssetName(cell));
 
             Destination destination = new()
             {

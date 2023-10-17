@@ -189,11 +189,11 @@ namespace MHServerEmu.GameServer.Entities
             StringBuilder sb = new();
 
             sb.AppendLine($"Type: {Type}");
-            sb.AppendLine($"Region: {GameDatabase.GetPrototypePath(Region)}");
-            sb.AppendLine($"Area: {GameDatabase.GetPrototypePath(Area)}");
-            sb.AppendLine($"Cell: {GameDatabase.GetPrototypePath(Cell)}");
-            sb.AppendLine($"Entity: {GameDatabase.GetPrototypePath(Entity)}");
-            sb.AppendLine($"Target: {GameDatabase.GetPrototypePath(Target)}");
+            sb.AppendLine($"Region: {GameDatabase.GetPrototypeName(Region)}");
+            sb.AppendLine($"Area: {GameDatabase.GetPrototypeName(Area)}");
+            sb.AppendLine($"Cell: {GameDatabase.GetPrototypeName(Cell)}");
+            sb.AppendLine($"Entity: {GameDatabase.GetPrototypeName(Entity)}");
+            sb.AppendLine($"Target: {GameDatabase.GetPrototypeName(Target)}");
             sb.AppendLine($"Unk2: {Unk2}");
             sb.AppendLine($"Name: {Name}");
             sb.AppendLine($"NameId: {NameId}");

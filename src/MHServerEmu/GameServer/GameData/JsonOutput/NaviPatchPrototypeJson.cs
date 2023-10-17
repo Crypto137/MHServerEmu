@@ -2,7 +2,7 @@
 using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.GameData.Prototypes;
 
-namespace MHServerEmu.GameServer.GameData.Gpak.JsonOutput
+namespace MHServerEmu.GameServer.GameData.JsonOutput
 {
     public class NaviPatchPrototypeJson
     {

@@ -1,16 +1,16 @@
 ﻿using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.Common;
 
-namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
+namespace MHServerEmu.GameServer.GameData.Prototypes
 {
-    public class UI
+    public class UIPrototype
     {
         public uint Header { get; }
         public uint Version { get; }
         public uint ClassId { get; }
         public UIPanelPrototype[] UIPanels { get; }
 
-        public UI(byte[] data)
+        public UIPrototype(byte[] data)
         {
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))

@@ -1,6 +1,5 @@
 ﻿using MHServerEmu.Common.Extensions;
-using MHServerEmu.GameServer.GameData.Gpak;
-using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
+using MHServerEmu.GameServer.GameData.Calligraphy;
 using MHServerEmu.GameServer.Properties;
 
 namespace MHServerEmu.GameServer.GameData.Prototypes
@@ -23,7 +22,7 @@ namespace MHServerEmu.GameServer.GameData.Prototypes
 
         public PropertyPrototype(Prototype prototype)
         {
-            Blueprint blueprint = GameDatabase.Calligraphy.GetPrototypeBlueprint(prototype);
+            Blueprint blueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(prototype);
             Array.Fill(Params, new());
 
             foreach (PrototypeEntryElement element in prototype.Entries[0].Elements)
@@ -94,9 +93,9 @@ namespace MHServerEmu.GameServer.GameData.Prototypes
             Params[index].DefaultValue = defaultValue;
 
             if (type == PropertyParamType.Asset)
-                Params[index].ValueMax = GameDatabase.Calligraphy.GetAssetType(subtype).GetMaxEnumValue();
+                Params[index].ValueMax = GameDatabase.GetAssetType(subtype).GetMaxEnumValue();
             else if (type == PropertyParamType.Prototype)
-                Params[index].ValueMax = GameDatabase.PrototypeRefManager.MaxEnumValue;
+                Params[index].ValueMax = 0; //Params[index].ValueMax = GameDatabase.LegacyPrototypeRefManager.MaxEnumValue;
         }
 
     }

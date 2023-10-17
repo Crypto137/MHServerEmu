@@ -1,5 +1,4 @@
-﻿using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
-using MHServerEmu.GameServer.Properties;
+﻿using MHServerEmu.GameServer.Properties;
 
 namespace MHServerEmu.GameServer.GameData.Prototypes
 {
@@ -35,10 +34,13 @@ namespace MHServerEmu.GameServer.GameData.Prototypes
         {
             foreach (PrototypeEntryElement element in prototype.Entries[0].Elements)
             {
-                switch (GameDatabase.Calligraphy.PrototypeFieldDict[element.Id])
+                switch (GameDatabase.GetBlueprintFieldName(element.Id))
                 {
                     case nameof(AggMethod):
-                        AggMethod = (AggregationMethod)Enum.Parse(typeof(AggregationMethod), GameDatabase.Calligraphy.AssetDict[(ulong)element.Value]);
+                        // AggMethod is null for some properties
+                        string aggMethod = GameDatabase.GetAssetName((ulong)element.Value);
+                        if (aggMethod == string.Empty) continue;
+                        AggMethod = (AggregationMethod)Enum.Parse(typeof(AggregationMethod), aggMethod);
                         break;
                     case nameof(ClientOnly):
                         ClientOnly = (bool)element.Value;
@@ -62,7 +64,7 @@ namespace MHServerEmu.GameServer.GameData.Prototypes
                         ReplicateForTransfer = (bool)element.Value;
                         break;
                     case nameof(ReplicateToDatabase):
-                        ReplicateToDatabase = (DatabasePolicy)Enum.Parse(typeof(DatabasePolicy), GameDatabase.Calligraphy.AssetDict[(ulong)element.Value]);
+                        ReplicateToDatabase = (DatabasePolicy)Enum.Parse(typeof(DatabasePolicy), GameDatabase.GetAssetName((ulong)element.Value));
                         break;
                     case nameof(ReplicateToDatabaseAllowedOnItems):
                         ReplicateToDatabaseAllowedOnItems = (bool)element.Value;
@@ -101,7 +103,7 @@ namespace MHServerEmu.GameServer.GameData.Prototypes
                         TruncatePropertyValueToInt = (bool)element.Value;
                         break;
                     case nameof(Type):
-                        Type = (PropertyType)Enum.Parse(typeof(PropertyType), GameDatabase.Calligraphy.AssetDict[(ulong)element.Value]);
+                        Type = (PropertyType)Enum.Parse(typeof(PropertyType), GameDatabase.GetAssetName((ulong)element.Value));
                         break;
                     case nameof(Version):
                         Version = (long)element.Value;

@@ -86,8 +86,8 @@ namespace MHServerEmu.GameServer.Powers
             sb.AppendLine($"Id: {Id}");
             sb.AppendLine($"CreatorId: {CreatorId}");
             sb.AppendLine($"UltimateCreatorId: {UltimateCreatorId}");
-            sb.AppendLine($"ConditionPrototypeId: {GameDatabase.GetPrototypePath(ConditionPrototypeId)}");
-            sb.AppendLine($"CreatorPowerPrototypeId: {GameDatabase.GetPrototypePath(CreatorPowerPrototypeId)}");
+            sb.AppendLine($"ConditionPrototypeId: {GameDatabase.GetPrototypeName(ConditionPrototypeId)}");
+            sb.AppendLine($"CreatorPowerPrototypeId: {GameDatabase.GetPrototypeName(CreatorPowerPrototypeId)}");
             sb.AppendLine($"Index: 0x{Index:X}");
             sb.AppendLine($"EngineAssetGuid: {EngineAssetGuid}");
             sb.AppendLine($"StartTime: {StartTime}");

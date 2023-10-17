@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.GameServer.GameData.Calligraphy;
 using MHServerEmu.GameServer.GameData.Gpak;
 using MHServerEmu.GameServer.GameData.LiveTuning;
 using MHServerEmu.GameServer.Properties;
@@ -16,11 +17,16 @@ namespace MHServerEmu.GameServer.GameData
 
         public static bool IsInitialized { get; }
 
-        public static CalligraphyStorage Calligraphy { get; private set; }
-        public static ResourceStorage Resource { get; private set; }
-        public static PrototypeRefManager PrototypeRefManager { get; private set; }
+        public static DataDirectory DataDirectory { get; private set; }
         public static PropertyInfoTable PropertyInfoTable { get; private set; }
         public static List<LiveTuningSetting> LiveTuningSettingList { get; private set; }
+
+        // DataRef is a unique ulong id that may change across different versions of the game (e.g. resource DataRef is hashed file path).
+        public static DataRefManager AssetTypeRefManager { get; } = new(true);
+        public static DataRefManager StringRefManager { get; } = new(false);
+        public static DataRefManager CurveRefManager { get; } = new(true);
+        public static DataRefManager BlueprintRefManager { get; } = new(true);
+        public static DataRefManager PrototypeRefManager { get; } = new(true);
 
         static GameDatabase()
         {
@@ -35,12 +41,11 @@ namespace MHServerEmu.GameServer.GameData
             Logger.Info("Initializing game database...");
             DateTime startTime = DateTime.Now;
 
-            // Initialize GPAK and derivative data
-            Calligraphy = new(new GpakFile(CalligraphyPath));
-            Resource = new(new GpakFile(ResourcePath));
+            // Initialize DataDirectory
+            DataDirectory = new(new GpakFile(CalligraphyPath), new GpakFile(ResourcePath));
 
-            PrototypeRefManager = new(Calligraphy, Resource);       // this needs to be initialized before PropertyInfoTable
-            PropertyInfoTable = new(Calligraphy);
+            // Initialize PropertyInfoTable
+            PropertyInfoTable = new(DataDirectory);
 
             // Load live tuning
             LiveTuningSettingList = JsonSerializer.Deserialize<List<LiveTuningSetting>>(File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Assets", "LiveTuning.json")));
@@ -82,25 +87,38 @@ namespace MHServerEmu.GameServer.GameData
             }
         }
 
-        // Helper methods for shorter access to PrototypeRefManager
-        public static string GetPrototypePath(ulong id) => PrototypeRefManager.GetPrototypePath(id);
-        public static ulong GetPrototypeId(string path) => PrototypeRefManager.GetPrototypeId(path);
-        public static ulong GetPrototypeId(ulong guid) => PrototypeRefManager.GetPrototypeId(guid);
-        public static ulong GetPrototypeId(ulong enumValue, PrototypeEnumType type) => PrototypeRefManager.GetPrototypeId(enumValue, type);
-        public static ulong GetPrototypeGuid(ulong id) => Calligraphy.PrototypeDirectory.IdDict[id].Guid;
-        public static ulong GetPrototypeEnumValue(ulong prototypeId, PrototypeEnumType type) => PrototypeRefManager.GetEnumValue(prototypeId, type);
+        #region Data Access
 
-        public static bool TryGetPrototypePath(ulong id, out string path) => PrototypeRefManager.TryGetPrototypePath(id, out path);
-        public static bool TryGetPrototypeId(string path, out ulong id) => PrototypeRefManager.TryGetPrototypeId(path, out id);
-        public static bool TryGetPrototypeId(ulong guid, out ulong id) => PrototypeRefManager.TryGetPrototypeId(guid, out id);
-        public static bool TryGetPrototypeId(ulong enumValue, PrototypeEnumType type, out ulong id) => PrototypeRefManager.TryGetPrototypeId(enumValue, type, out id);
-        public static bool TryGetPrototypeEnumValue(ulong prototypeId, PrototypeEnumType type, out ulong enumValue) => PrototypeRefManager.TryGetEnumValue(prototypeId, type, out enumValue);
+        public static AssetType GetAssetType(ulong assetId) => DataDirectory.AssetDirectory.GetAssetType(assetId);
+        public static Curve GetCurve(ulong curveId) => DataDirectory.CurveDirectory.GetCurve(curveId);
+        public static Blueprint GetBlueprint(ulong blueprintId) => DataDirectory.GetBlueprint(blueprintId);
+        public static T GetPrototype<T>(ulong prototypeId) => DataDirectory.GetPrototype<T>(prototypeId);
+
+        public static string GetAssetName(ulong assetId) => StringRefManager.GetReferenceName(assetId);
+        public static string GetAssetTypeName(ulong assetTypeId) => AssetTypeRefManager.GetReferenceName(assetTypeId);
+        public static string GetCurveName(ulong curveId) => CurveRefManager.GetReferenceName(curveId);
+        public static string GetBlueprintName(ulong blueprintId) => BlueprintRefManager.GetReferenceName(blueprintId);
+        public static string GetBlueprintFieldName(ulong fieldId) => StringRefManager.GetReferenceName(fieldId);
+        public static string GetPrototypeName(ulong prototypeId) => PrototypeRefManager.GetReferenceName(prototypeId);
+
+        public static ulong GetDataRefByPrototypeGuid(ulong guid) => DataDirectory.GetPrototypeDataRefByGuid(guid);
+
+        // Our implementation of GetPrototypeRefByName combines both GetPrototypeRefByName and GetDataRefByResourceGuid.
+        // The so-called "ResourceGuid" is actually just a prototype name, and in the client both of these methods work
+        // by rehashing the file path on each call to get an id, with GetPrototypeRefByName working only with Calligraphy
+        // prototypes, and GetDataRefByResourceGuid working only with resource prototypes (because Calligraphy and resource
+        // prototypes have different pre-hashing steps, see HashHelper for more info).
+        //
+        // We avoid all of this additional complexity by simply using a reverse lookup dictionary in our PrototypeRefManager.
+        public static ulong GetPrototypeRefByName(string name) => PrototypeRefManager.GetDataRefByName(name);
+
+        public static ulong GetPrototypeGuid(ulong id) => DataDirectory.GetPrototypeGuid(id);
+
+        #endregion
 
         private static bool VerifyData()
         {
-            return Calligraphy.Verify()
-                && Resource.Verify()
-                && PrototypeRefManager.Verify()
+            return DataDirectory.Verify()
                 && PropertyInfoTable.Verify();
         }
     }

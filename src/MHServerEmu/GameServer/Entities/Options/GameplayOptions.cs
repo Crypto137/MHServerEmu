@@ -123,7 +123,7 @@ namespace MHServerEmu.GameServer.Entities.Options
         {
             StringBuilder sb = new();
             for (int i = 0; i < ChatChannelFilters.Length; i++) sb.AppendLine($"ChatChannelFilter{i}: {ChatChannelFilters[i]}");
-            for (int i = 0; i < ChatTabChannels.Length; i++) sb.AppendLine($"ChatTabChannel{i}: {GameDatabase.GetPrototypePath(ChatTabChannels[i])}");
+            for (int i = 0; i < ChatTabChannels.Length; i++) sb.AppendLine($"ChatTabChannel{i}: {GameDatabase.GetPrototypeName(ChatTabChannels[i])}");
             for (int i = 0; i < OptionSettings.Length; i++) sb.AppendLine($"OptionSetting{i} ({(GameplayOptionSetting)i}): {OptionSettings[i]}");
             for (int i = 0; i < ArmorRarityVaporizeThresholds.Length; i++) sb.AppendLine($"ArmorRarityVaporizeThreshold{i}: {ArmorRarityVaporizeThresholds[i]}");
             return sb.ToString();

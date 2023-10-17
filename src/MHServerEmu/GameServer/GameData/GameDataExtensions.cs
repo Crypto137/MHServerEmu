@@ -1,4 +1,4 @@
-﻿using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
+﻿using MHServerEmu.GameServer.GameData.Prototypes;
 
 namespace MHServerEmu.GameServer.GameData
 {
@@ -6,7 +6,7 @@ namespace MHServerEmu.GameServer.GameData
     {
         public static Prototype GetPrototype(this ulong prototypeId)
         {
-            return GameDatabase.Calligraphy.GetPrototype(prototypeId);
+            return GameDatabase.DataDirectory.GetPrototype<Prototype>(prototypeId);
         }
     }
 }

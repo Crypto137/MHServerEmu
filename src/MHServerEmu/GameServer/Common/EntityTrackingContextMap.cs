@@ -39,7 +39,7 @@ namespace MHServerEmu.GameServer.Common
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"Context: {GameDatabase.GetPrototypePath(Context)}");
+            sb.AppendLine($"Context: {GameDatabase.GetPrototypeName(Context)}");
             sb.AppendLine($"Flag: 0x{Flag:X}");
             return sb.ToString();
         }

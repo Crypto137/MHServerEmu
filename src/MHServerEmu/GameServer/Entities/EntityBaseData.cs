@@ -148,7 +148,7 @@ namespace MHServerEmu.GameServer.Entities
             StringBuilder sb = new();
             sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
             sb.AppendLine($"EntityId: {EntityId}");
-            sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypePath(PrototypeId)}");
+            sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypeName(PrototypeId)}");
 
             sb.Append("Flags: ");
             for (int i = 0; i < Flags.Length; i++) if (Flags[i]) sb.Append($"{i} ");
@@ -167,7 +167,7 @@ namespace MHServerEmu.GameServer.Entities
             sb.AppendLine($"BoundsScaleOverride: {BoundsScaleOverride}");
             sb.AppendLine($"SourceEntityId: {SourceEntityId}");
             sb.AppendLine($"SourcePosition: {SourcePosition}");
-            sb.AppendLine($"ActivePowerPrototypeId: {GameDatabase.GetPrototypePath(ActivePowerPrototypeId)}");
+            sb.AppendLine($"ActivePowerPrototypeId: {GameDatabase.GetPrototypeName(ActivePowerPrototypeId)}");
             sb.AppendLine($"InvLoc: {InvLoc}");
             sb.AppendLine($"InvLocPrev: {InvLocPrev}");
             for (int i = 0; i < Vector.Length; i++) sb.AppendLine($"Vector{i}: 0x{Vector[i]:X}");

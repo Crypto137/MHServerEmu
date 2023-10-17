@@ -1,4 +1,4 @@
-﻿namespace MHServerEmu.GameServer.GameData.Gpak
+﻿namespace MHServerEmu.GameServer.GameData.Calligraphy
 {
     public readonly struct CalligraphyHeader
     {

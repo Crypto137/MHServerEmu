@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Common.Extensions;
+using MHServerEmu.GameServer.GameData.Calligraphy;
 
-namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
+namespace MHServerEmu.GameServer.GameData
 {
     public class StringFile
     {
@@ -33,7 +34,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
             LocaleStringId = reader.ReadUInt64();
 
             ushort variantNum = reader.ReadUInt16();
-            Variants = (variantNum > 0)
+            Variants = variantNum > 0
                 ? new StringVariation[variantNum - 1]
                 : Array.Empty<StringVariation>();
 
@@ -50,7 +51,7 @@ namespace MHServerEmu.GameServer.GameData.Gpak.FileFormats
         public ulong FlagsConsumed { get; set; }
         public ushort FlagsProduced { get; set; }
         public string String { get; set; }
-        
+
         public StringVariation(BinaryReader reader)
         {
             FlagsConsumed = reader.ReadUInt64();

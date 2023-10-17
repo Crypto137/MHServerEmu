@@ -1,10 +1,10 @@
 ﻿using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.Entities;
-using MHServerEmu.GameServer.GameData.Gpak.FileFormats;
 using MHServerEmu.GameServer.GameData.Prototypes.Markers;
 using MHServerEmu.GameServer.GameData;
-using MHServerEmu.GameServer.GameData.Gpak;
 using MHServerEmu.GameServer.Properties;
+using MHServerEmu.GameServer.GameData.Prototypes;
+using MHServerEmu.GameServer.GameData.Calligraphy;
 
 namespace MHServerEmu.GameServer.Regions
 {
@@ -66,13 +66,13 @@ namespace MHServerEmu.GameServer.Regions
                 nodes.Add(new TargetObject
                 {
                     Area = entryTarget.GetFieldDef(FieldId.Area),
-                    Entity = GameDatabase.GetPrototypeGuid((ulong)entryTarget.GetField(FieldId.Entity).Value),
+                    Entity = GameDatabase.DataDirectory.GetPrototypeGuid((ulong)entryTarget.GetField(FieldId.Entity).Value),
                     TargetId = origin
                 });
                 nodes.Add(new TargetObject
                 {
                     Area = entryOrigin.GetFieldDef(FieldId.Area),
-                    Entity = GameDatabase.GetPrototypeGuid((ulong)entryOrigin.GetField(FieldId.Entity).Value),
+                    Entity = GameDatabase.DataDirectory.GetPrototypeGuid((ulong)entryOrigin.GetField(FieldId.Entity).Value),
                     TargetId = target
                 });
             }
@@ -94,6 +94,7 @@ namespace MHServerEmu.GameServer.Regions
         public ulong CreateEntities(Region region)
         {
             ulong area;
+            ulong entryPrototypeId;
             CellPrototype entry;
             int cellid = 1;
             int areaid = 1;
@@ -123,10 +124,10 @@ namespace MHServerEmu.GameServer.Regions
 
                             float projectHeight = ProjectToFloor(entry, areaOrigin, npc.Position);
                                 if (entityPosition.Z > projectHeight) entityPosition.Z = projectHeight;
-                                entityPosition.Z += GetEntityFloor(GameDatabase.GetPrototypeId(npc.EntityGuid));
+                                entityPosition.Z += GetEntityFloor(GameDatabase.GetDataRefByPrototypeGuid(npc.EntityGuid));
 
                             _entityManager.CreateWorldEntity(
-                                region.Id, GameDatabase.GetPrototypeId(npc.EntityGuid),
+                                region.Id, GameDatabase.GetDataRefByPrototypeGuid(npc.EntityGuid),
                                 entityPosition, npc.Rotation,
                                 608, areaid, 608, cellId, area, false, snap);
                         }
@@ -136,9 +137,14 @@ namespace MHServerEmu.GameServer.Regions
 
             void MarkersAddDistrict(string path, bool addProp = false)
             {
-                District district = GameDatabase.Resource.DistrictDict[path];
+                ulong districtPrototypeId = GameDatabase.GetPrototypeRefByName(path);
+                DistrictPrototype district = GameDatabase.GetPrototype<DistrictPrototype>(districtPrototypeId);
                 for (cellid = 0; cellid < district.CellMarkerSet.Length; cellid++)
-                    MarkersAdd(GameDatabase.Resource.CellDict[district.CellMarkerSet[cellid].Resource], cellid + 1, addProp);
+                {
+                    ulong cellPrototypeId = GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[cellid].Resource);
+                    MarkersAdd(GameDatabase.GetPrototype<CellPrototype>(cellPrototypeId), cellid + 1, addProp);
+                }
+                    
             }
 
             void AddTeleports(CellPrototype entry, Area entryArea, ConnectionNodeDict targets, int cellId)
@@ -157,7 +163,7 @@ namespace MHServerEmu.GameServer.Regions
                                 if (door.EntityGuid == 14397992695795297083) dz = 0f;
                                 position.Z += dz;
                                 _entityManager.SpawnDirectTeleport(
-                                       (ulong)region.Prototype, GameDatabase.GetPrototypeId(door.EntityGuid),
+                                       (ulong)region.Prototype, GameDatabase.GetDataRefByPrototypeGuid(door.EntityGuid),
                                        position, door.Rotation,
                                        (int)entryArea.Id, region.Id, cellid, area, false,
                                        targets[area][door.EntityGuid],
@@ -176,7 +182,7 @@ namespace MHServerEmu.GameServer.Regions
                     for (int c = 0; c < entryArea.CellList.Count; c++)
                     {
                         cellid = (int)entryArea.CellList[c].Id;
-                        entry = GameDatabase.Resource.CellDict[GameDatabase.GetPrototypePath(entryArea.CellList[c].PrototypeId)];
+                        entry = GameDatabase.GetPrototype<CellPrototype>(entryArea.CellList[c].PrototypeId);
                         areaOrigin = entryArea.CellList[c].PositionInArea;
                         if (addMarkers)
                             MarkersAdd(entry, cellid, addProp);
@@ -231,14 +237,16 @@ namespace MHServerEmu.GameServer.Regions
                 case RegionPrototype.HelicarrierRegion:
 
                     area = (ulong)AreaPrototype.HelicarrierArea;
-                    MarkersAdd(GameDatabase.Resource.CellDict["Resource/Cells/DistrictCells/Helicarrier/Helicarrier_HUB.cell"], cellid);
+                    ulong cellPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Cells/DistrictCells/Helicarrier/Helicarrier_HUB.cell");
+                    MarkersAdd(GameDatabase.GetPrototype<CellPrototype>(cellPrototypeId), cellid);
 
                     break;
 
                 case RegionPrototype.HoloSimARegion1to60:
 
-                    area = GameDatabase.GetPrototypeId("Regions/EndGame/TierX/HoloSim/HoloSimAArea.prototype");
-                    entry = GameDatabase.Resource.CellDict["Resource/Cells/EndGame/DR_Survival_A.cell"];
+                    area = GameDatabase.GetPrototypeRefByName("Regions/EndGame/TierX/HoloSim/HoloSimAArea.prototype");
+                    entryPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Cells/EndGame/DR_Survival_A.cell");
+                    entry = GameDatabase.GetPrototype<CellPrototype>(entryPrototypeId);
                     MarkersAdd(entry, cellid);
 
                     cellid = 1;
@@ -252,7 +260,7 @@ namespace MHServerEmu.GameServer.Regions
                             {
                                 case 17602051469318245682:// EncounterOpenMissionSmallV10
                                 case 292473193813839029: // EncounterOpenMissionLargeV1
-                                    _entityManager.CreateWorldEntityEnemy(region.Id, GameDatabase.GetPrototypeId("Entity/Props/Throwables/ThrowablePoliceCar.prototype"),
+                                    _entityManager.CreateWorldEntityEnemy(region.Id, GameDatabase.GetPrototypeRefByName("Entity/Props/Throwables/ThrowablePoliceCar.prototype"),
                                         npc.Position, npc.Rotation,
                                         100, areaid, 100, cellid, area, false, 1, 1);
                                     break;
@@ -276,7 +284,7 @@ namespace MHServerEmu.GameServer.Regions
 
                 case RegionPrototype.CosmicDoopSectorSpaceRegion:
 
-                    area = GameDatabase.GetPrototypeId("Regions/EndGame/Special/CosmicDoopSectorSpace/CosmicDoopSectorSpaceAreaA.prototype");
+                    area = GameDatabase.GetPrototypeRefByName("Regions/EndGame/Special/CosmicDoopSectorSpace/CosmicDoopSectorSpaceAreaA.prototype");
                     ulong[] doop = new ulong[]
                     {
                         8886032254367441193, // CosmicDoopRangedMinion
@@ -327,13 +335,13 @@ namespace MHServerEmu.GameServer.Regions
                     {
                         cellid = (int)areaDoop.CellList[j].Id;
                         areaOrigin = areaDoop.CellList[j].PositionInArea;
-                        CellPrototype Cell = GameDatabase.Resource.CellDict[GameDatabase.GetPrototypePath(areaDoop.CellList[j].PrototypeId)];
+                        CellPrototype cell = GameDatabase.GetPrototype<CellPrototype>(areaDoop.CellList[j].PrototypeId);
                         int num = 0;
-                        for (int i = 0; i < Cell.MarkerSet.Length; i++)
+                        for (int i = 0; i < cell.MarkerSet.Length; i++)
                         {
-                            if (Cell.MarkerSet[i] is EntityMarkerPrototype)
+                            if (cell.MarkerSet[i] is EntityMarkerPrototype)
                             {
-                                npc = (EntityMarkerPrototype)Cell.MarkerSet[i];
+                                npc = (EntityMarkerPrototype)cell.MarkerSet[i];
                                 Vector3 pos = new(npc.Position.X + areaOrigin.X, npc.Position.Y + areaOrigin.Y, npc.Position.Z + areaOrigin.Z);
                                 switch (npc.EntityGuid)
                                 {
@@ -365,7 +373,8 @@ namespace MHServerEmu.GameServer.Regions
                 case RegionPrototype.TrainingRoomSHIELDRegion:
 
                     area = (ulong)AreaPrototype.TrainingRoomSHIELDArea;
-                    entry = GameDatabase.Resource.CellDict["Resource/Cells/DistrictCells/Training_Rooms/TrainingRoom_SHIELD_B.cell"];
+                    entryPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Cells/DistrictCells/Training_Rooms/TrainingRoom_SHIELD_B.cell");
+                    entry = GameDatabase.GetPrototype<CellPrototype>(entryPrototypeId);
                     MarkersAdd(entry, cellid, true);
 
                     cellid = 1;
@@ -378,25 +387,25 @@ namespace MHServerEmu.GameServer.Regions
                             switch (npc.EntityGuid)
                             {
                                 case 9760489745388478121: // EncounterTinyV12                                    
-                                    _entityManager.CreateWorldEntityEnemy(region.Id, GameDatabase.GetPrototypeId("Entity/Characters/Mobs/TrainingRoom/TrainingHPDummyBoss.prototype"),
+                                    _entityManager.CreateWorldEntityEnemy(region.Id, GameDatabase.GetPrototypeRefByName("Entity/Characters/Mobs/TrainingRoom/TrainingHPDummyBoss.prototype"),
                                         npc.Position, npc.Rotation,
                                         608, areaid, 608, cellid, area, false, 60, 60);
                                     break;
 
                                 case 1411432581376189649: // EncounterTinyV13                                    
-                                    _entityManager.CreateWorldEntityEnemy(region.Id, GameDatabase.GetPrototypeId("Entity/Characters/Mobs/TrainingRoom/TrainingHPDummyRaidBoss.prototype"),
+                                    _entityManager.CreateWorldEntityEnemy(region.Id, GameDatabase.GetPrototypeRefByName("Entity/Characters/Mobs/TrainingRoom/TrainingHPDummyRaidBoss.prototype"),
                                         npc.Position, npc.Rotation,
                                         608, areaid, 608, cellid, area, false, 60, 60);
                                     break;
 
                                 case 9712873838200498938: // EncounterTinyV14                                    
-                                    _entityManager.CreateWorldEntityEnemy(region.Id, GameDatabase.GetPrototypeId("Entity/Characters/Mobs/CowsEG/SpearCowD1.prototype"), // why not?
+                                    _entityManager.CreateWorldEntityEnemy(region.Id, GameDatabase.GetPrototypeRefByName("Entity/Characters/Mobs/CowsEG/SpearCowD1.prototype"), // why not?
                                         npc.Position, npc.Rotation, //Entity/Characters/Mobs/TrainingRoom/TrainingDamageDummy.prototype
                                         608, areaid, 608, cellid, area, false, 10, 10);
                                     break;
 
                                 case 17473025685948150052: // EncounterTinyV15                                    
-                                    _entityManager.CreateWorldEntityEnemy(region.Id, GameDatabase.GetPrototypeId("Entity/Characters/Mobs/TrainingRoom/TrainingHPDummy.prototype"),
+                                    _entityManager.CreateWorldEntityEnemy(region.Id, GameDatabase.GetPrototypeRefByName("Entity/Characters/Mobs/TrainingRoom/TrainingHPDummy.prototype"),
                                         npc.Position, npc.Rotation,
                                         608, areaid, 608, cellid, area, false, 10, 10);
                                     break;
@@ -420,7 +429,8 @@ namespace MHServerEmu.GameServer.Regions
                 case RegionPrototype.DangerRoomHubRegion:
 
                     area = (ulong)AreaPrototype.DangerRoomHubArea;
-                    MarkersAdd(GameDatabase.Resource.CellDict["Resource/Cells/EndGame/EndlessDungeon/DangerRoom_LaunchTerminal.cell"], cellid);
+                    entryPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Cells/EndGame/EndlessDungeon/DangerRoom_LaunchTerminal.cell");
+                    MarkersAdd(GameDatabase.GetPrototype<CellPrototype>(entryPrototypeId), cellid);
 
                     break;
 
@@ -441,14 +451,14 @@ namespace MHServerEmu.GameServer.Regions
 
                 case RegionPrototype.CH0701SavagelandRegion:
 
-                    area = GameDatabase.GetPrototypeId("Regions/StoryRevamp/CH07SavageLand/Areas/DinoJungle/DinoJungleArea.prototype");
+                    area = GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH07SavageLand/Areas/DinoJungle/DinoJungleArea.prototype");
 
                     Area areaL = region.AreaList[0];
                     for (int i = 11; i < 14; i++)
                     {
                         cellid = (int)areaL.CellList[i].Id;
                         areaOrigin = areaL.CellList[i].PositionInArea;
-                        MarkersAdd(GameDatabase.Resource.CellDict[GameDatabase.GetPrototypePath(areaL.CellList[i].PrototypeId)], cellid, true);
+                        MarkersAdd(GameDatabase.GetPrototype<CellPrototype>(areaL.CellList[i].PrototypeId), cellid, true);
                     }
 
                     break;
@@ -456,32 +466,35 @@ namespace MHServerEmu.GameServer.Regions
                 case RegionPrototype.AvengersTowerHUBRegion:
 
                     area = (ulong)AreaPrototype.AvengersTowerHubArea;
-                    MarkersAdd(GameDatabase.Resource.CellDict["Resource/Cells/DistrictCells/Avengers_Tower/AvengersTower_HUB.cell"], cellid);
+                    entryPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Cells/DistrictCells/Avengers_Tower/AvengersTower_HUB.cell");
+                    MarkersAdd(GameDatabase.GetPrototype<CellPrototype>(entryPrototypeId), cellid);
 
                     break;
 
                 case RegionPrototype.NPEAvengersTowerHUBRegion:
 
                     area = (ulong)AreaPrototype.NPEAvengersTowerHubArea;
-                    MarkersAdd(GameDatabase.Resource.CellDict["Resource/Cells/DistrictCells/Avengers_Tower/AvengersTowerNPE_HUB.cell"], cellid);
+                    entryPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Cells/DistrictCells/Avengers_Tower/AvengersTowerNPE_HUB.cell");
+                    MarkersAdd(GameDatabase.GetPrototype<CellPrototype>(entryPrototypeId), cellid);
 
-                    Encounter PopulationMarker = GameDatabase.Resource.EncounterDict["Resource/Encounters/Discoveries/Social_BenUrich_JessicaJones.encounter"];
-                    npc = (EntityMarkerPrototype)PopulationMarker.MarkerSet[0]; // BenUrich
+                    ulong populationMarkerId = GameDatabase.GetPrototypeRefByName("Resource/Encounters/Discoveries/Social_BenUrich_JessicaJones.encounter");
+                    EncounterPrototype populationMarker = GameDatabase.GetPrototype<EncounterPrototype>(populationMarkerId);
+                    npc = (EntityMarkerPrototype)populationMarker.MarkerSet[0]; // BenUrich
                     areaOrigin = new(-464f, 0f, 192f);
                     entityPosition = npc.Position + areaOrigin;
                     _entityManager.CreateWorldEntity(
-                            region.Id, GameDatabase.GetPrototypeId(npc.EntityGuid),
+                            region.Id, GameDatabase.GetDataRefByPrototypeGuid(npc.EntityGuid),
                             entityPosition, npc.Rotation,
                             608, areaid, 608, cellid, area, false);
 
-                    npc = (EntityMarkerPrototype)PopulationMarker.MarkerSet[2]; // JessicaJones
+                    npc = (EntityMarkerPrototype)populationMarker.MarkerSet[2]; // JessicaJones
                     entityPosition = npc.Position + areaOrigin;
                     _entityManager.CreateWorldEntity(
-                            region.Id, GameDatabase.GetPrototypeId(npc.EntityGuid),
+                            region.Id, GameDatabase.GetDataRefByPrototypeGuid(npc.EntityGuid),
                             entityPosition, npc.Rotation,
                             608, areaid, 608, cellid, area, false);
 
-                    _entityManager.CreateWorldEntity(region.Id, GameDatabase.GetPrototypeId("Entity/Characters/Vendors/Prototypes/Endgame/TeamSHIELDRepBuffer.prototype"),
+                    _entityManager.CreateWorldEntity(region.Id, GameDatabase.GetPrototypeRefByName("Entity/Characters/Vendors/Prototypes/Endgame/TeamSHIELDRepBuffer.prototype"),
                         new(736f, -352f, 177f), new(-2.15625f, 0f, 0f),
                         608, areaid, 608, cellid, area, false);
 
