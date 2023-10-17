@@ -6,7 +6,7 @@ namespace MHServerEmu.GameServer.GameData
     {
         public static Prototype GetPrototype(this ulong prototypeId)
         {
-            return GameDatabase.DataDirectory.GetPrototype(prototypeId);
+            return GameDatabase.DataDirectory.GetPrototype<Prototype>(prototypeId);
         }
     }
 }

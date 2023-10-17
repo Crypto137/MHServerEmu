@@ -43,7 +43,7 @@ namespace MHServerEmu.GameServer.Properties
             try
             {
                 _propertyInfoDict.Add(PropertyEnum.DisplayNameOverride,
-                    new(calligraphy.GetPrototype(GameDatabase.GetPrototypeRefByName("Property/Info/DisplayNameOverride.prototype"))));
+                    new(calligraphy.GetPrototype<Prototype>(GameDatabase.GetPrototypeRefByName("Property/Info/DisplayNameOverride.prototype"))));
 
                 _propertyInfoDict.Add(PropertyEnum.MissileAlwaysCollides,
                     new(calligraphy.GetBlueprintDefaultPrototype("Property/Mixin/BewareOfTiger/MissileAlwaysCollides.blueprint")));

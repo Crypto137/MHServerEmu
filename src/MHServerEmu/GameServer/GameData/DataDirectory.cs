@@ -18,8 +18,8 @@ namespace MHServerEmu.GameServer.GameData
         private readonly Dictionary<ulong, Blueprint> _blueprintDict = new();
 
         private readonly Dictionary<ulong, PrototypeDataRefRecord> _prototypeRecordDict = new();
-        private readonly Dictionary<ulong, Prototype> _prototypeDict = new();
-        private readonly Dictionary<ulong, ulong> _prototypeGuidToIdDict = new();
+        private readonly Dictionary<ulong, object> _prototypeDict = new();
+        private readonly Dictionary<ulong, ulong> _prototypeGuidToDataRefDict = new();
 
         private readonly Dictionary<Prototype, Blueprint> _prototypeBlueprintDict = new();  // .defaults prototype -> blueprint
 
@@ -181,7 +181,7 @@ namespace MHServerEmu.GameServer.GameData
         private void AddCalligraphyPrototype(ulong prototypeId, ulong prototypeGuid, ulong blueprintId, byte flags, string filePath, Dictionary<string, byte[]> gpakDict)
         {
             GameDatabase.PrototypeRefManager.AddDataRef(prototypeId, filePath);
-            _prototypeGuidToIdDict.Add(prototypeGuid, prototypeId);
+            _prototypeGuidToDataRefDict.Add(prototypeGuid, prototypeId);
 
             _prototypeRecordDict.Add(prototypeId, new()
             {
@@ -202,7 +202,7 @@ namespace MHServerEmu.GameServer.GameData
 
             // .defaults prototype -> blueprint
             foreach (var kvp in _blueprintDict)
-                _prototypeBlueprintDict.Add(GetPrototype(kvp.Value.DefaultPrototypeId), kvp.Value);
+                _prototypeBlueprintDict.Add(GetPrototype<Prototype>(kvp.Value.DefaultPrototypeId), kvp.Value);
 
             // enums
             _prototypeEnumManager = new(this);
@@ -214,7 +214,7 @@ namespace MHServerEmu.GameServer.GameData
 
         public ulong GetPrototypeDataRefByGuid(ulong guid)
         {
-            if (_prototypeGuidToIdDict.TryGetValue(guid, out ulong id))
+            if (_prototypeGuidToDataRefDict.TryGetValue(guid, out ulong id))
                 return id;
 
             return 0;
@@ -236,15 +236,15 @@ namespace MHServerEmu.GameServer.GameData
             return null;
         }
 
-        public Prototype GetPrototype(ulong id)
+        public T GetPrototype<T>(ulong id)
         {
-            if (_prototypeDict.TryGetValue(id, out Prototype prototype))
-                return prototype;
+            if (_prototypeDict.TryGetValue(id, out object prototype))
+                return (T)prototype;
 
-            return null;
+            return default;
         }
 
-        public Prototype GetBlueprintDefaultPrototype(Blueprint blueprint) => GetPrototype(blueprint.DefaultPrototypeId);
+        public Prototype GetBlueprintDefaultPrototype(Blueprint blueprint) => GetPrototype<Prototype>(blueprint.DefaultPrototypeId);
         public Prototype GetBlueprintDefaultPrototype(ulong blueprintId) => GetBlueprintDefaultPrototype(GetBlueprint(blueprintId));
         public Prototype GetBlueprintDefaultPrototype(string blueprintPath) => GetBlueprintDefaultPrototype(
             GetBlueprint(GameDatabase.BlueprintRefManager.GetDataRefByName(blueprintPath)));
@@ -252,11 +252,11 @@ namespace MHServerEmu.GameServer.GameData
         public Blueprint GetPrototypeBlueprint(Prototype prototype)
         {
             while (prototype.ParentId != 0)                     // Go up until we get to the parentless prototype (.defaults)
-                prototype = GetPrototype(prototype.ParentId);
+                prototype = GetPrototype<Prototype>(prototype.ParentId);
             return _prototypeBlueprintDict[prototype];          // Use .defaults prototype as a key to get the blueprint for it
         }
 
-        public Blueprint GetPrototypeBlueprint(ulong prototypeId) => GetPrototypeBlueprint(GetPrototype(prototypeId));
+        public Blueprint GetPrototypeBlueprint(ulong prototypeId) => GetPrototypeBlueprint(GetPrototype<Prototype>(prototypeId));
 
         public ulong GetPrototypeFromEnumValue(ulong enumValue, PrototypeEnumType type) => _prototypeEnumManager.GetPrototypeFromEnumValue(enumValue, type);
         public ulong GetPrototypeEnumValue(ulong prototypeId, PrototypeEnumType type) => _prototypeEnumManager.GetPrototypeEnumValue(prototypeId, type);
