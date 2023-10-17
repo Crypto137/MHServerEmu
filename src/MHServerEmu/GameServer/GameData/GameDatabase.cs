@@ -102,10 +102,14 @@ namespace MHServerEmu.GameServer.GameData
 
         public static ulong GetDataRefByPrototypeGuid(ulong guid) => DataDirectory.GetPrototypeDataRefByGuid(guid);
 
-        // GetDataRefByPrototypeName makes GetDataRefByResourceGuid redundant, because the so-called "ResourceGuid" is
-        // actually just prototype name. The client rehashes ResourceGuid on every call of GetDataRefByResourceGuid to
-        // get a prototypeId out of it, and we just use a reverse lookup dictionary in our PrototypeRefManager instead.
-        public static ulong GetDataRefByPrototypeName(string name) => PrototypeRefManager.GetDataRefByName(name);
+        // Our implementation of GetPrototypeRefByName combines both GetPrototypeRefByName and GetDataRefByResourceGuid.
+        // The so-called "ResourceGuid" is actually just a prototype name, and in the client both of these methods work
+        // by rehashing the file path on each call to get an id, with GetPrototypeRefByName working only with Calligraphy
+        // prototypes, and GetDataRefByResourceGuid working only with resource prototypes (because Calligraphy and resource
+        // prototypes have different pre-hashing steps, see HashHelper for more info).
+        //
+        // We avoid all of this additional complexity by simply using a reverse lookup dictionary in our PrototypeRefManager.
+        public static ulong GetPrototypeRefByName(string name) => PrototypeRefManager.GetDataRefByName(name);
 
         public static ulong GetPrototypeGuid(ulong id) => DataDirectory.GetPrototypeGuid(id);
 

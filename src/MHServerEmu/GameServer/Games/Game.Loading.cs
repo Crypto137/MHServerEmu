@@ -179,12 +179,12 @@ namespace MHServerEmu.GameServer.Games
                     if (avatar.BaseData.EntityId == (ulong)playerAvatarEntityId)
                     {
                         replacementInventorySlot = avatar.BaseData.InvLoc.Slot;
-                        avatar.BaseData.InvLoc.InventoryPrototypeId = GameDatabase.GetDataRefByPrototypeName("Entity/Inventory/PlayerInventories/PlayerAvatarInPlay.prototype");
+                        avatar.BaseData.InvLoc.InventoryPrototypeId = GameDatabase.GetPrototypeRefByName("Entity/Inventory/PlayerInventories/PlayerAvatarInPlay.prototype");
                         avatar.BaseData.InvLoc.Slot = 0;                           // set selected avatar entity inventory slot to 0
                     }
                     else if (avatar.BaseData.EntityId == (ulong)HardcodedAvatarEntityId.BlackCat)
                     {
-                        avatar.BaseData.InvLoc.InventoryPrototypeId = GameDatabase.GetDataRefByPrototypeName("Entity/Inventory/PlayerInventories/PlayerAvatarLibrary.prototype");
+                        avatar.BaseData.InvLoc.InventoryPrototypeId = GameDatabase.GetPrototypeRefByName("Entity/Inventory/PlayerInventories/PlayerAvatarLibrary.prototype");
                         avatar.BaseData.InvLoc.Slot = replacementInventorySlot;    // set Black Cat slot to the one previously occupied by the hero who replaces her
 
                         // Black Cat goes last in the hardcoded messages, so this should always be assigned last

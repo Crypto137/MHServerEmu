@@ -113,7 +113,7 @@ namespace MHServerEmu.GameServer.Regions
                         new(10, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototype.AvengersTowerHubArea, new(), true);
-                    area.AddCell(new(1, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/DistrictCells/Avengers_Tower/AvengersTower_HUB.cell"), new()));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/DistrictCells/Avengers_Tower/AvengersTower_HUB.cell"), new()));
 
                     region.AddArea(area);
 
@@ -151,7 +151,7 @@ namespace MHServerEmu.GameServer.Regions
                         new(10, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototype.NPEAvengersTowerHubArea, new(), true);
-                    area.AddCell(new(1, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/DistrictCells/Avengers_Tower/AvengersTowerNPE_HUB.cell"), new()));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/DistrictCells/Avengers_Tower/AvengersTowerNPE_HUB.cell"), new()));
                     area.CellList[0].AddEncounter(605211710028059265, 5, true);
 
                     region.AddArea(area);
@@ -177,7 +177,7 @@ namespace MHServerEmu.GameServer.Regions
                         new(10, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototype.TrainingRoomSHIELDArea, new(), true);
-                    area.AddCell(new(1, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/DistrictCells/Training_Rooms/TrainingRoom_SHIELD_B.cell"), new()));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/DistrictCells/Training_Rooms/TrainingRoom_SHIELD_B.cell"), new()));
 
                     region.AddArea(area);
 
@@ -200,8 +200,8 @@ namespace MHServerEmu.GameServer.Regions
                         new(2432.0f, 2432.0f, 2432.0f),
                         new(10, DifficultyTier.Normal));
 
-                        area = new(1,(AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/EndGame/TierX/HoloSim/HoloSimAArea.prototype"), new(), true);
-                        area.AddCell(new(1, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/EndGame/DR_Survival_A.cell"), new()));
+                        area = new(1,(AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/EndGame/TierX/HoloSim/HoloSimAArea.prototype"), new(), true);
+                        area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/EndGame/DR_Survival_A.cell"), new()));
 
                         region.AddArea(area);
 
@@ -229,7 +229,7 @@ namespace MHServerEmu.GameServer.Regions
 
                     district = GameDatabase.DataDirectory.Resource.DistrictDict["Resource/Districts/XaviersMansion.district"];
                     for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetDataRefByPrototypeName(district.CellMarkerSet[i].Resource), new()));
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
 
                     area.CellList[17].AddEncounter(15374827165380448803, 4, true);
                     area.CellList[15].AddEncounter(8642336607468261979, 7, true);
@@ -259,7 +259,7 @@ namespace MHServerEmu.GameServer.Regions
                         new(49, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototype.HelicarrierArea, new(), true);
-                    area.AddCell(new(1, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/DistrictCells/Helicarrier/Helicarrier_HUB.cell"), new()));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/DistrictCells/Helicarrier/Helicarrier_HUB.cell"), new()));
 
                     region.AddArea(area);
 
@@ -287,7 +287,7 @@ namespace MHServerEmu.GameServer.Regions
 
                     district = GameDatabase.DataDirectory.Resource.DistrictDict["Resource/Districts/AsgardHubDistrict.district"];
                     for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetDataRefByPrototypeName(district.CellMarkerSet[i].Resource), new()));
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
 
                     region.AddArea(area);
 
@@ -315,7 +315,7 @@ namespace MHServerEmu.GameServer.Regions
 
                     district = GameDatabase.DataDirectory.Resource.DistrictDict["Resource/Districts/GenoshaHUB.district"];
                     for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetDataRefByPrototypeName(district.CellMarkerSet[i].Resource), new()));
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
 
                     region.AddArea(area);
 
@@ -352,7 +352,7 @@ namespace MHServerEmu.GameServer.Regions
                         new(63, DifficultyTier.Heroic));
 
                     area = new(1, AreaPrototype.DangerRoomHubArea, new(), true);
-                    area.AddCell(new(1, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/EndGame/EndlessDungeon/DangerRoom_LaunchTerminal.cell"), new()));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/EndGame/EndlessDungeon/DangerRoom_LaunchTerminal.cell"), new()));
 
                     region.AddArea(area);
 
@@ -377,11 +377,11 @@ namespace MHServerEmu.GameServer.Regions
                         new(60, DifficultyTier.Normal));
 
                     area = new(2, AreaPrototype.InvasionSafeAbodeArea2, new(1152f, 0f, 0f), true);
-                    area.AddCell(new(1, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/SecretInvasion/MadripoorInvasion/Invasion_SafehouseWithin.cell"), new()));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/SecretInvasion/MadripoorInvasion/Invasion_SafehouseWithin.cell"), new()));
                     region.AddArea(area);
 
                     area = new(1, AreaPrototype.InvasionSafeAbodeArea1, new(-1152f, 0f, 0f), true);
-                    area.AddCell(new(2, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/SecretInvasion/MadripoorInvasion/Invasion_Safehouse.cell"), new()));
+                    area.AddCell(new(2, GameDatabase.GetPrototypeRefByName("Resource/Cells/SecretInvasion/MadripoorInvasion/Invasion_Safehouse.cell"), new()));
                     region.AddArea(area);
 
                     region.EntrancePosition = new(893f, 0f, 60f);
@@ -405,20 +405,20 @@ namespace MHServerEmu.GameServer.Regions
                     string dailyBugleArea = "Regions/Operations/Events/DailyBugle/Areas/";
                     string dailyBugle = "Resource/Cells/EndGame/DangerDailies/DailyBugle/";
 
-                    area = new(1, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(dailyBugleArea + "DailyBugleLobbyEntryArea.prototype"), new(), true);
-                    area.AddCell(new(1, GameDatabase.GetDataRefByPrototypeName(dailyBugle + "DailyBugle_Trans/Daily_DailyBugle_Lobby_Entry_A.cell"), new(0.0f, 0.0f, 0.0f)));
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeRefByName(dailyBugleArea + "DailyBugleLobbyEntryArea.prototype"), new(), true);
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName(dailyBugle + "DailyBugle_Trans/Daily_DailyBugle_Lobby_Entry_A.cell"), new(0.0f, 0.0f, 0.0f)));
                     region.AddArea(area);
-                    area = new(2, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(dailyBugleArea + "DailyBugleBasementArea.prototype"), new(), false);
-                    area.AddCell(new(2, GameDatabase.GetDataRefByPrototypeName(dailyBugle + "DailyBugle_A/Daily_DailyBugle_Basement_A.cell"), new(0.0f, 8192.0f, 0.0f)));
+                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeRefByName(dailyBugleArea + "DailyBugleBasementArea.prototype"), new(), false);
+                    area.AddCell(new(2, GameDatabase.GetPrototypeRefByName(dailyBugle + "DailyBugle_A/Daily_DailyBugle_Basement_A.cell"), new(0.0f, 8192.0f, 0.0f)));
                     region.AddArea(area);
-                    area = new(3, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(dailyBugleArea + "DailyBugleArchivesArea.prototype"), new(), false);
-                    area.AddCell(new(3, GameDatabase.GetDataRefByPrototypeName(dailyBugle + "DailyBugle_A/Daily_DailyBugle_Archives_A.cell"), new(8192.0f, -2048.0f, 0.0f)));
+                    area = new(3, (AreaPrototype)GameDatabase.GetPrototypeRefByName(dailyBugleArea + "DailyBugleArchivesArea.prototype"), new(), false);
+                    area.AddCell(new(3, GameDatabase.GetPrototypeRefByName(dailyBugle + "DailyBugle_A/Daily_DailyBugle_Archives_A.cell"), new(8192.0f, -2048.0f, 0.0f)));
                     region.AddArea(area);
-                    area = new(4, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(dailyBugleArea + "DailyBugleOfficeArea.prototype"), new(), false);
-                    area.AddCell(new(4, GameDatabase.GetDataRefByPrototypeName(dailyBugle + "DailyBugle_A/Daily_DailyBugle_Office_A.cell"), new(0.0f, -8192.0f, 0.0f)));
+                    area = new(4, (AreaPrototype)GameDatabase.GetPrototypeRefByName(dailyBugleArea + "DailyBugleOfficeArea.prototype"), new(), false);
+                    area.AddCell(new(4, GameDatabase.GetPrototypeRefByName(dailyBugle + "DailyBugle_A/Daily_DailyBugle_Office_A.cell"), new(0.0f, -8192.0f, 0.0f)));
                     region.AddArea(area);
-                    area = new(5, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(dailyBugleArea + "DailyBugleRooftopBossArea.prototype"), new(), false);
-                    area.AddCell(new(5, GameDatabase.GetDataRefByPrototypeName(dailyBugle + "DailyBugle_Trans/Daily_DailyBugle_Roof_Boss_A.cell"), new(-8192.0f, 0.0f, 0.0f)));
+                    area = new(5, (AreaPrototype)GameDatabase.GetPrototypeRefByName(dailyBugleArea + "DailyBugleRooftopBossArea.prototype"), new(), false);
+                    area.AddCell(new(5, GameDatabase.GetPrototypeRefByName(dailyBugle + "DailyBugle_Trans/Daily_DailyBugle_Roof_Boss_A.cell"), new(-8192.0f, 0.0f, 0.0f)));
                     region.AddArea(area);
 
 
@@ -439,13 +439,13 @@ namespace MHServerEmu.GameServer.Regions
                         new(8064.0f, 12672.0f, 1152.0f),
                         new(60, DifficultyTier.Normal));
 
-                    AreaPrototype raftArea = (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/StoryRevamp/CH00Raft/TheRaftNPE/NPERaftArea.prototype");
+                    AreaPrototype raftArea = (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH00Raft/TheRaftNPE/NPERaftArea.prototype");
                     area = new(1, raftArea, new(), true);
 
                     district = GameDatabase.DataDirectory.Resource.DistrictDict["Resource/Districts/Raft_District.district"];
 
                     for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetDataRefByPrototypeName(district.CellMarkerSet[i].Resource), new()));
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
 
                     region.AddArea(area);
 
@@ -470,12 +470,12 @@ namespace MHServerEmu.GameServer.Regions
                     if (south)
                     {
 
-                        AreaPrototype CH0101HellsKitchenSouthArea = (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/StoryRevamp/CH01HellsKitchen/Brownstones/CH0101HellsKitchenSouthArea.prototype");
+                        AreaPrototype CH0101HellsKitchenSouthArea = (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH01HellsKitchen/Brownstones/CH0101HellsKitchenSouthArea.prototype");
                         area = new(1, CH0101HellsKitchenSouthArea, new(), true);
                         district = GameDatabase.DataDirectory.Resource.DistrictDict["Resource/Districts/Hells_Kitchen_Brownstones.district"];
 
                         for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                            area.AddCell(new((uint)i + 1, GameDatabase.GetDataRefByPrototypeName(district.CellMarkerSet[i].Resource), new()));
+                            area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
 
                         region.AddArea(area);
 
@@ -488,12 +488,12 @@ namespace MHServerEmu.GameServer.Regions
                     else
                     {
                         
-                        AreaPrototype CH0102HellsKitchenNorthArea = (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/StoryRevamp/CH01HellsKitchen/Brownstones/CH0102HellsKitchenNorthArea.prototype");
+                        AreaPrototype CH0102HellsKitchenNorthArea = (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH01HellsKitchen/Brownstones/CH0102HellsKitchenNorthArea.prototype");
                         area = new(1, CH0102HellsKitchenNorthArea, new(), true);
                         district = GameDatabase.DataDirectory.Resource.DistrictDict["Resource/Districts/Hells_Kitchen_Brownstones_B.district"];
 
                         for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                            area.AddCell(new((uint)(i + 1), GameDatabase.GetDataRefByPrototypeName(district.CellMarkerSet[i].Resource), new()));
+                            area.AddCell(new((uint)(i + 1), GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
 
                         region.AddArea(area);
 
@@ -515,13 +515,13 @@ namespace MHServerEmu.GameServer.Regions
                         new(1152.0f, 10368.0f, 1152.0f),
                         new(60, DifficultyTier.Normal));
 
-                    AreaPrototype Nightclub = (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/StoryRevamp/CH01HellsKitchen/Brownstones/Nightclub/CH01NightclubArea.prototype");
+                    AreaPrototype Nightclub = (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH01HellsKitchen/Brownstones/Nightclub/CH01NightclubArea.prototype");
                     area = new(1, Nightclub, new(), true);
 
                     district = GameDatabase.DataDirectory.Resource.DistrictDict["Resource/Districts/Hells_Kitchen_Nightclub.district"];
 
                     for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetDataRefByPrototypeName(district.CellMarkerSet[i].Resource), new()));
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
 
                     region.AddArea(area);
 
@@ -542,13 +542,13 @@ namespace MHServerEmu.GameServer.Regions
                         new(12672.0f, 14976.0f, 1152.0f),
                         new(60, DifficultyTier.Normal));
 
-                    AreaPrototype ShippingYard = (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/StoryRevamp/CH02JerseyDocks/Areas/CH0201ShippingArea.prototype");
+                    AreaPrototype ShippingYard = (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH02JerseyDocks/Areas/CH0201ShippingArea.prototype");
                     area = new(1, ShippingYard, new(), true);
 
                     district = GameDatabase.DataDirectory.Resource.DistrictDict["Resource/Districts/Story/Ch02JerseyDocks/Ch02_JerseyDocks_Storage_Dist.district"];
 
                     for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetDataRefByPrototypeName(district.CellMarkerSet[i].Resource), new()));
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
                     region.AddArea(area);
 
                     region.EntrancePosition = new(48.0f, 4944.0f, 48.0f);
@@ -571,109 +571,109 @@ namespace MHServerEmu.GameServer.Regions
                     string Madripoor = "Resource/Cells/Madripoor/";
                     string MadripoorArea = "Regions/StoryRevamp/CH03Madripoor/";
 
-                    area = new(1, (AreaPrototype) GameDatabase.GetDataRefByPrototypeName(MadripoorArea + "Beach/BeachArea.prototype"), new(), false);
-                    area.AddCell(new(93, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Cove_C/Madripoor_SuperPier_A_X1_Y0.cell"), new(0.0f, -20736.0f, -4.0f)));
-                    area.AddCell(new(87, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Cove_C/Madripoor_Beach_C_NESW_A.cell"), new(0.0f, -25344.0f, -4.0f)));
-                    area.AddCell(new(84, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Cove_C/Madripoor_Beach_C_NESW_B.cell"), new(0.0f, -27648.0f, -4.0f)));
-                    area.AddCell(new(90, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Cove_C/Madripoor_Beach_C_NESW_C.cell"), new(0.0f, -23040.0f, -4.0f)));
-                    area.AddCell(new(96, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Cove_C/Madripoor_SuperPier_A_X1_Y1.cell"), new(0.0f, -18432.0f, -4.0f)));
-                    area.AddCell(new(99, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Cove_A/Madripoor_Beach_A_NESWcE_A.cell"), new(0.0f, -16128.0f, -4.0f)));
-                    area.AddCell(new(83, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Trans/Beach_NEW_SCShipwreckEntry.cell"), new(-2304.0f, -27648.0f, -4.0f)));
-                    area.AddCell(new(89, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Cove_B/Madripoor_Beach_B_NEW_A.cell"), new(-2304.0f, -23040.0f, -4.0f)));
-                    area.AddCell(new(95, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Cove_C/Madripoor_SuperPier_A_X0_Y1.cell"), new(-2304.0f, -18432.0f, -4.0f)));
-                    area.AddCell(new(92, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Cove_C/Madripoor_SuperPier_A_X0_Y0.cell"), new(-2304.0f, -20736.0f, -4.0f)));
-                    area.AddCell(new(86, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Cove_A/Madripoor_Beach_A_NEW_A.cell"), new(-2304.0f, -25344.0f, -4.0f)));
-                    area.AddCell(new(98, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Cove_B/Madripoor_Beach_B_NW_A.cell"), new(-2304.0f, -16128.0f, -4.0f)));
-                    area.AddCell(new(97, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Cove_A/Madripoor_Beach_A_ESW_A.cell"), new(2304.0f, -18432.0f, -4.0f)));
-                    area.AddCell(new(88, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Cove_A/Madripoor_Beach_A_ESW_B.cell"), new(2304.0f, -25344.0f, -4.0f)));
-                    area.AddCell(new(85, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Cove_B/Madripoor_Beach_B_ESW_A.cell"), new(2304.0f, -27648.0f, -4.0f)));
-                    area.AddCell(new(91, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Trans/Madripoor_Beach_ESW_CaveEntryA.cell"), new(2304.0f, -23040.0f, -4.0f)));
-                    area.AddCell(new(94, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Trans/Madripoor_Beach_ESW_CaveEntryB.cell"), new(2304.0f, -20736.0f, -4.0f)));
-                    area.AddCell(new(100, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Cove_B/Madripoor_Beach_B_SW_A.cell"), new(2304.0f, -16128.0f, -4.0f)));
-                    area.AddCell(new(81, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Cove_C/Madripoor_Beach_C_Defense_A.cell"), new(0.0f, -29952.0f, -4.0f)));
-                    area.AddCell(new(82, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Cove_A/Madripoor_Beach_A_ES_A.cell"), new(2304.0f, -29952.0f, -4.0f)));
-                    area.AddCell(new(80, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Trans/Madripoor_Entry_B.cell"), new(-2304.0f, -29952.0f, -4.0f)));
+                    area = new(1, (AreaPrototype) GameDatabase.GetPrototypeRefByName(MadripoorArea + "Beach/BeachArea.prototype"), new(), false);
+                    area.AddCell(new(93, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Cove_C/Madripoor_SuperPier_A_X1_Y0.cell"), new(0.0f, -20736.0f, -4.0f)));
+                    area.AddCell(new(87, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Cove_C/Madripoor_Beach_C_NESW_A.cell"), new(0.0f, -25344.0f, -4.0f)));
+                    area.AddCell(new(84, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Cove_C/Madripoor_Beach_C_NESW_B.cell"), new(0.0f, -27648.0f, -4.0f)));
+                    area.AddCell(new(90, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Cove_C/Madripoor_Beach_C_NESW_C.cell"), new(0.0f, -23040.0f, -4.0f)));
+                    area.AddCell(new(96, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Cove_C/Madripoor_SuperPier_A_X1_Y1.cell"), new(0.0f, -18432.0f, -4.0f)));
+                    area.AddCell(new(99, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Cove_A/Madripoor_Beach_A_NESWcE_A.cell"), new(0.0f, -16128.0f, -4.0f)));
+                    area.AddCell(new(83, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/Beach_NEW_SCShipwreckEntry.cell"), new(-2304.0f, -27648.0f, -4.0f)));
+                    area.AddCell(new(89, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Cove_B/Madripoor_Beach_B_NEW_A.cell"), new(-2304.0f, -23040.0f, -4.0f)));
+                    area.AddCell(new(95, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Cove_C/Madripoor_SuperPier_A_X0_Y1.cell"), new(-2304.0f, -18432.0f, -4.0f)));
+                    area.AddCell(new(92, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Cove_C/Madripoor_SuperPier_A_X0_Y0.cell"), new(-2304.0f, -20736.0f, -4.0f)));
+                    area.AddCell(new(86, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Cove_A/Madripoor_Beach_A_NEW_A.cell"), new(-2304.0f, -25344.0f, -4.0f)));
+                    area.AddCell(new(98, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Cove_B/Madripoor_Beach_B_NW_A.cell"), new(-2304.0f, -16128.0f, -4.0f)));
+                    area.AddCell(new(97, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Cove_A/Madripoor_Beach_A_ESW_A.cell"), new(2304.0f, -18432.0f, -4.0f)));
+                    area.AddCell(new(88, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Cove_A/Madripoor_Beach_A_ESW_B.cell"), new(2304.0f, -25344.0f, -4.0f)));
+                    area.AddCell(new(85, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Cove_B/Madripoor_Beach_B_ESW_A.cell"), new(2304.0f, -27648.0f, -4.0f)));
+                    area.AddCell(new(91, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/Madripoor_Beach_ESW_CaveEntryA.cell"), new(2304.0f, -23040.0f, -4.0f)));
+                    area.AddCell(new(94, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/Madripoor_Beach_ESW_CaveEntryB.cell"), new(2304.0f, -20736.0f, -4.0f)));
+                    area.AddCell(new(100, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Cove_B/Madripoor_Beach_B_SW_A.cell"), new(2304.0f, -16128.0f, -4.0f)));
+                    area.AddCell(new(81, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Cove_C/Madripoor_Beach_C_Defense_A.cell"), new(0.0f, -29952.0f, -4.0f)));
+                    area.AddCell(new(82, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Cove_A/Madripoor_Beach_A_ES_A.cell"), new(2304.0f, -29952.0f, -4.0f)));
+                    area.AddCell(new(80, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/Madripoor_Entry_B.cell"), new(-2304.0f, -29952.0f, -4.0f)));
                     region.AddArea(area);
 
-                    area = new(2, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(MadripoorArea + "Beach/BeachHydraOutpostArea.prototype"), new(), false);
-                    area.AddCell(new(79, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Trans/Beach_BaseEntry_EW_A.cell"), new(3.0f, -13824.0f, -4.0f)));
+                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeRefByName(MadripoorArea + "Beach/BeachHydraOutpostArea.prototype"), new(), false);
+                    area.AddCell(new(79, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/Beach_BaseEntry_EW_A.cell"), new(3.0f, -13824.0f, -4.0f)));
                     region.AddArea(area);
 
-                    area = new(3, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(MadripoorArea + "BambooForest/HydraOutpostToForestArea.prototype"), new(), false);
-                    area.AddCell(new(78, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Trans/Bamboo_Wide_BaseEntry_EW_A.cell"), new(0.0f, -11520.0f, -4.0f)));
+                    area = new(3, (AreaPrototype)GameDatabase.GetPrototypeRefByName(MadripoorArea + "BambooForest/HydraOutpostToForestArea.prototype"), new(), false);
+                    area.AddCell(new(78, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/Bamboo_Wide_BaseEntry_EW_A.cell"), new(0.0f, -11520.0f, -4.0f)));
                     region.AddArea(area);
 
-                    area = new(4, (AreaPrototype) GameDatabase.GetDataRefByPrototypeName(MadripoorArea + "BambooForest/BambooForestArea.prototype"), new(), false);
-                    area.AddCell(new(70, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Bamboo_Forest_Wide_C/Bamboo_Village_X1_Y1_A.cell"), new(-2304.0f, -4608.0f, -4.0f)));
-                    area.AddCell(new(71, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Trans/Bamboo_GroveEntry_NESW_A.cell"), new(0.0f, -4608.0f, -4.0f)));
-                    area.AddCell(new(65, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Bamboo_Forest_Wide_C/Bamboo_Village_X1_Y0_A.cell"), new(-2304.0f, -6912.0f, -4.0f)));
-                    area.AddCell(new(69, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Bamboo_Forest_Wide_C/Bamboo_Village_X0_Y1_A.cell"), new(-4608.0f, -4608.0f, -4.0f)));
-                    area.AddCell(new(66, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Bamboo_Forest_C/Bamboo_Forest_POI_NESW_A.cell"), new(0.0f, -6912.0f, -4.0f)));
-                    area.AddCell(new(64, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Bamboo_Forest_Wide_C/Bamboo_Village_X0_Y0_A.cell"), new(-4608.0f, -6912.0f, -4.0f)));
-                    area.AddCell(new(76, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Trans/Bamboo_Forest_Wide_A_NESWcE_B.cell"), new(0.0f, -2304.0f, -4.0f)));
-                    area.AddCell(new(75, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_NSW_A.cell"), new(-2304.0f, -2304.0f, -4.0f)));
-                    area.AddCell(new(74, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Trans/Bamboo_Wide_SCVillageEntry_A.cell"), new(-4608.0f, -2304.0f, -4.0f)));
-                    area.AddCell(new(63, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_NEW_A.cell"), new(-6912.0f, -6912.0f, -4.0f)));
-                    area.AddCell(new(68, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_NEW_A.cell"), new(-6912.0f, -4608.0f, -4.0f)));
-                    area.AddCell(new(73, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_NW_A.cell"), new(-6912.0f, -2304.0f, -4.0f)));
-                    area.AddCell(new(67, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Trans/Bamboo_Wide_SCDojoEntry_ESW_A.cell"), new(2304.0f, -6912.0f, -4.0f)));
-                    area.AddCell(new(72, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_ESW_B.cell"), new(2304.0f, -4608.0f, -4.0f)));
-                    area.AddCell(new(77, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_SW_A.cell"), new(2304.0f, -2304.0f, -4.0f)));
-                    area.AddCell(new(61, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_NESWcW_A.cell"), new(0.0f, -9216.0f, -4.0f)));
-                    area.AddCell(new(59, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_NES_B.cell"), new(-4608.0f, -9216.0f, -4.0f)));
-                    area.AddCell(new(60, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_NES_A.cell"), new(-2304.0f, -9216.0f, -4.0f)));
-                    area.AddCell(new(62, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_ES_A.cell"), new(2304.0f, -9216.0f, -4.0f)));
-                    area.AddCell(new(58, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_NE_A.cell"), new(-6912.0f, -9216.0f, -4.0f)));
+                    area = new(4, (AreaPrototype) GameDatabase.GetPrototypeRefByName(MadripoorArea + "BambooForest/BambooForestArea.prototype"), new(), false);
+                    area.AddCell(new(70, GameDatabase.GetPrototypeRefByName(Madripoor + "Bamboo_Forest_Wide_C/Bamboo_Village_X1_Y1_A.cell"), new(-2304.0f, -4608.0f, -4.0f)));
+                    area.AddCell(new(71, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/Bamboo_GroveEntry_NESW_A.cell"), new(0.0f, -4608.0f, -4.0f)));
+                    area.AddCell(new(65, GameDatabase.GetPrototypeRefByName(Madripoor + "Bamboo_Forest_Wide_C/Bamboo_Village_X1_Y0_A.cell"), new(-2304.0f, -6912.0f, -4.0f)));
+                    area.AddCell(new(69, GameDatabase.GetPrototypeRefByName(Madripoor + "Bamboo_Forest_Wide_C/Bamboo_Village_X0_Y1_A.cell"), new(-4608.0f, -4608.0f, -4.0f)));
+                    area.AddCell(new(66, GameDatabase.GetPrototypeRefByName(Madripoor + "Bamboo_Forest_C/Bamboo_Forest_POI_NESW_A.cell"), new(0.0f, -6912.0f, -4.0f)));
+                    area.AddCell(new(64, GameDatabase.GetPrototypeRefByName(Madripoor + "Bamboo_Forest_Wide_C/Bamboo_Village_X0_Y0_A.cell"), new(-4608.0f, -6912.0f, -4.0f)));
+                    area.AddCell(new(76, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/Bamboo_Forest_Wide_A_NESWcE_B.cell"), new(0.0f, -2304.0f, -4.0f)));
+                    area.AddCell(new(75, GameDatabase.GetPrototypeRefByName(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_NSW_A.cell"), new(-2304.0f, -2304.0f, -4.0f)));
+                    area.AddCell(new(74, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/Bamboo_Wide_SCVillageEntry_A.cell"), new(-4608.0f, -2304.0f, -4.0f)));
+                    area.AddCell(new(63, GameDatabase.GetPrototypeRefByName(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_NEW_A.cell"), new(-6912.0f, -6912.0f, -4.0f)));
+                    area.AddCell(new(68, GameDatabase.GetPrototypeRefByName(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_NEW_A.cell"), new(-6912.0f, -4608.0f, -4.0f)));
+                    area.AddCell(new(73, GameDatabase.GetPrototypeRefByName(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_NW_A.cell"), new(-6912.0f, -2304.0f, -4.0f)));
+                    area.AddCell(new(67, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/Bamboo_Wide_SCDojoEntry_ESW_A.cell"), new(2304.0f, -6912.0f, -4.0f)));
+                    area.AddCell(new(72, GameDatabase.GetPrototypeRefByName(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_ESW_B.cell"), new(2304.0f, -4608.0f, -4.0f)));
+                    area.AddCell(new(77, GameDatabase.GetPrototypeRefByName(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_SW_A.cell"), new(2304.0f, -2304.0f, -4.0f)));
+                    area.AddCell(new(61, GameDatabase.GetPrototypeRefByName(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_NESWcW_A.cell"), new(0.0f, -9216.0f, -4.0f)));
+                    area.AddCell(new(59, GameDatabase.GetPrototypeRefByName(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_NES_B.cell"), new(-4608.0f, -9216.0f, -4.0f)));
+                    area.AddCell(new(60, GameDatabase.GetPrototypeRefByName(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_NES_A.cell"), new(-2304.0f, -9216.0f, -4.0f)));
+                    area.AddCell(new(62, GameDatabase.GetPrototypeRefByName(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_ES_A.cell"), new(2304.0f, -9216.0f, -4.0f)));
+                    area.AddCell(new(58, GameDatabase.GetPrototypeRefByName(Madripoor + "Bamboo_Forest_Wide/Bamboo_Forest_Wide_A_NE_A.cell"), new(-6912.0f, -9216.0f, -4.0f)));
                     region.AddArea(area);
 
-                    area = new(5, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(MadripoorArea + "BambooForest/ForestToGladesArea.prototype"), new(), false);
-                    area.AddCell(new(57, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Trans/Bamboo_Wide_GladesEntry_EW_A.cell"), new(0.0f, 0.0f, -4.0f)));
+                    area = new(5, (AreaPrototype)GameDatabase.GetPrototypeRefByName(MadripoorArea + "BambooForest/ForestToGladesArea.prototype"), new(), false);
+                    area.AddCell(new(57, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/Bamboo_Wide_GladesEntry_EW_A.cell"), new(0.0f, 0.0f, -4.0f)));
                     region.AddArea(area);
 
-                    area = new(6, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(MadripoorArea + "Cove/GladesToCoveArea.prototype"), new(), false);
-                    area.AddCell(new(56, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Trans/Cove_GladesEntry_EW_A.cell"), new(0.0f, 2304.0f, -4.0f)));
+                    area = new(6, (AreaPrototype)GameDatabase.GetPrototypeRefByName(MadripoorArea + "Cove/GladesToCoveArea.prototype"), new(), false);
+                    area.AddCell(new(56, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/Cove_GladesEntry_EW_A.cell"), new(0.0f, 2304.0f, -4.0f)));
                     region.AddArea(area);
 
-                    area = new(7, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(MadripoorArea + "Cove/CoveArea.prototype"), new(), false);
-                    area.AddCell(new(51, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Shore_C/Madripoor_Shore_Grotto_Entry_A.cell"), new(0.0f, 11520.0f, -4.0f)));
-                    area.AddCell(new(48, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Shore_C/Madripoor_SuperShore_A_X0_Y1.cell"), new(0.0f, 9216.0f, -4.0f)));
-                    area.AddCell(new(45, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Shore_C/Madripoor_SuperShore_A_X0_Y0.cell"), new(0.0f, 6912.0f, -4.0f)));
-                    area.AddCell(new(53, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_NW_A.cell"), new(-2304.0f, 13824.0f, -4.0f)));
-                    area.AddCell(new(54, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_NESWcE_A.cell"), new(0.0f, 13824.0f, -4.0f)));
-                    area.AddCell(new(44, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_NEW_B.cell"), new(-2304.0f, 6912.0f, -4.0f)));
-                    area.AddCell(new(47, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_NEW_A.cell"), new(-2304.0f, 9216.0f, -4.0f)));
-                    area.AddCell(new(50, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_NEW_A.cell"), new(-2304.0f, 11520.0f, -4.0f)));
-                    area.AddCell(new(46, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Shore_C/Madripoor_SuperShore_A_X1_Y0.cell"), new(2304.0f, 6912.0f, -4.0f)));
-                    area.AddCell(new(49, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Shore_C/Madripoor_SuperShore_A_X1_Y1.cell"), new(2304.0f, 9216.0f, -4.0f)));
-                    area.AddCell(new(52, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Trans/Shore_ESW_SCIslandEntry.cell"), new(2304.0f, 11520.0f, -4.0f)));
-                    area.AddCell(new(55, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_SW_A.cell"), new(2304.0f, 13824.0f, -4.0f)));
-                    area.AddCell(new(42, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_NESWcW_A.cell"), new(0.0f, 4608.0f, -4.0f)));
-                    area.AddCell(new(43, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_ES_A.cell"), new(2304.0f, 4608.0f, -4.0f)));
-                    area.AddCell(new(41, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_NE_A.cell"), new(-2304.0f, 4608.0f, -4.0f)));
+                    area = new(7, (AreaPrototype)GameDatabase.GetPrototypeRefByName(MadripoorArea + "Cove/CoveArea.prototype"), new(), false);
+                    area.AddCell(new(51, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Shore_C/Madripoor_Shore_Grotto_Entry_A.cell"), new(0.0f, 11520.0f, -4.0f)));
+                    area.AddCell(new(48, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Shore_C/Madripoor_SuperShore_A_X0_Y1.cell"), new(0.0f, 9216.0f, -4.0f)));
+                    area.AddCell(new(45, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Shore_C/Madripoor_SuperShore_A_X0_Y0.cell"), new(0.0f, 6912.0f, -4.0f)));
+                    area.AddCell(new(53, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_NW_A.cell"), new(-2304.0f, 13824.0f, -4.0f)));
+                    area.AddCell(new(54, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_NESWcE_A.cell"), new(0.0f, 13824.0f, -4.0f)));
+                    area.AddCell(new(44, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_NEW_B.cell"), new(-2304.0f, 6912.0f, -4.0f)));
+                    area.AddCell(new(47, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_NEW_A.cell"), new(-2304.0f, 9216.0f, -4.0f)));
+                    area.AddCell(new(50, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_NEW_A.cell"), new(-2304.0f, 11520.0f, -4.0f)));
+                    area.AddCell(new(46, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Shore_C/Madripoor_SuperShore_A_X1_Y0.cell"), new(2304.0f, 6912.0f, -4.0f)));
+                    area.AddCell(new(49, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Shore_C/Madripoor_SuperShore_A_X1_Y1.cell"), new(2304.0f, 9216.0f, -4.0f)));
+                    area.AddCell(new(52, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/Shore_ESW_SCIslandEntry.cell"), new(2304.0f, 11520.0f, -4.0f)));
+                    area.AddCell(new(55, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_SW_A.cell"), new(2304.0f, 13824.0f, -4.0f)));
+                    area.AddCell(new(42, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_NESWcW_A.cell"), new(0.0f, 4608.0f, -4.0f)));
+                    area.AddCell(new(43, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_ES_A.cell"), new(2304.0f, 4608.0f, -4.0f)));
+                    area.AddCell(new(41, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_NE_A.cell"), new(-2304.0f, 4608.0f, -4.0f)));
                     region.AddArea(area);
 
-                    area = new(8, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(MadripoorArea + "LowTown/WasteTreatmentArea1.prototype"), new(), false);
-                    area.AddCell(new(40, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Trans/Waste_Treatment_EW_C_Trans.cell"), new(0.0f, 16128.0f, -4.0f)));
+                    area = new(8, (AreaPrototype)GameDatabase.GetPrototypeRefByName(MadripoorArea + "LowTown/WasteTreatmentArea1.prototype"), new(), false);
+                    area.AddCell(new(40, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/Waste_Treatment_EW_C_Trans.cell"), new(0.0f, 16128.0f, -4.0f)));
                     region.AddArea(area);
 
-                    area = new(9, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(MadripoorArea + "LowTown/WasteTreatmentArea2.prototype"), new(), false);
-                    area.AddCell(new(39, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Trans/Waste_Treatment_EW_A_Trans.cell"), new(0.0f, 18432.0f, 4.0f)));
+                    area = new(9, (AreaPrototype)GameDatabase.GetPrototypeRefByName(MadripoorArea + "LowTown/WasteTreatmentArea2.prototype"), new(), false);
+                    area.AddCell(new(39, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/Waste_Treatment_EW_A_Trans.cell"), new(0.0f, 18432.0f, 4.0f)));
                     region.AddArea(area);
 
-                    area = new(10, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(MadripoorArea + "LowTown/LowTownArea1.prototype"), new(), true);
-                    area.AddCell(new(38, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Lower_C/Madripoor_Lower_C_SW_A.cell"), new(0.0f, 20736.0f, 4.0f)));
+                    area = new(10, (AreaPrototype)GameDatabase.GetPrototypeRefByName(MadripoorArea + "LowTown/LowTownArea1.prototype"), new(), true);
+                    area.AddCell(new(38, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Lower_C/Madripoor_Lower_C_SW_A.cell"), new(0.0f, 20736.0f, 4.0f)));
                     region.AddArea(area);
                     
-                    area = new(11, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(MadripoorArea + "LowTown/LowTownArea2.prototype"), new(), false);
-                    area.AddCell(new(34, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NE_A.cell"), new(-4608.0f, 20736.0f, 4.0f)));
-                    area.AddCell(new(37, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Trans/LowTown_SCAlleyEntry_N_A.cell"), new(-2304.0f, 23040.0f, 4.0f)));
-                    area.AddCell(new(35, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Lower_B/Madripoor_Lower_B_NS_A.cell"), new(-2304.0f, 20736.0f, 4.0f)));
-                    area.AddCell(new(36, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NEW_B.cell"), new(-4608.0f, 23040.0f, 4.0f)));
+                    area = new(11, (AreaPrototype)GameDatabase.GetPrototypeRefByName(MadripoorArea + "LowTown/LowTownArea2.prototype"), new(), false);
+                    area.AddCell(new(34, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NE_A.cell"), new(-4608.0f, 20736.0f, 4.0f)));
+                    area.AddCell(new(37, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/LowTown_SCAlleyEntry_N_A.cell"), new(-2304.0f, 23040.0f, 4.0f)));
+                    area.AddCell(new(35, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Lower_B/Madripoor_Lower_B_NS_A.cell"), new(-2304.0f, 20736.0f, 4.0f)));
+                    area.AddCell(new(36, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NEW_B.cell"), new(-4608.0f, 23040.0f, 4.0f)));
                     region.AddArea(area);
 
-                    ulong fillerLower = GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_FILLER_A.cell");
+                    ulong fillerLower = GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_FILLER_A.cell");
 
-                    area = new(20, (AreaPrototype) GameDatabase.GetDataRefByPrototypeName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
+                    area = new(20, (AreaPrototype) GameDatabase.GetPrototypeRefByName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
                     area.AddCell(new(101, fillerLower, new(-6912.0f, 23040.0f, 4.0f)));
                     area.AddCell(new(102, fillerLower, new(-4608.0f, 32256.0f, 4.0f)));
                     area.AddCell(new(103, fillerLower, new(-6912.0f, 32256.0f, 4.0f)));
@@ -700,9 +700,9 @@ namespace MHServerEmu.GameServer.Regions
                     area.AddCell(new(142, fillerLower, new(-6912.0f, 18432.0f, 4.0f)));
                     region.AddArea(area);
 
-                    ulong fillerShore = GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_FILLER_A.cell");
+                    ulong fillerShore = GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_FILLER_A.cell");
 
-                    area = new(21, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
+                    area = new(21, (AreaPrototype)GameDatabase.GetPrototypeRefByName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
                     area.AddCell(new(110, fillerShore, new(-2304.0f, 2304.0f, -4.0f)));
                     area.AddCell(new(111, fillerShore, new(2304.0f, 16128.0f, -4.0f)));
                     area.AddCell(new(112, fillerShore, new(2304.0f, 2304.0f, -4.0f)));
@@ -724,34 +724,34 @@ namespace MHServerEmu.GameServer.Regions
                     region.AddArea(area);
 
 
-                    area = new(22, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(MadripoorArea + "LowTown/LowTownArea3.prototype"), new(), false);
-                    area.AddCell(new(28, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NE_A.cell"), new(-6912.0f, 25344.0f, 4.0f)));
-                    area.AddCell(new(32, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NW_A.cell"), new(-6912.0f, 29952.0f, 4.0f)));
-                    area.AddCell(new(30, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Lower_C/Madripoor_Lower_BobaTeaPOI_A.cell"), new(-6912.0f, 27648.0f, 4.0f)));
-                    area.AddCell(new(33, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_SW_A.cell"), new(-4608.0f, 29952.0f, 4.0f)));
-                    area.AddCell(new(31, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Trans/Madripoor_ESW_SCInstEntry.cell"), new(-4608.0f, 27648.0f, 4.0f)));
-                    area.AddCell(new(29, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NESW_A.cell"), new(-4608.0f, 25344.0f, 4.0f)));
+                    area = new(22, (AreaPrototype)GameDatabase.GetPrototypeRefByName(MadripoorArea + "LowTown/LowTownArea3.prototype"), new(), false);
+                    area.AddCell(new(28, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NE_A.cell"), new(-6912.0f, 25344.0f, 4.0f)));
+                    area.AddCell(new(32, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NW_A.cell"), new(-6912.0f, 29952.0f, 4.0f)));
+                    area.AddCell(new(30, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Lower_C/Madripoor_Lower_BobaTeaPOI_A.cell"), new(-6912.0f, 27648.0f, 4.0f)));
+                    area.AddCell(new(33, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_SW_A.cell"), new(-4608.0f, 29952.0f, 4.0f)));
+                    area.AddCell(new(31, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/Madripoor_ESW_SCInstEntry.cell"), new(-4608.0f, 27648.0f, 4.0f)));
+                    area.AddCell(new(29, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NESW_A.cell"), new(-4608.0f, 25344.0f, 4.0f)));
                     region.AddArea(area);
 
-                    area = new(23, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(MadripoorArea + "LowTown/LowTownPrincessBarArea.prototype"), new(), false);
-                    area.AddCell(new(27, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Trans/Madripoor_Lower_PrincessBar.cell"), new(-2304.0f, 25344.0f, 4.0f))); 
+                    area = new(23, (AreaPrototype)GameDatabase.GetPrototypeRefByName(MadripoorArea + "LowTown/LowTownPrincessBarArea.prototype"), new(), false);
+                    area.AddCell(new(27, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/Madripoor_Lower_PrincessBar.cell"), new(-2304.0f, 25344.0f, 4.0f))); 
                     region.AddArea(area);
 
-                    area = new(24, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(MadripoorArea + "LowTown/LowTownArea4.prototype"), new(), false);
-                    area.AddCell(new(23, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_ES_A.cell"), new(2304.0f, 27648.0f, 4.0f)));
-                    area.AddCell(new(22, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NES_A.cell"), new(0.0f, 27648.0f, 4.0f)));
-                    area.AddCell(new(24, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Trans/LowTown_SCForgottenEntry_A.cell"), new(-2304.0f, 29952.0f, 4.0f)));
-                    area.AddCell(new(25, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NW_A.cell"), new(0.0f, 29952.0f, 4.0f)));
-                    area.AddCell(new(21, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NEW_A.cell"), new(-2304.0f, 27648.0f, 4.0f)));
-                    area.AddCell(new(26, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NSW_B.cell"), new(2304.0f, 29952.0f, 4.0f)));
+                    area = new(24, (AreaPrototype)GameDatabase.GetPrototypeRefByName(MadripoorArea + "LowTown/LowTownArea4.prototype"), new(), false);
+                    area.AddCell(new(23, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_ES_A.cell"), new(2304.0f, 27648.0f, 4.0f)));
+                    area.AddCell(new(22, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NES_A.cell"), new(0.0f, 27648.0f, 4.0f)));
+                    area.AddCell(new(24, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/LowTown_SCForgottenEntry_A.cell"), new(-2304.0f, 29952.0f, 4.0f)));
+                    area.AddCell(new(25, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NW_A.cell"), new(0.0f, 29952.0f, 4.0f)));
+                    area.AddCell(new(21, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NEW_A.cell"), new(-2304.0f, 27648.0f, 4.0f)));
+                    area.AddCell(new(26, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NSW_B.cell"), new(2304.0f, 29952.0f, 4.0f)));
                     region.AddArea(area);
 
-                    area = new(25, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(MadripoorArea + "LowTown/LowTownInterArea.prototype"), new(), false);
-                    area.AddCell(new(20, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Trans/LowTown_To_High_NS_Exit_A.cell"), new(4608.0f, 29952.0f, 4.0f)));
+                    area = new(25, (AreaPrototype)GameDatabase.GetPrototypeRefByName(MadripoorArea + "LowTown/LowTownInterArea.prototype"), new(), false);
+                    area.AddCell(new(20, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/LowTown_To_High_NS_Exit_A.cell"), new(4608.0f, 29952.0f, 4.0f)));
                     region.AddArea(area);
 
-                    area = new(26, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(MadripoorArea + "LowTown/LowTownToTowerArea.prototype"), new(), false);
-                    area.AddCell(new(19, GameDatabase.GetDataRefByPrototypeName(Madripoor + "Madripoor_Trans/LowTown_To_High_S_Inter_A.cell"), new(6912.0f, 29952.0f, 4.0f)));
+                    area = new(26, (AreaPrototype)GameDatabase.GetPrototypeRefByName(MadripoorArea + "LowTown/LowTownToTowerArea.prototype"), new(), false);
+                    area.AddCell(new(19, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/LowTown_To_High_S_Inter_A.cell"), new(6912.0f, 29952.0f, 4.0f)));
                     region.AddArea(area);
 
 
@@ -777,49 +777,49 @@ namespace MHServerEmu.GameServer.Regions
 
                     string Savage = "Resource/Cells/Savagelands/";
 
-                    area = new(1, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/StoryRevamp/CH07SavageLand/Areas/DinoJungle/DinoJungleArea.prototype"), new(), true);
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH07SavageLand/Areas/DinoJungle/DinoJungleArea.prototype"), new(), true);
 
-                    area.AddCell(new(85, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_Trans/Dino_Jungle_NESW_Entry_A.cell"), new(-5760.0f, 2304.0f, 0.0f)));
-                    area.AddCell(new(103, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_A.cell"), new(-5760.0f, 9216.0f, 0.0f)));
-                    area.AddCell(new(82, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_B/Dino_Jungle_B_NESW_B.cell"), new(-12672.0f, 2304.0f, 0.0f)));
-                    area.AddCell(new(114, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NSW_A.cell"), new(-8064.0f, 13824.0f, 0.0f)));
-                    area.AddCell(new(90, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_B.cell"), new(-8064.0f, 4608.0f, 0.0f)));
-                    area.AddCell(new(106, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_B/Dino_Jungle_B_NESW_A.cell"), new(-12672.0f, 11520.0f, 0.0f)));
-                    area.AddCell(new(88, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_C.cell"), new(-12672.0f, 4608.0f, 0.0f)));
-                    area.AddCell(new(83, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_Trans/Dino_Jungle_SacredValley_Entry.cell"), new(-10368.0f, 2304.0f, 0.0f)));
-                    area.AddCell(new(89, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_C.cell"), new(-10368.0f, 4608.0f, 0.0f)));
-                    area.AddCell(new(116, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_FILLER_A.cell"), new(-3456.0f, 13824.0f, 0.0f)));
-                    area.AddCell(new(84, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_C.cell"), new(-8064.0f, 2304.0f, 0.0f)));
-                    area.AddCell(new(108, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_C/Dino_Jungle_Village_B.cell"), new(-8064.0f, 11520.0f, 0.0f)));
-                    area.AddCell(new(102, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_C/Dino_Jungle_Village_A.cell"), new(-8064.0f, 9216.0f, 0.0f)));
-                    area.AddCell(new(107, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_C/Dino_Jungle_Village_C.cell"), new(-10368.0f, 11520.0f, 0.0f)));
-                    area.AddCell(new(97, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_C/Dino_Jungle_C_NESW_A.cell"), new(-5760.0f, 6912.0f, 0.0f)));
-                    area.AddCell(new(95, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_C.cell"), new(-10368.0f, 6912.0f, 0.0f)));
-                    area.AddCell(new(96, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_A.cell"), new(-8064.0f, 6912.0f, 0.0f)));
-                    area.AddCell(new(94, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_B.cell"), new(-12672.0f, 6912.0f, 0.0f)));
-                    area.AddCell(new(101, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_C/Dino_Jungle_Village_D.cell"), new(-10368.0f, 9216.0f, 0.0f)));
-                    area.AddCell(new(91, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_A.cell"), new(-5760.0f, 4608.0f, 0.0f)));
-                    area.AddCell(new(100, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_A.cell"), new(-12672.0f, 9216.0f, 0.0f)));
-                    area.AddCell(new(109, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESWdNE_A.cell"), new(-5760.0f, 11520.0f, 0.0f)));
-                    area.AddCell(new(113, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NSW_A.cell"), new(-10368.0f, 13824.0f, 0.0f)));
-                    area.AddCell(new(81, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, 2304.0f, 0.0f)));
-                    area.AddCell(new(112, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NSW_A.cell"), new(-12672.0f, 13824.0f, 0.0f)));
-                    area.AddCell(new(93, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, 6912.0f, 0.0f)));
-                    area.AddCell(new(87, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, 4608.0f, 0.0f)));
-                    area.AddCell(new(105, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, 11520.0f, 0.0f)));
-                    area.AddCell(new(99, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_C/Dino_Jungle_JeepWreck.cell"), new(-14976.0f, 9216.0f, 0.0f)));
-                    area.AddCell(new(111, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NW_A.cell"), new(-14976.0f, 13824.0f, 0.0f)));
-                    area.AddCell(new(86, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, 2304.0f, 0.0f)));
-                    area.AddCell(new(92, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, 4608.0f, 0.0f)));
-                    area.AddCell(new(98, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, 6912.0f, 0.0f)));
-                    area.AddCell(new(104, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_Trans/Dino_Jungle_DinoGrave_Entry.cell"), new(-3456.0f, 9216.0f, 0.0f)));
-                    area.AddCell(new(115, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_SW_A.cell"), new(-5760.0f, 13824.0f, 0.0f)));
-                    area.AddCell(new(110, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_SW_A.cell"), new(-3456.0f, 11520.0f, 0.0f)));
+                    area.AddCell(new(85, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_Trans/Dino_Jungle_NESW_Entry_A.cell"), new(-5760.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(103, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_A.cell"), new(-5760.0f, 9216.0f, 0.0f)));
+                    area.AddCell(new(82, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_B/Dino_Jungle_B_NESW_B.cell"), new(-12672.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(114, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NSW_A.cell"), new(-8064.0f, 13824.0f, 0.0f)));
+                    area.AddCell(new(90, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_B.cell"), new(-8064.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(106, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_B/Dino_Jungle_B_NESW_A.cell"), new(-12672.0f, 11520.0f, 0.0f)));
+                    area.AddCell(new(88, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_C.cell"), new(-12672.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(83, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_Trans/Dino_Jungle_SacredValley_Entry.cell"), new(-10368.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(89, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_C.cell"), new(-10368.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(116, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_FILLER_A.cell"), new(-3456.0f, 13824.0f, 0.0f)));
+                    area.AddCell(new(84, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_C.cell"), new(-8064.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(108, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_C/Dino_Jungle_Village_B.cell"), new(-8064.0f, 11520.0f, 0.0f)));
+                    area.AddCell(new(102, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_C/Dino_Jungle_Village_A.cell"), new(-8064.0f, 9216.0f, 0.0f)));
+                    area.AddCell(new(107, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_C/Dino_Jungle_Village_C.cell"), new(-10368.0f, 11520.0f, 0.0f)));
+                    area.AddCell(new(97, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_C/Dino_Jungle_C_NESW_A.cell"), new(-5760.0f, 6912.0f, 0.0f)));
+                    area.AddCell(new(95, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_C.cell"), new(-10368.0f, 6912.0f, 0.0f)));
+                    area.AddCell(new(96, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_A.cell"), new(-8064.0f, 6912.0f, 0.0f)));
+                    area.AddCell(new(94, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_B.cell"), new(-12672.0f, 6912.0f, 0.0f)));
+                    area.AddCell(new(101, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_C/Dino_Jungle_Village_D.cell"), new(-10368.0f, 9216.0f, 0.0f)));
+                    area.AddCell(new(91, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_A.cell"), new(-5760.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(100, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_A.cell"), new(-12672.0f, 9216.0f, 0.0f)));
+                    area.AddCell(new(109, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESWdNE_A.cell"), new(-5760.0f, 11520.0f, 0.0f)));
+                    area.AddCell(new(113, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NSW_A.cell"), new(-10368.0f, 13824.0f, 0.0f)));
+                    area.AddCell(new(81, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(112, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NSW_A.cell"), new(-12672.0f, 13824.0f, 0.0f)));
+                    area.AddCell(new(93, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, 6912.0f, 0.0f)));
+                    area.AddCell(new(87, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(105, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, 11520.0f, 0.0f)));
+                    area.AddCell(new(99, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_C/Dino_Jungle_JeepWreck.cell"), new(-14976.0f, 9216.0f, 0.0f)));
+                    area.AddCell(new(111, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NW_A.cell"), new(-14976.0f, 13824.0f, 0.0f)));
+                    area.AddCell(new(86, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(92, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(98, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, 6912.0f, 0.0f)));
+                    area.AddCell(new(104, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_Trans/Dino_Jungle_DinoGrave_Entry.cell"), new(-3456.0f, 9216.0f, 0.0f)));
+                    area.AddCell(new(115, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_SW_A.cell"), new(-5760.0f, 13824.0f, 0.0f)));
+                    area.AddCell(new(110, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_SW_A.cell"), new(-3456.0f, 11520.0f, 0.0f)));
                     region.AddArea(area);
 
-                    ulong fillerDino = GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_FILLER_A.cell");
+                    ulong fillerDino = GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_FILLER_A.cell");
                     
-                    area = new(24, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
+                    area = new(24, (AreaPrototype)GameDatabase.GetPrototypeRefByName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
                     // 117 - 208
                     uint areaid = 117;
                     float y;
@@ -845,104 +845,104 @@ namespace MHServerEmu.GameServer.Regions
 
                     region.AddArea(area);
 
-                    area = new(2, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/StoryRevamp/CH07SavageLand/Areas/TransitionAreas/RiverTransitionWestArea.prototype"), new(), false);
-                    area.AddCell(new(75, GameDatabase.GetDataRefByPrototypeName(Savage + "Savagelands_Trans/Dino_Jungle_SuperRiver_F.cell"), new(-14976.0f, 0.0f, 0.0f)));
-                    area.AddCell(new(76, GameDatabase.GetDataRefByPrototypeName(Savage + "Savagelands_Trans/Dino_Jungle_SuperRiver_E.cell"), new(-12672.0f, 0.0f, 0.0f)));
-                    area.AddCell(new(77, GameDatabase.GetDataRefByPrototypeName(Savage + "Savagelands_Trans/Dino_Jungle_SuperRiver_B.cell"), new(-10368.0f, 0.0f, 0.0f)));
-                    area.AddCell(new(78, GameDatabase.GetDataRefByPrototypeName(Savage + "Savagelands_Trans/Dino_Jungle_SuperRiver_E.cell"), new(-8064.0f, 0.0f, 0.0f)));
-                    area.AddCell(new(79, GameDatabase.GetDataRefByPrototypeName(Savage + "Savagelands_Trans/Dino_Jungle_SuperRiver_C.cell"), new(-5760.0f, 0.0f, 0.0f)));
-                    area.AddCell(new(80, GameDatabase.GetDataRefByPrototypeName(Savage + "Savagelands_Trans/Dino_Jungle_SuperRiver_A.cell"), new(-3456.0f, 0.0f, 0.0f)));
+                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH07SavageLand/Areas/TransitionAreas/RiverTransitionWestArea.prototype"), new(), false);
+                    area.AddCell(new(75, GameDatabase.GetPrototypeRefByName(Savage + "Savagelands_Trans/Dino_Jungle_SuperRiver_F.cell"), new(-14976.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(76, GameDatabase.GetPrototypeRefByName(Savage + "Savagelands_Trans/Dino_Jungle_SuperRiver_E.cell"), new(-12672.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(77, GameDatabase.GetPrototypeRefByName(Savage + "Savagelands_Trans/Dino_Jungle_SuperRiver_B.cell"), new(-10368.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(78, GameDatabase.GetPrototypeRefByName(Savage + "Savagelands_Trans/Dino_Jungle_SuperRiver_E.cell"), new(-8064.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(79, GameDatabase.GetPrototypeRefByName(Savage + "Savagelands_Trans/Dino_Jungle_SuperRiver_C.cell"), new(-5760.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(80, GameDatabase.GetPrototypeRefByName(Savage + "Savagelands_Trans/Dino_Jungle_SuperRiver_A.cell"), new(-3456.0f, 0.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(18, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/StoryRevamp/CH07SavageLand/Areas/BroodJungle/BroodJungleArea.prototype"), new(), false);
-                    area.AddCell(new(90, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_B.cell"), new(-8064.0f, 4608.0f, 0.0f)));
-                    area.AddCell(new(65, GameDatabase.GetDataRefByPrototypeName(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_3L3_B.cell"), new(-10368.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(49, GameDatabase.GetDataRefByPrototypeName(Savage + "Brood_Jungle_Trans/Brood_Jungle_SCInstEntry.cell"), new(-5760.0f, -11520.0f, 0.0f)));
-                    area.AddCell(new(73, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_C/Dino_Jungle_MiniVillage.cell"), new(-5760.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(55, GameDatabase.GetDataRefByPrototypeName(Savage + "Brood_Jungle_Trans/Brood_Jungle_SCStationEntry_A.cell"), new(-5760.0f, -9216.0f, 0.0f)));
-                    area.AddCell(new(71, GameDatabase.GetDataRefByPrototypeName(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_1x2_B.cell"), new(-10368.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(70, GameDatabase.GetDataRefByPrototypeName(Savage + "Brood_Jungle_C/Brood_Jungle_ScienceSpire.cell"), new(-12672.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(60, GameDatabase.GetDataRefByPrototypeName(Savage + "Brood_Jungle_Trans/Jungle_Brood_Caves_Entry_A.cell"), new(-8064.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(58, GameDatabase.GetDataRefByPrototypeName(Savage + "Brood_Jungle_Trans/Brood_Jungle_SHIELD_A.cell"), new(-12672.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(66, GameDatabase.GetDataRefByPrototypeName(Savage + "Brood_Jungle_C/Brood_Jungle_C_NESW_A.cell"), new(-8064.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(64, GameDatabase.GetDataRefByPrototypeName(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_3L3_C.cell"), new(-12672.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(48, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESWdSE_A.cell"), new(-8064.0f, -11520.0f, 0.0f)));
-                    area.AddCell(new(72, GameDatabase.GetDataRefByPrototypeName(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_1x2_A.cell"), new(-8064.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(40, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NES_A.cell"), new(-12672.0f, -13824.0f, 0.0f)));
-                    area.AddCell(new(61, GameDatabase.GetDataRefByPrototypeName(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_2x1_A.cell"), new(-5760.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(59, GameDatabase.GetDataRefByPrototypeName(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_3L3_A.cell"), new(-10368.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(67, GameDatabase.GetDataRefByPrototypeName(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_2x1_B.cell"), new(-5760.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(46, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESWdNE_A.cell"), new(-12672.0f, -11520.0f, 0.0f)));
-                    area.AddCell(new(47, GameDatabase.GetDataRefByPrototypeName(Savage + "Brood_Jungle_Trans/Brood_Jungle_SCTowerEntry_A.cell"), new(-10368.0f, -11520.0f, 0.0f)));
-                    area.AddCell(new(54, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESWdSW_A.cell"), new(-8064.0f, -9216.0f, 0.0f)));
-                    area.AddCell(new(69, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(45, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, -11520.0f, 0.0f)));
-                    area.AddCell(new(63, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(51, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, -9216.0f, 0.0f)));
-                    area.AddCell(new(57, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(52, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESWdNW_A.cell"), new(-12672.0f, -9216.0f, 0.0f)));
-                    area.AddCell(new(50, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESWcN_A.cell"), new(-3456.0f, -11520.0f, 0.0f)));
-                    area.AddCell(new(74, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(42, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NES_A.cell"), new(-8064.0f, -13824.0f, 0.0f)));
-                    area.AddCell(new(56, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, -9216.0f, 0.0f)));
-                    area.AddCell(new(68, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(62, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(43, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NES_A.cell"), new(-5760.0f, -13824.0f, 0.0f)));
-                    area.AddCell(new(53, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NES_A.cell"), new(-10368.0f, -9216.0f, 0.0f)));
-                    area.AddCell(new(41, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NES_A.cell"), new(-10368.0f, -13824.0f, 0.0f)));
-                    area.AddCell(new(44, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_ES_A.cell"), new(-3456.0f, -13824.0f, 0.0f)));
-                    area.AddCell(new(39, GameDatabase.GetDataRefByPrototypeName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NE_A.cell"), new(-14976.0f, -13824.0f, 0.0f)));
+                    area = new(18, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH07SavageLand/Areas/BroodJungle/BroodJungleArea.prototype"), new(), false);
+                    area.AddCell(new(90, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_B.cell"), new(-8064.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(65, GameDatabase.GetPrototypeRefByName(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_3L3_B.cell"), new(-10368.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(49, GameDatabase.GetPrototypeRefByName(Savage + "Brood_Jungle_Trans/Brood_Jungle_SCInstEntry.cell"), new(-5760.0f, -11520.0f, 0.0f)));
+                    area.AddCell(new(73, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_C/Dino_Jungle_MiniVillage.cell"), new(-5760.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(55, GameDatabase.GetPrototypeRefByName(Savage + "Brood_Jungle_Trans/Brood_Jungle_SCStationEntry_A.cell"), new(-5760.0f, -9216.0f, 0.0f)));
+                    area.AddCell(new(71, GameDatabase.GetPrototypeRefByName(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_1x2_B.cell"), new(-10368.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(70, GameDatabase.GetPrototypeRefByName(Savage + "Brood_Jungle_C/Brood_Jungle_ScienceSpire.cell"), new(-12672.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(60, GameDatabase.GetPrototypeRefByName(Savage + "Brood_Jungle_Trans/Jungle_Brood_Caves_Entry_A.cell"), new(-8064.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(58, GameDatabase.GetPrototypeRefByName(Savage + "Brood_Jungle_Trans/Brood_Jungle_SHIELD_A.cell"), new(-12672.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(66, GameDatabase.GetPrototypeRefByName(Savage + "Brood_Jungle_C/Brood_Jungle_C_NESW_A.cell"), new(-8064.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(64, GameDatabase.GetPrototypeRefByName(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_3L3_C.cell"), new(-12672.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(48, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESWdSE_A.cell"), new(-8064.0f, -11520.0f, 0.0f)));
+                    area.AddCell(new(72, GameDatabase.GetPrototypeRefByName(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_1x2_A.cell"), new(-8064.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(40, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NES_A.cell"), new(-12672.0f, -13824.0f, 0.0f)));
+                    area.AddCell(new(61, GameDatabase.GetPrototypeRefByName(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_2x1_A.cell"), new(-5760.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(59, GameDatabase.GetPrototypeRefByName(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_3L3_A.cell"), new(-10368.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(67, GameDatabase.GetPrototypeRefByName(Savage + "Brood_Jungle_C/Brood_Jungle_HeavyJungle_2x1_B.cell"), new(-5760.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(46, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESWdNE_A.cell"), new(-12672.0f, -11520.0f, 0.0f)));
+                    area.AddCell(new(47, GameDatabase.GetPrototypeRefByName(Savage + "Brood_Jungle_Trans/Brood_Jungle_SCTowerEntry_A.cell"), new(-10368.0f, -11520.0f, 0.0f)));
+                    area.AddCell(new(54, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESWdSW_A.cell"), new(-8064.0f, -9216.0f, 0.0f)));
+                    area.AddCell(new(69, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(45, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, -11520.0f, 0.0f)));
+                    area.AddCell(new(63, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(51, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, -9216.0f, 0.0f)));
+                    area.AddCell(new(57, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NEW_A.cell"), new(-14976.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(52, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESWdNW_A.cell"), new(-12672.0f, -9216.0f, 0.0f)));
+                    area.AddCell(new(50, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESWcN_A.cell"), new(-3456.0f, -11520.0f, 0.0f)));
+                    area.AddCell(new(74, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(42, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NES_A.cell"), new(-8064.0f, -13824.0f, 0.0f)));
+                    area.AddCell(new(56, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, -9216.0f, 0.0f)));
+                    area.AddCell(new(68, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(62, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_ESW_A.cell"), new(-3456.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(43, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NES_A.cell"), new(-5760.0f, -13824.0f, 0.0f)));
+                    area.AddCell(new(53, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NES_A.cell"), new(-10368.0f, -9216.0f, 0.0f)));
+                    area.AddCell(new(41, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NES_A.cell"), new(-10368.0f, -13824.0f, 0.0f)));
+                    area.AddCell(new(44, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_ES_A.cell"), new(-3456.0f, -13824.0f, 0.0f)));
+                    area.AddCell(new(39, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NE_A.cell"), new(-14976.0f, -13824.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(21, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/StoryRevamp/CH07SavageLand/Areas/TransitionAreas/RopeBridgeNorthArea.prototype"), new(), false);
-                    area.AddCell(new(38, GameDatabase.GetDataRefByPrototypeName(Savage + "RopeBridge_Trans/RopeBridge_NS_A.cell"), new(-1152.0f, -11520.0f, 0.0f)));
+                    area = new(21, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH07SavageLand/Areas/TransitionAreas/RopeBridgeNorthArea.prototype"), new(), false);
+                    area.AddCell(new(38, GameDatabase.GetPrototypeRefByName(Savage + "RopeBridge_Trans/RopeBridge_NS_A.cell"), new(-1152.0f, -11520.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(22, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/StoryRevamp/CH07SavageLand/Areas/TransitionAreas/JungleToMarshSN.prototype"), new(), false);
-                    area.AddCell(new(37, GameDatabase.GetDataRefByPrototypeName(Savage + "Savagelands_Trans/JungleToMarsh_Trans_SN_A.cell"), new(1152.0f, -11520.0f, 0.0f)));
+                    area = new(22, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH07SavageLand/Areas/TransitionAreas/JungleToMarshSN.prototype"), new(), false);
+                    area.AddCell(new(37, GameDatabase.GetPrototypeRefByName(Savage + "Savagelands_Trans/JungleToMarsh_Trans_SN_A.cell"), new(1152.0f, -11520.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(23, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/StoryRevamp/CH07SavageLand/Areas/MutateMarsh/MutateMarshArea.prototype"), new(), false);
-                    area.AddCell(new(20, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_C/Marsh_C_NESW_Island_1x1.cell"), new(5760.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(11, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_B/Marsh_B_NESW_A.cell"), new(12672.0f, -11520.0f, 0.0f)));
-                    area.AddCell(new(27, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_C/Marsh_C_NESW_B.cell"), new(8064.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(15, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_Trans/Marsh_NESW_SabretoothEntry_A.cell"), new(8064.0f, -9216.0f, 0.0f)));
-                    area.AddCell(new(16, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_A/Marsh_A_NESW_B.cell"), new(10368.0f, -9216.0f, 0.0f)));
-                    area.AddCell(new(8, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_B/Marsh_B_NESW_B.cell"), new(5760.0f, -11520.0f, 0.0f)));
-                    area.AddCell(new(10, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_Trans/Marsh_Mutate_Caves_Entry_A.cell"), new(10368.0f, -11520.0f, 0.0f)));
-                    area.AddCell(new(26, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_A/Marsh_A_NESW_A.cell"), new(5760.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(21, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_C/Marsh_C_NESW_Island_1x2_B.cell"), new(8064.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(22, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_C/Marsh_C_NESW_Island_1x2_A.cell"), new(10368.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(14, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_A/Marsh_A_NESW_C.cell"), new(5760.0f, -9216.0f, 0.0f)));
-                    area.AddCell(new(17, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_C/Marsh_C_NESW_Island_A.cell"), new(12672.0f, -9216.0f, 0.0f)));
-                    area.AddCell(new(23, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_C/Marsh_C_NESW_Island_B.cell"), new(12672.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(9, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_B/Marsh_B_NESW_C.cell"), new(8064.0f, -11520.0f, 0.0f)));
-                    area.AddCell(new(29, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_A/Marsh_A_NESW_C.cell"), new(12672.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(28, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_C/Marsh_C_NESW_A.cell"), new(10368.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(33, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_A/Marsh_A_NSW_A.cell"), new(8064.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(35, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_Trans/Marsh_NSW_SCInstEntry.cell"), new(12672.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(34, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_A/Marsh_A_NSW_A.cell"), new(10368.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(2, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_A/Marsh_A_NES_A.cell"), new(5760.0f, -13824.0f, 0.0f)));
-                    area.AddCell(new(32, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_Trans/Marsh_NSW_SCInstEntry_B.cell"), new(5760.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(7, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_A/Marsh_A_NESWcS_A.cell"), new(3456.0f, -11520.0f, 0.0f)));
-                    area.AddCell(new(19, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_A/Marsh_A_NEW_A.cell"), new(3456.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(25, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_A/Marsh_A_NEW_A.cell"), new(3456.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(13, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_A/Marsh_A_NEW_A.cell"), new(3456.0f, -9216.0f, 0.0f)));
-                    area.AddCell(new(31, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_A/Marsh_A_NW_A.cell"), new(3456.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(18, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_A/Marsh_A_ESW_A.cell"), new(14976.0f, -9216.0f, 0.0f)));
-                    area.AddCell(new(30, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_A/Marsh_A_ESW_A.cell"), new(14976.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(24, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_A/Marsh_A_ESW_A.cell"), new(14976.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(12, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_Trans/Marsh_ESW_SCInstEntry.cell"), new(14976.0f, -11520.0f, 0.0f)));
-                    area.AddCell(new(36, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_A/Marsh_A_SW_A.cell"), new(14976.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(5, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_A/Marsh_A_NES_A.cell"), new(12672.0f, -13824.0f, 0.0f)));
-                    area.AddCell(new(4, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_A/Marsh_A_NES_A.cell"), new(10368.0f, -13824.0f, 0.0f)));
-                    area.AddCell(new(3, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_A/Marsh_A_NES_A.cell"), new(8064.0f, -13824.0f, 0.0f)));
-                    area.AddCell(new(6, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_A/Marsh_A_ES_A.cell"), new(14976.0f, -13824.0f, 0.0f)));
-                    area.AddCell(new(1, GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_A/Marsh_A_NE_A.cell"), new(3456.0f, -13824.0f, 0.0f)));
+                    area = new(23, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH07SavageLand/Areas/MutateMarsh/MutateMarshArea.prototype"), new(), false);
+                    area.AddCell(new(20, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_C/Marsh_C_NESW_Island_1x1.cell"), new(5760.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(11, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_B/Marsh_B_NESW_A.cell"), new(12672.0f, -11520.0f, 0.0f)));
+                    area.AddCell(new(27, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_C/Marsh_C_NESW_B.cell"), new(8064.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(15, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_Trans/Marsh_NESW_SabretoothEntry_A.cell"), new(8064.0f, -9216.0f, 0.0f)));
+                    area.AddCell(new(16, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_NESW_B.cell"), new(10368.0f, -9216.0f, 0.0f)));
+                    area.AddCell(new(8, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_B/Marsh_B_NESW_B.cell"), new(5760.0f, -11520.0f, 0.0f)));
+                    area.AddCell(new(10, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_Trans/Marsh_Mutate_Caves_Entry_A.cell"), new(10368.0f, -11520.0f, 0.0f)));
+                    area.AddCell(new(26, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_NESW_A.cell"), new(5760.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(21, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_C/Marsh_C_NESW_Island_1x2_B.cell"), new(8064.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(22, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_C/Marsh_C_NESW_Island_1x2_A.cell"), new(10368.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(14, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_NESW_C.cell"), new(5760.0f, -9216.0f, 0.0f)));
+                    area.AddCell(new(17, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_C/Marsh_C_NESW_Island_A.cell"), new(12672.0f, -9216.0f, 0.0f)));
+                    area.AddCell(new(23, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_C/Marsh_C_NESW_Island_B.cell"), new(12672.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(9, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_B/Marsh_B_NESW_C.cell"), new(8064.0f, -11520.0f, 0.0f)));
+                    area.AddCell(new(29, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_NESW_C.cell"), new(12672.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(28, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_C/Marsh_C_NESW_A.cell"), new(10368.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(33, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_NSW_A.cell"), new(8064.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(35, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_Trans/Marsh_NSW_SCInstEntry.cell"), new(12672.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(34, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_NSW_A.cell"), new(10368.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(2, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_NES_A.cell"), new(5760.0f, -13824.0f, 0.0f)));
+                    area.AddCell(new(32, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_Trans/Marsh_NSW_SCInstEntry_B.cell"), new(5760.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(7, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_NESWcS_A.cell"), new(3456.0f, -11520.0f, 0.0f)));
+                    area.AddCell(new(19, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_NEW_A.cell"), new(3456.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(25, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_NEW_A.cell"), new(3456.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(13, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_NEW_A.cell"), new(3456.0f, -9216.0f, 0.0f)));
+                    area.AddCell(new(31, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_NW_A.cell"), new(3456.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(18, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_ESW_A.cell"), new(14976.0f, -9216.0f, 0.0f)));
+                    area.AddCell(new(30, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_ESW_A.cell"), new(14976.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(24, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_ESW_A.cell"), new(14976.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(12, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_Trans/Marsh_ESW_SCInstEntry.cell"), new(14976.0f, -11520.0f, 0.0f)));
+                    area.AddCell(new(36, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_SW_A.cell"), new(14976.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(5, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_NES_A.cell"), new(12672.0f, -13824.0f, 0.0f)));
+                    area.AddCell(new(4, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_NES_A.cell"), new(10368.0f, -13824.0f, 0.0f)));
+                    area.AddCell(new(3, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_NES_A.cell"), new(8064.0f, -13824.0f, 0.0f)));
+                    area.AddCell(new(6, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_ES_A.cell"), new(14976.0f, -13824.0f, 0.0f)));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_NE_A.cell"), new(3456.0f, -13824.0f, 0.0f)));
                     region.AddArea(area);
 
-                    ulong fillerMarch = GameDatabase.GetDataRefByPrototypeName(Savage + "Marsh_A/Marsh_A_FILLER_A.cell");
-                    area = new(25, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
+                    ulong fillerMarch = GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_FILLER_A.cell");
+                    area = new(25, (AreaPrototype)GameDatabase.GetPrototypeRefByName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
                    
                     areaid = 209;
                     for (uint i = 0; i < 6; i++)
@@ -982,73 +982,73 @@ namespace MHServerEmu.GameServer.Regions
                     string Latveria = "Resource/Cells/Latveria/";
                     string LatveriaArea = "Regions/StoryRevamp/CH08Latveria/Areas/Latveria/Doomstadt/";
 
-                    area = new(1, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(LatveriaArea + "LatveriaPCZArea1.prototype"), new(), true);
-                    area.AddCell(new(52, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_C/Courtyard_SuperBridgeA_X0_Y1.cell"), new(-3456.0f, -10368.0f, 0.0f)));
-                    area.AddCell(new(51, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NESW_B.cell"), new(-5760.0f, -10368.0f, 0.0f)));
-                    area.AddCell(new(56, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_C/Courtyard_SuperBridgeA_X0_Y2.cell"), new(-3456.0f, -8064.0f, 0.0f)));
-                    area.AddCell(new(55, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_Trans/Courtyard_Objective_NSW_A.cell"), new(-5760.0f, -8064.0f, 0.0f)));
-                    area.AddCell(new(50, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_Trans/Courtyard_Entry_A.cell"), new(-8064.0f, -10368.0f, 0.0f)));
-                    area.AddCell(new(54, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NW_A.cell"), new(-8064.0f, -8064.0f, 0.0f)));
-                    area.AddCell(new(53, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NESWcN_A.cell"), new(-1152.0f, -10368.0f, 0.0f)));
-                    area.AddCell(new(57, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_SW_A.cell"), new(-1152.0f, -8064.0f, 0.0f)));
-                    area.AddCell(new(47, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NES_B.cell"), new(-5760.0f, -12672.0f, 0.0f)));
-                    area.AddCell(new(48, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_C/Courtyard_SuperBridgeA_X0_Y0.cell"), new(-3456.0f, -12672.0f, 0.0f)));
-                    area.AddCell(new(49, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_ES_A.cell"), new(-1152.0f, -12672.0f, 0.0f)));
-                    area.AddCell(new(46, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NE_A.cell"), new(-8064.0f, -12672.0f, 0.0f)));
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeRefByName(LatveriaArea + "LatveriaPCZArea1.prototype"), new(), true);
+                    area.AddCell(new(52, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_C/Courtyard_SuperBridgeA_X0_Y1.cell"), new(-3456.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(51, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NESW_B.cell"), new(-5760.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(56, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_C/Courtyard_SuperBridgeA_X0_Y2.cell"), new(-3456.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(55, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_Trans/Courtyard_Objective_NSW_A.cell"), new(-5760.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(50, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_Trans/Courtyard_Entry_A.cell"), new(-8064.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(54, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NW_A.cell"), new(-8064.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(53, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NESWcN_A.cell"), new(-1152.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(57, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_SW_A.cell"), new(-1152.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(47, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NES_B.cell"), new(-5760.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(48, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_C/Courtyard_SuperBridgeA_X0_Y0.cell"), new(-3456.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(49, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_ES_A.cell"), new(-1152.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(46, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NE_A.cell"), new(-8064.0f, -12672.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(2, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(LatveriaArea + "LatveriaPCZArea2.prototype"), new(), false);
-                    area.AddCell(new(36, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_B/Courtyard_B_NESW_C.cell"), new(5760.0f, -10368.0f, 0.0f)));
-                    area.AddCell(new(44, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NSW_B.cell"), new(5760.0f, -5760.0f, 0.0f)));
-                    area.AddCell(new(40, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NESW_A.cell"), new(5760.0f, -8064.0f, 0.0f)));
-                    area.AddCell(new(39, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_Trans/Courtyard_TavernEntry_NESW_A.cell"), new(3456.0f, -8064.0f, 0.0f)));
-                    area.AddCell(new(35, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NESW_D.cell"), new(3456.0f, -10368.0f, 0.0f)));
-                    area.AddCell(new(43, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NESWcE_A.cell"), new(3456.0f, -5760.0f, 0.0f)));
-                    area.AddCell(new(34, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NESWcS_A.cell"), new(1152.0f, -10368.0f, 0.0f)));
-                    area.AddCell(new(38, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_Trans/Courtyard_Objective_NEW_A.cell"), new(1152.0f, -8064.0f, 0.0f)));
-                    area.AddCell(new(42, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NW_A.cell"), new(1152.0f, -5760.0f, 0.0f)));
-                    area.AddCell(new(41, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_ESW_A.cell"), new(8064.0f, -8064.0f, 0.0f)));
-                    area.AddCell(new(37, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_ESW_B.cell"), new(8064.0f, -10368.0f, 0.0f)));
-                    area.AddCell(new(45, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_SW_A.cell"), new(8064.0f, -5760.0f, 0.0f)));
-                    area.AddCell(new(31, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NES_A.cell"), new(3456.0f, -12672.0f, 0.0f)));
-                    area.AddCell(new(32, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NES_B.cell"), new(5760.0f, -12672.0f, 0.0f)));
-                    area.AddCell(new(33, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_ES_A.cell"), new(8064.0f, -12672.0f, 0.0f)));
-                    area.AddCell(new(30, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NE_A.cell"), new(1152.0f, -12672.0f, 0.0f)));
+                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeRefByName(LatveriaArea + "LatveriaPCZArea2.prototype"), new(), false);
+                    area.AddCell(new(36, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_B/Courtyard_B_NESW_C.cell"), new(5760.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(44, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NSW_B.cell"), new(5760.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(40, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NESW_A.cell"), new(5760.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(39, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_Trans/Courtyard_TavernEntry_NESW_A.cell"), new(3456.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(35, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NESW_D.cell"), new(3456.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(43, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NESWcE_A.cell"), new(3456.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(34, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NESWcS_A.cell"), new(1152.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(38, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_Trans/Courtyard_Objective_NEW_A.cell"), new(1152.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(42, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NW_A.cell"), new(1152.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(41, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_ESW_A.cell"), new(8064.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(37, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_ESW_B.cell"), new(8064.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(45, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_SW_A.cell"), new(8064.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(31, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NES_A.cell"), new(3456.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(32, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NES_B.cell"), new(5760.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(33, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_ES_A.cell"), new(8064.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(30, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NE_A.cell"), new(1152.0f, -12672.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(3, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(LatveriaArea + "LatveriaPCZArea3.prototype"), new(), false);
-                    area.AddCell(new(23, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_C/Courtyard_SuperWallA_X0_Y1.cell"), new(3456.0f, 3456.0f, 0.0f)));
-                    area.AddCell(new(15, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_B/Courtyard_B_NESW_B.cell"), new(3456.0f, -1152.0f, 0.0f)));
-                    area.AddCell(new(24, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NESW_E.cell"), new(5760.0f, 3456.0f, 0.0f)));
-                    area.AddCell(new(16, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_Trans/Courtyard_Objective_NESW_A.cell"), new(5760.0f, -1152.0f, 0.0f)));
-                    area.AddCell(new(20, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_B/Courtyard_B_NESW_C.cell"), new(5760.0f, 1152.0f, 0.0f)));
-                    area.AddCell(new(28, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NSW_B.cell"), new(5760.0f, 5760.0f, 0.0f)));
-                    area.AddCell(new(19, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_C/Courtyard_SuperWallA_X0_Y0.cell"), new(3456.0f, 1152.0f, 0.0f)));
-                    area.AddCell(new(27, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NESWcE_A.cell"), new(3456.0f, 5760.0f, 0.0f)));
-                    area.AddCell(new(14, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NEW_A.cell"), new(1152.0f, -1152.0f, 0.0f)));
-                    area.AddCell(new(18, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NEW_B.cell"), new(1152.0f, 1152.0f, 0.0f)));
-                    area.AddCell(new(22, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NEW_A.cell"), new(1152.0f, 3456.0f, 0.0f)));
-                    area.AddCell(new(26, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NW_A.cell"), new(1152.0f, 5760.0f, 0.0f)));
-                    area.AddCell(new(25, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_ESW_B.cell"), new(8064.0f, 3456.0f, 0.0f)));
-                    area.AddCell(new(21, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_ESW_A.cell"), new(8064.0f, 1152.0f, 0.0f)));
-                    area.AddCell(new(17, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_Trans/Courtyard_TRCryptEntry_ESW_A.cell"), new(8064.0f, -1152.0f, 0.0f)));
-                    area.AddCell(new(29, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_SW_A.cell"), new(8064.0f, 5760.0f, 0.0f)));
-                    area.AddCell(new(11, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NESWcW_A.cell"), new(3456.0f, -3456.0f, 0.0f)));
-                    area.AddCell(new(12, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NES_B.cell"), new(5760.0f, -3456.0f, 0.0f)));
-                    area.AddCell(new(13, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_ES_A.cell"), new(8064.0f, -3456.0f, 0.0f)));
-                    area.AddCell(new(10, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NE_A.cell"), new(1152.0f, -3456.0f, 0.0f)));
+                    area = new(3, (AreaPrototype)GameDatabase.GetPrototypeRefByName(LatveriaArea + "LatveriaPCZArea3.prototype"), new(), false);
+                    area.AddCell(new(23, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_C/Courtyard_SuperWallA_X0_Y1.cell"), new(3456.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(15, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_B/Courtyard_B_NESW_B.cell"), new(3456.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(24, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NESW_E.cell"), new(5760.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(16, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_Trans/Courtyard_Objective_NESW_A.cell"), new(5760.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(20, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_B/Courtyard_B_NESW_C.cell"), new(5760.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(28, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NSW_B.cell"), new(5760.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(19, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_C/Courtyard_SuperWallA_X0_Y0.cell"), new(3456.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(27, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NESWcE_A.cell"), new(3456.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(14, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NEW_A.cell"), new(1152.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(18, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NEW_B.cell"), new(1152.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(22, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NEW_A.cell"), new(1152.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(26, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NW_A.cell"), new(1152.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(25, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_ESW_B.cell"), new(8064.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(21, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_ESW_A.cell"), new(8064.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(17, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_Trans/Courtyard_TRCryptEntry_ESW_A.cell"), new(8064.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(29, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_SW_A.cell"), new(8064.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(11, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NESWcW_A.cell"), new(3456.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(12, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NES_B.cell"), new(5760.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(13, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_ES_A.cell"), new(8064.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(10, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NE_A.cell"), new(1152.0f, -3456.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(5, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(LatveriaArea + "LatveriaPCZArea4.prototype"), new(), false);
-                    area.AddCell(new(5, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_SafeArea_A/Courtyard_SafeArea_NESW_A.cell"), new(3456.0f, 10368.0f, 0.0f)));
-                    area.AddCell(new(8, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NSW_C.cell"), new(3456.0f, 12672.0f, 0.0f)));
-                    area.AddCell(new(4, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NEW_B.cell"), new(1152.0f, 10368.0f, 0.0f)));
-                    area.AddCell(new(7, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_SafeArea_A/Courtyard_SafeArea_NW_A.cell"), new(1152.0f, 12672.0f, 0.0f)));
-                    area.AddCell(new(6, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_Trans/Courtyard_Exit_ESW_A.cell"), new(5760.0f, 10368.0f, 0.0f)));
-                    area.AddCell(new(9, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_SafeArea_A/Courtyard_SafeArea_SW_A.cell"), new(5760.0f, 12672.0f, 0.0f)));
-                    area.AddCell(new(2, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_A/Courtyard_A_NESWcW_A.cell"), new(3456.0f, 8064.0f, 0.0f)));
-                    area.AddCell(new(3, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_SafeArea_A/Courtyard_SafeArea_ES_A.cell"), new(5760.0f, 8064.0f, 0.0f)));
-                    area.AddCell(new(1, GameDatabase.GetDataRefByPrototypeName(Latveria + "Courtyard_SafeArea_A/Courtyard_SafeArea_NE_A.cell"), new(1152.0f, 8064.0f, 0.0f)));
+                    area = new(5, (AreaPrototype)GameDatabase.GetPrototypeRefByName(LatveriaArea + "LatveriaPCZArea4.prototype"), new(), false);
+                    area.AddCell(new(5, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_SafeArea_A/Courtyard_SafeArea_NESW_A.cell"), new(3456.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(8, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NSW_C.cell"), new(3456.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(4, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NEW_B.cell"), new(1152.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(7, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_SafeArea_A/Courtyard_SafeArea_NW_A.cell"), new(1152.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(6, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_Trans/Courtyard_Exit_ESW_A.cell"), new(5760.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(9, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_SafeArea_A/Courtyard_SafeArea_SW_A.cell"), new(5760.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(2, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_A/Courtyard_A_NESWcW_A.cell"), new(3456.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(3, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_SafeArea_A/Courtyard_SafeArea_ES_A.cell"), new(5760.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName(Latveria + "Courtyard_SafeArea_A/Courtyard_SafeArea_NE_A.cell"), new(1152.0f, 8064.0f, 0.0f)));
                     region.AddArea(area);
 
                     region.EntrancePosition = new(-8064.0f, -10368.0f, 0.0f);
@@ -1074,53 +1074,53 @@ namespace MHServerEmu.GameServer.Regions
                     uint cellid = 1;
                     areaid = 1;
 
-                    area = new(areaid++, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(CastleArea + "Exterior/CastleExteriorAreaAEntry.prototype"), new(), true);
-                    area.AddCell(new(cellid++, GameDatabase.GetDataRefByPrototypeName(Castle + "Latveria_Castle_Exterior_A.cell"), new(6912.0f, -18816.0f, 192.0f)));
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeRefByName(CastleArea + "Exterior/CastleExteriorAreaAEntry.prototype"), new(), true);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(Castle + "Latveria_Castle_Exterior_A.cell"), new(6912.0f, -18816.0f, 192.0f)));
                     region.AddArea(area);
-                    area = new(areaid++, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(CastleArea + "Exterior/CastleExteriorAreaD.prototype"), new(), false);
-                    area.AddCell(new(cellid++, GameDatabase.GetDataRefByPrototypeName(Castle + "Latveria_Castle_Exterior_D.cell"), new(6912.0f, -14208.0f, 704.0f)));
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeRefByName(CastleArea + "Exterior/CastleExteriorAreaD.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(Castle + "Latveria_Castle_Exterior_D.cell"), new(6912.0f, -14208.0f, 704.0f)));
                     region.AddArea(area);
-                    area = new(areaid++, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(CastleArea + "Exterior/CastleExteriorAreaF.prototype"), new(), false);
-                    area.AddCell(new(cellid++, GameDatabase.GetDataRefByPrototypeName(Castle + "Latveria_Castle_Exterior_F.cell"), new(6912.0f, -9600.0f, 704.0f)));
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeRefByName(CastleArea + "Exterior/CastleExteriorAreaF.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(Castle + "Latveria_Castle_Exterior_F.cell"), new(6912.0f, -9600.0f, 704.0f)));
                     region.AddArea(area);
-                    area = new(areaid++, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(CastleArea + "Exterior/CastleExteriorBossArea.prototype"), new(), false);
-                    area.AddCell(new(cellid++, GameDatabase.GetDataRefByPrototypeName(Castle + "Latveria_Castle_Exterior_Boss.cell"), new(6912.0f, -4992.0f, 192.0f)));
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeRefByName(CastleArea + "Exterior/CastleExteriorBossArea.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(Castle + "Latveria_Castle_Exterior_Boss.cell"), new(6912.0f, -4992.0f, 192.0f)));
                     region.AddArea(area);
-                    area = new(areaid++, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(CastleArea + "Exterior/CastleExteriorArrayArea.prototype"), new(), false);
-                    area.AddCell(new(cellid++, GameDatabase.GetDataRefByPrototypeName(Castle + "Latveria_Castle_Exterior_Array.cell"), new(6912.0f, -384.0f, 192.0f)));
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeRefByName(CastleArea + "Exterior/CastleExteriorArrayArea.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(Castle + "Latveria_Castle_Exterior_Array.cell"), new(6912.0f, -384.0f, 192.0f)));
                     region.AddArea(area);
-                    area = new(areaid++, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(CastleArea + "Exterior/CastleExteriorAreaGBridge.prototype"), new(), false);
-                    area.AddCell(new(cellid++, GameDatabase.GetDataRefByPrototypeName(Castle + "Latveria_Castle_Ext_G_Bridge.cell"), new(6912.0f, 4224.0f, 192.0f)));
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeRefByName(CastleArea + "Exterior/CastleExteriorAreaGBridge.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(Castle + "Latveria_Castle_Ext_G_Bridge.cell"), new(6912.0f, 4224.0f, 192.0f)));
                     region.AddArea(area);
-                    area = new(areaid++, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(CastleArea + "Interior/CastleInteriorAreaA.prototype"), new(), false);
-                    area.AddCell(new(cellid++, GameDatabase.GetDataRefByPrototypeName(Castle + "Latveria_Castle_Interior_A.cell"), new(6912.0f, 8832.0f, 320.0f)));
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeRefByName(CastleArea + "Interior/CastleInteriorAreaA.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(Castle + "Latveria_Castle_Interior_A.cell"), new(6912.0f, 8832.0f, 320.0f)));
                     region.AddArea(area);
-                    area = new(areaid++, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(CastleArea + "Interior/CastleInteriorAreaB.prototype"), new(), false);
-                    area.AddCell(new(cellid++, GameDatabase.GetDataRefByPrototypeName(Castle + "Latveria_Castle_Interior_B.cell"), new(6912.0f, 13440.0f, 320.0f)));
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeRefByName(CastleArea + "Interior/CastleInteriorAreaB.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(Castle + "Latveria_Castle_Interior_B.cell"), new(6912.0f, 13440.0f, 320.0f)));
                     region.AddArea(area);
-                    area = new(areaid++, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(CastleArea + "Interior/CastleInteriorAreaC.prototype"), new(), false);
-                    area.AddCell(new(cellid++, GameDatabase.GetDataRefByPrototypeName(Castle + "Latveria_Castle_Interior_C.cell"), new(6912.0f, 18048.0f, 320.0f)));
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeRefByName(CastleArea + "Interior/CastleInteriorAreaC.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(Castle + "Latveria_Castle_Interior_C.cell"), new(6912.0f, 18048.0f, 320.0f)));
                     region.AddArea(area);
-                    area = new(areaid++, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(CastleArea + "Interior/CastleDoomBotEstablishingArea.prototype"), new(), false);
-                    area.AddCell(new(cellid++, GameDatabase.GetDataRefByPrototypeName(Castle + "Latveria_Castle_Interior_D2.cell"), new(2304.0f, 18816.0f, 320.0f)));
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeRefByName(CastleArea + "Interior/CastleDoomBotEstablishingArea.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(Castle + "Latveria_Castle_Interior_D2.cell"), new(2304.0f, 18816.0f, 320.0f)));
                     region.AddArea(area);
-                    area = new(areaid++, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(CastleArea + "Interior/CastleDoomBotFactoryArea.prototype"), new(), false);
-                    area.AddCell(new(cellid++, GameDatabase.GetDataRefByPrototypeName(Castle + "Latveria_Castle_Interior_D.cell"), new(-2304.0f, 18816.0f, 320.0f)));
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeRefByName(CastleArea + "Interior/CastleDoomBotFactoryArea.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(Castle + "Latveria_Castle_Interior_D.cell"), new(-2304.0f, 18816.0f, 320.0f)));
                     region.AddArea(area);
-                    area = new(areaid++, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(CastleArea + "Interior/CastleInteriorAreaE.prototype"), new(), false);
-                    area.AddCell(new(cellid++, GameDatabase.GetDataRefByPrototypeName(Castle + "Latveria_Castle_Interior_E.cell"), new(-6912.0f, 18816.0f, 320.0f)));
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeRefByName(CastleArea + "Interior/CastleInteriorAreaE.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(Castle + "Latveria_Castle_Interior_E.cell"), new(-6912.0f, 18816.0f, 320.0f)));
                     region.AddArea(area);
-                    area = new(areaid++, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(CastleArea + "Interior/CastleInteriorAreaF.prototype"), new(), false);
-                    area.AddCell(new(cellid++, GameDatabase.GetDataRefByPrototypeName(Castle + "Latveria_Castle_Interior_F.cell"), new(-6912.0f, 14208.0f, 320.0f)));
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeRefByName(CastleArea + "Interior/CastleInteriorAreaF.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(Castle + "Latveria_Castle_Interior_F.cell"), new(-6912.0f, 14208.0f, 320.0f)));
                     region.AddArea(area);
-                    area = new(areaid++, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(CastleArea + "Interior/CastleInteriorPowerGenArea.prototype"), new(), false);
-                    area.AddCell(new(cellid++, GameDatabase.GetDataRefByPrototypeName(Castle + "Latveria_Castle_Interior_G.cell"), new(-2304.0f, 14208.0f, 320.0f)));
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeRefByName(CastleArea + "Interior/CastleInteriorPowerGenArea.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(Castle + "Latveria_Castle_Interior_G.cell"), new(-2304.0f, 14208.0f, 320.0f)));
                     region.AddArea(area);
-                    area = new(areaid++, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(CastleArea + "Interior/CastleInteriorAreaH.prototype"), new(), false);
-                    area.AddCell(new(cellid++, GameDatabase.GetDataRefByPrototypeName(Castle + "Latveria_Castle_Interior_H.cell"), new(2304.0f, 14208.0f, 320.0f)));
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeRefByName(CastleArea + "Interior/CastleInteriorAreaH.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(Castle + "Latveria_Castle_Interior_H.cell"), new(2304.0f, 14208.0f, 320.0f)));
                     region.AddArea(area);
-                    area = new(areaid++, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName(CastleArea + "Interior/CastleElevatorToDoomArea.prototype"), new(), false);
-                    area.AddCell(new(cellid++, GameDatabase.GetDataRefByPrototypeName(Castle + "Latveria_Castle_Interior_I_2.cell"), new(2304.0f, 9600.0f, -704.0f)));
+                    area = new(areaid++, (AreaPrototype)GameDatabase.GetPrototypeRefByName(CastleArea + "Interior/CastleElevatorToDoomArea.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(Castle + "Latveria_Castle_Interior_I_2.cell"), new(2304.0f, 9600.0f, -704.0f)));
                     region.AddArea(area);
 
                     region.EntrancePosition = new(6016.0f, -18464.0f, 192.0f);
@@ -1143,181 +1143,181 @@ namespace MHServerEmu.GameServer.Regions
 
                     string Norway = "Resource/Cells/Asgard/Norway/";
 
-                    area = new(1, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/StoryRevamp/CH09Asgard/Areas/Norway/NorwayPCZAreaA.prototype"), new(), true);
-                    area.AddCell(new(58, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_NESW_B.cell"), new(1152.0f, -5760.0f, 0.0f)));
-                    area.AddCell(new(50, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Trans/Norway_ROAD_ES_A.cell"), new(-3456.0f, -8064.0f, 0.0f)));
-                    area.AddCell(new(49, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Trans/Norway_ROAD_NW_A.cell"), new(-5760.0f, -8064.0f, 0.0f)));
-                    area.AddCell(new(56, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_C/Norway_OM_SHIELDOutpost_B.cell"), new(-3456.0f, -5760.0f, 0.0f)));
-                    area.AddCell(new(72, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(3456.0f, -1152.0f, 0.0f)));
-                    area.AddCell(new(62, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Trans/Norway_ROAD_NS_A.cell"), new(-3456.0f, -3456.0f, 0.0f)));
-                    area.AddCell(new(51, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_NESW_A.cell"), new(-1152.0f, -8064.0f, 0.0f)));
-                    area.AddCell(new(61, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_C/Norway_OM_BossEvent_A.cell"), new(-5760.0f, -3456.0f, 0.0f)));
-                    area.AddCell(new(71, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-1152.0f, -12672.0f, 0.0f)));
-                    area.AddCell(new(55, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_NESW_A.cell"), new(-5760.0f, -5760.0f, 0.0f)));
-                    area.AddCell(new(52, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_NESW_B.cell"), new(1152.0f, -8064.0f, 0.0f)));
-                    area.AddCell(new(43, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_C/Norway_C_NESW_Entry_A.cell"), new(-5760.0f, -10368.0f, 0.0f)));
-                    area.AddCell(new(63, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Trans/Norway_ROAD_ESW_A.cell"), new(-1152.0f, -3456.0f, 0.0f)));
-                    area.AddCell(new(57, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_C/Norway_OM_SHIELDOutpost_A.cell"), new(-1152.0f, -5760.0f, 0.0f)));
-                    area.AddCell(new(64, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_NESWdNE_A.cell"), new(1152.0f, -3456.0f, 0.0f)));
-                    area.AddCell(new(69, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_NESWcE_A.cell"), new(-1152.0f, -1152.0f, 0.0f)));
-                    area.AddCell(new(67, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_NSW_A.cell"), new(-5760.0f, -1152.0f, 0.0f)));
-                    area.AddCell(new(68, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_NSW_A.cell"), new(-3456.0f, -1152.0f, 0.0f)));
-                    area.AddCell(new(46, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_NESWdSW_A.cell"), new(1152.0f, -10368.0f, 0.0f)));
-                    area.AddCell(new(60, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_NEW_A.cell"), new(-8064.0f, -3456.0f, 0.0f)));
-                    area.AddCell(new(48, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_NEW_A.cell"), new(-8064.0f, -8064.0f, 0.0f)));
-                    area.AddCell(new(54, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_NEW_A.cell"), new(-8064.0f, -5760.0f, 0.0f)));
-                    area.AddCell(new(42, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_NEW_A.cell"), new(-8064.0f, -10368.0f, 0.0f)));
-                    area.AddCell(new(66, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_NW_A.cell"), new(-8064.0f, -1152.0f, 0.0f)));
-                    area.AddCell(new(44, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_NESWdNW_A.cell"), new(-3456.0f, -10368.0f, 0.0f)));
-                    area.AddCell(new(59, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_C/Norway_TR_Entry_Portal_C.cell"), new(3456.0f, -5760.0f, 0.0f)));
-                    area.AddCell(new(53, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_C/Norway_TR_Entry_Portal_B.cell"), new(3456.0f, -8064.0f, 0.0f)));
-                    area.AddCell(new(47, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_ESW_A.cell"), new(3456.0f, -10368.0f, 0.0f)));
-                    area.AddCell(new(70, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_SW_A.cell"), new(1152.0f, -1152.0f, 0.0f)));
-                    area.AddCell(new(38, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_NES_A.cell"), new(-5760.0f, -12672.0f, 0.0f)));
-                    area.AddCell(new(65, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_SW_A.cell"), new(3456.0f, -3456.0f, 0.0f)));
-                    area.AddCell(new(45, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_NES_B.cell"), new(-1152.0f, -10368.0f, 0.0f)));
-                    area.AddCell(new(39, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_ES_A.cell"), new(-3456.0f, -12672.0f, 0.0f)));
-                    area.AddCell(new(41, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_ES_A.cell"), new(3456.0f, -12672.0f, 0.0f)));
-                    area.AddCell(new(40, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_NE_A.cell"), new(1152.0f, -12672.0f, 0.0f)));
-                    area.AddCell(new(37, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_NE_A.cell"), new(-8064.0f, -12672.0f, 0.0f)));
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH09Asgard/Areas/Norway/NorwayPCZAreaA.prototype"), new(), true);
+                    area.AddCell(new(58, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_NESW_B.cell"), new(1152.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(50, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Trans/Norway_ROAD_ES_A.cell"), new(-3456.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(49, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Trans/Norway_ROAD_NW_A.cell"), new(-5760.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(56, GameDatabase.GetPrototypeRefByName(Norway + "Norway_C/Norway_OM_SHIELDOutpost_B.cell"), new(-3456.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(72, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(3456.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(62, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Trans/Norway_ROAD_NS_A.cell"), new(-3456.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(51, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_NESW_A.cell"), new(-1152.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(61, GameDatabase.GetPrototypeRefByName(Norway + "Norway_C/Norway_OM_BossEvent_A.cell"), new(-5760.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(71, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-1152.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(55, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_NESW_A.cell"), new(-5760.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(52, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_NESW_B.cell"), new(1152.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(43, GameDatabase.GetPrototypeRefByName(Norway + "Norway_C/Norway_C_NESW_Entry_A.cell"), new(-5760.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(63, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Trans/Norway_ROAD_ESW_A.cell"), new(-1152.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(57, GameDatabase.GetPrototypeRefByName(Norway + "Norway_C/Norway_OM_SHIELDOutpost_A.cell"), new(-1152.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(64, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_NESWdNE_A.cell"), new(1152.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(69, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_NESWcE_A.cell"), new(-1152.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(67, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_NSW_A.cell"), new(-5760.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(68, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_NSW_A.cell"), new(-3456.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(46, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_NESWdSW_A.cell"), new(1152.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(60, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_NEW_A.cell"), new(-8064.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(48, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_NEW_A.cell"), new(-8064.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(54, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_NEW_A.cell"), new(-8064.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(42, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_NEW_A.cell"), new(-8064.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(66, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_NW_A.cell"), new(-8064.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(44, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_NESWdNW_A.cell"), new(-3456.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(59, GameDatabase.GetPrototypeRefByName(Norway + "Norway_C/Norway_TR_Entry_Portal_C.cell"), new(3456.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(53, GameDatabase.GetPrototypeRefByName(Norway + "Norway_C/Norway_TR_Entry_Portal_B.cell"), new(3456.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(47, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_ESW_A.cell"), new(3456.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(70, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_SW_A.cell"), new(1152.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(38, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_NES_A.cell"), new(-5760.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(65, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_SW_A.cell"), new(3456.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(45, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_NES_B.cell"), new(-1152.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(39, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_ES_A.cell"), new(-3456.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(41, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_ES_A.cell"), new(3456.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(40, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_NE_A.cell"), new(1152.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(37, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_NE_A.cell"), new(-8064.0f, -12672.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(2, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/StoryRevamp/CH09Asgard/Areas/Norway/NorwayPCZAreaC.prototype"), new(), false);
-                    area.AddCell(new(9, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_C/Norway_Super_PyreOMEvent_A.cell"), new(1152.0f, 3456.0f, 0.0f)));
-                    area.AddCell(new(17, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_C/Norway_C_NESW_B.cell"), new(5760.0f, 5760.0f, 0.0f)));
-                    area.AddCell(new(35, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-3456.0f, 12672.0f, 0.0f)));
-                    area.AddCell(new(3, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_NES_A.cell"), new(1152.0f, 1152.0f, 0.0f)));
-                    area.AddCell(new(16, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Trans/Norway_ROAD_ES_A.cell"), new(3456.0f, 5760.0f, 0.0f)));
-                    area.AddCell(new(8, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Trans/Norway_ROAD_NW_A.cell"), new(-1152.0f, 3456.0f, 0.0f)));
-                    area.AddCell(new(28, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Trans/Norway_Asgard_Entry_A.cell"), new(3456.0f, 10368.0f, 0.0f)));
-                    area.AddCell(new(22, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Trans/Norway_ROAD_EW_B.cell"), new(3456.0f, 8064.0f, 0.0f)));
-                    area.AddCell(new(10, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_C/Norway_C_NESW_A.cell"), new(3456.0f, 3456.0f, 0.0f)));
-                    area.AddCell(new(21, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_NESW_A.cell"), new(1152.0f, 8064.0f, 0.0f)));
-                    area.AddCell(new(23, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_NESW_B.cell"), new(5760.0f, 8064.0f, 0.0f)));
-                    area.AddCell(new(14, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_NESW_A.cell"), new(-1152.0f, 5760.0f, 0.0f)));
-                    area.AddCell(new(29, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_NESW_A.cell"), new(5760.0f, 10368.0f, 0.0f)));
-                    area.AddCell(new(20, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Trans/Norway_Event_AreaC_A.cell"), new(-1152.0f, 8064.0f, 0.0f)));
-                    area.AddCell(new(36, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-1152.0f, 12672.0f, 0.0f)));
-                    area.AddCell(new(15, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_C/Norway_Super_PyreOMEvent_B.cell"), new(1152.0f, 5760.0f, 0.0f)));
-                    area.AddCell(new(11, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_NESW_B.cell"), new(5760.0f, 3456.0f, 0.0f)));
-                    area.AddCell(new(27, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_NESWdES_A.cell"), new(1152.0f, 10368.0f, 0.0f)));
-                    area.AddCell(new(32, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_NSW_A.cell"), new(3456.0f, 12672.0f, 0.0f)));
-                    area.AddCell(new(26, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_NSW_A.cell"), new(-1152.0f, 10368.0f, 0.0f)));
-                    area.AddCell(new(33, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_NSW_A.cell"), new(5760.0f, 12672.0f, 0.0f)));
-                    area.AddCell(new(7, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_NEW_A.cell"), new(-3456.0f, 3456.0f, 0.0f)));
-                    area.AddCell(new(13, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_NEW_A.cell"), new(-3456.0f, 5760.0f, 0.0f)));
-                    area.AddCell(new(19, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_NEW_A.cell"), new(-3456.0f, 8064.0f, 0.0f)));
-                    area.AddCell(new(25, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_NW_A.cell"), new(-3456.0f, 10368.0f, 0.0f)));
-                    area.AddCell(new(31, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_NW_A.cell"), new(1152.0f, 12672.0f, 0.0f)));
-                    area.AddCell(new(18, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_ESW_A.cell"), new(8064.0f, 5760.0f, 0.0f)));
-                    area.AddCell(new(24, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_ESW_A.cell"), new(8064.0f, 8064.0f, 0.0f)));
-                    area.AddCell(new(12, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_C/Norway_DarkForest_Entry.cell"), new(8064.0f, 3456.0f, 0.0f)));
-                    area.AddCell(new(30, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_C/Norway_TR_Entry_Portal.cell"), new(8064.0f, 10368.0f, 0.0f)));
-                    area.AddCell(new(34, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_SW_A.cell"), new(8064.0f, 12672.0f, 0.0f)));
-                    area.AddCell(new(2, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_NESWcW_A.cell"), new(-1152.0f, 1152.0f, 0.0f)));
-                    area.AddCell(new(4, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_NES_A.cell"), new(3456.0f, 1152.0f, 0.0f)));
-                    area.AddCell(new(5, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_NES_B.cell"), new(5760.0f, 1152.0f, 0.0f)));
-                    area.AddCell(new(6, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_ES_A.cell"), new(8064.0f, 1152.0f, 0.0f)));
-                    area.AddCell(new(1, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_NE_A.cell"), new(-3456.0f, 1152.0f, 0.0f)));
+                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH09Asgard/Areas/Norway/NorwayPCZAreaC.prototype"), new(), false);
+                    area.AddCell(new(9, GameDatabase.GetPrototypeRefByName(Norway + "Norway_C/Norway_Super_PyreOMEvent_A.cell"), new(1152.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(17, GameDatabase.GetPrototypeRefByName(Norway + "Norway_C/Norway_C_NESW_B.cell"), new(5760.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(35, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-3456.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(3, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_NES_A.cell"), new(1152.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(16, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Trans/Norway_ROAD_ES_A.cell"), new(3456.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(8, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Trans/Norway_ROAD_NW_A.cell"), new(-1152.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(28, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Trans/Norway_Asgard_Entry_A.cell"), new(3456.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(22, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Trans/Norway_ROAD_EW_B.cell"), new(3456.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(10, GameDatabase.GetPrototypeRefByName(Norway + "Norway_C/Norway_C_NESW_A.cell"), new(3456.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(21, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_NESW_A.cell"), new(1152.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(23, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_NESW_B.cell"), new(5760.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(14, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_NESW_A.cell"), new(-1152.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(29, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_NESW_A.cell"), new(5760.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(20, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Trans/Norway_Event_AreaC_A.cell"), new(-1152.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(36, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-1152.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(15, GameDatabase.GetPrototypeRefByName(Norway + "Norway_C/Norway_Super_PyreOMEvent_B.cell"), new(1152.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(11, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_NESW_B.cell"), new(5760.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(27, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_NESWdES_A.cell"), new(1152.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(32, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_NSW_A.cell"), new(3456.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(26, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_NSW_A.cell"), new(-1152.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(33, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_NSW_A.cell"), new(5760.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(7, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_NEW_A.cell"), new(-3456.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(13, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_NEW_A.cell"), new(-3456.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(19, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_NEW_A.cell"), new(-3456.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(25, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_NW_A.cell"), new(-3456.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(31, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_NW_A.cell"), new(1152.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(18, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_ESW_A.cell"), new(8064.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(24, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_ESW_A.cell"), new(8064.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(12, GameDatabase.GetPrototypeRefByName(Norway + "Norway_C/Norway_DarkForest_Entry.cell"), new(8064.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(30, GameDatabase.GetPrototypeRefByName(Norway + "Norway_C/Norway_TR_Entry_Portal.cell"), new(8064.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(34, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_SW_A.cell"), new(8064.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(2, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_NESWcW_A.cell"), new(-1152.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(4, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_NES_A.cell"), new(3456.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(5, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_NES_B.cell"), new(5760.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(6, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_ES_A.cell"), new(8064.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_NE_A.cell"), new(-3456.0f, 1152.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(3, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
-                    area.AddCell(new(73, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-8064.0f, -14976.0f, 0.0f)));
-                    area.AddCell(new(74, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-5760.0f, -14976.0f, 0.0f)));
-                    area.AddCell(new(75, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-3456.0f, -14976.0f, 0.0f)));
-                    area.AddCell(new(76, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-1152.0f, -14976.0f, 0.0f)));
-                    area.AddCell(new(77, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(1152.0f, -14976.0f, 0.0f)));
-                    area.AddCell(new(78, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-5760.0f, 1152.0f, 0.0f)));
-                    area.AddCell(new(79, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(3456.0f, -14976.0f, 0.0f)));
-                    area.AddCell(new(80, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-8064.0f, 1152.0f, 0.0f)));
-                    area.AddCell(new(81, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(5760.0f, -14976.0f, 0.0f)));
-                    area.AddCell(new(82, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-10368.0f, 1152.0f, 0.0f)));
-                    area.AddCell(new(83, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(8064.0f, -14976.0f, 0.0f)));
-                    area.AddCell(new(84, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-12672.0f, 1152.0f, 0.0f)));
-                    area.AddCell(new(85, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(5760.0f, -12672.0f, 0.0f)));
-                    area.AddCell(new(86, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-10368.0f, -1152.0f, 0.0f)));
-                    area.AddCell(new(87, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(5760.0f, -10368.0f, 0.0f)));
-                    area.AddCell(new(88, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-10368.0f, -3456.0f, 0.0f)));
-                    area.AddCell(new(89, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(5760.0f, -8064.0f, 0.0f)));
-                    area.AddCell(new(90, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-10368.0f, -5760.0f, 0.0f)));
-                    area.AddCell(new(91, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(5760.0f, -5760.0f, 0.0f)));
-                    area.AddCell(new(92, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-10368.0f, -8064.0f, 0.0f)));
-                    area.AddCell(new(93, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(5760.0f, -3456.0f, 0.0f)));
-                    area.AddCell(new(94, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-10368.0f, -10368.0f, 0.0f)));
-                    area.AddCell(new(95, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(5760.0f, -1152.0f, 0.0f)));
-                    area.AddCell(new(96, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-10368.0f, -12672.0f, 0.0f)));
-                    area.AddCell(new(97, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-10368.0f, -14976.0f, 0.0f)));
-                    area.AddCell(new(98, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-10368.0f, -17280.0f, 0.0f)));
-                    area.AddCell(new(99, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-8064.0f, -17280.0f, 0.0f)));
-                    area.AddCell(new(100, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-5760.0f, -17280.0f, 0.0f)));
-                    area.AddCell(new(101, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-3456.0f, -17280.0f, 0.0f)));
-                    area.AddCell(new(102, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-1152.0f, -17280.0f, 0.0f)));
-                    area.AddCell(new(103, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(1152.0f, -17280.0f, 0.0f)));
-                    area.AddCell(new(104, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-5760.0f, 3456.0f, 0.0f)));
-                    area.AddCell(new(105, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(3456.0f, -17280.0f, 0.0f)));
-                    area.AddCell(new(106, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-8064.0f, 3456.0f, 0.0f)));
-                    area.AddCell(new(107, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(5760.0f, -17280.0f, 0.0f)));
-                    area.AddCell(new(108, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-10368.0f, 3456.0f, 0.0f)));
-                    area.AddCell(new(109, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(8064.0f, -17280.0f, 0.0f)));
-                    area.AddCell(new(110, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-12672.0f, 3456.0f, 0.0f)));
-                    area.AddCell(new(111, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(8064.0f, -12672.0f, 0.0f)));
-                    area.AddCell(new(112, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-12672.0f, -1152.0f, 0.0f)));
-                    area.AddCell(new(113, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(8064.0f, -10368.0f, 0.0f)));
-                    area.AddCell(new(114, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-12672.0f, -3456.0f, 0.0f)));
-                    area.AddCell(new(115, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(8064.0f, -8064.0f, 0.0f)));
-                    area.AddCell(new(116, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-12672.0f, -5760.0f, 0.0f)));
-                    area.AddCell(new(117, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(8064.0f, -5760.0f, 0.0f)));
-                    area.AddCell(new(118, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-12672.0f, -8064.0f, 0.0f)));
-                    area.AddCell(new(119, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(8064.0f, -3456.0f, 0.0f)));
-                    area.AddCell(new(120, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-12672.0f, -10368.0f, 0.0f)));
-                    area.AddCell(new(121, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(8064.0f, -1152.0f, 0.0f)));
-                    area.AddCell(new(122, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-12672.0f, -12672.0f, 0.0f)));
-                    area.AddCell(new(123, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-12672.0f, -14976.0f, 0.0f)));
-                    area.AddCell(new(124, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-12672.0f, -17280.0f, 0.0f)));
-                    area.AddCell(new(125, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(8064.0f, 14976.0f, 0.0f)));
-                    area.AddCell(new(126, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(5760.0f, 14976.0f, 0.0f)));
-                    area.AddCell(new(127, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(3456.0f, 14976.0f, 0.0f)));
-                    area.AddCell(new(128, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(1152.0f, 14976.0f, 0.0f)));
-                    area.AddCell(new(129, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-1152.0f, 14976.0f, 0.0f)));
-                    area.AddCell(new(130, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-3456.0f, 14976.0f, 0.0f)));
-                    area.AddCell(new(131, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(10368.0f, -1152.0f, 0.0f)));
-                    area.AddCell(new(132, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-5760.0f, 14976.0f, 0.0f)));
-                    area.AddCell(new(133, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(12672.0f, -1152.0f, 0.0f)));
-                    area.AddCell(new(134, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-8064.0f, 14976.0f, 0.0f)));
-                    area.AddCell(new(135, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(10368.0f, 1152.0f, 0.0f)));
-                    area.AddCell(new(136, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-5760.0f, 12672.0f, 0.0f)));
-                    area.AddCell(new(137, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(10368.0f, 3456.0f, 0.0f)));
-                    area.AddCell(new(138, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-5760.0f, 10368.0f, 0.0f)));
-                    area.AddCell(new(139, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(10368.0f, 5760.0f, 0.0f)));
-                    area.AddCell(new(140, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-5760.0f, 8064.0f, 0.0f)));
-                    area.AddCell(new(141, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(10368.0f, 8064.0f, 0.0f)));
-                    area.AddCell(new(142, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-5760.0f, 5760.0f, 0.0f)));
-                    area.AddCell(new(143, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(10368.0f, 10368.0f, 0.0f)));
-                    area.AddCell(new(144, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(10368.0f, 12672.0f, 0.0f)));
-                    area.AddCell(new(145, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(10368.0f, 14976.0f, 0.0f)));
-                    area.AddCell(new(146, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(10368.0f, 17280.0f, 0.0f)));
-                    area.AddCell(new(147, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(8064.0f, 17280.0f, 0.0f)));
-                    area.AddCell(new(148, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(5760.0f, 17280.0f, 0.0f)));
-                    area.AddCell(new(149, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(3456.0f, 17280.0f, 0.0f)));
-                    area.AddCell(new(150, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(1152.0f, 17280.0f, 0.0f)));
-                    area.AddCell(new(151, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-1152.0f, 17280.0f, 0.0f)));
-                    area.AddCell(new(152, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-3456.0f, 17280.0f, 0.0f)));
-                    area.AddCell(new(153, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(10368.0f, -3456.0f, 0.0f)));
-                    area.AddCell(new(154, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-5760.0f, 17280.0f, 0.0f)));
-                    area.AddCell(new(155, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(12672.0f, -3456.0f, 0.0f)));
-                    area.AddCell(new(156, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-8064.0f, 17280.0f, 0.0f)));
-                    area.AddCell(new(157, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(12672.0f, 1152.0f, 0.0f)));
-                    area.AddCell(new(158, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-8064.0f, 12672.0f, 0.0f)));
-                    area.AddCell(new(159, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(12672.0f, 3456.0f, 0.0f)));
-                    area.AddCell(new(160, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-8064.0f, 10368.0f, 0.0f)));
-                    area.AddCell(new(161, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(12672.0f, 5760.0f, 0.0f)));
-                    area.AddCell(new(162, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-8064.0f, 8064.0f, 0.0f)));
-                    area.AddCell(new(163, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(12672.0f, 8064.0f, 0.0f)));
-                    area.AddCell(new(164, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-8064.0f, 5760.0f, 0.0f)));
-                    area.AddCell(new(165, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(12672.0f, 10368.0f, 0.0f)));
-                    area.AddCell(new(166, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(12672.0f, 12672.0f, 0.0f)));
-                    area.AddCell(new(167, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(12672.0f, 14976.0f, 0.0f)));
-                    area.AddCell(new(168, GameDatabase.GetDataRefByPrototypeName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(12672.0f, 17280.0f, 0.0f)));
+                    area = new(3, (AreaPrototype)GameDatabase.GetPrototypeRefByName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
+                    area.AddCell(new(73, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-8064.0f, -14976.0f, 0.0f)));
+                    area.AddCell(new(74, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-5760.0f, -14976.0f, 0.0f)));
+                    area.AddCell(new(75, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-3456.0f, -14976.0f, 0.0f)));
+                    area.AddCell(new(76, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-1152.0f, -14976.0f, 0.0f)));
+                    area.AddCell(new(77, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(1152.0f, -14976.0f, 0.0f)));
+                    area.AddCell(new(78, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-5760.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(79, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(3456.0f, -14976.0f, 0.0f)));
+                    area.AddCell(new(80, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-8064.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(81, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(5760.0f, -14976.0f, 0.0f)));
+                    area.AddCell(new(82, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-10368.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(83, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(8064.0f, -14976.0f, 0.0f)));
+                    area.AddCell(new(84, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-12672.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(85, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(5760.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(86, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-10368.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(87, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(5760.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(88, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-10368.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(89, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(5760.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(90, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-10368.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(91, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(5760.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(92, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-10368.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(93, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(5760.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(94, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-10368.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(95, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(5760.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(96, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-10368.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(97, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-10368.0f, -14976.0f, 0.0f)));
+                    area.AddCell(new(98, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-10368.0f, -17280.0f, 0.0f)));
+                    area.AddCell(new(99, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-8064.0f, -17280.0f, 0.0f)));
+                    area.AddCell(new(100, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-5760.0f, -17280.0f, 0.0f)));
+                    area.AddCell(new(101, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-3456.0f, -17280.0f, 0.0f)));
+                    area.AddCell(new(102, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-1152.0f, -17280.0f, 0.0f)));
+                    area.AddCell(new(103, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(1152.0f, -17280.0f, 0.0f)));
+                    area.AddCell(new(104, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-5760.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(105, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(3456.0f, -17280.0f, 0.0f)));
+                    area.AddCell(new(106, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-8064.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(107, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(5760.0f, -17280.0f, 0.0f)));
+                    area.AddCell(new(108, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-10368.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(109, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(8064.0f, -17280.0f, 0.0f)));
+                    area.AddCell(new(110, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-12672.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(111, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(8064.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(112, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-12672.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(113, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(8064.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(114, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-12672.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(115, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(8064.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(116, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-12672.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(117, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(8064.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(118, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-12672.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(119, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(8064.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(120, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-12672.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(121, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(8064.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(122, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-12672.0f, -12672.0f, 0.0f)));
+                    area.AddCell(new(123, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-12672.0f, -14976.0f, 0.0f)));
+                    area.AddCell(new(124, GameDatabase.GetPrototypeRefByName(Norway + "Norway_A/Norway_A_FILLER_A.cell"), new(-12672.0f, -17280.0f, 0.0f)));
+                    area.AddCell(new(125, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(8064.0f, 14976.0f, 0.0f)));
+                    area.AddCell(new(126, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(5760.0f, 14976.0f, 0.0f)));
+                    area.AddCell(new(127, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(3456.0f, 14976.0f, 0.0f)));
+                    area.AddCell(new(128, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(1152.0f, 14976.0f, 0.0f)));
+                    area.AddCell(new(129, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-1152.0f, 14976.0f, 0.0f)));
+                    area.AddCell(new(130, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-3456.0f, 14976.0f, 0.0f)));
+                    area.AddCell(new(131, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(10368.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(132, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-5760.0f, 14976.0f, 0.0f)));
+                    area.AddCell(new(133, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(12672.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(134, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-8064.0f, 14976.0f, 0.0f)));
+                    area.AddCell(new(135, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(10368.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(136, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-5760.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(137, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(10368.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(138, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-5760.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(139, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(10368.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(140, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-5760.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(141, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(10368.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(142, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-5760.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(143, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(10368.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(144, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(10368.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(145, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(10368.0f, 14976.0f, 0.0f)));
+                    area.AddCell(new(146, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(10368.0f, 17280.0f, 0.0f)));
+                    area.AddCell(new(147, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(8064.0f, 17280.0f, 0.0f)));
+                    area.AddCell(new(148, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(5760.0f, 17280.0f, 0.0f)));
+                    area.AddCell(new(149, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(3456.0f, 17280.0f, 0.0f)));
+                    area.AddCell(new(150, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(1152.0f, 17280.0f, 0.0f)));
+                    area.AddCell(new(151, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-1152.0f, 17280.0f, 0.0f)));
+                    area.AddCell(new(152, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-3456.0f, 17280.0f, 0.0f)));
+                    area.AddCell(new(153, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(10368.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(154, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-5760.0f, 17280.0f, 0.0f)));
+                    area.AddCell(new(155, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(12672.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(156, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-8064.0f, 17280.0f, 0.0f)));
+                    area.AddCell(new(157, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(12672.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(158, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-8064.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(159, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(12672.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(160, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(-8064.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(161, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(12672.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(162, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-8064.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(163, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(12672.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(164, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(-8064.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(165, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(12672.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(166, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(12672.0f, 12672.0f, 0.0f)));
+                    area.AddCell(new(167, GameDatabase.GetPrototypeRefByName(Norway + "Norway_AreaC/Norway_AreaC_FILLER_A.cell"), new(12672.0f, 14976.0f, 0.0f)));
+                    area.AddCell(new(168, GameDatabase.GetPrototypeRefByName(Norway + "Norway_Common/Norway_Common_FILLER_A.cell"), new(12672.0f, 17280.0f, 0.0f)));
                     region.AddArea(area);
 
                     region.EntrancePosition = new(-5648.0f, -10752.0f, 0.0f);
@@ -1339,48 +1339,48 @@ namespace MHServerEmu.GameServer.Regions
                         new(60, DifficultyTier.Normal));
 
                     string SiegeCity = "Resource/Cells/Asgard/SiegePCZ/SiegeCity/";
-                    area = new(1, (AreaPrototype) GameDatabase.GetDataRefByPrototypeName("Regions/StoryRevamp/CH09Asgard/Areas/Asgard/LowerAsgard/SiegeS2NCityArea.prototype"), new(), true);
-                    area.AddCell(new(26, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_Super/SiegeCity_SuperFour_X0Y1_A.cell"), new(1152.0f, 3456.0f, 0.0f)));
-                    area.AddCell(new(35, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_A/SiegeCity_A_FILLER_A.cell"), new(-5760.0f, -5760.0f, 0.0f)));
-                    area.AddCell(new(3, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCityTrans/Estate_TR_Entry_NES_A.cell"), new(1152.0f, -5760.0f, 0.0f)));
-                    area.AddCell(new(19, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_S2N_B/SiegeCityS2N_B_NESW_B.cell"), new(-1152.0f, 1152.0f, 0.0f)));
-                    area.AddCell(new(7, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_S2N_B/SiegeCityS2N_B_NESW_A.cell"), new(-1152.0f, -3456.0f, 0.0f)));
-                    area.AddCell(new(15, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_S2N_C/SiegeCityS2N_C_NESW_A.cell"), new(3456.0f, -1152.0f, 0.0f)));
-                    area.AddCell(new(13, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_Super/SiegeCity_Super_VerticalTop_A.cell"), new(-1152.0f, -1152.0f, 0.0f)));
-                    area.AddCell(new(21, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_Super/SiegeCity_SuperFour_X1Y0_A.cell"), new(3456.0f, 1152.0f, 0.0f)));
-                    area.AddCell(new(20, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_Super/SiegeCity_SuperFour_X0Y0_A.cell"), new(1152.0f, 1152.0f, 0.0f)));
-                    area.AddCell(new(36, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_A/SiegeCity_A_FILLER_A.cell"), new(5760.0f, -5760.0f, 0.0f)));
-                    area.AddCell(new(14, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCityTrans/SiegeCity_WP_NESW_A.cell"), new(1152.0f, -1152.0f, 0.0f)));
-                    area.AddCell(new(30, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCityTrans/SiegeCity_POI_Ship_B.cell"), new(-3456.0f, 5760.0f, 0.0f)));
-                    area.AddCell(new(12, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_Super/SiegeCity_Super_VerticalBot_A.cell"), new(-3456.0f, -1152.0f, 0.0f)));
-                    area.AddCell(new(8, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_A/SiegeCity_A_NESW_A.cell"), new(1152.0f, -3456.0f, 0.0f)));
-                    area.AddCell(new(25, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_A/SiegeCity_A_NESW_B.cell"), new(-1152.0f, 3456.0f, 0.0f)));
-                    area.AddCell(new(27, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_Super/SiegeCity_SuperFour_X1Y1_A.cell"), new(3456.0f, 3456.0f, 0.0f)));
-                    area.AddCell(new(18, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_A/SiegeCity_A_NESWdES_A.cell"), new(-3456.0f, 1152.0f, 0.0f)));
-                    area.AddCell(new(32, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_S2N_D/SiegeCityS2N_D_NSW_C.cell"), new(1152.0f, 5760.0f, 0.0f)));
-                    area.AddCell(new(31, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCityTrans/Restaurant_TR_Entry_NSW_A.cell"), new(-1152.0f, 5760.0f, 0.0f)));
-                    area.AddCell(new(33, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_S2N_D/SiegeCityS2N_D_NSW_B.cell"), new(3456.0f, 5760.0f, 0.0f)));
-                    area.AddCell(new(6, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_A/SiegeCity_A_NESWdSW_A.cell"), new(-3456.0f, -3456.0f, 0.0f)));
-                    area.AddCell(new(24, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_A/SiegeCity_A_NESWdSW_A.cell"), new(-3456.0f, 3456.0f, 0.0f)));
-                    area.AddCell(new(11, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_A/SiegeCity_A_NEW_C.cell"), new(-5760.0f, -1152.0f, 0.0f)));
-                    area.AddCell(new(29, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_S2N_D/SiegeCityS2N_D_NW_A.cell"), new(-5760.0f, 5760.0f, 0.0f)));
-                    area.AddCell(new(17, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_S2N_D/SiegeCityS2N_D_NW_B.cell"), new(-5760.0f, 1152.0f, 0.0f)));
-                    area.AddCell(new(9, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_A/SiegeCity_A_NESWdNW_B.cell"), new(3456.0f, -3456.0f, 0.0f)));
-                    area.AddCell(new(16, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_S2N_D/SiegeCityS2N_D_ESW_A.cell"), new(5760.0f, -1152.0f, 0.0f)));
-                    area.AddCell(new(22, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_S2N_C/SiegeCityS2N_C_ESW_A.cell"), new(5760.0f, 1152.0f, 0.0f)));
-                    area.AddCell(new(28, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCityTrans/SiegeCity_POI_Ship_A.cell"), new(5760.0f, 3456.0f, 0.0f)));
-                    area.AddCell(new(34, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCityTrans/SiegeCity_OM_DoorDefense_A.cell"), new(5760.0f, 5760.0f, 0.0f)));
-                    area.AddCell(new(2, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_A/SiegeCity_A_NES_C.cell"), new(-1152.0f, -5760.0f, 0.0f)));
-                    area.AddCell(new(10, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_S2N_D/SiegeCityS2N_D_ES_B.cell"), new(5760.0f, -3456.0f, 0.0f)));
-                    area.AddCell(new(4, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_S2N_D/SiegeCityS2N_D_ES_A.cell"), new(3456.0f, -5760.0f, 0.0f)));
-                    area.AddCell(new(23, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCityTrans/SiegeCity_Entry_A.cell"), new(-5760.0f, 3456.0f, 0.0f)));
-                    area.AddCell(new(5, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_A/SiegeCity_A_NE_A.cell"), new(-5760.0f, -3456.0f, 0.0f)));
-                    area.AddCell(new(1, GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_A/SiegeCity_A_NE_B.cell"), new(-3456.0f, -5760.0f, 0.0f)));
+                    area = new(1, (AreaPrototype) GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH09Asgard/Areas/Asgard/LowerAsgard/SiegeS2NCityArea.prototype"), new(), true);
+                    area.AddCell(new(26, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_Super/SiegeCity_SuperFour_X0Y1_A.cell"), new(1152.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(35, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_A/SiegeCity_A_FILLER_A.cell"), new(-5760.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(3, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCityTrans/Estate_TR_Entry_NES_A.cell"), new(1152.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(19, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_S2N_B/SiegeCityS2N_B_NESW_B.cell"), new(-1152.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(7, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_S2N_B/SiegeCityS2N_B_NESW_A.cell"), new(-1152.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(15, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_S2N_C/SiegeCityS2N_C_NESW_A.cell"), new(3456.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(13, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_Super/SiegeCity_Super_VerticalTop_A.cell"), new(-1152.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(21, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_Super/SiegeCity_SuperFour_X1Y0_A.cell"), new(3456.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(20, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_Super/SiegeCity_SuperFour_X0Y0_A.cell"), new(1152.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(36, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_A/SiegeCity_A_FILLER_A.cell"), new(5760.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(14, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCityTrans/SiegeCity_WP_NESW_A.cell"), new(1152.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(30, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCityTrans/SiegeCity_POI_Ship_B.cell"), new(-3456.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(12, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_Super/SiegeCity_Super_VerticalBot_A.cell"), new(-3456.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(8, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_A/SiegeCity_A_NESW_A.cell"), new(1152.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(25, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_A/SiegeCity_A_NESW_B.cell"), new(-1152.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(27, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_Super/SiegeCity_SuperFour_X1Y1_A.cell"), new(3456.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(18, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_A/SiegeCity_A_NESWdES_A.cell"), new(-3456.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(32, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_S2N_D/SiegeCityS2N_D_NSW_C.cell"), new(1152.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(31, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCityTrans/Restaurant_TR_Entry_NSW_A.cell"), new(-1152.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(33, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_S2N_D/SiegeCityS2N_D_NSW_B.cell"), new(3456.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(6, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_A/SiegeCity_A_NESWdSW_A.cell"), new(-3456.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(24, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_A/SiegeCity_A_NESWdSW_A.cell"), new(-3456.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(11, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_A/SiegeCity_A_NEW_C.cell"), new(-5760.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(29, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_S2N_D/SiegeCityS2N_D_NW_A.cell"), new(-5760.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(17, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_S2N_D/SiegeCityS2N_D_NW_B.cell"), new(-5760.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(9, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_A/SiegeCity_A_NESWdNW_B.cell"), new(3456.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(16, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_S2N_D/SiegeCityS2N_D_ESW_A.cell"), new(5760.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(22, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_S2N_C/SiegeCityS2N_C_ESW_A.cell"), new(5760.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(28, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCityTrans/SiegeCity_POI_Ship_A.cell"), new(5760.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(34, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCityTrans/SiegeCity_OM_DoorDefense_A.cell"), new(5760.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(2, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_A/SiegeCity_A_NES_C.cell"), new(-1152.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(10, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_S2N_D/SiegeCityS2N_D_ES_B.cell"), new(5760.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(4, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_S2N_D/SiegeCityS2N_D_ES_A.cell"), new(3456.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(23, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCityTrans/SiegeCity_Entry_A.cell"), new(-5760.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(5, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_A/SiegeCity_A_NE_A.cell"), new(-5760.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_A/SiegeCity_A_NE_B.cell"), new(-3456.0f, -5760.0f, 0.0f)));
                     region.AddArea(area);
 
-                    ulong fillerSiege = GameDatabase.GetDataRefByPrototypeName(SiegeCity + "SiegeCity_A/SiegeCity_A_FILLER_A.cell");
+                    ulong fillerSiege = GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_A/SiegeCity_A_FILLER_A.cell");
 
-                    area = new(2, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
+                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeRefByName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
 
                     areaid = 37;
                     for (uint i = 0; i < 8; i++)
@@ -1409,30 +1409,30 @@ namespace MHServerEmu.GameServer.Regions
                         new(11, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototype.DailyGSubwayFactoryGen1Area, new(-3456.5f, -7424f, 0f), true);
-                    area.AddCell(new(13, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/EndGame/DangerDailies/ShockerSubway/Daily_ShockerSubway_A_E_A.cell"), new()));
+                    area.AddCell(new(13, GameDatabase.GetPrototypeRefByName("Resource/Cells/EndGame/DangerDailies/ShockerSubway/Daily_ShockerSubway_A_E_A.cell"), new()));
                     region.AddArea(area);
 
                     area = new(2, AreaPrototype.DailyGSubwayFactoryGen1Area, new(-3456.5f, -3072.001f, 0f), false);
-                    area.AddCell(new(12, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/Hells_Kitchen_01/ShockerSubway/ShockerSubway_A/ShockerSubway_A_NW_A.cell"), new()));
+                    area.AddCell(new(12, GameDatabase.GetPrototypeRefByName("Resource/Cells/Hells_Kitchen_01/ShockerSubway/ShockerSubway_A/ShockerSubway_A_NW_A.cell"), new()));
                     region.AddArea(area);
 
                     area = new(3, AreaPrototype.DailyGSubwayFactoryGen1Area, new(-128.5f, -3072.001f, 0f), false);
-                    area.AddCell(new(8, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_NES_A.cell"), new()));
-                    area.AddCell(new(9, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/ReuseableInstances/Factory_B/Factory_B_ES_A.cell"), new(2304f, 0f, 0f)));
-                    area.AddCell(new(11, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_ESW_A.cell"), new(2304f, 2304f, 0f)));
+                    area.AddCell(new(8, GameDatabase.GetPrototypeRefByName("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_NES_A.cell"), new()));
+                    area.AddCell(new(9, GameDatabase.GetPrototypeRefByName("Resource/Cells/ReuseableInstances/Factory_B/Factory_B_ES_A.cell"), new(2304f, 0f, 0f)));
+                    area.AddCell(new(11, GameDatabase.GetPrototypeRefByName("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_ESW_A.cell"), new(2304f, 2304f, 0f)));
                     region.AddArea(area);
 
                     area = new(4, AreaPrototype.DailyGSubwayFactoryGen1Area, new(2175.5f, 1535.999f, 0f), false);
-                    area.AddCell(new(2, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_NEW_A.cell"), new()));
-                    area.AddCell(new(3, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_S_A.cell"), new(2304f, 0f, 0f)));
-                    area.AddCell(new(4, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_EW_A.cell"), new(0f, 2304f, 0f)));
-                    area.AddCell(new(7, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_FILLER_A.cell"), new(2304f, 2304f, 0f)));
-                    area.AddCell(new(5, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/ReuseableInstances/Factory_B/Factory_B_NW_A.cell"), new(0f, 4608f, 0f)));
-                    area.AddCell(new(6, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/ReuseableInstances/Factory_B/Factory_B_ES_A.cell"), new(2304f, 4608f, 0f)));
+                    area.AddCell(new(2, GameDatabase.GetPrototypeRefByName("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_NEW_A.cell"), new()));
+                    area.AddCell(new(3, GameDatabase.GetPrototypeRefByName("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_S_A.cell"), new(2304f, 0f, 0f)));
+                    area.AddCell(new(4, GameDatabase.GetPrototypeRefByName("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_EW_A.cell"), new(0f, 2304f, 0f)));
+                    area.AddCell(new(7, GameDatabase.GetPrototypeRefByName("Resource/Cells/ReuseableInstances/Factory_A/Factory_A_FILLER_A.cell"), new(2304f, 2304f, 0f)));
+                    area.AddCell(new(5, GameDatabase.GetPrototypeRefByName("Resource/Cells/ReuseableInstances/Factory_B/Factory_B_NW_A.cell"), new(0f, 4608f, 0f)));
+                    area.AddCell(new(6, GameDatabase.GetPrototypeRefByName("Resource/Cells/ReuseableInstances/Factory_B/Factory_B_ES_A.cell"), new(2304f, 4608f, 0f)));
                     region.AddArea(area);
 
                     area = new(5, AreaPrototype.DailyGSubwayFactoryGen1Area, new(4480.5044f, 8448f, 0f), false);
-                    area.AddCell(new(1, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/EndGame/DangerDailies/ShockerSubway/Daily_Shocker_Boss_A.cell"), new()));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/EndGame/DangerDailies/ShockerSubway/Daily_Shocker_Boss_A.cell"), new()));
                     region.AddArea(area);
 
                     region.EntrancePosition = new(-3376.5f, -8016f, 56f);
@@ -1454,28 +1454,28 @@ namespace MHServerEmu.GameServer.Regions
                         new(1792.0f, 10752.0f, 1792.0f),
                         new(11, DifficultyTier.Normal));
 
-                    area = new(1, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/EndGame/Terminals/Green/SinistersLab/Areas/DailyGSinisterLabEntryArea.prototype"), new(), true);
-                    area.AddCell(new(6, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/EndGame/DangerDailies/SinisterLab/SinisterLabTerminal_Entry_A.cell"), new(0.0f, -8960.0f, 0.0f)));
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/EndGame/Terminals/Green/SinistersLab/Areas/DailyGSinisterLabEntryArea.prototype"), new(), true);
+                    area.AddCell(new(6, GameDatabase.GetPrototypeRefByName("Resource/Cells/EndGame/DangerDailies/SinisterLab/SinisterLabTerminal_Entry_A.cell"), new(0.0f, -8960.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(2, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/StoryRevamp/CH07SavageLand/Areas/MutateMarsh/MutateCaves/SinisterLab/SinisterLabBAreaReaverConstruction.prototype"), new(), false);                    
-                    area.AddCell(new(5, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/Savagelands/SinisterLab/SinisterLab_A/SinisterLab_B.cell"), new(0.0f, -5376.0f, 0.0f)));
+                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH07SavageLand/Areas/MutateMarsh/MutateCaves/SinisterLab/SinisterLabBAreaReaverConstruction.prototype"), new(), false);                    
+                    area.AddCell(new(5, GameDatabase.GetPrototypeRefByName("Resource/Cells/Savagelands/SinisterLab/SinisterLab_A/SinisterLab_B.cell"), new(0.0f, -5376.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(3, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/StoryRevamp/CH07SavageLand/Areas/MutateMarsh/MutateCaves/SinisterLab/SinisterLabDAreaCloneMonitoring.prototype"), new(), false);                    
-                    area.AddCell(new(4, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/Savagelands/SinisterLab/SinisterLab_A/SinisterLab_D.cell"), new(0.0f, -1792.0f, 0.0f)));
+                    area = new(3, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH07SavageLand/Areas/MutateMarsh/MutateCaves/SinisterLab/SinisterLabDAreaCloneMonitoring.prototype"), new(), false);                    
+                    area.AddCell(new(4, GameDatabase.GetPrototypeRefByName("Resource/Cells/Savagelands/SinisterLab/SinisterLab_A/SinisterLab_D.cell"), new(0.0f, -1792.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(4, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/StoryRevamp/CH07SavageLand/Areas/MutateMarsh/MutateCaves/SinisterLab/SinisterLabEAreaGeneticResearch.prototype"), new(), false);
-                    area.AddCell(new(3, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/Savagelands/SinisterLab/SinisterLab_A/SinisterLab_E.cell"), new(0.0f, 1792.0f, 0.0f)));
+                    area = new(4, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH07SavageLand/Areas/MutateMarsh/MutateCaves/SinisterLab/SinisterLabEAreaGeneticResearch.prototype"), new(), false);
+                    area.AddCell(new(3, GameDatabase.GetPrototypeRefByName("Resource/Cells/Savagelands/SinisterLab/SinisterLab_A/SinisterLab_E.cell"), new(0.0f, 1792.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(5, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/StoryRevamp/CH07SavageLand/Areas/MutateMarsh/MutateCaves/SinisterLab/SinisterLabGAreaCommunications.prototype"), new(), false);
-                    area.AddCell(new(2, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/Savagelands/SinisterLab/SinisterLab_A/SinisterLab_G.cell"), new(0.0f, 5376.0f, 0.0f)));
+                    area = new(5, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH07SavageLand/Areas/MutateMarsh/MutateCaves/SinisterLab/SinisterLabGAreaCommunications.prototype"), new(), false);
+                    area.AddCell(new(2, GameDatabase.GetPrototypeRefByName("Resource/Cells/Savagelands/SinisterLab/SinisterLab_A/SinisterLab_G.cell"), new(0.0f, 5376.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(6, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/EndGame/Terminals/Green/SinistersLab/Areas/DailyGSinisterLabBossArea.prototype"), new(), false);
-                    area.AddCell(new(1, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/EndGame/DangerDailies/SinisterLab/SinisterLabTerminal_Boss_A.cell"), new(0.0f, 8960.0f, 0.0f)));
+                    area = new(6, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/EndGame/Terminals/Green/SinistersLab/Areas/DailyGSinisterLabBossArea.prototype"), new(), false);
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/EndGame/DangerDailies/SinisterLab/SinisterLabTerminal_Boss_A.cell"), new(0.0f, 8960.0f, 0.0f)));
                     region.AddArea(area);
 
                     region.EntrancePosition = new(1000.0f, -10100.0f, 0.0f);
@@ -1497,45 +1497,45 @@ namespace MHServerEmu.GameServer.Regions
 
                     string Rzoo = "Resource/Cells/Bronx_Zoo/";
                     
-                    area = new(1, (AreaPrototype) GameDatabase.GetDataRefByPrototypeName("Regions/EndGame/OneShotMissions/NonChapterBound/BronxZoo/ZooAreas/ZooArea1SN.prototype"), new(), true);
+                    area = new(1, (AreaPrototype) GameDatabase.GetPrototypeRefByName("Regions/EndGame/OneShotMissions/NonChapterBound/BronxZoo/ZooAreas/ZooArea1SN.prototype"), new(), true);
 
-                    area.AddCell(new(24, GameDatabase.GetDataRefByPrototypeName(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_NE_Entry_A.cell"), new(-1024.0f, -7488.0f, 0.0f)));
-                    area.AddCell(new(9, GameDatabase.GetDataRefByPrototypeName(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_NEW_Entry_A.cell"), new(-1024.0f, -5184.0f, 0.0f)));
-                    area.AddCell(new(13, GameDatabase.GetDataRefByPrototypeName(Rzoo+ "Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NEW_A.cell"), new(-1024.0f, -2880.0f, 0.0f))); // Bronx_Zoo_A/Bronx_Zoo_A_NEW_B.cell
-                    area.AddCell(new(14, GameDatabase.GetDataRefByPrototypeName(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_TR_Stadium_Entry_A.cell"), new(-1024.0f, -576.0f, 0.0f)));
-                    area.AddCell(new(22, GameDatabase.GetDataRefByPrototypeName(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_NES_Entry_A.cell"), new(1280.0f, -7488.0f, 0.0f)));
-                    area.AddCell(new(3, GameDatabase.GetDataRefByPrototypeName(Rzoo+"Bronx_Zoo_NESW_Attractions_A/Bronx_Zoo_FoodCourt_NESW_A.cell"), new(1280.0f, -5184.0f, 0.0f)));
-                    area.AddCell(new(5, GameDatabase.GetDataRefByPrototypeName(Rzoo+"Bronx_Zoo_NESW_Attractions_A/Bronx_Zoo_Carousel_NESW_A.cell"), new(1280.0f, -2880.0f, 0.0f)));
-                    area.AddCell(new(11, GameDatabase.GetDataRefByPrototypeName(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NSW_B.cell"), new(1280.0f, -576.0f, 0.0f)));
+                    area.AddCell(new(24, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_NE_Entry_A.cell"), new(-1024.0f, -7488.0f, 0.0f)));
+                    area.AddCell(new(9, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_NEW_Entry_A.cell"), new(-1024.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(13, GameDatabase.GetPrototypeRefByName(Rzoo+ "Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NEW_A.cell"), new(-1024.0f, -2880.0f, 0.0f))); // Bronx_Zoo_A/Bronx_Zoo_A_NEW_B.cell
+                    area.AddCell(new(14, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_TR_Stadium_Entry_A.cell"), new(-1024.0f, -576.0f, 0.0f)));
+                    area.AddCell(new(22, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_NES_Entry_A.cell"), new(1280.0f, -7488.0f, 0.0f)));
+                    area.AddCell(new(3, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_NESW_Attractions_A/Bronx_Zoo_FoodCourt_NESW_A.cell"), new(1280.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(5, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_NESW_Attractions_A/Bronx_Zoo_Carousel_NESW_A.cell"), new(1280.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(11, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NSW_B.cell"), new(1280.0f, -576.0f, 0.0f)));
 
-                    area.AddCell(new(19, GameDatabase.GetDataRefByPrototypeName(Rzoo+ "Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NES_A.cell"), new(3584.0f, -7488.0f, 0.0f)));//Bronx_Zoo_A/Bronx_Zoo_A_NES_B.cell
-                    area.AddCell(new(21, GameDatabase.GetDataRefByPrototypeName(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NES_A.cell"), new(5888.0f, -7488.0f, 0.0f)));
-                    area.AddCell(new(20, GameDatabase.GetDataRefByPrototypeName(Rzoo+ "Bronx_Zoo_A/Bronx_Zoo_A_NES_B.cell"), new(8192.0f, -7488.0f, 0.0f)));//Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NES_A.cell
-                    area.AddCell(new(23, GameDatabase.GetDataRefByPrototypeName(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_TR_Employee_Entry_A.cell"), new(10496.0f, -7488.0f, 0.0f)));  
+                    area.AddCell(new(19, GameDatabase.GetPrototypeRefByName(Rzoo+ "Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NES_A.cell"), new(3584.0f, -7488.0f, 0.0f)));//Bronx_Zoo_A/Bronx_Zoo_A_NES_B.cell
+                    area.AddCell(new(21, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NES_A.cell"), new(5888.0f, -7488.0f, 0.0f)));
+                    area.AddCell(new(20, GameDatabase.GetPrototypeRefByName(Rzoo+ "Bronx_Zoo_A/Bronx_Zoo_A_NES_B.cell"), new(8192.0f, -7488.0f, 0.0f)));//Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NES_A.cell
+                    area.AddCell(new(23, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_TR_Employee_Entry_A.cell"), new(10496.0f, -7488.0f, 0.0f)));  
 
-                    area.AddCell(new(1, GameDatabase.GetDataRefByPrototypeName(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NESW_A.cell"), new(8192.0f, -2880.0f, 0.0f)));
-                    area.AddCell(new(4, GameDatabase.GetDataRefByPrototypeName(Rzoo+"Bronx_Zoo_NESW_Attractions_A/Bronx_Zoo_Theater_NESW_A.cell"), new(8192.0f, -5184.0f, 0.0f)));                    
-                    area.AddCell(new(6, GameDatabase.GetDataRefByPrototypeName(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NSW_A.cell"), new(5888.0f, -576.0f, 0.0f)));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NESW_A.cell"), new(8192.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(4, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_NESW_Attractions_A/Bronx_Zoo_Theater_NESW_A.cell"), new(8192.0f, -5184.0f, 0.0f)));                    
+                    area.AddCell(new(6, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NSW_A.cell"), new(5888.0f, -576.0f, 0.0f)));
 
-                    area.AddCell(new(7, GameDatabase.GetDataRefByPrototypeName(Rzoo+"Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_TopLeft_A.cell"), new(5888.0f, -5184.0f, 0.0f)));
-                    area.AddCell(new(12, GameDatabase.GetDataRefByPrototypeName(Rzoo+"Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_TopRight_A.cell"), new(5888.0f, -2880.0f, 0.0f)));
-                    area.AddCell(new(2, GameDatabase.GetDataRefByPrototypeName(Rzoo+"Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_BotLeft_A.cell"), new(3584.0f, -5184.0f, 0.0f)));                    
-                    area.AddCell(new(15, GameDatabase.GetDataRefByPrototypeName(Rzoo+"Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_BotRight_A.cell"), new(3584.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(7, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_TopLeft_A.cell"), new(5888.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(12, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_TopRight_A.cell"), new(5888.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(2, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_BotLeft_A.cell"), new(3584.0f, -5184.0f, 0.0f)));                    
+                    area.AddCell(new(15, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_BotRight_A.cell"), new(3584.0f, -2880.0f, 0.0f)));
                     
-                    area.AddCell(new(8, GameDatabase.GetDataRefByPrototypeName(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NSW_B.cell"), new(8192.0f, -576.0f, 0.0f)));                 
-                    area.AddCell(new(10, GameDatabase.GetDataRefByPrototypeName(Rzoo+"Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NSW_A.cell"), new(3584.0f, -576.0f, 0.0f)));                    
+                    area.AddCell(new(8, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NSW_B.cell"), new(8192.0f, -576.0f, 0.0f)));                 
+                    area.AddCell(new(10, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NSW_A.cell"), new(3584.0f, -576.0f, 0.0f)));                    
                                         
-                    area.AddCell(new(16, GameDatabase.GetDataRefByPrototypeName(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NESWcN_A.cell"), new(10496.0f, -5184.0f, 0.0f))); 
-                    area.AddCell(new(17, GameDatabase.GetDataRefByPrototypeName(Rzoo+ "Bronx_Zoo_A/Bronx_Zoo_A_NESWdNE_A.cell"), new(10496.0f, -2880.0f, 0.0f))); // Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_ESW_A
-                    area.AddCell(new(18, GameDatabase.GetDataRefByPrototypeName(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_TR_Aquarium_Entry_A.cell"), new(10496.0f, -576.0f, 0.0f)));
+                    area.AddCell(new(16, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NESWcN_A.cell"), new(10496.0f, -5184.0f, 0.0f))); 
+                    area.AddCell(new(17, GameDatabase.GetPrototypeRefByName(Rzoo+ "Bronx_Zoo_A/Bronx_Zoo_A_NESWdNE_A.cell"), new(10496.0f, -2880.0f, 0.0f))); // Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_ESW_A
+                    area.AddCell(new(18, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_TR_Aquarium_Entry_A.cell"), new(10496.0f, -576.0f, 0.0f)));
                   
                     region.AddArea(area);
 
-                    ulong filler = GameDatabase.GetDataRefByPrototypeName(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_FILLER_A.cell");
+                    ulong filler = GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_FILLER_A.cell");
 
                     // fillers for ZooArea1SN
 
-                    area = new(10, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
+                    area = new(10, (AreaPrototype)GameDatabase.GetPrototypeRefByName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
                     area.AddCell(new(201, filler, new(-1024.0f, -9792.0f, 0.0f)));
                     area.AddCell(new(202, filler, new(10496.0f, 1728.0f, 0.0f)));
                     area.AddCell(new(203, filler, new(1280.0f, -9792.0f, 0.0f)));
@@ -1559,21 +1559,21 @@ namespace MHServerEmu.GameServer.Regions
                     area.AddCell(new(221, filler, new(-3328.0f, -9792.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(2, (AreaPrototype) GameDatabase.GetDataRefByPrototypeName("Regions/EndGame/OneShotMissions/NonChapterBound/BronxZoo/ZooAreas/ZooArea2.prototype"), new(), false);
-                    area.AddCell(new(122, GameDatabase.GetDataRefByPrototypeName(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_CagedCivisMission_A.cell"), new(15104.0f, -5184.0f, 0.0f)));
-                    area.AddCell(new(125, GameDatabase.GetDataRefByPrototypeName(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_NSW_JungleExit_A.cell"), new(15104.0f, -2880.0f, 0.0f)));
-                    area.AddCell(new(121, GameDatabase.GetDataRefByPrototypeName(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_NESWcS_A.cell"), new(12800.0f, -5184.0f, 0.0f)));
-                    area.AddCell(new(124, GameDatabase.GetDataRefByPrototypeName(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_NW_JungleExit_A.cell"), new(12800.0f, -2880.0f, 0.0f)));
-                    area.AddCell(new(123, GameDatabase.GetDataRefByPrototypeName(Rzoo + "Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_ESW_A.cell"), new(17408.0f, -5184.0f, 0.0f)));
-                    area.AddCell(new(126, GameDatabase.GetDataRefByPrototypeName(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_SW_JungleExit_A.cell"), new(17408.0f, -2880.0f, 0.0f)));
-                    area.AddCell(new(119, GameDatabase.GetDataRefByPrototypeName(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_NES_B.cell"), new(15104.0f, -7488.0f, 0.0f))); // Bronx_Zoo_A/Bronx_Zoo_A_NES_B.cell
-                    area.AddCell(new(120, GameDatabase.GetDataRefByPrototypeName(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_ES_A.cell"), new(17408.0f, -7488.0f, 0.0f)));
-                    area.AddCell(new(118, GameDatabase.GetDataRefByPrototypeName(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_NE_A.cell"), new(12800.0f, -7488.0f, 0.0f)));
+                    area = new(2, (AreaPrototype) GameDatabase.GetPrototypeRefByName("Regions/EndGame/OneShotMissions/NonChapterBound/BronxZoo/ZooAreas/ZooArea2.prototype"), new(), false);
+                    area.AddCell(new(122, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_CagedCivisMission_A.cell"), new(15104.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(125, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_NSW_JungleExit_A.cell"), new(15104.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(121, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_NESWcS_A.cell"), new(12800.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(124, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_NW_JungleExit_A.cell"), new(12800.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(123, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_ESW_A.cell"), new(17408.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(126, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_SW_JungleExit_A.cell"), new(17408.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(119, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_NES_B.cell"), new(15104.0f, -7488.0f, 0.0f))); // Bronx_Zoo_A/Bronx_Zoo_A_NES_B.cell
+                    area.AddCell(new(120, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_ES_A.cell"), new(17408.0f, -7488.0f, 0.0f)));
+                    area.AddCell(new(118, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_NE_A.cell"), new(12800.0f, -7488.0f, 0.0f)));
                     region.AddArea(area);
 
                     // fillers for ZooArea2
 
-                    area = new(11, (AreaPrototype) GameDatabase.GetDataRefByPrototypeName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
+                    area = new(11, (AreaPrototype) GameDatabase.GetPrototypeRefByName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
                     area.AddCell(new(222, filler, new(17408.0f, -576.0f, 0.0f)));
                     area.AddCell(new(223, filler, new(15104.0f, -9792.0f, 0.0f)));
                     area.AddCell(new(224, filler, new(15104.0f, -576.0f, 0.0f)));
@@ -1603,13 +1603,13 @@ namespace MHServerEmu.GameServer.Regions
                         new(19584.0f, 19584.0f, 1152.0f),
                         new(60, DifficultyTier.Normal));                    
 
-                    AreaPrototype CentralPark = (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/EndGame/TierX/UltronGameMode/UltronRaidMainArea.prototype");
+                    AreaPrototype CentralPark = (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/EndGame/TierX/UltronGameMode/UltronRaidMainArea.prototype");
                     area = new(1, CentralPark, new(), true);
 
                     district = GameDatabase.DataDirectory.Resource.DistrictDict["Resource/Districts/CentralParkUltronDistrict.district"];
 
                     for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetDataRefByPrototypeName(district.CellMarkerSet[i].Resource), new()));
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
 
                     region.AddArea(area);
 
@@ -1632,28 +1632,28 @@ namespace MHServerEmu.GameServer.Regions
                         new(60, DifficultyTier.Normal));
 
                     string DoopSector = "Resource/Cells/EndGame/CosmicDoopSector/";
-                    area = new(1, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/EndGame/Special/CosmicDoopSectorSpace/CosmicDoopSectorSpaceAreaA.prototype"), new(), true);
-                    area.AddCell(new(13, GameDatabase.GetDataRefByPrototypeName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NESW_A.cell"), new(0.0f, 0.0f, 0.0f)));
-                    area.AddCell(new(16, GameDatabase.GetDataRefByPrototypeName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NESW_B.cell"), new(0.0f, 2304.0f, 0.0f)));
-                    area.AddCell(new(7, GameDatabase.GetDataRefByPrototypeName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NESW_C.cell"), new(0.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(19, GameDatabase.GetDataRefByPrototypeName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NESW_B.cell"), new(0.0f, 4608.0f, 0.0f)));
-                    area.AddCell(new(10, GameDatabase.GetDataRefByPrototypeName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NESW_A.cell"), new(0.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(18, GameDatabase.GetDataRefByPrototypeName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NEW_A.cell"), new(-2304.0f, 4608.0f, 0.0f)));
-                    area.AddCell(new(22, GameDatabase.GetDataRefByPrototypeName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NSW_A.cell"), new(0.0f, 6912.0f, 0.0f)));
-                    area.AddCell(new(6, GameDatabase.GetDataRefByPrototypeName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NEW_A.cell"), new(-2304.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(12, GameDatabase.GetDataRefByPrototypeName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NEW_A.cell"), new(-2304.0f, 0.0f, 0.0f)));
-                    area.AddCell(new(15, GameDatabase.GetDataRefByPrototypeName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NEW_A.cell"), new(-2304.0f, 2304.0f, 0.0f)));
-                    area.AddCell(new(9, GameDatabase.GetDataRefByPrototypeName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NEW_A.cell"), new(-2304.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(21, GameDatabase.GetDataRefByPrototypeName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NW_A.cell"), new(-2304.0f, 6912.0f, 0.0f)));
-                    area.AddCell(new(14, GameDatabase.GetDataRefByPrototypeName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_ESW_A.cell"), new(2304.0f, 0.0f, 0.0f)));
-                    area.AddCell(new(11, GameDatabase.GetDataRefByPrototypeName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_ESW_A.cell"), new(2304.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(20, GameDatabase.GetDataRefByPrototypeName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_ESW_A.cell"), new(2304.0f, 4608.0f, 0.0f)));
-                    area.AddCell(new(8, GameDatabase.GetDataRefByPrototypeName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_ESW_A.cell"), new(2304.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(17, GameDatabase.GetDataRefByPrototypeName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_ESW_A.cell"), new(2304.0f, 2304.0f, 0.0f)));
-                    area.AddCell(new(23, GameDatabase.GetDataRefByPrototypeName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_SW_A.cell"), new(2304.0f, 6912.0f, 0.0f)));
-                    area.AddCell(new(4, GameDatabase.GetDataRefByPrototypeName(DoopSector + "CosmicDoopSectorTrans/CosmicDoopSector_Entry_A.cell"), new(0.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(5, GameDatabase.GetDataRefByPrototypeName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_ES_A.cell"), new(2304.0f, -6912.0f, 0.0f)));
-                    area.AddCell(new(3, GameDatabase.GetDataRefByPrototypeName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NE_A.cell"), new(-2304.0f, -6912.0f, 0.0f)));
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/EndGame/Special/CosmicDoopSectorSpace/CosmicDoopSectorSpaceAreaA.prototype"), new(), true);
+                    area.AddCell(new(13, GameDatabase.GetPrototypeRefByName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NESW_A.cell"), new(0.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(16, GameDatabase.GetPrototypeRefByName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NESW_B.cell"), new(0.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(7, GameDatabase.GetPrototypeRefByName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NESW_C.cell"), new(0.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(19, GameDatabase.GetPrototypeRefByName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NESW_B.cell"), new(0.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(10, GameDatabase.GetPrototypeRefByName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NESW_A.cell"), new(0.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(18, GameDatabase.GetPrototypeRefByName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NEW_A.cell"), new(-2304.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(22, GameDatabase.GetPrototypeRefByName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NSW_A.cell"), new(0.0f, 6912.0f, 0.0f)));
+                    area.AddCell(new(6, GameDatabase.GetPrototypeRefByName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NEW_A.cell"), new(-2304.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(12, GameDatabase.GetPrototypeRefByName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NEW_A.cell"), new(-2304.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(15, GameDatabase.GetPrototypeRefByName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NEW_A.cell"), new(-2304.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(9, GameDatabase.GetPrototypeRefByName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NEW_A.cell"), new(-2304.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(21, GameDatabase.GetPrototypeRefByName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NW_A.cell"), new(-2304.0f, 6912.0f, 0.0f)));
+                    area.AddCell(new(14, GameDatabase.GetPrototypeRefByName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_ESW_A.cell"), new(2304.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(11, GameDatabase.GetPrototypeRefByName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_ESW_A.cell"), new(2304.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(20, GameDatabase.GetPrototypeRefByName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_ESW_A.cell"), new(2304.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(8, GameDatabase.GetPrototypeRefByName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_ESW_A.cell"), new(2304.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(17, GameDatabase.GetPrototypeRefByName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_ESW_A.cell"), new(2304.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(23, GameDatabase.GetPrototypeRefByName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_SW_A.cell"), new(2304.0f, 6912.0f, 0.0f)));
+                    area.AddCell(new(4, GameDatabase.GetPrototypeRefByName(DoopSector + "CosmicDoopSectorTrans/CosmicDoopSector_Entry_A.cell"), new(0.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(5, GameDatabase.GetPrototypeRefByName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_ES_A.cell"), new(2304.0f, -6912.0f, 0.0f)));
+                    area.AddCell(new(3, GameDatabase.GetPrototypeRefByName(DoopSector + "CosmicDoopSector_A/CosmicDoopSector_NE_A.cell"), new(-2304.0f, -6912.0f, 0.0f)));
                     region.AddArea(area);
 
                     region.EntrancePosition = new(0.0f, -6912.0f, 0.0f);
@@ -1678,51 +1678,51 @@ namespace MHServerEmu.GameServer.Regions
                     string DocksPatrol = "Resource/Cells/EndGame/BrooklynDocksPatrol/";
                     string Shipping_C = "Resource/Cells/Brooklyn/Shipping_C/";
 
-                    area = new(1, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/EndGame/TierX/PatrolBrooklyn/Areas/DocksPatrolAreaA.prototype"), new(), true);
-                    area.AddCell(new(22, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_Dockyard_A/DP_Dockyard_A_ES_A.cell"), new(8064.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(30, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_WareSuper_C_Bot.cell"), new(5760.0f, 4608.0f, 0.0f)));
-                    area.AddCell(new(21, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_WareSuper_B_Top.cell"), new(5760.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(29, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_Dockyard_A/DP_Dockyard_A_NW_A.cell"), new(3456.0f, 4608.0f, 0.0f)));
-                    area.AddCell(new(20, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_WareSuper_B_Bot.cell"), new(3456.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(28, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_WareSuper_Top_A.cell"), new(8064.0f, 2304.0f, 0.0f)));
-                    area.AddCell(new(31, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_WareSuper_C_Top.cell"), new(8064.0f, 4608.0f, 0.0f)));
-                    area.AddCell(new(25, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_Dockyard_A/DP_Dockyard_A_ESW_A.cell"), new(8064.0f, 0.0f, 0.0f)));
-                    area.AddCell(new(26, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_WareSuper_Bot_A.cell"), new(3456.0f, 2304.0f, 0.0f)));
-                    area.AddCell(new(24, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_FoodTrucks_A.cell"), new(5760.0f, 0.0f, 0.0f)));
-                    area.AddCell(new(23, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_Dockyard_A/DP_Dockyard_A_NESW_A.cell"), new(3456.0f, 0.0f, 0.0f)));
-                    area.AddCell(new(27, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_WareSuper_Center_A.cell"), new(5760.0f, 2304.0f, 0.0f)));
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/EndGame/TierX/PatrolBrooklyn/Areas/DocksPatrolAreaA.prototype"), new(), true);
+                    area.AddCell(new(22, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_Dockyard_A/DP_Dockyard_A_ES_A.cell"), new(8064.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(30, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_WareSuper_C_Bot.cell"), new(5760.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(21, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_WareSuper_B_Top.cell"), new(5760.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(29, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_Dockyard_A/DP_Dockyard_A_NW_A.cell"), new(3456.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(20, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_WareSuper_B_Bot.cell"), new(3456.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(28, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_WareSuper_Top_A.cell"), new(8064.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(31, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_WareSuper_C_Top.cell"), new(8064.0f, 4608.0f, 0.0f)));
+                    area.AddCell(new(25, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_Dockyard_A/DP_Dockyard_A_ESW_A.cell"), new(8064.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(26, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_WareSuper_Bot_A.cell"), new(3456.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(24, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_FoodTrucks_A.cell"), new(5760.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(23, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_Dockyard_A/DP_Dockyard_A_NESW_A.cell"), new(3456.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(27, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_WareSuper_Center_A.cell"), new(5760.0f, 2304.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(2, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/EndGame/TierX/PatrolBrooklyn/Areas/DocksPatrolBridgeTransitionNS.prototype"), new(), false);
-                    area.AddCell(new(17, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_BridgeA_Left_A.cell"), new(1152.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(18, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_BridgeA_Center_A.cell"), new(1152.0f, 0.0f, 0.0f)));
-                    area.AddCell(new(19, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_BridgeA_Right_A.cell"), new(1152.0f, 2304.0f, 0.0f)));
+                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/EndGame/TierX/PatrolBrooklyn/Areas/DocksPatrolBridgeTransitionNS.prototype"), new(), false);
+                    area.AddCell(new(17, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_BridgeA_Left_A.cell"), new(1152.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(18, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_BridgeA_Center_A.cell"), new(1152.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(19, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_BridgeA_Right_A.cell"), new(1152.0f, 2304.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(4, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/EndGame/TierX/PatrolBrooklyn/Areas/DocksPatrolAreaB.prototype"), new(), false);
-                    area.AddCell(new(1, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_NE_A.cell"), new(-8064.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(9, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_NEW_A.cell"), new(-8064.0f, 0.0f, 0.0f)));
-                    area.AddCell(new(4, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_ES_A.cell"), new(-1152.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(2, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_NES_A.cell"), new(-5760.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(3, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DP_Shipping_A_NES_B.cell"), new(-3456.0f, -4608.0f, 0.0f)));
-                    area.AddCell(new(13, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_CargoShip_A_1.cell"), new(-8064.0f, 2304.0f, 0.0f)));
-                    area.AddCell(new(5, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_NEW_A.cell"), new(-8064.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(15, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_CargoShip_A_3.cell"), new(-3456.0f, 2304.0f, 0.0f)));
-                    area.AddCell(new(14, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_CargoShip_A_0.cell"), new(-5760.0f, 2304.0f, 0.0f)));
-                    area.AddCell(new(16, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_NSW_A.cell"), new(-1152.0f, 2304.0f, 0.0f)));
-                    area.AddCell(new(12, GameDatabase.GetDataRefByPrototypeName(Shipping_C + "Shipping_AIMSub_X1_Y0_A.cell"), new(-1152.0f, 0.0f, 0.0f)));
-                    area.AddCell(new(7, GameDatabase.GetDataRefByPrototypeName(Shipping_C + "Shipping_CrateWorld_X1_Y0_A.cell"), new(-3456.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(11, GameDatabase.GetDataRefByPrototypeName(Shipping_C + "Shipping_AIMSub_X0_Y0_A.cell"), new(-3456.0f, 0.0f, 0.0f)));
-                    area.AddCell(new(10, GameDatabase.GetDataRefByPrototypeName(Shipping_C + "DocksPatrol_CrateWorld_X0_Y1_A.cell"), new(-5760.0f, 0.0f, 0.0f)));
-                    area.AddCell(new(6, GameDatabase.GetDataRefByPrototypeName(Shipping_C + "DocksPatrol_CrateWorld_X0_Y0_A.cell"), new(-5760.0f, -2304.0f, 0.0f)));
-                    area.AddCell(new(8, GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_NESW_A.cell"), new(-1152.0f, -2304.0f, 0.0f)));
+                    area = new(4, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/EndGame/TierX/PatrolBrooklyn/Areas/DocksPatrolAreaB.prototype"), new(), false);
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_NE_A.cell"), new(-8064.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(9, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_NEW_A.cell"), new(-8064.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(4, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_ES_A.cell"), new(-1152.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(2, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_NES_A.cell"), new(-5760.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(3, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DP_Shipping_A_NES_B.cell"), new(-3456.0f, -4608.0f, 0.0f)));
+                    area.AddCell(new(13, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_CargoShip_A_1.cell"), new(-8064.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(5, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_NEW_A.cell"), new(-8064.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(15, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_CargoShip_A_3.cell"), new(-3456.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(14, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_CargoShip_A_0.cell"), new(-5760.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(16, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_NSW_A.cell"), new(-1152.0f, 2304.0f, 0.0f)));
+                    area.AddCell(new(12, GameDatabase.GetPrototypeRefByName(Shipping_C + "Shipping_AIMSub_X1_Y0_A.cell"), new(-1152.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(7, GameDatabase.GetPrototypeRefByName(Shipping_C + "Shipping_CrateWorld_X1_Y0_A.cell"), new(-3456.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(11, GameDatabase.GetPrototypeRefByName(Shipping_C + "Shipping_AIMSub_X0_Y0_A.cell"), new(-3456.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(10, GameDatabase.GetPrototypeRefByName(Shipping_C + "DocksPatrol_CrateWorld_X0_Y1_A.cell"), new(-5760.0f, 0.0f, 0.0f)));
+                    area.AddCell(new(6, GameDatabase.GetPrototypeRefByName(Shipping_C + "DocksPatrol_CrateWorld_X0_Y0_A.cell"), new(-5760.0f, -2304.0f, 0.0f)));
+                    area.AddCell(new(8, GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_NESW_A.cell"), new(-1152.0f, -2304.0f, 0.0f)));
                     region.AddArea(area);
 
                     // Filler
-                    ulong Dockyard_Filler = GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_Dockyard_A/DP_Dockyard_A_FILLER_A.cell");
-                    ulong Shipping_Filler = GameDatabase.GetDataRefByPrototypeName(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_FILLER_A.cell");
+                    ulong Dockyard_Filler = GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_Dockyard_A/DP_Dockyard_A_FILLER_A.cell");
+                    ulong Shipping_Filler = GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_FILLER_A.cell");
 
-                    area = new(5, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
+                    area = new(5, (AreaPrototype)GameDatabase.GetPrototypeRefByName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
                     area.AddCell(new(32, Dockyard_Filler, new(3456.0f, -4608.0f, 0.0f)));
                     area.AddCell(new(33, Dockyard_Filler, new(8064.0f, 6912.0f, 0.0f)));
                     area.AddCell(new(34, Dockyard_Filler, new(5760.0f, -4608.0f, 0.0f)));
@@ -1775,11 +1775,11 @@ namespace MHServerEmu.GameServer.Regions
                         new(21888.0f, 24192.0f, 1152.0f),
                         new(10, DifficultyTier.Normal));
 
-                    area = new(1, (AreaPrototype) GameDatabase.GetDataRefByPrototypeName("Regions/Story/CH10SecretInvasion/UpperMadripoor/UpperMadripoorAreaA.prototype"), new(), true);
+                    area = new(1, (AreaPrototype) GameDatabase.GetPrototypeRefByName("Regions/Story/CH10SecretInvasion/UpperMadripoor/UpperMadripoorAreaA.prototype"), new(), true);
 
                     district = GameDatabase.DataDirectory.Resource.DistrictDict["Resource/Districts/MadripoorHightownDistrict.district"];
                     for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetDataRefByPrototypeName(district.CellMarkerSet[i].Resource), new()));
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
                     
                     region.AddArea(area);
 
@@ -1802,11 +1802,11 @@ namespace MHServerEmu.GameServer.Regions
                         new(21888.0f, 24192.0f, 1152.0f),
                         new(63, DifficultyTier.Superheroic));
 
-                    area = new(1, (AreaPrototype)GameDatabase.GetDataRefByPrototypeName("Regions/Story/CH10SecretInvasion/UpperMadripoor/UpperMadripoorAreaA.prototype"), new(), true);
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/Story/CH10SecretInvasion/UpperMadripoor/UpperMadripoorAreaA.prototype"), new(), true);
 
                     district = GameDatabase.DataDirectory.Resource.DistrictDict["Resource/Districts/MadripoorHightownDistrict.district"];
                     for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetDataRefByPrototypeName(district.CellMarkerSet[i].Resource), new()));
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
 
                     region.AddArea(area);
 
@@ -1834,7 +1834,7 @@ namespace MHServerEmu.GameServer.Regions
 
                     district = GameDatabase.DataDirectory.Resource.DistrictDict["Resource/Districts/MidtownStatic/MidtownStatic_A.district"];
                     for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetDataRefByPrototypeName(district.CellMarkerSet[i].Resource), new()));
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
 
                     region.AddArea(area);
 
@@ -2008,7 +2008,7 @@ namespace MHServerEmu.GameServer.Regions
 
                     district = GameDatabase.DataDirectory.Resource.DistrictDict["Resource/Districts/MidtownStatic/MidtownStatic_A.district"];
                     for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetDataRefByPrototypeName(district.CellMarkerSet[i].Resource), new()));
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
 
                     region.AddArea(area);
 
