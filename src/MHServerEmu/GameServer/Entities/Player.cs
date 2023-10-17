@@ -24,8 +24,7 @@ namespace MHServerEmu.GameServer.Entities
         public ulong MatchQueueStatus { get; set; }
         public bool EmailVerified { get; set; }
         public ulong AccountCreationTimestamp { get; set; }
-        public ulong PartyRepId { get; set; }
-        public ulong PartyId { get; set; }
+        public ReplicatedUInt64 PartyId { get; set; }
         public string UnknownString { get; set; }
         public bool HasGuildInfo { get; set; }
         public GuildMemberReplicationRuntimeInfo GuildInfo { get; set; }
@@ -57,9 +56,8 @@ namespace MHServerEmu.GameServer.Entities
             EmailVerified = boolDecoder.ReadBool(stream);
             AccountCreationTimestamp = stream.ReadRawVarint64();
 
-            PartyRepId = stream.ReadRawVarint64();
-            PartyId = stream.ReadRawVarint64();
-            
+            PartyId = new(stream);
+
             HasGuildInfo = boolDecoder.ReadBool(stream);
             if (HasGuildInfo) GuildInfo = new(stream);      // GuildMember::SerializeReplicationRuntimeInfo
 
@@ -91,7 +89,7 @@ namespace MHServerEmu.GameServer.Entities
         public Player(EntityBaseData baseData, uint replicationPolicy, ReplicatedPropertyCollection propertyCollection,
             MissionManager missionManager, ReplicatedPropertyCollection avatarProperties,
             ulong shardId, ReplicatedString playerName, ReplicatedString unkName,
-            ulong matchQueueStatus, bool emailVerified, ulong accountCreationTimestamp,
+            ulong matchQueueStatus, bool emailVerified, ulong accountCreationTimestamp, ReplicatedUInt64 partyId,
             Community community, bool unkBool, ulong[] stashInventories, uint[] availableBadges,
             GameplayOptions gameplayOptions, AchievementState[] achievementStates, StashTabOption[] stashTabOptions) : base(baseData)
         {
@@ -108,6 +106,7 @@ namespace MHServerEmu.GameServer.Entities
             MatchQueueStatus = matchQueueStatus;
             EmailVerified = emailVerified;
             AccountCreationTimestamp = accountCreationTimestamp;
+            PartyId = partyId;
             Community = community;
             UnkBool = unkBool;
             StashInventories = stashInventories;
@@ -152,8 +151,7 @@ namespace MHServerEmu.GameServer.Entities
                 boolEncoder.WriteBuffer(cos);   // EmailVerified
                 cos.WriteRawVarint64(AccountCreationTimestamp);
 
-                cos.WriteRawVarint64(PartyRepId);
-                cos.WriteRawVarint64(PartyId);
+                cos.WriteRawBytes(PartyId.Encode());
 
                 boolEncoder.WriteBuffer(cos);   // HasGuildInfo
                 if (HasGuildInfo) cos.WriteRawBytes(GuildInfo.Encode());
@@ -202,6 +200,7 @@ namespace MHServerEmu.GameServer.Entities
             sb.AppendLine($"MatchQueueStatus: 0x{MatchQueueStatus:X}");
             sb.AppendLine($"EmailVerified: {EmailVerified}");
             sb.AppendLine($"AccountCreationTimestamp: 0x{AccountCreationTimestamp:X}");
+            sb.AppendLine($"PartyId: {PartyId}");
             sb.AppendLine($"HasGuildInfo: {HasGuildInfo}");
             sb.AppendLine($"GuildInfo: {GuildInfo}");
             sb.AppendLine($"UnknownString: {UnknownString}");
