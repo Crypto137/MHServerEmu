@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using MHServerEmu.Common;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.GameData.Calligraphy;
@@ -29,9 +30,6 @@ namespace MHServerEmu.GameServer.GameData
         public AssetDirectory AssetDirectory { get; }
         public CurveDirectory CurveDirectory { get; }
         public ReplacementDirectory ReplacementDirectory { get; }
-
-        // Temporary resource storage class
-        public ResourceStorage Resource { get; }
 
         public DataDirectory(GpakFile calligraphyGpak, GpakFile resourceGpak)
         {
@@ -88,6 +86,9 @@ namespace MHServerEmu.GameServer.GameData
                     ReadPrototypeDirectoryEntry(reader, gpakDict);
             }
 
+            // Load resource prototypes
+            CreatePrototypeDataRefsForDirectory(resourceGpak);
+
             Logger.Info($"Parsed {_prototypeDict.Count} prototype files");
 
             // Initialize replacement directory
@@ -101,9 +102,6 @@ namespace MHServerEmu.GameServer.GameData
                 for (int i = 0; i < recordCount; i++)
                     ReadReplacementDirectoryEntry(reader);
             }
-
-            // Load resources
-            Resource = new(resourceGpak);
 
             // old hierarchy init
             InitializeHierarchyCache();
@@ -180,9 +178,11 @@ namespace MHServerEmu.GameServer.GameData
 
         private void AddCalligraphyPrototype(ulong prototypeId, ulong prototypeGuid, ulong blueprintId, byte flags, string filePath, Dictionary<string, byte[]> gpakDict)
         {
+            // Create a dataRef
             GameDatabase.PrototypeRefManager.AddDataRef(prototypeId, filePath);
             _prototypeGuidToDataRefDict.Add(prototypeGuid, prototypeId);
 
+            // Add a new prototype record
             _prototypeRecordDict.Add(prototypeId, new()
             {
                 PrototypeId = prototypeId,
@@ -192,8 +192,43 @@ namespace MHServerEmu.GameServer.GameData
                 IsCalligraphyPrototype = true
             });
 
+            // Load the prototype
             PrototypeFile prototypeFile = new(gpakDict[$"Calligraphy/{filePath}"]);
             _prototypeDict.Add(prototypeId, prototypeFile.Prototype);
+        }
+
+        private void AddResource(string filePath, byte[] data)
+        {
+            // Create a dataRef
+            ulong prototypeId = HashHelper.HashPath($"&{filePath.ToLower()}");   
+            GameDatabase.PrototypeRefManager.AddDataRef(prototypeId, filePath);
+
+            // Add a new prototype record
+            _prototypeRecordDict.Add(prototypeId, new()
+            {
+                PrototypeId = prototypeId,
+                PrototypeGuid = 0,
+                BlueprintId = 0,
+                Flags = 0,
+                IsCalligraphyPrototype = false
+            });
+
+            // Load the resource
+            object resource;
+            string extension = Path.GetExtension(filePath);
+
+            switch (extension)
+            {
+                case ".cell":       resource = new CellPrototype(data);         break;
+                case ".district":   resource = new DistrictPrototype(data);     break;
+                case ".encounter":  resource = new EncounterPrototype(data);    break;
+                case ".propset":    resource = new PropSetPrototype(data);      break;
+                case ".prop":       resource = new PropPrototype(data);         break;
+                case ".ui":         resource = new UIPrototype(data);           break;
+                default:            throw new($"Unsupported resource type ({extension}).");
+            }
+
+            _prototypeDict.Add(prototypeId, resource);
         }
 
         private void InitializeHierarchyCache()
@@ -206,6 +241,14 @@ namespace MHServerEmu.GameServer.GameData
 
             // enums
             _prototypeEnumManager = new(this);
+        }
+
+        private void CreatePrototypeDataRefsForDirectory(GpakFile resourceFile)
+        {
+            // Not yet properly implemented
+            // Todo: after combining both sips into PakfileSystem filter files here by "Resource/" prefix
+            foreach (GpakEntry entry in resourceFile.Entries)
+                AddResource(entry.FilePath, entry.Data);
         }
 
         #endregion
