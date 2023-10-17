@@ -1,0 +1,198 @@
+syntax = "proto2";
+
+package Gazillion;
+
+enum GuildFormResultCode {
+	eGFCInternalError	= 0;
+	eGFCGuildInErrorState	= 1;
+	eGFCNotOnline	= 2;
+	eGFCRestrictedName	= 3;
+	eGFCDuplicateName	= 4;
+	eGFCAlreadyInGuild	= 5;
+	eGFCWaitingForDatabase	= 6;
+	eGFCSuccess	= 7;
+}
+
+enum GuildChangeNameResultCode {
+	eGCNRCInternalError	= 0;
+	eGCNRCGuildInErrorState	= 1;
+	eGCNRCNotOnline	= 2;
+	eGCNRCInvalidGuild	= 3;
+	eGCNRCNotInGuild	= 4;
+	eGCNRCRestrictedName	= 5;
+	eGCNRCDuplicateName	= 6;
+	eGCNRCNoPermission	= 7;
+	eGCNRCWaitingForDatabase	= 8;
+	eGCNRCSuccess	= 9;
+}
+
+enum GuildInviteResultCode {
+	eGIRCInternalError	= 0;
+	eGIRCGuildInErrorState	= 1;
+	eGIRCInviterNotOnline	= 2;
+	eGIRCGuildFull	= 3;
+	eGIRCInvitedInGuild	= 4;
+	eGIRCInvitedInOtherGuild	= 5;
+	eGIRCInvitedUnkownPlayer	= 6;
+	eGIRCInviterNotInGuild	= 7;
+	eGIRCInviterNoPermission	= 8;
+	eGIRCSuccess	= 9;
+}
+
+enum GuildRespondToInviteCode {
+	eGRICRejected	= 0;
+	eGRICAccepted	= 1;
+	eGRICAutoIgnored	= 2;
+}
+
+enum GuildRespondToInviteResultCode {
+	eGRIRCInternalError	= 0;
+	eGRIRCGuildInErrorState	= 1;
+	eGRIRCNotOnline	= 2;
+	eGRIRCInvalidGuild	= 3;
+	eGRIRCAlreadyInGuild	= 4;
+	eGRIRCGuildFull	= 5;
+	eGRIRCNotInvited	= 6;
+	eGRIRCJoined	= 7;
+	eGRIRCRejected	= 8;
+}
+
+enum GuildMembership {
+	eGMNone	= 0;
+	eGMMember	= 1;
+	eGMOfficer	= 2;
+	eGMLeader	= 3;
+}
+
+enum GuildChangeMemberResultCode {
+	eGCMRCInternalError	= 0;
+	eGCMRCGuildInErrorState	= 1;
+	eGCMRCNotOnline	= 2;
+	eGCMRCInitiatorNotInGuild	= 3;
+	eGCMRCInitiatorNoPermission	= 4;
+	eGCMRCUnknownMember	= 5;
+	eGCMRCNoChange	= 6;
+	eGCMRCCantModifyLeader	= 7;
+	eGCMRCRequiresStaff	= 8;
+	eGCMRCRequiresLeader	= 9;
+	eGCMRCNoTransferLeadership	= 10;
+	eGCMRCSuccess	= 11;
+	eGCMRCSuccessGuildDissolved	= 12;
+}
+
+message GuildForm {
+	required uint64	playerId	= 1;
+	required string	guildName	= 2;
+}
+
+message GuildFormResult {
+	required string	guildName	= 1;
+	required GuildFormResultCode	resultCode	= 2;
+}
+
+message GuildDisbanded {
+	required uint64	guildId	= 1;
+	required string	disbandingPlayerName	= 2;
+}
+
+message GuildChangeName {
+	required uint64	playerId	= 1;
+	required string	guildName	= 2;
+}
+
+message GuildChangeNameResult {
+	required string	submittedName	= 1;
+	required GuildChangeNameResultCode	resultCode	= 2;
+}
+
+message GuildNameChanged {
+	required uint64	guildId	= 1;
+	required string	newGuildName	= 2;
+	required string	changedByPlayerName	= 3;
+}
+
+message GuildInvite {
+	required string	toInvitePlayerName	= 1;
+	required uint64	invitedByPlayerId	= 2;
+}
+
+message GuildInviteResult {
+	required GuildInvite	invite	= 1;
+	required GuildInviteResultCode	resultCode	= 2;
+}
+
+message GuildInvitedToJoin {
+	required uint64	guildId	= 1;
+	required string	guildName	= 2;
+	required string	invitedByPlayerName	= 3;
+}
+
+message GuildRespondToInvite {
+	required uint64	playerId	= 1;
+	required uint64	guildId	= 2;
+	required GuildRespondToInviteCode	respondCode	= 3;
+}
+
+message GuildRespondToInviteResult {
+	required GuildRespondToInviteResultCode	resultCode	= 1;
+	required string	guildName	= 2;
+}
+
+message GuildMemberInfo {
+	required uint64	playerId	= 1;
+	required string	playerName	= 2;
+	required GuildMembership	membership	= 3;
+}
+
+message GuildChangeMember {
+	required uint64	sourcePlayerId	= 1;
+	required string	targetPlayerName	= 2;
+	required GuildMembership	targetNewMembership	= 3;
+}
+
+message GuildChangeMemberResult {
+	required string	targetPlayerName	= 1;
+	required GuildChangeMemberResultCode	resultCode	= 2;
+}
+
+message GuildMembersInfoChanged {
+	required uint64	guildId	= 1;
+	repeated GuildMemberInfo	members	= 2;
+	required string	initiatingMemberName	= 3;
+	optional bool	newMember	= 4 [default = false];
+}
+
+message GuildCompleteInfo {
+	required uint64	guildId	= 1;
+	required string	guildName	= 2;
+	repeated GuildMemberInfo	members	= 3;
+}
+
+message GuildMessageSetToServer {
+	optional GuildNameChanged	guildNameChanged	= 1;
+	optional GuildMembersInfoChanged	guildMembersInfoChanged	= 2;
+	optional GuildCompleteInfo	guildCompleteInfo	= 3;
+	optional GuildDisbanded	guildDisbanded	= 4;
+}
+
+message GuildMessageSetToClient {
+	optional GuildFormResult	guildFormResult	= 1;
+	optional GuildChangeNameResult	guildChangeNameResult	= 2;
+	optional GuildInviteResult	guildInviteResult	= 3;
+	optional GuildRespondToInviteResult	guildRespondToInviteResult	= 4;
+	optional GuildChangeMemberResult	guildChangeMemberResult	= 5;
+	optional GuildInvitedToJoin	guildInvitedToJoin	= 6;
+	optional GuildNameChanged	guildNameChanged	= 7;
+	optional GuildMembersInfoChanged	guildMembersInfoChanged	= 8;
+	optional GuildCompleteInfo	guildCompleteInfo	= 9;
+	optional GuildDisbanded	guildDisbanded	= 10;
+}
+
+message GuildMessageSetToPlayerManager {
+	optional GuildForm	guildForm	= 1;
+	optional GuildChangeName	guildChangeName	= 2;
+	optional GuildInvite	guildInvite	= 3;
+	optional GuildRespondToInvite	guildRespondToInvite	= 4;
+	optional GuildChangeMember	guildChangeMember	= 5;
+}
+

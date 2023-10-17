@@ -1,0 +1,17 @@
+syntax = "proto2";
+
+package Gazillion;
+
+message AuthTicket {
+	optional bytes	sessionKey	= 1;
+	optional bytes	sessionToken	= 2;
+	required uint64	sessionId	= 3;
+	optional string	errorMessage	= 4;
+	optional string	frontendServer	= 5;
+	optional string	frontendPort	= 6;
+	optional string	platformTicket	= 7;
+	optional bool	presalePurchase	= 8;
+	optional string	tosurl	= 9;
+	optional bool	success	= 10;
+}
+
