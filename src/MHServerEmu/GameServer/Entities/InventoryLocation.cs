@@ -14,7 +14,7 @@ namespace MHServerEmu.GameServer.Entities
         public InventoryLocation(CodedInputStream stream)
         {
             ContainerEntityId = stream.ReadRawVarint64();
-            InventoryPrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Inventory);
+            InventoryPrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.Inventory);
             Slot = stream.ReadRawVarint32();
         }
 
@@ -32,7 +32,7 @@ namespace MHServerEmu.GameServer.Entities
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
                 cos.WriteRawVarint64(ContainerEntityId);
-                cos.WritePrototypeId(InventoryPrototypeId, PrototypeEnumType.Inventory);
+                cos.WritePrototypeEnum(InventoryPrototypeId, PrototypeEnumType.Inventory);
                 cos.WriteRawVarint64(Slot);
 
                 cos.Flush();

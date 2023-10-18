@@ -16,12 +16,12 @@ namespace MHServerEmu.GameServer.UI
             UISyncData = new UISyncData[stream.ReadRawVarint32()];
             for (int i = 0; i < UISyncData.Length; i++)
             {
-                ulong widgetR = stream.ReadPrototypeId(PrototypeEnumType.All);
-                ulong contextR = stream.ReadPrototypeId(PrototypeEnumType.All);
+                ulong widgetR = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+                ulong contextR = stream.ReadPrototypeEnum(PrototypeEnumType.All);
 
                 ulong[] areas = new ulong[stream.ReadRawInt32()];
                 for (int j = 0; j < areas.Length; j++)
-                    areas[j] = stream.ReadPrototypeId(PrototypeEnumType.All);
+                    areas[j] = stream.ReadPrototypeEnum(PrototypeEnumType.All);
 
                 string className = GameDatabase.DataDirectory.GetPrototypeBlueprint(widgetR).RuntimeBinding;
 

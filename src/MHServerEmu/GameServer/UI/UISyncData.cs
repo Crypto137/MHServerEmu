@@ -41,12 +41,12 @@ namespace MHServerEmu.GameServer.UI
 
         protected void WriteParentFields(CodedOutputStream stream)
         {
-            stream.WritePrototypeId(WidgetR, PrototypeEnumType.All);
-            stream.WritePrototypeId(ContextR, PrototypeEnumType.All);
+            stream.WritePrototypeEnum(WidgetR, PrototypeEnumType.All);
+            stream.WritePrototypeEnum(ContextR, PrototypeEnumType.All);
 
             stream.WriteRawInt32(Areas.Length);
             for (int i = 0; i < Areas.Length; i++)
-                stream.WritePrototypeId(Areas[i], PrototypeEnumType.All);
+                stream.WritePrototypeEnum(Areas[i], PrototypeEnumType.All);
         }
 
         protected void WriteParentString(StringBuilder sb)

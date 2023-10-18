@@ -12,7 +12,7 @@ namespace MHServerEmu.GameServer.Common
 
         public EntityTrackingContextMap(CodedInputStream stream)
         {
-            Context = stream.ReadPrototypeId(PrototypeEnumType.All);
+            Context = stream.ReadPrototypeEnum(PrototypeEnumType.All);
             Flag = stream.ReadRawVarint32();
         }
 
@@ -28,7 +28,7 @@ namespace MHServerEmu.GameServer.Common
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                cos.WritePrototypeId(Context, PrototypeEnumType.All);
+                cos.WritePrototypeEnum(Context, PrototypeEnumType.All);
                 cos.WriteRawVarint32(Flag);
 
                 cos.Flush();

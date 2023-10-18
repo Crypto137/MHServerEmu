@@ -14,7 +14,7 @@ namespace MHServerEmu.GameServer.Missions
 
         public MissionManager(CodedInputStream stream, BoolDecoder boolDecoder)
         {
-            PrototypeId = stream.ReadPrototypeId(PrototypeEnumType.All);
+            PrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.All);
 
             Missions = new Mission[stream.ReadRawVarint64()];
             for (int i = 0; i < Missions.Length; i++)
@@ -44,7 +44,7 @@ namespace MHServerEmu.GameServer.Missions
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                cos.WritePrototypeId(PrototypeId, PrototypeEnumType.All);
+                cos.WritePrototypeEnum(PrototypeId, PrototypeEnumType.All);
 
                 cos.WriteRawVarint64((ulong)Missions.Length);
                 foreach (Mission mission in Missions)

@@ -16,7 +16,7 @@ namespace MHServerEmu.GameServer.Powers
 
         public PowerCollectionRecord(CodedInputStream stream, PowerCollectionRecord previousRecord)
         {
-            PowerPrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Power);
+            PowerPrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.Power);
             Flags = stream.ReadRawVarint32().ToBoolArray(FlagCount);
             IndexProps = new();
             IndexProps.PowerRank = Flags[1] ? 0 : stream.ReadRawVarint32();
@@ -54,7 +54,7 @@ namespace MHServerEmu.GameServer.Powers
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                cos.WritePrototypeId(PowerPrototypeId, PrototypeEnumType.Power);
+                cos.WritePrototypeEnum(PowerPrototypeId, PrototypeEnumType.Power);
                 cos.WriteRawVarint32(Flags.ToUInt32());
                 if (Flags[1] == false) cos.WriteRawVarint32(IndexProps.PowerRank);
                 if (Flags[2] == false && Flags[3] == false) cos.WriteRawVarint32(IndexProps.CharacterLevel);

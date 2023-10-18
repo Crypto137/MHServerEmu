@@ -13,8 +13,8 @@ namespace MHServerEmu.GameServer.Entities.Items
 
         public AffixSpec(CodedInputStream stream)
         {            
-            AffixProto = stream.ReadPrototypeId(PrototypeEnumType.All);
-            ScopeProto = stream.ReadPrototypeId(PrototypeEnumType.All);
+            AffixProto = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            ScopeProto = stream.ReadPrototypeEnum(PrototypeEnumType.All);
             Seed = stream.ReadRawInt32();
         }
 
@@ -31,8 +31,8 @@ namespace MHServerEmu.GameServer.Entities.Items
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                cos.WritePrototypeId(AffixProto, PrototypeEnumType.All);
-                cos.WritePrototypeId(ScopeProto, PrototypeEnumType.All);
+                cos.WritePrototypeEnum(AffixProto, PrototypeEnumType.All);
+                cos.WritePrototypeEnum(ScopeProto, PrototypeEnumType.All);
                 cos.WriteRawInt32(Seed);
 
                 cos.Flush();

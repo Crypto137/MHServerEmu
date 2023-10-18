@@ -39,7 +39,7 @@ namespace MHServerEmu.GameServer.Entities
             Flags = stream.ReadRawVarint32().ToBoolArray(FieldFlagCount);
             //LocMsgFlags = Flags >> 12;
 
-            if (Flags[11]) PrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Entity);
+            if (Flags[11]) PrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.Entity);
 
             Position = new(stream, 3);
 
@@ -84,7 +84,7 @@ namespace MHServerEmu.GameServer.Entities
                 cos.WriteRawVarint64(EntityId);
                 cos.WriteRawVarint32(Flags.ToUInt32());
 
-                if (Flags[11]) cos.WritePrototypeId(PrototypeId, PrototypeEnumType.Entity);
+                if (Flags[11]) cos.WritePrototypeEnum(PrototypeId, PrototypeEnumType.Entity);
                 cos.WriteRawBytes(Position.Encode(3));
 
                 if (Flags[0])

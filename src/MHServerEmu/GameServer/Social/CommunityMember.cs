@@ -30,8 +30,8 @@ namespace MHServerEmu.GameServer.Social
         {
             Name = stream.ReadRawString();
             DbId = stream.ReadRawVarint64();
-            RegionRef = stream.ReadPrototypeId(PrototypeEnumType.All);
-            DifficultyRef = stream.ReadPrototypeId(PrototypeEnumType.All);
+            RegionRef = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            DifficultyRef = stream.ReadPrototypeEnum(PrototypeEnumType.All);
             Slots = new AvatarSlotInfo[stream.ReadRawByte()];  
             for (int i = 0; i < Slots.Length; i++)
                 Slots[i] = new(stream);

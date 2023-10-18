@@ -14,7 +14,7 @@ namespace MHServerEmu.GameServer.Entities.Options
 
         public ChatChannelFilter(CodedInputStream stream, BoolDecoder boolDecoder)
         {
-            ChannelProtoId = stream.ReadPrototypeId(PrototypeEnumType.All);
+            ChannelProtoId = stream.ReadPrototypeEnum(PrototypeEnumType.All);
             IsSubscribed = boolDecoder.ReadBool(stream);
         }
 
@@ -36,7 +36,7 @@ namespace MHServerEmu.GameServer.Entities.Options
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                cos.WritePrototypeId(ChannelProtoId, PrototypeEnumType.All);
+                cos.WritePrototypeEnum(ChannelProtoId, PrototypeEnumType.All);
                 boolEncoder.WriteBuffer(cos);   // IsSubscribed
 
                 cos.Flush();

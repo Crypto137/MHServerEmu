@@ -39,7 +39,7 @@ namespace MHServerEmu.GameServer.Entities
 
             ReplicationPolicy = stream.ReadRawVarint32();
             EntityId = stream.ReadRawVarint64();
-            PrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Entity);
+            PrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.Entity);
             Flags = stream.ReadRawVarint32().ToBoolArray(FlagCount);
             LocFlags = stream.ReadRawVarint32().ToBoolArray(LocFlagCount);
 
@@ -62,7 +62,7 @@ namespace MHServerEmu.GameServer.Entities
             if (Flags[11]) BoundsScaleOverride = stream.ReadRawZigZagFloat(8);
             if (Flags[3]) SourceEntityId = stream.ReadRawVarint64();
             if (Flags[4]) SourcePosition = new(stream, 3);
-            if (Flags[1]) ActivePowerPrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Power);
+            if (Flags[1]) ActivePowerPrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.Power);
             if (Flags[6]) InvLoc = new(stream);
             if (Flags[7]) InvLocPrev = new(stream);
 
@@ -104,7 +104,7 @@ namespace MHServerEmu.GameServer.Entities
 
                 cos.WriteRawVarint32(ReplicationPolicy);
                 cos.WriteRawVarint64(EntityId);
-                cos.WritePrototypeId(PrototypeId, PrototypeEnumType.Entity);
+                cos.WritePrototypeEnum(PrototypeId, PrototypeEnumType.Entity);
                 cos.WriteRawVarint32(Flags.ToUInt32());
                 cos.WriteRawVarint32(LocFlags.ToUInt32());
 
@@ -127,7 +127,7 @@ namespace MHServerEmu.GameServer.Entities
                 if (Flags[11]) cos.WriteRawZigZagFloat(BoundsScaleOverride, 8);
                 if (Flags[3]) cos.WriteRawVarint64(SourceEntityId);
                 if (Flags[4]) cos.WriteRawBytes(SourcePosition.Encode(3));
-                if (Flags[1]) cos.WritePrototypeId(ActivePowerPrototypeId, PrototypeEnumType.Power);
+                if (Flags[1]) cos.WritePrototypeEnum(ActivePowerPrototypeId, PrototypeEnumType.Power);
                 if (Flags[6]) cos.WriteRawBytes(InvLoc.Encode());
                 if (Flags[7]) cos.WriteRawBytes(InvLocPrev.Encode());
 

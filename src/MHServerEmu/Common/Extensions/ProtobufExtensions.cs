@@ -58,7 +58,7 @@ namespace MHServerEmu.Common.Extensions
             return Encoding.UTF8.GetString(stream.ReadRawBytes(length));
         }
 
-        public static ulong ReadPrototypeId(this CodedInputStream stream, PrototypeEnumType enumType)
+        public static ulong ReadPrototypeEnum(this CodedInputStream stream, PrototypeEnumType enumType)
         {
             return GameDatabase.DataDirectory.GetPrototypeFromEnumValue(stream.ReadRawVarint64(), enumType);
         }
@@ -100,7 +100,7 @@ namespace MHServerEmu.Common.Extensions
             stream.WriteRawBytes(rawBytes);
         }
 
-        public static void WritePrototypeId(this CodedOutputStream stream, ulong prototypeId, PrototypeEnumType enumType)
+        public static void WritePrototypeEnum(this CodedOutputStream stream, ulong prototypeId, PrototypeEnumType enumType)
         {
             stream.WriteRawVarint64(GameDatabase.DataDirectory.GetPrototypeEnumValue(prototypeId, enumType));
         }

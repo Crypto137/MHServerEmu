@@ -46,7 +46,7 @@ namespace MHServerEmu.GameServer.Entities.Options
 
             ChatTabChannels = new ulong[stream.ReadRawVarint64()];
             for (int i = 0; i < ChatTabChannels.Length; i++)
-                ChatTabChannels[i] = stream.ReadPrototypeId(PrototypeEnumType.All);
+                ChatTabChannels[i] = stream.ReadPrototypeEnum(PrototypeEnumType.All);
 
             OptionSettings = new long[stream.ReadRawVarint64()];
             for (int i = 0; i < OptionSettings.Length; i++)
@@ -94,7 +94,7 @@ namespace MHServerEmu.GameServer.Entities.Options
 
                 cos.WriteRawVarint64((ulong)ChatTabChannels.Length);
                 foreach (ulong channel in ChatTabChannels)
-                    cos.WritePrototypeId(channel, PrototypeEnumType.All);
+                    cos.WritePrototypeEnum(channel, PrototypeEnumType.All);
 
                 cos.WriteRawVarint64((ulong)OptionSettings.Length);
                 foreach (long setting in OptionSettings)

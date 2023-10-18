@@ -19,13 +19,13 @@ namespace MHServerEmu.GameServer.Entities.Avatars
         {
             PowerSpecIndex = stream.ReadRawInt32();
             ShouldPersist = boolDecoder.ReadBool(stream);
-            AssociatedTransformMode = stream.ReadPrototypeId(PrototypeEnumType.All);
-            Slot0 = stream.ReadPrototypeId(PrototypeEnumType.All);
-            Slot1 = stream.ReadPrototypeId(PrototypeEnumType.All);
+            AssociatedTransformMode = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            Slot0 = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            Slot1 = stream.ReadPrototypeEnum(PrototypeEnumType.All);
 
             PowerSlots = new ulong[stream.ReadRawVarint64()];
             for (int i = 0; i < PowerSlots.Length; i++)
-                PowerSlots[i] = stream.ReadPrototypeId(PrototypeEnumType.All);
+                PowerSlots[i] = stream.ReadPrototypeEnum(PrototypeEnumType.All);
         }
 
         public AbilityKeyMapping(int powerSpecIndex, bool shouldPersist, ulong associatedTransformMode, ulong slot0, ulong slot1, ulong[] powerSlots)
@@ -51,13 +51,13 @@ namespace MHServerEmu.GameServer.Entities.Avatars
 
                 cos.WriteRawInt32(PowerSpecIndex);
                 boolEncoder.WriteBuffer(cos);   // ShouldPersist
-                cos.WritePrototypeId(AssociatedTransformMode, PrototypeEnumType.All);
-                cos.WritePrototypeId(Slot0, PrototypeEnumType.All);
-                cos.WritePrototypeId(Slot1, PrototypeEnumType.All);
+                cos.WritePrototypeEnum(AssociatedTransformMode, PrototypeEnumType.All);
+                cos.WritePrototypeEnum(Slot0, PrototypeEnumType.All);
+                cos.WritePrototypeEnum(Slot1, PrototypeEnumType.All);
 
                 cos.WriteRawVarint64((ulong)PowerSlots.Length);
                 foreach (ulong powerSlot in PowerSlots)
-                    cos.WritePrototypeId(powerSlot, PrototypeEnumType.All);
+                    cos.WritePrototypeEnum(powerSlot, PrototypeEnumType.All);
 
                 cos.Flush();
                 return ms.ToArray();

@@ -22,7 +22,7 @@ namespace MHServerEmu.GameServer.Missions
             PrototypeGuid = stream.ReadRawVarint64();
             State = stream.ReadRawVarint64();
             TimeExpireCurrentState = stream.ReadRawVarint64();
-            PrototypeId = stream.ReadPrototypeId(PrototypeEnumType.All);
+            PrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.All);
             Random = stream.ReadRawInt32();
 
             Objectives = new Objective[stream.ReadRawVarint64()];
@@ -57,7 +57,7 @@ namespace MHServerEmu.GameServer.Missions
                 cos.WriteRawVarint64(PrototypeGuid);
                 cos.WriteRawVarint64(State);
                 cos.WriteRawVarint64(TimeExpireCurrentState);
-                cos.WritePrototypeId(PrototypeId, PrototypeEnumType.All);
+                cos.WritePrototypeEnum(PrototypeId, PrototypeEnumType.All);
                 cos.WriteRawInt32(Random);
 
                 cos.WriteRawVarint64((ulong)Objectives.Length);

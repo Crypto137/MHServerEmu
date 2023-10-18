@@ -32,8 +32,8 @@ namespace MHServerEmu.GameServer.Powers
             Flags = stream.ReadRawVarint32().ToBoolArray(FlagCount);
             IdUserEntity = stream.ReadRawVarint64();
             if (Flags[0] == false) IdTargetEntity = stream.ReadRawVarint64();
-            PowerPrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Power);
-            if (Flags[1]) TriggeringPowerPrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Power);
+            PowerPrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.Power);
+            if (Flags[1]) TriggeringPowerPrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.Power);
             UserPosition = new(stream, 2);
             if (Flags[2]) TargetPosition = new Vector3(stream, 2) + UserPosition;      // TargetPosition is relative to UserPosition when encoded
             else if (Flags[3]) TargetPosition = UserPosition;
@@ -113,8 +113,8 @@ namespace MHServerEmu.GameServer.Powers
                 cos.WriteRawVarint32(Flags.ToUInt32());
                 cos.WriteRawVarint64(IdUserEntity);
                 if (Flags[0] == false) cos.WriteRawVarint64(IdTargetEntity);
-                cos.WritePrototypeId(PowerPrototypeId, PrototypeEnumType.Power);
-                if (Flags[1]) cos.WritePrototypeId(TriggeringPowerPrototypeId, PrototypeEnumType.Power);
+                cos.WritePrototypeEnum(PowerPrototypeId, PrototypeEnumType.Power);
+                if (Flags[1]) cos.WritePrototypeEnum(TriggeringPowerPrototypeId, PrototypeEnumType.Power);
                 cos.WriteRawBytes(UserPosition.Encode(2));
                 if (Flags[2]) cos.WriteRawBytes((TargetPosition - UserPosition).Encode(2));
                 if (Flags[4]) cos.WriteRawVarint64(MovementTimeMS);

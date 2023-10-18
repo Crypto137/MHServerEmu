@@ -70,7 +70,7 @@ namespace MHServerEmu.GameServer.Entities
 
             StashInventories = new ulong[stream.ReadRawVarint64()];
             for (int i = 0; i < StashInventories.Length; i++)
-                StashInventories[i] = stream.ReadPrototypeId(PrototypeEnumType.All);
+                StashInventories[i] = stream.ReadPrototypeEnum(PrototypeEnumType.All);
 
             AvailableBadges = new uint[stream.ReadRawVarint64()];
 
@@ -164,7 +164,7 @@ namespace MHServerEmu.GameServer.Entities
                 boolEncoder.WriteBuffer(cos);   // UnkBool
 
                 cos.WriteRawVarint64((ulong)StashInventories.Length);
-                foreach (ulong stashInventory in StashInventories) cos.WritePrototypeId(stashInventory, PrototypeEnumType.All);
+                foreach (ulong stashInventory in StashInventories) cos.WritePrototypeEnum(stashInventory, PrototypeEnumType.All);
 
                 cos.WriteRawVarint64((ulong)AvailableBadges.Length);
                 foreach (uint badge in AvailableBadges)

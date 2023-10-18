@@ -32,7 +32,7 @@ namespace MHServerEmu.GameServer.Powers
 
             ReplicationPolicy = stream.ReadRawVarint32();
             Flags = stream.ReadRawVarint32().ToBoolArray(FlagCount);
-            PowerPrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Power);
+            PowerPrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.Power);
             TargetId = stream.ReadRawVarint64();
 
             if (Flags[1])
@@ -110,7 +110,7 @@ namespace MHServerEmu.GameServer.Powers
 
                 cos.WriteRawVarint32(ReplicationPolicy);
                 cos.WriteRawVarint32(Flags.ToUInt32());
-                cos.WritePrototypeId(PowerPrototypeId, PrototypeEnumType.Power);
+                cos.WritePrototypeEnum(PowerPrototypeId, PrototypeEnumType.Power);
                 cos.WriteRawVarint64(TargetId);
                 if (Flags[1] == false && Flags[0] == false) cos.WriteRawVarint64(PowerOwnerId);
                 if (Flags[3] == false && Flags[2] == false) cos.WriteRawVarint64(UltimateOwnerId);

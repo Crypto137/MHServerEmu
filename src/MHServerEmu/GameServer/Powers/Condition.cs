@@ -31,8 +31,8 @@ namespace MHServerEmu.GameServer.Powers
             Id = stream.ReadRawVarint64();
             if (Flags[0] == false) CreatorId = stream.ReadRawVarint64();
             if (Flags[1] == false) UltimateCreatorId = stream.ReadRawVarint64();
-            if (Flags[2] == false) ConditionPrototypeId = stream.ReadPrototypeId(PrototypeEnumType.All);
-            if (Flags[3] == false) CreatorPowerPrototypeId = stream.ReadPrototypeId(PrototypeEnumType.All);
+            if (Flags[2] == false) ConditionPrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            if (Flags[3] == false) CreatorPowerPrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.All);
             if (Flags[4]) Index = stream.ReadRawVarint32();
 
             if (Flags[9]) EngineAssetGuid = stream.ReadRawVarint64();     // MarvelPlayer_BlackCat
@@ -59,8 +59,8 @@ namespace MHServerEmu.GameServer.Powers
                 cos.WriteRawVarint64(Id);
                 if (Flags[0] == false) cos.WriteRawVarint64(CreatorId);
                 if (Flags[1] == false) cos.WriteRawVarint64(UltimateCreatorId);
-                if (Flags[2] == false) cos.WritePrototypeId(ConditionPrototypeId, PrototypeEnumType.All);
-                if (Flags[3] == false) cos.WritePrototypeId(CreatorPowerPrototypeId, PrototypeEnumType.All);
+                if (Flags[2] == false) cos.WritePrototypeEnum(ConditionPrototypeId, PrototypeEnumType.All);
+                if (Flags[3] == false) cos.WritePrototypeEnum(CreatorPowerPrototypeId, PrototypeEnumType.All);
                 if (Flags[4]) cos.WriteRawVarint64(Index);
                 if (Flags[9]) cos.WriteRawVarint64(EngineAssetGuid);
                 cos.WriteRawInt64(StartTime);

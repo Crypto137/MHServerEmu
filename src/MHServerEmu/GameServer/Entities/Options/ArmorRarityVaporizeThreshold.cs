@@ -14,7 +14,7 @@ namespace MHServerEmu.GameServer.Entities.Options
         public ArmorRarityVaporizeThreshold(CodedInputStream stream)
         {
             Slot = (EquipmentInvUISlot)stream.ReadRawVarint64();
-            RarityPrototypeId = stream.ReadPrototypeId(PrototypeEnumType.All);
+            RarityPrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.All);
         }
 
         public ArmorRarityVaporizeThreshold(EquipmentInvUISlot slot, ulong rarityPrototypeId)
@@ -30,7 +30,7 @@ namespace MHServerEmu.GameServer.Entities.Options
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
                 cos.WriteRawVarint64((ulong)Slot);
-                cos.WritePrototypeId(RarityPrototypeId, PrototypeEnumType.All);
+                cos.WritePrototypeEnum(RarityPrototypeId, PrototypeEnumType.All);
 
                 cos.Flush();
                 return ms.ToArray();

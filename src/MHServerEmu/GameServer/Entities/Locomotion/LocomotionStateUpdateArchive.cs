@@ -25,7 +25,7 @@ namespace MHServerEmu.GameServer.Entities.Locomotion
             ReplicationPolicy = stream.ReadRawVarint32();
             EntityId = stream.ReadRawVarint64();
             LocFlags = stream.ReadRawVarint32().ToBoolArray(LocFlagCount);
-            if (LocFlags[11]) PrototypeId = stream.ReadPrototypeId(PrototypeEnumType.Entity);
+            if (LocFlags[11]) PrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.Entity);
             Position = new(stream, 3);
             if (LocFlags[0])
                 Orientation = new(stream, 6);
@@ -45,7 +45,7 @@ namespace MHServerEmu.GameServer.Entities.Locomotion
                 cos.WriteRawVarint32(ReplicationPolicy);
                 cos.WriteRawVarint64(EntityId);
                 cos.WriteRawVarint32(LocFlags.ToUInt32());
-                if (LocFlags[11]) cos.WritePrototypeId(PrototypeId, PrototypeEnumType.Entity);
+                if (LocFlags[11]) cos.WritePrototypeEnum(PrototypeId, PrototypeEnumType.Entity);
                 cos.WriteRawBytes(Position.Encode());
                 if (LocFlags[0])
                     cos.WriteRawBytes(Orientation.Encode(6));

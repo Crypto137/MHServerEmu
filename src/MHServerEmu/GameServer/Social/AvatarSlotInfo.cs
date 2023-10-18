@@ -14,8 +14,8 @@ namespace MHServerEmu.GameServer.Social
 
         public AvatarSlotInfo(CodedInputStream stream)
         {
-            AvatarRef = stream.ReadPrototypeId(PrototypeEnumType.All);
-            CostumeRef = stream.ReadPrototypeId(PrototypeEnumType.All);
+            AvatarRef = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            CostumeRef = stream.ReadPrototypeEnum(PrototypeEnumType.All);
             AvatarLevel = stream.ReadRawInt32();
             PrestigeLevel = stream.ReadRawInt32();
         }
@@ -34,8 +34,8 @@ namespace MHServerEmu.GameServer.Social
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                cos.WritePrototypeId(AvatarRef, PrototypeEnumType.All);
-                cos.WritePrototypeId(CostumeRef, PrototypeEnumType.All);
+                cos.WritePrototypeEnum(AvatarRef, PrototypeEnumType.All);
+                cos.WritePrototypeEnum(CostumeRef, PrototypeEnumType.All);
                 cos.WriteRawInt32(AvatarLevel);
                 cos.WriteRawInt32(PrestigeLevel);
 

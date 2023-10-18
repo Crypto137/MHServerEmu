@@ -111,11 +111,11 @@ namespace MHServerEmu.GameServer.Entities
         {
             Type = stream.ReadRawInt32();
 
-            Region = stream.ReadPrototypeId(PrototypeEnumType.All);
-            Area = stream.ReadPrototypeId(PrototypeEnumType.All);
-            Cell = stream.ReadPrototypeId(PrototypeEnumType.All);
-            Entity = stream.ReadPrototypeId(PrototypeEnumType.All);
-            Target = stream.ReadPrototypeId(PrototypeEnumType.All);
+            Region = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            Area = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            Cell = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            Entity = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            Target = stream.ReadPrototypeEnum(PrototypeEnumType.All);
 
             Unk2 = stream.ReadRawInt32();
 
@@ -160,11 +160,11 @@ namespace MHServerEmu.GameServer.Entities
 
                 cos.WriteRawInt32(Type);
 
-                cos.WritePrototypeId(Region, PrototypeEnumType.All);
-                cos.WritePrototypeId(Area, PrototypeEnumType.All);
-                cos.WritePrototypeId(Cell, PrototypeEnumType.All);
-                cos.WritePrototypeId(Entity, PrototypeEnumType.All);
-                cos.WritePrototypeId(Target, PrototypeEnumType.All);
+                cos.WritePrototypeEnum(Region, PrototypeEnumType.All);
+                cos.WritePrototypeEnum(Area, PrototypeEnumType.All);
+                cos.WritePrototypeEnum(Cell, PrototypeEnumType.All);
+                cos.WritePrototypeEnum(Entity, PrototypeEnumType.All);
+                cos.WritePrototypeEnum(Target, PrototypeEnumType.All);
 
                 cos.WriteRawInt32(Unk2);
 
