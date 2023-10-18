@@ -27,6 +27,8 @@
     public enum BlueprintId : ulong
     {
         WorldEntity = 7901305308382563236,
+        ThrowableProp = 14997899060839977779,
+        DestructibleProp = 18375929633378932151,
         ThrowablePowerProp = 8706319841384272336,
         ThrowableRestorePowerProp = 1483936524176856276,
         Costume = 10774581141289766864,
@@ -36,6 +38,7 @@
         SphereBounds = 8815641071010845470,
         CapsuleBounds = 3200633985132925828,
         ObjectSmall = 17525629558829421089,
+        NPCTemplateHub = 1884494645036913959,
         // Keywords
         Power = 6670986634407775621,
         Physical = 12758986785542509147,
@@ -48,6 +51,7 @@
         // WorldEntity
         UnrealClass = 9963296804083405606,
         Bounds = 12016533011036705044,
+        SnapToFloorOnSpawn = 5130007170241074758,
         // Costume
         CostumeUnrealClass = 3331018908052953682,
         // RegionConnectionTargetPrototype
