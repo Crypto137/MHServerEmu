@@ -3,13 +3,13 @@ using Gazillion;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.Entities;
+using MHServerEmu.GameServer.Entities.Avatars;
+using MHServerEmu.GameServer.Entities.Items;
 using MHServerEmu.GameServer.Entities.Locomotion;
 using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.GameData.Calligraphy;
 using MHServerEmu.GameServer.Powers;
 using MHServerEmu.GameServer.Properties;
-using MHServerEmu.GameServer.Entities.Avatars;
-using MHServerEmu.GameServer.Entities.Items;
 
 namespace MHServerEmu.Networking
 {

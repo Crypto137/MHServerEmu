@@ -1,13 +1,14 @@
-﻿using Google.ProtocolBuffers;
+﻿using System.Text;
+using Google.ProtocolBuffers;
 using MHServerEmu.GameServer.Common;
-using System.Text;
 
 namespace MHServerEmu.GameServer.Entities
 {
     public class PvP : MetaGame
     {
-        ReplicatedInt32 Team1;
-        ReplicatedInt32 Team2;
+        public ReplicatedInt32 Team1 { get; set; }
+        public ReplicatedInt32 Team2 { get; set; }
+
         public PvP(EntityBaseData baseData, byte[] archiveData) : base(baseData, archiveData) {
             CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
 

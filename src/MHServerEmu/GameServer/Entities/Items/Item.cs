@@ -1,13 +1,13 @@
-﻿using Google.ProtocolBuffers;
+﻿using System.Text;
+using Google.ProtocolBuffers;
 using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.Powers;
-using System.Text;
 
 namespace MHServerEmu.GameServer.Entities.Items
 {
     public class Item : WorldEntity
     {
-        ItemSpec ItemSpec { get; set; }
+        public ItemSpec ItemSpec { get; set; }
 
         public Item(EntityBaseData baseData, byte[] archiveData) : base(baseData)
         {

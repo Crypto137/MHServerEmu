@@ -1,7 +1,7 @@
-﻿using Google.ProtocolBuffers;
+﻿using System.Text;
+using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.GameServer.GameData;
-using System.Text;
 
 namespace MHServerEmu.GameServer.Entities.Items
 {
