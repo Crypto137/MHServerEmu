@@ -45,18 +45,10 @@ namespace MHServerEmu.GameServer.Properties
             CreateValueContainer(setPropertyMessage.ValueBits);
         }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                cos.WriteRawVarint64(Id.ReverseBytes());
-                cos.WriteRawVarint64(Value.RawValue);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawVarint64(Id.ReverseBytes());
+            stream.WriteRawVarint64(Value.RawValue);
         }
 
         public NetStructProperty ToNetStruct() => NetStructProperty.CreateBuilder().SetId(Id).SetValue(Value.RawValue).Build();

@@ -24,18 +24,11 @@ namespace MHServerEmu.GameServer.Properties
             if (propertyList != null) List.AddRange(propertyList);
         }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-                cos.WriteRawVarint64(ReplicationId);
-                cos.WriteRawUInt32((uint)List.Count);
-                foreach (Property property in List) cos.WriteRawBytes(property.Encode());
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawVarint64(ReplicationId);
+            stream.WriteRawUInt32((uint)List.Count);
+            foreach (Property property in List) property.Encode(stream);
         }
 
         public Property GetPropertyByEnum(PropertyEnum id)

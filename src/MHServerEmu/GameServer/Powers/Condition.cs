@@ -67,7 +67,7 @@ namespace MHServerEmu.GameServer.Powers
                 if (Flags[6]) cos.WriteRawInt64(PauseTime);
                 if (Flags[7]) cos.WriteRawInt64(Duration);
                 if (Flags[10]) cos.WriteRawInt32(UpdateInterval);
-                cos.WriteRawBytes(PropertyCollection.Encode());
+                PropertyCollection.Encode(cos);
                 if (Flags[11]) cos.WriteRawVarint32(CancelOnFlags);
 
                 cos.Flush();

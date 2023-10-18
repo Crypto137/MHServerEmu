@@ -39,7 +39,7 @@ namespace MHServerEmu.GameServer.Entities
         public virtual void Encode(CodedOutputStream stream)
         {
             stream.WriteRawVarint32(ReplicationPolicy);
-            stream.WriteRawBytes(PropertyCollection.Encode());
+            PropertyCollection.Encode(stream);
         }
 
         public ByteString Serialize()
