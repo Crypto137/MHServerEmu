@@ -10,6 +10,13 @@ namespace MHServerEmu.GameServer.Regions
 {
     using ConnectionNodeDict = Dictionary<ulong, Dictionary<ulong, ulong>>;
 
+    public struct TargetObject
+    {
+        public ulong Entity { get; set; }
+        public ulong Area { get; set; }
+        public ulong TargetId { get; set; }
+    }
+
     public partial class RegionManager
     {
         public static float ProjectToFloor(CellPrototype cell, Vector3 areaOrigin, Vector3 position)
