@@ -8,6 +8,7 @@ using MHServerEmu.GameServer.Entities.Items;
 using MHServerEmu.GameServer.Entities.Locomotion;
 using MHServerEmu.GameServer.GameData;
 using MHServerEmu.GameServer.GameData.Calligraphy;
+using MHServerEmu.GameServer.MetaGame;
 using MHServerEmu.GameServer.Powers;
 using MHServerEmu.GameServer.Properties;
 

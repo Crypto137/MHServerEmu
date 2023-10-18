@@ -1,34 +1,27 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.GameServer.Common;
-using MHServerEmu.GameServer.Properties;
+using MHServerEmu.GameServer.Entities;
 
-namespace MHServerEmu.GameServer.Entities
+namespace MHServerEmu.GameServer.MetaGame
 {
-    public class MetaGame : Entity
+    public class PvP : MetaGame
     {
-        public ReplicatedString Name { get; set; }
+        public ReplicatedInt32 Team1 { get; set; }
+        public ReplicatedInt32 Team2 { get; set; }
 
-        public MetaGame(EntityBaseData baseData, byte[] archiveData) : base(baseData)
+        public PvP(EntityBaseData baseData, byte[] archiveData) : base(baseData, archiveData)
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
 
             DecodeEntityFields(stream);
 
             Name = new(stream);
+            Team1 = new(stream);
+            Team2 = new(stream);
         }
 
-        public MetaGame(EntityBaseData baseData) : base(baseData) { }
-
-        public MetaGame(EntityBaseData baseData, uint replicationPolicy, ReplicatedPropertyCollection propertyCollection,
-            ReplicatedString name) : base(baseData)
-        {
-            ReplicationPolicy = replicationPolicy;
-            PropertyCollection = propertyCollection;
-
-            Name = name;
-        }
-
+        public PvP(EntityBaseData baseData) : base(baseData) { }
         public override byte[] Encode()
         {
             using (MemoryStream ms = new())
@@ -39,6 +32,8 @@ namespace MHServerEmu.GameServer.Entities
                 EncodeEntityFields(cos);
 
                 cos.WriteRawBytes(Name.Encode());
+                cos.WriteRawBytes(Team1.Encode());
+                cos.WriteRawBytes(Team2.Encode());
 
                 cos.Flush();
                 return ms.ToArray();
@@ -51,6 +46,8 @@ namespace MHServerEmu.GameServer.Entities
             WriteEntityString(sb);
 
             sb.AppendLine($"Name: {Name}");
+            sb.AppendLine($"Team1: {Team1}");
+            sb.AppendLine($"Team2: {Team2}");
 
             return sb.ToString();
         }
