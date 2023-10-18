@@ -12,92 +12,66 @@ namespace MHServerEmu.GameServer.Entities
 
         public uint ReplicationPolicy { get; set; }
         public ReplicatedPropertyCollection PropertyCollection { get; set; }
-        public ulong[] UnknownFields { get; set; } = Array.Empty<ulong>();
 
-        public Entity(EntityBaseData baseData, byte[] archiveData)
+        public Entity(EntityBaseData baseData, ByteString archiveData)
         {
             BaseData = baseData;
-            CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
-
-            DecodeEntityFields(stream);
-            DecodeUnknownFields(stream);
+            CodedInputStream stream = CodedInputStream.CreateInstance(archiveData.ToByteArray());
+            Decode(stream);
         }
 
         // Base data is required for all entities, so there's no parameterless constructor
         public Entity(EntityBaseData baseData) { BaseData = baseData; }
 
-        public Entity(EntityBaseData baseData, uint replicationPolicy, ReplicatedPropertyCollection propertyCollection, ulong[] unknownFields)
+        public Entity(EntityBaseData baseData, uint replicationPolicy, ReplicatedPropertyCollection propertyCollection)
         {
             BaseData = baseData;
             ReplicationPolicy = replicationPolicy;
             PropertyCollection = propertyCollection;
-            UnknownFields = unknownFields;
         }
 
-        public virtual byte[] Encode()
+        protected virtual void Decode(CodedInputStream stream)
+        {
+            ReplicationPolicy = stream.ReadRawVarint32();
+            PropertyCollection = new(stream);
+        }
+
+        public virtual void Encode(CodedOutputStream stream)
+        {
+            stream.WriteRawVarint32(ReplicationPolicy);
+            stream.WriteRawBytes(PropertyCollection.Encode());
+        }
+
+        public ByteString Serialize()
         {
             using (MemoryStream ms = new())
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                EncodeEntityFields(cos);
-                EncodeUnknownFields(cos);
-
+                Encode(cos);
                 cos.Flush();
-                return ms.ToArray();
+                return ByteString.CopyFrom(ms.ToArray());
             }
         }
 
         public NetMessageEntityCreate ToNetMessageEntityCreate()
         {
             return NetMessageEntityCreate.CreateBuilder()
-                .SetBaseData(ByteString.CopyFrom(BaseData.Encode()))
-                .SetArchiveData(ByteString.CopyFrom(Encode()))
+                .SetBaseData(BaseData.Serialize())
+                .SetArchiveData(Serialize())
                 .Build();
         }
 
-        public override string ToString()
-        {
-            StringBuilder sb = new();
-            WriteEntityString(sb);
-            WriteUnknownFieldString(sb);
-            return sb.ToString();
-        }
-
-        protected void DecodeEntityFields(CodedInputStream stream)
-        {
-            ReplicationPolicy = stream.ReadRawVarint32();
-            PropertyCollection = new(stream);
-        }
-
-        protected void DecodeUnknownFields(CodedInputStream stream)
-        {
-            List<ulong> fieldList = new();
-            while (!stream.IsAtEnd) fieldList.Add(stream.ReadRawVarint64());
-            UnknownFields = fieldList.ToArray();
-        }
-
-        protected void EncodeEntityFields(CodedOutputStream stream)
-        {
-            stream.WriteRawVarint32(ReplicationPolicy);
-            stream.WriteRawBytes(PropertyCollection.Encode());
-        }
-
-        protected void EncodeUnknownFields(CodedOutputStream stream)
-        {
-            foreach (ulong field in UnknownFields) stream.WriteRawVarint64(field);
-        }
-
-        protected void WriteEntityString(StringBuilder sb)
+        protected virtual void BuildString(StringBuilder sb)
         {
             sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
             sb.AppendLine($"PropertyCollection: {PropertyCollection}");
         }
 
-        protected void WriteUnknownFieldString(StringBuilder sb)
+        public override string ToString()
         {
-            for (int i = 0; i < UnknownFields.Length; i++)
-                sb.AppendLine($"UnknownField{i}: 0x{UnknownFields[i]:X}");
+            StringBuilder sb = new();
+            BuildString(sb);
+            return sb.ToString();
         }
     }
 }

@@ -14,14 +14,7 @@ namespace MHServerEmu.GameServer.Entities
         public PowerCollectionRecord[] PowerCollection { get; set; }
         public int UnkEvent { get; set; }
 
-        public WorldEntity(EntityBaseData baseData, byte[] archiveData) : base(baseData)
-        {
-            CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
-
-            DecodeEntityFields(stream);
-            DecodeWorldEntityFields(stream);
-            DecodeUnknownFields(stream);
-        }
+        public WorldEntity(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
         public WorldEntity(EntityBaseData baseData) : base(baseData) { }
 
@@ -57,32 +50,10 @@ namespace MHServerEmu.GameServer.Entities
             UnkEvent = 0;
         }
 
-        public override byte[] Encode()
+        protected override void Decode(CodedInputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+            base.Decode(stream);
 
-                EncodeEntityFields(cos);
-                EncodeWorldEntityFields(cos);
-                EncodeUnknownFields(cos);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
-        }
-
-        public override string ToString()
-        {
-            StringBuilder sb = new();
-            WriteEntityString(sb);
-            WriteWorldEntityString(sb);
-            WriteUnknownFieldString(sb);
-            return sb.ToString();
-        }
-
-        protected void DecodeWorldEntityFields(CodedInputStream stream)
-        {
             TrackingContextMap = new EntityTrackingContextMap[stream.ReadRawVarint64()];
             for (int i = 0; i < TrackingContextMap.Length; i++)
                 TrackingContextMap[i] = new(stream);
@@ -111,8 +82,10 @@ namespace MHServerEmu.GameServer.Entities
             UnkEvent = stream.ReadRawInt32();
         }
 
-        protected void EncodeWorldEntityFields(CodedOutputStream stream)
+        public override void Encode(CodedOutputStream stream)
         {
+            base.Encode(stream);
+
             stream.WriteRawVarint64((ulong)TrackingContextMap.Length);
             foreach (EntityTrackingContextMap entry in TrackingContextMap)
                 stream.WriteRawBytes(entry.Encode());
@@ -131,8 +104,10 @@ namespace MHServerEmu.GameServer.Entities
             stream.WriteRawInt32(UnkEvent);
         }
 
-        protected void WriteWorldEntityString(StringBuilder sb)
+        protected override void BuildString(StringBuilder sb)
         {
+            base.BuildString(sb);
+
             for (int i = 0; i < TrackingContextMap.Length; i++)
                 sb.AppendLine($"TrackingContextMap{i}: {TrackingContextMap[i]}");
 

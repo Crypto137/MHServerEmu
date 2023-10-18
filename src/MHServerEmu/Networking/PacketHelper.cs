@@ -159,7 +159,7 @@ namespace MHServerEmu.Networking
 
                             case NetMessageEntityCreate entityCreate:
                                 // Parse base data
-                                EntityBaseData baseData = new(entityCreate.BaseData.ToByteArray());
+                                EntityBaseData baseData = new(entityCreate.BaseData);
                                 writer.WriteLine($"BaseData: {baseData}");
 
                                 // Get blueprint for this entity
@@ -170,37 +170,37 @@ namespace MHServerEmu.Networking
                                 switch (blueprint.RuntimeBinding)
                                 {
                                     case "EntityPrototype":
-                                        writer.WriteLine($"ArchiveData: {new Entity(baseData, entityCreate.ArchiveData.ToByteArray())}");
+                                        writer.WriteLine($"ArchiveData: {new Entity(baseData, entityCreate.ArchiveData)}");
                                         break;
 
                                     case "WorldEntityPrototype":
                                     case "PropPrototype":
                                     case "DestructiblePropPrototype":
                                     case "SpawnerPrototype":
-                                        writer.WriteLine($"ArchiveData: {new WorldEntity(baseData, entityCreate.ArchiveData.ToByteArray())}");
+                                        writer.WriteLine($"ArchiveData: {new WorldEntity(baseData, entityCreate.ArchiveData)}");
                                         break;
 
                                     case "HotspotPrototype":
-                                        writer.WriteLine($"ArchiveData: {new Hotspot(baseData, entityCreate.ArchiveData.ToByteArray())}");
+                                        writer.WriteLine($"ArchiveData: {new Hotspot(baseData, entityCreate.ArchiveData)}");
                                         break;
 
                                     case "AgentPrototype":
                                     case "AgentTeamUpPrototype":
                                     case "OrbPrototype":
                                     case "SmartPropPrototype":
-                                        writer.WriteLine($"ArchiveData: {new Agent(baseData, entityCreate.ArchiveData.ToByteArray())}");
+                                        writer.WriteLine($"ArchiveData: {new Agent(baseData, entityCreate.ArchiveData)}");
                                         break;
 
                                     case "MissilePrototype":
-                                        writer.WriteLine($"ArchiveData: {new Missile(baseData, entityCreate.ArchiveData.ToByteArray())}");
+                                        writer.WriteLine($"ArchiveData: {new Missile(baseData, entityCreate.ArchiveData)}");
                                         break;
 
                                     case "AvatarPrototype":
-                                        writer.WriteLine($"ArchiveData: {new Avatar(baseData, entityCreate.ArchiveData.ToByteArray())}");
+                                        writer.WriteLine($"ArchiveData: {new Avatar(baseData, entityCreate.ArchiveData)}");
                                         break;
 
                                     case "KismetSequenceEntityPrototype":
-                                        writer.WriteLine($"ArchiveData: {new KismetSequenceEntity(baseData, entityCreate.ArchiveData.ToByteArray())}");
+                                        writer.WriteLine($"ArchiveData: {new KismetSequenceEntity(baseData, entityCreate.ArchiveData)}");
                                         break;
 
                                     case "ItemPrototype":
@@ -219,28 +219,28 @@ namespace MHServerEmu.Networking
                                     case "RelicPrototype":
                                     case "TeamUpGearPrototype":
                                     case "VanityTitleItemPrototype":                                    
-                                        writer.WriteLine($"ArchiveData: {new Item(baseData, entityCreate.ArchiveData.ToByteArray())}");
+                                        writer.WriteLine($"ArchiveData: {new Item(baseData, entityCreate.ArchiveData)}");
                                         break;
 
                                     case "PlayerPrototype":
-                                        writer.WriteLine($"ArchiveData: {new Player(baseData, entityCreate.ArchiveData.ToByteArray())}");
+                                        writer.WriteLine($"ArchiveData: {new Player(baseData, entityCreate.ArchiveData)}");
                                         break;
 
                                     case "TransitionPrototype":
-                                        writer.WriteLine($"ArchiveData: {new Transition(baseData, entityCreate.ArchiveData.ToByteArray())}");
+                                        writer.WriteLine($"ArchiveData: {new Transition(baseData, entityCreate.ArchiveData)}");
                                         break;
 
                                     case "MetaGamePrototype":
                                     case "MatchMetaGamePrototype":
-                                        writer.WriteLine($"ArchiveData: {new MetaGame(baseData, entityCreate.ArchiveData.ToByteArray())}");
+                                        writer.WriteLine($"ArchiveData: {new MetaGame(baseData, entityCreate.ArchiveData)}");
                                         break;
 
                                     case "PvPPrototype":
-                                        writer.WriteLine($"ArchiveData: {new PvP(baseData, entityCreate.ArchiveData.ToByteArray())}");
+                                        writer.WriteLine($"ArchiveData: {new PvP(baseData, entityCreate.ArchiveData)}");
                                         break;
 
                                     case "MissionMetaGamePrototype":
-                                        writer.WriteLine($"ArchiveData: {new MissionMetaGame(baseData, entityCreate.ArchiveData.ToByteArray())}");
+                                        writer.WriteLine($"ArchiveData: {new MissionMetaGame(baseData, entityCreate.ArchiveData)}");
                                         break;
 
                                     default:

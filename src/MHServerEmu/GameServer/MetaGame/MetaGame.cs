@@ -10,14 +10,7 @@ namespace MHServerEmu.GameServer.MetaGame
     {
         public ReplicatedString Name { get; set; }
 
-        public MetaGame(EntityBaseData baseData, byte[] archiveData) : base(baseData)
-        {
-            CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
-
-            DecodeEntityFields(stream);
-
-            Name = new(stream);
-        }
+        public MetaGame(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
         public MetaGame(EntityBaseData baseData) : base(baseData) { }
 
@@ -30,30 +23,25 @@ namespace MHServerEmu.GameServer.MetaGame
             Name = name;
         }
 
-        public override byte[] Encode()
+        protected override void Decode(CodedInputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+            base.Decode(stream);
 
-                // Encode
-                EncodeEntityFields(cos);
-
-                cos.WriteRawBytes(Name.Encode());
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            Name = new(stream);
         }
 
-        public override string ToString()
+        public override void Encode(CodedOutputStream stream)
         {
-            StringBuilder sb = new();
-            WriteEntityString(sb);
+            base.Encode(stream);
+
+            stream.WriteRawBytes(Name.Encode());
+        }
+
+        protected override void BuildString(StringBuilder sb)
+        {
+            base.BuildString(sb);
 
             sb.AppendLine($"Name: {Name}");
-
-            return sb.ToString();
         }
     }
 }

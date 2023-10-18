@@ -37,8 +37,8 @@ namespace MHServerEmu.Common
                     using (StreamWriter streamWriter = new(Path.Combine(Directory.GetCurrentDirectory(), $"{i}_entityCreate.txt")))
                     {
                         var entityCreateMessage = NetMessageEntityCreate.ParseFrom(messages[i].Payload);
-                        EntityBaseData baseData = new(entityCreateMessage.BaseData.ToByteArray());
-                        Entity entity = new(baseData, entityCreateMessage.ArchiveData.ToByteArray());
+                        EntityBaseData baseData = new(entityCreateMessage.BaseData);
+                        Entity entity = new(baseData, entityCreateMessage.ArchiveData);
 
                         streamWriter.WriteLine("baseData:");
                         streamWriter.WriteLine(baseData.ToString());

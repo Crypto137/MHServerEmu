@@ -17,27 +17,7 @@ namespace MHServerEmu.GameServer.Entities.Avatars
         public GuildMemberReplicationRuntimeInfo GuildInfo { get; set; }
         public AbilityKeyMapping[] AbilityKeyMappings { get; set; }
 
-        public Avatar(EntityBaseData baseData, byte[] archiveData) : base(baseData)
-        {
-            CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
-            BoolDecoder boolDecoder = new();
-
-            DecodeEntityFields(stream);
-            DecodeWorldEntityFields(stream);
-
-            PlayerName = new(stream);
-            OwnerPlayerDbId = stream.ReadRawVarint64();
-
-            GuildName = stream.ReadRawString();
-
-            //Gazillion::GuildMember::SerializeReplicationRuntimeInfo
-            HasGuildInfo = boolDecoder.ReadBool(stream);
-            if (HasGuildInfo) GuildInfo = new(stream);
-
-            AbilityKeyMappings = new AbilityKeyMapping[stream.ReadRawVarint64()];
-            for (int i = 0; i < AbilityKeyMappings.Length; i++)
-                AbilityKeyMappings[i] = new(stream, boolDecoder);
-        }
+        public Avatar(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
         public Avatar(EntityBaseData baseData, EntityTrackingContextMap[] trackingContextMap, Condition[] conditionCollection, PowerCollectionRecord[] powerCollection, int unkEvent,
             ReplicatedString playerName, ulong ownerPlayerDbId, string guildName, bool hasGuildInfo, GuildMemberReplicationRuntimeInfo guildInfo, AbilityKeyMapping[] abilityKeyMappings)
@@ -55,44 +35,53 @@ namespace MHServerEmu.GameServer.Entities.Avatars
             AbilityKeyMappings = abilityKeyMappings;
         }
 
-        public override byte[] Encode()
+        protected override void Decode(CodedInputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+            base.Decode(stream);
 
-                // Prepare bool encoder
-                BoolEncoder boolEncoder = new();
+            BoolDecoder boolDecoder = new();
 
-                boolEncoder.EncodeBool(HasGuildInfo);
-                foreach (AbilityKeyMapping keyMap in AbilityKeyMappings) keyMap.EncodeBools(boolEncoder);
+            PlayerName = new(stream);
+            OwnerPlayerDbId = stream.ReadRawVarint64();
 
-                boolEncoder.Cook();
+            GuildName = stream.ReadRawString();
 
-                // Encode
-                EncodeEntityFields(cos);
-                EncodeWorldEntityFields(cos);
+            //Gazillion::GuildMember::SerializeReplicationRuntimeInfo
+            HasGuildInfo = boolDecoder.ReadBool(stream);
+            if (HasGuildInfo) GuildInfo = new(stream);
 
-                cos.WriteRawBytes(PlayerName.Encode());
-                cos.WriteRawVarint64(OwnerPlayerDbId);
-                cos.WriteRawString(GuildName);
-
-                boolEncoder.WriteBuffer(cos);   // HasGuildInfo  
-                if (HasGuildInfo) cos.WriteRawBytes(GuildInfo.Encode());
-
-                cos.WriteRawVarint64((ulong)AbilityKeyMappings.Length);
-                foreach (AbilityKeyMapping keyMap in AbilityKeyMappings) cos.WriteRawBytes(keyMap.Encode(boolEncoder));
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            AbilityKeyMappings = new AbilityKeyMapping[stream.ReadRawVarint64()];
+            for (int i = 0; i < AbilityKeyMappings.Length; i++)
+                AbilityKeyMappings[i] = new(stream, boolDecoder);
         }
 
-        public override string ToString()
+        public override void Encode(CodedOutputStream stream)
         {
-            StringBuilder sb = new();
-            WriteEntityString(sb);
-            WriteWorldEntityString(sb);
+            base.Encode(stream);
+
+            // Prepare bool encoder
+            BoolEncoder boolEncoder = new();
+
+            boolEncoder.EncodeBool(HasGuildInfo);
+            foreach (AbilityKeyMapping keyMap in AbilityKeyMappings) keyMap.EncodeBools(boolEncoder);
+
+            boolEncoder.Cook();
+
+            // Encode
+            stream.WriteRawBytes(PlayerName.Encode());
+            stream.WriteRawVarint64(OwnerPlayerDbId);
+            stream.WriteRawString(GuildName);
+
+            boolEncoder.WriteBuffer(stream);   // HasGuildInfo  
+            if (HasGuildInfo) stream.WriteRawBytes(GuildInfo.Encode());
+
+            stream.WriteRawVarint64((ulong)AbilityKeyMappings.Length);
+            foreach (AbilityKeyMapping keyMap in AbilityKeyMappings) stream.WriteRawBytes(keyMap.Encode(boolEncoder));
+        }
+
+        protected override void BuildString(StringBuilder sb)
+        {
+            base.BuildString(sb);
 
             sb.AppendLine($"PlayerName: {PlayerName}");
             sb.AppendLine($"OwnerPlayerDbId: 0x{OwnerPlayerDbId:X}");
@@ -100,8 +89,6 @@ namespace MHServerEmu.GameServer.Entities.Avatars
             sb.AppendLine($"HasGuildInfo: {HasGuildInfo}");
             sb.AppendLine($"GuildInfo: {GuildInfo}");
             for (int i = 0; i < AbilityKeyMappings.Length; i++) sb.AppendLine($"AbilityKeyMapping{i}: {AbilityKeyMappings[i]}");
-
-            return sb.ToString();
         }
     }
 }

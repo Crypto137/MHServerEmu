@@ -37,12 +37,44 @@ namespace MHServerEmu.GameServer.Entities
         public AchievementState[] AchievementStates { get; set; }
         public StashTabOption[] StashTabOptions { get; set; }
 
-        public Player(EntityBaseData baseData, byte[] archiveData) : base(baseData)
-        {
-            CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
-            BoolDecoder boolDecoder = new();
+        public Player(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
-            DecodeEntityFields(stream);
+        // note: this is ugly
+        public Player(EntityBaseData baseData, uint replicationPolicy, ReplicatedPropertyCollection propertyCollection,
+            MissionManager missionManager, ReplicatedPropertyCollection avatarProperties,
+            ulong shardId, ReplicatedString playerName, ReplicatedString unkName,
+            ulong matchQueueStatus, bool emailVerified, ulong accountCreationTimestamp, ReplicatedUInt64 partyId,
+            Community community, bool unkBool, ulong[] stashInventories, uint[] availableBadges,
+            GameplayOptions gameplayOptions, AchievementState[] achievementStates, StashTabOption[] stashTabOptions) : base(baseData)
+        {
+            ReplicationPolicy = replicationPolicy;
+            PropertyCollection = propertyCollection;
+
+            MissionManager = missionManager;
+            AvatarPropertyCollection = avatarProperties;
+            ShardId = shardId;
+            Name = playerName;
+            ConsoleAccountId1 = 0;
+            ConsoleAccountId2 = 0;
+            UnkName = unkName;
+            MatchQueueStatus = matchQueueStatus;
+            EmailVerified = emailVerified;
+            AccountCreationTimestamp = accountCreationTimestamp;
+            PartyId = partyId;
+            Community = community;
+            UnkBool = unkBool;
+            StashInventories = stashInventories;
+            AvailableBadges = availableBadges;
+            GameplayOptions = gameplayOptions;
+            AchievementStates = achievementStates;
+            StashTabOptions = stashTabOptions;
+        }
+
+        protected override void Decode(CodedInputStream stream)
+        {
+            base.Decode(stream);
+
+            BoolDecoder boolDecoder = new();
 
             MissionManager = new(stream, boolDecoder);
             AvatarPropertyCollection = new(stream);
@@ -85,110 +117,70 @@ namespace MHServerEmu.GameServer.Entities
                 StashTabOptions[i] = new(stream);
         }
 
-        // note: this is ugly
-        public Player(EntityBaseData baseData, uint replicationPolicy, ReplicatedPropertyCollection propertyCollection,
-            MissionManager missionManager, ReplicatedPropertyCollection avatarProperties,
-            ulong shardId, ReplicatedString playerName, ReplicatedString unkName,
-            ulong matchQueueStatus, bool emailVerified, ulong accountCreationTimestamp, ReplicatedUInt64 partyId,
-            Community community, bool unkBool, ulong[] stashInventories, uint[] availableBadges,
-            GameplayOptions gameplayOptions, AchievementState[] achievementStates, StashTabOption[] stashTabOptions) : base(baseData)
+        public override void Encode(CodedOutputStream stream)
         {
-            ReplicationPolicy = replicationPolicy;
-            PropertyCollection = propertyCollection;
+            base.Encode(stream);
 
-            MissionManager = missionManager;
-            AvatarPropertyCollection = avatarProperties;
-            ShardId = shardId;
-            Name = playerName;
-            ConsoleAccountId1 = 0;
-            ConsoleAccountId2 = 0;
-            UnkName = unkName;
-            MatchQueueStatus = matchQueueStatus;
-            EmailVerified = emailVerified;
-            AccountCreationTimestamp = accountCreationTimestamp;
-            PartyId = partyId;
-            Community = community;
-            UnkBool = unkBool;
-            StashInventories = stashInventories;
-            AvailableBadges = availableBadges;
-            GameplayOptions = gameplayOptions;
-            AchievementStates = achievementStates;
-            StashTabOptions = stashTabOptions;
+            // Prepare bool encoder
+            BoolEncoder boolEncoder = new();
+
+            MissionManager.EncodeBools(boolEncoder);
+
+            boolEncoder.EncodeBool(EmailVerified);
+            boolEncoder.EncodeBool(HasGuildInfo);
+            boolEncoder.EncodeBool(HasCommunity);
+            boolEncoder.EncodeBool(UnkBool);
+
+            GameplayOptions.EncodeBools(boolEncoder);
+
+            boolEncoder.Cook();
+
+            // Encode
+            stream.WriteRawBytes(MissionManager.Encode(boolEncoder));
+            stream.WriteRawBytes(AvatarPropertyCollection.Encode());
+
+            stream.WriteRawVarint64(ShardId);
+            stream.WriteRawBytes(Name.Encode());
+            stream.WriteRawVarint64(ConsoleAccountId1);
+            stream.WriteRawVarint64(ConsoleAccountId2);
+            stream.WriteRawBytes(UnkName.Encode());
+            stream.WriteRawVarint64(MatchQueueStatus);
+            boolEncoder.WriteBuffer(stream);   // EmailVerified
+            stream.WriteRawVarint64(AccountCreationTimestamp);
+
+            stream.WriteRawBytes(PartyId.Encode());
+
+            boolEncoder.WriteBuffer(stream);   // HasGuildInfo
+            if (HasGuildInfo) stream.WriteRawBytes(GuildInfo.Encode());
+
+            stream.WriteRawString(UnknownString);
+
+            boolEncoder.WriteBuffer(stream);   // HasCommunity
+            if (HasCommunity) stream.WriteRawBytes(Community.Encode());
+
+            boolEncoder.WriteBuffer(stream);   // UnkBool
+
+            stream.WriteRawVarint64((ulong)StashInventories.Length);
+            foreach (ulong stashInventory in StashInventories) stream.WritePrototypeEnum(stashInventory, PrototypeEnumType.All);
+
+            stream.WriteRawVarint64((ulong)AvailableBadges.Length);
+            foreach (uint badge in AvailableBadges)
+                stream.WriteRawVarint64(badge);
+
+            stream.WriteRawBytes(GameplayOptions.Encode(boolEncoder));
+
+            stream.WriteRawVarint64((ulong)AchievementStates.Length);
+            foreach (AchievementState state in AchievementStates)
+                stream.WriteRawBytes(state.Encode());
+
+            stream.WriteRawVarint64((ulong)StashTabOptions.Length);
+            foreach (StashTabOption option in StashTabOptions)
+                stream.WriteRawBytes(option.Encode());
         }
 
-        public override byte[] Encode()
+        protected override void BuildString(StringBuilder sb)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                // Prepare bool encoder
-                BoolEncoder boolEncoder = new();
-
-                MissionManager.EncodeBools(boolEncoder);
-
-                boolEncoder.EncodeBool(EmailVerified);
-                boolEncoder.EncodeBool(HasGuildInfo);
-                boolEncoder.EncodeBool(HasCommunity);
-                boolEncoder.EncodeBool(UnkBool);
-
-                GameplayOptions.EncodeBools(boolEncoder);
-
-                boolEncoder.Cook();
-
-                // Encode
-                EncodeEntityFields(cos);
-
-                cos.WriteRawBytes(MissionManager.Encode(boolEncoder));
-                cos.WriteRawBytes(AvatarPropertyCollection.Encode());
-
-                cos.WriteRawVarint64(ShardId);
-                cos.WriteRawBytes(Name.Encode());
-                cos.WriteRawVarint64(ConsoleAccountId1);
-                cos.WriteRawVarint64(ConsoleAccountId2);
-                cos.WriteRawBytes(UnkName.Encode());
-                cos.WriteRawVarint64(MatchQueueStatus);
-                boolEncoder.WriteBuffer(cos);   // EmailVerified
-                cos.WriteRawVarint64(AccountCreationTimestamp);
-
-                cos.WriteRawBytes(PartyId.Encode());
-
-                boolEncoder.WriteBuffer(cos);   // HasGuildInfo
-                if (HasGuildInfo) cos.WriteRawBytes(GuildInfo.Encode());
-
-                cos.WriteRawString(UnknownString);
-
-                boolEncoder.WriteBuffer(cos);   // HasCommunity
-                if (HasCommunity) cos.WriteRawBytes(Community.Encode());
-
-                boolEncoder.WriteBuffer(cos);   // UnkBool
-
-                cos.WriteRawVarint64((ulong)StashInventories.Length);
-                foreach (ulong stashInventory in StashInventories) cos.WritePrototypeEnum(stashInventory, PrototypeEnumType.All);
-
-                cos.WriteRawVarint64((ulong)AvailableBadges.Length);
-                foreach (uint badge in AvailableBadges)
-                    cos.WriteRawVarint64(badge);
-
-                cos.WriteRawBytes(GameplayOptions.Encode(boolEncoder));
-
-                cos.WriteRawVarint64((ulong)AchievementStates.Length);
-                foreach (AchievementState state in AchievementStates)
-                    cos.WriteRawBytes(state.Encode());
-
-                cos.WriteRawVarint64((ulong)StashTabOptions.Length);
-                foreach (StashTabOption option in StashTabOptions)
-                    cos.WriteRawBytes(option.Encode());
-
-                cos.Flush();
-                return ms.ToArray();
-            }
-        }
-
-        public override string ToString()
-        {
-            StringBuilder sb = new();
-            WriteEntityString(sb);
+            base.BuildString(sb);
 
             sb.AppendLine($"MissionManager: {MissionManager}");
             sb.AppendLine($"AvatarPropertyCollection: {AvatarPropertyCollection}");
@@ -212,8 +204,6 @@ namespace MHServerEmu.GameServer.Entities
             sb.AppendLine($"GameplayOptions: {GameplayOptions}");
             for (int i = 0; i < AchievementStates.Length; i++) sb.AppendLine($"AchievementState{i}: {AchievementStates[i]}");
             for (int i = 0; i < StashTabOptions.Length; i++) sb.AppendLine($"StashTabOption{i}: {StashTabOptions[i]}");
-
-            return sb.ToString();
         }
     }
 }

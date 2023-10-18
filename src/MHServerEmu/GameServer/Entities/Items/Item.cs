@@ -9,13 +9,7 @@ namespace MHServerEmu.GameServer.Entities.Items
     {
         public ItemSpec ItemSpec { get; set; }
 
-        public Item(EntityBaseData baseData, byte[] archiveData) : base(baseData)
-        {
-            CodedInputStream stream = CodedInputStream.CreateInstance(archiveData);
-            DecodeEntityFields(stream);
-            DecodeWorldEntityFields(stream);
-            ItemSpec = new(stream);
-        }
+        public Item(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
         public Item(EntityBaseData baseData, EntityTrackingContextMap[] trackingContextMap, Condition[] conditionCollection,
             PowerCollectionRecord[] powerCollection, int unkEvent, ItemSpec itemSpec) : base(baseData)
@@ -27,29 +21,25 @@ namespace MHServerEmu.GameServer.Entities.Items
             ItemSpec = itemSpec;
         }
 
-        public override byte[] Encode()
+        protected override void Decode(CodedInputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+            base.Decode(stream);
 
-                // Encode
-                EncodeEntityFields(cos);
-                EncodeWorldEntityFields(cos);
-
-                cos.WriteRawBytes(ItemSpec.Encode());
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            ItemSpec = new(stream);
         }
-        public override string ToString()
+
+        public override void Encode(CodedOutputStream stream)
         {
-            StringBuilder sb = new();
-            WriteEntityString(sb);
-            WriteWorldEntityString(sb);
+            base.Encode(stream);
+
+            stream.WriteRawBytes(ItemSpec.Encode());
+        }
+
+        protected override void BuildString(StringBuilder sb)
+        {
+            base.BuildString(sb);
+
             sb.AppendLine($"ItemSpec: {ItemSpec}");
-            return sb.ToString();
         }
     }
 }

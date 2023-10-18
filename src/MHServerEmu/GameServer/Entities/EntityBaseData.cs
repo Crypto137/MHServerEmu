@@ -33,9 +33,9 @@ namespace MHServerEmu.GameServer.Entities
         public InventoryLocation InvLocPrev { get; }
         public ulong[] Vector { get; } = Array.Empty<ulong>();
 
-        public EntityBaseData(byte[] data)
+        public EntityBaseData(ByteString data)
         {
-            CodedInputStream stream = CodedInputStream.CreateInstance(data);
+            CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
 
             ReplicationPolicy = stream.ReadRawVarint32();
             EntityId = stream.ReadRawVarint64();
@@ -96,50 +96,53 @@ namespace MHServerEmu.GameServer.Entities
             Flags[10] = snap;
         }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
+        {
+            stream.WriteRawVarint32(ReplicationPolicy);
+            stream.WriteRawVarint64(EntityId);
+            stream.WritePrototypeEnum(PrototypeId, PrototypeEnumType.Entity);
+            stream.WriteRawVarint32(Flags.ToUInt32());
+            stream.WriteRawVarint32(LocFlags.ToUInt32());
+
+            if (Flags[5]) stream.WriteRawVarint32(InterestPolicies);
+            if (Flags[9]) stream.WriteRawVarint32(AvatarWorldInstanceId);
+            if (Flags[8]) stream.WriteRawVarint32(DbId);
+
+            // Location
+            if (Flags[0])
+            {
+                stream.WriteRawBytes(Position.Encode(3));
+
+                if (LocFlags[0])
+                    stream.WriteRawBytes(Orientation.Encode(6));
+                else
+                    stream.WriteRawZigZagFloat(Orientation.X, 6);
+            }
+
+            if (LocFlags[1] == false) stream.WriteRawBytes(LocomotionState.Encode(LocFlags));
+            if (Flags[11]) stream.WriteRawZigZagFloat(BoundsScaleOverride, 8);
+            if (Flags[3]) stream.WriteRawVarint64(SourceEntityId);
+            if (Flags[4]) stream.WriteRawBytes(SourcePosition.Encode(3));
+            if (Flags[1]) stream.WritePrototypeEnum(ActivePowerPrototypeId, PrototypeEnumType.Power);
+            if (Flags[6]) stream.WriteRawBytes(InvLoc.Encode());
+            if (Flags[7]) stream.WriteRawBytes(InvLocPrev.Encode());
+
+            if (Flags[14])
+            {
+                stream.WriteRawVarint64((ulong)Vector.Length);
+                for (int i = 0; i < Vector.Length; i++)
+                    stream.WriteRawVarint64(Vector[i]);
+            }
+        }
+
+        public ByteString Serialize()
         {
             using (MemoryStream ms = new())
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                cos.WriteRawVarint32(ReplicationPolicy);
-                cos.WriteRawVarint64(EntityId);
-                cos.WritePrototypeEnum(PrototypeId, PrototypeEnumType.Entity);
-                cos.WriteRawVarint32(Flags.ToUInt32());
-                cos.WriteRawVarint32(LocFlags.ToUInt32());
-
-                if (Flags[5]) cos.WriteRawVarint32(InterestPolicies);
-                if (Flags[9]) cos.WriteRawVarint32(AvatarWorldInstanceId);
-                if (Flags[8]) cos.WriteRawVarint32(DbId);
-
-                // Location
-                if (Flags[0])
-                {
-                    cos.WriteRawBytes(Position.Encode(3));
-
-                    if (LocFlags[0])
-                        cos.WriteRawBytes(Orientation.Encode(6));
-                    else
-                        cos.WriteRawZigZagFloat(Orientation.X, 6);
-                }
-
-                if (LocFlags[1] == false) cos.WriteRawBytes(LocomotionState.Encode(LocFlags));
-                if (Flags[11]) cos.WriteRawZigZagFloat(BoundsScaleOverride, 8);
-                if (Flags[3]) cos.WriteRawVarint64(SourceEntityId);
-                if (Flags[4]) cos.WriteRawBytes(SourcePosition.Encode(3));
-                if (Flags[1]) cos.WritePrototypeEnum(ActivePowerPrototypeId, PrototypeEnumType.Power);
-                if (Flags[6]) cos.WriteRawBytes(InvLoc.Encode());
-                if (Flags[7]) cos.WriteRawBytes(InvLocPrev.Encode());
-
-                if (Flags[14])
-                {
-                    cos.WriteRawVarint64((ulong)Vector.Length);
-                    for (int i = 0; i < Vector.Length; i++)
-                        cos.WriteRawVarint64(Vector[i]);
-                }
-
+                Encode(cos);
                 cos.Flush();
-                return ms.ToArray();
+                return ByteString.CopyFrom(ms.ToArray());
             }
         }
 

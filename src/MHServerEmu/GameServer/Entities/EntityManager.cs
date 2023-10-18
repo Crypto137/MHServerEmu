@@ -1,4 +1,5 @@
 ﻿using Gazillion;
+using Google.ProtocolBuffers;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.GameServer.Common;
 using MHServerEmu.GameServer.Entities.Avatars;
@@ -31,8 +32,8 @@ namespace MHServerEmu.GameServer.Entities
         public EntityManager()
         {
             // Initialize a waypoint entity
-            EntityBaseData waypointBaseData = new(Convert.FromHexString("200C839F01200020"));
-            Waypoint = new(waypointBaseData, Convert.FromHexString("20F4C10206000000CD80018880FCFF99BF968110CCC00202CC800302CD40D58280DE868098044DA1A1A4FE0399C00183B8030000000000"));
+            EntityBaseData waypointBaseData = new(ByteString.CopyFrom(Convert.FromHexString("200C839F01200020")));
+            Waypoint = new(waypointBaseData, ByteString.CopyFrom(Convert.FromHexString("20F4C10206000000CD80018880FCFF99BF968110CCC00202CC800302CD40D58280DE868098044DA1A1A4FE0399C00183B8030000000000")));
 
             // minihack: force default player and avatar entity message initialization on construction
             // so that there isn't a lag when a player logs in for the first time after the server starts
@@ -165,8 +166,8 @@ namespace MHServerEmu.GameServer.Entities
 
         public Player GetDefaultPlayerEntity()
         {
-            EntityBaseData baseData = new(PlayerMessage.BaseData.ToByteArray());
-            return new(baseData, PlayerMessage.ArchiveData.ToByteArray());
+            EntityBaseData baseData = new(PlayerMessage.BaseData);
+            return new(baseData, PlayerMessage.ArchiveData);
         }
 
         public Avatar[] GetDefaultAvatarEntities()
@@ -175,8 +176,8 @@ namespace MHServerEmu.GameServer.Entities
 
             for (int i = 0; i < avatars.Length; i++)
             {
-                EntityBaseData baseData = new(AvatarMessages[i].BaseData.ToByteArray());
-                avatars[i] = new(baseData, AvatarMessages[i].ArchiveData.ToByteArray());
+                EntityBaseData baseData = new(AvatarMessages[i].BaseData);
+                avatars[i] = new(baseData, AvatarMessages[i].ArchiveData);
             }
 
             return avatars;
