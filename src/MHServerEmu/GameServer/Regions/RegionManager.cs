@@ -24,6 +24,7 @@ namespace MHServerEmu.GameServer.Regions
             RegionPrototype.DailyGShockerSubwayRegionL60,
             RegionPrototype.DailyGSinisterLabRegionL60,
             RegionPrototype.BronxZooRegionL60,
+            RegionPrototype.HYDRAIslandPartDeuxRegionL60,
             RegionPrototype.XManhattanRegion1to60,
             RegionPrototype.XManhattanRegion60Cosmic,
             RegionPrototype.BrooklynPatrolRegionL60,
@@ -40,7 +41,9 @@ namespace MHServerEmu.GameServer.Regions
             RegionPrototype.CH0901NorwayPCZRegion,
             RegionPrototype.CH0904SiegePCZRegion,
             RegionPrototype.CosmicDoopSectorSpaceRegion,
-            RegionPrototype.OpDailyBugleRegionL11To60
+            RegionPrototype.OpDailyBugleRegionL11To60,
+           // RegionPrototype.DailyGTimesSquareRegionL60, // TODO: Mission telepors, Area Loading
+            RegionPrototype.DrStrangeTimesSquareRegionL60
         };
 
         // TODO: Determine if a region is a hub from its prototype
@@ -392,6 +395,60 @@ namespace MHServerEmu.GameServer.Regions
                     region.EntranceOrientation = new(-0.78125f, 0f, 0f);
                     region.WaypointPosition = new(893f, 0f, 60f);
                     region.WaypointOrientation = new();
+
+                    break;
+
+                case RegionPrototype.DailyGTimesSquareRegionL60:
+                    archiveData = new byte[] {
+                    };
+
+                    region = new(RegionPrototype.DailyGTimesSquareRegionL60,
+                        1038711701,
+                        archiveData,
+                        new(-1152.0f, -1152.0f, -1152.0f),
+                        new(17280.0f, 17280.0f, 1152.0f),
+                        new(20, DifficultyTier.Normal));
+
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/EndGame/Terminals/Green/TimesSquare/Areas/DailyGTimesSquareArea.prototype"), new(), true);
+                    districtPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Districts/TimesSquare_Terminal_District.district");
+                    district = GameDatabase.GetPrototype<DistrictPrototype>(districtPrototypeId);
+
+                    for (int i = 0; i < district.CellMarkerSet.Length; i++)
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
+
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(-250.5f, -484.8f, 0f);
+                    region.EntranceOrientation = new(1.57082f, 0f, 0f);
+                    region.WaypointPosition = new(-250.5f, -484.8f, 0f);
+                    region.WaypointOrientation = new(1.57082f, 0f, 0f);
+
+                    break;
+
+                case RegionPrototype.DrStrangeTimesSquareRegionL60:
+                    archiveData = new byte[] {
+                    };
+
+                    region = new(RegionPrototype.DrStrangeTimesSquareRegionL60,
+                        1038711701,
+                        archiveData,
+                        new(-1152.0f, -1152.0f, -1152.0f),
+                        new(17280.0f, 17280.0f, 1152.0f),
+                        new(10, DifficultyTier.Normal));
+
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/EndGame/StaticScenarios/DrStrangeEvent/Green/DrStrangeTimesSquareAreaGreen.prototype"), new(), true);
+                    districtPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Districts/TimesSquare_DrStrange_District.district");
+                    district = GameDatabase.GetPrototype<DistrictPrototype>(districtPrototypeId);
+
+                    for (int i = 0; i < district.CellMarkerSet.Length; i++)
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
+
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(-250.5f, -484.8f, 0f);
+                    region.EntranceOrientation = new(1.57082f, 0f, 0f);
+                    region.WaypointPosition = new(15150f, 13920f, -829f);
+                    region.WaypointOrientation = new(1.57082f, 0f, 0f);
 
                     break;
 
@@ -1601,6 +1658,195 @@ namespace MHServerEmu.GameServer.Regions
                     
                     break;
 
+                case RegionPrototype.HYDRAIslandPartDeuxRegionL60:
+                    archiveData = new byte[] {
+                    };
+
+                    region = new(RegionPrototype.HYDRAIslandPartDeuxRegionL60,
+                        1883928786,
+                        archiveData,
+                        new(-17920.0f, -28544.0f, -2304.0f),
+                        new(18176.0f, 30080.0f, 2304),
+                        new(60, DifficultyTier.Normal));
+
+                    string HydraIsland = "Resource/Cells/Hydra_Island/";
+                    string HydraIslandArea = "Regions/EndGame/OneShotMissions/NonChapterBound/HydraIslandPartDeux/";
+
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeRefByName(HydraIslandArea + "HydraIslandPartDeuxArea1.prototype"), new(), true);
+                    area.AddCell(new(12, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_Super/Hydra1S_SuperSub_X1_Y0.cell"), new(5504.0f, 19712.0f, -1152.0f)));
+                    area.AddCell(new(20, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_Trans/Hydra1S_Entry_A.cell"), new(10112.0f, 22016.0f, -1152.0f)));
+                    area.AddCell(new(36, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_N.cell"), new(10112.0f, 15104.0f, -1152.0f)));
+                    area.AddCell(new(24, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_Super/Hydra1S_SuperSub_X1_Y2.cell"), new(5504.0f, 24320.0f, -1152.0f)));
+                    area.AddCell(new(35, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_E.cell"), new(7808.0f, 15104.0f, -1152.0f)));
+                    area.AddCell(new(19, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_Super/Hydra1S_Super_X0_Y1.cell"), new(7808.0f, 22016.0f, -1152.0f)));
+                    area.AddCell(new(27, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_Super/Hydra1S_Super_X2_Y2.cell"), new(12416.0f, 24320.0f, -1152.0f)));
+                    area.AddCell(new(21, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_Super/Hydra1S_Super_X2_Y1.cell"), new(12416.0f, 22016.0f, -1152.0f)));
+                    area.AddCell(new(15, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_Super/Hydra1S_Super_X2_Y0.cell"), new(12416.0f, 19712.0f, -1152.0f)));
+                    area.AddCell(new(25, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_Super/Hydra1S_Super_X0_Y2.cell"), new(7808.0f, 24320.0f, -1152.0f)));
+                    area.AddCell(new(26, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_Super/Hydra1S_Super_X1_Y2.cell"), new(10112.0f, 24320.0f, -1152.0f)));
+                    area.AddCell(new(13, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_Super/Hydra1S_Super_X0_Y0.cell"), new(7808.0f, 19712.0f, -1152.0f)));
+                    area.AddCell(new(18, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_Super/Hydra1S_SuperSub_X1_Y1.cell"), new(5504.0f, 22016.0f, -1152.0f)));
+                    area.AddCell(new(14, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_Super/Hydra1S_Super_X1_Y0.cell"), new(10112.0f, 19712.0f, -1152.0f)));
+                    area.AddCell(new(30, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_NSW_A.cell"), new(5504.0f, 26624.0f, -1152.0f)));
+                    area.AddCell(new(33, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_B/Hydra1S_B_NSW_A.cell"), new(12416.0f, 26624.0f, -1152.0f)));
+                    area.AddCell(new(32, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_B/Hydra1S_B_NSW_A.cell"), new(10112.0f, 26624.0f, -1152.0f)));
+                    area.AddCell(new(31, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_Trans/Hydra1S_Ambush_NSW_A.cell"), new(7808.0f, 26624.0f, -1152.0f)));
+                    area.AddCell(new(9, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_NESWdSW_A.cell"), new(12416.0f, 17408.0f, -1152.0f)));
+                    area.AddCell(new(5, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_Trans/Hydra1S_Ambush_NEW_A.cell"), new(3200.0f, 17408.0f, -1152.0f)));
+                    area.AddCell(new(11, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_Super/Hydra1S_SuperSub_X0_Y0.cell"), new(3200.0f, 19712.0f, -1152.0f)));
+                    area.AddCell(new(23, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_Super/Hydra1S_SuperSub_X0_Y2.cell"), new(3200.0f, 24320.0f, -1152.0f)));
+                    area.AddCell(new(17, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_Super/Hydra1S_SuperSub_X0_Y1.cell"), new(3200.0f, 22016.0f, -1152.0f)));
+                    area.AddCell(new(29, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_NW_A.cell"), new(3200.0f, 26624.0f, -1152.0f)));
+                    area.AddCell(new(6, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_NESWdNW_A.cell"), new(5504.0f, 17408.0f, -1152.0f)));
+                    area.AddCell(new(16, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_ESW_A.cell"), new(14720.0f, 19712.0f, -1152.0f)));
+                    area.AddCell(new(28, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_B/Hydra1S_B_ESW_A.cell"), new(14720.0f, 24320.0f, -1152.0f)));
+                    area.AddCell(new(22, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_B/Hydra1S_B_ESW_A.cell"), new(14720.0f, 22016.0f, -1152.0f)));
+                    area.AddCell(new(10, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_ESW_A.cell"), new(14720.0f, 17408.0f, -1152.0f)));
+                    area.AddCell(new(34, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_B/Hydra1S_B_SW_A.cell"), new(14720.0f, 26624.0f, -1152.0f)));
+                    area.AddCell(new(8, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_NES_A.cell"), new(10112.0f, 17408.0f, -1152.0f)));
+                    area.AddCell(new(7, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_B/Hydra1S_B_NES_B.cell"), new(7808.0f, 17408.0f, -1152.0f)));
+                    area.AddCell(new(4, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_ES_A.cell"), new(14720.0f, 15104.0f, -1152.0f)));
+                    area.AddCell(new(2, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_B/Hydra1S_B_ES_A.cell"), new(5504.0f, 15104.0f, -1152.0f)));
+                    area.AddCell(new(3, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_B/Hydra1S_B_NE_A.cell"), new(12416.0f, 15104.0f, -1152.0f)));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_NE_A.cell"), new(3200.0f, 15104.0f, -1152.0f)));
+                    region.AddArea(area);
+
+                    area = new(12, (AreaPrototype)GameDatabase.GetPrototypeRefByName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
+                    area.AddCell(new(74, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_A.cell"), new(3200.0f, 12800.0f, -1152.0f)));
+                    area.AddCell(new(75, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_E.cell"), new(14720.0f, 28928.0f, -1152.0f)));
+                    area.AddCell(new(76, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_A.cell"), new(5504.0f, 12800.0f, -1152.0f)));
+                    area.AddCell(new(77, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_E.cell"), new(12416.0f, 28928.0f, -1152.0f)));
+                    area.AddCell(new(78, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_A.cell"), new(7808.0f, 12800.0f, -1152.0f)));
+                    area.AddCell(new(79, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_E.cell"), new(10112.0f, 28928.0f, -1152.0f)));
+                    area.AddCell(new(80, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_A.cell"), new(10112.0f, 12800.0f, -1152.0f)));
+                    area.AddCell(new(81, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_E.cell"), new(7808.0f, 28928.0f, -1152.0f)));
+                    area.AddCell(new(82, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_A.cell"), new(12416.0f, 12800.0f, -1152.0f)));
+                    area.AddCell(new(83, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_E.cell"), new(5504.0f, 28928.0f, -1152.0f)));
+                    area.AddCell(new(84, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_A.cell"), new(14720.0f, 12800.0f, -1152.0f)));
+                    area.AddCell(new(85, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_E.cell"), new(3200.0f, 28928.0f, -1152.0f)));
+                    area.AddCell(new(86, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_A.cell"), new(17024.0f, 12800.0f, -1152.0f)));
+                    area.AddCell(new(87, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_A.cell"), new(896.0f, 28928.0f, -1152.0f)));
+                    area.AddCell(new(88, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_N.cell"), new(17024.0f, 15104.0f, -1152.0f)));
+                    area.AddCell(new(89, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_A.cell"), new(896.0f, 26624.0f, -1152.0f)));
+                    area.AddCell(new(90, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_N.cell"), new(17024.0f, 17408.0f, -1152.0f)));
+                    area.AddCell(new(91, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_A.cell"), new(896.0f, 24320.0f, -1152.0f)));
+                    area.AddCell(new(92, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_N.cell"), new(17024.0f, 19712.0f, -1152.0f)));
+                    area.AddCell(new(93, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_A.cell"), new(896.0f, 22016.0f, -1152.0f)));
+                    area.AddCell(new(94, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_N.cell"), new(17024.0f, 22016.0f, -1152.0f)));
+                    area.AddCell(new(95, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_A.cell"), new(896.0f, 19712.0f, -1152.0f)));
+                    area.AddCell(new(96, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_N.cell"), new(17024.0f, 24320.0f, -1152.0f)));
+                    area.AddCell(new(97, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_A.cell"), new(896.0f, 17408.0f, -1152.0f)));
+                    area.AddCell(new(98, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_N.cell"), new(17024.0f, 26624.0f, -1152.0f)));
+                    area.AddCell(new(99, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_A.cell"), new(896.0f, 15104.0f, -1152.0f)));
+                    area.AddCell(new(100, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_NE.cell"), new(17024.0f, 28928.0f, -1152.0f)));
+                    area.AddCell(new(101, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_A.cell"), new(896.0f, 12800.0f, -1152.0f)));
+                    region.AddArea(area);
+                    
+                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeRefByName(HydraIslandArea + "HydraIslandPartDeuxBaseEntryArea.prototype"), new(), false);
+                    area.AddCell(new(73, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_Trans/Hydra1S_FakeEW_BaseEntry.cell"), new(-12800.0f, -896.0f, -1152.0f)));
+                    region.AddArea(area);
+                    area = new(3, (AreaPrototype)GameDatabase.GetPrototypeRefByName(HydraIslandArea + "HydraIslandPartDeuxBaseArea1.prototype"), new(), false);
+                    area.AddCell(new(72, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_A/Mandarin_A_FILLER_A.cell"), new(-10752.0f, -7040.0f, -1152.0f)));
+                    area.AddCell(new(64, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_B/Mandarin_B_NEW_A.cell"), new(-14848.0f, -7040.0f, -1152.0f)));
+                    area.AddCell(new(68, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_A/Mandarin_A_ES_A.cell"), new(-10752.0f, -4992.0f, -1152.0f)));
+                    area.AddCell(new(65, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_B/Mandarin_B_ES_A.cell"), new(-12800.0f, -7040.0f, -1152.0f)));
+                    area.AddCell(new(69, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_A/Mandarin_A_NW_A.cell"), new(-14848.0f, -2944.0f, -1152.0f)));
+                    area.AddCell(new(66, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_A/Mandarin_A_NEW_A.cell"), new(-14848.0f, -4992.0f, -1152.0f)));
+                    area.AddCell(new(71, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_B/Mandarin_B_SW_A.cell"), new(-10752.0f, -2944.0f, -1152.0f)));
+                    area.AddCell(new(67, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_B/Mandarin_B_NESW_B.cell"), new(-12800.0f, -4992.0f, -1152.0f)));
+                    area.AddCell(new(70, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_B/Mandarin_B_NESW_A.cell"), new(-12800.0f, -2944.0f, -1152.0f)));
+                    region.AddArea(area);
+                    area = new(4, (AreaPrototype)GameDatabase.GetPrototypeRefByName(HydraIslandArea + "HydraIslandPartDeuxInterAreaEW1.prototype"), new(), false);
+                    area.AddCell(new(63, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_Trans/Hydra1S_ServerClusterA_EW_A.cell"), new(-14848.0f, -9088.0f, -1152.0f)));
+                    region.AddArea(area);
+                    area = new(5, (AreaPrototype)GameDatabase.GetPrototypeRefByName(HydraIslandArea + "HydraIslandPartDeuxBaseArea2.prototype"), new(), false);
+                    area.AddCell(new(62, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_A/Mandarin_A_FILLER_A.cell"), new(-10752.0f, -15232.0f, -1152.0f)));
+                    area.AddCell(new(54, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_A/Mandarin_A_NE_A.cell"), new(-14848.0f, -15232.0f, -1152.0f)));
+                    area.AddCell(new(58, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_A/Mandarin_A_ES_A.cell"), new(-10752.0f, -13184.0f, -1152.0f)));
+                    area.AddCell(new(56, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_B/Mandarin_B_NEW_A.cell"), new(-14848.0f, -13184.0f, -1152.0f)));
+                    area.AddCell(new(59, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_A/Mandarin_A_NEW_A.cell"), new(-14848.0f, -11136.0f, -1152.0f)));
+                    area.AddCell(new(61, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_A/Mandarin_A_SW_A.cell"), new(-10752.0f, -11136.0f, -1152.0f)));
+                    area.AddCell(new(60, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_B/Mandarin_B_NSW_A.cell"), new(-12800.0f, -11136.0f, -1152.0f)));
+                    area.AddCell(new(55, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_A/Mandarin_A_ESW_A.cell"), new(-12800.0f, -15232.0f, -1152.0f)));
+                    area.AddCell(new(57, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_B/Mandarin_B_NESW_A.cell"), new(-12800.0f, -13184.0f, -1152.0f)));
+                    region.AddArea(area);
+                    area = new(6, (AreaPrototype)GameDatabase.GetPrototypeRefByName(HydraIslandArea + "HydraIslandPartDeuxInterAreaEW2.prototype"), new(), false);
+                    area.AddCell(new(53, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_B/Mandarin_B_EW_A.cell"), new(-12800.0f, -17280.0f, -1152.0f)));
+                    region.AddArea(area);
+                    area = new(7, (AreaPrototype)GameDatabase.GetPrototypeRefByName(HydraIslandArea + "HydraIslandPartDeuxBaseArea3.prototype"), new(), false);
+                    area.AddCell(new(51, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_A/Mandarin_A_FILLER_A.cell"), new(-10752.0f, -21376.0f, -1152.0f)));
+                    area.AddCell(new(43, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_A/Mandarin_A_NE_A.cell"), new(-14848.0f, -23424.0f, -1152.0f)));
+                    area.AddCell(new(52, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_A/Mandarin_A_FILLER_A.cell"), new(-14848.0f, -25472.0f, -1152.0f)));
+                    area.AddCell(new(41, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_A/Mandarin_A_NE_A.cell"), new(-12800.0f, -25472.0f, -1152.0f)));
+                    area.AddCell(new(50, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_A/Mandarin_A_S_A.cell"), new(-10752.0f, -19328.0f, -1152.0f)));
+                    area.AddCell(new(42, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_B/Mandarin_B_NES_A.cell"), new(-10752.0f, -25472.0f, -1152.0f)));
+                    area.AddCell(new(48, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_A/Mandarin_A_NW_A.cell"), new(-14848.0f, -19328.0f, -1152.0f)));
+                    area.AddCell(new(46, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_B/Mandarin_B_NEW_A.cell"), new(-14848.0f, -21376.0f, -1152.0f)));
+                    area.AddCell(new(45, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_A/Mandarin_A_SW_A.cell"), new(-10752.0f, -23424.0f, -1152.0f)));
+                    area.AddCell(new(47, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_B/Mandarin_B_ESW_A.cell"), new(-12800.0f, -21376.0f, -1152.0f)));
+                    area.AddCell(new(44, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_Trans/Hydra1S_ServerClusterB_NESW_A.cell"), new(-12800.0f, -23424.0f, -1152.0f)));
+                    area.AddCell(new(49, GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_B/Mandarin_B_NESW_A.cell"), new(-12800.0f, -19328.0f, -1152.0f)));
+                    region.AddArea(area);
+                    area = new(8, (AreaPrototype)GameDatabase.GetPrototypeRefByName(HydraIslandArea + "HydraIslandPartDeuxPreBossArea.prototype"), new(), false);
+                    area.AddCell(new(40, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_Trans/Hydra1S_PortalToBoss_A.cell"), new(-8704.0f, -25472.0f, -1152.0f)));
+                    region.AddArea(area);
+                    area = new(9, (AreaPrototype)GameDatabase.GetPrototypeRefByName(HydraIslandArea + "HydraIslandPartDeuxInterArea2.prototype"), new(), false);
+                    area.AddCell(new(39, GameDatabase.GetPrototypeRefByName("Resource/Cells/MutantTown/MutantTown_Trans/SewerInterArea_A_NS_A.cell"), new(-6528.0f, -25472.0f, -1152.0f)));
+                    region.AddArea(area);
+                    area = new(10, (AreaPrototype)GameDatabase.GetPrototypeRefByName(HydraIslandArea + "HydraIslandPartDeuxInterArea3.prototype"), new(), false);
+                    area.AddCell(new(38, GameDatabase.GetPrototypeRefByName("Resource/Cells/MutantTown/MutantTown_Trans/SewerInterArea_A_NS_A.cell"), new(-4224.0f, -25472.0f, -1152.0f)));
+                    region.AddArea(area);
+                    area = new(11, (AreaPrototype)GameDatabase.GetPrototypeRefByName(HydraIslandArea + "HydraIslandPartDeuxBaseBossArea.prototype"), new(), false);
+                    area.AddCell(new(37, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_Trans/Hydra1S_Boss_A.cell"), new(-768.0f, -25472.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    filler = GameDatabase.GetPrototypeRefByName(HydraIsland + "MandarinLair/Mandarin_A/Mandarin_A_FILLER_A.cell");
+                    area = new(13, (AreaPrototype)GameDatabase.GetPrototypeRefByName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
+                    area.AddCell(new(102, filler, new(-10752.0f, -896.0f, -1152.0f)));
+                    area.AddCell(new(103, filler, new(-12800.0f, -9088.0f, -1152.0f)));
+                    area.AddCell(new(104, filler, new(-10752.0f, -9088.0f, -1152.0f)));
+                    area.AddCell(new(105, filler, new(-14848.0f, -896.0f, -1152.0f)));
+                    area.AddCell(new(106, filler, new(-8704.0f, -9088.0f, -1152.0f)));
+                    area.AddCell(new(107, filler, new(-16896.0f, -896.0f, -1152.0f)));
+                    area.AddCell(new(108, filler, new(-8704.0f, -7040.0f, -1152.0f)));
+                    area.AddCell(new(109, filler, new(-16896.0f, -2944.0f, -1152.0f)));
+                    area.AddCell(new(110, filler, new(-8704.0f, -4992.0f, -1152.0f)));
+                    area.AddCell(new(111, filler, new(-16896.0f, -4992.0f, -1152.0f)));
+                    area.AddCell(new(112, filler, new(-8704.0f, -2944.0f, -1152.0f)));
+                    area.AddCell(new(113, filler, new(-16896.0f, -7040.0f, -1152.0f)));
+                    area.AddCell(new(114, filler, new(-8704.0f, -896.0f, -1152.0f)));
+                    area.AddCell(new(115, filler, new(-16896.0f, -9088.0f, -1152.0f)));
+                    area.AddCell(new(116, filler, new(-14848.0f, -17280.0f, -1152.0f)));
+                    area.AddCell(new(117, filler, new(-10752.0f, -17280.0f, -1152.0f)));
+                    area.AddCell(new(118, filler, new(-8704.0f, -17280.0f, -1152.0f)));
+                    area.AddCell(new(119, filler, new(-8704.0f, -15232.0f, -1152.0f)));
+                    area.AddCell(new(120, filler, new(-16896.0f, -11136.0f, -1152.0f)));
+                    area.AddCell(new(121, filler, new(-8704.0f, -13184.0f, -1152.0f)));
+                    area.AddCell(new(122, filler, new(-16896.0f, -13184.0f, -1152.0f)));
+                    area.AddCell(new(123, filler, new(-8704.0f, -11136.0f, -1152.0f)));
+                    area.AddCell(new(124, filler, new(-16896.0f, -15232.0f, -1152.0f)));
+                    area.AddCell(new(125, filler, new(-16896.0f, -17280.0f, -1152.0f)));
+                    area.AddCell(new(126, filler, new(-14848.0f, -27520.0f, -1152.0f)));
+                    area.AddCell(new(127, filler, new(-12800.0f, -27520.0f, -1152.0f)));
+                    area.AddCell(new(128, filler, new(-10752.0f, -27520.0f, -1152.0f)));
+                    area.AddCell(new(129, filler, new(-8704.0f, -27520.0f, -1152.0f)));
+                    area.AddCell(new(130, filler, new(-16896.0f, -19328.0f, -1152.0f)));
+                    area.AddCell(new(131, filler, new(-8704.0f, -23424.0f, -1152.0f)));
+                    area.AddCell(new(132, filler, new(-16896.0f, -21376.0f, -1152.0f)));
+                    area.AddCell(new(133, filler, new(-8704.0f, -21376.0f, -1152.0f)));
+                    area.AddCell(new(134, filler, new(-16896.0f, -23424.0f, -1152.0f)));
+                    area.AddCell(new(135, filler, new(-8704.0f, -19328.0f, -1152.0f)));
+                    area.AddCell(new(136, filler, new(-16896.0f, -25472.0f, -1152.0f)));
+                    area.AddCell(new(137, filler, new(-16896.0f, -27520.0f, -1152.0f)));
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(2944.0f, 21760.0f, -1920.0f);
+                    region.EntranceOrientation = new(-1.57082f, 0.0f, 0.0f);
+                    region.WaypointPosition = new(2944.0f, 21760.0f, -1920.0f);
+                    region.WaypointOrientation = new(1.57082f, 0.0f, 0.0f);
+
+                    break;
+
                 case RegionPrototype.UltronRaidRegionGreen:
                     archiveData = new byte[] {
                     };
@@ -1781,8 +2027,8 @@ namespace MHServerEmu.GameServer.Regions
                     region = new(RegionPrototype.UpperMadripoorRegionL60,
                         1883928786,
                         archiveData, 
-                        new(-1152.0f, -1152.0f, -1152.0f), 
-                        new(21888.0f, 24192.0f, 1152.0f),
+                        new(-1152.0f, -11136.0f, -3328.0f), 
+                        new(21888.0f, 24192.0f, 3328.0f),
                         new(10, DifficultyTier.Normal));
 
                     area = new(1, (AreaPrototype) GameDatabase.GetPrototypeRefByName("Regions/Story/CH10SecretInvasion/UpperMadripoor/UpperMadripoorAreaA.prototype"), new(), true);
@@ -1792,6 +2038,10 @@ namespace MHServerEmu.GameServer.Regions
                     for (int i = 0; i < district.CellMarkerSet.Length; i++)
                         area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
                     
+                    region.AddArea(area);
+
+                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/Story/CH10SecretInvasion/UpperMadripoor/UpperMadripoorAreaSewer.prototype"), new(), false);
+                    area.AddCell(new((uint)district.CellMarkerSet.Length + 1, GameDatabase.GetPrototypeRefByName("Resource/Cells/SecretInvasion/HighTownSewers/Hightown_Sewers_A.cell"), new(2176, -7808, 0)));
                     region.AddArea(area);
 
                     region.EntrancePosition = new(20665.0f, 15910.0f, 0.0f);
@@ -1809,7 +2059,7 @@ namespace MHServerEmu.GameServer.Regions
                     region = new(RegionPrototype.UpperMadripoorRegionL60Cosmic,
                         1883928786,
                         archiveData,
-                        new(-1152.0f, -1152.0f, -1152.0f),
+                        new(-1152.0f, -11136.0f, -3328.0f),
                         new(21888.0f, 24192.0f, 1152.0f),
                         new(63, DifficultyTier.Superheroic));
 
@@ -1820,6 +2070,10 @@ namespace MHServerEmu.GameServer.Regions
                     for (int i = 0; i < district.CellMarkerSet.Length; i++)
                         area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
 
+                    region.AddArea(area);
+
+                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/Story/CH10SecretInvasion/UpperMadripoor/UpperMadripoorAreaSewer.prototype"), new(), false);
+                    area.AddCell(new((uint)district.CellMarkerSet.Length + 1, GameDatabase.GetPrototypeRefByName("Resource/Cells/SecretInvasion/HighTownSewers/Hightown_Sewers_A.cell"), new(2176, -7808, 0)));
                     region.AddArea(area);
 
                     region.EntrancePosition = new(20665.0f, 15910.0f, 0.0f);
