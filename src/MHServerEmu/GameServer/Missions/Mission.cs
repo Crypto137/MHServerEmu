@@ -48,31 +48,21 @@ namespace MHServerEmu.GameServer.Missions
             Suspended = suspended;
         }
 
-        public byte[] Encode(BoolEncoder boolEncoder)
+        public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+            stream.WriteRawVarint64(PrototypeGuid);
+            stream.WriteRawVarint64(State);
+            stream.WriteRawVarint64(TimeExpireCurrentState);
+            stream.WritePrototypeEnum(PrototypeId, PrototypeEnumType.All);
+            stream.WriteRawInt32(Random);
 
-                cos.WriteRawVarint64(PrototypeGuid);
-                cos.WriteRawVarint64(State);
-                cos.WriteRawVarint64(TimeExpireCurrentState);
-                cos.WritePrototypeEnum(PrototypeId, PrototypeEnumType.All);
-                cos.WriteRawInt32(Random);
+            stream.WriteRawVarint64((ulong)Objectives.Length);
+            foreach (Objective objective in Objectives) objective.Encode(stream);
 
-                cos.WriteRawVarint64((ulong)Objectives.Length);
-                foreach (Objective objective in Objectives)
-                    cos.WriteRawBytes(objective.Encode());
+            stream.WriteRawVarint64((ulong)Participants.Length);
+            foreach (ulong Participant in Participants) stream.WriteRawVarint64(Participant);
 
-                cos.WriteRawVarint64((ulong)Participants.Length);
-                foreach (ulong Participant in Participants)
-                    cos.WriteRawVarint64(Participant);
-
-                boolEncoder.WriteBuffer(cos);   // Suspended   
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            boolEncoder.WriteBuffer(stream);   // Suspended
         }
 
         public override string ToString()

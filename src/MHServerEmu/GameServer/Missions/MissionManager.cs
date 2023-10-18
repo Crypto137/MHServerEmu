@@ -38,25 +38,15 @@ namespace MHServerEmu.GameServer.Missions
                 boolEncoder.EncodeBool(mission.Suspended);
         }
 
-        public byte[] Encode(BoolEncoder boolEncoder)
+        public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+            stream.WritePrototypeEnum(PrototypeId, PrototypeEnumType.All);
 
-                cos.WritePrototypeEnum(PrototypeId, PrototypeEnumType.All);
+            stream.WriteRawVarint64((ulong)Missions.Length);
+            foreach (Mission mission in Missions) mission.Encode(stream, boolEncoder);
 
-                cos.WriteRawVarint64((ulong)Missions.Length);
-                foreach (Mission mission in Missions)
-                    cos.WriteRawBytes(mission.Encode(boolEncoder));
-
-                cos.WriteRawInt32(LegendaryMissionBlacklists.Length);
-                foreach (LegendaryMissionBlacklist blacklist in LegendaryMissionBlacklists)
-                    cos.WriteRawBytes(blacklist.Encode());
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawInt32(LegendaryMissionBlacklists.Length);
+            foreach (LegendaryMissionBlacklist blacklist in LegendaryMissionBlacklists) blacklist.Encode(stream);
         }
 
         public override string ToString()

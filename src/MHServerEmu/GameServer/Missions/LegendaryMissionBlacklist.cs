@@ -24,19 +24,11 @@ namespace MHServerEmu.GameServer.Missions
             Missions = missions;
         }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                cos.WriteRawVarint64(Category);
-                cos.WriteRawVarint64((ulong)Missions.Length);
-                foreach (ulong mission in Missions) cos.WriteRawVarint64(mission);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawVarint64(Category);
+            stream.WriteRawVarint64((ulong)Missions.Length);
+            foreach (ulong mission in Missions) stream.WriteRawVarint64(mission);
         }
 
         public override string ToString()

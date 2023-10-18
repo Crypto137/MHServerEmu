@@ -21,16 +21,10 @@ namespace MHServerEmu.GameServer.Missions
             RegionId = regionId;
         }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-                cos.WriteRawVarint64(EntityId);
-                cos.WriteRawVarint64(RegionId);
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawVarint64(EntityId);
+            stream.WriteRawVarint64(RegionId);
         }
 
         public override string ToString()

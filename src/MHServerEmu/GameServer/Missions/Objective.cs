@@ -48,26 +48,18 @@ namespace MHServerEmu.GameServer.Missions
             FailRequiredCount = failRequiredCount;
         }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new ())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                cos.WriteRawByte((byte)ObjectivesIndex);
-                cos.WriteRawByte((byte)ObjectiveIndex);
-                cos.WriteRawInt32(ObjectiveState);
-                cos.WriteRawVarint64(ObjectiveStateExpireTime);
-                cos.WriteRawVarint64((ulong)InteractedEntities.Length);
-                foreach (InteractionTag tag in InteractedEntities) cos.WriteRawBytes(tag.Encode());
-                cos.WriteRawVarint64(CurrentCount);
-                cos.WriteRawVarint64(RequiredCount);
-                cos.WriteRawVarint64(FailCurrentCount);
-                cos.WriteRawVarint64(FailRequiredCount);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawByte((byte)ObjectivesIndex);
+            stream.WriteRawByte((byte)ObjectiveIndex);
+            stream.WriteRawInt32(ObjectiveState);
+            stream.WriteRawVarint64(ObjectiveStateExpireTime);
+            stream.WriteRawVarint64((ulong)InteractedEntities.Length);
+            foreach (InteractionTag tag in InteractedEntities) tag.Encode(stream);
+            stream.WriteRawVarint64(CurrentCount);
+            stream.WriteRawVarint64(RequiredCount);
+            stream.WriteRawVarint64(FailCurrentCount);
+            stream.WriteRawVarint64(FailRequiredCount);
         }
 
         public override string ToString()

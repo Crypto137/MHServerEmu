@@ -136,7 +136,7 @@ namespace MHServerEmu.GameServer.Entities
             boolEncoder.Cook();
 
             // Encode
-            stream.WriteRawBytes(MissionManager.Encode(boolEncoder));
+            MissionManager.Encode(stream, boolEncoder);
             stream.WriteRawBytes(AvatarPropertyCollection.Encode());
 
             stream.WriteRawVarint64(ShardId);
