@@ -27,18 +27,10 @@ namespace MHServerEmu.GameServer.Common
             Y = stream.ReadRawZigZagFloat(precision);
         }
 
-        public byte[] Encode(int precision = 3)
+        public void Encode(CodedOutputStream stream, int precision = 3)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                cos.WriteRawZigZagFloat(X, precision);
-                cos.WriteRawZigZagFloat(Y, precision);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawZigZagFloat(X, precision);
+            stream.WriteRawZigZagFloat(Y, precision);
         }
 
         public NetStructPoint2 ToNetStructPoint2() => NetStructPoint2.CreateBuilder().SetX(X).SetY(Y).Build();

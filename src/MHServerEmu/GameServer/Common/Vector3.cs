@@ -40,19 +40,11 @@ namespace MHServerEmu.GameServer.Common
             Z = point3.Z;
         }
 
-        public byte[] Encode(int precision = 3)
+        public void Encode(CodedOutputStream stream, int precision = 3)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                cos.WriteRawZigZagFloat(X, precision);
-                cos.WriteRawZigZagFloat(Y, precision);
-                cos.WriteRawZigZagFloat(Z, precision);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawZigZagFloat(X, precision);
+            stream.WriteRawZigZagFloat(Y, precision);
+            stream.WriteRawZigZagFloat(Z, precision);
         }
 
         public NetStructPoint3 ToNetStructPoint3() => NetStructPoint3.CreateBuilder().SetX(X).SetY(Y).SetZ(Z).Build();

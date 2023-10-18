@@ -85,10 +85,10 @@ namespace MHServerEmu.GameServer.Entities
                 cos.WriteRawVarint32(Flags.ToUInt32());
 
                 if (Flags[11]) cos.WritePrototypeEnum(PrototypeId, PrototypeEnumType.Entity);
-                cos.WriteRawBytes(Position.Encode(3));
+                Position.Encode(cos, 3);
 
                 if (Flags[0])
-                    cos.WriteRawBytes(Orientation.Encode(6));
+                    Orientation.Encode(cos, 6);
                 else
                     cos.WriteRawZigZagFloat(Orientation.X, 6);
 

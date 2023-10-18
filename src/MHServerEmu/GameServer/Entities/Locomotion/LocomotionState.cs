@@ -63,7 +63,7 @@ namespace MHServerEmu.GameServer.Entities.Locomotion
                 if (flags[7]) cos.WriteRawZigZagFloat(MoveSpeed, 0);
                 if (flags[8]) cos.WriteRawVarint32(Height);
                 if (flags[9]) cos.WriteRawVarint64(FollowEntityId);
-                if (flags[10]) cos.WriteRawBytes(FollowEntityRange.Encode(0));
+                if (flags[10]) FollowEntityRange.Encode(cos, 0);
 
                 if (flags[5])
                 {

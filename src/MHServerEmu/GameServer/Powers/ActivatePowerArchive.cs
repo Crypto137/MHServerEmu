@@ -115,8 +115,8 @@ namespace MHServerEmu.GameServer.Powers
                 if (Flags[0] == false) cos.WriteRawVarint64(IdTargetEntity);
                 cos.WritePrototypeEnum(PowerPrototypeId, PrototypeEnumType.Power);
                 if (Flags[1]) cos.WritePrototypeEnum(TriggeringPowerPrototypeId, PrototypeEnumType.Power);
-                cos.WriteRawBytes(UserPosition.Encode(2));
-                if (Flags[2]) cos.WriteRawBytes((TargetPosition - UserPosition).Encode(2));
+                UserPosition.Encode(cos, 2);
+                if (Flags[2]) (TargetPosition - UserPosition).Encode(cos, 2);
                 if (Flags[4]) cos.WriteRawVarint64(MovementTimeMS);
                 if (Flags[5]) cos.WriteRawVarint32(UnknownTimeMS);
                 if (Flags[6]) cos.WriteRawVarint32(PowerRandomSeed);

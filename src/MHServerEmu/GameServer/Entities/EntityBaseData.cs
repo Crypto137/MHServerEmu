@@ -111,10 +111,10 @@ namespace MHServerEmu.GameServer.Entities
             // Location
             if (Flags[0])
             {
-                stream.WriteRawBytes(Position.Encode(3));
+                Position.Encode(stream, 3);
 
                 if (LocFlags[0])
-                    stream.WriteRawBytes(Orientation.Encode(6));
+                    Orientation.Encode(stream, 6);
                 else
                     stream.WriteRawZigZagFloat(Orientation.X, 6);
             }
@@ -122,7 +122,7 @@ namespace MHServerEmu.GameServer.Entities
             if (LocFlags[1] == false) stream.WriteRawBytes(LocomotionState.Encode(LocFlags));
             if (Flags[11]) stream.WriteRawZigZagFloat(BoundsScaleOverride, 8);
             if (Flags[3]) stream.WriteRawVarint64(SourceEntityId);
-            if (Flags[4]) stream.WriteRawBytes(SourcePosition.Encode(3));
+            if (Flags[4]) SourcePosition.Encode(stream, 3);
             if (Flags[1]) stream.WritePrototypeEnum(ActivePowerPrototypeId, PrototypeEnumType.Power);
             if (Flags[6]) stream.WriteRawBytes(InvLoc.Encode());
             if (Flags[7]) stream.WriteRawBytes(InvLocPrev.Encode());

@@ -60,9 +60,9 @@ namespace MHServerEmu.GameServer.Entities.Avatars
                 boolEncoder.WriteBuffer(cos);   // IsUsingGamepadInput  
                 cos.WriteRawVarint32(AvatarWorldInstanceId);
                 cos.WriteRawVarint32(LocFlags.ToUInt32());
-                cos.WriteRawBytes(Position.Encode());
+                Position.Encode(cos, 3);
                 if (LocFlags[0])
-                    cos.WriteRawBytes(Orientation.Encode(6));
+                    Orientation.Encode(cos, 6);
                 else
                     cos.WriteRawZigZagFloat(Orientation.X, 6);
                 cos.WriteRawBytes(LocomotionState.Encode(LocFlags));

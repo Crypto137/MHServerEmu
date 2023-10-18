@@ -120,7 +120,7 @@ namespace MHServerEmu.GameServer.Powers
                 if (Flags[8]) cos.WriteRawVarint32(Damage2);
                 if (Flags[9]) cos.WriteRawVarint32(Healing);
                 if (Flags[10]) cos.WriteRawVarint64(AssetGuid);
-                if (Flags[5]) cos.WriteRawBytes(Position.Encode(2));
+                if (Flags[5]) Position.Encode(cos, 2);
                 if (Flags[11]) cos.WriteRawVarint64(TransferToId);
 
                 cos.Flush();

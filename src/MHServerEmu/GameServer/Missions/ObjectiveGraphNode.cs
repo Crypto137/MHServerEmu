@@ -43,7 +43,7 @@ namespace MHServerEmu.GameServer.Missions
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
                 cos.WriteRawVarint64(Id);
-                cos.WriteRawBytes(Position.Encode());
+                Position.Encode(cos);
 
                 cos.WriteRawVarint64((ulong)Areas.Length);
                 for (int i = 0; i < Areas.Length; i++)

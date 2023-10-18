@@ -28,7 +28,7 @@ namespace MHServerEmu.GameServer.Entities.Locomotion
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                cos.WriteRawBytes(Vertex.Encode());
+                Vertex.Encode(cos, 3);
                 cos.WriteRawInt32(VertexSideRadius);
 
                 cos.Flush();
