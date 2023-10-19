@@ -29,22 +29,25 @@ namespace MHServerEmu.Networking
             Payload = stream.ReadRawBytes((int)stream.ReadRawVarint32());
         }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
+        {
+            stream.WriteRawVarint32(Id);
+            stream.WriteRawVarint32((uint)Payload.Length);
+            stream.WriteRawBytes(Payload);
+        }
+
+        public byte[] Serialize()
         {
             using (MemoryStream ms = new())
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                cos.WriteRawVarint32(Id);
-                cos.WriteRawVarint32((uint)Payload.Length);
-                cos.WriteRawBytes(Payload);
-
+                Encode(cos);
                 cos.Flush();
                 return ms.ToArray();
             }
         }
 
-        public IMessage Deserialize(Type enumType)
+        public IMessage DeserializePayload(Type enumType)
         {
             string messageName = ProtocolDispatchTable.GetMessageName(enumType, Id);
 

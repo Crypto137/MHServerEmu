@@ -16,31 +16,7 @@ namespace MHServerEmu.Networking
         {
             get
             {
-                byte[] bodyBuffer = Array.Empty<byte>();
-                if (_muxCommand == MuxCommand.Data)
-                {
-                    if (_messageList.Count > 0)
-                    {
-                        using (MemoryStream ms = new())
-                        {
-                            CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                            foreach (GameMessage message in _messageList)
-                            {
-                                cos.WriteRawVarint32(message.Id);
-                                cos.WriteRawVarint32((uint)message.Payload.Length);
-                                cos.WriteRawBytes(message.Payload);
-                            }
-
-                            cos.Flush();
-                            bodyBuffer = ms.ToArray();
-                        }
-                    }
-                    else
-                    {
-                        Logger.Warn("Data packet contains no messages!");
-                    }
-                }
+                byte[] bodyBuffer = SerializeBody();
 
                 using (MemoryStream stream = new())
                 using (BinaryWriter writer = new(stream))
@@ -62,5 +38,25 @@ namespace MHServerEmu.Networking
 
         public void AddMessage(GameMessage message) => _messageList.Add(message);
         public void AddMessages(IEnumerable<GameMessage> messages) => _messageList.AddRange(messages);
+
+        private byte[] SerializeBody()
+        {
+            if (_muxCommand != MuxCommand.Data)
+                return Array.Empty<byte>();
+
+            if (_messageList.Count == 0)
+            {
+                Logger.Warn("Data packet contains no messages!");
+                return Array.Empty<byte>();
+            }
+
+            using (MemoryStream ms = new())
+            {
+                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+                foreach (GameMessage message in _messageList) message.Encode(cos);
+                cos.Flush();
+                return ms.ToArray();
+            }
+        }
     }
 }

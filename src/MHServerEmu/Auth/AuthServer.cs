@@ -169,7 +169,7 @@ namespace MHServerEmu.Auth
                         .SetHasnews(ConfigManager.Frontend.ShowNewsOnLogin)
                         .SetNewsurl(ConfigManager.Frontend.NewsUrl)
                         .SetSuccess(true)
-                        .Build()).Encode();
+                        .Build()).Serialize();
 
                     response.KeepAlive = false;
                     response.ContentType = "application/octet-stream";
@@ -194,7 +194,7 @@ namespace MHServerEmu.Auth
             byte[] buffer = new GameMessage(AuthTicket.CreateBuilder()
                 .SetSessionId(0)
                 .SetTosurl("http://localhost/tos")  // The client adds &locale=en_us to this url (or another locale code)
-                .Build()).Encode();
+                .Build()).Serialize();
 
             response.StatusCode = (int)AuthStatusCode.NeedToAcceptLegal;
             response.KeepAlive = false;
