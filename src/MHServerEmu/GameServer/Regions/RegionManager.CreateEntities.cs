@@ -146,14 +146,12 @@ namespace MHServerEmu.GameServer.Regions
 
                         if (marker.Contains("Entity/Characters/") || (addProp && marker.Contains("Entity/Props/")))
                         {
-                            entityPosition = entityMarker.Position + areaOrigin;
-
-                            bool snapToFloor;
+                            entityPosition = entityMarker.Position + areaOrigin;                            
 
                             ulong proto = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
                             bool entitySnapToFloor = GetSnapToFloorOnSpawn(proto);
 
-                            snapToFloor = (entityMarker.OverrideSnapToFloor == 1) ? (entityMarker.OverrideSnapToFloorValue == 1) : entitySnapToFloor;
+                            bool snapToFloor = (entityMarker.OverrideSnapToFloor == 1) ? (entityMarker.OverrideSnapToFloorValue == 1) : entitySnapToFloor;
 
                             if (snapToFloor)
                             {
