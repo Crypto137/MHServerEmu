@@ -25,19 +25,11 @@ namespace MHServerEmu.GameServer.Entities
             Slot = slot;
         }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                cos.WriteRawVarint64(ContainerEntityId);
-                cos.WritePrototypeEnum(InventoryPrototypeId, PrototypeEnumType.Inventory);
-                cos.WriteRawVarint64(Slot);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawVarint64(ContainerEntityId);
+            stream.WritePrototypeEnum(InventoryPrototypeId, PrototypeEnumType.Inventory);
+            stream.WriteRawVarint64(Slot);
         }
 
         public override string ToString()

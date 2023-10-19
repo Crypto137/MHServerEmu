@@ -65,7 +65,7 @@ namespace MHServerEmu.GameServer.Entities
 
             stream.WriteRawString(TransitionName);
             stream.WriteRawVarint64((ulong)Destinations.Length);
-            foreach (Destination destination in Destinations) stream.WriteRawBytes(destination.Encode());
+            foreach (Destination destination in Destinations) destination.Encode(stream);
         }
 
         protected override void BuildString(StringBuilder sb)
@@ -139,37 +139,29 @@ namespace MHServerEmu.GameServer.Entities
             UnkId2 = unkId2;
         }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+            stream.WriteRawInt32(Type);
 
-                cos.WriteRawInt32(Type);
+            stream.WritePrototypeEnum(Region, PrototypeEnumType.All);
+            stream.WritePrototypeEnum(Area, PrototypeEnumType.All);
+            stream.WritePrototypeEnum(Cell, PrototypeEnumType.All);
+            stream.WritePrototypeEnum(Entity, PrototypeEnumType.All);
+            stream.WritePrototypeEnum(Target, PrototypeEnumType.All);
 
-                cos.WritePrototypeEnum(Region, PrototypeEnumType.All);
-                cos.WritePrototypeEnum(Area, PrototypeEnumType.All);
-                cos.WritePrototypeEnum(Cell, PrototypeEnumType.All);
-                cos.WritePrototypeEnum(Entity, PrototypeEnumType.All);
-                cos.WritePrototypeEnum(Target, PrototypeEnumType.All);
+            stream.WriteRawInt32(Unk2);
 
-                cos.WriteRawInt32(Unk2);
+            stream.WriteRawString(Name);
+            stream.WriteRawVarint64(NameId);
 
-                cos.WriteRawString(Name);
-                cos.WriteRawVarint64(NameId);
+            stream.WriteRawVarint64(RegionId);
 
-                cos.WriteRawVarint64(RegionId);
+            stream.WriteRawFloat(Position.X);
+            stream.WriteRawFloat(Position.Y);
+            stream.WriteRawFloat(Position.Z);
 
-                cos.WriteRawFloat(Position.X);
-                cos.WriteRawFloat(Position.Y);
-                cos.WriteRawFloat(Position.Z);
-
-                cos.WriteRawVarint64(UnkId1);
-                cos.WriteRawVarint64(UnkId2);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawVarint64(UnkId1);
+            stream.WriteRawVarint64(UnkId2);
         }
         public override string ToString()
         {

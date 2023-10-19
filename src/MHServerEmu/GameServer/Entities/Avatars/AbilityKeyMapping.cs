@@ -43,25 +43,17 @@ namespace MHServerEmu.GameServer.Entities.Avatars
             boolEncoder.EncodeBool(ShouldPersist);
         }
 
-        public byte[] Encode(BoolEncoder boolEncoder)
+        public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+            stream.WriteRawInt32(PowerSpecIndex);
+            boolEncoder.WriteBuffer(stream);   // ShouldPersist
+            stream.WritePrototypeEnum(AssociatedTransformMode, PrototypeEnumType.All);
+            stream.WritePrototypeEnum(Slot0, PrototypeEnumType.All);
+            stream.WritePrototypeEnum(Slot1, PrototypeEnumType.All);
 
-                cos.WriteRawInt32(PowerSpecIndex);
-                boolEncoder.WriteBuffer(cos);   // ShouldPersist
-                cos.WritePrototypeEnum(AssociatedTransformMode, PrototypeEnumType.All);
-                cos.WritePrototypeEnum(Slot0, PrototypeEnumType.All);
-                cos.WritePrototypeEnum(Slot1, PrototypeEnumType.All);
-
-                cos.WriteRawVarint64((ulong)PowerSlots.Length);
-                foreach (ulong powerSlot in PowerSlots)
-                    cos.WritePrototypeEnum(powerSlot, PrototypeEnumType.All);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawVarint64((ulong)PowerSlots.Length);
+            foreach (ulong powerSlot in PowerSlots)
+                stream.WritePrototypeEnum(powerSlot, PrototypeEnumType.All);
         }
 
         public override string ToString()

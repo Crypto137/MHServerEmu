@@ -44,28 +44,18 @@ namespace MHServerEmu.GameServer.Powers
             PowerRefCount = Flags[0] ? 1 : stream.ReadRawVarint32();
         }
 
-        public PowerCollectionRecord() {
-            IndexProps = new();
-        }
+        public PowerCollectionRecord() { IndexProps = new(); }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                cos.WritePrototypeEnum(PowerPrototypeId, PrototypeEnumType.Power);
-                cos.WriteRawVarint32(Flags.ToUInt32());
-                if (Flags[1] == false) cos.WriteRawVarint32(IndexProps.PowerRank);
-                if (Flags[2] == false && Flags[3] == false) cos.WriteRawVarint32(IndexProps.CharacterLevel);
-                if (Flags[4] == false && Flags[5] == false && Flags[6] == false) cos.WriteRawVarint32(IndexProps.CombatLevel);
-                if (Flags[7] == false) cos.WriteRawVarint32(IndexProps.ItemLevel);
-                if (Flags[8] == false) cos.WriteRawFloat(IndexProps.ItemVariation);
-                if (Flags[0] == false) cos.WriteRawVarint32(PowerRefCount);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WritePrototypeEnum(PowerPrototypeId, PrototypeEnumType.Power);
+            stream.WriteRawVarint32(Flags.ToUInt32());
+            if (Flags[1] == false) stream.WriteRawVarint32(IndexProps.PowerRank);
+            if (Flags[2] == false && Flags[3] == false) stream.WriteRawVarint32(IndexProps.CharacterLevel);
+            if (Flags[4] == false && Flags[5] == false && Flags[6] == false) stream.WriteRawVarint32(IndexProps.CombatLevel);
+            if (Flags[7] == false) stream.WriteRawVarint32(IndexProps.ItemLevel);
+            if (Flags[8] == false) stream.WriteRawFloat(IndexProps.ItemVariation);
+            if (Flags[0] == false) stream.WriteRawVarint32(PowerRefCount);
         }
 
         public override string ToString()

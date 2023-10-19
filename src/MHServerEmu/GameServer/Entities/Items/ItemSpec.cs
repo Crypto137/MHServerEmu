@@ -41,25 +41,18 @@ namespace MHServerEmu.GameServer.Entities.Items
             EquippableBy = equippableBy;
         }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);                
+            stream.WritePrototypeEnum(ItemProto, PrototypeEnumType.All);
+            stream.WritePrototypeEnum(Rarity, PrototypeEnumType.All);
+            stream.WriteRawInt32(ItemLevel);
+            stream.WriteRawInt32(CreditsAmount);
 
-                cos.WritePrototypeEnum(ItemProto, PrototypeEnumType.All);
-                cos.WritePrototypeEnum(Rarity, PrototypeEnumType.All);
-                cos.WriteRawInt32(ItemLevel);
-                cos.WriteRawInt32(CreditsAmount);
+            foreach (AffixSpec affixSpec in AffixSpec) affixSpec.Encode(stream);
 
-                foreach (AffixSpec affixSpec in AffixSpec) cos.WriteRawBytes(affixSpec.Encode());
-
-                cos.WritePrototypeEnum(EquippableBy, PrototypeEnumType.All);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WritePrototypeEnum(EquippableBy, PrototypeEnumType.All);
         }
+
         public override string ToString()
         {
             StringBuilder sb = new();

@@ -22,18 +22,10 @@ namespace MHServerEmu.GameServer.Entities.Locomotion
             VertexSideRadius = vertexSideRadius;
         }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                Vertex.Encode(cos, 3);
-                cos.WriteRawInt32(VertexSideRadius);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            Vertex.Encode(stream, 3);
+            stream.WriteRawInt32(VertexSideRadius);
         }
 
         public override string ToString()

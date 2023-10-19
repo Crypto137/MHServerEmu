@@ -49,30 +49,22 @@ namespace MHServerEmu.GameServer.Powers
 
         public Condition() { }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                cos.WriteRawVarint32(Flags.ToUInt32());
-                cos.WriteRawVarint64(Id);
-                if (Flags[0] == false) cos.WriteRawVarint64(CreatorId);
-                if (Flags[1] == false) cos.WriteRawVarint64(UltimateCreatorId);
-                if (Flags[2] == false) cos.WritePrototypeEnum(ConditionPrototypeId, PrototypeEnumType.All);
-                if (Flags[3] == false) cos.WritePrototypeEnum(CreatorPowerPrototypeId, PrototypeEnumType.All);
-                if (Flags[4]) cos.WriteRawVarint64(Index);
-                if (Flags[9]) cos.WriteRawVarint64(EngineAssetGuid);
-                cos.WriteRawInt64(StartTime);
-                if (Flags[6]) cos.WriteRawInt64(PauseTime);
-                if (Flags[7]) cos.WriteRawInt64(Duration);
-                if (Flags[10]) cos.WriteRawInt32(UpdateInterval);
-                PropertyCollection.Encode(cos);
-                if (Flags[11]) cos.WriteRawVarint32(CancelOnFlags);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawVarint32(Flags.ToUInt32());
+            stream.WriteRawVarint64(Id);
+            if (Flags[0] == false) stream.WriteRawVarint64(CreatorId);
+            if (Flags[1] == false) stream.WriteRawVarint64(UltimateCreatorId);
+            if (Flags[2] == false) stream.WritePrototypeEnum(ConditionPrototypeId, PrototypeEnumType.All);
+            if (Flags[3] == false) stream.WritePrototypeEnum(CreatorPowerPrototypeId, PrototypeEnumType.All);
+            if (Flags[4]) stream.WriteRawVarint64(Index);
+            if (Flags[9]) stream.WriteRawVarint64(EngineAssetGuid);
+            stream.WriteRawInt64(StartTime);
+            if (Flags[6]) stream.WriteRawInt64(PauseTime);
+            if (Flags[7]) stream.WriteRawInt64(Duration);
+            if (Flags[10]) stream.WriteRawInt32(UpdateInterval);
+            PropertyCollection.Encode(stream);
+            if (Flags[11]) stream.WriteRawVarint32(CancelOnFlags);
         }
 
         public override string ToString()

@@ -119,13 +119,13 @@ namespace MHServerEmu.GameServer.Entities
                     stream.WriteRawZigZagFloat(Orientation.X, 6);
             }
 
-            if (LocFlags[1] == false) stream.WriteRawBytes(LocomotionState.Encode(LocFlags));
+            if (LocFlags[1] == false) LocomotionState.Encode(stream, LocFlags);
             if (Flags[11]) stream.WriteRawZigZagFloat(BoundsScaleOverride, 8);
             if (Flags[3]) stream.WriteRawVarint64(SourceEntityId);
             if (Flags[4]) SourcePosition.Encode(stream, 3);
             if (Flags[1]) stream.WritePrototypeEnum(ActivePowerPrototypeId, PrototypeEnumType.Power);
-            if (Flags[6]) stream.WriteRawBytes(InvLoc.Encode());
-            if (Flags[7]) stream.WriteRawBytes(InvLocPrev.Encode());
+            if (Flags[6]) InvLoc.Encode(stream);
+            if (Flags[7]) InvLocPrev.Encode(stream);
 
             if (Flags[14])
             {

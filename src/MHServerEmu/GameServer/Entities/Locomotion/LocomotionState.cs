@@ -52,28 +52,20 @@ namespace MHServerEmu.GameServer.Entities.Locomotion
             LocomotionPathNodes = locomotionPathNodes;
         }
 
-        public byte[] Encode(bool[] flags)
+        public void Encode(CodedOutputStream stream, bool[] flags)
         {
-            using (MemoryStream ms = new())
+            if (flags[3]) stream.WriteRawVarint64(LocomotionFlags);
+            if (flags[4]) stream.WriteRawVarint32(Method);
+            if (flags[7]) stream.WriteRawZigZagFloat(MoveSpeed, 0);
+            if (flags[8]) stream.WriteRawVarint32(Height);
+            if (flags[9]) stream.WriteRawVarint64(FollowEntityId);
+            if (flags[10]) FollowEntityRange.Encode(stream, 0);
+
+            if (flags[5])
             {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                if (flags[3]) cos.WriteRawVarint64(LocomotionFlags);
-                if (flags[4]) cos.WriteRawVarint32(Method);
-                if (flags[7]) cos.WriteRawZigZagFloat(MoveSpeed, 0);
-                if (flags[8]) cos.WriteRawVarint32(Height);
-                if (flags[9]) cos.WriteRawVarint64(FollowEntityId);
-                if (flags[10]) FollowEntityRange.Encode(cos, 0);
-
-                if (flags[5])
-                {
-                    cos.WriteRawVarint32(PathNodeUInt);
-                    cos.WriteRawVarint64((ulong)LocomotionPathNodes.Length);
-                    foreach (LocomotionPathNode naviVector in LocomotionPathNodes) cos.WriteRawBytes(naviVector.Encode());
-                }
-
-                cos.Flush();
-                return ms.ToArray();
+                stream.WriteRawVarint32(PathNodeUInt);
+                stream.WriteRawVarint64((ulong)LocomotionPathNodes.Length);
+                foreach (LocomotionPathNode naviVector in LocomotionPathNodes) naviVector.Encode(stream);
             }
         }
 

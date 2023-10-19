@@ -76,7 +76,7 @@ namespace MHServerEmu.GameServer.Entities.Avatars
             if (HasGuildInfo) GuildInfo.Encode(stream);
 
             stream.WriteRawVarint64((ulong)AbilityKeyMappings.Length);
-            foreach (AbilityKeyMapping keyMap in AbilityKeyMappings) stream.WriteRawBytes(keyMap.Encode(boolEncoder));
+            foreach (AbilityKeyMapping keyMap in AbilityKeyMappings) keyMap.Encode(stream, boolEncoder);
         }
 
         protected override void BuildString(StringBuilder sb)

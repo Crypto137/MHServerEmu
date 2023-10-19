@@ -65,7 +65,7 @@ namespace MHServerEmu.GameServer.Entities.Avatars
                     Orientation.Encode(cos, 6);
                 else
                     cos.WriteRawZigZagFloat(Orientation.X, 6);
-                cos.WriteRawBytes(LocomotionState.Encode(LocFlags));
+                LocomotionState.Encode(cos, LocFlags);
 
                 cos.Flush();
                 return ms.ToArray();

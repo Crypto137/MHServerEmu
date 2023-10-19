@@ -44,7 +44,7 @@ namespace MHServerEmu.GameServer.Powers
 
                 cos.WriteRawVarint32(ReplicationPolicy);
                 cos.WriteRawVarint64(EntityId);
-                cos.WriteRawBytes(Condition.Encode());
+                Condition.Encode(cos);
 
                 cos.Flush();
                 return ms.ToArray();

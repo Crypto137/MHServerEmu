@@ -87,18 +87,15 @@ namespace MHServerEmu.GameServer.Entities
             base.Encode(stream);
 
             stream.WriteRawVarint64((ulong)TrackingContextMap.Length);
-            foreach (EntityTrackingContextMap entry in TrackingContextMap)
-                stream.WriteRawBytes(entry.Encode());
+            foreach (EntityTrackingContextMap entry in TrackingContextMap) entry.Encode(stream);
 
             stream.WriteRawVarint64((ulong)ConditionCollection.Length);
-            foreach (Condition condition in ConditionCollection)
-                stream.WriteRawBytes(condition.Encode());
+            foreach (Condition condition in ConditionCollection) condition.Encode(stream);
 
             if ((ReplicationPolicy & 0x1) > 0)
             {
                 stream.WriteRawVarint32((uint)PowerCollection.Length);
-                for (int i = 0; i < PowerCollection.Length; i++)
-                    stream.WriteRawBytes(PowerCollection[i].Encode());
+                for (int i = 0; i < PowerCollection.Length; i++) PowerCollection[i].Encode(stream);
             }
 
             stream.WriteRawInt32(UnkEvent);

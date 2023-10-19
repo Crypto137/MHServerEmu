@@ -25,20 +25,13 @@ namespace MHServerEmu.GameServer.Entities.Items
             Seed = seed;
         }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                cos.WritePrototypeEnum(AffixProto, PrototypeEnumType.All);
-                cos.WritePrototypeEnum(ScopeProto, PrototypeEnumType.All);
-                cos.WriteRawInt32(Seed);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WritePrototypeEnum(AffixProto, PrototypeEnumType.All);
+            stream.WritePrototypeEnum(ScopeProto, PrototypeEnumType.All);
+            stream.WriteRawInt32(Seed);
         }
+
         public override string ToString()
         {
             StringBuilder sb = new();

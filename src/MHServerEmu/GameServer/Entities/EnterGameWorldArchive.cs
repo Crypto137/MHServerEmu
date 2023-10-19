@@ -92,7 +92,7 @@ namespace MHServerEmu.GameServer.Entities
                 else
                     cos.WriteRawZigZagFloat(Orientation.X, 6);
 
-                if (Flags[1] == false) cos.WriteRawBytes(LocomotionState.Encode(Flags));
+                if (Flags[1] == false) LocomotionState.Encode(cos, Flags);
                 if (Flags[12]) cos.WriteRawVarint32(UnknownSetting);
 
                 cos.Flush();

@@ -22,18 +22,10 @@ namespace MHServerEmu.GameServer.Common
             Flag = value;
         }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                cos.WritePrototypeEnum(Context, PrototypeEnumType.All);
-                cos.WriteRawVarint32(Flag);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WritePrototypeEnum(Context, PrototypeEnumType.All);
+            stream.WriteRawVarint32(Flag);
         }
 
         public override string ToString()

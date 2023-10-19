@@ -32,7 +32,7 @@ namespace MHServerEmu.GameServer.Entities.Items
         {
             base.Encode(stream);
 
-            stream.WriteRawBytes(ItemSpec.Encode());
+            ItemSpec.Encode(stream);
         }
 
         protected override void BuildString(StringBuilder sb)
