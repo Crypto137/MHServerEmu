@@ -36,30 +36,22 @@ namespace MHServerEmu.GameServer.Missions
 
         public ObjectiveGraphNode() { }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+            stream.WriteRawVarint64(Id);
+            Position.Encode(stream);
 
-                cos.WriteRawVarint64(Id);
-                Position.Encode(cos);
+            stream.WriteRawVarint64((ulong)Areas.Length);
+            for (int i = 0; i < Areas.Length; i++)
+                stream.WriteRawVarint64(Areas[i]);
 
-                cos.WriteRawVarint64((ulong)Areas.Length);
-                for (int i = 0; i < Areas.Length; i++)
-                    cos.WriteRawVarint64(Areas[i]);
+            stream.WriteRawVarint64((ulong)Cells.Length);
+            for (int i = 0; i < Cells.Length; i++)
+                stream.WriteRawVarint64(Cells[i]);
 
-                cos.WriteRawVarint64((ulong)Cells.Length);
-                for (int i = 0; i < Cells.Length; i++)
-                    cos.WriteRawVarint64(Cells[i]);
+            stream.WriteRawInt32(Type);
 
-                cos.WriteRawInt32(Type);
-
-                cos.WriteRawInt32(Index);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawInt32(Index);
         }
 
         public override string ToString()

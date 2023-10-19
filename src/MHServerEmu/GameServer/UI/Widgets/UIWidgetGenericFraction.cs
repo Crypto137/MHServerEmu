@@ -22,23 +22,15 @@ namespace MHServerEmu.GameServer.UI.Widgets
             TimePaused = boolDecoder.ReadBool(stream);
         }
 
-        public override byte[] Encode(BoolEncoder boolEncoder)
+        public override void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+            base.Encode(stream, boolEncoder);
 
-                WriteParentFields(cos);
-
-                cos.WriteRawInt32(CurrentCount);
-                cos.WriteRawInt32(TotalCount);
-                cos.WriteRawVarint64(TimeStart);
-                cos.WriteRawVarint64(TimeEnd);
-                boolEncoder.WriteBuffer(cos);   // TimePaused
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawInt32(CurrentCount);
+            stream.WriteRawInt32(TotalCount);
+            stream.WriteRawVarint64(TimeStart);
+            stream.WriteRawVarint64(TimeEnd);
+            boolEncoder.WriteBuffer(stream);   // TimePaused
         }
 
         public override void EncodeBools(BoolEncoder boolEncoder)
@@ -46,18 +38,15 @@ namespace MHServerEmu.GameServer.UI.Widgets
             boolEncoder.EncodeBool(TimePaused);
         }
 
-        public override string ToString()
+        protected override void BuildString(StringBuilder sb)
         {
-            StringBuilder sb = new();
-            WriteParentString(sb);
+            base.BuildString(sb);
 
             sb.AppendLine($"CurrentCount: {CurrentCount}");
             sb.AppendLine($"TotalCount: {TotalCount}");
             sb.AppendLine($"TimeStart: {TimeStart}");
             sb.AppendLine($"TimeEnd: {TimeEnd}");
             sb.AppendLine($"TimePaused: {TimePaused}");
-
-            return sb.ToString();
         }
     }
 }

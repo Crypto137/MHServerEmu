@@ -16,21 +16,13 @@ namespace MHServerEmu.GameServer.UI.Widgets
                 FilterEntries[i] = new(stream, boolDecoder);
         }
 
-        public override byte[] Encode(BoolEncoder boolEncoder)
+        public override void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+            base.Encode(stream, boolEncoder);
 
-                WriteParentFields(cos);
-
-                cos.WriteRawVarint64((ulong)FilterEntries.Length);
-                for (int i = 0; i < FilterEntries.Length; i++)
-                    cos.WriteRawBytes(FilterEntries[i].Encode(boolEncoder));
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawVarint64((ulong)FilterEntries.Length);
+            for (int i = 0; i < FilterEntries.Length; i++)
+                FilterEntries[i].Encode(stream, boolEncoder);
         }
 
         public override void EncodeBools(BoolEncoder boolEncoder)
@@ -39,12 +31,11 @@ namespace MHServerEmu.GameServer.UI.Widgets
                 entry.EncodeBools(boolEncoder);
         }
 
-        public override string ToString()
+        protected override void BuildString(StringBuilder sb)
         {
-            StringBuilder sb = new();
-            WriteParentString(sb);
+            base.BuildString(sb);
+
             for (int i = 0; i < FilterEntries.Length; i++) sb.AppendLine($"FilterEntry{i}: {FilterEntries[i]}");
-            return sb.ToString();
         }
     }
 
@@ -62,21 +53,13 @@ namespace MHServerEmu.GameServer.UI.Widgets
                 KnownEntityEntries[i] = new(stream, boolDecoder);
         }
 
-        public byte[] Encode(BoolEncoder boolEncoder)
+        public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+            stream.WriteRawVarint64(Index);
 
-                cos.WriteRawVarint64(Index);
-
-                cos.WriteRawVarint64((ulong)KnownEntityEntries.Length);
-                for (int i = 0; i < KnownEntityEntries.Length; i++)
-                    cos.WriteRawBytes(KnownEntityEntries[i].Encode(boolEncoder));
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawVarint64((ulong)KnownEntityEntries.Length);
+            for (int i = 0; i < KnownEntityEntries.Length; i++)
+                KnownEntityEntries[i].Encode(stream, boolEncoder);
         }
 
         public void EncodeBools(BoolEncoder boolEncoder)
@@ -117,24 +100,16 @@ namespace MHServerEmu.GameServer.UI.Widgets
             PropertyEntryIndex = stream.ReadRawInt32();
         }
 
-        public byte[] Encode(BoolEncoder boolEncoder)
+        public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                cos.WriteRawVarint64(EntryId);
-                cos.WriteRawInt32(State);
-                cos.WriteRawInt32(HealthPercent);
-                cos.WriteRawInt32(IconIndexForHealthPercentEval);
-                boolEncoder.WriteBuffer(cos);   // ForceRefreshEntityHealthPercent
-                cos.WriteRawVarint64(EnrageStartTime);
-                boolEncoder.WriteBuffer(cos);   // HasPropertyEntryEval
-                cos.WriteRawInt32(PropertyEntryIndex);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawVarint64(EntryId);
+            stream.WriteRawInt32(State);
+            stream.WriteRawInt32(HealthPercent);
+            stream.WriteRawInt32(IconIndexForHealthPercentEval);
+            boolEncoder.WriteBuffer(stream);   // ForceRefreshEntityHealthPercent
+            stream.WriteRawVarint64(EnrageStartTime);
+            boolEncoder.WriteBuffer(stream);   // HasPropertyEntryEval
+            stream.WriteRawInt32(PropertyEntryIndex);
         }
 
         public void EncodeBools(BoolEncoder boolEncoder)

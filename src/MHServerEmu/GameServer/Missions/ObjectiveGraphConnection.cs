@@ -19,19 +19,11 @@ namespace MHServerEmu.GameServer.Missions
 
         public ObjectiveGraphConnection() { }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                cos.WriteRawInt32(Node0);
-                cos.WriteRawInt32(Node1);
-                cos.WriteRawFloat(Distance);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawInt32(Node0);
+            stream.WriteRawInt32(Node1);
+            stream.WriteRawFloat(Distance);
         }
 
         public override string ToString()

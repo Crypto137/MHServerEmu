@@ -15,31 +15,20 @@ namespace MHServerEmu.GameServer.UI.Widgets
             MissionObjectiveName = stream.ReadRawVarint64();
         }
 
-        public override byte[] Encode(BoolEncoder boolEncoder)
+        public override void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+            base.Encode(stream, boolEncoder);
 
-                WriteParentFields(cos);
-
-                cos.WriteRawVarint64(MissionName);
-                cos.WriteRawVarint64(MissionObjectiveName);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawVarint64(MissionName);
+            stream.WriteRawVarint64(MissionObjectiveName);
         }
 
-        public override string ToString()
+        protected override void BuildString(StringBuilder sb)
         {
-            StringBuilder sb = new();
-            WriteParentString(sb);
+            base.BuildString(sb);
 
             sb.AppendLine($"MissionName: {MissionName}");
             sb.AppendLine($"MissionObjectiveName: {MissionObjectiveName}");
-
-            return sb.ToString();
         }
     }
 }

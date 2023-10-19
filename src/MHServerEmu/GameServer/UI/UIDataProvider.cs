@@ -53,19 +53,11 @@ namespace MHServerEmu.GameServer.UI
             }
         }
 
-        public virtual byte[] Encode(BoolEncoder boolEncoder)
+        public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                cos.WriteRawVarint32((uint)UISyncData.Length);
-                foreach (UISyncData data in UISyncData)
-                    cos.WriteRawBytes(data.Encode(boolEncoder));
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawVarint32((uint)UISyncData.Length);
+            foreach (UISyncData data in UISyncData)
+                data.Encode(stream, boolEncoder);
         }
 
         public void EncodeBools(BoolEncoder boolEncoder)

@@ -19,27 +19,7 @@ namespace MHServerEmu.GameServer.UI
             Areas = areas;
         }
 
-        public virtual byte[] Encode(BoolEncoder boolEncoder)
-        {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-                WriteParentFields(cos);
-                cos.Flush();
-                return ms.ToArray();
-            }
-        }
-
-        public virtual void EncodeBools(BoolEncoder boolEncoder) { }
-
-        public override string ToString()
-        {
-            StringBuilder sb = new();
-            WriteParentString(sb);
-            return sb.ToString();
-        }
-
-        protected void WriteParentFields(CodedOutputStream stream)
+        public virtual void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
             stream.WritePrototypeEnum(WidgetR, PrototypeEnumType.All);
             stream.WritePrototypeEnum(ContextR, PrototypeEnumType.All);
@@ -49,7 +29,16 @@ namespace MHServerEmu.GameServer.UI
                 stream.WritePrototypeEnum(Areas[i], PrototypeEnumType.All);
         }
 
-        protected void WriteParentString(StringBuilder sb)
+        public virtual void EncodeBools(BoolEncoder boolEncoder) { }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new();
+            BuildString(sb);
+            return sb.ToString();
+        }
+
+        protected virtual void BuildString(StringBuilder sb)
         {
             sb.AppendLine($"WidgetR: {GameDatabase.GetPrototypeName(WidgetR)}");
             sb.AppendLine($"ContextR: {GameDatabase.GetPrototypeName(ContextR)}");

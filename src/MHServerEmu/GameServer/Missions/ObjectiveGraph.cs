@@ -21,23 +21,13 @@ namespace MHServerEmu.GameServer.Missions
 
         public ObjectiveGraph() { }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+            stream.WriteRawVarint64((ulong)Nodes.Length);
+            for (int i = 0; i < Nodes.Length; i++) Nodes[i].Encode(stream);
 
-                cos.WriteRawVarint64((ulong)Nodes.Length);
-                for (int i = 0; i < Nodes.Length; i++)
-                    cos.WriteRawBytes(Nodes[i].Encode());
-
-                cos.WriteRawVarint64((ulong)Connections.Length);
-                for (int i = 0; i < Connections.Length; i++)
-                    cos.WriteRawBytes(Connections[i].Encode());
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawVarint64((ulong)Connections.Length);
+            for (int i = 0; i < Connections.Length; i++) Connections[i].Encode(stream);
         }
 
         public override string ToString()

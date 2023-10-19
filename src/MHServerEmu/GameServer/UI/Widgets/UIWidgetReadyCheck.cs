@@ -16,29 +16,20 @@ namespace MHServerEmu.GameServer.UI.Widgets
                 PlayerReadyStates[i] = new(stream);
         }
 
-        public override byte[] Encode(BoolEncoder boolEncoder)
+        public override void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+            base.Encode(stream, boolEncoder);
 
-                WriteParentFields(cos);
-
-                cos.WriteRawVarint64((ulong)PlayerReadyStates.Length);
-                for (int i = 0; i < PlayerReadyStates.Length; i++)
-                    cos.WriteRawBytes(PlayerReadyStates[i].Encode());
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawVarint64((ulong)PlayerReadyStates.Length);
+            for (int i = 0; i < PlayerReadyStates.Length; i++)
+                PlayerReadyStates[i].Encode(stream);
         }
 
-        public override string ToString()
+        protected override void BuildString(StringBuilder sb)
         {
-            StringBuilder sb = new();
-            WriteParentString(sb);
+            base.BuildString(sb);
+
             for (int i = 0; i < PlayerReadyStates.Length; i++) sb.AppendLine($"PlayerReadyState{i}: {PlayerReadyStates[i]}");
-            return sb.ToString();
         }
     }
 
@@ -55,19 +46,11 @@ namespace MHServerEmu.GameServer.UI.Widgets
             ReadyCheck = stream.ReadRawInt32();
         }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                cos.WriteRawVarint64(Index);
-                cos.WriteRawString(PlayerName);
-                cos.WriteRawInt32(ReadyCheck);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawVarint64(Index);
+            stream.WriteRawString(PlayerName);
+            stream.WriteRawInt32(ReadyCheck);
         }
 
         public override string ToString()

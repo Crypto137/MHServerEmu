@@ -15,29 +15,20 @@ namespace MHServerEmu.GameServer.UI.Widgets
                 Callbacks[i] = stream.ReadRawVarint64();
         }
 
-        public override byte[] Encode(BoolEncoder boolEncoder)
+        public override void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+            base.Encode(stream, boolEncoder);
 
-                WriteParentFields(cos);
-
-                cos.WriteRawVarint64((ulong)Callbacks.Length);
-                for (int i = 0; i < Callbacks.Length; i++)
-                    cos.WriteRawVarint64(Callbacks[i]);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawVarint64((ulong)Callbacks.Length);
+            for (int i = 0; i < Callbacks.Length; i++)
+                stream.WriteRawVarint64(Callbacks[i]);
         }
 
-        public override string ToString()
+        protected override void BuildString(StringBuilder sb)
         {
-            StringBuilder sb = new();
-            WriteParentString(sb);
+            base.BuildString(sb);
+
             for (int i = 0; i < Callbacks.Length; i++) sb.AppendLine($"Callback{i}: {Callbacks[i]}");
-            return sb.ToString();
         }
     }
 }
