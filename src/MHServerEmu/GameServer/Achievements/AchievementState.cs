@@ -24,19 +24,11 @@ namespace MHServerEmu.GameServer.Achievements
             CompletedDate = completedDate;
         }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                cos.WriteRawVarint64(Id);
-                cos.WriteRawVarint64(Count);
-                cos.WriteRawVarint64(CompletedDate);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawVarint64(Id);
+            stream.WriteRawVarint64(Count);
+            stream.WriteRawVarint64(CompletedDate);
         }
 
         public NetMessageAchievementStateUpdate.Types.AchievementState ToNetStruct()

@@ -30,18 +30,10 @@ namespace MHServerEmu.GameServer.Entities.Options
             IsSubscribed = netStruct.IsSubscribed;
         }
 
-        public byte[] Encode(BoolEncoder boolEncoder)
+        public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                cos.WritePrototypeEnum(ChannelProtoId, PrototypeEnumType.All);
-                boolEncoder.WriteBuffer(cos);   // IsSubscribed
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WritePrototypeEnum(ChannelProtoId, PrototypeEnumType.All);
+            boolEncoder.WriteBuffer(stream);   // IsSubscribed
         }
 
         public NetStructChatChannelFilterState ToNetStruct() => NetStructChatChannelFilterState.CreateBuilder().SetChannelProtoId(ChannelProtoId).SetIsSubscribed(IsSubscribed).Build();

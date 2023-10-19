@@ -68,12 +68,12 @@ namespace MHServerEmu.GameServer.Entities.Avatars
             boolEncoder.Cook();
 
             // Encode
-            stream.WriteRawBytes(PlayerName.Encode());
+            PlayerName.Encode(stream);
             stream.WriteRawVarint64(OwnerPlayerDbId);
             stream.WriteRawString(GuildName);
 
             boolEncoder.WriteBuffer(stream);   // HasGuildInfo  
-            if (HasGuildInfo) stream.WriteRawBytes(GuildInfo.Encode());
+            if (HasGuildInfo) GuildInfo.Encode(stream);
 
             stream.WriteRawVarint64((ulong)AbilityKeyMappings.Length);
             foreach (AbilityKeyMapping keyMap in AbilityKeyMappings) stream.WriteRawBytes(keyMap.Encode(boolEncoder));

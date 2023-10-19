@@ -105,6 +105,7 @@ namespace MHServerEmu.GameServer.Entities
                 StashInventories[i] = stream.ReadPrototypeEnum(PrototypeEnumType.All);
 
             AvailableBadges = new uint[stream.ReadRawVarint64()];
+            for (int i = 0; i < AvailableBadges.Length; i++) AvailableBadges[i] = stream.ReadRawVarint32();
 
             GameplayOptions = new(stream, boolDecoder);
 
@@ -140,23 +141,23 @@ namespace MHServerEmu.GameServer.Entities
             AvatarPropertyCollection.Encode(stream);
 
             stream.WriteRawVarint64(ShardId);
-            stream.WriteRawBytes(Name.Encode());
+            Name.Encode(stream);
             stream.WriteRawVarint64(ConsoleAccountId1);
             stream.WriteRawVarint64(ConsoleAccountId2);
-            stream.WriteRawBytes(UnkName.Encode());
+            UnkName.Encode(stream);
             stream.WriteRawVarint64(MatchQueueStatus);
             boolEncoder.WriteBuffer(stream);   // EmailVerified
             stream.WriteRawVarint64(AccountCreationTimestamp);
 
-            stream.WriteRawBytes(PartyId.Encode());
+            PartyId.Encode(stream);
 
             boolEncoder.WriteBuffer(stream);   // HasGuildInfo
-            if (HasGuildInfo) stream.WriteRawBytes(GuildInfo.Encode());
+            if (HasGuildInfo) GuildInfo.Encode(stream);
 
             stream.WriteRawString(UnknownString);
 
             boolEncoder.WriteBuffer(stream);   // HasCommunity
-            if (HasCommunity) stream.WriteRawBytes(Community.Encode());
+            if (HasCommunity) Community.Encode(stream);
 
             boolEncoder.WriteBuffer(stream);   // UnkBool
 
@@ -164,18 +165,15 @@ namespace MHServerEmu.GameServer.Entities
             foreach (ulong stashInventory in StashInventories) stream.WritePrototypeEnum(stashInventory, PrototypeEnumType.All);
 
             stream.WriteRawVarint64((ulong)AvailableBadges.Length);
-            foreach (uint badge in AvailableBadges)
-                stream.WriteRawVarint64(badge);
+            foreach (uint badge in AvailableBadges) stream.WriteRawVarint32(badge);
 
-            stream.WriteRawBytes(GameplayOptions.Encode(boolEncoder));
+            GameplayOptions.Encode(stream, boolEncoder);
 
             stream.WriteRawVarint64((ulong)AchievementStates.Length);
-            foreach (AchievementState state in AchievementStates)
-                stream.WriteRawBytes(state.Encode());
+            foreach (AchievementState state in AchievementStates) state.Encode(stream);
 
             stream.WriteRawVarint64((ulong)StashTabOptions.Length);
-            foreach (StashTabOption option in StashTabOptions)
-                stream.WriteRawBytes(option.Encode());
+            foreach (StashTabOption option in StashTabOptions) option.Encode(stream);
         }
 
         protected override void BuildString(StringBuilder sb)

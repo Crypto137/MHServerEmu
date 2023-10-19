@@ -27,20 +27,12 @@ namespace MHServerEmu.GameServer.Social
             CommunityMemberList = communityMemberList;
         }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-  
-                cos.WriteRawInt32(CircleNames.Length);
-                foreach (string circleName in CircleNames) cos.WriteRawString(circleName);
-                cos.WriteRawInt32(CommunityMemberList.Count);
-                foreach (CommunityMember communityMember in CommunityMemberList) cos.WriteRawBytes(communityMember.Encode());
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawInt32(CircleNames.Length);
+            foreach (string circleName in CircleNames) stream.WriteRawString(circleName);
+            stream.WriteRawInt32(CommunityMemberList.Count);
+            foreach (CommunityMember communityMember in CommunityMemberList) communityMember.Encode(stream);
         }
 
         public override string ToString()

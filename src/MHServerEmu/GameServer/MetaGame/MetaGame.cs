@@ -34,7 +34,7 @@ namespace MHServerEmu.GameServer.MetaGame
         {
             base.Encode(stream);
 
-            stream.WriteRawBytes(Name.Encode());
+            Name.Encode(stream);
         }
 
         protected override void BuildString(StringBuilder sb)

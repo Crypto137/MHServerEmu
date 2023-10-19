@@ -82,31 +82,19 @@ namespace MHServerEmu.GameServer.Entities.Options
                 boolEncoder.EncodeBool(filter.IsSubscribed);
         }
 
-        public byte[] Encode(BoolEncoder boolEncoder)
+        public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+            stream.WriteRawVarint64((ulong)ChatChannelFilters.Length);
+            foreach (ChatChannelFilter filter in ChatChannelFilters) filter.Encode(stream, boolEncoder);
 
-                cos.WriteRawVarint64((ulong)ChatChannelFilters.Length);
-                foreach (ChatChannelFilter filter in ChatChannelFilters)
-                    cos.WriteRawBytes(filter.Encode(boolEncoder));
+            stream.WriteRawVarint64((ulong)ChatTabChannels.Length);
+            foreach (ulong channel in ChatTabChannels) stream.WritePrototypeEnum(channel, PrototypeEnumType.All);
 
-                cos.WriteRawVarint64((ulong)ChatTabChannels.Length);
-                foreach (ulong channel in ChatTabChannels)
-                    cos.WritePrototypeEnum(channel, PrototypeEnumType.All);
+            stream.WriteRawVarint64((ulong)OptionSettings.Length);
+            foreach (long setting in OptionSettings) stream.WriteRawVarint64((ulong)setting);
 
-                cos.WriteRawVarint64((ulong)OptionSettings.Length);
-                foreach (long setting in OptionSettings)
-                    cos.WriteRawVarint64((ulong)setting);
-
-                cos.WriteRawVarint64((ulong)ArmorRarityVaporizeThresholds.Length);
-                foreach (ArmorRarityVaporizeThreshold threshold in ArmorRarityVaporizeThresholds)
-                    cos.WriteRawBytes(threshold.Encode());
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawVarint64((ulong)ArmorRarityVaporizeThresholds.Length);
+            foreach (ArmorRarityVaporizeThreshold threshold in ArmorRarityVaporizeThresholds) threshold.Encode(stream);
         }
 
         public NetStructGameplayOptions ToNetStruct()

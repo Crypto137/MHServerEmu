@@ -24,19 +24,11 @@ namespace MHServerEmu.GameServer.Social
             GuildMembership = guildMembership;
         }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                cos.WriteRawVarint64(GuildId);
-                cos.WriteRawString(GuildList);
-                cos.WriteRawInt32(GuildMembership);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawVarint64(GuildId);
+            stream.WriteRawString(GuildList);
+            stream.WriteRawInt32(GuildMembership);
         }
 
         public override string ToString()

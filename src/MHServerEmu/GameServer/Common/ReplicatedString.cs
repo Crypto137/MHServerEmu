@@ -21,18 +21,10 @@ namespace MHServerEmu.GameServer.Common
             Text = text;
         }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                cos.WriteRawVarint64(ReplicationId);
-                cos.WriteRawString(Text);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawVarint64(ReplicationId);
+            stream.WriteRawString(Text);
         }
 
         public override string ToString()

@@ -23,18 +23,10 @@ namespace MHServerEmu.GameServer.Entities.Options
             RarityPrototypeId = rarityPrototypeId;
         }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                cos.WriteRawVarint64((ulong)Slot);
-                cos.WritePrototypeEnum(RarityPrototypeId, PrototypeEnumType.All);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawVarint64((ulong)Slot);
+            stream.WritePrototypeEnum(RarityPrototypeId, PrototypeEnumType.All);
         }
 
         public override string ToString()

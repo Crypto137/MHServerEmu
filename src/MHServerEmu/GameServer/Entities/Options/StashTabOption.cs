@@ -31,21 +31,13 @@ namespace MHServerEmu.GameServer.Entities.Options
             Field3 = field3;
         }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                cos.WritePrototypeEnum(PrototypeId, PrototypeEnumType.All);
-                cos.WriteRawString(Name);
-                cos.WriteRawVarint64(AssetRef);
-                cos.WriteRawInt32(Field2);
-                cos.WriteRawInt32(Field3);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WritePrototypeEnum(PrototypeId, PrototypeEnumType.All);
+            stream.WriteRawString(Name);
+            stream.WriteRawVarint64(AssetRef);
+            stream.WriteRawInt32(Field2);
+            stream.WriteRawInt32(Field3);
         }
 
         public override string ToString()

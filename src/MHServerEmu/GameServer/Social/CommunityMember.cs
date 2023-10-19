@@ -61,34 +61,25 @@ namespace MHServerEmu.GameServer.Social
             ArchiveCircleIds = archiveCircleIds;
         }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+            stream.WriteRawString(Name);
+            stream.WriteRawVarint64(DbId);
+            stream.WriteRawVarint64(RegionRef);
+            stream.WriteRawVarint64(DifficultyRef);
 
-                cos.WriteRawString(Name);
-                cos.WriteRawVarint64(DbId);
-                cos.WriteRawVarint64(RegionRef);
-                cos.WriteRawVarint64(DifficultyRef);
+            stream.WriteRawByte((byte)Slots.Length);
+            foreach (AvatarSlotInfo slot in Slots) slot.Encode(stream);
 
-                cos.WriteRawByte((byte)Slots.Length);
-                foreach (AvatarSlotInfo slot in Slots)
-                    cos.WriteRawBytes(slot.Encode());
+            stream.WriteRawInt32((int)OnlineStatus);
+            stream.WriteRawString(MemberName);
+            stream.WriteRawString(UnkName);
+            stream.WriteRawVarint64(ConsoleAccountId1);
+            stream.WriteRawVarint64(ConsoleAccountId2);
 
-                cos.WriteRawInt32((int)OnlineStatus);
-                cos.WriteRawString(MemberName);
-                cos.WriteRawString(UnkName);
-                cos.WriteRawVarint64(ConsoleAccountId1);
-                cos.WriteRawVarint64(ConsoleAccountId2);
-
-                cos.WriteRawInt32(ArchiveCircleIds.Length);
-                foreach (int circleId in ArchiveCircleIds)
-                    cos.WriteRawInt32(circleId);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WriteRawInt32(ArchiveCircleIds.Length);
+            foreach (int circleId in ArchiveCircleIds)
+                stream.WriteRawInt32(circleId);
         }
 
         public override string ToString()

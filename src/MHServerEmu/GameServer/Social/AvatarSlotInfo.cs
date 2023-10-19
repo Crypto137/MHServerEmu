@@ -28,20 +28,12 @@ namespace MHServerEmu.GameServer.Social
             PrestigeLevel = prestigeLevel;
         }
 
-        public byte[] Encode()
+        public void Encode(CodedOutputStream stream)
         {
-            using (MemoryStream ms = new())
-            {
-                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
-
-                cos.WritePrototypeEnum(AvatarRef, PrototypeEnumType.All);
-                cos.WritePrototypeEnum(CostumeRef, PrototypeEnumType.All);
-                cos.WriteRawInt32(AvatarLevel);
-                cos.WriteRawInt32(PrestigeLevel);
-
-                cos.Flush();
-                return ms.ToArray();
-            }
+            stream.WritePrototypeEnum(AvatarRef, PrototypeEnumType.All);
+            stream.WritePrototypeEnum(CostumeRef, PrototypeEnumType.All);
+            stream.WriteRawInt32(AvatarLevel);
+            stream.WriteRawInt32(PrestigeLevel);
         }
 
         public override string ToString()

@@ -26,8 +26,8 @@ namespace MHServerEmu.GameServer.MetaGame
         {
             base.Encode(stream);
 
-            stream.WriteRawBytes(Team1.Encode());
-            stream.WriteRawBytes(Team2.Encode());
+            Team1.Encode(stream);
+            Team2.Encode(stream);
         }
 
         protected override void BuildString(StringBuilder sb)
