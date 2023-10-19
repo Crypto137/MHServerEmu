@@ -110,7 +110,7 @@ namespace MHServerEmu.GameServer.Regions
             if (miniMap.IsRevealAll == false) miniMap.Map = Array.Empty<byte>();
 
             messageList.Add(new(NetMessageUpdateMiniMap.CreateBuilder()
-                .SetArchiveData(ByteString.CopyFrom(miniMap.Encode()))
+                .SetArchiveData(miniMap.Serialize())
                 .Build()));
 
             return messageList.ToArray();

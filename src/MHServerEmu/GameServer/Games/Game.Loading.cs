@@ -55,7 +55,7 @@ namespace MHServerEmu.GameServer.Games
 
             EnterGameWorldArchive avatarEnterGameWorldArchive = new((ulong)account.Player.Avatar.ToEntityId(), region.EntrancePosition, region.EntranceOrientation.X, 350f);
             messageList.Add(new(NetMessageEntityEnterGameWorld.CreateBuilder()
-                .SetArchiveData(ByteString.CopyFrom(avatarEnterGameWorldArchive.Encode()))
+                .SetArchiveData(avatarEnterGameWorldArchive.Serialize())
                 .Build()));
 
             WorldEntity[] regionEntities = EntityManager.GetWorldEntitiesForRegion(region.Id);
@@ -66,7 +66,7 @@ namespace MHServerEmu.GameServer.Games
             // Put waypoint entity in the game world
             EnterGameWorldArchive waypointEnterGameWorldArchiveData = new(12, region.WaypointPosition, region.WaypointOrientation.X);
             messageList.Add(new(NetMessageEntityEnterGameWorld.CreateBuilder()
-                .SetArchiveData(ByteString.CopyFrom(waypointEnterGameWorldArchiveData.Encode()))
+                .SetArchiveData(waypointEnterGameWorldArchiveData.Serialize())
                 .Build()));
 
             // Load power collection

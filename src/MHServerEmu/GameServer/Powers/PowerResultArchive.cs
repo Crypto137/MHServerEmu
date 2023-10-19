@@ -26,9 +26,9 @@ namespace MHServerEmu.GameServer.Powers
         public Vector3 Position { get; set; }
         public ulong TransferToId { get; set; }
 
-        public PowerResultArchive(byte[] data)
+        public PowerResultArchive(ByteString data)
         {
-            CodedInputStream stream = CodedInputStream.CreateInstance(data);
+            CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
 
             ReplicationPolicy = stream.ReadRawVarint32();
             Flags = stream.ReadRawVarint32().ToBoolArray(FlagCount);
@@ -102,7 +102,7 @@ namespace MHServerEmu.GameServer.Powers
 
         public PowerResultArchive() { }
 
-        public byte[] Encode()
+        public ByteString Serialize()
         {
             using (MemoryStream ms = new())
             {
@@ -124,7 +124,7 @@ namespace MHServerEmu.GameServer.Powers
                 if (Flags[11]) cos.WriteRawVarint64(TransferToId);
 
                 cos.Flush();
-                return ms.ToArray();
+                return ByteString.CopyFrom(ms.ToArray());
             }
         }
 

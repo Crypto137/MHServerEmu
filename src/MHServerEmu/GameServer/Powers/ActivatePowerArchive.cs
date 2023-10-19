@@ -24,9 +24,9 @@ namespace MHServerEmu.GameServer.Powers
         public uint PowerRandomSeed { get; set; }
         public uint FXRandomSeed { get; set; }
 
-        public ActivatePowerArchive(byte[] data)
+        public ActivatePowerArchive(ByteString data)
         {
-            CodedInputStream stream = CodedInputStream.CreateInstance(data);
+            CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
 
             ReplicationPolicy = stream.ReadRawVarint32();
             Flags = stream.ReadRawVarint32().ToBoolArray(FlagCount);
@@ -103,7 +103,7 @@ namespace MHServerEmu.GameServer.Powers
 
         public ActivatePowerArchive() { }
 
-        public byte[] Encode()
+        public ByteString Serialize()
         {
             using (MemoryStream ms = new())
             {
@@ -123,7 +123,7 @@ namespace MHServerEmu.GameServer.Powers
                 if (Flags[7]) cos.WriteRawVarint32(FXRandomSeed);
 
                 cos.Flush();
-                return ms.ToArray();
+                return ByteString.CopyFrom(ms.ToArray());
             }
         }
 

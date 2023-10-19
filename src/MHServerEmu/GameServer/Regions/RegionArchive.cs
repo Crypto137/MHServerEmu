@@ -15,9 +15,9 @@ namespace MHServerEmu.GameServer.Powers
         public UIDataProvider UIDataProvider { get; set; }
         public ObjectiveGraph ObjectiveGraph { get; set; }
 
-        public RegionArchive(byte[] data)
+        public RegionArchive(ByteString data)
         {
-            CodedInputStream stream = CodedInputStream.CreateInstance(data);
+            CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
             BoolDecoder boolDecoder = new();
 
             ReplicationPolicy = stream.ReadRawVarint32();
@@ -29,7 +29,7 @@ namespace MHServerEmu.GameServer.Powers
 
         public RegionArchive() { }
 
-        public byte[] Encode()
+        public ByteString Serialize()
         {
             using (MemoryStream ms = new())
             {
@@ -49,7 +49,7 @@ namespace MHServerEmu.GameServer.Powers
                 ObjectiveGraph.Encode(cos);
 
                 cos.Flush();
-                return ms.ToArray();
+                return ByteString.CopyFrom(ms.ToArray());
             }
         }
 

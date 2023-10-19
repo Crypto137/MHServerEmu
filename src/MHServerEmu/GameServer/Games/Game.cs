@@ -149,7 +149,7 @@ namespace MHServerEmu.GameServer.Games
             {
                 case ClientToGameServerMessage.NetMessageUpdateAvatarState:
                     var updateAvatarStateMessage = NetMessageUpdateAvatarState.ParseFrom(message.Payload);
-                    UpdateAvatarStateArchive avatarState = new(updateAvatarStateMessage.ArchiveData.ToByteArray());
+                    UpdateAvatarStateArchive avatarState = new(updateAvatarStateMessage.ArchiveData);
                     client.LastPosition = avatarState.Position;
 
                     /* Logger spam

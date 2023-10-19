@@ -76,7 +76,7 @@ namespace MHServerEmu.GameServer.Games
 
                     };
                     messageList.Add(new(client,new(NetMessageActivatePower.CreateBuilder()
-                         .SetArchiveData(ByteString.CopyFrom(archive.Encode()))
+                         .SetArchiveData(archive.Serialize())
                          .Build())));
                     break;
 
@@ -114,7 +114,7 @@ namespace MHServerEmu.GameServer.Games
                             conditionArchive = new(avatarEntityId, 666, 55, powerId, 0);   // TODO: generate and save Condition.Id                        
 
                             messageList.Add(new(client, new(NetMessageAddCondition.CreateBuilder()
-                                .SetArchiveData(ByteString.CopyFrom(conditionArchive.Encode()))
+                                .SetArchiveData(conditionArchive.Serialize())
                                 .Build())));
 
                             messageList.Add(new(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
@@ -140,7 +140,7 @@ namespace MHServerEmu.GameServer.Games
                             Logger.Trace($"EventStart Ride");
                             conditionArchive = new(avatarEntityId, 667, 55, powerId, 0);
                             messageList.Add(new(client, new(NetMessageAddCondition.CreateBuilder()
-                                .SetArchiveData(ByteString.CopyFrom(conditionArchive.Encode()))
+                                .SetArchiveData(conditionArchive.Serialize())
                                 .Build())));
                             break;
 
@@ -292,7 +292,7 @@ namespace MHServerEmu.GameServer.Games
                     conditionArchive.Condition.EngineAssetGuid = asset;  // MarvelPlayer_EmmaFrost_Modern
 
                     messageList.Add(new(client, new(NetMessageAddCondition.CreateBuilder()
-                         .SetArchiveData(ByteString.CopyFrom(conditionArchive.Encode()))
+                         .SetArchiveData(conditionArchive.Serialize())
                          .Build())));
 
                     break;
@@ -317,7 +317,7 @@ namespace MHServerEmu.GameServer.Games
                     conditionArchive.Condition.Duration = 20000;
 
                     messageList.Add(new(client, new(NetMessageAddCondition.CreateBuilder()
-                        .SetArchiveData(ByteString.CopyFrom(conditionArchive.Encode()))
+                        .SetArchiveData(conditionArchive.Serialize())
                         .Build())));
 
                     WorldEntity arenaEntity = _game.EntityManager.CreateWorldEntityEmpty(

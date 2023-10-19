@@ -11,6 +11,7 @@ using MHServerEmu.GameServer.GameData.Calligraphy;
 using MHServerEmu.GameServer.MetaGame;
 using MHServerEmu.GameServer.Powers;
 using MHServerEmu.GameServer.Properties;
+using MHServerEmu.GameServer.Regions;
 
 namespace MHServerEmu.Networking
 {
@@ -253,27 +254,27 @@ namespace MHServerEmu.Networking
                             case NetMessageRegionChange regionChange:
                                 writer.WriteLine(protobufMessage);
                                 if (regionChange.ArchiveData.Length > 0)
-                                    writer.WriteLine($"ArchiveDataHex: {new RegionArchive(regionChange.ArchiveData.ToByteArray())}");
+                                    writer.WriteLine($"ArchiveDataHex: {new RegionArchive(regionChange.ArchiveData)}");
                                 break;
 
                             case NetMessageEntityEnterGameWorld entityEnterGameWorld:
-                                writer.WriteLine($"ArchiveData: {new EnterGameWorldArchive(entityEnterGameWorld.ArchiveData.ToByteArray())}");
+                                writer.WriteLine($"ArchiveData: {new EnterGameWorldArchive(entityEnterGameWorld.ArchiveData)}");
                                 break;
 
                             case NetMessageLocomotionStateUpdate locomotionStateUpdate:
-                                writer.WriteLine($"ArchiveData: {new LocomotionStateUpdateArchive(locomotionStateUpdate.ArchiveData.ToByteArray())}");
+                                writer.WriteLine($"ArchiveData: {new LocomotionStateUpdateArchive(locomotionStateUpdate.ArchiveData)}");
                                 break;
 
                             case NetMessageActivatePower activatePower:
-                                writer.WriteLine($"ArchiveData: {new ActivatePowerArchive(activatePower.ArchiveData.ToByteArray())}");
+                                writer.WriteLine($"ArchiveData: {new ActivatePowerArchive(activatePower.ArchiveData)}");
                                 break;
 
                             case NetMessagePowerResult powerResult:
-                                writer.WriteLine($"ArchiveData: {new PowerResultArchive(powerResult.ArchiveData.ToByteArray())}");
+                                writer.WriteLine($"ArchiveData: {new PowerResultArchive(powerResult.ArchiveData)}");
                                 break;
 
                             case NetMessageAddCondition addCondition:
-                                writer.WriteLine($"ArchiveData: {new AddConditionArchive(addCondition.ArchiveData.ToByteArray())}");
+                                writer.WriteLine($"ArchiveData: {new AddConditionArchive(addCondition.ArchiveData)}");
                                 break;
 
                             case NetMessageSetProperty setProperty:
@@ -281,7 +282,7 @@ namespace MHServerEmu.Networking
                                 break;
 
                             case NetMessageUpdateMiniMap updateMiniMap:
-                                writer.WriteLine($"ArchiveDataHex: {updateMiniMap.ArchiveData.ToByteArray().ToHexString()}");
+                                writer.WriteLine($"ArchiveData: {new MiniMapArchive(updateMiniMap.ArchiveData)}");
                                 break;
                         }
                     }

@@ -11,9 +11,9 @@ namespace MHServerEmu.GameServer.Regions
         public bool IsRevealAll { get; set; }
         public byte[] Map { get; set; }
 
-        public MiniMapArchive(byte[] data)
+        public MiniMapArchive(ByteString data)
         {
-            CodedInputStream stream = CodedInputStream.CreateInstance(data);
+            CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
             BoolDecoder boolDecoder = new();
 
             ReplicationPolicy = stream.ReadRawVarint32();
@@ -36,7 +36,7 @@ namespace MHServerEmu.GameServer.Regions
 
         public MiniMapArchive() { }
 
-        public byte[] Encode()
+        public ByteString Serialize()
         {
             using (MemoryStream ms = new())
             {
@@ -59,7 +59,7 @@ namespace MHServerEmu.GameServer.Regions
                 }
 
                 cos.Flush();
-                return ms.ToArray();
+                return ByteString.CopyFrom(ms.ToArray());
             }
         }
 

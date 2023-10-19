@@ -10,9 +10,9 @@ namespace MHServerEmu.GameServer.Powers
         public ulong EntityId { get; set; }
         public Condition Condition { get; set; }
 
-        public AddConditionArchive(byte[] data)
+        public AddConditionArchive(ByteString data)
         {
-            CodedInputStream stream = CodedInputStream.CreateInstance(data);
+            CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
 
             ReplicationPolicy = stream.ReadRawVarint32();
             EntityId = stream.ReadRawVarint64();
@@ -36,7 +36,7 @@ namespace MHServerEmu.GameServer.Powers
             };
         }
 
-        public byte[] Encode()
+        public ByteString Serialize()
         {
             using (MemoryStream ms = new())
             {
@@ -47,7 +47,7 @@ namespace MHServerEmu.GameServer.Powers
                 Condition.Encode(cos);
 
                 cos.Flush();
-                return ms.ToArray();
+                return ByteString.CopyFrom(ms.ToArray());
             }
         }
 

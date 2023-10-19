@@ -74,7 +74,7 @@ namespace MHServerEmu.GameServer.Powers
                     PowerResultArchive archive = new(tryActivatePower);
                     if (archive.TargetId > 0)
                         messageList.Add(new(client, new(NetMessagePowerResult.CreateBuilder()
-                            .SetArchiveData(ByteString.CopyFrom(archive.Encode()))
+                            .SetArchiveData(archive.Serialize())
                             .Build())));
 
                     break;
