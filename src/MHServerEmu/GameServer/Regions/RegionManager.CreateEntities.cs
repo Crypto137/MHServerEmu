@@ -39,15 +39,11 @@ namespace MHServerEmu.GameServer.Regions
                 return 46f; // AgentUntargetableInvulnerable.WorldEntity.Bounds.CapsuleBounds.HeightFromCenter
             PrototypeEntry TestWorldEntity = entity.GetEntry(BlueprintId.WorldEntity);
             if (TestWorldEntity == null)
-            {
-                //Logger.Debug($"[GetEntityFloor] WorldEntity not found [{prototypeId}] {GameDatabase.GetPrototypeName(prototypeId)}");
-                return 46f;
-            }
+                return GetEntityFloor(entity.ParentId);
+
             PrototypeEntryElement TestBounds = TestWorldEntity.GetField(FieldId.Bounds);
-            if (TestBounds == null) {
-                //Logger.Trace($"[GetEntityFloor] Bounds not found [{prototypeId}] {GameDatabase.GetPrototypeName(prototypeId)}");
-                return 46f; 
-            }
+            if (TestBounds == null) 
+                return GetEntityFloor(entity.ParentId);
 
             Prototype bounds = (Prototype)TestBounds.Value;
             float height = 0f;
@@ -142,35 +138,34 @@ namespace MHServerEmu.GameServer.Regions
                 {
                     if (entry.MarkerSet[i] is EntityMarkerPrototype)
                     {
-                        EntityMarkerPrototype npc = (EntityMarkerPrototype)entry.MarkerSet[i];
-                        string marker = npc.LastKnownEntityName;
+                        EntityMarkerPrototype entityMarker = (EntityMarkerPrototype)entry.MarkerSet[i];
+                        string marker = entityMarker.LastKnownEntityName;
 
                         if (marker.Contains("GambitMTXStore")) continue; // Invisible
                         if (marker.Contains("CosmicEventVendor")) continue; // Invisible
 
                         if (marker.Contains("Entity/Characters/") || (addProp && marker.Contains("Entity/Props/")))
                         {
-                            entityPosition = npc.Position + areaOrigin;
+                            entityPosition = entityMarker.Position + areaOrigin;                            
 
-                            bool? snapToFloor = null;
+                            ulong proto = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
+                            bool entitySnapToFloor = GetSnapToFloorOnSpawn(proto);
 
-                            if (npc.OverrideSnapToFloor == 1)
-                                snapToFloor = (npc.OverrideSnapToFloorValue == 1);
+                            bool snapToFloor = (entityMarker.OverrideSnapToFloor == 1) ? (entityMarker.OverrideSnapToFloorValue == 1) : entitySnapToFloor;
 
-                            if (snapToFloor != true)
-                                snapToFloor = GetSnapToFloorOnSpawn(GameDatabase.GetDataRefByPrototypeGuid(npc.EntityGuid));
-
-                            if (snapToFloor == true)
+                            if (snapToFloor)
                             {
-                                float projectHeight = ProjectToFloor(entry, areaOrigin, npc.Position);
-                                if (entityPosition.Z > projectHeight) entityPosition.Z = projectHeight;
+                                float projectHeight = ProjectToFloor(entry, areaOrigin, entityMarker.Position);
+                                if (entityPosition.Z > projectHeight)
+                                    entityPosition.Z = projectHeight;  
                             }
-                                entityPosition.Z += GetEntityFloor(GameDatabase.GetDataRefByPrototypeGuid(npc.EntityGuid));
+
+                            entityPosition.Z += GetEntityFloor(proto);
 
                             _entityManager.CreateWorldEntity(
-                                region.Id, GameDatabase.GetDataRefByPrototypeGuid(npc.EntityGuid),
-                                entityPosition, npc.Rotation,
-                                608, areaid, 608, cellId, area, false, snapToFloor == true);
+                                region.Id, proto,
+                                entityPosition, entityMarker.Rotation,
+                                608, areaid, 608, cellId, area, false, snapToFloor != entitySnapToFloor);
                         }
                     }
                 }
@@ -526,17 +521,7 @@ namespace MHServerEmu.GameServer.Regions
                             }
                         }
                     }
-                    /* zero effects 
-                    messageList.Add(new(NetMessageAIToggleState.CreateBuilder()
-                        .SetState(true)
-                        .Build())
-                        );
 
-                    messageList.Add(new(NetMessageDamageToggleState.CreateBuilder()
-                        .SetState(false)
-                        .Build())
-                        );
-                    */
                     break;
 
                 case RegionPrototype.DangerRoomHubRegion:
