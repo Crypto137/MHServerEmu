@@ -1,0 +1,7 @@
+<LoadingTips Version="1" Date="2017-11-27">
+	<Tip Name="LiveTipsHelp">
+		<Priority>true</Priority>
+		<Enable>true</Enable>
+		<Locale(en_us)>You can change what is displayed here by editing LiveLoadingTips.xml.</Locale(en_us)>
+	</Tip>
+</LoadingTips>

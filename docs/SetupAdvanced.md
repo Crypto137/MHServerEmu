@@ -45,3 +45,19 @@ The client uses an embedded web browser for some of its UI panels. MHServerEmu p
 Restart the server, and you should be able to see an example store home page when you open the in-game store. You can set other pages by editing various url options in `Config.ini` (e.g. `NewsUrl` to change the content of the news window). For more information on the embedded browser see [EmbeddedBrowser.md](./EmbeddedBrowser.md).
 
 Please note that the embedded browser is a 2014 version of the Chromium Embedded Framework (CEF), and using for general web browsing brings with it major security risks. You should use it only for displaying the content you trust.
+
+## Setting Up Live Tips
+
+The client can download additional loading screen tips from the server.
+
+1. Copy the [LiveLoadingTips.xml](./../assets/LiveLoadingTips.xml) file provided in this repository to `Apache24\htdocs`.
+
+2. Set `EnableLiveTips` and `EnableLiveTipsDownloader` in `SiteConfig.xml` to `true`.
+
+3. Set `LoadScreenTipsURL` in `SiteConfig.xml` to `http://localhost/LiveLoadingTips.xml`.
+
+4. (Optional) Adjust `LiveTipsQueryInterval` in `SiteConfig.xml` to your preferred query interval (by default the client queries new tips every 15 minutes).
+
+5. Edit `LiveLoadingTips.xml` to add your own tips.
+
+For tips to actually show up they need to have text matching the client's locale. For a list of locale website codes see [Constants.md](./Constants.md). The client updates tips only when the `Date` attribute of the root node of LiveLoadingTips.xml is different from the previous update.

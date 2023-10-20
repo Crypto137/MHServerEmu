@@ -16,6 +16,8 @@ If you would like to help with the development, here are some resources you can 
 
 - [ClientLaunchParameters.md](./ClientLaunchParameters.md) - lists various launch parameters that you can use when running the client (such as enabling verbose logging).
 
+- [Constants.md](./Constants.md) - lists various constants used by the client.
+
 For specific topics see these:
 
 - [ClientConfig.md](./ClientConfig.md) - ClientConfig.xml file structure.
