@@ -33,95 +33,15 @@ namespace MHServerEmu.Frontend
             switch ((FrontendProtocolMessage)message.Id)
             {
                 case FrontendProtocolMessage.ClientCredentials:
-                    Logger.Info($"Received ClientCredentials on muxId {muxId}");
                     ClientCredentials clientCredentials = ClientCredentials.ParseFrom(message.Payload);
-
-                    // Check if the session exists
-                    if (_sessionDict.TryGetValue(clientCredentials.Sessionid, out ClientSession session) == false)
-                    {
-                        Logger.Warn($"SessionId {clientCredentials.Sessionid} not found, disconnecting client");
-                        client.Connection.Disconnect();
-                        return;
-                    }
-
-                    // Try to decrypt the token
-                    if (Cryptography.TryDecryptToken(clientCredentials.EncryptedToken.ToByteArray(), session.Key,
-                        clientCredentials.Iv.ToByteArray(), out byte[] decryptedToken) == false)
-                    {
-                        Logger.Warn($"Failed to decrypt token for sessionId {session.Id}, disconnecting client");
-                        lock (_sessionLock) _sessionDict.Remove(session.Id);    // invalidate session after a failed login attempt
-                        client.Connection.Disconnect();
-                        return;
-                    }
-
-                    // Verify the token
-                    if (Cryptography.VerifyToken(decryptedToken, session.Token) == false)
-                    {
-                        Logger.Warn($"Failed to verify token for sessionId {session.Id}, disconnecting client");
-                        lock (_sessionLock) _sessionDict.Remove(session.Id);    // invalidate session after a failed login attempt
-                        client.Connection.Disconnect();
-                        return;
-                    }
-
-                    Logger.Info($"Verified client for sessionId {session.Id} - account {session.Account}");
-
-                    // Assign account to the client if the token is valid
-                    lock (_sessionLock)
-                    {
-                        client.AssignSession(session);
-                        _clientDict.Add(session.Id, client);
-                    }
-
-                    // Respond
-                    if (ConfigManager.Frontend.SimulateQueue)
-                    {
-                        Logger.Info("Responding with LoginQueueStatus message");
-                        client.SendMessage(muxId, new(LoginQueueStatus.CreateBuilder()
-                            .SetPlaceInLine(ConfigManager.Frontend.QueuePlaceInLine)
-                            .SetNumberOfPlayersInLine(ConfigManager.Frontend.QueueNumberOfPlayersInLine)
-                            .Build()));
-                    }
-                    else
-                    {
-                        Logger.Info("Responding with SessionEncryptionChanged message");
-                        client.SendMessage(muxId, new(SessionEncryptionChanged.CreateBuilder()
-                            .SetRandomNumberIndex(0)
-                            .SetEncryptedRandomNumber(ByteString.Empty)
-                            .Build()));
-                    }
-
+                    Logger.Info($"Received ClientCredentials on muxId {muxId}");
+                    HandleClientCredentials(client, clientCredentials);
                     break;
 
                 case FrontendProtocolMessage.InitialClientHandshake:
                     InitialClientHandshake initialClientHandshake = InitialClientHandshake.ParseFrom(message.Payload);
                     Logger.Info($"Received InitialClientHandshake for {initialClientHandshake.ServerType} on muxId {muxId}");
-
-                    // These handshakes should probably be handled by PlayerManagerService and GroupingManagerService. They should probably also track clients on their own.
-                    if (initialClientHandshake.ServerType == PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND && client.FinishedPlayerManagerHandshake == false)
-                    {
-                        client.FinishedPlayerManagerHandshake = true;
-
-                        // Queue loading
-                        client.IsLoading = true;
-                        client.SendMessage(1, new(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build()));
-
-                        // Send achievement database
-                        client.SendMessage(1, new(_serverManager.AchievementDatabase.ToNetMessageAchievementDatabaseDump()));
-                        // NetMessageQueryIsRegionAvailable regionPrototype: 9833127629697912670 should go in the same packet as AchievementDatabaseDump
-                    }
-                    else if (initialClientHandshake.ServerType == PubSubServerTypes.GROUPING_MANAGER_FRONTEND && client.FinishedGroupingManagerHandshake == false)
-                    {
-                        client.FinishedGroupingManagerHandshake = true;
-                    }
-
-                    // Add the player to a game when both handshakes are finished
-                    // Adding the player early can cause GroupingManager handshake to not finish properly, which leads to the chat not working
-                    if (client.FinishedPlayerManagerHandshake && client.FinishedGroupingManagerHandshake)
-                    {
-                        _serverManager.GroupingManagerService.AddPlayer(client);
-                        _serverManager.PlayerManagerService.AddPlayer(client);
-                    }
-
+                    HandleInitialClientHandshake(client, initialClientHandshake);
                     break;
 
                 default:
@@ -210,6 +130,92 @@ namespace MHServerEmu.Frontend
             {
                 foreach (var kvp in _clientDict)
                     kvp.Value.SendMessage(muxId, message);
+            }
+        }
+
+        private void HandleClientCredentials(FrontendClient client, ClientCredentials clientCredentials)
+        {
+            // Check if the session exists
+            if (_sessionDict.TryGetValue(clientCredentials.Sessionid, out ClientSession session) == false)
+            {
+                Logger.Warn($"SessionId {clientCredentials.Sessionid} not found, disconnecting client");
+                client.Connection.Disconnect();
+                return;
+            }
+
+            // Try to decrypt the token
+            if (Cryptography.TryDecryptToken(clientCredentials.EncryptedToken.ToByteArray(), session.Key,
+                clientCredentials.Iv.ToByteArray(), out byte[] decryptedToken) == false)
+            {
+                Logger.Warn($"Failed to decrypt token for sessionId {session.Id}, disconnecting client");
+                lock (_sessionLock) _sessionDict.Remove(session.Id);    // invalidate session after a failed login attempt
+                client.Connection.Disconnect();
+                return;
+            }
+
+            // Verify the token
+            if (Cryptography.VerifyToken(decryptedToken, session.Token) == false)
+            {
+                Logger.Warn($"Failed to verify token for sessionId {session.Id}, disconnecting client");
+                lock (_sessionLock) _sessionDict.Remove(session.Id);    // invalidate session after a failed login attempt
+                client.Connection.Disconnect();
+                return;
+            }
+
+            Logger.Info($"Verified client for sessionId {session.Id} - account {session.Account}");
+
+            // Assign account to the client if the token is valid
+            lock (_sessionLock)
+            {
+                client.AssignSession(session);
+                _clientDict.Add(session.Id, client);
+            }
+
+            // Respond
+            if (ConfigManager.Frontend.SimulateQueue)
+            {
+                Logger.Info("Responding with LoginQueueStatus message");
+                client.SendMessage(1, new(LoginQueueStatus.CreateBuilder()
+                    .SetPlaceInLine(ConfigManager.Frontend.QueuePlaceInLine)
+                    .SetNumberOfPlayersInLine(ConfigManager.Frontend.QueueNumberOfPlayersInLine)
+                    .Build()));
+            }
+            else
+            {
+                Logger.Info("Responding with SessionEncryptionChanged message");
+                client.SendMessage(1, new(SessionEncryptionChanged.CreateBuilder()
+                    .SetRandomNumberIndex(0)
+                    .SetEncryptedRandomNumber(ByteString.Empty)
+                    .Build()));
+            }
+        }
+
+        private void HandleInitialClientHandshake(FrontendClient client, InitialClientHandshake initialClientHandshake)
+        {
+            // These handshakes should probably be handled by PlayerManagerService and GroupingManagerService. They should probably also track clients on their own.
+            if (initialClientHandshake.ServerType == PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND && client.FinishedPlayerManagerHandshake == false)
+            {
+                client.FinishedPlayerManagerHandshake = true;
+
+                // Queue loading
+                client.IsLoading = true;
+                client.SendMessage(1, new(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build()));
+
+                // Send achievement database
+                client.SendMessage(1, new(_serverManager.AchievementDatabase.ToNetMessageAchievementDatabaseDump()));
+                // NetMessageQueryIsRegionAvailable regionPrototype: 9833127629697912670 should go in the same packet as AchievementDatabaseDump
+            }
+            else if (initialClientHandshake.ServerType == PubSubServerTypes.GROUPING_MANAGER_FRONTEND && client.FinishedGroupingManagerHandshake == false)
+            {
+                client.FinishedGroupingManagerHandshake = true;
+            }
+
+            // Add the player to a game when both handshakes are finished
+            // Adding the player early can cause GroupingManager handshake to not finish properly, which leads to the chat not working
+            if (client.FinishedPlayerManagerHandshake && client.FinishedGroupingManagerHandshake)
+            {
+                _serverManager.GroupingManagerService.AddPlayer(client);
+                _serverManager.PlayerManagerService.AddPlayer(client);
             }
         }
     }
