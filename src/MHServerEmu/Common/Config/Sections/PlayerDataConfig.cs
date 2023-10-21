@@ -1,6 +1,6 @@
-﻿using MHServerEmu.GameServer.Entities;
-using MHServerEmu.GameServer.Entities.Avatars;
-using MHServerEmu.GameServer.Regions;
+﻿using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Common.Config.Sections
 {

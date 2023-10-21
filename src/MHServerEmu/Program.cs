@@ -4,9 +4,9 @@ using MHServerEmu.Common.Commands;
 using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Common.Logging.Targets;
-using MHServerEmu.GameServer.GameData;
-using MHServerEmu.GameServer.Frontend.Accounts;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Networking;
+using MHServerEmu.Frontend.Accounts;
 
 namespace MHServerEmu
 {

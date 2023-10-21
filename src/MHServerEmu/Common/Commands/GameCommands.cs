@@ -1,10 +1,10 @@
 ﻿using MHServerEmu.Common.Config;
-using MHServerEmu.GameServer.Common;
-using MHServerEmu.GameServer.Entities.Avatars;
-using MHServerEmu.GameServer.Frontend.Accounts;
-using MHServerEmu.GameServer.GameData;
-using MHServerEmu.GameServer.Properties;
-using MHServerEmu.GameServer.Regions;
+using MHServerEmu.Frontend.Accounts;
+using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.Common.Commands
@@ -72,7 +72,7 @@ namespace MHServerEmu.Common.Commands
                 case AvatarPrototype.Storm:
                 case AvatarPrototype.Thing:
                 case AvatarPrototype.Thor:
-                    client.CurrentGame.EventManager.AddEvent(client, GameServer.Games.EventEnum.EmoteDance, 0, avatar);
+                    client.CurrentGame.EventManager.AddEvent(client, Games.Events.EventEnum.EmoteDance, 0, avatar);
                     return $"{avatar} begins to dance";
                 default:
                     return $"{avatar} doesn't want to dance";                   
@@ -117,7 +117,7 @@ namespace MHServerEmu.Common.Commands
             if (@params.Length < 3)
                 teleportPoint += client.LastPosition;
 
-            client.CurrentGame.EventManager.AddEvent(client, GameServer.Games.EventEnum.ToTeleport, 0, teleportPoint);
+            client.CurrentGame.EventManager.AddEvent(client, Games.Events.EventEnum.ToTeleport, 0, teleportPoint);
             return $"Teleporting to {teleportPoint}";
         }
     }

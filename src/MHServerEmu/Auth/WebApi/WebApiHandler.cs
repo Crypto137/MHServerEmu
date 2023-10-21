@@ -1,7 +1,7 @@
 ﻿using System.Collections.Specialized;
 using System.Text;
 using MHServerEmu.Common.Logging;
-using MHServerEmu.GameServer.Frontend.Accounts;
+using MHServerEmu.Frontend.Accounts;
 
 namespace MHServerEmu.Auth.WebApi
 {

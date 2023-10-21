@@ -1,8 +1,8 @@
 ﻿using Gazillion;
 using MHServerEmu.Common.Config;
-using MHServerEmu.GameServer.Frontend;
-using MHServerEmu.GameServer.Frontend.Accounts;
-using MHServerEmu.GameServer.GameData;
+using MHServerEmu.Frontend;
+using MHServerEmu.Frontend.Accounts;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.Common.Commands

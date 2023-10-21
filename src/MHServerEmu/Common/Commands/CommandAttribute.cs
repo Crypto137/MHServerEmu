@@ -1,4 +1,4 @@
-﻿using MHServerEmu.GameServer.Frontend.Accounts;
+﻿using MHServerEmu.Frontend.Accounts;
 
 namespace MHServerEmu.Common.Commands
 {

@@ -6,8 +6,8 @@ using Gazillion;
 using MHServerEmu.Auth.WebApi;
 using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
-using MHServerEmu.GameServer.Frontend;
 using MHServerEmu.Networking;
+using MHServerEmu.Frontend;
 
 namespace MHServerEmu.Auth
 {

@@ -1,11 +1,10 @@
 ﻿using Google.ProtocolBuffers;
 using MHServerEmu.Common.Logging;
-using MHServerEmu.GameServer;
-using MHServerEmu.GameServer.Common;
-using MHServerEmu.GameServer.Entities;
-using MHServerEmu.GameServer.Frontend;
-using MHServerEmu.GameServer.Games;
-using MHServerEmu.GameServer.Regions;
+using MHServerEmu.Frontend;
+using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Regions;
 using MHServerEmu.Networking.Base;
 
 namespace MHServerEmu.Networking
@@ -13,7 +12,7 @@ namespace MHServerEmu.Networking
     public class FrontendClient : IClient
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private readonly GameServerManager _gameServerManager;
+        private readonly ServerManager _gameServerManager;
 
         public Connection Connection { get; set; }
 
@@ -32,7 +31,7 @@ namespace MHServerEmu.Networking
         public ulong ThrowingCancelPower { get; set; }
         public Entity ThrowingObject { get; set; }
 
-        public FrontendClient(Connection connection, GameServerManager gameServerManager)
+        public FrontendClient(Connection connection, ServerManager gameServerManager)
         {
             Connection = connection;
             _gameServerManager = gameServerManager;

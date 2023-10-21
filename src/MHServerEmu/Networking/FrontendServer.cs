@@ -1,7 +1,6 @@
 ﻿using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
-using MHServerEmu.GameServer;
-using MHServerEmu.GameServer.Frontend;
+using MHServerEmu.Frontend;
 using MHServerEmu.Networking.Base;
 
 namespace MHServerEmu.Networking
@@ -10,7 +9,7 @@ namespace MHServerEmu.Networking
     {
         private new static readonly Logger Logger = LogManager.CreateLogger();  // Hide the Server.Logger so that this logger can show the actual server as log source.
 
-        private readonly GameServerManager _gameServerManager;
+        private readonly ServerManager _gameServerManager;
 
         public FrontendService FrontendService { get => _gameServerManager.FrontendService; }
 
