@@ -10,7 +10,7 @@ using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social;
 using MHServerEmu.Networking;
 
-namespace MHServerEmu.Games.Events
+namespace MHServerEmu.Games
 {
     public partial class Game
     {

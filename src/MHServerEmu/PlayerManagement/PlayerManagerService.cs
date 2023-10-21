@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Games;
 using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Networking;
 
@@ -7,14 +8,62 @@ namespace MHServerEmu.PlayerManagement
 {
     public class PlayerManagerService : IGameService
     {
+        private const int MuxChannel = 1;   // All messages come to and from PlayerManager over mux channel 1
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly ServerManager _serverManager;
+        private readonly GameManager _gameManager;
+        private readonly object _playerLock = new();
+        private readonly List<FrontendClient> _playerList = new();
 
         public PlayerManagerService(ServerManager serverManager)
         {
             _serverManager = serverManager;
+            _gameManager = new(_serverManager);
         }
+
+        public void AddPlayer(FrontendClient client)
+        {
+            lock (_playerLock)
+            {
+                if (_playerList.Contains(client))
+                {
+                    Logger.Warn("Failed to add player: already added");
+                    return;
+                }
+
+                _playerList.Add(client);
+                _gameManager.GetAvailableGame().AddPlayer(client);
+            }
+        }
+
+        public void RemovePlayer(FrontendClient client)
+        {
+            lock (_playerLock)
+            {
+                if (_playerList.Contains(client) == false)
+                {
+                    Logger.Warn("Failed to remove player: not found");
+                    return;
+                }
+
+                _playerList.Remove(client);
+            }
+        }
+
+        public void BroadcastMessage(GameMessage message)
+        {
+            lock (_playerLock)
+            {
+                foreach (FrontendClient player in _playerList)
+                    player.SendMessage(MuxChannel, message);
+            }
+        }
+
+        public Game GetGameByPlayer(FrontendClient client) => _gameManager.GetGameById(client.GameId);
+
+        #region Message Handling
 
         public void Handle(FrontendClient client, ushort muxId, GameMessage message)
         {
@@ -96,7 +145,7 @@ namespace MHServerEmu.PlayerManagement
                 case ClientToGameServerMessage.NetMessageSelectOmegaBonus:                      // This should be within NetMessageOmegaBonusAllocationCommit only in theory
                 case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:
                 case ClientToGameServerMessage.NetMessageRespecOmegaBonus:
-                    _serverManager.GameManager.GetGameById(client.GameId).Handle(client, muxId, message);
+                    GetGameByPlayer(client).Handle(client, muxId, message);
                     break;
 
                 // Grouping Manager messages
@@ -135,5 +184,7 @@ namespace MHServerEmu.PlayerManagement
         {
             foreach (GameMessage message in messages) Handle(client, muxId, message);
         }
+
+        #endregion
     }
 }

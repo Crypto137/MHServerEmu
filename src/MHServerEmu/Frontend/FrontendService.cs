@@ -119,7 +119,7 @@ namespace MHServerEmu.Frontend
                     if (client.FinishedPlayerManagerHandshake && client.FinishedGroupingManagerHandshake)
                     {
                         _serverManager.GroupingManagerService.SendMotd(client);
-                        _serverManager.GameManager.GetAvailableGame().AddPlayer(client);
+                        _serverManager.PlayerManagerService.AddPlayer(client);
                     }
 
                     break;
@@ -195,9 +195,11 @@ namespace MHServerEmu.Frontend
                     _clientDict.Remove(client.Session.Id);
                 }
 
+                _serverManager.PlayerManagerService.RemovePlayer(client);
+
                 if (ConfigManager.Frontend.BypassAuth == false) DBManager.UpdateAccountData(client.Session.Account);
 
-                Logger.Info($"Client disconnected - account {client.Session.Account}");
+                Logger.Info($"Client {client.Session.Account} disconnected");
             }
         }
 

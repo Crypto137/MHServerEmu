@@ -15,8 +15,6 @@ namespace MHServerEmu.Networking
 
         public AchievementDatabase AchievementDatabase { get; }
 
-        public GameManager GameManager { get; }
-
         public FrontendService FrontendService { get; }
         public GroupingManagerService GroupingManagerService { get; }
         public PlayerManagerService PlayerManagerService { get; }
@@ -28,9 +26,6 @@ namespace MHServerEmu.Networking
         {
             // Initialize achievement database
             AchievementDatabase = new(File.ReadAllBytes(Path.Combine(Directory.GetCurrentDirectory(), "Assets", "CompressedAchievementDatabaseDump.bin")));
-
-            // Initialize game manager
-            GameManager = new(this);
 
             // Initialize services
             FrontendService = new(this);

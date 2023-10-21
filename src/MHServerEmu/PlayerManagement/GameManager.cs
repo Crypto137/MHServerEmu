@@ -1,6 +1,6 @@
 ﻿using MHServerEmu.Common;
 using MHServerEmu.Common.Logging;
-using MHServerEmu.Games.Events;
+using MHServerEmu.Games;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.PlayerManagement
@@ -26,28 +26,24 @@ namespace MHServerEmu.PlayerManagement
 
         public Game GetGameById(ulong id)
         {
-            if (_gameDict.ContainsKey(id))
+            if (_gameDict.TryGetValue(id, out Game game) == false)
             {
-                return _gameDict[id];
-            }
-            else
-            {
-                Logger.Warn($"Failed to get game {id}: id is not in the dictionary");
+                Logger.Warn($"Failed to get game: id {id} not found");
                 return null;
             }
+
+            return game;
         }
 
         public Game GetAvailableGame()
         {
-            if (_gameDict.Count > 0)
-            {
-                return _gameDict.First().Value;
-            }
-            else
+            if (_gameDict.Count == 0)
             {
                 Logger.Warn($"Unable to get available game: no games are available");
                 return null;
             }
+
+            return _gameDict.First().Value;
         }
     }
 }

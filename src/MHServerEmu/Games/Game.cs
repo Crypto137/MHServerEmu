@@ -6,6 +6,7 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
@@ -13,7 +14,7 @@ using MHServerEmu.Games.Regions;
 using MHServerEmu.Grouping;
 using MHServerEmu.Networking;
 
-namespace MHServerEmu.Games.Events
+namespace MHServerEmu.Games
 {
     public partial class Game : IGameService
     {
