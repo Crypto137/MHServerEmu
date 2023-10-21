@@ -6,6 +6,7 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Powers;
@@ -249,6 +250,21 @@ namespace MHServerEmu.Games
 
                     break;
 
+                case ClientToGameServerMessage.NetMessageUseWaypoint:
+                    Logger.Info($"Received NetMessageUseWaypoint message");
+                    var useWaypointMessage = NetMessageUseWaypoint.ParseFrom(message.Payload);
+
+                    Logger.Trace(useWaypointMessage.ToString());
+
+                    RegionPrototype destinationRegion = (RegionPrototype)useWaypointMessage.RegionProtoId;
+
+                    if (RegionManager.IsRegionAvailable(destinationRegion))
+                        MovePlayerToRegion(client, destinationRegion);
+                    else
+                        Logger.Warn($"Region {destinationRegion} is not available");
+
+                    break;
+
                 case ClientToGameServerMessage.NetMessageSwitchAvatar:
                     Logger.Info($"Received NetMessageSwitchAvatar");
                     var switchAvatarMessage = NetMessageSwitchAvatar.ParseFrom(message.Payload);
@@ -289,19 +305,8 @@ namespace MHServerEmu.Games
 
                     break;
 
-                case ClientToGameServerMessage.NetMessageUseWaypoint:
-                    Logger.Info($"Received NetMessageUseWaypoint message");
-                    var useWaypointMessage = NetMessageUseWaypoint.ParseFrom(message.Payload);
-
-                    Logger.Trace(useWaypointMessage.ToString());
-
-                    RegionPrototype destinationRegion = (RegionPrototype)useWaypointMessage.RegionProtoId;
-
-                    if (RegionManager.IsRegionAvailable(destinationRegion))
-                        MovePlayerToRegion(client, destinationRegion);
-                    else
-                        Logger.Warn($"Region {destinationRegion} is not available");
-
+                case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:
+                    Logger.Trace(new GameplayOptions(NetMessageSetPlayerGameplayOptions.ParseFrom(message.Payload).OptionsData).ToString());
                     break;
 
                 case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:
