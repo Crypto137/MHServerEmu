@@ -7,7 +7,7 @@ using MHServerEmu.Networking;
 
 namespace MHServerEmu.Grouping
 {
-    public class GroupingManagerService : IGameMessageHandler
+    public class GroupingManagerService : IGameService
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -63,7 +63,7 @@ namespace MHServerEmu.Grouping
             }
         }
 
-        public void Handle(FrontendClient client, ushort muxId, GameMessage[] messages)
+        public void Handle(FrontendClient client, ushort muxId, IEnumerable<GameMessage> messages)
         {
             foreach (GameMessage message in messages) Handle(client, muxId, message);
         }

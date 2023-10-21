@@ -7,7 +7,7 @@ using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Networking
 {
-    public class ServerManager : IGameMessageHandler
+    public class ServerManager : IGameService
     {
         public const string GameVersion = "1.52.0.1700";
 
@@ -67,7 +67,7 @@ namespace MHServerEmu.Networking
             }
         }
 
-        public void Handle(FrontendClient client, ushort muxId, GameMessage[] messages)
+        public void Handle(FrontendClient client, ushort muxId, IEnumerable<GameMessage> messages)
         {
             switch (muxId)
             {
@@ -88,7 +88,7 @@ namespace MHServerEmu.Networking
                     break;
 
                 default:
-                    Logger.Warn($"{messages.Length} unhandled messages on muxId {muxId}");
+                    Logger.Warn($"{messages.Count()} unhandled messages on muxId {muxId}");
                     break;
             }
         }

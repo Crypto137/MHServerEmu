@@ -5,7 +5,7 @@ using MHServerEmu.Networking;
 
 namespace MHServerEmu.PlayerManagement
 {
-    public class PlayerManagerService : IGameMessageHandler
+    public class PlayerManagerService : IGameService
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -131,7 +131,7 @@ namespace MHServerEmu.PlayerManagement
             }
         }
 
-        public void Handle(FrontendClient client, ushort muxId, GameMessage[] messages)
+        public void Handle(FrontendClient client, ushort muxId, IEnumerable<GameMessage> messages)
         {
             foreach (GameMessage message in messages) Handle(client, muxId, message);
         }

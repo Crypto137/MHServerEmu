@@ -10,7 +10,7 @@ using MHServerEmu.Networking;
 
 namespace MHServerEmu.Billing
 {
-    public class BillingService : IGameMessageHandler
+    public class BillingService : IGameService
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -108,7 +108,7 @@ namespace MHServerEmu.Billing
             }
         }
 
-        public void Handle(FrontendClient client, ushort muxId, GameMessage[] messages)
+        public void Handle(FrontendClient client, ushort muxId, IEnumerable<GameMessage> messages)
         {
             foreach (GameMessage message in messages) Handle(client, muxId, message);
         }
