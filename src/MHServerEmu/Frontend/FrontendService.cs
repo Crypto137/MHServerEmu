@@ -118,7 +118,7 @@ namespace MHServerEmu.Frontend
                     // Adding the player early can cause GroupingManager handshake to not finish properly, which leads to the chat not working
                     if (client.FinishedPlayerManagerHandshake && client.FinishedGroupingManagerHandshake)
                     {
-                        _serverManager.GroupingManagerService.SendMotd(client);
+                        _serverManager.GroupingManagerService.AddPlayer(client);
                         _serverManager.PlayerManagerService.AddPlayer(client);
                     }
 
@@ -196,6 +196,7 @@ namespace MHServerEmu.Frontend
                 }
 
                 _serverManager.PlayerManagerService.RemovePlayer(client);
+                _serverManager.GroupingManagerService.RemovePlayer(client);
 
                 if (ConfigManager.Frontend.BypassAuth == false) DBManager.UpdateAccountData(client.Session.Account);
 

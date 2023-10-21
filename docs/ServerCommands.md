@@ -31,7 +31,7 @@ To see an up to date list of all commands, type !commands in the server console 
 | !server status                                          | Shows server status information.                  | All        |
 | !server shutdown                                        | Shuts down the server.                            | Admin      |
 | !client info [sessionId]                                | Show information about the specified client.      | Admin      |
-| !client kick [sessionId]                                | Kicks the specified client from the server.       | Moderator  |
+| !client kick [playerName]                               | Kicks the specified player from the server.       | Moderator  |
 | !client send [sessionId] [messageName] [messageContent] | Sends a protobuf message to the specified client. | Admin      |
 | !packet parse                                           | Parses messages from all packet files.            | Admin      |
 | !gpak export [entries\|data\|all]                       | Exports data from loaded GPAK files.              | Admin      |

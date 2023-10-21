@@ -57,7 +57,7 @@ namespace MHServerEmu.Frontend.Accounts.DBModels
             return Avatars.FirstOrDefault(avatar => avatar.Prototype == prototype);
         }
 
-        public override string ToString() => $"{Email} ({PlayerName})";
+        public override string ToString() => $"{PlayerName} ({Email})";
 
         private void InitializeData()
         {

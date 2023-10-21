@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Frontend;
+using MHServerEmu.Grouping;
 using MHServerEmu.Networking.Base;
 
 namespace MHServerEmu.Networking
@@ -12,6 +13,7 @@ namespace MHServerEmu.Networking
         private readonly ServerManager _serverManager;
 
         public FrontendService FrontendService { get => _serverManager.FrontendService; }
+        public GroupingManagerService GroupingManagerService { get => _serverManager.GroupingManagerService; }
 
         public FrontendServer()
         {

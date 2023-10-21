@@ -8,7 +8,7 @@ namespace MHServerEmu.PlayerManagement
 {
     public class PlayerManagerService : IGameService
     {
-        private const int MuxChannel = 1;   // All messages come to and from PlayerManager over mux channel 1
+        private const ushort MuxChannel = 1;   // All messages come to and from PlayerManager over mux channel 1
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
