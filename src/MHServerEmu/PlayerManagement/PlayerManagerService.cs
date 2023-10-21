@@ -9,11 +9,11 @@ namespace MHServerEmu.PlayerManagement
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private ServerManager _gameServerManager;
+        private readonly ServerManager _serverManager;
 
-        public PlayerManagerService(ServerManager gameServerManager)
+        public PlayerManagerService(ServerManager serverManager)
         {
-            _gameServerManager = gameServerManager;
+            _serverManager = serverManager;
         }
 
         public void Handle(FrontendClient client, ushort muxId, GameMessage message)
@@ -96,7 +96,7 @@ namespace MHServerEmu.PlayerManagement
                 case ClientToGameServerMessage.NetMessageSelectOmegaBonus:                      // This should be within NetMessageOmegaBonusAllocationCommit only in theory
                 case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:
                 case ClientToGameServerMessage.NetMessageRespecOmegaBonus:
-                    _gameServerManager.GameManager.GetGameById(client.GameId).Handle(client, muxId, message);
+                    _serverManager.GameManager.GetGameById(client.GameId).Handle(client, muxId, message);
                     break;
 
                 // Grouping Manager messages
@@ -104,7 +104,7 @@ namespace MHServerEmu.PlayerManagement
                 case ClientToGameServerMessage.NetMessageTell:
                 case ClientToGameServerMessage.NetMessageReportPlayer:
                 case ClientToGameServerMessage.NetMessageChatBanVote:
-                    _gameServerManager.GroupingManagerService.Handle(client, muxId, message);
+                    _serverManager.GroupingManagerService.Handle(client, muxId, message);
                     break;
 
                 // Billing messages
@@ -114,7 +114,7 @@ namespace MHServerEmu.PlayerManagement
                 case ClientToGameServerMessage.NetMessageBuyGiftForOtherPlayer:
                 case ClientToGameServerMessage.NetMessagePurchaseUnlock:
                 case ClientToGameServerMessage.NetMessageGetGiftHistory:
-                    _gameServerManager.BillingService.Handle(client, muxId, message);
+                    _serverManager.BillingService.Handle(client, muxId, message);
                     break;
 
                 case ClientToGameServerMessage.NetMessageGracefulDisconnect:

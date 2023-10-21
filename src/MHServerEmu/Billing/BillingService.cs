@@ -14,12 +14,12 @@ namespace MHServerEmu.Billing
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly ServerManager _gameServerManager;
+        private readonly ServerManager _serverManager;
         private readonly Catalog _catalog;
 
-        public BillingService(ServerManager gameServerManager)
+        public BillingService(ServerManager serverManager)
         {
-            _gameServerManager = gameServerManager;
+            _serverManager = serverManager;
             _catalog = JsonSerializer.Deserialize<Catalog>(File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Catalog.json")));
 
             // Apply a patch to the catalog if it's enabled and there's one

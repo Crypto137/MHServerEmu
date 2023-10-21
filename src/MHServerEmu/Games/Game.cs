@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.Events
         private readonly Dictionary<FrontendClient, List<GameMessage>> _responseListDict = new();
         private readonly Stopwatch _tickWatch = new();
 
-        private readonly ServerManager _gameServerManager;
+        private readonly ServerManager _serverManager;
 
         private readonly PowerMessageHandler _powerMessageHandler;
 
@@ -39,7 +39,7 @@ namespace MHServerEmu.Games.Events
         public RegionManager RegionManager { get; }
         public ConcurrentDictionary<FrontendClient, Player> PlayerDict { get; } = new();
 
-        public Game(ServerManager gameServerManager, ulong id)
+        public Game(ServerManager serverManager, ulong id)
         {
             EventManager = new(this);
             EntityManager = new();
@@ -47,7 +47,7 @@ namespace MHServerEmu.Games.Events
 
             _powerMessageHandler = new(EventManager);
 
-            _gameServerManager = gameServerManager;
+            _serverManager = serverManager;
             Id = id;
 
             // Start main game loop

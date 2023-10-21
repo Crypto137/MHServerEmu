@@ -9,19 +9,19 @@ namespace MHServerEmu.PlayerManagement
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly ServerManager _gameServerManager;
-        private Dictionary<ulong, Game> _gameDict = new();
+        private readonly ServerManager _serverManager;
+        private readonly Dictionary<ulong, Game> _gameDict = new();
 
-        public GameManager(ServerManager gameServerManager)
+        public GameManager(ServerManager serverManager)
         {
-            _gameServerManager = gameServerManager;
+            _serverManager = serverManager;
             CreateGame();
         }
 
         public void CreateGame()
         {
             ulong id = IdGenerator.Generate(IdType.Game);
-            _gameDict.Add(id, new(_gameServerManager, id));
+            _gameDict.Add(id, new(_serverManager, id));
         }
 
         public Game GetGameById(ulong id)

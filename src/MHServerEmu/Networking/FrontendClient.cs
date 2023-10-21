@@ -12,7 +12,7 @@ namespace MHServerEmu.Networking
     public class FrontendClient : IClient
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private readonly ServerManager _gameServerManager;
+        private readonly ServerManager _serverManager;
 
         public Connection Connection { get; set; }
 
@@ -20,7 +20,7 @@ namespace MHServerEmu.Networking
         public bool FinishedPlayerManagerHandshake { get; set; } = false;
         public bool FinishedGroupingManagerHandshake { get; set; } = false;
         public ulong GameId { get; set; }
-        public Game CurrentGame { get => _gameServerManager.GameManager.GetGameById(GameId); }
+        public Game CurrentGame { get => _serverManager.GameManager.GetGameById(GameId); }
 
         // Temporarily store state here instead of Game
         public bool IsLoading { get; set; } = false;
@@ -31,10 +31,10 @@ namespace MHServerEmu.Networking
         public ulong ThrowingCancelPower { get; set; }
         public Entity ThrowingObject { get; set; }
 
-        public FrontendClient(Connection connection, ServerManager gameServerManager)
+        public FrontendClient(Connection connection, ServerManager serverManager)
         {
             Connection = connection;
-            _gameServerManager = gameServerManager;
+            _serverManager = serverManager;
         }
 
         public void Parse(ConnectionDataEventArgs e)
@@ -62,7 +62,7 @@ namespace MHServerEmu.Networking
                     break;
 
                 case MuxCommand.Data:
-                    _gameServerManager.Handle(this, packet.MuxId, packet.Messages);
+                    _serverManager.Handle(this, packet.MuxId, packet.Messages);
                     break;
             }
         }

@@ -11,11 +11,11 @@ namespace MHServerEmu.Grouping
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private ServerManager _gameServerManager;
+        private readonly ServerManager _serverManager;
 
-        public GroupingManagerService(ServerManager gameServerManager)
+        public GroupingManagerService(ServerManager serverManager)
         {
-            _gameServerManager = gameServerManager;
+            _serverManager = serverManager;
         }
 
         public void Handle(FrontendClient client, ushort muxId, GameMessage message)
@@ -43,7 +43,7 @@ namespace MHServerEmu.Grouping
                                 .SetTheMessage(chatMessageIn.TheMessage)
                                 .Build();
 
-                            _gameServerManager.FrontendService.BroadcastMessage(2, new(chatMessageOut));
+                            _serverManager.FrontendService.BroadcastMessage(2, new(chatMessageOut));
                         }
                     }
 

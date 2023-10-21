@@ -15,7 +15,7 @@ namespace MHServerEmu.Frontend
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private ServerManager _gameServerManager;
+        private readonly ServerManager _serverManager;
 
         private readonly object _sessionLock = new();
         private readonly Dictionary<ulong, ClientSession> _sessionDict = new();
@@ -23,9 +23,9 @@ namespace MHServerEmu.Frontend
 
         public int SessionCount { get => _sessionDict.Count; }
 
-        public FrontendService(ServerManager gameServerManager)
+        public FrontendService(ServerManager serverManager)
         {
-            _gameServerManager = gameServerManager;
+            _serverManager = serverManager;
         }
 
         public void Handle(FrontendClient client, ushort muxId, GameMessage message)
@@ -106,7 +106,7 @@ namespace MHServerEmu.Frontend
                         client.SendMessage(1, new(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build()));
 
                         // Send achievement database
-                        client.SendMessage(1, new(_gameServerManager.AchievementDatabase.ToNetMessageAchievementDatabaseDump()));
+                        client.SendMessage(1, new(_serverManager.AchievementDatabase.ToNetMessageAchievementDatabaseDump()));
                         // NetMessageQueryIsRegionAvailable regionPrototype: 9833127629697912670 should go in the same packet as AchievementDatabaseDump
                     }
                     else if (initialClientHandshake.ServerType == PubSubServerTypes.GROUPING_MANAGER_FRONTEND && client.FinishedGroupingManagerHandshake == false)
@@ -118,8 +118,8 @@ namespace MHServerEmu.Frontend
                     // Adding the player early can cause GroupingManager handshake to not finish properly, which leads to the chat not working
                     if (client.FinishedPlayerManagerHandshake && client.FinishedGroupingManagerHandshake)
                     {
-                        _gameServerManager.GroupingManagerService.SendMotd(client);
-                        _gameServerManager.GameManager.GetAvailableGame().AddPlayer(client);
+                        _serverManager.GroupingManagerService.SendMotd(client);
+                        _serverManager.GameManager.GetAvailableGame().AddPlayer(client);
                     }
 
                     break;
