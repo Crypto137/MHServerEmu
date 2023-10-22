@@ -190,25 +190,12 @@ namespace MHServerEmu.Frontend
             }
         }
 
-        private void HandleInitialClientHandshake(FrontendClient client, InitialClientHandshake initialClientHandshake)
+        private void HandleInitialClientHandshake(FrontendClient client, InitialClientHandshake handshake)
         {
-            // These handshakes should probably be handled by PlayerManagerService and GroupingManagerService. They should probably also track clients on their own.
-            if (initialClientHandshake.ServerType == PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND && client.FinishedPlayerManagerHandshake == false)
-            {
-                client.FinishedPlayerManagerHandshake = true;
-
-                // Queue loading
-                client.IsLoading = true;
-                client.SendMessage(1, new(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build()));
-
-                // Send achievement database
-                client.SendMessage(1, new(_serverManager.AchievementDatabase.ToNetMessageAchievementDatabaseDump()));
-                // NetMessageQueryIsRegionAvailable regionPrototype: 9833127629697912670 should go in the same packet as AchievementDatabaseDump
-            }
-            else if (initialClientHandshake.ServerType == PubSubServerTypes.GROUPING_MANAGER_FRONTEND && client.FinishedGroupingManagerHandshake == false)
-            {
-                client.FinishedGroupingManagerHandshake = true;
-            }
+            if (handshake.ServerType == PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND && client.FinishedPlayerManagerHandshake == false)
+                _serverManager.PlayerManagerService.AcceptClientHandshake(client);
+            else if (handshake.ServerType == PubSubServerTypes.GROUPING_MANAGER_FRONTEND && client.FinishedGroupingManagerHandshake == false)
+                _serverManager.GroupingManagerService.AcceptClientHandshake(client);
 
             // Add the player to a game when both handshakes are finished
             // Adding the player early can cause GroupingManager handshake to not finish properly, which leads to the chat not working

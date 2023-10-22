@@ -22,6 +22,11 @@ namespace MHServerEmu.Grouping
             _serverManager = serverManager;
         }
 
+        public void AcceptClientHandshake(FrontendClient client)
+        {
+            client.FinishedGroupingManagerHandshake = true;
+        }
+
         public void AddPlayer(FrontendClient client)
         {
             lock (_playerLock)

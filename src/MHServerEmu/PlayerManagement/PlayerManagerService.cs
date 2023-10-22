@@ -22,6 +22,19 @@ namespace MHServerEmu.PlayerManagement
             _gameManager = new(_serverManager);
         }
 
+        public void AcceptClientHandshake(FrontendClient client)
+        {
+            client.FinishedPlayerManagerHandshake = true;
+
+            // Queue loading
+            client.IsLoading = true;
+            client.SendMessage(MuxChannel, new(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build()));
+
+            // Send achievement database
+            client.SendMessage(MuxChannel, new(_serverManager.AchievementDatabase.ToNetMessageAchievementDatabaseDump()));
+            // NetMessageQueryIsRegionAvailable regionPrototype: 9833127629697912670 should go in the same packet as AchievementDatabaseDump
+        }
+
         public void AddPlayer(FrontendClient client)
         {
             lock (_playerLock)
