@@ -131,7 +131,7 @@ namespace MHServerEmu.Common.Commands
         {
             if (client == null) return "You can only invoke this command from the game.";
             if (@params.Length == 0) return "Invalid arguments. Type 'help player avatar' to get help.";
-            if (ConfigManager.Frontend.BypassAuth) return "Disable BypassAuth to use this command";
+            if (ConfigManager.PlayerManager.BypassAuth) return "Disable BypassAuth to use this command";
 
             if (Enum.TryParse(typeof(AvatarPrototype), @params[0], true, out object avatar))
             {
@@ -149,7 +149,7 @@ namespace MHServerEmu.Common.Commands
         {
             if (client == null) return "You can only invoke this command from the game.";
             if (@params.Length == 0) return "Invalid arguments. Type 'help player region' to get help.";
-            if (ConfigManager.Frontend.BypassAuth) return "Disable BypassAuth to use this command";
+            if (ConfigManager.PlayerManager.BypassAuth) return "Disable BypassAuth to use this command";
 
             if (Enum.TryParse(typeof(RegionPrototype), @params[0], true, out object region))
             {
@@ -183,7 +183,7 @@ namespace MHServerEmu.Common.Commands
                     ulong replicationId = (ulong)client.Session.Account.Player.Avatar.ToPropertyCollectionReplicationId();
 
                     // Update account data if needed
-                    if (ConfigManager.Frontend.BypassAuth == false) client.Session.Account.CurrentAvatar.Costume = prototypeId;
+                    if (ConfigManager.PlayerManager.BypassAuth == false) client.Session.Account.CurrentAvatar.Costume = prototypeId;
 
                     // Send NetMessageSetProperty message
                     client.SendMessage(1, new(property.ToNetMessageSetProperty(replicationId)));

@@ -30,7 +30,7 @@ namespace MHServerEmu.PlayerManagement
                 Logger.Warn($"Client version mismatch ({loginDataPB.Version} instead of {ServerManager.GameVersion})");
 
                 // Fail auth if version mismatch is not allowed
-                if (ConfigManager.Frontend.AllowClientVersionMismatch == false)
+                if (ConfigManager.PlayerManager.AllowClientVersionMismatch == false)
                     return AuthStatusCode.PatchRequired;
             }
 
@@ -38,7 +38,7 @@ namespace MHServerEmu.PlayerManagement
             DBAccount account;
             AuthStatusCode statusCode;
 
-            if (ConfigManager.Frontend.BypassAuth)  // Auth always succeeds when BypassAuth is set to true
+            if (ConfigManager.PlayerManager.BypassAuth)  // Auth always succeeds when BypassAuth is set to true
             {
                 account = AccountManager.DefaultAccount;
                 statusCode = AuthStatusCode.Success;

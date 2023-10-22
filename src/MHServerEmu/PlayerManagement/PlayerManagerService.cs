@@ -49,12 +49,12 @@ namespace MHServerEmu.PlayerManagement
             }
 
             // Respond on successful auth
-            if (ConfigManager.Frontend.SimulateQueue)
+            if (ConfigManager.PlayerManager.SimulateQueue)
             {
                 Logger.Info("Responding with LoginQueueStatus message");
                 client.SendMessage(MuxChannel, new(LoginQueueStatus.CreateBuilder()
-                    .SetPlaceInLine(ConfigManager.Frontend.QueuePlaceInLine)
-                    .SetNumberOfPlayersInLine(ConfigManager.Frontend.QueueNumberOfPlayersInLine)
+                    .SetPlaceInLine(ConfigManager.PlayerManager.QueuePlaceInLine)
+                    .SetNumberOfPlayersInLine(ConfigManager.PlayerManager.QueueNumberOfPlayersInLine)
                     .Build()));
             }
             else
@@ -113,7 +113,7 @@ namespace MHServerEmu.PlayerManagement
                 _sessionManager.RemoveSession(client.Session.Id);
             }
 
-            if (ConfigManager.Frontend.BypassAuth == false) DBManager.UpdateAccountData(client.Session.Account);
+            if (ConfigManager.PlayerManager.BypassAuth == false) DBManager.UpdateAccountData(client.Session.Account);
         }
 
         public void BroadcastMessage(GameMessage message)

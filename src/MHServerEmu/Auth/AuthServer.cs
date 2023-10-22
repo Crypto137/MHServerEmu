@@ -166,8 +166,8 @@ namespace MHServerEmu.Auth
                         .SetFrontendServer(ConfigManager.Frontend.PublicAddress)
                         .SetFrontendPort(ConfigManager.Frontend.Port)
                         .SetPlatformTicket("")
-                        .SetHasnews(ConfigManager.Frontend.ShowNewsOnLogin)
-                        .SetNewsurl(ConfigManager.Frontend.NewsUrl)
+                        .SetHasnews(ConfigManager.PlayerManager.ShowNewsOnLogin)
+                        .SetNewsurl(ConfigManager.PlayerManager.NewsUrl)
                         .SetSuccess(true)
                         .Build()).Serialize();
 

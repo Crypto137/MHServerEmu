@@ -9,6 +9,7 @@ namespace MHServerEmu.Common.Config
         public static LoggingConfig Logging { get; }
         public static PlayerDataConfig PlayerData { get; }
         public static FrontendConfig Frontend { get; }
+        public static PlayerManagerConfig PlayerManager { get; }
         public static GroupingManagerConfig GroupingManager { get; }
         public static GameOptionsConfig GameOptions { get; }
         public static BillingConfig Billing { get; }
@@ -25,6 +26,7 @@ namespace MHServerEmu.Common.Config
                 Logging = new(configFile);
                 PlayerData = new(configFile);
                 Frontend = new(configFile);
+                PlayerManager = new(configFile);
                 GroupingManager = new(configFile);
                 GameOptions = new(configFile);
                 Billing = new(configFile);
