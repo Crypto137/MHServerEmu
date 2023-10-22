@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 using MHServerEmu.Common.Logging;
-using MHServerEmu.Networking;
+using MHServerEmu.Frontend;
 
 namespace MHServerEmu.Common.Commands
 {

@@ -13,22 +13,24 @@ namespace MHServerEmu.Networking
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        public FrontendServer FrontendServer { get; }
+
         public AchievementDatabase AchievementDatabase { get; }
 
-        public FrontendService FrontendService { get; }
         public GroupingManagerService GroupingManagerService { get; }
         public PlayerManagerService PlayerManagerService { get; }
         public BillingService BillingService { get; }
 
         public long StartTime { get; }      // Used for calculating game time 
 
-        public ServerManager()
+        public ServerManager(FrontendServer frontendServer)
         {
+            FrontendServer = frontendServer;
+
             // Initialize achievement database
             AchievementDatabase = new(File.ReadAllBytes(Path.Combine(Directory.GetCurrentDirectory(), "Assets", "CompressedAchievementDatabaseDump.bin")));
 
             // Initialize services
-            FrontendService = new(this);
             GroupingManagerService = new(this);
             PlayerManagerService = new(this);
             BillingService = new(this);
@@ -44,7 +46,7 @@ namespace MHServerEmu.Networking
                     if (client.FinishedPlayerManagerHandshake)
                         PlayerManagerService.Handle(client, muxId, message);
                     else
-                        FrontendService.Handle(client, muxId, message);
+                        FrontendServer.Handle(client, muxId, message);
 
                     break;
 
@@ -52,7 +54,7 @@ namespace MHServerEmu.Networking
                     if (client.FinishedGroupingManagerHandshake)
                         GroupingManagerService.Handle(client, muxId, message);
                     else
-                        FrontendService.Handle(client, muxId, message);
+                        FrontendServer.Handle(client, muxId, message);
 
                     break;
 
@@ -70,7 +72,7 @@ namespace MHServerEmu.Networking
                     if (client.FinishedPlayerManagerHandshake)
                         PlayerManagerService.Handle(client, muxId, messages);
                     else
-                        FrontendService.Handle(client, muxId, messages);
+                        FrontendServer.Handle(client, muxId, messages);
 
                     break;
 
@@ -78,7 +80,7 @@ namespace MHServerEmu.Networking
                     if (client.FinishedGroupingManagerHandshake)
                         GroupingManagerService.Handle(client, muxId, messages);
                     else
-                        FrontendService.Handle(client, muxId, messages);
+                        FrontendServer.Handle(client, muxId, messages);
 
                     break;
 

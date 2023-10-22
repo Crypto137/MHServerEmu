@@ -4,10 +4,11 @@ using MHServerEmu.Games;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Networking;
 using MHServerEmu.Networking.Base;
 using MHServerEmu.PlayerManagement;
 
-namespace MHServerEmu.Networking
+namespace MHServerEmu.Frontend
 {
     public class FrontendClient : IClient
     {
@@ -20,7 +21,7 @@ namespace MHServerEmu.Networking
         public bool FinishedPlayerManagerHandshake { get; set; } = false;
         public bool FinishedGroupingManagerHandshake { get; set; } = false;
         public ulong GameId { get; set; }
-        public Game CurrentGame { get => _serverManager.PlayerManagerService.GetGameByPlayer(this) ; }
+        public Game CurrentGame { get => _serverManager.PlayerManagerService.GetGameByPlayer(this); }
 
         // Temporarily store state here instead of Game
         public bool IsLoading { get; set; } = false;
@@ -45,20 +46,20 @@ namespace MHServerEmu.Networking
             switch (packet.Command)
             {
                 case MuxCommand.Connect:
-                    Logger.Trace($"Accepting connection for muxId {packet.MuxId}");
+                    Logger.Trace($"Connected on mux channel {packet.MuxId}");
                     Connection.Send(new PacketOut(packet.MuxId, MuxCommand.ConnectAck));
                     break;
 
                 case MuxCommand.ConnectAck:
-                    Logger.Warn($"Received accept for muxId {packet.MuxId}. Is this supposed to happen?");
+                    Logger.Warn($"Accepted connection on mux channel {packet.MuxId}. Is this supposed to happen?");
                     break;
 
                 case MuxCommand.Disconnect:
-                    Logger.Trace($"Received disconnect for muxId {packet.MuxId}");
+                    Logger.Trace($"Disconnected from mux channel {packet.MuxId}");
                     break;
 
                 case MuxCommand.ConnectWithData:
-                    Logger.Warn($"Received connectdata for muxId {packet.MuxId}. Is this supposed to happen?");
+                    Logger.Warn($"Connected with data on mux channel {packet.MuxId}. Is this supposed to happen?");
                     break;
 
                 case MuxCommand.Data:

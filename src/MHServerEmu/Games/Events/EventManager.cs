@@ -1,15 +1,16 @@
 ﻿using Gazillion;
+using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Networking;
-using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Common.Extensions;
-using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.GameData.Calligraphy;
 
 namespace MHServerEmu.Games.Events
 {

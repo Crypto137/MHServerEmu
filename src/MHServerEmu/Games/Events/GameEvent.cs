@@ -1,4 +1,4 @@
-﻿using MHServerEmu.Networking;
+﻿using MHServerEmu.Frontend;
 
 namespace MHServerEmu.Games.Events
 {

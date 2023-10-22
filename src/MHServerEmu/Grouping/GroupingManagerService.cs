@@ -2,6 +2,7 @@
 using MHServerEmu.Common.Commands;
 using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Frontend;
 using MHServerEmu.Networking;
 using MHServerEmu.PlayerManagement.Accounts;
 

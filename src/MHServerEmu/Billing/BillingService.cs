@@ -3,6 +3,7 @@ using Gazillion;
 using MHServerEmu.Billing.Catalogs;
 using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Properties;

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Globalization;
 using Gazillion;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;

@@ -2,8 +2,8 @@
 using Gazillion;
 using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Frontend;
 using MHServerEmu.Grouping;
-using MHServerEmu.Networking;
 
 namespace MHServerEmu.Common.Commands
 {

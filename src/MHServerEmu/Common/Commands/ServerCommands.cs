@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Common.Config;
+using MHServerEmu.Frontend;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Networking;
 using MHServerEmu.PlayerManagement;

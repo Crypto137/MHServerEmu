@@ -1,4 +1,6 @@
-﻿namespace MHServerEmu.Networking
+﻿using MHServerEmu.Frontend;
+
+namespace MHServerEmu.Networking
 {
     public class QueuedGameMessage
     {
