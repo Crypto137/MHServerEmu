@@ -1,7 +1,11 @@
 ﻿using Gazillion;
+using Google.ProtocolBuffers;
+using MHServerEmu.Auth;
+using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games;
 using MHServerEmu.Networking;
+using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.PlayerManagement
 {
@@ -12,15 +16,59 @@ namespace MHServerEmu.PlayerManagement
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly ServerManager _serverManager;
+
+        private readonly SessionManager _sessionManager;
         private readonly GameManager _gameManager;
         private readonly object _playerLock = new();
         private readonly List<FrontendClient> _playerList = new();
 
+        public int SessionCount { get => _sessionManager.SessionCount; }
+
         public PlayerManagerService(ServerManager serverManager)
         {
             _serverManager = serverManager;
+            _sessionManager = new();
             _gameManager = new(_serverManager);
         }
+
+        #region Auth
+
+        public AuthStatusCode HandleLoginRequest(LoginDataPB loginDataPB, out ClientSession session)
+        {
+            return _sessionManager.TryCreateSessionFromLoginDataPB(loginDataPB, out session);
+        }
+
+        public void HandleClientCredentials(FrontendClient client, ClientCredentials credentials)
+        {
+            if (_sessionManager.VerifyClientCredentials(client, credentials) == false)
+            {
+                Logger.Warn($"Failed to verify client credentials, disconnecting client on {client.Connection}");
+                client.Connection.Disconnect();
+                return;
+            }
+
+            // Respond on successful auth
+            if (ConfigManager.Frontend.SimulateQueue)
+            {
+                Logger.Info("Responding with LoginQueueStatus message");
+                client.SendMessage(MuxChannel, new(LoginQueueStatus.CreateBuilder()
+                    .SetPlaceInLine(ConfigManager.Frontend.QueuePlaceInLine)
+                    .SetNumberOfPlayersInLine(ConfigManager.Frontend.QueueNumberOfPlayersInLine)
+                    .Build()));
+            }
+            else
+            {
+                Logger.Info("Responding with SessionEncryptionChanged message");
+                client.SendMessage(MuxChannel, new(SessionEncryptionChanged.CreateBuilder()
+                    .SetRandomNumberIndex(0)
+                    .SetEncryptedRandomNumber(ByteString.Empty)
+                    .Build()));
+            }
+        }
+
+        #endregion
+
+        #region Client Management
 
         public void AcceptClientHandshake(FrontendClient client)
         {
@@ -61,7 +109,10 @@ namespace MHServerEmu.PlayerManagement
                 }
 
                 _playerList.Remove(client);
+                _sessionManager.RemoveSession(client.Session.Id);
             }
+
+            if (ConfigManager.Frontend.BypassAuth == false) DBManager.UpdateAccountData(client.Session.Account);
         }
 
         public void BroadcastMessage(GameMessage message)
@@ -73,7 +124,11 @@ namespace MHServerEmu.PlayerManagement
             }
         }
 
+        public bool TryGetSession(ulong sessionId, out ClientSession session) => _sessionManager.TryGetSession(sessionId, out session);
+        public bool TryGetClient(ulong sessionId, out FrontendClient client) => _sessionManager.TryGetClient(sessionId, out client);
         public Game GetGameByPlayer(FrontendClient client) => _gameManager.GetGameById(client.GameId);
+
+        #endregion
 
         #region Message Handling
 

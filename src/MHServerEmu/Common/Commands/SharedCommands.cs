@@ -1,7 +1,7 @@
-﻿using MHServerEmu.Frontend.Accounts;
-using MHServerEmu.Games.GameData;
+﻿using MHServerEmu.Games.GameData;
 using MHServerEmu.Grouping;
 using MHServerEmu.Networking;
+using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.Common.Commands
 {

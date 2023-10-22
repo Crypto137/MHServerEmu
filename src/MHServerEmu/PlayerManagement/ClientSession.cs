@@ -1,8 +1,8 @@
 ﻿using System.Text;
 using MHServerEmu.Common;
-using MHServerEmu.Frontend.Accounts.DBModels;
+using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
-namespace MHServerEmu.Frontend
+namespace MHServerEmu.PlayerManagement
 {
     public enum ClientDownloader
     {

@@ -1,8 +1,9 @@
 ﻿using MHServerEmu.Common;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.PlayerManagement.Accounts;
 
-namespace MHServerEmu.Frontend.Accounts.DBModels
+namespace MHServerEmu.PlayerManagement.Accounts.DBModels
 {
     public class DBAccount
     {

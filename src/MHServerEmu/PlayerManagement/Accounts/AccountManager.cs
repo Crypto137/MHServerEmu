@@ -4,9 +4,9 @@ using MHServerEmu.Auth;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Extensions;
-using MHServerEmu.Frontend.Accounts.DBModels;
+using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
-namespace MHServerEmu.Frontend.Accounts
+namespace MHServerEmu.PlayerManagement.Accounts
 {
     public enum AccountUserLevel : byte
     {

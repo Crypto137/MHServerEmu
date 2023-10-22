@@ -1,11 +1,11 @@
 ﻿using MHServerEmu.Common.Config;
-using MHServerEmu.Frontend.Accounts;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Networking;
+using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.Common.Commands
 {

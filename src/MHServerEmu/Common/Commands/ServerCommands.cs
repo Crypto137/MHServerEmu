@@ -1,9 +1,9 @@
 ﻿using Gazillion;
 using MHServerEmu.Common.Config;
-using MHServerEmu.Frontend;
-using MHServerEmu.Frontend.Accounts;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Networking;
+using MHServerEmu.PlayerManagement;
+using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.Common.Commands
 {
@@ -34,7 +34,7 @@ namespace MHServerEmu.Common.Commands
 
             if (ulong.TryParse(@params[0], out ulong sessionId))
             {
-                if (Program.FrontendServer.FrontendService.TryGetSession(sessionId, out ClientSession session))
+                if (Program.FrontendServer.PlayerManagerService.TryGetSession(sessionId, out ClientSession session))
                 {
                     return session.ToString();
                 }
@@ -68,7 +68,7 @@ namespace MHServerEmu.Common.Commands
 
             if (ulong.TryParse(@params[0], out ulong sessionId))
             {
-                if (Program.FrontendServer.FrontendService.TryGetClient(sessionId, out FrontendClient target))
+                if (Program.FrontendServer.PlayerManagerService.TryGetClient(sessionId, out FrontendClient target))
                 {
                     switch (@params[1].ToLower())
                     {

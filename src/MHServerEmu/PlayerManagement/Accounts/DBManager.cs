@@ -1,9 +1,9 @@
 ﻿using System.Data.SQLite;
 using Dapper;
 using MHServerEmu.Common.Logging;
-using MHServerEmu.Frontend.Accounts.DBModels;
+using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
-namespace MHServerEmu.Frontend.Accounts
+namespace MHServerEmu.PlayerManagement.Accounts
 {
     public static class DBManager
     {

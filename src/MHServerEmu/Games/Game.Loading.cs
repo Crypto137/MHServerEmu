@@ -1,6 +1,5 @@
 ﻿using Gazillion;
 using MHServerEmu.Common.Config;
-using MHServerEmu.Frontend.Accounts.DBModels;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
@@ -9,6 +8,7 @@ using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social;
 using MHServerEmu.Networking;
+using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.Games
 {

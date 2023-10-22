@@ -6,7 +6,7 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Common.Logging.Targets;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Networking;
-using MHServerEmu.Frontend.Accounts;
+using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu
 {
@@ -76,7 +76,7 @@ namespace MHServerEmu
 
         public static string GetServerStatus()
         {
-            return $"Server Status\nUptime: {DateTime.Now - StartupTime:hh\\:mm\\:ss}\nSessions: {FrontendServer.FrontendService.SessionCount}";
+            return $"Server Status\nUptime: {DateTime.Now - StartupTime:hh\\:mm\\:ss}\nSessions: {FrontendServer.PlayerManagerService.SessionCount}";
         }
 
         private static void PrintBanner()
@@ -143,7 +143,7 @@ namespace MHServerEmu
         {
             if (AuthServer != null) return false;
 
-            AuthServer = new(8080, FrontendServer.FrontendService);
+            AuthServer = new(8080, FrontendServer.PlayerManagerService);
             AuthServerThread = new(AuthServer.Run) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
             AuthServerThread.Start();
 

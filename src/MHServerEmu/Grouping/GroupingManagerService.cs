@@ -2,8 +2,8 @@
 using MHServerEmu.Common.Commands;
 using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
-using MHServerEmu.Frontend.Accounts;
 using MHServerEmu.Networking;
+using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.Grouping
 {

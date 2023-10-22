@@ -1,7 +1,7 @@
 ﻿using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Regions;
 
-namespace MHServerEmu.Frontend.Accounts.DBModels
+namespace MHServerEmu.PlayerManagement.Accounts.DBModels
 {
     public class DBPlayer
     {

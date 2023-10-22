@@ -7,7 +7,7 @@ using MHServerEmu.Auth.WebApi;
 using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Networking;
-using MHServerEmu.Frontend;
+using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Auth
 {
@@ -16,16 +16,16 @@ namespace MHServerEmu.Auth
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly string _url;
-        private readonly FrontendService _frontendService;
+        private readonly PlayerManagerService _playerManager;
         private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly WebApiHandler _webApiHandler;
 
         private HttpListener _listener;
 
-        public AuthServer(int port, FrontendService frontendService)
+        public AuthServer(int port, PlayerManagerService playerManager)
         {
             _url = $"http://localhost:{port}/";
-            _frontendService = frontendService;
+            _playerManager = playerManager;
             _cancellationTokenSource = new();
             _webApiHandler = new();
         }
@@ -145,7 +145,7 @@ namespace MHServerEmu.Auth
                     }
 
                     // Try to create a new session from the data we received
-                    AuthStatusCode statusCode = _frontendService.TryCreateSessionFromLoginDataPB(loginDataPB, out ClientSession session);
+                    AuthStatusCode statusCode = _playerManager.HandleLoginRequest(loginDataPB, out ClientSession session);
 
                     // Respond with an error if session creation didn't succeed
                     if (statusCode != AuthStatusCode.Success)
