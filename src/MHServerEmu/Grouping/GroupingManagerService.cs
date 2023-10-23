@@ -107,26 +107,34 @@ namespace MHServerEmu.Grouping
 
         private void OnChat(FrontendClient client, NetMessageChat chat)
         {
-            if (CommandManager.TryParse(chat.TheMessage.Body, client) == false)
-            {
-                // Limit broadcast and metagame channels to users with moderator privileges and higher
-                if ((chat.RoomType == ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS || chat.RoomType == ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
-                    && client.Session.Account.UserLevel < AccountUserLevel.Moderator)
-                {
-                    client.SendMessage(1, new(NetMessageChatError.CreateBuilder().SetErrorMessage(ChatErrorMessages.CHAT_ERROR_COMMAND_NOT_RECOGNIZED).Build()));
-                }
-                else
-                {
-                    Logger.Trace($"[{ChatHelper.GetRoomName(chat.RoomType)}] [{client.Session.Account})]: {chat.TheMessage.Body}");
+            // Try to parse the message as a command first
+            if (CommandManager.TryParse(chat.TheMessage.Body, client)) return;
 
-                    // Right now all messages are broadcasted to all connected players
-                    BroadcastMessage(new(ChatNormalMessage.CreateBuilder()
-                        .SetRoomType(chat.RoomType)
-                        .SetFromPlayerName(client.Session.Account.PlayerName)
-                        .SetTheMessage(chat.TheMessage)
-                        .Build()));
-                }
+            // Limit broadcast and metagame channels to users with moderator privileges and higher
+            if ((chat.RoomType == ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS || chat.RoomType == ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
+                && client.Session.Account.UserLevel < AccountUserLevel.Moderator)
+            {
+                // There are two chat error sources: NetMessageChatError from GameServerToClient.proto and ChatErrorMessage from GroupingManager.proto.
+                // The client expects the former from mux channel 1, and the latter from mux channel 2. Local region chat might be handled by the game
+                // instance instead. CHAT_ERROR_COMMAND_NOT_RECOGNIZED works only with NetMessageChatError, so this might have to be handled by the
+                // game instance as well.
+
+                client.SendMessage(1, new(NetMessageChatError.CreateBuilder()
+                    .SetErrorMessage(ChatErrorMessages.CHAT_ERROR_COMMAND_NOT_RECOGNIZED)
+                    .Build()));
+
+                return;
             }
+
+            // Broadcast the message if everything's okay
+            Logger.Trace($"[{ChatHelper.GetRoomName(chat.RoomType)}] [{client.Session.Account})]: {chat.TheMessage.Body}");
+
+            // Right now all messages are broadcasted to all connected players
+            BroadcastMessage(new(ChatNormalMessage.CreateBuilder()
+                .SetRoomType(chat.RoomType)
+                .SetFromPlayerName(client.Session.Account.PlayerName)
+                .SetTheMessage(chat.TheMessage)
+                .Build()));
         }
 
         private void OnTell(FrontendClient client, NetMessageTell tell)
@@ -134,7 +142,9 @@ namespace MHServerEmu.Grouping
             Logger.Trace($"Received tell for {tell.TargetPlayerName}");
 
             // Respond with an error for now
-            client.SendMessage(MuxChannel, new(ChatErrorMessage.CreateBuilder().SetErrorMessage(ChatErrorMessages.CHAT_ERROR_NO_SUCH_USER).Build()));
+            client.SendMessage(MuxChannel, new(ChatErrorMessage.CreateBuilder()
+                .SetErrorMessage(ChatErrorMessages.CHAT_ERROR_NO_SUCH_USER)
+                .Build()));
         }
 
         #endregion
