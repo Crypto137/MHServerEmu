@@ -45,5 +45,11 @@ namespace MHServerEmu.Grouping
 
             client.SendMessages(MuxChannel, messageList);
         }
+
+        public static string GetRoomName(ChatRoomTypes type)
+        {
+            // All room enums start with "CHAT_ROOM_TYPE_", which is 15 characters
+            return Enum.GetName(type).Substring(15);
+        }
     }
 }

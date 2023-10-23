@@ -117,7 +117,7 @@ namespace MHServerEmu.Grouping
                 }
                 else
                 {
-                    Logger.Trace($"[{chat.RoomType}] [{client.Session.Account})]: {chat.TheMessage.Body}");
+                    Logger.Trace($"[{ChatHelper.GetRoomName(chat.RoomType)}] [{client.Session.Account})]: {chat.TheMessage.Body}");
 
                     // Right now all messages are broadcasted to all connected players
                     BroadcastMessage(new(ChatNormalMessage.CreateBuilder()
