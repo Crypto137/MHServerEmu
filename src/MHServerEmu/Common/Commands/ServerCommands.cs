@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Common.Config;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Networking;
@@ -147,6 +148,18 @@ namespace MHServerEmu.Common.Commands
             }
 
             return "Invalid parameters. Type 'help gpak extract' to get help.";
+        }
+    }
+
+    [CommandGroup("debug", "Debug commands for development.", AccountUserLevel.Admin)]
+    public class DebugCommands : CommandGroup
+    {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        [Command("test", "Runs test code.", AccountUserLevel.Admin)]
+        public string Test(string[] @params, FrontendClient client)
+        {
+            return string.Empty;
         }
     }
 }

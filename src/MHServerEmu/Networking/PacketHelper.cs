@@ -149,8 +149,8 @@ namespace MHServerEmu.Networking
                     try
                     {
                         IMessage protobufMessage = (packet.MuxId == 1)
-                                ? message.DeserializePayload(typeof(GameServerToClientMessage))
-                                : message.DeserializePayload(typeof(GroupingManagerMessage));
+                                ? message.Deserialize(typeof(GameServerToClientMessage))
+                                : message.Deserialize(typeof(GroupingManagerMessage));
 
                         switch (protobufMessage)
                         {
