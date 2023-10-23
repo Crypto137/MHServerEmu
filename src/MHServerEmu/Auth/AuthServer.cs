@@ -135,7 +135,7 @@ namespace MHServerEmu.Auth
             switch ((FrontendProtocolMessage)message.Id)
             {
                 case FrontendProtocolMessage.LoginDataPB:
-                    var loginDataPB = LoginDataPB.ParseFrom(message.Payload);
+                    var loginDataPB = message.Deserialize<LoginDataPB>();
 
                     // Send a TOS popup when the client uses tos@test.com as email
                     if (loginDataPB.EmailAddress.ToLower() == "tos@test.com")
@@ -145,7 +145,7 @@ namespace MHServerEmu.Auth
                     }
 
                     // Try to create a new session from the data we received
-                    AuthStatusCode statusCode = _playerManager.HandleLoginRequest(loginDataPB, out ClientSession session);
+                    AuthStatusCode statusCode = _playerManager.OnLoginDataPB(loginDataPB, out ClientSession session);
 
                     // Respond with an error if session creation didn't succeed
                     if (statusCode != AuthStatusCode.Success)

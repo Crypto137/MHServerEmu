@@ -40,13 +40,11 @@ namespace MHServerEmu.Frontend
             switch ((FrontendProtocolMessage)message.Id)
             {
                 case FrontendProtocolMessage.ClientCredentials:
-                    ClientCredentials credentials = ClientCredentials.ParseFrom(message.Payload);
-                    Logger.Info($"Received ClientCredentials on mux channel {muxId}");
-                    _serverManager.PlayerManagerService.HandleClientCredentials(client, credentials);
+                    _serverManager.PlayerManagerService.OnClientCredentials(client, message.Deserialize<ClientCredentials>());
                     break;
 
                 case FrontendProtocolMessage.InitialClientHandshake:
-                    InitialClientHandshake handshake = InitialClientHandshake.ParseFrom(message.Payload);
+                    var handshake = message.Deserialize<InitialClientHandshake>();
                     Logger.Info($"Received InitialClientHandshake for {handshake.ServerType} on mux channel {muxId}");
 
                     if (handshake.ServerType == PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND && client.FinishedPlayerManagerHandshake == false)

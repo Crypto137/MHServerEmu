@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using Google.ProtocolBuffers;
+﻿using Google.ProtocolBuffers;
 using MHServerEmu.Common.Logging;
 
 namespace MHServerEmu.Networking
@@ -33,7 +32,7 @@ namespace MHServerEmu.Networking
         }
 
         /// <summary>
-        /// Decodes a game message from the specified CodedInputStream.
+        /// Decodes a game message from the provided CodedInputStream.
         /// </summary>
         /// <param name="stream">CodedInputStream to decode from.</param>
         public GameMessage(CodedInputStream stream)
@@ -43,9 +42,9 @@ namespace MHServerEmu.Networking
         }
 
         /// <summary>
-        /// Encodes the game message to the specified CodedOutputStream.
+        /// Encodes the game message to the provided CodedOutputStream.
         /// </summary>
-        /// <param name="stream"></param>
+        /// <param name="stream">CodedOutputStream to encode to.</param>
         public void Encode(CodedOutputStream stream)
         {
             stream.WriteRawVarint32(Id);

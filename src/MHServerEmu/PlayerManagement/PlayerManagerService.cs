@@ -32,43 +32,6 @@ namespace MHServerEmu.PlayerManagement
             _gameManager = new(_serverManager);
         }
 
-        #region Auth
-
-        public AuthStatusCode HandleLoginRequest(LoginDataPB loginDataPB, out ClientSession session)
-        {
-            return _sessionManager.TryCreateSessionFromLoginDataPB(loginDataPB, out session);
-        }
-
-        public void HandleClientCredentials(FrontendClient client, ClientCredentials credentials)
-        {
-            if (_sessionManager.VerifyClientCredentials(client, credentials) == false)
-            {
-                Logger.Warn($"Failed to verify client credentials, disconnecting client on {client.Connection}");
-                client.Connection.Disconnect();
-                return;
-            }
-
-            // Respond on successful auth
-            if (ConfigManager.PlayerManager.SimulateQueue)
-            {
-                Logger.Info("Responding with LoginQueueStatus message");
-                client.SendMessage(MuxChannel, new(LoginQueueStatus.CreateBuilder()
-                    .SetPlaceInLine(ConfigManager.PlayerManager.QueuePlaceInLine)
-                    .SetNumberOfPlayersInLine(ConfigManager.PlayerManager.QueueNumberOfPlayersInLine)
-                    .Build()));
-            }
-            else
-            {
-                Logger.Info("Responding with SessionEncryptionChanged message");
-                client.SendMessage(MuxChannel, new(SessionEncryptionChanged.CreateBuilder()
-                    .SetRandomNumberIndex(0)
-                    .SetEncryptedRandomNumber(ByteString.Empty)
-                    .Build()));
-            }
-        }
-
-        #endregion
-
         #region Client Management
 
         public void AcceptClientHandshake(FrontendClient client)
@@ -144,22 +107,19 @@ namespace MHServerEmu.PlayerManagement
                     // doesn't include it. To avoid an exception we build a partial message from the data we receive.
                     // TODO: We need to validate all messages coming in from clients to avoid problems like these.
                     var readyForGameJoin = NetMessageReadyForGameJoin.CreateBuilder().MergeFrom(message.Payload).BuildPartial();
-                    HandleReadyForGameJoin(client, readyForGameJoin);
+                    OnReadyForGameJoin(client, readyForGameJoin);
                     break;
 
                 case ClientToGameServerMessage.NetMessageSyncTimeRequest:
-                    //var syncTimeRequest = NetMessageSyncTimeRequest.ParseFrom(message.Payload);
-                    //HandleSyncTimeRequest(client, syncTimeRequest);
+                    //OnSyncTimeRequest(client, message.Deserialize<NetMessageSyncTimeRequest>());
                     break;
 
                 case ClientToGameServerMessage.NetMessagePing:
-                    //var ping = NetMessagePing.ParseFrom(message.Payload);
-                    //HandlePing(client, ping);
+                    //OnPing(client, message.Deserialize<NetMessagePing>());
                     break;
 
                 case ClientToGameServerMessage.NetMessageFPS:
-                    //var fps = NetMessageFPS.ParseFrom(message.Payload);
-                    //HandleFps(client, fps);
+                    //OnFps(client, message.Deserialize<NetMessageFPS>());
                     break;
 
                 case ClientToGameServerMessage.NetMessageGracefulDisconnect:
@@ -218,7 +178,42 @@ namespace MHServerEmu.PlayerManagement
             foreach (GameMessage message in messages) Handle(client, muxId, message);
         }
 
-        private void HandleReadyForGameJoin(FrontendClient client, NetMessageReadyForGameJoin readyForGameJoin)
+        public AuthStatusCode OnLoginDataPB(LoginDataPB loginDataPB, out ClientSession session)
+        {
+            return _sessionManager.TryCreateSessionFromLoginDataPB(loginDataPB, out session);
+        }
+
+        public void OnClientCredentials(FrontendClient client, ClientCredentials credentials)
+        {
+            Logger.Info($"Received ClientCredentials");
+
+            if (_sessionManager.VerifyClientCredentials(client, credentials) == false)
+            {
+                Logger.Warn($"Failed to verify client credentials, disconnecting client on {client.Connection}");
+                client.Connection.Disconnect();
+                return;
+            }
+
+            // Respond on successful auth
+            if (ConfigManager.PlayerManager.SimulateQueue)
+            {
+                Logger.Info("Responding with LoginQueueStatus message");
+                client.SendMessage(MuxChannel, new(LoginQueueStatus.CreateBuilder()
+                    .SetPlaceInLine(ConfigManager.PlayerManager.QueuePlaceInLine)
+                    .SetNumberOfPlayersInLine(ConfigManager.PlayerManager.QueueNumberOfPlayersInLine)
+                    .Build()));
+            }
+            else
+            {
+                Logger.Info("Responding with SessionEncryptionChanged message");
+                client.SendMessage(MuxChannel, new(SessionEncryptionChanged.CreateBuilder()
+                    .SetRandomNumberIndex(0)
+                    .SetEncryptedRandomNumber(ByteString.Empty)
+                    .Build()));
+            }
+        }
+
+        private void OnReadyForGameJoin(FrontendClient client, NetMessageReadyForGameJoin readyForGameJoin)
         {
             Logger.Info($"Received NetMessageReadyForGameJoin from {client.Session.Account}");
             Logger.Trace(readyForGameJoin.ToString());
@@ -234,7 +229,7 @@ namespace MHServerEmu.PlayerManagement
                 .Build()));
         }
 
-        private void HandleSyncTimeRequest(FrontendClient client, NetMessageSyncTimeRequest syncTimeRequest)
+        private void OnSyncTimeRequest(FrontendClient client, NetMessageSyncTimeRequest syncTimeRequest)
         {
             // NOTE: this is old experimental code
             Logger.Info($"Received NetMessageSyncTimeRequest:");
@@ -256,13 +251,13 @@ namespace MHServerEmu.PlayerManagement
                 .Build()));
         }
 
-        private void HandlePing(FrontendClient client, NetMessagePing ping)
+        private void OnPing(FrontendClient client, NetMessagePing ping)
         {
             Logger.Info($"Received ping:");
             Logger.Trace(ping.ToString());
         }
 
-        private void HandleFps(FrontendClient client, NetMessageFPS fps)
+        private void OnFps(FrontendClient client, NetMessageFPS fps)
         {
             Logger.Info("Received FPS:");
             Logger.Trace(fps.ToString());
