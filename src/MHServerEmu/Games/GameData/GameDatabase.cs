@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics;
+using System.Text.Json;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Gpak;
@@ -39,7 +40,7 @@ namespace MHServerEmu.Games.GameData
             }
 
             Logger.Info("Initializing game database...");
-            DateTime startTime = DateTime.Now;
+            var stopwatch = Stopwatch.StartNew();
 
             // Initialize DataDirectory
             DataDirectory = new(new GpakFile(CalligraphyPath), new GpakFile(ResourcePath));
@@ -60,8 +61,8 @@ namespace MHServerEmu.Games.GameData
             }
 
             // Finish game database initialization
-            long loadTime = (long)(DateTime.Now - startTime).TotalMilliseconds;
-            Logger.Info($"Finished initializing game database in {loadTime} ms");
+            stopwatch.Stop();
+            Logger.Info($"Finished initializing game database in {stopwatch.ElapsedMilliseconds} ms");
             IsInitialized = true;
         }
 
