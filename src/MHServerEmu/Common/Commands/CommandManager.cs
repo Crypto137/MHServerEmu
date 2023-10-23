@@ -155,7 +155,7 @@ namespace MHServerEmu.Common.Commands
 
         private static void SendClientResponse(string output, FrontendClient client)
         {
-            GroupingManagerService.SendMetagameChatMessage(client, output);
+            ChatHelper.SendMetagameMessage(client, output);
         }
     }
 }

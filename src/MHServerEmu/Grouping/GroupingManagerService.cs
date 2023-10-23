@@ -1,6 +1,5 @@
 ﻿using Gazillion;
 using MHServerEmu.Common.Commands;
-using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Frontend;
 using MHServerEmu.Networking;
@@ -10,7 +9,7 @@ namespace MHServerEmu.Grouping
 {
     public class GroupingManagerService : IGameService
     {
-        private const ushort MuxChannel = 2;    // All messages come to and from GroupingManager over mux channel 2
+        private const ushort MuxChannel = 2;    // All messages come from GroupingManager over mux channel 2
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -22,6 +21,8 @@ namespace MHServerEmu.Grouping
         {
             _serverManager = serverManager;
         }
+
+        #region Player Management
 
         public void AcceptClientHandshake(FrontendClient client)
         {
@@ -39,7 +40,7 @@ namespace MHServerEmu.Grouping
                 }
 
                 _playerDict.Add(client.Session.Account.PlayerName.ToLower(), client);
-                SendMotd(client);
+                client.SendMessage(MuxChannel, new(ChatHelper.Motd));
             }
         }
 
@@ -68,6 +69,10 @@ namespace MHServerEmu.Grouping
 
         public bool TryGetPlayerByName(string playerName, out FrontendClient client) => _playerDict.TryGetValue(playerName.ToLower(), out client);
 
+        #endregion
+
+        #region Message Handling
+
         public void Handle(FrontendClient client, ushort muxId, GameMessage message)
         {
             if (muxId != 1) throw new($"GroupingManagerService message handling on mux channel {muxId} is not implemented");    // In case we ever get a message directly from the client on channel 2
@@ -75,40 +80,8 @@ namespace MHServerEmu.Grouping
             // Handle messages routed from the PlayerManager
             switch ((ClientToGameServerMessage)message.Id)
             {
-                case ClientToGameServerMessage.NetMessageChat:
-                    var chatMessageIn = NetMessageChat.ParseFrom(message.Payload);
-
-                    if (CommandManager.TryParse(chatMessageIn.TheMessage.Body, client) == false)
-                    {
-                        // Limit broadcast and metagame channels to users with moderator privileges and higher
-                        if ((chatMessageIn.RoomType == ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS || chatMessageIn.RoomType == ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
-                            && client.Session.Account.UserLevel < AccountUserLevel.Moderator)
-                        {
-                            client.SendMessage(1, new(NetMessageChatError.CreateBuilder().SetErrorMessage(ChatErrorMessages.CHAT_ERROR_COMMAND_NOT_RECOGNIZED).Build()));
-                        }
-                        else
-                        {
-                            Logger.Trace($"[{chatMessageIn.RoomType}] [{client.Session.Account})]: {chatMessageIn.TheMessage.Body}");
-
-                            var chatMessageOut = ChatNormalMessage.CreateBuilder()
-                                .SetRoomType(chatMessageIn.RoomType)
-                                .SetFromPlayerName(client.Session.Account.PlayerName)
-                                .SetTheMessage(chatMessageIn.TheMessage)
-                                .Build();
-
-                            BroadcastMessage(new(chatMessageOut));
-                        }
-                    }
-
-                    break;
-
-                case ClientToGameServerMessage.NetMessageTell:
-                    var tellMessage = NetMessageTell.ParseFrom(message.Payload);
-                    Logger.Trace($"Received tell for {tellMessage.TargetPlayerName}");
-
-                    // Respond with an error for now
-                    client.SendMessage(MuxChannel, new(ChatErrorMessage.CreateBuilder().SetErrorMessage(ChatErrorMessages.CHAT_ERROR_NO_SUCH_USER).Build()));
-                    break;
+                case ClientToGameServerMessage.NetMessageChat: OnChat(client, message.Deserialize<NetMessageChat>()); break;
+                case ClientToGameServerMessage.NetMessageTell: OnTell(client, message.Deserialize<NetMessageTell>()); break;
 
                 default:
                     Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
@@ -121,44 +94,38 @@ namespace MHServerEmu.Grouping
             foreach (GameMessage message in messages) Handle(client, muxId, message);
         }
 
-        public static void SendMetagameChatMessage(FrontendClient client, string text)
+        private void OnChat(FrontendClient client, NetMessageChat chat)
         {
-            client.SendMessage(MuxChannel, new(ChatNormalMessage.CreateBuilder()
-                .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
-                .SetFromPlayerName(ConfigManager.GroupingManager.MotdPlayerName)
-                .SetTheMessage(ChatMessage.CreateBuilder().SetBody(text))
-                .SetPrestigeLevel(ConfigManager.GroupingManager.MotdPrestigeLevel)
-                .Build()));
-        }
-
-        public static void SendMetagameChatMessages(FrontendClient client, IEnumerable<string> texts)
-        {
-            List<GameMessage> messageList = new();
-            bool headerIsSet = false;               // Flag to add player name to the header (first) message
-
-            foreach (string text in texts)
+            if (CommandManager.TryParse(chat.TheMessage.Body, client) == false)
             {
-                messageList.Add(new(ChatNormalMessage.CreateBuilder()
-                    .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
-                    .SetFromPlayerName(headerIsSet ? string.Empty : ConfigManager.GroupingManager.MotdPlayerName)
-                    .SetTheMessage(ChatMessage.CreateBuilder().SetBody(text))
-                    .SetPrestigeLevel(ConfigManager.GroupingManager.MotdPrestigeLevel)
-                    .Build()));
+                // Limit broadcast and metagame channels to users with moderator privileges and higher
+                if ((chat.RoomType == ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS || chat.RoomType == ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
+                    && client.Session.Account.UserLevel < AccountUserLevel.Moderator)
+                {
+                    client.SendMessage(1, new(NetMessageChatError.CreateBuilder().SetErrorMessage(ChatErrorMessages.CHAT_ERROR_COMMAND_NOT_RECOGNIZED).Build()));
+                }
+                else
+                {
+                    Logger.Trace($"[{chat.RoomType}] [{client.Session.Account})]: {chat.TheMessage.Body}");
 
-                headerIsSet = true;
+                    // Right now all messages are broadcasted to all connected players
+                    BroadcastMessage(new(ChatNormalMessage.CreateBuilder()
+                        .SetRoomType(chat.RoomType)
+                        .SetFromPlayerName(client.Session.Account.PlayerName)
+                        .SetTheMessage(chat.TheMessage)
+                        .Build()));
+                }
             }
-
-            client.SendMessages(MuxChannel, messageList);
         }
 
-        private void SendMotd(FrontendClient client)
+        private void OnTell(FrontendClient client, NetMessageTell tell)
         {
-            client.SendMessage(MuxChannel, new(ChatBroadcastMessage.CreateBuilder()
-                .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS)
-                .SetFromPlayerName(ConfigManager.GroupingManager.MotdPlayerName)
-                .SetTheMessage(ChatMessage.CreateBuilder().SetBody(ConfigManager.GroupingManager.MotdText))
-                .SetPrestigeLevel(ConfigManager.GroupingManager.MotdPrestigeLevel)
-                .Build()));
+            Logger.Trace($"Received tell for {tell.TargetPlayerName}");
+
+            // Respond with an error for now
+            client.SendMessage(MuxChannel, new(ChatErrorMessage.CreateBuilder().SetErrorMessage(ChatErrorMessages.CHAT_ERROR_NO_SUCH_USER).Build()));
         }
+
+        #endregion
     }
 }

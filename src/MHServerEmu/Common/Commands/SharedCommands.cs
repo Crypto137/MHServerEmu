@@ -46,7 +46,7 @@ namespace MHServerEmu.Common.Commands
                     // This is because the chat window doesn't handle individual messages with too many lines well (e.g. when the lookup pattern is not specific enough)
                     List<string> outputList = new() { "Lookup Matches:" };
                     outputList.AddRange(matchList.Select(match => $"[{match.Key}] {Path.GetRelativePath(rootDirectory, match.Value)}"));
-                    GroupingManagerService.SendMetagameChatMessages(client, outputList);
+                    ChatHelper.SendMetagameMessages(client, outputList);
                     return string.Empty;
                 }
             }
