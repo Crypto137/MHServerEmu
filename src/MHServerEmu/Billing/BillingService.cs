@@ -11,7 +11,7 @@ using MHServerEmu.Networking;
 
 namespace MHServerEmu.Billing
 {
-    public class BillingService : IGameService
+    public class BillingService : IMessageHandler
     {
         private const ushort MuxChannel = 1;
 
@@ -52,7 +52,7 @@ namespace MHServerEmu.Billing
             Logger.Info($"Initialized store catalog with {_catalog.Entries.Length} entries");
         }
 
-        public void Handle(FrontendClient client, ushort muxId, GameMessage message)
+        public void Handle(FrontendClient client, GameMessage message)
         {
             switch ((ClientToGameServerMessage)message.Id)
             {
@@ -66,9 +66,9 @@ namespace MHServerEmu.Billing
             }
         }
 
-        public void Handle(FrontendClient client, ushort muxId, IEnumerable<GameMessage> messages)
+        public void Handle(FrontendClient client, IEnumerable<GameMessage> messages)
         {
-            foreach (GameMessage message in messages) Handle(client, muxId, message);
+            foreach (GameMessage message in messages) Handle(client, message);
         }
 
         private void OnGetCatalog(FrontendClient client, NetMessageGetCatalog getCatalog)

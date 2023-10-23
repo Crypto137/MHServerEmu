@@ -18,7 +18,7 @@ using MHServerEmu.Networking;
 
 namespace MHServerEmu.Games
 {
-    public partial class Game : IGameService
+    public partial class Game : IMessageHandler
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -91,7 +91,7 @@ namespace MHServerEmu.Games
             }
         }
 
-        public void Handle(FrontendClient client, ushort muxId, GameMessage message)
+        public void Handle(FrontendClient client, GameMessage message)
         {
             lock (_gameLock)
             {
@@ -99,9 +99,9 @@ namespace MHServerEmu.Games
             }
         }
 
-        public void Handle(FrontendClient client, ushort muxId, IEnumerable<GameMessage> messages)
+        public void Handle(FrontendClient client, IEnumerable<GameMessage> messages)
         {
-            foreach (GameMessage message in messages) Handle(client, muxId, message);
+            foreach (GameMessage message in messages) Handle(client, message);
         }
 
         public void AddPlayer(FrontendClient client)

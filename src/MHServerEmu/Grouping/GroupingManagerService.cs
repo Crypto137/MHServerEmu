@@ -7,7 +7,7 @@ using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.Grouping
 {
-    public class GroupingManagerService : IGameService
+    public class GroupingManagerService : IGameService, IMessageHandler
     {
         private const ushort MuxChannel = 2;    // All messages come from GroupingManager over mux channel 2
 
@@ -73,10 +73,21 @@ namespace MHServerEmu.Grouping
 
         #region Message Handling
 
+        // Direct message handling from mux channel 2. We haven't really seen this, but there's a
+        // ClientToGroupingManager protocol that includes a single message - GetPlayerInfoByName
         public void Handle(FrontendClient client, ushort muxId, GameMessage message)
         {
-            if (muxId != 1) throw new($"GroupingManagerService message handling on mux channel {muxId} is not implemented");    // In case we ever get a message directly from the client on channel 2
+            throw new NotImplementedException();
+        }
 
+        public void Handle(FrontendClient client, ushort muxId, IEnumerable<GameMessage> messages)
+        {
+            throw new NotImplementedException();
+        }
+
+        // Routed message handling
+        public void Handle(FrontendClient client, GameMessage message)
+        {
             // Handle messages routed from the PlayerManager
             switch ((ClientToGameServerMessage)message.Id)
             {
@@ -89,9 +100,9 @@ namespace MHServerEmu.Grouping
             }
         }
 
-        public void Handle(FrontendClient client, ushort muxId, IEnumerable<GameMessage> messages)
+        public void Handle(FrontendClient client,IEnumerable<GameMessage> messages)
         {
-            foreach (GameMessage message in messages) Handle(client, muxId, message);
+            foreach (GameMessage message in messages) Handle(client, message);
         }
 
         private void OnChat(FrontendClient client, NetMessageChat chat)

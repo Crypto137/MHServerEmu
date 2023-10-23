@@ -146,7 +146,7 @@ namespace MHServerEmu.PlayerManagement
                 case ClientToGameServerMessage.NetMessageSelectOmegaBonus:  // This should be within NetMessageOmegaBonusAllocationCommit only in theory
                 case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:
                 case ClientToGameServerMessage.NetMessageRespecOmegaBonus:
-                    GetGameByPlayer(client).Handle(client, muxId, message);
+                    GetGameByPlayer(client).Handle(client, message);
                     break;
 
                 // Grouping Manager
@@ -154,7 +154,7 @@ namespace MHServerEmu.PlayerManagement
                 case ClientToGameServerMessage.NetMessageTell:
                 case ClientToGameServerMessage.NetMessageReportPlayer:
                 case ClientToGameServerMessage.NetMessageChatBanVote:
-                    _serverManager.GroupingManagerService.Handle(client, muxId, message);
+                    _serverManager.GroupingManagerService.Handle(client, message);
                     break;
 
                 // Billing
@@ -164,7 +164,7 @@ namespace MHServerEmu.PlayerManagement
                 case ClientToGameServerMessage.NetMessageBuyGiftForOtherPlayer:
                 case ClientToGameServerMessage.NetMessagePurchaseUnlock:
                 case ClientToGameServerMessage.NetMessageGetGiftHistory:
-                    _serverManager.BillingService.Handle(client, muxId, message);
+                    _serverManager.BillingService.Handle(client, message);
                     break;
 
                 default:
