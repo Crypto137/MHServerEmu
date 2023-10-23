@@ -144,7 +144,7 @@ namespace MHServerEmu
         {
             if (AuthServer != null) return false;
 
-            AuthServer = new(8080, FrontendServer.PlayerManagerService);
+            AuthServer = new(FrontendServer.PlayerManagerService);
             AuthServerThread = new(AuthServer.Run) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
             AuthServerThread.Start();
 

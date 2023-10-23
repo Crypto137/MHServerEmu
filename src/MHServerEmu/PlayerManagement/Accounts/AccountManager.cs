@@ -17,7 +17,7 @@ namespace MHServerEmu.PlayerManagement.Accounts
 
     public static class AccountManager
     {
-        public static readonly DBAccount DefaultAccount = new(ConfigManager.PlayerData.PlayerName, ConfigManager.PlayerData.StartingRegion, ConfigManager.PlayerData.StartingAvatar);
+        public static readonly DBAccount DefaultAccount = new(ConfigManager.DefaultPlayerData.PlayerName, ConfigManager.DefaultPlayerData.StartingRegion, ConfigManager.DefaultPlayerData.StartingAvatar);
 
         public static bool IsInitialized { get; }
 

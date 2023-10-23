@@ -7,13 +7,13 @@ namespace MHServerEmu.Common.Config
         public static bool IsInitialized { get; private set; }
 
         public static LoggingConfig Logging { get; }
-        public static PlayerDataConfig PlayerData { get; }
         public static FrontendConfig Frontend { get; }
+        public static AuthConfig Auth { get; }
         public static PlayerManagerConfig PlayerManager { get; }
+        public static DefaultPlayerDataConfig DefaultPlayerData { get; }
         public static GroupingManagerConfig GroupingManager { get; }
         public static GameOptionsConfig GameOptions { get; }
         public static BillingConfig Billing { get; }
-        public static WebApiConfig WebApi { get; }
 
         static ConfigManager()
         {
@@ -24,13 +24,13 @@ namespace MHServerEmu.Common.Config
                 IniFile configFile = new(path);
 
                 Logging = new(configFile);
-                PlayerData = new(configFile);
                 Frontend = new(configFile);
+                Auth = new(configFile);
                 PlayerManager = new(configFile);
+                DefaultPlayerData = new(configFile);
                 GroupingManager = new(configFile);
                 GameOptions = new(configFile);
                 Billing = new(configFile);
-                WebApi = new(configFile);
 
                 IsInitialized = true;
             }

@@ -1,18 +1,17 @@
-﻿using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.Entities.Avatars;
+﻿using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Common.Config.Sections
 {
-    public class PlayerDataConfig
+    public class DefaultPlayerDataConfig
     {
-        private const string Section = "PlayerData";
+        private const string Section = "DefaultPlayerData";
 
         public string PlayerName { get; }
         public RegionPrototype StartingRegion { get; }
         public AvatarPrototype StartingAvatar { get; }
 
-        public PlayerDataConfig(IniFile configFile)
+        public DefaultPlayerDataConfig(IniFile configFile)
         {
             PlayerName = configFile.ReadString(Section, nameof(PlayerName));
 

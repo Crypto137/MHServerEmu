@@ -22,9 +22,9 @@ namespace MHServerEmu.Auth
 
         private HttpListener _listener;
 
-        public AuthServer(int port, PlayerManagerService playerManager)
+        public AuthServer(PlayerManagerService playerManager)
         {
-            _url = $"http://localhost:{port}/";
+            _url = $"http://{ConfigManager.Auth.Address}:{ConfigManager.Auth.Port}/";
             _playerManager = playerManager;
             _cancellationTokenSource = new();
             _webApiHandler = new();
@@ -91,7 +91,7 @@ namespace MHServerEmu.Auth
                     if (request.Url.LocalPath == "/favicon.ico") return;     // Ignore favicon requests
 
                     // Web API get requests
-                    if (requestIsFromGameClient == false && ConfigManager.WebApi.EnableWebApi)
+                    if (requestIsFromGameClient == false && ConfigManager.Auth.EnableWebApi)
                     {
                         HandleWebApiRequest(request, response);
                         return;
@@ -108,7 +108,7 @@ namespace MHServerEmu.Auth
                     }
                     
                     // Web API post requests
-                    if (requestIsFromGameClient == false && ConfigManager.WebApi.EnableWebApi)
+                    if (requestIsFromGameClient == false && ConfigManager.Auth.EnableWebApi)
                     {
                         HandleWebApiRequest(request, response);
                         return;
