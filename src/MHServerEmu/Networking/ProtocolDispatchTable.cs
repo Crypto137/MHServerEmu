@@ -15,9 +15,11 @@ namespace MHServerEmu.Networking
         private static readonly Dictionary<Type, Dictionary<byte, string>> IdToNameDict = new();        // Id -> Class name
         private static readonly Dictionary<string, Dictionary<string, byte>> MessageToIdDict = new();   // IMessage -> Id
         private static readonly Dictionary<string, Type> NameToTypeDict = new();                        // Class name -> Type 
-        private static readonly Dictionary<Type, MethodInfo> TypeToParseMethodDict = new();             // Type -> ParseFrom MethodInfo
+        private static readonly Dictionary<Type, ParseMessage> TypeToParseDelegateDict = new();         // Type -> ParseMessage Delegate
 
         public static bool IsInitialized { get; }
+
+        public delegate IMessage ParseMessage(byte[] data);
 
         static ProtocolDispatchTable()
         {
@@ -41,8 +43,8 @@ namespace MHServerEmu.Networking
         public static string GetMessageName(Type enumType, byte id) => IdToNameDict[enumType][id];
         public static byte GetMessageId(IMessage message) => MessageToIdDict[message.DescriptorForType.File.Name][message.DescriptorForType.Name];
         public static Type GetMessageType(string name) => NameToTypeDict[name];
-        public static MethodInfo GetMessageParseMethod<T>() => TypeToParseMethodDict[typeof(T)];
-        public static MethodInfo GetMessageParseMethod(Type messageType) => TypeToParseMethodDict[messageType];
+        public static ParseMessage GetParseMessageDelegate<T>() => TypeToParseDelegateDict[typeof(T)];
+        public static ParseMessage GetParseMessageDelegate(Type messageType) => TypeToParseDelegateDict[messageType];
 
         private static void ParseMessageEnum(Type type, string protocolName)
         {
@@ -55,12 +57,13 @@ namespace MHServerEmu.Networking
                 IdToNameDict[type].Add((byte)i, names[i]);
                 MessageToIdDict[protocolName].Add(names[i], (byte)i);
                 
-                // Use reflection to get message type and parse MethodInfo
+                // Use reflection to get message type and ParseFrom MethodInfo
                 Type messageType = LibGazillionAssembly.GetType($"Gazillion.{names[i]}") ?? throw new("Message type is null.");
                 MethodInfo parseMethod = messageType.GetMethod("ParseFrom", ParseMethodArgumentTypes) ?? throw new("Message ParseFrom method is null.");
 
+                // Create delegates from MethodInfo to speed up deserialization
                 NameToTypeDict.Add(names[i], messageType);
-                TypeToParseMethodDict.Add(messageType, parseMethod);
+                TypeToParseDelegateDict.Add(messageType, parseMethod.CreateDelegate<ParseMessage>());
             }
         }
     }

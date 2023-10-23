@@ -76,8 +76,8 @@ namespace MHServerEmu.Networking
         {
             try
             {
-                MethodInfo method = ProtocolDispatchTable.GetMessageParseMethod<T>();
-                return (T)method.Invoke(null, new object[] { Payload });
+                var parse = ProtocolDispatchTable.GetParseMessageDelegate<T>();
+                return (T)parse(Payload);
             }
             catch (Exception e)
             {
@@ -95,9 +95,9 @@ namespace MHServerEmu.Networking
         {
             string name = ProtocolDispatchTable.GetMessageName(protocolEnumType, Id);
             Type type = ProtocolDispatchTable.GetMessageType(name);
-            MethodInfo parseMethod = ProtocolDispatchTable.GetMessageParseMethod(type);
+            var parse = ProtocolDispatchTable.GetParseMessageDelegate(type);
 
-            return (IMessage)parseMethod.Invoke(null, new object[] { Payload });
+            return parse(Payload);
         }
     }
 }
