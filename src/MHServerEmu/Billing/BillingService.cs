@@ -13,6 +13,8 @@ namespace MHServerEmu.Billing
 {
     public class BillingService : IGameService
     {
+        private const ushort MuxChannel = 1;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly ServerManager _serverManager;
@@ -54,54 +56,9 @@ namespace MHServerEmu.Billing
         {
             switch ((ClientToGameServerMessage)message.Id)
             {
-                case ClientToGameServerMessage.NetMessageGetCatalog:
-                    Logger.Info($"Received NetMessageGetCatalog");
-                    client.SendMessage(muxId, new(_catalog.ToNetMessageCatalogItems(false)));
-                    break;
-
-                case ClientToGameServerMessage.NetMessageGetCurrencyBalance:
-                    Logger.Info($"Received NetMessageGetCurrencyBalance");
-
-                    client.SendMessage(muxId, new(NetMessageGetCurrencyBalanceResponse.CreateBuilder()
-                        .SetCurrencyBalance(ConfigManager.Billing.CurrencyBalance)
-                        .Build()));
-
-                    break;
-
-                case ClientToGameServerMessage.NetMessageBuyItemFromCatalog:
-                    Logger.Info($"Received NetMessageBuyItemFromCatalog");
-                    var buyItemMessage = NetMessageBuyItemFromCatalog.ParseFrom(message.Payload);
-                    Logger.Trace(buyItemMessage.ToString());
-
-                    // HACK: change costume when a player "buys" a costume
-                    CatalogEntry entry = _catalog.GetEntry(buyItemMessage.SkuId);
-                    if (entry != null && entry.GuidItems.Length > 0)
-                    {
-                        string prototypePath = GameDatabase.GetPrototypeName(entry.GuidItems[0].ItemPrototypeRuntimeIdForClient);
-                        if (prototypePath.Contains("Entity/Items/Costumes/Prototypes/"))
-                        {
-                            // Create a new CostumeCurrent property for the purchased costume
-                            Property property = new(PropertyEnum.CostumeCurrent, entry.GuidItems[0].ItemPrototypeRuntimeIdForClient);
-
-                            // Get replication id for the client avatar
-                            ulong replicationId = (ulong)client.Session.Account.Player.Avatar.ToPropertyCollectionReplicationId();
-
-                            // Update account data
-                            client.Session.Account.CurrentAvatar.Costume = entry.GuidItems[0].ItemPrototypeRuntimeIdForClient;
-
-                            // Send NetMessageSetProperty message
-                            client.SendMessage(1, new(property.ToNetMessageSetProperty(replicationId)));
-                        }
-                    }
-
-                    client.SendMessage(muxId, new(NetMessageBuyItemFromCatalogResponse.CreateBuilder()
-                        .SetDidSucceed(true)
-                        .SetCurrentCurrencyBalance(ConfigManager.Billing.CurrencyBalance)
-                        .SetErrorcode(BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS)
-                        .SetSkuId(buyItemMessage.SkuId)
-                        .Build()));
-
-                    break;
+                case ClientToGameServerMessage.NetMessageGetCatalog: OnGetCatalog(client, message.Deserialize<NetMessageGetCatalog>()); break;
+                case ClientToGameServerMessage.NetMessageGetCurrencyBalance: OnGetCurrencyBalance(client); break;
+                case ClientToGameServerMessage.NetMessageBuyItemFromCatalog: OnBuyItemFromCatalog(client, message.Deserialize<NetMessageBuyItemFromCatalog>()); break;
 
                 default:
                     Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
@@ -112,6 +69,55 @@ namespace MHServerEmu.Billing
         public void Handle(FrontendClient client, ushort muxId, IEnumerable<GameMessage> messages)
         {
             foreach (GameMessage message in messages) Handle(client, muxId, message);
+        }
+
+        private void OnGetCatalog(FrontendClient client, NetMessageGetCatalog getCatalog)
+        {
+            // TODO: cache catalog message and don't resend it if it's not needed
+            Logger.Info($"Received NetMessageGetCatalog");
+            client.SendMessage(MuxChannel, new(_catalog.ToNetMessageCatalogItems(false)));
+        }
+
+        private void OnGetCurrencyBalance(FrontendClient client)
+        {
+            Logger.Info($"Received NetMessageGetCurrencyBalance");
+            client.SendMessage(MuxChannel, new(NetMessageGetCurrencyBalanceResponse.CreateBuilder()
+                .SetCurrencyBalance(ConfigManager.Billing.CurrencyBalance)
+                .Build()));
+        }
+
+        private void OnBuyItemFromCatalog(FrontendClient client, NetMessageBuyItemFromCatalog buyItemFromCatalog)
+        {
+            Logger.Info($"Received NetMessageBuyItemFromCatalog");
+            Logger.Trace(buyItemFromCatalog.ToString());
+
+            // HACK: change costume when a player "buys" a costume
+            CatalogEntry entry = _catalog.GetEntry(buyItemFromCatalog.SkuId);
+            if (entry != null && entry.GuidItems.Length > 0)
+            {
+                string prototypePath = GameDatabase.GetPrototypeName(entry.GuidItems[0].ItemPrototypeRuntimeIdForClient);
+                if (prototypePath.Contains("Entity/Items/Costumes/Prototypes/"))
+                {
+                    // Create a new CostumeCurrent property for the purchased costume
+                    Property property = new(PropertyEnum.CostumeCurrent, entry.GuidItems[0].ItemPrototypeRuntimeIdForClient);
+
+                    // Get replication id for the client avatar
+                    ulong replicationId = (ulong)client.Session.Account.Player.Avatar.ToPropertyCollectionReplicationId();
+
+                    // Update account data
+                    client.Session.Account.CurrentAvatar.Costume = entry.GuidItems[0].ItemPrototypeRuntimeIdForClient;
+
+                    // Send NetMessageSetProperty message
+                    client.SendMessage(MuxChannel, new(property.ToNetMessageSetProperty(replicationId)));
+                }
+            }
+
+            client.SendMessage(MuxChannel, new(NetMessageBuyItemFromCatalogResponse.CreateBuilder()
+                .SetDidSucceed(true)
+                .SetCurrentCurrencyBalance(ConfigManager.Billing.CurrencyBalance)
+                .SetErrorcode(BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS)
+                .SetSkuId(buyItemFromCatalog.SkuId)
+                .Build()));
         }
     }
 }
