@@ -80,9 +80,20 @@ namespace MHServerEmu.Networking
             }
             catch (Exception e)
             {
-                Logger.ErrorException(e, nameof(Deserialize));
+                Logger.ErrorException(e, $"{nameof(Deserialize)}<{nameof(T)}>");
                 return default;
             }
+        }
+
+        /// <summary>
+        /// Deserializes the payload as the specified message type. The return value indicates whether the operation succeeded.
+        /// </summary>
+        /// <typeparam name="T">Protobuf message type.</typeparam>
+        /// <param name="message">Deserialized protobuf message of the specified type.</param>
+        public bool TryDeserialize<T>(out T message) where T: IMessage
+        {
+            message = Deserialize<T>();
+            return message != null;
         }
 
         /// <summary>

@@ -91,8 +91,15 @@ namespace MHServerEmu.Grouping
             // Handle messages routed from the PlayerManager
             switch ((ClientToGameServerMessage)message.Id)
             {
-                case ClientToGameServerMessage.NetMessageChat: OnChat(client, message.Deserialize<NetMessageChat>()); break;
-                case ClientToGameServerMessage.NetMessageTell: OnTell(client, message.Deserialize<NetMessageTell>()); break;
+                case ClientToGameServerMessage.NetMessageChat:
+                    if (message.TryDeserialize<NetMessageChat>(out var chat))
+                        OnChat(client, chat);
+                    break;
+
+                case ClientToGameServerMessage.NetMessageTell:
+                    if (message.TryDeserialize<NetMessageTell>(out var tell))
+                        OnTell(client, tell);
+                    break;
 
                 default:
                     Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");

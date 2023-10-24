@@ -135,7 +135,7 @@ namespace MHServerEmu.Auth
             switch ((FrontendProtocolMessage)message.Id)
             {
                 case FrontendProtocolMessage.LoginDataPB:
-                    var loginDataPB = message.Deserialize<LoginDataPB>();
+                    if (message.TryDeserialize<LoginDataPB>(out var loginDataPB) == false) return;
 
                     // Send a TOS popup when the client uses tos@test.com as email
                     if (loginDataPB.EmailAddress.ToLower() == "tos@test.com")

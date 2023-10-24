@@ -56,9 +56,19 @@ namespace MHServerEmu.Billing
         {
             switch ((ClientToGameServerMessage)message.Id)
             {
-                case ClientToGameServerMessage.NetMessageGetCatalog: OnGetCatalog(client, message.Deserialize<NetMessageGetCatalog>()); break;
-                case ClientToGameServerMessage.NetMessageGetCurrencyBalance: OnGetCurrencyBalance(client); break;
-                case ClientToGameServerMessage.NetMessageBuyItemFromCatalog: OnBuyItemFromCatalog(client, message.Deserialize<NetMessageBuyItemFromCatalog>()); break;
+                case ClientToGameServerMessage.NetMessageGetCatalog:
+                    if (message.TryDeserialize<NetMessageGetCatalog>(out var getCatalog))
+                        OnGetCatalog(client, getCatalog);
+                    break;
+
+                case ClientToGameServerMessage.NetMessageGetCurrencyBalance:
+                    OnGetCurrencyBalance(client);
+                    break;
+
+                case ClientToGameServerMessage.NetMessageBuyItemFromCatalog:
+                    if (message.TryDeserialize<NetMessageBuyItemFromCatalog>(out var buyItemFromCatalog))
+                        OnBuyItemFromCatalog(client, buyItemFromCatalog);
+                    break;
 
                 default:
                     Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");

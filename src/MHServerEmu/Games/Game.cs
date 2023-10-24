@@ -152,13 +152,19 @@ namespace MHServerEmu.Games
             switch ((ClientToGameServerMessage)message.Id)
             {
                 case ClientToGameServerMessage.NetMessageUpdateAvatarState:
-                    OnUpdateAvatarState(client, message.Deserialize<NetMessageUpdateAvatarState>()); break;
+                    if (message.TryDeserialize<NetMessageUpdateAvatarState>(out var updateAvatarState))
+                        OnUpdateAvatarState(client, updateAvatarState);
+                    break;
 
                 case ClientToGameServerMessage.NetMessageCellLoaded:
-                    OnCellLoaded(client, message.Deserialize<NetMessageCellLoaded>()); break;
+                    if (message.TryDeserialize<NetMessageCellLoaded>(out var cellLoaded))
+                        OnCellLoaded(client, cellLoaded);
+                    break;
 
                 case ClientToGameServerMessage.NetMessageUseInteractableObject:
-                    OnUseInteractableObject(client, message.Deserialize<NetMessageUseInteractableObject>()); break;
+                    if (message.TryDeserialize<NetMessageUseInteractableObject>(out var useInteractableObject))
+                        OnUseInteractableObject(client, useInteractableObject);
+                    break;
 
                 case ClientToGameServerMessage.NetMessageTryActivatePower:
                 case ClientToGameServerMessage.NetMessagePowerRelease:
@@ -168,28 +174,43 @@ namespace MHServerEmu.Games
                     EnqueueResponses(_powerMessageHandler.HandleMessage(client, message)); break;
 
                 case ClientToGameServerMessage.NetMessageTryInventoryMove:
-                    OnTryInventoryMove(client, message.Deserialize<NetMessageTryInventoryMove>()); break;
+                    if (message.TryDeserialize<NetMessageTryInventoryMove>(out var tryInventoryMove))
+                        OnTryInventoryMove(client, tryInventoryMove);
+                    break;
 
                 case ClientToGameServerMessage.NetMessageThrowInteraction:
-                    OnThrowInteraction(client, message.Deserialize<NetMessageThrowInteraction>()); break;
+                    if (message.TryDeserialize<NetMessageThrowInteraction>(out var throwInteraction))
+                        OnThrowInteraction(client, throwInteraction);
+                    break;
 
                 case ClientToGameServerMessage.NetMessageUseWaypoint:
-                    OnUseWaypoint(client, message.Deserialize<NetMessageUseWaypoint>()); break;
+                    if (message.TryDeserialize<NetMessageUseWaypoint>(out var useWaypoint))
+                        OnUseWaypoint(client, useWaypoint);
+                    break;
 
                 case ClientToGameServerMessage.NetMessageSwitchAvatar:
-                    OnSwitchAvatar(client, message.Deserialize<NetMessageSwitchAvatar>()); break;
+                    if (message.TryDeserialize<NetMessageSwitchAvatar>(out var switchAvatar))
+                        OnSwitchAvatar(client, switchAvatar);
+                    break;
 
                 case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:
-                    OnSetPlayerGameplayOptions(client, message.Deserialize<NetMessageSetPlayerGameplayOptions>()); break;
+                    if (message.TryDeserialize<NetMessageSetPlayerGameplayOptions>(out var setPlayerGameplayOptions))
+                        OnSetPlayerGameplayOptions(client, setPlayerGameplayOptions);
+                    break;
 
                 case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:
-                    OnRequestInterestInAvatarEquipment(client, message.Deserialize<NetMessageRequestInterestInAvatarEquipment>()); break;
+                    if (message.TryDeserialize<NetMessageRequestInterestInAvatarEquipment>(out var requestInterestInAvatarEquipment))
+                        OnRequestInterestInAvatarEquipment(client, requestInterestInAvatarEquipment);
+                    break;
 
                 case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:
-                    OnOmegaBonusAllocationCommit(client, message.Deserialize<NetMessageOmegaBonusAllocationCommit>()); break;
+                    if (message.TryDeserialize<NetMessageOmegaBonusAllocationCommit>(out var omegaBonusAllocationCommit))
+                        OnOmegaBonusAllocationCommit(client, omegaBonusAllocationCommit);
+                    break;
 
                 default:
-                    Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})"); break;
+                    Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
+                    break;
             }
         }
 

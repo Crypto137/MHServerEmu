@@ -105,25 +105,35 @@ namespace MHServerEmu.PlayerManagement
                 case ClientToGameServerMessage.NetMessageReadyForGameJoin:
                     // NetMessageReadyForGameJoin contains a bug where wipesDataIfMismatchedInDb is marked as required but the client
                     // doesn't include it. To avoid an exception we build a partial message from the data we receive.
-                    // TODO: We need to validate all messages coming in from clients to avoid problems like these.
-                    var readyForGameJoin = NetMessageReadyForGameJoin.CreateBuilder().MergeFrom(message.Payload).BuildPartial();
-                    OnReadyForGameJoin(client, readyForGameJoin);
+                    try
+                    {
+                        var readyForGameJoin = NetMessageReadyForGameJoin.CreateBuilder().MergeFrom(message.Payload).BuildPartial();
+                        OnReadyForGameJoin(client, readyForGameJoin);
+                    }
+                    catch
+                    {
+                        Logger.Error("Failed to deserialize NetMessageReadyForGameJoin");
+                    }
+
                     break;
 
                 case ClientToGameServerMessage.NetMessageSyncTimeRequest:
-                    //OnSyncTimeRequest(client, message.Deserialize<NetMessageSyncTimeRequest>());
+                    if (message.TryDeserialize<NetMessageSyncTimeRequest>(out var syncTimeRequest))
+                        OnSyncTimeRequest(client, syncTimeRequest);
                     break;
 
                 case ClientToGameServerMessage.NetMessagePing:
-                    //OnPing(client, message.Deserialize<NetMessagePing>());
+                    if (message.TryDeserialize<NetMessagePing>(out var ping))
+                        OnPing(client, ping);
                     break;
 
                 case ClientToGameServerMessage.NetMessageFPS:
-                    //OnFps(client, message.Deserialize<NetMessageFPS>());
+                    if (message.TryDeserialize<NetMessageFPS>(out var fps))
+                        OnFps(client, fps);
                     break;
 
                 case ClientToGameServerMessage.NetMessageGracefulDisconnect:
-                    client.SendMessage(muxId, new(NetMessageGracefulDisconnectAck.DefaultInstance));
+                    OnGracefulDisconnect(client);
                     break;
 
                 // Routed messages
@@ -232,6 +242,7 @@ namespace MHServerEmu.PlayerManagement
         private void OnSyncTimeRequest(FrontendClient client, NetMessageSyncTimeRequest syncTimeRequest)
         {
             // NOTE: this is old experimental code
+            /*
             Logger.Info($"Received NetMessageSyncTimeRequest:");
             Logger.Trace(syncTimeRequest.ToString());
 
@@ -249,18 +260,24 @@ namespace MHServerEmu.PlayerManagement
                 .SetGametimeDialationStarted(0)
                 .SetDatetimeDialationStarted(0)
                 .Build()));
+            */
         }
 
         private void OnPing(FrontendClient client, NetMessagePing ping)
         {
-            Logger.Info($"Received ping:");
-            Logger.Trace(ping.ToString());
+            //Logger.Info($"Received ping:");
+            //Logger.Trace(ping.ToString());
         }
 
         private void OnFps(FrontendClient client, NetMessageFPS fps)
         {
-            Logger.Info("Received FPS:");
-            Logger.Trace(fps.ToString());
+            //Logger.Info("Received FPS:");
+            //Logger.Trace(fps.ToString());
+        }
+
+        private void OnGracefulDisconnect(FrontendClient client)
+        {
+            client.SendMessage(MuxChannel, new(NetMessageGracefulDisconnectAck.DefaultInstance));
         }
 
         #endregion

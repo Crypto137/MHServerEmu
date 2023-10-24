@@ -24,24 +24,36 @@ namespace MHServerEmu.Games.Powers
             switch ((ClientToGameServerMessage)message.Id)
             {
                 case ClientToGameServerMessage.NetMessageTryActivatePower:
-                    return OnTryActivatePower(client, message.Deserialize<NetMessageTryActivatePower>());
-                
+                    if (message.TryDeserialize<NetMessageTryActivatePower>(out var tryActivatePower))
+                        return OnTryActivatePower(client, tryActivatePower);
+                    break;
+
                 case ClientToGameServerMessage.NetMessagePowerRelease:
-                    return OnPowerRelease(client, message.Deserialize<NetMessagePowerRelease>());
+                    if (message.TryDeserialize<NetMessagePowerRelease>(out var powerRelease))
+                        return OnPowerRelease(client, powerRelease);
+                    break;
 
                 case ClientToGameServerMessage.NetMessageTryCancelPower:
-                    return OnTryCancelPower(client, message.Deserialize<NetMessageTryCancelPower>());
+                    if (message.TryDeserialize<NetMessageTryCancelPower>(out var tryCancelPower))
+                        return OnTryCancelPower(client, tryCancelPower);
+                    break;
 
                 case ClientToGameServerMessage.NetMessageTryCancelActivePower:
-                    return OnTryCancelActivePower(client, message.Deserialize<NetMessageTryCancelActivePower>());
+                    if (message.TryDeserialize<NetMessageTryCancelActivePower>(out var tryCancelActivePower))
+                        return OnTryCancelActivePower(client, tryCancelActivePower);
+                    break;
 
                 case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer:
-                    return OnContinuousPowerUpdate(client, message.Deserialize<NetMessageContinuousPowerUpdateToServer>());
+                    if (message.TryDeserialize<NetMessageContinuousPowerUpdateToServer>(out var continuousPowerUpdate))
+                        return OnContinuousPowerUpdate(client, continuousPowerUpdate);
+                    break;
 
                 default:
                     Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
-                    return Array.Empty<QueuedGameMessage>();
+                    break;
             }
+
+            return Array.Empty<QueuedGameMessage>();
         }
 
         private bool PowerHasKeyword(ulong PowerId, BlueprintId Keyword)
