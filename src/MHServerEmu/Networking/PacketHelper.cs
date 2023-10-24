@@ -1,6 +1,5 @@
 ﻿using Google.ProtocolBuffers;
 using Gazillion;
-using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
@@ -25,20 +24,17 @@ namespace MHServerEmu.Networking
         {
             string path = Path.Combine(PacketDirectory, fileName);
 
-            if (File.Exists(path))
-            {
-                CodedInputStream stream = CodedInputStream.CreateInstance(File.ReadAllBytes(path));
-                PacketIn packet = new(stream);
-
-                if (packet.Command == MuxCommand.Data)
-                {
-                    ParseServerMessagesFromPacket(packet, Path.Combine(PacketDirectory, $"{Path.GetFileNameWithoutExtension(path)}_parsed.txt"));
-                }
-            }
-            else
+            if (File.Exists(path) == false)
             {
                 Logger.Warn($"{path} not found");
+                return;
             }
+
+            CodedInputStream stream = CodedInputStream.CreateInstance(File.ReadAllBytes(path));
+            PacketIn packet = new(stream);
+
+            if (packet.Command == MuxCommand.Data)
+                ParseServerMessagesFromPacket(packet, Path.Combine(PacketDirectory, $"{Path.GetFileNameWithoutExtension(path)}_parsed.txt"));
         }
 
         public static void ParseServerMessagesFromAllPacketFiles()
@@ -63,25 +59,24 @@ namespace MHServerEmu.Networking
         {
             string path = Path.Combine(PacketDirectory, fileName);
 
-            if (File.Exists(path))
-            {
-                CodedInputStream stream = CodedInputStream.CreateInstance(File.ReadAllBytes(path));
-                int packetCount = 0;
-
-                while (!stream.IsAtEnd)
-                {
-                    PacketIn packet = new(stream);
-
-                    if (packet.Command == MuxCommand.Data)
-                    {
-                        ParseServerMessagesFromPacket(packet, Path.Combine(PacketDirectory, $"{Path.GetFileNameWithoutExtension(path)}_packet{packetCount}_parsed.txt"));
-                        packetCount++;
-                    }
-                }
-            }
-            else
+            if (File.Exists(path) == false)
             {
                 Logger.Warn($"{path} not found");
+                return;
+            }
+
+            CodedInputStream stream = CodedInputStream.CreateInstance(File.ReadAllBytes(path));
+            int packetCount = 0;
+
+            while (!stream.IsAtEnd)
+            {
+                PacketIn packet = new(stream);
+
+                if (packet.Command == MuxCommand.Data)
+                {
+                    ParseServerMessagesFromPacket(packet, Path.Combine(PacketDirectory, $"{Path.GetFileNameWithoutExtension(path)}_packet{packetCount}_parsed.txt"));
+                    packetCount++;
+                }
             }
         }
 
@@ -89,26 +84,25 @@ namespace MHServerEmu.Networking
         {
             string path = Path.Combine(PacketDirectory, fileName);
 
-            if (File.Exists(path))
-            {
-                CodedInputStream stream = CodedInputStream.CreateInstance(File.ReadAllBytes(path));
-                int packetCount = 0;
-
-                while (!stream.IsAtEnd)
-                {
-                    PacketIn packet = new(stream);
-
-                    if (packet.Command == MuxCommand.Data)
-                    {
-                        byte[] rawPacket = packet.ToPacketOut().Data;
-                        File.WriteAllBytes(Path.Combine(PacketDirectory, $"{Path.GetFileNameWithoutExtension(path)}_packet{packetCount}_raw.bin"), rawPacket);
-                        packetCount++;
-                    }
-                }
-            }
-            else
+            if (File.Exists(path) == false)
             {
                 Logger.Warn($"{path} not found");
+                return;
+            }
+
+            CodedInputStream stream = CodedInputStream.CreateInstance(File.ReadAllBytes(path));
+            int packetCount = 0;
+
+            while (!stream.IsAtEnd)
+            {
+                PacketIn packet = new(stream);
+
+                if (packet.Command == MuxCommand.Data)
+                {
+                    byte[] rawPacket = packet.ToPacketOut().Data;
+                    File.WriteAllBytes(Path.Combine(PacketDirectory, $"{Path.GetFileNameWithoutExtension(path)}_packet{packetCount}_raw.bin"), rawPacket);
+                    packetCount++;
+                }
             }
         }
 
@@ -116,18 +110,16 @@ namespace MHServerEmu.Networking
         {
             string path = Path.Combine(PacketDirectory, fileName);
 
-            if (File.Exists(path))
-            {
-                CodedInputStream stream = CodedInputStream.CreateInstance(File.ReadAllBytes(path));
-                PacketIn packet = new(stream);
-                Logger.Info($"Loaded {packet.Messages.Length} messages from {fileName}");
-                return packet.Messages;
-            }
-            else
+            if (File.Exists(path) == false)
             {
                 Logger.Warn($"{fileName} not found");
                 return Array.Empty<GameMessage>();
             }
+
+            CodedInputStream stream = CodedInputStream.CreateInstance(File.ReadAllBytes(path));
+            PacketIn packet = new(stream);
+            Logger.Info($"Loaded {packet.Messages.Length} messages from {fileName}");
+            return packet.Messages;
         }
 
         private static void ParseServerMessagesFromPacket(PacketIn packet, string outputPath)
