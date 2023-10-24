@@ -37,8 +37,17 @@ namespace MHServerEmu.Networking
         /// <param name="stream">CodedInputStream to decode from.</param>
         public GameMessage(CodedInputStream stream)
         {
-            Id = (byte)stream.ReadRawVarint32();
-            Payload = stream.ReadRawBytes((int)stream.ReadRawVarint32());
+            try
+            {
+                Id = (byte)stream.ReadRawVarint32();
+                Payload = stream.ReadRawBytes((int)stream.ReadRawVarint32());
+            }
+            catch (Exception e)
+            {
+                Id = 0;
+                Payload = null;
+                Logger.ErrorException(e, "GameMessage construction failed");
+            }
         }
 
         /// <summary>
