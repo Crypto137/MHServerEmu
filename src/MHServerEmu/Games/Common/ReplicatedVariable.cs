@@ -1,38 +1,34 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Common
 {
-    public class ReplicatedVariable<T>
+    public class ReplicatedVariable<T> : ArchiveMessageHandler
     {
-        public ulong ReplicationId { get; set; }
         public T Value { get; set; }
 
-        public ReplicatedVariable(CodedInputStream stream)
+        public ReplicatedVariable(CodedInputStream stream) : base(stream)
         {
-            ReplicationId = stream.ReadRawVarint64();
             Value = (T)DecodeValue(stream);
         }
 
-        public ReplicatedVariable(ulong repId, T value)
+        public ReplicatedVariable(ulong replicationId, T value) : base(replicationId)
         {
-            ReplicationId = repId;
             Value = value;
         }
 
-        public void Encode(CodedOutputStream stream)
+        public override void Encode(CodedOutputStream stream)
         {
-            stream.WriteRawVarint64(ReplicationId);
+            base.Encode(stream);
             EncodeValue(stream);
         }
 
-        public override string ToString()
+        protected override void BuildString(StringBuilder sb)
         {
-            StringBuilder sb = new();
-            sb.AppendLine($"ReplicationId: {ReplicationId}");
+            base.BuildString(sb);
             sb.AppendLine($"Value: {Value}");
-            return sb.ToString();
         }
 
         private object DecodeValue(CodedInputStream stream)
