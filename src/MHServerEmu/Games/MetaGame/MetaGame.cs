@@ -8,14 +8,14 @@ namespace MHServerEmu.Games.MetaGame
 {
     public class MetaGame : Entity
     {
-        public ReplicatedString Name { get; set; }
+        public ReplicatedVariable<string> Name { get; set; }
 
         public MetaGame(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
         public MetaGame(EntityBaseData baseData) : base(baseData) { }
 
         public MetaGame(EntityBaseData baseData, uint replicationPolicy, ReplicatedPropertyCollection propertyCollection,
-            ReplicatedString name) : base(baseData)
+            ReplicatedVariable<string> name) : base(baseData)
         {
             ReplicationPolicy = replicationPolicy;
             PropertyCollection = propertyCollection;

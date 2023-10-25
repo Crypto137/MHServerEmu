@@ -195,7 +195,7 @@ namespace MHServerEmu.Games
                 {
                     // modify avatar data here
 
-                    avatar.PlayerName.Text = account.PlayerName;
+                    avatar.PlayerName.Value = account.PlayerName;
 
                     bool hasCostumeCurrent = false;
                     bool hasCharacterLevel = false;

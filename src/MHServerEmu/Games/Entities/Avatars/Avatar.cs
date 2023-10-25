@@ -10,7 +10,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 {
     public class Avatar : Agent
     {
-        public ReplicatedString PlayerName { get; set; }
+        public ReplicatedVariable<string> PlayerName { get; set; }
         public ulong OwnerPlayerDbId { get; set; }
         public string GuildName { get; set; }
         public bool HasGuildInfo { get; set; }
@@ -20,7 +20,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public Avatar(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
         public Avatar(EntityBaseData baseData, EntityTrackingContextMap[] trackingContextMap, Condition[] conditionCollection, PowerCollectionRecord[] powerCollection, int unkEvent,
-            ReplicatedString playerName, ulong ownerPlayerDbId, string guildName, bool hasGuildInfo, GuildMemberReplicationRuntimeInfo guildInfo, AbilityKeyMapping[] abilityKeyMappings)
+            ReplicatedVariable<string> playerName, ulong ownerPlayerDbId, string guildName, bool hasGuildInfo, GuildMemberReplicationRuntimeInfo guildInfo, AbilityKeyMapping[] abilityKeyMappings)
             : base(baseData)
         {
             TrackingContextMap = trackingContextMap;

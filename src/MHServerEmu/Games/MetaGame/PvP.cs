@@ -7,8 +7,8 @@ namespace MHServerEmu.Games.MetaGame
 {
     public class PvP : MetaGame
     {
-        public ReplicatedInt32 Team1 { get; set; }
-        public ReplicatedInt32 Team2 { get; set; }
+        public ReplicatedVariable<int> Team1 { get; set; }
+        public ReplicatedVariable<int> Team2 { get; set; }
 
         public PvP(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 

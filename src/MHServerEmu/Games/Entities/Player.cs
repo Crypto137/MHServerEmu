@@ -17,14 +17,14 @@ namespace MHServerEmu.Games.Entities
         public MissionManager MissionManager { get; set; }
         public ReplicatedPropertyCollection AvatarPropertyCollection { get; set; }
         public ulong ShardId { get; set; }
-        public ReplicatedString Name { get; set; }
+        public ReplicatedVariable<string> Name { get; set; }
         public ulong ConsoleAccountId1 { get; set; }
         public ulong ConsoleAccountId2 { get; set; }
-        public ReplicatedString UnkName { get; set; }
+        public ReplicatedVariable<string> UnkName { get; set; }
         public ulong MatchQueueStatus { get; set; }
         public bool EmailVerified { get; set; }
         public ulong AccountCreationTimestamp { get; set; }
-        public ReplicatedUInt64 PartyId { get; set; }
+        public ReplicatedVariable<ulong> PartyId { get; set; }
         public string UnknownString { get; set; }
         public bool HasGuildInfo { get; set; }
         public GuildMemberReplicationRuntimeInfo GuildInfo { get; set; }
@@ -42,8 +42,8 @@ namespace MHServerEmu.Games.Entities
         // note: this is ugly
         public Player(EntityBaseData baseData, uint replicationPolicy, ReplicatedPropertyCollection propertyCollection,
             MissionManager missionManager, ReplicatedPropertyCollection avatarProperties,
-            ulong shardId, ReplicatedString playerName, ReplicatedString unkName,
-            ulong matchQueueStatus, bool emailVerified, ulong accountCreationTimestamp, ReplicatedUInt64 partyId,
+            ulong shardId, ReplicatedVariable<string> playerName, ReplicatedVariable<string> unkName,
+            ulong matchQueueStatus, bool emailVerified, ulong accountCreationTimestamp, ReplicatedVariable<ulong> partyId,
             Community community, bool unkBool, ulong[] stashInventories, uint[] availableBadges,
             GameplayOptions gameplayOptions, AchievementState[] achievementStates, StashTabOption[] stashTabOptions) : base(baseData)
         {
