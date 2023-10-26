@@ -22,6 +22,7 @@ namespace MHServerEmu.Frontend
         public bool FinishedGroupingManagerHandshake { get; set; } = false;
         public ulong GameId { get; set; }
         public Game CurrentGame { get => _serverManager.PlayerManagerService.GetGameByPlayer(this); }
+        public Region Region { get => CurrentGame.RegionManager.GetRegion(Session.Account.Player.Region); }
 
         // Temporarily store state here instead of Game
         public bool IsLoading { get; set; } = false;
