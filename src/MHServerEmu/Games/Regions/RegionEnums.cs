@@ -46,6 +46,8 @@
         // Chapter 4
         CH0401LowerEastRegion = 11922318117493283053,       // Lower East Side
         CH0402UpperEastRegion = 7814783688219433201,        // Upper East Side
+        CH0405WaxMuseumRegion = 18416219930763860231,       // Wax Museum
+        CH0408MaggiaRestaurantRegion = 4986534524151667661, // Maggia Restaurant
         CH0410FiskTowerRegion = 4829776495467370741,        // Fisk Tower
 
         // Chapter 5
@@ -113,6 +115,9 @@
         XmansionNWSRegionUnbanded = 17669583277812293411,       // X-Defense
         SurturRaidRegionGreen = 943404224811899020,             // Muspelheim Raid
         AxisRaidRegionGreen = 10186536050085467400,              // Axis Raid
+
+        // Treasure Rooms
+        TRGameCenterRegion = 16693804270797857925,              // Game Center
 
         // Special
         CosmicDoopSectorSpaceRegion = 8744981792306700722       // Cosmic Doop Sector Space

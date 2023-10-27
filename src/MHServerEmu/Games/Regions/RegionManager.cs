@@ -23,6 +23,7 @@ namespace MHServerEmu.Games.Regions
             RegionPrototype.NPERaftRegion,
             RegionPrototype.DailyGShockerSubwayRegionL60,
             RegionPrototype.DailyGSinisterLabRegionL60,
+            RegionPrototype.DailyGFiskTowerRegionL60, // TODO: Area Loading
             RegionPrototype.BronxZooRegionL60,
             RegionPrototype.HYDRAIslandPartDeuxRegionL60,
             RegionPrototype.XManhattanRegion1to60,
@@ -30,11 +31,18 @@ namespace MHServerEmu.Games.Regions
             RegionPrototype.BrooklynPatrolRegionL60,
             RegionPrototype.UpperMadripoorRegionL60,
             RegionPrototype.UpperMadripoorRegionL60Cosmic,
+            RegionPrototype.TRGameCenterRegion,
             RegionPrototype.UltronRaidRegionGreen,
             RegionPrototype.CH0101HellsKitchenRegion,
             RegionPrototype.CH0105NightclubRegion,
             RegionPrototype.CH0201ShippingYardRegion,
             RegionPrototype.CH0301MadripoorRegion,
+            RegionPrototype.CH0307HandTowerRegion,
+            RegionPrototype.CH0401LowerEastRegion,
+            RegionPrototype.CH0402UpperEastRegion,
+            RegionPrototype.CH0405WaxMuseumRegion,
+            RegionPrototype.CH0408MaggiaRestaurantRegion,
+            RegionPrototype.CH0410FiskTowerRegion,
             RegionPrototype.CH0701SavagelandRegion,
             RegionPrototype.CH0804LatveriaPCZRegion,
             RegionPrototype.CH0808DoomCastleRegion,
@@ -830,6 +838,300 @@ namespace MHServerEmu.Games.Regions
                     region.WaypointOrientation = new();
                     break;
 
+                case RegionPrototype.CH0307HandTowerRegion:
+                    archiveData = new byte[] {
+                    };
+                    float fixOffset = 25000f;
+                    region = new(RegionPrototype.CH0307HandTowerRegion,
+                        1883928786,
+                        archiveData,
+                        new(-10368.0f - fixOffset, -10368.0f - fixOffset, -2176.0f),
+                        new(10368.0f + fixOffset, 10368.0f + fixOffset, 2176.0f),
+                        new(60, DifficultyTier.Normal));
+
+                    string HandTower = "Regions/StoryRevamp/CH03Madripoor/LowTown/HandTower/";
+
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeRefByName(HandTower + "HandTowerArea.prototype"), new(), true);
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/HandOffice/HandOffice_Trans/HandOffice_LobbyEntry_B.cell"), new(0.0f, 0.0f, 0.0f)));
+                    region.AddArea(area);
+                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeRefByName(HandTower + "HandTowerArea2.prototype"), new(), false);
+                    area.AddCell(new(2, GameDatabase.GetPrototypeRefByName("Resource/Cells/HandOffice/HandOffice_A/HandOffice_A_Floor_A2.cell"), new(0.0f, 8192.0f + fixOffset, 0.0f)));
+                    region.AddArea(area);
+                    area = new(3, (AreaPrototype)GameDatabase.GetPrototypeRefByName(HandTower + "HandTowerArea3.prototype"), new(), false);
+                    area.AddCell(new(3, GameDatabase.GetPrototypeRefByName("Resource/Cells/HandOffice/HandOffice_A/HandOffice_A_Floor_B3.cell"), new(8192.0f + fixOffset, 0.0f, 0.0f)));
+                    region.AddArea(area);
+                    area = new(4, (AreaPrototype)GameDatabase.GetPrototypeRefByName(HandTower + "HandTowerArea4.prototype"), new(), false);
+                    area.AddCell(new(4, GameDatabase.GetPrototypeRefByName("Resource/Cells/HandOffice/HandOffice_A/HandOffice_A_Floor_C4.cell"), new(0.0f, -8192.0f - fixOffset, 0.0f)));
+                    region.AddArea(area);
+                    area = new(5, (AreaPrototype)GameDatabase.GetPrototypeRefByName(HandTower + "HandTowerArea5.prototype"), new(), false);
+                    area.AddCell(new(5, GameDatabase.GetPrototypeRefByName("Resource/Cells/HandOffice/HandOffice_Trans/HandOffice_BossRoom_B.cell"), new(-8192.0f - fixOffset, 0.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(-1789.4968f, -240.62897f, -408.9992f);
+                    region.EntranceOrientation = new(3.141641f, 0.0f, 0.0f);
+                    region.WaypointPosition = new(-1789.4968f, -240.62897f, -408.9992f);
+                    region.WaypointOrientation = new(-3.141641f, 0.0f, 0.0f);
+
+                    break;
+
+                case RegionPrototype.CH0401LowerEastRegion:
+                    archiveData = new byte[] {
+                    };
+                    region = new(RegionPrototype.CH0401LowerEastRegion,
+                        1883928786,
+                        archiveData,
+                        new(-10368.0f, -9216.0f, -1152.0f),
+                        new(10368.0f, 9216.0f, 1152.0f),
+                        new(60, DifficultyTier.Normal));
+
+                    string HellKitchen02 = "Resource/Cells/Hells_Kitchen_02/";
+                    string HellKitchen02Area = "Regions/StoryRevamp/CH04EastSide/Areas/";
+
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeRefByName(HellKitchen02Area + "CH0401LowerEastArea1Entry.prototype"), new(), true);
+                    area.AddCell(new(55, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Hells_Kitchen_02_Trans/RedLight_Entry_NEW.cell"), new(4608.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(54, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Hells_Kitchen_02_Trans/RedLight_NESW_MeatLocker_Entry.cell"), new(2304.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(59, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NSW_A.cell"), new(4608.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(58, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NSW_A.cell"), new(2304.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(53, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NESWcS_A.cell"), new(0.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(57, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NW_A.cell"), new(0.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(56, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_ESW_A.cell"), new(6912.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(60, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_SW_A.cell"), new(6912.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(51, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NES_A.cell"), new(4608.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(50, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NES_A.cell"), new(2304.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(52, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_ES_A.cell"), new(6912.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(49, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NE_A.cell"), new(0.0f, -8064.0f, 0.0f)));
+                    region.AddArea(area);
+                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeRefByName(HellKitchen02Area + "CH0401LowerEastArea2.prototype"), new(), false);
+                    area.AddCell(new(42, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_C/RedLight_Theater_X0_Y0B.cell"), new(-6912.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(38, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Hells_Kitchen_02_Trans/RedLight_B_NESW_HauntedEntry_A.cell"), new(-6912.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(46, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NSW_A.cell"), new(-6912.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(39, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_B/RedLight_B_NESW_D.cell"), new(-4608.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(47, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NESWcE_A.cell"), new(-4608.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(43, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_C/RedLight_Theater_X1_Y0.cell"), new(-4608.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(37, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NEW_B.cell"), new(-9216.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(41, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NEW_A.cell"), new(-9216.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(45, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NW_A.cell"), new(-9216.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(40, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Hells_Kitchen_02_Trans/RedLight_ESW_Objective1Exit_A.cell"), new(-2304.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(44, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Hells_Kitchen_02_Trans/RedLight_ESW_Objective1Entry_A.cell"), new(-2304.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(48, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_SW_B.cell"), new(-2304.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(34, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NES_A.cell"), new(-6912.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(35, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NES_A.cell"), new(-4608.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(36, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_ES_A.cell"), new(-2304.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(33, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NE_A.cell"), new(-9216.0f, -8064.0f, 0.0f)));
+                    region.AddArea(area);
+                    area = new(3, (AreaPrototype)GameDatabase.GetPrototypeRefByName(HellKitchen02Area + "CH0401LowerEastArea3.prototype"), new(), false);
+                    area.AddCell(new(26, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_B/RedLight_B_NESW_C.cell"), new(-4608.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(23, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_C/RedLight_MGH_Garage_X1_Y0.cell"), new(-2304.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(31, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NSW_A.cell"), new(-2304.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(22, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_C/RedLight_MGH_Garage_X0_Y0.cell"), new(-4608.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(30, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NSW_B.cell"), new(-4608.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(27, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_B/RedLight_B_NESW_D.cell"), new(-2304.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(25, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NEW_B.cell"), new(-6912.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(21, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NEW_A.cell"), new(-6912.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(29, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NW_A.cell"), new(-6912.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(24, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NESWcN_A.cell"), new(0.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(28, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Hells_Kitchen_02_Trans/RedLight_ESW_SecretLabEntry_A.cell"), new(0.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(32, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_SW_A.cell"), new(0.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(18, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NESWcW_A.cell"), new(-4608.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(19, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NES_A.cell"), new(-2304.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(20, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_ES_A.cell"), new(0.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(17, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NE_A.cell"), new(-6912.0f, 1152.0f, 0.0f)));
+                    region.AddArea(area);
+                    area = new(4, (AreaPrototype)GameDatabase.GetPrototypeRefByName(HellKitchen02Area + "CH0401LowerEastArea4Exit.prototype"), new(), false);
+                    area.AddCell(new(11, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NESW_C.cell"), new(6912.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(6, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_C/RedLight_Wax_Museum_A1_X0_Y0.cell"), new(4608.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(14, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NSW_A.cell"), new(4608.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(10, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_C/RedLight_Wax_Museum_A2_X0_Y1.cell"), new(4608.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(7, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_Subway_B/RedLight_Subway_NESW_A_2.cell"), new(6912.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(15, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Hells_Kitchen_02_Trans/RedLight_A_NSW_GarageEntry_B.cell"), new(6912.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(5, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NESWcS_A.cell"), new(2304.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(9, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NEW_A.cell"), new(2304.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(13, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NW_B.cell"), new(2304.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(8, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_Subway_B/RedLight_Subway_ESW_A_2.cell"), new(9216.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(12, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_ESW_A.cell"), new(9216.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(16, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_SW_A.cell"), new(9216.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(2, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NES_A.cell"), new(4608.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(3, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NES_A.cell"), new(6912.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(4, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_Subway_A/RedLight_Subway_ES_A.cell"), new(9216.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "RedLight_A/RedLight_A_NE_A.cell"), new(2304.0f, 1152.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(5669.1f, -6814.5f, 5.0f);
+                    region.EntranceOrientation = new(-2.35623f, 0.0f, 0.0f);
+                    region.WaypointPosition = new(5669.1f, -6814.5f, 5.0f);
+                    region.WaypointOrientation = new(-3.927051f, 0.0f, 0.0f);
+
+                    break;
+
+                case RegionPrototype.CH0402UpperEastRegion:
+                    archiveData = new byte[] {
+                    };
+                    region = new(RegionPrototype.CH0402UpperEastRegion,
+                        1883928786,
+                        archiveData,
+                        new(-10368.0f, -11520.0f, -1152.0f),
+                        new(10368.0f, 11520.0f, 1152.0f),
+                        new(60, DifficultyTier.Normal));
+
+                    HellKitchen02 = "Resource/Cells/Hells_Kitchen_02/";
+                    HellKitchen02Area = "Regions/StoryRevamp/CH04EastSide/Areas/";
+
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeRefByName(HellKitchen02Area + "CH0402UpperEastArea1Entry.prototype"), new(), true);
+                    area.AddCell(new(55, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_C/Upper_East_Super_NYPD_X0_Y1_B.cell"), new(-2304.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(58, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_NESWcE_A.cell"), new(-2304.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(54, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_Trans/Upper_East_Subway_Exit_A.cell"), new(-4608.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(57, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_NW_A.cell"), new(-4608.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(56, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_C/Upper_East_Super_NYPD_X1_Y1_B.cell"), new(0.0f, -8064.0f, 0.0f)));
+                    area.AddCell(new(59, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_SW_A.cell"), new(0.0f, -5760.0f, 0.0f)));
+                    area.AddCell(new(52, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_C/Upper_East_Super_NYPD_X0_Y0_B.cell"), new(-2304.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(53, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_C/Upper_East_Super_NYPD_X1_Y0_B.cell"), new(0.0f, -10368.0f, 0.0f)));
+                    area.AddCell(new(51, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_NE_A.cell"), new(-4608.0f, -10368.0f, 0.0f)));
+                    region.AddArea(area);
+                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeRefByName(HellKitchen02Area + "CH0402UpperEastArea2.prototype"), new(), false);
+                    area.AddCell(new(29, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_C/Upper_East_Super_HorizLeft_C.cell"), new(-2304.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(37, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_B/Upper_East_B_NESW_B.cell"), new(-6912.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(43, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_NESW_B.cell"), new(-4608.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(27, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_B/Upper_East_B_NESW_A.cell"), new(-6912.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(33, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_B/Upper_East_B_NESW_B.cell"), new(-4608.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(49, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_NSW_A.cell"), new(-2304.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(32, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_NESW_A.cell"), new(-6912.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(48, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_C/Upper_East_Bank_NSW_A.cell"), new(-4608.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(44, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_C/Upper_East_Restaurant2_NESW.cell"), new(-2304.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(28, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_Trans/Upper_East_LavamenEruption_A.cell"), new(-4608.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(39, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_C/Upper_East_Super_N_Edge_Bot_A.cell"), new(-2304.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(42, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_C/Upper_East_Super_S_Edge_Top_A.cell"), new(-6912.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(34, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_C/Upper_East_Super_HorizRight_C.cell"), new(-2304.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(38, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_NESW_B.cell"), new(-4608.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(47, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_B/Upper_East_B_NSW_A.cell"), new(-6912.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(36, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_Trans/Upper_East_MaintenanceEntry_A.cell"), new(-9216.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(41, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_C/Upper_East_Super_S_Edge_Bot_A.cell"), new(-9216.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(31, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_NEW_A.cell"), new(-9216.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(26, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_NEW_A.cell"), new(-9216.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(46, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_NW_A.cell"), new(-9216.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(45, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_NESWcN_A.cell"), new(0.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(30, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_Trans/Upper_East_BarberEntry_A.cell"), new(0.0f, -1152.0f, 0.0f)));
+                    area.AddCell(new(35, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_ESW_A.cell"), new(0.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(40, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_C/Upper_East_Super_N_Edge_Top_A.cell"), new(0.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(50, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_SW_A.cell"), new(0.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(24, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_NESWcW_A.cell"), new(-2304.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(22, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_NES_A.cell"), new(-6912.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(23, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_NES_A.cell"), new(-4608.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(25, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_ES_A.cell"), new(0.0f, -3456.0f, 0.0f)));
+                    area.AddCell(new(21, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_NE_A.cell"), new(-9216.0f, -3456.0f, 0.0f)));
+                    region.AddArea(area);
+                    area = new(3, (AreaPrototype)GameDatabase.GetPrototypeRefByName(HellKitchen02Area + "CH0402UpperEastArea3Exit.prototype"), new(), false);
+                    area.AddCell(new(6, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_Trans/Upper_East_MoloidOfficeEntry.cell"), new(4608.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(14, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_B/Upper_East_B_NESW_A.cell"), new(4608.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(10, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_B/Upper_East_B_NESW_B.cell"), new(4608.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(18, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_B/Upper_East_B_NSW_A.cell"), new(4608.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(15, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_C/Upper_East_Super_HorizRight_A.cell"), new(6912.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(7, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_NESW_A.cell"), new(6912.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(11, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_C/Upper_East_Super_HorizLeft_A.cell"), new(6912.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(19, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_NSW_A.cell"), new(6912.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(9, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_NESWcS_A.cell"), new(2304.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(13, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_NEW_A.cell"), new(2304.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(5, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_NEW_A.cell"), new(2304.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(17, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_NW_A.cell"), new(2304.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(12, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_C/Upper_East_Fisk_Tower_3.cell"), new(9216.0f, 5760.0f, 0.0f)));
+                    area.AddCell(new(16, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_C/Upper_East_Fisk_Lobby.cell"), new(9216.0f, 8064.0f, 0.0f)));
+                    area.AddCell(new(8, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_C/Upper_East_Fisk_Tower_2.cell"), new(9216.0f, 3456.0f, 0.0f)));
+                    area.AddCell(new(20, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_SW_A.cell"), new(9216.0f, 10368.0f, 0.0f)));
+                    area.AddCell(new(2, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_NES_A.cell"), new(4608.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(3, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_NES_A.cell"), new(6912.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(4, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_ES_A.cell"), new(9216.0f, 1152.0f, 0.0f)));
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName(HellKitchen02 + "Upper_East_Side_A/Upper_East_A_NE_A.cell"), new(2304.0f, 1152.0f, 0.0f)));
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(-1792.0f, -7472.0f, 6.0f);
+                    region.EntranceOrientation = new(0.78541f, 0.0f, 0.0f);
+                    region.WaypointPosition = new(-1792.0f, -7472.0f, 6.0f);
+                    region.WaypointOrientation = new(0.78541f, 0.0f, 0.0f);
+
+                    break;
+
+                case RegionPrototype.CH0405WaxMuseumRegion:
+                    archiveData = new byte[] {
+                    };
+                    region = new(RegionPrototype.CH0405WaxMuseumRegion,
+                        1038711701,
+                        archiveData,
+                        new(-2176.0f, -2176.0f, -2176.0f),
+                        new(2176.0f, 2176.0f, 2176.0f),
+                        new(60, DifficultyTier.Normal));                    
+
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH04EastSide/Areas/LowerEastSide/WaxMuseum/CH0405WaxMuseumArea1.prototype"), new(), true);
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/Hells_Kitchen_02/RedLight_SC_Instances/RedLight_WaxMuseum_B.cell"), new()));
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(-1096.0f, -128.0f, 5.0f);
+                    region.EntranceOrientation = new();
+                    region.WaypointPosition = new(1158.0f, 1498.0f, 5.0f) ;
+                    region.WaypointOrientation = new();
+
+                    break;
+
+                case RegionPrototype.CH0408MaggiaRestaurantRegion:
+                    archiveData = new byte[] {
+                    };
+                    region = new(RegionPrototype.CH0408MaggiaRestaurantRegion,
+                        1038711701,
+                        archiveData,
+                        new(-1750.0f, -1750.0f, -1750.0f),
+                        new(1750.0f, 1750.0f, 1750.0f),
+                        new(60, DifficultyTier.Normal));
+
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH04EastSide/Areas/UpperEastSide/MaggiaRestaurant/CH0408MobRestaurantArea.prototype"), new(), true);
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/Hells_Kitchen_02/Upper_East_Side_Trans/Upper_East_Maggia_Restaurant2.cell"), new()));
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(-1406.4f, -22.0f, 12.0f);
+                    region.EntranceOrientation = new();
+                    region.WaypointPosition = new(-260.0f, 255.0f, 12.0f);
+                    region.WaypointOrientation = new(1.57082f, 0.0f, 0.0f);
+
+                    break;
+
+                case RegionPrototype.CH0410FiskTowerRegion:
+                    archiveData = new byte[] {
+                    };
+                    fixOffset = 15000f;
+                    region = new(RegionPrototype.CH0410FiskTowerRegion,
+                        1883928786,
+                        archiveData,
+                        new(-10368.0f - fixOffset, -12544.0f - fixOffset, -2176.0f),
+                        new(10368.0f + fixOffset, 12544.0f + fixOffset, 2176.0f),
+                        new(60, DifficultyTier.Normal));
+                    
+                    string FiskTower = "Regions/StoryRevamp/CH04EastSide/Areas/UpperEastSide/FiskTower/";
+
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeRefByName(FiskTower + "CH0410FiskTowerArea1Lobby.prototype"), new(), true);
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/FiskTower/FiskTower_Trans/FiskTower_Lobby_Entry_B.cell"), new(0.0f, 2176.0f, 0.0f)));
+                    region.AddArea(area);
+                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeRefByName(FiskTower + "CH0410FiskTowerArea2.prototype"), new(), false);
+                    area.AddCell(new(2, GameDatabase.GetPrototypeRefByName("Resource/Cells/FiskTower/FiskTower_A/FiskTower_B_Floor_E.cell"), new(0.0f, 10368.0f + fixOffset, 0.0f)));
+                    region.AddArea(area);
+                    area = new(3, (AreaPrototype)GameDatabase.GetPrototypeRefByName(FiskTower + "CH0410FiskTowerArea3.prototype"), new(), false);
+                    area.AddCell(new(3, GameDatabase.GetPrototypeRefByName("Resource/Cells/FiskTower/FiskTower_A/FiskTower_B_Floor_F.cell"), new(8192.0f + fixOffset, 2176.0f, 0.0f)));
+                    region.AddArea(area);
+                    area = new(4, (AreaPrototype)GameDatabase.GetPrototypeRefByName(FiskTower + "CH0410FiskTowerArea4.prototype"), new(), false);
+                    area.AddCell(new(4, GameDatabase.GetPrototypeRefByName("Resource/Cells/FiskTower/FiskTower_A/FiskTower_B_Floor_G.cell"), new(0.0f, -6016.0f - fixOffset, 0.0f)));
+                    region.AddArea(area);
+                    area = new(5, (AreaPrototype)GameDatabase.GetPrototypeRefByName(FiskTower + "CH0410FiskTowerArea5Elektra.prototype"), new(), false);
+                    area.AddCell(new(5, GameDatabase.GetPrototypeRefByName("Resource/Cells/FiskTower/FiskTower_A/FiskTower_B_Floor_H.cell"), new(0.0f, -10368.0f - fixOffset, 0.0f)));
+                    region.AddArea(area);
+                    area = new(6, (AreaPrototype)GameDatabase.GetPrototypeRefByName(FiskTower + "CH0410FiskTowerArea6Bullseye.prototype"), new(), false);
+                    area.AddCell(new(6, GameDatabase.GetPrototypeRefByName("Resource/Cells/FiskTower/FiskTower_A/FiskTower_B_Floor_I.cell"), new(-8192.0f - fixOffset, 2176.0f, 0.0f)));
+                    region.AddArea(area);
+                    area = new(7, (AreaPrototype)GameDatabase.GetPrototypeRefByName(FiskTower + "CH0410FiskTowerArea7Kingpin.prototype"), new(), false);
+                    area.AddCell(new(7, GameDatabase.GetPrototypeRefByName("Resource/Cells/FiskTower/FiskTower_Trans/FiskTower_BossRoom_B.cell"), new(8192.0f + fixOffset, 10368.0f + fixOffset, 0.0f)));
+                    region.AddArea(area);
+                    region.EntrancePosition = new(-1152.0f, 2176.0f - 256.0f, -832.0f);
+                    region.EntranceOrientation = new(-1.57082f, 0.0f, 0.0f);
+                    region.WaypointPosition = new(-1152.0f, 2176.0f - 256.0f, -832.0f);
+                    region.WaypointOrientation = new(1.57082f, 0.0f, 0.0f);
+
+                    break;
+
                 case RegionPrototype.CH0701SavagelandRegion:
 
                     archiveData = new byte[] {
@@ -1550,7 +1852,39 @@ namespace MHServerEmu.Games.Regions
                     region.WaypointOrientation = new();
                     
                     break;
-                    
+
+                case RegionPrototype.DailyGFiskTowerRegionL60:
+                    archiveData = new byte[] {
+                    };
+
+                    float fixTower = 8704f; // 8704.0f
+
+                    region = new(RegionPrototype.DailyGFiskTowerRegionL60,
+                        1883928786,
+                        archiveData,
+                        new(-4352.0f - fixTower, -4352.0f - fixTower, -1536.0f), // new(-13056.0f, -13056.0f, -1536.0f)
+                        new(4352.0f + fixTower, 4352.0f + fixTower, 1536.0f), // new(13056.0f, 13056.0f, 1536.0f)
+                        new(60, DifficultyTier.Normal));
+
+                   
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/EndGame/Terminals/Green/FiskTower/Areas/DailyGFiskTowerArea.prototype"), new(), true);
+
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/FiskTower/FiskTower_Trans/FiskTowerDaily_Lobby_Entry_A.cell"), new(-fixTower, -fixTower, 0.0f)));
+                  /*  area.AddCell(new(2, GameDatabase.GetPrototypeRefByName("Resource/Cells/FiskTower/FiskTower_A/FiskTower_A_Floor_A.cell"), new(-fixTower, 0.0f, 0.0f)));
+                    area.AddCell(new(3, GameDatabase.GetPrototypeRefByName("Resource/Cells/FiskTower/FiskTower_A/FiskTower_A_Floor_B.cell"), new(-fixTower, fixTower, 0.0f)));
+                    area.AddCell(new(4, GameDatabase.GetPrototypeRefByName("Resource/Cells/FiskTower/FiskTower_A/FiskTower_A_Floor_D.cell"), new(0.0f, fixTower, 0.0f)));
+                    area.AddCell(new(5, GameDatabase.GetPrototypeRefByName("Resource/Cells/FiskTower/FiskTower_Trans/FiskTower_BossRoom_A.cell"), new(0.0f, 0.0f, 0.0f)));*/
+
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(-fixTower - 1440, -fixTower - 896, 0.0f - 832);//-fixTower - 1440, -fixTower - 896, 0.0f - 832
+                    region.EntranceOrientation = new();
+                    region.WaypointPosition = new(-fixTower - 1440, -fixTower - 896, 0.0f - 832);
+                    region.WaypointOrientation = new(3.14159f, 0f, 0f);
+
+                    break;
+
+
                 case RegionPrototype.BronxZooRegionL60:
                     archiveData = new byte[] {
                     };
@@ -2028,26 +2362,55 @@ namespace MHServerEmu.Games.Regions
                         1883928786,
                         archiveData, 
                         new(-1152.0f, -11136.0f, -3328.0f), 
-                        new(21888.0f, 24192.0f, 3328.0f),
-                        new(10, DifficultyTier.Normal));
+                        new(26496.0f, 24192.0f, 3328.0f),
+                        new(60, DifficultyTier.Normal));
 
                     area = new(1, (AreaPrototype) GameDatabase.GetPrototypeRefByName("Regions/Story/CH10SecretInvasion/UpperMadripoor/UpperMadripoorAreaA.prototype"), new(), true);
 
                     districtPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Districts/MadripoorHightownDistrict.district");
                     district = GameDatabase.GetPrototype<DistrictPrototype>(districtPrototypeId);
                     for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
-                    
+                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));                    
                     region.AddArea(area);
 
+                    cellid = (uint)district.CellMarkerSet.Length + 1;
+
+                    // SubAreaSequences
+
                     area = new(2, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/Story/CH10SecretInvasion/UpperMadripoor/UpperMadripoorAreaSewer.prototype"), new(), false);
-                    area.AddCell(new((uint)district.CellMarkerSet.Length + 1, GameDatabase.GetPrototypeRefByName("Resource/Cells/SecretInvasion/HighTownSewers/Hightown_Sewers_A.cell"), new(2176, -7808, 0)));
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName("Resource/Cells/SecretInvasion/HighTownSewers/Hightown_Sewers_A.cell"), new(2176, -7808, 0)));
+                    region.AddArea(area);
+
+                    area = new(3, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/Story/CH10SecretInvasion/UpperMadripoor/UpperMadripoorAreaSafeZone.prototype"), new(), false);
+                    area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName("Resource/Cells/Madripoor/UpperMadripoor/Upper_Madripoor_Trans/Jumbotron_Overlook_A.cell"), new(24192, -8832, 1024)));
                     region.AddArea(area);
 
                     region.EntrancePosition = new(20665.0f, 15910.0f, 0.0f);
                     region.EntranceOrientation = new(-1.914437f, 0.0f, 0.0f);
                     region.WaypointPosition = new(20665.0f, 15910.0f, 0.0f);
                     region.WaypointOrientation = new(1.914437f, 0.0f, 0.0f);
+
+                    break;
+
+                case RegionPrototype.TRGameCenterRegion:
+                    archiveData = new byte[] {
+                    };
+
+                    region = new(RegionPrototype.TRGameCenterRegion,
+                        1883928786,
+                        archiveData,
+                        new(-4608.0f, -4608.0f, -4608.0f),
+                        new(4608.0f, 4608.0f, 4608.0f),
+                        new(60, DifficultyTier.Normal));
+
+                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/Story/CH10SecretInvasion/UpperMadripoor/TreasureRooms/TRGameCenterArea.prototype"), new(), true);
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/Madripoor/UpperMadripoor/Upper_Madripoor_Trans/GameCenter_TR_A.cell"), new()));
+                    region.AddArea(area);
+
+                    region.EntrancePosition = new(-2948.0f, -1031.0f, 303.0f);
+                    region.EntranceOrientation = new(1.57082f, 0.0f, 0.0f);
+                    region.WaypointPosition = new(3038.0f, 642.0f, 136.0f);
+                    region.WaypointOrientation = new(1.57082f, 0.0f, 0.0f);
 
                     break;
 

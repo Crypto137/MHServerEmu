@@ -60,7 +60,7 @@ namespace MHServerEmu.Games.Regions
 
         public static bool GetSnapToFloorOnSpawn(ulong prototypeId)
         {
-            if (prototypeId == (ulong)BlueprintId.ThrowableProp) return false;
+            if (prototypeId == (ulong)BlueprintId.ThrowableProp) return true;
             if (prototypeId == (ulong)BlueprintId.DestructibleProp) return true;
             Prototype entity = prototypeId.GetPrototype();
             PrototypeEntry TestWorldEntity = entity.GetEntry(BlueprintId.WorldEntity);
@@ -245,16 +245,32 @@ namespace MHServerEmu.Games.Regions
                 case RegionPrototype.XManhattanRegion1to60:
                 case RegionPrototype.XManhattanRegion60Cosmic:
                 case RegionPrototype.UltronRaidRegionGreen:
+                case RegionPrototype.NPERaftRegion:
                 case RegionPrototype.CH0105NightclubRegion:
-                case RegionPrototype.CH0301MadripoorRegion:
+                case RegionPrototype.CH0201ShippingYardRegion:
+                case RegionPrototype.CH0701SavagelandRegion:
+                case RegionPrototype.CH0804LatveriaPCZRegion:
+                case RegionPrototype.CH0808DoomCastleRegion:
+                case RegionPrototype.CH0901NorwayPCZRegion:
                 case RegionPrototype.CH0904SiegePCZRegion:
                     GenerateEntities(region, null, true, true);
 
                     break;
 
+                case RegionPrototype.TRGameCenterRegion:
+                    connectionNodes = new ulong[] {
+                        7639542123192857492, // TRGameCenterNodeEnter
+                    };
+                    targets = BuildConnectionEdges(connectionNodes);
+                    GenerateEntities(region, targets, true, true);
+
+                    break;
+
                 case RegionPrototype.UpperMadripoorRegionL60:
                 case RegionPrototype.UpperMadripoorRegionL60Cosmic:
-                    connectionNodes = new ulong[] { 
+                    connectionNodes = new ulong[] {
+                        7533474634124963840, // UpperMadripoorSafeZoneNode
+                        7639542123192857492, // TRGameCenterNodeEnter
                         18086542742377411223, // UpperMadripoorSewerToCentralNode
                         10669111645315543387, // UpperMadripoorSewerToEastNode
                         9296679134777520601, // UpperMadripoorSewerToNorthNode
@@ -280,7 +296,72 @@ namespace MHServerEmu.Games.Regions
                     GenerateEntities(region, targets, true, true);
                     break;
 
-                    
+                case RegionPrototype.CH0301MadripoorRegion:
+                    connectionNodes = new ulong[]
+                    {
+                         15391000012663825577 , // LowTownToHandTower
+                         9754323402190562962 , // BeachToHydraOutpostNode
+                    };
+                    targets = BuildConnectionEdges(connectionNodes);
+                    GenerateEntities(region, targets, true, true);
+                    break;
+
+                case RegionPrototype.CH0307HandTowerRegion:
+                    connectionNodes = new ulong[]
+                    {
+                         15391000012663825577 , // LowTownToHandTower
+                         5944206842741730203 , // HandTowerLobbyToFloor2Node
+                         5285936687927405528 , // HandTowerFloor2ToFloor3Node
+                         5271901688289307610 , // HandTowerFloor3ToFloor4Node
+                         10586598960311315260 , // HandTowerFloor4ToBossNode
+                    };
+                    targets = BuildConnectionEdges(connectionNodes);
+                    GenerateEntities(region, targets, true, true);
+                    break;
+
+                case RegionPrototype.CH0401LowerEastRegion:
+                case RegionPrototype.CH0405WaxMuseumRegion:
+                    connectionNodes = new ulong[]
+                    {
+                         7969222097651113506 , // WaxMuseumNodeEnter
+                    };
+                    targets = BuildConnectionEdges(connectionNodes);
+                    GenerateEntities(region, targets, true, true);
+                    break;
+
+                case RegionPrototype.CH0408MaggiaRestaurantRegion:
+                    connectionNodes = new ulong[]
+                    {
+                         4892594607208668810 , // RestaurantFrontNode
+                    };
+                    targets = BuildConnectionEdges(connectionNodes);
+                    GenerateEntities(region, targets, true, true);
+                    break;
+
+                case RegionPrototype.CH0402UpperEastRegion:
+                    connectionNodes = new ulong[]
+                    {
+                         4892594607208668810 , // RestaurantFrontNode
+                         3426134486181749300 , // FiskTowerEntryNode
+                    };
+                    targets = BuildConnectionEdges(connectionNodes);
+                    GenerateEntities(region, targets, true, true);
+                    break;
+
+                case RegionPrototype.CH0410FiskTowerRegion:
+                    connectionNodes = new ulong[]
+                    {
+                         3426134486181749300 , // FiskTowerEntryNode
+                         10936066410997621140 , // FiskElevatorANode
+                         9708032418080301461 , // FiskElevatorBNode
+                         4558214450896052630 , // FiskElevatorCNode
+                         11836314134885245335 , // FiskElevatorDNode
+                         2141693716469129624 , // FiskElevatorENode
+                    };
+                    targets = BuildConnectionEdges(connectionNodes);
+                    GenerateEntities(region, targets, true, true);
+                    break;
+
                 case RegionPrototype.HYDRAIslandPartDeuxRegionL60:
                     connectionNodes = new ulong[] { 
                         14896483168893745334, // Hydra1ShotPreBossToBossNode
@@ -291,8 +372,8 @@ namespace MHServerEmu.Games.Regions
                     GenerateEntities(region, targets, true, true);
 
                     // Temporary Fix for ON teleport
-                    _entityManager.GetEntityByPrototypeId(9635289451621323629).BaseData.PrototypeId = 18247075406046695986; //BunkerDoorLargeOFF
-                    _entityManager.GetEntityByPrototypeId(15325647619817083651).BaseData.PrototypeId = 16804963870366568904; //MandarinPortalOFF
+                    _entityManager.GetEntityByPrototypeIdFromRegion(9635289451621323629, region.Id).BaseData.PrototypeId = 18247075406046695986; //BunkerDoorLargeOFF
+                    _entityManager.GetEntityByPrototypeIdFromRegion(15325647619817083651, region.Id).BaseData.PrototypeId = 16804963870366568904; //MandarinPortalOFF
 
                     /* TODO: OSRSkullJWooDecryptionController
                     
@@ -365,6 +446,15 @@ namespace MHServerEmu.Games.Regions
                     GenerateEntities(region, targets, true, true);
                     break;
 
+                case RegionPrototype.DailyGFiskTowerRegionL60:
+                    connectionNodes = new ulong[]
+                    {
+                         4458370674568667845 , // DailyGFiskTowerDToBossNode
+                    };
+                    targets = BuildConnectionEdges(connectionNodes);
+                    GenerateEntities(region, targets, true, true);
+                    break;
+
                 case RegionPrototype.DailyGTimesSquareRegionL60:
                     connectionNodes = new ulong[]
                     {
@@ -385,8 +475,8 @@ namespace MHServerEmu.Games.Regions
                     GenerateEntities(region, targets, true, true);
 
                     // Temporary Fix for ON teleport
-                    _entityManager.GetEntityByPrototypeId(3817919318712522311).BaseData.PrototypeId = 3361079670852883724; //OpenTransitionMedSoftOFF1
-                    _entityManager.GetEntityByPrototypeId(11621620264142837342).BaseData.PrototypeId = 16378653613730632945; //OpenTransitionSmlSoftOFF2
+                    _entityManager.GetEntityByPrototypeIdFromRegion(3817919318712522311, region.Id).BaseData.PrototypeId = 3361079670852883724; //OpenTransitionMedSoftOFF1
+                    _entityManager.GetEntityByPrototypeIdFromRegion(11621620264142837342, region.Id).BaseData.PrototypeId = 16378653613730632945; //OpenTransitionSmlSoftOFF2
                     
                     break;
 
@@ -544,20 +634,6 @@ namespace MHServerEmu.Games.Regions
 
                     area = (ulong)AreaPrototype.XaviersMansionArea;
                     MarkersAddDistrict("Resource/Districts/XaviersMansion.district");
-
-                    break;
-
-                case RegionPrototype.CH0701SavagelandRegion:
-
-                    area = GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH07SavageLand/Areas/DinoJungle/DinoJungleArea.prototype");
-
-                    Area areaL = region.AreaList[0];
-                    for (int i = 11; i < 14; i++)
-                    {
-                        cellid = (int)areaL.CellList[i].Id;
-                        areaOrigin = areaL.CellList[i].PositionInArea;
-                        MarkersAdd(GameDatabase.GetPrototype<CellPrototype>(areaL.CellList[i].PrototypeId), cellid, true);
-                    }
 
                     break;
 
