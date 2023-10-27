@@ -2354,16 +2354,20 @@ namespace MHServerEmu.Games.Regions
                     break;
 
                 case RegionPrototype.UpperMadripoorRegionL60:
+                case RegionPrototype.UpperMadripoorRegionL60Cosmic:
 
                     archiveData = new byte[] {
                     };
 
-                    region = new(RegionPrototype.UpperMadripoorRegionL60,
+                    CreateRegionParams diff = (prototype ==  RegionPrototype.UpperMadripoorRegionL60)?
+                        new(60, DifficultyTier.Normal) : new(63, DifficultyTier.Superheroic); 
+
+                    region = new(prototype,
                         1883928786,
                         archiveData, 
                         new(-1152.0f, -11136.0f, -3328.0f), 
                         new(26496.0f, 24192.0f, 3328.0f),
-                        new(60, DifficultyTier.Normal));
+                        diff);
 
                     area = new(1, (AreaPrototype) GameDatabase.GetPrototypeRefByName("Regions/Story/CH10SecretInvasion/UpperMadripoor/UpperMadripoorAreaA.prototype"), new(), true);
 
@@ -2411,38 +2415,6 @@ namespace MHServerEmu.Games.Regions
                     region.EntranceOrientation = new(1.57082f, 0.0f, 0.0f);
                     region.WaypointPosition = new(3038.0f, 642.0f, 136.0f);
                     region.WaypointOrientation = new(1.57082f, 0.0f, 0.0f);
-
-                    break;
-
-                case RegionPrototype.UpperMadripoorRegionL60Cosmic:
-
-                    archiveData = new byte[] {
-                    };
-
-                    region = new(RegionPrototype.UpperMadripoorRegionL60Cosmic,
-                        1883928786,
-                        archiveData,
-                        new(-1152.0f, -11136.0f, -3328.0f),
-                        new(21888.0f, 24192.0f, 1152.0f),
-                        new(63, DifficultyTier.Superheroic));
-
-                    area = new(1, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/Story/CH10SecretInvasion/UpperMadripoor/UpperMadripoorAreaA.prototype"), new(), true);
-
-                    districtPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Districts/MadripoorHightownDistrict.district");
-                    district = GameDatabase.GetPrototype<DistrictPrototype>(districtPrototypeId);
-                    for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
-
-                    region.AddArea(area);
-
-                    area = new(2, (AreaPrototype)GameDatabase.GetPrototypeRefByName("Regions/Story/CH10SecretInvasion/UpperMadripoor/UpperMadripoorAreaSewer.prototype"), new(), false);
-                    area.AddCell(new((uint)district.CellMarkerSet.Length + 1, GameDatabase.GetPrototypeRefByName("Resource/Cells/SecretInvasion/HighTownSewers/Hightown_Sewers_A.cell"), new(2176, -7808, 0)));
-                    region.AddArea(area);
-
-                    region.EntrancePosition = new(20665.0f, 15910.0f, 0.0f);
-                    region.EntranceOrientation = new(-1.914437f, 0.0f, 0.0f);
-                    region.WaypointPosition = new(20665.0f, 15910.0f, 0.0f);
-                    region.WaypointOrientation = new(1.914437f, 0.0f, 0.0f);
 
                     break;
 
