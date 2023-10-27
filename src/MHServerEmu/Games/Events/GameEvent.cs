@@ -13,7 +13,8 @@ namespace MHServerEmu.Games.Events
         StartMagikUltimate,
         EndMagikUltimate,
         ToTeleport,
-        EmoteDance,        
+        EmoteDance,
+        FinishCellLoading
     }
 
     public class GameEvent

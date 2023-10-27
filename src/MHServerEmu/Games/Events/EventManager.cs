@@ -43,6 +43,12 @@ namespace MHServerEmu.Games.Events
         {
             _eventList.Add(new(client, eventId, timeMs, data));
         }
+        
+        public void KillEvent(FrontendClient client, EventEnum eventId)
+        {
+            if (_eventList.Count > 0)
+                _eventList.RemoveAll(@event => (@event.Client == client) && (@event.Event == eventId));
+        }
 
         private List<QueuedGameMessage> HandleEvent(GameEvent queuedEvent)
         {
@@ -59,6 +65,12 @@ namespace MHServerEmu.Games.Events
 
             switch (eventId)
             {
+                case EventEnum.FinishCellLoading:
+                    Logger.Warn($"Forсed loading");
+                    client.CellLoaded = (int)queuedEvent.Data;
+                    client.CurrentGame.FinishLoading(client);
+                    break;
+
                 case EventEnum.EmoteDance:
 
                     AvatarPrototype avatar = (AvatarPrototype)queuedEvent.Data;
@@ -205,16 +217,16 @@ namespace MHServerEmu.Games.Events
                     if (worldEntity == null) break;
                     ulong unrealClass = (ulong)worldEntity.GetField(FieldId.UnrealClass).Value;
                     client.IsThrowing = true;
-                    if (throwPrototype.ParentId != 14997899060839977779) // ThrowableProp
+                    if (throwPrototype.ParentId != (ulong)BlueprintId.ThrowableProp)
                         throwPrototype = throwPrototype.ParentId.GetPrototype();
-                    property = new(PropertyEnum.ThrowableOriginatorAssetRef, unrealClass); // MarvelDestructible_Throwable_PoliceCar
+                    property = new(PropertyEnum.ThrowableOriginatorAssetRef, unrealClass);
                     messageList.Add(new(client, new(property.ToNetMessageSetProperty(avatarRepId))));
 
                     // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
                     client.ThrowingCancelPower = (ulong)throwPrototype.GetEntry(BlueprintId.ThrowableRestorePowerProp).Elements[0].Value;
                     messageList.Add(new(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
-                        .SetPowerProtoId(client.ThrowingCancelPower) // Powers/Environment/ThrowablePowers/Vehicles/ThrownPoliceCarCancelPower.prototype
+                        .SetPowerProtoId(client.ThrowingCancelPower)
                         .SetPowerRank(0)
                         .SetCharacterLevel(60) // TODO: Player.Avatar.GetProperty(PropertyEnum.CharacterLevel)
                         .SetCombatLevel(60) // TODO: Player.Avatar.GetProperty(PropertyEnum.CombatLevel)
@@ -226,7 +238,7 @@ namespace MHServerEmu.Games.Events
                     client.ThrowingPower = (ulong)throwPrototype.GetEntry(BlueprintId.ThrowablePowerProp).Elements[0].Value;
                     messageList.Add(new(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
-                        .SetPowerProtoId(client.ThrowingPower) // Powers/Environment/ThrowablePowers/Vehicles/ThrownPoliceCarPower.prototype
+                        .SetPowerProtoId(client.ThrowingPower)
                         .SetPowerRank(0)
                         .SetCharacterLevel(60)
                         .SetCombatLevel(60)
@@ -255,22 +267,22 @@ namespace MHServerEmu.Games.Events
                     // ThrowObject.Prototype.ThrowablePowerProp.Value
                     messageList.Add(new(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
-                        .SetPowerProtoId(client.ThrowingPower) // ThrownPoliceCarPower
+                        .SetPowerProtoId(client.ThrowingPower)
                         .Build())));
 
                     // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
                     messageList.Add(new(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
-                        .SetPowerProtoId(client.ThrowingCancelPower) // ThrownPoliceCarCancelPower
+                        .SetPowerProtoId(client.ThrowingCancelPower)
                         .Build())));
 
                     Logger.Trace("Event EndThrowing");
 
-                    if (GameDatabase.GetPrototypeName(powerId).Contains("CancelPower")) // ThrownPoliceCarCancelPower
+                    if (GameDatabase.GetPrototypeName(powerId).Contains("CancelPower")) 
                     {
                         if (client.ThrowingObject != null)
                             messageList.Add(new(client, new(client.ThrowingObject.ToNetMessageEntityCreate())));
-                        Logger.Trace("Event ThrownPoliceCarCancelPower");
+                        Logger.Trace("Event ThrownCancelPower");
                     }
                     client.ThrowingObject = null;
                     client.IsThrowing = false;

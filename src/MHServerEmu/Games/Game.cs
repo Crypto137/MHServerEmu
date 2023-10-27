@@ -120,6 +120,7 @@ namespace MHServerEmu.Games
                 EnqueueResponses(client, GetExitGameMessages());
                 client.Session.Account.Player.Region = region;
                 EnqueueResponses(client, GetBeginLoadingMessages(client.Session.Account));
+                client.CellLoaded = 0;
                 client.IsLoading = true;
             }
         }
@@ -225,13 +226,23 @@ namespace MHServerEmu.Games
             */
         }
 
+        public void FinishLoading(FrontendClient client)
+        {
+            EnqueueResponses(client, GetFinishLoadingMessages(client.Session.Account));
+            client.IsLoading = false;
+        }
+
         private void OnCellLoaded(FrontendClient client, NetMessageCellLoaded cellLoaded)
         {
-            Logger.Info($"Received CellLoaded message");
-            if (client.IsLoading)
-            {
-                EnqueueResponses(client, GetFinishLoadingMessages(client.Session.Account));
-                client.IsLoading = false;
+            client.CellLoaded++;
+            Logger.Info($"Received CellLoaded message cell[{cellLoaded.CellId}] loaded [{client.CellLoaded}/{client.Region.CellsInRegion}]");
+            if (client.IsLoading) {
+                EventManager.KillEvent(client, EventEnum.FinishCellLoading);
+                if (client.CellLoaded == client.Region.CellsInRegion)
+                    FinishLoading(client);
+                else
+                    // set timer 5 seconds for wait client answer
+                    EventManager.AddEvent(client, EventEnum.FinishCellLoading, 5000, client.Region.CellsInRegion);
             }
         }
 
@@ -250,7 +261,20 @@ namespace MHServerEmu.Games
                 Transition teleport = interactableObject as Transition;
                 if (teleport.Destinations.Length == 0) return;
                 Logger.Trace($"Destination entity {teleport.Destinations[0].Entity}");
-                Entity target = EntityManager.FindEntityByDestination(teleport.Destinations[0]);
+
+                if (teleport.Destinations[0].Type == 2)
+                {
+                    ulong currentRegion = (ulong)client.Session.Account.Player.Region;
+                    if (currentRegion != teleport.Destinations[0].Region)
+                    {
+                        Logger.Trace($"Destination region {teleport.Destinations[0].Region}");
+                        client.CurrentGame.MovePlayerToRegion(client, (RegionPrototype)teleport.Destinations[0].Region);
+
+                        return;
+                    }
+                }
+
+                Entity target = EntityManager.FindEntityByDestination(teleport.Destinations[0], teleport.RegionId);
                 if (target == null) return;
                 Vector3 targetRot = target.BaseData.Orientation;
                 float offset = 150f;
