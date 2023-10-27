@@ -249,11 +249,19 @@ namespace MHServerEmu.Games.Regions
                 case RegionPrototype.CH0105NightclubRegion:
                 case RegionPrototype.CH0201ShippingYardRegion:
                 case RegionPrototype.CH0701SavagelandRegion:
-                case RegionPrototype.CH0804LatveriaPCZRegion:
-                case RegionPrototype.CH0808DoomCastleRegion:
                 case RegionPrototype.CH0901NorwayPCZRegion:
                 case RegionPrototype.CH0904SiegePCZRegion:
                     GenerateEntities(region, null, true, true);
+
+                    break;
+
+                case RegionPrototype.CH0804LatveriaPCZRegion:
+                case RegionPrototype.CH0808DoomCastleRegion:
+                    connectionNodes = new ulong[] {
+                        8784254912487368435, // LatveriaPCZtoInstanceNode
+                    };
+                    targets = BuildConnectionEdges(connectionNodes);
+                    GenerateEntities(region, targets, true, true);
 
                     break;
 
