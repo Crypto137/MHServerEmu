@@ -120,6 +120,7 @@ namespace MHServerEmu.Games
                 EnqueueResponses(client, GetExitGameMessages());
                 client.Session.Account.Player.Region = region;
                 EnqueueResponses(client, GetBeginLoadingMessages(client.Session.Account));
+                client.LoadedCellCount = 0;
                 client.IsLoading = true;
             }
         }
@@ -164,6 +165,11 @@ namespace MHServerEmu.Games
                 case ClientToGameServerMessage.NetMessageUseInteractableObject:
                     if (message.TryDeserialize<NetMessageUseInteractableObject>(out var useInteractableObject))
                         OnUseInteractableObject(client, useInteractableObject);
+                    break;
+
+                case ClientToGameServerMessage.NetMessagePerformPreInteractPower:
+                    if (message.TryDeserialize<NetMessagePerformPreInteractPower>(out var performPreInteractPower))
+                        OnPerformPreInteractPower(client, performPreInteractPower);
                     break;
 
                 case ClientToGameServerMessage.NetMessageTryActivatePower:
@@ -225,13 +231,34 @@ namespace MHServerEmu.Games
             */
         }
 
+        public void FinishLoading(FrontendClient client)
+        {
+            EnqueueResponses(client, GetFinishLoadingMessages(client.Session.Account));
+            client.IsLoading = false;
+        }
+
         private void OnCellLoaded(FrontendClient client, NetMessageCellLoaded cellLoaded)
         {
-            Logger.Info($"Received CellLoaded message");
-            if (client.IsLoading)
+            client.LoadedCellCount++;
+            Logger.Info($"Received CellLoaded message cell[{cellLoaded.CellId}] loaded [{client.LoadedCellCount}/{client.Region.CellsInRegion}]");
+            if (client.IsLoading) {
+                EventManager.KillEvent(client, EventEnum.FinishCellLoading);
+                if (client.LoadedCellCount == client.Region.CellsInRegion)
+                    FinishLoading(client);
+                else
+                    // set timer 5 seconds for wait client answer
+                    EventManager.AddEvent(client, EventEnum.FinishCellLoading, 5000, client.Region.CellsInRegion);
+            }
+        }
+
+        private void OnPerformPreInteractPower(FrontendClient client, NetMessagePerformPreInteractPower performPreInteractPower)
+        {            
+            Logger.Trace($"Received PerformPreInteractPower for {performPreInteractPower.IdTarget}");
+
+            if (EntityManager.TryGetEntityById(performPreInteractPower.IdTarget, out Entity interactObject))
             {
-                EnqueueResponses(client, GetFinishLoadingMessages(client.Session.Account));
-                client.IsLoading = false;
+                EventManager.AddEvent(client, EventEnum.OnPreInteractPower, 0, interactObject);
+                EventManager.AddEvent(client, EventEnum.OnPreInteractPowerEnd, 1000, interactObject); // ChargingTimeMS    
             }
         }
 
@@ -250,7 +277,20 @@ namespace MHServerEmu.Games
                 Transition teleport = interactableObject as Transition;
                 if (teleport.Destinations.Length == 0) return;
                 Logger.Trace($"Destination entity {teleport.Destinations[0].Entity}");
-                Entity target = EntityManager.FindEntityByDestination(teleport.Destinations[0]);
+
+                if (teleport.Destinations[0].Type == 2)
+                {
+                    ulong currentRegion = (ulong)client.Session.Account.Player.Region;
+                    if (currentRegion != teleport.Destinations[0].Region)
+                    {
+                        Logger.Trace($"Destination region {teleport.Destinations[0].Region}");
+                        client.CurrentGame.MovePlayerToRegion(client, (RegionPrototype)teleport.Destinations[0].Region);
+
+                        return;
+                    }
+                }
+
+                Entity target = EntityManager.FindEntityByDestination(teleport.Destinations[0], teleport.RegionId);
                 if (target == null) return;
                 Vector3 targetRot = target.BaseData.Orientation;
                 float offset = 150f;

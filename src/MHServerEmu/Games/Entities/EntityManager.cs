@@ -7,6 +7,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.Games.Entities
@@ -88,16 +89,29 @@ namespace MHServerEmu.Games.Entities
             EntityBaseData baseData = (requiresEnterGameWorld == false)
                 ? new EntityBaseData(GenEntityId(), prototypeId, position, orientation, OverrideSnapToFloor)
                 : new EntityBaseData(GenEntityId(), prototypeId, null, null);
-            // Logger.Warn($"SpawnDirectTeleport {GameDatabase.GetPrototypePath(targetPrototype)}");
+            
             PrototypeEntry regionConnectionTarget = targetPrototype.GetPrototype().GetEntry(BlueprintId.RegionConnectionTarget);
 
             ulong cell = regionConnectionTarget.GetFieldDef(FieldId.Cell);
             if (cell != 0) cell = GameDatabase.GetPrototypeRefByName(GameDatabase.GetAssetName(cell));
 
+            ulong targetRegion = regionConnectionTarget.GetFieldDef(FieldId.Region);
+            // Logger.Debug($"SpawnDirectTeleport {targetRegion}");
+            if (targetRegion == 0) { // get Parent value
+                PrototypeEntry parentTarget = targetPrototype.GetPrototype().ParentId.GetPrototype().GetEntry(BlueprintId.RegionConnectionTarget);
+                if (parentTarget != null) targetRegion = parentTarget.GetFieldDef(FieldId.Region);
+            }
+
+            if (RegionManager.IsRegionAvailable((RegionPrototype)targetRegion) == false) // TODO: change region test
+                targetRegion = regionPrototype;
+
+            int type = 1; // default teleport
+            if (targetRegion != regionPrototype) type = 2; // region teleport
+
             Destination destination = new()
             {
-                Type = 1,   // TODO: Get type for teleport
-                Region = regionPrototype,
+                Type = type,
+                Region = targetRegion,
                 Area = regionConnectionTarget.GetFieldDef(FieldId.Area),
                 Cell = cell,
                 Entity = (ulong)regionConnectionTarget.GetField(FieldId.Entity).Value,
@@ -128,11 +142,15 @@ namespace MHServerEmu.Games.Entities
 
         public Entity GetEntityById(ulong entityId) => _entityDict[entityId];
         public Entity GetEntityByPrototypeId(ulong prototype) => _entityDict.Values.FirstOrDefault(entity => entity.BaseData.PrototypeId == prototype);
-        public Entity FindEntityByDestination(Destination destination)
+        public Entity GetEntityByPrototypeIdFromRegion(ulong prototype, ulong regionId)
+        {
+            return _entityDict.Values.FirstOrDefault(entity => entity.BaseData.PrototypeId == prototype && entity.RegionId == regionId);
+        }
+        public Entity FindEntityByDestination(Destination destination, ulong regionId)
         {
             foreach (KeyValuePair<ulong, Entity> entity in _entityDict)
             {
-                if (entity.Value.BaseData.PrototypeId == destination.Entity)
+                if (entity.Value.BaseData.PrototypeId == destination.Entity && entity.Value.RegionId == regionId)
                 {
                     if (destination.Area == 0) return entity.Value;
                     Property property = entity.Value.PropertyCollection.GetPropertyByEnum(PropertyEnum.ContextAreaRef);

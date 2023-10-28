@@ -43,6 +43,12 @@ namespace MHServerEmu.Games.Events
         {
             _eventList.Add(new(client, eventId, timeMs, data));
         }
+        
+        public void KillEvent(FrontendClient client, EventEnum eventId)
+        {
+            if (_eventList.Count > 0)
+                _eventList.RemoveAll(@event => (@event.Client == client) && (@event.Event == eventId));
+        }
 
         private List<QueuedGameMessage> HandleEvent(GameEvent queuedEvent)
         {
@@ -50,6 +56,7 @@ namespace MHServerEmu.Games.Events
             FrontendClient client = queuedEvent.Client;
             EventEnum eventId = queuedEvent.Event;
             ulong powerId;
+            ActivatePowerArchive activatePower;
 
             if (queuedEvent.IsExpired() == false)
                 return messageList;
@@ -59,11 +66,80 @@ namespace MHServerEmu.Games.Events
 
             switch (eventId)
             {
+                case EventEnum.OnPreInteractPower:
+                    Entity interactObject = (Entity)queuedEvent.Data;
+                    ulong proto = interactObject.BaseData.PrototypeId;
+                    PrototypeEntry world = proto.GetPrototype().GetEntry(BlueprintId.WorldEntity);
+                    if (world == null) break;
+                    ulong preIteractPower = world.GetFieldDef(FieldId.PreInteractPower);
+                    if (preIteractPower == 0) break;
+                    Logger.Trace($"OnPreInteractPower {GameDatabase.GetPrototypeName(preIteractPower)}");
+
+                    messageList.Add(new(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                        .SetEntityId(avatarEntityId)
+                        .SetPowerProtoId(preIteractPower)
+                        .SetPowerRank(0)
+                        .SetCharacterLevel(60)
+                        .SetCombatLevel(60)
+                        .SetItemLevel(1)
+                        .SetItemVariation(1)
+                        .Build())));
+
+                    activatePower = new()
+                    {
+                        ReplicationPolicy = 1,
+                        Flags = 202u.ToBoolArray(8),
+                        IdUserEntity = avatarEntityId,
+                        IdTargetEntity = 0,
+                        PowerPrototypeId = preIteractPower,
+                        UserPosition = client.LastPosition,
+                        PowerRandomSeed = 2222,
+                        FXRandomSeed = 2222
+
+                    };
+                    messageList.Add(new(client, new(NetMessageActivatePower.CreateBuilder()
+                         .SetArchiveData(activatePower.Serialize())
+                         .Build())));
+
+                    if (proto == 16537916167475500124) // BowlingBallReturnDispenser
+                    {
+                        // TODO: add BowlingBallItem
+                    }
+
+                    break;
+
+                case EventEnum.OnPreInteractPowerEnd:
+
+                    interactObject = (Entity)queuedEvent.Data;
+                    proto = interactObject.BaseData.PrototypeId;
+                    world = proto.GetPrototype().GetEntry(BlueprintId.WorldEntity);
+                    if (world == null) break;
+                    preIteractPower = world.GetFieldDef(FieldId.PreInteractPower);
+                    if (preIteractPower == 0) break;
+                    Logger.Trace($"OnPreInteractPowerEnd");
+
+                    messageList.Add(new(client, new(NetMessageOnPreInteractPowerEnd.CreateBuilder()
+                        .SetIdTargetEntity(interactObject.BaseData.EntityId)
+                        .SetAvatarIndex(0)
+                        .Build())));
+
+                    messageList.Add(new(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
+                              .SetEntityId(avatarEntityId)
+                              .SetPowerProtoId(preIteractPower)
+                              .Build())));
+                    break;
+
+                case EventEnum.FinishCellLoading:
+                    Logger.Warn($"Forсed loading");
+                    client.LoadedCellCount = (int)queuedEvent.Data;
+                    client.CurrentGame.FinishLoading(client);
+                    break;
+
                 case EventEnum.EmoteDance:
 
                     AvatarPrototype avatar = (AvatarPrototype)queuedEvent.Data;
                     avatarEntityId = (ulong)avatar.ToEntityId();
-                    ActivatePowerArchive archive = new()
+                    activatePower = new()
                     {
                         ReplicationPolicy = 1,
                         Flags = 202u.ToBoolArray(8),
@@ -76,7 +152,7 @@ namespace MHServerEmu.Games.Events
 
                     };
                     messageList.Add(new(client,new(NetMessageActivatePower.CreateBuilder()
-                         .SetArchiveData(archive.Serialize())
+                         .SetArchiveData(activatePower.Serialize())
                          .Build())));
                     break;
 
@@ -205,16 +281,16 @@ namespace MHServerEmu.Games.Events
                     if (worldEntity == null) break;
                     ulong unrealClass = (ulong)worldEntity.GetField(FieldId.UnrealClass).Value;
                     client.IsThrowing = true;
-                    if (throwPrototype.ParentId != 14997899060839977779) // ThrowableProp
+                    if (throwPrototype.ParentId != (ulong)BlueprintId.ThrowableProp)
                         throwPrototype = throwPrototype.ParentId.GetPrototype();
-                    property = new(PropertyEnum.ThrowableOriginatorAssetRef, unrealClass); // MarvelDestructible_Throwable_PoliceCar
+                    property = new(PropertyEnum.ThrowableOriginatorAssetRef, unrealClass);
                     messageList.Add(new(client, new(property.ToNetMessageSetProperty(avatarRepId))));
 
                     // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
                     client.ThrowingCancelPower = (ulong)throwPrototype.GetEntry(BlueprintId.ThrowableRestorePowerProp).Elements[0].Value;
                     messageList.Add(new(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
-                        .SetPowerProtoId(client.ThrowingCancelPower) // Powers/Environment/ThrowablePowers/Vehicles/ThrownPoliceCarCancelPower.prototype
+                        .SetPowerProtoId(client.ThrowingCancelPower)
                         .SetPowerRank(0)
                         .SetCharacterLevel(60) // TODO: Player.Avatar.GetProperty(PropertyEnum.CharacterLevel)
                         .SetCombatLevel(60) // TODO: Player.Avatar.GetProperty(PropertyEnum.CombatLevel)
@@ -226,7 +302,7 @@ namespace MHServerEmu.Games.Events
                     client.ThrowingPower = (ulong)throwPrototype.GetEntry(BlueprintId.ThrowablePowerProp).Elements[0].Value;
                     messageList.Add(new(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
-                        .SetPowerProtoId(client.ThrowingPower) // Powers/Environment/ThrowablePowers/Vehicles/ThrownPoliceCarPower.prototype
+                        .SetPowerProtoId(client.ThrowingPower)
                         .SetPowerRank(0)
                         .SetCharacterLevel(60)
                         .SetCombatLevel(60)
@@ -255,22 +331,22 @@ namespace MHServerEmu.Games.Events
                     // ThrowObject.Prototype.ThrowablePowerProp.Value
                     messageList.Add(new(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
-                        .SetPowerProtoId(client.ThrowingPower) // ThrownPoliceCarPower
+                        .SetPowerProtoId(client.ThrowingPower)
                         .Build())));
 
                     // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
                     messageList.Add(new(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
-                        .SetPowerProtoId(client.ThrowingCancelPower) // ThrownPoliceCarCancelPower
+                        .SetPowerProtoId(client.ThrowingCancelPower)
                         .Build())));
 
                     Logger.Trace("Event EndThrowing");
 
-                    if (GameDatabase.GetPrototypeName(powerId).Contains("CancelPower")) // ThrownPoliceCarCancelPower
+                    if (GameDatabase.GetPrototypeName(powerId).Contains("CancelPower")) 
                     {
                         if (client.ThrowingObject != null)
                             messageList.Add(new(client, new(client.ThrowingObject.ToNetMessageEntityCreate())));
-                        Logger.Trace("Event ThrownPoliceCarCancelPower");
+                        Logger.Trace("Event ThrownCancelPower");
                     }
                     client.ThrowingObject = null;
                     client.IsThrowing = false;

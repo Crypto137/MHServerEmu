@@ -23,6 +23,8 @@ namespace MHServerEmu.Games.Regions
         public Vector3 WaypointPosition { get; set; }
         public Vector3 WaypointOrientation { get; set; }
 
+        public int CellsInRegion { get; set; }
+
         public Region(RegionPrototype prototype, int randomSeed, byte[] archiveData, Vector3 min, Vector3 max, CreateRegionParams createParams)
         {
             Id = IdGenerator.Generate(IdType.Region);
@@ -76,6 +78,8 @@ namespace MHServerEmu.Games.Regions
 
             // TODO: prefetch other regions
 
+            CellsInRegion = 0;
+
             foreach (Area area in AreaList)
             {
                 messageList.Add(new((byte)GameServerToClientMessage.NetMessageAddArea, NetMessageAddArea.CreateBuilder()
@@ -100,6 +104,7 @@ namespace MHServerEmu.Games.Regions
                         builder.AddEncounters(reservedSpawn.ToNetStruct());
 
                     messageList.Add(new(builder.Build()));
+                    CellsInRegion++;
                 }
             }
 
