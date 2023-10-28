@@ -120,7 +120,7 @@ namespace MHServerEmu.Games
                 EnqueueResponses(client, GetExitGameMessages());
                 client.Session.Account.Player.Region = region;
                 EnqueueResponses(client, GetBeginLoadingMessages(client.Session.Account));
-                client.CellLoaded = 0;
+                client.LoadedCellCount = 0;
                 client.IsLoading = true;
             }
         }
@@ -239,11 +239,11 @@ namespace MHServerEmu.Games
 
         private void OnCellLoaded(FrontendClient client, NetMessageCellLoaded cellLoaded)
         {
-            client.CellLoaded++;
-            Logger.Info($"Received CellLoaded message cell[{cellLoaded.CellId}] loaded [{client.CellLoaded}/{client.Region.CellsInRegion}]");
+            client.LoadedCellCount++;
+            Logger.Info($"Received CellLoaded message cell[{cellLoaded.CellId}] loaded [{client.LoadedCellCount}/{client.Region.CellsInRegion}]");
             if (client.IsLoading) {
                 EventManager.KillEvent(client, EventEnum.FinishCellLoading);
-                if (client.CellLoaded == client.Region.CellsInRegion)
+                if (client.LoadedCellCount == client.Region.CellsInRegion)
                     FinishLoading(client);
                 else
                     // set timer 5 seconds for wait client answer

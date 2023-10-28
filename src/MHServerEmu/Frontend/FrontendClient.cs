@@ -26,7 +26,7 @@ namespace MHServerEmu.Frontend
 
         // Temporarily store state here instead of Game
         public bool IsLoading { get; set; } = false;
-        public int CellLoaded { get; set; } = 0;
+        public int LoadedCellCount { get; set; } = 0;
         public Vector3 LastPosition { get; set; }
         public ulong MagikUltimateEntityId { get; set; }
         public bool IsThrowing { get; set; } = false;

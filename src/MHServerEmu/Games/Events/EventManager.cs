@@ -131,7 +131,7 @@ namespace MHServerEmu.Games.Events
 
                 case EventEnum.FinishCellLoading:
                     Logger.Warn($"Forсed loading");
-                    client.CellLoaded = (int)queuedEvent.Data;
+                    client.LoadedCellCount = (int)queuedEvent.Data;
                     client.CurrentGame.FinishLoading(client);
                     break;
 
