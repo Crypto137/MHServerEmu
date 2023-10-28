@@ -52,6 +52,7 @@
         UnrealClass = 9963296804083405606,
         Bounds = 12016533011036705044,
         SnapToFloorOnSpawn = 5130007170241074758,
+        PreInteractPower = 9600084259269121367,
         // Costume
         CostumeUnrealClass = 3331018908052953682,
         // RegionConnectionTargetPrototype

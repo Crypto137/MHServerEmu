@@ -56,6 +56,7 @@ namespace MHServerEmu.Games.Events
             FrontendClient client = queuedEvent.Client;
             EventEnum eventId = queuedEvent.Event;
             ulong powerId;
+            ActivatePowerArchive activatePower;
 
             if (queuedEvent.IsExpired() == false)
                 return messageList;
@@ -65,6 +66,69 @@ namespace MHServerEmu.Games.Events
 
             switch (eventId)
             {
+                case EventEnum.OnPreInteractPower:
+                    Entity interactObject = (Entity)queuedEvent.Data;
+                    ulong proto = interactObject.BaseData.PrototypeId;
+                    PrototypeEntry world = proto.GetPrototype().GetEntry(BlueprintId.WorldEntity);
+                    if (world == null) break;
+                    ulong preIteractPower = world.GetFieldDef(FieldId.PreInteractPower);
+                    if (preIteractPower == 0) break;
+                    Logger.Trace($"OnPreInteractPower {GameDatabase.GetPrototypeName(preIteractPower)}");
+
+                    messageList.Add(new(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                        .SetEntityId(avatarEntityId)
+                        .SetPowerProtoId(preIteractPower)
+                        .SetPowerRank(0)
+                        .SetCharacterLevel(60)
+                        .SetCombatLevel(60)
+                        .SetItemLevel(1)
+                        .SetItemVariation(1)
+                        .Build())));
+
+                    activatePower = new()
+                    {
+                        ReplicationPolicy = 1,
+                        Flags = 202u.ToBoolArray(8),
+                        IdUserEntity = avatarEntityId,
+                        IdTargetEntity = 0,
+                        PowerPrototypeId = preIteractPower,
+                        UserPosition = client.LastPosition,
+                        PowerRandomSeed = 2222,
+                        FXRandomSeed = 2222
+
+                    };
+                    messageList.Add(new(client, new(NetMessageActivatePower.CreateBuilder()
+                         .SetArchiveData(activatePower.Serialize())
+                         .Build())));
+
+                    if (proto == 16537916167475500124) // BowlingBallReturnDispenser
+                    {
+                        // TODO: add BowlingBallItem
+                    }
+
+                    break;
+
+                case EventEnum.OnPreInteractPowerEnd:
+
+                    interactObject = (Entity)queuedEvent.Data;
+                    proto = interactObject.BaseData.PrototypeId;
+                    world = proto.GetPrototype().GetEntry(BlueprintId.WorldEntity);
+                    if (world == null) break;
+                    preIteractPower = world.GetFieldDef(FieldId.PreInteractPower);
+                    if (preIteractPower == 0) break;
+                    Logger.Trace($"OnPreInteractPowerEnd");
+
+                    messageList.Add(new(client, new(NetMessageOnPreInteractPowerEnd.CreateBuilder()
+                        .SetIdTargetEntity(interactObject.BaseData.EntityId)
+                        .SetAvatarIndex(0)
+                        .Build())));
+
+                    messageList.Add(new(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
+                              .SetEntityId(avatarEntityId)
+                              .SetPowerProtoId(preIteractPower)
+                              .Build())));
+                    break;
+
                 case EventEnum.FinishCellLoading:
                     Logger.Warn($"Forсed loading");
                     client.CellLoaded = (int)queuedEvent.Data;
@@ -75,7 +139,7 @@ namespace MHServerEmu.Games.Events
 
                     AvatarPrototype avatar = (AvatarPrototype)queuedEvent.Data;
                     avatarEntityId = (ulong)avatar.ToEntityId();
-                    ActivatePowerArchive archive = new()
+                    activatePower = new()
                     {
                         ReplicationPolicy = 1,
                         Flags = 202u.ToBoolArray(8),
@@ -88,7 +152,7 @@ namespace MHServerEmu.Games.Events
 
                     };
                     messageList.Add(new(client,new(NetMessageActivatePower.CreateBuilder()
-                         .SetArchiveData(archive.Serialize())
+                         .SetArchiveData(activatePower.Serialize())
                          .Build())));
                     break;
 

@@ -167,6 +167,11 @@ namespace MHServerEmu.Games
                         OnUseInteractableObject(client, useInteractableObject);
                     break;
 
+                case ClientToGameServerMessage.NetMessagePerformPreInteractPower:
+                    if (message.TryDeserialize<NetMessagePerformPreInteractPower>(out var performPreInteractPower))
+                        OnPerformPreInteractPower(client, performPreInteractPower);
+                    break;
+
                 case ClientToGameServerMessage.NetMessageTryActivatePower:
                 case ClientToGameServerMessage.NetMessagePowerRelease:
                 case ClientToGameServerMessage.NetMessageTryCancelPower:
@@ -243,6 +248,17 @@ namespace MHServerEmu.Games
                 else
                     // set timer 5 seconds for wait client answer
                     EventManager.AddEvent(client, EventEnum.FinishCellLoading, 5000, client.Region.CellsInRegion);
+            }
+        }
+
+        private void OnPerformPreInteractPower(FrontendClient client, NetMessagePerformPreInteractPower performPreInteractPower)
+        {            
+            Logger.Trace($"Received PerformPreInteractPower for {performPreInteractPower.IdTarget}");
+
+            if (EntityManager.TryGetEntityById(performPreInteractPower.IdTarget, out Entity interactObject))
+            {
+                EventManager.AddEvent(client, EventEnum.OnPreInteractPower, 0, interactObject);
+                EventManager.AddEvent(client, EventEnum.OnPreInteractPowerEnd, 1000, interactObject); // ChargingTimeMS    
             }
         }
 
