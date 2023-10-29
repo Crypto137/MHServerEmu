@@ -6,6 +6,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Networking;
+using MHServerEmu.Games.Entities.Items;
 
 namespace MHServerEmu.Games.Powers
 {
@@ -131,6 +132,15 @@ namespace MHServerEmu.Games.Powers
             {
                 _eventManager.AddEvent(client, EventEnum.StartMagikUltimate, 0, tryActivatePower.TargetPosition);
                 _eventManager.AddEvent(client, EventEnum.EndMagikUltimate, 20000, 0u);
+            }
+            else if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.Items.BowlingBallItemPower)
+            {
+                Item bowlingBall = (Item)client.CurrentGame.EntityManager.GetEntityByPrototypeId(7835010736274089329); // BowlingBallItem
+                if (bowlingBall != null)
+                {
+                    messageList.Add(new(client, new(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(bowlingBall.BaseData.EntityId).Build())));
+                    client.CurrentGame.EntityManager.DestroyEntity(bowlingBall.BaseData.EntityId);
+                }
             }
 
             // if (powerPrototypePath.Contains("TravelPower/")) 

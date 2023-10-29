@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Entities.Items
 {
@@ -11,13 +12,22 @@ namespace MHServerEmu.Games.Entities.Items
 
         public Item(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
-        public Item(EntityBaseData baseData, EntityTrackingContextMap[] trackingContextMap, Condition[] conditionCollection,
-            PowerCollectionRecord[] powerCollection, int unkEvent, ItemSpec itemSpec) : base(baseData)
+        public Item(EntityBaseData baseData, ulong replicationId, ulong rank, int itemLevel, ulong itemRarity, float itemVariation, ItemSpec itemSpec) : base(baseData)
         {
-            TrackingContextMap = trackingContextMap;
-            ConditionCollection = conditionCollection;
-            PowerCollection = powerCollection;
-            UnkEvent = unkEvent;
+            Property requirement = new(PropertyEnum.Requirement, itemLevel * 1.0f);
+            requirement.Id = 0x66A3940000000000;
+            PropertyCollection = new(replicationId, new()
+            {
+                new(PropertyEnum.Rank, rank),
+                new(PropertyEnum.ItemRarity, itemRarity),
+                new(PropertyEnum.ItemVariation, itemVariation),
+                new(PropertyEnum.InventoryStackSizeMax, 1000),
+                requirement
+            });
+            TrackingContextMap = Array.Empty<EntityTrackingContextMap>();
+            ConditionCollection = Array.Empty<Condition>();
+            PowerCollection = Array.Empty<PowerCollectionRecord>();
+            UnkEvent = 0;
             ItemSpec = itemSpec;
         }
 

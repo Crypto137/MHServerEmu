@@ -272,52 +272,57 @@ namespace MHServerEmu.Games
                 EnqueueResponse(client, new(NetMessageMissionInteractRelease.DefaultInstance));
             }
 
-            if (EntityManager.TryGetEntityById(useInteractableObject.IdTarget, out Entity interactableObject) && interactableObject is Transition)
+            if (EntityManager.TryGetEntityById(useInteractableObject.IdTarget, out Entity interactableObject))
             {
-                Transition teleport = interactableObject as Transition;
-                if (teleport.Destinations.Length == 0) return;
-                Logger.Trace($"Destination entity {teleport.Destinations[0].Entity}");
-
-                if (teleport.Destinations[0].Type == 2)
+                if (interactableObject is Transition)
                 {
-                    ulong currentRegion = (ulong)client.Session.Account.Player.Region;
-                    if (currentRegion != teleport.Destinations[0].Region)
+                    Transition teleport = interactableObject as Transition;
+                    if (teleport.Destinations.Length == 0) return;
+                    Logger.Trace($"Destination entity {teleport.Destinations[0].Entity}");
+
+                    if (teleport.Destinations[0].Type == 2)
                     {
-                        Logger.Trace($"Destination region {teleport.Destinations[0].Region}");
-                        client.CurrentGame.MovePlayerToRegion(client, (RegionPrototype)teleport.Destinations[0].Region);
+                        ulong currentRegion = (ulong)client.Session.Account.Player.Region;
+                        if (currentRegion != teleport.Destinations[0].Region)
+                        {
+                            Logger.Trace($"Destination region {teleport.Destinations[0].Region}");
+                            client.CurrentGame.MovePlayerToRegion(client, (RegionPrototype)teleport.Destinations[0].Region);
 
-                        return;
+                            return;
+                        }
                     }
+
+                    Entity target = EntityManager.FindEntityByDestination(teleport.Destinations[0], teleport.RegionId);
+                    if (target == null) return;
+                    Vector3 targetRot = target.BaseData.Orientation;
+                    float offset = 150f;
+                    Vector3 targetPos = new(
+                        target.BaseData.Position.X + offset * (float)Math.Cos(targetRot.X),
+                        target.BaseData.Position.Y + offset * (float)Math.Sin(targetRot.X),
+                        target.BaseData.Position.Z);
+
+                    Logger.Trace($"Teleporting to {targetPos}");
+
+                    Property property = target.PropertyCollection.GetPropertyByEnum(PropertyEnum.MapCellId);
+                    uint cellid = (uint)(long)property.Value.Get();
+                    property = target.PropertyCollection.GetPropertyByEnum(PropertyEnum.MapAreaId);
+                    uint areaid = (uint)(long)property.Value.Get();
+                    Logger.Trace($"Teleporting to areaid {areaid} cellid {cellid}");
+
+                    EnqueueResponse(client, new(NetMessageEntityPosition.CreateBuilder()
+                        .SetIdEntity((ulong)client.Session.Account.Player.Avatar.ToEntityId())
+                        .SetFlags(64)
+                        .SetPosition(targetPos.ToNetStructPoint3())
+                        .SetOrientation(targetRot.ToNetStructPoint3())
+                        .SetCellId(cellid)
+                        .SetAreaId(areaid)
+                        .SetEntityPrototypeId((ulong)client.Session.Account.Player.Avatar)
+                        .Build()));
+
+                    client.LastPosition = targetPos;
                 }
-
-                Entity target = EntityManager.FindEntityByDestination(teleport.Destinations[0], teleport.RegionId);
-                if (target == null) return;
-                Vector3 targetRot = target.BaseData.Orientation;
-                float offset = 150f;
-                Vector3 targetPos = new(
-                    target.BaseData.Position.X + offset * (float)Math.Cos(targetRot.X),
-                    target.BaseData.Position.Y + offset * (float)Math.Sin(targetRot.X),
-                    target.BaseData.Position.Z);
-
-                Logger.Trace($"Teleporting to {targetPos}");
-
-                Property property = target.PropertyCollection.GetPropertyByEnum(PropertyEnum.MapCellId);
-                uint cellid = (uint)(long)property.Value.Get();
-                property = target.PropertyCollection.GetPropertyByEnum(PropertyEnum.MapAreaId);
-                uint areaid = (uint)(long)property.Value.Get();
-                Logger.Trace($"Teleporting to areaid {areaid} cellid {cellid}");
-
-                EnqueueResponse(client, new(NetMessageEntityPosition.CreateBuilder()
-                    .SetIdEntity((ulong)client.Session.Account.Player.Avatar.ToEntityId())
-                    .SetFlags(64)
-                    .SetPosition(targetPos.ToNetStructPoint3())
-                    .SetOrientation(targetRot.ToNetStructPoint3())
-                    .SetCellId(cellid)
-                    .SetAreaId(areaid)
-                    .SetEntityPrototypeId((ulong)client.Session.Account.Player.Avatar)
-                    .Build()));
-
-                client.LastPosition = targetPos;
+                else  
+                    EventManager.AddEvent(client, EventEnum.UseInteractableObject, 0, interactableObject);
             }
         }
 

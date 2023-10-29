@@ -1,8 +1,10 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
+using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -80,6 +82,29 @@ namespace MHServerEmu.Games.Entities
             worldEntity.RegionId = regionId;
             _entityDict.Add(baseData.EntityId, worldEntity);
             return worldEntity;
+        }
+
+        public Item CreateInvItem(ulong itemProto, InventoryLocation invLoc, ulong rarity, int itemLevel, float itemVariation, AffixSpec[] affixSpec) {
+
+            EntityBaseData baseData = new ()
+            {
+                ReplicationPolicy = 4,
+                EntityId = GenEntityId(),
+                PrototypeId = itemProto,
+                Flags = 224u.ToBoolArray(16), // 5 6 7
+                InterestPolicies = 4,
+                LocFlags = 0u.ToBoolArray(16),
+                LocomotionState = new(0f),
+                InvLoc = invLoc,
+                InvLocPrev = new(0, 0, 4294967295), // -1
+            };
+
+            ulong defRank = 15168672998566398820; // Popcorn
+            int seed = 67827702; // TODO: Random
+            ItemSpec itemSpec = new(itemProto, rarity, itemLevel, 0, affixSpec, seed, 0);
+            Item item = new(baseData, GenReplicationId(), defRank, itemLevel, rarity, itemVariation, itemSpec);
+            _entityDict.Add(baseData.EntityId, item);
+            return item;
         }
 
         public Transition SpawnDirectTeleport(ulong regionPrototype, ulong prototypeId, Vector3 position, Vector3 orientation,

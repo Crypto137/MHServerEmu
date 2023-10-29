@@ -5,6 +5,7 @@ using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Calligraphy;
@@ -66,9 +67,67 @@ namespace MHServerEmu.Games.Events
 
             switch (eventId)
             {
-                case EventEnum.OnPreInteractPower:
+                case EventEnum.UseInteractableObject:
+
                     Entity interactObject = (Entity)queuedEvent.Data;
                     ulong proto = interactObject.BaseData.PrototypeId;
+                    Logger.Trace($"UseInteractableObject {GameDatabase.GetPrototypeName(proto)}");
+
+                    if (proto == 16537916167475500124) // BowlingBallReturnDispenser
+                    {                      
+                        // bowlingBallItem = proto.LootTablePrototypeProp.Value->Table.Choices.Item.Item
+                        ulong bowlingBallItem = 7835010736274089329; // Entity/Items/Consumables/Prototypes/AchievementRewards/ItemRewards/BowlingBallItem
+                        // itemPower = bowlingBallItem.Item.ActionsTriggeredOnItemEvent.ItemActionSet.Choices.ItemActionUsePower.Power
+                        ulong itemPower = (ulong)PowerPrototypes.Items.BowlingBallItemPower; // BowlingBallItemPower
+                        // itemRarities = bowlingBallItem.Item.LootDropRestrictions.Rarity.AllowedRarities
+                        ulong itemRarities = 9254498193264414304; // R4Epic
+
+                        Item bowlingBall = (Item)client.CurrentGame.EntityManager.GetEntityByPrototypeId(bowlingBallItem);
+ 
+                       if (bowlingBall != null)
+                        { // TODO: test if ball already in Inventary
+                            messageList.Add(new(client, new(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(bowlingBall.BaseData.EntityId).Build())));
+                            client.CurrentGame.EntityManager.DestroyEntity(bowlingBall.BaseData.EntityId);
+                        }
+
+                        AffixSpec[] affixSpec = { new AffixSpec(0, 0, 1) }; // BindingInformation
+                        float itemVariation = 0.14366376f; // TODO: Random
+                        
+                        bowlingBall = client.CurrentGame.EntityManager.CreateInvItem(
+                            bowlingBallItem,
+                            new(14646212, 6731158030400100344, 0), // PlayerGeneral
+                            itemRarities, 1, 
+                            itemVariation, 
+                            affixSpec);
+
+                        // Item.BindingSettings.ItemBindingSettings.DefaultSettings.ItemBindingSettingsEntry
+                        bowlingBall.PropertyCollection.List.Add(new(PropertyEnum.ItemIsTradable, false)); 
+                        bowlingBall.PropertyCollection.List.Add(new(PropertyEnum.ItemBindsToAccountOnPickup, true));
+                        bowlingBall.PropertyCollection.List.Add(new(PropertyEnum.ItemBindsToCharacterOnEquip, true));
+
+                        messageList.Add(new(client, new(bowlingBall.ToNetMessageEntityCreate())));
+
+                        //  if (assign) // TODO: check power assigned by player
+                        messageList.Add(new(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
+                            .SetEntityId(avatarEntityId)
+                            .SetPowerProtoId(itemPower)
+                            .Build())));
+                        messageList.Add(new(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                                .SetEntityId(avatarEntityId)
+                                .SetPowerProtoId(itemPower)
+                                .SetPowerRank(0)
+                                .SetCharacterLevel(60)
+                                .SetCombatLevel(60)
+                                .SetItemLevel(1)
+                                .SetItemVariation(itemVariation)
+                                .Build())));
+                    }
+
+                    break;
+
+                case EventEnum.OnPreInteractPower:
+                    interactObject = (Entity)queuedEvent.Data;
+                    proto = interactObject.BaseData.PrototypeId;
                     PrototypeEntry world = proto.GetPrototype().GetEntry(BlueprintId.WorldEntity);
                     if (world == null) break;
                     ulong preIteractPower = world.GetFieldDef(FieldId.PreInteractPower);
@@ -95,16 +154,11 @@ namespace MHServerEmu.Games.Events
                         UserPosition = client.LastPosition,
                         PowerRandomSeed = 2222,
                         FXRandomSeed = 2222
-
                     };
+
                     messageList.Add(new(client, new(NetMessageActivatePower.CreateBuilder()
                          .SetArchiveData(activatePower.Serialize())
                          .Build())));
-
-                    if (proto == 16537916167475500124) // BowlingBallReturnDispenser
-                    {
-                        // TODO: add BowlingBallItem
-                    }
 
                     break;
 
