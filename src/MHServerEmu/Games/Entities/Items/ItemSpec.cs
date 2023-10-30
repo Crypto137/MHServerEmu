@@ -47,9 +47,9 @@ namespace MHServerEmu.Games.Entities.Items
             stream.WritePrototypeEnum(Rarity, PrototypeEnumType.All);
             stream.WriteRawInt32(ItemLevel);
             stream.WriteRawInt32(CreditsAmount);
-
+            stream.WriteRawVarint64((ulong)AffixSpec.Length);
             foreach (AffixSpec affixSpec in AffixSpec) affixSpec.Encode(stream);
-
+            stream.WriteRawInt32(Seed);
             stream.WritePrototypeEnum(EquippableBy, PrototypeEnumType.All);
         }
 
