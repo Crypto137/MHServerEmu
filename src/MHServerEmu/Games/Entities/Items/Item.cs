@@ -21,7 +21,6 @@ namespace MHServerEmu.Games.Entities.Items
                 new(PropertyEnum.Rank, rank),
                 new(PropertyEnum.ItemRarity, itemRarity),
                 new(PropertyEnum.ItemVariation, itemVariation),
-                new(PropertyEnum.InventoryStackSizeMax, 1000),
                 requirement
             });
             TrackingContextMap = Array.Empty<EntityTrackingContextMap>();

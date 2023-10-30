@@ -95,20 +95,25 @@ namespace MHServerEmu.Games.Events
                             client.CurrentGame.EntityManager.DestroyEntity(bowlingBall.BaseData.EntityId);
                         }
 
-                        AffixSpec[] affixSpec = { new AffixSpec(0, 0, 1) }; // BindingInformation
-                        float itemVariation = 0.14366376f; // TODO: Random
-                        
+                        AffixSpec[] affixSpec = { new AffixSpec(4906559676663600947, 0, 1) }; // BindingInformation                        
+                        int seed = 67827702; // TODO: Random
+                        float itemVariation = 0.14366376f; // TODO: Random::NextFloat
                         bowlingBall = client.CurrentGame.EntityManager.CreateInvItem(
                             bowlingBallItem,
                             new(14646212, 6731158030400100344, 0), // PlayerGeneral
                             itemRarities, 1, 
-                            itemVariation, 
-                            affixSpec);
+                            itemVariation, seed, 
+                            affixSpec,
+                            true );
 
-                        // Item.BindingSettings.ItemBindingSettings.DefaultSettings.ItemBindingSettingsEntry
-                        bowlingBall.PropertyCollection.List.Add(new(PropertyEnum.ItemIsTradable, false)); 
-                        bowlingBall.PropertyCollection.List.Add(new(PropertyEnum.ItemBindsToAccountOnPickup, true));
-                        bowlingBall.PropertyCollection.List.Add(new(PropertyEnum.ItemBindsToCharacterOnEquip, true));
+                        // TODO: applyItemSpecProperties 
+                        bowlingBall.PropertyCollection.List.AddRange(
+                            new Property[] {
+                            new(PropertyEnum.InventoryStackSizeMax, 1000), // Item.StackSettings
+                            new(PropertyEnum.ItemIsTradable, false), // DefaultSettings.IsTradable
+                            new(PropertyEnum.ItemBindsToAccountOnPickup, true), // DefaultSettings.BindsToAccountOnPickup
+                            new(PropertyEnum.ItemBindsToCharacterOnEquip, true) // // DefaultSettings.BindsToCharacterOnEquip
+                            });
 
                         messageList.Add(new(client, new(bowlingBall.ToNetMessageEntityCreate())));
 
@@ -117,15 +122,16 @@ namespace MHServerEmu.Games.Events
                             .SetEntityId(avatarEntityId)
                             .SetPowerProtoId(itemPower)
                             .Build())));
+
                         messageList.Add(new(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
-                                .SetEntityId(avatarEntityId)
-                                .SetPowerProtoId(itemPower)
-                                .SetPowerRank(0)
-                                .SetCharacterLevel(60)
-                                .SetCombatLevel(60)
-                                .SetItemLevel(1)
-                                .SetItemVariation(itemVariation)
-                                .Build())));
+                            .SetEntityId(avatarEntityId)
+                            .SetPowerProtoId(itemPower)
+                            .SetPowerRank(0)
+                            .SetCharacterLevel(60)
+                            .SetCombatLevel(60)
+                            .SetItemLevel(1)
+                            .SetItemVariation(itemVariation)
+                            .Build())));
                     }
 
                     break;

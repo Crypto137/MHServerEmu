@@ -84,23 +84,27 @@ namespace MHServerEmu.Games.Entities
             return worldEntity;
         }
 
-        public Item CreateInvItem(ulong itemProto, InventoryLocation invLoc, ulong rarity, int itemLevel, float itemVariation, AffixSpec[] affixSpec) {
+        public Item CreateInvItem(ulong itemProto, InventoryLocation invLoc, ulong rarity, int itemLevel, float itemVariation, int seed, AffixSpec[] affixSpec, bool isNewItem) {
 
             EntityBaseData baseData = new ()
             {
                 ReplicationPolicy = 4,
                 EntityId = GenEntityId(),
                 PrototypeId = itemProto,
-                Flags = 224u.ToBoolArray(16), // 5 6 7
+                Flags = 96u.ToBoolArray(16), // 5 6
                 InterestPolicies = 4,
                 LocFlags = 0u.ToBoolArray(16),
                 LocomotionState = new(0f),
-                InvLoc = invLoc,
-                InvLocPrev = new(0, 0, 4294967295), // -1
+                InvLoc = invLoc
             };
 
-            ulong defRank = 15168672998566398820; // Popcorn
-            int seed = 67827702; // TODO: Random
+            if (isNewItem)
+            {
+                baseData.Flags[7] = true;
+                baseData.InvLocPrev = new(0, 0, 0xFFFFFFFF); // -1
+            }                
+
+            ulong defRank = 15168672998566398820; // Popcorn           
             ItemSpec itemSpec = new(itemProto, rarity, itemLevel, 0, affixSpec, seed, 0);
             Item item = new(baseData, GenReplicationId(), defRank, itemLevel, rarity, itemVariation, itemSpec);
             _entityDict.Add(baseData.EntityId, item);
