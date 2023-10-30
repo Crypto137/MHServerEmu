@@ -257,8 +257,11 @@ namespace MHServerEmu.Games
 
             if (EntityManager.TryGetEntityById(performPreInteractPower.IdTarget, out Entity interactObject))
             {
-                EventManager.AddEvent(client, EventEnum.OnPreInteractPower, 0, interactObject);
-                EventManager.AddEvent(client, EventEnum.OnPreInteractPowerEnd, 1000, interactObject); // ChargingTimeMS    
+                if (EventManager.HasEvent(client, EventEnum.OnPreInteractPowerEnd) == false)
+                {
+                    EventManager.AddEvent(client, EventEnum.OnPreInteractPower, 0, interactObject);
+                    EventManager.AddEvent(client, EventEnum.OnPreInteractPowerEnd, 1000, interactObject); // ChargingTimeMS    
+                }
             }
         }
 

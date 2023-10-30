@@ -44,6 +44,11 @@ namespace MHServerEmu.Games.Events
         {
             _eventList.Add(new(client, eventId, timeMs, data));
         }
+
+        public bool HasEvent(FrontendClient client, EventEnum eventId)
+        {
+            return _eventList.Exists(@event => @event.Client == client && @event.Event == eventId);
+        }
         
         public void KillEvent(FrontendClient client, EventEnum eventId)
         {
