@@ -15,6 +15,7 @@ using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Grouping;
 using MHServerEmu.Networking;
+using MHServerEmu.Networking.Base;
 
 namespace MHServerEmu.Games
 {
@@ -207,6 +208,11 @@ namespace MHServerEmu.Games
                 case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:
                     if (message.TryDeserialize<NetMessageRequestInterestInAvatarEquipment>(out var requestInterestInAvatarEquipment))
                         OnRequestInterestInAvatarEquipment(client, requestInterestInAvatarEquipment);
+                    break;
+
+                case ClientToGameServerMessage.NetMessageRequestInterestInInventory:
+                    if (message.TryDeserialize<NetMessageRequestInterestInInventory>(out var requestInterestInInventory))
+                        OnRequestInterestInInventory(client, requestInterestInInventory);
                     break;
 
                 case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:
@@ -406,6 +412,16 @@ namespace MHServerEmu.Games
         {
             Logger.Info($"Received SetPlayerGameplayOptions message");
             Logger.Trace(new GameplayOptions(setPlayerGameplayOptions.OptionsData).ToString());
+        }
+
+        private void OnRequestInterestInInventory(FrontendClient client, NetMessageRequestInterestInInventory requestInterestInInventory)
+        {
+            Logger.Info($"Received NetMessageRequestInterestInInventory {requestInterestInInventory.InventoryProtoId}");
+
+            EnqueueResponse(client, new(NetMessageInventoryLoaded.CreateBuilder()
+                .SetInventoryProtoId(requestInterestInInventory.InventoryProtoId)
+                .SetLoadState(requestInterestInInventory.LoadState)
+                .Build()));
         }
 
         private void OnRequestInterestInAvatarEquipment(FrontendClient client, NetMessageRequestInterestInAvatarEquipment requestInterestInAvatarEquipment)
