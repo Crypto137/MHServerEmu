@@ -15,7 +15,7 @@ using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Grouping;
 using MHServerEmu.Networking;
-using MHServerEmu.Networking.Base;
+using Random = MHServerEmu.Common.Random;
 
 namespace MHServerEmu.Games
 {
@@ -34,6 +34,7 @@ namespace MHServerEmu.Games
         private readonly ServerManager _serverManager;
 
         private readonly PowerMessageHandler _powerMessageHandler;
+        private readonly Random _random;
 
         private int _tickCount;
 
@@ -49,6 +50,7 @@ namespace MHServerEmu.Games
             EntityManager = new();
             RegionManager = new(EntityManager);
 
+            _random = new Random();
             _powerMessageHandler = new(EventManager);
 
             _serverManager = serverManager;
@@ -58,6 +60,8 @@ namespace MHServerEmu.Games
             Thread gameThread = new(Update) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
             gameThread.Start();
         }
+
+        public Random GetRandom() { return _random; }
 
         public void Update()
         {
