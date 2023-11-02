@@ -96,8 +96,8 @@ namespace MHServerEmu.Games.Events
                         }
 
                         AffixSpec[] affixSpec = { new AffixSpec(4906559676663600947, 0, 1) }; // BindingInformation                        
-                        int seed = _game.GetRandom().Next();
-                        float itemVariation = _game.GetRandom().NextFloat(); 
+                        int seed = _game.Random.Next();
+                        float itemVariation = _game.Random.NextFloat(); 
                         bowlingBall = client.CurrentGame.EntityManager.CreateInvItem(
                             bowlingBallItem,
                             new(14646212, 6731158030400100344, 0), // PlayerGeneral

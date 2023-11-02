@@ -34,11 +34,11 @@ namespace MHServerEmu.Games
         private readonly ServerManager _serverManager;
 
         private readonly PowerMessageHandler _powerMessageHandler;
-        private readonly Random _random;
 
         private int _tickCount;
 
         public ulong Id { get; }
+        public Random Random { get; } = new();
         public EventManager EventManager { get; }
         public EntityManager EntityManager { get; }
         public RegionManager RegionManager { get; }
@@ -50,7 +50,6 @@ namespace MHServerEmu.Games
             EntityManager = new();
             RegionManager = new(EntityManager);
 
-            _random = new Random();
             _powerMessageHandler = new(EventManager);
 
             _serverManager = serverManager;
@@ -60,8 +59,6 @@ namespace MHServerEmu.Games
             Thread gameThread = new(Update) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
             gameThread.Start();
         }
-
-        public Random GetRandom() { return _random; }
 
         public void Update()
         {
@@ -209,14 +206,14 @@ namespace MHServerEmu.Games
                         OnSetPlayerGameplayOptions(client, setPlayerGameplayOptions);
                     break;
 
-                case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:
-                    if (message.TryDeserialize<NetMessageRequestInterestInAvatarEquipment>(out var requestInterestInAvatarEquipment))
-                        OnRequestInterestInAvatarEquipment(client, requestInterestInAvatarEquipment);
-                    break;
-
                 case ClientToGameServerMessage.NetMessageRequestInterestInInventory:
                     if (message.TryDeserialize<NetMessageRequestInterestInInventory>(out var requestInterestInInventory))
                         OnRequestInterestInInventory(client, requestInterestInInventory);
+                    break;
+
+                case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:
+                    if (message.TryDeserialize<NetMessageRequestInterestInAvatarEquipment>(out var requestInterestInAvatarEquipment))
+                        OnRequestInterestInAvatarEquipment(client, requestInterestInAvatarEquipment);
                     break;
 
                 case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:
