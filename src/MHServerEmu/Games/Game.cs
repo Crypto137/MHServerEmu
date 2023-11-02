@@ -15,6 +15,7 @@ using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Grouping;
 using MHServerEmu.Networking;
+using Random = MHServerEmu.Common.Random;
 
 namespace MHServerEmu.Games
 {
@@ -37,6 +38,7 @@ namespace MHServerEmu.Games
         private int _tickCount;
 
         public ulong Id { get; }
+        public Random Random { get; } = new();
         public EventManager EventManager { get; }
         public EntityManager EntityManager { get; }
         public RegionManager RegionManager { get; }
@@ -204,6 +206,11 @@ namespace MHServerEmu.Games
                         OnSetPlayerGameplayOptions(client, setPlayerGameplayOptions);
                     break;
 
+                case ClientToGameServerMessage.NetMessageRequestInterestInInventory:
+                    if (message.TryDeserialize<NetMessageRequestInterestInInventory>(out var requestInterestInInventory))
+                        OnRequestInterestInInventory(client, requestInterestInInventory);
+                    break;
+
                 case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:
                     if (message.TryDeserialize<NetMessageRequestInterestInAvatarEquipment>(out var requestInterestInAvatarEquipment))
                         OnRequestInterestInAvatarEquipment(client, requestInterestInAvatarEquipment);
@@ -257,8 +264,11 @@ namespace MHServerEmu.Games
 
             if (EntityManager.TryGetEntityById(performPreInteractPower.IdTarget, out Entity interactObject))
             {
-                EventManager.AddEvent(client, EventEnum.OnPreInteractPower, 0, interactObject);
-                EventManager.AddEvent(client, EventEnum.OnPreInteractPowerEnd, 1000, interactObject); // ChargingTimeMS    
+                if (EventManager.HasEvent(client, EventEnum.OnPreInteractPowerEnd) == false)
+                {
+                    EventManager.AddEvent(client, EventEnum.OnPreInteractPower, 0, interactObject);
+                    EventManager.AddEvent(client, EventEnum.OnPreInteractPowerEnd, 1000, interactObject); // ChargingTimeMS    
+                }
             }
         }
 
@@ -272,52 +282,57 @@ namespace MHServerEmu.Games
                 EnqueueResponse(client, new(NetMessageMissionInteractRelease.DefaultInstance));
             }
 
-            if (EntityManager.TryGetEntityById(useInteractableObject.IdTarget, out Entity interactableObject) && interactableObject is Transition)
+            if (EntityManager.TryGetEntityById(useInteractableObject.IdTarget, out Entity interactableObject))
             {
-                Transition teleport = interactableObject as Transition;
-                if (teleport.Destinations.Length == 0) return;
-                Logger.Trace($"Destination entity {teleport.Destinations[0].Entity}");
-
-                if (teleport.Destinations[0].Type == 2)
+                if (interactableObject is Transition)
                 {
-                    ulong currentRegion = (ulong)client.Session.Account.Player.Region;
-                    if (currentRegion != teleport.Destinations[0].Region)
+                    Transition teleport = interactableObject as Transition;
+                    if (teleport.Destinations.Length == 0) return;
+                    Logger.Trace($"Destination entity {teleport.Destinations[0].Entity}");
+
+                    if (teleport.Destinations[0].Type == 2)
                     {
-                        Logger.Trace($"Destination region {teleport.Destinations[0].Region}");
-                        client.CurrentGame.MovePlayerToRegion(client, (RegionPrototype)teleport.Destinations[0].Region);
+                        ulong currentRegion = (ulong)client.Session.Account.Player.Region;
+                        if (currentRegion != teleport.Destinations[0].Region)
+                        {
+                            Logger.Trace($"Destination region {teleport.Destinations[0].Region}");
+                            client.CurrentGame.MovePlayerToRegion(client, (RegionPrototype)teleport.Destinations[0].Region);
 
-                        return;
+                            return;
+                        }
                     }
+
+                    Entity target = EntityManager.FindEntityByDestination(teleport.Destinations[0], teleport.RegionId);
+                    if (target == null) return;
+                    Vector3 targetRot = target.BaseData.Orientation;
+                    float offset = 150f;
+                    Vector3 targetPos = new(
+                        target.BaseData.Position.X + offset * (float)Math.Cos(targetRot.X),
+                        target.BaseData.Position.Y + offset * (float)Math.Sin(targetRot.X),
+                        target.BaseData.Position.Z);
+
+                    Logger.Trace($"Teleporting to {targetPos}");
+
+                    Property property = target.PropertyCollection.GetPropertyByEnum(PropertyEnum.MapCellId);
+                    uint cellid = (uint)(long)property.Value.Get();
+                    property = target.PropertyCollection.GetPropertyByEnum(PropertyEnum.MapAreaId);
+                    uint areaid = (uint)(long)property.Value.Get();
+                    Logger.Trace($"Teleporting to areaid {areaid} cellid {cellid}");
+
+                    EnqueueResponse(client, new(NetMessageEntityPosition.CreateBuilder()
+                        .SetIdEntity((ulong)client.Session.Account.Player.Avatar.ToEntityId())
+                        .SetFlags(64)
+                        .SetPosition(targetPos.ToNetStructPoint3())
+                        .SetOrientation(targetRot.ToNetStructPoint3())
+                        .SetCellId(cellid)
+                        .SetAreaId(areaid)
+                        .SetEntityPrototypeId((ulong)client.Session.Account.Player.Avatar)
+                        .Build()));
+
+                    client.LastPosition = targetPos;
                 }
-
-                Entity target = EntityManager.FindEntityByDestination(teleport.Destinations[0], teleport.RegionId);
-                if (target == null) return;
-                Vector3 targetRot = target.BaseData.Orientation;
-                float offset = 150f;
-                Vector3 targetPos = new(
-                    target.BaseData.Position.X + offset * (float)Math.Cos(targetRot.X),
-                    target.BaseData.Position.Y + offset * (float)Math.Sin(targetRot.X),
-                    target.BaseData.Position.Z);
-
-                Logger.Trace($"Teleporting to {targetPos}");
-
-                Property property = target.PropertyCollection.GetPropertyByEnum(PropertyEnum.MapCellId);
-                uint cellid = (uint)(long)property.Value.Get();
-                property = target.PropertyCollection.GetPropertyByEnum(PropertyEnum.MapAreaId);
-                uint areaid = (uint)(long)property.Value.Get();
-                Logger.Trace($"Teleporting to areaid {areaid} cellid {cellid}");
-
-                EnqueueResponse(client, new(NetMessageEntityPosition.CreateBuilder()
-                    .SetIdEntity((ulong)client.Session.Account.Player.Avatar.ToEntityId())
-                    .SetFlags(64)
-                    .SetPosition(targetPos.ToNetStructPoint3())
-                    .SetOrientation(targetRot.ToNetStructPoint3())
-                    .SetCellId(cellid)
-                    .SetAreaId(areaid)
-                    .SetEntityPrototypeId((ulong)client.Session.Account.Player.Avatar)
-                    .Build()));
-
-                client.LastPosition = targetPos;
+                else  
+                    EventManager.AddEvent(client, EventEnum.UseInteractableObject, 0, interactableObject);
             }
         }
 
@@ -398,6 +413,16 @@ namespace MHServerEmu.Games
         {
             Logger.Info($"Received SetPlayerGameplayOptions message");
             Logger.Trace(new GameplayOptions(setPlayerGameplayOptions.OptionsData).ToString());
+        }
+
+        private void OnRequestInterestInInventory(FrontendClient client, NetMessageRequestInterestInInventory requestInterestInInventory)
+        {
+            Logger.Info($"Received NetMessageRequestInterestInInventory {requestInterestInInventory.InventoryProtoId}");
+
+            EnqueueResponse(client, new(NetMessageInventoryLoaded.CreateBuilder()
+                .SetInventoryProtoId(requestInterestInInventory.InventoryProtoId)
+                .SetLoadState(requestInterestInInventory.LoadState)
+                .Build()));
         }
 
         private void OnRequestInterestInAvatarEquipment(FrontendClient client, NetMessageRequestInterestInAvatarEquipment requestInterestInAvatarEquipment)

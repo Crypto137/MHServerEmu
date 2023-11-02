@@ -5,6 +5,10 @@ namespace MHServerEmu.Games.Powers
     public static class PowerPrototypes
     {
         // This is kinda ridiculous, maybe we need a better way to handle this lol
+        public enum Items : ulong
+        {
+            BowlingBallItemPower = 18211158277448213692,
+        }
         public enum Emotes : ulong
         {
 

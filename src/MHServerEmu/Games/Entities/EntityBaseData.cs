@@ -29,8 +29,8 @@ namespace MHServerEmu.Games.Entities
         public ulong SourceEntityId { get; }
         public Vector3 SourcePosition { get; }
         public ulong ActivePowerPrototypeId { get; }
-        public InventoryLocation InvLoc { get; }
-        public InventoryLocation InvLocPrev { get; }
+        public InventoryLocation InvLoc { get; set; }
+        public InventoryLocation InvLocPrev { get; set; }
         public ulong[] Vector { get; } = Array.Empty<ulong>();
 
         public EntityBaseData(ByteString data)

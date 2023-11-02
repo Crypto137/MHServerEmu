@@ -28,6 +28,7 @@
     {
         WorldEntity = 7901305308382563236,
         ThrowableProp = 14997899060839977779,
+        ThrowableSmartProp = 13025272806030579034,
         DestructibleProp = 18375929633378932151,
         ThrowablePowerProp = 8706319841384272336,
         ThrowableRestorePowerProp = 1483936524176856276,
