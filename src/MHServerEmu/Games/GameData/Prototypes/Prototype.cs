@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData.Calligraphy;
+using System.Reflection;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -24,6 +25,58 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public byte Flags { get; }
         public ulong ParentId { get; }  // 0 for .defaults
         public PrototypeEntry[] Entries { get; }
+
+        public Prototype() { }
+
+        private void FillField(object Value, FieldInfo fieldType)
+        {
+            object convertedValue = Convert.ChangeType(Value, fieldType.FieldType);
+            // TODO Enums, Prototypes and other types
+            fieldType.SetValue(this, convertedValue);
+        }
+
+        private void FillFieldsFromData(Prototype data, Blueprint blueprint, Type protoType)
+        {
+            foreach (var member in blueprint.Members)
+            {
+                var fieldName = member.FieldName;
+                var fieldType = protoType.GetField(fieldName);
+
+                if (fieldType != null)
+                {
+                    foreach (var entry in data.Entries)
+                    {
+                        if (entry.Id == blueprint.DefaultPrototypeId)
+                        {
+                            foreach (var element in entry.Elements)
+                            {
+                                if (element.Id == member.FieldId)
+                                {
+                                    FillField(element.Value, fieldType);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public void FillPrototype(Type protoType, Prototype proto)
+        {
+            Blueprint blueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(proto);
+
+            if (blueprint.RuntimeBinding != protoType.Name)
+            {
+                // TODO Print error;
+                return;
+            }
+
+            Prototype defaultData = GameDatabase.DataDirectory.GetBlueprintDefaultPrototype(blueprint); 
+
+            FillFieldsFromData(defaultData, blueprint, protoType);
+            // TODO fill data from parents
+            FillFieldsFromData(proto, blueprint, protoType);            
+        }
 
         public Prototype(BinaryReader reader)
         {
