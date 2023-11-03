@@ -29,18 +29,21 @@ namespace MHServerEmu.Grouping
             client.FinishedGroupingManagerHandshake = true;
         }
 
-        public void AddPlayer(FrontendClient client)
+        public bool AddPlayer(FrontendClient client)
         {
             lock (_playerLock)
             {
-                if (_playerDict.ContainsValue(client))
+                string playerName = client.Session.Account.PlayerName.ToLower();
+
+                if (_playerDict.ContainsKey(playerName))
                 {
                     Logger.Warn("Failed to add player: already added");
-                    return;
+                    return false;
                 }
 
-                _playerDict.Add(client.Session.Account.PlayerName.ToLower(), client);
+                _playerDict.Add(playerName, client);
                 client.SendMessage(MuxChannel, new(ChatHelper.Motd));
+                return true;
             }
         }
 

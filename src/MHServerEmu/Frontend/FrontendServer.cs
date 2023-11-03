@@ -58,8 +58,10 @@ namespace MHServerEmu.Frontend
                     // Adding the player early can cause GroupingManager handshake to not finish properly, which leads to the chat not working
                     if (client.FinishedPlayerManagerHandshake && client.FinishedGroupingManagerHandshake)
                     {
-                        _serverManager.GroupingManagerService.AddPlayer(client);
-                        _serverManager.PlayerManagerService.AddPlayer(client);
+                        // Disconnect the client if the account is already logged in
+                        // TODO: disconnect the logged in player instead?
+                        if (_serverManager.GroupingManagerService.AddPlayer(client) == false) client.Connection.Disconnect();
+                        if (_serverManager.PlayerManagerService.AddPlayer(client) == false) client.Connection.Disconnect();
                     }
 
                     break;

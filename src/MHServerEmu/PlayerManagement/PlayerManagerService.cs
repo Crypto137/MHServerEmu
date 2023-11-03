@@ -47,18 +47,23 @@ namespace MHServerEmu.PlayerManagement
             // NetMessageQueryIsRegionAvailable regionPrototype: 9833127629697912670 should go in the same packet as AchievementDatabaseDump
         }
 
-        public void AddPlayer(FrontendClient client)
+        public bool AddPlayer(FrontendClient client)
         {
             lock (_playerLock)
             {
-                if (_playerList.Contains(client))
+                // TODO: make this check better
+                foreach (FrontendClient player in _playerList)
                 {
-                    Logger.Warn("Failed to add player: already added");
-                    return;
+                    if (player.Session.Account.Id == client.Session.Account.Id)
+                    {
+                        Logger.Warn("Failed to add player: already added");
+                        return false;
+                    }
                 }
 
                 _playerList.Add(client);
                 _gameManager.GetAvailableGame().AddPlayer(client);
+                return true;
             }
         }
 
