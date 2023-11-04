@@ -6,6 +6,9 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Common.Logging.Targets;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Generators.Prototypes;
+using MHServerEmu.Games.Regions;
 using MHServerEmu.Networking;
 using MHServerEmu.PlayerManagement.Accounts;
 
@@ -47,8 +50,49 @@ namespace MHServerEmu
                 return;
             }
 
-            StartServers();
+            // StartServers();
 
+            // debug part
+            // 7293929583592937434	Regions/HUBS/XaviersMansion/XaviersMansionRegion.prototype
+            Logger.Debug($"Start Test");
+            {
+                Prototype proto = 7293929583592937434u.GetPrototype();
+                RegionPrototype regionPrototype = new(proto);
+
+                Logger.Debug($"XaviersMansionRegion.Level = {regionPrototype.Level}");
+                Logger.Debug($"XaviersMansionRegion.PlayerLimit = {regionPrototype.PlayerLimit}");
+                RegionGeneratorPrototype r = regionPrototype.RegionGenerator;
+                if (r is StaticRegionGeneratorPrototype)
+                    Logger.Debug($"XaviersMansionRegion.RegionGenerator is StaticRegionGeneratorPrototype");
+                Logger.Debug($"XaviersMansionRegion.RegionGenerator\n.StaticAreas[0]\n.Area = {(r as StaticRegionGeneratorPrototype).StaticAreas[0].Area}");
+
+                // 9142075282174842340	Regions/HUBRevamp/NPEAvengersTowerHUBRegion.prototype
+                proto = 9142075282174842340u.GetPrototype();
+                regionPrototype = new(proto);
+                r = regionPrototype.RegionGenerator;
+                if (r is SequenceRegionGeneratorPrototype)
+                    Logger.Debug($"NPEAvengersTowerHUBRegion.RegionGenerator is SequenceRegionGeneratorPrototype");
+                Logger.Debug($"NPEAvengersTowerHUBRegion.RegionGenerator\n.AreaSequence[0]\n.AreaChoices[0]\n.Area = {(r as SequenceRegionGeneratorPrototype).AreaSequence[0].AreaChoices[0].Area}");
+
+                // 15546930156792977757	Regions/StoryRevamp/CH03Madripoor/CH0301MadripoorRegion.prototype
+                proto = 15546930156792977757u.GetPrototype();
+                regionPrototype = new(proto);
+                r = regionPrototype.RegionGenerator;
+                if (r is SequenceRegionGeneratorPrototype)
+                    Logger.Debug($"CH0301MadripoorRegion.RegionGenerator is SequenceRegionGeneratorPrototype");
+                Logger.Debug($"CH0301MadripoorRegion.RegionGenerator\n.AreaSequence[0]\n.ConnectedTo[0]\n.AreaChoices[0]\n.ConnectOn = {(r as SequenceRegionGeneratorPrototype).AreaSequence[0].ConnectedTo[0].AreaChoices[0].ConnectOn}");
+
+                Type regions = typeof(RegionPrototypeId);
+                Logger.Debug($"start load regions");
+                foreach (ulong regionProtoId in Enum.GetValues(regions))
+                {
+                    proto = regionProtoId.GetPrototype();
+                    regionPrototype = new(proto);
+                    Logger.Debug($"region[{regionProtoId}].RegionName = {regionPrototype.RegionName}");
+                }
+                Logger.Debug($"end load");
+            }
+            Logger.Debug($"End Test");
             // Begin processing console input
             Logger.Info("Type '!commands' for a list of available commands");
             while (true)
