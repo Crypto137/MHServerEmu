@@ -183,11 +183,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
             FillFieldsFromData(defaultData, blueprint, protoType);
 
             ulong parent = proto.ParentId;
-            while ( parent != blueprint.DefaultPrototypeId )
+            List<Prototype> parents = new();
+            while (parent != blueprint.DefaultPrototypeId)
             {
-               Prototype parentProto = parent.GetPrototype();
-               FillFieldsFromData(parentProto, blueprint, protoType);
-               parent = parentProto.ParentId;
+                //Logger.Info($"{GameDatabase.GetPrototypeName(parent)}");
+                Prototype parentProto = parent.GetPrototype();
+                parents.Add(parentProto);
+                parent = parentProto.ParentId;
+            }
+            if (parents.Count > 0)
+            {
+                parents.Reverse();
+                foreach (Prototype parentProto in parents)
+                    FillFieldsFromData(parentProto, blueprint, protoType);
             }
 
             FillFieldsFromData(proto, blueprint, protoType);            
