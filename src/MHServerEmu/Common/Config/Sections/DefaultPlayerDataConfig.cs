@@ -8,8 +8,8 @@ namespace MHServerEmu.Common.Config.Sections
         private const string Section = "DefaultPlayerData";
 
         public string PlayerName { get; }
-        public RegionPrototype StartingRegion { get; }
-        public AvatarPrototype StartingAvatar { get; }
+        public RegionPrototypeId StartingRegion { get; }
+        public AvatarPrototypeId StartingAvatar { get; }
 
         public DefaultPlayerDataConfig(IniFile configFile)
         {
@@ -18,18 +18,18 @@ namespace MHServerEmu.Common.Config.Sections
             // StartingRegion
             string startingRegion = configFile.ReadString(Section, nameof(StartingRegion));
 
-            if (Enum.TryParse(typeof(RegionPrototype), startingRegion, out object regionPrototypeEnum))
-                StartingRegion = (RegionPrototype)regionPrototypeEnum;
+            if (Enum.TryParse(typeof(RegionPrototypeId), startingRegion, out object regionPrototypeEnum))
+                StartingRegion = (RegionPrototypeId)regionPrototypeEnum;
             else
-                StartingRegion = RegionPrototype.NPEAvengersTowerHUBRegion;
+                StartingRegion = RegionPrototypeId.NPEAvengersTowerHUBRegion;
 
             // StartingHero
             string startingAvatar = configFile.ReadString(Section, nameof(StartingAvatar));
 
-            if (Enum.TryParse(typeof(AvatarPrototype), startingAvatar, out object avatarEntityEnum))
-                StartingAvatar = (AvatarPrototype)avatarEntityEnum;
+            if (Enum.TryParse(typeof(AvatarPrototypeId), startingAvatar, out object avatarEntityEnum))
+                StartingAvatar = (AvatarPrototypeId)avatarEntityEnum;
             else
-                StartingAvatar = AvatarPrototype.BlackCat;
+                StartingAvatar = AvatarPrototypeId.BlackCat;
         }
     }
 }

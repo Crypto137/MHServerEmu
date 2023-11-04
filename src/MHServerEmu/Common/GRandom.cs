@@ -1,19 +1,19 @@
 ﻿namespace MHServerEmu.Common
 {
-    public class Random
+    public class GRandom
     {
         public const int RandMax = 0x7fffffff;
 
         private int _seed;
         private readonly Rand _rand;
 
-        public Random() 
+        public GRandom() 
         {
             _seed = 0;
             _rand = new Rand(0);
         }
 
-        public Random(int seed)
+        public GRandom(int seed)
         {
             _seed = seed;
             _rand = new Rand((uint)seed);

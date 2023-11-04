@@ -2,15 +2,15 @@
 {
     public static class AvatarPrototypeEnumExtensions
     {
-        public static HardcodedAvatarEntityId ToEntityId(this AvatarPrototype prototype)
+        public static HardcodedAvatarEntityId ToEntityId(this AvatarPrototypeId prototype)
         {
-            return (HardcodedAvatarEntityId)Enum.Parse(typeof(HardcodedAvatarEntityId), Enum.GetName(typeof(AvatarPrototype), prototype));
+            return (HardcodedAvatarEntityId)Enum.Parse(typeof(HardcodedAvatarEntityId), Enum.GetName(typeof(AvatarPrototypeId), prototype));
         }
 
-        public static HardcodedAvatarPropertyCollectionReplicationId ToPropertyCollectionReplicationId(this AvatarPrototype prototype)
+        public static HardcodedAvatarPropertyCollectionReplicationId ToPropertyCollectionReplicationId(this AvatarPrototypeId prototype)
         {
             return (HardcodedAvatarPropertyCollectionReplicationId)Enum.Parse(typeof(HardcodedAvatarPropertyCollectionReplicationId),
-                Enum.GetName(typeof(AvatarPrototype), prototype));
+                Enum.GetName(typeof(AvatarPrototypeId), prototype));
         }
     }
 
@@ -25,7 +25,7 @@
         Type6
     }
 
-    public enum AvatarPrototype : ulong
+    public enum AvatarPrototypeId : ulong
     {
         Angela = 13124420519155930214,
         AntMan = 18132742377931805821,

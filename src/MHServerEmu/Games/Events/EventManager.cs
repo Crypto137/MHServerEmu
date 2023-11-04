@@ -202,7 +202,7 @@ namespace MHServerEmu.Games.Events
 
                 case EventEnum.EmoteDance:
 
-                    AvatarPrototype avatar = (AvatarPrototype)queuedEvent.Data;
+                    AvatarPrototypeId avatar = (AvatarPrototypeId)queuedEvent.Data;
                     avatarEntityId = (ulong)avatar.ToEntityId();
                     activatePower = new()
                     {

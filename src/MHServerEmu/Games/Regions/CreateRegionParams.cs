@@ -5,7 +5,7 @@ namespace MHServerEmu.Games.Regions
     public class CreateRegionParams
     {
         public uint Level { get; set; }
-        public DifficultyTier DifficultyTier { get; set; }
+        public DifficultyTierPrototypeId DifficultyTier { get; set; }
 
         /* todo
             optional NetStructRegionOrigin  origin	= 2;
@@ -26,7 +26,7 @@ namespace MHServerEmu.Games.Regions
 	        optional uint64 dangerRoomScenarioR	= 18;
         */
 
-        public CreateRegionParams(uint level, DifficultyTier difficultyTier)
+        public CreateRegionParams(uint level, DifficultyTierPrototypeId difficultyTier)
         {
             Level = level;
             DifficultyTier = difficultyTier;

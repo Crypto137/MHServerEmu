@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using Gazillion;
+using MHServerEmu.Common;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
@@ -15,7 +16,6 @@ using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Grouping;
 using MHServerEmu.Networking;
-using Random = MHServerEmu.Common.Random;
 
 namespace MHServerEmu.Games
 {
@@ -38,7 +38,7 @@ namespace MHServerEmu.Games
         private int _tickCount;
 
         public ulong Id { get; }
-        public Random Random { get; } = new();
+        public GRandom Random { get; } = new();
         public EventManager EventManager { get; }
         public EntityManager EntityManager { get; }
         public RegionManager RegionManager { get; }
@@ -115,7 +115,7 @@ namespace MHServerEmu.Games
             }
         }
 
-        public void MovePlayerToRegion(FrontendClient client, RegionPrototype region)
+        public void MovePlayerToRegion(FrontendClient client, RegionPrototypeId region)
         {
             lock (_gameLock)
             {
@@ -296,7 +296,7 @@ namespace MHServerEmu.Games
                         if (currentRegion != teleport.Destinations[0].Region)
                         {
                             Logger.Trace($"Destination region {teleport.Destinations[0].Region}");
-                            client.CurrentGame.MovePlayerToRegion(client, (RegionPrototype)teleport.Destinations[0].Region);
+                            client.CurrentGame.MovePlayerToRegion(client, (RegionPrototypeId)teleport.Destinations[0].Region);
 
                             return;
                         }
@@ -362,7 +362,7 @@ namespace MHServerEmu.Games
             Logger.Info($"Received UseWaypoint message");
             Logger.Trace(useWaypoint.ToString());
 
-            RegionPrototype destinationRegion = (RegionPrototype)useWaypoint.RegionProtoId;
+            RegionPrototypeId destinationRegion = (RegionPrototypeId)useWaypoint.RegionProtoId;
 
             if (RegionManager.IsRegionAvailable(destinationRegion))
                 MovePlayerToRegion(client, destinationRegion);
@@ -377,7 +377,7 @@ namespace MHServerEmu.Games
 
             // A hack for changing avatar in-game
             //client.Session.Account.CurrentAvatar.Costume = 0;  // reset costume on avatar switch
-            client.Session.Account.Player.Avatar = (AvatarPrototype)switchAvatar.AvatarPrototypeId;
+            client.Session.Account.Player.Avatar = (AvatarPrototypeId)switchAvatar.AvatarPrototypeId;
             ChatHelper.SendMetagameMessage(client, $"Changing avatar to {client.Session.Account.Player.Avatar}.");
             MovePlayerToRegion(client, client.Session.Account.Player.Region);
 

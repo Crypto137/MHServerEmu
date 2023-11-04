@@ -8,7 +8,7 @@ namespace MHServerEmu.Games.Regions
 {
     public class Region
     {
-        public RegionPrototype Prototype { get; }
+        public RegionPrototypeId Prototype { get; }
         public ulong Id { get; }
         public int RandomSeed { get; }
         public byte[] ArchiveData { get; }
@@ -25,7 +25,7 @@ namespace MHServerEmu.Games.Regions
 
         public int CellsInRegion { get; set; }
 
-        public Region(RegionPrototype prototype, int randomSeed, byte[] archiveData, Vector3 min, Vector3 max, CreateRegionParams createParams)
+        public Region(RegionPrototypeId prototype, int randomSeed, byte[] archiveData, Vector3 min, Vector3 max, CreateRegionParams createParams)
         {
             Id = IdGenerator.Generate(IdType.Region);
 

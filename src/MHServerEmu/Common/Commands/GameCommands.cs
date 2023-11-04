@@ -18,7 +18,7 @@ namespace MHServerEmu.Common.Commands
         {
             if (client == null) return "You can only invoke this command from the game.";
 
-            client.CurrentGame.MovePlayerToRegion(client, RegionPrototype.AvengersTowerHUBRegion);
+            client.CurrentGame.MovePlayerToRegion(client, RegionPrototypeId.AvengersTowerHUBRegion);
 
             return "Changing region to Avengers Tower (original)";
         }
@@ -32,7 +32,7 @@ namespace MHServerEmu.Common.Commands
         {
             if (client == null) return "You can only invoke this command from the game.";
 
-            client.CurrentGame.MovePlayerToRegion(client, RegionPrototype.CosmicDoopSectorSpaceRegion);
+            client.CurrentGame.MovePlayerToRegion(client, RegionPrototypeId.CosmicDoopSectorSpaceRegion);
 
             return "Travel to Cosmic Doop Sector";
         }
@@ -57,22 +57,22 @@ namespace MHServerEmu.Common.Commands
         {
             if (client == null) return "You can only invoke this command from the game.";
 
-            AvatarPrototype avatar = client.Session.Account.Player.Avatar;
+            AvatarPrototypeId avatar = client.Session.Account.Player.Avatar;
             switch (avatar)
             {
-                case AvatarPrototype.BlackPanther:
-                case AvatarPrototype.BlackWidow:
-                case AvatarPrototype.CaptainAmerica:
-                case AvatarPrototype.Colossus:
-                case AvatarPrototype.EmmaFrost:
-                case AvatarPrototype.Hulk:
-                case AvatarPrototype.IronMan:
-                case AvatarPrototype.RocketRaccoon:
-                case AvatarPrototype.ScarletWitch:
-                case AvatarPrototype.Spiderman:
-                case AvatarPrototype.Storm:
-                case AvatarPrototype.Thing:
-                case AvatarPrototype.Thor:
+                case AvatarPrototypeId.BlackPanther:
+                case AvatarPrototypeId.BlackWidow:
+                case AvatarPrototypeId.CaptainAmerica:
+                case AvatarPrototypeId.Colossus:
+                case AvatarPrototypeId.EmmaFrost:
+                case AvatarPrototypeId.Hulk:
+                case AvatarPrototypeId.IronMan:
+                case AvatarPrototypeId.RocketRaccoon:
+                case AvatarPrototypeId.ScarletWitch:
+                case AvatarPrototypeId.Spiderman:
+                case AvatarPrototypeId.Storm:
+                case AvatarPrototypeId.Thing:
+                case AvatarPrototypeId.Thor:
                     client.CurrentGame.EventManager.AddEvent(client, Games.Events.EventEnum.EmoteDance, 0, avatar);
                     return $"{avatar} begins to dance";
                 default:
@@ -133,9 +133,9 @@ namespace MHServerEmu.Common.Commands
             if (@params.Length == 0) return "Invalid arguments. Type 'help player avatar' to get help.";
             if (ConfigManager.PlayerManager.BypassAuth) return "Disable BypassAuth to use this command";
 
-            if (Enum.TryParse(typeof(AvatarPrototype), @params[0], true, out object avatar))
+            if (Enum.TryParse(typeof(AvatarPrototypeId), @params[0], true, out object avatar))
             {
-                client.Session.Account.Player.Avatar = (AvatarPrototype)avatar;
+                client.Session.Account.Player.Avatar = (AvatarPrototypeId)avatar;
                 return $"Changing avatar to {client.Session.Account.Player.Avatar}. Relog for changes to take effect.";
             }
             else
@@ -151,9 +151,9 @@ namespace MHServerEmu.Common.Commands
             if (@params.Length == 0) return "Invalid arguments. Type 'help player region' to get help.";
             if (ConfigManager.PlayerManager.BypassAuth) return "Disable BypassAuth to use this command";
 
-            if (Enum.TryParse(typeof(RegionPrototype), @params[0], true, out object region))
+            if (Enum.TryParse(typeof(RegionPrototypeId), @params[0], true, out object region))
             {
-                client.Session.Account.Player.Region = (RegionPrototype)region;
+                client.Session.Account.Player.Region = (RegionPrototypeId)region;
                 return $"Changing starting region to {client.Session.Account.Player.Region}. Relog for changes to take effect.";
             }
             else

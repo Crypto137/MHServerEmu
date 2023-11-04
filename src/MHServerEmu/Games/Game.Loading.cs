@@ -149,7 +149,7 @@ namespace MHServerEmu.Games
             friend.OnlineStatus = CommunityMemberOnlineStatus.Online;
             friend.MemberName = "TonyStark";
             friend.Slots = new AvatarSlotInfo[] { new(421791326977791218, 7150542631074405762, 60, 5) };
-            friend.RegionRef = (ulong)RegionPrototype.NPEAvengersTowerHUBRegion;
+            friend.RegionRef = (ulong)RegionPrototypeId.NPEAvengersTowerHUBRegion;
 
             player.Community.CommunityMemberList.Add(new("Doomsaw", 1, 0, 0, new AvatarSlotInfo[] { new(17750839636937086083, 14098108758769669917, 60, 6) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
             player.Community.CommunityMemberList.Add(new("PizzaTime", 2, 0, 0, new AvatarSlotInfo[] { new(9378552423541970369, 6454902525769881598, 60, 5) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));

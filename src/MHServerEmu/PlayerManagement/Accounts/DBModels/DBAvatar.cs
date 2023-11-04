@@ -15,13 +15,13 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
 
         public ulong AccountId { get; set; }
 
-        public AvatarPrototype Prototype { get; set; }
-        public long RawPrototype { get => (long)Prototype; private set => Prototype = (AvatarPrototype)value; }
+        public AvatarPrototypeId Prototype { get; set; }
+        public long RawPrototype { get => (long)Prototype; private set => Prototype = (AvatarPrototypeId)value; }
 
         public ulong Costume { get; set; } = 0;
         public long RawCostume { get => (long)Costume; private set => Costume = (ulong)value; }
 
-        public DBAvatar(ulong accountId, AvatarPrototype prototype)
+        public DBAvatar(ulong accountId, AvatarPrototypeId prototype)
         {
             AccountId = accountId;
             Prototype = prototype;

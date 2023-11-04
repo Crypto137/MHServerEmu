@@ -131,7 +131,7 @@ namespace MHServerEmu.Games.Entities
                 if (parentTarget != null) targetRegion = parentTarget.GetFieldDef(FieldId.Region);
             }
 
-            if (RegionManager.IsRegionAvailable((RegionPrototype)targetRegion) == false) // TODO: change region test
+            if (RegionManager.IsRegionAvailable((RegionPrototypeId)targetRegion) == false) // TODO: change region test
                 targetRegion = regionPrototype;
 
             int type = 1; // default teleport
