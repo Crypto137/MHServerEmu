@@ -17,7 +17,7 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public AreaSequenceInfoPrototype[] AreaSequence;
         public float MinRootSeparation;
         public int Tries;
-        public SubGenerationPrototype(Prototype proto) { FillPrototype(typeof(SubGenerationPrototype), proto); }
+        public SubGenerationPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(SubGenerationPrototype), proto); }
     }
 
     public class EndlessThemePrototype : Prototype
@@ -25,14 +25,14 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public EndlessThemeEntryPrototype Boss;
         public EndlessThemeEntryPrototype Normal;
         public EndlessThemeEntryPrototype TreasureRoom;
-        public EndlessThemePrototype(Prototype proto) { FillPrototype(typeof(EndlessThemePrototype), proto); }
+        public EndlessThemePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EndlessThemePrototype), proto); }
     }
 
     public class EndlessThemeEntryPrototype : Prototype
     {
         public AreaSequenceInfoPrototype[] AreaSequence;
         public EndlessStateEntryPrototype[] Challenges;
-        public EndlessThemeEntryPrototype(Prototype proto) { FillPrototype(typeof(EndlessThemeEntryPrototype), proto); }
+        public EndlessThemeEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EndlessThemeEntryPrototype), proto); }
     }
 
     public class EndlessStateEntryPrototype : Prototype
@@ -40,7 +40,7 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public ulong MetaState;
         public ulong RegionPOIPicker;
         public MetaStateChallengeTier Tier;
-        public EndlessStateEntryPrototype(Prototype proto) { FillPrototype(typeof(EndlessStateEntryPrototype), proto); }
+        public EndlessStateEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EndlessStateEntryPrototype), proto); }
     }
 
     public enum MetaStateChallengeTier
@@ -60,7 +60,7 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public bool ConnectAllShared;
         public short SharedEdgeMinimum;
         public short Weight;
-        public AreaSequenceInfoPrototype(Prototype proto) { FillPrototype(typeof(AreaSequenceInfoPrototype), proto); }
+        public AreaSequenceInfoPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AreaSequenceInfoPrototype), proto); }
     }
 
     public class WeightedAreaPrototype : Prototype
@@ -70,7 +70,7 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public RegionDirection ConnectOn;
         public ulong RespawnOverride;
         public bool AlignedToPrevious;
-        public WeightedAreaPrototype(Prototype proto) { FillPrototype(typeof(WeightedAreaPrototype), proto); }
+        public WeightedAreaPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(WeightedAreaPrototype), proto); }
     }
     public enum RegionDirection
     {

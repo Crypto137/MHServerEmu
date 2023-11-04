@@ -8,9 +8,15 @@ namespace MHServerEmu.Games.Generators.Areas
 {
     public class Generator { 
 
+        public Area Area { get; set; }
+        public Region Region { get; set; }
+
         public Generator() { }
 
-        public virtual void Initialize(Area area) { }
+        public virtual void Initialize(Area area) {
+            Area = area;
+            // Region = Area.Region
+        }
 
         public virtual void Generate(Random random, RegionGenerator regionGenerator) { }
 

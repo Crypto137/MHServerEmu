@@ -4,7 +4,7 @@ namespace MHServerEmu.Games.Generators.Prototypes
 {
     public class GeneratorPrototype : Prototype
     {
-        public GeneratorPrototype(Prototype proto) { FillPrototype(typeof(GeneratorPrototype), proto); }
+        public GeneratorPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(GeneratorPrototype), proto); }
     }
 
     public class DistrictAreaGeneratorPrototype : GeneratorPrototype
@@ -43,14 +43,14 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public bool Unique;
         public IgnoreOfTypeEntryPrototype IgnoreOfType;
 
-        public CellSetEntryPrototype(Prototype proto) { FillPrototype(typeof(CellSetEntryPrototype), proto); }
+        public CellSetEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(CellSetEntryPrototype), proto); }
     }
 
     public class IgnoreOfTypeEntryPrototype : Prototype
     {
         public int Ignore;
 
-        public IgnoreOfTypeEntryPrototype(Prototype proto) { FillPrototype(typeof(IgnoreOfTypeEntryPrototype), proto); }
+        public IgnoreOfTypeEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(IgnoreOfTypeEntryPrototype), proto); }
     }
 
     public class RequiredPOIAreaEntryPrototype : Prototype
@@ -58,7 +58,7 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public ulong Area;
         public int Picks;
 
-        public RequiredPOIAreaEntryPrototype(Prototype proto) { FillPrototype(typeof(RequiredPOIAreaEntryPrototype), proto); }
+        public RequiredPOIAreaEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RequiredPOIAreaEntryPrototype), proto); }
     }
 
     public class RequiredPOIGroupPrototype : Prototype
@@ -66,7 +66,7 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public RequiredPOIAreaEntryPrototype[] Areas;
         public RequiredCellBasePrototype[] RequiredCells;
 
-        public RequiredPOIGroupPrototype(Prototype proto) { FillPrototype(typeof(RequiredPOIGroupPrototype), proto); }
+        public RequiredPOIGroupPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RequiredPOIGroupPrototype), proto); }
     }
 
     #region CellGridBehaviorPrototype
@@ -75,14 +75,14 @@ namespace MHServerEmu.Games.Generators.Prototypes
     {
         public ulong BehaviorId;
 
-        public CellGridBehaviorPrototype(Prototype proto) { FillPrototype(typeof(CellGridBehaviorPrototype), proto); }
+        public CellGridBehaviorPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(CellGridBehaviorPrototype), proto); }
     }
     public class BlacklistCellPrototype : Prototype
     {
         public int X;
         public int Y;
 
-        public BlacklistCellPrototype(Prototype proto) { FillPrototype(typeof(BlacklistCellPrototype), proto); }
+        public BlacklistCellPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(BlacklistCellPrototype), proto); }
     }
 
     public class CellGridBlacklistBehaviorPrototype : CellGridBehaviorPrototype

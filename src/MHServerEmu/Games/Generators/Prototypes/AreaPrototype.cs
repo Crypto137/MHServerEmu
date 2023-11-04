@@ -26,7 +26,7 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public ulong PlayerCameraSettingsOrbis;
         public ulong[] Keywords;
 
-        public AreaPrototype(Prototype proto) { FillPrototype(typeof(AreaPrototype), proto); }
+        public AreaPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AreaPrototype), proto); }
     }
 
     public enum AreaMinimapReveal {
@@ -41,7 +41,7 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public ulong[] Cells;
         public ulong RespawnOverride;
 
-        public RespawnCellOverridePrototype(Prototype proto) { FillPrototype(typeof(RespawnCellOverridePrototype), proto); }
+        public RespawnCellOverridePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RespawnCellOverridePrototype), proto); }
     }
 
     public class StyleEntryPrototype : Prototype
@@ -50,6 +50,6 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public ulong[] PropSets;
         public int Weight;
 
-        public StyleEntryPrototype(Prototype proto) { FillPrototype(typeof(StyleEntryPrototype), proto); }
+        public StyleEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(StyleEntryPrototype), proto); }
     }
 }

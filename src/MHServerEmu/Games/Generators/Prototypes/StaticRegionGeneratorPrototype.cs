@@ -14,7 +14,7 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public ulong AreaA;
         public ulong AreaB;
         public bool ConnectAllShared;
-        public AreaConnectionPrototype(Prototype proto) { FillPrototype(typeof(AreaConnectionPrototype), proto); }
+        public AreaConnectionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AreaConnectionPrototype), proto); }
     }
 
     public class StaticAreaPrototype : Prototype
@@ -23,6 +23,6 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public int X;
         public int Y;
         public int Z;
-        public StaticAreaPrototype(Prototype proto) { FillPrototype(typeof(StaticAreaPrototype), proto); }
+        public StaticAreaPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(StaticAreaPrototype), proto); }
     }
 }

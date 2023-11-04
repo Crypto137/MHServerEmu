@@ -18,7 +18,7 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public CellChoicePrototype[] LeftOrBottomChoices;
         public CellChoicePrototype[] RightOrTopChoices;
         public AreaOrientation Orientation;
-        public CanyonCellChoiceListPrototype(Prototype proto) { FillPrototype(typeof(CanyonCellChoiceListPrototype), proto); }
+        public CanyonCellChoiceListPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(CanyonCellChoiceListPrototype), proto); }
     }
 
     public enum AreaOrientation
@@ -31,6 +31,6 @@ namespace MHServerEmu.Games.Generators.Prototypes
     {
         public ulong Cell;
         public int Weight;
-        public CellChoicePrototype(Prototype proto) { FillPrototype(typeof(CellChoicePrototype), proto); }
+        public CellChoicePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(CellChoicePrototype), proto); }
     }
 }

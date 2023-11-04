@@ -14,7 +14,7 @@ namespace MHServerEmu.Games.Generators.Prototypes
     #region TowerAreaEntryPrototype
     public class TowerAreaEntryPrototype : Prototype
     {
-        public TowerAreaEntryPrototype(Prototype proto) { FillPrototype(typeof(TowerAreaEntryPrototype), proto); }
+        public TowerAreaEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(TowerAreaEntryPrototype), proto); }
     }
 
     public class TowerAreaRandomSeqCellsEntryPrototype : TowerAreaEntryPrototype

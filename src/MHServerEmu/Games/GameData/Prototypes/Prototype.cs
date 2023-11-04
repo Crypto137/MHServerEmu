@@ -1,5 +1,8 @@
 ﻿using MHServerEmu.Common.Extensions;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.Generators.Prototypes;
+using System;
 using System.Reflection;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -22,42 +25,146 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class Prototype
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
         public byte Flags { get; }
         public ulong ParentId { get; }  // 0 for .defaults
         public PrototypeEntry[] Entries { get; }
 
-        public Prototype() { }
+        public Prototype(Prototype proto) { }
 
-        private void FillField(object Value, FieldInfo fieldType)
+        private object ConvertValue(object Value, Type fieldType, CalligraphyValueType valueType)
         {
-            object convertedValue = Convert.ChangeType(Value, fieldType.FieldType);
-            // TODO Enums, Prototypes and other types
-            fieldType.SetValue(this, convertedValue);
+            object convertedValue = null;
+
+            if (Value == null) 
+                return Convert.ChangeType(null, fieldType);
+            
+            switch (valueType)
+            {
+                case CalligraphyValueType.B: // bool
+                case CalligraphyValueType.D: // float
+                case CalligraphyValueType.L: // int short
+                    convertedValue = Convert.ChangeType(Value, fieldType);
+                    break;
+
+                case CalligraphyValueType.R: // PrototypeRef 
+                    Prototype proto = (Prototype)Value;
+                    if (proto.ParentId != 0)
+                    {
+                        string className = GameDatabase.DataDirectory.GetPrototypeBlueprint(proto).RuntimeBinding;
+                      //  Logger.Info($"Init Prototype {className}");
+                        Type protoType = Type.GetType("MHServerEmu.Games.Generators.Prototypes." + className);
+                        if (protoType == null)
+                        {
+                            Logger.Warn($"PrototypeClass {className} not exist");
+                            return null;
+                        }
+                        object[] parameters = new object[] { proto };
+                        convertedValue = Activator.CreateInstance(protoType, parameters);
+                    }
+                    else 
+                        convertedValue = null;
+                    break;
+
+                case CalligraphyValueType.P: // PrototypeId
+                case CalligraphyValueType.S: // StringId
+                case CalligraphyValueType.C: // CurveId
+                    convertedValue = Value; // ulong
+                    break;
+
+                case CalligraphyValueType.A: // AssetName String                    
+
+                    if (fieldType.IsEnum)
+                    {
+                        ulong assetId = (ulong)Value;
+                        string assetName = GameDatabase.GetAssetName(assetId);
+                        if (Enum.IsDefined(fieldType, assetName))
+                        {
+                            convertedValue = Enum.Parse(fieldType, assetName);
+                        }
+                    }
+                    else convertedValue = (ulong)Value;
+
+                    break;
+                
+                default:
+                    convertedValue = Convert.ChangeType(Value, fieldType);
+                    break;
+            }
+            return convertedValue;
+        }
+
+        private void SetValue(object Value, FieldInfo fieldInfo, CalligraphyValueType valueType)
+        {
+          //  Logger.Info($"Try Convert {valueType} type for {fieldInfo.Name}");
+            object convertedValue = ConvertValue(Value, fieldInfo.FieldType, valueType);            
+            fieldInfo.SetValue(this, convertedValue);
+        }
+
+        private void SetValues(object[] Values, FieldInfo fieldInfo, CalligraphyValueType valueType)
+        {
+          //  Logger.Info($"Try Convert {valueType} type for {fieldInfo.Name}");
+            Type elementType = fieldInfo.FieldType.GetElementType(); 
+            if (elementType != null)
+            {
+                Array array = Array.CreateInstance(elementType, Values.Length); 
+
+                for (int i = 0; i < Values.Length; i++)
+                {
+                    object convertedValue = ConvertValue(Values[i], elementType, valueType);
+                    array.SetValue(convertedValue, i);
+                }
+
+                fieldInfo.SetValue(this, array); 
+            }
         }
 
         private void FillFieldsFromData(Prototype data, Blueprint blueprint, Type protoType)
         {
+          //  Logger.Info($"FillFields for {blueprint.RuntimeBinding}");
             foreach (var member in blueprint.Members)
             {
                 var fieldName = member.FieldName;
                 var fieldType = protoType.GetField(fieldName);
-
+                bool nextMember = true;
                 if (fieldType != null)
                 {
-                    foreach (var entry in data.Entries)
+                    if (data.Entries != null)
                     {
-                        if (entry.Id == blueprint.DefaultPrototypeId)
+                        foreach (var entry in data.Entries)
                         {
-                            foreach (var element in entry.Elements)
+                            if (entry.Id == blueprint.DefaultPrototypeId)
                             {
-                                if (element.Id == member.FieldId)
+                                if (fieldType.FieldType.IsArray)
                                 {
-                                    FillField(element.Value, fieldType);
+                                    foreach (var element in entry.ListElements)
+                                    {
+                                        if (element.Id == member.FieldId)
+                                        {
+                                            SetValues(element.Values, fieldType, element.Type);
+                                            nextMember = false;
+                                            break;
+                                        }
+                                    }
                                 }
+                                else
+                                {
+                                    foreach (var element in entry.Elements)
+                                    {
+                                        if (element.Id == member.FieldId)
+                                        {
+                                            SetValue(element.Value, fieldType, element.Type);
+                                            nextMember = false;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (nextMember == false) break;
                             }
                         }
                     }
                 }
+
             }
         }
 
@@ -67,14 +174,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (blueprint.RuntimeBinding != protoType.Name)
             {
-                // TODO Print error;
+                //Logger.Info($"RuntimeBinding {blueprint.RuntimeBinding} for {protoType.Name}");
                 return;
             }
 
             Prototype defaultData = GameDatabase.DataDirectory.GetBlueprintDefaultPrototype(blueprint); 
 
             FillFieldsFromData(defaultData, blueprint, protoType);
-            // TODO fill data from parents
+
+            ulong parent = proto.ParentId;
+            while ( parent != blueprint.DefaultPrototypeId )
+            {
+               Prototype parentProto = parent.GetPrototype();
+               FillFieldsFromData(parentProto, blueprint, protoType);
+               parent = parentProto.ParentId;
+            }
+
             FillFieldsFromData(proto, blueprint, protoType);            
         }
 

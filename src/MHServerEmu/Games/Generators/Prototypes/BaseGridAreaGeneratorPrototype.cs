@@ -49,7 +49,7 @@ namespace MHServerEmu.Games.Generators.Prototypes
     {
         public ulong[] Cells;
 
-        public RoadGeneratorPrototype(Prototype proto) { FillPrototype(typeof(RoadGeneratorPrototype), proto); }
+        public RoadGeneratorPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RoadGeneratorPrototype), proto); }
     }
 
     public class CellDeletionProfilePrototype : Prototype
@@ -57,7 +57,7 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public CellDeletionEnum RoomKillMethod;
         public float RoomKillPct;
 
-        public CellDeletionProfilePrototype(Prototype proto) { FillPrototype(typeof(CellDeletionProfilePrototype), proto); }
+        public CellDeletionProfilePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(CellDeletionProfilePrototype), proto); }
     }
 
     public enum CellDeletionEnum
@@ -73,7 +73,7 @@ namespace MHServerEmu.Games.Generators.Prototypes
 
     public class RequiredCellRestrictBasePrototype : Prototype
     {
-        public RequiredCellRestrictBasePrototype(Prototype proto) { FillPrototype(typeof(RequiredCellRestrictBasePrototype), proto); }
+        public RequiredCellRestrictBasePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RequiredCellRestrictBasePrototype), proto); }
     }
 
     public class RequiredCellRestrictSegPrototype : RequiredCellRestrictBasePrototype
@@ -111,7 +111,7 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public ulong PopulationThemeOverride;
         public RequiredCellRestrictBasePrototype[] LocationRestrictions;
 
-        public RequiredCellBasePrototype(Prototype proto) { FillPrototype(typeof(RequiredCellBasePrototype), proto); }
+        public RequiredCellBasePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RequiredCellBasePrototype), proto); }
     }
 
     public class RequiredCellPrototype : RequiredCellBasePrototype
@@ -153,6 +153,6 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public RandomInstanceRegionPrototype[] List;
         public int Picks;
 
-        public RandomInstanceListPrototype(Prototype proto) { FillPrototype(typeof(RandomInstanceListPrototype), proto); }
+        public RandomInstanceListPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RandomInstanceListPrototype), proto); }
     }
 }
