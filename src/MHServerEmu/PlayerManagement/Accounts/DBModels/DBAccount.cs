@@ -37,7 +37,7 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
             InitializeData();
         }
 
-        public DBAccount(string playerName, RegionPrototype region, AvatarPrototype avatar)
+        public DBAccount(string playerName, RegionPrototypeId region, AvatarPrototype avatar)
         {
             // Default account for using with BypassAuth
             Id = 0;

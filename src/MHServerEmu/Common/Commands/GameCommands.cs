@@ -18,7 +18,7 @@ namespace MHServerEmu.Common.Commands
         {
             if (client == null) return "You can only invoke this command from the game.";
 
-            client.CurrentGame.MovePlayerToRegion(client, RegionPrototype.AvengersTowerHUBRegion);
+            client.CurrentGame.MovePlayerToRegion(client, RegionPrototypeId.AvengersTowerHUBRegion);
 
             return "Changing region to Avengers Tower (original)";
         }
@@ -32,7 +32,7 @@ namespace MHServerEmu.Common.Commands
         {
             if (client == null) return "You can only invoke this command from the game.";
 
-            client.CurrentGame.MovePlayerToRegion(client, RegionPrototype.CosmicDoopSectorSpaceRegion);
+            client.CurrentGame.MovePlayerToRegion(client, RegionPrototypeId.CosmicDoopSectorSpaceRegion);
 
             return "Travel to Cosmic Doop Sector";
         }
@@ -151,9 +151,9 @@ namespace MHServerEmu.Common.Commands
             if (@params.Length == 0) return "Invalid arguments. Type 'help player region' to get help.";
             if (ConfigManager.PlayerManager.BypassAuth) return "Disable BypassAuth to use this command";
 
-            if (Enum.TryParse(typeof(RegionPrototype), @params[0], true, out object region))
+            if (Enum.TryParse(typeof(RegionPrototypeId), @params[0], true, out object region))
             {
-                client.Session.Account.Player.Region = (RegionPrototype)region;
+                client.Session.Account.Player.Region = (RegionPrototypeId)region;
                 return $"Changing starting region to {client.Session.Account.Player.Region}. Relog for changes to take effect.";
             }
             else

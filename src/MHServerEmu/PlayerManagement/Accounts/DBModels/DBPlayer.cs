@@ -16,8 +16,8 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
 
         public ulong AccountId { get; set; }
 
-        public RegionPrototype Region { get; set; }
-        public long RawRegion { get => (long)Region; private set => Region = (RegionPrototype)value; }
+        public RegionPrototypeId Region { get; set; }
+        public long RawRegion { get => (long)Region; private set => Region = (RegionPrototypeId)value; }
 
         public AvatarPrototype Avatar { get; set; }
         public long RawAvatar { get => (long)Avatar; private set => Avatar = (AvatarPrototype)value; }
@@ -25,7 +25,7 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
         public DBPlayer(ulong accountId)
         {
             AccountId = accountId;
-            Region = RegionPrototype.NPEAvengersTowerHUBRegion;
+            Region = RegionPrototypeId.NPEAvengersTowerHUBRegion;
             Avatar = AvatarPrototype.CaptainAmerica;
         }
 

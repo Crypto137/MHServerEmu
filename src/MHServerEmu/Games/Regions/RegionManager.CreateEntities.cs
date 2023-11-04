@@ -233,30 +233,30 @@ namespace MHServerEmu.Games.Regions
 
             switch (region.Prototype)
             {
-                case RegionPrototype.AsgardiaRegion:
+                case RegionPrototypeId.AsgardiaRegion:
 
-                    area = (ulong)AreaPrototype.AsgardiaArea;
+                    area = (ulong)AreaPrototypeId.AsgardiaArea;
                     MarkersAddDistrict("Resource/Districts/AsgardHubDistrict.district");
 
                     break;
 
-                case RegionPrototype.BronxZooRegionL60:
-                case RegionPrototype.BrooklynPatrolRegionL60:
-                case RegionPrototype.XManhattanRegion1to60:
-                case RegionPrototype.XManhattanRegion60Cosmic:
-                case RegionPrototype.UltronRaidRegionGreen:
-                case RegionPrototype.NPERaftRegion:
-                case RegionPrototype.CH0105NightclubRegion:
-                case RegionPrototype.CH0201ShippingYardRegion:
-                case RegionPrototype.CH0701SavagelandRegion:
-                case RegionPrototype.CH0901NorwayPCZRegion:
-                case RegionPrototype.CH0904SiegePCZRegion:
+                case RegionPrototypeId.BronxZooRegionL60:
+                case RegionPrototypeId.BrooklynPatrolRegionL60:
+                case RegionPrototypeId.XManhattanRegion1to60:
+                case RegionPrototypeId.XManhattanRegion60Cosmic:
+                case RegionPrototypeId.UltronRaidRegionGreen:
+                case RegionPrototypeId.NPERaftRegion:
+                case RegionPrototypeId.CH0105NightclubRegion:
+                case RegionPrototypeId.CH0201ShippingYardRegion:
+                case RegionPrototypeId.CH0701SavagelandRegion:
+                case RegionPrototypeId.CH0901NorwayPCZRegion:
+                case RegionPrototypeId.CH0904SiegePCZRegion:
                     GenerateEntities(region, null, true, true);
 
                     break;
 
-                case RegionPrototype.CH0804LatveriaPCZRegion:
-                case RegionPrototype.CH0808DoomCastleRegion:
+                case RegionPrototypeId.CH0804LatveriaPCZRegion:
+                case RegionPrototypeId.CH0808DoomCastleRegion:
                     connectionNodes = new ulong[] {
                         8784254912487368435, // LatveriaPCZtoInstanceNode
                     };
@@ -265,7 +265,7 @@ namespace MHServerEmu.Games.Regions
 
                     break;
 
-                case RegionPrototype.TRGameCenterRegion:
+                case RegionPrototypeId.TRGameCenterRegion:
                     connectionNodes = new ulong[] {
                         7639542123192857492, // TRGameCenterNodeEnter
                     };
@@ -274,8 +274,8 @@ namespace MHServerEmu.Games.Regions
 
                     break;
 
-                case RegionPrototype.UpperMadripoorRegionL60:
-                case RegionPrototype.UpperMadripoorRegionL60Cosmic:
+                case RegionPrototypeId.UpperMadripoorRegionL60:
+                case RegionPrototypeId.UpperMadripoorRegionL60Cosmic:
                     connectionNodes = new ulong[] {
                         7533474634124963840, // UpperMadripoorSafeZoneNode
                         7639542123192857492, // TRGameCenterNodeEnter
@@ -290,7 +290,7 @@ namespace MHServerEmu.Games.Regions
 
                     break;
 
-                case RegionPrototype.DailyGSinisterLabRegionL60:
+                case RegionPrototypeId.DailyGSinisterLabRegionL60:
                     connectionNodes = new ulong[] { 6937597958432367477 };
                     targets = BuildConnectionEdges(connectionNodes);
                     targets[11176346407598236282] = targets[0];
@@ -298,13 +298,13 @@ namespace MHServerEmu.Games.Regions
 
                     break;
 
-                case RegionPrototype.CH0101HellsKitchenRegion:
+                case RegionPrototypeId.CH0101HellsKitchenRegion:
                     connectionNodes = new ulong[] { 14443352045617489679 };
                     targets = BuildConnectionEdges(connectionNodes);
                     GenerateEntities(region, targets, true, true);
                     break;
 
-                case RegionPrototype.CH0301MadripoorRegion:
+                case RegionPrototypeId.CH0301MadripoorRegion:
                     connectionNodes = new ulong[]
                     {
                          15391000012663825577 , // LowTownToHandTower
@@ -314,7 +314,7 @@ namespace MHServerEmu.Games.Regions
                     GenerateEntities(region, targets, true, true);
                     break;
 
-                case RegionPrototype.CH0307HandTowerRegion:
+                case RegionPrototypeId.CH0307HandTowerRegion:
                     connectionNodes = new ulong[]
                     {
                          15391000012663825577 , // LowTownToHandTower
@@ -327,8 +327,8 @@ namespace MHServerEmu.Games.Regions
                     GenerateEntities(region, targets, true, true);
                     break;
 
-                case RegionPrototype.CH0401LowerEastRegion:
-                case RegionPrototype.CH0405WaxMuseumRegion:
+                case RegionPrototypeId.CH0401LowerEastRegion:
+                case RegionPrototypeId.CH0405WaxMuseumRegion:
                     connectionNodes = new ulong[]
                     {
                          7969222097651113506 , // WaxMuseumNodeEnter
@@ -337,7 +337,7 @@ namespace MHServerEmu.Games.Regions
                     GenerateEntities(region, targets, true, true);
                     break;
 
-                case RegionPrototype.CH0408MaggiaRestaurantRegion:
+                case RegionPrototypeId.CH0408MaggiaRestaurantRegion:
                     connectionNodes = new ulong[]
                     {
                          4892594607208668810 , // RestaurantFrontNode
@@ -346,7 +346,7 @@ namespace MHServerEmu.Games.Regions
                     GenerateEntities(region, targets, true, true);
                     break;
 
-                case RegionPrototype.CH0402UpperEastRegion:
+                case RegionPrototypeId.CH0402UpperEastRegion:
                     connectionNodes = new ulong[]
                     {
                          4892594607208668810 , // RestaurantFrontNode
@@ -356,7 +356,7 @@ namespace MHServerEmu.Games.Regions
                     GenerateEntities(region, targets, true, true);
                     break;
 
-                case RegionPrototype.CH0410FiskTowerRegion:
+                case RegionPrototypeId.CH0410FiskTowerRegion:
                     connectionNodes = new ulong[]
                     {
                          3426134486181749300 , // FiskTowerEntryNode
@@ -370,7 +370,7 @@ namespace MHServerEmu.Games.Regions
                     GenerateEntities(region, targets, true, true);
                     break;
 
-                case RegionPrototype.HYDRAIslandPartDeuxRegionL60:
+                case RegionPrototypeId.HYDRAIslandPartDeuxRegionL60:
                     connectionNodes = new ulong[] { 
                         14896483168893745334, // Hydra1ShotPreBossToBossNode
                         3860711599720838991, // Hydra1ShotSubToCliffNode
@@ -406,15 +406,15 @@ namespace MHServerEmu.Games.Regions
 
                     break;
 
-                case RegionPrototype.HelicarrierRegion:
+                case RegionPrototypeId.HelicarrierRegion:
 
-                    area = (ulong)AreaPrototype.HelicarrierArea;
+                    area = (ulong)AreaPrototypeId.HelicarrierArea;
                     ulong cellPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Cells/DistrictCells/Helicarrier/Helicarrier_HUB.cell");
                     MarkersAdd(GameDatabase.GetPrototype<CellPrototype>(cellPrototypeId), cellid);
 
                     break;
 
-                case RegionPrototype.HoloSimARegion1to60:
+                case RegionPrototypeId.HoloSimARegion1to60:
 
                     area = GameDatabase.GetPrototypeRefByName("Regions/EndGame/TierX/HoloSim/HoloSimAArea.prototype");
                     entryPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Cells/EndGame/DR_Survival_A.cell");
@@ -441,7 +441,7 @@ namespace MHServerEmu.Games.Regions
                     }
                     break;
 
-                case RegionPrototype.OpDailyBugleRegionL11To60:
+                case RegionPrototypeId.OpDailyBugleRegionL11To60:
                     connectionNodes = new ulong[] 
                     {
                          14492921398354848340 , // DailyBugleLobbyToBasementNode
@@ -454,7 +454,7 @@ namespace MHServerEmu.Games.Regions
                     GenerateEntities(region, targets, true, true);
                     break;
 
-                case RegionPrototype.DailyGFiskTowerRegionL60:
+                case RegionPrototypeId.DailyGFiskTowerRegionL60:
                     connectionNodes = new ulong[]
                     {
                          4458370674568667845 , // DailyGFiskTowerDToBossNode
@@ -463,7 +463,7 @@ namespace MHServerEmu.Games.Regions
                     GenerateEntities(region, targets, true, true);
                     break;
 
-                case RegionPrototype.DailyGTimesSquareRegionL60:
+                case RegionPrototypeId.DailyGTimesSquareRegionL60:
                     connectionNodes = new ulong[]
                     {
                          8167419542698075817 , // DailyGTimesSquareRestToStreetNode
@@ -473,7 +473,7 @@ namespace MHServerEmu.Games.Regions
                     GenerateEntities(region, targets, true, true);
                     break;
 
-                case RegionPrototype.DrStrangeTimesSquareRegionL60:
+                case RegionPrototypeId.DrStrangeTimesSquareRegionL60:
                     connectionNodes = new ulong[]
                     {
                          17939117456967478777 , // DrStrangeTimesSquareRestToStreetNode
@@ -488,7 +488,7 @@ namespace MHServerEmu.Games.Regions
                     
                     break;
 
-                case RegionPrototype.CosmicDoopSectorSpaceRegion:
+                case RegionPrototypeId.CosmicDoopSectorSpaceRegion:
 
                     area = GameDatabase.GetPrototypeRefByName("Regions/EndGame/Special/CosmicDoopSectorSpace/CosmicDoopSectorSpaceAreaA.prototype");
                     ulong[] doop = new ulong[]
@@ -576,9 +576,9 @@ namespace MHServerEmu.Games.Regions
 
                     break;
 
-                case RegionPrototype.TrainingRoomSHIELDRegion:
+                case RegionPrototypeId.TrainingRoomSHIELDRegion:
 
-                    area = (ulong)AreaPrototype.TrainingRoomSHIELDArea;
+                    area = (ulong)AreaPrototypeId.TrainingRoomSHIELDArea;
                     entryPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Cells/DistrictCells/Training_Rooms/TrainingRoom_SHIELD_B.cell");
                     entry = GameDatabase.GetPrototype<CellPrototype>(entryPrototypeId);
                     MarkersAdd(entry, cellid, true);
@@ -622,15 +622,15 @@ namespace MHServerEmu.Games.Regions
 
                     break;
 
-                case RegionPrototype.DangerRoomHubRegion:
+                case RegionPrototypeId.DangerRoomHubRegion:
 
-                    area = (ulong)AreaPrototype.DangerRoomHubArea;
+                    area = (ulong)AreaPrototypeId.DangerRoomHubArea;
                     entryPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Cells/EndGame/EndlessDungeon/DangerRoom_LaunchTerminal.cell");
                     MarkersAdd(GameDatabase.GetPrototype<CellPrototype>(entryPrototypeId), cellid);
 
                     break;
 
-                case RegionPrototype.GenoshaHUBRegion:
+                case RegionPrototypeId.GenoshaHUBRegion:
 
                     connectionNodes = new ulong[] { 7252811901575568920 };
                     targets = BuildConnectionEdges(connectionNodes);
@@ -638,24 +638,24 @@ namespace MHServerEmu.Games.Regions
 
                     break;
 
-                case RegionPrototype.XaviersMansionRegion:
+                case RegionPrototypeId.XaviersMansionRegion:
 
-                    area = (ulong)AreaPrototype.XaviersMansionArea;
+                    area = (ulong)AreaPrototypeId.XaviersMansionArea;
                     MarkersAddDistrict("Resource/Districts/XaviersMansion.district");
 
                     break;
 
-                case RegionPrototype.AvengersTowerHUBRegion:
+                case RegionPrototypeId.AvengersTowerHUBRegion:
 
-                    area = (ulong)AreaPrototype.AvengersTowerHubArea;
+                    area = (ulong)AreaPrototypeId.AvengersTowerHubArea;
                     entryPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Cells/DistrictCells/Avengers_Tower/AvengersTower_HUB.cell");
                     MarkersAdd(GameDatabase.GetPrototype<CellPrototype>(entryPrototypeId), cellid);
 
                     break;
 
-                case RegionPrototype.NPEAvengersTowerHUBRegion:
+                case RegionPrototypeId.NPEAvengersTowerHUBRegion:
 
-                    area = (ulong)AreaPrototype.NPEAvengersTowerHubArea;
+                    area = (ulong)AreaPrototypeId.NPEAvengersTowerHubArea;
                     entryPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Cells/DistrictCells/Avengers_Tower/AvengersTowerNPE_HUB.cell");
                     MarkersAdd(GameDatabase.GetPrototype<CellPrototype>(entryPrototypeId), cellid);
 

@@ -9,7 +9,7 @@
         Omega1 = 424700179461639950
     }
 
-    public enum RegionPrototype : ulong
+    public enum RegionPrototypeId : ulong
     {
         // Hubs
         AvengersTowerHUBRegion = 14599574127156009346,      // Avengers Tower (original)

@@ -118,7 +118,7 @@ namespace MHServerEmu.Games
             }
         }
 
-        public void MovePlayerToRegion(FrontendClient client, RegionPrototype region)
+        public void MovePlayerToRegion(FrontendClient client, RegionPrototypeId region)
         {
             lock (_gameLock)
             {
@@ -299,7 +299,7 @@ namespace MHServerEmu.Games
                         if (currentRegion != teleport.Destinations[0].Region)
                         {
                             Logger.Trace($"Destination region {teleport.Destinations[0].Region}");
-                            client.CurrentGame.MovePlayerToRegion(client, (RegionPrototype)teleport.Destinations[0].Region);
+                            client.CurrentGame.MovePlayerToRegion(client, (RegionPrototypeId)teleport.Destinations[0].Region);
 
                             return;
                         }
@@ -365,7 +365,7 @@ namespace MHServerEmu.Games
             Logger.Info($"Received UseWaypoint message");
             Logger.Trace(useWaypoint.ToString());
 
-            RegionPrototype destinationRegion = (RegionPrototype)useWaypoint.RegionProtoId;
+            RegionPrototypeId destinationRegion = (RegionPrototypeId)useWaypoint.RegionProtoId;
 
             if (RegionManager.IsRegionAvailable(destinationRegion))
                 MovePlayerToRegion(client, destinationRegion);
