@@ -36,6 +36,7 @@ namespace MHServerEmu.Games
         private readonly PowerMessageHandler _powerMessageHandler;
 
         private int _tickCount;
+        private ulong _currentRepId;
 
         public ulong Id { get; }
         public GRandom Random { get; } = new();
@@ -44,16 +45,22 @@ namespace MHServerEmu.Games
         public RegionManager RegionManager { get; }
         public ConcurrentDictionary<FrontendClient, Player> PlayerDict { get; } = new();
 
+        public ulong CurrentRepId { get => ++_currentRepId; }
+
         public Game(ServerManager serverManager, ulong id)
         {
+            _serverManager = serverManager;
+            Id = id;
+
+            // The game uses 16 bits of the current UTC time in seconds as the initial replication id
+            _currentRepId = (ulong)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond) & 0xFFFF;
+            Logger.Debug($"Initial repId: {_currentRepId}");
+
             EventManager = new(this);
-            EntityManager = new();
+            EntityManager = new(this);
             RegionManager = new(EntityManager);
 
             _powerMessageHandler = new(EventManager);
-
-            _serverManager = serverManager;
-            Id = id;
 
             // Start main game loop
             Thread gameThread = new(Update) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };

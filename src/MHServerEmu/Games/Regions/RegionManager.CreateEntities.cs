@@ -229,7 +229,7 @@ namespace MHServerEmu.Games.Regions
                 }
             }
 
-            ulong numEntities = _entityManager.GetLastEntityId();
+            ulong numEntities = _entityManager.PeekNextEntityId();
 
             switch (region.Prototype)
             {
@@ -683,7 +683,7 @@ namespace MHServerEmu.Games.Regions
                     break;
 
             }
-            return _entityManager.GetLastEntityId() - numEntities;
+            return _entityManager.PeekNextEntityId() - numEntities;
         }
     }
 }
