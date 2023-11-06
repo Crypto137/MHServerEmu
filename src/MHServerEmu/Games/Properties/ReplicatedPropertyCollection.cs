@@ -32,12 +32,10 @@ namespace MHServerEmu.Games.Properties
             return _propertyCollection.GetPropertyByEnum(propertyEnum);
         }
 
-        public override string ToString()
+        protected override void BuildString(StringBuilder sb)
         {
-            StringBuilder sb = new();
-            sb.AppendLine($"ReplicationId: {ReplicationId}");
+            base.BuildString(sb);
             sb.AppendLine(_propertyCollection.ToString());
-            return sb.ToString();
         }
     }
 }
