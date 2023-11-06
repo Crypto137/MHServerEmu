@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Generators.Prototypes
 {
@@ -6,6 +7,15 @@ namespace MHServerEmu.Games.Generators.Prototypes
     {
         public StaticAreaPrototype[] StaticAreas;
         public AreaConnectionPrototype[] Connections;
+
+        public override ulong GetStartAreaRef(Region region) {
+
+            if (StaticAreas != null && StaticAreas.Length > 0)
+                return StaticAreas[0].Area;
+
+            return 0;
+        }
+
         public StaticRegionGeneratorPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(StaticRegionGeneratorPrototype), proto); }
     }
 

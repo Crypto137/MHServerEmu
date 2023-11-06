@@ -1,4 +1,6 @@
-﻿using MHServerEmu.Games.GameData.Prototypes;
+﻿using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Generators.Prototypes
 {
@@ -81,7 +83,40 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public ulong[] Keywords;
 
         public RegionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RegionPrototype), proto); }
+
+        public ulong GetDefaultArea(Region region)
+        {
+            ulong defaultArea = 0;
+
+            if (StartTarget != 0)
+            {
+                RegionConnectionTargetPrototype target = new(StartTarget.GetPrototype());
+                defaultArea = target.Area;
+            }
+            
+            if (defaultArea == 0)
+            {
+                return RegionGenerator.GetStartAreaRef(region); // TODO check return
+            }
+
+            return defaultArea;
+        }
     }
+
+    public class RegionConnectionTargetPrototype : Prototype
+    {
+        public ulong Region;
+        public ulong Area;
+        public ulong Cell;
+        public ulong Entity;
+        public bool EnabledByDefault;
+        public ulong IntroKismetSeq;
+        public ulong Name;
+        public int UISortOrder;
+        public RegionConnectionTargetPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RegionConnectionTargetPrototype), proto); }
+    }
+
+    #region Enum
     public enum MissionTrackerFilterType
     {
 	    None = -1,
@@ -121,6 +156,7 @@ namespace MHServerEmu.Games.Generators.Prototypes
 	    PvPQueue = 1,
 	    DailyQueue = 5,
     }
+    #endregion
 
     public class RegionDifficultySettingsPrototype : Prototype
     {

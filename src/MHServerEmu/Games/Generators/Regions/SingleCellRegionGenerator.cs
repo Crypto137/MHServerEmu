@@ -6,6 +6,7 @@ namespace MHServerEmu.Games.Generators.Regions
     {
         public override void GenerateRegion(int randomSeed, Region region)
         {
+            StartArea = null;
 
         }
     }

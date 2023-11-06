@@ -6,7 +6,7 @@ using MHServerEmu.Networking;
 
 namespace MHServerEmu.Games.Regions
 {
-    public class Region
+    public partial class Region
     {
         public RegionPrototypeId Prototype { get; }
         public ulong Id { get; }

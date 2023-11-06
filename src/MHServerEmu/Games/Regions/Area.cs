@@ -2,7 +2,7 @@
 
 namespace MHServerEmu.Games.Regions
 {
-    public class Area
+    public partial class Area
     {
         public uint Id { get; }
         public AreaPrototypeId Prototype { get; }

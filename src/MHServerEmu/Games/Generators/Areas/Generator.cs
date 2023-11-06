@@ -1,7 +1,7 @@
 ﻿using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Regions;
-using Random = MHServerEmu.Common.Random;
+using MHServerEmu.Common;
 
 
 namespace MHServerEmu.Games.Generators.Areas
@@ -18,9 +18,9 @@ namespace MHServerEmu.Games.Generators.Areas
             // Region = Area.Region
         }
 
-        public virtual void Generate(Random random, RegionGenerator regionGenerator) { }
+        public virtual void Generate(GRandom random, RegionGenerator regionGenerator) { }
 
-        public virtual Aabb PreGenerate(Random random) { return null; }
+        public virtual Aabb PreGenerate(GRandom random) { return null; }
 
 
     }

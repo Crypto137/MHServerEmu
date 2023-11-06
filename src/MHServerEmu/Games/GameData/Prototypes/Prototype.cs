@@ -168,19 +168,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
 
+        public void LoadDefault(Type protoType, Blueprint blueprint) // TODO make Dictonary with defaults
+        {
+            // ulong defProto = blueprint.DefaultPrototypeId;
+           // Logger.Info($"Default{GameDatabase.GetPrototypeName(defProto)}");
+            Prototype defaultData = GameDatabase.DataDirectory.GetBlueprintDefaultPrototype(blueprint);
+            //Type protoType = Type.GetType("MHServerEmu.Games.Generators.Prototypes." + blueprint.RuntimeBinding); 
+            FillFieldsFromData(defaultData, blueprint, protoType);
+        }
+
         public void FillPrototype(Type protoType, Prototype proto)
         {
             Blueprint blueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(proto);
 
-            if (blueprint.RuntimeBinding != protoType.Name)
-            {
-                //Logger.Info($"RuntimeBinding {blueprint.RuntimeBinding} for {protoType.Name}");
-                return;
-            }
-
-            Prototype defaultData = GameDatabase.DataDirectory.GetBlueprintDefaultPrototype(blueprint); 
-
-            FillFieldsFromData(defaultData, blueprint, protoType);
+            LoadDefault(protoType, blueprint);
 
             ulong parent = proto.ParentId;
             List<Prototype> parents = new();
