@@ -11,6 +11,7 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -46,6 +47,8 @@ namespace MHServerEmu.Games
         public ConcurrentDictionary<FrontendClient, Player> PlayerDict { get; } = new();
 
         public ulong CurrentRepId { get => ++_currentRepId; }
+        // We use a dictionary property instead of AccessMessageHandlerHash(), which is essentially just a getter
+        public Dictionary<ulong, ArchiveMessageHandler> MessageHandlerDict { get; } = new();
 
         public Game(ServerManager serverManager, ulong id)
         {
