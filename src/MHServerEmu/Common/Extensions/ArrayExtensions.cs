@@ -1,4 +1,6 @@
-﻿namespace MHServerEmu.Common.Extensions
+﻿using Google.ProtocolBuffers;
+
+namespace MHServerEmu.Common.Extensions
 {
     public static class ArrayExtensions
     {
@@ -22,20 +24,59 @@
             0x0f, 0x8f, 0x4f, 0xcf, 0x2f, 0xaf, 0x6f, 0xef, 0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff
         };
 
+        /// <summary>
+        /// Enumerates a generic array.
+        /// </summary>
         public static IEnumerable<T> Enumerate<T>(this T[] array, int start, int count)
         {
             if (array == null)
-                throw new ArgumentNullException("array");
+                throw new ArgumentNullException(nameof(array));
 
             for (int i = 0; i < count; i++)
                 yield return array[start + i];
         }
 
+        #region Hex/ByteString Helpers
+
+        /// <summary>
+        /// Converts a byte array to a hex string.
+        /// </summary>
         public static string ToHexString(this byte[] byteArray)
         {
             return byteArray.Aggregate("", (current, b) => current + b.ToString("X2"));
         }
 
+        /// <summary>
+        /// Converts a byte array to a protobuf-compatible ByteString.
+        /// </summary>
+        public static ByteString ToByteString(this byte[] byteArray)
+        {
+            return ByteString.CopyFrom(byteArray);
+        }
+        
+        /// <summary>
+        /// Converts a hex string to a byte array.
+        /// </summary>
+        public static byte[] ToByteArray(this string hexString)
+        {
+            return Convert.FromHexString(hexString);
+        }
+
+        /// <summary>
+        /// Converts a hex string to a protobuf-compatible ByteString.
+        /// </summary>
+        public static ByteString ToByteString(this string hexString)
+        {
+            return hexString.ToByteArray().ToByteString();
+        }
+
+        #endregion
+
+        #region Bit/Byte Manipulation
+
+        /// <summary>
+        /// Reverses the order of bytes in a ulong value.
+        /// </summary>
         public static ulong ReverseBytes(this ulong value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
@@ -43,6 +84,9 @@
             return BitConverter.ToUInt64(bytes);
         }
 
+        /// <summary>
+        /// Reverses the order of bits in a ulong value.
+        /// </summary>
         public static ulong ReverseBits(this ulong value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
@@ -55,12 +99,19 @@
             return BitConverter.ToUInt64(bytes);
         }
 
-        #region uint <-> bool[] conversion
+        #endregion
+
+        #region uint <-> bool[] Conversion
+
         /* uint mask cheat sheet for getting bools (1 << i)
          0 == 0x1,       1 == 0x2,       2 == 0x4,       3 == 0x8,       4 == 0x10,      5 == 0x20,     6 == 0x40,     7 == 0x80,
          8 == 0x100,     9 == 0x200,    10 == 0x400,    11 == 0x800,    12 == 0x1000,   13 == 0x2000,  14 == 0x4000,  15 == 0x8000
         16 == 0x10000,  17 == 0x20000,  18 == 0x40000,  19 == 0x80000,  20 == 0x100000
         */
+
+        /// <summary>
+        /// Converts a uint to a bool array of flags. A uint can hold up to 32 bools.
+        /// </summary>
         public static bool[] ToBoolArray(this uint value, int arraySize = 32)
         {
             if (arraySize > 32) throw new("Cannot decode more than 32 bools from a uint.");
@@ -73,6 +124,9 @@
             return output;
         }
 
+        /// <summary>
+        /// Converts a bool array of flags to a uint. A uint can hold up to 32 bools.
+        /// </summary>
         public static uint ToUInt32(this bool[] boolArray)
         {
             if (boolArray.Length > 32) throw new("Cannot encode more than 32 bools in a uint.");

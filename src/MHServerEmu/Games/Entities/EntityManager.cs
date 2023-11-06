@@ -34,9 +34,10 @@ namespace MHServerEmu.Games.Entities
 
         public EntityManager()
         {
-            // Initialize a waypoint entity
-            EntityBaseData waypointBaseData = new(ByteString.CopyFrom(Convert.FromHexString("200C839F01200020")));
-            Waypoint = new(waypointBaseData, ByteString.CopyFrom(Convert.FromHexString("20F4C10206000000CD80018880FCFF99BF968110CCC00202CC800302CD40D58280DE868098044DA1A1A4FE0399C00183B8030000000000")));
+            // Initialize a waypoint entity from hardcoded data
+            ByteString waypointBaseData = "200C839F01200020".ToByteString();
+            ByteString waypointArchiveData = "20F4C10206000000CD80018880FCFF99BF968110CCC00202CC800302CD40D58280DE868098044DA1A1A4FE0399C00183B8030000000000".ToByteString();
+            Waypoint = new(new(waypointBaseData), waypointArchiveData);
 
             // minihack: force default player and avatar entity message initialization on construction
             // so that there isn't a lag when a player logs in for the first time after the server starts
