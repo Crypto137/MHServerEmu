@@ -45,5 +45,11 @@ namespace MHServerEmu.Games.Common
 
 
         public override string ToString() => $"Min:{Min} Max:{Max}";
+
+        public Vector3 GetCenter()
+        {
+            Vector3 size = Max - Min;
+            return Min + (size / 2.0f);
+        }
     }
 }
