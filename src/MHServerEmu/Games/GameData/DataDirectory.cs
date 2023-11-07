@@ -10,7 +10,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 namespace MHServerEmu.Games.GameData
 {
     /// <summary>
-    /// The class that manages all loaded data.
+    /// Manages all loaded game data.
     /// </summary>
     public class DataDirectory
     {
@@ -117,7 +117,7 @@ namespace MHServerEmu.Games.GameData
             string filePath = reader.ReadFixedString16().Replace('\\', '/');
 
             GameDatabase.AssetTypeRefManager.AddDataRef(dataId, filePath);
-            LoadedAssetTypeRecord record = AssetDirectory.CreateAssetTypeRecord(dataId, flags);
+            var record = AssetDirectory.CreateAssetTypeRecord(dataId, flags);
             record.AssetType = new(gpakDict[$"Calligraphy/{filePath}"], AssetDirectory, dataId, assetTypeGuid);
 
         }
