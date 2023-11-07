@@ -1,5 +1,4 @@
-﻿using System.Text;
-using K4os.Compression.LZ4;
+﻿using K4os.Compression.LZ4;
 using MHServerEmu.Common.Logging;
 
 namespace MHServerEmu.Games.GameData.Gpak
@@ -22,33 +21,25 @@ namespace MHServerEmu.Games.GameData.Gpak
             }
 
             // Read GPAK file
-            using (FileStream fileStream = File.OpenRead(gpakFilePath))
+            using (FileStream stream = File.OpenRead(gpakFilePath))
+            using (BinaryReader reader = new(stream))
             {
-                byte[] buffer = new byte[1024 * 1024 * 6];  // 6 MB should be enough for the largest file (compressed Prototype.directory)
-
                 // Read GPAK file header
-                Header = ReadInt(fileStream, buffer);
-                Version = ReadInt(fileStream, buffer);
-                Entries = new GpakEntry[ReadInt(fileStream, buffer)];
+                Header = reader.ReadInt32();
+                Version = reader.ReadInt32();
+                Entries = new GpakEntry[reader.ReadInt32()];
 
                 // Read metadata for all entries
                 for (int i = 0; i < Entries.Length; i++)
-                {
-                    ulong id = ReadULong(fileStream, buffer);
-                    string filePath = ReadString(fileStream, buffer, ReadInt(fileStream, buffer));
-                    int modTime = ReadInt(fileStream, buffer);
-                    int offset = ReadInt(fileStream, buffer);
-                    int compressedSize = ReadInt(fileStream, buffer);
-                    int uncompressedSize = ReadInt(fileStream, buffer);
-
-                    Entries[i] = new(id, filePath, modTime, offset, compressedSize, uncompressedSize);
-                }
+                    Entries[i] = new(reader);
 
                 // Decompress the actual data
+                byte[] buffer = new byte[1024 * 1024 * 6];  // 6 MB should be enough for the largest file (compressed Prototype.directory)
+
                 foreach (GpakEntry entry in Entries)
                 {
                     byte[] data = new byte[entry.UncompressedSize];
-                    fileStream.Read(buffer, 0, entry.CompressedSize);
+                    stream.Read(buffer, 0, entry.CompressedSize);
                     LZ4Codec.Decode(buffer, 0, entry.CompressedSize, data, 0, data.Length);
                     entry.Data = data;
                 }
@@ -94,24 +85,6 @@ namespace MHServerEmu.Games.GameData.Gpak
                 dict.Add(entry.FilePath, entry.Data);
 
             return dict;
-        }
-
-        private static int ReadInt(FileStream fileStream, byte[] buffer)
-        {
-            fileStream.Read(buffer, 0, 4);
-            return BitConverter.ToInt32(buffer, 0);
-        }
-
-        private static ulong ReadULong(FileStream fileStream, byte[] buffer)
-        {
-            fileStream.Read(buffer, 0, 8);
-            return BitConverter.ToUInt64(buffer, 0);
-        }
-
-        private static string ReadString(FileStream fileStream, byte[] buffer, int length)
-        {
-            fileStream.Read(buffer, 0, length);
-            return Encoding.UTF8.GetString(buffer, 0, length);
         }
     }
 }
