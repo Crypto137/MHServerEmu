@@ -16,6 +16,15 @@ namespace MHServerEmu.Games.GameData
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private static readonly string[] DataDirectoryFiles = new string[]
+        {
+            "Calligraphy/Curve.directory",
+            "Calligraphy/Type.directory",
+            "Calligraphy/Blueprint.directory",
+            "Calligraphy/Prototype.directory",
+            "Calligraphy/Replacement.directory"
+        };
+
         private readonly Dictionary<ulong, Blueprint> _blueprintDict = new();
 
         private readonly Dictionary<ulong, PrototypeDataRefRecord> _prototypeRecordDict = new();
@@ -36,71 +45,48 @@ namespace MHServerEmu.Games.GameData
             // Convert GPAK file to a dictionary for easy access to all of its entries
             var gpakDict = calligraphyGpak.ToDictionary();
 
-            // Initialize asset directory
-            AssetDirectory = new();
-
-            using (MemoryStream stream = new(gpakDict["Calligraphy/Type.directory"]))
-            using (BinaryReader reader = new(stream))
-            {
-                CalligraphyHeader header = reader.ReadCalligraphyHeader();      // TDR
-                int recordCount = reader.ReadInt32();
-                for (int i = 0; i < recordCount; i++)
-                    ReadTypeDirectoryEntry(reader, gpakDict);
-            }
-
-            Logger.Info($"Parsed {AssetDirectory.AssetCount} assets of {AssetDirectory.AssetTypeCount} types");
-
-            // Initialize curve directory
+            // Create subdirectories
             CurveDirectory = new();
-
-            using (MemoryStream stream = new(gpakDict["Calligraphy/Curve.directory"]))
-            using (BinaryReader reader = new(stream))
-            {
-                CalligraphyHeader header = reader.ReadCalligraphyHeader();      // CDR
-                int recordCount = reader.ReadInt32();
-                for (int i = 0; i < recordCount; i++)
-                    ReadCurveDirectoryEntry(reader, gpakDict);
-            }
-
-            Logger.Info($"Parsed {CurveDirectory.RecordCount} curves");
-
-            // Initialize blueprint directory
-            using (MemoryStream stream = new(gpakDict["Calligraphy/Blueprint.directory"]))
-            using (BinaryReader reader = new(stream))
-            {
-                CalligraphyHeader header = reader.ReadCalligraphyHeader();      // BDR
-                int recordCount = reader.ReadInt32();
-                for (int i = 0; i < recordCount; i++)
-                    ReadBlueprintDirectoryEntry(reader, gpakDict);
-            }
-
-            Logger.Info($"Parsed {_blueprintDict.Count} blueprints");
-
-            // Initialize prototype directory
-            using (MemoryStream stream = new(gpakDict["Calligraphy/Prototype.directory"]))
-            using (BinaryReader reader = new(stream))
-            {
-                CalligraphyHeader header = reader.ReadCalligraphyHeader();      // PDR
-                int recordCount = reader.ReadInt32();
-                for (int i = 0; i < recordCount; i++)
-                    ReadPrototypeDirectoryEntry(reader, gpakDict);
-            }
-
-            // Load resource prototypes
-            CreatePrototypeDataRefsForDirectory(resourceGpak);
-
-            Logger.Info($"Parsed {_prototypeDict.Count} prototype files");
-
-            // Initialize replacement directory
+            AssetDirectory = new();
             ReplacementDirectory = new();
 
-            using (MemoryStream stream = new(gpakDict["Calligraphy/Replacement.directory"]))
-            using (BinaryReader reader = new(stream))
+            // Load all directories
+            for (int i = 0; i < DataDirectoryFiles.Length; i++)
             {
-                CalligraphyHeader header = reader.ReadCalligraphyHeader();      // RDR
-                int recordCount = reader.ReadInt32();
-                for (int i = 0; i < recordCount; i++)
-                    ReadReplacementDirectoryEntry(reader);
+                using (MemoryStream stream = new(gpakDict[DataDirectoryFiles[i]]))
+                using (BinaryReader reader = new(stream))
+                {
+                    var header = reader.ReadCalligraphyHeader();
+                    int recordCount = reader.ReadInt32();
+
+                    switch (header.Magic)
+                    {
+                        case "CDR":     // Curves
+                            for (int j = 0; j < recordCount; j++) ReadCurveDirectoryEntry(reader, gpakDict);
+                            Logger.Info($"Parsed {CurveDirectory.RecordCount} curves");
+                            break;
+
+                        case "TDR":     // Assets
+                            for (int j = 0; j < recordCount; j++) ReadTypeDirectoryEntry(reader, gpakDict);
+                            Logger.Info($"Parsed {AssetDirectory.AssetCount} assets of {AssetDirectory.AssetTypeCount} types");
+                            break;
+
+                        case "BDR":     // Blueprints
+                            for (int j = 0; j < recordCount; j++) ReadBlueprintDirectoryEntry(reader, gpakDict);
+                            Logger.Info($"Parsed {_blueprintDict.Count} blueprints");
+                            break;
+
+                        case "PDR":     // Prototypes
+                            for (int j = 0; j < recordCount; j++) ReadPrototypeDirectoryEntry(reader, gpakDict);
+                            CreatePrototypeDataRefsForDirectory(resourceGpak);  // Load resource prototypes
+                            Logger.Info($"Parsed {_prototypeDict.Count} prototype files");
+                            break;
+
+                        case "RDR":     // Replacement
+                            for (int j = 0; j < recordCount; j++) ReadReplacementDirectoryEntry(reader);
+                            break;
+                    }
+                }
             }
 
             // old hierarchy init
@@ -119,7 +105,6 @@ namespace MHServerEmu.Games.GameData
             GameDatabase.AssetTypeRefManager.AddDataRef(dataId, filePath);
             var record = AssetDirectory.CreateAssetTypeRecord(dataId, flags);
             record.AssetType = new(gpakDict[$"Calligraphy/{filePath}"], AssetDirectory, dataId, assetTypeGuid);
-
         }
 
         private void ReadCurveDirectoryEntry(BinaryReader reader, Dictionary<string, byte[]> gpakDict)
