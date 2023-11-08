@@ -27,9 +27,8 @@ namespace MHServerEmu.Games.GameData
 
         private readonly Dictionary<ulong, Blueprint> _blueprintDict = new();
 
-        private readonly Dictionary<ulong, PrototypeDataRefRecord> _prototypeRecordDict = new();
-        private readonly Dictionary<ulong, object> _prototypeDict = new();
-        private readonly Dictionary<ulong, ulong> _prototypeGuidToDataRefDict = new();
+        private readonly Dictionary<ulong, PrototypeDataRefRecord> _prototypeRecordDict = new();    // PrototypeId -> PrototypeDataRefRecord
+        private readonly Dictionary<ulong, ulong> _prototypeGuidToDataRefDict = new();              // PrototypeGuid -> PrototypeId
 
         private readonly Dictionary<Prototype, Blueprint> _prototypeBlueprintDict = new();  // .defaults prototype -> blueprint
 
@@ -79,7 +78,7 @@ namespace MHServerEmu.Games.GameData
                         case "PDR":     // Prototypes
                             for (int j = 0; j < recordCount; j++) ReadPrototypeDirectoryEntry(reader, gpakDict);
                             CreatePrototypeDataRefsForDirectory(resourceGpak);  // Load resource prototypes
-                            Logger.Info($"Parsed {_prototypeDict.Count} prototype files");
+                            Logger.Info($"Parsed {_prototypeRecordDict.Count} prototype files");
                             break;
 
                         case "RDR":     // Replacement
@@ -168,18 +167,20 @@ namespace MHServerEmu.Games.GameData
             _prototypeGuidToDataRefDict.Add(prototypeGuid, prototypeId);
 
             // Add a new prototype record
-            _prototypeRecordDict.Add(prototypeId, new()
+            PrototypeDataRefRecord record = new()
             {
                 PrototypeId = prototypeId,
                 PrototypeGuid = prototypeGuid,
                 BlueprintId = blueprintId,
                 Flags = flags,
                 IsCalligraphyPrototype = true
-            });
+            };
+
+            _prototypeRecordDict.Add(prototypeId, record);
 
             // Load the prototype
             PrototypeFile prototypeFile = new(gpakDict[$"Calligraphy/{filePath}"]);
-            _prototypeDict.Add(prototypeId, prototypeFile.Prototype);
+            record.Prototype = prototypeFile.Prototype;
         }
 
         private void AddResource(string filePath, byte[] data)
@@ -189,31 +190,31 @@ namespace MHServerEmu.Games.GameData
             GameDatabase.PrototypeRefManager.AddDataRef(prototypeId, filePath);
 
             // Add a new prototype record
-            _prototypeRecordDict.Add(prototypeId, new()
+            PrototypeDataRefRecord record = new()
             {
                 PrototypeId = prototypeId,
                 PrototypeGuid = 0,
                 BlueprintId = 0,
                 Flags = 0,
                 IsCalligraphyPrototype = false
-            });
+            };
+
+            _prototypeRecordDict.Add(prototypeId, record);
 
             // Load the resource
-            object resource;
             string extension = Path.GetExtension(filePath);
-
-            switch (extension)
+            object resource = extension switch
             {
-                case ".cell":       resource = new CellPrototype(data);         break;
-                case ".district":   resource = new DistrictPrototype(data);     break;
-                case ".encounter":  resource = new EncounterPrototype(data);    break;
-                case ".propset":    resource = new PropSetPrototype(data);      break;
-                case ".prop":       resource = new PropPrototype(data);         break;
-                case ".ui":         resource = new UIPrototype(data);           break;
-                default:            throw new($"Unsupported resource type ({extension}).");
-            }
+                ".cell" =>      new CellPrototype(data),
+                ".district" =>  new DistrictPrototype(data),
+                ".encounter" => new EncounterPrototype(data),
+                ".propset" =>   new PropSetPrototype(data),
+                ".prop" =>      new PropPrototype(data),
+                ".ui" =>        new UIPrototype(data),
+                _ =>            throw new NotImplementedException($"Unsupported resource type ({extension})."),
+            };
 
-            _prototypeDict.Add(prototypeId, resource);
+            record.Prototype = resource;
         }
 
         private void InitializeHierarchyCache()
@@ -242,34 +243,35 @@ namespace MHServerEmu.Games.GameData
 
         public ulong GetPrototypeDataRefByGuid(ulong guid)
         {
-            if (_prototypeGuidToDataRefDict.TryGetValue(guid, out ulong id))
-                return id;
+            if (_prototypeGuidToDataRefDict.TryGetValue(guid, out ulong id) == false)
+                return 0;
 
-            return 0;
+            return id;
         }
 
         public ulong GetPrototypeGuid(ulong id)
         {
-            if (_prototypeRecordDict.TryGetValue(id, out PrototypeDataRefRecord record))
-                return record.PrototypeGuid;
+            if (_prototypeRecordDict.TryGetValue(id, out PrototypeDataRefRecord record) == false)
+                return 0;
 
-            return 0;
+            return record.PrototypeGuid;
         }
 
         public Blueprint GetBlueprint(ulong id)
         {
-            if (_blueprintDict.TryGetValue(id, out Blueprint blueprint))
-                return blueprint;
+            if (_blueprintDict.TryGetValue(id, out Blueprint blueprint) == false)
+                return null;
 
-            return null;
+            return blueprint;
         }
 
         public T GetPrototype<T>(ulong id)
         {
-            if (_prototypeDict.TryGetValue(id, out object prototype))
-                return (T)prototype;
+            var record = GetPrototypeDataRefRecord(id);
+            if (record == null) return default;
+            if (record.Prototype == null) return default;
 
-            return default;
+            return (T)record.Prototype;
         }
 
         public Prototype GetBlueprintDefaultPrototype(Blueprint blueprint) => GetPrototype<Prototype>(blueprint.DefaultPrototypeId);
@@ -291,14 +293,23 @@ namespace MHServerEmu.Games.GameData
 
         public List<ulong> GetPowerPropertyIdList(string filter) => _prototypeEnumManager.GetPowerPropertyIdList(filter);   // TO BE REMOVED: temp bruteforcing of power property ids
 
-
-        // Helper methods
         public bool IsCalligraphyPrototype(ulong prototypeId)
         {
-            if (_prototypeRecordDict.TryGetValue(prototypeId, out PrototypeDataRefRecord record))
-                return record.IsCalligraphyPrototype;
+            if (_prototypeRecordDict.TryGetValue(prototypeId, out PrototypeDataRefRecord record) == false)
+                return false;
 
-            return false;
+            return record.IsCalligraphyPrototype;
+        }
+
+        private PrototypeDataRefRecord GetPrototypeDataRefRecord(ulong prototypeId)
+        {
+            if (_prototypeRecordDict.TryGetValue(prototypeId, out var record) == false)
+            {
+                Logger.Warn($"PrototypeId {prototypeId} has no data ref record in the data directory");
+                return null;
+            }
+
+            return record;
         }
 
         #endregion
@@ -310,7 +321,7 @@ namespace MHServerEmu.Games.GameData
             return AssetDirectory.AssetCount > 0
                 && CurveDirectory.RecordCount > 0
                 && _blueprintDict.Count > 0
-                && _prototypeDict.Count > 0
+                && _prototypeRecordDict.Count > 0
                 && ReplacementDirectory.RecordCount > 0;
         }
 
@@ -325,14 +336,15 @@ namespace MHServerEmu.Games.GameData
         }
 
         #endregion
-    }
 
-    public class PrototypeDataRefRecord
-    {
-        public ulong PrototypeId { get; set; }
-        public ulong PrototypeGuid { get; set; }
-        public ulong BlueprintId { get; set; }
-        public byte Flags { get; set; }
-        public bool IsCalligraphyPrototype { get; set; }
+        class PrototypeDataRefRecord
+        {
+            public ulong PrototypeId { get; set; }
+            public ulong PrototypeGuid { get; set; }
+            public ulong BlueprintId { get; set; }
+            public byte Flags { get; set; }
+            public bool IsCalligraphyPrototype { get; set; }
+            public object Prototype { get; set; }
+        }
     }
 }
