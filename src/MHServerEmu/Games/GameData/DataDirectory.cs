@@ -25,12 +25,13 @@ namespace MHServerEmu.Games.GameData
             "Calligraphy/Replacement.directory"
         };
 
-        private readonly Dictionary<ulong, Blueprint> _blueprintDict = new();
+        private readonly Dictionary<ulong, LoadedBlueprintRecord> _blueprintRecordDict = new();     // BlueprintId -> LoadedBlueprintRecord
+        private readonly Dictionary<ulong, ulong> _blueprintGuidToDataRefDict = new();              // BlueprintGuid -> BlueprintId
 
         private readonly Dictionary<ulong, PrototypeDataRefRecord> _prototypeRecordDict = new();    // PrototypeId -> PrototypeDataRefRecord
         private readonly Dictionary<ulong, ulong> _prototypeGuidToDataRefDict = new();              // PrototypeGuid -> PrototypeId
 
-        private readonly Dictionary<Prototype, Blueprint> _prototypeBlueprintDict = new();  // .defaults prototype -> blueprint
+        private readonly Dictionary<Prototype, Blueprint> _prototypeBlueprintDict = new();          // .defaults prototype -> blueprint
 
         // Temporary helper class for getting prototype enums until we implement prototype class hierarchy properly
         private PrototypeEnumManager _prototypeEnumManager; 
@@ -72,7 +73,7 @@ namespace MHServerEmu.Games.GameData
 
                         case "BDR":     // Blueprints
                             for (int j = 0; j < recordCount; j++) ReadBlueprintDirectoryEntry(reader, gpakDict);
-                            Logger.Info($"Parsed {_blueprintDict.Count} blueprints");
+                            Logger.Info($"Parsed {_blueprintRecordDict.Count} blueprints");
                             break;
 
                         case "PDR":     // Prototypes
@@ -151,13 +152,18 @@ namespace MHServerEmu.Games.GameData
 
         private void LoadBlueprint(ulong id, ulong guid, byte flags, Dictionary<string, byte[]> gpakDict)
         {
-            // Blueprint deserialization is not yet properly implemented
+            // Add guid lookup
+            _blueprintGuidToDataRefDict[guid] = id;
+
+            // Deserialize (blueprint deserialization is not yet properly implemented)
             Blueprint blueprint = new(gpakDict[$"Calligraphy/{GameDatabase.GetBlueprintName(id)}"]);
-            _blueprintDict.Add(id, blueprint);
 
             // Add field name refs when loading blueprints
             foreach (BlueprintMember member in blueprint.Members)
                 GameDatabase.StringRefManager.AddDataRef(member.FieldId, member.FieldName);
+
+            // Add a new blueprint record
+            _blueprintRecordDict.Add(id, new(blueprint, flags));
         }
 
         private void AddCalligraphyPrototype(ulong prototypeId, ulong prototypeGuid, ulong blueprintId, byte flags, string filePath, Dictionary<string, byte[]> gpakDict)
@@ -222,8 +228,8 @@ namespace MHServerEmu.Games.GameData
             // not yet properly implemented
 
             // .defaults prototype -> blueprint
-            foreach (var kvp in _blueprintDict)
-                _prototypeBlueprintDict.Add(GetPrototype<Prototype>(kvp.Value.DefaultPrototypeId), kvp.Value);
+            foreach (var kvp in _blueprintRecordDict)
+                _prototypeBlueprintDict.Add(GetPrototype<Prototype>(kvp.Value.Blueprint.DefaultPrototypeId), kvp.Value.Blueprint);
 
             // enums
             _prototypeEnumManager = new(this);
@@ -259,10 +265,10 @@ namespace MHServerEmu.Games.GameData
 
         public Blueprint GetBlueprint(ulong id)
         {
-            if (_blueprintDict.TryGetValue(id, out Blueprint blueprint) == false)
+            if (_blueprintRecordDict.TryGetValue(id, out var record) == false)
                 return null;
 
-            return blueprint;
+            return record.Blueprint;
         }
 
         public T GetPrototype<T>(ulong id)
@@ -320,7 +326,7 @@ namespace MHServerEmu.Games.GameData
         {
             return AssetDirectory.AssetCount > 0
                 && CurveDirectory.RecordCount > 0
-                && _blueprintDict.Count > 0
+                && _blueprintRecordDict.Count > 0
                 && _prototypeRecordDict.Count > 0
                 && ReplacementDirectory.RecordCount > 0;
         }
@@ -336,6 +342,18 @@ namespace MHServerEmu.Games.GameData
         }
 
         #endregion
+
+        struct LoadedBlueprintRecord
+        {
+            public Blueprint Blueprint { get; set; }
+            public byte Flags { get; set; }
+
+            public LoadedBlueprintRecord(Blueprint blueprint, byte flags)
+            {
+                Blueprint = blueprint;
+                Flags = flags;
+            }
+        }
 
         class PrototypeDataRefRecord
         {
