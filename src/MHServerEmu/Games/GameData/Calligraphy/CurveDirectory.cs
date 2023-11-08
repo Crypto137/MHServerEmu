@@ -15,24 +15,24 @@
 
         public CurveRecord GetCurveRecord(ulong id)
         {
-            if (_curveRecordDict.TryGetValue(id, out CurveRecord record))
-                return record;
+            if (_curveRecordDict.TryGetValue(id, out CurveRecord record) == false)
+                return null;
 
-            return null;
+            return record;
         }
 
         public Curve GetCurve(ulong id)
         {
-            if (_curveRecordDict.TryGetValue(id, out CurveRecord record))
-                return record.Curve;
+            if (_curveRecordDict.TryGetValue(id, out CurveRecord record) == false)
+                return null;
 
-            return null;
+            return record.Curve;
         }
-    }
 
-    public class CurveRecord
-    {
-        public Curve Curve { get; set; }
-        public byte Flags { get; set; }
+        public class CurveRecord
+        {
+            public Curve Curve { get; set; }
+            public byte Flags { get; set; }
+        }
     }
 }

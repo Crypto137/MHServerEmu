@@ -39,19 +39,19 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         {
             return _assets.FirstOrDefault(asset => asset.Id == id);
         }
-    }
 
-    public readonly struct AssetValue
-    {
-        public ulong Id { get; }
-        public ulong Guid { get; }
-        public byte Flags { get; }
-
-        public AssetValue(BinaryReader reader)
+        public readonly struct AssetValue
         {
-            Id = reader.ReadUInt64();
-            Guid = reader.ReadUInt64();
-            Flags = reader.ReadByte();
+            public ulong Id { get; }
+            public ulong Guid { get; }
+            public byte Flags { get; }
+
+            public AssetValue(BinaryReader reader)
+            {
+                Id = reader.ReadUInt64();
+                Guid = reader.ReadUInt64();
+                Flags = reader.ReadByte();
+            }
         }
     }
 }

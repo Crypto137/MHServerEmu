@@ -71,14 +71,14 @@
             _assetIdToTypeIdDict.Add(assetId, assetTypeId);
             _assetGuidToIdDict.Add(assetGuid, assetId);
         }
-    }
 
-    /// <summary>
-    /// Represents a loaded AssetType in the AssetDirectory.
-    /// </summary>
-    public class LoadedAssetTypeRecord
-    {
-        public AssetType AssetType { get; set; }
-        public byte Flags { get; set; }
+        /// <summary>
+        /// Represents a loaded AssetType in the AssetDirectory.
+        /// </summary>
+        public class LoadedAssetTypeRecord
+        {
+            public AssetType AssetType { get; set; }
+            public byte Flags { get; set; }
+        }
     }
 }

@@ -114,7 +114,7 @@ namespace MHServerEmu.Games.GameData
             string filePath = reader.ReadFixedString16().Replace('\\', '/');
 
             GameDatabase.CurveRefManager.AddDataRef(curveId, filePath);
-            CurveRecord record = CurveDirectory.CreateCurveRecord(curveId, flags);
+            var record = CurveDirectory.CreateCurveRecord(curveId, flags);
             record.Curve = new(gpakDict[$"Calligraphy/{filePath}"]);
         }
 
