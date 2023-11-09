@@ -3,6 +3,8 @@ using MHServerEmu.Games.GameData.Calligraphy;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
+    // TODO: Move Calligraphy prototype deserialization to CalligraphySerializer
+
     public class PrototypeFile
     {
         public CalligraphyHeader Header { get; }
@@ -19,31 +21,39 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
+    public readonly struct PrototypeDataHeader
+    {
+        public bool ReferenceExists { get; }
+        public bool DataExists { get; }
+        public bool PolymorphicData { get; }
+        public ulong ReferenceType { get; }     // Parent prototype id, invalid (0) for .defaults
+
+        public PrototypeDataHeader(BinaryReader reader)
+        {
+            byte flags = reader.ReadByte();
+            ReferenceExists = (flags & 0x01) > 0;
+            DataExists = (flags & 0x02) > 0;
+            PolymorphicData = (flags & 0x04) > 0;
+
+            ReferenceType = ReferenceExists ? reader.ReadUInt64() : 0;
+        }
+    }
+
     public class Prototype
     {
-        public byte Flags { get; }
-        public ulong ParentId { get; }  // 0 for .defaults
+        public PrototypeDataHeader Header { get; }
         public PrototypeEntry[] Entries { get; }
 
         public Prototype() { }
 
         public Prototype(BinaryReader reader)
         {
-            Flags = reader.ReadByte();
+            Header = new(reader);
+            if (Header.DataExists == false) return;
 
-            if ((Flags & 0x01) > 0)      // flag0 == contains parent id
-            {
-                ParentId = reader.ReadUInt64();
-
-                if ((Flags & 0x02) > 0)  // flag1 == contains data
-                {
-                    Entries = new PrototypeEntry[reader.ReadUInt16()];
-                    for (int i = 0; i < Entries.Length; i++)
-                        Entries[i] = new(reader);
-                }
-            }
-
-            // flag2 == ??
+            Entries = new PrototypeEntry[reader.ReadUInt16()];
+            for (int i = 0; i < Entries.Length; i++)
+                Entries[i] = new(reader);
         }
 
         public PrototypeEntry GetEntry(ulong blueprintId)

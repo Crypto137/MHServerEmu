@@ -35,25 +35,25 @@ namespace MHServerEmu.Games.Regions
         public static float GetEntityFloor(ulong prototypeId)
         {
             Prototype entity = prototypeId.GetPrototype();
-            if (entity.ParentId == (ulong)BlueprintId.NPCTemplateHub)
+            if (entity.Header.ReferenceType == (ulong)BlueprintId.NPCTemplateHub)
                 return 46f; // AgentUntargetableInvulnerable.WorldEntity.Bounds.CapsuleBounds.HeightFromCenter
             PrototypeEntry TestWorldEntity = entity.GetEntry(BlueprintId.WorldEntity);
             if (TestWorldEntity == null)
-                return GetEntityFloor(entity.ParentId);
+                return GetEntityFloor(entity.Header.ReferenceType);
 
             PrototypeEntryElement TestBounds = TestWorldEntity.GetField(FieldId.Bounds);
             if (TestBounds == null) 
-                return GetEntityFloor(entity.ParentId);
+                return GetEntityFloor(entity.Header.ReferenceType);
 
             Prototype bounds = (Prototype)TestBounds.Value;
             float height = 0f;
-            if (bounds.ParentId == (ulong)BlueprintId.BoxBounds || bounds.ParentId == (ulong)BlueprintId.ObjectSmall)
+            if (bounds.Header.ReferenceType == (ulong)BlueprintId.BoxBounds || bounds.Header.ReferenceType == (ulong)BlueprintId.ObjectSmall)
                 height = (float)(double)bounds.GetEntry(BlueprintId.BoxBounds).GetField(FieldId.Height).Value;
-            else if (bounds.ParentId == (ulong)BlueprintId.SphereBounds)
+            else if (bounds.Header.ReferenceType == (ulong)BlueprintId.SphereBounds)
                 height = (float)(double)bounds.GetEntry(BlueprintId.SphereBounds).GetField(FieldId.Radius).Value;
-            else if (bounds.ParentId == (ulong)BlueprintId.CapsuleBounds)
+            else if (bounds.Header.ReferenceType == (ulong)BlueprintId.CapsuleBounds)
                 height = (float)(double)bounds.GetEntry(BlueprintId.CapsuleBounds).GetField(FieldId.HeightFromCenter).Value * 2f;
-            else Logger.Warn($"ParentId = {bounds.ParentId}");
+            else Logger.Warn($"ReferenceType = {bounds.Header.ReferenceType}");
 
             return height / 2;
         }
@@ -65,10 +65,10 @@ namespace MHServerEmu.Games.Regions
             Prototype entity = prototypeId.GetPrototype();
             PrototypeEntry TestWorldEntity = entity.GetEntry(BlueprintId.WorldEntity);
             if (TestWorldEntity == null) 
-                return GetSnapToFloorOnSpawn(entity.ParentId);
+                return GetSnapToFloorOnSpawn(entity.Header.ReferenceType);
             PrototypeEntryElement TestSnapToFloorOnSpawn = TestWorldEntity.GetField(FieldId.SnapToFloorOnSpawn);
             if (TestSnapToFloorOnSpawn == null) 
-                return GetSnapToFloorOnSpawn(entity.ParentId);
+                return GetSnapToFloorOnSpawn(entity.Header.ReferenceType);
             return (bool)TestSnapToFloorOnSpawn.Value;
         }
 
@@ -78,7 +78,7 @@ namespace MHServerEmu.Games.Regions
             {
                 if (target == (ulong)BlueprintId.RegionConnectionTarget) return 0;
                 ulong area = target.GetPrototype().GetEntry(BlueprintId.RegionConnectionTarget).GetFieldDef(FieldId.Area);
-                if (area == 0) return FindArea(target.GetPrototype().ParentId);
+                if (area == 0) return FindArea(target.GetPrototype().Header.ReferenceType);
                 return area;
             }
 

@@ -16,14 +16,12 @@ namespace MHServerEmu.Games.GameData.JsonOutput
 
         public class PrototypeJson
         {
-            public byte Flags { get; }
-            public string ParentId { get; }
+            public PrototypeDataHeader Header { get; }
             public PrototypeEntryJson[] Entries { get; }
 
             public PrototypeJson(Prototype prototype)
             {
-                Flags = prototype.Flags;
-                ParentId = GameDatabase.GetPrototypeName(prototype.ParentId);
+                Header = prototype.Header;
 
                 if (prototype.Entries != null)
                 {

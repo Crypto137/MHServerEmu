@@ -287,8 +287,8 @@ namespace MHServerEmu.Games.GameData
 
         public Blueprint GetPrototypeBlueprint(Prototype prototype)
         {
-            while (prototype.ParentId != 0)                     // Go up until we get to the parentless prototype (.defaults)
-                prototype = GetPrototype<Prototype>(prototype.ParentId);
+            while (prototype.Header.ReferenceType != 0)                     // Go up until we get to the parentless prototype (.defaults)
+                prototype = GetPrototype<Prototype>(prototype.Header.ReferenceType);
             return _prototypeBlueprintDict[prototype];          // Use .defaults prototype as a key to get the blueprint for it
         }
 

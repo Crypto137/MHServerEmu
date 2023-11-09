@@ -131,7 +131,7 @@ namespace MHServerEmu.Games.Entities
             ulong targetRegion = regionConnectionTarget.GetFieldDef(FieldId.Region);
             // Logger.Debug($"SpawnDirectTeleport {targetRegion}");
             if (targetRegion == 0) { // get Parent value
-                PrototypeEntry parentTarget = targetPrototype.GetPrototype().ParentId.GetPrototype().GetEntry(BlueprintId.RegionConnectionTarget);
+                PrototypeEntry parentTarget = targetPrototype.GetPrototype().Header.ReferenceType.GetPrototype().GetEntry(BlueprintId.RegionConnectionTarget);
                 if (parentTarget != null) targetRegion = parentTarget.GetFieldDef(FieldId.Region);
             }
 

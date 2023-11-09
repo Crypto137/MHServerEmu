@@ -346,9 +346,9 @@ namespace MHServerEmu.Games.Events
                     if (worldEntity == null) break;
                     ulong unrealClass = (ulong)worldEntity.GetField(FieldId.UnrealClass).Value;
                     client.IsThrowing = true;
-                    if (throwPrototype.ParentId != (ulong)BlueprintId.ThrowableProp)
-                        if (throwPrototype.ParentId != (ulong)BlueprintId.ThrowableSmartProp)
-                            throwPrototype = throwPrototype.ParentId.GetPrototype();
+                    if (throwPrototype.Header.ReferenceType != (ulong)BlueprintId.ThrowableProp)
+                        if (throwPrototype.Header.ReferenceType != (ulong)BlueprintId.ThrowableSmartProp)
+                            throwPrototype = throwPrototype.Header.ReferenceType.GetPrototype();
                     property = new(PropertyEnum.ThrowableOriginatorAssetRef, unrealClass);
                     messageList.Add(new(client, new(property.ToNetMessageSetProperty(avatarRepId))));
 
