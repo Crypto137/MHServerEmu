@@ -25,6 +25,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong ParentId { get; }  // 0 for .defaults
         public PrototypeEntry[] Entries { get; }
 
+        public Prototype() { }
+
         public Prototype(BinaryReader reader)
         {
             Flags = reader.ReadByte();
