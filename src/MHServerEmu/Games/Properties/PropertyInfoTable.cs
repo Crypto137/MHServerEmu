@@ -17,9 +17,9 @@ namespace MHServerEmu.Games.Properties
             // Loop through the main property info directory to get most info
 
             // hacky reimplementation for compatibility
-            ulong[] blueprintIds = GameDatabase.BlueprintRefManager.Enumerate();
+            BlueprintId[] blueprintIds = GameDatabase.BlueprintRefManager.Enumerate();
 
-            foreach (ulong blueprintId in blueprintIds)
+            foreach (var blueprintId in blueprintIds)
             {
                 string filePath = GameDatabase.GetBlueprintName(blueprintId);
 

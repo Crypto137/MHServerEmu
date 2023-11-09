@@ -15,8 +15,8 @@ namespace MHServerEmu.Games.Powers
         public bool[] Flags { get; set; }
         public ulong IdUserEntity { get; set; }
         public ulong IdTargetEntity { get; set; }
-        public ulong PowerPrototypeId { get; set; }
-        public ulong TriggeringPowerPrototypeId { get; set; }
+        public PrototypeId PowerPrototypeId { get; set; }
+        public PrototypeId TriggeringPowerPrototypeId { get; set; }
         public Vector3 UserPosition { get; set; }
         public Vector3 TargetPosition { get; set; }
         public ulong MovementTimeMS { get; set; }   // should this be uint or ulong?
@@ -49,7 +49,7 @@ namespace MHServerEmu.Games.Powers
             Flags = 0u.ToBoolArray(FlagCount);
 
             IdUserEntity = tryActivatePower.IdUserEntity;
-            PowerPrototypeId = tryActivatePower.PowerPrototypeId;
+            PowerPrototypeId = (PrototypeId)tryActivatePower.PowerPrototypeId;
             UserPosition = userPosition;        // derive this from tryActivatePower.MovementSpeed?
 
             // IdTargetEntity
@@ -62,7 +62,7 @@ namespace MHServerEmu.Games.Powers
             // TriggeringPowerPrototypeId
             if (tryActivatePower.HasTriggeringPowerPrototypeId)
             {
-                TriggeringPowerPrototypeId = tryActivatePower.TriggeringPowerPrototypeId;
+                TriggeringPowerPrototypeId = (PrototypeId)tryActivatePower.TriggeringPowerPrototypeId;
                 Flags[1] = true;
             }
 

@@ -171,7 +171,7 @@ namespace MHServerEmu.Common.Commands
             try
             {
                 // Try to parse costume prototype id from command
-                ulong prototypeId = ulong.Parse(@params[0]);
+                var prototypeId = (PrototypeId)ulong.Parse(@params[0]);
                 string prototypePath = GameDatabase.GetPrototypeName(prototypeId);
 
                 if (prototypeId == 0 || prototypePath.Contains("Entity/Items/Costumes/Prototypes/"))
@@ -183,7 +183,7 @@ namespace MHServerEmu.Common.Commands
                     ulong replicationId = (ulong)client.Session.Account.Player.Avatar.ToPropertyCollectionReplicationId();
 
                     // Update account data if needed
-                    if (ConfigManager.PlayerManager.BypassAuth == false) client.Session.Account.CurrentAvatar.Costume = prototypeId;
+                    if (ConfigManager.PlayerManager.BypassAuth == false) client.Session.Account.CurrentAvatar.Costume = (ulong)prototypeId;
 
                     // Send NetMessageSetProperty message
                     client.SendMessage(1, new(property.ToNetMessageSetProperty(replicationId)));

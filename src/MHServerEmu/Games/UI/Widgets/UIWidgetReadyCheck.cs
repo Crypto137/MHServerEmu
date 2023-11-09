@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.UI.Widgets
 {
@@ -9,7 +10,7 @@ namespace MHServerEmu.Games.UI.Widgets
     {
         public PlayerReadyState[] PlayerReadyStates { get; set; }
 
-        public UIWidgetReadyCheck(ulong widgetR, ulong contextR, ulong[] areas, CodedInputStream stream) : base(widgetR, contextR, areas)
+        public UIWidgetReadyCheck(PrototypeId widgetR, PrototypeId contextR, PrototypeId[] areas, CodedInputStream stream) : base(widgetR, contextR, areas)
         {
             PlayerReadyStates = new PlayerReadyState[stream.ReadRawVarint64()];
             for (int i = 0; i < PlayerReadyStates.Length; i++)

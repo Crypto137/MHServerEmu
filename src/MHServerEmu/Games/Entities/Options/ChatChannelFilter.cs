@@ -9,7 +9,7 @@ namespace MHServerEmu.Games.Entities.Options
 {
     public class ChatChannelFilter
     {
-        public ulong ChannelProtoId { get; set; }
+        public PrototypeId ChannelProtoId { get; set; }
         public bool IsSubscribed { get; set; }
 
         public ChatChannelFilter(CodedInputStream stream, BoolDecoder boolDecoder)
@@ -18,7 +18,7 @@ namespace MHServerEmu.Games.Entities.Options
             IsSubscribed = boolDecoder.ReadBool(stream);
         }
 
-        public ChatChannelFilter(ulong channelProtoId, bool isSubscribed)
+        public ChatChannelFilter(PrototypeId channelProtoId, bool isSubscribed)
         {
             ChannelProtoId = channelProtoId;
             IsSubscribed = isSubscribed;
@@ -26,7 +26,7 @@ namespace MHServerEmu.Games.Entities.Options
 
         public ChatChannelFilter(NetStructChatChannelFilterState netStruct)
         {
-            ChannelProtoId = netStruct.ChannelProtoId;
+            ChannelProtoId = (PrototypeId)netStruct.ChannelProtoId;
             IsSubscribed = netStruct.IsSubscribed;
         }
 
@@ -36,7 +36,7 @@ namespace MHServerEmu.Games.Entities.Options
             boolEncoder.WriteBuffer(stream);   // IsSubscribed
         }
 
-        public NetStructChatChannelFilterState ToNetStruct() => NetStructChatChannelFilterState.CreateBuilder().SetChannelProtoId(ChannelProtoId).SetIsSubscribed(IsSubscribed).Build();
+        public NetStructChatChannelFilterState ToNetStruct() => NetStructChatChannelFilterState.CreateBuilder().SetChannelProtoId((ulong)ChannelProtoId).SetIsSubscribed(IsSubscribed).Build();
 
         public override string ToString()
         {

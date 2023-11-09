@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             foreach (PrototypeEntryElement element in prototype.Entries[0].Elements)
             {
-                BlueprintMember blueprintMember = blueprint.GetMember(element.Id);
+                BlueprintMember blueprintMember = blueprint.GetMember((StringId)element.Id);
 
                 switch (blueprintMember.FieldName)
                 {
@@ -93,7 +93,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Params[index].DefaultValue = defaultValue;
 
             if (type == PropertyParamType.Asset)
-                Params[index].ValueMax = GameDatabase.GetAssetType(subtype).MaxEnumValue;
+                Params[index].ValueMax = GameDatabase.GetAssetType((AssetTypeId)subtype).MaxEnumValue;
             else if (type == PropertyParamType.Prototype)
                 Params[index].ValueMax = 0; //Params[index].ValueMax = GameDatabase.LegacyPrototypeRefManager.MaxEnumValue;
         }

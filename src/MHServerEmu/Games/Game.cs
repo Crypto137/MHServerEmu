@@ -285,10 +285,11 @@ namespace MHServerEmu.Games
         private void OnUseInteractableObject(FrontendClient client, NetMessageUseInteractableObject useInteractableObject)
         {
             Logger.Info($"Received UseInteractableObject message");
+            var missionPrototypeRef = (PrototypeId)useInteractableObject.MissionPrototypeRef;
 
-            if (useInteractableObject.MissionPrototypeRef != 0)
+            if (missionPrototypeRef != PrototypeId.Invalid)
             {
-                Logger.Debug($"UseInteractableObject message contains missionPrototypeRef: {GameDatabase.GetPrototypeName(useInteractableObject.MissionPrototypeRef)}");
+                Logger.Debug($"UseInteractableObject message contains missionPrototypeRef: {missionPrototypeRef}");
                 EnqueueResponse(client, new(NetMessageMissionInteractRelease.DefaultInstance));
             }
 
@@ -302,7 +303,7 @@ namespace MHServerEmu.Games
 
                     if (teleport.Destinations[0].Type == 2)
                     {
-                        ulong currentRegion = (ulong)client.Session.Account.Player.Region;
+                        var currentRegion = (PrototypeId)client.Session.Account.Player.Region;
                         if (currentRegion != teleport.Destinations[0].Region)
                         {
                             Logger.Trace($"Destination region {teleport.Destinations[0].Region}");

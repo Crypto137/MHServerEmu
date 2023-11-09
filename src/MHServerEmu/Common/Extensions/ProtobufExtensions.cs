@@ -61,7 +61,7 @@ namespace MHServerEmu.Common.Extensions
         /// <summary>
         /// Reads a prototype enum value from the stream and converts it to a data ref.
         /// </summary>
-        public static ulong ReadPrototypeEnum(this CodedInputStream stream, PrototypeEnumType enumType)
+        public static PrototypeId ReadPrototypeEnum(this CodedInputStream stream, PrototypeEnumType enumType)
         {
             return GameDatabase.DataDirectory.GetPrototypeFromEnumValue(stream.ReadRawVarint64(), enumType);
         }
@@ -106,7 +106,7 @@ namespace MHServerEmu.Common.Extensions
         /// <summary>
         /// Converts a prototype data ref to an enum value and writes it to the stream.
         /// </summary>
-        public static void WritePrototypeEnum(this CodedOutputStream stream, ulong prototypeId, PrototypeEnumType enumType)
+        public static void WritePrototypeEnum(this CodedOutputStream stream, PrototypeId prototypeId, PrototypeEnumType enumType)
         {
             stream.WriteRawVarint64(GameDatabase.DataDirectory.GetPrototypeEnumValue(prototypeId, enumType));
         }

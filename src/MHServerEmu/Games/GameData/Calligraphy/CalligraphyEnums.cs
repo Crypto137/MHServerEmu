@@ -24,7 +24,7 @@
 
     // Enums for specific data for easy access
 
-    public enum BlueprintId : ulong
+    public enum DefaultPrototypeId : ulong
     {
         WorldEntity = 7901305308382563236,
         ThrowableProp = 14997899060839977779,

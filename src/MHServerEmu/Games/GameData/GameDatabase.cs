@@ -23,11 +23,11 @@ namespace MHServerEmu.Games.GameData
         public static List<LiveTuningSetting> LiveTuningSettingList { get; private set; }
 
         // DataRef is a unique ulong id that may change across different versions of the game (e.g. resource DataRef is hashed file path).
-        public static DataRefManager AssetTypeRefManager { get; } = new(true);
-        public static DataRefManager StringRefManager { get; } = new(false);
-        public static DataRefManager CurveRefManager { get; } = new(true);
-        public static DataRefManager BlueprintRefManager { get; } = new(true);
-        public static DataRefManager PrototypeRefManager { get; } = new(true);
+        public static DataRefManager<StringId> StringRefManager { get; } = new(false);
+        public static DataRefManager<AssetTypeId> AssetTypeRefManager { get; } = new(true);
+        public static DataRefManager<CurveId> CurveRefManager { get; } = new(true);
+        public static DataRefManager<BlueprintId> BlueprintRefManager { get; } = new(true);
+        public static DataRefManager<PrototypeId> PrototypeRefManager { get; } = new(true);
 
         static GameDatabase()
         {
@@ -90,19 +90,19 @@ namespace MHServerEmu.Games.GameData
 
         #region Data Access
 
-        public static AssetType GetAssetType(ulong assetId) => DataDirectory.AssetDirectory.GetAssetType(assetId);
-        public static Curve GetCurve(ulong curveId) => DataDirectory.CurveDirectory.GetCurve(curveId);
-        public static Blueprint GetBlueprint(ulong blueprintId) => DataDirectory.GetBlueprint(blueprintId);
-        public static T GetPrototype<T>(ulong prototypeId) => DataDirectory.GetPrototype<T>(prototypeId);
+        public static AssetType GetAssetType(AssetTypeId assetTypeId) => DataDirectory.AssetDirectory.GetAssetType(assetTypeId);
+        public static Curve GetCurve(CurveId curveId) => DataDirectory.CurveDirectory.GetCurve(curveId);
+        public static Blueprint GetBlueprint(BlueprintId blueprintId) => DataDirectory.GetBlueprint(blueprintId);
+        public static T GetPrototype<T>(PrototypeId prototypeId) => DataDirectory.GetPrototype<T>(prototypeId);
 
-        public static string GetAssetName(ulong assetId) => StringRefManager.GetReferenceName(assetId);
-        public static string GetAssetTypeName(ulong assetTypeId) => AssetTypeRefManager.GetReferenceName(assetTypeId);
-        public static string GetCurveName(ulong curveId) => CurveRefManager.GetReferenceName(curveId);
-        public static string GetBlueprintName(ulong blueprintId) => BlueprintRefManager.GetReferenceName(blueprintId);
-        public static string GetBlueprintFieldName(ulong fieldId) => StringRefManager.GetReferenceName(fieldId);
-        public static string GetPrototypeName(ulong prototypeId) => PrototypeRefManager.GetReferenceName(prototypeId);
+        public static string GetAssetName(StringId assetId) => StringRefManager.GetReferenceName(assetId);
+        public static string GetAssetTypeName(AssetTypeId assetTypeId) => AssetTypeRefManager.GetReferenceName(assetTypeId);
+        public static string GetCurveName(CurveId curveId) => CurveRefManager.GetReferenceName(curveId);
+        public static string GetBlueprintName(BlueprintId blueprintId) => BlueprintRefManager.GetReferenceName(blueprintId);
+        public static string GetBlueprintFieldName(StringId fieldId) => StringRefManager.GetReferenceName(fieldId);
+        public static string GetPrototypeName(PrototypeId prototypeId) => PrototypeRefManager.GetReferenceName(prototypeId);
 
-        public static ulong GetDataRefByPrototypeGuid(ulong guid) => DataDirectory.GetPrototypeDataRefByGuid(guid);
+        public static PrototypeId GetDataRefByPrototypeGuid(ulong guid) => DataDirectory.GetPrototypeDataRefByGuid(guid);
 
         // Our implementation of GetPrototypeRefByName combines both GetPrototypeRefByName and GetDataRefByResourceGuid.
         // The so-called "ResourceGuid" is actually just a prototype name, and in the client both of these methods work
@@ -111,9 +111,9 @@ namespace MHServerEmu.Games.GameData
         // prototypes have different pre-hashing steps, see HashHelper for more info).
         //
         // We avoid all of this additional complexity by simply using a reverse lookup dictionary in our PrototypeRefManager.
-        public static ulong GetPrototypeRefByName(string name) => PrototypeRefManager.GetDataRefByName(name);
+        public static PrototypeId GetPrototypeRefByName(string name) => PrototypeRefManager.GetDataRefByName(name);
 
-        public static ulong GetPrototypeGuid(ulong id) => DataDirectory.GetPrototypeGuid(id);
+        public static ulong GetPrototypeGuid(PrototypeId id) => DataDirectory.GetPrototypeGuid(id);
 
         #endregion
 

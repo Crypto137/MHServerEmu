@@ -23,7 +23,7 @@ namespace MHServerEmu.Games.Entities
         public uint ReplicationPolicy { get; }
         public ulong EntityId { get; set; }
         public bool[] Flags { get; set; }   // mystery flags: 2, 6
-        public ulong PrototypeId { get; set; }
+        public PrototypeId PrototypeId { get; set; }
         public Vector3 Position { get; set; }
         public Vector3 Orientation { get; set; }
         public LocomotionState LocomotionState { get; set; }

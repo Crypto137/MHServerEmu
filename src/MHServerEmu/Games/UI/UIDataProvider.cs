@@ -16,10 +16,10 @@ namespace MHServerEmu.Games.UI
             UISyncData = new UISyncData[stream.ReadRawVarint32()];
             for (int i = 0; i < UISyncData.Length; i++)
             {
-                ulong widgetR = stream.ReadPrototypeEnum(PrototypeEnumType.All);
-                ulong contextR = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+                PrototypeId widgetR = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+                PrototypeId contextR = stream.ReadPrototypeEnum(PrototypeEnumType.All);
 
-                ulong[] areas = new ulong[stream.ReadRawInt32()];
+                PrototypeId[] areas = new PrototypeId[stream.ReadRawInt32()];
                 for (int j = 0; j < areas.Length; j++)
                     areas[j] = stream.ReadPrototypeEnum(PrototypeEnumType.All);
 

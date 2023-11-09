@@ -50,7 +50,7 @@ namespace MHServerEmu.Games.GameData.JsonOutput
 
             public BlueprintMemberJson(BlueprintMember member)
             {
-                FieldId = member.FieldId;
+                FieldId = (ulong)member.FieldId;
                 FieldName = member.FieldName;
                 ValueType = (char)member.ValueType;
                 ContainerType = (char)member.ContainerType;
@@ -59,17 +59,17 @@ namespace MHServerEmu.Games.GameData.JsonOutput
                 {
                     // Only these types have subtypes
                     case 'A':
-                        Subtype = GameDatabase.GetAssetTypeName(member.Subtype);
+                        Subtype = GameDatabase.GetAssetTypeName((AssetTypeId)member.Subtype);
                         break;
 
                     case 'C':
-                        Subtype = GameDatabase.GetCurveName(member.Subtype);
+                        Subtype = GameDatabase.GetCurveName((CurveId)member.Subtype);
                         break;
 
                     // Both P and R have prototypes as their subtypes
                     case 'P':
                     case 'R':
-                        Subtype = GameDatabase.GetPrototypeName(member.Subtype);
+                        Subtype = GameDatabase.GetPrototypeName((PrototypeId)member.Subtype);
                         break;
                 }
             }

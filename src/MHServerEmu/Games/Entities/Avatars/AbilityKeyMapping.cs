@@ -10,10 +10,10 @@ namespace MHServerEmu.Games.Entities.Avatars
     {
         public int PowerSpecIndex { get; set; }
         public bool ShouldPersist { get; set; }
-        public ulong AssociatedTransformMode { get; set; }  // Prototype
-        public ulong Slot0 { get; set; }                    // Prototype
-        public ulong Slot1 { get; set; }                    // Prototype
-        public ulong[] PowerSlots { get; set; }             // Prototypes
+        public PrototypeId AssociatedTransformMode { get; set; }
+        public PrototypeId Slot0 { get; set; }
+        public PrototypeId Slot1 { get; set; }
+        public PrototypeId[] PowerSlots { get; set; }
 
         public AbilityKeyMapping(CodedInputStream stream, BoolDecoder boolDecoder)
         {
@@ -23,12 +23,12 @@ namespace MHServerEmu.Games.Entities.Avatars
             Slot0 = stream.ReadPrototypeEnum(PrototypeEnumType.All);
             Slot1 = stream.ReadPrototypeEnum(PrototypeEnumType.All);
 
-            PowerSlots = new ulong[stream.ReadRawVarint64()];
+            PowerSlots = new PrototypeId[stream.ReadRawVarint64()];
             for (int i = 0; i < PowerSlots.Length; i++)
                 PowerSlots[i] = stream.ReadPrototypeEnum(PrototypeEnumType.All);
         }
 
-        public AbilityKeyMapping(int powerSpecIndex, bool shouldPersist, ulong associatedTransformMode, ulong slot0, ulong slot1, ulong[] powerSlots)
+        public AbilityKeyMapping(int powerSpecIndex, bool shouldPersist, PrototypeId associatedTransformMode, PrototypeId slot0, PrototypeId slot1, PrototypeId[] powerSlots)
         {
             PowerSpecIndex = powerSpecIndex;
             ShouldPersist = shouldPersist;
@@ -52,7 +52,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             stream.WritePrototypeEnum(Slot1, PrototypeEnumType.All);
 
             stream.WriteRawVarint64((ulong)PowerSlots.Length);
-            foreach (ulong powerSlot in PowerSlots)
+            foreach (PrototypeId powerSlot in PowerSlots)
                 stream.WritePrototypeEnum(powerSlot, PrototypeEnumType.All);
         }
 

@@ -34,11 +34,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             foreach (PrototypeEntryElement element in prototype.Entries[0].Elements)
             {
-                switch (GameDatabase.GetBlueprintFieldName(element.Id))
+                switch (GameDatabase.GetBlueprintFieldName((StringId)element.Id))
                 {
                     case nameof(AggMethod):
                         // AggMethod is null for some properties
-                        string aggMethod = GameDatabase.GetAssetName((ulong)element.Value);
+                        string aggMethod = GameDatabase.GetAssetName((StringId)element.Value);
                         if (aggMethod == string.Empty) continue;
                         AggMethod = (AggregationMethod)Enum.Parse(typeof(AggregationMethod), aggMethod);
                         break;
@@ -64,7 +64,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         ReplicateForTransfer = (bool)element.Value;
                         break;
                     case nameof(ReplicateToDatabase):
-                        ReplicateToDatabase = (DatabasePolicy)Enum.Parse(typeof(DatabasePolicy), GameDatabase.GetAssetName((ulong)element.Value));
+                        ReplicateToDatabase = (DatabasePolicy)Enum.Parse(typeof(DatabasePolicy), GameDatabase.GetAssetName((StringId)element.Value));
                         break;
                     case nameof(ReplicateToDatabaseAllowedOnItems):
                         ReplicateToDatabaseAllowedOnItems = (bool)element.Value;
@@ -103,7 +103,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         TruncatePropertyValueToInt = (bool)element.Value;
                         break;
                     case nameof(Type):
-                        Type = (PropertyType)Enum.Parse(typeof(PropertyType), GameDatabase.GetAssetName((ulong)element.Value));
+                        Type = (PropertyType)Enum.Parse(typeof(PropertyType), GameDatabase.GetAssetName((StringId)element.Value));
                         break;
                     case nameof(Version):
                         Version = (long)element.Value;

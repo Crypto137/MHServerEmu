@@ -1,15 +1,16 @@
 ﻿using MHServerEmu.Games.Common;
+using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Regions
 {
     public class Cell
     {
         public uint Id { get; }
-        public ulong PrototypeId { get; }
+        public PrototypeId PrototypeId { get; }
         public Vector3 PositionInArea { get; }
         public List<ReservedSpawn> EncounterList { get; } = new();
 
-        public Cell(uint id, ulong prototypeId, Vector3 positionInArea)
+        public Cell(uint id, PrototypeId prototypeId, Vector3 positionInArea)
         {
             Id = id;
             PrototypeId = prototypeId;

@@ -7,8 +7,8 @@ namespace MHServerEmu.Games.Social
 {
     public class AvatarSlotInfo
     {
-        public ulong AvatarRef { get; set; }
-        public ulong CostumeRef { get; set; }
+        public PrototypeId AvatarRef { get; set; }
+        public PrototypeId CostumeRef { get; set; }
         public int AvatarLevel { get; set; }
         public int PrestigeLevel { get; set; }
 
@@ -20,7 +20,7 @@ namespace MHServerEmu.Games.Social
             PrestigeLevel = stream.ReadRawInt32();
         }
 
-        public AvatarSlotInfo(ulong avatarRef, ulong costumeRef, int avatarLevel, int prestigeLevel)
+        public AvatarSlotInfo(PrototypeId avatarRef, PrototypeId costumeRef, int avatarLevel, int prestigeLevel)
         {
             AvatarRef = avatarRef;
             CostumeRef = costumeRef;

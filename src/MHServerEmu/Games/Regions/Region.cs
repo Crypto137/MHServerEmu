@@ -94,7 +94,7 @@ namespace MHServerEmu.Games.Regions
                     var builder = NetMessageCellCreate.CreateBuilder()
                         .SetAreaId(area.Id)
                         .SetCellId(cell.Id)
-                        .SetCellPrototypeId(cell.PrototypeId)
+                        .SetCellPrototypeId((ulong)cell.PrototypeId)
                         .SetPositionInArea(cell.PositionInArea.ToNetStructPoint3())
                         .SetCellRandomSeed(RandomSeed)
                         .SetBufferwidth(0)

@@ -13,7 +13,7 @@ namespace MHServerEmu.Games.Powers
 
         public uint ReplicationPolicy { get; set; }
         public bool[] Flags { get; set; }
-        public ulong PowerPrototypeId { get; set; }
+        public PrototypeId PowerPrototypeId { get; set; }
         public ulong TargetId { get; set; }
         public ulong PowerOwnerId { get; set; }
         public ulong UltimateOwnerId { get; set; }
@@ -60,7 +60,7 @@ namespace MHServerEmu.Games.Powers
             // damage test
             ReplicationPolicy = 0x1;
             Flags = 0u.ToBoolArray(FlagCount);
-            PowerPrototypeId = tryActivatePower.PowerPrototypeId;
+            PowerPrototypeId = (PrototypeId)tryActivatePower.PowerPrototypeId;
             TargetId = tryActivatePower.IdTargetEntity;
             PowerOwnerId = tryActivatePower.IdUserEntity;
             Flags[3] = true;    // UltimateOwnerId same as PowerOwnerId
@@ -83,7 +83,7 @@ namespace MHServerEmu.Games.Powers
             // damage test
             ReplicationPolicy = 0x1;
             Flags = 0u.ToBoolArray(FlagCount);
-            PowerPrototypeId = continuousPowerUpdate.PowerPrototypeId;
+            PowerPrototypeId = (PrototypeId)continuousPowerUpdate.PowerPrototypeId;
             TargetId = continuousPowerUpdate.IdTargetEntity;
             Flags[3] = true;    // UltimateOwnerId same as PowerOwnerId
 

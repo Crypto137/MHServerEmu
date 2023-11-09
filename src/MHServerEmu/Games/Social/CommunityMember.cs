@@ -16,8 +16,8 @@ namespace MHServerEmu.Games.Social
     {
         public string Name { get; set; }
         public ulong DbId { get; set; }
-        public ulong RegionRef { get; set; }
-        public ulong DifficultyRef { get; set; }
+        public PrototypeId RegionRef { get; set; }
+        public PrototypeId DifficultyRef { get; set; }
         public AvatarSlotInfo[] Slots { get; set; }
         public CommunityMemberOnlineStatus OnlineStatus { get; set; }
         public string MemberName { get; set; }
@@ -45,7 +45,7 @@ namespace MHServerEmu.Games.Social
                 ArchiveCircleIds[i] = stream.ReadRawInt32();
         }
 
-        public CommunityMember(string name, ulong dbId, ulong regionRef, ulong difficultyRef, 
+        public CommunityMember(string name, ulong dbId, PrototypeId regionRef, PrototypeId difficultyRef, 
             AvatarSlotInfo[] slots, CommunityMemberOnlineStatus onlineStatus, string unkName, int[] archiveCircleIds)
         {
             Name = name;
@@ -65,8 +65,8 @@ namespace MHServerEmu.Games.Social
         {
             stream.WriteRawString(Name);
             stream.WriteRawVarint64(DbId);
-            stream.WriteRawVarint64(RegionRef);
-            stream.WriteRawVarint64(DifficultyRef);
+            stream.WritePrototypeEnum(RegionRef, PrototypeEnumType.All);
+            stream.WritePrototypeEnum(DifficultyRef, PrototypeEnumType.All);
 
             stream.WriteRawByte((byte)Slots.Length);
             foreach (AvatarSlotInfo slot in Slots) slot.Encode(stream);

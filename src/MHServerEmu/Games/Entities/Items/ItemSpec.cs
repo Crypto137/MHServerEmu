@@ -7,13 +7,13 @@ namespace MHServerEmu.Games.Entities.Items
 {
     public class ItemSpec
     {
-        public ulong ItemProto { get; set; }
-        public ulong Rarity { get; set; }
+        public PrototypeId ItemProto { get; set; }
+        public PrototypeId Rarity { get; set; }
         public int ItemLevel { get; set; }
         public int CreditsAmount { get; set; }
         public AffixSpec[] AffixSpec { get; set; }
         public int Seed { get; set; }
-        public ulong EquippableBy { get; set; }
+        public PrototypeId EquippableBy { get; set; }
 
         public ItemSpec(CodedInputStream stream)
         {            
@@ -30,7 +30,7 @@ namespace MHServerEmu.Games.Entities.Items
             EquippableBy = stream.ReadPrototypeEnum(PrototypeEnumType.All);
         }
 
-        public ItemSpec(ulong itemProto, ulong rarity, int itemLevel, int creditsAmount, AffixSpec[] affixSpec, int seed, ulong equippableBy)
+        public ItemSpec(PrototypeId itemProto, PrototypeId rarity, int itemLevel, int creditsAmount, AffixSpec[] affixSpec, int seed, PrototypeId equippableBy)
         {
             ItemProto = itemProto;
             Rarity = rarity;

@@ -8,7 +8,7 @@ namespace MHServerEmu.Games.Entities
     public class InventoryLocation
     {
         public ulong ContainerEntityId { get; set; }
-        public ulong InventoryPrototypeId { get; set; }
+        public PrototypeId InventoryPrototypeId { get; set; }
         public uint Slot { get; set; }
 
         public InventoryLocation(CodedInputStream stream)
@@ -18,7 +18,7 @@ namespace MHServerEmu.Games.Entities
             Slot = stream.ReadRawVarint32();
         }
 
-        public InventoryLocation(ulong containerEntityId, ulong inventoryPrototypeId, uint slot)
+        public InventoryLocation(ulong containerEntityId, PrototypeId inventoryPrototypeId, uint slot)
         {
             ContainerEntityId = containerEntityId;
             InventoryPrototypeId = inventoryPrototypeId;

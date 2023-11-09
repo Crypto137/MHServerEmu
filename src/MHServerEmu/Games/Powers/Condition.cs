@@ -14,8 +14,8 @@ namespace MHServerEmu.Games.Powers
         public ulong Id { get; set; }
         public ulong CreatorId { get; set; }
         public ulong UltimateCreatorId { get; set; }
-        public ulong ConditionPrototypeId { get; set; }
-        public ulong CreatorPowerPrototypeId { get; set; }
+        public PrototypeId ConditionPrototypeId { get; set; }
+        public PrototypeId CreatorPowerPrototypeId { get; set; }
         public uint Index { get; set; }
         public ulong EngineAssetGuid { get; set; }
         public long StartTime { get; set; }

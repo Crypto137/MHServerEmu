@@ -60,28 +60,28 @@ namespace MHServerEmu.Games.GameData.JsonOutput
 
                     public PrototypeEntryElementJson(PrototypeEntryElement element)
                     {
-                        Id = GameDatabase.GetBlueprintFieldName(element.Id);
+                        Id = GameDatabase.GetBlueprintFieldName((StringId)element.Id);
                         Type = (char)element.Type;
 
                         switch (Type)
                         {
                             case 'A':
-                                ulong assetId = (ulong)element.Value;
+                                var assetId = (StringId)element.Value;
                                 string assetName = GameDatabase.GetAssetName(assetId);
                                 string assetTypeName = GameDatabase.GetAssetTypeName(GameDatabase.DataDirectory.AssetDirectory.GetAssetTypeId(assetId));
                                 Value = $"{assetName} ({assetTypeName})";
                                 break;
                             case 'C':
-                                Value = GameDatabase.GetCurveName((ulong)element.Value);
+                                Value = GameDatabase.GetCurveName((CurveId)element.Value);
                                 break;
                             case 'P':
-                                Value = GameDatabase.GetPrototypeName((ulong)element.Value);
+                                Value = GameDatabase.GetPrototypeName((PrototypeId)element.Value);
                                 break;
                             case 'R':
                                 Value = new PrototypeJson((Prototype)element.Value);
                                 break;
                             case 'T':
-                                Value = GameDatabase.GetAssetTypeName((ulong)element.Value);
+                                Value = GameDatabase.GetAssetTypeName((AssetTypeId)element.Value);
                                 break;
                             default:
                                 Value = element.Value;
@@ -98,7 +98,7 @@ namespace MHServerEmu.Games.GameData.JsonOutput
 
                     public PrototypeEntryListElementJson(PrototypeEntryListElement element)
                     {
-                        Id = GameDatabase.GetBlueprintFieldName(element.Id);
+                        Id = GameDatabase.GetBlueprintFieldName((StringId)element.Id);
                         Type = (char)element.Type;
 
                         Values = new object[element.Values.Length];
@@ -107,22 +107,22 @@ namespace MHServerEmu.Games.GameData.JsonOutput
                             switch (Type)
                             {
                                 case 'A':
-                                    ulong assetId = (ulong)element.Values[i];
+                                    var assetId = (StringId)element.Values[i];
                                     string assetName = GameDatabase.GetAssetName(assetId);
                                     string assetTypeName = GameDatabase.GetAssetTypeName(GameDatabase.DataDirectory.AssetDirectory.GetAssetTypeId(assetId));
                                     Values[i] = $"{assetName} ({assetTypeName})";
                                     break;
                                 case 'C':
-                                    Values[i] = GameDatabase.GetCurveName((ulong)element.Values[i]);
+                                    Values[i] = GameDatabase.GetCurveName((CurveId)element.Values[i]);
                                     break;
                                 case 'P':
-                                    Values[i] = GameDatabase.GetPrototypeName((ulong)element.Values[i]);
+                                    Values[i] = GameDatabase.GetPrototypeName((PrototypeId)element.Values[i]);
                                     break;
                                 case 'R':
                                     Values[i] = new PrototypeJson((Prototype)element.Values[i]);
                                     break;
                                 case 'T':
-                                    Values[i] = GameDatabase.GetAssetTypeName((ulong)element.Values[i]);
+                                    Values[i] = GameDatabase.GetAssetTypeName((AssetTypeId)element.Values[i]);
                                     break;
                                 default:
                                     Values[i] = element.Values[i];

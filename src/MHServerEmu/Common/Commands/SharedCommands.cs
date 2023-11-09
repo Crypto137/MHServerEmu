@@ -30,7 +30,7 @@ namespace MHServerEmu.Common.Commands
             return OutputPrototypeLookup(matchList, "Regions/", client);
         }
 
-        private static string OutputPrototypeLookup(List<KeyValuePair<ulong, string>> matchList, string rootDirectory, FrontendClient client)
+        private static string OutputPrototypeLookup(List<KeyValuePair<PrototypeId, string>> matchList, string rootDirectory, FrontendClient client)
         {
             if (matchList.Count > 0)
             {

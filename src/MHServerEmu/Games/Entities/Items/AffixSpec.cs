@@ -7,8 +7,8 @@ namespace MHServerEmu.Games.Entities.Items
 {
     public class AffixSpec
     {
-        public ulong AffixProto { get; set; }
-        public ulong ScopeProto { get; set; }
+        public PrototypeId AffixProto { get; set; }
+        public PrototypeId ScopeProto { get; set; }
         public int Seed { get; set; }
 
         public AffixSpec(CodedInputStream stream)
@@ -18,7 +18,7 @@ namespace MHServerEmu.Games.Entities.Items
             Seed = stream.ReadRawInt32();
         }
 
-        public AffixSpec(ulong affixProto, ulong scopeProto, int seed)
+        public AffixSpec(PrototypeId affixProto, PrototypeId scopeProto, int seed)
         {
             AffixProto = affixProto;
             ScopeProto = scopeProto;

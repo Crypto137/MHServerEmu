@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 
@@ -29,7 +30,7 @@ namespace MHServerEmu.Games.Entities
         }
 
         public WorldEntity(EntityBaseData baseData, ulong replicationId, Vector3 mapPosition, int health, int mapAreaId,
-            int healthMaxOther, ulong mapRegionId, int mapCellId, ulong contextAreaRef) : base(baseData)
+            int healthMaxOther, ulong mapRegionId, int mapCellId, PrototypeId contextAreaRef) : base(baseData)
         {
             ReplicationPolicy = 0x20;
 

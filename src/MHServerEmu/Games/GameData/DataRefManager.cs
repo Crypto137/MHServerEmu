@@ -4,10 +4,10 @@
     // We are currently using ulong values as is. Every time something mentions
     // a DataRef it's actually a ulong id (e.g. prototype id).
 
-    public class DataRefManager
+    public class DataRefManager<T> where T: Enum
     {
-        private readonly Dictionary<ulong, string> _referenceDict = new();
-        private readonly Dictionary<string, ulong> _reverseLookupDict;
+        private readonly Dictionary<T, string> _referenceDict = new();
+        private readonly Dictionary<string, T> _reverseLookupDict;
 
         public int Count { get => _referenceDict.Count; }
 
@@ -18,44 +18,44 @@
             if (useReverseLookupDict) _reverseLookupDict = new();
         }
 
-        public void AddDataRef(ulong value, string name)
+        public void AddDataRef(T value, string name)
         {
             _referenceDict.Add(value, name);
             if (_reverseLookupDict != null) _reverseLookupDict.Add(name, value);
         }
 
-        public ulong GetDataRefByName(string name)
+        public T GetDataRefByName(string name)
         {
             // Try to use a lookup dict first
             if (_reverseLookupDict != null)
             {
-                if (_reverseLookupDict.TryGetValue(name, out ulong id))
-                    return id;
+                if (_reverseLookupDict.TryGetValue(name, out T dataRef) == false)
+                    return default;
 
-                return 0;
+                return dataRef;
             }
 
             // Fall back to linear search if there's no dict
             foreach (var kvp in _referenceDict)
                 if (kvp.Value == name) return kvp.Key;
 
-            return 0;
+            return default;
         }
 
-        public string GetReferenceName(ulong id)
+        public string GetReferenceName(T dataRef)
         {
-            if (_referenceDict.TryGetValue(id, out string name))
-                return name;
+            if (_referenceDict.TryGetValue(dataRef, out string name) == false)
+                return string.Empty;
 
-            return string.Empty;
+            return name;
         }
 
-        public ulong[] Enumerate()
+        public T[] Enumerate()
         {
-            ulong[] refValues = new ulong[_referenceDict.Count];
+            T[] refValues = new T[_referenceDict.Count];
 
             int i = 0;
-            foreach (ulong key in _referenceDict.Keys)
+            foreach (T key in _referenceDict.Keys)
             {
                 refValues[i] = key;
                 i++;
@@ -68,9 +68,9 @@
 
         // temporarily add this here until we figure out a better way to implement lookup
 
-        public List<KeyValuePair<ulong, string>> LookupCostume(string pattern)
+        public List<KeyValuePair<T, string>> LookupCostume(string pattern)
         {
-            List<KeyValuePair<ulong, string>> matchList = new();
+            List<KeyValuePair<T, string>> matchList = new();
 
             foreach (var kvp in _referenceDict)
                 if (kvp.Value.Contains("Entity/Items/Costumes/Prototypes/") && kvp.Value.ToLower().Contains(pattern))
@@ -79,9 +79,9 @@
             return matchList;
         }
 
-        public List<KeyValuePair<ulong, string>> LookupRegion(string pattern)
+        public List<KeyValuePair<T, string>> LookupRegion(string pattern)
         {
-            List<KeyValuePair<ulong, string>> matchList = new();
+            List<KeyValuePair<T, string>> matchList = new();
 
             foreach (var kvp in _referenceDict)
             {

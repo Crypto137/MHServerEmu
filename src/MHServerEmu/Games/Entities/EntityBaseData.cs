@@ -16,7 +16,7 @@ namespace MHServerEmu.Games.Entities
         // It was probably converted to an archive for optimization reasons.
         public uint ReplicationPolicy { get; set; }
         public ulong EntityId { get; set; }
-        public ulong PrototypeId { get; set; }
+        public PrototypeId PrototypeId { get; set; }
         public bool[] Flags { get; set; }         // mystery flags: 2, 10, 12, 13
         public bool[] LocFlags { get; set; }
         public uint InterestPolicies { get; set; }
@@ -28,7 +28,7 @@ namespace MHServerEmu.Games.Entities
         public float BoundsScaleOverride { get; }
         public ulong SourceEntityId { get; }
         public Vector3 SourcePosition { get; }
-        public ulong ActivePowerPrototypeId { get; }
+        public PrototypeId ActivePowerPrototypeId { get; }
         public InventoryLocation InvLoc { get; set; }
         public InventoryLocation InvLocPrev { get; set; }
         public ulong[] Vector { get; } = Array.Empty<ulong>();
@@ -76,7 +76,7 @@ namespace MHServerEmu.Games.Entities
 
         public EntityBaseData() { }
 
-        public EntityBaseData(ulong entityId, ulong prototypeId, Vector3 position, Vector3 orientation, bool snap = false)
+        public EntityBaseData(ulong entityId, PrototypeId prototypeId, Vector3 position, Vector3 orientation, bool snap = false)
         {
             ReplicationPolicy = 0x20;
             EntityId = entityId;

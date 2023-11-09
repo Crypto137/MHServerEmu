@@ -13,7 +13,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         public uint ReplicationPolicy { get; set; }
         public ulong EntityId { get; set; }
         public bool[] LocFlags { get; set; }
-        public ulong PrototypeId { get; set; }
+        public PrototypeId PrototypeId { get; set; }
         public Vector3 Position { get; set; }
         public Vector3 Orientation { get; set; }
         public LocomotionState LocomotionState { get; set; }

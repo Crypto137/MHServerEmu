@@ -8,7 +8,7 @@ namespace MHServerEmu.Games.Missions
 {
     public class MissionManager
     {
-        public ulong PrototypeId { get; set; }
+        public PrototypeId PrototypeId { get; set; }
         public Mission[] Missions { get; set; }
         public LegendaryMissionBlacklist[] LegendaryMissionBlacklists { get; set; }
 
@@ -25,7 +25,7 @@ namespace MHServerEmu.Games.Missions
                 LegendaryMissionBlacklists[i] = new(stream);
         }
 
-        public MissionManager(ulong prototypeId, Mission[] missions, LegendaryMissionBlacklist[] legendaryMissionBlacklists)
+        public MissionManager(PrototypeId prototypeId, Mission[] missions, LegendaryMissionBlacklist[] legendaryMissionBlacklists)
         {
             PrototypeId = prototypeId;
             Missions = missions;

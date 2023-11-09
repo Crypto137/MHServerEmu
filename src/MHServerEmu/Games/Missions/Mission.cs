@@ -11,7 +11,7 @@ namespace MHServerEmu.Games.Missions
         public ulong PrototypeGuid { get; set; }
         public ulong State { get; set; }
         public ulong TimeExpireCurrentState { get; set; }
-        public ulong PrototypeId { get; set; }
+        public PrototypeId PrototypeId { get; set; }
         public int Random { get; set; }
         public Objective[] Objectives { get; set; }
         public ulong[] Participants { get; set; }
@@ -36,7 +36,7 @@ namespace MHServerEmu.Games.Missions
             Suspended = boolDecoder.ReadBool(stream);
         }
 
-        public Mission(ulong prototypeGuid, ulong state, ulong timeExpireCurrentState, ulong prototypeId,
+        public Mission(ulong prototypeGuid, ulong state, ulong timeExpireCurrentState, PrototypeId prototypeId,
             Objective[] objectives, ulong[] participants, bool suspended)
         {
             PrototypeGuid = prototypeGuid;

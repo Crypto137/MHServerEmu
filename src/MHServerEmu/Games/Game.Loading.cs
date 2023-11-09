@@ -142,24 +142,24 @@ namespace MHServerEmu.Games
            
             CommunityMember friend = player.Community.CommunityMemberList[0];
             friend.MemberName = "DavidBrevik"; 
-            friend.Slots = new AvatarSlotInfo[] { new(15769648016960461069, 4881398219179434365, 60, 6) };
+            friend.Slots = new AvatarSlotInfo[] { new((PrototypeId)15769648016960461069, (PrototypeId)4881398219179434365, 60, 6) };
             friend.OnlineStatus = CommunityMemberOnlineStatus.Online;
-            friend.RegionRef = 10434222419069901867;
+            friend.RegionRef = (PrototypeId)10434222419069901867;
             friend = player.Community.CommunityMemberList[1];
             friend.OnlineStatus = CommunityMemberOnlineStatus.Online;
             friend.MemberName = "TonyStark";
-            friend.Slots = new AvatarSlotInfo[] { new(421791326977791218, 7150542631074405762, 60, 5) };
-            friend.RegionRef = (ulong)RegionPrototypeId.NPEAvengersTowerHUBRegion;
+            friend.Slots = new AvatarSlotInfo[] { new((PrototypeId)421791326977791218, (PrototypeId)7150542631074405762, 60, 5) };
+            friend.RegionRef = (PrototypeId)RegionPrototypeId.NPEAvengersTowerHUBRegion;
 
-            player.Community.CommunityMemberList.Add(new("Doomsaw", 1, 0, 0, new AvatarSlotInfo[] { new(17750839636937086083, 14098108758769669917, 60, 6) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
-            player.Community.CommunityMemberList.Add(new("PizzaTime", 2, 0, 0, new AvatarSlotInfo[] { new(9378552423541970369, 6454902525769881598, 60, 5) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
-            player.Community.CommunityMemberList.Add(new("RogueServerEnjoyer", 3, 0, 0, new AvatarSlotInfo[] { new(1660250039076459846, 9447440487974639491, 60, 3) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
-            player.Community.CommunityMemberList.Add(new("WhiteQueenXOXO", 4, 0, 0, new AvatarSlotInfo[] { new(412966192105395660, 12724924652099869123, 60, 4) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
-            player.Community.CommunityMemberList.Add(new("AlexBond", 5, 0, 0, new AvatarSlotInfo[] { new(9255468350667101753, 16813567318560086134, 60, 2) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
-            player.Community.CommunityMemberList.Add(new("Crypto137", 6, 0, 0, new AvatarSlotInfo[] { new(421791326977791218, 1195778722002966150, 60, 2) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
-            player.Community.CommunityMemberList.Add(new("yn01", 7, 0, 0, new AvatarSlotInfo[] { new(12534955053251630387, 14506515434462517197, 60, 2) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
+            player.Community.CommunityMemberList.Add(new("Doomsaw", 1, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)17750839636937086083, (PrototypeId)14098108758769669917, 60, 6) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
+            player.Community.CommunityMemberList.Add(new("PizzaTime", 2, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)9378552423541970369, (PrototypeId)6454902525769881598, 60, 5) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
+            player.Community.CommunityMemberList.Add(new("RogueServerEnjoyer", 3, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)1660250039076459846, (PrototypeId)9447440487974639491, 60, 3) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
+            player.Community.CommunityMemberList.Add(new("WhiteQueenXOXO", 4, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)412966192105395660, (PrototypeId)12724924652099869123, 60, 4) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
+            player.Community.CommunityMemberList.Add(new("AlexBond", 5, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)9255468350667101753, (PrototypeId)16813567318560086134, 60, 2) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
+            player.Community.CommunityMemberList.Add(new("Crypto137", 6, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)421791326977791218, (PrototypeId)1195778722002966150, 60, 2) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
+            player.Community.CommunityMemberList.Add(new("yn01", 7, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)12534955053251630387, (PrototypeId)14506515434462517197, 60, 2) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
             player.Community.CommunityMemberList.Add(new("Gazillion", 8, 0, 0, Array.Empty<AvatarSlotInfo>(), CommunityMemberOnlineStatus.Offline, "", new int[] { 0 }));
-            player.Community.CommunityMemberList.Add(new("FriendlyLawyer", 100, 0, 0, new AvatarSlotInfo[] { new(12394659164528645362, 2844257346122946366, 99, 1) }, CommunityMemberOnlineStatus.Online, "", new int[] { 2 }));
+            player.Community.CommunityMemberList.Add(new("FriendlyLawyer", 100, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)12394659164528645362, (PrototypeId)2844257346122946366, 99, 1) }, CommunityMemberOnlineStatus.Online, "", new int[] { 2 }));
 
             messageList.Add(new(player.ToNetMessageEntityCreate()));
 

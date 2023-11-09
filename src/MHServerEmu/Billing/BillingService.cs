@@ -115,7 +115,7 @@ namespace MHServerEmu.Billing
                     ulong replicationId = (ulong)client.Session.Account.Player.Avatar.ToPropertyCollectionReplicationId();
 
                     // Update account data
-                    client.Session.Account.CurrentAvatar.Costume = entry.GuidItems[0].ItemPrototypeRuntimeIdForClient;
+                    client.Session.Account.CurrentAvatar.Costume = (ulong)entry.GuidItems[0].ItemPrototypeRuntimeIdForClient;
 
                     // Send NetMessageSetProperty message
                     client.SendMessage(MuxChannel, new(property.ToNetMessageSetProperty(replicationId)));

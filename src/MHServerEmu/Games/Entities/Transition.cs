@@ -12,7 +12,7 @@ namespace MHServerEmu.Games.Entities
     {
         public string TransitionName { get; set; }
         public Destination[] Destinations { get; set; }
-        public Transition(EntityBaseData baseData, ulong replicationId, ulong mapRegionId, int mapAreaId, int mapCellId, ulong contextAreaRef, 
+        public Transition(EntityBaseData baseData, ulong replicationId, ulong mapRegionId, int mapAreaId, int mapCellId, PrototypeId contextAreaRef, 
             Vector3 mapPosition, Destination destination) : base(baseData)
         {
             ReplicationPolicy = 0x21;
@@ -80,11 +80,11 @@ namespace MHServerEmu.Games.Entities
     public class Destination
     {
         public int Type { get; set; }
-        public ulong Region { get; set; }
-        public ulong Area { get; set; }
-        public ulong Cell { get; set; }
-        public ulong Entity { get; set; }
-        public ulong Target {get; set; }
+        public PrototypeId Region { get; set; }
+        public PrototypeId Area { get; set; }
+        public PrototypeId Cell { get; set; }
+        public PrototypeId Entity { get; set; }
+        public PrototypeId Target {get; set; }
         public int Unk2 { get; set; }
         public string Name { get; set; }
         public ulong NameId { get; set; }
@@ -120,7 +120,7 @@ namespace MHServerEmu.Games.Entities
             UnkId2 = stream.ReadRawVarint64();
         }
 
-        public Destination(int type, ulong region, ulong area, ulong cell, ulong entity, ulong target, 
+        public Destination(int type, PrototypeId region, PrototypeId area, PrototypeId cell, PrototypeId entity, PrototypeId target, 
             int unk2, string name, ulong nameId, ulong regionId, 
             Vector3 position, ulong unkId1, ulong unkId2)
         {

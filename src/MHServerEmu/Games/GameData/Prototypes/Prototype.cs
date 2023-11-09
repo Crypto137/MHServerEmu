@@ -26,7 +26,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool ReferenceExists { get; }
         public bool DataExists { get; }
         public bool PolymorphicData { get; }
-        public ulong ReferenceType { get; }     // Parent prototype id, invalid (0) for .defaults
+        public PrototypeId ReferenceType { get; }     // Parent prototype id, invalid (0) for .defaults
 
         public PrototypeDataHeader(BinaryReader reader)
         {
@@ -35,7 +35,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             DataExists = (flags & 0x02) > 0;
             PolymorphicData = (flags & 0x04) > 0;
 
-            ReferenceType = ReferenceExists ? reader.ReadUInt64() : 0;
+            ReferenceType = ReferenceExists ? (PrototypeId)reader.ReadUInt64() : 0;
         }
     }
 
@@ -56,24 +56,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 Entries[i] = new(reader);
         }
 
-        public PrototypeEntry GetEntry(ulong blueprintId)
+        public PrototypeEntry GetEntry(PrototypeId defaultPrototypeId)
         {
             if (Entries == null) return null;
-            return Entries.FirstOrDefault(entry => entry.Id == blueprintId);
+            return Entries.FirstOrDefault(entry => entry.Id == defaultPrototypeId);
         }
-        public PrototypeEntry GetEntry(BlueprintId blueprintId) => GetEntry((ulong)blueprintId);
+
+        public PrototypeEntry GetEntry(DefaultPrototypeId defaultPrototypeId) => GetEntry((PrototypeId)defaultPrototypeId);
     }
 
     public class PrototypeEntry
     {
-        public ulong Id { get; }
+        public PrototypeId Id { get; }
         public byte ByteField { get; }
         public PrototypeEntryElement[] Elements { get; }
         public PrototypeEntryListElement[] ListElements { get; }
 
         public PrototypeEntry(BinaryReader reader)
         {
-            Id = reader.ReadUInt64();
+            Id = (PrototypeId)reader.ReadUInt64();
             ByteField = reader.ReadByte();
 
             Elements = new PrototypeEntryElement[reader.ReadUInt16()];

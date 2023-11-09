@@ -12,7 +12,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
         public int MaxEnumValue { get => _assets.Length - 1; }  // Is this correct?
 
-        public AssetType(byte[] data, AssetDirectory assetDirectory, ulong assetTypeId, ulong assetTypeGuid)
+        public AssetType(byte[] data, AssetDirectory assetDirectory, AssetTypeId assetTypeId, ulong assetTypeGuid)
         {
             _guid = assetTypeGuid;
 
@@ -35,20 +35,20 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             }
         }
 
-        public AssetValue GetAssetValue(ulong id)
+        public AssetValue GetAssetValue(StringId id)
         {
             return _assets.FirstOrDefault(asset => asset.Id == id);
         }
 
         public readonly struct AssetValue
         {
-            public ulong Id { get; }
+            public StringId Id { get; }
             public ulong Guid { get; }
             public byte Flags { get; }
 
             public AssetValue(BinaryReader reader)
             {
-                Id = reader.ReadUInt64();
+                Id = (StringId)reader.ReadUInt64();
                 Guid = reader.ReadUInt64();
                 Flags = reader.ReadByte();
             }

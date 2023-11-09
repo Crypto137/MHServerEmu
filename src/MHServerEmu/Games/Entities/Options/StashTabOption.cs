@@ -7,7 +7,7 @@ namespace MHServerEmu.Games.Entities.Options
 {
     public class StashTabOption
     {
-        public ulong PrototypeId { get; set; }
+        public PrototypeId PrototypeId { get; set; }
         public string Name { get; set; }
         public ulong AssetRef { get; set; }
         public int Field2 { get; set; }
@@ -22,7 +22,7 @@ namespace MHServerEmu.Games.Entities.Options
             Field3 = stream.ReadRawInt32();            
         }
 
-        public StashTabOption(ulong prototypeId, string name, ulong assetRef, int field2, int field3)
+        public StashTabOption(PrototypeId prototypeId, string name, ulong assetRef, int field2, int field3)
         {
             PrototypeId = prototypeId;
             Name = name;

@@ -5,7 +5,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
     public class Blueprint
     {                    
         public string RuntimeBinding { get; }                           // Name of the C++ class that handles prototypes that use this blueprint
-        public ulong DefaultPrototypeId { get; }                        // .defaults prototype file id
+        public PrototypeId DefaultPrototypeId { get; }                        // .defaults prototype file id
         public BlueprintReference[] Parents { get; }
         public BlueprintReference[] ContributingBlueprints { get; }
         public BlueprintMember[] Members { get; }                       // Field definitions for prototypes that use this blueprint  
@@ -18,7 +18,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 CalligraphyHeader header = reader.ReadCalligraphyHeader();  // BPT v11
 
                 RuntimeBinding = reader.ReadFixedString16();
-                DefaultPrototypeId = reader.ReadUInt64();
+                DefaultPrototypeId = (PrototypeId)reader.ReadUInt64();
 
                 Parents = new BlueprintReference[reader.ReadUInt16()];
                 for (int i = 0; i < Parents.Length; i++)
@@ -34,7 +34,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             }
         }
 
-        public BlueprintMember GetMember(ulong id)
+        public BlueprintMember GetMember(StringId id)
         {
             return Members.First(member => member.FieldId == id);
         }
@@ -42,19 +42,19 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
     public class BlueprintReference
     {
-        public ulong Id { get; }
+        public PrototypeId Id { get; }
         public byte ByteField { get; }
 
         public BlueprintReference(BinaryReader reader)
         {
-            Id = reader.ReadUInt64();
+            Id = (PrototypeId)reader.ReadUInt64();
             ByteField = reader.ReadByte();
         }
     }
 
     public class BlueprintMember
     {
-        public ulong FieldId { get; }
+        public StringId FieldId { get; }
         public string FieldName { get; }
         public CalligraphyValueType ValueType { get; }
         public CalligraphyContainerType ContainerType { get; }
@@ -62,7 +62,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
         public BlueprintMember(BinaryReader reader)
         {
-            FieldId = reader.ReadUInt64();
+            FieldId = (StringId)reader.ReadUInt64();
             FieldName = reader.ReadFixedString16();
             ValueType = (CalligraphyValueType)reader.ReadByte();
             ContainerType = (CalligraphyContainerType)reader.ReadByte();

@@ -9,7 +9,7 @@ namespace MHServerEmu.Games.Powers
     {
         private const int FlagCount = 9;
 
-        public ulong PowerPrototypeId { get; set; }
+        public PrototypeId PowerPrototypeId { get; set; }
         public bool[] Flags { get; set; }
         public PowerIndexProperties IndexProps { get; set; }
         public uint PowerRefCount { get; set; }

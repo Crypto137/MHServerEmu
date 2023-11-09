@@ -8,11 +8,11 @@ namespace MHServerEmu.Games.UI
 {
     public class UISyncData
     {
-        public ulong WidgetR { get; set; }
-        public ulong ContextR { get; set; }
-        public ulong[] Areas { get; set; }
+        public PrototypeId WidgetR { get; set; }
+        public PrototypeId ContextR { get; set; }
+        public PrototypeId[] Areas { get; set; }
 
-        public UISyncData(ulong widgetR, ulong contextR, ulong[] areas)
+        public UISyncData(PrototypeId widgetR, PrototypeId contextR, PrototypeId[] areas)
         {
             WidgetR = widgetR;
             ContextR = contextR;

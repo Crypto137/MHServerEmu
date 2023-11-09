@@ -72,8 +72,8 @@ namespace MHServerEmu.Games.GameData
 
         #endregion
 
-        private Dictionary<PrototypeEnumType, ulong[]> _prototypeEnumDict;                  // EnumValue -> PrototypeId
-        private Dictionary<PrototypeEnumType, Dictionary<ulong, ulong>> _enumLookupDict;    // PrototypeId -> EnumValue
+        private readonly Dictionary<PrototypeEnumType, PrototypeId[]> _prototypeEnumDict;            // EnumValue -> PrototypeId
+        private readonly Dictionary<PrototypeEnumType, Dictionary<PrototypeId, ulong>> _enumLookupDict;    // PrototypeId -> EnumValue
 
         public int MaxEnumValue { get => _enumLookupDict[PrototypeEnumType.All].Count - 1; }
 
@@ -83,16 +83,16 @@ namespace MHServerEmu.Games.GameData
             _prototypeEnumDict = new();
 
             // Prototype enum is an array of sorted prototype hashes where id's index in the array is its enum value
-            List<ulong> allEnumValueList = new() { 0 };
+            List<PrototypeId> allEnumValueList = new() { PrototypeId.Invalid };
             allEnumValueList.AddRange(GameDatabase.PrototypeRefManager.Enumerate());
-            ulong[] allEnumValues = allEnumValueList.ToArray();
+            PrototypeId[] allEnumValues = allEnumValueList.ToArray();
 
             _prototypeEnumDict.Add(PrototypeEnumType.All, allEnumValues);
 
             // Enumerated hashmap is already sorted, so we just need to filter prototypes according to their blueprint classes
-            List<ulong> entityList = new() { 0 };
-            List<ulong> inventoryList = new() { 0 };
-            List<ulong> powerList = new() { 0 };
+            List<PrototypeId> entityList = new() { 0 };
+            List<PrototypeId> inventoryList = new() { 0 };
+            List<PrototypeId> powerList = new() { 0 };
 
             for (int i = 0; i < allEnumValues.Length; i++)
             {
@@ -124,8 +124,8 @@ namespace MHServerEmu.Games.GameData
             }
         }
 
-        public ulong GetPrototypeFromEnumValue(ulong enumValue, PrototypeEnumType type) => _prototypeEnumDict[type][enumValue];
-        public ulong GetPrototypeEnumValue(ulong prototypeId, PrototypeEnumType type) => _enumLookupDict[type][prototypeId];
+        public PrototypeId GetPrototypeFromEnumValue(ulong enumValue, PrototypeEnumType type) => _prototypeEnumDict[type][enumValue];
+        public ulong GetPrototypeEnumValue(PrototypeId prototypeId, PrototypeEnumType type) => _enumLookupDict[type][prototypeId];
 
         public bool Verify()
         {
@@ -137,7 +137,7 @@ namespace MHServerEmu.Games.GameData
 
         public List<ulong> GetPowerPropertyIdList(string filter)
         {
-            ulong[] powerTable = _prototypeEnumDict[PrototypeEnumType.Power];
+            PrototypeId[] powerTable = _prototypeEnumDict[PrototypeEnumType.Power];
             List<ulong> propertyIdList = new();
 
             for (int i = 1; i < powerTable.Length; i++)

@@ -2,18 +2,18 @@
 {
     public class CurveDirectory
     {
-        private readonly Dictionary<ulong, CurveRecord> _curveRecordDict = new();
+        private readonly Dictionary<CurveId, CurveRecord> _curveRecordDict = new();
 
         public int RecordCount { get => _curveRecordDict.Count; }
 
-        public CurveRecord CreateCurveRecord(ulong id, byte flags)
+        public CurveRecord CreateCurveRecord(CurveId id, byte flags)
         {
             CurveRecord record = new() { Flags = flags };
             _curveRecordDict.Add(id, record);
             return record;
         }
 
-        public CurveRecord GetCurveRecord(ulong id)
+        public CurveRecord GetCurveRecord(CurveId id)
         {
             if (_curveRecordDict.TryGetValue(id, out CurveRecord record) == false)
                 return null;
@@ -21,7 +21,7 @@
             return record;
         }
 
-        public Curve GetCurve(ulong id)
+        public Curve GetCurve(CurveId id)
         {
             if (_curveRecordDict.TryGetValue(id, out CurveRecord record) == false)
                 return null;

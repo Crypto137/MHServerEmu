@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Powers
 {
@@ -21,7 +22,7 @@ namespace MHServerEmu.Games.Powers
 
         public AddConditionArchive() { }
 
-        public AddConditionArchive(ulong entityId, ulong id, uint flags, ulong prototypeId, int startTime)
+        public AddConditionArchive(ulong entityId, ulong id, uint flags, PrototypeId prototypeId, int startTime)
         {
             ReplicationPolicy = 239;
             EntityId = entityId;

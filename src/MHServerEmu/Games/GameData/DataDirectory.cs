@@ -25,11 +25,11 @@ namespace MHServerEmu.Games.GameData
             "Calligraphy/Replacement.directory"
         };
 
-        private readonly Dictionary<ulong, LoadedBlueprintRecord> _blueprintRecordDict = new();     // BlueprintId -> LoadedBlueprintRecord
-        private readonly Dictionary<ulong, ulong> _blueprintGuidToDataRefDict = new();              // BlueprintGuid -> BlueprintId
+        private readonly Dictionary<BlueprintId, LoadedBlueprintRecord> _blueprintRecordDict = new();     // BlueprintId -> LoadedBlueprintRecord
+        private readonly Dictionary<ulong, BlueprintId> _blueprintGuidToDataRefDict = new();              // BlueprintGuid -> BlueprintId
 
-        private readonly Dictionary<ulong, PrototypeDataRefRecord> _prototypeRecordDict = new();    // PrototypeId -> PrototypeDataRefRecord
-        private readonly Dictionary<ulong, ulong> _prototypeGuidToDataRefDict = new();              // PrototypeGuid -> PrototypeId
+        private readonly Dictionary<PrototypeId, PrototypeDataRefRecord> _prototypeRecordDict = new();    // PrototypeId -> PrototypeDataRefRecord
+        private readonly Dictionary<ulong, PrototypeId> _prototypeGuidToDataRefDict = new();              // PrototypeGuid -> PrototypeId
 
         private readonly Dictionary<Prototype, Blueprint> _prototypeBlueprintDict = new();          // .defaults prototype -> blueprint
 
@@ -97,7 +97,7 @@ namespace MHServerEmu.Games.GameData
 
         private void ReadTypeDirectoryEntry(BinaryReader reader, Dictionary<string, byte[]> gpakDict)
         {
-            ulong dataId = reader.ReadUInt64();
+            var dataId = (AssetTypeId)reader.ReadUInt64();
             ulong assetTypeGuid = reader.ReadUInt64();
             byte flags = reader.ReadByte();
             string filePath = reader.ReadFixedString16().Replace('\\', '/');
@@ -109,7 +109,7 @@ namespace MHServerEmu.Games.GameData
 
         private void ReadCurveDirectoryEntry(BinaryReader reader, Dictionary<string, byte[]> gpakDict)
         {
-            ulong curveId = reader.ReadUInt64();
+            var curveId = (CurveId)reader.ReadUInt64();
             ulong guid = reader.ReadUInt64();   // Doesn't seem to be used at all
             byte flags = reader.ReadByte();
             string filePath = reader.ReadFixedString16().Replace('\\', '/');
@@ -121,7 +121,7 @@ namespace MHServerEmu.Games.GameData
 
         private void ReadBlueprintDirectoryEntry(BinaryReader reader, Dictionary<string, byte[]> gpakDict)
         {
-            ulong dataId = reader.ReadUInt64();
+            var dataId = (BlueprintId)reader.ReadUInt64();
             ulong guid = reader.ReadUInt64();
             byte flags = reader.ReadByte();
             string filePath = reader.ReadFixedString16().Replace('\\', '/');
@@ -132,9 +132,9 @@ namespace MHServerEmu.Games.GameData
 
         public void ReadPrototypeDirectoryEntry(BinaryReader reader, Dictionary<string, byte[]> gpakDict)
         {
-            ulong prototypeId = reader.ReadUInt64();
+            var prototypeId = (PrototypeId)reader.ReadUInt64();
             ulong prototypeGuid = reader.ReadUInt64();
-            ulong blueprintId = reader.ReadUInt64();
+            var blueprintId = (PrototypeId)reader.ReadUInt64();
             byte flags = reader.ReadByte();
             string filePath = reader.ReadFixedString16().Replace('\\', '/');
 
@@ -150,7 +150,7 @@ namespace MHServerEmu.Games.GameData
             ReplacementDirectory.AddReplacementRecord(oldGuid, newGuid, name);
         }
 
-        private void LoadBlueprint(ulong id, ulong guid, byte flags, Dictionary<string, byte[]> gpakDict)
+        private void LoadBlueprint(BlueprintId id, ulong guid, byte flags, Dictionary<string, byte[]> gpakDict)
         {
             // Add guid lookup
             _blueprintGuidToDataRefDict[guid] = id;
@@ -160,13 +160,13 @@ namespace MHServerEmu.Games.GameData
 
             // Add field name refs when loading blueprints
             foreach (BlueprintMember member in blueprint.Members)
-                GameDatabase.StringRefManager.AddDataRef(member.FieldId, member.FieldName);
+                GameDatabase.StringRefManager.AddDataRef((StringId)member.FieldId, member.FieldName);
 
             // Add a new blueprint record
             _blueprintRecordDict.Add(id, new(blueprint, flags));
         }
 
-        private void AddCalligraphyPrototype(ulong prototypeId, ulong prototypeGuid, ulong blueprintId, byte flags, string filePath, Dictionary<string, byte[]> gpakDict)
+        private void AddCalligraphyPrototype(PrototypeId prototypeId, ulong prototypeGuid, PrototypeId blueprintId, byte flags, string filePath, Dictionary<string, byte[]> gpakDict)
         {
             // Create a dataRef
             GameDatabase.PrototypeRefManager.AddDataRef(prototypeId, filePath);
@@ -192,7 +192,7 @@ namespace MHServerEmu.Games.GameData
         private void AddResource(string filePath, byte[] data)
         {
             // Create a dataRef
-            ulong prototypeId = HashHelper.HashPath($"&{filePath.ToLower()}");   
+            var prototypeId = (PrototypeId)HashHelper.HashPath($"&{filePath.ToLower()}");   
             GameDatabase.PrototypeRefManager.AddDataRef(prototypeId, filePath);
 
             // Add a new prototype record
@@ -247,15 +247,15 @@ namespace MHServerEmu.Games.GameData
 
         #region Data Access
 
-        public ulong GetPrototypeDataRefByGuid(ulong guid)
+        public PrototypeId GetPrototypeDataRefByGuid(ulong guid)
         {
-            if (_prototypeGuidToDataRefDict.TryGetValue(guid, out ulong id) == false)
-                return 0;
+            if (_prototypeGuidToDataRefDict.TryGetValue(guid, out var id) == false)
+                return PrototypeId.Invalid;
 
             return id;
         }
 
-        public ulong GetPrototypeGuid(ulong id)
+        public ulong GetPrototypeGuid(PrototypeId id)
         {
             if (_prototypeRecordDict.TryGetValue(id, out PrototypeDataRefRecord record) == false)
                 return 0;
@@ -263,7 +263,7 @@ namespace MHServerEmu.Games.GameData
             return record.PrototypeGuid;
         }
 
-        public Blueprint GetBlueprint(ulong id)
+        public Blueprint GetBlueprint(BlueprintId id)
         {
             if (_blueprintRecordDict.TryGetValue(id, out var record) == false)
                 return null;
@@ -271,7 +271,7 @@ namespace MHServerEmu.Games.GameData
             return record.Blueprint;
         }
 
-        public T GetPrototype<T>(ulong id)
+        public T GetPrototype<T>(PrototypeId id)
         {
             var record = GetPrototypeDataRefRecord(id);
             if (record == null) return default;
@@ -281,7 +281,7 @@ namespace MHServerEmu.Games.GameData
         }
 
         public Prototype GetBlueprintDefaultPrototype(Blueprint blueprint) => GetPrototype<Prototype>(blueprint.DefaultPrototypeId);
-        public Prototype GetBlueprintDefaultPrototype(ulong blueprintId) => GetBlueprintDefaultPrototype(GetBlueprint(blueprintId));
+        public Prototype GetBlueprintDefaultPrototype(BlueprintId blueprintId) => GetBlueprintDefaultPrototype(GetBlueprint(blueprintId));
         public Prototype GetBlueprintDefaultPrototype(string blueprintPath) => GetBlueprintDefaultPrototype(
             GetBlueprint(GameDatabase.BlueprintRefManager.GetDataRefByName(blueprintPath)));
 
@@ -292,14 +292,14 @@ namespace MHServerEmu.Games.GameData
             return _prototypeBlueprintDict[prototype];          // Use .defaults prototype as a key to get the blueprint for it
         }
 
-        public Blueprint GetPrototypeBlueprint(ulong prototypeId) => GetPrototypeBlueprint(GetPrototype<Prototype>(prototypeId));
+        public Blueprint GetPrototypeBlueprint(PrototypeId prototypeId) => GetPrototypeBlueprint(GetPrototype<Prototype>(prototypeId));
 
-        public ulong GetPrototypeFromEnumValue(ulong enumValue, PrototypeEnumType type) => _prototypeEnumManager.GetPrototypeFromEnumValue(enumValue, type);
-        public ulong GetPrototypeEnumValue(ulong prototypeId, PrototypeEnumType type) => _prototypeEnumManager.GetPrototypeEnumValue(prototypeId, type);
+        public PrototypeId GetPrototypeFromEnumValue(ulong enumValue, PrototypeEnumType type) => _prototypeEnumManager.GetPrototypeFromEnumValue(enumValue, type);
+        public ulong GetPrototypeEnumValue(PrototypeId prototypeId, PrototypeEnumType type) => _prototypeEnumManager.GetPrototypeEnumValue(prototypeId, type);
 
         public List<ulong> GetPowerPropertyIdList(string filter) => _prototypeEnumManager.GetPowerPropertyIdList(filter);   // TO BE REMOVED: temp bruteforcing of power property ids
 
-        public bool IsCalligraphyPrototype(ulong prototypeId)
+        public bool IsCalligraphyPrototype(PrototypeId prototypeId)
         {
             if (_prototypeRecordDict.TryGetValue(prototypeId, out PrototypeDataRefRecord record) == false)
                 return false;
@@ -307,7 +307,7 @@ namespace MHServerEmu.Games.GameData
             return record.IsCalligraphyPrototype;
         }
 
-        private PrototypeDataRefRecord GetPrototypeDataRefRecord(ulong prototypeId)
+        private PrototypeDataRefRecord GetPrototypeDataRefRecord(PrototypeId prototypeId)
         {
             if (_prototypeRecordDict.TryGetValue(prototypeId, out var record) == false)
             {
@@ -357,9 +357,9 @@ namespace MHServerEmu.Games.GameData
 
         class PrototypeDataRefRecord
         {
-            public ulong PrototypeId { get; set; }
+            public PrototypeId PrototypeId { get; set; }
             public ulong PrototypeGuid { get; set; }
-            public ulong BlueprintId { get; set; }
+            public PrototypeId BlueprintId { get; set; }
             public byte Flags { get; set; }
             public bool IsCalligraphyPrototype { get; set; }
             public object Prototype { get; set; }

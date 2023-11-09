@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.UI.Widgets
 {
@@ -13,7 +14,7 @@ namespace MHServerEmu.Games.UI.Widgets
         public ulong TimeEnd { get; set; }
         public bool TimePaused { get; set; }
 
-        public UIWidgetGenericFraction(ulong widgetR, ulong contextR, ulong[] areas, CodedInputStream stream, BoolDecoder boolDecoder) : base(widgetR, contextR, areas)
+        public UIWidgetGenericFraction(PrototypeId widgetR, PrototypeId contextR, PrototypeId[] areas, CodedInputStream stream, BoolDecoder boolDecoder) : base(widgetR, contextR, areas)
         {
             CurrentCount = stream.ReadRawInt32();
             TotalCount = stream.ReadRawInt32();

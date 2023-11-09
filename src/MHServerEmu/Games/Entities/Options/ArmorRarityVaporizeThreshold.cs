@@ -9,7 +9,7 @@ namespace MHServerEmu.Games.Entities.Options
     public class ArmorRarityVaporizeThreshold
     {
         public EquipmentInvUISlot Slot { get; set; }
-        public ulong RarityPrototypeId { get; set; }
+        public PrototypeId RarityPrototypeId { get; set; }
 
         public ArmorRarityVaporizeThreshold(CodedInputStream stream)
         {
@@ -17,7 +17,7 @@ namespace MHServerEmu.Games.Entities.Options
             RarityPrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.All);
         }
 
-        public ArmorRarityVaporizeThreshold(EquipmentInvUISlot slot, ulong rarityPrototypeId)
+        public ArmorRarityVaporizeThreshold(EquipmentInvUISlot slot, PrototypeId rarityPrototypeId)
         {
             Slot = slot;
             RarityPrototypeId = rarityPrototypeId;
