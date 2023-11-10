@@ -289,7 +289,7 @@ namespace MHServerEmu.Games
 
             if (missionPrototypeRef != PrototypeId.Invalid)
             {
-                Logger.Debug($"UseInteractableObject message contains missionPrototypeRef: {missionPrototypeRef}");
+                Logger.Debug($"UseInteractableObject message contains missionPrototypeRef: {GameDatabase.GetPrototypeName(missionPrototypeRef)}");
                 EnqueueResponse(client, new(NetMessageMissionInteractRelease.DefaultInstance));
             }
 
