@@ -6,28 +6,28 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PropertyPrototype Mixin { get; set; }                   // contains mixin param information
 
-        public AggregationMethod AggMethod { get; }
+        public AggregationMethod AggMethod { get; }             // A Property/AggregationMethod.type
         public bool ClientOnly { get; }
         public double CurveDefault { get; }
-        public object Eval { get; }                             // R
+        public object Eval { get; }                             // R Eval/Eval.defaults
         public bool EvalAlwaysCalculates { get; }
         public double Min { get; }
         public double Max { get; }
         public bool ReplicateForTransfer { get; }
-        public DatabasePolicy ReplicateToDatabase { get; }
+        public DatabasePolicy ReplicateToDatabase { get; }      // A Property/DatabasePolicy.type
         public bool ReplicateToDatabaseAllowedOnItems { get; }
         public bool ReplicateToOwner { get; }
         public bool ReplicateToParty { get; }
         public bool ReplicateToProximity { get; }
         public bool ReplicateToDiscovery { get; }
         public bool ReplicateToTrader { get; }
-        public ulong ValueDisplayFormat { get; }                // P
+        public PrototypeId ValueDisplayFormat { get; }          // Localization/Translations/Translation.defaults
         public bool SerializeEntityToPowerPayload { get; }
         public bool SerializePowerToPowerPayload { get; }
         public bool SerializeConditionSrcToCondition { get; }
-        public ulong TooltipText { get; }                       // P
+        public PrototypeId TooltipText { get; }                 // Localization/Translations/Properties/PropertyTranslation.defaults
         public bool TruncatePropertyValueToInt { get; }
-        public PropertyType Type { get; }
+        public PropertyType Type { get; }                       // A Property/PropertyType.type
         public long Version { get; }
 
         public PropertyInfoPrototype(Prototype prototype)
@@ -85,7 +85,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         ReplicateToTrader = (bool)field.Value;
                         break;
                     case nameof(ValueDisplayFormat):
-                        ValueDisplayFormat = (ulong)field.Value;
+                        ValueDisplayFormat = (PrototypeId)field.Value;
                         break;
                     case nameof(SerializeEntityToPowerPayload):
                         SerializeEntityToPowerPayload = (bool)field.Value;
@@ -97,7 +97,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         SerializeConditionSrcToCondition = (bool)field.Value;
                         break;
                     case nameof(TooltipText):
-                        TooltipText = (ulong)field.Value;
+                        TooltipText = (PrototypeId)field.Value;
                         break;
                     case nameof(TruncatePropertyValueToInt):
                         TruncatePropertyValueToInt = (bool)field.Value;
