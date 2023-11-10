@@ -20,7 +20,7 @@ For a more in-depth list of commands see [ServerCommands.md](./ServerCommands.md
 
 To allow remote clients to connect to your server you need to set up your Apache to function as a reverse proxy server.
 
-1. Add `ProxyPass /AuthServer http://localhost:8080` and `ProxyPassReverse /AuthServer http://localhost:8080` to `httpd-ahssl.conf`, similar to how you have added Rewrite lines during the initial setup.
+1. Add `ProxyPass /AuthServer http://localhost:8080` and `ProxyPassReverse /AuthServer http://localhost:8080` to `httpd-ssl.conf`, similar to how you have added Rewrite lines during the initial setup.
 
 2. Create a copy of your `SiteConfig.xml` in `Apache24\htdocs` and replace the `AuthServerAddress` value in it with your server's **public** IP address or domain name.
 
