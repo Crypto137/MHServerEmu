@@ -7,12 +7,12 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         // An AssetType is basically an enum for all assets of a certain type. An AssetValue is a reference to an asset.
         // All AssetTypes and AssetValues have their own unique ids. Some assets are literally representations of enums.
 
-        private readonly ulong _guid;
+        private readonly AssetTypeGuid _guid;
         private readonly AssetValue[] _assets;
 
         public int MaxEnumValue { get => _assets.Length - 1; }  // Is this correct?
 
-        public AssetType(byte[] data, AssetDirectory assetDirectory, AssetTypeId assetTypeId, ulong assetTypeGuid)
+        public AssetType(byte[] data, AssetDirectory assetDirectory, AssetTypeId assetTypeId, AssetTypeGuid assetTypeGuid)
         {
             _guid = assetTypeGuid;
 
@@ -43,13 +43,13 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         public readonly struct AssetValue
         {
             public StringId Id { get; }
-            public ulong Guid { get; }
+            public AssetGuid Guid { get; }
             public byte Flags { get; }
 
             public AssetValue(BinaryReader reader)
             {
                 Id = (StringId)reader.ReadUInt64();
-                Guid = reader.ReadUInt64();
+                Guid = (AssetGuid)reader.ReadUInt64();
                 Flags = reader.ReadByte();
             }
         }

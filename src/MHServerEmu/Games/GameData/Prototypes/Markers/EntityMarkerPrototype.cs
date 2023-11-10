@@ -6,7 +6,7 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
     public class EntityMarkerPrototype : MarkerPrototype
     {
         [JsonPropertyOrder(2)]
-        public ulong EntityGuid { get; }
+        public PrototypeGuid EntityGuid { get; }
         [JsonPropertyOrder(3)]
         public string LastKnownEntityName { get; }
         [JsonPropertyOrder(4)]
@@ -36,7 +36,7 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
         {
             ProtoNameHash = ResourcePrototypeHash.EntityMarkerPrototype;
 
-            EntityGuid = reader.ReadUInt64();
+            EntityGuid = (PrototypeGuid)reader.ReadUInt64();
             LastKnownEntityName = reader.ReadFixedString32();
             Modifier1Guid = reader.ReadUInt64();
             if (Modifier1Guid != 0) Modifier1Text = reader.ReadFixedString32();

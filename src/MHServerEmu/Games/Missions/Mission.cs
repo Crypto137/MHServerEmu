@@ -8,7 +8,7 @@ namespace MHServerEmu.Games.Missions
 {
     public class Mission
     {
-        public ulong PrototypeGuid { get; set; }
+        public PrototypeGuid PrototypeGuid { get; set; }
         public ulong State { get; set; }
         public ulong TimeExpireCurrentState { get; set; }
         public PrototypeId PrototypeId { get; set; }
@@ -19,7 +19,7 @@ namespace MHServerEmu.Games.Missions
 
         public Mission(CodedInputStream stream, BoolDecoder boolDecoder)
         {
-            PrototypeGuid = stream.ReadRawVarint64();
+            PrototypeGuid = (PrototypeGuid)stream.ReadRawVarint64();
             State = stream.ReadRawVarint64();
             TimeExpireCurrentState = stream.ReadRawVarint64();
             PrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.All);
@@ -36,7 +36,7 @@ namespace MHServerEmu.Games.Missions
             Suspended = boolDecoder.ReadBool(stream);
         }
 
-        public Mission(ulong prototypeGuid, ulong state, ulong timeExpireCurrentState, PrototypeId prototypeId,
+        public Mission(PrototypeGuid prototypeGuid, ulong state, ulong timeExpireCurrentState, PrototypeId prototypeId,
             Objective[] objectives, ulong[] participants, bool suspended)
         {
             PrototypeGuid = prototypeGuid;
@@ -50,7 +50,7 @@ namespace MHServerEmu.Games.Missions
 
         public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
-            stream.WriteRawVarint64(PrototypeGuid);
+            stream.WriteRawVarint64((ulong)PrototypeGuid);
             stream.WriteRawVarint64(State);
             stream.WriteRawVarint64(TimeExpireCurrentState);
             stream.WritePrototypeEnum(PrototypeId, PrototypeEnumType.All);

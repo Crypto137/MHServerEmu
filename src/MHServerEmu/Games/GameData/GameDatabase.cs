@@ -102,7 +102,7 @@ namespace MHServerEmu.Games.GameData
         public static string GetBlueprintFieldName(StringId fieldId) => StringRefManager.GetReferenceName(fieldId);
         public static string GetPrototypeName(PrototypeId prototypeId) => PrototypeRefManager.GetReferenceName(prototypeId);
 
-        public static PrototypeId GetDataRefByPrototypeGuid(ulong guid) => DataDirectory.GetPrototypeDataRefByGuid(guid);
+        public static PrototypeId GetDataRefByPrototypeGuid(PrototypeGuid guid) => DataDirectory.GetPrototypeDataRefByGuid(guid);
 
         // Our implementation of GetPrototypeRefByName combines both GetPrototypeRefByName and GetDataRefByResourceGuid.
         // The so-called "ResourceGuid" is actually just a prototype name, and in the client both of these methods work
@@ -113,7 +113,7 @@ namespace MHServerEmu.Games.GameData
         // We avoid all of this additional complexity by simply using a reverse lookup dictionary in our PrototypeRefManager.
         public static PrototypeId GetPrototypeRefByName(string name) => PrototypeRefManager.GetDataRefByName(name);
 
-        public static ulong GetPrototypeGuid(PrototypeId id) => DataDirectory.GetPrototypeGuid(id);
+        public static PrototypeGuid GetPrototypeGuid(PrototypeId id) => DataDirectory.GetPrototypeGuid(id);
 
         #endregion
 

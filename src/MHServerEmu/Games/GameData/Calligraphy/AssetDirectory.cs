@@ -7,7 +7,7 @@
     {
         private readonly Dictionary<AssetTypeId, LoadedAssetTypeRecord> _assetTypeRecordDict = new();   // assetTypeId => LoadedAssetTypeRecord
         private readonly Dictionary<StringId, AssetTypeId> _assetIdToTypeIdDict = new();                // assetId => assetTypeId
-        private readonly Dictionary<ulong, StringId> _assetGuidToIdDict = new();                        // assetGuid => assetId
+        private readonly Dictionary<AssetGuid, StringId> _assetGuidToIdDict = new();                    // assetGuid => assetId
 
         public int AssetTypeCount { get => _assetTypeRecordDict.Count; }
         public int AssetCount { get => _assetGuidToIdDict.Count; }
@@ -66,7 +66,7 @@
         /// <summary>
         /// Adds new assetId => assetTypeId and assetGuid => assetId lookups.
         /// </summary>
-        public void AddAssetLookup(AssetTypeId assetTypeId, StringId assetId, ulong assetGuid)
+        public void AddAssetLookup(AssetTypeId assetTypeId, StringId assetId, AssetGuid assetGuid)
         {
             _assetIdToTypeIdDict.Add(assetId, assetTypeId);
             _assetGuidToIdDict.Add(assetGuid, assetId);
