@@ -1,8 +1,10 @@
 ﻿namespace MHServerEmu.Games.GameData
 {
-    // Note: in the client DataRef is a container class for ulong data ids.
-    // We are currently using ulong values as is. Every time something mentions
-    // a DataRef it's actually a ulong id (e.g. prototype id).
+    // Note: in the client DataRef is a container class for ulong-based data ids.
+    // We are currently using ulong enums as is. Every time something mentions
+    // a DataRef it's actually a ulong id (e.g. PrototypeId).
+
+    // See DataRefTypes.cs for defined id types.
 
     public class DataRefManager<T> where T: Enum
     {
@@ -66,7 +68,7 @@
             return refValues;
         }
 
-        // temporarily add this here until we figure out a better way to implement lookup
+        // Temporarily move lookups here until we figure out a better way to implement them
 
         public List<KeyValuePair<T, string>> LookupCostume(string pattern)
         {

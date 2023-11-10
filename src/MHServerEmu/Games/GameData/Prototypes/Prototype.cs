@@ -68,14 +68,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class PrototypeEntry
     {
         public PrototypeId Id { get; }
-        public byte ByteField { get; }
+        public byte Flags { get; }
         public PrototypeEntryElement[] Elements { get; }
         public PrototypeEntryListElement[] ListElements { get; }
 
         public PrototypeEntry(BinaryReader reader)
         {
             Id = (PrototypeId)reader.ReadUInt64();
-            ByteField = reader.ReadByte();
+            Flags = reader.ReadByte();
 
             Elements = new PrototypeEntryElement[reader.ReadUInt16()];
             for (int i = 0; i < Elements.Length; i++)
@@ -86,37 +86,37 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 ListElements[i] = new(reader);
         }
 
-        public PrototypeEntryElement GetField(ulong fieldId)
+        public PrototypeEntryElement GetField(StringId fieldId)
         {
             if (Elements == null) return null;
             return Elements.FirstOrDefault(field => field.Id == fieldId);
         }
-        public PrototypeEntryElement GetField(FieldId fieldId) => GetField((ulong)fieldId);
+        public PrototypeEntryElement GetField(FieldId fieldId) => GetField((StringId)fieldId);
 
         public ulong GetFieldDef(FieldId fieldId)
         {
-            PrototypeEntryElement field = GetField((ulong)fieldId);
+            PrototypeEntryElement field = GetField((StringId)fieldId);
             if (field == null) return 0;
             return (ulong)field.Value;
         }
 
-        public PrototypeEntryListElement GetListField(ulong fieldId)
+        public PrototypeEntryListElement GetListField(StringId fieldId)
         {
             if (ListElements == null) return null;
             return ListElements.FirstOrDefault(field => field.Id == fieldId);
         }
 
-        public PrototypeEntryListElement GetListField(FieldId fieldId) => GetListField((ulong)fieldId);
+        public PrototypeEntryListElement GetListField(FieldId fieldId) => GetListField((StringId)fieldId);
     }
 
     public class PrototypeEntryElement
     {
-        public ulong Id { get; }
+        public StringId Id { get; }
         public CalligraphyValueType Type { get; }
         public object Value { get; }
         public PrototypeEntryElement(BinaryReader reader)
         {
-            Id = reader.ReadUInt64();
+            Id = (StringId)reader.ReadUInt64();
             Type = (CalligraphyValueType)reader.ReadByte();
 
             switch (Type)
@@ -142,13 +142,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PrototypeEntryListElement
     {
-        public ulong Id { get; }
+        public StringId Id { get; }
         public CalligraphyValueType Type { get; }
         public object[] Values { get; }
 
         public PrototypeEntryListElement(BinaryReader reader)
         {
-            Id = reader.ReadUInt64();
+            Id = (StringId)reader.ReadUInt64();
             Type = (CalligraphyValueType)reader.ReadByte();
 
             Values = new object[reader.ReadUInt16()];

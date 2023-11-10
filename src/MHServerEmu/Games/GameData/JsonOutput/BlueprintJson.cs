@@ -31,12 +31,12 @@ namespace MHServerEmu.Games.GameData.JsonOutput
         public class BlueprintReferenceJson
         {
             public string Id { get; }
-            public byte ByteField { get; }
+            public byte Flags { get; }
 
             public BlueprintReferenceJson(BlueprintReference reference)
             {
                 Id = GameDatabase.GetPrototypeName(reference.Id);
-                ByteField = reference.ByteField;
+                Flags = reference.Flags;
             }
         }
 

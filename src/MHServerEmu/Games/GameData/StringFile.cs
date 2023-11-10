@@ -24,14 +24,14 @@ namespace MHServerEmu.Games.GameData
 
     public class StringMapEntry
     {
-        public ulong LocaleStringId { get; set; }
+        public LocaleStringId LocaleStringId { get; set; }
         public StringVariation[] Variants { get; set; }
         public ushort FlagsProduced { get; set; }
         public string String { get; set; }
 
         public StringMapEntry(BinaryReader reader)
         {
-            LocaleStringId = reader.ReadUInt64();
+            LocaleStringId = (LocaleStringId)reader.ReadUInt64();
 
             ushort variantNum = reader.ReadUInt16();
             Variants = variantNum > 0

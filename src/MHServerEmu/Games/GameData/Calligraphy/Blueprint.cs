@@ -43,12 +43,12 @@ namespace MHServerEmu.Games.GameData.Calligraphy
     public class BlueprintReference
     {
         public PrototypeId Id { get; }
-        public byte ByteField { get; }
+        public byte Flags { get; }
 
         public BlueprintReference(BinaryReader reader)
         {
             Id = (PrototypeId)reader.ReadUInt64();
-            ByteField = reader.ReadByte();
+            Flags = reader.ReadByte();
         }
     }
 

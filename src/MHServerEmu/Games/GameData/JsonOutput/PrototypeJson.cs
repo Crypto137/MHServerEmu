@@ -34,14 +34,14 @@ namespace MHServerEmu.Games.GameData.JsonOutput
             public class PrototypeEntryJson
             {
                 public string Id { get; }
-                public byte ByteField { get; }
+                public byte Flags { get; }
                 public PrototypeEntryElementJson[] Elements { get; }
                 public PrototypeEntryListElementJson[] ListElements { get; }
 
                 public PrototypeEntryJson(PrototypeEntry entry)
                 {
                     Id = GameDatabase.GetPrototypeName(entry.Id);
-                    ByteField = entry.ByteField;
+                    Flags = entry.Flags;
 
                     Elements = new PrototypeEntryElementJson[entry.Elements.Length];
                     for (int i = 0; i < Elements.Length; i++)
