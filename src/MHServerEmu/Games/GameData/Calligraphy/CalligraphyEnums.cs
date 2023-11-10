@@ -17,8 +17,8 @@
 
     public enum CalligraphyContainerType : byte
     {
-        L = 0x4c,   // list (A P R T only)
-        S = 0x53    // single
+        S = 0x53,   // Simple
+        L = 0x4c    // List (A P R T only)
     }
 
 

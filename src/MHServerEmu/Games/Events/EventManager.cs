@@ -139,7 +139,7 @@ namespace MHServerEmu.Games.Events
                 case EventEnum.OnPreInteractPower:
                     interactObject = (Entity)queuedEvent.Data;
                     proto = interactObject.BaseData.PrototypeId;
-                    PrototypeEntry world = proto.GetPrototype().GetEntry(DefaultPrototypeId.WorldEntity);
+                    PrototypeFieldGroup world = proto.GetPrototype().GetFieldGroup(DefaultPrototypeId.WorldEntity);
                     if (world == null) break;
                     var preIteractPower = (PrototypeId)world.GetFieldDef(FieldId.PreInteractPower);
                     if (preIteractPower == PrototypeId.Invalid) break;
@@ -177,7 +177,7 @@ namespace MHServerEmu.Games.Events
 
                     interactObject = (Entity)queuedEvent.Data;
                     proto = interactObject.BaseData.PrototypeId;
-                    world = proto.GetPrototype().GetEntry(DefaultPrototypeId.WorldEntity);
+                    world = proto.GetPrototype().GetFieldGroup(DefaultPrototypeId.WorldEntity);
                     if (world == null) break;
                     preIteractPower = (PrototypeId)world.GetFieldDef(FieldId.PreInteractPower);
                     if (preIteractPower == 0) break;
@@ -342,7 +342,7 @@ namespace MHServerEmu.Games.Events
                     Logger.Warn($"{GameDatabase.GetPrototypeName(client.ThrowingObject.BaseData.PrototypeId)}");
                     // ThrowObject.Prototype.WorldEntity.UnrealClass
                     Prototype throwPrototype = client.ThrowingObject.BaseData.PrototypeId.GetPrototype();
-                    PrototypeEntry worldEntity = throwPrototype.GetEntry(DefaultPrototypeId.WorldEntity);
+                    PrototypeFieldGroup worldEntity = throwPrototype.GetFieldGroup(DefaultPrototypeId.WorldEntity);
                     if (worldEntity == null) break;
                     ulong unrealClass = (ulong)worldEntity.GetField(FieldId.UnrealClass).Value;
                     client.IsThrowing = true;
@@ -353,7 +353,7 @@ namespace MHServerEmu.Games.Events
                     messageList.Add(new(client, new(property.ToNetMessageSetProperty(avatarRepId))));
 
                     // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
-                    client.ThrowingCancelPower = (ulong)throwPrototype.GetEntry(DefaultPrototypeId.ThrowableRestorePowerProp).Elements[0].Value;
+                    client.ThrowingCancelPower = (ulong)throwPrototype.GetFieldGroup(DefaultPrototypeId.ThrowableRestorePowerProp).SimpleFields[0].Value;
                     messageList.Add(new(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
                         .SetPowerProtoId(client.ThrowingCancelPower)
@@ -365,7 +365,7 @@ namespace MHServerEmu.Games.Events
                         .Build())));
 
                     // ThrowObject.Prototype.ThrowablePowerProp.Value
-                    client.ThrowingPower = (ulong)throwPrototype.GetEntry(DefaultPrototypeId.ThrowablePowerProp).Elements[0].Value;
+                    client.ThrowingPower = (ulong)throwPrototype.GetFieldGroup(DefaultPrototypeId.ThrowablePowerProp).SimpleFields[0].Value;
                     messageList.Add(new(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
                         .SetPowerProtoId(client.ThrowingPower)
@@ -431,7 +431,7 @@ namespace MHServerEmu.Games.Events
                     if (emmaCostume == PrototypeId.Invalid)
                         emmaCostume = GameDatabase.GetPrototypeRefByName("Entity/Items/Costumes/Prototypes/EmmaFrost/Modern.prototype");
 
-                    ulong asset = (ulong)emmaCostume.GetPrototype().GetEntry(DefaultPrototypeId.Costume).GetField(FieldId.CostumeUnrealClass).Value;
+                    ulong asset = (ulong)emmaCostume.GetPrototype().GetFieldGroup(DefaultPrototypeId.Costume).GetField(FieldId.CostumeUnrealClass).Value;
                     conditionArchive.Condition.EngineAssetGuid = asset;  // MarvelPlayer_EmmaFrost_Modern
 
                     messageList.Add(new(client, new(NetMessageAddCondition.CreateBuilder()

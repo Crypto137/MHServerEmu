@@ -59,9 +59,9 @@ namespace MHServerEmu.Games.Powers
 
         private bool PowerHasKeyword(PrototypeId powerId, DefaultPrototypeId Keyword)
         {
-            PrototypeEntry Power = powerId.GetPrototype().GetEntry(DefaultPrototypeId.Power);
+            PrototypeFieldGroup Power = powerId.GetPrototype().GetFieldGroup(DefaultPrototypeId.Power);
             if (Power == null) return false;
-            PrototypeEntryListElement Keywords = Power.GetListField(FieldId.Keywords);
+            PrototypeListField Keywords = Power.GetListField(FieldId.Keywords);
             if (Keywords == null) return false;
 
             for (int i = 0; i < Keywords.Values.Length; i++)
@@ -112,11 +112,11 @@ namespace MHServerEmu.Games.Powers
             if (powerPrototypePath.Contains("ThrowablePowers/"))
             {
                 Logger.Trace($"AddEvent EndThrowing for {tryActivatePower.PowerPrototypeId}");
-                PrototypeEntry Power = powerPrototypeId.GetPrototype().GetEntry(DefaultPrototypeId.Power);
+                PrototypeFieldGroup Power = powerPrototypeId.GetPrototype().GetFieldGroup(DefaultPrototypeId.Power);
                 long animationTimeMS = 1100;
                 if (Power != null)
                 {
-                    PrototypeEntryElement AnimationTimeMS = Power.GetField(FieldId.AnimationTimeMS);
+                    PrototypeSimpleField AnimationTimeMS = Power.GetField(FieldId.AnimationTimeMS);
                     if (AnimationTimeMS != null) animationTimeMS = (long)AnimationTimeMS.Value;
                 }
                 _eventManager.AddEvent(client, EventEnum.EndThrowing, animationTimeMS, tryActivatePower.PowerPrototypeId);

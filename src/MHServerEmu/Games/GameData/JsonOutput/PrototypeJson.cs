@@ -17,48 +17,48 @@ namespace MHServerEmu.Games.GameData.JsonOutput
         public class PrototypeJson
         {
             public PrototypeDataHeader Header { get; }
-            public PrototypeEntryJson[] Entries { get; }
+            public PrototypeFieldGroupJson[] FieldGroups { get; }
 
             public PrototypeJson(Prototype prototype)
             {
                 Header = prototype.Header;
 
-                if (prototype.Entries != null)
+                if (prototype.FieldGroups != null)
                 {
-                    Entries = new PrototypeEntryJson[prototype.Entries.Length];
-                    for (int i = 0; i < Entries.Length; i++)
-                        Entries[i] = new(prototype.Entries[i]);
+                    FieldGroups = new PrototypeFieldGroupJson[prototype.FieldGroups.Length];
+                    for (int i = 0; i < FieldGroups.Length; i++)
+                        FieldGroups[i] = new(prototype.FieldGroups[i]);
                 }
             }
 
-            public class PrototypeEntryJson
+            public class PrototypeFieldGroupJson
             {
-                public string Id { get; }
-                public byte Flags { get; }
-                public PrototypeEntryElementJson[] Elements { get; }
-                public PrototypeEntryListElementJson[] ListElements { get; }
+                public string DeclaringBlueprintId { get; }
+                public byte BlueprintCopyNumber { get; }
+                public PrototypeSimpleFieldJson[] SimpleFields { get; }
+                public PrototypeListFieldJson[] ListFields { get; }
 
-                public PrototypeEntryJson(PrototypeEntry entry)
+                public PrototypeFieldGroupJson(PrototypeFieldGroup entry)
                 {
-                    Id = GameDatabase.GetPrototypeName(entry.Id);
-                    Flags = entry.Flags;
+                    DeclaringBlueprintId = GameDatabase.GetPrototypeName(entry.DeclaringBlueprintId);
+                    BlueprintCopyNumber = entry.BlueprintCopyNumber;
 
-                    Elements = new PrototypeEntryElementJson[entry.Elements.Length];
-                    for (int i = 0; i < Elements.Length; i++)
-                        Elements[i] = new(entry.Elements[i]);
+                    SimpleFields = new PrototypeSimpleFieldJson[entry.SimpleFields.Length];
+                    for (int i = 0; i < SimpleFields.Length; i++)
+                        SimpleFields[i] = new(entry.SimpleFields[i]);
 
-                    ListElements = new PrototypeEntryListElementJson[entry.ListElements.Length];
-                    for (int i = 0; i < ListElements.Length; i++)
-                        ListElements[i] = new(entry.ListElements[i]);
+                    ListFields = new PrototypeListFieldJson[entry.ListFields.Length];
+                    for (int i = 0; i < ListFields.Length; i++)
+                        ListFields[i] = new(entry.ListFields[i]);
                 }
 
-                public class PrototypeEntryElementJson
+                public class PrototypeSimpleFieldJson
                 {
                     public string Id { get; }
                     public char Type { get; }
                     public object Value { get; }
 
-                    public PrototypeEntryElementJson(PrototypeEntryElement element)
+                    public PrototypeSimpleFieldJson(PrototypeSimpleField element)
                     {
                         Id = GameDatabase.GetBlueprintFieldName((StringId)element.Id);
                         Type = (char)element.Type;
@@ -90,13 +90,13 @@ namespace MHServerEmu.Games.GameData.JsonOutput
                     }
                 }
 
-                public class PrototypeEntryListElementJson
+                public class PrototypeListFieldJson
                 {
                     public string Id { get; }
                     public char Type { get; }
                     public object[] Values { get; }
 
-                    public PrototypeEntryListElementJson(PrototypeEntryListElement element)
+                    public PrototypeListFieldJson(PrototypeListField element)
                     {
                         Id = GameDatabase.GetBlueprintFieldName((StringId)element.Id);
                         Type = (char)element.Type;

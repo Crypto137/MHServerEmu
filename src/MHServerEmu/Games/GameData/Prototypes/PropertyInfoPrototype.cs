@@ -32,81 +32,81 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public PropertyInfoPrototype(Prototype prototype)
         {
-            foreach (PrototypeEntryElement element in prototype.Entries[0].Elements)
+            foreach (PrototypeSimpleField field in prototype.FieldGroups[0].SimpleFields)
             {
-                switch (GameDatabase.GetBlueprintFieldName((StringId)element.Id))
+                switch (GameDatabase.GetBlueprintFieldName(field.Id))
                 {
                     case nameof(AggMethod):
                         // AggMethod is null for some properties
-                        string aggMethod = GameDatabase.GetAssetName((StringId)element.Value);
+                        string aggMethod = GameDatabase.GetAssetName((StringId)field.Value);
                         if (aggMethod == string.Empty) continue;
                         AggMethod = (AggregationMethod)Enum.Parse(typeof(AggregationMethod), aggMethod);
                         break;
                     case nameof(ClientOnly):
-                        ClientOnly = (bool)element.Value;
+                        ClientOnly = (bool)field.Value;
                         break;
                     case nameof(CurveDefault):
-                        CurveDefault = (double)element.Value;
+                        CurveDefault = (double)field.Value;
                         break;
                     case nameof(Eval):
-                        Eval = element.Value;
+                        Eval = field.Value;
                         break;
                     case nameof(EvalAlwaysCalculates):
-                        EvalAlwaysCalculates = (bool)element.Value;
+                        EvalAlwaysCalculates = (bool)field.Value;
                         break;
                     case nameof(Min):
-                        Min = (double)element.Value;
+                        Min = (double)field.Value;
                         break;
                     case nameof(Max):
-                        Max = (double)element.Value;
+                        Max = (double)field.Value;
                         break;
                     case nameof(ReplicateForTransfer):
-                        ReplicateForTransfer = (bool)element.Value;
+                        ReplicateForTransfer = (bool)field.Value;
                         break;
                     case nameof(ReplicateToDatabase):
-                        ReplicateToDatabase = (DatabasePolicy)Enum.Parse(typeof(DatabasePolicy), GameDatabase.GetAssetName((StringId)element.Value));
+                        ReplicateToDatabase = (DatabasePolicy)Enum.Parse(typeof(DatabasePolicy), GameDatabase.GetAssetName((StringId)field.Value));
                         break;
                     case nameof(ReplicateToDatabaseAllowedOnItems):
-                        ReplicateToDatabaseAllowedOnItems = (bool)element.Value;
+                        ReplicateToDatabaseAllowedOnItems = (bool)field.Value;
                         break;
                     case nameof(ReplicateToOwner):
-                        ReplicateToOwner = (bool)element.Value;
+                        ReplicateToOwner = (bool)field.Value;
                         break;
                     case nameof(ReplicateToParty):
-                        ReplicateToParty = (bool)element.Value;
+                        ReplicateToParty = (bool)field.Value;
                         break;
                     case nameof(ReplicateToProximity):
-                        ReplicateToProximity = (bool)element.Value;
+                        ReplicateToProximity = (bool)field.Value;
                         break;
                     case nameof(ReplicateToDiscovery):
-                        ReplicateToDiscovery = (bool)element.Value;
+                        ReplicateToDiscovery = (bool)field.Value;
                         break;
                     case nameof(ReplicateToTrader):
-                        ReplicateToTrader = (bool)element.Value;
+                        ReplicateToTrader = (bool)field.Value;
                         break;
                     case nameof(ValueDisplayFormat):
-                        ValueDisplayFormat = (ulong)element.Value;
+                        ValueDisplayFormat = (ulong)field.Value;
                         break;
                     case nameof(SerializeEntityToPowerPayload):
-                        SerializeEntityToPowerPayload = (bool)element.Value;
+                        SerializeEntityToPowerPayload = (bool)field.Value;
                         break;
                     case nameof(SerializePowerToPowerPayload):
-                        SerializePowerToPowerPayload = (bool)element.Value;
+                        SerializePowerToPowerPayload = (bool)field.Value;
                         break;
                     case nameof(SerializeConditionSrcToCondition):
-                        SerializeConditionSrcToCondition = (bool)element.Value;
+                        SerializeConditionSrcToCondition = (bool)field.Value;
                         break;
                     case nameof(TooltipText):
-                        TooltipText = (ulong)element.Value;
+                        TooltipText = (ulong)field.Value;
                         break;
                     case nameof(TruncatePropertyValueToInt):
-                        TruncatePropertyValueToInt = (bool)element.Value;
+                        TruncatePropertyValueToInt = (bool)field.Value;
                         break;
                     case nameof(Type):
-                        Type = (PropertyType)Enum.Parse(typeof(PropertyType), GameDatabase.GetAssetName((StringId)element.Value));
+                        Type = (PropertyType)Enum.Parse(typeof(PropertyType), GameDatabase.GetAssetName((StringId)field.Value));
                         break;
                     case nameof(Version):
-                        Version = (long)element.Value;
+                        Version = (long)field.Value;
                         break;
                 }
             }

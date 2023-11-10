@@ -42,7 +42,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class Prototype
     {
         public PrototypeDataHeader Header { get; }
-        public PrototypeEntry[] Entries { get; }
+        public PrototypeFieldGroup[] FieldGroups { get; }
 
         public Prototype() { }
 
@@ -51,70 +51,70 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Header = new(reader);
             if (Header.DataExists == false) return;
 
-            Entries = new PrototypeEntry[reader.ReadUInt16()];
-            for (int i = 0; i < Entries.Length; i++)
-                Entries[i] = new(reader);
+            FieldGroups = new PrototypeFieldGroup[reader.ReadUInt16()];
+            for (int i = 0; i < FieldGroups.Length; i++)
+                FieldGroups[i] = new(reader);
         }
 
-        public PrototypeEntry GetEntry(PrototypeId defaultPrototypeId)
+        public PrototypeFieldGroup GetFieldGroup(PrototypeId defaultPrototypeId)
         {
-            if (Entries == null) return null;
-            return Entries.FirstOrDefault(entry => entry.Id == defaultPrototypeId);
+            if (FieldGroups == null) return null;
+            return FieldGroups.FirstOrDefault(entry => entry.DeclaringBlueprintId == defaultPrototypeId);
         }
 
-        public PrototypeEntry GetEntry(DefaultPrototypeId defaultPrototypeId) => GetEntry((PrototypeId)defaultPrototypeId);
+        public PrototypeFieldGroup GetFieldGroup(DefaultPrototypeId defaultPrototypeId) => GetFieldGroup((PrototypeId)defaultPrototypeId);
     }
 
-    public class PrototypeEntry
+    public class PrototypeFieldGroup
     {
-        public PrototypeId Id { get; }
-        public byte Flags { get; }
-        public PrototypeEntryElement[] Elements { get; }
-        public PrototypeEntryListElement[] ListElements { get; }
+        public PrototypeId DeclaringBlueprintId { get; }
+        public byte BlueprintCopyNumber { get; }
+        public PrototypeSimpleField[] SimpleFields { get; }
+        public PrototypeListField[] ListFields { get; }
 
-        public PrototypeEntry(BinaryReader reader)
+        public PrototypeFieldGroup(BinaryReader reader)
         {
-            Id = (PrototypeId)reader.ReadUInt64();
-            Flags = reader.ReadByte();
+            DeclaringBlueprintId = (PrototypeId)reader.ReadUInt64();
+            BlueprintCopyNumber = reader.ReadByte();
 
-            Elements = new PrototypeEntryElement[reader.ReadUInt16()];
-            for (int i = 0; i < Elements.Length; i++)
-                Elements[i] = new(reader);
+            SimpleFields = new PrototypeSimpleField[reader.ReadUInt16()];
+            for (int i = 0; i < SimpleFields.Length; i++)
+                SimpleFields[i] = new(reader);
 
-            ListElements = new PrototypeEntryListElement[reader.ReadUInt16()];
-            for (int i = 0; i < ListElements.Length; i++)
-                ListElements[i] = new(reader);
+            ListFields = new PrototypeListField[reader.ReadUInt16()];
+            for (int i = 0; i < ListFields.Length; i++)
+                ListFields[i] = new(reader);
         }
 
-        public PrototypeEntryElement GetField(StringId fieldId)
+        public PrototypeSimpleField GetField(StringId fieldId)
         {
-            if (Elements == null) return null;
-            return Elements.FirstOrDefault(field => field.Id == fieldId);
+            if (SimpleFields == null) return null;
+            return SimpleFields.FirstOrDefault(field => field.Id == fieldId);
         }
-        public PrototypeEntryElement GetField(FieldId fieldId) => GetField((StringId)fieldId);
+        public PrototypeSimpleField GetField(FieldId fieldId) => GetField((StringId)fieldId);
 
         public ulong GetFieldDef(FieldId fieldId)
         {
-            PrototypeEntryElement field = GetField((StringId)fieldId);
+            PrototypeSimpleField field = GetField((StringId)fieldId);
             if (field == null) return 0;
             return (ulong)field.Value;
         }
 
-        public PrototypeEntryListElement GetListField(StringId fieldId)
+        public PrototypeListField GetListField(StringId fieldId)
         {
-            if (ListElements == null) return null;
-            return ListElements.FirstOrDefault(field => field.Id == fieldId);
+            if (ListFields == null) return null;
+            return ListFields.FirstOrDefault(field => field.Id == fieldId);
         }
 
-        public PrototypeEntryListElement GetListField(FieldId fieldId) => GetListField((StringId)fieldId);
+        public PrototypeListField GetListField(FieldId fieldId) => GetListField((StringId)fieldId);
     }
 
-    public class PrototypeEntryElement
+    public class PrototypeSimpleField
     {
         public StringId Id { get; }
         public CalligraphyValueType Type { get; }
         public object Value { get; }
-        public PrototypeEntryElement(BinaryReader reader)
+        public PrototypeSimpleField(BinaryReader reader)
         {
             Id = (StringId)reader.ReadUInt64();
             Type = (CalligraphyValueType)reader.ReadByte();
@@ -140,13 +140,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
-    public class PrototypeEntryListElement
+    public class PrototypeListField
     {
         public StringId Id { get; }
         public CalligraphyValueType Type { get; }
         public object[] Values { get; }
 
-        public PrototypeEntryListElement(BinaryReader reader)
+        public PrototypeListField(BinaryReader reader)
         {
             Id = (StringId)reader.ReadUInt64();
             Type = (CalligraphyValueType)reader.ReadByte();

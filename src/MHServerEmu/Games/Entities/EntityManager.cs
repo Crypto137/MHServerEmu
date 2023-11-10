@@ -123,7 +123,7 @@ namespace MHServerEmu.Games.Entities
                 ? new EntityBaseData(GetNextEntityId(), prototypeId, position, orientation, OverrideSnapToFloor)
                 : new EntityBaseData(GetNextEntityId(), prototypeId, null, null);
             
-            PrototypeEntry regionConnectionTarget = targetPrototype.GetPrototype().GetEntry(DefaultPrototypeId.RegionConnectionTarget);
+            PrototypeFieldGroup regionConnectionTarget = targetPrototype.GetPrototype().GetFieldGroup(DefaultPrototypeId.RegionConnectionTarget);
 
             var cellAssetId = (StringId)regionConnectionTarget.GetFieldDef(FieldId.Cell);
             var cellPrototypeId = cellAssetId != StringId.Invalid ? GameDatabase.GetPrototypeRefByName(GameDatabase.GetAssetName(cellAssetId)) : PrototypeId.Invalid;
@@ -131,7 +131,7 @@ namespace MHServerEmu.Games.Entities
             var targetRegion = (PrototypeId)regionConnectionTarget.GetFieldDef(FieldId.Region);
             // Logger.Debug($"SpawnDirectTeleport {targetRegion}");
             if (targetRegion == 0) { // get Parent value
-                PrototypeEntry parentTarget = targetPrototype.GetPrototype().Header.ReferenceType.GetPrototype().GetEntry(DefaultPrototypeId.RegionConnectionTarget);
+                PrototypeFieldGroup parentTarget = targetPrototype.GetPrototype().Header.ReferenceType.GetPrototype().GetFieldGroup(DefaultPrototypeId.RegionConnectionTarget);
                 if (parentTarget != null) targetRegion = (PrototypeId)parentTarget.GetFieldDef(FieldId.Region);
             }
 

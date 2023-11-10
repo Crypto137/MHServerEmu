@@ -25,27 +25,27 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Blueprint blueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(prototype);
             Array.Fill(Params, new());
 
-            foreach (PrototypeEntryElement element in prototype.Entries[0].Elements)
+            foreach (PrototypeSimpleField field in prototype.FieldGroups[0].SimpleFields)
             {
-                BlueprintMember blueprintMember = blueprint.GetMember((StringId)element.Id);
+                BlueprintMember blueprintMember = blueprint.GetMember(field.Id);
 
                 switch (blueprintMember.FieldName)
                 {
                     case "Value":
-                        ValueType = element.Type;
-                        DefaultValue = element.Value;
+                        ValueType = field.Type;
+                        DefaultValue = field.Value;
                         break;
                     case "Param0":
-                        SetParamType(0, ParamTypeDict[element.Type], blueprintMember.Subtype, element.Value);
+                        SetParamType(0, ParamTypeDict[field.Type], blueprintMember.Subtype, field.Value);
                         break;
                     case "Param1":
-                        SetParamType(1, ParamTypeDict[element.Type], blueprintMember.Subtype, element.Value);
+                        SetParamType(1, ParamTypeDict[field.Type], blueprintMember.Subtype, field.Value);
                         break;
                     case "Param2":
-                        SetParamType(2, ParamTypeDict[element.Type], blueprintMember.Subtype, element.Value);
+                        SetParamType(2, ParamTypeDict[field.Type], blueprintMember.Subtype, field.Value);
                         break;
                     case "Param3":
-                        SetParamType(3, ParamTypeDict[element.Type], blueprintMember.Subtype, element.Value);
+                        SetParamType(3, ParamTypeDict[field.Type], blueprintMember.Subtype, field.Value);
                         break;
                 }
             }
