@@ -42,9 +42,9 @@ The client uses an embedded web browser for some of its UI panels. MHServerEmu p
 
 3. Set `StoreHomePageUrl` in `Config.ini` to `http://localhost/mhgame_store_home`.
 
-Restart the server, and you should be able to see an example store home page when you open the in-game store. You can set other pages by editing various url options in `Config.ini` (e.g. `NewsUrl` to change the content of the news window). For more information on the embedded browser see [EmbeddedBrowser.md](./EmbeddedBrowser.md).
+Restart the server, and you should be able to see an example store home page when you open the in-game store. You can set other pages by editing various URL options in `Config.ini` (e.g. `NewsUrl` to change the content of the news window). For more information on the embedded browser see [EmbeddedBrowser.md](./EmbeddedBrowser.md).
 
-Please note that the embedded browser is a 2014 version of the Chromium Embedded Framework (CEF), and using for general web browsing brings with it major security risks. You should use it only for displaying the content you trust.
+Please note that the embedded browser is a 2014 version of the Chromium Embedded Framework (CEF), and using it for general web browsing is a major security risk. You should use it only for displaying the content you trust.
 
 ## Setting Up Live Tips
 
