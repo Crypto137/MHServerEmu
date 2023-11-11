@@ -15,7 +15,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                CalligraphyHeader header = reader.ReadCalligraphyHeader();  // BPT v11
+                CalligraphyHeader header = new(reader);
 
                 RuntimeBinding = reader.ReadFixedString16();
                 DefaultPrototypeId = (PrototypeId)reader.ReadUInt64();

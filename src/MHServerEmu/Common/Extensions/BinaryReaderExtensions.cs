@@ -1,18 +1,10 @@
 ﻿using System.Text;
 using MHServerEmu.Games.Common;
-using MHServerEmu.Games.GameData.Calligraphy;
 
 namespace MHServerEmu.Common.Extensions
 {
     public static class BinaryReaderExtensions
     {
-        public static CalligraphyHeader ReadCalligraphyHeader(this BinaryReader reader)
-        {
-            string magic = Encoding.UTF8.GetString(reader.ReadBytes(3));
-            byte version = reader.ReadByte();
-            return new(magic, version);
-        }
-
         public static string ReadFixedString16(this BinaryReader reader)
         {
             return Encoding.UTF8.GetString(reader.ReadBytes(reader.ReadUInt16()));

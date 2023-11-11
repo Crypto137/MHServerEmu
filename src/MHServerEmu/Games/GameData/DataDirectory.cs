@@ -56,7 +56,7 @@ namespace MHServerEmu.Games.GameData
                 using (MemoryStream stream = new(gpakDict[DataDirectoryFiles[i]]))
                 using (BinaryReader reader = new(stream))
                 {
-                    var header = reader.ReadCalligraphyHeader();
+                    CalligraphyHeader header = new(reader);
                     int recordCount = reader.ReadInt32();
 
                     switch (header.Magic)

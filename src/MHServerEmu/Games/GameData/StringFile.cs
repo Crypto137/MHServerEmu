@@ -13,7 +13,7 @@ namespace MHServerEmu.Games.GameData
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = reader.ReadCalligraphyHeader();
+                Header = new(reader);
 
                 StringMap = new StringMapEntry[reader.ReadUInt16()];
                 for (int i = 0; i < StringMap.Length; i++)

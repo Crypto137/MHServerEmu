@@ -15,7 +15,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = reader.ReadCalligraphyHeader();
+                Header = new(reader);
                 Prototype = new(reader);
             }
         }

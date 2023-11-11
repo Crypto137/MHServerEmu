@@ -1,13 +1,12 @@
 ﻿using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
-using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class CellPrototype
     {
-        public CalligraphyHeader Header { get; }
+        public uint Header { get; }
         public uint Version { get; }
         public uint ClassId { get; }
         public Aabb Boundbox { get; }
@@ -28,7 +27,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = reader.ReadCalligraphyHeader();
+                Header = reader.ReadUInt32();
                 Version = reader.ReadUInt32();
                 ClassId = reader.ReadUInt32();
                 Vector3 max = reader.ReadVector3();

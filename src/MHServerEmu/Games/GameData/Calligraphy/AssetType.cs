@@ -19,7 +19,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                CalligraphyHeader header = reader.ReadCalligraphyHeader();
+                CalligraphyHeader header = new(reader);
 
                 _assets = new AssetValue[reader.ReadUInt16()];
                 for (int i = 0; i < _assets.Length; i++)
