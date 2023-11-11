@@ -1,14 +1,13 @@
 ﻿using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
+using MHServerEmu.Games.GameData.Resource;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class DistrictPrototype
     {
-        public uint Header { get; }
-        public uint Version { get; }
-        public uint ClassId { get; }
+        public ResourceHeader Header { get; }
         public ResourceMarkerPrototype[] CellMarkerSet { get; }
         public MarkerPrototype[] MarkerSet { get; }                 // size is always 0 in all of our files
         public PathNodeSetPrototype[] PathCollection { get; }       // PathCollectionPrototype
@@ -18,9 +17,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = reader.ReadUInt32();
-                Version = reader.ReadUInt32();
-                ClassId = reader.ReadUInt32();
+                Header = new(reader);
 
                 CellMarkerSet = new ResourceMarkerPrototype[reader.ReadUInt32()];
                 for (int i = 0; i < CellMarkerSet.Length; i++)

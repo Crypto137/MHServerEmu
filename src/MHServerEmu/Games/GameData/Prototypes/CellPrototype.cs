@@ -1,14 +1,13 @@
 ﻿using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
+using MHServerEmu.Games.GameData.Resource;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class CellPrototype
     {
-        public uint Header { get; }
-        public uint Version { get; }
-        public uint ClassId { get; }
+        public ResourceHeader Header { get; }
         public Aabb Boundbox { get; }
         public uint Type { get; }
         public uint Walls { get; }
@@ -27,9 +26,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = reader.ReadUInt32();
-                Version = reader.ReadUInt32();
-                ClassId = reader.ReadUInt32();
+                Header = new(reader);
                 Vector3 max = reader.ReadVector3();
                 Vector3 min = reader.ReadVector3();
                 Boundbox = new(min, max);

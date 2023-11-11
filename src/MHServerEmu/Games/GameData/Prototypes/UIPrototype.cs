@@ -1,13 +1,12 @@
 ﻿using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.GameData.Resource;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class UIPrototype
     {
-        public uint Header { get; }
-        public uint Version { get; }
-        public uint ClassId { get; }
+        public ResourceHeader Header { get; }
         public UIPanelPrototype[] UIPanels { get; }
 
         public UIPrototype(byte[] data)
@@ -15,9 +14,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = reader.ReadUInt32();
-                Version = reader.ReadUInt32();
-                ClassId = reader.ReadUInt32();
+                Header = new(reader);
 
                 UIPanels = new UIPanelPrototype[reader.ReadUInt32()];
                 for (int i = 0; i < UIPanels.Length; i++)

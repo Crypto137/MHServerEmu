@@ -1,13 +1,12 @@
 ﻿using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
+using MHServerEmu.Games.GameData.Resource;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class EncounterPrototype
     {
-        public uint Header { get; }
-        public uint Version { get; }
-        public uint ClassId { get; }
+        public ResourceHeader Header { get; }
         public ulong PopulationMarkerGuid { get; }
         public string ClientMap { get; }
         public MarkerPrototype[] MarkerSet { get; }
@@ -18,9 +17,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = reader.ReadUInt32();
-                Version = reader.ReadUInt32();
-                ClassId = reader.ReadUInt32();
+                Header = new(reader);
                 PopulationMarkerGuid = reader.ReadUInt64();
                 ClientMap = reader.ReadFixedString32();
 
