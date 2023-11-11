@@ -2,7 +2,6 @@
 using System.Text.Json;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
-using MHServerEmu.Games.GameData.Gpak;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Properties;
 
@@ -12,9 +11,9 @@ namespace MHServerEmu.Games.GameData
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private static readonly string GpakDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "GPAK");
-        private static readonly string CalligraphyPath = Path.Combine(GpakDirectory, "Calligraphy.sip");
-        private static readonly string ResourcePath = Path.Combine(GpakDirectory, "mu_cdata.sip");
+        private static readonly string PakDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "GPAK");
+        private static readonly string CalligraphyPath = Path.Combine(PakDirectory, "Calligraphy.sip");
+        private static readonly string ResourcePath = Path.Combine(PakDirectory, "mu_cdata.sip");
 
         public static bool IsInitialized { get; }
 
@@ -34,7 +33,7 @@ namespace MHServerEmu.Games.GameData
             // Make sure sip files are present
             if (File.Exists(CalligraphyPath) == false || File.Exists(ResourcePath) == false)
             {
-                Logger.Fatal($"Calligraphy.sip and/or mu_cdata.sip are missing! Make sure you copied these files to {GpakDirectory}.");
+                Logger.Fatal($"Calligraphy.sip and/or mu_cdata.sip are missing! Make sure you copied these files to {PakDirectory}.");
                 IsInitialized = false;
                 return;
             }
@@ -43,7 +42,7 @@ namespace MHServerEmu.Games.GameData
             var stopwatch = Stopwatch.StartNew();
 
             // Initialize DataDirectory
-            DataDirectory = new(new GpakFile(CalligraphyPath), new GpakFile(ResourcePath));
+            DataDirectory = new(new PakFile(CalligraphyPath), new PakFile(ResourcePath));
 
             // Initialize PropertyInfoTable
             PropertyInfoTable = new(DataDirectory);
@@ -66,25 +65,25 @@ namespace MHServerEmu.Games.GameData
             IsInitialized = true;
         }
 
-        public static void ExtractGpak(bool extractEntries, bool extractData)
+        public static void ExtractPak(bool extractEntries, bool extractData)
         {
-            GpakFile calligraphyFile = new(CalligraphyPath, true);
-            GpakFile resourceFile = new(ResourcePath, true);
+            PakFile calligraphyFile = new(CalligraphyPath, true);
+            PakFile resourceFile = new(ResourcePath, true);
 
             if (extractEntries)
             {
                 Logger.Info("Extracting Calligraphy entries...");
-                calligraphyFile.ExtractEntries(Path.Combine(GpakDirectory, "Calligraphy.tsv"));
+                calligraphyFile.ExtractEntries(Path.Combine(PakDirectory, "Calligraphy.tsv"));
                 Logger.Info("Extracting Resource entries...");
-                resourceFile.ExtractEntries(Path.Combine(GpakDirectory, "mu_cdata.tsv"));
+                resourceFile.ExtractEntries(Path.Combine(PakDirectory, "mu_cdata.tsv"));
             }
 
             if (extractData)
             {
                 Logger.Info("Extracting Calligraphy data...");
-                calligraphyFile.ExtractData(GpakDirectory);
+                calligraphyFile.ExtractData(PakDirectory);
                 Logger.Info("Extracting Resource data...");
-                resourceFile.ExtractData(GpakDirectory);
+                resourceFile.ExtractData(PakDirectory);
             }
         }
 

@@ -123,10 +123,10 @@ namespace MHServerEmu.Common.Commands
         }
     }
 
-    [CommandGroup("gpak", "Provides commands to interact with GPAK files.", AccountUserLevel.Admin)]
-    public class GpakCommands : CommandGroup
+    [CommandGroup("pak", "Provides commands to interact with pak files.", AccountUserLevel.Admin)]
+    public class PakCommands : CommandGroup
     {
-        [Command("extract", "Extracts entries and/or data from GPAK files.\nUsage: gpak extract [entries|data|all]", AccountUserLevel.Admin)]
+        [Command("extract", "Extracts entries and/or data from pak files.\nUsage: pak extract [entries|data|all]", AccountUserLevel.Admin)]
         public string Extract(string[] @params, FrontendClient client)
         {
             if (client != null) return "You can only invoke this command from the server console.";
@@ -136,18 +136,18 @@ namespace MHServerEmu.Common.Commands
                 switch (@params[0].ToLower())
                 {
                     case "entries":
-                        GameDatabase.ExtractGpak(true, false);
-                        return "Finished extracting GPAK entries.";
+                        GameDatabase.ExtractPak(true, false);
+                        return "Finished extracting pak entries.";
                     case "data":
-                        GameDatabase.ExtractGpak(false, true);
-                        return "Finished extracting GPAK data.";
+                        GameDatabase.ExtractPak(false, true);
+                        return "Finished extracting pak data.";
                     case "all":
-                        GameDatabase.ExtractGpak(true, true);
-                        return "Finished extracting GPAK entries and data.";
+                        GameDatabase.ExtractPak(true, true);
+                        return "Finished extracting pak entries and data.";
                 }
             }
 
-            return "Invalid parameters. Type 'help gpak extract' to get help.";
+            return "Invalid parameters. Type 'help pak extract' to get help.";
         }
     }
 
