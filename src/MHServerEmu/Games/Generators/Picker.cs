@@ -6,8 +6,8 @@ namespace MHServerEmu.Games.Generators
     {
         public class WeightedElement
         {
-            public T Element;
-            public int Weight;
+            public T Element { get; }
+            public int Weight { get; }
             public WeightedElement(T element, int weight) { Element = element; Weight = weight; }
         }
         enum WeightMode
@@ -159,5 +159,9 @@ namespace MHServerEmu.Games.Generators
             return false;
         }
 
+        public void Clear()
+        {
+            _elements.Clear(); _weights = 0;
+        }
     }
 }
