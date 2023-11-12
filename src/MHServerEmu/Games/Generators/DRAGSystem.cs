@@ -7,6 +7,8 @@ using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Generators;
 using System.Diagnostics;
+using MHServerEmu.Games.Generators.Navi;
+using Vector3 = MHServerEmu.Games.Common.Vector3;
 
 namespace MHServerEmu.Games.Generators
 {
@@ -57,7 +59,8 @@ namespace MHServerEmu.Games.Generators
 }
 
 namespace MHServerEmu.Games.Regions
-{ 
+{
+    [Flags]
     public enum GenerateFlag
     {
         Background = 0x1,
@@ -73,19 +76,65 @@ namespace MHServerEmu.Games.Regions
         public Aabb RegionBounds { get; set; }
         public Aabb LocalBounds { get; set; }
 
+        public List<uint> SubAreas { get; private set; }
+
+        public ulong RespawnOverride { get; set; }
+        public ulong DistrictDataRef { get; set; }
+
+        public Region Region { get; set; }
+
         public Generator Generator { get; set; }
 
-        private List<AreaConnectionPoint> AreaConnections;
+        private readonly List<AreaConnectionPoint> AreaConnections;
 
-        public bool Generate(SequenceRegionGenerator generator, List<ulong> areas, GenerateFlag flag)
+        public bool Generate(RegionGenerator generator, List<ulong> areas, GenerateFlag flags)
+        {
+            bool success = true;
+            if (success && flags.HasFlag(GenerateFlag.Background))
+                success &= GenerateBackground(generator, areas);
+
+            if (success && flags.HasFlag(GenerateFlag.PostInitialize))
+                success &= GeneratePostInitialize();
+            if (success && flags.HasFlag(GenerateFlag.Navi))
+                success &= GenerateNavi();
+
+            if (success && flags.HasFlag(GenerateFlag.PathCollection))
+            {
+                DistrictPrototype district = GameDatabase.GetPrototype<DistrictPrototype>(DistrictDataRef);
+                if (district != null)
+                    Region.PathCache.AppendPathCollection(district.PathCollection, Origin);
+            }
+
+            if (success && flags.HasFlag(GenerateFlag.Population))
+                success &= GeneratePopulation();
+
+            if (success && flags.HasFlag(GenerateFlag.PostGenerate))
+                success &= PostGenerate();
+
+            return success;
+        }
+
+        private bool PostGenerate()
         {
             throw new NotImplementedException();
         }
-        public List<uint> GetSubAreas()
+
+        private bool GeneratePopulation()
         {
             throw new NotImplementedException();
         }
-        public void SetRespawnOverride(ulong respawnOverride)
+
+        private bool GenerateNavi()
+        {
+            throw new NotImplementedException();
+        }
+
+        private bool GeneratePostInitialize()
+        {
+            throw new NotImplementedException();
+        }
+
+        private bool GenerateBackground(RegionGenerator generator, List<ulong> areas)
         {
             throw new NotImplementedException();
         }
@@ -152,7 +201,7 @@ namespace MHServerEmu.Games.Regions
         public RegionPrototype RegionPrototype { get; set; }
         public RegionSettings Setting { get; private set; }
         public RegionProgressionGraph ProgressionGraph { get; set; }
-
+        public PathCache PathCache { get; private set;}
         public void Initialize(RegionSettings settings)
         {
             ProgressionGraph = new();

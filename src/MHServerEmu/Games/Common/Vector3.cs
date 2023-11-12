@@ -95,5 +95,21 @@ namespace MHServerEmu.Games.Common
 
         public override int GetHashCode() => X.GetHashCode() ^ Y.GetHashCode() ^ Z.GetHashCode();
         public override string ToString() => $"x:{X} y:{Y} z:{Z}";
+        public static float Dot(Vector3 v1, Vector3 v2) => v1.X * v2.X + v1.Y * v2.Y + v1.Z * v2.Z;
+        public static float SegmentPointDistanceSq(Vector3 a, Vector3 b, Vector3 c)
+        {
+            Vector3 ba = b - a;
+            Vector3 ca = c - a;
+            Vector3 cb = c - b;
+            float dotcb = Dot(ca, ba);
+            if (dotcb <= 0.0f) return Dot(ca, ca);
+            float dotba = Dot(ba, ba);
+            if (dotcb >= dotba) return Dot(cb, cb);
+            float dotca = Dot(ca, ca);
+            return (dotca - dotcb * (dotcb / dotba));
+        }
+
+        public static float DistanceSquared2D(Vector3 a, Vector3 b) => LengthSqr(new Vector3(b.X - a.X, b.Y - a.Y, 0.0f));
+        public static float LengthSqr(Vector3 v) => v.X * v.X + v.Y * v.Y + v.Z * v.Z;
     }
 }

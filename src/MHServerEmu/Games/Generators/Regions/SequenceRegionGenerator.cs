@@ -347,7 +347,7 @@ namespace MHServerEmu.Games.Generators.Regions
         {
             Generator.DereferenceFromPOI(area);
 
-            foreach (var id in area.GetSubAreas())
+            foreach (var id in area.SubAreas)
                 Region.DestroyArea(id);
             Region.DestroyArea(area.Id);
             entry.ClearArea();
@@ -412,7 +412,7 @@ namespace MHServerEmu.Games.Generators.Regions
             area = Region.CreateArea(weightedArea.Area, new());
             if (area == null) return false;
 
-            area.SetRespawnOverride(weightedArea.RespawnOverride);
+            area.RespawnOverride = weightedArea.RespawnOverride;
 
             bool success = false;
 

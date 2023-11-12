@@ -2,7 +2,6 @@
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Generators.Prototypes;
 using MHServerEmu.Games.Regions;
-using System;
 
 namespace MHServerEmu.Games.Generators.Regions
 {
