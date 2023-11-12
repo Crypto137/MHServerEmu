@@ -62,6 +62,12 @@ namespace MHServerEmu.Games.Generators.Prototypes
 	    SpecificGameplay,
     }
 
+    public class TranslationPrototype : Prototype
+    {
+        public ulong Value;
+        public TranslationPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(TranslationPrototype), proto); }
+
+    }
 
     #region KeywordPrototype
 
