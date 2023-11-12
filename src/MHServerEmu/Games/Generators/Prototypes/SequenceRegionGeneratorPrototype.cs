@@ -1,4 +1,6 @@
-﻿using MHServerEmu.Games.GameData.Prototypes;
+﻿using MHServerEmu.Common;
+using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Generators.Prototypes
 {
@@ -10,6 +12,27 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public EndlessThemePrototype[] EndlessThemes;
         public SubGenerationPrototype[] SubAreaSequences;
         public SequenceRegionGeneratorPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(SequenceRegionGeneratorPrototype), proto); }
+
+        public EndlessThemeEntryPrototype GetEndlessGeneration(int randomSeed, int endlessLevel, int endlessLevelsTotal)
+        {
+            if (EndlessThemes == null || endlessLevel <= 0 || endlessLevelsTotal <= 0) return null;
+
+            int totalThemes = EndlessThemes.Length;
+            int randomIndex = randomSeed % totalThemes;
+            int endlessOffset = (endlessLevel - 1) / endlessLevelsTotal; 
+            int selectedIndex = (randomIndex + endlessOffset) % totalThemes;
+
+            EndlessThemePrototype EndlessTheme = EndlessThemes[selectedIndex];
+            int levelInTheme = endlessLevel % endlessLevelsTotal;
+
+            if (levelInTheme == 0)
+                return EndlessTheme.TreasureRoom;
+            else if (levelInTheme == endlessLevelsTotal - 1)
+                return EndlessTheme.Boss;
+            else
+                return EndlessTheme.Normal;
+        }
+
     }
 
     public class SubGenerationPrototype : Prototype
@@ -33,6 +56,36 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public AreaSequenceInfoPrototype[] AreaSequence;
         public EndlessStateEntryPrototype[] Challenges;
         public EndlessThemeEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EndlessThemeEntryPrototype), proto); }
+
+        public EndlessStateEntryPrototype GetState(int randomSeed, int endlessLevel, MetaStateChallengeTier missionTier)
+        {
+            if (Challenges == null)  return null;
+            
+            GRandom random = new(randomSeed + endlessLevel);
+            Picker<EndlessStateEntryPrototype> picker = new Picker<EndlessStateEntryPrototype>(random);
+
+            foreach (var state in Challenges)
+            {
+                if (state == null) continue;
+
+                if (missionTier != MetaStateChallengeTier.None && missionTier != state.Tier) continue;
+
+                MetaStatePrototype metaState = GameDatabase.GetPrototype<MetaStatePrototype>(state.MetaState);
+                if (metaState != null && !metaState.CanApplyState())
+                {
+                    Logger.Warn($"EndlessThemeEntryPrototype::GetState() State Disabled.");
+                    continue;
+                }
+
+                picker.Add(state);
+            }
+
+            if (!picker.Empty() && picker.Pick(out EndlessStateEntryPrototype statePicked)) return statePicked;
+
+            return null;
+        }
+
+
     }
 
     public class EndlessStateEntryPrototype : Prototype
@@ -72,6 +125,8 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public bool AlignedToPrevious;
         public WeightedAreaPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(WeightedAreaPrototype), proto); }
     }
+
+    [Flags]
     public enum RegionDirection
     {
         NoRestriction = 0,

@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Generators;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -6,7 +7,7 @@ namespace MHServerEmu.Games.Regions
     {
         public uint Id { get; }
         public AreaPrototypeId Prototype { get; }
-        public Vector3 Origin { get; }
+        public Vector3 Origin { get; set; }
         public bool IsStartArea { get; }
 
         public List<Cell> CellList { get; } = new();

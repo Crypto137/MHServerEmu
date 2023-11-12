@@ -6,6 +6,7 @@ using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Generators;
+using System.Diagnostics;
 
 namespace MHServerEmu.Games.Generators
 {
@@ -70,28 +71,103 @@ namespace MHServerEmu.Games.Regions
     public partial class Area
     {
         public Aabb RegionBounds { get; set; }
+        public Aabb LocalBounds { get; set; }
+
+        public Generator Generator { get; set; }
+
+        private List<AreaConnectionPoint> AreaConnections;
+
+        public bool Generate(SequenceRegionGenerator generator, List<ulong> areas, GenerateFlag flag)
+        {
+            throw new NotImplementedException();
+        }
+        public List<uint> GetSubAreas()
+        {
+            throw new NotImplementedException();
+        }
+        public void SetRespawnOverride(ulong respawnOverride)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static void CreateConnection(Area areaA, Area areaB, Vector3 position, ConnectPosition connectPosition)
+        {
+            areaA.AddConnection(position, areaB, connectPosition);
+            areaB.AddConnection(position, areaA, connectPosition);
+        }
+
+        public void AddConnection(Vector3 position, Area area, ConnectPosition connectPosition)
+        {
+            AreaConnectionPoint areaConnection = new()
+            {
+                Position = position,
+                ConnectedArea = area,
+                ConnectPosition = connectPosition
+            };
+
+            AreaConnections.Add(areaConnection);
+        }
+        public bool GetPossibleAreaConnections(List<Vector3> connections, Segment segment)
+        {
+            if (Generator == null) return false;
+            return Generator.GetPossibleConnections(connections, segment);
+        }
+
+        public ulong GetPrototypeDataRef()
+        {
+            return (ulong)Prototype;
+        }
+
+    }
+
+    public enum ConnectPosition
+    {
+        One,
+        Begin,
+        Inside,
+        End
+    }
+
+    public class AreaConnectionPoint
+    {
+        public Area ConnectedArea { get; set; }
+        public Vector3 Position { get; set; }
+        public ulong Id { get; set; }
+        public ConnectPosition ConnectPosition { get; set; }
+
+        public AreaConnectionPoint()
+        {
+            ConnectedArea = null;
+            Position = new();
+            Id = 0;
+            ConnectPosition = ConnectPosition.One;
+        }
+
     }
 
     public partial class Region
     {
         public Aabb Bound { get; set; }
         public Area StartArea { get; set; }
-        public RegionPrototype RegionPrototype { get; set; }  
-        
+        public RegionPrototype RegionPrototype { get; set; }
+        public RegionSettings Setting { get; private set; }
         public RegionProgressionGraph ProgressionGraph { get; set; }
 
-        public void Initialize()
+        public void Initialize(RegionSettings settings)
         {
             ProgressionGraph = new();
-
-            // TODO RegionSettings
+            Setting = settings;
+            RandomSeed = settings.Seed;
+            // TODO other setting;
+            if (settings.GenerateAreas)
+                GenerateAreas((ulong)Prototype);
         }
 
         public Aabb CalculateBound()
         {
             Aabb bound = Aabb.InvertedLimit;
 
-            foreach(var area in AreaList)
+            foreach (var area in AreaList)
                 bound += area.RegionBounds;
 
             return bound;
@@ -108,8 +184,7 @@ namespace MHServerEmu.Games.Regions
 
         public void GenerateAreas(ulong regionPrototypeId)
         {
-            Prototype proto = regionPrototypeId.GetPrototype();
-            RegionPrototype = new(proto);
+            RegionPrototype = GameDatabase.GetPrototype<RegionPrototype>(regionPrototypeId);
             RegionGenerator regionGenerator = DRAGSystem.LinkRegionGenerator(RegionPrototype.RegionGenerator);
 
             regionGenerator.GenerateRegion(RandomSeed, this);
@@ -131,13 +206,48 @@ namespace MHServerEmu.Games.Regions
 
         public void GenerateHelper(RegionGenerator regionGenerator, GenerateFlag flag)
         {
-            // TODO
+            throw new NotImplementedException();
         }
 
         public Area CreateArea(ulong area, Vector3 areaOrigin)
         {
-            return null;
+            throw new NotImplementedException();
         }
+
+        public MetaStateChallengeTier RegionAffixGetMissionTier()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DestroyArea(uint id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Area GetArea(ulong area)
+        {
+            throw new NotImplementedException();
+        }
+
+        public float GetDistanceToClosestAreaBounds(Vector3 position)
+        {
+            float minDistance = float.MaxValue;
+            foreach (var area in AreaList)
+            {
+                float distance = area.RegionBounds.DistanceToPoint2D(position);
+                minDistance = Math.Min(distance, minDistance);
+            }
+
+            Debug.Assert(minDistance != float.MaxValue);
+            return minDistance;
+        }
+    }
+
+    public struct RegionSettings
+    {
+        public int EndlessLevel;
+        public int Seed;
+        public bool GenerateAreas;
     }
 
     #region ProgressionGraph
@@ -151,19 +261,20 @@ namespace MHServerEmu.Games.Regions
 
         public void SetRoot(Area area) 
         {
+            if (area == null) return;
             DestroyGraph();
             _root = CreateNode(null, area);
         }
  
         public Area GetRoot() 
         {
-            if (_root != null)
-                return _root.Area;
+            if (_root != null) return _root.Area;
             return null;
         }
 
         public RegionProgressionNode CreateNode(RegionProgressionNode parent, Area area)
         {
+            if (area == null) return null;
             RegionProgressionNode node = new(parent, area);
             _nodes.Add(node);
             return node;
@@ -171,12 +282,10 @@ namespace MHServerEmu.Games.Regions
 
         public void AddLink(Area parent, Area child) 
         {
-            if (parent == null || child == null)
-                return;
+            if (parent == null || child == null) return;
 
             RegionProgressionNode foundParent = FindNode(parent);
-            if (foundParent == null)
-                return;
+            if (foundParent == null) return;
 
             RegionProgressionNode childNode = _root.FindChildNode(child, true);
 
@@ -192,16 +301,13 @@ namespace MHServerEmu.Games.Regions
 
         public void RemoveLink(Area parent, Area child) 
         {
-            if (parent == null || child == null)
-                return;
+            if (parent == null || child == null) return;
 
             RegionProgressionNode foundParent = FindNode(parent);
-            if (foundParent == null)
-                return;
+            if (foundParent == null) return;
 
             RegionProgressionNode childNode = _root.FindChildNode(child, true);
-            if (childNode == null)
-                return;
+            if (childNode == null) return;
 
             foundParent.RemoveChild(childNode);
             RemoveNode(childNode);
@@ -209,17 +315,13 @@ namespace MHServerEmu.Games.Regions
 
         public void RemoveNode(RegionProgressionNode deleteNode)
         {  
-            if (deleteNode != null)
-                _nodes.Remove(deleteNode);
+            if (deleteNode != null) _nodes.Remove(deleteNode);
         }
 
         public RegionProgressionNode FindNode(Area area)
         {
-            if (_root == null)
-                return null;
-
-            if (_root.Area == area)
-                return _root;
+            if (_root == null) return null;
+            if (_root.Area == area) return _root;
 
             return _root.FindChildNode(area, true);
         }
@@ -230,16 +332,14 @@ namespace MHServerEmu.Games.Regions
             if (node != null)
             {
                 RegionProgressionNode prev = node.ParentNode;
-                if (prev != null)
-                    return prev.Area;
+                if (prev != null) return prev.Area;
             }
             return null;
         }
 
         private void DestroyGraph() 
         {
-            if (_root == null)
-                return;
+            if (_root == null) return;
             _nodes.Clear();
             _root = null;            
         }
@@ -250,7 +350,7 @@ namespace MHServerEmu.Games.Regions
         public RegionProgressionNode ParentNode { get; }
         public Area Area { get; }
 
-        private List<RegionProgressionNode> _childs;
+        private readonly List<RegionProgressionNode> _childs;
 
         public RegionProgressionNode(RegionProgressionNode parent, Area area)
         {
@@ -265,7 +365,7 @@ namespace MHServerEmu.Games.Regions
 
         public RegionProgressionNode FindChildNode(Area area, bool recurse = false)
         {
-            foreach (RegionProgressionNode child in _childs)
+            foreach (var child in _childs)
             {
                 if (child.Area == area)
                     return child;

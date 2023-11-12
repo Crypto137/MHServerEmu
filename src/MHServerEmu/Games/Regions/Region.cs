@@ -10,7 +10,7 @@ namespace MHServerEmu.Games.Regions
     {
         public RegionPrototypeId Prototype { get; }
         public ulong Id { get; }
-        public int RandomSeed { get; }
+        public int RandomSeed { get; private set; }
         public byte[] ArchiveData { get; }
         public Vector3 Min { get; }
         public Vector3 Max { get; }
