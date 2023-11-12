@@ -1,5 +1,4 @@
-﻿using ICSharpCode.SharpZipLib.Core;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace MHServerEmu.Games.Common
 {
@@ -51,5 +50,66 @@ namespace MHServerEmu.Games.Common
             Vector3 size = Max - Min;
             return Min + (size / 2.0f);
         }
+
+        public Aabb Translate(Vector3 newPosition) => new(Min + newPosition, Max + newPosition);
+
+        public Aabb Expand(float expandSize)
+        {
+            Vector3 expandVec = new(expandSize, expandSize, expandSize);
+            return new(Min - expandVec, Max + expandVec);
+        }
+
+        public ContainmentType ContainsXY(Aabb bounds)
+        {
+            if (bounds.Min.X > Max.X || bounds.Max.X < Min.X ||
+                bounds.Min.Y > Max.Y || bounds.Max.Y < Min.Y)
+            {
+                return ContainmentType.Disjoint;
+            }
+            else if (bounds.Min.X >= Min.X && bounds.Max.X <= Max.X &&
+                     bounds.Min.Y >= Min.Y && bounds.Max.Y <= Max.Y)
+            {
+                return ContainmentType.Contains;
+            }
+
+            return ContainmentType.Intersects;
+        }
+
+        public ContainmentType ContainsXY(Aabb areaBounds, float epsilon)
+        {
+            Aabb expanded = Expand(epsilon);
+            return expanded.ContainsXY(areaBounds);
+        }
+
+        public float DistanceToPointSq2D(Vector3 point)
+        {
+            float distance = 0.0f;
+
+            for (int i = 0; i < 2; i++)
+            {
+                float value = point[i];
+
+                if (value < Min[i])
+                    distance += MathF.Pow(Min[i] - value, 2);
+                else if (value > Max[i])
+                    distance += MathF.Pow(value - Max[i], 2);
+            }
+
+            return distance;
+        }
+
+        public float DistanceToPoint2D(Vector3 point)
+        {
+            float distance = DistanceToPointSq2D(point);
+            return (distance > 0.000001f) ? MathF.Sqrt(distance) : 0.0f;
+        }
+
     }
+    public enum ContainmentType
+    {
+        Contains,    
+        Disjoint,   
+        Intersects  
+    }
+
 }

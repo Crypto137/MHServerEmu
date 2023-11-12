@@ -6,11 +6,32 @@ namespace MHServerEmu.Games.Common
 {
     public class Vector3
     {
+        public static readonly Vector3 Zero = new(0.0f, 0.0f, 0.0f);
+
         // precision values: 3 for position, 6 for orientation
 
         public float X { get; set; }    // Yaw for orientation
         public float Y { get; set; }    // Pitch for orientation
         public float Z { get; set; }    // Roll for orientation
+
+        public float this[int index]
+        {
+            get
+            {                
+                if (index == 0) return X;
+                if (index == 1) return Y;
+                if (index == 2) return Z;
+                throw new IndexOutOfRangeException("Invalid index for Vector3");
+            }
+            set
+            {
+                if (index == 0) X = value;
+                else if (index == 1) Y = value;
+                else if (index == 2) Z = value;
+                else
+                    throw new IndexOutOfRangeException("Invalid index for Vector3");
+            }
+        }
 
         public Vector3()
         {
@@ -59,6 +80,8 @@ namespace MHServerEmu.Games.Common
         public static bool operator !=(Vector3 a, Vector3 b) => !(a == b);
         public static bool operator >(Vector3 a, Vector3 b) => ReferenceEquals(null, a) ? ReferenceEquals(null, b) : (a.X > b.X && a.Y > b.Y && a.Z > b.Z);
         public static bool operator <(Vector3 a, Vector3 b) => !(a > b);
+        public static float Length(Vector3 v) => MathF.Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z);
+        public static bool EpsilonSphereTest(Vector3 v1, Vector3 v2, float epsilon) => Length(v1 - v2) < epsilon;
 
         public override bool Equals(object obj)
         {
