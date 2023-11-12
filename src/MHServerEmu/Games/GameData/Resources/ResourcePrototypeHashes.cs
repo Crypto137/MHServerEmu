@@ -1,4 +1,4 @@
-﻿namespace MHServerEmu.Games.GameData.Resource
+﻿namespace MHServerEmu.Games.GameData.Resources
 {
     /// <summary>
     /// Precalculated DJB2 hashes for known resource prototypes.

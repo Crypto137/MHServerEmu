@@ -1,4 +1,4 @@
-﻿namespace MHServerEmu.Games.GameData.Resource
+﻿namespace MHServerEmu.Games.GameData.Resources
 {
     public readonly struct ResourceHeader
     {
