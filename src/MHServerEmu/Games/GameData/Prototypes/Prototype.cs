@@ -121,16 +121,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             switch (Type)
             {
-                case CalligraphyValueType.B:
+                case CalligraphyValueType.Boolean:
                     Value = Convert.ToBoolean(reader.ReadUInt64());
                     break;
-                case CalligraphyValueType.D:
+                case CalligraphyValueType.Double:
                     Value = reader.ReadDouble();
                     break;
-                case CalligraphyValueType.L:
+                case CalligraphyValueType.Long:
                     Value = reader.ReadInt64();
                     break;
-                case CalligraphyValueType.R:
+                case CalligraphyValueType.RHStruct:
                     Value = new Prototype(reader);
                     break;
                 default:
@@ -156,16 +156,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 switch (Type)
                 {
-                    case CalligraphyValueType.B:
+                    case CalligraphyValueType.Boolean:
                         Values[i] = Convert.ToBoolean(reader.ReadUInt64());
                         break;
-                    case CalligraphyValueType.D:
+                    case CalligraphyValueType.Double:
                         Values[i] = reader.ReadDouble();
                         break;
-                    case CalligraphyValueType.L:
+                    case CalligraphyValueType.Long:
                         Values[i] = reader.ReadInt64();
                         break;
-                    case CalligraphyValueType.R:
+                    case CalligraphyValueType.RHStruct:
                         Values[i] = new Prototype(reader);
                         break;
                     default:

@@ -70,10 +70,10 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             switch (ValueType)
             {
                 // Only these types have subtypes
-                case CalligraphyValueType.A:
-                case CalligraphyValueType.C:
-                case CalligraphyValueType.P:
-                case CalligraphyValueType.R:
+                case CalligraphyValueType.Asset:
+                case CalligraphyValueType.Curve:
+                case CalligraphyValueType.Prototype:
+                case CalligraphyValueType.RHStruct:
                     Subtype = reader.ReadUInt64();
                     break;
             }

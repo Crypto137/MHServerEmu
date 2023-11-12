@@ -10,9 +10,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private static readonly Dictionary<CalligraphyValueType, PropertyParamType> ParamTypeDict = new()   // Params can hold only three of the Calligraphy value types
         {
-            { CalligraphyValueType.L, PropertyParamType.Integer },
-            { CalligraphyValueType.A, PropertyParamType.Asset },
-            { CalligraphyValueType.P, PropertyParamType.Prototype }
+            { CalligraphyValueType.Long, PropertyParamType.Integer },
+            { CalligraphyValueType.Asset, PropertyParamType.Asset },
+            { CalligraphyValueType.Prototype, PropertyParamType.Prototype }
         };
 
         public CalligraphyValueType ValueType { get; }
