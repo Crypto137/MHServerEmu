@@ -282,7 +282,16 @@ namespace MHServerEmu.Games.GameData
         public T GetPrototype<T>(ulong id)
         {
             if (_prototypeDict.TryGetValue(id, out object prototype))
-                return (T)prototype;
+            {
+                if (typeof(T).Name != "Prototype" && prototype.GetType().Name == "Prototype")
+                {
+                   var newPrototype = (T)Activator.CreateInstance(typeof(T), new object[] { prototype });
+                    _prototypeDict[id] = newPrototype;
+                    return newPrototype;
+                }
+                else
+                    return (T)prototype;
+            }                
 
             return default;
         }

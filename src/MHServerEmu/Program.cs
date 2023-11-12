@@ -56,8 +56,8 @@ namespace MHServerEmu
             // 7293929583592937434	Regions/HUBS/XaviersMansion/XaviersMansionRegion.prototype
             Logger.Debug($"Start Test");
             {
-                Prototype proto = 7293929583592937434u.GetPrototype();
-                RegionPrototype regionPrototype = new(proto);
+                //Prototype proto = 7293929583592937434u.GetPrototype();
+                RegionPrototype regionPrototype = GameDatabase.GetPrototype<RegionPrototype>(7293929583592937434);
 
                 Logger.Debug($"XaviersMansionRegion.Level = {regionPrototype.Level}");
                 Logger.Debug($"XaviersMansionRegion.PlayerLimit = {regionPrototype.PlayerLimit}");
@@ -65,18 +65,18 @@ namespace MHServerEmu
                 if (r is StaticRegionGeneratorPrototype)
                     Logger.Debug($"XaviersMansionRegion.RegionGenerator is StaticRegionGeneratorPrototype");
                 Logger.Debug($"XaviersMansionRegion.RegionGenerator\n.StaticAreas[0]\n.Area = {(r as StaticRegionGeneratorPrototype).StaticAreas[0].Area}");
+                regionPrototype = GameDatabase.GetPrototype<RegionPrototype>(7293929583592937434); // cashed prototype
+                Logger.Debug($"XaviersMansionRegion.Level = {regionPrototype.Level}");
 
                 // 9142075282174842340	Regions/HUBRevamp/NPEAvengersTowerHUBRegion.prototype
-                proto = 9142075282174842340u.GetPrototype();
-                regionPrototype = new(proto);
+                regionPrototype = GameDatabase.GetPrototype<RegionPrototype>(9142075282174842340);
                 r = regionPrototype.RegionGenerator;
                 if (r is SequenceRegionGeneratorPrototype)
                     Logger.Debug($"NPEAvengersTowerHUBRegion.RegionGenerator is SequenceRegionGeneratorPrototype");
                 Logger.Debug($"NPEAvengersTowerHUBRegion.RegionGenerator\n.AreaSequence[0]\n.AreaChoices[0]\n.Area = {(r as SequenceRegionGeneratorPrototype).AreaSequence[0].AreaChoices[0].Area}");
 
                 // 15546930156792977757	Regions/StoryRevamp/CH03Madripoor/CH0301MadripoorRegion.prototype
-                proto = 15546930156792977757u.GetPrototype();
-                regionPrototype = new(proto);
+                regionPrototype = GameDatabase.GetPrototype<RegionPrototype>(15546930156792977757);
                 r = regionPrototype.RegionGenerator;
                 if (r is SequenceRegionGeneratorPrototype)
                     Logger.Debug($"CH0301MadripoorRegion.RegionGenerator is SequenceRegionGeneratorPrototype");
@@ -86,8 +86,7 @@ namespace MHServerEmu
                 Logger.Debug($"start load regions");
                 foreach (ulong regionProtoId in Enum.GetValues(regions))
                 {
-                    proto = regionProtoId.GetPrototype();
-                    regionPrototype = new(proto);
+                    regionPrototype = GameDatabase.GetPrototype<RegionPrototype>(regionProtoId);
                     Logger.Debug($"region[{regionProtoId}].RegionName = {regionPrototype.RegionName}");
                 }
                 Logger.Debug($"end load");

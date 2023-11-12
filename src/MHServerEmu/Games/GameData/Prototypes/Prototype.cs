@@ -25,7 +25,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class Prototype
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
+        public static readonly Logger Logger = LogManager.CreateLogger();
         public byte Flags { get; }
         public ulong ParentId { get; }  // 0 for .defaults
         public PrototypeEntry[] Entries { get; }
@@ -59,8 +59,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                             Logger.Warn($"PrototypeClass {className} not exist");
                             return null;
                         }
-                        object[] parameters = new object[] { proto };
-                        convertedValue = Activator.CreateInstance(protoType, parameters);
+                        convertedValue = Activator.CreateInstance(protoType, new object[] { proto });
                     }
                     else 
                         convertedValue = null;
