@@ -20,7 +20,8 @@ MHServerEmu-specific topics.
 
 Information about client <-> server communication.
 
-- [Overview](./Networking/Overview.md) - a somewhat outdated overview of how the game's networking.
+- [Packet Structure](./Networking/PacketStructure.md) - an overview of the packet structure.
+- [Authentication](./Networking/Authentication.md) - an overview of the authentication flow.
 
 ## Web
 
