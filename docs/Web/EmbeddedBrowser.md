@@ -4,7 +4,7 @@ Some of the in-game UI panels (TOS popup on login, store, community news) use a 
 
 ## API Calls
 
-Calls are generally made with onclick events (e.g. ```<a onclick="myApi.OpenCatalogToItem('HeroesPage', '')">```). You can find an example of a store home page [here](./../assets/store/mhgame_store_home).
+Calls are generally made with onclick events (e.g. ```<a onclick="myApi.OpenCatalogToItem('HeroesPage', '')">```). You can find an example of a store home page [here](./../../assets/store/mhgame_store_home).
 
 | Call                                                   | Description                                                                                                   |
 | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |

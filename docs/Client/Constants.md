@@ -4,20 +4,20 @@ This file lists various constants used by the client.
 
 ## Locale Website Codes
 
-- en_us
+- `en_us`
 
-- zh_tw
+- `zh_tw`
 
-- fr_fr
+- `fr_fr`
 
-- de_de
+- `de_de`
 
-- ja_jp
+- `ja_jp`
 
-- ko_kr
+- `ko_kr`
 
-- pt_br
+- `pt_br`
 
-- ru_ru
+- `ru_ru`
 
-- es_mx
+- `es_mx`

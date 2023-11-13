@@ -4,7 +4,19 @@ To launch most versions of the game without any launcher you can use the followi
 
 Older versions of the game from before BitRaider was removed require the following parameters: "-nobitraider -nosteam".
 
-Many of these parameters can be set automatically by using [Bifrost](https://github.com/Crypto137/Bifrost).
+Some of these parameters can be set automatically by using [Bifrost](https://github.com/Crypto137/Bifrost).
+
+## Generic Unreal Engine parameters
+
+| Parameter        | Description                              |
+| ---------------- | ---------------------------------------- |
+| -nostartupmovies | Disables logo movies on startup.         |
+| -nomovies        | Disables all movies.                     |
+| -nosplash        | Disables splash image on initialization. |
+| -nosound         | Disables sound.                          |
+| -ResX=           | Forces horizontal resolution.            |
+| -ResY=           | Forces vertical resolution.              |
+| -opengl          | Forces OpenGL API (buggy).               |
 
 ## Game-specific parameters
 
@@ -94,15 +106,3 @@ MOBILE
 UI
 LEADERBOARD
 ```
-
-## Generic Unreal Engine parameters
-
-| Parameter        | Description                              |
-| ---------------- | ---------------------------------------- |
-| -nostartupmovies | Disables logo movies on startup.         |
-| -nomovies        | Disables all movies.                     |
-| -nosplash        | Disables splash image on initialization. |
-| -nosound         | Disables sound.                          |
-| -ResX=           | Forces horizontal resolution.            |
-| -ResY=           | Forces vertical resolution.              |
-| -opengl          | Forces OpenGL API (buggy).               |

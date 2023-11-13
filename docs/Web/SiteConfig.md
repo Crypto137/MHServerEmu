@@ -1,8 +1,8 @@
 # SiteConfig
 
-SiteConfig.xml is a configuration file that the client requests from the CDN on startup that includes information required for logging in, such as AuthServerAddress. SiteConfig.xml follows the same syntax as [ClientConfig.xml](./ClientConfig.md) that comes with the client.
+SiteConfig.xml is a configuration file that the client requests from the CDN on startup that includes information required for logging in, such as AuthServerAddress. SiteConfig.xml follows the same syntax as [ClientConfig.xml](./../Client/ClientConfig.md) that comes with the client.
 
-Early versions of the game cannot start without a SiteConfig. You can work around this by putting a defaultsiteconfig.xml file in the same directory as ClientConfig.xml.
+Early versions of the game cannot start without a SiteConfig. You can work around this by putting a DefaultSiteConfig.xml file in the same directory as ClientConfig.xml.
 
 ## Fields
 

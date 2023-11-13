@@ -1,8 +1,8 @@
-# Setup
+# Initial Setup
 
 First you need to get the 1.52.0.1700 client. This is the final released version of Marvel Heroes, If you still have the game in your Steam library, you can download it from there.
 
-*Note: it is also possible to download other versions of the client from Steam. See [ClientVersions.md](./ClientVersions.md) for details.*
+*Note: it is also possible to download other versions of the client from Steam. See [Client Versions](./../Client/ClientVersions.md) for details.*
 
 After getting the client, you need to set up a web server to serve SiteConfig.xml and redirect login requests. For this guide we're going to use Apache.
 
@@ -15,9 +15,9 @@ After getting the client, you need to set up a web server to serve SiteConfig.xm
 4. Open ```Apache24\conf\extra\httpd-ssl.conf``` with any text editor, find the `<VirtualHost _default_:443>` section, and add the following two lines to it:
    `RewriteEngine on` and `RewriteRule ^/AuthServer(.*) http://%{HTTP_HOST}:8080$1 [P]`.
 
-5. Put [server.crt](./../assets/ssl/server.crt) and [server.crt](./../assets/ssl/server.key) provided in this repository in `Apache24\conf`. Alternatively, you can generate your own OpenSSL certificate.
+5. Put [server.crt](./../../assets/ssl/server.crt) and [server.crt](./../../assets/ssl/server.key) provided in this repository in `Apache24\conf`. Alternatively, you can generate your own OpenSSL certificate.
 
-6. Put [SiteConfig.xml](./../assets/SiteConfig.xml) provided in this repository in ```Apache24\htdocs```.
+6. Put [SiteConfig.xml](./../../assets/SiteConfig.xml) provided in this repository in ```Apache24\htdocs```.
 
 7. Open ```ClientConfig.xml``` located in ```Marvel Heroes\Data\Configs``` with any text editor and replace the ```SiteConfigLocation``` value with ```localhost/SiteConfig.xml```. The line should look like this: `<str name="SiteConfigLocation" value="localhost/SiteConfig.xml" />`.
 
@@ -39,4 +39,4 @@ If everything works correctly, the server should display client connection infor
 
 *Note: you can launch the game without Steam by running MarvelHeroesOmega.exe with the following arguments: -robocopy -nosteam.*
 
-You can customize how the emulator functions, including changing your starter hero, by editing the `Config.ini` file. See [SetupAdvanced.md](./SetupAdvanced.md) for more advanced setup topics.
+You can customize how the emulator functions by editing the `Config.ini` file. See [Advanced Setup](./AdvancedSetup.md) for more advanced setup topics.

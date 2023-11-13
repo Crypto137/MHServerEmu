@@ -1,6 +1,6 @@
 # Advanced Setup
 
-Below are some of the more advanced setup topics you might be interested in. For first-time setup instructions please see [Setup.md](./Setup.md).
+Below are some of the more advanced setup topics you might be interested in. For first-time setup instructions please see [Initial Setup](./InitialSetup.md).
 
 ## Enabling Accounts
 
@@ -14,7 +14,7 @@ You can create and manage accounts by using ! commands in the server console or 
 
 - `!account password [email] [newPassword]` - changes password for the specified account.
 
-For a more in-depth list of commands see [ServerCommands.md](./ServerCommands.md) or type `!commands`.
+For a more in-depth list of commands see [Server Commands](./../ServerEmu/ServerCommands.md) or type `!commands`.
 
 ## Setting Up Remote Connections
 
@@ -36,13 +36,13 @@ Please keep in mind that MHServerEmu is experimental software still heavily in d
 
 The client uses an embedded web browser for some of its UI panels. MHServerEmu provides some options that allow you to make use of this feature.
 
-1. Copy the [mhgame_store_home](./../assets/store/mhgame_store_home/) folder provided in this repository to `Apache24\htdocs`.
+1. Copy the [mhgame_store_home](./../../assets/store/mhgame_store_home/) folder provided in this repository to `Apache24\htdocs`.
 
 2. Set `OverrideStoreUrls` in `Config.ini` to `true`.
 
 3. Set `StoreHomePageUrl` in `Config.ini` to `http://localhost/mhgame_store_home`.
 
-Restart the server, and you should be able to see an example store home page when you open the in-game store. You can set other pages by editing various URL options in `Config.ini` (e.g. `NewsUrl` to change the content of the news window). For more information on the embedded browser see [EmbeddedBrowser.md](./EmbeddedBrowser.md).
+Restart the server, and you should be able to see an example store home page when you open the in-game store. You can set other pages by editing various URL options in `Config.ini` (e.g. `NewsUrl` to change the content of the news window). For more information on the embedded browser see [Embedded Browser](./../Web/EmbeddedBrowser.md).
 
 Please note that the embedded browser is a 2014 version of the Chromium Embedded Framework (CEF), and using it for general web browsing is a major security risk. You should use it only for displaying the content you trust.
 
@@ -50,7 +50,7 @@ Please note that the embedded browser is a 2014 version of the Chromium Embedded
 
 The client can download additional loading screen tips from the server.
 
-1. Copy the [LiveLoadingTips.xml](./../assets/LiveLoadingTips.xml) file provided in this repository to `Apache24\htdocs`.
+1. Copy the [LiveLoadingTips.xml](./../../assets/LiveLoadingTips.xml) file provided in this repository to `Apache24\htdocs`.
 
 2. Set `EnableLiveTips` and `EnableLiveTipsDownloader` in `SiteConfig.xml` to `true`.
 
@@ -60,4 +60,4 @@ The client can download additional loading screen tips from the server.
 
 5. Edit `LiveLoadingTips.xml` to add your own tips.
 
-For tips to actually show up they need to have text matching the client's locale. For a list of locale website codes see [Constants.md](./Constants.md). The client updates tips only when the `Date` attribute of the root node of LiveLoadingTips.xml is different from the previous update.
+For tips to actually show up they need to have text matching the client's locale. For a list of locale website codes see [Constants](./../Client/Constants.md). The client updates tips only when the `Date` attribute of the root node of LiveLoadingTips.xml is different from the previous update.
