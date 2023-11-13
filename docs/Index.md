@@ -23,6 +23,12 @@ Information about client <-> server communication.
 - [Packet Structure](./Networking/PacketStructure.md) - an overview of the packet structure.
 - [Authentication](./Networking/Authentication.md) - an overview of the authentication flow.
 
+## Game Data
+
+Information about how static game data is stored and processed by the game.
+
+- [Pak File](./GameData/PakFile.md) - an overview of the custom archive format used by the game.
+
 ## Web
 
 Information about various web assets that the client gets via HTTP.
