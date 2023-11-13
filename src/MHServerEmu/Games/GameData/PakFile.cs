@@ -14,12 +14,12 @@ namespace MHServerEmu.Games.GameData
         public uint Version { get; }
         public PakEntry[] Entries { get; } = Array.Empty<PakEntry>();
 
-        public PakFile(string pakFilePath, bool silent = false)
+        public PakFile(string pakFilePath)
         {
             // Make sure the specified file exists
             if (File.Exists(pakFilePath) == false)
             {
-                if (silent == false) Logger.Error($"{Path.GetFileName(pakFilePath)} not found");
+                Logger.Error($"{Path.GetFileName(pakFilePath)} not found");
                 return;
             }
 
@@ -48,36 +48,7 @@ namespace MHServerEmu.Games.GameData
                 }
             }
 
-            if (silent == false) Logger.Info($"Loaded {Entries.Length} entries from {Path.GetFileName(pakFilePath)}");
-        }
-
-        public void ExtractEntries(string filePath)
-        {
-            // Create the directory if needed
-            string directoryName = Path.GetDirectoryName(filePath);
-            if (Directory.Exists(directoryName) == false) Directory.CreateDirectory(directoryName);
-
-            // Write all entries
-            using (StreamWriter writer = new(filePath))
-            {
-                foreach (PakEntry entry in Entries)
-                {
-                    string entryString = $"{entry.FileHash}\t{entry.FilePath}\t{entry.ModTime}\t{entry.Offset}\t{entry.CompressedSize}\t{entry.UncompressedSize}";
-                    writer.WriteLine(entryString);
-                }
-            }
-        }
-
-        public void ExtractData(string outputDirectory)
-        {
-            foreach (PakEntry entry in Entries)
-            {
-                string filePath = Path.Combine(outputDirectory, entry.FilePath);
-                string directory = Path.GetDirectoryName(filePath);                 // Paks have their own directory structure that we need to keep in mind.
-
-                if (Directory.Exists(directory) == false) Directory.CreateDirectory(directory);
-                File.WriteAllBytes(filePath, entry.Data);
-            }
+            Logger.Info($"Loaded {Entries.Length} entries from {Path.GetFileName(pakFilePath)}");
         }
 
         public byte[] GetFile(string filePath)

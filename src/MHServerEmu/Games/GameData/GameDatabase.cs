@@ -65,28 +65,6 @@ namespace MHServerEmu.Games.GameData
             IsInitialized = true;
         }
 
-        public static void ExtractPak(bool extractEntries, bool extractData)
-        {
-            PakFile calligraphyFile = new(CalligraphyPath, true);
-            PakFile resourceFile = new(ResourcePath, true);
-
-            if (extractEntries)
-            {
-                Logger.Info("Extracting Calligraphy entries...");
-                calligraphyFile.ExtractEntries(Path.Combine(PakDirectory, "Calligraphy.tsv"));
-                Logger.Info("Extracting Resource entries...");
-                resourceFile.ExtractEntries(Path.Combine(PakDirectory, "mu_cdata.tsv"));
-            }
-
-            if (extractData)
-            {
-                Logger.Info("Extracting Calligraphy data...");
-                calligraphyFile.ExtractData(PakDirectory);
-                Logger.Info("Extracting Resource data...");
-                resourceFile.ExtractData(PakDirectory);
-            }
-        }
-
         #region Data Access
 
         public static AssetType GetAssetType(AssetTypeId assetTypeId) => DataDirectory.AssetDirectory.GetAssetType(assetTypeId);

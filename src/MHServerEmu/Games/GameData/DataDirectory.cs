@@ -1,9 +1,7 @@
-﻿using System.Text.Json;
-using MHServerEmu.Common;
+﻿using MHServerEmu.Common;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
-using MHServerEmu.Games.GameData.JsonOutput;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.GameData
@@ -54,23 +52,23 @@ namespace MHServerEmu.Games.GameData
                     {
                         case "CDR":     // Curves
                             for (int j = 0; j < recordCount; j++) ReadCurveDirectoryEntry(reader, calligraphyPak);
-                            Logger.Info($"Parsed {CurveDirectory.RecordCount} curves");
+                            Logger.Info($"Loaded {CurveDirectory.RecordCount} curves");
                             break;
 
                         case "TDR":     // AssetTypes
                             for (int j = 0; j < recordCount; j++) ReadTypeDirectoryEntry(reader, calligraphyPak);
-                            Logger.Info($"Parsed {AssetDirectory.AssetCount} assets of {AssetDirectory.AssetTypeCount} types");
+                            Logger.Info($"Loaded {AssetDirectory.AssetCount} assets of {AssetDirectory.AssetTypeCount} types");
                             break;
 
                         case "BDR":     // Blueprints
                             for (int j = 0; j < recordCount; j++) ReadBlueprintDirectoryEntry(reader, calligraphyPak);
-                            Logger.Info($"Parsed {_blueprintRecordDict.Count} blueprints");
+                            Logger.Info($"Loaded {_blueprintRecordDict.Count} blueprints");
                             break;
 
                         case "PDR":     // Prototypes
                             for (int j = 0; j < recordCount; j++) ReadPrototypeDirectoryEntry(reader, calligraphyPak);
                             CreatePrototypeDataRefsForDirectory(resourcePak);  // Load resource prototypes
-                            Logger.Info($"Parsed {_prototypeRecordDict.Count} prototype files");
+                            Logger.Info($"Loaded {_prototypeRecordDict.Count} prototype files");
                             break;
 
                         case "RDR":     // Replacement
@@ -320,16 +318,6 @@ namespace MHServerEmu.Games.GameData
                 && _blueprintRecordDict.Count > 0
                 && _prototypeRecordDict.Count > 0
                 && ReplacementDirectory.RecordCount > 0;
-        }
-
-        public void Export()
-        {
-            // Set up json serializer
-            JsonSerializerOptions jsonSerializerOptions = new() { WriteIndented = true, MaxDepth = 128 };
-            jsonSerializerOptions.Converters.Add(new BlueprintConverter());
-            jsonSerializerOptions.Converters.Add(new PrototypeFileConverter());
-
-            // todo: reimplement export
         }
 
         #endregion

@@ -123,34 +123,6 @@ namespace MHServerEmu.Common.Commands
         }
     }
 
-    [CommandGroup("pak", "Provides commands to interact with pak files.", AccountUserLevel.Admin)]
-    public class PakCommands : CommandGroup
-    {
-        [Command("extract", "Extracts entries and/or data from pak files.\nUsage: pak extract [entries|data|all]", AccountUserLevel.Admin)]
-        public string Extract(string[] @params, FrontendClient client)
-        {
-            if (client != null) return "You can only invoke this command from the server console.";
-
-            if (@params != null && @params.Length > 0)
-            {
-                switch (@params[0].ToLower())
-                {
-                    case "entries":
-                        GameDatabase.ExtractPak(true, false);
-                        return "Finished extracting pak entries.";
-                    case "data":
-                        GameDatabase.ExtractPak(false, true);
-                        return "Finished extracting pak data.";
-                    case "all":
-                        GameDatabase.ExtractPak(true, true);
-                        return "Finished extracting pak entries and data.";
-                }
-            }
-
-            return "Invalid parameters. Type 'help pak extract' to get help.";
-        }
-    }
-
     [CommandGroup("debug", "Debug commands for development.", AccountUserLevel.Admin)]
     public class DebugCommands : CommandGroup
     {
