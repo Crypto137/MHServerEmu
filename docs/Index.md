@@ -27,6 +27,7 @@ Information about client <-> server communication.
 
 Information about how static game data is stored and processed by the game.
 
+- [Overview](./GameData/Overview.md) - a general overview of how game data is implemented.
 - [Pak File](./GameData/PakFile.md) - an overview of the custom archive format used by the game.
 
 ## Web
