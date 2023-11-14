@@ -92,6 +92,14 @@ namespace MHServerEmu.Games.GameData
 
         public static PrototypeGuid GetPrototypeGuid(PrototypeId id) => DataDirectory.GetPrototypeGuid(id);
 
+        public static PrototypeId GetDataRefByAsset(StringId assetId)
+        {
+            if (assetId == StringId.Invalid) return PrototypeId.Invalid;
+
+            string assetName = GetAssetName(assetId);
+            return GetPrototypeRefByName(assetName);
+        }
+
         #endregion
 
         private static bool VerifyData()
