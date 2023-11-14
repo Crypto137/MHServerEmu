@@ -34,7 +34,7 @@ There are two known versions of these SQLite-based paks:
 
 ## Custom Gazillion Paks
 
-At some currently unknown point in 2014-2015 the original SQLite-based archives were replaced with a new custom format developed by Gazillion. Data was also split into two files: `Calligraphy.sip` for data exported from Calligraphy and `mu_cdata.sip` for resource data. These custom paks can be opened with [MHDataParser](https://github.com/Crypto137/MHDataParser).
+At some currently unknown point in 2014-2015 the original SQLite-based archives were replaced with a new custom format developed by Gazillion. Data was also split into two files: `Calligraphy.sip` for data exported from [Calligraphy](./Calligraphy.md) and `mu_cdata.sip` for resource data. These custom paks can be opened with [MHDataParser](https://github.com/Crypto137/MHDataParser).
 
 Files with this format start with an eight-byte header:
 

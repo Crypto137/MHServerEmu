@@ -6,7 +6,7 @@ Static data includes things needed to run the game, such as loot tables, damage 
 
 A piece of static data is called a *prototype*. A prototype can be as small as a variable in a damage calculation formula to as large as a definition for a region or a playable hero. Each prototype is a bound to a specific class that encapsulates it and postprocesses it after loading if needed.
 
-Prototypes can be separated into two main categories: Calligraphy prototypes stored in `Calligraphy.sip` and resource prototypes stored in `mu_cdata.sip`. Only cells, districts, encounters, props, prop sets, and UIs are resource prototypes, everything else (which is the vast majority of it) is Calligraphy-based.
+Prototypes can be separated into two main categories: [Calligraphy](./Calligraphy.md) prototypes stored in `Calligraphy.sip` and resource prototypes stored in `mu_cdata.sip`. Only cells, districts, encounters, props, prop sets, and UIs are resource prototypes, everything else (which is the vast majority of it) is Calligraphy-based.
 
 In addition to prototypes there are also auxiliary data types that are used as prototype field values: curves, assets, and blueprints.
 
