@@ -5,8 +5,11 @@ Calligraphy is a custom game data management system developed by Gazillion. Its 
 Calligraphy uses five file formats: directory, curve, asset type, blueprint, and prototype. All Calligraphy files start with the same four-byte header:
 
 ```csharp
-char[3] Magic;
-byte Version;
+struct CalligraphyHeader
+{
+    char[3] Magic;
+    byte Version;
+}
 ```
 
 The magic string defines what format is used in the file. The version depends on the game version: game versions 1.9-1.17 used Calligraphy version 10, and all later game versions starting with 1.18 released on January 24th 2014 use Calligraphy version 11.
@@ -165,4 +168,83 @@ enum CalligraphyContainerType : byte
 
 ## Prototype
 
-TODO
+Prototype (`.prototype` or `.defaults`, signature `PTP`) files contain values for fields defined in blueprints. Each `.defaults` prototype file is paired with a `.blueprint` file that defines its fields, and `.prototype` files inherit from these default prototypes.
+
+Prototype files have the following structure:
+
+```csharp
+CalligraphyHeader Header;
+Prototype Prototype;
+```
+
+Prototypes themselves have the following structure:
+
+```csharp
+PrototypeDataHeader Header;
+
+if (Header.DataExists)
+{
+    ushort FieldGroupsLength;
+    PrototypeFieldGroup[FieldGroupsLength] FieldGroups;
+}
+```
+
+Prototype data header has the following structure:
+
+```csharp
+struct PrototypeDataHeader
+{
+    byte Flags;
+    bool ReferenceExists = (Flags & 0x01) > 0;
+    bool DataExists = (Flags & 0x02) > 0;
+    bool PolymorphicData = (Flags & 0x04) > 0;
+
+    if (ReferenceExists)
+        ulong ReferenceType;    // Parent prototype id, invalid (0) for .defaults 
+}
+
+```
+
+Each field group is a collection of fields belonging to blueprints that contribute to a prototype. They have the following structure:
+
+```csharp
+ulong DeclaringBlueprintId;    // .defaults prototype id
+byte BlueprintCopyNumber;
+
+ushort SimpleFieldsLength;
+PrototypeSimpleField[SimpleFieldsLength] SimpleFields;
+
+ushort ListFieldsLength;
+PrototypeListField[ListFieldsLength] ListFields;
+```
+
+Simple fields contain a single value and have the following structure:
+
+```csharp
+ulong FieldId;
+ValueType Type;    // See Blueprint section above for more info
+object Value;
+```
+
+List fields contain a list of values and have a similar structure:
+
+```csharp
+ulong FieldId;
+ValueType Type;
+ushort ValuesLength;
+object[ValuesLength] Values;
+```
+
+ The actual value type depends on `Type`:
+
+- `Boolean`: a boolean stored as a 64-bit unsigned integer.
+
+- `Double`: a double precision 64-bit floating point value.
+
+- `Long`: a 64-bit signed integer value.
+
+- `RHStruct`: a new prototype definition starting with `PrototypeDataHeader`.
+
+- `Asset`, `Curve`, `Prototype`, `String`, `Type`: a 64-bit data id.
+
+RHStructs are fully-featured prototypes without an id that can have other RHStructs as their field values. Because of that, some prototypes have a heavily nested recursive structure.

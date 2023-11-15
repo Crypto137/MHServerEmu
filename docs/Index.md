@@ -21,6 +21,7 @@ MHServerEmu-specific topics.
 Information about client <-> server communication.
 
 - [Packet Structure](./Networking/PacketStructure.md) - an overview of the packet structure.
+
 - [Authentication](./Networking/Authentication.md) - an overview of the authentication flow.
 
 ## Game Data
@@ -28,7 +29,9 @@ Information about client <-> server communication.
 Information about how static game data is stored and processed by the game.
 
 - [Overview](./GameData/Overview.md) - a general overview of how game data is implemented.
+
 - [Pak File](./GameData/PakFile.md) - an overview of the custom archive format used by the game.
+
 - [Calligraphy](./GameData/Calligraphy.md) - an overview of the Calligraphy data system.
 
 ## Web
