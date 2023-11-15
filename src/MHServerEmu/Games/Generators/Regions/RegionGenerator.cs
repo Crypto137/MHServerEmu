@@ -45,15 +45,10 @@ namespace MHServerEmu.Games.Generators.Regions
         public static void CenterRegion(Region region)
         {
             Aabb bound = region.CalculateBound();
-            Vector3 center = bound.GetCenter();
+            Vector3 center = bound.Center;
 
             foreach (Area area in region.AreaList)  
                 area.Origin -= center;
-        }
-
-        public static bool EpsilonTest(float val1, float val2, float epsilon)
-        {
-            return val1 >= (val2 - epsilon) && val1 <= (val2 + epsilon);
         }
 
         public static bool GetSharedConnections(List<Vector3> sharedConnections, Area areaA, Area areaB)
@@ -92,7 +87,7 @@ namespace MHServerEmu.Games.Generators.Regions
             }
 
             if (connectionsFound == false)
-                Logger.Error($"No connection found between: AreaA: {areaA.Prototype} AreaB: {areaB.Prototype}"); 
+                Logger.Error($"No connection found between: AreaA: {areaA.PrototypeId} AreaB: {areaB.PrototypeId}"); 
 
             return connectionsFound;
         }
@@ -104,7 +99,7 @@ namespace MHServerEmu.Games.Generators.Regions
             Aabb boundsA = areaA.RegionBounds;
             Aabb boundsB = areaB.RegionBounds;
 
-            if (EpsilonTest(boundsA.Max.X, boundsB.Min.X, 10.0f))
+            if (Segment.EpsilonTest(boundsA.Max.X, boundsB.Min.X, 10.0f))
             {
                 float x = boundsA.Max.X;
                 float maxY = Math.Min(boundsA.Max.Y, boundsB.Max.Y);
@@ -114,7 +109,7 @@ namespace MHServerEmu.Games.Generators.Regions
                 sharedEdge.End = new(x, maxY, 0.0f);
                 return true;
             }
-            else if (EpsilonTest(boundsA.Max.Y, boundsB.Min.Y, 10.0f))
+            else if (Segment.EpsilonTest(boundsA.Max.Y, boundsB.Min.Y, 10.0f))
             {
                 float y = boundsA.Max.Y;
                 float maxX = Math.Min(boundsA.Max.X, boundsB.Max.X);
@@ -124,7 +119,7 @@ namespace MHServerEmu.Games.Generators.Regions
                 sharedEdge.End = new(maxX, y, 0.0f);
                 return true;
             }
-            else if (EpsilonTest(boundsA.Min.X, boundsB.Max.X, 10.0f))
+            else if (Segment.EpsilonTest(boundsA.Min.X, boundsB.Max.X, 10.0f))
             {
                 float x = boundsA.Min.X;
                 float maxY = Math.Min(boundsA.Max.Y, boundsB.Max.Y);
@@ -134,7 +129,7 @@ namespace MHServerEmu.Games.Generators.Regions
                 sharedEdge.End = new(x, maxY, 0.0f);
                 return true;
             }
-            else if (EpsilonTest(boundsA.Min.Y, boundsB.Max.Y, 10.0f))
+            else if (Segment.EpsilonTest(boundsA.Min.Y, boundsB.Max.Y, 10.0f))
             {
                 float y = boundsA.Min.Y;
                 float maxX = Math.Min(boundsA.Max.X, boundsB.Max.X);

@@ -9,6 +9,9 @@ using MHServerEmu.Games.Generators;
 using System.Diagnostics;
 using MHServerEmu.Games.Generators.Navi;
 using Vector3 = MHServerEmu.Games.Common.Vector3;
+using MHServerEmu.Common.Logging;
+using MHServerEmu.Common;
+using MHServerEmu.Games.Generators.Population;
 
 namespace MHServerEmu.Games.Generators
 {
@@ -71,21 +74,144 @@ namespace MHServerEmu.Games.Regions
         PostGenerate = 0x20,
     }
 
+    public struct CellSettings
+    {
+        public Vector3 PositionInArea;
+        public Vector3 OrientationInArea;
+        public ulong CellRef;
+    }
+
+    public partial class Cell
+    {
+        public Aabb RegionBounds { get; private set; }
+        public Area Area { get; private set; }
+
+        public List<uint> CellConnections = new();
+        public void AddNavigationDataToRegion()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AddCellConnection(uint id)
+        {
+            CellConnections.Add(id);
+        }
+
+    }
+
+    public struct AreaSettings
+    {
+        public uint Id;
+        public AreaPrototypeId AreaPrototype;
+        public Vector3 Origin;
+        public RegionSettings RegionSettings;
+    }
+
     public partial class Area
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
         public Aabb RegionBounds { get; set; }
         public Aabb LocalBounds { get; set; }
-
-        public List<uint> SubAreas { get; private set; }
+        public int RandomSeed { get; set; }
+        public List<uint> SubAreas = new();
 
         public ulong RespawnOverride { get; set; }
         public ulong DistrictDataRef { get; set; }
+        public Game Game { get; private set; }
+        public Region Region { get; private set; }
+        public AreaPrototype AreaPrototype { get; set; }
+        public int MinimapRevealGroupId { get; set; }
 
-        public Region Region { get; set; }
-
+        private GenerateFlag _statusFlag;
+        private PropTable PropTable;
+        
         public Generator Generator { get; set; }
 
-        private readonly List<AreaConnectionPoint> AreaConnections;
+        private readonly List<AreaConnectionPoint> AreaConnections = new();
+
+        public Area(Game game, Region region)
+        {
+            Game = game;
+            Region = region;
+            Origin = new();
+            LocalBounds = new(Aabb.InvertedLimit);
+            RegionBounds = new(Aabb.InvertedLimit);
+        }
+
+        public bool Initialize(AreaSettings settings)
+        {
+            Id = settings.Id;
+            if (Id == 0) return false;
+
+            PrototypeId = (AreaPrototypeId)settings.AreaPrototype;
+            AreaPrototype = GameDatabase.GetPrototype<AreaPrototype>((ulong)PrototypeId);
+            if (AreaPrototype == null) return false;
+
+            Origin = settings.Origin;
+            RegionBounds = new Aabb(Origin, Origin);
+
+            RandomSeed = Region.RandomSeed; 
+
+            if (settings.RegionSettings.GenerateAreas)
+            { 
+                Generator = DRAGSystem.LinkGenerator(AreaPrototype.Generator, this);
+                if (Generator == null)
+                {
+                    Logger.Error("Area failed to link to a required generator.");
+                    return false;
+                }
+
+                GRandom random = new(RandomSeed);
+
+                LocalBounds = Generator.PreGenerate(random);
+
+                RegionBounds = LocalBounds.Translate(Origin);
+                RegionBounds.RoundToNearestInteger();
+            }
+
+            PropTable = new ();
+
+            if (AreaPrototype.PropSets != null)
+            {
+                foreach (var propSet in AreaPrototype.PropSets)
+                    PropTable.AppendPropSet(propSet);
+            }
+
+            MinimapRevealGroupId = AreaPrototype.MinimapRevealGroupId;
+
+            return true;
+        }
+
+        public AreaGenerationInterface GetAreaGenerationInterface()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool AddCell(uint cellid, CellSettings cellSettings)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IntersectsXY(Vector3 position) => RegionBounds.IntersectsXY(position);
+
+        public Cell GetCellAtPosition(Vector3 position)
+        {
+            Aabb volume = new (position, 0.000001f, 0.000001f, RegionBounds.Height * 2.0f);
+            foreach (Cell cell in Region.IterateCellsInVolume(volume))
+                if (cell.Area == this)  return cell;
+
+            return null;
+        }
+
+        public bool CreateCellConnection(Cell cellA, Cell cellB)
+        {
+            if (cellA.Area != this || cellB.Area != this) return false;
+
+            cellA.AddCellConnection(cellB.Id);
+            cellB.AddCellConnection(cellA.Id);
+
+            return true;
+        }
 
         public bool Generate(RegionGenerator generator, List<ulong> areas, GenerateFlag flags)
         {
@@ -126,7 +252,20 @@ namespace MHServerEmu.Games.Regions
 
         private bool GenerateNavi()
         {
-            throw new NotImplementedException();
+            if (!TestStatus(GenerateFlag.Background))
+            {
+                Logger.Warn($"[Engineering Issue] Navi is getting generated out of order with, or after a failed area generator\nRegion:{Region.Prototype}\nArea:{PrototypeId}");
+                return false;
+            }
+
+            if (TestStatus(GenerateFlag.Navi))  return true;
+
+            SetStatus(GenerateFlag.Navi, true);
+
+            foreach (var cell in CellList)
+                cell.AddNavigationDataToRegion();
+
+            return true;
         }
 
         private bool GeneratePostInitialize()
@@ -134,9 +273,47 @@ namespace MHServerEmu.Games.Regions
             throw new NotImplementedException();
         }
 
-        private bool GenerateBackground(RegionGenerator generator, List<ulong> areas)
+        public bool GenerateBackground(RegionGenerator regionGenerator, List<ulong> areas)
         {
-            throw new NotImplementedException();
+            if (Region == null)  return false;
+            if (TestStatus(GenerateFlag.Background)) return true;
+            if (Generator == null) return false;
+            
+            GRandom random = new (RandomSeed);
+
+            // AreaGenerateBackground
+            bool success = Generator.Generate(random, regionGenerator, areas);
+
+            if (!success) Logger.Error($"Area {PrototypeId} in region {Region.Prototype} failed to generate");
+
+            Generator = null; 
+
+            if (success && SubAreas.Count > 0)
+            {
+                foreach (var areaProto in SubAreas)
+                    if (areaProto != 0)
+                    {
+                        Area area = Region.GetArea(areaProto);
+                        if (area != null)
+                            success &= area.GenerateBackground(regionGenerator, areas);
+                    }
+
+            }
+
+            if (success) SetStatus(GenerateFlag.Background, true);
+
+            return success;
+        }
+
+        private void SetStatus(GenerateFlag status, bool enable)
+        {
+            if (enable) _statusFlag |= status;
+            else _statusFlag ^= status;
+        }
+
+        private bool TestStatus(GenerateFlag status)
+        {
+            return _statusFlag.HasFlag(status);
         }
 
         public static void CreateConnection(Area areaA, Area areaB, Vector3 position, ConnectPosition connectPosition)
@@ -164,7 +341,7 @@ namespace MHServerEmu.Games.Regions
 
         public ulong GetPrototypeDataRef()
         {
-            return (ulong)Prototype;
+            return (ulong)PrototypeId;
         }
 
     }
@@ -270,12 +447,34 @@ namespace MHServerEmu.Games.Regions
 
         public void DestroyArea(uint id)
         {
+            Area areaToRemove = null;
+            foreach (Area area in AreaList)
+            {
+                if (area.Id == id)
+                {
+                    areaToRemove = area;
+                    break;
+                }
+            }
+
+            if (areaToRemove != null)
+            {
+                DeallocateArea(areaToRemove);
+                AreaList.Remove(areaToRemove);
+            }
+        }
+
+        private void DeallocateArea(Area areaToRemove)
+        {
             throw new NotImplementedException();
         }
 
-        public Area GetArea(ulong area)
+        public Area GetArea(ulong prototypeId)
         {
-            throw new NotImplementedException();
+            foreach (var area in AreaList)
+                if ((ulong)area.PrototypeId == prototypeId)  return area;
+
+            return null;
         }
 
         public float GetDistanceToClosestAreaBounds(Vector3 position)
@@ -289,6 +488,11 @@ namespace MHServerEmu.Games.Regions
 
             Debug.Assert(minDistance != float.MaxValue);
             return minDistance;
+        }
+
+        internal IEnumerable<Cell> IterateCellsInVolume(Aabb aabb)
+        {
+            throw new NotImplementedException();
         }
     }
 

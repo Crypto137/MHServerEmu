@@ -4,12 +4,12 @@ namespace MHServerEmu.Games.Generators.Prototypes
 {
     public class AreaPrototype : Prototype
     {
-        public ulong Generator;
+        public GeneratorPrototype Generator;
         public int LevelOffset;
         public ulong Population;
         public ulong AreaName;
         public ulong PropDensity;
-        public ulong PropSets;
+        public ulong[] PropSets;
         public StyleEntryPrototype[] Styles;
         public ulong ClientMap;
         public ulong AmbientSfx;
