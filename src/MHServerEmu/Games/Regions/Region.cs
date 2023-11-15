@@ -84,7 +84,7 @@ namespace MHServerEmu.Games.Regions
             {
                 messageList.Add(new((byte)GameServerToClientMessage.NetMessageAddArea, NetMessageAddArea.CreateBuilder()
                     .SetAreaId(area.Id)
-                    .SetAreaPrototypeId((ulong)area.Prototype)
+                    .SetAreaPrototypeId((ulong)area.PrototypeId)
                     .SetAreaOrigin(area.Origin.ToNetStructPoint3())
                     .SetIsStartArea(area.IsStartArea)
                     .Build().ToByteArray()));

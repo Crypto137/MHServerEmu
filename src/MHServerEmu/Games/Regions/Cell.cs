@@ -2,7 +2,7 @@
 
 namespace MHServerEmu.Games.Regions
 {
-    public class Cell
+    public partial class Cell
     {
         public uint Id { get; }
         public ulong PrototypeId { get; }

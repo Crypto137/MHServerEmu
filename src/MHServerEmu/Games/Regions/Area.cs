@@ -1,12 +1,13 @@
 ﻿using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Generators;
+using MHServerEmu.Games.Generators.Areas;
 
 namespace MHServerEmu.Games.Regions
 {
     public partial class Area
     {
-        public uint Id { get; }
-        public AreaPrototypeId Prototype { get; }
+        public uint Id { get; private set; }
+        public AreaPrototypeId PrototypeId { get; private set; }
         public Vector3 Origin { get; set; }
         public bool IsStartArea { get; }
 
@@ -15,7 +16,7 @@ namespace MHServerEmu.Games.Regions
         public Area(uint id, AreaPrototypeId prototype, Vector3 origin, bool isStartArea)
         {
             Id = id;
-            Prototype = prototype;
+            PrototypeId = prototype;
             Origin = origin;
             IsStartArea = isStartArea;
         }

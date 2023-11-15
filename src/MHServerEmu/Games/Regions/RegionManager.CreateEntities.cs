@@ -214,7 +214,7 @@ namespace MHServerEmu.Games.Regions
                 for (int a = 0; a < region.AreaList.Count; a++)
                 {
                     Area entryArea = region.AreaList[a];
-                    area = (ulong)entryArea.Prototype;
+                    area = (ulong)entryArea.PrototypeId;
                     for (int c = 0; c < entryArea.CellList.Count; c++)
                     {
                         cellid = (int)entryArea.CellList[c].Id;
@@ -684,6 +684,11 @@ namespace MHServerEmu.Games.Regions
 
             }
             return _entityManager.GetLastEntityId() - numEntities;
+        }
+
+        public uint AllocateCellId()
+        {
+            throw new NotImplementedException();
         }
     }
 }
