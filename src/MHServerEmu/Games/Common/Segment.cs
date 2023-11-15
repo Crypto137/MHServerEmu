@@ -1,6 +1,4 @@
-﻿using MHServerEmu.Games.Common;
-
-namespace MHServerEmu.Games.Generators
+﻿namespace MHServerEmu.Games.Common
 {
     public class Segment
     {
@@ -29,6 +27,11 @@ namespace MHServerEmu.Games.Generators
         public float Length()
         {
             return Vector3.Length(GetDirection());
+        }
+
+        public static bool EpsilonTest(float val1, float val2, float epsilon)
+        {
+            return val1 >= val2 - epsilon && val1 <= val2 + epsilon;
         }
 
     }

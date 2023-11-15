@@ -40,6 +40,13 @@ namespace MHServerEmu.Games.Common
             Z = 0.0f;
         }
 
+        public Vector3(Vector3 vector)
+        {
+            X = vector.X;
+            Y = vector.Y;
+            Z = vector.Z;
+        }
+
         public Vector3(float x, float y, float z)
         {
             X = x;

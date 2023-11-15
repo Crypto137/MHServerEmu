@@ -13,13 +13,31 @@ namespace MHServerEmu.Games.Common
         public float Length { get => Max.Y - Min.Y; }
         [JsonIgnore]
         public float Height { get => Max.Z - Min.Z; }
-
+        [JsonIgnore]
+        public Vector3 Center { get => Min + ((Max - Min) / 2.0f); }
         public Aabb(Vector3 min, Vector3 max)
         {
             Min = min;
             Max = max;
         }
+        public Aabb(Aabb bound)
+        {
+            Min = new(bound.Min);
+            Max = new(bound.Max);
+        }
+
+        public Aabb(Vector3 center, float width, float length, float height)
+        {
+            float halfWidth = width / 2.0f;
+            float halfLength = length / 2.0f;
+            float halfHeight = height / 2.0f;
+
+            Min = new (center.X - halfWidth, center.Y - halfLength, center.Z - halfHeight);
+            Max = new (center.X + halfWidth, center.Y + halfLength, center.Z + halfHeight);
+        }
+
         [JsonIgnore]
+
         public static readonly Aabb InvertedLimit = new (
             new Vector3(float.MaxValue, float.MaxValue, float.MaxValue),
             new Vector3(float.MinValue, float.MinValue, float.MinValue)
@@ -42,14 +60,20 @@ namespace MHServerEmu.Games.Common
             return new Aabb(newMin, newMax);
         }
 
+        public static Aabb operator +(Aabb aabb, Vector3 point)
+        {
+            Vector3 newMin = new(Math.Min(aabb.Min.X, point.X),
+                                    Math.Min(aabb.Min.Y, point.Y),
+                                    Math.Min(aabb.Min.Z, point.Z));
+
+            Vector3 newMax = new(Math.Max(aabb.Max.X, point.X),
+                                    Math.Max(aabb.Max.Y, point.Y),
+                                    Math.Max(aabb.Max.Z, point.Z));
+
+            return new Aabb(newMin, newMax);
+        }
 
         public override string ToString() => $"Min:{Min} Max:{Max}";
-
-        public Vector3 GetCenter()
-        {
-            Vector3 size = Max - Min;
-            return Min + (size / 2.0f);
-        }
 
         public Aabb Translate(Vector3 newPosition) => new(Min + newPosition, Max + newPosition);
 
@@ -103,6 +127,15 @@ namespace MHServerEmu.Games.Common
             float distance = DistanceToPointSq2D(point);
             return (distance > 0.000001f) ? MathF.Sqrt(distance) : 0.0f;
         }
+
+        public void RoundToNearestInteger()
+        {
+            Min = new Vector3(MathF.Round(Min.X), MathF.Round(Min.Y), MathF.Round(Min.Z));
+            Max = new Vector3(MathF.Round(Max.X), MathF.Round(Max.Y), MathF.Round(Max.Z));
+        }
+
+        public bool IntersectsXY(Vector3 point) => point.X >= Min.X && point.X <= Max.X && point.Y >= Min.Y && point.Y <= Max.Y;
+
 
     }
     public enum ContainmentType
