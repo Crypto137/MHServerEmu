@@ -60,4 +60,4 @@ The client can download additional loading screen tips from the server.
 
 5. Edit `LiveLoadingTips.xml` to add your own tips.
 
-For tips to actually show up they need to have text matching the client's locale. For a list of locale website codes see [Constants](./../Client/Constants.md). The client updates tips only when the `Date` attribute of the root node of LiveLoadingTips.xml is different from the previous update.
+For tips to actually show up they need to have text matching the client's locale. For a list of supported locale website codes see [here](./../GameData/Locale.md). The client updates tips only when the `Date` attribute of the root node of LiveLoadingTips.xml is different from the previous update.

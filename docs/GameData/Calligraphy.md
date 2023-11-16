@@ -14,7 +14,7 @@ struct CalligraphyHeader
 
 The magic string defines what format is used in the file. The version depends on the game version: game versions 1.9-1.17 used Calligraphy version 10, and all later game versions starting with 1.18 released on January 24th 2014 use Calligraphy version 11.
 
-All strings in Calligraphy files are fixed-length ASCII strings with the length encoded in a 16-bit value preceding the text:
+All strings in Calligraphy files are fixed-length UTF-8 strings with the length encoded in a 16-bit value preceding the text:
 
 ```csharp
 ushort StringLength;
@@ -202,7 +202,6 @@ struct PrototypeDataHeader
     if (ReferenceExists)
         ulong ReferenceType;    // Parent prototype id, invalid (0) for .defaults 
 }
-
 ```
 
 Each field group is a collection of fields belonging to blueprints that contribute to a prototype. They have the following structure:
