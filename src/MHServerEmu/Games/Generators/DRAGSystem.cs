@@ -79,6 +79,7 @@ namespace MHServerEmu.Games.Regions
         public Vector3 PositionInArea;
         public Vector3 OrientationInArea;
         public ulong CellRef;
+        public int Seed;
     }
 
     public partial class Cell
