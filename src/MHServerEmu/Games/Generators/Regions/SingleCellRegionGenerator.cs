@@ -15,21 +15,21 @@ namespace MHServerEmu.Games.Generators.Regions
             ulong dynamicAreaProto = proto.AreaInterface; // DRAG\AreaGenerators\DynamicArea.prototype
             if (dynamicAreaProto == 0) return;
 
-            ulong cellProtoId = proto.Cell; // Resource/Cells/Lobby.cell
-            CellPrototype cellProto = proto.CellProto;
-            if (cellProtoId == 0 && cellProto == null)  return;
+            ulong cellAsset = proto.Cell; // Resource/Cells/Lobby.cell
+            ulong cellRef = proto.CellProto;
+            if (cellAsset == 0 && cellRef == 0)  return;
 
-            if (cellProto == null)
+            if (cellRef == 0)
             { 
-                cellProto = GameDatabase.GetPrototype<CellPrototype>(cellProtoId);
-                if (cellProto == null) return;
+                cellRef = GameDatabase.GetDataRefByAsset(cellAsset);
+                if (cellRef == 0) return;
             }
 
             Area area = region.CreateArea(dynamicAreaProto, new());
             if (area == null) return;
 
             AreaGenerationInterface areaInterface = area.GetAreaGenerationInterface();
-            areaInterface.PlaceCell(cellProto,  new());
+            areaInterface.PlaceCell(cellRef,  new());
 
             RegionProgressionGraph graph = region.ProgressionGraph;
             graph.SetRoot(area);

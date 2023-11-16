@@ -1,5 +1,4 @@
 ﻿using MHServerEmu.Games.Common;
-using MHServerEmu.Games.Regions;
 using System.Collections;
 
 namespace MHServerEmu.Games.Generators.Areas
@@ -7,22 +6,34 @@ namespace MHServerEmu.Games.Generators.Areas
     public class GenCellContainer : IEnumerable<GenCell>
     {
         private readonly List<GenCell> Cells = new ();
-        public IEnumerator<GenCell> GetEnumerator()
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        public IEnumerator<GenCell> GetEnumerator() => Cells.GetEnumerator();
+
+        public bool CreateCell(uint id, Vector3 position, ulong cellRef)
         {
-            return Cells.GetEnumerator();
+            GenCell cell = new(id, position, cellRef);
+            Cells.Add(cell);
+            return true;
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
+        public void Initialize(uint id = 0)
         {
-            return GetEnumerator();
+           // TODO: Cells.Resize(id)
         }
+     
     }
 
     public class GenCell
     {
-        public Vector3 Position { get; private set; }
-        public ulong CellRef { get; private set; }
+        public uint Id { get; set; }
+        public Vector3 Position { get; set; }
+        public ulong CellRef { get; set; }
 
-        public uint Id { get; private set; }
+        public GenCell(uint id, Vector3 position, ulong cellRef)
+        {
+            Id = id;
+            Position = position;
+            CellRef = cellRef;
+        }
     }
 }

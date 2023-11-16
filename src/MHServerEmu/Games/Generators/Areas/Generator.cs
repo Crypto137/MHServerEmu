@@ -14,9 +14,10 @@ namespace MHServerEmu.Games.Generators.Areas
         public bool PreGenerated { get; set; }
         public Generator() { }
 
-        public virtual void Initialize(Area area) {
+        public virtual bool Initialize(Area area) {
             Area = area;
             Region = Area.Region;
+            return true;
         }
 
         public virtual bool Generate(GRandom random, RegionGenerator regionGenerator, List<ulong> areas) { return false; }
