@@ -29,8 +29,8 @@ All directories start with a Calligraphy header and the number of records contai
 
 ```csharp
 CalligraphyHeader Header;
-uint RecordsLength;
-Record[RecordsLength] Records;
+uint NumRecords;
+Record[NumRecords] Records;
 ```
 
 `Curve.directory` (signature `CDR`), `Type.directory` (signature `CDR`), and `Blueprint.directory` (signature `BDR`) have the same standard record structure:
@@ -83,8 +83,8 @@ Asset type files have the following structure:
 
 ```csharp
 CalligraphyHeader Header;
-ushort AssetsLength;
-Asset[AssetsLength]; Assets;
+ushort NumAssets;
+Asset[NumAssets]; Assets;
 ```
 
 Each asset in an asset type has the following structure:
@@ -107,14 +107,14 @@ CalligraphyHeader Header;
 string RuntimeBinding;    // Name of the class that handles prototypes that use this blueprint
 ulong DefaultPrototypeId;
 
-ushort ParentsLength;
-BlueprintReference[ParentsLength] Parents;
+ushort NumParents;
+BlueprintReference[NumParents] Parents;
 
-ushort ContributingBlueprintsLength;
-BlueprintReference[ContributingBlueprintsLength] ContributingBlueprints;
+ushort NumContributingBlueprints;
+BlueprintReference[NumContributingBlueprints] ContributingBlueprints;
 
-ushort MembersLength;
-BlueprintMember[MembersLength] Members;
+ushort NumMembers;
+BlueprintMember[NumMembers] Members;
 ```
 
 Blueprint references actually reference the default prototype bound to a blueprint, and not the blueprint itself. They have the following structure:
@@ -184,8 +184,8 @@ PrototypeDataHeader Header;
 
 if (Header.DataExists)
 {
-    ushort FieldGroupsLength;
-    PrototypeFieldGroup[FieldGroupsLength] FieldGroups;
+    ushort NumFieldGroups;
+    PrototypeFieldGroup[NumFieldGroups] FieldGroups;
 }
 ```
 
@@ -210,11 +210,11 @@ Each field group is a collection of fields belonging to blueprints that contribu
 ulong DeclaringBlueprintId;    // .defaults prototype id
 byte BlueprintCopyNumber;
 
-ushort SimpleFieldsLength;
-PrototypeSimpleField[SimpleFieldsLength] SimpleFields;
+ushort NumSimpleFields;
+PrototypeSimpleField[NumSimpleFields] SimpleFields;
 
-ushort ListFieldsLength;
-PrototypeListField[ListFieldsLength] ListFields;
+ushort NumListFields;
+PrototypeListField[NumListFields] ListFields;
 ```
 
 Simple fields contain a single value and have the following structure:
@@ -230,7 +230,7 @@ List fields contain a list of values and have a similar structure:
 ```csharp
 ulong FieldId;
 ValueType Type;
-ushort ValuesLength;
+ushort NumValues;
 object[ValuesLength] Values;
 ```
 

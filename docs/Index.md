@@ -34,6 +34,8 @@ Information about how static game data is stored and processed by the game.
 
 - [Calligraphy](./GameData/Calligraphy.md) - an overview of the Calligraphy data system.
 
+- [Locale](./GameData/Locale.md) - a reference table of supported locales and locale file format information.
+
 ## Web
 
 Information about various web assets that the client gets via HTTP.

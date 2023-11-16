@@ -46,8 +46,8 @@ uint Version;
 It is followed by an array of metadata entries:
 
 ```csharp
-int EntriesLength;
-PakEntry[EntriesLength] Entries;
+int NumEntries;
+PakEntry[NumEntries] Entries;
 ```
 
 Each entry has the following structure:
