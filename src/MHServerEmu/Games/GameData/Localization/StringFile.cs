@@ -1,12 +1,12 @@
 ﻿using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData.Calligraphy;
 
-namespace MHServerEmu.Games.GameData
+namespace MHServerEmu.Games.GameData.Localization
 {
     public class StringFile
     {
         public CalligraphyHeader Header { get; }
-        public StringMapEntry[] StringMap { get; }
+        public Dictionary<LocaleStringId, StringMapEntry> StringMap { get; } = new();
 
         public StringFile(byte[] data)
         {
@@ -15,9 +15,12 @@ namespace MHServerEmu.Games.GameData
             {
                 Header = new(reader);
 
-                StringMap = new StringMapEntry[reader.ReadUInt16()];
-                for (int i = 0; i < StringMap.Length; i++)
-                    StringMap[i] = new(reader);
+                ushort entryCount = reader.ReadUInt16();
+                for (int i = 0; i < entryCount; i++)
+                {
+                    var id = (LocaleStringId)reader.ReadUInt64();
+                    StringMap.Add(id, new(reader));
+                }
             }
         }
     }
