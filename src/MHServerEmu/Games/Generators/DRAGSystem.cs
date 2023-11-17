@@ -99,6 +99,39 @@ namespace MHServerEmu.Games.Regions
             CellConnections.Add(id);
         }
 
+        public static bool DetermineType(ref Type type, Vector3 position)
+        {
+            Vector3 northVector = new (1, 0, 0);
+            Vector3 eastVector = new (0, 1, 0);
+
+            Vector3 normalizedVector = Vector3.Normalize2D(position);
+
+            float northDot = Vector3.Dot(northVector, normalizedVector);
+            float eastDot = Vector3.Dot(eastVector, normalizedVector);
+ 
+            if (northDot >= 0.75)
+            {
+                type |= Type.N;
+                return true;
+            }
+            else if (northDot <= -0.75)
+            {
+                type |= Type.S;
+                return true;
+            }
+            else if (eastDot >= 0.75)
+            {
+                type |= Type.E;
+                return true;
+            }
+            else if (eastDot <= -0.75)
+            {
+                type |= Type.W;
+                return true;
+            }
+
+            return false;
+        }
     }
 
     public struct AreaSettings

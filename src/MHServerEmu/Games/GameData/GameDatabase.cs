@@ -4,6 +4,7 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Gpak;
 using MHServerEmu.Games.GameData.LiveTuning;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData
@@ -127,6 +128,11 @@ namespace MHServerEmu.Games.GameData
         {
             return DataDirectory.Verify()
                 && PropertyInfoTable.Verify();
+        }
+
+        internal static List<CellPrototype> GetCellPrototypesByPath(string cellSetPath)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -88,8 +88,9 @@ namespace MHServerEmu.Games.Common
         public static bool operator >(Vector3 a, Vector3 b) => ReferenceEquals(null, a) ? ReferenceEquals(null, b) : (a.X > b.X && a.Y > b.Y && a.Z > b.Z);
         public static bool operator <(Vector3 a, Vector3 b) => !(a > b);
         public static float Length(Vector3 v) => MathF.Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z);
-        public static bool EpsilonSphereTest(Vector3 v1, Vector3 v2, float epsilon) => Length(v1 - v2) < epsilon;
-
+        public static bool EpsilonSphereTest(Vector3 v1, Vector3 v2, float epsilon) => LengthSqr(v1 - v2) < epsilon;
+        public static float LengthSqr(Vector3 v) => v.X * v.X + v.Y * v.Y + v.Z * v.Z;
+        public static bool IsNearZero(Vector3 v, float epsilon) => LengthSqr(v) < epsilon;
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(this, obj)) return true;
@@ -117,6 +118,13 @@ namespace MHServerEmu.Games.Common
         }
 
         public static float DistanceSquared2D(Vector3 a, Vector3 b) => LengthSqr(new Vector3(b.X - a.X, b.Y - a.Y, 0.0f));
-        public static float LengthSqr(Vector3 v) => v.X * v.X + v.Y * v.Y + v.Z * v.Z;
+        
+        public static Vector3 Normalize2D(Vector3 v)
+        {
+            Vector3 vector2D = new (v.X, v.Y, 0f);
+            return IsNearZero(vector2D, 0.000001f) ? new(XAxis) : Normalize(vector2D); 
+        }
+        public static Vector3 XAxis => new (1f, 0f, 0f);
+        public static Vector3 Normalize(Vector3 v) =>  v / Length(v);
     }
 }

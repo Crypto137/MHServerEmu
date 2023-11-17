@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.GameData.Prototypes;
+﻿using MHServerEmu.Games.Common;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Generators.Prototypes
 {
@@ -28,6 +29,19 @@ namespace MHServerEmu.Games.Generators.Prototypes
 
         public AreaPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AreaPrototype), proto); }
     }
+
+    public struct AreaTransition
+    {
+        public Vector3 Position;
+        public Vector3 Rotation;
+        public AreaTransitionPrototype Prototype;
+    }
+
+    public class AreaTransitionPrototype : Prototype
+    {
+        public ulong Type;
+        public AreaTransitionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AreaTransitionPrototype), proto); }
+    };
 
     public enum AreaMinimapReveal {
 	    Standard,

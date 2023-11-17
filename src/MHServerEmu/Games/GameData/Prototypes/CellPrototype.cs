@@ -23,6 +23,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public CellHeightMap HeightMap { get; }
         public ulong[] HotspotPrototypes { get; }
 
+        public ulong DataRef { get { throw new NotImplementedException(); } }
+
         public CellPrototype(byte[] data)
         {
             using (MemoryStream stream = new(data))

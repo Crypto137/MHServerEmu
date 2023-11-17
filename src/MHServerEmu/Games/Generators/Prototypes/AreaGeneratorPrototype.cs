@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Generators.Prototypes
 {
@@ -41,14 +42,14 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public ulong CellSet;
         public int Weight;
         public bool Unique;
-        public IgnoreOfTypeEntryPrototype IgnoreOfType;
+        public IgnoreOfTypeEntryPrototype[] IgnoreOfType;
 
         public CellSetEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(CellSetEntryPrototype), proto); }
     }
 
     public class IgnoreOfTypeEntryPrototype : Prototype
     {
-        public int Ignore;
+        public Cell.WallGroup Ignore;
 
         public IgnoreOfTypeEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(IgnoreOfTypeEntryPrototype), proto); }
     }
