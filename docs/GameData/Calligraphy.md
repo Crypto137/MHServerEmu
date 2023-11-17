@@ -17,8 +17,11 @@ The magic string defines what format is used in the file. The version depends on
 All strings in Calligraphy files are fixed-length UTF-8 strings with the length encoded in a 16-bit value preceding the text:
 
 ```csharp
-ushort StringLength;
-char[StringLength] String;
+struct FixedString16
+{
+    ushort StringLength;
+    char[StringLength] String;
+}
 ```
 
 ## Directory
@@ -28,28 +31,37 @@ Directory (`.directory`) files contain information required for the initializati
 All directories start with a Calligraphy header and the number of records contained in the directory.
 
 ```csharp
-CalligraphyHeader Header;
-uint NumRecords;
-Record[NumRecords] Records;
+struct DirectoryFile
+{
+    CalligraphyHeader Header;
+    uint NumRecords;
+    Record[NumRecords] Records;
+}
 ```
 
 `Curve.directory` (signature `CDR`), `Type.directory` (signature `CDR`), and `Blueprint.directory` (signature `BDR`) have the same standard record structure:
 
 ```csharp
-ulong Id;
-ulong Guid;
-byte Flags;
-string FilePath;
+struct GenericRecord
+{
+    ulong Id;
+    ulong Guid;
+    byte Flags;
+    FixedString16 FilePath;
+}
 ```
 
 `Prototype.directory` (signature `PDR`) has a modified structure:
 
 ```csharp
-ulong PrototypeId;
-ulong PrototypeGuid;
-ulong BlueprintId; // Even though it's called BlueprintId, this is actually a parent default prototype id
-byte Flags;
-string FilePath;
+struct PrototypeRecord
+{
+    ulong PrototypeId;
+    ulong PrototypeGuid;
+    ulong BlueprintId; // Even though it's called BlueprintId, this is actually a parent default prototype id
+    byte Flags;
+    FixedString16 FilePath;
+}
 ```
 
 `Replacement.directory` (signature `RDR`) is a special directory used for handling deprecated GUIDs. Replacement records are managed by the `ReplacementDirectory` class. This file has a different record structure:
@@ -57,7 +69,7 @@ string FilePath;
 ```csharp
 ulong OldGuid;
 ulong NewGuid;
-string Name;
+FixedString16 Name;
 ```
 
 Please note that file paths contained in these directory files use the `\` symbol as the path delimiter, while [pak files](./PakFile.md) use `/`. To use these paths for reading files from the pak file system you need to replace `\` with `/` while reading them.
@@ -69,10 +81,13 @@ Curve (`.curve`, signature `CRV`) files contain collections of 64-bit floating p
 Curve files have the following structure:
 
 ```csharp
-CalligraphyHeader Header;
-int StartPosition;
-int EndPosition;
-double[EndPosition - StartPosition + 1] Values;
+struct CurveFile
+{
+    CalligraphyHeader Header;
+    int StartPosition;
+    int EndPosition;
+    double[EndPosition - StartPosition + 1] Values; 
+}
 ```
 
 ## Asset Type
@@ -82,18 +97,24 @@ Asset type (`.type`, signature `TYP`) files contain collections of asset referen
 Asset type files have the following structure:
 
 ```csharp
-CalligraphyHeader Header;
-ushort NumAssets;
-Asset[NumAssets]; Assets;
+struct AssetTypeFile
+{
+    CalligraphyHeader Header;
+    ushort NumAssets;
+    Asset[NumAssets]; Assets;
+}
 ```
 
 Each asset in an asset type has the following structure:
 
 ```csharp
-ulong AssetId;    // Processed by the client as the StringId for the name
-ulong AssetGuid;
-byte Flags;
-string Name;
+struct Asset
+{
+    ulong AssetId;    // Processed by the client as the StringId for the name
+    ulong AssetGuid;
+    byte Flags;
+    FixedString16 Name; 
+}
 ```
 
 ## Blueprint
@@ -103,38 +124,48 @@ Blueprint (`.blueprint`, signature `BPT`) files contain definitions for various 
 Blueprint files have the following structure:
 
 ```csharp
-CalligraphyHeader Header;
-string RuntimeBinding;    // Name of the class that handles prototypes that use this blueprint
-ulong DefaultPrototypeId;
+struct BlueprintFile
+{
+    CalligraphyHeader Header;
+    FixedString16 RuntimeBinding;    // Name of the class that handles prototypes that use this blueprint
+    ulong DefaultPrototypeId;
 
-ushort NumParents;
-BlueprintReference[NumParents] Parents;
+    ushort NumParents;
+    BlueprintReference[NumParents] Parents;
 
-ushort NumContributingBlueprints;
-BlueprintReference[NumContributingBlueprints] ContributingBlueprints;
+    ushort NumContributingBlueprints;
+    BlueprintReference[NumContributingBlueprints] ContributingBlueprints;
 
-ushort NumMembers;
-BlueprintMember[NumMembers] Members;
+    ushort NumMembers;
+    BlueprintMember[NumMembers] Members;
+}
+
 ```
 
 Blueprint references actually reference the default prototype bound to a blueprint, and not the blueprint itself. They have the following structure:
 
 ```csharp
-ulong PrototypeId;
-byte Flags;
+struct BlueprintReference
+{
+    ulong PrototypeId;
+    byte Flags;
+}
 ```
 
 Blueprint members are definitions for prototype fields that have the following structure:
 
 ```csharp
-ulong FieldId;        // Processed by the client as a StringId
-string FieldName;
-byte ValueType;
-byte ContainerType;
+struct BlueprintMember
+{
+    ulong FieldId;        // Processed by the client as a StringId
+    FixedString16 FieldName;
+    byte ValueType;
+    byte ContainerType;
 
-if (ValueType == Asset || ValueType == Curve
-|| ValueType == Prototype || ValueType == RHStruct)
-    ulong Subtype;
+    if (ValueType == Asset || ValueType == Curve
+    || ValueType == Prototype || ValueType == RHStruct)
+        ulong Subtype;
+}
 ```
 
 `ValueType` defines the type of data stored in a field. Calligraphy supports nine value types:
@@ -173,19 +204,25 @@ Prototype (`.prototype` or `.defaults`, signature `PTP`) files contain values fo
 Prototype files have the following structure:
 
 ```csharp
-CalligraphyHeader Header;
-Prototype Prototype;
+struct PrototypeFile
+{
+    CalligraphyHeader Header;
+    Prototype Prototype;
+}
 ```
 
 Prototypes themselves have the following structure:
 
 ```csharp
-PrototypeDataHeader Header;
-
-if (Header.DataExists)
+struct Prototype
 {
-    ushort NumFieldGroups;
-    PrototypeFieldGroup[NumFieldGroups] FieldGroups;
+    PrototypeDataHeader Header;
+
+    if (Header.DataExists)
+    {
+        ushort NumFieldGroups;
+        PrototypeFieldGroup[NumFieldGroups] FieldGroups;
+    } 
 }
 ```
 
@@ -207,31 +244,40 @@ struct PrototypeDataHeader
 Each field group is a collection of fields belonging to blueprints that contribute to a prototype. They have the following structure:
 
 ```csharp
-ulong DeclaringBlueprintId;    // .defaults prototype id
-byte BlueprintCopyNumber;
+struct PrototypeFieldGroup
+{
+    ulong DeclaringBlueprintId;    // .defaults prototype id
+    byte BlueprintCopyNumber;
 
-ushort NumSimpleFields;
-PrototypeSimpleField[NumSimpleFields] SimpleFields;
+    ushort NumSimpleFields;
+    PrototypeSimpleField[NumSimpleFields] SimpleFields;
 
-ushort NumListFields;
-PrototypeListField[NumListFields] ListFields;
+    ushort NumListFields;
+    PrototypeListField[NumListFields] ListFields;
+}
 ```
 
 Simple fields contain a single value and have the following structure:
 
 ```csharp
-ulong FieldId;
-ValueType Type;    // See Blueprint section above for more info
-object Value;
+struct PrototypeSimpleField
+{
+    ulong FieldId;
+    ValueType Type;    // See Blueprint section above for more info
+    object Value; 
+}
 ```
 
 List fields contain a list of values and have a similar structure:
 
 ```csharp
-ulong FieldId;
-ValueType Type;
-ushort NumValues;
-object[ValuesLength] Values;
+struct PrototypeListField
+{
+    ulong FieldId;
+    ValueType Type;
+    ushort NumValues;
+    object[ValuesLength] Values;  
+}
 ```
 
  The actual value type depends on `Type`:
