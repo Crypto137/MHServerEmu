@@ -80,6 +80,7 @@ namespace MHServerEmu.Games.Regions
         public Vector3 OrientationInArea;
         public ulong CellRef;
         public int Seed;
+        public ulong OverrideLocationName;
     }
 
     public partial class Cell
@@ -129,6 +130,7 @@ namespace MHServerEmu.Games.Regions
         public Generator Generator { get; set; }
 
         private readonly List<AreaConnectionPoint> AreaConnections = new();
+        private List<TowerFixupData> TowerFixupList;
 
         public Area(Game game, Region region)
         {
@@ -188,7 +190,13 @@ namespace MHServerEmu.Games.Regions
             throw new NotImplementedException();
         }
 
-        public bool AddCell(uint cellid, CellSettings cellSettings)
+        internal List<TowerFixupData> GetTowerFixup(bool toCreate)
+        {
+            if (TowerFixupList == null && toCreate) TowerFixupList = new();
+            return TowerFixupList;
+        }
+
+        public Cell AddCell(uint cellid, CellSettings cellSettings)
         {
             throw new NotImplementedException();
         }

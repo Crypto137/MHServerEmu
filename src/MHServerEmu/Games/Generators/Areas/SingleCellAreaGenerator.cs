@@ -29,7 +29,9 @@ namespace MHServerEmu.Games.Generators.Areas
                 Seed = Area.RandomSeed
             };
 
-            return Area.AddCell(AllocateCellId(), cellSettings);
+            if (Area.AddCell(AllocateCellId(), cellSettings) == null) return false;
+
+            return true;
         }
         
         public override bool GetPossibleConnections(List<Vector3> connections, Segment segment)
