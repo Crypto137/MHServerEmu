@@ -452,7 +452,7 @@ namespace MHServerEmu.Games.Generators.Regions
                             }
                         }
 
-                        List<Vector3> sharedConnections = new();
+                        ConnectionList sharedConnections = new();
 
                         while (picker != null && !picker.Empty() && picker.PickRemove(out ConnectionPair connectionPair))
                         {
@@ -711,31 +711,33 @@ namespace MHServerEmu.Games.Generators.Regions
         public void ClearArea() { Area = null; }
     }
 
+    public class ConnectionList : List<Vector3> { public ConnectionList() {} }
+
     public class AreaEdge
     {
         public Area Area { get; }
         public Cell.Type Type { get; }
         public Segment Edge { get; }
-        public List<Vector3> Connections { get; }
+        public ConnectionList ConnectionList { get; }
 
         public AreaEdge(Area area, Cell.Type type, Vector3 a, Vector3 b)
         {
             Area = area;
             Type = type;
             Edge = new(a, b);
-            Connections = new();
+            ConnectionList = new();
 
             if (a.X == b.X)
             {
                 Edge.Start = (a.Y < b.Y ? a : b);
                 Edge.End = (a.Y < b.Y ? b : a);
-                area.GetPossibleAreaConnections(Connections, Edge);
+                area.GetPossibleAreaConnections(ConnectionList, Edge);
             }
             else if (a.Y == b.Y)
             {
                 Edge.Start = (a.X < b.X ? a : b);
                 Edge.End = (a.X < b.X ? b : a);
-                area.GetPossibleAreaConnections(Connections, Edge);
+                area.GetPossibleAreaConnections(ConnectionList, Edge);
             }
             else
             {
@@ -744,7 +746,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
         }
 
-        public bool IsValid() => Edge.Length() > 0 && Connections.Count > 0;
+        public bool IsValid() => Edge.Length() > 0 && ConnectionList.Count > 0;
         public float GetLength() => Edge.Length();
 
     }
@@ -831,9 +833,9 @@ namespace MHServerEmu.Games.Generators.Regions
 
                     if (edgeA != null && edgeB != null)
                     {
-                        foreach (var pointA in edgeA.Connections)
+                        foreach (var pointA in edgeA.ConnectionList)
                         {
-                            foreach (var pointB in edgeB.Connections)
+                            foreach (var pointB in edgeB.ConnectionList)
                             {
                                 ConnectionPair pair = new (pointA, pointB);
                                 if (aligned == false || CheckAlignment(edgeA, edgeB, pair))

@@ -123,7 +123,7 @@ namespace MHServerEmu.Games.Generators.Areas
             return protoDistrict;
         }
 
-        public override bool GetPossibleConnections(List<Vector3> connections, Segment segment)
+        public override bool GetPossibleConnections(ConnectionList connections, Segment segment)
         {
             connections.Clear();
 

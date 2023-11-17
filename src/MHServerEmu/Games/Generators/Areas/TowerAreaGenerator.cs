@@ -183,7 +183,7 @@ namespace MHServerEmu.Games.Generators.Areas
             return cell;
         }
 
-        public override bool GetPossibleConnections(List<Vector3> connections, Segment segment)
+        public override bool GetPossibleConnections(ConnectionList connections, Segment segment)
         {
             return false;
         }

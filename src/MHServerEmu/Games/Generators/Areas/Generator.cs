@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         public virtual Aabb PreGenerate(GRandom random) { return null; }
 
-        public virtual bool GetPossibleConnections(List<Vector3> connections, Segment segment){ return false; }
+        public virtual bool GetPossibleConnections(ConnectionList connections, Segment segment){ return false; }
 
         public uint AllocateCellId()
         {

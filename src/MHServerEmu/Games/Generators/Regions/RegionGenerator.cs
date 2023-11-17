@@ -51,7 +51,7 @@ namespace MHServerEmu.Games.Generators.Regions
                 area.Origin -= center;
         }
 
-        public static bool GetSharedConnections(List<Vector3> sharedConnections, Area areaA, Area areaB)
+        public static bool GetSharedConnections(ConnectionList sharedConnections, Area areaA, Area areaB)
         {
             if (areaA == null || areaB == null) return false;
 
@@ -63,10 +63,10 @@ namespace MHServerEmu.Games.Generators.Regions
                 return false;
             }
 
-            List<Vector3> connectionsA = new();
+            ConnectionList connectionsA = new();
             bool hasA = areaA.GetPossibleAreaConnections(connectionsA, sharedEdge);
 
-            List<Vector3> connectionsB = new();
+            ConnectionList connectionsB = new();
             bool hasB = areaB.GetPossibleAreaConnections(connectionsB, sharedEdge);
 
             bool connectionsFound = false;
@@ -142,7 +142,7 @@ namespace MHServerEmu.Games.Generators.Regions
             return false;
         }
 
-        public static void SetSharedConnections(List<Vector3> sharedConnections, Area areaA, Area areaB)
+        public static void SetSharedConnections(ConnectionList sharedConnections, Area areaA, Area areaB)
         {
             if (sharedConnections.Count == 1)
             {

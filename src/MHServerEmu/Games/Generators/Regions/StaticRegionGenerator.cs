@@ -71,7 +71,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
         public static bool GenerateConnectionFromQueriedPoints(GRandom random, out Vector3 connection, Area areaA, Area areaB)
         {
-            List<Vector3> sharedConnections = new ();
+            ConnectionList sharedConnections = new ();
             connection = null;
 
             if (!GetSharedConnections(sharedConnections, areaA, areaB)) return false;
@@ -103,7 +103,7 @@ namespace MHServerEmu.Games.Generators.Regions
                 {
                     if (areaConnectProto.ConnectAllShared)
                     {
-                        List<Vector3> sharedConnections = new ();
+                        ConnectionList sharedConnections = new ();
                         GetSharedConnections(sharedConnections, areaA, areaB);
                         SetSharedConnections(sharedConnections, areaA, areaB);
                     }
@@ -122,7 +122,7 @@ namespace MHServerEmu.Games.Generators.Regions
                 {
                     if (areaConnectProto.ConnectAllShared)
                     {
-                        List<Vector3> sharedConnections = new ();
+                        ConnectionList sharedConnections = new ();
                         GetSharedConnections(sharedConnections, areaA, areaB);
                         SetSharedConnections(sharedConnections, areaB, areaA);
                     }

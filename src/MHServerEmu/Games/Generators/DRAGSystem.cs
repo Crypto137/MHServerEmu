@@ -375,7 +375,7 @@ namespace MHServerEmu.Games.Regions
 
             AreaConnections.Add(areaConnection);
         }
-        public bool GetPossibleAreaConnections(List<Vector3> connections, Segment segment)
+        public bool GetPossibleAreaConnections(ConnectionList connections, Segment segment)
         {
             if (Generator == null) return false;
             return Generator.GetPossibleConnections(connections, segment);
