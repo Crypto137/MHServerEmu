@@ -37,7 +37,7 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
             InitializeData();
         }
 
-        public DBAccount(string playerName, RegionPrototypeId region, AvatarPrototype avatar)
+        public DBAccount(string playerName, RegionPrototypeId region, AvatarPrototypeId avatar)
         {
             // Default account for using with BypassAuth
             Id = 0;
@@ -53,7 +53,7 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
 
         public DBAccount() { }
 
-        public DBAvatar GetAvatar(AvatarPrototype prototype)
+        public DBAvatar GetAvatar(AvatarPrototypeId prototype)
         {
             return Avatars.FirstOrDefault(avatar => avatar.Prototype == prototype);
         }
@@ -63,7 +63,7 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
         private void InitializeData()
         {
             Player = new(Id);
-            Avatars = Enum.GetValues(typeof(AvatarPrototype)).Cast<AvatarPrototype>().Select(prototype => new DBAvatar(Id, prototype)).ToArray();
+            Avatars = Enum.GetValues(typeof(AvatarPrototypeId)).Cast<AvatarPrototypeId>().Select(prototype => new DBAvatar(Id, prototype)).ToArray();
         }
     }
 }

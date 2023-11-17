@@ -9,7 +9,7 @@ namespace MHServerEmu.Common.Config.Sections
 
         public string PlayerName { get; }
         public RegionPrototypeId StartingRegion { get; }
-        public AvatarPrototype StartingAvatar { get; }
+        public AvatarPrototypeId StartingAvatar { get; }
 
         public DefaultPlayerDataConfig(IniFile configFile)
         {
@@ -26,10 +26,10 @@ namespace MHServerEmu.Common.Config.Sections
             // StartingHero
             string startingAvatar = configFile.ReadString(Section, nameof(StartingAvatar));
 
-            if (Enum.TryParse(typeof(AvatarPrototype), startingAvatar, out object avatarEntityEnum))
-                StartingAvatar = (AvatarPrototype)avatarEntityEnum;
+            if (Enum.TryParse(typeof(AvatarPrototypeId), startingAvatar, out object avatarEntityEnum))
+                StartingAvatar = (AvatarPrototypeId)avatarEntityEnum;
             else
-                StartingAvatar = AvatarPrototype.BlackCat;
+                StartingAvatar = AvatarPrototypeId.BlackCat;
         }
     }
 }

@@ -19,14 +19,14 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
         public RegionPrototypeId Region { get; set; }
         public long RawRegion { get => (long)Region; private set => Region = (RegionPrototypeId)value; }
 
-        public AvatarPrototype Avatar { get; set; }
-        public long RawAvatar { get => (long)Avatar; private set => Avatar = (AvatarPrototype)value; }
+        public AvatarPrototypeId Avatar { get; set; }
+        public long RawAvatar { get => (long)Avatar; private set => Avatar = (AvatarPrototypeId)value; }
 
         public DBPlayer(ulong accountId)
         {
             AccountId = accountId;
             Region = RegionPrototypeId.NPEAvengersTowerHUBRegion;
-            Avatar = AvatarPrototype.CaptainAmerica;
+            Avatar = AvatarPrototypeId.CaptainAmerica;
         }
 
         public DBPlayer() { }

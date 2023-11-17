@@ -380,7 +380,7 @@ namespace MHServerEmu.Games
 
             // A hack for changing avatar in-game
             //client.Session.Account.CurrentAvatar.Costume = 0;  // reset costume on avatar switch
-            client.Session.Account.Player.Avatar = (AvatarPrototype)switchAvatar.AvatarPrototypeId;
+            client.Session.Account.Player.Avatar = (AvatarPrototypeId)switchAvatar.AvatarPrototypeId;
             ChatHelper.SendMetagameMessage(client, $"Changing avatar to {client.Session.Account.Player.Avatar}.");
             MovePlayerToRegion(client, client.Session.Account.Player.Region);
 
