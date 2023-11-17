@@ -2,7 +2,7 @@
 
 Resources are serialized prototypes that do not follow the standard [Calligraphy](./Calligraphy.md) format. They are stored separately in the `mu_cdata.sip` archive.
 
-There are five types of resources: cells, districts, encounters, props, prop sets, and UIs. All resource files start with the same four-byte header:
+There are five types of resources: cells, districts, encounters, props, prop sets, and UIs. All resource files start with the same 12-byte header:
 
 ```csharp
 struct ResourceHeader
@@ -76,7 +76,7 @@ struct CellHeightMap
 {
     uint HeightMapSizeX;
     uint HeightMapSizeY;
-    
+
     uint NumHeightMapData;
     short[NumHeightMapData] HeightMapData;
 
@@ -87,7 +87,26 @@ struct CellHeightMap
 
 ## District
 
-TODO
+District (`.district`) files contain district prototypes. Districts are collections of cells with fixed layouts.
+
+District files have the following structure:
+
+```csharp
+struct DistrictPrototype
+{
+    ResourceHeader Header;
+
+    uint NumCellMarkerSet;
+    ResourceMarkerPrototype[NumCellMarkerSet] CellMarkerSet;
+
+    uint NumMarkerSet;    // Seems to be always 0 in 1.52.0.1700
+    MarkerPrototype[NumMarkerSet] MarkerSet;
+
+    // PathCollectionPrototype
+    uint NumPathCollection;
+    PathNodeSetPrototype[NumPathCollection] PathCollection;
+}
+```
 
 ## Encounter
 

@@ -34,6 +34,10 @@ Information about how static game data is stored and processed by the game.
 
 - [Calligraphy](./GameData/Calligraphy.md) - an overview of the Calligraphy data system.
 
+- [Resources](./GameData/Resources.md) - an overview of resource prototype files.
+
+- [Auxiliary Resource Prototypes](./GameData/AuxiliaryResourcePrototypes.md) - information about auxiliary prototypes used in resources (markers and NaviPatches).
+
 - [Locale](./GameData/Locale.md) - a reference table of supported locales and locale file format information.
 
 ## Web

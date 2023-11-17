@@ -113,3 +113,30 @@ struct NaviPatchEdgePrototype
     byte[NumFlags1] Flags1;
 }
 ```
+
+## Path Nodes
+
+Path node prototypes are used only in districts. They are stored in sets that have the following structure:
+
+```csharp
+struct PathNodeSetPrototype
+{
+    uint ProtoNameHash;
+    ushort Group;
+    
+    uint NumPathNodes;
+    PathNodePrototype[NumPathNodes] PathNodes;
+
+    ushort NumNodes;
+}
+```
+
+Each path node is a Vector3 preceded by a hash of the prototype name.
+
+```csharp
+struct PathNodePrototype
+{
+    uint ProtoNameHash;
+    Vector3 Position;
+}
+```
