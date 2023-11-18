@@ -181,7 +181,7 @@ namespace MHServerEmu.Games.GameData
         private void AddResource(string filePath, byte[] data)
         {
             // Create a dataRef
-            var prototypeId = (PrototypeId)HashHelper.HashPath($"&{filePath.ToLower()}");   
+            var prototypeId = (PrototypeId)HashHelper.HashPath($"&{filePath}");   
             GameDatabase.PrototypeRefManager.AddDataRef(prototypeId, filePath);
 
             // Add a new prototype record
