@@ -26,7 +26,7 @@ struct FixedString16
 
 ## Directory
 
-Directory (`.directory`) files contain information required for the initialization of the `DataDirectory` singleton class. There's a total of five directory files, each containing a number of records with slightly different structures.
+Directory (`.directory`) files contain information required for the initialization of the `DataDirectory` class. There's a total of five directory files, each containing a number of records with slightly different structures.
 
 All directories start with a Calligraphy header and the number of records contained in the directory.
 
@@ -139,7 +139,6 @@ struct BlueprintFile
     ushort NumMembers;
     BlueprintMember[NumMembers] Members;
 }
-
 ```
 
 Blueprint references actually reference the default prototype bound to a blueprint, and not the blueprint itself. They have the following structure:
