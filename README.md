@@ -24,4 +24,4 @@ This server emulator is currently in early stages of development. Currently it f
 
 ## Setup
 
-See [Setup.md](https://github.com/Crypto137/MHServerEmu/blob/master/docs/Setup/InitialSetup.md) for information on how to set the server up. Please note that since MHServerEmu is still in early stages in development, the process is currently not particularly user friendly.
+See [InitialSetup.md](https://github.com/Crypto137/MHServerEmu/blob/master/docs/Setup/InitialSetup.md) for information on how to set the server up. Please note that since MHServerEmu is still in early stages in development, the process is currently not particularly user friendly.
