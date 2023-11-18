@@ -3,7 +3,7 @@ using MHServerEmu.Games.Common;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class UIPrototype
+    public class UIPrototype : Prototype
     {
         public uint Header { get; }
         public uint Version { get; }
@@ -48,13 +48,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return panelPrototype;
         }
     }
+    public enum PanelScaleMode {
+	    None,
+	    XStretch,
+	    YOnly,
+	    XOnly,
+	    Both,
+	    ScreenSize,
+    }
 
-    public class UIPanelPrototype
+    public class UIPanelPrototype : Prototype
     {
         public ResourcePrototypeHash ProtoNameHash { get; protected set; }
         public string PanelName { get; protected set; }
         public string TargetName { get; protected set; }
-        public uint ScaleMode { get; protected set; }
+        public PanelScaleMode ScaleMode { get; protected set; }
         public UIPanelPrototype Children { get; protected set; }
         public string WidgetClass { get; protected set; }
         public string SwfName { get; protected set; }
@@ -70,7 +78,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             PanelName = reader.ReadFixedString32();
             TargetName = reader.ReadFixedString32();
-            ScaleMode = reader.ReadUInt32();
+            ScaleMode = (PanelScaleMode)reader.ReadUInt32();
             Children = ReadUIPanelPrototype(reader);
             WidgetClass = reader.ReadFixedString32();
             SwfName = reader.ReadFixedString32();

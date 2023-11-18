@@ -18,23 +18,23 @@ namespace MHServerEmu.Games.Generators.Areas
             Aabb bounds = new(Aabb.InvertedLimit);
 
             DistrictPrototype protoDistrict = GetDistrictPrototype();
-            if (protoDistrict == null || protoDistrict.CellMarkerSet == null) return bounds;
+            if (protoDistrict == null || protoDistrict.CellMarkerSet.Markers == null) return bounds;
 
-            foreach (var cellMarker in protoDistrict.CellMarkerSet)
+            foreach (var cellMarker in protoDistrict.CellMarkerSet.Markers)
             {
-                if (cellMarker == null) continue;
+                if (cellMarker is not ResourceMarkerPrototype resourceMarker) continue;
 
-                ulong cellRef = GameDatabase.GetPrototypeRefByName(cellMarker.Resource);
+                ulong cellRef = GameDatabase.GetPrototypeRefByName(resourceMarker.Resource);
                 if (cellRef == 0)
                 {
-                    Logger.Warn($"Unable to link Resource {cellMarker.Resource} to a corresponding .cell file");
+                    Logger.Warn($"Unable to link Resource {resourceMarker.Resource} to a corresponding .cell file");
                     continue;
                 }
 
                 CellPrototype cellProto = GameDatabase.GetPrototype<CellPrototype>(cellRef);
                 if (cellProto == null) continue;
 
-                bounds += cellProto.Boundbox + cellMarker.Position;
+                bounds += cellProto.BoundingBox + resourceMarker.Position;
 
             }
 
@@ -49,17 +49,17 @@ namespace MHServerEmu.Games.Generators.Areas
             DistrictPrototype protoDistrict = GetDistrictPrototype();
             if (protoDistrict == null) return false;
 
-            foreach (var cellMarker in protoDistrict.CellMarkerSet)
+            foreach (var cellMarker in protoDistrict.CellMarkerSet.Markers)
             {
-                if (cellMarker == null) continue;
+                if (cellMarker is not ResourceMarkerPrototype resourceMarker) continue;
 
-                ulong cellRef = GameDatabase.GetPrototypeRefByName(cellMarker.Resource); // GetDataRefByResourceGuid 
+                ulong cellRef = GameDatabase.GetPrototypeRefByName(resourceMarker.Resource); // GetDataRefByResourceGuid 
                 if (cellRef == 0) continue;
 
                 CellSettings cellSettings = new()
                 {
-                    PositionInArea = cellMarker.Position,
-                    OrientationInArea = cellMarker.Rotation,
+                    PositionInArea = resourceMarker.Position,
+                    OrientationInArea = resourceMarker.Rotation,
                     CellRef = cellRef
                 };
 
@@ -137,24 +137,26 @@ namespace MHServerEmu.Games.Generators.Areas
                 return false;
             }
 
-            if (protoDistrict.CellMarkerSet == null)
+            if (protoDistrict.CellMarkerSet.Markers == null)
             {
                 Logger.Warn($"StaticArea's District contains no cells");
                 return false;
             }
 
-            foreach (var cellMarker in protoDistrict.CellMarkerSet)
+            foreach (var cellMarker in protoDistrict.CellMarkerSet.Markers)
             {
-                ulong cellRef = GameDatabase.GetPrototypeRefByName(cellMarker.Resource);
+                if (cellMarker is not ResourceMarkerPrototype resourceMarker) continue;
+
+                ulong cellRef = GameDatabase.GetPrototypeRefByName(resourceMarker.Resource);
                 if (cellRef == 0) continue;
 
-                Vector3 cellPos = cellMarker.Position;
+                Vector3 cellPos = resourceMarker.Position;
                 CellPrototype cellProto = GameDatabase.GetPrototype<CellPrototype>(cellRef);
                 if (cellProto == null) continue;
 
-                if (cellProto.MarkerSet != null)
+                if (cellProto.MarkerSet.Markers != null)
                 {
-                    foreach (var marker in cellProto.MarkerSet)
+                    foreach (var marker in cellProto.MarkerSet.Markers)
                     {
                         if (marker is not CellConnectorMarkerPrototype cellConnector)  continue;
 

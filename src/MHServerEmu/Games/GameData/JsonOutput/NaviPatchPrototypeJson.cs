@@ -29,8 +29,8 @@ namespace MHServerEmu.Games.GameData.JsonOutput
             ProtoNameHash = prototype.ProtoNameHash;
             Index0 = prototype.Index0;
             Index1 = prototype.Index1;
-            Flags0 = prototype.Flags0.ToHexString();
-            Flags1 = prototype.Flags1.ToHexString();
+            Flags0 = string.Join("|", prototype.Flags0);
+            Flags1 = string.Join("|", prototype.Flags1);
         }
     }
 }

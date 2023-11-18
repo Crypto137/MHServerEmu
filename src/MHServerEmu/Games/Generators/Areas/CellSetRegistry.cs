@@ -109,10 +109,10 @@ namespace MHServerEmu.Games.Generators.Areas
             CellPrototype cellProto = GameDatabase.GetPrototype<CellPrototype>(cellRef);
             if (cellProto == null) return;
 
-            uint cellType = cellProto.Type;
+            uint cellType = (uint)cellProto.Type;
             uint cellWalls = cellProto.Walls;
-            uint fillerEdges = cellProto.FillerEdges;
-            Aabb bounds = cellProto.Boundbox;
+            uint fillerEdges = (uint)cellProto.FillerEdges;
+            Aabb bounds = cellProto.BoundingBox;
 
             if (!Segment.EpsilonTest(bounds.Length, bounds.Width, 0.000001f)) {
                 Logger.Error($"Data:(.cell file) Grid Generation requires square cells.\n\tCell: {cellProto.ClientMap}\n\tLength:{bounds.Length}\n\tWidth:{bounds.Width}");
@@ -145,9 +145,9 @@ namespace MHServerEmu.Games.Generators.Areas
             if (_cellsWalls[cellWalls] == null) _cellsWalls[cellWalls] = new();
             _cellsWalls[cellWalls].Add(entry);
 
-            if (cellProto.MarkerSet != null)
+            if (cellProto.MarkerSet.Markers != null)
             {
-                foreach (MarkerPrototype marker in cellProto.MarkerSet)
+                foreach (var marker in cellProto.MarkerSet.Markers)
                 {
                     if (marker == null) continue;               
 
@@ -228,7 +228,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 if (IsInCellSet(cellSetEntry, cellSetPath, cell))
                 {
                     cells.Add(cell.DataRef);
-                    cellBox = cell.Boundbox;
+                    cellBox = cell.BoundingBox;
                     ++numCells;
                 }
             }

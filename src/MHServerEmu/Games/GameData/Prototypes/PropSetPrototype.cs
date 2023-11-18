@@ -2,7 +2,7 @@
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class PropSetPrototype
+    public class PropSetPrototype : Prototype
     {
         public uint Header { get; }
         public uint Version { get; }
@@ -28,7 +28,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
-    public class PropSetTypeListPrototype
+    public class PropSetTypeListPrototype : Prototype
     {
         public ResourcePrototypeHash ProtoNameHash { get; }
         public PropSetTypeEntryPrototype[] PropShapeEntries { get; }
@@ -46,7 +46,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
-    public class PropSetTypeEntryPrototype
+    public class PropSetTypeEntryPrototype : Prototype
     {
         public ResourcePrototypeHash ProtoNameHash { get; }
         public string NameId { get; }

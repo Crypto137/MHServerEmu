@@ -11,12 +11,11 @@ namespace MHServerEmu.Games.Generators.Navi
 
         public PathCache() { _pathMap = new(); _pathNodeMap = new(); }
 
-        public void AppendPathCollection(PathNodeSetPrototype[] PathNodeSets, Vector3 offset) // PathCollectionPrototype
+        public void AppendPathCollection(PathCollectionPrototype PathNodeCollection, Vector3 offset) 
         {
-
-            if (PathNodeSets != null)
+            if (PathNodeCollection.PathNodeSets != null)
             {
-                foreach (var pathNodeSet in PathNodeSets)
+                foreach (var pathNodeSet in PathNodeCollection.PathNodeSets)
                 {
                     if (pathNodeSet == null) continue;
 
@@ -172,12 +171,6 @@ namespace MHServerEmu.Games.Generators.Navi
 			ReverseBackAndForth = 4,
 		}
 
-    }
-
-    public class PathCollectionPrototype // Prototype?
-    {
-        public PathNodeSetPrototype[] PathNodeSets;
-        public PathCollectionPrototype() { }
     }
 
 }

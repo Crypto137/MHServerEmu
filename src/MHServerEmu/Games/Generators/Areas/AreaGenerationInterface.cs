@@ -64,7 +64,7 @@ namespace MHServerEmu.Games.Generators.Areas
             CellPrototype cellProto = GameDatabase.GetPrototype<CellPrototype>(cellRef);
             if (cellProto == null) return false;
 
-            area.LocalBounds += cellProto.Boundbox.Translate(position);
+            area.LocalBounds += cellProto.BoundingBox.Translate(position);
             area.RegionBounds = area.LocalBounds.Translate(area.Origin);
             area.RegionBounds.RoundToNearestInteger();
 

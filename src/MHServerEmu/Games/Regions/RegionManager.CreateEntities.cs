@@ -21,9 +21,9 @@ namespace MHServerEmu.Games.Regions
     {
         public static float ProjectToFloor(CellPrototype cell, Vector3 areaOrigin, Vector3 position)
         {
-            Vector3 cellPos = position - cell.Boundbox.Min;
-            cellPos.X /= cell.Boundbox.Width;
-            cellPos.Y /= cell.Boundbox.Length;
+            Vector3 cellPos = position - cell.BoundingBox.Min;
+            cellPos.X /= cell.BoundingBox.Width;
+            cellPos.Y /= cell.BoundingBox.Length;
             int mapX = (int)cell.HeightMap.HeightMapSize.X;
             int mapY = (int)cell.HeightMap.HeightMapSize.Y;
             int x = Math.Clamp((int)(cellPos.X * mapX), 0, mapX - 1);
@@ -130,15 +130,13 @@ namespace MHServerEmu.Games.Regions
             Vector3 entityPosition;
             ulong[] connectionNodes;
             ConnectionNodeDict targets;
-            EntityMarkerPrototype npc;
 
             void MarkersAdd(CellPrototype entry, int cellId, bool addProp = false)
             {
-                for (int i = 0; i < entry.MarkerSet.Length; i++)
+                foreach (var markerProto in entry.MarkerSet.Markers)
                 {
-                    if (entry.MarkerSet[i] is EntityMarkerPrototype)
+                    if (markerProto is EntityMarkerPrototype entityMarker)
                     {
-                        EntityMarkerPrototype entityMarker = (EntityMarkerPrototype)entry.MarkerSet[i];
                         string marker = entityMarker.LastKnownEntityName;
 
                         if (marker.Contains("GambitMTXStore")) continue; // Invisible
@@ -175,21 +173,21 @@ namespace MHServerEmu.Games.Regions
             {
                 ulong districtPrototypeId = GameDatabase.GetPrototypeRefByName(path);
                 DistrictPrototype district = GameDatabase.GetPrototype<DistrictPrototype>(districtPrototypeId);
-                for (cellid = 0; cellid < district.CellMarkerSet.Length; cellid++)
+                cellid = 1;
+                foreach (var cell in district.CellMarkerSet.Markers.Cast<ResourceMarkerPrototype>())
                 {
-                    ulong cellPrototypeId = GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[cellid].Resource);
-                    MarkersAdd(GameDatabase.GetPrototype<CellPrototype>(cellPrototypeId), cellid + 1, addProp);
+                    ulong cellPrototypeId = GameDatabase.GetPrototypeRefByName(cell.Resource);
+                    MarkersAdd(GameDatabase.GetPrototype<CellPrototype>(cellPrototypeId), cellid++, addProp);
                 }
                     
             }
 
             void AddTeleports(CellPrototype entry, Area entryArea, ConnectionNodeDict targets, int cellId)
             {
-                for (int i = 0; i < entry.InitializeSet.Length; i++)
+                foreach (var marker in entry.InitializeSet.Markers)
                 {
-                    if (entry.InitializeSet[i] is EntityMarkerPrototype)
+                    if (marker is EntityMarkerPrototype door)
                     {
-                        EntityMarkerPrototype door = (EntityMarkerPrototype)entry.InitializeSet[i];
                         if (targets.ContainsKey(area))
                             if (targets[area].ContainsKey(door.EntityGuid))
                             {
@@ -422,12 +420,10 @@ namespace MHServerEmu.Games.Regions
                     MarkersAdd(entry, cellid);
 
                     cellid = 1;
-                    for (int i = 0; i < entry.MarkerSet.Length; i++)
+                    foreach (var marker in entry.MarkerSet.Markers)
                     {
-                        if (entry.MarkerSet[i] is EntityMarkerPrototype)
+                        if (marker is EntityMarkerPrototype npc)
                         {
-                            npc = (EntityMarkerPrototype)entry.MarkerSet[i];
-
                             switch (npc.EntityGuid)
                             {
                                 case 17602051469318245682:// EncounterOpenMissionSmallV10
@@ -543,11 +539,10 @@ namespace MHServerEmu.Games.Regions
                         areaOrigin = areaDoop.CellList[j].PositionInArea;
                         CellPrototype cell = GameDatabase.GetPrototype<CellPrototype>(areaDoop.CellList[j].PrototypeId);
                         int num = 0;
-                        for (int i = 0; i < cell.MarkerSet.Length; i++)
+                        foreach (var marker in cell.MarkerSet.Markers)
                         {
-                            if (cell.MarkerSet[i] is EntityMarkerPrototype)
+                            if (marker is EntityMarkerPrototype npc)
                             {
-                                npc = (EntityMarkerPrototype)cell.MarkerSet[i];
                                 Vector3 pos = new(npc.Position.X + areaOrigin.X, npc.Position.Y + areaOrigin.Y, npc.Position.Z + areaOrigin.Z);
                                 switch (npc.EntityGuid)
                                 {
@@ -584,11 +579,10 @@ namespace MHServerEmu.Games.Regions
                     MarkersAdd(entry, cellid, true);
 
                     cellid = 1;
-                    for (int i = 0; i < entry.MarkerSet.Length; i++)
+                    foreach (var marker in entry.MarkerSet.Markers)
                     {
-                        if (entry.MarkerSet[i] is EntityMarkerPrototype)
+                        if (marker is EntityMarkerPrototype npc)
                         {
-                            npc = (EntityMarkerPrototype)entry.MarkerSet[i];
                             //Logger.Trace($"[{i}].EntityGuid = {npc.EntityGuid}");     // this is slow and causes Game tick time to go over 50 ms on loading
                             switch (npc.EntityGuid)
                             {
@@ -660,21 +654,23 @@ namespace MHServerEmu.Games.Regions
                     MarkersAdd(GameDatabase.GetPrototype<CellPrototype>(entryPrototypeId), cellid);
 
                     ulong populationMarkerId = GameDatabase.GetPrototypeRefByName("Resource/Encounters/Discoveries/Social_BenUrich_JessicaJones.encounter");
-                    EncounterPrototype populationMarker = GameDatabase.GetPrototype<EncounterPrototype>(populationMarkerId);
-                    npc = (EntityMarkerPrototype)populationMarker.MarkerSet[0]; // BenUrich
-                    areaOrigin = new(-464f, 0f, 192f);
-                    entityPosition = npc.Position + areaOrigin;
-                    _entityManager.CreateWorldEntity(
-                            region.Id, GameDatabase.GetDataRefByPrototypeGuid(npc.EntityGuid),
-                            entityPosition, npc.Rotation,
-                            608, areaid, 608, cellid, area, false);
+                    EncounterResourcePrototype populationMarker = GameDatabase.GetPrototype<EncounterResourcePrototype>(populationMarkerId);
+                    {
+                        EntityMarkerPrototype npc = (EntityMarkerPrototype)populationMarker.MarkerSet.Markers[0]; // BenUrich
+                        areaOrigin = new(-464f, 0f, 192f);
+                        entityPosition = npc.Position + areaOrigin;
+                        _entityManager.CreateWorldEntity(
+                                region.Id, GameDatabase.GetDataRefByPrototypeGuid(npc.EntityGuid),
+                                entityPosition, npc.Rotation,
+                                608, areaid, 608, cellid, area, false);
 
-                    npc = (EntityMarkerPrototype)populationMarker.MarkerSet[2]; // JessicaJones
-                    entityPosition = npc.Position + areaOrigin;
-                    _entityManager.CreateWorldEntity(
-                            region.Id, GameDatabase.GetDataRefByPrototypeGuid(npc.EntityGuid),
-                            entityPosition, npc.Rotation,
-                            608, areaid, 608, cellid, area, false);
+                        npc = (EntityMarkerPrototype)populationMarker.MarkerSet.Markers[2]; // JessicaJones
+                        entityPosition = npc.Position + areaOrigin;
+                        _entityManager.CreateWorldEntity(
+                                region.Id, GameDatabase.GetDataRefByPrototypeGuid(npc.EntityGuid),
+                                entityPosition, npc.Rotation,
+                                608, areaid, 608, cellid, area, false);
+                    }
 
                     _entityManager.CreateWorldEntity(region.Id, GameDatabase.GetPrototypeRefByName("Entity/Characters/Vendors/Prototypes/Endgame/TeamSHIELDRepBuffer.prototype"),
                         new(736f, -352f, 177f), new(-2.15625f, 0f, 0f),

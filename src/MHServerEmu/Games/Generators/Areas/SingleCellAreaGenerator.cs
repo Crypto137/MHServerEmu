@@ -45,9 +45,9 @@ namespace MHServerEmu.Games.Generators.Areas
             Vector3 origin = Area.Origin;
             Vector3 cellPos = new();
 
-            if (cellProto.MarkerSet != null)
+            if (cellProto.MarkerSet.Markers != null)
             {      
-                foreach (var marker in cellProto.MarkerSet)
+                foreach (var marker in cellProto.MarkerSet.Markers)
                 {
                     if (marker is not CellConnectorMarkerPrototype cellConnector) continue;
 
@@ -108,12 +108,16 @@ namespace MHServerEmu.Games.Generators.Areas
 
             if (cellProto != null)
             {
-                bounds = new(cellProto.Boundbox);
+                bounds = new(cellProto.BoundingBox);
                 PreGenerated = true;
             }
 
             return bounds;
         }
 
+        internal static void CellGridBorderBehavior(Area area)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

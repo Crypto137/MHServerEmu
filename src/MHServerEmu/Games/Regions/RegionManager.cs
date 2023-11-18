@@ -2,6 +2,7 @@
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.GameData.Prototypes.Markers;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -107,6 +108,7 @@ namespace MHServerEmu.Games.Regions
             Region region = null;
             byte[] archiveData = Array.Empty<byte>();
             Area area;
+            uint cellid;
             ulong districtPrototypeId;
             DistrictPrototype district = null;
 
@@ -241,8 +243,9 @@ namespace MHServerEmu.Games.Regions
 
                     districtPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Districts/XaviersMansion.district");
                     district = GameDatabase.GetPrototype<DistrictPrototype>(districtPrototypeId);
-                    for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
+                    cellid = 1;
+                    foreach (var marker in district.CellMarkerSet.Markers.Cast<ResourceMarkerPrototype>())
+                        area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(marker.Resource), new()));
 
                     area.CellList[17].AddEncounter(15374827165380448803, 4, true);
                     area.CellList[15].AddEncounter(8642336607468261979, 7, true);
@@ -300,8 +303,9 @@ namespace MHServerEmu.Games.Regions
 
                     districtPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Districts/AsgardHubDistrict.district");
                     district = GameDatabase.GetPrototype<DistrictPrototype>(districtPrototypeId);
-                    for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
+                    cellid = 1;
+                    foreach (var marker in district.CellMarkerSet.Markers.Cast<ResourceMarkerPrototype>())
+                        area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(marker.Resource), new()));
 
                     region.AddArea(area);
 
@@ -329,8 +333,9 @@ namespace MHServerEmu.Games.Regions
 
                     districtPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Districts/GenoshaHUB.district");
                     district = GameDatabase.GetPrototype<DistrictPrototype>(districtPrototypeId);
-                    for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
+                    cellid = 1;
+                    foreach (var marker in district.CellMarkerSet.Markers.Cast<ResourceMarkerPrototype>())
+                        area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(marker.Resource), new()));
 
                     region.AddArea(area);
 
@@ -421,8 +426,9 @@ namespace MHServerEmu.Games.Regions
                     districtPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Districts/TimesSquare_Terminal_District.district");
                     district = GameDatabase.GetPrototype<DistrictPrototype>(districtPrototypeId);
 
-                    for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
+                    cellid = 1;
+                    foreach (var marker in district.CellMarkerSet.Markers.Cast<ResourceMarkerPrototype>())
+                        area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(marker.Resource), new()));
 
                     region.AddArea(area);
 
@@ -447,9 +453,9 @@ namespace MHServerEmu.Games.Regions
                     area = new(1, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/EndGame/StaticScenarios/DrStrangeEvent/Green/DrStrangeTimesSquareAreaGreen.prototype"), new(), true);
                     districtPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Districts/TimesSquare_DrStrange_District.district");
                     district = GameDatabase.GetPrototype<DistrictPrototype>(districtPrototypeId);
-
-                    for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
+                    cellid = 1;
+                    foreach (var marker in district.CellMarkerSet.Markers.Cast<ResourceMarkerPrototype>())
+                        area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(marker.Resource), new()));
 
                     region.AddArea(area);
 
@@ -514,8 +520,9 @@ namespace MHServerEmu.Games.Regions
                     districtPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Districts/Raft_District.district");
                     district = GameDatabase.GetPrototype<DistrictPrototype>(districtPrototypeId);
 
-                    for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
+                    cellid = 1;
+                    foreach (var marker in district.CellMarkerSet.Markers.Cast<ResourceMarkerPrototype>())
+                        area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(marker.Resource), new()));
 
                     region.AddArea(area);
 
@@ -545,8 +552,9 @@ namespace MHServerEmu.Games.Regions
                         districtPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Districts/Hells_Kitchen_Brownstones.district");
                         district = GameDatabase.GetPrototype<DistrictPrototype>(districtPrototypeId);
 
-                        for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                            area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
+                        cellid = 1;
+                        foreach (var marker in district.CellMarkerSet.Markers.Cast<ResourceMarkerPrototype>())
+                            area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(marker.Resource), new()));
 
                         region.AddArea(area);
 
@@ -564,8 +572,9 @@ namespace MHServerEmu.Games.Regions
                         districtPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Districts/Hells_Kitchen_Brownstones_B.district");
                         district = GameDatabase.GetPrototype<DistrictPrototype>(districtPrototypeId);
 
-                        for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                            area.AddCell(new((uint)(i + 1), GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
+                        cellid = 1;
+                        foreach (var marker in district.CellMarkerSet.Markers.Cast<ResourceMarkerPrototype>())
+                            area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(marker.Resource), new()));
 
                         region.AddArea(area);
 
@@ -593,8 +602,9 @@ namespace MHServerEmu.Games.Regions
                     districtPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Districts/Hells_Kitchen_Nightclub.district");
                     district = GameDatabase.GetPrototype<DistrictPrototype>(districtPrototypeId);
 
-                    for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
+                    cellid = 1;
+                    foreach (var marker in district.CellMarkerSet.Markers.Cast<ResourceMarkerPrototype>())
+                        area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(marker.Resource), new()));
 
                     region.AddArea(area);
 
@@ -621,8 +631,10 @@ namespace MHServerEmu.Games.Regions
                     districtPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Districts/Story/Ch02JerseyDocks/Ch02_JerseyDocks_Storage_Dist.district");
                     district = GameDatabase.GetPrototype<DistrictPrototype>(districtPrototypeId);
 
-                    for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
+                    cellid = 1;
+                    foreach (var marker in district.CellMarkerSet.Markers.Cast<ResourceMarkerPrototype>())
+                        area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(marker.Resource), new()));
+
                     region.AddArea(area);
 
                     region.EntrancePosition = new(48.0f, 4944.0f, 48.0f);
@@ -1439,7 +1451,7 @@ namespace MHServerEmu.Games.Regions
 
                     string Castle = "Resource/Cells/Latveria/Doomstadt_Castle_A/";
                     string CastleArea = "Regions/StoryRevamp/CH08Latveria/Areas/Latveria/CastleDoom/";
-                    uint cellid = 1;
+                    cellid = 1;
                     areaid = 1;
 
                     area = new(areaid++, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName(CastleArea + "Exterior/CastleExteriorAreaAEntry.prototype"), new(), true);
@@ -2198,8 +2210,9 @@ namespace MHServerEmu.Games.Regions
                     districtPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Districts/CentralParkUltronDistrict.district");
                     district = GameDatabase.GetPrototype<DistrictPrototype>(districtPrototypeId);
 
-                    for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
+                    cellid = 1;
+                    foreach (var marker in district.CellMarkerSet.Markers.Cast<ResourceMarkerPrototype>())
+                        area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(marker.Resource), new()));
 
                     region.AddArea(area);
 
@@ -2373,11 +2386,11 @@ namespace MHServerEmu.Games.Regions
 
                     districtPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Districts/MadripoorHightownDistrict.district");
                     district = GameDatabase.GetPrototype<DistrictPrototype>(districtPrototypeId);
-                    for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));                    
-                    region.AddArea(area);
+                    cellid = 1;
+                    foreach (var marker in district.CellMarkerSet.Markers.Cast<ResourceMarkerPrototype>())
+                        area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(marker.Resource), new()));
 
-                    cellid = (uint)district.CellMarkerSet.Length + 1;
+                    region.AddArea(area);
 
                     // SubAreaSequences
 
@@ -2435,8 +2448,9 @@ namespace MHServerEmu.Games.Regions
 
                     districtPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Districts/MidtownStatic/MidtownStatic_A.district");
                     district = GameDatabase.GetPrototype<DistrictPrototype>(districtPrototypeId);
-                    for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
+                    cellid = 1;
+                    foreach (var marker in district.CellMarkerSet.Markers.Cast<ResourceMarkerPrototype>())
+                        area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(marker.Resource), new()));
 
                     region.AddArea(area);
 
@@ -2610,8 +2624,9 @@ namespace MHServerEmu.Games.Regions
 
                     districtPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Districts/MidtownStatic/MidtownStatic_A.district");
                     district = GameDatabase.GetPrototype<DistrictPrototype>(districtPrototypeId);
-                    for (int i = 0; i < district.CellMarkerSet.Length; i++)
-                        area.AddCell(new((uint)i + 1, GameDatabase.GetPrototypeRefByName(district.CellMarkerSet[i].Resource), new()));
+                    cellid = 1;
+                    foreach (var marker in district.CellMarkerSet.Markers.Cast<ResourceMarkerPrototype>())
+                        area.AddCell(new(cellid++, GameDatabase.GetPrototypeRefByName(marker.Resource), new()));
 
                     region.AddArea(area);
 

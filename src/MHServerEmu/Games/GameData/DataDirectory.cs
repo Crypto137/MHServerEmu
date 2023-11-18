@@ -221,9 +221,9 @@ namespace MHServerEmu.Games.GameData
             {
                 case ".cell":       resource = new CellPrototype(data);         break;
                 case ".district":   resource = new DistrictPrototype(data);     break;
-                case ".encounter":  resource = new EncounterPrototype(data);    break;
+                case ".encounter":  resource = new EncounterResourcePrototype(data);    break;
                 case ".propset":    resource = new PropSetPrototype(data);      break;
-                case ".prop":       resource = new PropPrototype(data);         break;
+                case ".prop":       resource = new PropPackagePrototype(data);         break;
                 case ".ui":         resource = new UIPrototype(data);           break;
                 default:            throw new($"Unsupported resource type ({extension}).");
             }
