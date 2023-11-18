@@ -36,30 +36,34 @@ There are two known versions of these SQLite-based paks:
 
 At some currently unknown point in 2014-2015 the original SQLite-based archives were replaced with a new custom format developed by Gazillion. Data was also split into two files: `Calligraphy.sip` for data exported from [Calligraphy](./Calligraphy.md) and `mu_cdata.sip` for resource data. These custom paks can be opened with [MHDataParser](https://github.com/Crypto137/MHDataParser).
 
-Files with this format start with an eight-byte header:
+Files with this format have the following structure:
 
 ```csharp
-uint Header;    // KAPG
-uint Version;
+struct PakFile
+{
+    uint Header;    // KAPG
+    uint Version;
+
+    int NumEntries;
+    PakEntry[NumEntries] Entries;
+
+    byte[] CompressedRawData;
+}
 ```
 
-It is followed by an array of metadata entries:
+Entries have the following structure:
 
 ```csharp
-int NumEntries;
-PakEntry[NumEntries] Entries;
-```
-
-Each entry has the following structure:
-
-```csharp
-ulong FileHash;
-int FileNameLength;
-char[FileNameLength] FileName;
-int ModTime;
-int Offset;
-int CompressedSize;
-int UncompressedSize;
+struct PakEntry
+{
+    ulong FileHash;
+    int FileNameLength;
+    char[FileNameLength] FileName;
+    int ModTime;
+    int Offset;
+    int CompressedSize;
+    int UncompressedSize;
+}
 ```
 
 The entries are followed by raw data compressed using the [LZ4](https://github.com/lz4/lz4) algorithm. The offsets specified in the entries are from where the raw data begins.

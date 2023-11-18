@@ -28,7 +28,7 @@ path = path.ToLower();
 ulong prototypeId = (Adler32(path) | (Crc32(path) << 32)) - 1
 ```
 
-Before hashing Calligraphy and resource prototype paths undergo different preparation.
+Before hashing, Calligraphy and resource prototype paths undergo different preparation.
 
 For Calligraphy prototypes:
 
