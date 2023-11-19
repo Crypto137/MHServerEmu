@@ -57,5 +57,3 @@ Information about how the client functions.
 - [Client Launch Parameters](./Client/ClientLaunchParameters.md) - a list of various launch parameters that you can use when running the client (such as enabling verbose logging).
 
 - [ClientConfig](./Client/ClientConfig.md) - ClientConfig.xml file structure.
-
-- [Constants](./Client/Constants.md) - a list of various constants used by the client.
