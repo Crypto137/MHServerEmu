@@ -3,7 +3,7 @@ using MHServerEmu.Games.Common;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public enum NaviContentTag
+    public enum NaviContentTags
     {
         None = 0,
         OpaqueWall = 1,
@@ -15,7 +15,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     }
 
     [Flags]
-    public enum NaviContentFlag
+    public enum NaviContentFlags
     {
         AddWalk         = 1 << 0,
         RemoveWalk      = 1 << 1,
@@ -49,8 +49,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public uint ProtoNameHash { get; }
         public uint Index0 { get; }
         public uint Index1 { get; }
-        public NaviContentFlag[] Flags0 { get; }
-        public NaviContentFlag[] Flags1 { get; }
+        public NaviContentFlags[] Flags0 { get; }
+        public NaviContentFlags[] Flags1 { get; }
 
         public NaviPatchEdgePrototype(BinaryReader reader)
         {
@@ -58,13 +58,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Index0 = reader.ReadUInt32();
             Index1 = reader.ReadUInt32();
 
-            Flags0 = new NaviContentFlag[reader.ReadUInt32()];
+            Flags0 = new NaviContentFlags[reader.ReadUInt32()];
             for (int i = 0; i < Flags0.Length; i++)
-                Flags0[i] = (NaviContentFlag)reader.ReadByte();
+                Flags0[i] = (NaviContentFlags)reader.ReadByte();
 
-            Flags1 = new NaviContentFlag[reader.ReadUInt32()];
+            Flags1 = new NaviContentFlags[reader.ReadUInt32()];
             for (int i = 0; i < Flags1.Length; i++)
-                Flags1[i] = (NaviContentFlag)reader.ReadByte();
+                Flags1[i] = (NaviContentFlags)reader.ReadByte();
         }
     }
 }

@@ -2,6 +2,7 @@
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.GameData.Resources;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -9,16 +10,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public ResourceHeader Header { get; }
         public Aabb BoundingBox { get; }
-        public uint Type { get; }
+        public Cell.Type Type { get; }
         public uint Walls { get; }
-        public uint FillerEdges { get; }
-        public uint RoadConnections { get; }
+        public Cell.Filler FillerEdges { get; }
+        public Cell.Type RoadConnections { get; }
         public string ClientMap { get; }
-        public MarkerPrototype[] InitializeSet { get; }
-        public MarkerPrototype[] MarkerSet { get; }
+        public MarkerSetPrototype InitializeSet { get; }
+        public MarkerSetPrototype MarkerSet { get; }
         public NaviPatchSourcePrototype NaviPatchSource { get; }
         public byte IsOffsetInMapFile { get; }
-        public CellHeightMap HeightMap { get; }
+        public HeightMapPrototype HeightMap { get; }
         public PrototypeGuid[] HotspotPrototypes { get; }
 
         public CellPrototype(byte[] data)
@@ -30,20 +31,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 Vector3 max = reader.ReadVector3();
                 Vector3 min = reader.ReadVector3();
                 BoundingBox = new(min, max);
-                Type = reader.ReadUInt32();
+                Type = (Cell.Type)reader.ReadUInt32();
                 Walls = reader.ReadUInt32();
-                FillerEdges = reader.ReadUInt32();
-                RoadConnections = reader.ReadUInt32();
+                FillerEdges = (Cell.Filler)reader.ReadUInt32();
+                RoadConnections = (Cell.Type)reader.ReadUInt32();
                 ClientMap = reader.ReadFixedString32();
-
-                InitializeSet = new MarkerPrototype[reader.ReadInt32()];
-                for (int i = 0; i < InitializeSet.Length; i++)
-                    InitializeSet[i] = ReadMarkerPrototype(reader);
-
-                MarkerSet = new MarkerPrototype[reader.ReadInt32()];
-                for (int i = 0; i < MarkerSet.Length; i++)
-                    MarkerSet[i] = ReadMarkerPrototype(reader);
-
+                InitializeSet = new(reader);
+                MarkerSet = new(reader);
                 NaviPatchSource = new(reader);
                 IsOffsetInMapFile = reader.ReadByte();
                 HeightMap = new(reader);
@@ -53,41 +47,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     HotspotPrototypes[i] = (PrototypeGuid)reader.ReadUInt64();
             }
         }
-
-        private MarkerPrototype ReadMarkerPrototype(BinaryReader reader)
-        {
-            MarkerPrototype markerPrototype;
-            ResourcePrototypeHash hash = (ResourcePrototypeHash)reader.ReadUInt32();
-
-            switch (hash)
-            {
-                case ResourcePrototypeHash.CellConnectorMarkerPrototype:
-                    markerPrototype = new CellConnectorMarkerPrototype(reader);
-                    break;
-                case ResourcePrototypeHash.DotCornerMarkerPrototype:
-                    markerPrototype = new DotCornerMarkerPrototype(reader);
-                    break;
-                case ResourcePrototypeHash.EntityMarkerPrototype:
-                    markerPrototype = new EntityMarkerPrototype(reader);
-                    break;
-                case ResourcePrototypeHash.RoadConnectionMarkerPrototype:
-                    markerPrototype = new RoadConnectionMarkerPrototype(reader);
-                    break;
-                default:
-                    throw new($"Unknown ResourcePrototypeHash {(uint)hash}");   // Throw an exception if there's a hash for a type we didn't expect
-            }
-
-            return markerPrototype;
-        }
     }
 
-    public class CellHeightMap
+    public class HeightMapPrototype
     {
         public Vector2 HeightMapSize { get; }
         public short[] HeightMapData { get; }
         public byte[] HotspotData { get; }
 
-        public CellHeightMap(BinaryReader reader)
+        public HeightMapPrototype(BinaryReader reader)
         {
             HeightMapSize = new(reader.ReadUInt32(), reader.ReadUInt32());
 
