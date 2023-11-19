@@ -45,8 +45,8 @@ Cell files have the following structure:
 ```csharp
 struct CellPrototype
 {
-    ResourceHeader Header;
-    Vector3 AabbMax;
+    ResourceHeader Header;
+    Vector3 AabbMax;    // Aabb BoundingBox
     Vector3 AabbMin;
     uint Type;
     uint Walls;
@@ -102,11 +102,11 @@ struct DistrictPrototype
     uint NumMarkerSet;    // Seems to be always 0 in 1.52.0.1700
     MarkerPrototype[NumMarkerSet] MarkerSet;
 
-    // PathCollectionPrototype
-    uint NumPathCollection;
-    PathNodeSetPrototype[NumPathCollection] PathCollection;
+    PathCollectionPrototype PathCollection;
 }
 ```
+
+For more information on `PathCollectionPrototype` see [here](./AuxiliaryResourcePrototypes.md). 
 
 ## Encounter
 

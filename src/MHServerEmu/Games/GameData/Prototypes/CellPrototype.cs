@@ -8,7 +8,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class CellPrototype
     {
         public ResourceHeader Header { get; }
-        public Aabb Boundbox { get; }
+        public Aabb BoundingBox { get; }
         public uint Type { get; }
         public uint Walls { get; }
         public uint FillerEdges { get; }
@@ -29,7 +29,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 Header = new(reader);
                 Vector3 max = reader.ReadVector3();
                 Vector3 min = reader.ReadVector3();
-                Boundbox = new(min, max);
+                BoundingBox = new(min, max);
                 Type = reader.ReadUInt32();
                 Walls = reader.ReadUInt32();
                 FillerEdges = reader.ReadUInt32();

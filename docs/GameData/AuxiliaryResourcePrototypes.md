@@ -107,23 +107,50 @@ struct NaviPatchEdgePrototype
     uint Index1;
 
     uint NumFlags0;
-    byte[NumFlags0] Flags0;
+    NaviContentFlag[NumFlags0] Flags0;
 
     uint NumFlags1;
-    byte[NumFlags1] Flags1;
+    NaviContentFlag[NumFlags1] Flags1;
 }
 ```
 
-## Path Nodes
+Edge flags are bit sets that can contain the following flags:
 
-Path node prototypes are used only in districts. They are stored in sets that have the following structure:
+```csharp
+[Flags]
+enum NaviContentFlag
+{
+    AddWalk         = 1 << 0,
+    RemoveWalk      = 1 << 1,
+    AddFly          = 1 << 2,
+    RemoveFly       = 1 << 3,
+    AddPower        = 1 << 4,
+    RemovePower     = 1 << 5,
+    AddSight        = 1 << 6,
+    RemoveSight     = 1 << 7
+}
+```
+
+## Path Collection
+
+Path collection prototypes are used only in districts. They have the following structure:
+
+```csharp
+struct PathCollectionPrototype
+{
+    uint NumPathCollection;
+    PathNodeSetPrototype[NumPathCollection] PathCollection;
+}
+```
+
+Path node sets have the following structure:
 
 ```csharp
 struct PathNodeSetPrototype
 {
     uint ProtoNameHash;
     ushort Group;
-    
+
     uint NumPathNodes;
     PathNodePrototype[NumPathNodes] PathNodes;
 

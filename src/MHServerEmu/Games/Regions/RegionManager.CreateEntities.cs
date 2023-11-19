@@ -21,9 +21,9 @@ namespace MHServerEmu.Games.Regions
     {
         public static float ProjectToFloor(CellPrototype cell, Vector3 areaOrigin, Vector3 position)
         {
-            Vector3 cellPos = position - cell.Boundbox.Min;
-            cellPos.X /= cell.Boundbox.Width;
-            cellPos.Y /= cell.Boundbox.Length;
+            Vector3 cellPos = position - cell.BoundingBox.Min;
+            cellPos.X /= cell.BoundingBox.Width;
+            cellPos.Y /= cell.BoundingBox.Length;
             int mapX = (int)cell.HeightMap.HeightMapSize.X;
             int mapY = (int)cell.HeightMap.HeightMapSize.Y;
             int x = Math.Clamp((int)(cellPos.X * mapX), 0, mapX - 1);
