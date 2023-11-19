@@ -26,13 +26,16 @@ Locale (`.locale`, signature `LOC`) files contain metadata for a given localizat
 Locale files have the following structure:
 
 ```csharp
-CalligraphyHeader Header;
-string Name;
-string LanguageDisplayName;
-string RegionDisplayName;
-string Directory;
-ushort NumFlags;
-LocaleFlag[NumFlags] Flags;
+struct LocaleFile
+{
+    CalligraphyHeader Header;
+    string Name;
+    string LanguageDisplayName;
+    string RegionDisplayName;
+    string Directory;
+    ushort NumFlags;
+    LocaleFlag[NumFlags] Flags;
+}
 ```
 
 Locale flags have the following structure:
@@ -55,21 +58,27 @@ String (`.string`, signature `STR`) files contain a map of localized string ids.
 String files have the following structure:
 
 ```csharp
-CalligraphyHeader Header;
-ushort NumEntries;
-StringMapEntry[NumEntries] StringMap;
+struct StringFile
+{
+    CalligraphyHeader Header;
+    ushort NumEntries;
+    StringMapEntry[NumEntries] StringMap;
+}
 ```
 
 Each string map entry has the following structure:
 
 ```csharp
-ulong LocaleStringId;
-ushort NumVariants;
-ushort FlagsProduced;
-uint Offset;
+struct StringMapEntry
+{
+    ulong LocaleStringId;
+    ushort NumVariants;
+    ushort FlagsProduced;
+    uint Offset;
 
-if (NumVariants > 0)
-    StringVariation[NumVariants - 1] Variants;
+    if (NumVariants > 0)
+        StringVariation[NumVariants - 1] Variants;
+}
 ```
 
 Variations are alternate versions of strings used in some languages (e.g. for grammatical cases in Russian). They have the following structure:

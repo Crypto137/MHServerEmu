@@ -3,9 +3,12 @@
 Packets are routed to various services using what is called mux. All packets have a six-byte header with the following structure:
 
 ```csharp
-ushort MuxId;
-UInt24 BodySize;
-byte MuxCommand;
+struct MuxHeader
+{
+    ushort MuxId;
+    UInt24 BodySize;
+    byte MuxCommand;
+}
 ```
 
 There are a total of five known mux commands:
@@ -26,9 +29,12 @@ In data packets the header is followed by a body of length defined in the header
 Each message has the following structure:
 
 ```csharp
-varint MessageId;          // Same as index in its .proto schema
-varint MessageSize;
-byte[MessageSize] ProtobufPayload;
+struct GameMessage
+{
+    varint MessageId;          // Same as index in its .proto schema
+    varint MessageSize;
+    byte[MessageSize] ProtobufPayload;
+}
 ```
 
 Varint, or variable-width integer, is an unsigned 64-bit integer encoded using the protobuf wire format. Each varint can take anywhere between one and ten bytes, with small values using fewer bytes. Varints are heavily used for encoding all sorts of data in the game's network protocol. For more information see [protobuf documentation on encoding](https://protobuf.dev/programming-guides/encoding/).
