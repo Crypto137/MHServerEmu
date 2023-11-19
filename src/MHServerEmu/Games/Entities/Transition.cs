@@ -5,6 +5,7 @@ using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Generators.Prototypes;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -12,6 +13,8 @@ namespace MHServerEmu.Games.Entities
     {
         public string TransitionName { get; set; }
         public Destination[] Destinations { get; set; }
+
+        public TransitionPrototype TransitionPrototype { get { return EntityPrototype as TransitionPrototype; } }
         public Transition(EntityBaseData baseData, ulong replicationId, ulong mapRegionId, int mapAreaId, int mapCellId, ulong contextAreaRef, 
             Vector3 mapPosition, Destination destination) : base(baseData)
         {
@@ -74,6 +77,12 @@ namespace MHServerEmu.Games.Entities
 
             sb.AppendLine($"TransitionName: {TransitionName}");
             for (int i = 0; i < Destinations.Length; i++) sb.AppendLine($"Destination{i}: {Destinations[i]}");
+        }
+
+        public void ConfigureTowerGen(Transition transition)
+        {
+            // TODO: Elevators for Tower
+            return;
         }
     }
 

@@ -12,6 +12,7 @@ using Vector3 = MHServerEmu.Games.Common.Vector3;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Common;
 using MHServerEmu.Games.Generators.Population;
+using MHServerEmu.Games.Entities;
 
 namespace MHServerEmu.Games.Generators
 {
@@ -87,6 +88,7 @@ namespace MHServerEmu.Games.Regions
     {
         public Aabb RegionBounds { get; private set; }
         public Area Area { get; private set; }
+        public IEnumerable<Entity> Entities { get { throw new NotImplementedException(); } }
 
         public List<uint> CellConnections = new();
         public void AddNavigationDataToRegion()
@@ -131,6 +133,11 @@ namespace MHServerEmu.Games.Regions
             }
 
             return false;
+        }
+
+        internal bool PostInitialize()
+        {
+            throw new NotImplementedException();
         }
     }
 
@@ -220,7 +227,7 @@ namespace MHServerEmu.Games.Regions
 
         public AreaGenerationInterface GetAreaGenerationInterface()
         {
-            throw new NotImplementedException();
+            return TestStatus(GenerateFlag.Background) ? Generator as AreaGenerationInterface : null;
         }
 
         internal List<TowerFixupData> GetTowerFixup(bool toCreate)
@@ -284,12 +291,14 @@ namespace MHServerEmu.Games.Regions
 
         private bool PostGenerate()
         {
-            throw new NotImplementedException();
+            // TODO Write Spawn Entities here
+            return true;
         }
 
         private bool GeneratePopulation()
         {
-            throw new NotImplementedException();
+            // TODO Write generation Entities here
+            return true;
         }
 
         private bool GenerateNavi()
@@ -312,6 +321,70 @@ namespace MHServerEmu.Games.Regions
 
         private bool GeneratePostInitialize()
         {
+            bool success = true;
+
+            if (!TestStatus(GenerateFlag.Background)) return false;
+
+            CellGridGenerator.CellGridBorderBehavior(this);
+            WideGridAreaGenerator.CellGridBorderBehavior(this);
+            SingleCellAreaGenerator.CellGridBorderBehavior(this);
+
+            foreach (var cell in CellList)
+            {
+                if (cell == null) continue;
+                success &= cell.PostInitialize();
+            }
+
+            if (TowerFixupList != null && TowerFixupList.Count > 0)
+            {
+                foreach (var towerData in TowerFixupList)
+                {
+                    Cell cell = towerData.Id != 0 ? GetCell(towerData.Id) : null;
+                    Cell previous = towerData.Previous != 0 ? GetCell(towerData.Previous) : null;
+
+                    if (cell != null && previous != null)
+                    {
+                        Transition towerUpTrans = null;
+                        Transition towerDownTrans = null;
+
+                        foreach (var entity in previous.Entities)
+                        {
+                            if (entity is Transition transition)
+                            {
+                                if (transition.TransitionPrototype.Type == RegionTransitionType.TowerUp)
+                                {
+                                    towerUpTrans = transition;
+                                    break;
+                                }
+                            }
+                        }
+
+                        foreach (var entity in cell.Entities)
+                        {
+                            if (entity is Transition transition)
+                            {
+                                if (transition.TransitionPrototype.Type == RegionTransitionType.TowerDown)
+                                {
+                                    towerDownTrans = transition;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (towerUpTrans != null && towerDownTrans != null)
+                        {
+                            towerUpTrans.ConfigureTowerGen(towerDownTrans);
+                            towerDownTrans.ConfigureTowerGen(towerUpTrans);
+                        }
+                    }
+                }
+            }
+
+            return success;
+        }
+
+        private Cell GetCell(uint id)
+        {
             throw new NotImplementedException();
         }
 
@@ -323,10 +396,8 @@ namespace MHServerEmu.Games.Regions
             
             GRandom random = new (RandomSeed);
 
-            // AreaGenerateBackground
             bool success = Generator.Generate(random, regionGenerator, areas);
-
-            if (!success) Logger.Error($"Area {PrototypeId} in region {Region.Prototype} failed to generate");
+            if (!success) Logger.Trace($"Area {PrototypeId} in region {Region.Prototype} failed to generate");
 
             Generator = null; 
 

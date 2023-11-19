@@ -2,6 +2,8 @@
 using Google.ProtocolBuffers;
 using Gazillion;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Generators.Prototypes;
+using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -12,6 +14,8 @@ namespace MHServerEmu.Games.Entities
 
         public uint ReplicationPolicy { get; set; }
         public ReplicatedPropertyCollection PropertyCollection { get; set; }
+
+        public EntityPrototype EntityPrototype { get { return GameDatabase.GetPrototype<EntityPrototype>(BaseData.PrototypeId); } }
 
         public Entity(EntityBaseData baseData, ByteString archiveData)
         {
