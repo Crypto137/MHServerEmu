@@ -4,9 +4,21 @@
 
 ## Markers
 
-Cells, districts, and props also contain markers - prototypes that indicate position and rotation of various things. All markers start with a [djb2 hash](https://theartincode.stanis.me/008-djb2/) of the prototype name that defines the further structure. There's a total of six marker types used by resources: cell connector, dot corner, entity, resource, road connection, and unreal prop.
+Markers are prototypes that indicate position and rotation of various objects. 
 
-Cell connectors, dot corners, and road connection markers are used in cells, encounters and props, and have the same structure:
+They are stored in sets with the following structure:
+
+```csharp
+struct MarkerSetPrototype
+{
+    int NumMarkers;
+    MarkerPrototype[NumMarkers] Markers;
+}
+```
+
+All markers start with a [djb2 hash](https://theartincode.stanis.me/008-djb2/) of the prototype name that defines the further structure. There's a total of six marker types used by resources: `CellConnectorMarkerPrototype`, `DotCornerMarkerPrototype`, `EntityMarkerPrototype`, `ResourceMarkerPrototype`, `RoadConnectionMarkerPrototype`, and `UnrealPropMarkerPrototype`.
+
+Cell connectors, dot corner, and road connection markers share the following structure:
 
 ```csharp
 // Same as DotCornerMarkerPrototype and RoadConnectionMarkerPrototype
@@ -19,7 +31,7 @@ struct CellConnectorMarkerPrototype
 }
 ```
 
-Entity markers are also used in cells, encounters and props, and have the following structure:
+Entity markers have the following structure:
 
 ```csharp
 struct EntityMarkerPrototype
@@ -28,11 +40,11 @@ struct EntityMarkerPrototype
     ulong EntityGuid;    // PrototypeGuid
     FixedString32 LastKnownEntityName;
     ulong Modifier1Guid; // PrototypeGuid
-    if (Modifier1Guid != 0) FixedString32 Modifier1Text;
+    // eFlagDontCook FixedString32 Modifier1Text
     ulong Modifier2Guid; // PrototypeGuid
-    if (Modifier2Guid != 0) FixedString32 Modifier2Text;
+    // eFlagDontCook FixedString32 Modifier2Text
     ulong Modifier3Guid; // PrototypeGuid
-    if (Modifier3Guid != 0) FixedString32 Modifier3Text;
+    // eFlagDontCook FixedString32 Modifier3Text
     uint EncounterSpawnPhase;
     byte OverrideSnapToFloor;
     byte OverrideSnapToFloorValue;
@@ -43,7 +55,7 @@ struct EntityMarkerPrototype
 }
 ```
 
-Resource markers are used in districts, encounters and props, and have the following structure:
+Resource markers have the following structure:
 
 ```csharp
 struct ResourceMarkerPrototype
@@ -55,7 +67,7 @@ struct ResourceMarkerPrototype
 }
 ```
 
-Unreal prop markers are used only in encounters and props, and have the following structure:
+Unreal prop markers have the following structure:
 
 ```csharp
 struct UnrealPropMarkerPrototype
@@ -76,6 +88,7 @@ NaviPatch prototypes are used in cells, encounters and props. They are stored in
 ```csharp
 struct NaviPatchSourcePrototype
 {
+    // eFlagDontCook PatchFragments
     uint NaviPatchCrc;
     NaviPatchPrototype NaviPatch;
     NaviPatchPrototype PropPatch;
@@ -107,10 +120,10 @@ struct NaviPatchEdgePrototype
     uint Index1;
 
     uint NumFlags0;
-    NaviContentFlag[NumFlags0] Flags0;
+    NaviContentFlags[NumFlags0] Flags0;
 
     uint NumFlags1;
-    NaviContentFlag[NumFlags1] Flags1;
+    NaviContentFlags[NumFlags1] Flags1;
 }
 ```
 
@@ -118,7 +131,7 @@ Edge flags are bit sets that can contain the following flags:
 
 ```csharp
 [Flags]
-enum NaviContentFlag
+enum NaviContentFlags
 {
     AddWalk         = 1 << 0,
     RemoveWalk      = 1 << 1,
@@ -158,7 +171,7 @@ struct PathNodeSetPrototype
 }
 ```
 
-Each path node is a Vector3 preceded by a hash of the prototype name.
+Each path node is a Vector3 preceded by a hash of the prototype class name.
 
 ```csharp
 struct PathNodePrototype

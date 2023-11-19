@@ -48,31 +48,105 @@ struct CellPrototype
     ResourceHeader Header;
     Vector3 AabbMax;    // Aabb BoundingBox
     Vector3 AabbMin;
-    uint Type;
+    CellType Type;
     uint Walls;
-    uint FillerEdges;
-    uint RoadConnections;
+    CellFiller FillerEdges;
+    CellType RoadConnections;
     FixedString32 ClientMap;
-
-    int NumInitializeSet;
-    MarkerPrototype[NumInitializeSet] InitializeSet;
-
-    int NumMarkerSet;
-    MarkerPrototype[NumMarkerSet] MarkerSet;
-
+    MarkerSetPrototype InitializeSet;
+    MarkerSetPrototype MarkerSet;
     NaviPatchSourcePrototype NaviPatchSource;
     byte IsOffsetInMapFile;
-    CellHeightMap HeightMap;
+    HeightMapPrototype HeightMap;
 
     uint NumHotspotPrototypes;
     ulong[NumHotspotPrototypes] HotspotPrototypes; // PrototypeGuid 
 }
 ```
 
-For more information on `MarkerPrototype` and `NaviPatchSourcePrototype` see [here](./AuxiliaryResourcePrototypes.md). Cell height maps have the following structure:
+For more information on `MarkerSetPrototype` and `NaviPatchSourcePrototype` see [here](./AuxiliaryResourcePrototypes.md).
+
+Cardinal directions are specified in cells using the following enums:
 
 ```csharp
-struct CellHeightMap
+enum CellType
+{
+    None = 0,
+    N = 1,
+    E = 2,
+    S = 4,
+    W = 8,
+    NS = 5,
+    EW = 10,
+    NE = 3,
+    NW = 9,
+    ES = 6,
+    SW = 12,
+    ESW = 14,
+    NSW = 13,
+    NEW = 11,
+    NES = 7,
+    NESW = 15,
+    NESWdNW = 159,
+    NESWdNE = 207,
+    NESWdSW = 63,
+    NESWdSE = 111,
+    NESWcN = 351,
+    NESWcE = 303,
+    NESWcS = 159,
+    NESWcW = 207,
+}
+
+enum CellWallGroup
+{
+    N = 254,
+    E = 251,
+    S = 239,
+    W = 191,
+    NE = 250,
+    ES = 235,
+    SW = 175,
+    NW = 190,
+    NS = 238,
+    EW = 187,
+    NES = 234,
+    ESW = 171,
+    NSW = 174,
+    NEW = 186,
+    NESW = 170,
+    WideNE = 248,
+    WideES = 227,
+    WideSW = 143,
+    WideNW = 62,
+    WideNES = 224,
+    WideESW = 131,
+    WideNSW = 14,
+    WideNEW = 56,
+    WideNESW = 0,
+    WideNESWcN = 130,
+    WideNESWcE = 10,
+    WideNESWcS = 40,
+    WideNESWcW = 160,
+}
+
+enum CellFiller
+{
+    N = 1,
+    NE = 2,
+    E = 4,
+    SE = 8,
+    S = 16,
+    SW = 32,
+    W = 64,
+    NW = 128,
+    C = 256,
+}
+```
+
+Height maps have the following structure:
+
+```csharp
+struct HeightMapPrototype
 {
     uint HeightMapSizeX;
     uint HeightMapSizeY;
@@ -87,26 +161,21 @@ struct CellHeightMap
 
 ## District
 
-District (`.district`) files contain district prototypes. Districts are collections of cells with fixed layouts.
+District (`.district`) files contain district resource prototypes. Districts are collections of cells with fixed layouts.
 
 District files have the following structure:
 
 ```csharp
-struct DistrictPrototype
+struct DistrictResourcePrototype
 {
     ResourceHeader Header;
-
-    uint NumCellMarkerSet;
-    ResourceMarkerPrototype[NumCellMarkerSet] CellMarkerSet;
-
-    uint NumMarkerSet;    // Seems to be always 0 in 1.52.0.1700
-    MarkerPrototype[NumMarkerSet] MarkerSet;
-
+    MarkerSetPrototype CellMarkerSet; 
+    MarkerSetPrototype MarkerSet; // Always empty in 1.52.0.1700
     PathCollectionPrototype PathCollection;
 }
 ```
 
-For more information on `PathCollectionPrototype` see [here](./AuxiliaryResourcePrototypes.md). 
+For more information on `MarkerSetPrototype` and `PathCollectionPrototype` see [here](./AuxiliaryResourcePrototypes.md). 
 
 ## Encounter
 
@@ -120,24 +189,21 @@ struct EncounterPrototype
     ResourceHeader Header;
     ulong PopulationMarkerGuid; // PrototypeGuid
     FixedString32 ClientMap;
-
-    uint NumMarkerSet;
-    MarkerPrototype[NumMarkerSet] MarkerSet;
-
+    MarkerSetPrototype MarkerSet;
     NaviPatchSourcePrototype NaviPatchSource;
 }
 ```
 
-For more information on `MarkerPrototype` and `NaviPatchSourcePrototype` see [here](./AuxiliaryResourcePrototypes.md).
+For more information on `MarkerSetPrototype` and `NaviPatchSourcePrototype` see [here](./AuxiliaryResourcePrototypes.md).
 
 ## Prop
 
-Prop (`.prop`) files contain prop prototypes.
+Prop (`.prop`) files contain prop package prototypes.
 
 Prop files have the following structure:
 
 ```csharp
-struct PropPrototype
+struct PropPackagePrototype
 {
     ResourceHeader Header;
 
@@ -146,7 +212,7 @@ struct PropPrototype
 }
 ```
 
-Each prop group has the following structure:
+Each procedural prop group has the following structure:
 
 ```csharp
 struct ProceduralPropGroupPrototype
@@ -156,17 +222,14 @@ struct ProceduralPropGroupPrototype
     FixedString32 PrefabPath;
     Vector3 MarkerPosition;
     Vector3 MarkerRotation;
-
-    uint NumObjects;
-    MarkerPrototype[NumObjects] Objects;
-
+    MarkerSetPrototype Objects;
     NaviPatchSourcePrototype NaviPatchSource;
     ushort RandomRotationDegrees;
     ushort RandomPosition;
 }
 ```
 
-For more information on `MarkerPrototype` and `NaviPatchSourcePrototype` see [here](./AuxiliaryResourcePrototypes.md). 
+For more information on `MarkerSetPrototype` and `NaviPatchSourcePrototype` see [here](./AuxiliaryResourcePrototypes.md). 
 
 ## Prop Set
 
@@ -229,7 +292,7 @@ struct UIPrototype
 
 There are two types of UI panel prototypes used in 1.52.0.1700: `StretchedPanelPrototype` and `AnchoredPanelPrototype`. Other versions of the client use additional panel prototypes that are currently unknown.
 
-The format of the panel to follow depends on the ProtoNameHash, similarly to markers. A ProtoNameHash with a value of `0` indicates that no data follows it.
+The format of the panel to follow depends on the ProtoNameHash, similarly to [markers](./AuxiliaryResourcePrototypes.md). A ProtoNameHash with a value of `0` indicates that no data follows it.
 
 All UI panel prototypes have the following fields:
 
@@ -238,7 +301,7 @@ struct UIPanelPrototypeCommon
 {
     FixedString32 PanelName;
     FixedString32 TargetName;
-    uint ScaleMode;
+    PanelScaleMode ScaleMode;
     UIPanelPrototype Children;
     FixedString32 WidgetClass;
     FixedString32 SwfName;
@@ -249,6 +312,20 @@ struct UIPanelPrototypeCommon
     byte EntityInteractPanel;
     byte UseNewPlacementSystem;
     byte KeepLoaded;
+}
+```
+
+There are six panel scale modes:
+
+```csharp
+enum PanelScaleMode
+{
+    None,
+    XStretch,
+    YOnly,
+    XOnly,
+    Both,
+    ScreenSize
 }
 ```
 
