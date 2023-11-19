@@ -26,11 +26,11 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
             EntityGuid = (PrototypeGuid)reader.ReadUInt64();
             LastKnownEntityName = reader.ReadFixedString32();
             Modifier1Guid = (PrototypeGuid)reader.ReadUInt64();
-            if (Modifier1Guid != PrototypeGuid.Invalid) Modifier1Text = reader.ReadFixedString32();
+            // eFlagDontCook Modifier1Text = reader.ReadFixedString32();
             Modifier2Guid = (PrototypeGuid)reader.ReadUInt64();
-            if (Modifier2Guid != PrototypeGuid.Invalid) Modifier2Text = reader.ReadFixedString32();
+            // eFlagDontCook Modifier2Text = reader.ReadFixedString32();
             Modifier3Guid = (PrototypeGuid)reader.ReadUInt64();
-            if (Modifier3Guid != PrototypeGuid.Invalid) Modifier3Text = reader.ReadFixedString32();
+            // eFlagDontCook Modifier3Text = reader.ReadFixedString32();
             EncounterSpawnPhase = reader.ReadUInt32();
             OverrideSnapToFloor = reader.ReadByte();
             OverrideSnapToFloorValue = reader.ReadByte();
