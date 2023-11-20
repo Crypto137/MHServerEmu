@@ -5,6 +5,7 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -20,7 +21,7 @@ namespace MHServerEmu.Games.Entities
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public uint ReplicationPolicy { get; }
+        public AoiNetworkPolicyValues ReplicationPolicy { get; }
         public ulong EntityId { get; set; }
         public bool[] Flags { get; set; }   // mystery flags: 2, 6
         public PrototypeId PrototypeId { get; set; }
@@ -33,7 +34,7 @@ namespace MHServerEmu.Games.Entities
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
 
-            ReplicationPolicy = stream.ReadRawVarint32();
+            ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
             EntityId = stream.ReadRawVarint64();
 
             Flags = stream.ReadRawVarint32().ToBoolArray(FieldFlagCount);
@@ -56,7 +57,7 @@ namespace MHServerEmu.Games.Entities
 
         public EnterGameWorldArchive(ulong entityId, Vector3 position, float orientation)
         {
-            ReplicationPolicy = 0x01;
+            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0;
             EntityId = entityId;
             Flags = 0x02u.ToBoolArray(FieldFlagCount);
             Position = position;
@@ -65,7 +66,7 @@ namespace MHServerEmu.Games.Entities
 
         public EnterGameWorldArchive(ulong entityId, Vector3 position, float orientation, float moveSpeed)
         {
-            ReplicationPolicy = 0x01;
+            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0;
             EntityId = entityId;
             Flags = 0x10A0u.ToBoolArray(FieldFlagCount);
             Position = position;
@@ -80,7 +81,7 @@ namespace MHServerEmu.Games.Entities
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                cos.WriteRawVarint64(ReplicationPolicy);
+                cos.WriteRawVarint64((uint)ReplicationPolicy);
                 cos.WriteRawVarint64(EntityId);
                 cos.WriteRawVarint32(Flags.ToUInt32());
 
@@ -103,7 +104,7 @@ namespace MHServerEmu.Games.Entities
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
+            sb.AppendLine($"ReplicationPolicy: {ReplicationPolicy}");
             sb.AppendLine($"EntityId: {EntityId}");
 
             sb.Append("Flags: ");

@@ -93,7 +93,7 @@ namespace MHServerEmu.Games.Entities
 
             EntityBaseData baseData = new ()
             {
-                ReplicationPolicy = 4,
+                ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel2,
                 EntityId = GetNextEntityId(),
                 PrototypeId = itemProto,
                 Flags = 96u.ToBoolArray(16), // 5 6

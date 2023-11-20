@@ -64,7 +64,7 @@ namespace MHServerEmu.Games.Entities
 
         protected virtual void BuildString(StringBuilder sb)
         {
-            sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
+            sb.AppendLine($"ReplicationPolicy: {ReplicationPolicy}");
             sb.AppendLine($"PropertyCollection: {PropertyCollection}");
         }
 

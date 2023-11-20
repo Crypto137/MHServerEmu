@@ -4,6 +4,7 @@ using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -14,7 +15,7 @@ namespace MHServerEmu.Games.Entities
 
         // Note: in old client builds (July 2014 and earlier) this used to be a protobuf message with a lot of fields.
         // It was probably converted to an archive for optimization reasons.
-        public uint ReplicationPolicy { get; set; }
+        public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
         public ulong EntityId { get; set; }
         public PrototypeId PrototypeId { get; set; }
         public bool[] Flags { get; set; }         // mystery flags: 2, 10, 12, 13
@@ -37,7 +38,7 @@ namespace MHServerEmu.Games.Entities
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
 
-            ReplicationPolicy = stream.ReadRawVarint32();
+            ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
             EntityId = stream.ReadRawVarint64();
             PrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.Entity);
             Flags = stream.ReadRawVarint32().ToBoolArray(FlagCount);
@@ -78,7 +79,7 @@ namespace MHServerEmu.Games.Entities
 
         public EntityBaseData(ulong entityId, PrototypeId prototypeId, Vector3 position, Vector3 orientation, bool snap = false)
         {
-            ReplicationPolicy = 0x20;
+            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel5;
             EntityId = entityId;
             PrototypeId = prototypeId;
             LocomotionState = new(0f);
@@ -98,7 +99,7 @@ namespace MHServerEmu.Games.Entities
 
         public void Encode(CodedOutputStream stream)
         {
-            stream.WriteRawVarint32(ReplicationPolicy);
+            stream.WriteRawVarint32((uint)ReplicationPolicy);
             stream.WriteRawVarint64(EntityId);
             stream.WritePrototypeEnum(PrototypeId, PrototypeEnumType.Entity);
             stream.WriteRawVarint32(Flags.ToUInt32());
@@ -149,7 +150,7 @@ namespace MHServerEmu.Games.Entities
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
+            sb.AppendLine($"ReplicationPolicy: {ReplicationPolicy}");
             sb.AppendLine($"EntityId: {EntityId}");
             sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypeName(PrototypeId)}");
 

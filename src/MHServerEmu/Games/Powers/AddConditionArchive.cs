@@ -58,7 +58,7 @@ namespace MHServerEmu.Games.Powers
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
+            sb.AppendLine($"ReplicationPolicy: {ReplicationPolicy}");
             sb.AppendLine($"EntityId: {EntityId}");
             sb.AppendLine($"Condition: {Condition}");
 

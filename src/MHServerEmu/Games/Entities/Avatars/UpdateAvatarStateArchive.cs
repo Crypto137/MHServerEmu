@@ -4,6 +4,7 @@ using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Locomotion;
+using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Entities.Avatars
 {
@@ -11,7 +12,7 @@ namespace MHServerEmu.Games.Entities.Avatars
     {
         private const int LocFlagCount = 16;
 
-        public uint ReplicationPolicy { get; set; }
+        public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
         public int AvatarIndex { get; set; }
         public ulong EntityId { get; set; }
         public bool IsUsingGamepadInput { get; set; }
@@ -26,7 +27,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
             BoolDecoder boolDecoder = new();
 
-            ReplicationPolicy = stream.ReadRawVarint32();
+            ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
             AvatarIndex = stream.ReadRawInt32();
             EntityId = stream.ReadRawVarint64();
             IsUsingGamepadInput = boolDecoder.ReadBool(stream);
@@ -54,7 +55,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 boolEncoder.Cook();
 
                 // Encode
-                cos.WriteRawVarint32(ReplicationPolicy);
+                cos.WriteRawVarint32((uint)ReplicationPolicy);
                 cos.WriteRawInt32(AvatarIndex);
                 cos.WriteRawVarint64(EntityId);
                 boolEncoder.WriteBuffer(cos);   // IsUsingGamepadInput  
@@ -75,7 +76,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
+            sb.AppendLine($"ReplicationPolicy: {ReplicationPolicy}");
             sb.AppendLine($"AvatarIndex: {AvatarIndex}");
             sb.AppendLine($"EntityId: {EntityId}");
             sb.AppendLine($"IsUsingGamepadInput: {IsUsingGamepadInput}");

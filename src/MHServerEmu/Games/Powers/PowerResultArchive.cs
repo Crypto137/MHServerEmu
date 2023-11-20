@@ -4,6 +4,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Powers
 {
@@ -11,7 +12,7 @@ namespace MHServerEmu.Games.Powers
     {
         private const int FlagCount = 12;
 
-        public uint ReplicationPolicy { get; set; }
+        public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
         public bool[] Flags { get; set; }
         public PrototypeId PowerPrototypeId { get; set; }
         public ulong TargetId { get; set; }
@@ -30,7 +31,7 @@ namespace MHServerEmu.Games.Powers
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
 
-            ReplicationPolicy = stream.ReadRawVarint32();
+            ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
             Flags = stream.ReadRawVarint32().ToBoolArray(FlagCount);
             PowerPrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.Power);
             TargetId = stream.ReadRawVarint64();
@@ -58,7 +59,7 @@ namespace MHServerEmu.Games.Powers
         public PowerResultArchive(NetMessageTryActivatePower tryActivatePower)
         {
             // damage test
-            ReplicationPolicy = 0x1;
+            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0;
             Flags = 0u.ToBoolArray(FlagCount);
             PowerPrototypeId = (PrototypeId)tryActivatePower.PowerPrototypeId;
             TargetId = tryActivatePower.IdTargetEntity;
@@ -81,7 +82,7 @@ namespace MHServerEmu.Games.Powers
         public PowerResultArchive(NetMessageContinuousPowerUpdateToServer continuousPowerUpdate)
         {
             // damage test
-            ReplicationPolicy = 0x1;
+            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0;
             Flags = 0u.ToBoolArray(FlagCount);
             PowerPrototypeId = (PrototypeId)continuousPowerUpdate.PowerPrototypeId;
             TargetId = continuousPowerUpdate.IdTargetEntity;
@@ -108,7 +109,7 @@ namespace MHServerEmu.Games.Powers
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                cos.WriteRawVarint32(ReplicationPolicy);
+                cos.WriteRawVarint32((uint)ReplicationPolicy);
                 cos.WriteRawVarint32(Flags.ToUInt32());
                 cos.WritePrototypeEnum(PowerPrototypeId, PrototypeEnumType.Power);
                 cos.WriteRawVarint64(TargetId);
@@ -131,7 +132,7 @@ namespace MHServerEmu.Games.Powers
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
+            sb.AppendLine($"ReplicationPolicy: {ReplicationPolicy}");
 
             sb.Append("Flags: ");
             for (int i = 0; i < Flags.Length; i++) if (Flags[i]) sb.Append($"{i} ");

@@ -2,12 +2,13 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Regions
 {
     public class MiniMapArchive
     {
-        public uint ReplicationPolicy { get; set; }
+        public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
         public bool IsRevealAll { get; set; }
         public byte[] Map { get; set; }
 
@@ -16,7 +17,7 @@ namespace MHServerEmu.Games.Regions
             CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
             BoolDecoder boolDecoder = new();
 
-            ReplicationPolicy = stream.ReadRawVarint32();
+            ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
             IsRevealAll = boolDecoder.ReadBool(stream);
 
             // Map buffer is only included when the map is not revealed by default
@@ -30,7 +31,9 @@ namespace MHServerEmu.Games.Regions
 
         public MiniMapArchive(bool isRevealAll)
         {
-            ReplicationPolicy = 0xef;
+            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0 | AoiNetworkPolicyValues.AoiChannel1 | AoiNetworkPolicyValues.AoiChannel2
+                | AoiNetworkPolicyValues.AoiChannel3 | AoiNetworkPolicyValues.AoiChannel5 | AoiNetworkPolicyValues.AoiChannelClientOnly
+                | AoiNetworkPolicyValues.AoiChannel7;
             IsRevealAll = isRevealAll;
         }
 
@@ -48,7 +51,7 @@ namespace MHServerEmu.Games.Regions
                 boolEncoder.Cook();
 
                 // Encode
-                cos.WriteRawVarint32(ReplicationPolicy);
+                cos.WriteRawVarint32((uint)ReplicationPolicy);
                 boolEncoder.WriteBuffer(cos);   // IsRevealAll
 
                 if (IsRevealAll == false)
@@ -66,7 +69,7 @@ namespace MHServerEmu.Games.Regions
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
+            sb.AppendLine($"ReplicationPolicy: {ReplicationPolicy}");
             sb.AppendLine($"IsRevealAll: {IsRevealAll}");
             if (IsRevealAll == false) sb.AppendLine($"Map: {Map.ToHexString()}");
             return sb.ToString();

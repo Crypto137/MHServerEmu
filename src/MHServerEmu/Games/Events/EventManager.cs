@@ -9,6 +9,7 @@ using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Networking;
@@ -157,7 +158,7 @@ namespace MHServerEmu.Games.Events
 
                     activatePower = new()
                     {
-                        ReplicationPolicy = 1,
+                        ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0,
                         Flags = 202u.ToBoolArray(8),
                         IdUserEntity = avatarEntityId,
                         IdTargetEntity = 0,
@@ -206,7 +207,7 @@ namespace MHServerEmu.Games.Events
                     avatarEntityId = (ulong)avatar.ToEntityId();
                     activatePower = new()
                     {
-                        ReplicationPolicy = 1,
+                        ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0,
                         Flags = 202u.ToBoolArray(8),
                         IdUserEntity = avatarEntityId,
                         IdTargetEntity = avatarEntityId,

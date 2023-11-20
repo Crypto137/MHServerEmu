@@ -4,6 +4,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Powers
 {
@@ -11,7 +12,7 @@ namespace MHServerEmu.Games.Powers
     {
         private const int FlagCount = 8;
 
-        public uint ReplicationPolicy { get; set; }
+        public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
         public bool[] Flags { get; set; }
         public ulong IdUserEntity { get; set; }
         public ulong IdTargetEntity { get; set; }
@@ -28,7 +29,7 @@ namespace MHServerEmu.Games.Powers
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
 
-            ReplicationPolicy = stream.ReadRawVarint32();
+            ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
             Flags = stream.ReadRawVarint32().ToBoolArray(FlagCount);
             IdUserEntity = stream.ReadRawVarint64();
             if (Flags[0] == false) IdTargetEntity = stream.ReadRawVarint64();
@@ -45,7 +46,7 @@ namespace MHServerEmu.Games.Powers
 
         public ActivatePowerArchive(NetMessageTryActivatePower tryActivatePower, Vector3 userPosition)
         {
-            ReplicationPolicy = 0x1;
+            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0;
             Flags = 0u.ToBoolArray(FlagCount);
 
             IdUserEntity = tryActivatePower.IdUserEntity;
@@ -109,7 +110,7 @@ namespace MHServerEmu.Games.Powers
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                cos.WriteRawVarint32(ReplicationPolicy);
+                cos.WriteRawVarint32((uint)ReplicationPolicy);
                 cos.WriteRawVarint32(Flags.ToUInt32());
                 cos.WriteRawVarint64(IdUserEntity);
                 if (Flags[0] == false) cos.WriteRawVarint64(IdTargetEntity);
@@ -130,7 +131,7 @@ namespace MHServerEmu.Games.Powers
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
+            sb.AppendLine($"ReplicationPolicy: {ReplicationPolicy}");
 
             sb.Append("Flags: ");
             for (int i = 0; i < Flags.Length; i++) if (Flags[i]) sb.Append($"{i} ");

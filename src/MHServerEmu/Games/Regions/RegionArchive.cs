@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Games.Missions;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.UI;
 
@@ -9,7 +10,7 @@ namespace MHServerEmu.Games.Powers
 {
     public class RegionArchive
     {
-        public uint ReplicationPolicy { get; set; }
+        public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
         public ReplicatedPropertyCollection PropertyCollection { get; set; }
         public MissionManager MissionManager { get; set; }
         public UIDataProvider UIDataProvider { get; set; }
@@ -20,7 +21,7 @@ namespace MHServerEmu.Games.Powers
             CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
             BoolDecoder boolDecoder = new();
 
-            ReplicationPolicy = stream.ReadRawVarint32();
+            ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
             PropertyCollection = new(stream);
             MissionManager = new(stream, boolDecoder);
             UIDataProvider = new(stream, boolDecoder);
@@ -42,7 +43,7 @@ namespace MHServerEmu.Games.Powers
                 boolEncoder.Cook();
 
                 // Encode
-                cos.WriteRawVarint32(ReplicationPolicy);
+                cos.WriteRawVarint32((uint)ReplicationPolicy);
                 PropertyCollection.Encode(cos);
                 MissionManager.Encode(cos, boolEncoder);
                 UIDataProvider.Encode(cos, boolEncoder);
@@ -57,7 +58,7 @@ namespace MHServerEmu.Games.Powers
         {
             StringBuilder sb = new();
 
-            sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
+            sb.AppendLine($"ReplicationPolicy: {ReplicationPolicy}");
             sb.AppendLine($"PropertyCollection: {PropertyCollection}");
             sb.AppendLine($"MissionManager: {MissionManager}");
             sb.AppendLine($"UIDataProvider: {UIDataProvider}");

@@ -3,6 +3,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Entities.Locomotion
 {
@@ -10,7 +11,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
     {
         private const int LocFlagCount = 16;
 
-        public uint ReplicationPolicy { get; set; }
+        public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
         public ulong EntityId { get; set; }
         public bool[] LocFlags { get; set; }
         public PrototypeId PrototypeId { get; set; }
@@ -22,7 +23,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
 
-            ReplicationPolicy = stream.ReadRawVarint32();
+            ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
             EntityId = stream.ReadRawVarint64();
             LocFlags = stream.ReadRawVarint32().ToBoolArray(LocFlagCount);
             if (LocFlags[11]) PrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.Entity);
@@ -42,7 +43,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                cos.WriteRawVarint32(ReplicationPolicy);
+                cos.WriteRawVarint32((uint)ReplicationPolicy);
                 cos.WriteRawVarint64(EntityId);
                 cos.WriteRawVarint32(LocFlags.ToUInt32());
                 if (LocFlags[11]) cos.WritePrototypeEnum(PrototypeId, PrototypeEnumType.Entity);
@@ -61,7 +62,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
+            sb.AppendLine($"ReplicationPolicy: {ReplicationPolicy}");
             sb.AppendLine($"EntityId: {EntityId}");
 
             sb.Append("LocFlags: ");
