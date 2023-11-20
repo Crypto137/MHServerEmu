@@ -19,7 +19,7 @@ Strings in resource files are similar to Calligraphy (fixed-length UTF-8 strings
 struct FixedString32
 {
     int StringLength;
-    char[StringLength] String;
+    byte[StringLength] String; // UTF-8
 }
 ```
 

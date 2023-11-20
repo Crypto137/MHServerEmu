@@ -58,7 +58,7 @@ struct PakEntry
 {
     ulong FileHash;
     int FileNameLength;
-    char[FileNameLength] FileName;
+    byte[FileNameLength] FileName; // UTF-8
     int ModTime;
     int Offset;
     int CompressedSize;

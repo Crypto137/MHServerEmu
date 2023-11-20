@@ -20,7 +20,7 @@ All strings in Calligraphy files are fixed-length UTF-8 strings with the length 
 struct FixedString16
 {
     ushort StringLength;
-    char[StringLength] String;
+    byte[StringLength] String; // UTF-8
 }
 ```
 
@@ -46,10 +46,19 @@ struct GenericRecord
 {
     ulong Id;
     ulong Guid;
-    byte Flags;
+    GenericRecordFlags Flags;
     FixedString16 FilePath;
 }
+
+[Flags]
+enum GenericRecordFlags
+{
+    None = 0,
+    Protected = 1
+}
 ```
+
+Note: although curve records do contain a field for flags, it's always `0` (none).
 
 `Prototype.directory` (signature `PDR`) has a modified structure:
 
@@ -59,8 +68,16 @@ struct PrototypeRecord
     ulong PrototypeId;
     ulong PrototypeGuid;
     ulong BlueprintId; // Even though it's called BlueprintId, this is actually a parent default prototype id
-    byte Flags;
+    PrototypeRecordFlags Flags;
     FixedString16 FilePath;
+}
+
+[Flags]
+enum PrototypeRecordFlags
+{
+    None = 0,
+    Abstract = 1,
+    Protected = 2
 }
 ```
 
@@ -101,19 +118,26 @@ struct AssetTypeFile
 {
     CalligraphyHeader Header;
     ushort NumAssets;
-    Asset[NumAssets]; Assets;
+    AssetValue[NumAssets]; Assets;
 }
 ```
 
 Each asset in an asset type has the following structure:
 
 ```csharp
-struct Asset
+struct AssetValue
 {
     ulong AssetId;    // Processed by the client as the StringId for the name
     ulong AssetGuid;
-    byte Flags;
+    AssetValueFlags Flags;
     FixedString16 Name; 
+}
+
+[Flags]
+enum AssetValueFlags
+{
+    None = 0,
+    Protected = 1
 }
 ```
 
@@ -146,8 +170,8 @@ Blueprint references actually reference the default prototype bound to a bluepri
 ```csharp
 struct BlueprintReference
 {
-    ulong PrototypeId;
-    byte Flags;
+    ulong BlueprintId; // PrototypeId
+    byte NumOfCopies;
 }
 ```
 
@@ -158,19 +182,19 @@ struct BlueprintMember
 {
     ulong FieldId;        // Processed by the client as a StringId
     FixedString16 FieldName;
-    byte ValueType;
-    byte ContainerType;
+    byte BaseType;
+    byte StructureType;
 
-    if (ValueType == Asset || ValueType == Curve
-    || ValueType == Prototype || ValueType == RHStruct)
+    if (BaseType == Asset || BaseType == Curve
+    || BaseType == Prototype || BaseType == RHStruct)
         ulong Subtype;
 }
 ```
 
-`ValueType` defines the type of data stored in a field. Calligraphy supports nine value types:
+`BaseType` defines the type of data stored in a field. Calligraphy supports nine base types:
 
 ```csharp
-enum CalligraphyValueType : byte
+enum CalligraphyBaseType : byte
 {
     Asset = 0x41,       // A (Id reference to an asset)
     Boolean = 0x42,     // B (Stored as a UInt64)
@@ -184,10 +208,10 @@ enum CalligraphyValueType : byte
 }
 ```
 
-`ContainerType` defines whether a field contains a single value or a list of multiple values:
+`StructureType` defines whether a field contains a single value or a list of multiple values:
 
 ```csharp
-enum CalligraphyContainerType : byte
+enum CalligraphyStructureType : byte
 {
     Simple = 0x53,      // Simple
     List = 0x4c         // List (only for assets, prototypes, rhstructs, and types)
@@ -262,7 +286,7 @@ Simple fields contain a single value and have the following structure:
 struct PrototypeSimpleField
 {
     ulong FieldId;
-    ValueType Type;    // See Blueprint section above for more info
+    BaseType Type;    // See Blueprint section above for more info
     object Value; 
 }
 ```
@@ -273,13 +297,13 @@ List fields contain a list of values and have a similar structure:
 struct PrototypeListField
 {
     ulong FieldId;
-    ValueType Type;
+    BaseType Type;
     ushort NumValues;
     object[ValuesLength] Values;  
 }
 ```
 
- The actual value type depends on `Type`:
+ The actual value type depends on the base type in `Type`:
 
 - `Boolean`: a boolean stored as a 64-bit unsigned integer.
 

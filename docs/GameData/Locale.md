@@ -29,9 +29,9 @@ Locale files have the following structure:
 struct LocaleFile
 {
     CalligraphyHeader Header;
-    string Name;
-    string LanguageDisplayName;
-    string RegionDisplayName;
+    FixedString16 Name;
+    FixedString16 LanguageDisplayName;
+    FixedString16 RegionDisplayName;
     string Directory;
     ushort NumFlags;
     LocaleFlag[NumFlags] Flags;
