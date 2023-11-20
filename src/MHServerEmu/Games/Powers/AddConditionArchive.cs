@@ -23,7 +23,7 @@ namespace MHServerEmu.Games.Powers
 
         public AddConditionArchive() { }
 
-        public AddConditionArchive(ulong entityId, ulong id, uint flags, PrototypeId prototypeId, int startTime)
+        public AddConditionArchive(ulong entityId, ulong id, ConditionSerializationFlags serializationFlags, PrototypeId prototypeId, int startTime)
         {
             ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0 | AoiNetworkPolicyValues.AoiChannel1 | AoiNetworkPolicyValues.AoiChannel2
                 | AoiNetworkPolicyValues.AoiChannel3 |  AoiNetworkPolicyValues.AoiChannel5 | AoiNetworkPolicyValues.AoiChannelClientOnly
@@ -33,7 +33,7 @@ namespace MHServerEmu.Games.Powers
             Condition = new()
             {
                 Id = id,
-                Flags = flags.ToBoolArray(16),
+                SerializationFlags = serializationFlags,
                 CreatorPowerPrototypeId = prototypeId,
                 StartTime = startTime,
                 PropertyCollection = new(0)
