@@ -53,8 +53,8 @@ struct GenericRecord
 [Flags]
 enum GenericRecordFlags
 {
-    None = 0,
-    Protected = 1
+    None        = 0,
+    Protected   = 1 << 0
 }
 ```
 
@@ -75,9 +75,9 @@ struct PrototypeRecord
 [Flags]
 enum PrototypeRecordFlags
 {
-    None = 0,
-    Abstract = 1,
-    Protected = 2
+    None        = 0,
+    Abstract    = 1 << 0,
+    Protected   = 1 << 1
 }
 ```
 
@@ -136,8 +136,8 @@ struct AssetValue
 [Flags]
 enum AssetValueFlags
 {
-    None = 0,
-    Protected = 1
+    None        = 0,
+    Protected   = 1 << 0
 }
 ```
 
@@ -254,13 +254,22 @@ Prototype data header has the following structure:
 ```csharp
 struct PrototypeDataHeader
 {
-    byte Flags;
-    bool ReferenceExists = (Flags & 0x01) > 0;
-    bool DataExists = (Flags & 0x02) > 0;
-    bool PolymorphicData = (Flags & 0x04) > 0;
+    PrototypeDataDesc Flags;
+    bool ReferenceExists = Flags.HasFlag(PrototypeDataDesc.ReferenceExists);
+    bool DataExists = Flags.HasFlag(PrototypeDataDesc.DataExists);
+    bool PolymorphicData = Flags.HasFlag(PrototypeDataDesc.PolymorphicData);
 
-    if (ReferenceExists)
-        ulong ReferenceType;    // Parent prototype id, invalid (0) for .defaults 
+    if (ReferenceExists)
+        ulong ReferenceType;    // Parent prototype id, invalid (0) for .defaults 
+}
+
+[Flags]
+enum PrototypeDataDesc : byte
+{
+    None            = 0,
+    ReferenceExists = 1 << 0,
+    DataExists      = 1 << 1,
+    PolymorphicData = 1 << 2
 }
 ```
 
