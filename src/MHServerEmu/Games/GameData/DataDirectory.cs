@@ -88,7 +88,7 @@ namespace MHServerEmu.Games.GameData
         {
             var dataId = (AssetTypeId)reader.ReadUInt64();
             var assetTypeGuid = (AssetTypeGuid)reader.ReadUInt64();
-            byte flags = reader.ReadByte();
+            var flags = (AssetTypeRecordFlags)reader.ReadByte();
             string filePath = reader.ReadFixedString16().Replace('\\', '/');
 
             GameDatabase.AssetTypeRefManager.AddDataRef(dataId, filePath);
@@ -99,8 +99,8 @@ namespace MHServerEmu.Games.GameData
         private void ReadCurveDirectoryEntry(BinaryReader reader, PakFile pak)
         {
             var curveId = (CurveId)reader.ReadUInt64();
-            var guid = (CurveGuid)reader.ReadUInt64();   // Doesn't seem to be used at all
-            byte flags = reader.ReadByte();
+            var guid = (CurveGuid)reader.ReadUInt64();          // Doesn't seem to be used at all
+            var flags = (CurveRecordFlags)reader.ReadByte();    // Neither is this, none of the curve records have any flags set
             string filePath = reader.ReadFixedString16().Replace('\\', '/');
 
             GameDatabase.CurveRefManager.AddDataRef(curveId, filePath);
@@ -112,7 +112,7 @@ namespace MHServerEmu.Games.GameData
         {
             var dataId = (BlueprintId)reader.ReadUInt64();
             var guid = (BlueprintGuid)reader.ReadUInt64();
-            byte flags = reader.ReadByte();
+            var flags = (BlueprintRecordFlags)reader.ReadByte();
             string filePath = reader.ReadFixedString16().Replace('\\', '/');
 
             GameDatabase.BlueprintRefManager.AddDataRef(dataId, filePath);
@@ -124,7 +124,7 @@ namespace MHServerEmu.Games.GameData
             var prototypeId = (PrototypeId)reader.ReadUInt64();
             var prototypeGuid = (PrototypeGuid)reader.ReadUInt64();
             var blueprintId = (PrototypeId)reader.ReadUInt64();
-            byte flags = reader.ReadByte();
+            var flags = (PrototypeRecordFlags)reader.ReadByte();
             string filePath = reader.ReadFixedString16().Replace('\\', '/');
 
             AddCalligraphyPrototype(prototypeId, prototypeGuid, blueprintId, flags, filePath, pak);
@@ -139,7 +139,7 @@ namespace MHServerEmu.Games.GameData
             ReplacementDirectory.AddReplacementRecord(oldGuid, newGuid, name);
         }
 
-        private void LoadBlueprint(BlueprintId id, BlueprintGuid guid, byte flags, PakFile pak)
+        private void LoadBlueprint(BlueprintId id, BlueprintGuid guid, BlueprintRecordFlags flags, PakFile pak)
         {
             // Add guid lookup
             _blueprintGuidToDataRefDict[guid] = id;
@@ -155,7 +155,7 @@ namespace MHServerEmu.Games.GameData
             _blueprintRecordDict.Add(id, new(blueprint, flags));
         }
 
-        private void AddCalligraphyPrototype(PrototypeId prototypeId, PrototypeGuid prototypeGuid, PrototypeId blueprintId, byte flags, string filePath, PakFile pak)
+        private void AddCalligraphyPrototype(PrototypeId prototypeId, PrototypeGuid prototypeGuid, PrototypeId blueprintId, PrototypeRecordFlags flags, string filePath, PakFile pak)
         {
             // Create a dataRef
             GameDatabase.PrototypeRefManager.AddDataRef(prototypeId, filePath);
@@ -325,9 +325,9 @@ namespace MHServerEmu.Games.GameData
         struct LoadedBlueprintRecord
         {
             public Blueprint Blueprint { get; set; }
-            public byte Flags { get; set; }
+            public BlueprintRecordFlags Flags { get; set; }
 
-            public LoadedBlueprintRecord(Blueprint blueprint, byte flags)
+            public LoadedBlueprintRecord(Blueprint blueprint, BlueprintRecordFlags flags)
             {
                 Blueprint = blueprint;
                 Flags = flags;
@@ -339,7 +339,7 @@ namespace MHServerEmu.Games.GameData
             public PrototypeId PrototypeId { get; set; }
             public PrototypeGuid PrototypeGuid { get; set; }
             public PrototypeId BlueprintId { get; set; }
-            public byte Flags { get; set; }
+            public PrototypeRecordFlags Flags { get; set; }
             public bool IsCalligraphyPrototype { get; set; }
             public object Prototype { get; set; }
         }

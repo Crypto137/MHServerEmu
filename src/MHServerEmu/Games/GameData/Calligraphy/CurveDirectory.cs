@@ -6,7 +6,7 @@
 
         public int RecordCount { get => _curveRecordDict.Count; }
 
-        public CurveRecord CreateCurveRecord(CurveId id, byte flags)
+        public CurveRecord CreateCurveRecord(CurveId id, CurveRecordFlags flags)
         {
             CurveRecord record = new() { Flags = flags };
             _curveRecordDict.Add(id, record);
@@ -32,7 +32,7 @@
         public class CurveRecord
         {
             public Curve Curve { get; set; }
-            public byte Flags { get; set; }
+            public CurveRecordFlags Flags { get; set; }
         }
     }
 }

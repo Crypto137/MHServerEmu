@@ -40,15 +40,15 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         }
     }
 
-    public class BlueprintReference
+    public readonly struct BlueprintReference
     {
-        public PrototypeId Id { get; }
-        public byte Flags { get; }
+        public PrototypeId BlueprintId { get; }
+        public byte NumOfCopies { get; }
 
         public BlueprintReference(BinaryReader reader)
         {
-            Id = (PrototypeId)reader.ReadUInt64();
-            Flags = reader.ReadByte();
+            BlueprintId = (PrototypeId)reader.ReadUInt64();
+            NumOfCopies = reader.ReadByte();
         }
     }
 
@@ -56,24 +56,24 @@ namespace MHServerEmu.Games.GameData.Calligraphy
     {
         public StringId FieldId { get; }
         public string FieldName { get; }
-        public CalligraphyValueType ValueType { get; }
-        public CalligraphyContainerType ContainerType { get; }
+        public CalligraphyBaseType BaseType { get; }
+        public CalligraphyStructureType StructureType { get; }
         public ulong Subtype { get; }
 
         public BlueprintMember(BinaryReader reader)
         {
             FieldId = (StringId)reader.ReadUInt64();
             FieldName = reader.ReadFixedString16();
-            ValueType = (CalligraphyValueType)reader.ReadByte();
-            ContainerType = (CalligraphyContainerType)reader.ReadByte();
+            BaseType = (CalligraphyBaseType)reader.ReadByte();
+            StructureType = (CalligraphyStructureType)reader.ReadByte();
 
-            switch (ValueType)
+            switch (BaseType)
             {
-                // Only these types have subtypes
-                case CalligraphyValueType.Asset:
-                case CalligraphyValueType.Curve:
-                case CalligraphyValueType.Prototype:
-                case CalligraphyValueType.RHStruct:
+                // Only these base types have subtypes
+                case CalligraphyBaseType.Asset:
+                case CalligraphyBaseType.Curve:
+                case CalligraphyBaseType.Prototype:
+                case CalligraphyBaseType.RHStruct:
                     Subtype = reader.ReadUInt64();
                     break;
             }

@@ -1,5 +1,4 @@
-﻿using MHServerEmu.Common.Extensions;
-using MHServerEmu.Games.GameData.Calligraphy;
+﻿using MHServerEmu.Games.GameData.Calligraphy;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -23,6 +22,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public readonly struct PrototypeDataHeader
     {
+        // CalligraphyReader::ReadPrototypeHeader
+
+        [Flags]
+        private enum PrototypeDataDesc : byte
+        {
+            None = 0,
+            ReferenceExists = 1,
+            DataExists = 2,
+            PolymorphicData = 4
+        }
+
         public bool ReferenceExists { get; }
         public bool DataExists { get; }
         public bool PolymorphicData { get; }
@@ -30,10 +40,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public PrototypeDataHeader(BinaryReader reader)
         {
-            byte flags = reader.ReadByte();
-            ReferenceExists = (flags & 0x01) > 0;
-            DataExists = (flags & 0x02) > 0;
-            PolymorphicData = (flags & 0x04) > 0;
+            var flags = (PrototypeDataDesc)reader.ReadByte();
+            ReferenceExists = flags.HasFlag(PrototypeDataDesc.ReferenceExists);
+            DataExists = flags.HasFlag(PrototypeDataDesc.DataExists);
+            PolymorphicData = flags.HasFlag(PrototypeDataDesc.PolymorphicData);
 
             ReferenceType = ReferenceExists ? (PrototypeId)reader.ReadUInt64() : 0;
         }
@@ -112,25 +122,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class PrototypeSimpleField
     {
         public StringId Id { get; }
-        public CalligraphyValueType Type { get; }
+        public CalligraphyBaseType Type { get; }
         public object Value { get; }
         public PrototypeSimpleField(BinaryReader reader)
         {
             Id = (StringId)reader.ReadUInt64();
-            Type = (CalligraphyValueType)reader.ReadByte();
+            Type = (CalligraphyBaseType)reader.ReadByte();
 
             switch (Type)
             {
-                case CalligraphyValueType.Boolean:
+                case CalligraphyBaseType.Boolean:
                     Value = Convert.ToBoolean(reader.ReadUInt64());
                     break;
-                case CalligraphyValueType.Double:
+                case CalligraphyBaseType.Double:
                     Value = reader.ReadDouble();
                     break;
-                case CalligraphyValueType.Long:
+                case CalligraphyBaseType.Long:
                     Value = reader.ReadInt64();
                     break;
-                case CalligraphyValueType.RHStruct:
+                case CalligraphyBaseType.RHStruct:
                     Value = new Prototype(reader);
                     break;
                 default:
@@ -143,29 +153,29 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class PrototypeListField
     {
         public StringId Id { get; }
-        public CalligraphyValueType Type { get; }
+        public CalligraphyBaseType Type { get; }
         public object[] Values { get; }
 
         public PrototypeListField(BinaryReader reader)
         {
             Id = (StringId)reader.ReadUInt64();
-            Type = (CalligraphyValueType)reader.ReadByte();
+            Type = (CalligraphyBaseType)reader.ReadByte();
 
             Values = new object[reader.ReadUInt16()];
             for (int i = 0; i < Values.Length; i++)
             {
                 switch (Type)
                 {
-                    case CalligraphyValueType.Boolean:
+                    case CalligraphyBaseType.Boolean:
                         Values[i] = Convert.ToBoolean(reader.ReadUInt64());
                         break;
-                    case CalligraphyValueType.Double:
+                    case CalligraphyBaseType.Double:
                         Values[i] = reader.ReadDouble();
                         break;
-                    case CalligraphyValueType.Long:
+                    case CalligraphyBaseType.Long:
                         Values[i] = reader.ReadInt64();
                         break;
-                    case CalligraphyValueType.RHStruct:
+                    case CalligraphyBaseType.RHStruct:
                         Values[i] = new Prototype(reader);
                         break;
                     default:

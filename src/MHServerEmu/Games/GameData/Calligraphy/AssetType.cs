@@ -44,13 +44,13 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         {
             public StringId Id { get; }
             public AssetGuid Guid { get; }
-            public byte Flags { get; }
+            public AssetValueFlags Flags { get; }
 
             public AssetValue(BinaryReader reader)
             {
                 Id = (StringId)reader.ReadUInt64();
                 Guid = (AssetGuid)reader.ReadUInt64();
-                Flags = reader.ReadByte();
+                Flags = (AssetValueFlags)reader.ReadByte();
             }
         }
     }

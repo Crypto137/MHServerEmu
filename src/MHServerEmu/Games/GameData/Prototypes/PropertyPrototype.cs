@@ -8,14 +8,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         private const byte MaxParamCount = 4;
 
-        private static readonly Dictionary<CalligraphyValueType, PropertyParamType> ParamTypeDict = new()   // Params can hold only three of the Calligraphy value types
+        private static readonly Dictionary<CalligraphyBaseType, PropertyParamType> ParamTypeDict = new()   // Params can hold only three of the Calligraphy value types
         {
-            { CalligraphyValueType.Long, PropertyParamType.Integer },
-            { CalligraphyValueType.Asset, PropertyParamType.Asset },
-            { CalligraphyValueType.Prototype, PropertyParamType.Prototype }
+            { CalligraphyBaseType.Long, PropertyParamType.Integer },
+            { CalligraphyBaseType.Asset, PropertyParamType.Asset },
+            { CalligraphyBaseType.Prototype, PropertyParamType.Prototype }
         };
 
-        public CalligraphyValueType ValueType { get; }
+        public CalligraphyBaseType ValueType { get; }
         public object DefaultValue { get; }
         public int ParamCount { get; } = 0;
         public PropertyParam[] Params { get; } = new PropertyParam[MaxParamCount];

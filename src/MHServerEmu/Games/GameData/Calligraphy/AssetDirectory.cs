@@ -15,7 +15,7 @@
         /// <summary>
         /// Creates a new record that can hold a loaded AssetType.
         /// </summary>
-        public LoadedAssetTypeRecord CreateAssetTypeRecord(AssetTypeId id, byte flags)
+        public LoadedAssetTypeRecord CreateAssetTypeRecord(AssetTypeId id, AssetTypeRecordFlags flags)
         {
             LoadedAssetTypeRecord record = new() { Flags = flags };
             _assetTypeRecordDict.Add(id, record);
@@ -78,7 +78,7 @@
         public class LoadedAssetTypeRecord
         {
             public AssetType AssetType { get; set; }
-            public byte Flags { get; set; }
+            public AssetTypeRecordFlags Flags { get; set; }
         }
     }
 }

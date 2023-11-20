@@ -2,7 +2,7 @@
 {
     // Type enums
 
-    public enum CalligraphyValueType : byte
+    public enum CalligraphyBaseType : byte
     {
         Asset = 0x41,       // A (Id reference to an asset)
         Boolean = 0x42,     // B (Stored as a UInt64)
@@ -15,10 +15,48 @@
         Type = 0x54         // T (Id reference to an AssetType)
     }
 
-    public enum CalligraphyContainerType : byte
+    public enum CalligraphyStructureType : byte
     {
         Simple = 0x53,      // Simple
         List = 0x4c         // List (only for assets, prototypes, rhstructs, and types)
+    }
+
+    // Bit field enums
+
+    [Flags]
+    public enum CurveRecordFlags
+    {
+        None = 0
+        // Although curve records do have a field for flags, it's 0 for all records
+    }
+
+    [Flags]
+    public enum AssetTypeRecordFlags
+    {
+        None = 0,
+        Protected = 1     // AssetDirectory::AssetTypeIsProtected
+    }
+
+    [Flags]
+    public enum AssetValueFlags
+    {
+        None = 0,
+        Protected = 1     // AssetType::AssetIsProtected
+    }
+
+    [Flags]
+    public enum BlueprintRecordFlags
+    {
+        None = 0,
+        Protected = 1     // DataDirectory::BlueprintIsProtected
+    }
+
+    [Flags]
+    public enum PrototypeRecordFlags
+    {
+        None = 0,
+        Abstract = 1,     // DataDirectory::PrototypeIsAbstract
+        Protected = 2     // DataDirectory::PrototypeIsProtected
     }
 
     // Enums for specific data for easy access

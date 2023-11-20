@@ -3,7 +3,7 @@
     // Below are placeholder bit field enums we can use until we figure out appropriate flags for each case
 
     [Flags]
-    public enum UInt8Flags : ushort
+    public enum UInt8Flags : byte
     {
         None = 0,
         Flag0 = 1,
