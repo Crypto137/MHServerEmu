@@ -92,13 +92,13 @@ namespace MHServerEmu.Games.Entities
 
         public Item CreateInvItem(PrototypeId itemProto, InventoryLocation invLoc, PrototypeId rarity, int itemLevel, float itemVariation, int seed, AffixSpec[] affixSpec, bool isNewItem) {
 
-            EntityBaseData baseData = new ()
+            EntityBaseData baseData = new()
             {
                 ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel2,
                 EntityId = GetNextEntityId(),
                 PrototypeId = itemProto,
-                Flags = 96u.ToBoolArray(16), // 5 6
-                InterestPolicies = 4,
+                FieldFlags = EntityCreateMessageFlags.HasInterestPolicies | EntityCreateMessageFlags.HasInvLoc,
+                InterestPolicies = AoiNetworkPolicyValues.AoiChannel2,
                 LocoFieldFlags = LocomotionMessageFlags.None,
                 LocomotionState = new(0f),
                 InvLoc = invLoc
@@ -106,18 +106,18 @@ namespace MHServerEmu.Games.Entities
 
             if (isNewItem)
             {
-                baseData.Flags[7] = true;
-                baseData.InvLocPrev = new(0, 0, 0xFFFFFFFF); // -1
+                baseData.FieldFlags |= EntityCreateMessageFlags.HasInvLocPrev;
+                baseData.InvLocPrev = new(0, PrototypeId.Invalid, 0xFFFFFFFF); // -1
             }                
 
-            ulong defRank = 15168672998566398820; // Popcorn           
+            var defRank = (PrototypeId)15168672998566398820; // Popcorn           
             ItemSpec itemSpec = new(itemProto, rarity, itemLevel, 0, affixSpec, seed, 0);
             Item item = new(baseData, _game.CurrentRepId, defRank, itemLevel, rarity, itemVariation, itemSpec);
             _entityDict.Add(baseData.EntityId, item);
             return item;
         }
 
-        public Transition SpawnDirectTeleport(ulong regionPrototype, PrototypeId prototypeId, Vector3 position, Vector3 orientation,
+        public Transition SpawnDirectTeleport(PrototypeId regionPrototype, PrototypeId prototypeId, Vector3 position, Vector3 orientation,
             int mapAreaId, ulong regionId, int mapCellId, PrototypeId contextAreaRef, bool requiresEnterGameWorld,
             PrototypeId targetPrototype, bool OverrideSnapToFloor)
         {
@@ -138,10 +138,10 @@ namespace MHServerEmu.Games.Entities
             }
 
             if (RegionManager.IsRegionAvailable((RegionPrototypeId)targetRegion) == false) // TODO: change region test
-                targetRegion = (PrototypeId)regionPrototype;
+                targetRegion = regionPrototype;
 
             int type = 1; // default teleport
-            if (targetRegion != (PrototypeId)regionPrototype) type = 2; // region teleport
+            if (targetRegion != regionPrototype) type = 2; // region teleport
 
             Destination destination = new()
             {

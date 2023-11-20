@@ -13,7 +13,7 @@ namespace MHServerEmu.Games.Entities.Items
 
         public Item(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
-        public Item(EntityBaseData baseData, ulong replicationId, ulong rank, int itemLevel, PrototypeId itemRarity, float itemVariation, ItemSpec itemSpec) : base(baseData)
+        public Item(EntityBaseData baseData, ulong replicationId, PrototypeId rank, int itemLevel, PrototypeId itemRarity, float itemVariation, ItemSpec itemSpec) : base(baseData)
         {
             Property requirement = new(PropertyEnum.Requirement, itemLevel * 1.0f);
             requirement.Id = 0x66A3940000000000;

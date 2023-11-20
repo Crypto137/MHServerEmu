@@ -197,7 +197,7 @@ namespace MHServerEmu.Games.Regions
                                 if (door.EntityGuid == (PrototypeGuid)14397992695795297083) dz = 0f;
                                 position.Z += dz;
                                 _entityManager.SpawnDirectTeleport(
-                                       (ulong)region.Prototype, GameDatabase.GetDataRefByPrototypeGuid(door.EntityGuid),
+                                       (PrototypeId)region.Prototype, GameDatabase.GetDataRefByPrototypeGuid(door.EntityGuid),
                                        position, door.Rotation,
                                        (int)entryArea.Id, region.Id, cellid, area, false,
                                        targets[area][door.EntityGuid],

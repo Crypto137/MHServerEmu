@@ -8,9 +8,10 @@ using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Entities
 {
-    // These flags probably contain isClientEntityHidden and newOnServer from old protocols
+    // Unused flag names from old protocols:
+    // isClientEntityHidden, newOnServer
     [Flags]
-    public enum EnterGameWorldMessageFlags
+    public enum EnterGameWorldMessageFlags : uint
     {
         None                        = 0,
         HasAvatarWorldInstanceId    = 1 << 0,
