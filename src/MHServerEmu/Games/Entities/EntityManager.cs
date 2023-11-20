@@ -5,6 +5,7 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -98,7 +99,7 @@ namespace MHServerEmu.Games.Entities
                 PrototypeId = itemProto,
                 Flags = 96u.ToBoolArray(16), // 5 6
                 InterestPolicies = 4,
-                LocFlags = 0u.ToBoolArray(16),
+                LocoFieldFlags = LocomotionMessageFlags.None,
                 LocomotionState = new(0f),
                 InvLoc = invLoc
             };

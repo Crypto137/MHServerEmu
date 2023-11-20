@@ -1,33 +1,63 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
+using MHServerEmu.Common;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
 
 namespace MHServerEmu.Games.Entities.Locomotion
 {
+    [Flags]
+    public enum LocomotionMessageFlags : uint
+    {
+        None                    = 0,
+        HasFullOrientation      = 1 << 0,
+        NoLocomotionState       = 1 << 1,
+        Flag2                   = 1 << 2,
+        HasLocomotionFlags      = 1 << 3,
+        HasMethod               = 1 << 4,
+        UpdatePathNodes         = 1 << 5,
+        Flag6                   = 1 << 6,
+        HasMoveSpeed            = 1 << 7,
+        HasHeight               = 1 << 8,
+        HasFollowEntityId       = 1 << 9,
+        HasFollowEntityRange    = 1 << 10,
+        HasEntityPrototypeId    = 1 << 11
+    }
+
     public class LocomotionState
     {
-        public ulong LocomotionFlags { get; set; }
+        public UInt64Flags LocomotionFlags { get; set; }
         public uint Method { get; set; }
         public float MoveSpeed { get; set; }
         public uint Height { get; set; }
         public ulong FollowEntityId { get; set; }
         public Vector2 FollowEntityRange { get; set; }
-        public uint PathNodeUInt { get; set; }
+        public uint PathGoalNodeIndex { get; set; }     // This was signed in old protocols
         public LocomotionPathNode[] LocomotionPathNodes { get; set; } = Array.Empty<LocomotionPathNode>();
 
-        public LocomotionState(CodedInputStream stream, bool[] flags)
+        public LocomotionState(CodedInputStream stream, LocomotionMessageFlags flags)
         {
-            if (flags[3]) LocomotionFlags = stream.ReadRawVarint64();
-            if (flags[4]) Method = stream.ReadRawVarint32();
-            if (flags[7]) MoveSpeed = stream.ReadRawZigZagFloat(0);
-            if (flags[8]) Height = stream.ReadRawVarint32();
-            if (flags[9]) FollowEntityId = stream.ReadRawVarint64();
-            if (flags[10]) FollowEntityRange = new(stream.ReadRawZigZagFloat(0), stream.ReadRawZigZagFloat(0));
+            if (flags.HasFlag(LocomotionMessageFlags.HasLocomotionFlags))
+                LocomotionFlags = (UInt64Flags)stream.ReadRawVarint64();
 
-            if (flags[5])
+            if (flags.HasFlag(LocomotionMessageFlags.HasMethod))
+                Method = stream.ReadRawVarint32();
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasMoveSpeed))
+                MoveSpeed = stream.ReadRawZigZagFloat(0);
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasHeight))
+                Height = stream.ReadRawVarint32();
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasFollowEntityId))
+                FollowEntityId = stream.ReadRawVarint64();
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasFollowEntityRange))
+                FollowEntityRange = new(stream.ReadRawZigZagFloat(0), stream.ReadRawZigZagFloat(0));
+
+            if (flags.HasFlag(LocomotionMessageFlags.UpdatePathNodes))
             {
-                PathNodeUInt = stream.ReadRawVarint32();
+                PathGoalNodeIndex = stream.ReadRawVarint32();
                 LocomotionPathNodes = new LocomotionPathNode[stream.ReadRawVarint64()];
                 for (int i = 0; i < LocomotionPathNodes.Length; i++)
                     LocomotionPathNodes[i] = new(stream);
@@ -39,8 +69,8 @@ namespace MHServerEmu.Games.Entities.Locomotion
             MoveSpeed = moveSpeed;
         }
 
-        public LocomotionState(ulong locomotionFlags, uint method, float moveSpeed, uint height,
-            ulong followEntityId, Vector2 followEntityRange, uint pathNodeUInt, LocomotionPathNode[] locomotionPathNodes)
+        public LocomotionState(UInt64Flags locomotionFlags, uint method, float moveSpeed, uint height,
+            ulong followEntityId, Vector2 followEntityRange, uint pathGoalNodeIndex, LocomotionPathNode[] locomotionPathNodes)
         {
             LocomotionFlags = locomotionFlags;
             Method = method;
@@ -48,22 +78,33 @@ namespace MHServerEmu.Games.Entities.Locomotion
             Height = height;
             FollowEntityId = followEntityId;
             FollowEntityRange = followEntityRange;
-            PathNodeUInt = pathNodeUInt;
+            PathGoalNodeIndex = pathGoalNodeIndex;
             LocomotionPathNodes = locomotionPathNodes;
         }
 
-        public void Encode(CodedOutputStream stream, bool[] flags)
+        public void Encode(CodedOutputStream stream, LocomotionMessageFlags flags)
         {
-            if (flags[3]) stream.WriteRawVarint64(LocomotionFlags);
-            if (flags[4]) stream.WriteRawVarint32(Method);
-            if (flags[7]) stream.WriteRawZigZagFloat(MoveSpeed, 0);
-            if (flags[8]) stream.WriteRawVarint32(Height);
-            if (flags[9]) stream.WriteRawVarint64(FollowEntityId);
-            if (flags[10]) FollowEntityRange.Encode(stream, 0);
+            if (flags.HasFlag(LocomotionMessageFlags.HasLocomotionFlags))
+                stream.WriteRawVarint64((ulong)LocomotionFlags);
 
-            if (flags[5])
+            if (flags.HasFlag(LocomotionMessageFlags.HasMethod))
+                stream.WriteRawVarint32(Method);
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasMoveSpeed))
+                stream.WriteRawZigZagFloat(MoveSpeed, 0);
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasHeight))
+                stream.WriteRawVarint32(Height);
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasFollowEntityId))
+                stream.WriteRawVarint64(FollowEntityId);
+
+            if (flags.HasFlag(LocomotionMessageFlags.HasFollowEntityRange))
+                FollowEntityRange.Encode(stream, 0);
+
+            if (flags.HasFlag(LocomotionMessageFlags.UpdatePathNodes))
             {
-                stream.WriteRawVarint32(PathNodeUInt);
+                stream.WriteRawVarint32(PathGoalNodeIndex);
                 stream.WriteRawVarint64((ulong)LocomotionPathNodes.Length);
                 foreach (LocomotionPathNode naviVector in LocomotionPathNodes) naviVector.Encode(stream);
             }
@@ -72,13 +113,13 @@ namespace MHServerEmu.Games.Entities.Locomotion
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"LocomotionFlags: 0x{LocomotionFlags:X}");
+            sb.AppendLine($"LocomotionFlags: {LocomotionFlags}");
             sb.AppendLine($"Method: 0x{Method:X}");
             sb.AppendLine($"MoveSpeed: {MoveSpeed}");
             sb.AppendLine($"Height: 0x{Height:X}");
-            sb.AppendLine($"FollowEntityId: 0x{FollowEntityId:X}");
+            sb.AppendLine($"FollowEntityId: {FollowEntityId}");
             sb.AppendLine($"FollowEntityRange: {FollowEntityRange}");
-            sb.AppendLine($"PathNodeUInt: 0x{PathNodeUInt:X}");
+            sb.AppendLine($"PathGoalNodeIndex: {PathGoalNodeIndex}");
             for (int i = 0; i < LocomotionPathNodes.Length; i++) sb.AppendLine($"LocomotionPathNode{i}: {LocomotionPathNodes[i]}");
             return sb.ToString();
         }

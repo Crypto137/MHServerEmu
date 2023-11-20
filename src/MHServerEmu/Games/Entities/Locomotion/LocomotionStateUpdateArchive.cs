@@ -9,11 +9,9 @@ namespace MHServerEmu.Games.Entities.Locomotion
 {
     public class LocomotionStateUpdateArchive
     {
-        private const int LocFlagCount = 16;
-
         public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
         public ulong EntityId { get; set; }
-        public bool[] LocFlags { get; set; }
+        public LocomotionMessageFlags FieldFlags { get; set; }
         public PrototypeId PrototypeId { get; set; }
         public Vector3 Position { get; set; }
         public Vector3 Orientation { get; set; }
@@ -25,14 +23,18 @@ namespace MHServerEmu.Games.Entities.Locomotion
 
             ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
             EntityId = stream.ReadRawVarint64();
-            LocFlags = stream.ReadRawVarint32().ToBoolArray(LocFlagCount);
-            if (LocFlags[11]) PrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.Entity);
+            FieldFlags = (LocomotionMessageFlags)stream.ReadRawVarint32();
+
+            if (FieldFlags.HasFlag(LocomotionMessageFlags.HasEntityPrototypeId))
+                PrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.Entity);
+            
             Position = new(stream, 3);
-            if (LocFlags[0])
-                Orientation = new(stream, 6);
-            else
-                Orientation = new(stream.ReadRawZigZagFloat(6), 0f, 0f);
-            LocomotionState = new(stream, LocFlags);
+
+            Orientation = FieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation)
+                ? new(stream, 6)
+                : new(stream.ReadRawZigZagFloat(6), 0f, 0f);
+
+            LocomotionState = new(stream, FieldFlags);
         }
 
         public LocomotionStateUpdateArchive() { }
@@ -45,14 +47,19 @@ namespace MHServerEmu.Games.Entities.Locomotion
 
                 cos.WriteRawVarint32((uint)ReplicationPolicy);
                 cos.WriteRawVarint64(EntityId);
-                cos.WriteRawVarint32(LocFlags.ToUInt32());
-                if (LocFlags[11]) cos.WritePrototypeEnum(PrototypeId, PrototypeEnumType.Entity);
+                cos.WriteRawVarint32((uint)FieldFlags);
+
+                if (FieldFlags.HasFlag(LocomotionMessageFlags.HasEntityPrototypeId))
+                    cos.WritePrototypeEnum(PrototypeId, PrototypeEnumType.Entity);
+
                 Position.Encode(cos, 3);
-                if (LocFlags[0])
+
+                if (FieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation))
                     Orientation.Encode(cos, 6);
                 else
                     cos.WriteRawZigZagFloat(Orientation.X, 6);
-                LocomotionState.Encode(cos, LocFlags);
+
+                LocomotionState.Encode(cos, FieldFlags);
 
                 cos.Flush();
                 return ByteString.CopyFrom(ms.ToArray());
@@ -64,11 +71,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             StringBuilder sb = new();
             sb.AppendLine($"ReplicationPolicy: {ReplicationPolicy}");
             sb.AppendLine($"EntityId: {EntityId}");
-
-            sb.Append("LocFlags: ");
-            for (int i = 0; i < LocFlags.Length; i++) if (LocFlags[i]) sb.Append($"{i} ");
-            sb.AppendLine();
-
+            sb.AppendLine($"FieldFlags: {FieldFlags}");
             sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypeName(PrototypeId)}");
             sb.AppendLine($"Position: {Position}");
             sb.AppendLine($"Orientation: {Orientation}");

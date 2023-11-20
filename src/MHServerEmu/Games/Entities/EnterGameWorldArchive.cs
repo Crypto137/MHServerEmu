@@ -1,7 +1,6 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
@@ -9,26 +8,35 @@ using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Entities
 {
+    // These flags probably contain isClientEntityHidden and newOnServer from old protocols
+    [Flags]
+    public enum EnterGameWorldMessageFlags
+    {
+        None                        = 0,
+        HasAvatarWorldInstanceId    = 1 << 0,
+        Flag1                       = 1 << 1,
+        Flag2                       = 1 << 2,
+        Flag3                       = 1 << 3
+    }
+
     public class EnterGameWorldArchive
     {
-        // examples
-        // player 01B2F8FD06A021F0A301BC40902E9103BC05000001
-        // waypoint 010C028043E06BD82AC801
-        // something with 0xA0 01BEF8FD06A001B6A501D454902E0094050000
-        // known Flags: 0x02 == mini (waypoint, etc), 0x10A0 == players, 0xA0 == ??
+        // Examples
+        // Player:                       01B2F8FD06A021F0A301BC40902E9103BC05000001
+        // Waypoint:                     010C028043E06BD82AC801
+        // Something with flags 0xA0:    01BEF8FD06A001B6A501D454902E0094050000
 
-        private const int FieldFlagCount = 16;  // keep flag count a bit higher than we need just in case so we don't miss anything
-
-        private static readonly Logger Logger = LogManager.CreateLogger();
+        private const int LocoFlagsCount = 12;
 
         public AoiNetworkPolicyValues ReplicationPolicy { get; }
         public ulong EntityId { get; set; }
-        public bool[] Flags { get; set; }   // mystery flags: 2, 6
-        public PrototypeId PrototypeId { get; set; }
+        public LocomotionMessageFlags LocoFieldFlags { get; set; }
+        public EnterGameWorldMessageFlags ExtraFieldFlags { get; set; }
+        public PrototypeId EntityPrototypeId { get; set; }
         public Vector3 Position { get; set; }
         public Vector3 Orientation { get; set; }
         public LocomotionState LocomotionState { get; set; }
-        public uint UnknownSetting { get; set; }
+        public uint AvatarWorldInstanceId { get; set; }     // This was signed in old protocols
 
         public EnterGameWorldArchive(ByteString data)
         {
@@ -37,29 +45,33 @@ namespace MHServerEmu.Games.Entities
             ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
             EntityId = stream.ReadRawVarint64();
 
-            Flags = stream.ReadRawVarint32().ToBoolArray(FieldFlagCount);
-            //LocMsgFlags = Flags >> 12;
+            // This archive contains additional flags combined with LocomotionMessageFlags in a single 32-bit value
+            uint allFieldFlags = stream.ReadRawVarint32();
+            LocoFieldFlags = (LocomotionMessageFlags)(allFieldFlags & 0xFFF);
+            ExtraFieldFlags = (EnterGameWorldMessageFlags)(allFieldFlags >> LocoFlagsCount);
 
-            if (Flags[11]) PrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.Entity);
+            if (LocoFieldFlags.HasFlag(LocomotionMessageFlags.HasEntityPrototypeId))
+                EntityPrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.Entity);
 
             Position = new(stream, 3);
 
-            if (Flags[0])
-                Orientation = new(stream.ReadRawZigZagFloat(6), stream.ReadRawZigZagFloat(6), stream.ReadRawZigZagFloat(6));
-            else
-                Orientation = new(stream.ReadRawZigZagFloat(6), 0f, 0f);
+            Orientation = LocoFieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation)
+                ? new(stream, 6)
+                : new(stream.ReadRawZigZagFloat(6), 0f, 0f);
 
-            if (Flags[1] == false) LocomotionState = new(stream, Flags);
-            if (Flags[12]) UnknownSetting = stream.ReadRawVarint32();          // LocMsgFlags[0]
+            if (LocoFieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false)
+                LocomotionState = new(stream, LocoFieldFlags);
 
-            if (stream.IsAtEnd == false) Logger.Warn("Archive contains unknown fields!");
+            if (ExtraFieldFlags.HasFlag(EnterGameWorldMessageFlags.HasAvatarWorldInstanceId))
+                AvatarWorldInstanceId = stream.ReadRawVarint32();
         }
 
         public EnterGameWorldArchive(ulong entityId, Vector3 position, float orientation)
         {
             ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0;
             EntityId = entityId;
-            Flags = 0x02u.ToBoolArray(FieldFlagCount);
+            LocoFieldFlags = LocomotionMessageFlags.NoLocomotionState;
+            ExtraFieldFlags = EnterGameWorldMessageFlags.None;
             Position = position;
             Orientation = new(orientation, 0f, 0f);
         }
@@ -68,11 +80,12 @@ namespace MHServerEmu.Games.Entities
         {
             ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0;
             EntityId = entityId;
-            Flags = 0x10A0u.ToBoolArray(FieldFlagCount);
+            LocoFieldFlags = LocomotionMessageFlags.UpdatePathNodes | LocomotionMessageFlags.HasMoveSpeed;
+            ExtraFieldFlags = EnterGameWorldMessageFlags.HasAvatarWorldInstanceId;
             Position = position;
             Orientation = new(orientation, 0f, 0f);
             LocomotionState = new(moveSpeed);
-            UnknownSetting = 1;
+            AvatarWorldInstanceId = 1;
         }
 
         public ByteString Serialize()
@@ -83,18 +96,23 @@ namespace MHServerEmu.Games.Entities
 
                 cos.WriteRawVarint64((uint)ReplicationPolicy);
                 cos.WriteRawVarint64(EntityId);
-                cos.WriteRawVarint32(Flags.ToUInt32());
+                cos.WriteRawVarint32((uint)LocoFieldFlags | ((uint)ExtraFieldFlags << LocoFlagsCount));     // Combine flags
 
-                if (Flags[11]) cos.WritePrototypeEnum(PrototypeId, PrototypeEnumType.Entity);
+                if (LocoFieldFlags.HasFlag(LocomotionMessageFlags.HasEntityPrototypeId))
+                    cos.WritePrototypeEnum(EntityPrototypeId, PrototypeEnumType.Entity);
+
                 Position.Encode(cos, 3);
 
-                if (Flags[0])
+                if (LocoFieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation))
                     Orientation.Encode(cos, 6);
                 else
                     cos.WriteRawZigZagFloat(Orientation.X, 6);
 
-                if (Flags[1] == false) LocomotionState.Encode(cos, Flags);
-                if (Flags[12]) cos.WriteRawVarint32(UnknownSetting);
+                if (LocoFieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false)
+                    LocomotionState.Encode(cos, LocoFieldFlags);
+
+                if (ExtraFieldFlags.HasFlag(EnterGameWorldMessageFlags.HasAvatarWorldInstanceId))
+                    cos.WriteRawVarint32(AvatarWorldInstanceId);
 
                 cos.Flush();
                 return ByteString.CopyFrom(ms.ToArray());
@@ -106,16 +124,13 @@ namespace MHServerEmu.Games.Entities
             StringBuilder sb = new();
             sb.AppendLine($"ReplicationPolicy: {ReplicationPolicy}");
             sb.AppendLine($"EntityId: {EntityId}");
-
-            sb.Append("Flags: ");
-            for (int i = 0; i < Flags.Length; i++) if (Flags[i]) sb.Append($"{i} ");
-            sb.AppendLine();
-
-            sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypeName(PrototypeId)}");
+            sb.AppendLine($"LocoFieldFlags: {LocoFieldFlags}");
+            sb.AppendLine($"ExtraFieldFlags: {ExtraFieldFlags}");
+            sb.AppendLine($"EntityPrototypeId: {GameDatabase.GetPrototypeName(EntityPrototypeId)}");
             sb.AppendLine($"Position: {Position}");
             sb.AppendLine($"Orientation: {Orientation}");
             sb.AppendLine($"LocomotionState: {LocomotionState}");
-            sb.AppendLine($"UnknownSetting: 0x{UnknownSetting:X}");
+            sb.AppendLine($"AvatarWorldInstanceId: {AvatarWorldInstanceId}");
             return sb.ToString();
         }
     }
