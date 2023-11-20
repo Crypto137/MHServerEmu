@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using Gazillion;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -10,7 +11,7 @@ namespace MHServerEmu.Games.Entities
         public EntityBaseData BaseData { get; set; }
         public ulong RegionId { get; set; } = 0;
 
-        public uint ReplicationPolicy { get; set; }
+        public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
         public ReplicatedPropertyCollection PropertyCollection { get; set; }
 
         public Entity(EntityBaseData baseData, ByteString archiveData)
@@ -23,7 +24,7 @@ namespace MHServerEmu.Games.Entities
         // Base data is required for all entities, so there's no parameterless constructor
         public Entity(EntityBaseData baseData) { BaseData = baseData; }
 
-        public Entity(EntityBaseData baseData, uint replicationPolicy, ReplicatedPropertyCollection propertyCollection)
+        public Entity(EntityBaseData baseData, AoiNetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection propertyCollection)
         {
             BaseData = baseData;
             ReplicationPolicy = replicationPolicy;
@@ -32,13 +33,13 @@ namespace MHServerEmu.Games.Entities
 
         protected virtual void Decode(CodedInputStream stream)
         {
-            ReplicationPolicy = stream.ReadRawVarint32();
+            ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
             PropertyCollection = new(stream);
         }
 
         public virtual void Encode(CodedOutputStream stream)
         {
-            stream.WriteRawVarint32(ReplicationPolicy);
+            stream.WriteRawVarint32((uint)ReplicationPolicy);
             PropertyCollection.Encode(stream);
         }
 

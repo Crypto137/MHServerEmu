@@ -1,8 +1,9 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Games.GameData;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 
@@ -15,7 +16,7 @@ namespace MHServerEmu.Games.Entities
         public Transition(EntityBaseData baseData, ulong replicationId, ulong mapRegionId, int mapAreaId, int mapCellId, PrototypeId contextAreaRef, 
             Vector3 mapPosition, Destination destination) : base(baseData)
         {
-            ReplicationPolicy = 0x21;
+            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0 | AoiNetworkPolicyValues.AoiChannel5;
             PropertyCollection = new(replicationId, new()
             {
                 new(PropertyEnum.MapPosition, mapPosition),

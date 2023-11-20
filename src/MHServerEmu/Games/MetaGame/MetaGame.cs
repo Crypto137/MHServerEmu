@@ -1,7 +1,9 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
+using MHServerEmu.Common;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.MetaGame
@@ -14,7 +16,7 @@ namespace MHServerEmu.Games.MetaGame
 
         public MetaGame(EntityBaseData baseData) : base(baseData) { }
 
-        public MetaGame(EntityBaseData baseData, uint replicationPolicy, ReplicatedPropertyCollection propertyCollection,
+        public MetaGame(EntityBaseData baseData, AoiNetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection propertyCollection,
             ReplicatedVariable<string> name) : base(baseData)
         {
             ReplicationPolicy = replicationPolicy;
