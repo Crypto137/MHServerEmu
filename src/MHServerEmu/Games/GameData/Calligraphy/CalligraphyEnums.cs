@@ -26,37 +26,37 @@
     [Flags]
     public enum CurveRecordFlags
     {
-        None = 0
+        None        = 0
         // Although curve records do have a field for flags, it's 0 for all records
     }
 
     [Flags]
     public enum AssetTypeRecordFlags
     {
-        None = 0,
-        Protected = 1     // AssetDirectory::AssetTypeIsProtected
+        None        = 0,
+        Protected   = 1 << 0    // AssetDirectory::AssetTypeIsProtected
     }
 
     [Flags]
     public enum AssetValueFlags
     {
-        None = 0,
-        Protected = 1     // AssetType::AssetIsProtected
+        None        = 0,
+        Protected   = 1 << 0    // AssetType::AssetIsProtected
     }
 
     [Flags]
     public enum BlueprintRecordFlags
     {
-        None = 0,
-        Protected = 1     // DataDirectory::BlueprintIsProtected
+        None        = 0,
+        Protected   = 1 << 0    // DataDirectory::BlueprintIsProtected
     }
 
     [Flags]
     public enum PrototypeRecordFlags
     {
-        None = 0,
-        Abstract = 1,     // DataDirectory::PrototypeIsAbstract
-        Protected = 2     // DataDirectory::PrototypeIsProtected
+        None        = 0,
+        Abstract    = 1 << 0,   // DataDirectory::PrototypeIsAbstract
+        Protected   = 1 << 1    // DataDirectory::PrototypeIsProtected
     }
 
     // Enums for specific data for easy access

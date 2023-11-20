@@ -182,11 +182,11 @@ struct BlueprintMember
 {
     ulong FieldId;        // Processed by the client as a StringId
     FixedString16 FieldName;
-    byte BaseType;
-    byte StructureType;
+    CalligraphyBaseType BaseType;
+    CalligraphyStructureType StructureType;
 
-    if (BaseType == Asset || BaseType == Curve
-    || BaseType == Prototype || BaseType == RHStruct)
+    if (BaseType == CalligraphyBaseType.Asset || BaseType == CalligraphyBaseType.Curve
+    || BaseType == CalligraphyBaseType.Prototype || BaseType == CalligraphyBaseType.RHStruct)
         ulong Subtype;
 }
 ```

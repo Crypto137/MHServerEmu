@@ -17,14 +17,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
     [Flags]
     public enum NaviContentFlags
     {
-        AddWalk         = 1 << 0,
-        RemoveWalk      = 1 << 1,
-        AddFly          = 1 << 2,
-        RemoveFly       = 1 << 3,
-        AddPower        = 1 << 4,
-        RemovePower     = 1 << 5,
-        AddSight        = 1 << 6,
-        RemoveSight     = 1 << 7
+        None        = 0,
+        AddWalk     = 1 << 0,
+        RemoveWalk  = 1 << 1,
+        AddFly      = 1 << 2,
+        RemoveFly   = 1 << 3,
+        AddPower    = 1 << 4,
+        RemovePower = 1 << 5,
+        AddSight    = 1 << 6,
+        RemoveSight = 1 << 7
     }
 
     public class NaviPatchPrototype
