@@ -107,9 +107,6 @@ namespace MHServerEmu.Games.Powers
 
             if (Flags.HasFlag(PowerResultMessageFlags.HasTransferToEntityId))
                 TransferToEntityId = stream.ReadRawVarint64();
-
-            if (ResultFlags.HasFlag(UInt64Flags.Flag0) == false)
-                Console.WriteLine(ToString());
         }
 
         public PowerResultArchive(NetMessageTryActivatePower tryActivatePower)
