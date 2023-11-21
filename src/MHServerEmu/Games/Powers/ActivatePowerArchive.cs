@@ -8,12 +8,24 @@ using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Powers
 {
+    [Flags]
+    public enum ActivatePowerMessageFlags
+    {
+        None                            = 0,
+        TargetIsUser                    = 1 << 0,
+        HasTriggeringPowerPrototypeId   = 1 << 1,
+        HasTargetPosition               = 1 << 2,
+        TargetPositionIsUserPosition    = 1 << 3,
+        HasMovementTimeMS               = 1 << 4,
+        HasUnknownTimeMS                = 1 << 5,
+        HasPowerRandomSeed              = 1 << 6,
+        HasFXRandomSeed                 = 1 << 7
+    }
+
     public class ActivatePowerArchive
     {
-        private const int FlagCount = 8;
-
         public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
-        public bool[] Flags { get; set; }
+        public ActivatePowerMessageFlags Flags { get; set; }
         public ulong IdUserEntity { get; set; }
         public ulong IdTargetEntity { get; set; }
         public PrototypeId PowerPrototypeId { get; set; }
@@ -30,24 +42,41 @@ namespace MHServerEmu.Games.Powers
             CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
 
             ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
-            Flags = stream.ReadRawVarint32().ToBoolArray(FlagCount);
+            Flags = (ActivatePowerMessageFlags)stream.ReadRawVarint32();
             IdUserEntity = stream.ReadRawVarint64();
-            if (Flags[0] == false) IdTargetEntity = stream.ReadRawVarint64();
+
+            if (Flags.HasFlag(ActivatePowerMessageFlags.TargetIsUser) == false)
+                IdTargetEntity = stream.ReadRawVarint64();
+
             PowerPrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.Power);
-            if (Flags[1]) TriggeringPowerPrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.Power);
+
+            if (Flags.HasFlag(ActivatePowerMessageFlags.HasTriggeringPowerPrototypeId))
+                TriggeringPowerPrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.Power);
+
             UserPosition = new(stream, 2);
-            if (Flags[2]) TargetPosition = new Vector3(stream, 2) + UserPosition;      // TargetPosition is relative to UserPosition when encoded
-            else if (Flags[3]) TargetPosition = UserPosition;
-            if (Flags[4]) MovementTimeMS = stream.ReadRawVarint64();
-            if (Flags[5]) UnknownTimeMS = stream.ReadRawVarint32();
-            if (Flags[6]) PowerRandomSeed = stream.ReadRawVarint32();
-            if (Flags[7]) FXRandomSeed = stream.ReadRawVarint32();
+
+            if (Flags.HasFlag(ActivatePowerMessageFlags.HasTargetPosition))
+                TargetPosition = new Vector3(stream, 2) + UserPosition;      // TargetPosition is relative to UserPosition when encoded
+            else if (Flags.HasFlag(ActivatePowerMessageFlags.TargetPositionIsUserPosition))
+                TargetPosition = UserPosition;
+
+            if (Flags.HasFlag(ActivatePowerMessageFlags.HasMovementTimeMS))
+                MovementTimeMS = stream.ReadRawVarint64();
+
+            if (Flags.HasFlag(ActivatePowerMessageFlags.HasUnknownTimeMS))
+                UnknownTimeMS = stream.ReadRawVarint32();
+
+            if (Flags.HasFlag(ActivatePowerMessageFlags.HasPowerRandomSeed))
+                PowerRandomSeed = stream.ReadRawVarint32();
+
+            if (Flags.HasFlag(ActivatePowerMessageFlags.HasFXRandomSeed))
+                FXRandomSeed = stream.ReadRawVarint32();
         }
 
         public ActivatePowerArchive(NetMessageTryActivatePower tryActivatePower, Vector3 userPosition)
         {
             ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0;
-            Flags = 0u.ToBoolArray(FlagCount);
+            Flags = ActivatePowerMessageFlags.None;
 
             IdUserEntity = tryActivatePower.IdUserEntity;
             PowerPrototypeId = (PrototypeId)tryActivatePower.PowerPrototypeId;
@@ -56,7 +85,7 @@ namespace MHServerEmu.Games.Powers
             // IdTargetEntity
             if (tryActivatePower.HasIdTargetEntity)                 
                 if (tryActivatePower.IdTargetEntity == IdUserEntity)
-                    Flags[0] = true;    // flag0 means the user is the target
+                    Flags |= ActivatePowerMessageFlags.TargetIsUser;    // flag0 means the user is the target
                 else
                     IdTargetEntity = tryActivatePower.IdTargetEntity;
 
@@ -64,25 +93,25 @@ namespace MHServerEmu.Games.Powers
             if (tryActivatePower.HasTriggeringPowerPrototypeId)
             {
                 TriggeringPowerPrototypeId = (PrototypeId)tryActivatePower.TriggeringPowerPrototypeId;
-                Flags[1] = true;
+                Flags |= ActivatePowerMessageFlags.HasTriggeringPowerPrototypeId;
             }
 
             // TargetPosition
             if (tryActivatePower.HasTargetPosition)
             {
                 TargetPosition = new(tryActivatePower.TargetPosition);
-                Flags[2] = true;
+                Flags |= ActivatePowerMessageFlags.HasTargetPosition;
             }
             else
             {
-                Flags[3] = true;    // TargetPosition == UserPosition
+                Flags |= ActivatePowerMessageFlags.TargetPositionIsUserPosition;    // TargetPosition == UserPosition
             }
 
             // MovementTimeMS
             if (tryActivatePower.HasMovementTimeMS)
             {
                 MovementTimeMS = tryActivatePower.MovementTimeMS;
-                Flags[4] = true;
+                Flags |= ActivatePowerMessageFlags.HasMovementTimeMS;
             }
 
             // UnknownTimeMS (Flag5) - where does this come from?
@@ -91,14 +120,14 @@ namespace MHServerEmu.Games.Powers
             if (tryActivatePower.HasPowerRandomSeed)
             {
                 PowerRandomSeed = tryActivatePower.PowerRandomSeed;
-                Flags[6] = true;
+                Flags |= ActivatePowerMessageFlags.HasPowerRandomSeed;
             }
 
             // FXRandomSeed - NOTE: FXRandomSeed is marked as required in protobuf, so it should always be present
             if (tryActivatePower.HasFxRandomSeed)
             {
                 FXRandomSeed = tryActivatePower.FxRandomSeed;
-                Flags[7] = true;
+                Flags |= ActivatePowerMessageFlags.HasFXRandomSeed;
             }
         }
 
@@ -111,17 +140,33 @@ namespace MHServerEmu.Games.Powers
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
                 cos.WriteRawVarint32((uint)ReplicationPolicy);
-                cos.WriteRawVarint32(Flags.ToUInt32());
+                cos.WriteRawVarint32((uint)Flags);
                 cos.WriteRawVarint64(IdUserEntity);
-                if (Flags[0] == false) cos.WriteRawVarint64(IdTargetEntity);
+
+                if (Flags.HasFlag(ActivatePowerMessageFlags.TargetIsUser) == false)
+                    cos.WriteRawVarint64(IdTargetEntity);
+
                 cos.WritePrototypeEnum(PowerPrototypeId, PrototypeEnumType.Power);
-                if (Flags[1]) cos.WritePrototypeEnum(TriggeringPowerPrototypeId, PrototypeEnumType.Power);
+
+                if (Flags.HasFlag(ActivatePowerMessageFlags.HasTriggeringPowerPrototypeId))
+                    cos.WritePrototypeEnum(TriggeringPowerPrototypeId, PrototypeEnumType.Power);
+
                 UserPosition.Encode(cos, 2);
-                if (Flags[2]) (TargetPosition - UserPosition).Encode(cos, 2);
-                if (Flags[4]) cos.WriteRawVarint64(MovementTimeMS);
-                if (Flags[5]) cos.WriteRawVarint32(UnknownTimeMS);
-                if (Flags[6]) cos.WriteRawVarint32(PowerRandomSeed);
-                if (Flags[7]) cos.WriteRawVarint32(FXRandomSeed);
+
+                if (Flags.HasFlag(ActivatePowerMessageFlags.HasTargetPosition))
+                    (TargetPosition - UserPosition).Encode(cos, 2);
+
+                if (Flags.HasFlag(ActivatePowerMessageFlags.HasMovementTimeMS))
+                    cos.WriteRawVarint64(MovementTimeMS);
+
+                if (Flags.HasFlag(ActivatePowerMessageFlags.HasUnknownTimeMS))
+                    cos.WriteRawVarint32(UnknownTimeMS);
+
+                if (Flags.HasFlag(ActivatePowerMessageFlags.HasPowerRandomSeed))
+                    cos.WriteRawVarint32(PowerRandomSeed);
+
+                if (Flags.HasFlag(ActivatePowerMessageFlags.HasFXRandomSeed))
+                    cos.WriteRawVarint32(FXRandomSeed);
 
                 cos.Flush();
                 return ByteString.CopyFrom(ms.ToArray());
@@ -132,11 +177,7 @@ namespace MHServerEmu.Games.Powers
         {
             StringBuilder sb = new();
             sb.AppendLine($"ReplicationPolicy: {ReplicationPolicy}");
-
-            sb.Append("Flags: ");
-            for (int i = 0; i < Flags.Length; i++) if (Flags[i]) sb.Append($"{i} ");
-            sb.AppendLine();
-
+            sb.AppendLine($"Flags: {Flags}");
             sb.AppendLine($"IdUserEntity: {IdUserEntity}");
             sb.AppendLine($"IdTargetEntity: {IdTargetEntity}");
             sb.AppendLine($"PowerPrototypeId: {GameDatabase.GetPrototypeName(PowerPrototypeId)}");
@@ -147,7 +188,6 @@ namespace MHServerEmu.Games.Powers
             sb.AppendLine($"UnknownTimeMS: {UnknownTimeMS}");
             sb.AppendLine($"PowerRandomSeed: {PowerRandomSeed}");
             sb.AppendLine($"FXRandomSeed: {FXRandomSeed}");
-
             return sb.ToString();
         }
     }

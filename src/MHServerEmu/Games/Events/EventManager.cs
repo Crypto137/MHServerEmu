@@ -159,7 +159,7 @@ namespace MHServerEmu.Games.Events
                     activatePower = new()
                     {
                         ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0,
-                        Flags = 202u.ToBoolArray(8),
+                        Flags = ActivatePowerMessageFlags.HasTriggeringPowerPrototypeId | ActivatePowerMessageFlags.TargetPositionIsUserPosition | ActivatePowerMessageFlags.HasPowerRandomSeed | ActivatePowerMessageFlags.HasFXRandomSeed,
                         IdUserEntity = avatarEntityId,
                         IdTargetEntity = 0,
                         PowerPrototypeId = preIteractPower,
@@ -208,7 +208,7 @@ namespace MHServerEmu.Games.Events
                     activatePower = new()
                     {
                         ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0,
-                        Flags = 202u.ToBoolArray(8),
+                        Flags = ActivatePowerMessageFlags.HasTriggeringPowerPrototypeId | ActivatePowerMessageFlags.TargetPositionIsUserPosition | ActivatePowerMessageFlags.HasPowerRandomSeed | ActivatePowerMessageFlags.HasFXRandomSeed,
                         IdUserEntity = avatarEntityId,
                         IdTargetEntity = avatarEntityId,
                         PowerPrototypeId = (PrototypeId)PowerPrototypes.Emotes.EmoteDance,
