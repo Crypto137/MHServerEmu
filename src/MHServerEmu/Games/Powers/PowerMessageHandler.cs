@@ -150,7 +150,7 @@ namespace MHServerEmu.Games.Powers
             //Logger.Trace(tryActivatePower.ToString());
 
             PowerResultArchive archive = new(tryActivatePower);
-            if (archive.TargetId > 0)
+            if (archive.TargetEntityId > 0)
                 messageList.Add(new(client, new(NetMessagePowerResult.CreateBuilder()
                     .SetArchiveData(archive.Serialize())
                     .Build())));
