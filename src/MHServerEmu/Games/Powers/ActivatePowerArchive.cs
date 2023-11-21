@@ -17,7 +17,7 @@ namespace MHServerEmu.Games.Powers
         HasTargetPosition               = 1 << 2,
         TargetPositionIsUserPosition    = 1 << 3,
         HasMovementTimeMS               = 1 << 4,
-        HasUnknownTimeMS                = 1 << 5,
+        HasVariableActivationTime       = 1 << 5,
         HasPowerRandomSeed              = 1 << 6,
         HasFXRandomSeed                 = 1 << 7
     }
@@ -29,11 +29,11 @@ namespace MHServerEmu.Games.Powers
         public ulong IdUserEntity { get; set; }
         public ulong IdTargetEntity { get; set; }
         public PrototypeId PowerPrototypeId { get; set; }
-        public PrototypeId TriggeringPowerPrototypeId { get; set; }
+        public PrototypeId TriggeringPowerPrototypeId { get; set; }     // AKA parentPowerPrototypeId
         public Vector3 UserPosition { get; set; }
         public Vector3 TargetPosition { get; set; }
-        public ulong MovementTimeMS { get; set; }   // should this be uint or ulong?
-        public uint UnknownTimeMS { get; set; }
+        public ulong MovementTimeMS { get; set; }   // AKA moveTimeSeconds, should this be uint or ulong?
+        public uint VariableActivationTime { get; set; }
         public uint PowerRandomSeed { get; set; }
         public uint FXRandomSeed { get; set; }
 
@@ -63,8 +63,8 @@ namespace MHServerEmu.Games.Powers
             if (Flags.HasFlag(ActivatePowerMessageFlags.HasMovementTimeMS))
                 MovementTimeMS = stream.ReadRawVarint64();
 
-            if (Flags.HasFlag(ActivatePowerMessageFlags.HasUnknownTimeMS))
-                UnknownTimeMS = stream.ReadRawVarint32();
+            if (Flags.HasFlag(ActivatePowerMessageFlags.HasVariableActivationTime))
+                VariableActivationTime = stream.ReadRawVarint32();
 
             if (Flags.HasFlag(ActivatePowerMessageFlags.HasPowerRandomSeed))
                 PowerRandomSeed = stream.ReadRawVarint32();
@@ -114,7 +114,7 @@ namespace MHServerEmu.Games.Powers
                 Flags |= ActivatePowerMessageFlags.HasMovementTimeMS;
             }
 
-            // UnknownTimeMS (Flag5) - where does this come from?
+            // VariableActivationTime - where does this come from?
 
             // PowerRandomSeed
             if (tryActivatePower.HasPowerRandomSeed)
@@ -159,8 +159,8 @@ namespace MHServerEmu.Games.Powers
                 if (Flags.HasFlag(ActivatePowerMessageFlags.HasMovementTimeMS))
                     cos.WriteRawVarint64(MovementTimeMS);
 
-                if (Flags.HasFlag(ActivatePowerMessageFlags.HasUnknownTimeMS))
-                    cos.WriteRawVarint32(UnknownTimeMS);
+                if (Flags.HasFlag(ActivatePowerMessageFlags.HasVariableActivationTime))
+                    cos.WriteRawVarint32(VariableActivationTime);
 
                 if (Flags.HasFlag(ActivatePowerMessageFlags.HasPowerRandomSeed))
                     cos.WriteRawVarint32(PowerRandomSeed);
@@ -185,7 +185,7 @@ namespace MHServerEmu.Games.Powers
             sb.AppendLine($"UserPosition: {UserPosition}");
             sb.AppendLine($"TargetPosition: {TargetPosition}");
             sb.AppendLine($"MovementTimeMS: {MovementTimeMS}");
-            sb.AppendLine($"UnknownTimeMS: {UnknownTimeMS}");
+            sb.AppendLine($"VariableActivationTime: {VariableActivationTime}");
             sb.AppendLine($"PowerRandomSeed: {PowerRandomSeed}");
             sb.AppendLine($"FXRandomSeed: {FXRandomSeed}");
             return sb.ToString();
