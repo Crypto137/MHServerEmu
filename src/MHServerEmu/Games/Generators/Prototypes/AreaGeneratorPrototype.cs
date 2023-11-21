@@ -111,4 +111,19 @@ namespace MHServerEmu.Games.Generators.Prototypes
     };
 
     #endregion
+
+    public class SuperCellEntryPrototype : Prototype
+    {
+        public sbyte X;
+        public sbyte Y;
+        public ulong Cell;
+        public ulong[] Alts;
+        public SuperCellEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(SuperCellEntryPrototype), proto); }
+    }
+
+    public class SuperCellPrototype : Prototype
+    {
+        new public SuperCellEntryPrototype[] Entries;
+        public SuperCellPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(SuperCellPrototype), proto); }
+    }
 }

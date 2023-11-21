@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Generators.Prototypes
 {
@@ -27,21 +28,20 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public CellDeletionEnum RoomKillMethod;
         public float RoomKillChancePct;
         public CellDeletionProfilePrototype[] SecondaryDeletionProfiles;
-        public RequiredCellPrototype[] RequiredSuperCells;
-        public RequiredSuperCellEntryPrototype[] RequiredCells;
+        public RequiredCellPrototype[] RequiredCells;
         public bool SupressMissingCellErrors;
         public bool NoConnectionsOnCorners;
+        public RandomInstanceListPrototype RandomInstances;
+        public int DeadEndMax;
+        public RequiredSuperCellEntryPrototype[] RequiredSuperCells;
         public RequiredSuperCellEntryPrototype[] NonRequiredSuperCells;
         public int NonRequiredSuperCellsMin;
         public int NonRequiredSuperCellsMax;
         public RequiredCellPrototype[] NonRequiredNormalCells;
         public int NonRequiredNormalCellsMin;
         public int NonRequiredNormalCellsMax;
-        public int DeadEndMax;
-        public RandomInstanceListPrototype RandomInstances;
         public RoadGeneratorPrototype Roads;
         public IPoint2Prototype[] AllowedConnections;
-
         public BaseGridAreaGeneratorPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(BaseGridAreaGeneratorPrototype), proto); }
     }
 
@@ -88,7 +88,7 @@ namespace MHServerEmu.Games.Generators.Prototypes
 
     public class RequiredCellRestrictEdgePrototype : RequiredCellRestrictBasePrototype
     {
-        public int Edge;
+        public Cell.Type Edge;
 
         public RequiredCellRestrictEdgePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RequiredCellRestrictEdgePrototype), proto); }
     }

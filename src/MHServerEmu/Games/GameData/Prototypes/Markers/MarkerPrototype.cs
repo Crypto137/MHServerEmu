@@ -16,6 +16,11 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
         public Vector3 Rotation { get; protected set; }
     }
 
+    public class MarkerFilterPrototype : Prototype
+    {
+        public MarkerFilterPrototype() { }
+    }
+
     public class MarkerSetPrototype : Prototype
     {
         public MarkerPrototype[] Markers { get; }

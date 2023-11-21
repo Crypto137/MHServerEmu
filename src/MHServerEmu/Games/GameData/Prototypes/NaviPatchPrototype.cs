@@ -20,16 +20,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
-    enum СontentTags {
-	    None = 0,
-	    OpaqueWall = 1,
-	    TransparentWall = 2,
-	    Blocking = 3,
-	    NoFly = 4,
-	    Walkable = 5,
-	    Obstacle = 6,
-    }
-
     [Flags]
     public enum СontentFlags {
 	    AddWalk = 1 << 0,

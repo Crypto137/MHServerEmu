@@ -32,7 +32,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public ResourcePrototypeHash ProtoNameHash { get; }
         public PropSetTypeEntryPrototype[] PropShapeEntries { get; }
-        public ulong PropType { get; }
+        public ulong PropType { get; } // long
 
         public PropSetTypeListPrototype(BinaryReader reader)
         {

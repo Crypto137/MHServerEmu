@@ -115,8 +115,8 @@ public class ExportErrorPrototype : EvalPrototype
 
     public class LoadPropContextParamsPrototype : EvalPrototype
     {
-        public ulong Prop;
         public EvalContext PropertyCollectionContext;
+        public ulong Prop;
         public EvalContext PropertyIdContext;
         public LoadPropContextParamsPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(LoadPropContextParamsPrototype), proto); }
     }
@@ -403,22 +403,22 @@ public class ExportErrorPrototype : EvalPrototype
 
     public class ForEachConditionInContextPrototype : EvalPrototype
     {
-        public EvalPrototype LoopConditionPreScope;
-        public EvalPrototype LoopConditionPostScope;
         public EvalPrototype PostLoop;
         public EvalPrototype PreLoop;
-        public EvalPrototype ConditionCollectionContext;
         public EvalPrototype[] ScopeLoopBody;
+        public EvalPrototype LoopConditionPreScope;
+        public EvalPrototype LoopConditionPostScope;
+        public EvalContext ConditionCollectionContext;
         public ForEachConditionInContextPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ForEachConditionInContextPrototype), proto); }
     }
 
     public class ForEachProtoRefInContextRefListPrototype : EvalPrototype
     {
-        public EvalPrototype LoopCondition;
         public EvalPrototype PostLoop;
         public EvalPrototype PreLoop;
-        public EvalContext ProtoRefListContext;
         public EvalPrototype[] ScopeLoopBody;
+        public EvalPrototype LoopCondition;
+        public EvalContext ProtoRefListContext;
         public ForEachProtoRefInContextRefListPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ForEachProtoRefInContextRefListPrototype), proto); }
     }
 

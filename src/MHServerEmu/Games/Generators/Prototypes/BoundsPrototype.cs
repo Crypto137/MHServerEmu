@@ -4,25 +4,25 @@ namespace MHServerEmu.Games.Generators.Prototypes
 {
     public class BoundsPrototype : Prototype
     {
-        public bool BlockOnlyMyself;
-        public bool BlocksLanding;
-        public bool BlocksLineOfSight;
+        public BoundsCollisionType CollisionType;
         public bool BlocksSpawns;
-        public BoundsCollision CollisionType;
         public bool ComplexPickingOnly;
         public bool IgnoreCollisionWithAllies;
-        public BoundsMovementPowerBlock BlocksMovementPowers;
+        public bool BlocksLanding;
+        public bool BlocksLineOfSight;
+        public BoundsMovementPowerBlockType BlocksMovementPowers;
         public bool IgnoreBlockingWithAvatars;
+        public bool BlockOnlyMyself;
         public BoundsPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(BoundsPrototype), proto); }
     }
 
-    public enum BoundsCollision {
+    public enum BoundsCollisionType {
         None,
 	    Overlapping,
 	    Blocking,
     }
 
-    public enum BoundsMovementPowerBlock {
+    public enum BoundsMovementPowerBlockType {
 	    None,
 	    Ground,
 	    All,
@@ -47,6 +47,14 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public float HeightFromCenter;
         public float Length;
         public TriangleBoundsPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(TriangleBoundsPrototype), proto); }
+    }
+    public class WedgeBoundsPrototype : BoundsPrototype
+    {
+        public float AngleDegrees;
+        public float BaseWidth;
+        public float Length;
+        public float HeightFromCenter;
+        public WedgeBoundsPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(WedgeBoundsPrototype), proto); }
     }
 
     public class BoxBoundsPrototype : BoundsPrototype

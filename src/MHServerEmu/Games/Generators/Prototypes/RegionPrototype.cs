@@ -6,81 +6,81 @@ namespace MHServerEmu.Games.Generators.Prototypes
 {
     public class RegionPrototype : Prototype
     {
-        public RegionAccessCheckPrototype[] AccessChecks;
-        public ulong[] AccessDifficulties;
-        public ulong[] AltRegions;
-        public bool LevelBandedRegionUsesPlayerLevel;
-        public bool AllowAutoPartyOnEnter;
-        public bool AllowLocalCoopMode;
-        public bool AlwaysRevealFullMap;
-        public bool AlwaysShutdownWhenVacant;
-        public bool QueueDoNotWaitToFull;
-        public ulong AmbientSfx;
-        public float AutoPartyWindowSecs;
-        public RegionEnums Behavior;
-        public bool RespawnDestructibles;
-        public ulong BodySliderTarget;
-        public bool BodySliderOneWay;
-        public int BonusItemFindMultiplier;
-        public ulong Chapter;
         public ulong ClientMap;
-        public bool CloseWhenReservationsReachesZero;
-        public RegionDifficultySettingsPrototype DifficultySettings;
-        public bool DisplayCommunityNews;
-        public bool EnableAvatarSwap;
-        public EvalPrototype EvalAccessRestriction;
-        public ulong EvalAccessRestrictionMessage;
-        public FootstepTrace FootstepTraceOverride;
-        public bool ForceSimulation;
-        public bool IsNPE;
-        public ulong MarkerFilter;
-        public ulong MetaGames;
-        public MissionTrackerFilterType[] MissionTrackerFilterList;
-        public ulong Music;
-        public RegionMusicBehavior MusicBehavior;
-        public float LifetimeInMinutes;
-        public ulong LoadingScreensConsole;
-        public ulong LoadingScreens;
-        public LootTableAssignmentPrototype[] LootTables;
-        public ObjectiveGraphSettingsPrototype ObjectiveGraph;
-        public bool PartyFormationAllowed;
-        public RegionQueueMethod RegionQueueMethod;
-        public RegionQueueStateEntryPrototype[] RegionQueueStates;
-        public bool PausesBoostConditions;
-        public int Level;
-        public bool LevelOverridesboolacterLevel;
-        public bool LevelUseAreaOffset;
-        public ulong[] PopulationOverrides;
-        public ulong[] PowerKeywordBlacklist;
-        public ulong PresenceStatusText;
-        public ulong PropertyGameModeSetOnEntry;
-        public RegionGeneratorPrototype RegionGenerator;
-        public ulong RegionName;
-        public ulong[] RestrictedRoster;
-        public bool ShowTransitionIndicators;
+        public ulong BodySliderTarget;
         public ulong StartTarget;
-        public bool SynergyEditAllowed;
-        public TransitionUIPrototype[] TransitionUITypes;
-        public float UIMapWallThickness;
+        public ulong[] Music;
+        public RegionGeneratorPrototype RegionGenerator;
+        public RegionBehaviorAsset Behavior;
+        public ulong RegionName;
+        public ulong MetaGames;
+        public bool ForceSimulation;
+        public ulong LoadingScreens;
+        public bool AlwaysRevealFullMap;
+        public ulong Chapter;
+        public int PlayerLimit;
+        public float LifetimeInMinutes;
         public ulong WaypointAutoUnlock;
-        public ulong WaypointAutoUnlockList;
+        public bool PartyFormationAllowed;
+        public TransitionUIPrototype[] TransitionUITypes;
+        public ulong AmbientSfx;
+        public ulong[] PowerKeywordBlacklist;
+        public bool CloseWhenReservationsReachesZero;
+        public float UIMapWallThickness;
+        public ulong[] PopulationOverrides;
+        public int Level;
+        public MissionTrackerFilterType[] MissionTrackerFilterList;
+        public bool AllowAutoPartyOnEnter;
+        public float AutoPartyWindowSecs;
         public bool DailyCheckpointStartTarget;
         public int LowPopulationPlayerLimit;
         public ulong RespawnOverride;
         public ulong PlayerCameraSettings;
-        public ulong PlayerCameraSettingsOrbis;
+        public RegionQueueMethod RegionQueueMethod;
+        public EvalPrototype EvalAccessRestriction;
+        public ulong WaypointAutoUnlockList;
+        public bool AlwaysShutdownWhenVacant;
+        public bool SynergyEditAllowed;
+        public ulong[] Keywords;
+        public ulong UITopPanel;
+        public ulong[] AltRegions;
+        public RegionAccessCheckPrototype[] AccessChecks;
         public ulong UIDescription;
         public ulong UILocation;
-        public ulong UITopPanel;
+        public bool PausesBoostConditions;
+        public bool ShowTransitionIndicators;
+        public RegionQueueStateEntryPrototype[] RegionQueueStates;
+        public ulong MarkerFilter;
+        public bool LevelBandedRegionUsesPlayerLevel;
+        public FootstepTraceBehaviorAsset FootstepTraceOverride;
+        public bool QueueDoNotWaitToFull;
+        public bool DisplayCommunityNews;
         public ulong UnrealClass;
+        public bool RespawnDestructibles;
+        public ulong PropertyGameModeSetOnEntry;
         public bool UsePrevRegionPlayerDeathCount;
+        public LootTableAssignmentPrototype[] LootTables;
         public ulong AffixTable;
+        public ObjectiveGraphSettingsPrototype ObjectiveGraph;
         public DividedStartLocationPrototype[] DividedStartLocations;
+        public RegionMusicBehaviorAsset MusicBehavior;
         public ulong AvatarObjectiveInfoOverride;
+        public RegionDifficultySettingsPrototype DifficultySettings;
+        public bool LevelOverridesCharacterLevel;
+        public bool LevelUseAreaOffset;
+        public ulong EvalAccessRestrictionMessage;
+        public bool BodySliderOneWay;
+        public bool EnableAvatarSwap;
+        public ulong[] RestrictedRoster;
         public ulong[] AvatarPowers;
+        public bool IsNPE;
+        public ulong PresenceStatusText;
+        public ulong[] AccessDifficulties;
         public ulong Tuning;
-        public int PlayerLimit;
-        public ulong[] Keywords;
+        public int BonusItemFindMultiplier;
+        public ulong PlayerCameraSettingsOrbis;
+        public ulong LoadingScreensConsole;
+        public bool AllowLocalCoopMode;
 
         public RegionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RegionPrototype), proto); }
 
@@ -127,7 +127,7 @@ namespace MHServerEmu.Games.Generators.Prototypes
 	    Challenge = 4,
     }
 
-    public enum RegionEnums
+    public enum RegionBehaviorAsset
     {
 	    Invalid = -1,
 	    Town = 0,
@@ -138,14 +138,14 @@ namespace MHServerEmu.Games.Generators.Prototypes
 	    MatchPlay = 4,
     }
 
-    public enum RegionMusicBehavior
+    public enum RegionMusicBehaviorAsset
     {
         None,
         Default,
         Mission,
     }
 
-    public enum FootstepTrace
+    public enum FootstepTraceBehaviorAsset
     {
         None,
         Enable,
@@ -158,12 +158,6 @@ namespace MHServerEmu.Games.Generators.Prototypes
     }
     #endregion
 
-    public class RegionDifficultySettingsPrototype : Prototype
-    {
-        public ulong TuningTable;
-        public RegionDifficultySettingsPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RegionDifficultySettingsPrototype), proto); }
-    }
-
     public class ObjectiveGraphSettingsPrototype : Prototype
     {
         public ObjectiveGraphModeAsset Mode;
@@ -174,6 +168,13 @@ namespace MHServerEmu.Games.Generators.Prototypes
 	    Off,
 	    PathDistance,
 	    PathNavi,
+    }
+
+    public class FactionLimitPrototype : Prototype
+    {
+        public ulong Faction;
+        public int PlayerLimit;
+        public FactionLimitPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(FactionLimitPrototype), proto); }
     }
 
     public class RegionAccessCheckPrototype : Prototype
@@ -209,5 +210,51 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public ulong Target;
         public int Players;
         public DividedStartLocationPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(DividedStartLocationPrototype), proto); }
+    }
+
+    public class RegionPortalControlEntryPrototype : Prototype
+    {
+        public ulong Region;
+        public int UnlockDurationMinutes;
+        public int UnlockPeriodMinutes;
+        public RegionPortalControlEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RegionPortalControlEntryPrototype), proto); }
+    }
+
+
+    public class RegionConnectionNodePrototype : Prototype
+    {
+        public ulong Origin;
+        public ulong Target;
+        public RegionTransitionDirectionality Type;
+        public RegionConnectionNodePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RegionConnectionNodePrototype), proto); }
+    }
+    public enum RegionTransitionDirectionality
+    {
+        BiDirectional = 0,
+        OneWay = 1,
+        Disabled = 2,
+    }
+    public class ZoneLevelPrototype : Prototype
+    {
+        public ZoneLevelPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ZoneLevelPrototype), proto); }
+    }
+
+    public class ZoneLevelFixedPrototype : ZoneLevelPrototype
+    {
+        public short level;
+        public ZoneLevelFixedPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ZoneLevelFixedPrototype), proto); }
+    }
+
+    public class ZoneLevelRelativePrototype : ZoneLevelPrototype
+    {
+        public short modmax;
+        public short modmin;
+        public ZoneLevelRelativePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ZoneLevelRelativePrototype), proto); }
+    }
+
+    public class BlackOutZonePrototype : Prototype
+    {
+        public float BlackOutRadius;
+        public BlackOutZonePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(BlackOutZonePrototype), proto); }
     }
 }

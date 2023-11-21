@@ -6,27 +6,26 @@ namespace MHServerEmu.Games.Generators.Prototypes
     public class AreaPrototype : Prototype
     {
         public GeneratorPrototype Generator;
-        public int LevelOffset;
         public ulong Population;
         public ulong AreaName;
         public ulong PropDensity;
         public ulong[] PropSets;
         public StyleEntryPrototype[] Styles;
         public ulong ClientMap;
-        public ulong AmbientSfx;
         public ulong[] Music;
-        public RegionMusicBehavior MusicBehavior;
-        public FootstepTrace FootstepTraceOverride;
         public bool FullyGenerateCells;
         public AreaMinimapReveal MinimapRevealMode;
-        public int MinimapRevealGroupId;
+        public ulong AmbientSfx;
         public ulong MinimapName;
+        public int MinimapRevealGroupId;
         public ulong RespawnOverride;
-        public RespawnCellOverridePrototype[] RespawnCellOverrides;
         public ulong PlayerCameraSettings;
-        public ulong PlayerCameraSettingsOrbis;
+        public FootstepTraceBehaviorAsset FootstepTraceOverride;
+        public RegionMusicBehaviorAsset MusicBehavior;
         public ulong[] Keywords;
-
+        public int LevelOffset;
+        public RespawnCellOverridePrototype[] RespawnCellOverrides;
+        public ulong PlayerCameraSettingsOrbis;
         public AreaPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AreaPrototype), proto); }
     }
 
@@ -65,5 +64,11 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public int Weight;
 
         public StyleEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(StyleEntryPrototype), proto); }
+    }
+
+    public class AreaListPrototype : Prototype
+    {
+        public ulong[] Areas;
+        public AreaListPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AreaListPrototype), proto); }
     }
 }

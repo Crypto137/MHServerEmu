@@ -36,8 +36,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public Vector3 MarkerRotation { get; }
         public MarkerSetPrototype Objects { get; }
         public NaviPatchSourcePrototype NaviPatchSource { get; }
-        public ushort RandomRotationDegrees { get; }
-        public ushort RandomPosition { get; }
+        public ushort RandomRotationDegrees { get; } // short
+        public ushort RandomPosition { get; } // short
 
         public ProceduralPropGroupPrototype(BinaryReader reader)
         {
