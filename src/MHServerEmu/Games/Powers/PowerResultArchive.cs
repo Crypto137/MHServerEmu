@@ -48,6 +48,8 @@ namespace MHServerEmu.Games.Powers
 
     public class PowerResultArchive
     {
+        private static readonly Random Random = new();  // For testing, remove this later
+
         public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
         public PowerResultMessageFlags Flags { get; set; }
         public PrototypeId PowerPrototypeId { get; set; }
@@ -128,8 +130,22 @@ namespace MHServerEmu.Games.Powers
                 PowerOwnerPosition = new(tryActivatePower.TargetPosition);
                 Flags |= PowerResultMessageFlags.HasPowerOwnerPosition;
 
-                if (TargetEntityId != PowerOwnerEntityId) DamagePhysical = 100;
-                Flags |= PowerResultMessageFlags.HasDamagePhysical;
+                if (TargetEntityId != PowerOwnerEntityId)
+                {
+                    DamagePhysical = (uint)Random.NextInt64(80, 120);
+                    Flags |= PowerResultMessageFlags.HasDamagePhysical;
+
+                    if (Random.NextSingle() < 0.35f)
+                    {
+                        DamagePhysical = (uint)(DamagePhysical * 1.5f);
+                        ResultFlags |= PowerResultFlags.Critical;
+                        if (Random.NextSingle() < 0.35f)
+                        {
+                            DamagePhysical = (uint)(DamagePhysical * 1.5f);
+                            ResultFlags |= PowerResultFlags.SuperCritical;
+                        }
+                    }
+                }
             }
         }
 
