@@ -22,53 +22,117 @@ Some of these parameters can be set automatically by using [Bifrost](https://git
 
 These require further checking for compatibility with various versions of the client.
 
-| Parameter              | Description                                                                                  | Values                                                                            |
-| ---------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| -defaultregion=        |                                                                                              |                                                                                   |
-| -defaultcell=          |                                                                                              |                                                                                   |
-| -startingregion=       |                                                                                              |                                                                                   |
-| -startingcell=         |                                                                                              |                                                                                   |
-| -envoverride=          |                                                                                              |                                                                                   |
-| -collectionname=       |                                                                                              |                                                                                   |
-| -emailaddress=         |                                                                                              |                                                                                   |
-| -password=             |                                                                                              |                                                                                   |
-| -twofactorauthcode=    |                                                                                              |                                                                                   |
-| -twofactorauthname=    |                                                                                              |                                                                                   |
-| -twofactortrustmachine |                                                                                              |                                                                                   |
-| -loginasplayer         |                                                                                              |                                                                                   |
-| -loginasanother        |                                                                                              |                                                                                   |
-| -nosave                |                                                                                              |                                                                                   |
-| -serveroverride=       |                                                                                              |                                                                                   |
-| -webtoken              |                                                                                              |                                                                                   |
-| -siteconfigurl=        | Specifies a custom SiteConfig URL.                                                           |                                                                                   |
-| -nosolidstate          | Disables Gazillion launcher integration.                                                     |                                                                                   |
-| -nosteam               | Disables Steam integration.                                                                  |                                                                                   |
-| -robocopy              | Launches the game in standalone mode (mutually exclusive with -solidstate and -steam).       |                                                                                   |
-| -solidstate            | Launches the game in Gazillion launcher mode (mutually exclusive with -robocopy and -steam). |                                                                                   |
-| -steam                 | Launches the game in Steam mode (mutually exclusive with -robocopy and -solidstate).         |                                                                                   |
-| -skipmotioncomics      |                                                                                              |                                                                                   |
-| -nocatalog             | Prevents store catalog from loading.                                                         |                                                                                   |
-| -norostercatalog       |                                                                                              |                                                                                   |
-| -displaynametoggle     |                                                                                              |                                                                                   |
-| -xpnumberstoggle       |                                                                                              |                                                                                   |
-| -floatingnumberstoggle |                                                                                              |                                                                                   |
-| -combatlogtoggle       |                                                                                              |                                                                                   |
-| -nouinotifications     |                                                                                              |                                                                                   |
-| -noaccount             | Disables account-related buttons on the login screen.                                        |                                                                                   |
-| -nologout              | Disables the logout button.                                                                  |                                                                                   |
-| -nonews                | Disables community news.                                                                     |                                                                                   |
-| -nooptions             | Disables the options buttons.                                                                |                                                                                   |
-| -nostore               | Disables the store buttons.                                                                  |                                                                                   |
-| -bypasspsn             |                                                                                              |                                                                                   |
-| -bypassconsoleauth     |                                                                                              |                                                                                   |
-| -streaming             |                                                                                              |                                                                                   |
-| -platform=             |                                                                                              | orbis, dingo                                                                      |
-| -enableTracing         | Enables verbose logging.                                                                     |                                                                                   |
-| -log                   | Enables verbose logging and shows a log window.                                              |                                                                                   |
-| -LoggingLevel=         | Specifies the logging level for verbose logging.                                             | NONE, CRITICAL, FATAL, ERROR, WARNING, INFORMATION, VERBOSE, EXTRA_VERBOSE, DEBUG |
-| -LoggingChannels=      | Specifies logging channels for verbose logging.                                              | See below for a full list of available channels.                                  |
+### ClientApp::Initialize
 
-### Logging Channels
+| Parameter               | Description                                                           | Values                                                                            |
+| ----------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| -asserts                |                                                                       |                                                                                   |
+| -verifies               |                                                                       |                                                                                   |
+| -uploadVerifies         | Calls `DebugSetWhetherToUploadVerifies`.                              |                                                                                   |
+| -enablecoredumps        | Calls `DebugEnableCoreDumps`.                                         |                                                                                   |
+| -disableminidumps       | Calls `DebugSetMinidumpCreationPolicy`.                               |                                                                                   |
+| -forceLocalStackWalking | Calls `DebugSetForcedLocalStackWalkPolicy`.                           |                                                                                   |
+| -enableTracing          | Enables verbose logging.                                              |                                                                                   |
+| -log                    | Enables verbose logging and shows a log window.                       |                                                                                   |
+| -LoggingLevel=          | Specifies the logging level for verbose logging.                      | NONE, CRITICAL, FATAL, ERROR, WARNING, INFORMATION, VERBOSE, EXTRA_VERBOSE, DEBUG |
+| -LoggingChannels=       | Specifies logging channels for verbose logging.                       | See below for a full list of available channels.                                  |
+| -suppressall            | Disables logging.                                                     |                                                                                   |
+| -maxload                | Forces loading of all prototypes during game database initialization. |                                                                                   |
+| -nocalligraphypak       | Disables Calligraphy pak file (Calligraphy.sip) loading.              |                                                                                   |
+| -novalidate             |                                                                       |                                                                                   |
+| -nohardwareinfo         |                                                                       |                                                                                   |
+
+### ClientAppSettingsPostCoreInit::Initialize
+
+| Parameter              | Description                                                                                  | Values       |
+| ---------------------- | -------------------------------------------------------------------------------------------- | ------------ |
+| -defaultregion=        |                                                                                              |              |
+| -defaultcell=          |                                                                                              |              |
+| -startingregion=       |                                                                                              |              |
+| -startingcell=         |                                                                                              |              |
+| -envoverride=          |                                                                                              |              |
+| -collectionname=       |                                                                                              |              |
+| -emailaddress=         |                                                                                              |              |
+| -password=             |                                                                                              |              |
+| -twofactorauthcode=    |                                                                                              |              |
+| -twofactorauthname=    |                                                                                              |              |
+| -twofactortrustmachine |                                                                                              |              |
+| -loginasplayer         |                                                                                              |              |
+| -loginasanother        |                                                                                              |              |
+| -nosave                |                                                                                              |              |
+| -serveroverride=       |                                                                                              |              |
+| -webtoken              |                                                                                              |              |
+| -siteconfigurl=        | Specifies a custom SiteConfig URL.                                                           |              |
+| -nosolidstate          | Disables Gazillion launcher integration.                                                     |              |
+| -nosteam               | Disables Steam integration.                                                                  |              |
+| -robocopy              | Launches the game in standalone mode (mutually exclusive with -solidstate and -steam).       |              |
+| -solidstate            | Launches the game in Gazillion launcher mode (mutually exclusive with -robocopy and -steam). |              |
+| -steam                 | Launches the game in Steam mode (mutually exclusive with -robocopy and -solidstate).         |              |
+| -skipmotioncomics      |                                                                                              |              |
+| -nocatalog             | Prevents store catalog from loading.                                                         |              |
+| -norostercatalog       |                                                                                              |              |
+| -displaynametoggle     |                                                                                              |              |
+| -xpnumberstoggle       |                                                                                              |              |
+| -floatingnumberstoggle |                                                                                              |              |
+| -combatlogtoggle       |                                                                                              |              |
+| -nouinotifications     |                                                                                              |              |
+| -noaccount             | Disables account-related buttons on the login screen.                                        |              |
+| -nologout              | Disables the logout button.                                                                  |              |
+| -nonews                | Disables community news.                                                                     |              |
+| -nooptions             | Disables the options buttons.                                                                |              |
+| -nostore               | Disables the store buttons.                                                                  |              |
+| -bypasspsn             |                                                                                              |              |
+| -bypassconsoleauth     |                                                                                              |              |
+| -streaming             |                                                                                              |              |
+| -platform=             |                                                                                              | orbis, dingo |
+
+### SiteConfig::ParseCommandLine
+
+| Parameter    | Description | Values |
+| ------------ | ----------- | ------ |
+| -authticket= |             |        |
+| -authserver= |             |        |
+| -authurl=    |             |        |
+
+### ClientGame::Initialize
+
+| Parameter   | Description | Values |
+| ----------- | ----------- | ------ |
+| -nooverwolf |             |        |
+
+### Atlas::Initialize
+
+| Parameter     | Description | Values |
+| ------------- | ----------- | ------ |
+| -nomapmarkers |             |        |
+
+### AudioManager::Initialize
+
+| Parameter      | Description | Values |
+| -------------- | ----------- | ------ |
+| -nomusic       |             |        |
+| -foleyineditor |             |        |
+
+### UnrealAudioManager::Initialize
+
+| Parameter          | Description | Values |
+| ------------------ | ----------- | ------ |
+| -audioglobalfocus  |             |        |
+| -audiofilepackages |             |        |
+
+### UnrealGameAdapter::Initialize
+
+| Parameter        | Description | Values |
+| ---------------- | ----------- | ------ |
+| -dependencygraph |             |        |
+
+### UnrealGameAdapter::SendSteamUserInfo
+
+| Parameter               | Description | Values |
+| ----------------------- | ----------- | ------ |
+| -steamachievementupdate |             |        |
+
+## Logging Channels
 
 You can specify channels for verbose logging using the following syntax: `-LoggingChannels=-ALL,+GAME`. Available channels:
 
