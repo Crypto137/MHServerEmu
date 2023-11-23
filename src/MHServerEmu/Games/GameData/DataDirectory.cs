@@ -234,8 +234,10 @@ namespace MHServerEmu.Games.GameData
 
         private void CreatePrototypeDataRefsForDirectory(PakFile resourceFile)
         {
-            // Not yet properly implemented
-            // Todo: after combining both sips into PakfileSystem filter files here by "Resource/" prefix
+            // If we were to support older versions of the game where all data is stored in a single pak,
+            // we would have to implement file filtering by prefix here. See PakFileSystem::GetResourceFiles()
+            // for reference.
+
             foreach (PakEntry entry in resourceFile.Entries)
                 AddResource(entry.FilePath, entry.Data);
         }

@@ -34,29 +34,40 @@
     public enum AssetTypeRecordFlags : byte
     {
         None        = 0,
-        Protected   = 1 << 0    // AssetDirectory::AssetTypeIsProtected
+        Protected   = 1 << 0    // AssetDirectory::AssetTypeIsProtected()
     }
 
     [Flags]
     public enum AssetValueFlags : byte
     {
         None        = 0,
-        Protected   = 1 << 0    // AssetType::AssetIsProtected
+        Protected   = 1 << 0    // AssetType::AssetIsProtected()
     }
 
     [Flags]
     public enum BlueprintRecordFlags : byte
     {
         None        = 0,
-        Protected   = 1 << 0    // DataDirectory::BlueprintIsProtected
+        Protected   = 1 << 0    // DataDirectory::BlueprintIsProtected()
     }
 
     [Flags]
     public enum PrototypeRecordFlags : byte
     {
         None        = 0,
-        Abstract    = 1 << 0,   // DataDirectory::PrototypeIsAbstract
-        Protected   = 1 << 1    // DataDirectory::PrototypeIsProtected
+        Abstract    = 1 << 0,   // DataDirectory::PrototypeIsAbstract()
+        Protected   = 1 << 1,   // DataDirectory::PrototypeIsProtected()
+        EditorOnly  = 1 << 2,   // DataDirectory::isEditorOnlyByClassId(), seems to be set for NaviFragmentPrototype only
+    }
+
+    [Flags]
+    public enum PrototypeIterateFlags : byte    // PrototypeIterator::advanceToValid(), 
+    {
+        None            = 0,
+        Flag0           = 1 << 0,   // Unused?
+        NoAbstract      = 1 << 1,
+        ApprovedOnly    = 1 << 2,
+        WithEditorOnly  = 1 << 3    // Records that have EditorOnly set are skipped if this is not set
     }
 
     // Enums for specific data for easy access
