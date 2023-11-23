@@ -66,25 +66,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 FieldGroups[i] = new(reader);
         }
 
-        public PrototypeFieldGroup GetFieldGroup(PrototypeId defaultPrototypeId)
+        public PrototypeFieldGroup GetFieldGroup(BlueprintId blueprintId)
         {
             if (FieldGroups == null) return null;
-            return FieldGroups.FirstOrDefault(entry => entry.DeclaringBlueprintId == defaultPrototypeId);
+            return FieldGroups.FirstOrDefault(entry => entry.DeclaringBlueprintId == blueprintId);
         }
 
-        public PrototypeFieldGroup GetFieldGroup(DefaultPrototypeId defaultPrototypeId) => GetFieldGroup((PrototypeId)defaultPrototypeId);
+        public PrototypeFieldGroup GetFieldGroup(HardcodedBlueprintId blueprintId) => GetFieldGroup((BlueprintId)blueprintId);
     }
 
     public class PrototypeFieldGroup
     {
-        public PrototypeId DeclaringBlueprintId { get; }
+        public BlueprintId DeclaringBlueprintId { get; }
         public byte BlueprintCopyNumber { get; }
         public PrototypeSimpleField[] SimpleFields { get; }
         public PrototypeListField[] ListFields { get; }
 
         public PrototypeFieldGroup(BinaryReader reader)
         {
-            DeclaringBlueprintId = (PrototypeId)reader.ReadUInt64();
+            DeclaringBlueprintId = (BlueprintId)reader.ReadUInt64();
             BlueprintCopyNumber = reader.ReadByte();
 
             SimpleFields = new PrototypeSimpleField[reader.ReadUInt16()];

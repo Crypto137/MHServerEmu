@@ -4,13 +4,15 @@ using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Properties
 {
+    // Old experimental hacky code below, to be properly re-implemented
+
     public class PropertyInfoTable
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private Dictionary<PropertyEnum, PropertyInfoPrototype> _propertyInfoDict = new();
 
-        public PropertyInfoTable(DataDirectory calligraphy)
+        public PropertyInfoTable(DataDirectory dataDirectory)
         {
             Dictionary<PropertyEnum, PropertyPrototype> mixinDict = new();
 
@@ -26,7 +28,8 @@ namespace MHServerEmu.Games.Properties
                 if (filePath.Contains("Property/Info"))
                 {
                     PropertyEnum property = (PropertyEnum)Enum.Parse(typeof(PropertyEnum), Path.GetFileNameWithoutExtension(filePath));
-                    PropertyInfoPrototype prototype = new(calligraphy.GetBlueprintDefaultPrototype(filePath));
+                    PrototypeId defaultPrototypeId = dataDirectory.GetBlueprintDefaultPrototype(blueprintId);
+                    PropertyInfoPrototype prototype = new(GameDatabase.GetPrototype<Prototype>(defaultPrototypeId));
 
                     _propertyInfoDict.Add(property, prototype);
                 }
@@ -34,7 +37,7 @@ namespace MHServerEmu.Games.Properties
                 {
                     string fileName = Path.GetFileNameWithoutExtension(filePath);
                     PropertyEnum property = (PropertyEnum)Enum.Parse(typeof(PropertyEnum), fileName.Substring(0, fileName.Length - 4)); // -4 to remove Prop at the end
-                    PropertyPrototype mixin = new(calligraphy.GetBlueprintDefaultPrototype(filePath));
+                    PropertyPrototype mixin = new((PrototypeId)blueprintId);
                     mixinDict.Add(property, mixin);
                 }
             }
@@ -42,14 +45,17 @@ namespace MHServerEmu.Games.Properties
             // Manually add property info missed by the loop
             try
             {
+                // Property/Info/DisplayNameOverride.prototype
                 _propertyInfoDict.Add(PropertyEnum.DisplayNameOverride,
-                    new(calligraphy.GetPrototype<Prototype>(GameDatabase.GetPrototypeRefByName("Property/Info/DisplayNameOverride.prototype"))));
+                    new(dataDirectory.GetPrototype<Prototype>((PrototypeId)14845682279047958969)));
 
+                // Property/Mixin/BewareOfTiger/MissileAlwaysCollides.blueprint
                 _propertyInfoDict.Add(PropertyEnum.MissileAlwaysCollides,
-                    new(calligraphy.GetBlueprintDefaultPrototype("Property/Mixin/BewareOfTiger/MissileAlwaysCollides.blueprint")));
+                    new(dataDirectory.GetPrototype<Prototype>((PrototypeId)9507546413010851972)));
 
+                // Property/Mixin/BewareOfTiger/StolenPowerAvailable.blueprint
                 _propertyInfoDict.Add(PropertyEnum.StolenPowerAvailable,
-                    new(calligraphy.GetBlueprintDefaultPrototype("Property/Mixin/BewareOfTiger/StolenPowerAvailable.blueprint")));
+                    new(dataDirectory.GetPrototype<Prototype>((PrototypeId)11450873518952749073)));
             }
             catch
             {

@@ -123,7 +123,7 @@ namespace MHServerEmu.Games.GameData
         {
             var prototypeId = (PrototypeId)reader.ReadUInt64();
             var prototypeGuid = (PrototypeGuid)reader.ReadUInt64();
-            var blueprintId = (PrototypeId)reader.ReadUInt64();
+            var blueprintId = (BlueprintId)reader.ReadUInt64();
             var flags = (PrototypeRecordFlags)reader.ReadByte();
             string filePath = reader.ReadFixedString16().Replace('\\', '/');
 
@@ -155,7 +155,7 @@ namespace MHServerEmu.Games.GameData
             _blueprintRecordDict.Add(id, new(blueprint, flags));
         }
 
-        private void AddCalligraphyPrototype(PrototypeId prototypeId, PrototypeGuid prototypeGuid, PrototypeId blueprintId, PrototypeRecordFlags flags, string filePath, PakFile pak)
+        private void AddCalligraphyPrototype(PrototypeId prototypeId, PrototypeGuid prototypeGuid, BlueprintId blueprintId, PrototypeRecordFlags flags, string filePath, PakFile pak)
         {
             // Create a dataRef
             GameDatabase.PrototypeRefManager.AddDataRef(prototypeId, filePath);
@@ -189,7 +189,7 @@ namespace MHServerEmu.Games.GameData
             {
                 PrototypeId = prototypeId,
                 PrototypeGuid = PrototypeGuid.Invalid,
-                BlueprintId = PrototypeId.Invalid,
+                BlueprintId = BlueprintId.Invalid,
                 Flags = 0,
                 IsCalligraphyPrototype = false
             };
@@ -260,6 +260,23 @@ namespace MHServerEmu.Games.GameData
             return record.Blueprint;
         }
 
+        public BlueprintId GetPrototypeBlueprintDataRef(PrototypeId prototypeId)
+        {
+            if (prototypeId == PrototypeId.Invalid) return BlueprintId.Invalid;
+
+            var record = GetPrototypeDataRefRecord(prototypeId);
+            if (record == null) return BlueprintId.Invalid;
+
+            return record.BlueprintId;
+        }
+
+        public Blueprint GetPrototypeBlueprint(PrototypeId prototypeId)
+        {
+            BlueprintId blueprintId = GetPrototypeBlueprintDataRef(prototypeId);
+            if (blueprintId == BlueprintId.Invalid) return null;
+            return GetBlueprint(blueprintId);
+        }
+
         public T GetPrototype<T>(PrototypeId id)
         {
             var record = GetPrototypeDataRefRecord(id);
@@ -269,19 +286,12 @@ namespace MHServerEmu.Games.GameData
             return (T)record.Prototype;
         }
 
-        public Prototype GetBlueprintDefaultPrototype(Blueprint blueprint) => GetPrototype<Prototype>(blueprint.DefaultPrototypeId);
-        public Prototype GetBlueprintDefaultPrototype(BlueprintId blueprintId) => GetBlueprintDefaultPrototype(GetBlueprint(blueprintId));
-        public Prototype GetBlueprintDefaultPrototype(string blueprintPath) => GetBlueprintDefaultPrototype(
-            GetBlueprint(GameDatabase.BlueprintRefManager.GetDataRefByName(blueprintPath)));
-
-        public Blueprint GetPrototypeBlueprint(Prototype prototype)
+        public PrototypeId GetBlueprintDefaultPrototype(BlueprintId blueprintId)
         {
-            while (prototype.Header.ReferenceType != 0)                     // Go up until we get to the parentless prototype (.defaults)
-                prototype = GetPrototype<Prototype>(prototype.Header.ReferenceType);
-            return _prototypeBlueprintDict[prototype];          // Use .defaults prototype as a key to get the blueprint for it
+            var blueprint = GetBlueprint(blueprintId);
+            if (blueprint == null) return PrototypeId.Invalid;
+            return blueprint.DefaultPrototypeId;
         }
-
-        public Blueprint GetPrototypeBlueprint(PrototypeId prototypeId) => GetPrototypeBlueprint(GetPrototype<Prototype>(prototypeId));
 
         public PrototypeId GetPrototypeFromEnumValue(ulong enumValue, PrototypeEnumType type) => _prototypeEnumManager.GetPrototypeFromEnumValue(enumValue, type);
         public ulong GetPrototypeEnumValue(PrototypeId prototypeId, PrototypeEnumType type) => _prototypeEnumManager.GetPrototypeEnumValue(prototypeId, type);
@@ -338,7 +348,7 @@ namespace MHServerEmu.Games.GameData
         {
             public PrototypeId PrototypeId { get; set; }
             public PrototypeGuid PrototypeGuid { get; set; }
-            public PrototypeId BlueprintId { get; set; }
+            public BlueprintId BlueprintId { get; set; }
             public PrototypeRecordFlags Flags { get; set; }
             public bool IsCalligraphyPrototype { get; set; }
             public object Prototype { get; set; }

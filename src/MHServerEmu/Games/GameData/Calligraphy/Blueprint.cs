@@ -5,7 +5,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
     public class Blueprint
     {                    
         public string RuntimeBinding { get; }                           // Name of the C++ class that handles prototypes that use this blueprint
-        public PrototypeId DefaultPrototypeId { get; }                        // .defaults prototype file id
+        public PrototypeId DefaultPrototypeId { get; }                  // .defaults prototype file id
         public BlueprintReference[] Parents { get; }
         public BlueprintReference[] ContributingBlueprints { get; }
         public BlueprintMember[] Members { get; }                       // Field definitions for prototypes that use this blueprint  
@@ -42,12 +42,12 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
     public readonly struct BlueprintReference
     {
-        public PrototypeId BlueprintId { get; }
+        public BlueprintId BlueprintId { get; }
         public byte NumOfCopies { get; }
 
         public BlueprintReference(BinaryReader reader)
         {
-            BlueprintId = (PrototypeId)reader.ReadUInt64();
+            BlueprintId = (BlueprintId)reader.ReadUInt64();
             NumOfCopies = reader.ReadByte();
         }
     }

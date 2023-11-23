@@ -20,9 +20,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int ParamCount { get; } = 0;
         public PropertyParam[] Params { get; } = new PropertyParam[MaxParamCount];
 
-        public PropertyPrototype(Prototype prototype)
+        public PropertyPrototype(PrototypeId prototypeId)
         {
-            Blueprint blueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(prototype);
+            Prototype prototype = GameDatabase.GetPrototype<Prototype>(prototypeId);
+            Blueprint blueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(prototypeId);
             Array.Fill(Params, new());
 
             foreach (PrototypeSimpleField field in prototype.FieldGroups[0].SimpleFields)

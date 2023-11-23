@@ -62,9 +62,9 @@
     // Enums for specific data for easy access
 
     /// <summary>
-    /// Represents a hardcoded default prototype id.
+    /// Represents a hardcoded blueprint id.
     /// </summary>
-    public enum DefaultPrototypeId : ulong
+    public enum HardcodedBlueprintId : ulong
     {
         WorldEntity = 7901305308382563236,
         ThrowableProp = 14997899060839977779,

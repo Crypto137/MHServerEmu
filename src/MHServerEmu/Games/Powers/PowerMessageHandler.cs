@@ -57,9 +57,9 @@ namespace MHServerEmu.Games.Powers
             return Array.Empty<QueuedGameMessage>();
         }
 
-        private bool PowerHasKeyword(PrototypeId powerId, DefaultPrototypeId Keyword)
+        private bool PowerHasKeyword(PrototypeId powerId, HardcodedBlueprintId Keyword)
         {
-            PrototypeFieldGroup Power = powerId.GetPrototype().GetFieldGroup(DefaultPrototypeId.Power);
+            PrototypeFieldGroup Power = powerId.GetPrototype().GetFieldGroup(HardcodedBlueprintId.Power);
             if (Power == null) return false;
             PrototypeListField Keywords = Power.GetListField(FieldId.Keywords);
             if (Keywords == null) return false;
@@ -112,7 +112,7 @@ namespace MHServerEmu.Games.Powers
             if (powerPrototypePath.Contains("ThrowablePowers/"))
             {
                 Logger.Trace($"AddEvent EndThrowing for {tryActivatePower.PowerPrototypeId}");
-                PrototypeFieldGroup Power = powerPrototypeId.GetPrototype().GetFieldGroup(DefaultPrototypeId.Power);
+                PrototypeFieldGroup Power = powerPrototypeId.GetPrototype().GetFieldGroup(HardcodedBlueprintId.Power);
                 long animationTimeMS = 1100;
                 if (Power != null)
                 {
@@ -124,9 +124,9 @@ namespace MHServerEmu.Games.Powers
             }
             else if (powerPrototypePath.Contains("EmmaFrost/"))
             {
-                if (PowerHasKeyword(powerPrototypeId, DefaultPrototypeId.DiamondFormActivatePower))
+                if (PowerHasKeyword(powerPrototypeId, HardcodedBlueprintId.DiamondFormActivatePower))
                     _eventManager.AddEvent(client, EventEnum.DiamondFormActivate, 0, tryActivatePower.PowerPrototypeId);
-                else if (PowerHasKeyword(powerPrototypeId, DefaultPrototypeId.Mental))
+                else if (PowerHasKeyword(powerPrototypeId, HardcodedBlueprintId.Mental))
                     _eventManager.AddEvent(client, EventEnum.DiamondFormDeactivate, 0, tryActivatePower.PowerPrototypeId);
             }
             else if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.Magik.Ultimate)

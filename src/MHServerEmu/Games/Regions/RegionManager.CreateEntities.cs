@@ -35,9 +35,9 @@ namespace MHServerEmu.Games.Regions
         public static float GetEntityFloor(PrototypeId prototypeId)
         {
             Prototype entity = prototypeId.GetPrototype();
-            if (entity.Header.ReferenceType == (PrototypeId)DefaultPrototypeId.NPCTemplateHub)
+            if (entity.Header.ReferenceType == (PrototypeId)HardcodedBlueprintId.NPCTemplateHub)
                 return 46f; // AgentUntargetableInvulnerable.WorldEntity.Bounds.CapsuleBounds.HeightFromCenter
-            PrototypeFieldGroup TestWorldEntity = entity.GetFieldGroup(DefaultPrototypeId.WorldEntity);
+            PrototypeFieldGroup TestWorldEntity = entity.GetFieldGroup(HardcodedBlueprintId.WorldEntity);
             if (TestWorldEntity == null)
                 return GetEntityFloor(entity.Header.ReferenceType);
 
@@ -47,12 +47,12 @@ namespace MHServerEmu.Games.Regions
 
             Prototype bounds = (Prototype)TestBounds.Value;
             float height = 0f;
-            if (bounds.Header.ReferenceType == (PrototypeId)DefaultPrototypeId.BoxBounds || bounds.Header.ReferenceType == (PrototypeId)DefaultPrototypeId.ObjectSmall)
-                height = (float)(double)bounds.GetFieldGroup(DefaultPrototypeId.BoxBounds).GetField(FieldId.Height).Value;
-            else if (bounds.Header.ReferenceType == (PrototypeId)DefaultPrototypeId.SphereBounds)
-                height = (float)(double)bounds.GetFieldGroup(DefaultPrototypeId.SphereBounds).GetField(FieldId.Radius).Value;
-            else if (bounds.Header.ReferenceType == (PrototypeId)DefaultPrototypeId.CapsuleBounds)
-                height = (float)(double)bounds.GetFieldGroup(DefaultPrototypeId.CapsuleBounds).GetField(FieldId.HeightFromCenter).Value * 2f;
+            if (bounds.Header.ReferenceType == (PrototypeId)HardcodedBlueprintId.BoxBounds || bounds.Header.ReferenceType == (PrototypeId)HardcodedBlueprintId.ObjectSmall)
+                height = (float)(double)bounds.GetFieldGroup(HardcodedBlueprintId.BoxBounds).GetField(FieldId.Height).Value;
+            else if (bounds.Header.ReferenceType == (PrototypeId)HardcodedBlueprintId.SphereBounds)
+                height = (float)(double)bounds.GetFieldGroup(HardcodedBlueprintId.SphereBounds).GetField(FieldId.Radius).Value;
+            else if (bounds.Header.ReferenceType == (PrototypeId)HardcodedBlueprintId.CapsuleBounds)
+                height = (float)(double)bounds.GetFieldGroup(HardcodedBlueprintId.CapsuleBounds).GetField(FieldId.HeightFromCenter).Value * 2f;
             else Logger.Warn($"ReferenceType = {bounds.Header.ReferenceType}");
 
             return height / 2;
@@ -60,10 +60,10 @@ namespace MHServerEmu.Games.Regions
 
         public static bool GetSnapToFloorOnSpawn(PrototypeId prototypeId)
         {
-            if (prototypeId == (PrototypeId)DefaultPrototypeId.ThrowableProp) return true;
-            if (prototypeId == (PrototypeId)DefaultPrototypeId.DestructibleProp) return true;
+            if (prototypeId == (PrototypeId)HardcodedBlueprintId.ThrowableProp) return true;
+            if (prototypeId == (PrototypeId)HardcodedBlueprintId.DestructibleProp) return true;
             Prototype entity = prototypeId.GetPrototype();
-            PrototypeFieldGroup TestWorldEntity = entity.GetFieldGroup(DefaultPrototypeId.WorldEntity);
+            PrototypeFieldGroup TestWorldEntity = entity.GetFieldGroup(HardcodedBlueprintId.WorldEntity);
             if (TestWorldEntity == null) 
                 return GetSnapToFloorOnSpawn(entity.Header.ReferenceType);
             PrototypeSimpleField TestSnapToFloorOnSpawn = TestWorldEntity.GetField(FieldId.SnapToFloorOnSpawn);
@@ -76,8 +76,8 @@ namespace MHServerEmu.Games.Regions
         {
             PrototypeId FindArea(PrototypeId target)
             {
-                if (target == (PrototypeId)DefaultPrototypeId.RegionConnectionTarget) return 0;
-                var area = (PrototypeId)target.GetPrototype().GetFieldGroup(DefaultPrototypeId.RegionConnectionTarget).GetFieldDef(FieldId.Area);
+                if (target == (PrototypeId)HardcodedBlueprintId.RegionConnectionTarget) return 0;
+                var area = (PrototypeId)target.GetPrototype().GetFieldGroup(HardcodedBlueprintId.RegionConnectionTarget).GetFieldDef(FieldId.Area);
                 if (area == PrototypeId.Invalid) return FindArea(target.GetPrototype().Header.ReferenceType);
                 return area;
             }
@@ -87,10 +87,10 @@ namespace MHServerEmu.Games.Regions
 
             foreach (PrototypeId connection in connectionNode)
             {
-                var target = (PrototypeId)connection.GetPrototype().GetFieldGroup(DefaultPrototypeId.RegionConnectionNode).GetField(FieldId.Target).Value;
-                PrototypeFieldGroup entryTarget = target.GetPrototype().GetFieldGroup(DefaultPrototypeId.RegionConnectionTarget);
-                var origin = (PrototypeId)connection.GetPrototype().GetFieldGroup(DefaultPrototypeId.RegionConnectionNode).GetField(FieldId.Origin).Value;
-                PrototypeFieldGroup entryOrigin = origin.GetPrototype().GetFieldGroup(DefaultPrototypeId.RegionConnectionTarget);
+                var target = (PrototypeId)connection.GetPrototype().GetFieldGroup(HardcodedBlueprintId.RegionConnectionNode).GetField(FieldId.Target).Value;
+                PrototypeFieldGroup entryTarget = target.GetPrototype().GetFieldGroup(HardcodedBlueprintId.RegionConnectionTarget);
+                var origin = (PrototypeId)connection.GetPrototype().GetFieldGroup(HardcodedBlueprintId.RegionConnectionNode).GetField(FieldId.Origin).Value;
+                PrototypeFieldGroup entryOrigin = origin.GetPrototype().GetFieldGroup(HardcodedBlueprintId.RegionConnectionTarget);
                 nodes.Add(new TargetObject
                 {
                     Area = FindArea(target),
