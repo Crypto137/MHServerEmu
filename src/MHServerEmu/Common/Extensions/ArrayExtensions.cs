@@ -1,4 +1,5 @@
-﻿using Google.ProtocolBuffers;
+﻿using System.Text;
+using Google.ProtocolBuffers;
 
 namespace MHServerEmu.Common.Extensions
 {
@@ -97,6 +98,21 @@ namespace MHServerEmu.Common.Extensions
                 bytes[i] = BitReversalLookupTable[bytes[i]];
 
             return BitConverter.ToUInt64(bytes);
+        }
+
+        #endregion
+
+        #region Misc
+
+        /// <summary>
+        /// Converts a data directory path to a Calligraphy path. Used before hashing to get a data id.
+        /// </summary>
+        public static string ToCalligraphyPath(this string path)
+        {
+            StringBuilder sb = new(path);
+            sb.Replace('.', '?');
+            sb.Replace('/', '.');
+            return sb.ToString();
         }
 
         #endregion
