@@ -6,7 +6,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.GameData
 {
-    public enum DataOrigin
+    public enum DataOrigin : byte
     {
         Unknown,        // Default value returned by DataDirectory::GetDataOrigin()
         Calligraphy,

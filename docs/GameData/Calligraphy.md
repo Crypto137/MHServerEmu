@@ -51,7 +51,7 @@ struct GenericRecord
 }
 
 [Flags]
-enum GenericRecordFlags
+enum GenericRecordFlags : byte
 {
     None        = 0,
     Protected   = 1 << 0
@@ -73,7 +73,7 @@ struct PrototypeRecord
 }
 
 [Flags]
-enum PrototypeRecordFlags
+enum PrototypeRecordFlags : byte
 {
     None        = 0,
     Abstract    = 1 << 0,
@@ -134,7 +134,7 @@ struct AssetValue
 }
 
 [Flags]
-enum AssetValueFlags
+enum AssetValueFlags : byte
 {
     None        = 0,
     Protected   = 1 << 0
