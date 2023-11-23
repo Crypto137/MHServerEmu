@@ -96,7 +96,7 @@ namespace MHServerEmu.Games.GameData
 
             for (int i = 0; i < allEnumValues.Length; i++)
             {
-                if (dataDirectory.IsCalligraphyPrototype(allEnumValues[i]))   // skip resource prototypes
+                if (dataDirectory.GetDataOrigin(allEnumValues[i]) == DataOrigin.Calligraphy)   // Enumerate only Calligraphy prototypes
                 {
                     Blueprint blueprint = dataDirectory.GetPrototypeBlueprint(allEnumValues[i]);
 
