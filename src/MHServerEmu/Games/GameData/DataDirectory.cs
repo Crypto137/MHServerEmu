@@ -36,8 +36,6 @@ namespace MHServerEmu.Games.GameData
         private readonly Dictionary<PrototypeId, PrototypeDataRefRecord> _prototypeRecordDict = new();
         private readonly Dictionary<PrototypeGuid, PrototypeId> _prototypeGuidToDataRefDict = new();
 
-        private readonly Dictionary<Prototype, Blueprint> _prototypeBlueprintDict = new();              // .defaults prototype -> blueprint
-
         // Temporary helper class for getting prototype enums until we implement prototype class hierarchy properly
         private PrototypeEnumManager _prototypeEnumManager;
 
@@ -46,6 +44,20 @@ namespace MHServerEmu.Games.GameData
         public ReplacementDirectory ReplacementDirectory { get; } = new();
 
         public DataDirectory(PakFile calligraphyPak, PakFile resourcePak)
+        {
+            // Load Calligraphy data
+            LoadCalligraphyDataFramework(calligraphyPak);
+
+            // Load resource prototypes
+            CreatePrototypeDataRefsForDirectory(resourcePak);
+
+            // Initialize hierarchy (old)
+            InitializeHierarchyCache();
+        }
+
+        #region Initialization
+
+        private void LoadCalligraphyDataFramework(PakFile calligraphyPak)
         {
             // Load all directories
             for (int i = 0; i < DataDirectoryFiles.Length; i++)
@@ -75,8 +87,7 @@ namespace MHServerEmu.Games.GameData
 
                         case "PDR":     // Prototypes
                             for (int j = 0; j < recordCount; j++) ReadPrototypeDirectoryEntry(reader, calligraphyPak);
-                            CreatePrototypeDataRefsForDirectory(resourcePak);  // Load resource prototypes
-                            Logger.Info($"Loaded {_prototypeRecordDict.Count} prototype files");
+                            Logger.Info($"Loaded {_prototypeRecordDict.Count} Calligraphy prototype files");
                             break;
 
                         case "RDR":     // Replacement
@@ -85,12 +96,7 @@ namespace MHServerEmu.Games.GameData
                     }
                 }
             }
-
-            // old hierarchy init
-            InitializeHierarchyCache();
         }
-
-        #region Initialization
 
         private void ReadTypeDirectoryEntry(BinaryReader reader, PakFile pak)
         {
@@ -127,7 +133,7 @@ namespace MHServerEmu.Games.GameData
             LoadBlueprint(dataId, guid, flags, pak);
         }
 
-        public void ReadPrototypeDirectoryEntry(BinaryReader reader, PakFile pak)
+        private void ReadPrototypeDirectoryEntry(BinaryReader reader, PakFile pak)
         {
             var prototypeId = (PrototypeId)reader.ReadUInt64();
             var prototypeGuid = (PrototypeGuid)reader.ReadUInt64();
@@ -186,6 +192,18 @@ namespace MHServerEmu.Games.GameData
             record.Prototype = prototypeFile.Prototype;
         }
 
+        private void CreatePrototypeDataRefsForDirectory(PakFile resourceFile)
+        {
+            // If we were to support older versions of the game where all data is stored in a single pak,
+            // we would have to implement file filtering by prefix here. See PakFileSystem::GetResourceFiles()
+            // for reference.
+
+            foreach (PakEntry entry in resourceFile.Entries)
+                AddResource(entry.FilePath, entry.Data);
+
+            Logger.Info($"Loaded {resourceFile.Entries.Length} resource prototype files");
+        }
+
         private void AddResource(string filePath, byte[] data)
         {
             // Create a dataRef
@@ -222,24 +240,19 @@ namespace MHServerEmu.Games.GameData
 
         private void InitializeHierarchyCache()
         {
-            // not yet properly implemented
+            // Not yet properly implemented
 
-            // .defaults prototype -> blueprint
-            foreach (var kvp in _blueprintRecordDict)
-                _prototypeBlueprintDict.Add(GetPrototype<Prototype>(kvp.Value.Blueprint.DefaultPrototypeId), kvp.Value.Blueprint);
-
-            // enums
+            // Initialize enums
             _prototypeEnumManager = new(this);
         }
 
-        private void CreatePrototypeDataRefsForDirectory(PakFile resourceFile)
+        public bool Verify()
         {
-            // If we were to support older versions of the game where all data is stored in a single pak,
-            // we would have to implement file filtering by prefix here. See PakFileSystem::GetResourceFiles()
-            // for reference.
-
-            foreach (PakEntry entry in resourceFile.Entries)
-                AddResource(entry.FilePath, entry.Data);
+            return AssetDirectory.AssetCount > 0
+                && CurveDirectory.RecordCount > 0
+                && _blueprintRecordDict.Count > 0
+                && _prototypeRecordDict.Count > 0
+                && ReplacementDirectory.RecordCount > 0;
         }
 
         #endregion
@@ -325,19 +338,6 @@ namespace MHServerEmu.Games.GameData
             }
 
             return record;
-        }
-
-        #endregion
-
-        #region Old Extras
-
-        public bool Verify()
-        {
-            return AssetDirectory.AssetCount > 0
-                && CurveDirectory.RecordCount > 0
-                && _blueprintRecordDict.Count > 0
-                && _prototypeRecordDict.Count > 0
-                && ReplacementDirectory.RecordCount > 0;
         }
 
         #endregion
