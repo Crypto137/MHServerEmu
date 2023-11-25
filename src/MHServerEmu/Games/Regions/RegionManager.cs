@@ -124,7 +124,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-5024f, -5024f, -2048f),
                         new(5024f, 5024f, 2048f),
-                        new(10, DifficultyTierPrototypeId.Normal));
+                        new(10, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototypeId.AvengersTowerHubArea, new(), true);
                     area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/DistrictCells/Avengers_Tower/AvengersTower_HUB.cell"), new()));
@@ -162,7 +162,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-5024f, -5024f, -2048f),
                         new(5024f, 5024f, 2048f),
-                        new(10, DifficultyTierPrototypeId.Normal));
+                        new(10, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototypeId.NPEAvengersTowerHubArea, new(), true);
                     area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/DistrictCells/Avengers_Tower/AvengersTowerNPE_HUB.cell"), new()));
@@ -188,7 +188,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-3250f, -3250f, -3250f),
                         new(3250f, 3250f, 3250f),
-                        new(10, DifficultyTierPrototypeId.Normal));
+                        new(10, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototypeId.TrainingRoomSHIELDArea, new(), true);
                     area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/DistrictCells/Training_Rooms/TrainingRoom_SHIELD_B.cell"), new()));
@@ -212,7 +212,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-2432.0f, -2432.0f, -2432.0f),
                         new(2432.0f, 2432.0f, 2432.0f),
-                        new(10, DifficultyTierPrototypeId.Normal));
+                        new(10, DifficultyTier.Normal));
 
                         area = new(1,(AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/EndGame/TierX/HoloSim/HoloSimAArea.prototype"), new(), true);
                         area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/EndGame/DR_Survival_A.cell"), new()));
@@ -237,7 +237,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-6144f, -5120f, -1043f),
                         new(4096f, 9216f, 1024f),
-                        new(28, DifficultyTierPrototypeId.Normal));
+                        new(28, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototypeId.XaviersMansionArea, new(), true);
 
@@ -271,7 +271,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-4352f, -4352f, -4352f),
                         new(4352f, 4352f, 4352f),
-                        new(49, DifficultyTierPrototypeId.Normal));
+                        new(49, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototypeId.HelicarrierArea, new(), true);
                     area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/DistrictCells/Helicarrier/Helicarrier_HUB.cell"), new()));
@@ -296,7 +296,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-1152f, -5760f, -1152f),
                         new(5760f, 8064f, 1152f),
-                        new(58, DifficultyTierPrototypeId.Normal));
+                        new(58, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototypeId.AsgardiaArea, new(), true);
 
@@ -325,7 +325,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-11319f, -12336f, -2304f),
                         new(11319f, 12336f, 2304f),
-                        new(60, DifficultyTierPrototypeId.Normal));
+                        new(60, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototypeId.GenoshaHUBArea, new(), true);
 
@@ -366,7 +366,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-1664f, -1664f, -1664f),
                         new(1664f, 1664f, 1664f),
-                        new(63, DifficultyTierPrototypeId.Heroic));
+                        new(63, DifficultyTier.Heroic));
 
                     area = new(1, AreaPrototypeId.DangerRoomHubArea, new(), true);
                     area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/EndGame/EndlessDungeon/DangerRoom_LaunchTerminal.cell"), new()));
@@ -391,7 +391,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-2304f, -1152f, -1152f),
                         new(2304f, 1152f, 1152f),
-                        new(60, DifficultyTierPrototypeId.Normal));
+                        new(60, DifficultyTier.Normal));
 
                     area = new(2, AreaPrototypeId.InvasionSafeAbodeArea2, new(1152f, 0f, 0f), true);
                     area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/SecretInvasion/MadripoorInvasion/Invasion_SafehouseWithin.cell"), new()));
@@ -417,7 +417,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-1152.0f, -1152.0f, -1152.0f),
                         new(17280.0f, 17280.0f, 1152.0f),
-                        new(20, DifficultyTierPrototypeId.Normal));
+                        new(20, DifficultyTier.Normal));
 
                     area = new(1, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/EndGame/Terminals/Green/TimesSquare/Areas/DailyGTimesSquareArea.prototype"), new(), true);
                     districtPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Districts/TimesSquare_Terminal_District.district");
@@ -444,7 +444,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-1152.0f, -1152.0f, -1152.0f),
                         new(17280.0f, 17280.0f, 1152.0f),
-                        new(10, DifficultyTierPrototypeId.Normal));
+                        new(10, DifficultyTier.Normal));
 
                     area = new(1, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/EndGame/StaticScenarios/DrStrangeEvent/Green/DrStrangeTimesSquareAreaGreen.prototype"), new(), true);
                     districtPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Districts/TimesSquare_DrStrange_District.district");
@@ -471,7 +471,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-10240.0f,	-10240.0f,	-2048.0f),
                         new(10240.0f, 10240.0f, 2048.0f),
-                        new(20, DifficultyTierPrototypeId.Normal));
+                        new(20, DifficultyTier.Normal));
 
                     string dailyBugleArea = "Regions/Operations/Events/DailyBugle/Areas/";
                     string dailyBugle = "Resource/Cells/EndGame/DangerDailies/DailyBugle/";
@@ -508,7 +508,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-1152.0f, 0.0f, -1152.0f),
                         new(8064.0f, 12672.0f, 1152.0f),
-                        new(60, DifficultyTierPrototypeId.Normal));
+                        new(60, DifficultyTier.Normal));
 
                     AreaPrototypeId raftArea = (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH00Raft/TheRaftNPE/NPERaftArea.prototype");
                     area = new(1, raftArea, new(), true);
@@ -535,7 +535,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-1152.0f, -8064.0f, -1152.0f),
                         new(14976.0f, 14976.0f, 1152.0f),
-                        new(60, DifficultyTierPrototypeId.Normal));
+                        new(60, DifficultyTier.Normal));
 
                     bool south = true;
 
@@ -587,7 +587,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-5760.0f, 0.0f, -1152.0f),
                         new(1152.0f, 10368.0f, 1152.0f),
-                        new(60, DifficultyTierPrototypeId.Normal));
+                        new(60, DifficultyTier.Normal));
 
                     AreaPrototypeId Nightclub = (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH01HellsKitchen/Brownstones/Nightclub/CH01NightclubArea.prototype");
                     area = new(1, Nightclub, new(), true);
@@ -615,7 +615,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData, 
                         new(-1152.0f, -1152.0f, -1152.0f),
                         new(12672.0f, 14976.0f, 1152.0f),
-                        new(60, DifficultyTierPrototypeId.Normal));
+                        new(60, DifficultyTier.Normal));
 
                     AreaPrototypeId ShippingYard = (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH02JerseyDocks/Areas/CH0201ShippingArea.prototype");
                     area = new(1, ShippingYard, new(), true);
@@ -642,7 +642,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-10368.0f, -33408.0f, -1156.0f),
                         new(8064.0f, 31104.0f, 1156.0f),
-                        new(60, DifficultyTierPrototypeId.Normal));
+                        new(60, DifficultyTier.Normal));
 
                     string Madripoor = "Resource/Cells/Madripoor/";
                     string MadripoorArea = "Regions/StoryRevamp/CH03Madripoor/";
@@ -849,7 +849,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-10368.0f - fixOffset, -10368.0f - fixOffset, -2176.0f),
                         new(10368.0f + fixOffset, 10368.0f + fixOffset, 2176.0f),
-                        new(60, DifficultyTierPrototypeId.Normal));
+                        new(60, DifficultyTier.Normal));
 
                     string HandTower = "Regions/StoryRevamp/CH03Madripoor/LowTown/HandTower/";
 
@@ -884,7 +884,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-10368.0f, -9216.0f, -1152.0f),
                         new(10368.0f, 9216.0f, 1152.0f),
-                        new(60, DifficultyTierPrototypeId.Normal));
+                        new(60, DifficultyTier.Normal));
 
                     string HellKitchen02 = "Resource/Cells/Hells_Kitchen_02/";
                     string HellKitchen02Area = "Regions/StoryRevamp/CH04EastSide/Areas/";
@@ -973,7 +973,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-10368.0f, -11520.0f, -1152.0f),
                         new(10368.0f, 11520.0f, 1152.0f),
-                        new(60, DifficultyTierPrototypeId.Normal));
+                        new(60, DifficultyTier.Normal));
 
                     HellKitchen02 = "Resource/Cells/Hells_Kitchen_02/";
                     HellKitchen02Area = "Regions/StoryRevamp/CH04EastSide/Areas/";
@@ -1059,7 +1059,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-2176.0f, -2176.0f, -2176.0f),
                         new(2176.0f, 2176.0f, 2176.0f),
-                        new(60, DifficultyTierPrototypeId.Normal));                    
+                        new(60, DifficultyTier.Normal));                    
 
                     area = new(1, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH04EastSide/Areas/LowerEastSide/WaxMuseum/CH0405WaxMuseumArea1.prototype"), new(), true);
                     area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/Hells_Kitchen_02/RedLight_SC_Instances/RedLight_WaxMuseum_B.cell"), new()));
@@ -1080,7 +1080,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-1750.0f, -1750.0f, -1750.0f),
                         new(1750.0f, 1750.0f, 1750.0f),
-                        new(60, DifficultyTierPrototypeId.Normal));
+                        new(60, DifficultyTier.Normal));
 
                     area = new(1, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH04EastSide/Areas/UpperEastSide/MaggiaRestaurant/CH0408MobRestaurantArea.prototype"), new(), true);
                     area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/Hells_Kitchen_02/Upper_East_Side_Trans/Upper_East_Maggia_Restaurant2.cell"), new()));
@@ -1102,7 +1102,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-10368.0f - fixOffset, -12544.0f - fixOffset, -2176.0f),
                         new(10368.0f + fixOffset, 12544.0f + fixOffset, 2176.0f),
-                        new(60, DifficultyTierPrototypeId.Normal));
+                        new(60, DifficultyTier.Normal));
                     
                     string FiskTower = "Regions/StoryRevamp/CH04EastSide/Areas/UpperEastSide/FiskTower/";
 
@@ -1143,7 +1143,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-20736.0f, -18432.0f, -1152.0f),
                         new(16128.0f, 19584.0f, 1152.0f),
-                        new(60, DifficultyTierPrototypeId.Normal));
+                        new(60, DifficultyTier.Normal));
 
                     string Savage = "Resource/Cells/Savagelands/";
 
@@ -1347,7 +1347,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-9216.0f, -13824.0f, -1152.0f),
                         new(9216.0f, 13824.0f, 1152.0f),
-                        new(60, DifficultyTierPrototypeId.Normal));
+                        new(60, DifficultyTier.Normal));
 
                     string Latveria = "Resource/Cells/Latveria/";
                     string LatveriaArea = "Regions/StoryRevamp/CH08Latveria/Areas/Latveria/Doomstadt/";
@@ -1437,7 +1437,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-9216.0f, -21120.0f, -3008.0f),
                         new(9216.0f, 21120.0f, 3008.0f),
-                        new(60, DifficultyTierPrototypeId.Normal));
+                        new(60, DifficultyTier.Normal));
 
                     string Castle = "Resource/Cells/Latveria/Doomstadt_Castle_A/";
                     string CastleArea = "Regions/StoryRevamp/CH08Latveria/Areas/Latveria/CastleDoom/";
@@ -1509,7 +1509,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-13824.0f, -18432.0f, -1152.0f),
                         new(13824.0f, 18432.0f, 1152.0f),
-                        new(60, DifficultyTierPrototypeId.Normal));
+                        new(60, DifficultyTier.Normal));
 
                     string Norway = "Resource/Cells/Asgard/Norway/";
 
@@ -1706,7 +1706,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-9216.0f, -9216.0f, -1152.0f),
                         new(9216.0f, 9216.0f, 1152.0f),
-                        new(60, DifficultyTierPrototypeId.Normal));
+                        new(60, DifficultyTier.Normal));
 
                     string SiegeCity = "Resource/Cells/Asgard/SiegePCZ/SiegeCity/";
                     area = new(1, (AreaPrototypeId) GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH09Asgard/Areas/Asgard/LowerAsgard/SiegeS2NCityArea.prototype"), new(), true);
@@ -1776,7 +1776,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-5633f, -9600f, -2176f),
                         new(5633f, 9600f, 2176f),
-                        new(11, DifficultyTierPrototypeId.Normal));
+                        new(11, DifficultyTier.Normal));
 
                     area = new(1, AreaPrototypeId.DailyGSubwayFactoryGen1Area, new(-3456.5f, -7424f, 0f), true);
                     area.AddCell(new(13, GameDatabase.GetPrototypeRefByName("Resource/Cells/EndGame/DangerDailies/ShockerSubway/Daily_ShockerSubway_A_E_A.cell"), new()));
@@ -1822,7 +1822,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-1792.0f, -10752.0f, -1792.0f),
                         new(1792.0f, 10752.0f, 1792.0f),
-                        new(11, DifficultyTierPrototypeId.Normal));
+                        new(11, DifficultyTier.Normal));
 
                     area = new(1, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/EndGame/Terminals/Green/SinistersLab/Areas/DailyGSinisterLabEntryArea.prototype"), new(), true);
                     area.AddCell(new(6, GameDatabase.GetPrototypeRefByName("Resource/Cells/EndGame/DangerDailies/SinisterLab/SinisterLabTerminal_Entry_A.cell"), new(0.0f, -8960.0f, 0.0f)));
@@ -1866,7 +1866,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-4352.0f - fixTower, -4352.0f - fixTower, -1536.0f), // new(-13056.0f, -13056.0f, -1536.0f)
                         new(4352.0f + fixTower, 4352.0f + fixTower, 1536.0f), // new(13056.0f, 13056.0f, 1536.0f)
-                        new(60, DifficultyTierPrototypeId.Normal));
+                        new(60, DifficultyTier.Normal));
 
                    
                     area = new(1, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/EndGame/Terminals/Green/FiskTower/Areas/DailyGFiskTowerArea.prototype"), new(), true);
@@ -1895,7 +1895,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-4480.0f, -10944.0f, -1152.0f),
                         new(20864.0f, 2880.0f, 1152.0f),
-                        new(60, DifficultyTierPrototypeId.Normal));
+                        new(60, DifficultyTier.Normal));
 
                     string Rzoo = "Resource/Cells/Bronx_Zoo/";
                     
@@ -2003,7 +2003,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-17920.0f, -28544.0f, -2304.0f),
                         new(18176.0f, 30080.0f, 2304),
-                        new(60, DifficultyTierPrototypeId.Normal));
+                        new(60, DifficultyTier.Normal));
 
                     string HydraIsland = "Resource/Cells/Hydra_Island/";
                     string HydraIslandArea = "Regions/EndGame/OneShotMissions/NonChapterBound/HydraIslandPartDeux/";
@@ -2192,7 +2192,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-1152.0f, -1152.0f, -1152.0f),
                         new(19584.0f, 19584.0f, 1152.0f),
-                        new(60, DifficultyTierPrototypeId.Normal));                    
+                        new(60, DifficultyTier.Normal));                    
 
                     AreaPrototypeId CentralPark = (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/EndGame/TierX/UltronGameMode/UltronRaidMainArea.prototype");
                     area = new(1, CentralPark, new(), true);
@@ -2221,7 +2221,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-3456.0f, -8064.0f, -1152.0f),
                         new(3456.0f, 8064.0f, 1152.0f),
-                        new(60, DifficultyTierPrototypeId.Normal));
+                        new(60, DifficultyTier.Normal));
 
                     string DoopSector = "Resource/Cells/EndGame/CosmicDoopSector/";
                     area = new(1, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/EndGame/Special/CosmicDoopSectorSpace/CosmicDoopSectorSpaceAreaA.prototype"), new(), true);
@@ -2265,7 +2265,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-11520.0f, -8064.0f, -1152.0f),
                         new(11520.0f, 8064.0f, 1152.0f),
-                        new(10, DifficultyTierPrototypeId.Normal));
+                        new(10, DifficultyTier.Normal));
 
                     string DocksPatrol = "Resource/Cells/EndGame/BrooklynDocksPatrol/";
                     string Shipping_C = "Resource/Cells/Brooklyn/Shipping_C/";
@@ -2362,7 +2362,7 @@ namespace MHServerEmu.Games.Regions
                     };
 
                     CreateRegionParams diff = (prototype ==  RegionPrototypeId.UpperMadripoorRegionL60)?
-                        new(60, DifficultyTierPrototypeId.Normal) : new(63, DifficultyTierPrototypeId.Superheroic); 
+                        new(60, DifficultyTier.Normal) : new(63, DifficultyTier.Superheroic); 
 
                     region = new(prototype,
                         1883928786,
@@ -2405,7 +2405,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-4608.0f, -4608.0f, -4608.0f),
                         new(4608.0f, 4608.0f, 4608.0f),
-                        new(60, DifficultyTierPrototypeId.Normal));
+                        new(60, DifficultyTier.Normal));
 
                     area = new(1, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/Story/CH10SecretInvasion/UpperMadripoor/TreasureRooms/TRGameCenterArea.prototype"), new(), true);
                     area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/Madripoor/UpperMadripoor/Upper_Madripoor_Trans/GameCenter_TR_A.cell"), new()));
@@ -2428,7 +2428,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-1152f, -1152f, -1152f),
                         new(12672f, 12672f, 1152f),
-                        new(10, DifficultyTierPrototypeId.Normal));
+                        new(10, DifficultyTier.Normal));
 
 
                     area = new(1, AreaPrototypeId.XManhattanArea1, new(), true);
@@ -2603,7 +2603,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-1152f, -1152f, -1152f),
                         new(12672f, 12672f, 1152f),
-                        new(63, DifficultyTierPrototypeId.Superheroic));
+                        new(63, DifficultyTier.Superheroic));
 
 
                     area = new(1, AreaPrototypeId.XManhattanArea1, new(), true);

@@ -1,6 +1,6 @@
 ﻿namespace MHServerEmu.Games.Regions
 {
-    public enum DifficultyTierPrototypeId : ulong
+    public enum DifficultyTier : ulong
     {
         Normal = 18016845980090109785,
         Heroic = 7540373722300157771,
