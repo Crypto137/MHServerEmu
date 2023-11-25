@@ -5,7 +5,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class PropSetPrototype
     {
-        public ResourceHeader Header { get; }
         public PropSetTypeListPrototype[] PropShapeLists { get; }
         public string PropSetPackage { get; }
 
@@ -14,7 +13,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = new(reader);
+                ResourceHeader header = new(reader);
 
                 PropShapeLists = new PropSetTypeListPrototype[reader.ReadUInt32()];
                 for (int i = 0; i < PropShapeLists.Length; i++)

@@ -8,7 +8,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class CellPrototype
     {
-        public ResourceHeader Header { get; }
         public Aabb BoundingBox { get; }
         public Cell.Type Type { get; }
         public uint Walls { get; }
@@ -27,7 +26,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = new(reader);
+                ResourceHeader header = new(reader);
+
                 Vector3 max = reader.ReadVector3();
                 Vector3 min = reader.ReadVector3();
                 BoundingBox = new(min, max);

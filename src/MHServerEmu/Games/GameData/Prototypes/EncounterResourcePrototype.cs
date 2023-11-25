@@ -6,7 +6,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class EncounterResourcePrototype
     {
-        public ResourceHeader Header { get; }
         public PrototypeGuid PopulationMarkerGuid { get; }
         public string ClientMap { get; }
         public MarkerSetPrototype MarkerSet { get; }
@@ -17,7 +16,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = new(reader);
+                ResourceHeader header = new(reader);
+
                 PopulationMarkerGuid = (PrototypeGuid)reader.ReadUInt64();
                 ClientMap = reader.ReadFixedString32();
                 MarkerSet = new(reader);

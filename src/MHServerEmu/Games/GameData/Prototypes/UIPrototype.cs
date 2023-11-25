@@ -131,7 +131,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class UIPrototype
     {
-        public ResourceHeader Header { get; }
         public UIPanelPrototype[] UIPanels { get; }
 
         public UIPrototype(byte[] data)
@@ -139,7 +138,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = new(reader);
+                ResourceHeader header = new(reader);
 
                 UIPanels = new UIPanelPrototype[reader.ReadUInt32()];
                 for (int i = 0; i < UIPanels.Length; i++)

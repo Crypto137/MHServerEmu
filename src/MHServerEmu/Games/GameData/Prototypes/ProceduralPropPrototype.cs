@@ -7,7 +7,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class PropPackagePrototype
     {
-        public ResourceHeader Header { get; }
         public ProceduralPropGroupPrototype[] PropGroups { get; }
 
         public PropPackagePrototype(byte[] data)
@@ -15,7 +14,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = new(reader);
+                ResourceHeader header = new(reader);
 
                 PropGroups = new ProceduralPropGroupPrototype[reader.ReadUInt32()];
                 for (int i = 0; i < PropGroups.Length; i++)

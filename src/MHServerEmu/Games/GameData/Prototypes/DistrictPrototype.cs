@@ -5,7 +5,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class DistrictPrototype
     {
-        public ResourceHeader Header { get; }
         public MarkerSetPrototype CellMarkerSet { get; }
         public MarkerSetPrototype MarkerSet { get; }                 // Size is always 0 in all of our files
         public PathCollectionPrototype PathCollection { get; }
@@ -15,7 +14,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = new(reader);
+                ResourceHeader header = new(reader);
+
                 CellMarkerSet = new(reader);
                 MarkerSet = new(reader);
                 PathCollection = new(reader);
