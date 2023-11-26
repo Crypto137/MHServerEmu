@@ -32,6 +32,8 @@ Information about how static game data is stored and processed by the game.
 
 - [Pak File](./GameData/PakFile.md) - an overview of the custom archive format used by the game.
 
+- [Data References](./GameData/DataReferences.md) - how static data is referenced by the game.
+
 - [Calligraphy](./GameData/Calligraphy.md) - an overview of the Calligraphy data system.
 
 - [Resources](./GameData/Resources.md) - an overview of resource prototype files.

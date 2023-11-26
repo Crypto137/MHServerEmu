@@ -24,23 +24,23 @@ These require further checking for compatibility with various versions of the cl
 
 ### ClientApp::Initialize
 
-| Parameter               | Description                                                           | Values                                                                            |
-| ----------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| -asserts                |                                                                       |                                                                                   |
-| -verifies               |                                                                       |                                                                                   |
-| -uploadVerifies         | Calls `DebugSetWhetherToUploadVerifies`.                              |                                                                                   |
-| -enablecoredumps        | Calls `DebugEnableCoreDumps`.                                         |                                                                                   |
-| -disableminidumps       | Calls `DebugSetMinidumpCreationPolicy`.                               |                                                                                   |
-| -forceLocalStackWalking | Calls `DebugSetForcedLocalStackWalkPolicy`.                           |                                                                                   |
-| -enableTracing          | Enables verbose logging.                                              |                                                                                   |
-| -log                    | Enables verbose logging and shows a log window.                       |                                                                                   |
-| -LoggingLevel=          | Specifies the logging level for verbose logging.                      | NONE, CRITICAL, FATAL, ERROR, WARNING, INFORMATION, VERBOSE, EXTRA_VERBOSE, DEBUG |
-| -LoggingChannels=       | Specifies logging channels for verbose logging.                       | See below for a full list of available channels.                                  |
-| -suppressall            | Disables logging.                                                     |                                                                                   |
-| -maxload                | Forces loading of all prototypes during game database initialization. |                                                                                   |
-| -nocalligraphypak       | Disables Calligraphy pak file (Calligraphy.sip) loading.              |                                                                                   |
-| -novalidate             |                                                                       |                                                                                   |
-| -nohardwareinfo         |                                                                       |                                                                                   |
+| Parameter               | Description                                                                                                           | Values                                                                            |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| -asserts                |                                                                                                                       |                                                                                   |
+| -verifies               |                                                                                                                       |                                                                                   |
+| -uploadVerifies         | Calls `DebugSetWhetherToUploadVerifies`.                                                                              |                                                                                   |
+| -enablecoredumps        | Calls `DebugEnableCoreDumps`.                                                                                         |                                                                                   |
+| -disableminidumps       | Calls `DebugSetMinidumpCreationPolicy`.                                                                               |                                                                                   |
+| -forceLocalStackWalking | Calls `DebugSetForcedLocalStackWalkPolicy`.                                                                           |                                                                                   |
+| -enableTracing          | Enables verbose logging.                                                                                              |                                                                                   |
+| -log                    | Enables verbose logging and shows a log window.                                                                       |                                                                                   |
+| -LoggingLevel=          | Specifies the logging level for verbose logging.                                                                      | NONE, CRITICAL, FATAL, ERROR, WARNING, INFORMATION, VERBOSE, EXTRA_VERBOSE, DEBUG |
+| -LoggingChannels=       | Specifies logging channels for verbose logging.                                                                       | See below for a full list of available channels.                                  |
+| -suppressall            | Disables logging.                                                                                                     |                                                                                   |
+| -maxload                | Forces loading of all prototypes during game database initialization.                                                 |                                                                                   |
+| -nocalligraphypak       | Disables Calligraphy pak file (`Calligraphy.sip`) loading and forces the client to load all data from `mu_cdata.sip`. |                                                                                   |
+| -novalidate             |                                                                                                                       |                                                                                   |
+| -nohardwareinfo         |                                                                                                                       |                                                                                   |
 
 ### ClientAppSettingsPostCoreInit::Initialize
 
