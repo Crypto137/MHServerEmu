@@ -17,9 +17,10 @@ namespace MHServerEmu.Games.GameData
 
         public static bool IsInitialized { get; }
 
-        public static DataDirectory DataDirectory { get; private set; }
-        public static PropertyInfoTable PropertyInfoTable { get; private set; }
-        public static List<LiveTuningSetting> LiveTuningSettingList { get; private set; }
+        public static PrototypeClassManager PrototypeClassManager { get; }
+        public static DataDirectory DataDirectory { get; }
+        public static PropertyInfoTable PropertyInfoTable { get; }
+        public static List<LiveTuningSetting> LiveTuningSettingList { get; }
 
         // DataRef is a unique ulong id that may change across different versions of the game (e.g. resource DataRef is hashed file path).
         public static DataRefManager<StringId> StringRefManager { get; } = new(false);
@@ -40,6 +41,9 @@ namespace MHServerEmu.Games.GameData
 
             Logger.Info("Initializing game database...");
             var stopwatch = Stopwatch.StartNew();
+
+            // Initialize PrototypeClassManager
+            PrototypeClassManager = new();
 
             // Initialize DataDirectory
             DataDirectory = new(new PakFile(CalligraphyPath), new PakFile(ResourcePath));
