@@ -3,6 +3,7 @@ using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using System.Diagnostics;
 
 namespace MHServerEmu.Games.GameData
 {
@@ -45,6 +46,8 @@ namespace MHServerEmu.Games.GameData
 
         public DataDirectory(PakFile calligraphyPak, PakFile resourcePak)
         {
+            var stopwatch = Stopwatch.StartNew();
+
             // Load Calligraphy data
             LoadCalligraphyDataFramework(calligraphyPak);
 
@@ -53,6 +56,8 @@ namespace MHServerEmu.Games.GameData
 
             // Initialize hierarchy (old)
             InitializeHierarchyCache();
+
+            Logger.Info($"Initialized in {stopwatch.ElapsedMilliseconds} ms");
         }
 
         #region Initialization

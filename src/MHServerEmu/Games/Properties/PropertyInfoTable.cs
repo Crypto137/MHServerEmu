@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using System.Diagnostics;
 
 namespace MHServerEmu.Games.Properties
 {
@@ -14,6 +15,8 @@ namespace MHServerEmu.Games.Properties
 
         public PropertyInfoTable(DataDirectory dataDirectory)
         {
+            var stopwatch = Stopwatch.StartNew();
+
             Dictionary<PropertyEnum, PropertyPrototype> mixinDict = new();
 
             // Loop through the main property info directory to get most info
@@ -68,7 +71,7 @@ namespace MHServerEmu.Games.Properties
 
             // Finish initialization
             if (Verify())
-                Logger.Info($"Loaded info for {_propertyInfoDict.Count} properties");
+                Logger.Info($"Loaded info for {_propertyInfoDict.Count} properties in {stopwatch.ElapsedMilliseconds} ms");
             else
                 Logger.Error("Failed to initialize PropertyInfoTable");
         }
