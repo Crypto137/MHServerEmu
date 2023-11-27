@@ -19,6 +19,7 @@ namespace MHServerEmu.Games.Regions
         public void AddEncounter(ulong asset, uint id, bool useMarkerOrientation) => EncounterList.Add(new(asset, id, useMarkerOrientation));
         public void AddEncounter(ReservedSpawn reservedSpawn) => EncounterList.Add(reservedSpawn);
 
+        [Flags]
         public enum Type
         {
 			None = 0,
@@ -47,7 +48,22 @@ namespace MHServerEmu.Games.Regions
 			NESWcW = 207,
 		}
 
-		public enum WallGroup
+        [Flags]
+        public enum Walls
+        {
+            N = 1,
+            NE = 2,
+            E = 4,
+            SE = 8,
+            S = 16,
+            SW = 32,
+            W = 64,
+            NW = 128,
+            C = 256,
+        }
+
+        [Flags]
+        public enum WallGroup
         {
             N = 254,
             E = 251,
@@ -79,6 +95,7 @@ namespace MHServerEmu.Games.Regions
             WideNESWcW = 160,
         }
 
+        [Flags]
         public enum Filler
         {
             N = 1,

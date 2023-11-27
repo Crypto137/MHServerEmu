@@ -30,7 +30,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong ParentId { get; }  // 0 for .defaults
         public PrototypeEntry[] Entries { get; }
 
+        public virtual void PostProcess() { }
+
         public Prototype() { } // for Resource Prototype
+
+        public ulong GetDataRef() {
+            ulong DataRef = 0; // TODO: Get DataRef
+            return DataRef; 
+        }
 
         public Prototype(Prototype proto) { }
 

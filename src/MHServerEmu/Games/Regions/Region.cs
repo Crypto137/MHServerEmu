@@ -8,7 +8,7 @@ namespace MHServerEmu.Games.Regions
 {
     public partial class Region
     {
-        public RegionPrototypeId Prototype { get; }
+        public RegionPrototypeId PrototypeId { get; }
         public ulong Id { get; }
         public int RandomSeed { get; private set; }
         public byte[] ArchiveData { get; }
@@ -29,7 +29,7 @@ namespace MHServerEmu.Games.Regions
         {
             Id = IdGenerator.Generate(IdType.Region);
 
-            Prototype = prototype;
+            PrototypeId = prototype;
             RandomSeed = randomSeed;
             ArchiveData = archiveData;
             Min = min;
@@ -51,14 +51,14 @@ namespace MHServerEmu.Games.Regions
                 .Build()));
 
             messageList.Add(new(NetMessageQueueLoadingScreen.CreateBuilder()
-                .SetRegionPrototypeId((ulong)Prototype)
+                .SetRegionPrototypeId((ulong)PrototypeId)
                 .Build()));
 
             var regionChangeBuilder = NetMessageRegionChange.CreateBuilder()
                 .SetRegionId(Id)
                 .SetServerGameId(serverGameId)
                 .SetClearingAllInterest(false)
-                .SetRegionPrototypeId((ulong)Prototype)
+                .SetRegionPrototypeId((ulong)PrototypeId)
                 .SetRegionRandomSeed(RandomSeed)
                 .SetRegionMin(Min.ToNetStructPoint3())
                 .SetRegionMax(Max.ToNetStructPoint3())
@@ -74,7 +74,7 @@ namespace MHServerEmu.Games.Regions
             // mission updates and entity creation happens here
 
             // why is there a second NetMessageQueueLoadingScreen?
-            messageList.Add(new(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId((ulong)Prototype).Build()));
+            messageList.Add(new(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId((ulong)PrototypeId).Build()));
 
             // TODO: prefetch other regions
 
@@ -111,7 +111,7 @@ namespace MHServerEmu.Games.Regions
             messageList.Add(new(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build()));
 
             // Mini map
-            MiniMapArchive miniMap = new(RegionManager.RegionIsHub(Prototype)); // Reveal map by default for hubs
+            MiniMapArchive miniMap = new(RegionManager.RegionIsHub(PrototypeId)); // Reveal map by default for hubs
             if (miniMap.IsRevealAll == false) miniMap.Map = Array.Empty<byte>();
 
             messageList.Add(new(NetMessageUpdateMiniMap.CreateBuilder()

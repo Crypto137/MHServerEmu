@@ -29,7 +29,7 @@
             return Vector3.Length(GetDirection());
         }
 
-        public static bool EpsilonTest(float val1, float val2, float epsilon)
+        public static bool EpsilonTest(float val1, float val2, float epsilon = 0.000001f)
         {
             return val1 >= val2 - epsilon && val1 <= val2 + epsilon;
         }

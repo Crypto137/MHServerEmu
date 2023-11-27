@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.GameData.Prototypes;
+﻿using MHServerEmu.Games.Common;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Generators.Prototypes
 {
@@ -72,6 +73,10 @@ namespace MHServerEmu.Games.Generators.Prototypes
 
         public IPoint2Prototype(Prototype proto) : base(proto) { FillPrototype(typeof(IPoint2Prototype), proto); }
 
+        public Vector2 ToIPoint2()
+        {
+            return new(X, Y);
+        }
     }
     public class Vector2Prototype : Prototype
     {
