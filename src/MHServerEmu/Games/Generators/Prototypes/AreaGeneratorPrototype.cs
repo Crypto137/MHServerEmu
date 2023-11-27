@@ -1,4 +1,6 @@
-﻿using MHServerEmu.Games.GameData.Prototypes;
+﻿using MHServerEmu.Common;
+using MHServerEmu.Games.Common;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Generators.Prototypes
@@ -118,12 +120,41 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public sbyte Y;
         public ulong Cell;
         public ulong[] Alts;
+
+        public Point2 Offset { get => new(X, Y); }
         public SuperCellEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(SuperCellEntryPrototype), proto); }
+
+        internal ulong PickCell(GRandom random, List<ulong> list)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class SuperCellPrototype : Prototype
     {
         new public SuperCellEntryPrototype[] Entries;
+
+        public Point2 Max;
         public SuperCellPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(SuperCellPrototype), proto); }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            Max = new (-1, -1);
+
+            if (Entries != null)
+            {
+                foreach (SuperCellEntryPrototype superCellEntry in Entries)
+                {
+                    if (superCellEntry != null)
+                    {
+                        Max.X = Math.Max(Max.X, superCellEntry.X);
+                        Max.Y = Math.Max(Max.Y, superCellEntry.Y);
+                    }
+                }
+            }
+        }
+
     }
 }

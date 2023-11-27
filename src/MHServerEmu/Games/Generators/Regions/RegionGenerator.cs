@@ -1,5 +1,7 @@
-﻿using MHServerEmu.Common.Logging;
+﻿using MHServerEmu.Common;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -164,6 +166,11 @@ namespace MHServerEmu.Games.Generators.Regions
                     Area.CreateConnection(areaA, areaB, sharedConnections[connectionIndex], connectionPoint);
                 }
             }
+        }
+
+        internal bool GetRequiredPOICellsForArea(Area area, GRandom random, List<Prototype> list)
+        {
+            throw new NotImplementedException();
         }
     }
 }

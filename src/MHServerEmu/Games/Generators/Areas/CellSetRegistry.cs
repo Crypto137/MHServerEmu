@@ -15,7 +15,7 @@ namespace MHServerEmu.Games.Generators.Areas
         public bool Picked;
         public bool Unique;
         public int Weight;
-
+        
         public List<AreaTransition> AreaTransitions = new();
 
         public CellSetRegistryEntry(){}
@@ -27,13 +27,15 @@ namespace MHServerEmu.Games.Generators.Areas
     public class CellSetRegistry
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
-        public Aabb CellBox;
+        public Aabb CellBounds;
 
         private EntryList _cells = new();
         private Dictionary<uint, EntryList> _cellsFiller = new();
         private Dictionary<uint, EntryList> _cellsType = new();
         private Dictionary<uint, EntryList> _cellsWalls = new();
         private Dictionary<Cell.Type, Vector3> _connectionsType = new();
+
+        public bool IsInitialized { get; internal set; }
 
         public ulong GetCellSetAssetPicked(GRandom random, Cell.Type cellType, List<ulong> skipList)
         {
@@ -95,7 +97,7 @@ namespace MHServerEmu.Games.Generators.Areas
         {
             if (weight <= 0) return;
 
-            if (GatherCellSet(cellSet, cellSetEntry, out List<ulong> cells, out CellBox))
+            if (GatherCellSet(cellSet, cellSetEntry, out List<ulong> cells, out CellBounds))
             {
                 foreach (var cellRef in cells)
                     AddReference(cellRef, weight, unique);
@@ -114,7 +116,7 @@ namespace MHServerEmu.Games.Generators.Areas
             uint fillerEdges = (uint)cellProto.FillerEdges;
             Aabb bounds = cellProto.BoundingBox;
 
-            if (!Segment.EpsilonTest(bounds.Length, bounds.Width, 0.000001f)) {
+            if (!Segment.EpsilonTest(bounds.Length, bounds.Width)) {
                 Logger.Error($"Data:(.cell file) Grid Generation requires square cells.\n\tCell: {cellProto.ClientMap}\n\tLength:{bounds.Length}\n\tWidth:{bounds.Width}");
                 return;
             }
@@ -260,6 +262,21 @@ namespace MHServerEmu.Games.Generators.Areas
             }
 
             return true;
+        }
+
+        internal Vector3 GetConnectionListForType(Cell.Type type)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool IsComplete()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void Initialize(bool supressMissingCellErrors)
+        {
+            throw new NotImplementedException();
         }
     }
 }

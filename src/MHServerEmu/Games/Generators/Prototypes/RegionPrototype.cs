@@ -84,6 +84,19 @@ namespace MHServerEmu.Games.Generators.Prototypes
 
         public RegionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RegionPrototype), proto); }
 
+        public static bool Equivalent(RegionPrototype regionA, RegionPrototype regionB)
+        {
+            if (regionA == null || regionB == null)  return false;
+            if (regionA == regionB) return true;
+            return regionA.HasAltRegion(regionB.GetDataRef());
+        }
+
+        private bool HasAltRegion(ulong dataRef)
+        {
+            if (AltRegions!=null) return AltRegions.Contains(dataRef);
+            return false;
+        }
+
         public ulong GetDefaultArea(Region region)
         {
             ulong defaultArea = 0;

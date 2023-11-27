@@ -43,6 +43,11 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public RoadGeneratorPrototype Roads;
         public IPoint2Prototype[] AllowedConnections;
         public BaseGridAreaGeneratorPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(BaseGridAreaGeneratorPrototype), proto); }
+
+        internal bool RequiresCell(ulong cellRef)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class RoadGeneratorPrototype : Prototype
@@ -74,6 +79,8 @@ namespace MHServerEmu.Games.Generators.Prototypes
     public class RequiredCellRestrictBasePrototype : Prototype
     {
         public RequiredCellRestrictBasePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RequiredCellRestrictBasePrototype), proto); }
+
+        public virtual bool CheckPoint(int x, int y, int width, int height) => false;
     }
 
     public class RequiredCellRestrictSegPrototype : RequiredCellRestrictBasePrototype
@@ -84,6 +91,17 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public int EndY;
 
         public RequiredCellRestrictSegPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RequiredCellRestrictSegPrototype), proto); }
+
+        public override bool CheckPoint(int x, int y, int width, int height)
+        {
+            if (StartX == EndX)
+                return (EndY > StartY) ? (y >= StartY && y <= EndY) : (y >= EndY && y <= StartY);
+
+            if (StartY == EndY)
+                return (EndX > StartX) ? (x >= StartX && x <= EndX) : (x >= EndX && x <= StartX);
+
+            return false;
+        }
     }
 
     public class RequiredCellRestrictEdgePrototype : RequiredCellRestrictBasePrototype
@@ -91,6 +109,15 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public Cell.Type Edge;
 
         public RequiredCellRestrictEdgePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RequiredCellRestrictEdgePrototype), proto); }
+        
+        public override bool CheckPoint(int x, int y, int width, int height)
+        {
+            return (Edge.HasFlag(Cell.Type.N) && x == width - 1) ||
+                   (Edge.HasFlag(Cell.Type.E) && y == height - 1) ||
+                   (Edge.HasFlag(Cell.Type.S) && x == 0) ||
+                   (Edge.HasFlag(Cell.Type.W) && y == 0);
+        }
+
     }
 
     public class RequiredCellRestrictPosPrototype : RequiredCellRestrictBasePrototype
@@ -99,6 +126,8 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public int Y;
 
         public RequiredCellRestrictPosPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RequiredCellRestrictPosPrototype), proto); }
+
+        public override bool CheckPoint(int x, int y, int width, int height) => (X == x && Y == y);
     }
 
     #endregion

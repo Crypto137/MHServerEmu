@@ -13,6 +13,7 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Common;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Entities;
+using System.Collections.Generic;
 
 namespace MHServerEmu.Games.Generators
 {
@@ -169,8 +170,10 @@ namespace MHServerEmu.Games.Regions
         
         public Generator Generator { get; set; }
 
-        private readonly List<AreaConnectionPoint> AreaConnections = new();
+        public List<AreaConnectionPoint> AreaConnections = new();
         private List<TowerFixupData> TowerFixupList;
+
+        public readonly List<RandomInstanceRegionPrototype> RandomInstances = new();
 
         public Area(Game game, Region region)
         {
@@ -305,7 +308,7 @@ namespace MHServerEmu.Games.Regions
         {
             if (!TestStatus(GenerateFlag.Background))
             {
-                Logger.Warn($"[Engineering Issue] Navi is getting generated out of order with, or after a failed area generator\nRegion:{Region.Prototype}\nArea:{PrototypeId}");
+                Logger.Warn($"[Engineering Issue] Navi is getting generated out of order with, or after a failed area generator\nRegion:{Region}\nArea:{ToString}");
                 return false;
             }
 
@@ -397,7 +400,7 @@ namespace MHServerEmu.Games.Regions
             GRandom random = new (RandomSeed);
 
             bool success = Generator.Generate(random, regionGenerator, areas);
-            if (!success) Logger.Trace($"Area {PrototypeId} in region {Region.Prototype} failed to generate");
+            if (!success) Logger.Trace($"Area {ToString()} in region {Region} failed to generate");
 
             Generator = null; 
 
@@ -457,6 +460,11 @@ namespace MHServerEmu.Games.Regions
             return (ulong)PrototypeId;
         }
 
+        public override string ToString()
+        {
+            return $"{PrototypeId}";
+        }
+
     }
 
     public enum ConnectPosition
@@ -499,7 +507,7 @@ namespace MHServerEmu.Games.Regions
             RandomSeed = settings.Seed;
             // TODO other setting;
             if (settings.GenerateAreas)
-                GenerateAreas((ulong)Prototype);
+                GenerateAreas((ulong)PrototypeId);
         }
 
         public Aabb CalculateBound()
@@ -606,6 +614,16 @@ namespace MHServerEmu.Games.Regions
         internal IEnumerable<Cell> IterateCellsInVolume(Aabb aabb)
         {
             throw new NotImplementedException();
+        }
+
+        public ulong GetPrototypeDataRef()
+        {
+            return (ulong)PrototypeId;
+        }
+
+        public override string ToString()
+        {
+            return $"{PrototypeId}";
         }
     }
 
