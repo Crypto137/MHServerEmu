@@ -1,6 +1,6 @@
 ﻿namespace MHServerEmu.Games.Properties
 {
-    public enum PropertyType
+    public enum PropertyDataType
     {
         Boolean,
         Real,

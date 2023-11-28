@@ -4,31 +4,31 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class PropertyInfoPrototype : Prototype
     {
-        public PropertyPrototype Mixin { get; set; }                   // contains mixin param information
+        public PropertyPrototype Mixin { get; set; }            // contains mixin param information
 
+        public long Version { get; }
         public AggregationMethod AggMethod { get; }             // A Property/AggregationMethod.type
-        public bool ClientOnly { get; }
-        public double CurveDefault { get; }
-        public object Eval { get; }                             // R Eval/Eval.defaults
-        public bool EvalAlwaysCalculates { get; }
         public double Min { get; }
         public double Max { get; }
-        public bool ReplicateForTransfer { get; }
         public DatabasePolicy ReplicateToDatabase { get; }      // A Property/DatabasePolicy.type
-        public bool ReplicateToDatabaseAllowedOnItems { get; }
-        public bool ReplicateToOwner { get; }
-        public bool ReplicateToParty { get; }
         public bool ReplicateToProximity { get; }
+        public bool ReplicateToParty { get; }
+        public bool ReplicateToOwner { get; }
         public bool ReplicateToDiscovery { get; }
-        public bool ReplicateToTrader { get; }
-        public PrototypeId ValueDisplayFormat { get; }          // Localization/Translations/Translation.defaults
+        public bool ReplicateForTransfer { get; }
+        public PropertyDataType Type { get; }                   // A Property/PropertyType.type
+        public double CurveDefault { get; }
+        public bool ReplicateToDatabaseAllowedOnItems { get; }
+        public bool ClientOnly { get; }
         public bool SerializeEntityToPowerPayload { get; }
         public bool SerializePowerToPowerPayload { get; }
-        public bool SerializeConditionSrcToCondition { get; }
         public PrototypeId TooltipText { get; }                 // Localization/Translations/Properties/PropertyTranslation.defaults
         public bool TruncatePropertyValueToInt { get; }
-        public PropertyType Type { get; }                       // A Property/PropertyType.type
-        public long Version { get; }
+        public object Eval { get; }                             // R Eval/Eval.defaults
+        public bool EvalAlwaysCalculates { get; }
+        public bool SerializeConditionSrcToCondition { get; }
+        public bool ReplicateToTrader { get; }
+        public PrototypeId ValueDisplayFormat { get; }          // Localization/Translations/Translation.defaults
 
         public PropertyInfoPrototype(Prototype prototype)
         {
@@ -105,7 +105,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         TruncatePropertyValueToInt = (bool)field.Value;
                         break;
                     case nameof(Type):
-                        Type = (PropertyType)Enum.Parse(typeof(PropertyType), GameDatabase.GetAssetName((StringId)field.Value));
+                        Type = (PropertyDataType)Enum.Parse(typeof(PropertyDataType), GameDatabase.GetAssetName((StringId)field.Value));
                         break;
                     case nameof(Version):
                         Version = (long)field.Value;

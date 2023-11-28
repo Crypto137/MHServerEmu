@@ -84,24 +84,24 @@ namespace MHServerEmu.Games.Properties
         {
             switch (Info.Type)
             {
-                case PropertyType.Boolean:
+                case PropertyDataType.Boolean:
                     Value = new PropertyValueBoolean(rawValue);
                     break;
 
-                case PropertyType.Real:
+                case PropertyDataType.Real:
                     Value = new PropertyValueReal(rawValue);
                     break;
 
-                case PropertyType.Integer:
-                case PropertyType.Time:
+                case PropertyDataType.Integer:
+                case PropertyDataType.Time:
                     Value = new PropertyValueInteger(rawValue);
                     break;
 
-                case PropertyType.Prototype:
+                case PropertyDataType.Prototype:
                     Value = new PropertyValuePrototype(rawValue);
                     break;
 
-                case PropertyType.Int21Vector3:
+                case PropertyDataType.Int21Vector3:
                     Value = new PropertyValueInt21Vector3(rawValue);
                     break;
 
