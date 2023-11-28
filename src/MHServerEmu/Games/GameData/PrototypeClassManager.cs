@@ -35,7 +35,7 @@ namespace MHServerEmu.Games.GameData
 
         public bool PrototypeClassIsA(Type classToCheck, Type parent)
         {
-            return classToCheck.IsSubclassOf(parent);
+            return classToCheck == parent || classToCheck.IsSubclassOf(parent);
         }
     }
 }
