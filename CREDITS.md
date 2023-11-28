@@ -16,6 +16,8 @@
 
 - mooege and diiis for inspiration.
 
+- All the Discord MVPs and taskmasters who help us.
+
 - Black Cat for her abilities of math and cheating death.
 
 - All the people who worked on the game in any capacity.
