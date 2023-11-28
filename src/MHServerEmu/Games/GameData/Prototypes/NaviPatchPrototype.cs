@@ -28,7 +28,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         RemoveSight = 1 << 7
     }
 
-    public class NaviPatchPrototype
+    public class NaviPatchPrototype : Prototype
     {
         public Vector3[] Points { get; }
         public NaviPatchEdgePrototype[] Edges { get; }
@@ -45,7 +45,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
-    public class NaviPatchEdgePrototype
+    public class NaviPatchEdgePrototype : Prototype
     {
         public uint ProtoNameHash { get; }
         public uint Index0 { get; }

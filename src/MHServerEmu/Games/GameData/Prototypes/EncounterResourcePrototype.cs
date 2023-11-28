@@ -4,7 +4,7 @@ using MHServerEmu.Games.GameData.Resources;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class EncounterResourcePrototype
+    public class EncounterResourcePrototype : Prototype
     {
         public PrototypeGuid PopulationMarkerGuid { get; }
         public string ClientMap { get; }

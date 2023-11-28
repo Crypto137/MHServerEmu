@@ -3,7 +3,7 @@ using MHServerEmu.Games.GameData.Resources;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class DistrictPrototype
+    public class DistrictPrototype : Prototype
     {
         public MarkerSetPrototype CellMarkerSet { get; }
         public MarkerSetPrototype MarkerSet { get; }                 // Size is always 0 in all of our files

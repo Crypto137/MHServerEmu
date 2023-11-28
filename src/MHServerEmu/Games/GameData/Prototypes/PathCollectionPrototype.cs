@@ -4,7 +4,7 @@ using MHServerEmu.Games.GameData.Resources;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class PathCollectionPrototype
+    public class PathCollectionPrototype : Prototype
     {
         public PathNodeSetPrototype[] PathNodeSets { get; }
 
@@ -16,7 +16,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
-    public class PathNodeSetPrototype
+    public class PathNodeSetPrototype : Prototype
     {
         public ResourcePrototypeHash ProtoNameHash { get; }
         public ushort Group { get; }
@@ -36,7 +36,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
-    public class PathNodePrototype
+    public class PathNodePrototype : Prototype
     {
         public ResourcePrototypeHash ProtoNameHash { get; }
         public Vector3 Position { get; }

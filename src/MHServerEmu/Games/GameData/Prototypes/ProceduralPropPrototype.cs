@@ -5,7 +5,7 @@ using MHServerEmu.Games.GameData.Resources;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class PropPackagePrototype
+    public class PropPackagePrototype : Prototype
     {
         public ProceduralPropGroupPrototype[] PropGroups { get; }
 
@@ -23,7 +23,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
-    public class ProceduralPropGroupPrototype
+    public class ProceduralPropGroupPrototype : Prototype
     {
         public ResourcePrototypeHash ProtoNameHash { get; }
         public string NameId { get; }

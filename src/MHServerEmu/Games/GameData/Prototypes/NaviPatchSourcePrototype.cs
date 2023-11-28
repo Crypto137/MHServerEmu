@@ -1,6 +1,6 @@
 ﻿namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class NaviPatchSourcePrototype
+    public class NaviPatchSourcePrototype : Prototype
     {
         // PatchFragments "Skipping writing field %s in class %s because it has eFlagDontCook set"
         public uint NaviPatchCrc { get; }

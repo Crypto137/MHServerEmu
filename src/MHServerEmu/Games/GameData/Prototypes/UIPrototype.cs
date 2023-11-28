@@ -129,7 +129,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     #region Resource UI prototypes
 
-    public class UIPrototype
+    public class UIPrototype : Prototype
     {
         public UIPanelPrototype[] UIPanels { get; }
 
@@ -147,7 +147,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
-    public class UIPanelPrototype
+    public class UIPanelPrototype : Prototype
     {
         public ResourcePrototypeHash ProtoNameHash { get; protected set; }
         public string PanelName { get; protected set; }

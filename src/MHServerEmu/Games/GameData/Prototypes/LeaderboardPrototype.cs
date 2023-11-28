@@ -1,6 +1,4 @@
-﻿using System.Net;
-
-namespace MHServerEmu.Games.GameData.Prototypes
+﻿namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 

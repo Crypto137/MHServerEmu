@@ -6,7 +6,7 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class CellPrototype
+    public class CellPrototype : Prototype
     {
         public Aabb BoundingBox { get; }
         public Cell.Type Type { get; }

@@ -4,13 +4,7 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    /*
     public class PropertyPrototype : Prototype
-    {
-    }
-    */
-
-    public class PropertyPrototype
     {
         private const byte MaxParamCount = 4;
 
@@ -28,6 +22,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public PropertyPrototype(PrototypeId prototypeId)
         {
+            // NOTE: Old misguided experiments below
+
             Prototype prototype = GameDatabase.GetPrototype<Prototype>(prototypeId);
             Blueprint blueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(prototypeId);
             Array.Fill(Params, new());
@@ -105,15 +101,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 Params[index].ValueMax = 0; //Params[index].ValueMax = GameDatabase.LegacyPrototypeRefManager.MaxEnumValue;
         }
 
-    }
-
-    public class PropertyParam
-    {
-        public PropertyParamType Type { get; set; } = PropertyParamType.Invalid;
-        public object DefaultValue { get; set; } = 0;
-        public int ValueMax { get; set; } = 0;
-        public int Offset { get; set; } = 0;
-        public int Size { get; set; } = 0;
+        public class PropertyParam
+        {
+            public PropertyParamType Type { get; set; } = PropertyParamType.Invalid;
+            public object DefaultValue { get; set; } = 0;
+            public int ValueMax { get; set; } = 0;
+            public int Offset { get; set; } = 0;
+            public int Size { get; set; } = 0;
+        }
     }
 
     public class PropertyEntryPrototype : Prototype

@@ -2,7 +2,7 @@
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class PropertyInfoPrototype
+    public class PropertyInfoPrototype : Prototype
     {
         public PropertyPrototype Mixin { get; set; }                   // contains mixin param information
 
@@ -32,6 +32,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public PropertyInfoPrototype(Prototype prototype)
         {
+            // NOTE: Old misguided experiments below
+
             foreach (PrototypeSimpleField field in prototype.FieldGroups[0].SimpleFields)
             {
                 switch (GameDatabase.GetBlueprintFieldName(field.Id))
