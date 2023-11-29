@@ -17,7 +17,7 @@ namespace MHServerEmu.Games.GameData
 
             foreach (Type type in Assembly.GetExecutingAssembly().GetTypes())
             {
-                if (type.IsSubclassOf(typeof(Prototype)) == false) continue;
+                if (PrototypeClassIsA(type, typeof(Prototype)) == false) continue;  // Skip non-prototype classes
                 _prototypeNameToTypeDict.Add(type.Name, type);
             }
 
