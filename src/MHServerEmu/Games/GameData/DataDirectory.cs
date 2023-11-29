@@ -180,6 +180,10 @@ namespace MHServerEmu.Games.GameData
             GameDatabase.PrototypeRefManager.AddDataRef(prototypeId, filePath);
             _prototypeGuidToDataRefDict.Add(prototypeGuid, prototypeId);
 
+            // Get blueprint and class type
+            Blueprint blueprint = GetBlueprint(blueprintId);
+            Type classType = GameDatabase.PrototypeClassManager.GetPrototypeClassTypeByName(blueprint.RuntimeBinding);
+
             // Add a new prototype record
             PrototypeDataRefRecord record = new()
             {
@@ -187,8 +191,13 @@ namespace MHServerEmu.Games.GameData
                 PrototypeGuid = prototypeGuid,
                 BlueprintId = blueprintId,
                 Flags = flags,
-                DataOrigin = DataOrigin.Calligraphy
+                ClassType = classType,
+                DataOrigin = DataOrigin.Calligraphy,
+                Blueprint = blueprint
             };
+
+            if (IsEditorOnlyByClassType(classType))
+                record.Flags |= PrototypeRecordFlags.EditorOnly;
 
             _prototypeRecordDict.Add(prototypeId, record);
 
@@ -211,6 +220,10 @@ namespace MHServerEmu.Games.GameData
 
         private void AddResource(string filePath, byte[] data)
         {
+            // Get class type
+            Type classType = GetResourceClassTypeByFileName(filePath);
+            if (classType == null) return;
+
             // Create a dataRef
             var prototypeId = (PrototypeId)HashHelper.HashPath($"&{filePath}");   
             GameDatabase.PrototypeRefManager.AddDataRef(prototypeId, filePath);
@@ -221,7 +234,7 @@ namespace MHServerEmu.Games.GameData
                 PrototypeId = prototypeId,
                 PrototypeGuid = PrototypeGuid.Invalid,
                 BlueprintId = BlueprintId.Invalid,
-                Flags = 0,
+                Flags = IsEditorOnlyByClassType(classType) ? PrototypeRecordFlags.EditorOnly : PrototypeRecordFlags.None,
                 DataOrigin = DataOrigin.Resource
             };
 
@@ -345,6 +358,28 @@ namespace MHServerEmu.Games.GameData
             return record;
         }
 
+        private Type GetResourceClassTypeByFileName(string fileName)
+        {
+            // Replacement for Gazillion's GetResourceClassIdByFilename
+            switch (Path.GetExtension(fileName))
+            {
+                case ".cell":       return GameDatabase.PrototypeClassManager.GetPrototypeClassTypeByName("CellPrototype");
+                case ".district":   return GameDatabase.PrototypeClassManager.GetPrototypeClassTypeByName("DistrictPrototype");
+                case ".markerset":  return GameDatabase.PrototypeClassManager.GetPrototypeClassTypeByName("MarkerSetPrototype");
+                case ".encounter":  return GameDatabase.PrototypeClassManager.GetPrototypeClassTypeByName("EncounterResourcePrototype");
+                case ".prop":       return GameDatabase.PrototypeClassManager.GetPrototypeClassTypeByName("PropPackagePrototype");
+                case ".propset":    return GameDatabase.PrototypeClassManager.GetPrototypeClassTypeByName("PropSetPrototype");
+                case ".ui":         return GameDatabase.PrototypeClassManager.GetPrototypeClassTypeByName("UIPrototype");
+                case ".fragment":   return GameDatabase.PrototypeClassManager.GetPrototypeClassTypeByName("NaviFragmentPrototype");
+
+                default:
+                    Logger.Warn($"Failed to get class type for resource {fileName}");
+                    return null;
+            }
+        }
+
+        private bool IsEditorOnlyByClassType(Type type) => type == typeof(NaviFragmentPrototype);   // Only NaviFragmentPrototype is editor only
+
         #endregion
 
         struct LoadedBlueprintRecord
@@ -365,7 +400,9 @@ namespace MHServerEmu.Games.GameData
             public PrototypeGuid PrototypeGuid { get; set; }
             public BlueprintId BlueprintId { get; set; }
             public PrototypeRecordFlags Flags { get; set; }
-            public DataOrigin DataOrigin { get; set; }    // Original memory location: PrototypeDataRefRecord + 32
+            public Type ClassType { get; set; }                 // We use C# type instead of class id
+            public DataOrigin DataOrigin { get; set; }          // Original memory location: PrototypeDataRefRecord + 32
+            public Blueprint Blueprint { get; set; }
             public object Prototype { get; set; }
         }
     }
