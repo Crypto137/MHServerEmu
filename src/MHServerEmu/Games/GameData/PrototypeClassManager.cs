@@ -22,13 +22,16 @@ namespace MHServerEmu.Games.GameData
             }
 
             stopwatch.Stop();
-            Logger.Info($"Initialized in {stopwatch.ElapsedMilliseconds} ms");
+            Logger.Info($"Initialized {_prototypeNameToTypeDict.Count} prototype classes in {stopwatch.ElapsedMilliseconds} ms");
         }
 
         public Type GetPrototypeTypeByName(string name)
         {
             if (_prototypeNameToTypeDict.TryGetValue(name, out Type type) == false)
+            {
+                Logger.Warn($"Prototype class {name} not found");
                 return null;
+            }
 
             return type;
         }

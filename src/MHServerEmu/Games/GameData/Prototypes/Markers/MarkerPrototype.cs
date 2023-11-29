@@ -6,14 +6,18 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
     /// <summary>
     /// This is the parent class for all other MarkerPrototypes.
     /// </summary>
-    public class MarkerPrototype
+    public class MarkerPrototype : Prototype
     {
         public ResourcePrototypeHash ProtoNameHash { get; protected set; }    // DJB hash of the class name
         public Vector3 Position { get; protected set; }
         public Vector3 Rotation { get; protected set; }
     }
 
-    public class MarkerSetPrototype
+    public class MarkerFilterPrototype : Prototype
+    {
+    }
+
+    public class MarkerSetPrototype : Prototype
     {
         public MarkerPrototype[] Markers { get; }
 

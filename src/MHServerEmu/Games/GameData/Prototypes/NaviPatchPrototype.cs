@@ -28,6 +28,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
         RemoveSight = 1 << 7
     }
 
+    public class NaviPatchSourcePrototype : Prototype
+    {
+        // PatchFragments "Skipping writing field %s in class %s because it has eFlagDontCook set"
+        public uint NaviPatchCrc { get; }
+        public NaviPatchPrototype NaviPatch { get; }
+        public NaviPatchPrototype PropPatch { get; }
+        public float PlayableArea { get; }
+        public float SpawnableArea { get; }
+
+        public NaviPatchSourcePrototype(BinaryReader reader)
+        {
+            NaviPatchCrc = reader.ReadUInt32();
+            NaviPatch = new(reader);
+            PropPatch = new(reader);
+            PlayableArea = reader.ReadSingle();
+            SpawnableArea = reader.ReadSingle();
+        }
+    }
+
     public class NaviPatchPrototype : Prototype
     {
         public Vector3[] Points { get; }
@@ -67,5 +86,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
             for (int i = 0; i < Flags1.Length; i++)
                 Flags1[i] = (NaviContentFlags)reader.ReadByte();
         }
+    }
+
+    public class NaviPatchFragmentPrototype : Prototype
+    {
+        public Vector3 Position;
+        public Vector3 Rotation;
+        public Vector3 Scale;
+        public Vector3 PrePivot;
+        public ulong FragmentResource;
     }
 }

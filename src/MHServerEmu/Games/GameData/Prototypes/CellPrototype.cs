@@ -49,7 +49,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
-    public class HeightMapPrototype
+    public class HeightMapPrototype : Prototype
     {
         public Vector2 HeightMapSize { get; }
         public short[] HeightMapData { get; }
