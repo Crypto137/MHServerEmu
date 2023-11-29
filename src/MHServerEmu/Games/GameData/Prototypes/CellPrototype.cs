@@ -13,7 +13,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public uint ClassId { get; }
         public Aabb BoundingBox { get; }
         public Cell.Type Type { get; }
-        public uint Walls { get; }
+        public Cell.Walls Walls { get; }
         public Cell.Filler FillerEdges { get; }
         public Cell.Type RoadConnections { get; }
         public string ClientMap { get; }
@@ -38,7 +38,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 Vector3 min = reader.ReadVector3();
                 BoundingBox = new(min, max);
                 Type = (Cell.Type)reader.ReadUInt32();
-                Walls = reader.ReadUInt32();
+                Walls = (Cell.Walls)reader.ReadUInt32();
                 FillerEdges = (Cell.Filler)reader.ReadUInt32();
                 RoadConnections = (Cell.Type)reader.ReadUInt32();
                 ClientMap = reader.ReadFixedString32();

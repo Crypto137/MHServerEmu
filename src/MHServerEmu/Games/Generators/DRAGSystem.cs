@@ -140,6 +140,23 @@ namespace MHServerEmu.Games.Regions
         {
             throw new NotImplementedException();
         }
+
+        public static Type BuildTypeFromWalls(Walls walls)
+        {
+            Type type = Type.None;
+
+            if (!walls.HasFlag(Walls.N)) type |= Type.N;
+            if (!walls.HasFlag(Walls.E)) type |= Type.E;
+            if (!walls.HasFlag(Walls.S)) type |= Type.S;
+            if (!walls.HasFlag(Walls.W)) type |= Type.W;
+
+            if (!walls.HasFlag(Walls.E | Walls.N) && walls.HasFlag(Walls.NE)) type |= Type.dNE;
+            if (!walls.HasFlag(Walls.S | Walls.E) && walls.HasFlag(Walls.SE)) type |= Type.dSE;
+            if (!walls.HasFlag(Walls.W | Walls.S) && walls.HasFlag(Walls.SW)) type |= Type.dSW;
+            if (!walls.HasFlag(Walls.W | Walls.N) && walls.HasFlag(Walls.NW)) type |= Type.dNW;
+
+            return type;
+        }
     }
 
     public struct AreaSettings

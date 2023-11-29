@@ -569,7 +569,7 @@ namespace MHServerEmu.Games.Generators.Areas
         {
             if (CellContainer == null) return;
 
-            int cells = chance * CellContainer.NumCells() / 100;
+            int cells = chance * CellContainer.NumCells / 100;
             GetPrototype(out BaseGridAreaGeneratorPrototype proto);
 
             void CheckRoomKill(CellDeletionEnum method)
@@ -588,7 +588,7 @@ namespace MHServerEmu.Games.Generators.Areas
             {
                 foreach (var profile in proto.SecondaryDeletionProfiles)
                 {
-                    cells = (int)(profile.RoomKillPct * CellContainer.NumCells()) / 100;
+                    cells = (int)(profile.RoomKillPct * CellContainer.NumCells) / 100;
                     CheckRoomKill(profile.RoomKillMethod);
                 }
             }

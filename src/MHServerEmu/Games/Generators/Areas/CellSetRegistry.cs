@@ -30,16 +30,16 @@ namespace MHServerEmu.Games.Generators.Areas
         public Aabb CellBounds;
 
         private EntryList _cells = new();
-        private Dictionary<uint, EntryList> _cellsFiller = new();
-        private Dictionary<uint, EntryList> _cellsType = new();
-        private Dictionary<uint, EntryList> _cellsWalls = new();
+        private Dictionary<Cell.Filler, EntryList> _cellsFiller = new();
+        private Dictionary<Cell.Type, EntryList> _cellsType = new();
+        private Dictionary<Cell.Walls, EntryList> _cellsWalls = new();
         private Dictionary<Cell.Type, Vector3> _connectionsType = new();
 
         public bool IsInitialized { get; internal set; }
 
         public ulong GetCellSetAssetPicked(GRandom random, Cell.Type cellType, List<ulong> skipList)
         {
-            EntryList entryList = _cellsType[(uint)cellType];
+            EntryList entryList = _cellsType[cellType];
 
             if (entryList == null || entryList.Count == 0) return 0;
 
@@ -111,9 +111,9 @@ namespace MHServerEmu.Games.Generators.Areas
             CellPrototype cellProto = GameDatabase.GetPrototype<CellPrototype>(cellRef);
             if (cellProto == null) return;
 
-            uint cellType = (uint)cellProto.Type;
-            uint cellWalls = cellProto.Walls;
-            uint fillerEdges = (uint)cellProto.FillerEdges;
+            Cell.Type cellType = cellProto.Type;
+            Cell.Walls cellWalls = cellProto.Walls;
+            Cell.Filler fillerEdges = cellProto.FillerEdges;
             Aabb bounds = cellProto.BoundingBox;
 
             if (!Segment.EpsilonTest(bounds.Length, bounds.Width)) {
@@ -122,7 +122,7 @@ namespace MHServerEmu.Games.Generators.Areas
             }
 
             float playableArea = cellProto.NaviPatchSource.PlayableArea;
-            bool filler = (cellWalls == 511) && (playableArea <= 0.0f);
+            bool filler = (cellWalls == Cell.Walls.All) && (playableArea <= 0.0f);
 
             CellSetRegistryEntry entry = new()
             {
