@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text;
 
-namespace MHSourceFilePathExtractor
+namespace MHExecutableAnalyzer
 {
     public class FilePathExtractor
     {
@@ -18,6 +18,8 @@ namespace MHSourceFilePathExtractor
 
             for (int i = 0; i < data.Length; i++)
             {
+                if (data[i] != PathSignature[0]) continue;  // Check the entire signature only if the first character matches
+
                 if (PathSignature.SequenceEqual(data.Skip(i).Take(PathSignature.Length)))
                 {
                     List<byte> byteList = new();

@@ -1,4 +1,4 @@
-﻿namespace MHSourceFilePathExtractor
+﻿namespace MHExecutableAnalyzer
 {
     internal class Program
     {

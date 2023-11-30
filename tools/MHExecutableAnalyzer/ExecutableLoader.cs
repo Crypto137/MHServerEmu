@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text;
 
-namespace MHSourceFilePathExtractor
+namespace MHExecutableAnalyzer
 {
     public class ExecutableLoader
     {
@@ -51,6 +51,8 @@ namespace MHSourceFilePathExtractor
             // signatures we are looking for should be.
             for (int i = Data.Length - Data.Length / 5; i < Data.Length; i++)
             {
+                if (Data[i] != ShippingSignature[0]) continue;  // Check the entire signature only if the first character matches
+
                 if (ShippingSignature.SequenceEqual(Data.Skip(i).Take(ShippingSignature.Length)))
                     return true;
             }
