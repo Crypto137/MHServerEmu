@@ -6,12 +6,13 @@ namespace MHServerEmu.Games.GameData
 {
     public class PakFile
     {
+        private const uint Signature = 1196441931;  // KAPG
+        private const uint Version = 1;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Dictionary<string, byte[]> _fileDict = new();
 
-        public uint Header { get; }  // KAPG
-        public uint Version { get; }
         public PakEntry[] Entries { get; } = Array.Empty<PakEntry>();
 
         public PakFile(string pakFilePath)
@@ -28,8 +29,19 @@ namespace MHServerEmu.Games.GameData
             using (BinaryReader reader = new(stream))
             {
                 // Read file header
-                Header = reader.ReadUInt32();
-                Version = reader.ReadUInt32();
+                uint signature = reader.ReadUInt32();
+                if (signature != Signature)
+                {
+                    Logger.Error($"Invalid pak file signature {signature}, expected {Signature}");
+                    return;
+                }
+
+                uint version = reader.ReadUInt32();
+                if (version != Version)
+                {
+                    Logger.Error($"Invalid pak file version {version}, expected {Version}");
+                    return;
+                }
 
                 // Read all entries
                 Entries = new PakEntry[reader.ReadInt32()];
