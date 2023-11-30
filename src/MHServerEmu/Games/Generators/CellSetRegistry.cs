@@ -37,7 +37,18 @@ namespace MHServerEmu.Games.Generators
         private Dictionary<Cell.Filler, EntryList> _cellsFiller = new();
         private Dictionary<Cell.Type, EntryList> _cellsType = new();
         private Dictionary<Cell.Walls, EntryList> _cellsWalls = new();
-        private Dictionary<Cell.Type, Vector3> _connectionsType = new();        
+        private Dictionary<Cell.Type, Vector3> _connectionsType = new();
+
+        public CellSetRegistry()
+        {
+            IsInitialized = false;
+            _supressMissingCellErrors = false;
+            for (int i = 0; i < 4; i++)
+            {
+                Cell.Type type = (Cell.Type)(1 << i);
+                _connectionsType[type] = Vector3.Zero;
+            }
+        }
 
         public void Initialize(bool supressMissingCellErrors)
         {
@@ -304,7 +315,7 @@ namespace MHServerEmu.Games.Generators
             for (int i = 1; i < 16; ++i)
             {
                 Cell.Type type = (Cell.Type)i;
-                if (_connectionsType[type] == null && !_supressMissingCellErrors)
+                if (_cellsType[type] == null && !_supressMissingCellErrors)
                 {
                     Logger.Trace($"CellSetRegistry Missing {type}");
                 }
@@ -314,7 +325,7 @@ namespace MHServerEmu.Games.Generators
 
         public bool HasCellOfType(Cell.Type cellType)
         {
-            return _connectionsType.ContainsKey(cellType);
+            return _cellsType.ContainsKey(cellType);
         }
 
     }
