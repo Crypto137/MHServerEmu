@@ -34,7 +34,7 @@ There are two known versions of these SQLite-based paks:
 
 ## Custom Gazillion Paks
 
-In version `1.29.0.25` released on November 11, 2014 the original SQLite-based archives were replaced with a new custom format developed by Gazillion. At some point later on data was also split into two files: `Calligraphy.sip` for data exported from [Calligraphy](./Calligraphy.md) and `mu_cdata.sip` for [resource](./Resources.md) data.
+In version `1.29.0.25` released on November 11, 2014 the original SQLite-based archives were replaced with a new custom format developed by Gazillion. Later on in version `1.0.4458.0` released on January 24, 2015 data was also split into two files: `Calligraphy.sip` for data exported from [Calligraphy](./Calligraphy.md) and `mu_cdata.sip` for [resource](./Resources.md) data.
 
 **Note:** it's possible to force newer client versions to load all data from the `mu_cdata.sip` archive by using the `-nocalligraphypak` launch parameter.
 
