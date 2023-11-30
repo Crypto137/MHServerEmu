@@ -30,18 +30,19 @@ namespace MHServerEmu.Games.Generators
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
         public Aabb CellBounds;
+        public bool IsInitialized { get; private set; }
 
+        private bool _supressMissingCellErrors;
         private EntryList _cells = new();
         private Dictionary<Cell.Filler, EntryList> _cellsFiller = new();
         private Dictionary<Cell.Type, EntryList> _cellsType = new();
         private Dictionary<Cell.Walls, EntryList> _cellsWalls = new();
-        private Dictionary<Cell.Type, Vector3> _connectionsType = new();
+        private Dictionary<Cell.Type, Vector3> _connectionsType = new();        
 
-        public bool IsInitialized { get; private set; }
-
-        internal void Initialize(bool supressMissingCellErrors)
+        public void Initialize(bool supressMissingCellErrors)
         {
-            throw new NotImplementedException();
+            _supressMissingCellErrors = supressMissingCellErrors;
+            IsInitialized = true;
         }
 
         public ulong GetCellSetAssetPicked(GRandom random, Cell.Type cellType, List<ulong> skipList)
@@ -293,19 +294,28 @@ namespace MHServerEmu.Games.Generators
             return true;
         }
 
-        internal Vector3 GetConnectionListForType(Cell.Type type)
+        public Vector3 GetConnectionListForType(Cell.Type type)
         {
-            throw new NotImplementedException();
+            return _connectionsType[type];
         }
 
-        internal bool IsComplete()
+        public bool IsComplete()
         {
-            throw new NotImplementedException();
+            for (int i = 1; i < 16; ++i)
+            {
+                Cell.Type type = (Cell.Type)i;
+                if (_connectionsType[type] == null && !_supressMissingCellErrors)
+                {
+                    Logger.Trace($"CellSetRegistry Missing {type}");
+                }
+            }
+            return true;
         }
 
-        internal bool HasCellOfType(Cell.Type cellType)
+        public bool HasCellOfType(Cell.Type cellType)
         {
-            throw new NotImplementedException();
+            return _connectionsType.ContainsKey(cellType);
         }
+
     }
 }

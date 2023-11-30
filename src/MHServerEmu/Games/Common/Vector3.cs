@@ -87,7 +87,7 @@ namespace MHServerEmu.Games.Common
         public void Set(float x, float y, float z)
         {
             X = x;
-            Y = y
+            Y = y;
             Z = z;
         }
 
