@@ -120,6 +120,7 @@ namespace MHServerEmu.Games.Regions
             W = 64,
             NW = 128,
             C = 256,
+            None = 0,
         }
     }
 }

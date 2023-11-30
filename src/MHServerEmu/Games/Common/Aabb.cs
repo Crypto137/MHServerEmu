@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using static MHServerEmu.Games.Powers.PowerPrototypes;
 
 namespace MHServerEmu.Games.Common
 {
@@ -134,9 +135,18 @@ namespace MHServerEmu.Games.Common
             Max = new Vector3(MathF.Round(Max.X), MathF.Round(Max.Y), MathF.Round(Max.Z));
         }
 
-        public bool IntersectsXY(Vector3 point) => point.X >= Min.X && point.X <= Max.X && point.Y >= Min.Y && point.Y <= Max.Y;
+        public bool IntersectsXY(Vector3 point)
+        {
+            return point.X >= Min.X && point.X <= Max.X &&
+                   point.Y >= Min.Y && point.Y <= Max.Y;
+        }
 
-
+        public bool Intersects(Aabb bounds)
+        {
+            return  bounds.Min.X <= Max.X && bounds.Max.X >= Min.X &&
+                    bounds.Min.Y <= Max.Y && bounds.Max.Y >= Min.Y &&
+                    bounds.Min.Z <= Max.Z && bounds.Max.Z >= Min.Z;
+        }
     }
     public enum ContainmentType
     {

@@ -3,7 +3,6 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Generators.Prototypes;
 using MHServerEmu.Games.Regions;
-using Vector3 = MHServerEmu.Games.Common.Vector3;
 
 namespace MHServerEmu.Games.Generators.Regions
 {
@@ -432,7 +431,6 @@ namespace MHServerEmu.Games.Generators.Regions
                     if (previousArea != null)
                     {
                         AreaSequenceInfoPrototype previousSequenceInfo = entry.Previous.SequenceInfo;
-
                         Picker<ConnectionPair> picker = entry.AreaConnectionPicker;
 
                         if (picker == null)
@@ -462,7 +460,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
                             bool testCollision = false;
 
-                            foreach (var a in Region.AreaList)
+                            foreach (var a in Region.AreaList) // IterateAreas()
                             {
                                 if (a == area) continue;
 

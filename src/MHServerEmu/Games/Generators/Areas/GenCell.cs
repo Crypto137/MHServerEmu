@@ -4,6 +4,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
 using System.Collections;
+using MHServerEmu.Common;
 
 namespace MHServerEmu.Games.Generators.Areas
 {
@@ -28,7 +29,7 @@ namespace MHServerEmu.Games.Generators.Areas
             return GetCell(GetIndex(x, y));
         }
 
-        private bool TestCoord(int x, int y)
+        public bool TestCoord(int x, int y)
         {
             return x >= 0 && x < Width && y >= 0 && y < Height;
         }
@@ -149,7 +150,6 @@ namespace MHServerEmu.Games.Generators.Areas
             return success;
         }
 
-
         public bool DestroyableCell(int x, int y)
         { 
             return VerifyCoord(x, y) && DestroyableCell(GetIndex(x, y));
@@ -229,8 +229,8 @@ namespace MHServerEmu.Games.Generators.Areas
                 if (GenCell.ShareConnection(cellA, cellB)) GenCell.Disconnect(cellA, cellB);
             }
 
-            GenCellConnectivityTest test = new ();
-            if (!test.TestCellConnected(this, cellA))
+            GenCellConnectivityTest connectivity = new ();
+            if (!connectivity.TestCellConnected(this, cellA))
             {
                 // Print3(PrintEnum.0);
                 Logger.Trace($"x: {x} y: {y}");
@@ -268,7 +268,7 @@ namespace MHServerEmu.Games.Generators.Areas
             if (!TestTypeConnection(x, y, cell, determineType, type, Cell.Type.S)) return false;
 
             Cell.Type testType = type & ~externalConnections; 
-            GenCellConnectivityTest ConnectivityTest = new ();
+            GenCellConnectivityTest connectivity = new ();
             List<GenCellConnectivityTest.GenCellConnection> list = new ();
 
             if (!testType.HasFlag(Cell.Type.E) && TestCoord(x, y + 1))
@@ -280,7 +280,7 @@ namespace MHServerEmu.Games.Generators.Areas
             if (!testType.HasFlag(Cell.Type.S) && TestCoord(x - 1, y))
                 list.Add(new (cell, GetCell(x - 1, y)));
 
-            if (ConnectivityTest.TestConnectionsRequired(this, cell, list)) return false;
+            if (connectivity.TestConnectionsRequired(this, cell, list)) return false;
 
             return true;
         }
@@ -324,7 +324,7 @@ namespace MHServerEmu.Games.Generators.Areas
             return true;
         }
 
-        private Cell.Type DetermineType(int x, int y)
+        public Cell.Type DetermineType(int x, int y)
         {
             Cell.Type type = Cell.Type.None;
             GenCell cell = GetCell(x, y);
@@ -341,23 +341,73 @@ namespace MHServerEmu.Games.Generators.Areas
             return type;
         }
 
+        public virtual bool DestroyUnrequiredConnections(GenCell cell, GRandom random, int chance)
+        {
+            if (cell == null) return false;
+
+            GenCellConnectivityTest connectivity = new ();
+
+            foreach (GenCell connection in cell.Connections)
+            {
+                if (connection != null)
+                {
+                    if (!CheckForConnectivity(cell, connection) 
+                        && !connectivity.TestConnectionRequired(this, cell, connection) 
+                        && random.NextPct(chance))
+                    {
+                        cell.DisconnectFrom(connection);
+                        connection.DisconnectFrom(cell);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        private bool CheckForConnectivity(GenCell cellA, GenCell cellB)
+        {
+            if (DeadEndMax > 0)
+            {
+                foreach (GenCell cell in Cells)
+                {
+                    if (cell == null) continue;
+
+                    int connections = 0;
+                    foreach (GenCell connectedCell in cell.Connections)
+                    {
+                        if (!((connectedCell == cellA && cell == cellB) || (connectedCell == cellB && cell == cellA)))
+                            connections++;
+                    }
+
+                    if (connections == 1)
+                    {
+                        if (!CheckForConnectivityPerCell(cell, 1, DeadEndMax, null, cellA, cellB))
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+
     }
     public class GenCellConnectivityTest
     {
         public class GenCellConnection
         {
-            private readonly GenCell _cellA;
-            private readonly GenCell _cellB;
+            private readonly GenCell _origin;
+            private readonly GenCell _target;
 
-            public GenCellConnection(GenCell cellA, GenCell cellB)
+            public GenCellConnection(GenCell origin, GenCell target)
             {
-                _cellA = cellA;
-                _cellB = cellB;
+                _origin = origin;
+                _target = target;
             }
 
             public bool Test(GenCell cellA, GenCell cellB)
             {
-                return (cellA == _cellA && cellB == _cellB) || (cellB == _cellA && cellA == _cellB);
+                return (cellA == _origin && cellB == _target) || (cellB == _origin && cellA == _target);
             }
         }
 
@@ -388,6 +438,17 @@ namespace MHServerEmu.Games.Generators.Areas
                     RunTreeWithExcludedConnections(connection, list);
                 }
             }
+        }
+
+        private void RunTreeWithExcludedConnection(GenCell cell, GenCell origin, GenCell target)
+        {
+            if (cell == null || origin == null || target == null) return;
+
+            List<GenCellConnection> list = new()
+            {
+                new GenCellConnection(origin, target)
+            };
+            RunTreeWithExcludedConnections(cell, list);
         }
 
         public static bool IsConnectionInList(List<GenCellConnection> list, GenCell cell, GenCell cellConnection)
@@ -449,6 +510,19 @@ namespace MHServerEmu.Games.Generators.Areas
             return false;
         }
 
+        public bool TestConnectionRequired(GenCellContainer container, GenCell cellA, GenCell cellB)
+        {
+            Reset(container);
+
+            if (cellB.CellRef != 0 || cellA.CellRef != 0) return true;
+
+            RunTreeWithExcludedConnection(cellA, cellA, cellB);
+
+            foreach (var item in _connectivity)
+                if (!item.Value) return true;
+
+            return false;
+        }
     }
 
     public class GenCellContainer : IEnumerable<GenCell>
@@ -461,7 +535,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         public int NumCells { get; private set; }
 
-        private readonly List<GenCell> Cells = new ();
+        public readonly List<GenCell> Cells = new ();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         public IEnumerator<GenCell> GetEnumerator() => Cells.GetEnumerator();
 
@@ -571,6 +645,41 @@ namespace MHServerEmu.Games.Generators.Areas
             return true;
         }
 
+        public bool CheckForConnectivityPerCell(GenCell cell, int level, int maxlevel, GenCell prev, GenCell cellA, GenCell cellB)
+        {
+            if (cell != null)
+            {
+                if (level > maxlevel) return false;
+
+                int connections = 0;
+                foreach (GenCell connection in cell.Connections)
+                {
+                    if (!((connection == cellA && cell == cellB) 
+                        || (connection == cellB && cell == cellA)))
+                        connections++;
+                }
+
+                if (connections >= 3) return true;
+
+                if (StartCells.Contains(cell) || DestinationCells.Contains(cell)) return true;
+
+                bool check = false;
+                foreach (GenCell connection in cell.Connections)
+                {
+                    if ((connection == prev) 
+                        || (connection == cellA && cell == cellB) 
+                        || (connection == cellB && cell == cellA))
+                        continue;
+
+                    check |= CheckForConnectivityPerCell(connection, level++, maxlevel, cell, cellA, cellB);
+                }
+
+                return check;
+            }
+
+            return false;
+        }
+
         private bool CheckForConnectivityPerCell(GenCell cell, int level, int maxlevel, GenCell prev, GenCell checkedCell)
         {
             if (cell != null)
@@ -583,12 +692,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
                 if (connections >= 3)  return true;
 
-                foreach (GenCell startCell in StartCells)
-                    if (cell == startCell) return true;
-
-                foreach (GenCell destinationCell in DestinationCells)
-                    if (cell == destinationCell)  return true;
-
+                if (StartCells.Contains(cell) || DestinationCells.Contains(cell)) return true;
 
                 bool check = false;
                 foreach (GenCell connection in cell.Connections)

@@ -83,6 +83,8 @@ namespace MHServerEmu.Games.Regions
         public ulong CellRef;
         public int Seed;
         public ulong OverrideLocationName;
+        public List<uint> ConnectedCells;
+        public ulong PopulationThemeOverrideRef;
     }
 
     public partial class Cell
@@ -512,7 +514,20 @@ namespace MHServerEmu.Games.Regions
     public partial class Region
     {
         public Aabb Bound { get; set; }
-        public Area StartArea { get; set; }
+        private Area _startArea;
+        public Area StartArea
+        {
+            get
+            {
+                if (_startArea == null && AreaList.Count > 0)
+                    _startArea = AreaList.First();
+                return _startArea;
+            }
+            set
+            {
+                _startArea = value;
+            }
+        }
         public RegionPrototype RegionPrototype { get; set; }
         public RegionSettings Setting { get; private set; }
         public RegionProgressionGraph ProgressionGraph { get; set; }
@@ -531,7 +546,7 @@ namespace MHServerEmu.Games.Regions
         {
             Aabb bound = Aabb.InvertedLimit;
 
-            foreach (var area in AreaList)
+            foreach (var area in AreaList) // IterateAreas()
                 bound += area.RegionBounds;
 
             return bound;
@@ -618,7 +633,7 @@ namespace MHServerEmu.Games.Regions
         public float GetDistanceToClosestAreaBounds(Vector3 position)
         {
             float minDistance = float.MaxValue;
-            foreach (var area in AreaList)
+            foreach (var area in AreaList) // IterateAreas()
             {
                 float distance = area.RegionBounds.DistanceToPoint2D(position);
                 minDistance = Math.Min(distance, minDistance);

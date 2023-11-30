@@ -5,6 +5,7 @@ using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Gpak;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Generators.Prototypes;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData
@@ -131,6 +132,11 @@ namespace MHServerEmu.Games.GameData
         }
 
         internal static List<CellPrototype> GetCellPrototypesByPath(string cellSetPath)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal static GlobalsPrototype GetGlobalsPrototype()
         {
             throw new NotImplementedException();
         }

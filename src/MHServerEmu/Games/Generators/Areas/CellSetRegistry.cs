@@ -20,10 +20,12 @@ namespace MHServerEmu.Games.Generators.Areas
 
         public CellSetRegistryEntry(){}
     }
+
     public class EntryList : List<CellSetRegistryEntry>
     {
         public EntryList() { }
     }
+
     public class CellSetRegistry
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
@@ -35,7 +37,12 @@ namespace MHServerEmu.Games.Generators.Areas
         private Dictionary<Cell.Walls, EntryList> _cellsWalls = new();
         private Dictionary<Cell.Type, Vector3> _connectionsType = new();
 
-        public bool IsInitialized { get; internal set; }
+        public bool IsInitialized { get; private set; }
+
+        internal void Initialize(bool supressMissingCellErrors)
+        {
+            throw new NotImplementedException();
+        }
 
         public ulong GetCellSetAssetPicked(GRandom random, Cell.Type cellType, List<ulong> skipList)
         {
@@ -56,6 +63,27 @@ namespace MHServerEmu.Games.Generators.Areas
             }
             else
                 Logger.Warn($"Warning: Generator tried to prevent choosing a type {cellType} cell that was similar to it's neighbors but failed doing so due to a lack of alternatives, consider making more variations of that type.");
+
+            return 0;
+        }
+
+        public ulong GetCellSetAssetPickedByFiller(GRandom random, Cell.Filler fillerType)
+        {
+            EntryList entryList = _cellsFiller[fillerType];
+
+            if (entryList == null || entryList.Count == 0) return 0;
+
+            Picker<CellSetRegistryEntry> picker = new(random);
+            bool picked = PopulatePickerPhases(picker, entryList, null);
+
+            if (picked)
+            {
+                if (!picker.Empty() && picker.Pick(out CellSetRegistryEntry entry))
+                {
+                    entry.Picked = true;
+                    return entry.CellRef;
+                }
+            }
 
             return 0;
         }
@@ -274,7 +302,7 @@ namespace MHServerEmu.Games.Generators.Areas
             throw new NotImplementedException();
         }
 
-        internal void Initialize(bool supressMissingCellErrors)
+        internal bool HasCellOfType(Cell.Type cellType)
         {
             throw new NotImplementedException();
         }

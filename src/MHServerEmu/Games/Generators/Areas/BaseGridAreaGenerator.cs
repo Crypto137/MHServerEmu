@@ -11,14 +11,14 @@ namespace MHServerEmu.Games.Generators.Areas
 {
     public class BaseGridAreaGenerator : Generator
     {
-        private readonly CellSetRegistry CellSetRegistry = new();
         private readonly List<RegionTransitionSpec> RegionTransitions = new();
         private readonly List<RegionTransitionSpec> RequiredTransitions = new();
 
+        public readonly CellSetRegistry CellSetRegistry = new();
         public GenCellGridContainer CellContainer { get; set; }
-        private float IncrementZ { get; }
-        private int IncrementX { get; }
-        private int IncrementY { get; }
+        public float IncrementZ { get; set; }
+        public float IncrementX { get; set; }
+        public float IncrementY { get; set; }
         
         public override Aabb PreGenerate(GRandom random)
         {            
@@ -217,6 +217,15 @@ namespace MHServerEmu.Games.Generators.Areas
                 return false;
             }
             return true;
+        }
+
+        public static void CreateConnectedCellList(GenCell cell, List<uint> connectedCells)
+        {
+            if (cell != null)
+            {
+                foreach (var connectedCell in cell.Connections)
+                    connectedCells.Add(connectedCell.Id);
+            }
         }
 
         public bool CreateRequiredCells(GRandom random, RegionGenerator regionGenerator, List<ulong> areas)
