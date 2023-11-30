@@ -36,11 +36,7 @@ namespace MHServerEmu.Games.Generators.Regions
         private void DoConnection(GRandom random, Region region, StaticAreaPrototype[] staticAreas, StaticRegionGeneratorPrototype regionGeneratorProto)
         {
             RegionProgressionGraph graph = region.ProgressionGraph;
-
-            if (StartArea != null && graph.GetRoot() == null )
-            {
-                graph.SetRoot(StartArea);
-            }
+            if (StartArea != null && graph.GetRoot() == null ) graph.SetRoot(StartArea);
 
             if (staticAreas.Length > 1)
             {
@@ -81,7 +77,6 @@ namespace MHServerEmu.Games.Generators.Regions
                 picker.Add(point);
 
             if (picker.Empty()) return false;
-
             if (!picker.Pick(out connection)) return false;
 
             return true;

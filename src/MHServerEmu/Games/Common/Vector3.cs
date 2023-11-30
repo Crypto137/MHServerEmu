@@ -6,8 +6,6 @@ namespace MHServerEmu.Games.Common
 {
     public class Vector3
     {
-        public static readonly Vector3 Zero = new(0.0f, 0.0f, 0.0f);
-
         // precision values: 3 for position, 6 for orientation
 
         public float X { get; set; }    // Yaw for orientation
@@ -17,7 +15,7 @@ namespace MHServerEmu.Games.Common
         public float this[int index]
         {
             get
-            {                
+            {
                 if (index == 0) return X;
                 if (index == 1) return Y;
                 if (index == 2) return Z;
@@ -79,6 +77,20 @@ namespace MHServerEmu.Games.Common
         public NetStructIPoint3 ToNetStructIPoint3() => NetStructIPoint3.CreateBuilder()
             .SetX((uint)MathF.Max(0f, X)).SetY((uint)MathF.Max(0f, Y)).SetZ((uint)MathF.Max(0f, Z)).Build();    // Use MathF.Max when converting to NetStructIPoint3 to prevent underflow
 
+        public void Set(Vector3 v)
+        {
+            X = v.X;
+            Y = v.Y;
+            Z = v.Z;
+        }
+
+        public void Set(float x, float y, float z)
+        {
+            X = x;
+            Y = y
+            Z = z;
+        }
+
         public static Vector3 operator +(Vector3 a, Vector3 b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
         public static Vector3 operator -(Vector3 a, Vector3 b) => new(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
         public static Vector3 operator *(Vector3 v, float f) => new(v.X * f, v.Y * f, v.Z * f);
@@ -117,14 +129,19 @@ namespace MHServerEmu.Games.Common
             return (dotca - dotcb * (dotcb / dotba));
         }
 
-        public static float DistanceSquared2D(Vector3 a, Vector3 b) => LengthSqr(new Vector3(b.X - a.X, b.Y - a.Y, 0.0f));
-        
+        public static float DistanceSquared2D(Vector3 a, Vector3 b) => LengthSqr(new (b.X - a.X, b.Y - a.Y, 0.0f));
+
         public static Vector3 Normalize2D(Vector3 v)
         {
-            Vector3 vector2D = new (v.X, v.Y, 0f);
-            return IsNearZero(vector2D, 0.000001f) ? new(XAxis) : Normalize(vector2D); 
+            Vector3 vector2D = new(v.X, v.Y, 0f);
+            return IsNearZero(vector2D, 0.000001f) ? XAxis : Normalize(vector2D);
         }
-        public static Vector3 XAxis => new (1f, 0f, 0f);
+
         public static Vector3 Normalize(Vector3 v) =>  v / Length(v);
+
+        // static vectors
+
+        public static Vector3 Zero { get => new(0.0f, 0.0f, 0.0f); }
+        public static Vector3 XAxis { get => new(1.0f, 0.0f, 0.0f); }
     }
 }

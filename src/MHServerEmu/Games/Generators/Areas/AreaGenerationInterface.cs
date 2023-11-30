@@ -1,5 +1,4 @@
-﻿
-using MHServerEmu.Common;
+﻿using MHServerEmu.Common;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -17,7 +16,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         public override bool Initialize(Area area)
         {
-            if (base.Initialize(area) == false) return false;
+            if (!base.Initialize(area)) return false;
 
             if (Area.AreaPrototype.Generator is not AreaGenerationInterfacePrototype) return false;
 
@@ -29,7 +28,7 @@ namespace MHServerEmu.Games.Generators.Areas
         public override Aabb PreGenerate(GRandom random)
         {
             PreGenerated = true;
-            return new(Aabb.InvertedLimit);
+            return Aabb.InvertedLimit;
         }
 
         public override bool Generate(GRandom random, RegionGenerator regionGenerator, List<ulong> areas)
@@ -43,7 +42,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 {
                     CellSettings cellSettings = new()
                     {
-                        PositionInArea = cell.Position,
+                        PositionInArea = new(cell.Position),
                         CellRef = cell.CellRef
                     };
 
@@ -73,7 +72,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         public bool PlaceCell(ulong cellRef, Vector3 position)
         {
-            if (UpdateBounds(Area, cellRef, position) == false) return false;
+            if (!UpdateBounds(Area, cellRef, position)) return false;
 
             return GenCellContainer.CreateCell(AllocateCellId(), position, cellRef);
         }

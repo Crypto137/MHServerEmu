@@ -39,7 +39,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         public override Aabb PreGenerate(GRandom random)
         {
-            if (Area.AreaPrototype.Generator is not TowerAreaGeneratorPrototype proto) return new(Aabb.InvertedLimit);
+            if (Area.AreaPrototype.Generator is not TowerAreaGeneratorPrototype proto) return Aabb.InvertedLimit;
 
             if (proto.Entries != null)
             {
@@ -59,7 +59,7 @@ namespace MHServerEmu.Games.Generators.Areas
                     }
                     else
                     {
-                        // false;
+                        Logger.Error("PreGenerate entry unknown");
                     }
                 }
                 GridSize = (int)Math.Sqrt(totalCells) + 1;
@@ -78,7 +78,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 return new (min, max);
             }
 
-            return new(Aabb.InvertedLimit);
+            return Aabb.InvertedLimit;
         }
 
 
@@ -156,6 +156,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
             int x = NumCells / GridSize;
             int y = 0;
+
             if ((x % 2) == 0)
                 y = NumCells % GridSize;
             else if ((x % 2) == 1)
@@ -171,7 +172,7 @@ namespace MHServerEmu.Games.Generators.Areas
             CellSettings settings = new()
             {
                 CellRef = cellRef,
-                PositionInArea = positionInArea,
+                PositionInArea = new(positionInArea),
                 OverrideLocationName = locationName
             };
 

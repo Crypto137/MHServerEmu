@@ -1,5 +1,4 @@
 ﻿using System.Text.Json.Serialization;
-using static MHServerEmu.Games.Powers.PowerPrototypes;
 
 namespace MHServerEmu.Games.Common
 {
@@ -39,10 +38,25 @@ namespace MHServerEmu.Games.Common
 
         [JsonIgnore]
 
-        public static readonly Aabb InvertedLimit = new (
-            new Vector3(float.MaxValue, float.MaxValue, float.MaxValue),
-            new Vector3(float.MinValue, float.MinValue, float.MinValue)
-          );
+        public static Aabb InvertedLimit
+        {
+            get => new(
+                new Vector3(float.MaxValue, float.MaxValue, float.MaxValue),
+                new Vector3(float.MinValue, float.MinValue, float.MinValue)
+            );
+        }
+
+        public void Set(Aabb aabb)
+        {
+            Min.Set(aabb.Min);
+            Max.Set(aabb.Max);
+        }
+
+        public void Set(Vector3 min, Vector3 max)
+        {
+            Min.Set(min);
+            Max.Set(max);
+        }
 
         public static Aabb operator +(Aabb aabb1, Aabb aabb2)
         {
@@ -131,8 +145,8 @@ namespace MHServerEmu.Games.Common
 
         public void RoundToNearestInteger()
         {
-            Min = new Vector3(MathF.Round(Min.X), MathF.Round(Min.Y), MathF.Round(Min.Z));
-            Max = new Vector3(MathF.Round(Max.X), MathF.Round(Max.Y), MathF.Round(Max.Z));
+            Min.Set( MathF.Round(Min.X), MathF.Round(Min.Y), MathF.Round(Min.Z) );
+            Max.Set( MathF.Round(Max.X), MathF.Round(Max.Y), MathF.Round(Max.Z) );
         }
 
         public bool IntersectsXY(Vector3 point)

@@ -3,6 +3,7 @@ using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Generators.Areas
 {
@@ -39,5 +40,104 @@ namespace MHServerEmu.Games.Generators.Areas
             return regionManager.AllocateCellId();
         }
 
+        public static bool DoBorderBehavior(Area area, int borderWidth, CellSetRegistry registry, float cellSize, int cellsX, int cellsY)
+        {
+            GRandom random = area.Game.GetRandom();
+            Vector3 origin = area.Origin;
+            Vector3 offset = Vector3.Zero;
+            Cell.Filler filler;
+
+            for (int w = 1; w <= borderWidth; w++)
+            {
+                for (int x = 0; x < cellsX + borderWidth; x++)
+                {
+                    filler = Cell.Filler.E;
+                    if (x == (cellsX + borderWidth - 1)) filler = Cell.Filler.SE;
+
+                    offset.X = x * cellSize;
+                    offset.Y = -w * cellSize;
+                    TryPlaceBorderBehaviorCell(area, registry, random, origin, offset, filler);
+
+                    filler = Cell.Filler.W;
+                    if (x == (cellsX + borderWidth - 1)) filler = Cell.Filler.NW;
+
+                    offset.X = (cellsX - x - 1) * cellSize;
+                    offset.Y = (cellsY + w - 1) * cellSize;
+                    TryPlaceBorderBehaviorCell(area, registry, random, origin, offset, filler);
+                }
+
+                for (int y = 0; y < cellsY + borderWidth; y++)
+                {
+                    filler = Cell.Filler.S;
+                    if (y == (cellsY + borderWidth - 1)) filler = Cell.Filler.SW;
+
+                    offset.X = (cellsX + w - 1) * cellSize;
+                    offset.Y = y * cellSize;
+                    TryPlaceBorderBehaviorCell(area, registry, random, origin, offset, filler);
+
+                    filler = Cell.Filler.N;
+                    if (y == (cellsY + borderWidth - 1)) filler = Cell.Filler.NE;
+
+                    offset.X = -w * cellSize;
+                    offset.Y = (cellsY - y - 1) * cellSize;
+                    TryPlaceBorderBehaviorCell(area, registry, random, origin, offset, filler);
+                }
+            }
+
+            return true;
+        }
+
+        private static bool TryPlaceBorderBehaviorCell(Area area, CellSetRegistry registry, GRandom random, Vector3 origin, Vector3 offset, Cell.Filler fillerType)
+        {
+            if (area == null) return false;
+
+            uint areaId = area.Id;
+            Region region = area.Region;
+
+            Vector3 position = origin + offset;
+            bool inAreas = true;
+            Aabb cellBounds = registry.CellBounds;
+
+            foreach (Area testArea in region.AreaList) // IterateAreas()
+            {
+                Aabb regionBounds = testArea.RegionBounds;
+                Aabb testBounds = new(position, cellBounds.Width - 128.0f, cellBounds.Length - 128.0f, cellBounds.Height - 128.0f);
+
+                if (regionBounds.Intersects(testBounds) && testArea.Id != areaId)
+                {
+                    inAreas = false;
+                    break;
+                }
+            }
+
+            if (inAreas)
+            {
+                ulong dynamicAreaRef = GameDatabase.GetGlobalsPrototype().DynamicArea;
+                Area dynamicArea = region.CreateArea(dynamicAreaRef, position);
+                AreaGenerationInterface generatorInterface = dynamicArea.GetAreaGenerationInterface();
+
+                if (generatorInterface != null)
+                {
+                    ulong cellRef = registry.GetCellSetAssetPickedByFiller(random, fillerType);
+                    if (cellRef == 0) cellRef = registry.GetCellSetAssetPickedByFiller(random, Cell.Filler.None);
+
+                    if (cellRef != 0)
+                    {
+                        generatorInterface.PlaceCell(cellRef, new());
+                        area.AddSubArea(dynamicArea);
+
+                        List<ulong> areas = new() { area.GetPrototypeDataRef() };
+                        dynamicArea.Generate(null, areas, GenerateFlag.Background);
+                        return true;
+                    }
+                    else
+                    {
+                        region.DestroyArea(dynamicArea.Id);
+                    }
+                }
+            }
+
+            return false;
+        }
     }
 }

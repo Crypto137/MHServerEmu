@@ -29,6 +29,12 @@
             return Vector3.Length(GetDirection());
         }
 
+        public void Set(Segment segment)
+        {
+            Start.Set(segment.Start);
+            End.Set(segment.End);
+        }
+
         public static bool EpsilonTest(float val1, float val2, float epsilon = 0.000001f)
         {
             return val1 >= val2 - epsilon && val1 <= val2 + epsilon;

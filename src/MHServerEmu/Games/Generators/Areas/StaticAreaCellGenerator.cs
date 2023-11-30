@@ -15,7 +15,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         public override Aabb PreGenerate(GRandom random)
         {
-            Aabb bounds = new(Aabb.InvertedLimit);
+            Aabb bounds = Aabb.InvertedLimit;
 
             DistrictPrototype protoDistrict = GetDistrictPrototype();
             if (protoDistrict == null || protoDistrict.CellMarkerSet.Markers == null) return bounds;
@@ -113,12 +113,12 @@ namespace MHServerEmu.Games.Generators.Areas
                 return null;
             }
 
-            ulong DistrictProtoId = GameDatabase.GetDataRefByAsset(districtAssetRef);
-            DistrictPrototype protoDistrict = GameDatabase.GetPrototype<DistrictPrototype>(DistrictProtoId);
+            ulong districtRef = GameDatabase.GetDataRefByAsset(districtAssetRef);
+            DistrictPrototype protoDistrict = GameDatabase.GetPrototype<DistrictPrototype>(districtRef);
             if (protoDistrict == null)
                 Logger.Warn($"District Prototype is not available. Likely a missing file. Looking for Asset: {GameDatabase.GetAssetName(districtAssetRef)}");
 
-            area.DistrictDataRef = DistrictProtoId;
+            area.DistrictDataRef = districtRef;
 
             return protoDistrict;
         }
@@ -150,7 +150,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 ulong cellRef = GameDatabase.GetPrototypeRefByName(resourceMarker.Resource);
                 if (cellRef == 0) continue;
 
-                Vector3 cellPos = resourceMarker.Position;
+                Vector3 offset = resourceMarker.Position;
                 CellPrototype cellProto = GameDatabase.GetPrototype<CellPrototype>(cellRef);
                 if (cellProto == null) continue;
 
@@ -160,7 +160,7 @@ namespace MHServerEmu.Games.Generators.Areas
                     {
                         if (marker is not CellConnectorMarkerPrototype cellConnector)  continue;
 
-                        Vector3 connection = origin + cellPos + cellConnector.Position;
+                        Vector3 connection = origin + offset + cellConnector.Position;
 
                         if (segment.Start.X == segment.End.X)
                         {

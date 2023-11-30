@@ -29,9 +29,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 Seed = Area.RandomSeed
             };
 
-            if (Area.AddCell(AllocateCellId(), cellSettings) == null) return false;
-
-            return true;
+            return Area.AddCell(AllocateCellId(), cellSettings) != null;
         }
         
         public override bool GetPossibleConnections(ConnectionList connections, Segment segment)
@@ -43,7 +41,7 @@ namespace MHServerEmu.Games.Generators.Areas
             if (cellProto == null) return false;
 
             Vector3 origin = Area.Origin;
-            Vector3 cellPos = new();
+            Vector3 offset = Vector3.Zero;
 
             if (cellProto.MarkerSet.Markers != null)
             {      
@@ -51,7 +49,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 {
                     if (marker is not CellConnectorMarkerPrototype cellConnector) continue;
 
-                    Vector3 connection = origin + cellPos + cellConnector.Position;
+                    Vector3 connection = origin + offset + cellConnector.Position;
 
                     if (segment.Start.X == segment.End.X)
                     {
@@ -102,13 +100,13 @@ namespace MHServerEmu.Games.Generators.Areas
 
         public override Aabb PreGenerate(GRandom random)
         {
-            Aabb bounds = new(Aabb.InvertedLimit);
+            Aabb bounds = Aabb.InvertedLimit;
 
             CellPrototype cellProto = GetCellPrototype(); 
 
             if (cellProto != null)
             {
-                bounds = new(cellProto.BoundingBox);
+                bounds.Set(cellProto.BoundingBox);
                 PreGenerated = true;
             }
 

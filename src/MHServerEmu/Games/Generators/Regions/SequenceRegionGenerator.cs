@@ -130,7 +130,6 @@ namespace MHServerEmu.Games.Generators.Regions
 
     public class GenAtPositionFunctor : PositionFunctor
     {
-
         private int _tries;
         private float _separation;
         private SequenceRegionGenerator _generator;
@@ -417,7 +416,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
             if (entry.Previous == null)
             {
-                area.Origin = origin;
+                area.Origin.Set(origin);
                 success = true;
             }
             else
@@ -456,15 +455,15 @@ namespace MHServerEmu.Games.Generators.Regions
                         {
                             Aabb localBounds = area.LocalBounds;
                             Vector3 translation = connectionPair.A - connectionPair.B;
-                            Aabb newBounds = localBounds.Translate(translation);
+                            Aabb testBounds = localBounds.Translate(translation);
 
                             bool testCollision = false;
 
-                            foreach (var a in Region.AreaList) // IterateAreas()
+                            foreach (var testArea in Region.AreaList) // IterateAreas()
                             {
-                                if (a == area) continue;
+                                if (testArea == area) continue;
 
-                                if (a.RegionBounds.ContainsXY(newBounds, -128.0f) != ContainmentType.Disjoint)
+                                if (testArea.RegionBounds.ContainsXY(testBounds, -128.0f) != ContainmentType.Disjoint)
                                 {
                                     testCollision = true;
 
@@ -480,7 +479,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
                             if (testCollision) continue;
 
-                            area.Origin = translation;
+                            area.Origin.Set(translation);
 
                             if (RegionGenerator.GetSharedConnections(sharedConnections, area, previousArea))
                             {
@@ -526,7 +525,6 @@ namespace MHServerEmu.Games.Generators.Regions
 
         private bool PickArea(GRandom random, SequenceStackEntry entry)
         {
-
             if (entry == null) return false;
 
             AreaSequenceInfoPrototype sequenceInfo = entry.SequenceInfo;
@@ -578,7 +576,6 @@ namespace MHServerEmu.Games.Generators.Regions
 
         private static bool PickSequence(GRandom random, SequenceStackEntry entry, AreaSequenceInfoPrototype[] areaInfos, List<AreaSequenceInfoPrototype> selectedAreaSequenceInfos)
         {          
-
             if (entry == null || areaInfos == null || areaInfos.Length == 0 || selectedAreaSequenceInfos == null) return false;
 
             entry.Reset();
@@ -658,8 +655,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
         public Picker<ConnectionPair> SetAreaConnectionPicker(List<ConnectionPair> pairs, GRandom random)
         {
-            if (WeightedArea == null || AreaConnectionPicker != null || pairs.Count == 0)
-                return null;
+            if (WeightedArea == null || AreaConnectionPicker != null || pairs.Count == 0) return null;
 
             AreaConnectionPicker = new(random);
 
@@ -699,10 +695,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
         public bool HasOtherConnectionOptions()
         {
-            if (WeightedArea != null && AreaConnectionPicker != null)
-            {
-                return !AreaConnectionPicker.Empty();
-            }
+            if (WeightedArea != null && AreaConnectionPicker != null) return !AreaConnectionPicker.Empty();
             return false;
         }
 
@@ -713,6 +706,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
     public class AreaEdge
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
         public Area Area { get; }
         public Cell.Type Type { get; }
         public Segment Edge { get; }
@@ -739,7 +733,7 @@ namespace MHServerEmu.Games.Generators.Regions
             }
             else
             {
-               // error false
+                Logger.Error("AreaEdge A != B");
             }
 
         }
@@ -751,6 +745,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
     public class EdgeReport
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
         public Area Area { get; }
         public List<AreaEdge> Edges { get; }
         public Cell.Type EdgeType { get; private set; }
@@ -803,7 +798,6 @@ namespace MHServerEmu.Games.Generators.Regions
             return false;
         }
 
-
         public bool HasEdge(Cell.Type side) => (EdgeType & side) != 0;
 
         private void PushOrCleanEdge(AreaEdge edge)
@@ -815,7 +809,7 @@ namespace MHServerEmu.Games.Generators.Regions
             }
             else
             {
-                // edge = null;
+                Logger.Error("PushOrCleanEdge edge = null");
             }
         }
 
@@ -836,10 +830,7 @@ namespace MHServerEmu.Games.Generators.Regions
                             foreach (var pointB in edgeB.ConnectionList)
                             {
                                 ConnectionPair pair = new (pointA, pointB);
-                                if (aligned == false || CheckAlignment(edgeA, edgeB, pair))
-                                {
-                                    possibleConnections.Add(pair);
-                                }
+                                if (aligned == false || CheckAlignment(edgeA, edgeB, pair)) possibleConnections.Add(pair);
                             }
                         }
                     }

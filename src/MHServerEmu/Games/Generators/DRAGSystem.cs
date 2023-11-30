@@ -6,14 +6,11 @@ using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Generators;
-using System.Diagnostics;
 using MHServerEmu.Games.Generators.Navi;
-using Vector3 = MHServerEmu.Games.Common.Vector3;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Common;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Entities;
-using System.Collections.Generic;
 
 namespace MHServerEmu.Games.Generators
 {
@@ -199,8 +196,8 @@ namespace MHServerEmu.Games.Regions
             Game = game;
             Region = region;
             Origin = new();
-            LocalBounds = new(Aabb.InvertedLimit);
-            RegionBounds = new(Aabb.InvertedLimit);
+            LocalBounds = Aabb.InvertedLimit;
+            RegionBounds = Aabb.InvertedLimit;
         }
 
         public bool Initialize(AreaSettings settings)
@@ -508,11 +505,11 @@ namespace MHServerEmu.Games.Regions
             Id = 0;
             ConnectPosition = ConnectPosition.One;
         }
-
     }
 
     public partial class Region
     {
+        public static readonly Logger Logger = LogManager.CreateLogger();
         public Aabb Bound { get; set; }
         private Area _startArea;
         public Area StartArea
@@ -639,7 +636,8 @@ namespace MHServerEmu.Games.Regions
                 minDistance = Math.Min(distance, minDistance);
             }
 
-            Debug.Assert(minDistance != float.MaxValue);
+            if (minDistance != float.MaxValue) 
+                Logger.Error("GetDistanceToClosestAreaBounds");
             return minDistance;
         }
 
@@ -670,6 +668,7 @@ namespace MHServerEmu.Games.Regions
 
     public class RegionProgressionGraph
     {
+        public static readonly Logger Logger = LogManager.CreateLogger();
         private RegionProgressionNode _root;
         private List<RegionProgressionNode> _nodes;
 
@@ -704,12 +703,15 @@ namespace MHServerEmu.Games.Regions
             if (foundParent == null) return;
 
             RegionProgressionNode childNode = _root.FindChildNode(child, true);
-
             if (childNode == null)
+            {
                 childNode = CreateNode(foundParent, child);
+                if (childNode == null) return;
+            }
             else
             {
-                // Error double link
+                Logger.Error($"Attempt to do a double link between a parent and child:\n parent: {foundParent.Area}\n child: {child}");
+                return;
             }
 
             foundParent.AddChild(childNode);
