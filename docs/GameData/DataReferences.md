@@ -42,4 +42,6 @@ For resource prototypes:
 
 Example: `Resource/Encounters/CH09Norway/OM_NordicRuins_CowBosses.encounter` should be formatted as `&Resource/Encounters/CH09Norway/OM_NordicRuins_CowBosses.encounter`.
 
+[Pak file](./PakFile.md) entry hashes are generated the same way, but without any additional formatting.
+
 GUID generation algorithms are currently unknown.

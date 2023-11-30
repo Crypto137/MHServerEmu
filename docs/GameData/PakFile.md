@@ -2,7 +2,7 @@
 
 A pak file (also known as `GPAK` by its signature and `sip` by its extension) is an archive that contains game data. Early versions of the game used a SQLite database for storage, but later on it was replaced with a custom format.
 
-Initially all data was stored in a single `mu_cdata.sip` file located in `%GameDirectory%\UnrealEngine3\Binaries\Win32\Data`. Eventually data was separated into two files (`Calligraphy.sip` and `mu_cdata.sip`) located in `%GameDirectory%\Data\Game`.
+Initially all data was stored in a single `mu_cdata.sip` file located in `%GameDirectory%\UnrealEngine3\Binaries\Win32\Data`. Eventually data was separated into two files (`Calligraphy.sip` and `mu_cdata.sip`), and then moved to `%GameDirectory%\Data\Game`.
 
 ## SQLite Paks
 
@@ -12,7 +12,7 @@ The `data_tbl` table has the following columns:
 
 | Name | Type      | Constraints             | Description    |
 | ---- | --------- | ----------------------- | -------------- |
-| `i`  | `INTEGER` |                         | File id / hash |
+| `i`  | `INTEGER` |                         | File name hash |
 | `n`  | `TEXT`    | `UNIQUE COLLATE NOCASE` | File name      |
 | `b`  | `BLOB`    |                         | Data           |
 | `l`  | `INTEGER` |                         | Data size      |
@@ -29,7 +29,7 @@ There are two known versions of these SQLite-based paks:
 
 | Format Version | Note                                                                        | Client Version |
 | -------------- | --------------------------------------------------------------------------- | -------------- |
-| 1.5            | Added back index for names for non-maxload optimization                     | 1.9-1.22       |
+| 1.5            | Added back index for names for non-maxload optimization                     | 1.9-1.21       |
 | 1.6            | Added lz4 compression for stored data to speed up shipping client load time | 1.22-1.28      |
 
 ## Custom Gazillion Paks
@@ -68,6 +68,8 @@ struct PakEntry
 }
 ```
 
+`FileHash` is `FileName` hashed using the same algorithm as Calligraphy / resource [data references](./DataReferences.md), but without any additional formatting. Files are sorted by their hash value.
+
 The entries are followed by raw data compressed using the [LZ4](https://github.com/lz4/lz4) algorithm. The offsets specified in the entries are from where the raw data begins.
 
-Data from these custom paks can be extracted and parsed with [MHDataParser](https://github.com/Crypto137/MHDataParser).
+These custom paks can be unpacked and packed with the [MHPakTool](./../../Tools/MHPakTool) included in this repository. Data can be parsed with [MHDataParser](https://github.com/Crypto137/MHDataParser),
