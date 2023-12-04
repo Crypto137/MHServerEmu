@@ -6,14 +6,13 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Prototypes;
 using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Regions;
-using System.Collections.Generic;
 
 namespace MHServerEmu.Games.Generators.Areas
 {
     public class BaseGridAreaGenerator : Generator
     {
-        private readonly List<RegionTransitionSpec> RegionTransitions = new();
-        private readonly List<RegionTransitionSpec> RequiredTransitions = new();
+        private readonly List<RegionTransitionSpec> _regionTransitions = new();
+        private readonly List<RegionTransitionSpec> _requiredTransitions = new();
 
         public readonly CellSetRegistry CellSetRegistry = new();
         public GenCellGridContainer CellContainer { get; set; }
@@ -69,11 +68,11 @@ namespace MHServerEmu.Games.Generators.Areas
                     target.Area == area.GetPrototypeDataRef() && target.Cell != 0)
                 {
                     RegionTransitionSpec spec = new (target.Cell, target.Entity, true);
-                    RegionTransitions.Add(spec);
+                    _regionTransitions.Add(spec);
                 }
             }
 
-            RegionTransition.GetRequiredTransitionData(region.GetPrototypeDataRef(), area.GetPrototypeDataRef(), RegionTransitions);
+            RegionTransition.GetRequiredTransitionData(region.GetPrototypeDataRef(), area.GetPrototypeDataRef(), _regionTransitions);
 
             return InitializeCellRegistry() && InitializeContainer();
         }
@@ -261,9 +260,9 @@ namespace MHServerEmu.Games.Generators.Areas
                 }
             }
 
-            if (!failed && RequiredTransitions.Any())
+            if (!failed && _requiredTransitions.Any())
             {
-                foreach (RegionTransitionSpec spec in RequiredTransitions)
+                foreach (RegionTransitionSpec spec in _requiredTransitions)
                 {
                     ulong cellRef = spec.GetCellRef();
                     if (proto.RequiresCell(cellRef))  continue;
@@ -373,8 +372,8 @@ namespace MHServerEmu.Games.Generators.Areas
         private bool FillPickerWithReservableCells(Picker<Point2> picker, ulong cellRef, RequiredCellBasePrototype requiredCell = null)
         {
             if (CellContainer == null) return false;
-
             picker.Clear();
+
             for (int y = 0; y < CellContainer.Height; ++y)
             {
                 for (int x = 0; x < CellContainer.Width; ++x)
@@ -538,7 +537,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         private void RemoveCellFromRegionTransitionSpecList(ulong cell)
         {
-            RequiredTransitions.RemoveAll(transition => cell == transition.Cell);
+            _requiredTransitions.RemoveAll(transition => cell == transition.Cell);
         }
 
         public bool GenerateRandomInstanceLinks(GRandom random)
@@ -1081,6 +1080,54 @@ namespace MHServerEmu.Games.Generators.Areas
             return false;
         }
 
+        public void BuildExcludedListLikeCells(int x, int y, Cell.Type cellType, List<ulong> excludedList)
+        {
+            if (CellContainer == null) return;
+
+            void AddExcludedCell(int tX, int tY)
+            {
+                if (CellContainer.TestCoord(tX, tY))
+                {
+                    GenCell testCell = CellContainer.GetCell(tX, tY);
+                    if (testCell != null && testCell.CellRef != 0 && CellContainer.DetermineType(tX, tY) == cellType)
+                        excludedList.Add(testCell.CellRef);
+                }
+            }
+
+            AddExcludedCell(x + 1, y);  // N
+            AddExcludedCell(x, y + 1);  // E
+            AddExcludedCell(x - 1, y);  // S
+            AddExcludedCell(x, y - 1);  // W 
+        }
+
+        public bool PlaceFillerRoom(GRandom random, int x, int y, Vector3 position)
+        {
+            Cell.Filler filler = Cell.Filler.None;
+
+            if (CellContainer.GetCell(x + 1, y, false) != null)     filler |= Cell.Filler.N;
+            if (CellContainer.GetCell(x + 1, y + 1, false) != null) filler |= Cell.Filler.NE;
+            if (CellContainer.GetCell(x, y + 1, false) != null)     filler |= Cell.Filler.E;
+            if (CellContainer.GetCell(x - 1, y + 1, false) != null) filler |= Cell.Filler.SE;
+            if (CellContainer.GetCell(x - 1, y, false) != null)     filler |= Cell.Filler.S;
+            if (CellContainer.GetCell(x - 1, y - 1, false) != null) filler |= Cell.Filler.SW;
+            if (CellContainer.GetCell(x, y - 1, false) != null)     filler |= Cell.Filler.W;
+            if (CellContainer.GetCell(x + 1, y - 1, false) != null) filler |= Cell.Filler.NW;
+
+            ulong cellRef = CellSetRegistry.GetCellSetAssetPickedByFiller(random, filler);
+            if (cellRef == 0) cellRef = CellSetRegistry.GetCellSetAssetPickedByFiller(random, Cell.Filler.None);
+
+            if (cellRef != 0)
+            {
+                CellSettings cellSettings = new()
+                {
+                    PositionInArea = new(position),
+                    CellRef = cellRef
+                };
+                return Area.AddCell(AllocateCellId(), cellSettings) != null;
+            }
+            return false;
+        }
+
         private bool DijkstraRoad(List<RoadInfo> buildGrid, Point2 pointA, Point2 pointB, List<Point2> road)
         {
             Point2 invalidPoint = new (-1, -1);
@@ -1094,6 +1141,24 @@ namespace MHServerEmu.Games.Generators.Areas
 
             buildGrid[CellContainer.GetIndex(pointA.X, pointA.Y)].Distance = 0;
             visitedNodes.Add(pointA);
+
+            void ProcessNeighbor(Point2 currentNode, int distance, Cell.Type direction)
+            {
+                if (GetPointTo(direction, currentNode, out Point2 pointTo) && CellContainer.CheckCoord(pointTo.X, pointTo.Y))
+                {
+                    RoadInfo info = buildGrid[CellContainer.GetIndex(pointTo.X, pointTo.Y)];
+
+                    if (info.Type == Cell.Type.NESW
+                        && info.RoadType == Cell.Type.None
+                        && distance < info.Distance
+                        && !visitedNodes.Contains(pointTo))
+                    {
+                        visitedNodes.Add(pointTo);
+                        info.Distance = distance;
+                        info.PrevPoint = currentNode;
+                    }
+                }
+            }
 
             while (visitedNodes.Count > 0)
             {
@@ -1119,31 +1184,13 @@ namespace MHServerEmu.Games.Generators.Areas
                 //if (currentInfo.Distance == float.MaxValue) break; // Max Float?
                 int distance = currentInfo.Distance + 1;
 
-                ProcessNeighbor(buildGrid, visitedNodes, currentNode, distance, Cell.Type.N);
-                ProcessNeighbor(buildGrid, visitedNodes, currentNode, distance, Cell.Type.E);
-                ProcessNeighbor(buildGrid, visitedNodes, currentNode, distance, Cell.Type.S);
-                ProcessNeighbor(buildGrid, visitedNodes, currentNode, distance, Cell.Type.W);
+                ProcessNeighbor(currentNode, distance, Cell.Type.N);
+                ProcessNeighbor(currentNode, distance, Cell.Type.E);
+                ProcessNeighbor(currentNode, distance, Cell.Type.S);
+                ProcessNeighbor(currentNode, distance, Cell.Type.W);
             }
 
             return true;
-        }
-
-        private void ProcessNeighbor(List<RoadInfo> buildGrid, List<Point2> visitedNodes, Point2 currentNode, int distance, Cell.Type direction)
-        {
-            if (GetPointTo(direction, currentNode, out Point2 pointTo) && CellContainer.CheckCoord(pointTo.X, pointTo.Y))
-            {
-                RoadInfo info = buildGrid[CellContainer.GetIndex(pointTo.X, pointTo.Y)];
-
-                if (info.Type == Cell.Type.NESW 
-                    && info.RoadType == Cell.Type.None 
-                    && distance < info.Distance 
-                    && !visitedNodes.Contains(pointTo))
-                {
-                    visitedNodes.Add(pointTo);
-                    info.Distance = distance;
-                    info.PrevPoint = currentNode;
-                }
-            }
         }
 
         private bool VerifyCellToDirAndCheckType(List<RoadInfo> roadInfo, int x, int y, Cell.Type direction, Cell.Type type = Cell.Type.None, Cell.Type roadType = Cell.Type.None)

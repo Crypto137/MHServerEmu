@@ -32,8 +32,7 @@ namespace MHServerEmu.Games.Generators.Areas
         }
 
         public override bool Generate(GRandom random, RegionGenerator regionGenerator, List<ulong> areas)
-        {
-          
+        {          
             if (Area.AreaPrototype.Generator is not AreaGenerationInterfacePrototype) return false; 
 
             foreach (GenCell cell in GenCellContainer)

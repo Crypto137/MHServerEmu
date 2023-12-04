@@ -20,13 +20,9 @@ namespace MHServerEmu.Games.Generators.Areas
         public override bool InitializeContainer()
         {
             if (!base.InitializeContainer()) return false;
-
             if (Area.AreaPrototype.Generator is not GridAreaGeneratorPrototype proto) return false;
-
             if (proto.Behaviors != null)
-            {
                 RunBehaviors(null, proto.Behaviors, ProcessEnum.Initialize);
-            }
 
             return true;
         }
@@ -138,14 +134,12 @@ namespace MHServerEmu.Games.Generators.Areas
         public override bool Initialize(Area area)
         {
             CellContainer = new();
-
             return base.Initialize(area);
         }
 
         public override bool Generate(GRandom random, RegionGenerator regionGenerator, List<ulong> areas)
         {
             if (CellContainer == null) return false;
-
             if (Area.AreaPrototype.Generator is not GridAreaGeneratorPrototype proto) return false;
 
             bool success = false;
@@ -188,7 +182,6 @@ namespace MHServerEmu.Games.Generators.Areas
         private bool ProcessCellTypes(GRandom random)
         {
             if (CellContainer == null) return false;
-
             if (Area.AreaPrototype.Generator is not GridAreaGeneratorPrototype proto) return false;
 
             int randomSeed = Area.RandomSeed;
@@ -302,72 +295,6 @@ namespace MHServerEmu.Games.Generators.Areas
 
                 cellMap.Clear();
                 cellMap = null;
-            }
-        }
-
-        private bool PlaceFillerRoom(GRandom random, int x, int y, Vector3 position)
-        {
-            Cell.Filler filler = Cell.Filler.None;
-
-            if (CellContainer.GetCell(x + 1, y, false) != null)     filler |= Cell.Filler.N;
-            if (CellContainer.GetCell(x + 1, y + 1, false) != null) filler |= Cell.Filler.NE;
-            if (CellContainer.GetCell(x, y + 1, false) != null)     filler |= Cell.Filler.E;
-            if (CellContainer.GetCell(x - 1, y + 1, false) != null) filler |= Cell.Filler.SE;
-            if (CellContainer.GetCell(x - 1, y, false) != null)     filler |= Cell.Filler.S;
-            if (CellContainer.GetCell(x - 1, y - 1, false) != null) filler |= Cell.Filler.SW;
-            if (CellContainer.GetCell(x, y - 1, false) != null)     filler |= Cell.Filler.W;
-            if (CellContainer.GetCell(x + 1, y - 1, false) != null) filler |= Cell.Filler.NW;
-
-            ulong cellRef = CellSetRegistry.GetCellSetAssetPickedByFiller(random, filler);
-            if (cellRef == 0)
-                cellRef = CellSetRegistry.GetCellSetAssetPickedByFiller(random, Cell.Filler.None);
-
-            if (cellRef != 0)
-            {
-                CellSettings cellSettings = new ()
-                {
-                    PositionInArea = new(position),
-                    CellRef = cellRef
-                };
-
-                return Area.AddCell(AllocateCellId(), cellSettings) != null;
-            }
-
-            return false;
-        }
-
-        private void BuildExcludedListLikeCells(int x, int y, Cell.Type cellType, List<ulong> excludedList)
-        {
-            if (CellContainer == null) return;
-
-            GenCell testCell;
-
-            if (CellContainer.TestCoord(x + 1, y))
-            {
-                testCell = CellContainer.GetCell(x + 1, y);
-                if (testCell != null && testCell.CellRef != 0 && CellContainer.DetermineType(x + 1, y) == cellType)
-                    excludedList.Add(testCell.CellRef);
-            }
-
-            if (CellContainer.TestCoord(x, y + 1))
-            {
-                testCell = CellContainer.GetCell(x, y + 1);
-                if (testCell != null && testCell.CellRef != 0 && CellContainer.DetermineType(x, y + 1) == cellType)
-                    excludedList.Add(testCell.CellRef);
-            }
-
-            if (CellContainer.TestCoord(x - 1, y))
-            {
-                testCell = CellContainer.GetCell(x - 1, y);
-                if (testCell != null && testCell.CellRef != 0 && CellContainer.DetermineType(x - 1, y) == cellType)
-                    excludedList.Add(testCell.CellRef);
-            }
-
-            if (CellContainer.TestCoord(x, y - 1))
-            {
-                testCell = CellContainer.GetCell(x, y - 1);
-                if (testCell != null && testCell.CellRef != 0 && CellContainer.DetermineType(x, y - 1) == cellType)
-                    excludedList.Add(testCell.CellRef);
             }
         }
 

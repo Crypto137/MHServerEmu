@@ -38,7 +38,7 @@ namespace MHServerEmu.Games.Generators
                    VerifyIndex(GetIndex(x, y));
         }
 
-        public bool Initialize(int x, int y, CellSetRegistry cellSetRegistry, int deadEndMax)
+        public virtual bool Initialize(int x, int y, CellSetRegistry cellSetRegistry, int deadEndMax)
         {
             if (cellSetRegistry == null) return false;
 
@@ -155,28 +155,6 @@ namespace MHServerEmu.Games.Generators
         public virtual bool DestroyCell(int x, int y)
         {
             return VerifyCoord(x, y) && DestroyCell(GetIndex(x, y));
-        }
-
-        public bool AddStartOrDestinationCell(GenCell cell, GenCell.GenCellType type)
-        {
-            if (cell == null) return false;
-
-            switch (type)
-            {
-                case GenCell.GenCellType.None:
-                    return false;
-
-                case GenCell.GenCellType.Start:
-                    StartCells.Add(cell);
-                    return true;
-
-                case GenCell.GenCellType.Destination:
-                    DestinationCells.Add(cell);
-                    return true;
-
-                default:
-                    return false;
-            }
         }
 
         public virtual bool ReserveCell(int x, int y, ulong cellRef, GenCell.GenCellType genCellType)
@@ -338,55 +316,6 @@ namespace MHServerEmu.Games.Generators
             return type;
         }
 
-        public virtual bool DestroyUnrequiredConnections(GenCell cell, GRandom random, int chance)
-        {
-            if (cell == null) return false;
-
-            GenCellConnectivityTest connectivity = new();
-
-            foreach (GenCell connection in cell.Connections)
-            {
-                if (connection != null)
-                {
-                    if (!CheckForConnectivity(cell, connection)
-                        && !connectivity.TestConnectionRequired(this, cell, connection)
-                        && random.NextPct(chance))
-                    {
-                        cell.DisconnectFrom(connection);
-                        connection.DisconnectFrom(cell);
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        private bool CheckForConnectivity(GenCell cellA, GenCell cellB)
-        {
-            if (DeadEndMax > 0)
-            {
-                foreach (GenCell cell in Cells)
-                {
-                    if (cell == null) continue;
-
-                    int connections = 0;
-                    foreach (GenCell connectedCell in cell.Connections)
-                    {
-                        if (!(connectedCell == cellA && cell == cellB || connectedCell == cellB && cell == cellA))
-                            connections++;
-                    }
-
-                    if (connections == 1)
-                    {
-                        if (!CheckForConnectivityPerCell(cell, 1, DeadEndMax, null, cellA, cellB))
-                        {
-                            return false;
-                        }
-                    }
-                }
-            }
-            return true;
-        }
         public bool CheckCoord(int x, int y)
         {
             return x >= 0 && x < Width && y >= 0 && y < Height && VerifyIndex(GetIndex(x, y));

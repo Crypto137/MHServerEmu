@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Common.Logging;
+﻿using MHServerEmu.Common;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Regions;
 using System.Collections;
@@ -64,7 +65,7 @@ namespace MHServerEmu.Games.Generators
             RunTreeWithExcludedConnections(cell, list);
         }
 
-        public static bool IsConnectionInList(List<GenCellConnection> list, GenCell cell, GenCell cellConnection)
+        private static bool IsConnectionInList(List<GenCellConnection> list, GenCell cell, GenCell cellConnection)
         {
             foreach (GenCellConnection connection in list)
                 if (connection.Test(cell, cellConnection)) return true;
@@ -145,7 +146,6 @@ namespace MHServerEmu.Games.Generators
         public List<GenCell> StartCells = new();
         public List<GenCell> DestinationCells = new();
         public int DeadEndMax { get; set; }
-
         public int NumCells { get; private set; }
 
         public readonly List<GenCell> Cells = new();
@@ -166,9 +166,31 @@ namespace MHServerEmu.Games.Generators
             for (int i = 0; i < size; i++)
             {
                 Cells.Add(new());
-                ++NumCells;
+                ++NumCells; // From CreateCell(Index)
             }
             return true;
+        }
+
+        public bool AddStartOrDestinationCell(GenCell cell, GenCell.GenCellType type)
+        {
+            if (cell == null) return false;
+
+            switch (type)
+            {
+                case GenCell.GenCellType.None:
+                    return false;
+
+                case GenCell.GenCellType.Start:
+                    StartCells.Add(cell);
+                    return true;
+
+                case GenCell.GenCellType.Destination:
+                    DestinationCells.Add(cell);
+                    return true;
+
+                default:
+                    return false;
+            }
         }
 
         private void DestroyAllCells()
@@ -202,6 +224,29 @@ namespace MHServerEmu.Games.Generators
                 return true;
             }
             return false;
+        }
+
+        public virtual bool DestroyUnrequiredConnections(GenCell cell, GRandom random, int chance)
+        {
+            if (cell == null) return false;
+
+            GenCellConnectivityTest connectivity = new();
+
+            foreach (GenCell connection in cell.Connections)
+            {
+                if (connection != null)
+                {
+                    if (!CheckForConnectivity(cell, connection)
+                        && !connectivity.TestConnectionRequired(this, cell, connection)
+                        && random.NextPct(chance))
+                    {
+                        cell.DisconnectFrom(connection);
+                        connection.DisconnectFrom(cell);
+                    }
+                }
+            }
+
+            return true;
         }
 
         public GenCell GetCell(int index)
@@ -256,7 +301,34 @@ namespace MHServerEmu.Games.Generators
             return true;
         }
 
-        public bool CheckForConnectivityPerCell(GenCell cell, int level, int maxlevel, GenCell prev, GenCell cellA, GenCell cellB)
+        private bool CheckForConnectivity(GenCell cellA, GenCell cellB)
+        {
+            if (DeadEndMax > 0)
+            {
+                foreach (GenCell cell in Cells)
+                {
+                    if (cell == null) continue;
+
+                    int connections = 0;
+                    foreach (GenCell connectedCell in cell.Connections)
+                    {
+                        if (!(connectedCell == cellA && cell == cellB || connectedCell == cellB && cell == cellA))
+                            connections++;
+                    }
+
+                    if (connections == 1)
+                    {
+                        if (!CheckForConnectivityPerCell(cell, 1, DeadEndMax, null, cellA, cellB))
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+
+        private bool CheckForConnectivityPerCell(GenCell cell, int level, int maxlevel, GenCell prev, GenCell cellA, GenCell cellB)
         {
             if (cell != null)
             {

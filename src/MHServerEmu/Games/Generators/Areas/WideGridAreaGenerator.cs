@@ -409,6 +409,11 @@ namespace MHServerEmu.Games.Generators.Areas
 
     public class WideGenCellGridContainer : GenCellGridContainer
     {
+        public enum Dir
+        {
+            N, NE, E, ES, S, SW, W, NW
+        }
+
         private readonly int[,] _offsets = {
             { 1, 0 },  // N
             { 1, 1 },  // NE
@@ -420,16 +425,16 @@ namespace MHServerEmu.Games.Generators.Areas
             { 1, -1 }  // NW
         };
 
-        private static readonly Dictionary<Cell.Type, int> _typeToIndex = new ()
+        private static readonly Dictionary<Cell.Type, Dir> _typeToIndex = new ()
         {
-            { Cell.Type.N,  0 },
-            { Cell.Type.NE, 1 },
-            { Cell.Type.E,  2 },
-            { Cell.Type.ES, 3 },
-            { Cell.Type.S,  4 },
-            { Cell.Type.SW, 5 },
-            { Cell.Type.W,  6 },
-            { Cell.Type.NW, 7 }
+            { Cell.Type.N,  Dir.N },
+            { Cell.Type.NE, Dir.NE },
+            { Cell.Type.E,  Dir.E },
+            { Cell.Type.ES, Dir.ES },
+            { Cell.Type.S,  Dir.S },
+            { Cell.Type.SW, Dir.SW },
+            { Cell.Type.W,  Dir.W },
+            { Cell.Type.NW, Dir.NW }
         };
 
         private static readonly Walls[] _wallMasks = new Walls[]
@@ -444,28 +449,47 @@ namespace MHServerEmu.Games.Generators.Areas
             Walls.SE
         };
 
-        private static Walls GetWallIndexMask(Walls walls, int index)
+        private static Walls GetWallMask(Walls walls, Dir dir)
         {
-            switch (index)
+            switch (dir)
             {
-                case 0: return (walls.HasFlag(Walls.NW) ? Walls.SW : Walls.None) |
-                                (walls.HasFlag(Walls.N) ? Walls.S : Walls.None) |
-                                (walls.HasFlag(Walls.NE) ? Walls.SE : Walls.None);
-                case 1: return walls.HasFlag(Walls.NE) ? Walls.SW : Walls.None;
-                case 2: return (walls.HasFlag(Walls.SE) ? Walls.NW : Walls.None) |
-                                (walls.HasFlag(Walls.E) ? Walls.W : Walls.None) |
-                                (walls.HasFlag(Walls.NE) ? Walls.NW : Walls.None);
-                case 3: return walls.HasFlag(Walls.SE) ? Walls.NW : Walls.None;
-                case 4: return (walls.HasFlag(Walls.SW) ? Walls.NW : Walls.None) |
-                                (walls.HasFlag(Walls.S) ? Walls.N : Walls.None) |
-                                (walls.HasFlag(Walls.SE) ? Walls.NE : Walls.None);
-                case 5: return walls.HasFlag(Walls.SW) ? Walls.NE : Walls.None;
-                case 6: return (walls.HasFlag(Walls.NW) ? Walls.NE : Walls.None) |
-                                (walls.HasFlag(Walls.W) ? Walls.E : Walls.None) |
-                                (walls.HasFlag(Walls.SW) ? Walls.SE : Walls.None);
-                case 7: return walls.HasFlag(Walls.NW) ? Walls.SE : Walls.None;
+                case Dir.N:  return (walls.HasFlag(Walls.NW) ? Walls.SW : Walls.None) |
+                                    (walls.HasFlag(Walls.N) ? Walls.S : Walls.None) |
+                                    (walls.HasFlag(Walls.NE) ? Walls.SE : Walls.None);
+                case Dir.NE: return walls.HasFlag(Walls.NE) ? Walls.SW : Walls.None;
+                case Dir.E:  return (walls.HasFlag(Walls.SE) ? Walls.SW : Walls.None) |
+                                    (walls.HasFlag(Walls.E) ? Walls.W : Walls.None) |
+                                    (walls.HasFlag(Walls.NE) ? Walls.NW : Walls.None);
+                case Dir.ES: return walls.HasFlag(Walls.SE) ? Walls.NW : Walls.None;
+                case Dir.S:  return (walls.HasFlag(Walls.SW) ? Walls.NW : Walls.None) |
+                                    (walls.HasFlag(Walls.S) ? Walls.N : Walls.None) |
+                                    (walls.HasFlag(Walls.SE) ? Walls.NE : Walls.None);
+                case Dir.SW: return walls.HasFlag(Walls.SW) ? Walls.NE : Walls.None;
+                case Dir.W:  return (walls.HasFlag(Walls.NW) ? Walls.NE : Walls.None) |
+                                    (walls.HasFlag(Walls.W) ? Walls.E : Walls.None) |
+                                    (walls.HasFlag(Walls.SW) ? Walls.SE : Walls.None);
+                case Dir.NW: return walls.HasFlag(Walls.NW) ? Walls.SE : Walls.None;
                 default: return Walls.None;
             }
+        }
+
+        public override bool Initialize(int iX, int iY, CellSetRegistry registry, int deadEndMax)
+        {
+            if (!base.Initialize(iX, iY, registry, deadEndMax)) return false;
+
+            for (int x = 0; x < iX; ++x)
+            {
+                GetCell(x, iY - 1).MaskRequiredWalls(_wallMasks[(int)Dir.W]); 
+                GetCell(x, 0).MaskRequiredWalls(_wallMasks[(int)Dir.E]); 
+            }
+
+            for (int y = 0; y < iY; ++y)
+            {
+                GetCell(iX - 1, y).MaskRequiredWalls(_wallMasks[(int)Dir.S]);
+                GetCell(0, y).MaskRequiredWalls(_wallMasks[(int)Dir.N]);
+            }
+
+            return true;
         }
 
         public bool ModifyWideCell(int x, int y, Walls walls)
@@ -479,7 +503,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 int offsetY = _offsets[i, 1];
 
                 cell = GetCell(x + offsetX, y + offsetY, false);
-                if (cell != null) cell.MaskRequiredWalls(GetWallIndexMask(walls, i));
+                if (cell != null) cell.MaskRequiredWalls(GetWallMask(walls, (Dir)i));
             }
             return true;
         }
@@ -495,7 +519,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 int offsetY = _offsets[i, 1];
 
                 cell = GetCell(x + offsetX, y + offsetY, false);
-                if (cell != null && !cell.CheckWallMask(GetWallIndexMask(walls, i), CellSetRegistry))
+                if (cell != null && !cell.CheckWallMask(GetWallMask(walls, (Dir)i), CellSetRegistry))
                     return false;      
             }
             return true;
@@ -541,8 +565,8 @@ namespace MHServerEmu.Games.Generators.Areas
         {
             if (_typeToIndex.TryGetValue(direction, out var i))
             {
-                x += _offsets[i, 0];
-                y += _offsets[i, 1];
+                x += _offsets[(int)i, 0];
+                y += _offsets[(int)i, 1];
 
                 if (TestCoord(x, y))
                 {

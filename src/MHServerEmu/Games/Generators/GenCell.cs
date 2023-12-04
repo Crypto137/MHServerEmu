@@ -18,7 +18,7 @@ namespace MHServerEmu.Games.Generators
 
         public uint Id { get; set; }
         public Vector3 Position { get; set; }
-        public ulong CellRef { get; set; }
+        public ulong CellRef { get; private set; }
         public ulong PopulationThemeOverrideRef { get; set; }
 
         public Cell.Type ExternalConnections { get; private set; }
@@ -33,14 +33,27 @@ namespace MHServerEmu.Games.Generators
         public readonly List<GenCell> Connections = new();
         public readonly List<GenCell> Corners = new();
 
-        private readonly Area[] ConnectedAreas = new Area[4];        
+        private readonly Area[] _connectedAreas = new Area[4];        
 
-        public GenCell() { Position = new(); }
+        public GenCell() 
+        {
+            ExternalConnections = Cell.Type.None;
+            RequiredWalls = Cell.Walls.None;
+            PreventWalls = Cell.Walls.None;
+            DotCorner = Cell.Type.None;
+            CellRef = 0;
+            Position = new(); 
+        }
+
         public GenCell(uint id, Vector3 position, ulong cellRef)
         {
             Id = id;
             Position = position;
             CellRef = cellRef;
+            ExternalConnections = Cell.Type.None;
+            RequiredWalls = Cell.Walls.None;
+            PreventWalls = Cell.Walls.None;
+            DotCorner = Cell.Type.None;
         }
 
         public void SetExternalConnection(Cell.Type connectionType, Area connectedArea, ConnectPosition connectPosition)
@@ -50,7 +63,7 @@ namespace MHServerEmu.Games.Generators
             switch (connectionType)
             {
                 case Cell.Type.N:
-                    ConnectedAreas[0] = connectedArea;
+                    _connectedAreas[0] = connectedArea;
                     RequiredWalls &= ~Cell.Walls.N;
                     PreventWalls = Cell.Walls.W | Cell.Walls.SW | Cell.Walls.S | Cell.Walls.SE | Cell.Walls.E | Cell.Walls.N;
                     if (connectPosition == ConnectPosition.Begin || connectPosition == ConnectPosition.Inside)
@@ -66,7 +79,7 @@ namespace MHServerEmu.Games.Generators
                     break;
 
                 case Cell.Type.E:
-                    ConnectedAreas[1] = connectedArea;
+                    _connectedAreas[1] = connectedArea;
                     RequiredWalls &= ~Cell.Walls.E;
                     PreventWalls = Cell.Walls.NW | Cell.Walls.W | Cell.Walls.SW | Cell.Walls.S | Cell.Walls.E | Cell.Walls.N;
                     if (connectPosition == ConnectPosition.Begin || connectPosition == ConnectPosition.Inside)
@@ -82,7 +95,7 @@ namespace MHServerEmu.Games.Generators
                     break;
 
                 case Cell.Type.S:
-                    ConnectedAreas[2] = connectedArea;
+                    _connectedAreas[2] = connectedArea;
                     RequiredWalls &= ~Cell.Walls.S;
                     PreventWalls = Cell.Walls.NW | Cell.Walls.W | Cell.Walls.S | Cell.Walls.E | Cell.Walls.NE | Cell.Walls.N;
                     if (connectPosition == ConnectPosition.Begin || connectPosition == ConnectPosition.Inside)
@@ -98,7 +111,7 @@ namespace MHServerEmu.Games.Generators
                     break;
 
                 case Cell.Type.W:
-                    ConnectedAreas[3] = connectedArea;
+                    _connectedAreas[3] = connectedArea;
                     RequiredWalls &= ~Cell.Walls.W;
                     PreventWalls = Cell.Walls.W | Cell.Walls.S | Cell.Walls.SE | Cell.Walls.E | Cell.Walls.NE | Cell.Walls.N;
                     if (connectPosition == ConnectPosition.Begin || connectPosition == ConnectPosition.Inside)
