@@ -35,5 +35,15 @@
 
         private void Log(Level level, string message) => LogRouter.RouteMessage(level, Name, message);
         private void LogException(Level level, string message, Exception exception) => LogRouter.RouteException(level, Name, message, exception);
+
+        public static string ToString(IEnumerable<object> collection)
+        {
+            string output = "{";
+            foreach (var item in collection)
+                output += $"{item} ";
+            output += "}";
+
+            return output;
+        }
     }
 }

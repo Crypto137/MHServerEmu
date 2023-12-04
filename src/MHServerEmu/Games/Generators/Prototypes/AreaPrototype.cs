@@ -29,7 +29,7 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public AreaPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AreaPrototype), proto); }
     }
 
-    public struct AreaTransition
+    public class AreaTransition
     {
         public Vector3 Position;
         public Vector3 Rotation;

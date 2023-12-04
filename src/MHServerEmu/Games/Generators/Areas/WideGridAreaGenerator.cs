@@ -38,7 +38,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
             if (!success)
             {
-                Logger.Trace($"WideGridAreaGenerator failed after {10 - tries} attempts | region: {Region} | area: {Area}");
+                Logger.Warn($"WideGridAreaGenerator failed after {10 - tries} attempts | region: {Region} | area: {Area}");
                 return false;
             }
 

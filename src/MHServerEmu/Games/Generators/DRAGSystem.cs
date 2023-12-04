@@ -11,7 +11,6 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Common;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Entities;
-using static MHServerEmu.Games.Regions.Cell;
 
 namespace MHServerEmu.Games.Generators
 {
@@ -89,6 +88,7 @@ namespace MHServerEmu.Games.Regions
     {
         public Aabb RegionBounds { get; private set; }
         public Area Area { get; private set; }
+        public Game Game { get; private set; }
         public IEnumerable<Entity> Entities { get { throw new NotImplementedException(); } }
 
         public List<uint> CellConnections = new();
@@ -168,6 +168,11 @@ namespace MHServerEmu.Games.Regions
             return ret;
         }
 
+        public override string ToString()
+        {
+            return $"{GameDatabase.GetPrototypeName(PrototypeId)}, cellid={Id}, cellpos={RegionBounds.Center}, game={Game}";
+        }
+
     }
 
     public struct AreaSettings
@@ -217,7 +222,7 @@ namespace MHServerEmu.Games.Regions
             Id = settings.Id;
             if (Id == 0) return false;
 
-            PrototypeId = (AreaPrototypeId)settings.AreaPrototype;
+            PrototypeId = settings.AreaPrototype;
             AreaPrototype = GameDatabase.GetPrototype<AreaPrototype>((ulong)PrototypeId);
             if (AreaPrototype == null) return false;
 
@@ -490,9 +495,13 @@ namespace MHServerEmu.Games.Regions
 
         public override string ToString()
         {
-            return $"{PrototypeId}";
+            return $"{GetPrototypeName()}, areaid={Id}, aabb=[{RegionBounds}], game={Game}";
         }
 
+        private string GetPrototypeName()
+        {
+            return GameDatabase.GetFormattedPrototypeName(GetPrototypeDataRef());
+        }
     }
 
     public enum ConnectPosition
@@ -523,6 +532,8 @@ namespace MHServerEmu.Games.Regions
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
         public Aabb Bound { get; set; }
+        public Game Game { get; private set; }
+
         private Area _startArea;
         public Area StartArea
         {
@@ -665,7 +676,12 @@ namespace MHServerEmu.Games.Regions
 
         public override string ToString()
         {
-            return $"{PrototypeId}";
+            return $"{GetPrototypeName()}, ID=0x{Id:X16} ({Id}), DIFF={GameDatabase.GetFormattedPrototypeName(Setting.DifficultyTierRef)}, SEED={RandomSeed}, GAMEID={Game}";
+        }
+
+        private string GetPrototypeName()
+        {
+            return GameDatabase.GetFormattedPrototypeName(GetPrototypeDataRef());
         }
     }
 
@@ -674,6 +690,7 @@ namespace MHServerEmu.Games.Regions
         public int EndlessLevel;
         public int Seed;
         public bool GenerateAreas;
+        public ulong DifficultyTierRef;
     }
 
     #region ProgressionGraph

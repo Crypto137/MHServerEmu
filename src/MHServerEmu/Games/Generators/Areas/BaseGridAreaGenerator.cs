@@ -243,7 +243,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 {
                     if (!SpawnRequiredCellBase(random, picker, requiredCellBase))
                     {
-                        Logger.Trace("Failed to place Required Cell");
+                        Logger.Warn($"Failed to place Required Cell. CELL={requiredCellBase} AREA={Area}");
                         failed = true;
                     }
                 }
@@ -255,7 +255,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 AddCellsToPicker(cellPicker, proto.NonRequiredSuperCells);
                 if (!SpawnNonRequiredCellList(random, picker, cellPicker, proto.NonRequiredSuperCellsMin, proto.NonRequiredSuperCellsMax))
                 {
-                    Logger.Trace("Failed to place the minimum number of Non-Required SuperCells");
+                    Logger.Warn($"Failed to place the minimum number of Non-Required SuperCells. CELLS={Logger.ToString(proto.NonRequiredSuperCells)} AREA={Area}");
                     failed = true;
                 }
             }
@@ -269,7 +269,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
                     if (cellRef == 0)
                     {
-                        Logger.Trace($"Reservable Cell {GameDatabase.GetAssetName(spec.Cell)} Does not Exist in Area {Area}");
+                        Logger.Warn($"Reservable Cell {GameDatabase.GetAssetName(spec.Cell)} Does not Exist in Area {Area}");
                         continue;
                     }
 
@@ -283,7 +283,7 @@ namespace MHServerEmu.Games.Generators.Areas
                     else
                     {
                         failed = true;
-                        Logger.Trace($"Failed to place Required Transition Cell. CELL={cellRef}");
+                        Logger.Warn($"Failed to place Required Transition Cell. CELL={cellRef} AREA={Area}");
                     }
                 }
             }
@@ -320,7 +320,7 @@ namespace MHServerEmu.Games.Generators.Areas
                             else
                             {
                                 failed = true;
-                                Logger.Trace($"Failed to place Random Instance Cell. CELL={cellRef}");
+                                Logger.Warn($"Failed to place Random Instance Cell. CELL={cellRef}");
                             }
                         }
                     }
@@ -334,7 +334,7 @@ namespace MHServerEmu.Games.Generators.Areas
                     if (!SpawnRequiredCellBase(random, picker, requiredCellBase))
                     {
                         failed = true;
-                        Logger.Trace($"Failed to place 'RequiredCells'. CELLS={requiredCellBase}");
+                        Logger.Warn($"Failed to place 'RequiredCells'. CELLS={requiredCellBase}");
                     }
                 }
             }
@@ -350,7 +350,7 @@ namespace MHServerEmu.Games.Generators.Areas
                         if (!SpawnRequiredCellBase(random, picker, (RequiredCellBasePrototype)requiredCellBase))
                         {
                             failed = true;
-                            Logger.Trace($"Failed to place RequiredPOI. CELLS={requiredCellBase}");
+                            Logger.Warn($"Failed to place RequiredPOI. CELLS={requiredCellBase}");
                         }
                     }
                 }
@@ -363,7 +363,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 if (!SpawnNonRequiredCellList(random, picker, cellPicker, proto.NonRequiredNormalCellsMin, proto.NonRequiredNormalCellsMax))
                 {
                     failed = true;
-                    Logger.Trace($"Failed to place the minimum number of Non-Required Normal Cells.");
+                    Logger.Warn($"Failed to place the minimum number of Non-Required Normal Cells.");
                 }
             }
             return !failed;

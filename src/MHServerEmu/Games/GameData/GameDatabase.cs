@@ -140,5 +140,10 @@ namespace MHServerEmu.Games.GameData
         {
             throw new NotImplementedException();
         }
+
+        public static string GetFormattedPrototypeName(ulong protoId)
+        {
+            return Path.GetFileNameWithoutExtension(GetPrototypeName(protoId));
+        }
     }
 }

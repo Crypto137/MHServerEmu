@@ -33,11 +33,11 @@ namespace MHServerEmu.Games.Generators
         public bool IsInitialized { get; private set; }
 
         private bool _supressMissingCellErrors;
-        private EntryList _cells = new();
-        private Dictionary<Cell.Filler, EntryList> _cellsFiller = new();
-        private Dictionary<Cell.Type, EntryList> _cellsType = new();
-        private Dictionary<Cell.Walls, EntryList> _cellsWalls = new();
-        private Dictionary<Cell.Type, Vector3> _connectionsType = new();
+        private readonly EntryList _cells = new();
+        private readonly Dictionary<Cell.Filler, EntryList> _cellsFiller = new();
+        private readonly Dictionary<Cell.Type, EntryList> _cellsType = new();
+        private readonly Dictionary<Cell.Walls, EntryList> _cellsWalls = new();
+        private readonly Dictionary<Cell.Type, Vector3> _connectionsType = new();
 
         public CellSetRegistry()
         {

@@ -75,7 +75,5 @@ namespace MHServerEmu.Games.Generators.Areas
 
             return GenCellContainer.CreateCell(AllocateCellId(), position, cellRef);
         }
-
-
     }
 }
