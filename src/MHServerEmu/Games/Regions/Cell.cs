@@ -63,6 +63,7 @@ namespace MHServerEmu.Games.Regions
         [Flags]
         public enum Walls
         {
+            None = 0,   // 000000000
             N = 1,      // 000000001
             NE = 2,     // 000000010
             E = 4,      // 000000100

@@ -90,5 +90,20 @@ namespace MHServerEmu.Games.Generators.Prototypes
             }
         }
 
+        public bool ContainsCell(ulong cellRef)
+        {
+            if (Entries != null)
+            {
+                foreach (var entryProto in Entries)
+                {
+                    if (entryProto != null && GameDatabase.GetDataRefByAsset(entryProto.Cell) == cellRef)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
     }
 }

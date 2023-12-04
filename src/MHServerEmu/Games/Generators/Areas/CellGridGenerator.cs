@@ -15,7 +15,7 @@ namespace MHServerEmu.Games.Generators.Areas
             Generate
         }
 
-        public class CellDeterminationMap : Dictionary<Cell.Type, List<Point2>> {}
+        public class CellDeterminationMap : Dictionary<int, List<Point2>> {}
 
         public override bool InitializeContainer()
         {
@@ -273,26 +273,23 @@ namespace MHServerEmu.Games.Generators.Areas
         private bool BuildCellDeterminationMap(out CellDeterminationMap cellMap)
         {
             cellMap = new();
-            if (cellMap == null) return false;
-
             for (int y = 0; y < CellContainer.Height; y++)
             {
                 for (int x = 0; x < CellContainer.Width; x++)
                 {
                     Cell.Type type = CellContainer.DetermineType(x, y);
 
-                    if (cellMap.TryGetValue(type, out List<Point2> pointList))
+                    if (cellMap.TryGetValue((int)type, out List<Point2> pointList))
                     {
                         pointList.Add(new(x, y));
                     }
                     else
                     {
                         pointList = new() { new(x, y) };
-                        cellMap[type] = pointList;
+                        cellMap[(int)type] = pointList;
                     }
                 }
             }
-
             return true;
         }
 

@@ -31,7 +31,7 @@ namespace MHServerEmu.Games.Generators
             return x >= 0 && x < Width && y >= 0 && y < Height;
         }
 
-        private bool VerifyCoord(int x, int y)
+        public bool VerifyCoord(int x, int y)
         {
             return x >= 0 && x < Width &&
                    y >= 0 && y < Height &&
@@ -147,12 +147,12 @@ namespace MHServerEmu.Games.Generators
             return success;
         }
 
-        public bool DestroyableCell(int x, int y)
+        public virtual bool DestroyableCell(int x, int y)
         {
             return VerifyCoord(x, y) && DestroyableCell(GetIndex(x, y));
         }
 
-        public bool DestroyCell(int x, int y)
+        public virtual bool DestroyCell(int x, int y)
         {
             return VerifyCoord(x, y) && DestroyCell(GetIndex(x, y));
         }
@@ -179,7 +179,7 @@ namespace MHServerEmu.Games.Generators
             }
         }
 
-        public bool ReserveCell(int x, int y, ulong cellRef, GenCell.GenCellType genCellType)
+        public virtual bool ReserveCell(int x, int y, ulong cellRef, GenCell.GenCellType genCellType)
         {
             if (!ReservableCell(x, y, cellRef)) return false;
 
@@ -200,7 +200,7 @@ namespace MHServerEmu.Games.Generators
             return true;
         }
 
-        private bool ModifyNormalCell(int x, int y, Cell.Type type)
+        public bool ModifyNormalCell(int x, int y, Cell.Type type)
         {
             GenCell cellA = GetCell(x, y);
             GenCell cellB;
@@ -237,7 +237,7 @@ namespace MHServerEmu.Games.Generators
             return true;
         }
 
-        public bool ReservableCell(int x, int y, ulong cellRef)
+        public virtual bool ReservableCell(int x, int y, ulong cellRef)
         {
             if (!VerifyCoord(x, y)) return false;
             CellPrototype cellProto = GameDatabase.GetPrototype<CellPrototype>(cellRef);
@@ -334,7 +334,7 @@ namespace MHServerEmu.Games.Generators
             if (y - 1 >= 0 && cell.IsConnected(GetCell(x, y - 1)))      type |= Cell.Type.W;
             if (x - 1 >= 0 && cell.IsConnected(GetCell(x - 1, y)))      type |= Cell.Type.S;
 
-            if (cell.HasDotCorner()) type |= cell.DotCorner; // always None
+            if (cell.HasDotCorner()) type |= cell.DotCorner; // Never true
             return type;
         }
 
@@ -387,6 +387,16 @@ namespace MHServerEmu.Games.Generators
             }
             return true;
         }
+        public bool CheckCoord(int x, int y)
+        {
+            return x >= 0 && x < Width && y >= 0 && y < Height && VerifyIndex(GetIndex(x, y));
+        }
+
+        internal void Print3()
+        {
+            throw new NotImplementedException();
+        }
+
 
     }
 

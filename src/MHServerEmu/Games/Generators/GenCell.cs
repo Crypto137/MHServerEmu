@@ -31,9 +31,9 @@ namespace MHServerEmu.Games.Generators
         public bool Visited { get; set; }
 
         public readonly List<GenCell> Connections = new();
+        public readonly List<GenCell> Corners = new();
 
-        private readonly Area[] ConnectedAreas = new Area[4];
-        private readonly List<GenCell> Corners = new();
+        private readonly Area[] ConnectedAreas = new Area[4];        
 
         public GenCell() { Position = new(); }
         public GenCell(uint id, Vector3 position, ulong cellRef)
@@ -215,6 +215,19 @@ namespace MHServerEmu.Games.Generators
         public bool HasDotCorner()
         {
             return (DotCorner & Cell.Type.DotMask) != Cell.Type.None;
+        }
+
+        public Cell.Walls MaskRequiredWalls(Cell.Walls walls)
+        {
+            RequiredWalls |= walls;
+            return RequiredWalls;
+        }
+
+        public bool CheckWallMask(Cell.Walls walls, CellSetRegistry registry)
+        {
+            if (PreventWalls.HasFlag(walls)) return false;
+            if (registry == null) return true;
+            return registry.HasCellWithWalls(RequiredWalls | walls);
         }
 
     }

@@ -56,16 +56,13 @@ namespace MHServerEmu.Games.Generators
             IsInitialized = true;
         }
 
-        public ulong GetCellSetAssetPicked(GRandom random, Cell.Type cellType, List<ulong> skipList)
+        public ulong GetCellSetAssetPicked(GRandom random, Cell.Type cellType, List<ulong> excludedList)
         {
             EntryList entryList = _cellsType[cellType];
-
             if (entryList == null || entryList.Count == 0) return 0;
 
             Picker<CellSetRegistryEntry> picker = new(random);
-            bool picked = PopulatePickerPhases(picker, entryList, skipList);
-
-            if (picked)
+            if (PopulatePickerPhases(picker, entryList, excludedList))
             {
                 if (!picker.Empty() && picker.Pick(out CellSetRegistryEntry entry))
                 {
@@ -79,16 +76,31 @@ namespace MHServerEmu.Games.Generators
             return 0;
         }
 
+        public ulong GetCellSetAssetPickedByWall(GRandom random, Cell.Walls wallType, List<ulong> excludedList = null)
+        {
+            EntryList entryList = _cellsWalls[wallType];
+
+            Picker<CellSetRegistryEntry> picker = new(random);
+            if (PopulatePickerPhases(picker, entryList, excludedList))
+            {
+                if (!picker.Empty() && picker.Pick(out CellSetRegistryEntry entry))
+                {
+                    entry.Picked = true;
+                    return entry.CellRef;
+                }
+            } else 
+                Logger.Warn("Warning: Generator tried to prevent choosing a type UnknownWallType cell that was similar to its neighbors but failed doing so due to a lack of alternatives, consider making more variations of that type.");
+
+            return 0;
+        }
+
         public ulong GetCellSetAssetPickedByFiller(GRandom random, Cell.Filler fillerType)
         {
             EntryList entryList = _cellsFiller[fillerType];
-
             if (entryList == null || entryList.Count == 0) return 0;
 
             Picker<CellSetRegistryEntry> picker = new(random);
-            bool picked = PopulatePickerPhases(picker, entryList, null);
-
-            if (picked)
+            if (PopulatePickerPhases(picker, entryList, null))
             {
                 if (!picker.Empty() && picker.Pick(out CellSetRegistryEntry entry))
                 {
@@ -96,7 +108,6 @@ namespace MHServerEmu.Games.Generators
                     return entry.CellRef;
                 }
             }
-
             return 0;
         }
 
@@ -326,6 +337,11 @@ namespace MHServerEmu.Games.Generators
         public bool HasCellOfType(Cell.Type cellType)
         {
             return _cellsType.ContainsKey(cellType);
+        }
+
+        public bool HasCellWithWalls(Cell.Walls wallType)
+        {
+           return _cellsWalls.ContainsKey(wallType) && _cellsWalls[wallType] != null;
         }
 
     }

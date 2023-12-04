@@ -225,11 +225,9 @@ namespace MHServerEmu.Games.Generators
             return false;
         }
 
-        private bool DestroyableCell(GenCell cell)
+        public virtual bool DestroyableCell(GenCell cell)
         {
-            if (cell == null) return false;
-            if (cell.CellRef != 0) return false;
-            if (cell.ExternalConnections != Cell.Type.None) return false;
+            if (cell == null || cell.CellRef != 0 || cell.ExternalConnections != Cell.Type.None) return false;
 
             foreach (var connection in cell.Connections)
                 if (connection != null && connection.CellRef != 0) return false;

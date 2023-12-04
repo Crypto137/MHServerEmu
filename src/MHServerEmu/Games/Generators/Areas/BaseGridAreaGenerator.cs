@@ -6,6 +6,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Prototypes;
 using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Regions;
+using System.Collections.Generic;
 
 namespace MHServerEmu.Games.Generators.Areas
 {
@@ -828,5 +829,384 @@ namespace MHServerEmu.Games.Generators.Areas
         {
             if (Region != null) CellContainer.DetermineCellDepthsAndShortestPath();
         }
+
+        public class RoadInfo
+        {
+            public Cell.Type Type;
+            public Cell.Type RoadType;
+            public bool InCell;
+            public int Distance;
+            public Point2 PrevPoint;
+        }
+
+        public bool GenerateRoads(GRandom random, RoadGeneratorPrototype roadGeneratorProto)
+        {
+            if (CellContainer == null || roadGeneratorProto == null || roadGeneratorProto.Cells == null) return true;
+
+            List<Point2> roadPoints = new();
+
+            for (int x = 0; x < CellContainer.Width; ++x)
+            {
+                for (int y = 0; y < CellContainer.Height; ++y)
+                {
+                    GenCell cell = CellContainer.GetCell(x, y);
+                    if (cell != null)
+                    {
+                        if (cell.ExternalConnections != Cell.Type.None && cell.CellRef == 0)
+                        {
+                            Cell.Walls requiredWalls = cell.RequiredWalls;
+                            ulong cellRef = CellSetRegistry.HasCellWithWalls(requiredWalls) ? CellSetRegistry.GetCellSetAssetPickedByWall(random, requiredWalls) : 0;
+
+                            if (!CellContainer.ReservableCell(x, y, cellRef)) return false;
+                            CellContainer.ReserveCell(x, y, cellRef, GenCell.GenCellType.Destination);
+                        }
+                        if (cell.CellRef != 0)
+                        {
+                            CellPrototype cellProto = GameDatabase.GetPrototype<CellPrototype>(cell.CellRef);
+                            if (cellProto != null && cellProto.RoadConnections != Cell.Type.None)
+                                roadPoints.Add(new(x, y));
+                        }
+                    }
+                }
+            }
+
+            int count = roadPoints.Count;
+            if (count < 2)
+            {
+                Logger.Trace($"RoadGenerator specified in Area, but only {count} Road Point found. AREA={Area}");
+                return true;
+            }
+
+            int gridSize = CellContainer.Width * CellContainer.Height;
+            RoadInfo[] roadGrid = new RoadInfo[gridSize];
+            ulong firstCellRef = GameDatabase.GetDataRefByAsset(roadGeneratorProto.Cells.First());
+            for (int x = 0; x < CellContainer.Width; ++x)
+            {
+                for (int y = 0; y < CellContainer.Height; ++y)
+                {
+                    RoadInfo roadInfo = roadGrid[CellContainer.GetIndex(x, y)];
+                    roadInfo.Type = Cell.Type.None;
+                    roadInfo.RoadType = Cell.Type.None;
+                    roadInfo.InCell = false;
+
+                    GenCell cell = CellContainer.GetCell(x, y);
+                    if (cell != null)
+                    {
+                        if (cell.CellRef != 0)
+                        {
+                            CellPrototype cellProto = GameDatabase.GetPrototype<CellPrototype>(cell.CellRef);
+                            if (cellProto != null)
+                            {
+                                roadInfo.InCell = true;
+                                roadInfo.Type = cellProto.Type;
+                                roadInfo.RoadType = cellProto.RoadConnections;
+                            }
+                        }
+                        else
+                        {
+                            if (CellContainer.ReservableCell(x, y, firstCellRef))
+                            {
+                                roadInfo.Type = Cell.Type.NESW;
+                            }
+                        }
+                    }
+                }
+            }
+
+            HashSet<int> setIndexes = new();
+            List<int> workingStack = new();
+            List<List<int>> results = new();
+            for (int i = 0; i < count; ++i) setIndexes.Add(i);
+            Permutations(setIndexes, workingStack, results, count);
+
+            List<int> bestResult = null;
+            float bestDistance = float.MaxValue;
+
+            foreach (var result in results)
+            {
+                if (result != null)
+                {
+                    float distance = 0.0f;
+                    for (int i = 0; i < result.Count - 1; ++i)
+                    {
+                        int indexA = result[i];
+                        int indexB = result[i + 1];
+                        Point2 pointA = new(roadPoints[indexA].X, roadPoints[indexA].Y);
+                        Point2 pointB = new(roadPoints[indexB].X, roadPoints[indexB].Y);
+                        distance += Point2.DistanceSquared2D(pointA, pointB);
+                    }
+
+                    if (distance < bestDistance)
+                    {
+                        bestDistance = distance;
+                        bestResult = result;
+                    }
+                }
+            }
+
+            if (bestResult != null && workingStack.Count == 0)
+                workingStack.AddRange(bestResult);
+
+            foreach (var result in results) result.Clear();
+            results.Clear();
+
+            List<RoadInfo> listRoads = new(roadGrid);
+
+            for (int i = 0; i < workingStack.Count - 1; ++i)
+            {
+                int indexA = workingStack[i];
+                int indexB = workingStack[i + 1];
+                List<RoadInfo> buildGrid = new(roadGrid);
+                if (BuildRoad(buildGrid, roadPoints[indexA], roadPoints[indexB]))
+                {
+                    for (int n = 0; n < buildGrid.Count; ++n)
+                        buildGrid[n].RoadType |= buildGrid[n].RoadType;                 
+                }
+                else return false;
+            }
+
+            for (int i = 0; i < listRoads.Count; ++i)
+            {
+                RoadInfo info = listRoads[i];
+                if (info.RoadType != Cell.Type.None && !info.InCell)
+                {
+                    Picker<ulong> picker = new(random);
+                    foreach (var cellAsset in roadGeneratorProto.Cells)
+                    {
+                        ulong cellRef = GameDatabase.GetDataRefByAsset(cellAsset);
+                        CellPrototype cellProto = GameDatabase.GetPrototype<CellPrototype>(cellRef);
+                        if (cellProto != null && cellProto.RoadConnections == info.RoadType)
+                            picker.Add(cellRef);
+                    }
+
+                    if (!picker.Empty() && picker.Pick(out ulong pickedCell))
+                    {
+                        int x = i % CellContainer.Width;
+                        int y = i / CellContainer.Width;
+
+                        if (CellContainer.ReservableCell(x, y, pickedCell))
+                            CellContainer.ReserveCell(x, y, pickedCell, GenCell.GenCellType.None);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        private bool BuildRoad(List<RoadInfo> buildGrid, Point2 pointA, Point2 pointB)
+        {
+            RoadInfo infoA = buildGrid[CellContainer.GetIndex(pointA.X, pointA.Y)];
+            if (!VerifyCellToDirAndCheckType(buildGrid, pointA.X, pointA.Y, infoA.RoadType, Cell.Type.NESW))
+            {
+                Logger.Trace($"RoadGenerator specified in Area, but A road connection is blocked. AREA={Area}");
+                return false;
+            }
+
+            RoadInfo infoB = buildGrid[CellContainer.GetIndex(pointB.X, pointB.Y)];
+            if (!VerifyCellToDirAndCheckType(buildGrid, pointB.X, pointB.Y, infoB.RoadType, Cell.Type.NESW))
+            {
+                Logger.Trace($"RoadGenerator specified in Area, but B road connection is blocked. AREA={Area}");
+                return false;
+            }
+
+            if (CellsBothInSuperCell(
+                CellContainer.GetCell(pointA.X, pointA.Y), 
+                CellContainer.GetCell(pointB.X, pointB.Y))) return true;
+
+            if (!GetPointTo(infoA.RoadType, pointA, out Point2 roadA)
+                || !GetPointTo(infoB.RoadType, pointB, out Point2 roadB)) return false;
+
+            if (roadB == pointA || roadA == pointB) return true;
+
+            List<Point2> road = new ();
+            DijkstraRoad(buildGrid, roadA, roadB, road);
+            if (road.Count == 0) return false;
+
+            for (int i = 0; i < road.Count; ++i)
+            {
+                RoadInfo info = buildGrid[road[i].X + road[i].Y * CellContainer.Width];
+
+                if (i - 1 >= 0)
+                    ProcessRoadInfo(road[i], road[i - 1], info);
+
+                if (i + 1 < road.Count)
+                    ProcessRoadInfo(road[i], road[i + 1], info);
+
+                ProcessRoadInfo(road[i], pointA, info);
+                ProcessRoadInfo(road[i], pointB, info);
+            }
+
+            return true;
+        }
+
+        private static void ProcessRoadInfo(Point2 a, Point2 b, RoadInfo info)
+        {
+            if (IsPointBToDirOfA(a, b, Cell.Type.N)) info.RoadType |= Cell.Type.N;
+            if (IsPointBToDirOfA(a, b, Cell.Type.E)) info.RoadType |= Cell.Type.E;
+            if (IsPointBToDirOfA(a, b, Cell.Type.S)) info.RoadType |= Cell.Type.S;
+            if (IsPointBToDirOfA(a, b, Cell.Type.W)) info.RoadType |= Cell.Type.W;
+        }
+
+        private static bool IsPointBToDirOfA(Point2 pointA, Point2 pointB, Cell.Type dir)
+        {
+            if (GetPointTo(dir, pointA, out Point2 pointTo))
+                return pointB == pointTo;
+
+            return false;
+        }
+
+        private static bool GetPointTo(Cell.Type direction, Point2 point, out Point2 pointTo)
+        {
+            pointTo = new (point);
+
+            switch (direction)
+            {
+                case Cell.Type.N:
+                    pointTo.X += 1;
+                    return true;
+
+                case Cell.Type.E:
+                    pointTo.Y += 1;
+                    return true;
+
+                case Cell.Type.S:
+                    pointTo.X -= 1;
+                    return true;
+
+                case Cell.Type.W:
+                    pointTo.Y -= 1;
+                    return true;
+            }
+
+            return false;
+        }
+
+        private bool DijkstraRoad(List<RoadInfo> buildGrid, Point2 pointA, Point2 pointB, List<Point2> road)
+        {
+            Point2 invalidPoint = new (-1, -1);
+            List<Point2> visitedNodes = new();
+
+            foreach (var roadInfo in buildGrid)
+            {
+                roadInfo.Distance = int.MaxValue;
+                roadInfo.PrevPoint = invalidPoint;
+            }
+
+            buildGrid[CellContainer.GetIndex(pointA.X, pointA.Y)].Distance = 0;
+            visitedNodes.Add(pointA);
+
+            while (visitedNodes.Count > 0)
+            {
+                var currentNode = visitedNodes.First();
+                var currentInfo = buildGrid[CellContainer.GetIndex(currentNode.X, currentNode.Y)];
+
+                visitedNodes.RemoveAt(0);
+
+                if (currentNode == pointB)
+                {
+                    Point2 prevPoint = pointB;
+                    road.Add(pointB);
+
+                    RoadInfo info = buildGrid[CellContainer.GetIndex(prevPoint.X, prevPoint.Y)];
+                    while (info.PrevPoint != invalidPoint)
+                    {
+                        road.Add(info.PrevPoint);
+                        info = buildGrid[CellContainer.GetIndex(info.PrevPoint.X, info.PrevPoint.Y)];
+                    }
+                    return true;
+                }
+
+                //if (currentInfo.Distance == float.MaxValue) break; // Max Float?
+                int distance = currentInfo.Distance + 1;
+
+                ProcessNeighbor(buildGrid, visitedNodes, currentNode, distance, Cell.Type.N);
+                ProcessNeighbor(buildGrid, visitedNodes, currentNode, distance, Cell.Type.E);
+                ProcessNeighbor(buildGrid, visitedNodes, currentNode, distance, Cell.Type.S);
+                ProcessNeighbor(buildGrid, visitedNodes, currentNode, distance, Cell.Type.W);
+            }
+
+            return true;
+        }
+
+        private void ProcessNeighbor(List<RoadInfo> buildGrid, List<Point2> visitedNodes, Point2 currentNode, int distance, Cell.Type direction)
+        {
+            if (GetPointTo(direction, currentNode, out Point2 pointTo) && CellContainer.CheckCoord(pointTo.X, pointTo.Y))
+            {
+                RoadInfo info = buildGrid[CellContainer.GetIndex(pointTo.X, pointTo.Y)];
+
+                if (info.Type == Cell.Type.NESW 
+                    && info.RoadType == Cell.Type.None 
+                    && distance < info.Distance 
+                    && !visitedNodes.Contains(pointTo))
+                {
+                    visitedNodes.Add(pointTo);
+                    info.Distance = distance;
+                    info.PrevPoint = currentNode;
+                }
+            }
+        }
+
+        private bool VerifyCellToDirAndCheckType(List<RoadInfo> roadInfo, int x, int y, Cell.Type direction, Cell.Type type = Cell.Type.None, Cell.Type roadType = Cell.Type.None)
+        {
+            switch (direction)
+            {
+                case Cell.Type.N:
+                    x += 1;
+                    break;
+                case Cell.Type.E:
+                    y += 1;
+                    break;
+                case Cell.Type.S:
+                    x -= 1;
+                    break;
+                case Cell.Type.W:
+                    y -= 1;
+                    break;
+            }
+
+            if (!CellContainer.CheckCoord(x, y)) return false; 
+
+            int index = CellContainer.GetIndex(x, y);
+            RoadInfo info = roadInfo[index];
+
+            if (info.InCell) return false;
+            if (type != Cell.Type.None && type != info.Type) return false;
+            if (roadType != Cell.Type.None && roadType != info.RoadType) return false;
+
+            return true;
+        }
+
+        private bool CellsBothInSuperCell(GenCell cellA, GenCell cellB)
+        {
+            if (GetPrototype(out var proto)) return false;
+            if (proto.RequiredSuperCells == null) return false;
+            if (cellA == null || cellB == null || cellA.CellRef == 0 || cellB.CellRef == 0) return false;
+
+            foreach (var superCellEntry in proto.RequiredSuperCells)
+            {
+                var superCellProto = GameDatabase.GetPrototype<SuperCellPrototype>(superCellEntry.SuperCell);
+                if (superCellProto != null && superCellProto.ContainsCell(cellA.CellRef) && superCellProto.ContainsCell(cellB.CellRef))
+                    return true;
+            }
+            return false;
+        }
+
+        private bool Permutations(HashSet<int> setIndexes, List<int> workingStack, List<List<int>> results, int count)
+        {
+            if (workingStack.Count == count)
+                results.Add(new(workingStack));
+
+            List<int> indexes = new (setIndexes);
+            foreach (var index in indexes)
+            {
+                workingStack.Add(index);
+                setIndexes.Remove(index);
+                Permutations(setIndexes, workingStack, results, count);
+                setIndexes.Add(workingStack[workingStack.Count - 1]);
+                workingStack.RemoveAt(workingStack.Count - 1);
+            }
+            return true;
+        }
+
     }
 }

@@ -11,6 +11,7 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Common;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Entities;
+using static MHServerEmu.Games.Regions.Cell;
 
 namespace MHServerEmu.Games.Generators
 {
@@ -156,6 +157,17 @@ namespace MHServerEmu.Games.Regions
 
             return type;
         }
+
+        public static Walls WallsRotate(Walls walls, int clockwiseRotation)
+        {
+            if (clockwiseRotation == 0 || clockwiseRotation >= 8) return walls;
+            int rotatedWalls = ((int)walls & 0xFF << clockwiseRotation);
+            Walls ret = (walls & Walls.C) | (Walls) ((rotatedWalls | (rotatedWalls >> 8)) & 0xFF);
+            if (ret >= Walls.All) return walls;           
+
+            return ret;
+        }
+
     }
 
     public struct AreaSettings
