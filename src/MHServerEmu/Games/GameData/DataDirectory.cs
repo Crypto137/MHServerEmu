@@ -1,9 +1,10 @@
-﻿using MHServerEmu.Common;
+﻿using System.Diagnostics;
+using MHServerEmu.Common;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
-using System.Diagnostics;
+using MHServerEmu.Games.GameData.Prototypes.Markers;
 
 namespace MHServerEmu.Games.GameData
 {
@@ -363,14 +364,14 @@ namespace MHServerEmu.Games.GameData
             // Replacement for Gazillion's GetResourceClassIdByFilename
             switch (Path.GetExtension(fileName))
             {
-                case ".cell":       return GameDatabase.PrototypeClassManager.GetPrototypeClassTypeByName("CellPrototype");
-                case ".district":   return GameDatabase.PrototypeClassManager.GetPrototypeClassTypeByName("DistrictPrototype");
-                case ".markerset":  return GameDatabase.PrototypeClassManager.GetPrototypeClassTypeByName("MarkerSetPrototype");
-                case ".encounter":  return GameDatabase.PrototypeClassManager.GetPrototypeClassTypeByName("EncounterResourcePrototype");
-                case ".prop":       return GameDatabase.PrototypeClassManager.GetPrototypeClassTypeByName("PropPackagePrototype");
-                case ".propset":    return GameDatabase.PrototypeClassManager.GetPrototypeClassTypeByName("PropSetPrototype");
-                case ".ui":         return GameDatabase.PrototypeClassManager.GetPrototypeClassTypeByName("UIPrototype");
-                case ".fragment":   return GameDatabase.PrototypeClassManager.GetPrototypeClassTypeByName("NaviFragmentPrototype");
+                case ".cell":       return typeof(CellPrototype);
+                case ".district":   return typeof(DistrictPrototype);
+                case ".markerset":  return typeof(MarkerSetPrototype);
+                case ".encounter":  return typeof(EncounterResourcePrototype);
+                case ".prop":       return typeof(PropPackagePrototype);
+                case ".propset":    return typeof(PropSetPrototype);
+                case ".ui":         return typeof(UIPrototype);
+                case ".fragment":   return typeof(NaviFragmentPrototype);
 
                 default:
                     Logger.Warn($"Failed to get class type for resource {fileName}");
