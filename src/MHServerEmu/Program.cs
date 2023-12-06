@@ -6,6 +6,7 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Common.Logging.Targets;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Networking;
 using MHServerEmu.PlayerManagement.Accounts;
 
@@ -41,7 +42,8 @@ namespace MHServerEmu
             Logger.Info("MHServerEmu starting...");
 
             // Initialize everything else and start the servers
-            if (ProtocolDispatchTable.IsInitialized == false || GameDatabase.IsInitialized == false || AccountManager.IsInitialized == false)
+            if (ProtocolDispatchTable.IsInitialized == false || GameDatabase.IsInitialized == false || LiveTuningManager.IsInitialized == false ||
+                AccountManager.IsInitialized == false)
             {
                 Console.ReadLine();
                 return;

@@ -1,8 +1,6 @@
 ﻿using System.Diagnostics;
-using System.Text.Json;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
-using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData
@@ -20,7 +18,6 @@ namespace MHServerEmu.Games.GameData
         public static PrototypeClassManager PrototypeClassManager { get; }
         public static DataDirectory DataDirectory { get; }
         public static PropertyInfoTable PropertyInfoTable { get; }
-        public static List<LiveTuningSetting> LiveTuningSettingList { get; }
 
         // DataRef is a unique ulong id that may change across different versions of the game (e.g. resource DataRef is hashed file path).
         public static DataRefManager<StringId> StringRefManager { get; } = new(false);
@@ -51,10 +48,6 @@ namespace MHServerEmu.Games.GameData
             // Initialize PropertyInfoTable
             PropertyInfoTable = new(DataDirectory);
 
-            // Load live tuning
-            LiveTuningSettingList = JsonSerializer.Deserialize<List<LiveTuningSetting>>(File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Assets", "LiveTuning.json")));
-            Logger.Info($"Loaded {LiveTuningSettingList.Count} live tuning settings");
-
             // Verify
             if (VerifyData() == false)
             {
@@ -82,6 +75,12 @@ namespace MHServerEmu.Games.GameData
         public static string GetBlueprintName(BlueprintId blueprintId) => BlueprintRefManager.GetReferenceName(blueprintId);
         public static string GetBlueprintFieldName(StringId fieldId) => StringRefManager.GetReferenceName(fieldId);
         public static string GetPrototypeName(PrototypeId prototypeId) => PrototypeRefManager.GetReferenceName(prototypeId);
+
+        public static string GetPrototypeNameByGuid(PrototypeGuid guid)
+        {
+            PrototypeId id = DataDirectory.GetPrototypeDataRefByGuid(guid);
+            return PrototypeRefManager.GetReferenceName(id);
+        }
 
         public static PrototypeId GetDataRefByPrototypeGuid(PrototypeGuid guid) => DataDirectory.GetPrototypeDataRefByGuid(guid);
 

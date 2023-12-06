@@ -3,6 +3,7 @@ using MHServerEmu.Common.Config;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -26,11 +27,7 @@ namespace MHServerEmu.Games
                 .Build()));
 
             messageList.Add(new(NetMessageServerVersion.CreateBuilder().SetVersion(ServerManager.GameVersion).Build()));
-
-            messageList.Add(new(NetMessageLiveTuningUpdate.CreateBuilder()
-                .AddRangeTuningTypeKeyValueSettings(GameDatabase.LiveTuningSettingList.Select(setting => setting.ToNetStructProtoEnumValue()))
-                .Build()));
-
+            messageList.Add(new(LiveTuningManager.LiveTuningData.ToNetMessageLiveTuningUpdate()));
             messageList.Add(new(NetMessageReadyForTimeSync.DefaultInstance));
 
             // Load local player data

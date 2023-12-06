@@ -58,7 +58,7 @@
     <None Update="Assets\GPAK\IMPORTANT.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\LiveTuning.json">
+    <None Update="Assets\LiveTuningData.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Assets\Packets\NetMessageEntityCreateAvatars.bin">
