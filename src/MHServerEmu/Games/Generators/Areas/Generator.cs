@@ -4,6 +4,8 @@ using MHServerEmu.Games.Regions;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.GameData.Prototypes.Markers;
 
 namespace MHServerEmu.Games.Generators.Areas
 {
@@ -139,5 +141,36 @@ namespace MHServerEmu.Games.Generators.Areas
 
             return false;
         }
+
+        protected static bool GetConnectionPointOnSegment(out Vector3 connectionPoint, CellPrototype cellProto, Segment segment, Vector3 offset)
+        {
+            connectionPoint = Vector3.Zero;
+            if (cellProto == null) return false;
+
+            var MarkerEntities = cellProto.MarkerSet.Markers;
+            foreach (var markerProto in MarkerEntities)
+            {
+                if (markerProto is not CellConnectorMarkerPrototype cellConnectionProto) continue;
+                Vector3 point = offset + cellConnectionProto.Position;
+                if (segment.Start.X == segment.End.X)
+                {
+                    if (Segment.EpsilonTest(point.X, segment.Start.X, 10.0f) && (point.Y <= segment.End.Y) && (point.Y >= segment.Start.Y))
+                    {
+                        connectionPoint = point;
+                        return true;
+                    }
+                }
+                else if (segment.Start.Y == segment.End.Y)
+                {
+                    if (Segment.EpsilonTest(point.Y, segment.Start.Y, 10.0f) && (point.X <= segment.End.X) && (point.X >= segment.Start.X))
+                    {
+                        connectionPoint = point;
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
     }
 }
