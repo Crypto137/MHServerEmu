@@ -1,7 +1,6 @@
 ﻿using MHServerEmu.Billing;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Frontend;
-using MHServerEmu.Games.Achievements;
 using MHServerEmu.Grouping;
 using MHServerEmu.PlayerManagement;
 
@@ -15,8 +14,6 @@ namespace MHServerEmu.Networking
 
         public FrontendServer FrontendServer { get; }
 
-        public AchievementDatabase AchievementDatabase { get; }
-
         public GroupingManagerService GroupingManagerService { get; }
         public PlayerManagerService PlayerManagerService { get; }
         public BillingService BillingService { get; }
@@ -27,8 +24,6 @@ namespace MHServerEmu.Networking
         {
             FrontendServer = frontendServer;
 
-            // Initialize achievement database
-            AchievementDatabase = new(File.ReadAllBytes(Path.Combine(Directory.GetCurrentDirectory(), "Assets", "CompressedAchievementDatabaseDump.bin")));
 
             // Initialize services
             GroupingManagerService = new(this);

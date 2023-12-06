@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData
@@ -26,6 +28,9 @@ namespace MHServerEmu.Games.GameData
         public static DataRefManager<BlueprintId> BlueprintRefManager { get; } = new(true);
         public static DataRefManager<PrototypeId> PrototypeRefManager { get; } = new(true);
 
+        // Global prototypes
+        public static Prototype GlobalsPrototype { get => GetPrototype<Prototype>(GetPrototypeRefByName("Globals/Globals.defaults")); }
+
         static GameDatabase()
         {
             // Make sure sip files are present
@@ -45,8 +50,22 @@ namespace MHServerEmu.Games.GameData
             // Initialize DataDirectory
             DataDirectory = new(new PakFile(CalligraphyPath), new PakFile(ResourcePath));
 
+            // initializeLocaleManager - do we even need it?
+
             // Initialize PropertyInfoTable
             PropertyInfoTable = new(DataDirectory);
+
+            // initializeKeywordPrototypes
+
+            // LoadAllData
+
+            // InteractionManager::Initialize 
+
+            // processInventoryMap
+
+            // processAvatarSynergyMap
+
+            AchievementDatabase.Instance.Initialize();
 
             // Verify
             if (VerifyData() == false)

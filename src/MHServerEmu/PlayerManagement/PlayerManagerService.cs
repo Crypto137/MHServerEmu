@@ -5,6 +5,7 @@ using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
+using MHServerEmu.Games.Achievements;
 using MHServerEmu.Networking;
 using MHServerEmu.PlayerManagement.Accounts;
 
@@ -43,7 +44,7 @@ namespace MHServerEmu.PlayerManagement
             client.SendMessage(MuxChannel, new(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build()));
 
             // Send achievement database
-            client.SendMessage(MuxChannel, new(_serverManager.AchievementDatabase.ToNetMessageAchievementDatabaseDump()));
+            client.SendMessage(MuxChannel, new(AchievementDatabase.Instance.ToNetMessageAchievementDatabaseDump()));
             // NetMessageQueryIsRegionAvailable regionPrototype: 9833127629697912670 should go in the same packet as AchievementDatabaseDump
         }
 
