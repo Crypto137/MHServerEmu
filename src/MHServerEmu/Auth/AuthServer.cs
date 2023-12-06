@@ -16,16 +16,14 @@ namespace MHServerEmu.Auth
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly string _url;
-        private readonly PlayerManagerService _playerManager;
         private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly WebApiHandler _webApiHandler;
 
         private HttpListener _listener;
 
-        public AuthServer(PlayerManagerService playerManager)
+        public AuthServer()
         {
             _url = $"http://{ConfigManager.Auth.Address}:{ConfigManager.Auth.Port}/";
-            _playerManager = playerManager;
             _cancellationTokenSource = new();
             _webApiHandler = new();
         }
@@ -145,7 +143,7 @@ namespace MHServerEmu.Auth
                     }
 
                     // Try to create a new session from the data we received
-                    AuthStatusCode statusCode = _playerManager.OnLoginDataPB(loginDataPB, out ClientSession session);
+                    AuthStatusCode statusCode = ServerManager.Instance.PlayerManagerService.OnLoginDataPB(loginDataPB, out ClientSession session);
 
                     // Respond with an error if session creation didn't succeed
                     if (statusCode != AuthStatusCode.Success)

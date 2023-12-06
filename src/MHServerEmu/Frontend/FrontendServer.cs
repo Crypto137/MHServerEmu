@@ -1,10 +1,8 @@
 ﻿using Gazillion;
 using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
-using MHServerEmu.Grouping;
 using MHServerEmu.Networking;
 using MHServerEmu.Networking.Base;
-using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Frontend
 {
@@ -12,15 +10,8 @@ namespace MHServerEmu.Frontend
     {
         private new static readonly Logger Logger = LogManager.CreateLogger();  // Hide the Server.Logger so that this logger can show the actual server as log source.
 
-        private readonly ServerManager _serverManager;
-
-        public PlayerManagerService PlayerManagerService { get => _serverManager.PlayerManagerService; }
-        public GroupingManagerService GroupingManagerService { get => _serverManager.GroupingManagerService; }
-
         public FrontendServer()
         {
-            _serverManager = new(this);
-
             OnConnect += FrontendServer_OnConnect;
             OnDisconnect += FrontendServer_OnDisconnect;
             DataReceived += FrontendServer_DataReceived;
@@ -41,7 +32,7 @@ namespace MHServerEmu.Frontend
             {
                 case FrontendProtocolMessage.ClientCredentials:
                     if (message.TryDeserialize<ClientCredentials>(out var credentials))
-                        _serverManager.PlayerManagerService.OnClientCredentials(client, credentials);
+                        ServerManager.Instance.PlayerManagerService.OnClientCredentials(client, credentials);
                     break;
 
                 case FrontendProtocolMessage.InitialClientHandshake:
@@ -50,9 +41,9 @@ namespace MHServerEmu.Frontend
                     Logger.Info($"Received InitialClientHandshake for {handshake.ServerType} on mux channel {muxId}");
 
                     if (handshake.ServerType == PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND && client.FinishedPlayerManagerHandshake == false)
-                        _serverManager.PlayerManagerService.AcceptClientHandshake(client);
+                        ServerManager.Instance.PlayerManagerService.AcceptClientHandshake(client);
                     else if (handshake.ServerType == PubSubServerTypes.GROUPING_MANAGER_FRONTEND && client.FinishedGroupingManagerHandshake == false)
-                        _serverManager.GroupingManagerService.AcceptClientHandshake(client);
+                        ServerManager.Instance.GroupingManagerService.AcceptClientHandshake(client);
 
                     // Add the player to a game when both handshakes are finished
                     // Adding the player early can cause GroupingManager handshake to not finish properly, which leads to the chat not working
@@ -60,8 +51,8 @@ namespace MHServerEmu.Frontend
                     {
                         // Disconnect the client if the account is already logged in
                         // TODO: disconnect the logged in player instead?
-                        if (_serverManager.GroupingManagerService.AddPlayer(client) == false) client.Connection.Disconnect();
-                        if (_serverManager.PlayerManagerService.AddPlayer(client) == false) client.Connection.Disconnect();
+                        if (ServerManager.Instance.GroupingManagerService.AddPlayer(client) == false) client.Connection.Disconnect();
+                        if (ServerManager.Instance.PlayerManagerService.AddPlayer(client) == false) client.Connection.Disconnect();
                     }
 
                     break;
@@ -84,7 +75,7 @@ namespace MHServerEmu.Frontend
         private void FrontendServer_OnConnect(object sender, ConnectionEventArgs e)
         {
             Logger.Info($"Client connected from {e.Connection}");
-            e.Connection.Client = new FrontendClient(e.Connection, _serverManager);
+            e.Connection.Client = new FrontendClient(e.Connection);
         }
 
         private void FrontendServer_OnDisconnect(object sender, ConnectionEventArgs e)
@@ -97,8 +88,8 @@ namespace MHServerEmu.Frontend
             }
             else
             {
-                _serverManager.PlayerManagerService.RemovePlayer(client);
-                _serverManager.GroupingManagerService.RemovePlayer(client);
+                ServerManager.Instance.PlayerManagerService.RemovePlayer(client);
+                ServerManager.Instance.GroupingManagerService.RemovePlayer(client);
                 Logger.Info($"Client {client.Session.Account} disconnected");
             }
         }

@@ -13,14 +13,10 @@ namespace MHServerEmu.Grouping
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly ServerManager _serverManager;
         private readonly object _playerLock = new();
         private readonly Dictionary<string, FrontendClient> _playerDict = new();    // Store players in a name-client dictionary because tell messages are sent by player name
 
-        public GroupingManagerService(ServerManager serverManager)
-        {
-            _serverManager = serverManager;
-        }
+        public GroupingManagerService() { }
 
         #region Player Management
 

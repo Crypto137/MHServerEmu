@@ -1,10 +1,8 @@
 ﻿using System.Globalization;
-using MHServerEmu.Auth;
 using MHServerEmu.Common.Commands;
 using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Common.Logging.Targets;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Networking;
@@ -16,12 +14,6 @@ namespace MHServerEmu
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
         public static readonly DateTime StartupTime = DateTime.Now;
-
-        public static FrontendServer FrontendServer { get; private set; }
-        public static AuthServer AuthServer { get; private set; }
-
-        public static Thread FrontendServerThread { get; private set; }
-        public static Thread AuthServerThread { get; private set; }
 
         static void Main(string[] args)
         {
@@ -49,7 +41,8 @@ namespace MHServerEmu
                 return;
             }
 
-            StartServers();
+            ServerManager.Instance.Initialize();
+            ServerManager.Instance.StartServers();
 
             // Begin processing console input
             Logger.Info("Type '!commands' for a list of available commands");
@@ -62,24 +55,8 @@ namespace MHServerEmu
 
         public static void Shutdown()
         {
-            if (AuthServer != null)
-            {
-                Logger.Info("Shutting down AuthServer...");
-                AuthServer.Shutdown();
-            }
-
-            if (FrontendServer != null)
-            {
-                Logger.Info("Shutting down FrontendServer...");
-                FrontendServer.Shutdown();
-            }
-
+            ServerManager.Instance.Shutdown();
             Environment.Exit(0);
-        }
-
-        public static string GetServerStatus()
-        {
-            return $"Server Status\nUptime: {DateTime.Now - StartupTime:hh\\:mm\\:ss}\nSessions: {FrontendServer.PlayerManagerService.SessionCount}";
         }
 
         private static void PrintBanner()
@@ -122,37 +99,5 @@ namespace MHServerEmu
                     ConfigManager.Logging.FileMinLevel, ConfigManager.Logging.FileMaxLevel,
                     $"MHServerEmu_{StartupTime:yyyy-dd-MM_HH.mm.ss}.log", false));
         }
-
-        #region Server Control
-
-        private static void StartServers()
-        {
-            StartFrontendServer();
-            StartAuthServer();
-        }
-
-        private static bool StartFrontendServer()
-        {
-            if (FrontendServer != null) return false;
-
-            FrontendServer = new FrontendServer();
-            FrontendServerThread = new(FrontendServer.Run) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
-            FrontendServerThread.Start();
-
-            return true;
-        }
-
-        private static bool StartAuthServer()
-        {
-            if (AuthServer != null) return false;
-
-            AuthServer = new(FrontendServer.PlayerManagerService);
-            AuthServerThread = new(AuthServer.Run) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
-            AuthServerThread.Start();
-
-            return true;
-        }
-
-        #endregion
     }
 }

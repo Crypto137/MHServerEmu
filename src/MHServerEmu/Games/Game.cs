@@ -32,8 +32,6 @@ namespace MHServerEmu.Games
         private readonly Dictionary<FrontendClient, List<GameMessage>> _responseListDict = new();
         private readonly Stopwatch _tickWatch = new();
 
-        private readonly ServerManager _serverManager;
-
         private readonly PowerMessageHandler _powerMessageHandler;
 
         private int _tickCount;
@@ -50,9 +48,8 @@ namespace MHServerEmu.Games
         // We use a dictionary property instead of AccessMessageHandlerHash(), which is essentially just a getter
         public Dictionary<ulong, ArchiveMessageHandler> MessageHandlerDict { get; } = new();
 
-        public Game(ServerManager serverManager, ulong id)
+        public Game(ulong id)
         {
-            _serverManager = serverManager;
             Id = id;
 
             // The game uses 16 bits of the current UTC time in seconds as the initial replication id

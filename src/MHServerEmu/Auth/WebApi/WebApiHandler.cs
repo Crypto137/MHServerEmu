@@ -51,7 +51,7 @@ namespace MHServerEmu.Auth.WebApi
 
         private byte[] HandleServerStatusRequest()
         {
-            return GenerateResponse("Server Status", Program.GetServerStatus());
+            return GenerateResponse("Server Status", ServerManager.Instance.GetServerStatus());
         }
 
         private byte[] GenerateResponse(string title, string text)

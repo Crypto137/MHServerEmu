@@ -17,8 +17,6 @@ namespace MHServerEmu.PlayerManagement
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly ServerManager _serverManager;
-
         private readonly SessionManager _sessionManager;
         private readonly GameManager _gameManager;
         private readonly object _playerLock = new();
@@ -26,11 +24,10 @@ namespace MHServerEmu.PlayerManagement
 
         public int SessionCount { get => _sessionManager.SessionCount; }
 
-        public PlayerManagerService(ServerManager serverManager)
+        public PlayerManagerService()
         {
-            _serverManager = serverManager;
             _sessionManager = new();
-            _gameManager = new(_serverManager);
+            _gameManager = new();
         }
 
         #region Client Management
@@ -172,7 +169,7 @@ namespace MHServerEmu.PlayerManagement
                 case ClientToGameServerMessage.NetMessageTell:
                 case ClientToGameServerMessage.NetMessageReportPlayer:
                 case ClientToGameServerMessage.NetMessageChatBanVote:
-                    _serverManager.GroupingManagerService.Handle(client, message);
+                    ServerManager.Instance.GroupingManagerService.Handle(client, message);
                     break;
 
                 // Billing
@@ -182,7 +179,7 @@ namespace MHServerEmu.PlayerManagement
                 case ClientToGameServerMessage.NetMessageBuyGiftForOtherPlayer:
                 case ClientToGameServerMessage.NetMessagePurchaseUnlock:
                 case ClientToGameServerMessage.NetMessageGetGiftHistory:
-                    _serverManager.BillingService.Handle(client, message);
+                    ServerManager.Instance.BillingService.Handle(client, message);
                     break;
 
                 default:
