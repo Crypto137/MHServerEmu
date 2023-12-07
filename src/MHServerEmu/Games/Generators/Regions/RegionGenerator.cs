@@ -168,9 +168,17 @@ namespace MHServerEmu.Games.Generators.Regions
             }
         }
 
-        internal bool GetRequiredPOICellsForArea(Area area, GRandom random, List<Prototype> list)
+        public bool GetRequiredPOICellsForArea(Area area, GRandom random, out List<Prototype> list)
         {
-            throw new NotImplementedException();
+            list = new ();
+            if (area != null && POIPickerCollection != null)
+            {
+                POIPickerCollection.DereferenceArea(area);
+                return POIPickerCollection.GetCellsForArea(area, random, list);
+            }
+
+            return false;
         }
+
     }
 }

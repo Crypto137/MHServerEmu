@@ -11,7 +11,7 @@ namespace MHServerEmu.Games.Generators.Areas
 {
     public class BaseGridAreaGenerator : Generator
     {
-        private readonly List<RegionTransitionSpec> _regionTransitions = new();
+        private List<RegionTransitionSpec> _regionTransitions = new();
         private readonly List<RegionTransitionSpec> _requiredTransitions = new();
 
         public readonly CellSetRegistry CellSetRegistry = new();
@@ -72,7 +72,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 }
             }
 
-            RegionTransition.GetRequiredTransitionData(region.GetPrototypeDataRef(), area.GetPrototypeDataRef(), _regionTransitions);
+            RegionTransition.GetRequiredTransitionData(region.GetPrototypeDataRef(), area.GetPrototypeDataRef(), out _regionTransitions);
 
             return InitializeCellRegistry() && InitializeContainer();
         }
@@ -341,8 +341,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
             if (!failed)
             {
-                List<Prototype> list = new();
-                failed = !regionGenerator.GetRequiredPOICellsForArea(Area, random, list);
+                failed = !regionGenerator.GetRequiredPOICellsForArea(Area, random, out var list);
                 if (!failed)
                 {
                     foreach (Prototype requiredCellBase in list)

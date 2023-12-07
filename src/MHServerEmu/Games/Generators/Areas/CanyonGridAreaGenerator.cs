@@ -184,7 +184,7 @@ namespace MHServerEmu.Games.Generators.Areas
             float width = bridgeProto.BoundingBox.Width;
             float length = bridgeProto.BoundingBox.Length;
 
-            bool success = false;
+            bool found = false;
 
             bool westBridgeOnly = proto.ConnectOnBridgeOnlyDirection.HasFlag(RegionDirection.West) && direction == Cell.Type.W;
             bool eastBridgeOnly = proto.ConnectOnBridgeOnlyDirection.HasFlag(RegionDirection.East) && direction == Cell.Type.E;
@@ -220,12 +220,12 @@ namespace MHServerEmu.Games.Generators.Areas
                     if (GetConnectionPointOnSegment(out Vector3 connectionPoint, bridgeProto, segment, offset))
                     {
                         connections.Add(connectionPoint);
-                        success = true;
+                        found = true;
                     }
                 }
             }
 
-            return success;
+            return found;
         }
 
     }

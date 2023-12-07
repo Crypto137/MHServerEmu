@@ -348,6 +348,11 @@ namespace MHServerEmu.Games.GameData
             // todo: reimplement export
         }
 
+        public IEnumerable<Prototype> IteratePrototypesInHierarchy(Type prototypeType, int flags)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
     }
 

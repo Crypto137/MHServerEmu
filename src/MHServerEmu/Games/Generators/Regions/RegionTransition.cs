@@ -1,18 +1,66 @@
-﻿namespace MHServerEmu.Games.Generators.Regions
+﻿using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Generators.Prototypes;
+
+namespace MHServerEmu.Games.Generators.Regions
 {
     public class RegionTransition
     {
         public RegionTransition() { }
 
-        internal static void GetRequiredTransitionData(ulong RegionRef, ulong AreaRef, List<RegionTransitionSpec> transitions)
+        public static bool GetRequiredTransitionData(ulong regionRef, ulong areaRef, out List<RegionTransitionSpec> specList)
         {
-            throw new NotImplementedException();
+            specList = new ();
+
+            IEnumerable<Prototype> iterateProtos = GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(RegionConnectionNodePrototype), 2 | 4);
+
+            // ulong InvalidPrototype = 0;  This variable has no logic!!!
+            bool found = false;
+
+            foreach (var itrProto in iterateProtos) // they check ALL prototypes... TODO: Rewrite!!!
+            {
+                if (itrProto is RegionConnectionNodePrototype proto)
+                {
+                    var origin = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(proto.Origin);
+                    var target = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(proto.Target);
+
+                    if (origin != null && target != null)
+                    {
+                        if (regionRef == origin.Region && areaRef == origin.Area)
+                        {
+                            bool start = false; // (proto.Type == RegionTransitionDirectionality.BiDirectional && InvalidPrototype != 0 && target.Region == InvalidPrototype);
+                            RegionTransitionSpec spec = new(origin.Cell, origin.Entity, start);
+
+                            if (!specList.Contains(spec) && spec.Cell != 0)
+                            {
+                                specList.Add(spec);
+                                found = true;
+                            }
+                        }
+
+                        else if (proto.Type == RegionTransitionDirectionality.BiDirectional && regionRef == target.Region && areaRef == target.Area)
+                        {
+                            bool start = false; // (InvalidPrototype != 0 && origin.Region == InvalidPrototype);
+                            RegionTransitionSpec spec = new(target.Cell, target.Entity, start);
+
+                            if (!specList.Contains(spec) && spec.Cell != 0)
+                            {
+                                specList.Add(spec);
+                                found = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return found;
         }
+
     }
 
     public class RegionTransitionSpec
     {
-        public ulong Cell;
+        public ulong Cell; // assetRef
         public ulong Entity;
         public bool Start;
 
@@ -25,9 +73,9 @@
             Start = start;
         }
 
-        internal ulong GetCellRef()
+        public ulong GetCellRef()
         {
-            throw new NotImplementedException();
+            return GameDatabase.GetDataRefByAsset(Cell);
         }
     }
 }

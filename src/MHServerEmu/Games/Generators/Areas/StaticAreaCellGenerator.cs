@@ -16,14 +16,12 @@ namespace MHServerEmu.Games.Generators.Areas
         public override Aabb PreGenerate(GRandom random)
         {
             Aabb bounds = Aabb.InvertedLimit;
-
             DistrictPrototype protoDistrict = GetDistrictPrototype();
             if (protoDistrict == null || protoDistrict.CellMarkerSet.Markers == null) return bounds;
 
             foreach (var cellMarker in protoDistrict.CellMarkerSet.Markers)
             {
                 if (cellMarker is not ResourceMarkerPrototype resourceMarker) continue;
-
                 ulong cellRef = GameDatabase.GetPrototypeRefByName(resourceMarker.Resource);
                 if (cellRef == 0)
                 {
@@ -33,13 +31,11 @@ namespace MHServerEmu.Games.Generators.Areas
 
                 CellPrototype cellProto = GameDatabase.GetPrototype<CellPrototype>(cellRef);
                 if (cellProto == null) continue;
-
                 bounds += cellProto.BoundingBox + resourceMarker.Position;
 
             }
 
             PreGenerated = true;
-
             return bounds;
         }
 
@@ -119,7 +115,6 @@ namespace MHServerEmu.Games.Generators.Areas
                 Logger.Warn($"District Prototype is not available. Likely a missing file. Looking for Asset: {GameDatabase.GetAssetName(districtAssetRef)}");
 
             area.DistrictDataRef = districtRef;
-
             return protoDistrict;
         }
 
@@ -183,7 +178,6 @@ namespace MHServerEmu.Games.Generators.Areas
                     }
                 }
             }
-
             return connected;
         }
 

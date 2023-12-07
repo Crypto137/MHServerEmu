@@ -77,7 +77,6 @@ namespace MHServerEmu.Games.Generators.Areas
 
                 return new (min, max);
             }
-
             return Aabb.InvertedLimit;
         }
 
@@ -146,7 +145,6 @@ namespace MHServerEmu.Games.Generators.Areas
                     previous = cell;
                 }
             }
-
             return true;
         }
 
@@ -180,7 +178,6 @@ namespace MHServerEmu.Games.Generators.Areas
             if (cell == null) return null;
 
             NumCells++;
-
             return cell;
         }
 

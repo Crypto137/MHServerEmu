@@ -113,9 +113,34 @@ namespace MHServerEmu.Games.Generators.Areas
             return bounds;
         }
 
-        internal static void CellGridBorderBehavior(Area area)
+        public static bool CellGridBorderBehavior(Area area)
         {
-            throw new NotImplementedException();
+            if (area == null) return false;
+
+            GeneratorPrototype generatorProto = area.AreaPrototype.Generator;
+            var singleCellGeneratorProto = generatorProto as SingleCellAreaGeneratorPrototype;
+
+            if (singleCellGeneratorProto != null && singleCellGeneratorProto.BorderCellSets != null && singleCellGeneratorProto.Cell != 0)
+            {
+                ulong assetRef = singleCellGeneratorProto.Cell;
+                ulong cellRef = GameDatabase.GetDataRefByAsset(assetRef);
+                CellPrototype cellP = GameDatabase.GetPrototype<CellPrototype>(cellRef);
+
+                if (cellP == null) return false;
+
+                CellSetRegistry registry = new ();
+                registry.Initialize(true);
+                foreach (var cellSetEntry in singleCellGeneratorProto.BorderCellSets)
+                {
+                    if (cellSetEntry == null) continue;
+                    registry.LoadDirectory(cellSetEntry.CellSet, cellSetEntry, cellSetEntry.Weight, cellSetEntry.Unique);
+                }
+
+                return DoBorderBehavior(area, singleCellGeneratorProto.BorderWidth, registry, cellP.BoundingBox.Width, 1, 1);
+            }
+
+            return false;
         }
+
     }
 }
