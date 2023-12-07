@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Common.Config.Sections;
+using MHServerEmu.Common.Helpers;
 
 namespace MHServerEmu.Common.Config
 {
@@ -17,7 +18,7 @@ namespace MHServerEmu.Common.Config
 
         static ConfigManager()
         {
-            string path = Path.Combine(Directory.GetCurrentDirectory(), "Config.ini");
+            string path = Path.Combine(FileHelper.ServerRoot, "Config.ini");
 
             if (File.Exists(path))
             {

@@ -2,6 +2,7 @@
 using Gazillion;
 using MHServerEmu.Billing.Catalogs;
 using MHServerEmu.Common.Config;
+using MHServerEmu.Common.Helpers;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities.Avatars;
@@ -21,15 +22,15 @@ namespace MHServerEmu.Billing
 
         public BillingService()
         {
-            _catalog = JsonSerializer.Deserialize<Catalog>(File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Catalog.json")));
+            _catalog = FileHelper.DeserializeJson<Catalog>(Path.Combine(FileHelper.AssetsDirectory, "Catalog.json"));
 
             // Apply a patch to the catalog if it's enabled and there's one
             if (ConfigManager.Billing.ApplyCatalogPatch)
             {
-                string patchPath = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "CatalogPatch.json");
+                string patchPath = Path.Combine(FileHelper.AssetsDirectory, "CatalogPatch.json");
                 if (File.Exists(patchPath))
                 {
-                    CatalogEntry[] catalogPatch = JsonSerializer.Deserialize<CatalogEntry[]>(File.ReadAllText(patchPath));
+                    CatalogEntry[] catalogPatch = FileHelper.DeserializeJson<CatalogEntry[]>(patchPath);
                     _catalog.ApplyPatch(catalogPatch);
                 }
             }

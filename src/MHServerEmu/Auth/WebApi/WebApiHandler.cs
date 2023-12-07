@@ -1,5 +1,6 @@
 ﻿using System.Collections.Specialized;
 using System.Text;
+using MHServerEmu.Common.Helpers;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.PlayerManagement.Accounts;
 
@@ -20,7 +21,7 @@ namespace MHServerEmu.Auth.WebApi
 
         public WebApiHandler()
         {
-            string assetDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "AuthServer");
+            string assetDirectory = Path.Combine(FileHelper.AssetsDirectory, "AuthServer");
             ResponseHtml = File.ReadAllText(Path.Combine(assetDirectory, "Response.html"));
             AccountCreateFormHtml = File.ReadAllText(Path.Combine(assetDirectory, "AccountCreateForm.html"));
         }

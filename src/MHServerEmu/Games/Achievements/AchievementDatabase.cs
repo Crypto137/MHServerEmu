@@ -1,6 +1,7 @@
 ﻿using Google.ProtocolBuffers;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using Gazillion;
+using MHServerEmu.Common.Helpers;
 using MHServerEmu.Common.Logging;
 
 namespace MHServerEmu.Games.Achievements
@@ -21,7 +22,7 @@ namespace MHServerEmu.Games.Achievements
 
         public void Initialize()
         {
-            string compressedDumpPath = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "CompressedAchievementDatabaseDump.bin");
+            string compressedDumpPath = Path.Combine(FileHelper.AssetsDirectory, "CompressedAchievementDatabaseDump.bin");
             byte[] compressedDump = File.ReadAllBytes(compressedDumpPath);
 
             // Decompress the dump

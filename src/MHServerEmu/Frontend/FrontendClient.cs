@@ -1,4 +1,5 @@
 ﻿using Google.ProtocolBuffers;
+using MHServerEmu.Common.Helpers;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games;
 using MHServerEmu.Games.Common;
@@ -107,7 +108,7 @@ namespace MHServerEmu.Frontend
 
         public void SendPacketFromFile(string fileName)
         {
-            string path = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Packets", fileName);
+            string path = Path.Combine(FileHelper.AssetsDirectory, "Packets", fileName);
 
             if (File.Exists(path))
             {

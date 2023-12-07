@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace MHServerEmu.Common
+namespace MHServerEmu.Common.Helpers
 {
     public static class HashHelper
     {
@@ -13,7 +13,7 @@ namespace MHServerEmu.Common
                 a = (a + c) % mod;
                 b = (b + a) % mod;
             }
-            return (b << 16) | a;
+            return b << 16 | a;
         }
 
         public static uint Crc32(byte[] bytes)
@@ -28,7 +28,7 @@ namespace MHServerEmu.Common
         {
             uint hash = 5381;
             for (int i = 0; i < str.Length; i++)
-                hash = (hash << 5) + hash + ((byte)str[i]);
+                hash = (hash << 5) + hash + (byte)str[i];
             return hash;
         }
 
@@ -48,7 +48,7 @@ namespace MHServerEmu.Common
             path = path.ToLower();
             ulong adler = Adler32(path);
             ulong crc = Crc32(path);
-            return (adler | (crc << 32)) - 1;
+            return (adler | crc << 32) - 1;
         }
     }
 }

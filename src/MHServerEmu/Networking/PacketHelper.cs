@@ -1,5 +1,6 @@
 ﻿using Google.ProtocolBuffers;
 using Gazillion;
+using MHServerEmu.Common.Helpers;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
@@ -18,7 +19,7 @@ namespace MHServerEmu.Networking
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private static readonly string PacketDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Packets");
+        private static readonly string PacketDirectory = Path.Combine(FileHelper.AssetsDirectory, "Packets");
 
         public static void ParseServerMessagesFromPacketFile(string fileName)
         {

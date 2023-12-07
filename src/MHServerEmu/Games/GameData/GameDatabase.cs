@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using MHServerEmu.Common.Helpers;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.GameData.Calligraphy;
@@ -11,7 +12,7 @@ namespace MHServerEmu.Games.GameData
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private static readonly string PakDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "GPAK");
+        private static readonly string PakDirectory = Path.Combine(FileHelper.AssetsDirectory, "GPAK");
         private static readonly string CalligraphyPath = Path.Combine(PakDirectory, "Calligraphy.sip");
         private static readonly string ResourcePath = Path.Combine(PakDirectory, "mu_cdata.sip");
 

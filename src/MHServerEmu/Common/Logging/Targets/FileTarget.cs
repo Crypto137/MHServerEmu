@@ -1,4 +1,6 @@
-﻿namespace MHServerEmu.Common.Logging.Targets
+﻿using MHServerEmu.Common.Helpers;
+
+namespace MHServerEmu.Common.Logging.Targets
 {
     public class FileTarget : LogTarget, IDisposable
     {
@@ -10,7 +12,7 @@
         public FileTarget(bool includeTimestamps, Logger.Level minimumLevel, Logger.Level maximumLevel, string fileName, bool reset = false)
             : base(includeTimestamps, minimumLevel, maximumLevel)
         {         
-            string logDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Logs");
+            string logDirectory = Path.Combine(FileHelper.ServerRoot, "Logs");
             if (!Directory.Exists(logDirectory)) Directory.CreateDirectory(logDirectory);
 
             _fileStream = new(Path.Combine(logDirectory, fileName), reset ? FileMode.Create : FileMode.Append, FileAccess.Write, FileShare.Read);

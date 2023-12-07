@@ -1,5 +1,5 @@
-﻿using System.Text.Json;
-using Gazillion;
+﻿using Gazillion;
+using MHServerEmu.Common.Helpers;
 using MHServerEmu.Common.Logging;
 
 namespace MHServerEmu.Games.GameData.LiveTuning
@@ -25,8 +25,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
         /// </summary>
         public LiveTuningData(string jsonPath)
         {
-            string json = File.ReadAllText(jsonPath);
-            _settingList = JsonSerializer.Deserialize<List<LiveTuningSetting>>(json);
+            _settingList = FileHelper.DeserializeJson<List<LiveTuningSetting>>(jsonPath);
         }
         
         /// <summary>

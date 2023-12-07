@@ -5,7 +5,7 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Networking;
 
-namespace MHServerEmu.Common
+namespace MHServerEmu.Common.Helpers
 {
     public static class DataHelper
     {
@@ -16,7 +16,7 @@ namespace MHServerEmu.Common
             CodedInputStream stream = CodedInputStream.CreateInstance(data);
 
             int count = 0;
-            using (StreamWriter streamWriter = new(Path.Combine(Directory.GetCurrentDirectory(), outputFileName)))
+            using (StreamWriter streamWriter = new(Path.Combine(FileHelper.ServerRoot, outputFileName)))
             {
                 while (!stream.IsAtEnd)
                 {
@@ -34,7 +34,7 @@ namespace MHServerEmu.Common
             {
                 if (messages[i].Id == (byte)GameServerToClientMessage.NetMessageEntityCreate)
                 {
-                    using (StreamWriter streamWriter = new(Path.Combine(Directory.GetCurrentDirectory(), $"{i}_entityCreate.txt")))
+                    using (StreamWriter streamWriter = new(Path.Combine(FileHelper.ServerRoot, $"{i}_entityCreate.txt")))
                     {
                         var entityCreateMessage = NetMessageEntityCreate.ParseFrom(messages[i].Payload);
                         EntityBaseData baseData = new(entityCreateMessage.BaseData);
