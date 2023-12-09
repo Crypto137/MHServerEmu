@@ -3,6 +3,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Powers
@@ -54,10 +55,10 @@ namespace MHServerEmu.Games.Powers
                 UltimateCreatorId = stream.ReadRawVarint64();
 
             if (SerializationFlags.HasFlag(ConditionSerializationFlags.NoConditionPrototypeId) == false)
-                ConditionPrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+                ConditionPrototypeId = stream.ReadPrototypeEnum<Prototype>();
 
             if (SerializationFlags.HasFlag(ConditionSerializationFlags.NoCreatorPowerPrototypeId) == false)
-                CreatorPowerPrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+                CreatorPowerPrototypeId = stream.ReadPrototypeEnum<Prototype>();
 
             if (SerializationFlags.HasFlag(ConditionSerializationFlags.HasIndex))
                 Index = stream.ReadRawVarint32();
@@ -97,10 +98,10 @@ namespace MHServerEmu.Games.Powers
                 stream.WriteRawVarint64(UltimateCreatorId);
 
             if (SerializationFlags.HasFlag(ConditionSerializationFlags.NoConditionPrototypeId) == false)
-                stream.WritePrototypeEnum(ConditionPrototypeId, PrototypeEnumType.All);
+                stream.WritePrototypeEnum<Prototype>(ConditionPrototypeId);
 
             if (SerializationFlags.HasFlag(ConditionSerializationFlags.NoCreatorPowerPrototypeId) == false)
-                stream.WritePrototypeEnum(CreatorPowerPrototypeId, PrototypeEnumType.All);
+                stream.WritePrototypeEnum<Prototype>(CreatorPowerPrototypeId);
 
             if (SerializationFlags.HasFlag(ConditionSerializationFlags.HasIndex))
                 stream.WriteRawVarint64(Index);

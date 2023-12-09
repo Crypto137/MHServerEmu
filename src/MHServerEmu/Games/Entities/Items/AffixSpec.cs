@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Entities.Items
 {
@@ -13,8 +14,8 @@ namespace MHServerEmu.Games.Entities.Items
 
         public AffixSpec(CodedInputStream stream)
         {            
-            AffixProto = stream.ReadPrototypeEnum(PrototypeEnumType.All);
-            ScopeProto = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            AffixProto = stream.ReadPrototypeEnum<Prototype>();
+            ScopeProto = stream.ReadPrototypeEnum<Prototype>();
             Seed = stream.ReadRawInt32();
         }
 
@@ -27,8 +28,8 @@ namespace MHServerEmu.Games.Entities.Items
 
         public void Encode(CodedOutputStream stream)
         {
-            stream.WritePrototypeEnum(AffixProto, PrototypeEnumType.All);
-            stream.WritePrototypeEnum(ScopeProto, PrototypeEnumType.All);
+            stream.WritePrototypeEnum<Prototype>(AffixProto);
+            stream.WritePrototypeEnum<Prototype>(ScopeProto);
             stream.WriteRawInt32(Seed);
         }
 

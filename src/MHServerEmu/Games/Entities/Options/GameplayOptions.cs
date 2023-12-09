@@ -4,6 +4,7 @@ using Gazillion;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.Entities.Options
@@ -46,7 +47,7 @@ namespace MHServerEmu.Games.Entities.Options
 
             ChatTabChannels = new PrototypeId[stream.ReadRawVarint64()];
             for (int i = 0; i < ChatTabChannels.Length; i++)
-                ChatTabChannels[i] = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+                ChatTabChannels[i] = stream.ReadPrototypeEnum<Prototype>();
 
             OptionSettings = new long[stream.ReadRawVarint64()];
             for (int i = 0; i < OptionSettings.Length; i++)
@@ -88,7 +89,7 @@ namespace MHServerEmu.Games.Entities.Options
             foreach (ChatChannelFilter filter in ChatChannelFilters) filter.Encode(stream, boolEncoder);
 
             stream.WriteRawVarint64((ulong)ChatTabChannels.Length);
-            foreach (PrototypeId channel in ChatTabChannels) stream.WritePrototypeEnum(channel, PrototypeEnumType.All);
+            foreach (PrototypeId channel in ChatTabChannels) stream.WritePrototypeEnum<Prototype>(channel);
 
             stream.WriteRawVarint64((ulong)OptionSettings.Length);
             foreach (long setting in OptionSettings) stream.WriteRawVarint64((ulong)setting);

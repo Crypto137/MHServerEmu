@@ -4,6 +4,7 @@ using Gazillion;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Entities.Options
 {
@@ -14,7 +15,7 @@ namespace MHServerEmu.Games.Entities.Options
 
         public ChatChannelFilter(CodedInputStream stream, BoolDecoder boolDecoder)
         {
-            ChannelProtoId = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            ChannelProtoId = stream.ReadPrototypeEnum<Prototype>();
             IsSubscribed = boolDecoder.ReadBool(stream);
         }
 
@@ -32,7 +33,7 @@ namespace MHServerEmu.Games.Entities.Options
 
         public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
-            stream.WritePrototypeEnum(ChannelProtoId, PrototypeEnumType.All);
+            stream.WritePrototypeEnum<Prototype>(ChannelProtoId);
             boolEncoder.WriteBuffer(stream);   // IsSubscribed
         }
 

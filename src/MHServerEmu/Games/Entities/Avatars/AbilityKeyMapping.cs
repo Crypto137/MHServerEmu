@@ -3,6 +3,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Entities.Avatars
 {
@@ -19,13 +20,13 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             PowerSpecIndex = stream.ReadRawInt32();
             ShouldPersist = boolDecoder.ReadBool(stream);
-            AssociatedTransformMode = stream.ReadPrototypeEnum(PrototypeEnumType.All);
-            Slot0 = stream.ReadPrototypeEnum(PrototypeEnumType.All);
-            Slot1 = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            AssociatedTransformMode = stream.ReadPrototypeEnum<Prototype>();
+            Slot0 = stream.ReadPrototypeEnum<Prototype>();
+            Slot1 = stream.ReadPrototypeEnum<Prototype>();
 
             PowerSlots = new PrototypeId[stream.ReadRawVarint64()];
             for (int i = 0; i < PowerSlots.Length; i++)
-                PowerSlots[i] = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+                PowerSlots[i] = stream.ReadPrototypeEnum<Prototype>();
         }
 
         public AbilityKeyMapping(int powerSpecIndex, bool shouldPersist, PrototypeId associatedTransformMode, PrototypeId slot0, PrototypeId slot1, PrototypeId[] powerSlots)
@@ -47,13 +48,13 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             stream.WriteRawInt32(PowerSpecIndex);
             boolEncoder.WriteBuffer(stream);   // ShouldPersist
-            stream.WritePrototypeEnum(AssociatedTransformMode, PrototypeEnumType.All);
-            stream.WritePrototypeEnum(Slot0, PrototypeEnumType.All);
-            stream.WritePrototypeEnum(Slot1, PrototypeEnumType.All);
+            stream.WritePrototypeEnum<Prototype>(AssociatedTransformMode);
+            stream.WritePrototypeEnum<Prototype>(Slot0);
+            stream.WritePrototypeEnum<Prototype>(Slot1);
 
             stream.WriteRawVarint64((ulong)PowerSlots.Length);
             foreach (PrototypeId powerSlot in PowerSlots)
-                stream.WritePrototypeEnum(powerSlot, PrototypeEnumType.All);
+                stream.WritePrototypeEnum<Prototype>(powerSlot);
         }
 
         public override string ToString()

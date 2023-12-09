@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Entities.Items
 {
@@ -17,8 +18,8 @@ namespace MHServerEmu.Games.Entities.Items
 
         public ItemSpec(CodedInputStream stream)
         {            
-            ItemProto = stream.ReadPrototypeEnum(PrototypeEnumType.All);
-            Rarity = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            ItemProto = stream.ReadPrototypeEnum<Prototype>();
+            Rarity = stream.ReadPrototypeEnum<Prototype>();
             ItemLevel = stream.ReadRawInt32();
             CreditsAmount = stream.ReadRawInt32();
 
@@ -27,7 +28,7 @@ namespace MHServerEmu.Games.Entities.Items
                 AffixSpec[i] = new(stream);
 
             Seed = stream.ReadRawInt32();
-            EquippableBy = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            EquippableBy = stream.ReadPrototypeEnum<Prototype>();
         }
 
         public ItemSpec(PrototypeId itemProto, PrototypeId rarity, int itemLevel, int creditsAmount, AffixSpec[] affixSpec, int seed, PrototypeId equippableBy)
@@ -43,14 +44,14 @@ namespace MHServerEmu.Games.Entities.Items
 
         public void Encode(CodedOutputStream stream)
         {
-            stream.WritePrototypeEnum(ItemProto, PrototypeEnumType.All);
-            stream.WritePrototypeEnum(Rarity, PrototypeEnumType.All);
+            stream.WritePrototypeEnum<Prototype>(ItemProto);
+            stream.WritePrototypeEnum<Prototype>(Rarity);
             stream.WriteRawInt32(ItemLevel);
             stream.WriteRawInt32(CreditsAmount);
             stream.WriteRawVarint64((ulong)AffixSpec.Length);
             foreach (AffixSpec affixSpec in AffixSpec) affixSpec.Encode(stream);
             stream.WriteRawInt32(Seed);
-            stream.WritePrototypeEnum(EquippableBy, PrototypeEnumType.All);
+            stream.WritePrototypeEnum<Prototype>(EquippableBy);
         }
 
         public override string ToString()

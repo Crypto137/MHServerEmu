@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Social
 {
@@ -14,8 +15,8 @@ namespace MHServerEmu.Games.Social
 
         public AvatarSlotInfo(CodedInputStream stream)
         {
-            AvatarRef = stream.ReadPrototypeEnum(PrototypeEnumType.All);
-            CostumeRef = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            AvatarRef = stream.ReadPrototypeEnum<Prototype>();
+            CostumeRef = stream.ReadPrototypeEnum<Prototype>();
             AvatarLevel = stream.ReadRawInt32();
             PrestigeLevel = stream.ReadRawInt32();
         }
@@ -30,8 +31,8 @@ namespace MHServerEmu.Games.Social
 
         public void Encode(CodedOutputStream stream)
         {
-            stream.WritePrototypeEnum(AvatarRef, PrototypeEnumType.All);
-            stream.WritePrototypeEnum(CostumeRef, PrototypeEnumType.All);
+            stream.WritePrototypeEnum<Prototype>(AvatarRef);
+            stream.WritePrototypeEnum<Prototype>(CostumeRef);
             stream.WriteRawInt32(AvatarLevel);
             stream.WriteRawInt32(PrestigeLevel);
         }

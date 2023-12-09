@@ -4,6 +4,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Powers
@@ -48,10 +49,10 @@ namespace MHServerEmu.Games.Powers
             if (Flags.HasFlag(ActivatePowerMessageFlags.TargetIsUser) == false)
                 IdTargetEntity = stream.ReadRawVarint64();
 
-            PowerPrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.Power);
+            PowerPrototypeId = stream.ReadPrototypeEnum<PowerPrototype>();
 
             if (Flags.HasFlag(ActivatePowerMessageFlags.HasTriggeringPowerPrototypeId))
-                TriggeringPowerPrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.Power);
+                TriggeringPowerPrototypeId = stream.ReadPrototypeEnum<PowerPrototype>();
 
             UserPosition = new(stream, 2);
 
@@ -146,10 +147,10 @@ namespace MHServerEmu.Games.Powers
                 if (Flags.HasFlag(ActivatePowerMessageFlags.TargetIsUser) == false)
                     cos.WriteRawVarint64(IdTargetEntity);
 
-                cos.WritePrototypeEnum(PowerPrototypeId, PrototypeEnumType.Power);
+                cos.WritePrototypeEnum<PowerPrototype>(PowerPrototypeId);
 
                 if (Flags.HasFlag(ActivatePowerMessageFlags.HasTriggeringPowerPrototypeId))
-                    cos.WritePrototypeEnum(TriggeringPowerPrototypeId, PrototypeEnumType.Power);
+                    cos.WritePrototypeEnum<PowerPrototype>(TriggeringPowerPrototypeId);
 
                 UserPosition.Encode(cos, 2);
 

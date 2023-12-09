@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -14,7 +15,7 @@ namespace MHServerEmu.Games.Entities
         public InventoryLocation(CodedInputStream stream)
         {
             ContainerEntityId = stream.ReadRawVarint64();
-            InventoryPrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.Inventory);
+            InventoryPrototypeId = stream.ReadPrototypeEnum<InventoryPrototype>();
             Slot = stream.ReadRawVarint32();
         }
 
@@ -28,7 +29,7 @@ namespace MHServerEmu.Games.Entities
         public void Encode(CodedOutputStream stream)
         {
             stream.WriteRawVarint64(ContainerEntityId);
-            stream.WritePrototypeEnum(InventoryPrototypeId, PrototypeEnumType.Inventory);
+            stream.WritePrototypeEnum<InventoryPrototype>(InventoryPrototypeId);
             stream.WriteRawVarint64(Slot);
         }
 

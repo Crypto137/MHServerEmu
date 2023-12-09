@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Social
 {
@@ -30,8 +31,8 @@ namespace MHServerEmu.Games.Social
         {
             Name = stream.ReadRawString();
             DbId = stream.ReadRawVarint64();
-            RegionRef = stream.ReadPrototypeEnum(PrototypeEnumType.All);
-            DifficultyRef = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            RegionRef = stream.ReadPrototypeEnum<Prototype>();
+            DifficultyRef = stream.ReadPrototypeEnum<Prototype>();
             Slots = new AvatarSlotInfo[stream.ReadRawByte()];  
             for (int i = 0; i < Slots.Length; i++)
                 Slots[i] = new(stream);
@@ -65,8 +66,8 @@ namespace MHServerEmu.Games.Social
         {
             stream.WriteRawString(Name);
             stream.WriteRawVarint64(DbId);
-            stream.WritePrototypeEnum(RegionRef, PrototypeEnumType.All);
-            stream.WritePrototypeEnum(DifficultyRef, PrototypeEnumType.All);
+            stream.WritePrototypeEnum<Prototype>(RegionRef);
+            stream.WritePrototypeEnum<Prototype>(DifficultyRef);
 
             stream.WriteRawByte((byte)Slots.Length);
             foreach (AvatarSlotInfo slot in Slots) slot.Encode(stream);

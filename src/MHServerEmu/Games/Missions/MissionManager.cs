@@ -3,6 +3,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Missions
 {
@@ -14,7 +15,7 @@ namespace MHServerEmu.Games.Missions
 
         public MissionManager(CodedInputStream stream, BoolDecoder boolDecoder)
         {
-            PrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            PrototypeId = stream.ReadPrototypeEnum<Prototype>();
 
             Missions = new Mission[stream.ReadRawVarint64()];
             for (int i = 0; i < Missions.Length; i++)
@@ -40,7 +41,7 @@ namespace MHServerEmu.Games.Missions
 
         public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
-            stream.WritePrototypeEnum(PrototypeId, PrototypeEnumType.All);
+            stream.WritePrototypeEnum<Prototype>(PrototypeId);
 
             stream.WriteRawVarint64((ulong)Missions.Length);
             foreach (Mission mission in Missions) mission.Encode(stream, boolEncoder);

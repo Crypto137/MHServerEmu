@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Common
 {
@@ -12,7 +13,7 @@ namespace MHServerEmu.Games.Common
 
         public EntityTrackingContextMap(CodedInputStream stream)
         {
-            Context = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            Context = stream.ReadPrototypeEnum<Prototype>();
             Flag = stream.ReadRawVarint32();
         }
 
@@ -24,7 +25,7 @@ namespace MHServerEmu.Games.Common
 
         public void Encode(CodedOutputStream stream)
         {
-            stream.WritePrototypeEnum(Context, PrototypeEnumType.All);
+            stream.WritePrototypeEnum<Prototype>(Context);
             stream.WriteRawVarint32(Flag);
         }
 

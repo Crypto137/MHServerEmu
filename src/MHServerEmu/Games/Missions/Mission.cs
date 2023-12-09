@@ -3,6 +3,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Missions
 {
@@ -22,7 +23,7 @@ namespace MHServerEmu.Games.Missions
             PrototypeGuid = (PrototypeGuid)stream.ReadRawVarint64();
             State = stream.ReadRawVarint64();
             TimeExpireCurrentState = stream.ReadRawVarint64();
-            PrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            PrototypeId = stream.ReadPrototypeEnum<Prototype>();
             Random = stream.ReadRawInt32();
 
             Objectives = new Objective[stream.ReadRawVarint64()];
@@ -53,7 +54,7 @@ namespace MHServerEmu.Games.Missions
             stream.WriteRawVarint64((ulong)PrototypeGuid);
             stream.WriteRawVarint64(State);
             stream.WriteRawVarint64(TimeExpireCurrentState);
-            stream.WritePrototypeEnum(PrototypeId, PrototypeEnumType.All);
+            stream.WritePrototypeEnum<Prototype>(PrototypeId);
             stream.WriteRawInt32(Random);
 
             stream.WriteRawVarint64((ulong)Objectives.Length);

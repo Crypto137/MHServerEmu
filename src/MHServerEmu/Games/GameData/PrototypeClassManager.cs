@@ -44,5 +44,10 @@ namespace MHServerEmu.Games.GameData
         {
             return classToCheck == parent || classToCheck.IsSubclassOf(parent);
         }
+
+        public IEnumerable<Type> GetEnumerator()
+        {
+            return _prototypeNameToClassTypeDict.Values.AsEnumerable();
+        }
     }
 }
