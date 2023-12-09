@@ -17,7 +17,7 @@ namespace MHServerEmu.Games.GameData
     }
 
     /// <summary>
-    /// Manages all loaded game data.
+    /// A singleton that manages all loaded game data.
     /// </summary>
     public class DataDirectory
     {
@@ -40,11 +40,17 @@ namespace MHServerEmu.Games.GameData
 
         private readonly Dictionary<Type, PrototypeEnumValueNode> _prototypeEnumLookupDict = new();
 
+        public static DataDirectory Instance { get; } = new();
+
         public CurveDirectory CurveDirectory { get; } = new();
         public AssetDirectory AssetDirectory { get; } = new();
         public ReplacementDirectory ReplacementDirectory { get; } = new();
 
-        public DataDirectory(PakFile calligraphyPak, PakFile resourcePak)
+        private DataDirectory() { }
+
+        #region Initialization
+
+        public void Initialize(PakFile calligraphyPak, PakFile resourcePak)
         {
             var stopwatch = Stopwatch.StartNew();
 
@@ -59,8 +65,6 @@ namespace MHServerEmu.Games.GameData
 
             Logger.Info($"Initialized in {stopwatch.ElapsedMilliseconds} ms");
         }
-
-        #region Initialization
 
         private void LoadCalligraphyDataFramework(PakFile calligraphyPak)
         {
@@ -101,6 +105,12 @@ namespace MHServerEmu.Games.GameData
                     }
                 }
             }
+
+            // TODO: PrototypeClassManager::BindAssetTypesToEnums()
+
+            // Populate blueprint hierarchy hash sets
+            foreach (LoadedBlueprintRecord record in _blueprintRecordDict.Values)
+                record.Blueprint.OnAllDirectoriesLoaded();
         }
 
         private void ReadTypeDirectoryEntry(BinaryReader reader, PakFile pak)
@@ -164,7 +174,7 @@ namespace MHServerEmu.Games.GameData
             _blueprintGuidToDataRefDict[guid] = id;
 
             // Deserialize (blueprint deserialization is not yet properly implemented)
-            Blueprint blueprint = new(pak.GetFile($"Calligraphy/{GameDatabase.GetBlueprintName(id)}"));
+            Blueprint blueprint = new(pak.GetFile($"Calligraphy/{GameDatabase.GetBlueprintName(id)}"), id, guid);
 
             // Add field name refs when loading blueprints
             foreach (BlueprintMember member in blueprint.Members)

@@ -49,7 +49,8 @@ namespace MHServerEmu.Games.GameData
             PrototypeClassManager = new();
 
             // Initialize DataDirectory
-            DataDirectory = new(new PakFile(CalligraphyPath), new PakFile(ResourcePath));
+            DataDirectory = DataDirectory.Instance;
+            DataDirectory.Initialize(new(CalligraphyPath), new(ResourcePath));
 
             // initializeLocaleManager - do we even need it?
 
