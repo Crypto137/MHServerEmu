@@ -38,7 +38,7 @@ namespace MHServerEmu.Games.GameData
         private readonly Dictionary<PrototypeId, PrototypeDataRefRecord> _prototypeRecordDict = new();
         private readonly Dictionary<PrototypeGuid, PrototypeId> _prototypeGuidToDataRefDict = new();
 
-        private readonly Dictionary<Type, PrototypeEnumValueNode> _prototypeEnumLookupDict = new();
+        private readonly Dictionary<Type, PrototypeEnumValueNode> _prototypeClassLookupDict = new(GameDatabase.PrototypeClassManager.ClassCount);
 
         public static DataDirectory Instance { get; } = new();
 
@@ -272,15 +272,11 @@ namespace MHServerEmu.Games.GameData
         /// </summary>
         private void InitializeHierarchyCache()
         {
-            // TODO: blueprint enumeration
-
             var stopwatch = Stopwatch.StartNew();
 
-            // Create a dictionary to store temporary lists of prototype refs that belong to each prototype class
-            Dictionary<Type, List<PrototypeId>> enumListDict = new(GameDatabase.PrototypeClassManager.ClassCount);
-
+            // Create lookup nodes for each prototype class
             foreach (Type prototypeClassType in GameDatabase.PrototypeClassManager.GetEnumerator())
-                enumListDict.Add(prototypeClassType, new() { PrototypeId.Invalid });    // Each enum lookup contains 0 / invalid as its first value
+                _prototypeClassLookupDict.Add(prototypeClassType, new());
 
             // Sort all prototype data records by prototype id
             PrototypeDataRefRecord[] sortedRecords = _prototypeRecordDict.Values.OrderBy(x => x.PrototypeId).ToArray();
@@ -288,20 +284,34 @@ namespace MHServerEmu.Games.GameData
             // Put all prototype refs where they belong
             foreach (PrototypeDataRefRecord record in sortedRecords)
             {
-                enumListDict[typeof(Prototype)].Add(record.PrototypeId);    // All refs go to the overall prototype enum
+                // Class hierarchy
+                _prototypeClassLookupDict[typeof(Prototype)].PrototypeRecordList.Add(record);    // All refs go to the overall prototype enum
 
                 // Add refs for child lookups if needed
                 Type classType = record.ClassType;
                 while (classType != typeof(Prototype))
                 {
-                    enumListDict[classType].Add(record.PrototypeId);
+                    _prototypeClassLookupDict[classType].PrototypeRecordList.Add(record);
                     classType = classType.BaseType;
+                }
+                
+                // Blueprint hierarchy
+                if (record.BlueprintId == BlueprintId.Invalid) continue;    // Skip resources, since they don't use blueprints
+                
+                foreach (BlueprintId fileId in record.Blueprint.FileIdHashSet)
+                {
+                    Blueprint parent = GetBlueprint(fileId);
+                    parent.PrototypeRecordList.Add(record);
                 }
             }
 
-            // Create enum value nodes for each class type from our sorted lists
-            foreach (var kvp in enumListDict)
-                _prototypeEnumLookupDict.Add(kvp.Key, new(kvp.Value));
+            // Generate enum lookups for each class type
+            foreach (var kvp in _prototypeClassLookupDict)
+                kvp.Value.GenerateEnumLookups();
+
+            // Same for blueprints
+            foreach (var kvp in _blueprintRecordDict)
+                kvp.Value.Blueprint.GenerateEnumLookups();
 
             stopwatch.Stop();
             Logger.Info($"Initialized hierarchy cache in {stopwatch.ElapsedMilliseconds} ms");
@@ -379,10 +389,10 @@ namespace MHServerEmu.Games.GameData
 
         public PrototypeId GetPrototypeFromEnumValue<T>(int enumValue) where T: Prototype
         {
-            PrototypeId[] enumLookup = _prototypeEnumLookupDict[typeof(T)].EnumValueToPrototypeLookup;
+            PrototypeId[] enumLookup = _prototypeClassLookupDict[typeof(T)].EnumValueToPrototypeLookup;
             if (enumValue < 0 || enumValue >= enumLookup.Length)
             {
-                Logger.Warn($"Failed to get prototype for enumValue {enumValue} as {typeof(T).Name}");
+                Logger.Warn($"Failed to get prototype for enumValue {enumValue} as {nameof(T)}");
                 return PrototypeId.Invalid;
             }
 
@@ -391,22 +401,44 @@ namespace MHServerEmu.Games.GameData
 
         public int GetPrototypeEnumValue<T>(PrototypeId prototypeId) where T: Prototype
         {
-            Dictionary<PrototypeId, int> dict = _prototypeEnumLookupDict[typeof(T)].PrototypeToEnumValueDict;
+            Dictionary<PrototypeId, int> dict = _prototypeClassLookupDict[typeof(T)].PrototypeToEnumValueDict;
 
             if (dict.TryGetValue(prototypeId, out int enumValue) == false)
             {
-                Logger.Warn($"Failed to get enum value for prototype {GameDatabase.GetPrototypeName(prototypeId)} as {typeof(T).Name}");
+                Logger.Warn($"Failed to get enum value for prototype {GameDatabase.GetPrototypeName(prototypeId)} as {nameof(T)}");
                 return 0;
             }
 
             return enumValue;
         }
 
+        public IEnumerable<PrototypeDataRefRecord> GetIteratedPrototypesInHierarchy<T>() where T: Prototype
+        {
+            if (_prototypeClassLookupDict.TryGetValue(typeof(T), out var node) == false)
+            {
+                Logger.Warn($"Failed to get iterated prototype list for class {nameof(T)}");
+                return Enumerable.Empty<PrototypeDataRefRecord>();
+            }
+
+            return node.PrototypeRecordList;
+        }
+
+        public IEnumerable<PrototypeDataRefRecord> GetIteratedPrototypesInHierarchy(BlueprintId blueprintId)
+        {
+            if (_blueprintRecordDict.TryGetValue(blueprintId, out var record) == false)
+            {
+                Logger.Warn($"Failed to get iterated prototype list for blueprint id {blueprintId}");
+                return Enumerable.Empty<PrototypeDataRefRecord>();
+            }
+
+            return record.Blueprint.PrototypeRecordList;
+        }
+
         public List<ulong> GetPowerPropertyIdList(string filter)
         {
             // TO BE REMOVED: temp bruteforcing of power property ids
 
-            PrototypeId[] powerTable = _prototypeEnumLookupDict[typeof(PowerPrototype)].EnumValueToPrototypeLookup;
+            PrototypeId[] powerTable = _prototypeClassLookupDict[typeof(PowerPrototype)].EnumValueToPrototypeLookup;
             List<ulong> propertyIdList = new();
 
             for (int i = 1; i < powerTable.Length; i++)
@@ -471,36 +503,43 @@ namespace MHServerEmu.Games.GameData
             }
         }
 
-        class PrototypeDataRefRecord
-        {
-            public PrototypeId PrototypeId { get; set; }
-            public PrototypeGuid PrototypeGuid { get; set; }
-            public BlueprintId BlueprintId { get; set; }
-            public PrototypeRecordFlags Flags { get; set; }
-            public Type ClassType { get; set; }                 // We use C# type instead of class id
-            public DataOrigin DataOrigin { get; set; }          // Original memory location: PrototypeDataRefRecord + 32
-            public Blueprint Blueprint { get; set; }
-            public object Prototype { get; set; }
-        }
-
         /// <summary>
-        /// Contains PrototypeId -> EnumValue and EnumValue -> PrototypeId lookups for a prototype class.
+        /// Contains data record references and enum lookups for a particular prototype class.
         /// </summary>
-        readonly struct PrototypeEnumValueNode
+        class PrototypeEnumValueNode
         {
-            public Dictionary<PrototypeId, int> PrototypeToEnumValueDict { get; }
-            public PrototypeId[] EnumValueToPrototypeLookup { get; }
+            public List<PrototypeDataRefRecord> PrototypeRecordList { get; } = new();   // A list of all prototype records belonging to this class for iteration
+            public PrototypeId[] EnumValueToPrototypeLookup { get; private set; }
+            public Dictionary<PrototypeId, int> PrototypeToEnumValueDict { get; private set; }
 
-            public PrototypeEnumValueNode(List<PrototypeId> prototypeIdList)
+            public void GenerateEnumLookups()
             {
-                // PrototypeId -> EnumValue
-                PrototypeToEnumValueDict = new(prototypeIdList.Count);
-                for (int i = 0; i < prototypeIdList.Count; i++)
-                    PrototypeToEnumValueDict.Add(prototypeIdList[i], i);
+                // Note: this method is not present in the original game where this is done
+                // within DataDirectory::initializeHierarchyCache() instead.
 
                 // EnumValue -> PrototypeId
-                EnumValueToPrototypeLookup = prototypeIdList.ToArray();
+                EnumValueToPrototypeLookup = new PrototypeId[PrototypeRecordList.Count + 1];
+                EnumValueToPrototypeLookup[0] = PrototypeId.Invalid;
+                for (int i = 0; i < PrototypeRecordList.Count; i++)
+                    EnumValueToPrototypeLookup[i + 1] = PrototypeRecordList[i].PrototypeId;
+
+                // PrototypeId -> EnumValue
+                PrototypeToEnumValueDict = new(EnumValueToPrototypeLookup.Length);
+                for (int i = 0; i < EnumValueToPrototypeLookup.Length; i++)
+                    PrototypeToEnumValueDict.Add(EnumValueToPrototypeLookup[i], i);
             }
         }
+    }
+
+    public class PrototypeDataRefRecord
+    {
+        public PrototypeId PrototypeId { get; set; }
+        public PrototypeGuid PrototypeGuid { get; set; }
+        public BlueprintId BlueprintId { get; set; }
+        public PrototypeRecordFlags Flags { get; set; }
+        public Type ClassType { get; set; }                 // We use C# type instead of class id
+        public DataOrigin DataOrigin { get; set; }          // Original memory location: PrototypeDataRefRecord + 32
+        public Blueprint Blueprint { get; set; }
+        public object Prototype { get; set; }
     }
 }
