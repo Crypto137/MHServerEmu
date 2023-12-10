@@ -67,35 +67,5 @@
 
             return refValues;
         }
-
-        // Temporarily move lookups here until we figure out a better way to implement them
-
-        public List<KeyValuePair<T, string>> LookupCostume(string pattern)
-        {
-            List<KeyValuePair<T, string>> matchList = new();
-
-            foreach (var kvp in _referenceDict)
-                if (kvp.Value.Contains("Entity/Items/Costumes/Prototypes/") && kvp.Value.ToLower().Contains(pattern))
-                    matchList.Add(kvp);
-
-            return matchList;
-        }
-
-        public List<KeyValuePair<T, string>> LookupRegion(string pattern)
-        {
-            List<KeyValuePair<T, string>> matchList = new();
-
-            foreach (var kvp in _referenceDict)
-            {
-                if (kvp.Value.Contains("Regions/"))
-                {
-                    string fileName = Path.GetFileName(kvp.Value);
-                    if (fileName.Contains("Region") && Path.GetExtension(fileName) == ".prototype" && fileName.ToLower().Contains(pattern))
-                        matchList.Add(kvp);
-                }
-            }
-
-            return matchList;
-        }
     }
 }
