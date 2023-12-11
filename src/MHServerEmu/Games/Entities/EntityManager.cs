@@ -229,5 +229,11 @@ namespace MHServerEmu.Games.Entities
 
             return avatars;
         }
+
+        public IEnumerable<Entity> GetCellEntities(Cell cell)
+        {
+            return _entityDict.Values.Where(entity => entity is WorldEntity worldEntity && worldEntity.Cell == cell);
+        }
+
     }
 }

@@ -4,6 +4,7 @@ using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -13,6 +14,10 @@ namespace MHServerEmu.Games.Entities
         public Condition[] ConditionCollection { get; set; }
         public PowerCollectionRecord[] PowerCollection { get; set; }
         public int UnkEvent { get; set; }
+
+
+        private RegionLocation _location; // TODO init;
+        public Cell Cell { get => _location.Cell; }
 
         public WorldEntity(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 

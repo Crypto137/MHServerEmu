@@ -71,9 +71,48 @@ namespace MHServerEmu.Games.Regions
         private readonly EntityManager _entityManager;
         private readonly Dictionary<RegionPrototypeId, Region> _regionDict = new();
 
+        private uint _cellId;
+        private uint _areaId;
+        private readonly Dictionary<uint, Cell> _allCells = new();
+
         public RegionManager(EntityManager entityManager)
         {
             _entityManager = entityManager;
+            _areaId = 1;
+            _cellId = 1;
+        }
+
+        public uint AllocateCellId() => _cellId++;
+        public uint AllocateAreaId() => _areaId++;
+
+        public bool AddCell(Cell cell)
+        {
+            if (cell != null && _allCells.ContainsKey(cell.Id) == false)
+            {
+                _allCells[cell.Id] = cell;
+                Logger.Trace($"Adding cell {cell} in region {cell.GetRegion()}");
+                return true;
+            }
+            return false;
+        }
+
+        public Cell GetCell(uint cellId)
+        {
+            if (_allCells.TryGetValue(cellId, out var cell)) return cell;
+            return null;
+        }
+
+        public bool RemoveCell(Cell cell)
+        {
+            if (cell == null) return false;
+            Logger.Trace($"Removing cell {cell} from region {cell.GetRegion()}");
+
+            if (_allCells.ContainsKey(cell.Id))
+            {
+                _allCells.Remove(cell.Id);
+                return true;
+            }
+            return false;
         }
 
         public Region GetRegion(RegionPrototypeId prototype)

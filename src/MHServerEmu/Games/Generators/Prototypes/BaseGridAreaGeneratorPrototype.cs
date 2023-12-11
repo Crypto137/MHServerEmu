@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.GameData.Prototypes;
+﻿using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Generators.Prototypes
@@ -44,10 +45,30 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public IPoint2Prototype[] AllowedConnections;
         public BaseGridAreaGeneratorPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(BaseGridAreaGeneratorPrototype), proto); }
 
-        internal bool RequiresCell(ulong cellRef)
+        public bool RequiresCell(ulong cellRef)
         {
-            throw new NotImplementedException();
+            if (RequiredSuperCells != null)
+            {
+                foreach (RequiredSuperCellEntryPrototype entry in RequiredSuperCells)
+                {
+                    if (entry != null && entry.SuperCell != 0)
+                    {
+                        SuperCellPrototype superCellP = GameDatabase.GetPrototype<SuperCellPrototype>(entry.SuperCell);
+                        if (superCellP != null && superCellP.ContainsCell(cellRef)) return true;
+                    }
+                }
+            }
+
+            if (RequiredCells != null)
+            {
+                foreach (RequiredCellPrototype requiredCell in RequiredCells)
+                {
+                    if (requiredCell != null && GameDatabase.GetDataRefByAsset(requiredCell.Cell) == cellRef) return true;
+                }
+            }
+            return false;
         }
+
     }
 
     public class RoadGeneratorPrototype : Prototype

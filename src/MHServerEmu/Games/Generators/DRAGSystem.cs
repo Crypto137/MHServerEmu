@@ -11,6 +11,7 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Common;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Missions;
 
 namespace MHServerEmu.Games.Generators
 {
@@ -73,7 +74,7 @@ namespace MHServerEmu.Games.Regions
         PostGenerate = 0x20,
     }
 
-    public struct CellSettings
+    public class CellSettings
     {
         public Vector3 PositionInArea;
         public Vector3 OrientationInArea;
@@ -86,12 +87,87 @@ namespace MHServerEmu.Games.Regions
 
     public partial class Cell
     {
+        public CellPrototype CellProto { get; private set; }
+        public Vector3 OrientationInArea { get; private set; }
+        public Vector3 AreaOffset { get; private set; }
+        public CellSettings Settings { get; private set; }
+        public Type _type { get; private set; }
+        public int Seed { get; private set; }
+        public ulong PopulationThemeOverrideRef { get; private set; }
         public Aabb RegionBounds { get; private set; }
         public Area Area { get; private set; }
-        public Game Game { get; private set; }
-        public IEnumerable<Entity> Entities { get { throw new NotImplementedException(); } }
+        public Game Game { get => (Area != null) ? Area.Game: null; }
+        public IEnumerable<Entity> Entities { get => Game.EntityManager.GetCellEntities(this); } // TODO: Optimize
 
         public List<uint> CellConnections = new();
+
+        private float PlayableNavArea;
+        private float SpawnableNavArea;
+        public float PlayableArea { get => (PlayableNavArea != -1.0) ? PlayableNavArea : 0.0f; }
+        public float SpawnableArea { get => (SpawnableNavArea != -1.0) ? SpawnableNavArea : 0.0f; }
+        public SpatialPartitionLocation SpatialPartitionLocation = new(); // Never Init
+
+        public Cell(Area area, uint id)
+        {
+            RegionBounds = Aabb.Zero;
+            PositionInArea = Vector3.Zero;
+            Area = area;
+            Id = id;
+            PlayableNavArea = -1.0f;
+            SpawnableNavArea = -1.0f;
+        }
+
+        public bool Initialize(CellSettings settings)
+        {
+            if (Area == null) return false;
+            if (settings.CellRef == 0) return false;
+
+            PrototypeId = settings.CellRef;
+            CellProto = GameDatabase.GetPrototype<CellPrototype>(PrototypeId);
+            if (CellProto == null) return false;
+
+            SpawnableNavArea = CellProto.NaviPatchSource.SpawnableArea;
+            PlayableNavArea = CellProto.NaviPatchSource.PlayableArea;
+            if (PlayableNavArea == -1.0f) PlayableNavArea = 0.0f;
+
+            if (SpawnableNavArea == -1.0f && PlayableNavArea >= 0.0f)
+                SpawnableNavArea = PlayableNavArea;
+
+            _type = CellProto.Type;
+            Seed = settings.Seed;
+            PopulationThemeOverrideRef = settings.PopulationThemeOverrideRef;
+
+            if (settings.ConnectedCells != null && settings.ConnectedCells.Any())
+                CellConnections.AddRange(settings.ConnectedCells);
+
+            Settings = settings;
+            SetAreaPosition(settings.PositionInArea, settings.OrientationInArea);
+
+            return true;
+        }
+
+        private void SetAreaPosition(Vector3 positionInArea, Vector3 orientationInArea)
+        {
+            if (CellProto == null) return;
+
+            if (SpatialPartitionLocation.IsValid()) // never
+                GetRegion().PartitionCell(this, Region.PartitionContext.Remove);
+
+            PositionInArea = positionInArea;
+            OrientationInArea = orientationInArea;
+
+            // AreaTransform = Transform3.BuildTransform(positionInArea, orientationInArea);
+            // RegionTransform = Transform3.BuildTransform(positionInArea + Area.Origin, orientationInArea);
+
+            AreaOffset = Area.AreaToRegion(positionInArea);
+
+            RegionBounds = CellProto.BoundingBox.Translate(AreaOffset);
+            RegionBounds.RoundToNearestInteger();
+
+            if (!SpatialPartitionLocation.IsValid()) // always
+                GetRegion().PartitionCell(this, Region.PartitionContext.Insert); 
+        }
+
         public void AddNavigationDataToRegion()
         {
             throw new NotImplementedException();
@@ -136,9 +212,10 @@ namespace MHServerEmu.Games.Regions
             return false;
         }
 
-        internal bool PostInitialize()
+        public bool PostInitialize()
         {
-            throw new NotImplementedException();
+            // TODO: can add Markers here
+            return true;
         }
 
         public static Type BuildTypeFromWalls(Walls walls)
@@ -173,14 +250,27 @@ namespace MHServerEmu.Games.Regions
             return $"{GameDatabase.GetPrototypeName(PrototypeId)}, cellid={Id}, cellpos={RegionBounds.Center}, game={Game}";
         }
 
+        public void Shutdown()
+        {
+            Region region = GetRegion();
+            if (region != null && SpatialPartitionLocation.IsValid()) // Always not Valid
+                region.PartitionCell(this, Region.PartitionContext.Remove);
+        }
+
+        public Region GetRegion()
+        {
+            if (Area == null) return null;
+            return Area.Region;
+        }
     }
 
-    public struct AreaSettings
+    public class AreaSettings
     {
         public uint Id;
         public AreaPrototypeId AreaPrototype;
         public Vector3 Origin;
         public RegionSettings RegionSettings;
+        public ulong AreaDataRef;
     }
 
     public partial class Area
@@ -202,6 +292,9 @@ namespace MHServerEmu.Games.Regions
         private PropTable PropTable;
         
         public Generator Generator { get; set; }
+
+        public float PlayableNavArea;
+        public float SpawnableNavArea;
 
         public List<AreaConnectionPoint> AreaConnections = new();
         private List<TowerFixupData> TowerFixupList;
@@ -266,15 +359,29 @@ namespace MHServerEmu.Games.Regions
             return TestStatus(GenerateFlag.Background) ? Generator as AreaGenerationInterface : null;
         }
 
-        internal List<TowerFixupData> GetTowerFixup(bool toCreate)
+        public List<TowerFixupData> GetTowerFixup(bool toCreate)
         {
             if (TowerFixupList == null && toCreate) TowerFixupList = new();
             return TowerFixupList;
         }
 
-        public Cell AddCell(uint cellid, CellSettings cellSettings)
+        public Cell AddCell(uint cellid, CellSettings settings)
         {
-            throw new NotImplementedException();
+            if (settings.Seed == 0) settings.Seed = RandomSeed;
+
+            Cell cell = new(this, cellid);
+            CellList.Add(cell);
+            cell.Initialize(settings);
+
+            PlayableNavArea += cell.PlayableArea;
+            SpawnableNavArea += cell.SpawnableArea;
+
+            RegionManager regionManager = Game.RegionManager;
+            regionManager.AddCell(cell);
+
+            Region.SpawnMarkerRegistry.AddCell(cell);
+
+            return cell;
         }
 
         public bool IntersectsXY(Vector3 position) => RegionBounds.IntersectsXY(position);
@@ -371,7 +478,7 @@ namespace MHServerEmu.Games.Regions
                 success &= cell.PostInitialize();
             }
 
-            if (TowerFixupList != null && TowerFixupList.Count > 0)
+            if (TowerFixupList != null && TowerFixupList.Any())
             {
                 foreach (var towerData in TowerFixupList)
                 {
@@ -419,9 +526,14 @@ namespace MHServerEmu.Games.Regions
             return success;
         }
 
+        public void AddSubArea(Area newarea)
+        {
+            if (newarea != null) SubAreas.Add(newarea.Id);
+        }
+
         private Cell GetCell(uint id)
         {
-            throw new NotImplementedException();
+            return CellList.FirstOrDefault(pair => pair.Id == id);
         }
 
         public bool GenerateBackground(RegionGenerator regionGenerator, List<ulong> areas)
@@ -437,7 +549,7 @@ namespace MHServerEmu.Games.Regions
 
             Generator = null; 
 
-            if (success && SubAreas.Count > 0)
+            if (success && SubAreas.Any())
             {
                 foreach (var areaProto in SubAreas)
                     if (areaProto != 0)
@@ -450,7 +562,6 @@ namespace MHServerEmu.Games.Regions
             }
 
             if (success) SetStatus(GenerateFlag.Background, true);
-
             return success;
         }
 
@@ -460,7 +571,7 @@ namespace MHServerEmu.Games.Regions
             else _statusFlag ^= status;
         }
 
-        private bool TestStatus(GenerateFlag status)
+        public bool TestStatus(GenerateFlag status)
         {
             return _statusFlag.HasFlag(status);
         }
@@ -502,6 +613,61 @@ namespace MHServerEmu.Games.Regions
         {
             return GameDatabase.GetFormattedPrototypeName(GetPrototypeDataRef());
         }
+
+        public void Shutdown()
+        {
+            DestroyAllConnections();
+            RemoveAllCells();
+
+            PropTable = null;
+            Generator = null;
+            TowerFixupList = null;
+        }
+
+        private void RemoveAllCells()
+        {
+            foreach (var cell in CellList) RemoveCell(cell.Id);
+        }
+
+        private void RemoveCell(uint id)
+        {
+            Cell cell = GetCell(id);
+            if (cell != null)
+            {
+                Region.SpawnMarkerRegistry.RemoveCell(cell);
+                DeleteCellAt(cell);
+            }
+        }
+
+        private void DeleteCellAt(Cell cell)
+        {
+            if (cell.Area == this)
+            {
+                RegionManager regionManager = Game.RegionManager;
+                if (regionManager != null) regionManager.RemoveCell(cell);
+
+                cell.Shutdown();
+                CellList.Remove(cell);
+            }
+        }
+
+        private void DestroyAllConnections()
+        {
+            foreach (var point in AreaConnections)
+                if (point.ConnectedArea != null)  point.ConnectedArea.DestroyConnectionsWithArea(this);
+
+            AreaConnections.Clear();
+        }
+
+        private void DestroyConnectionsWithArea(Area area)
+        {
+            AreaConnections.RemoveAll(point => point.ConnectedArea == area);
+        }
+
+        public Vector3 AreaToRegion(Vector3 positionInArea)
+        {
+            return positionInArea + Origin;
+        }
     }
 
     public enum ConnectPosition
@@ -528,10 +694,22 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
+    public class DividedStartLocation
+    {
+        public DividedStartLocationPrototype Location { get; }
+
+        public DividedStartLocation(DividedStartLocationPrototype location)
+        {
+            Location = location;
+        }        
+    }
+
     public partial class Region
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
         public Aabb Bound { get; set; }
+        public bool AvatarSwapEnabled { get; private set; }
+        public object RestrictedRosterEnabled { get; private set; }
         public Game Game { get; private set; }
 
         private Area _startArea;
@@ -539,7 +717,7 @@ namespace MHServerEmu.Games.Regions
         {
             get
             {
-                if (_startArea == null && AreaList.Count > 0)
+                if (_startArea == null && AreaList.Any())
                     _startArea = AreaList.First();
                 return _startArea;
             }
@@ -549,17 +727,203 @@ namespace MHServerEmu.Games.Regions
             }
         }
         public RegionPrototype RegionPrototype { get; set; }
-        public RegionSettings Setting { get; private set; }
-        public RegionProgressionGraph ProgressionGraph { get; set; }
+        public RegionSettings Settings { get; private set; }
+        public RegionProgressionGraph ProgressionGraph { get; set; } // Region progression graph 
+        public ObjectiveGraph ObjectiveGraph { get; private set; }
         public PathCache PathCache { get; private set;}
-        public void Initialize(RegionSettings settings)
+        public SpawnMarkerRegistry SpawnMarkerRegistry { get; private set; }
+        public EntityTracker EntityTracker { get; private set; } // Entity tracker
+        public TuningTable Difficulty { get; private set; } // Difficulty table
+        public MissionManager MissionManager { get; private set; } // Mission manager
+        public EntityRegionSpatialPartition EntitySpatialPartition { get; private set; } // Entity spatial partition
+        public CellSpatialPartition CellSpatialPartition { get; private set; } // Cell spatial partition
+        public List<DividedStartLocation> DividedStartLocations { get; } = new ();
+        public int RegionLevel { get; private set; }
+        public IEnumerable<Cell> Cells { get => IterateCellsInVolume(Bound); }
+
+        public Region(Game game)
         {
-            ProgressionGraph = new();
-            Setting = settings;
+            Game = game;
+            SpawnMarkerRegistry = new(this);
+            Settings = new();
+        }
+
+        public bool Initialize(RegionSettings settings)
+        {
+            // "Region_Initialize" ProfileTimer
+            if (Game == null) return false;
+            Settings = settings;
+            //Bind(this, 0xEF);
+            
+            Id = settings.InstanceAddress; // Region Id
+            if (Id == 0) return false;
+            RegionPrototype = settings.RegionPrototype;
+            if (RegionPrototype == null) return false;
+
+            RegionPrototype regionProto = RegionPrototype;
             RandomSeed = settings.Seed;
-            // TODO other setting;
+            Bound = settings.Bound;
+            AvatarSwapEnabled = RegionPrototype.EnableAvatarSwap;
+            RestrictedRosterEnabled = (RegionPrototype.RestrictedRoster != null && RegionPrototype.RestrictedRoster.Length>0);
+
+            SetRegionLevel();
+
+            //FlattenCopyFrom(settings.PropertyCollection, false); 
+            // unk1 = settings.unk1;
+            // SetProperty(settings.EndlessLevel, PropertyEnum.EndlessLevel);
+            // SequenceRegionGeneratorPrototype sequenceRegionGenerator = regionProto.RegionGenerator as SequenceRegionGeneratorPrototype;
+            // SetProperty(sequenceRegionGenerator != null ? sequenceRegionGenerator.EndlessLevelsPerTheme : 0, PropertyEnum.EndlessLevelsTotal);
+
+            EntityTracker = new (this);
+            //LowResMapResolution = GetLowResMapResolution();
+
+            GlobalsPrototype globals = GameDatabase.GetGlobalsPrototype();
+            if (globals == null)
+            {
+                Logger.Error("Unable to get globals prototype for region initialize");
+                return false;
+            }
+
+            Difficulty = new (this);
+
+            RegionDifficultySettingsPrototype difficultySettings = regionProto.GetDifficultySettings();
+            if (difficultySettings != null)
+            {
+                Difficulty.SetTuningTable(difficultySettings.TuningTable);
+
+             /* if (HasProperty(PropertyEnum.DifficultyIndex))
+                    TuningTable.SetDifficultyIndex(GetProperty<int>(PropertyEnum.DifficultyIndex), false);
+             */
+            }
+
+            if (regionProto.DividedStartLocations != null)
+                InitDividedStartLocations(regionProto.DividedStartLocations);
+
+            // if (!NaviSystem.Initialize(this))  return false;
+            if (!Bound.IsZero())
+            {
+                if (settings.GenerateAreas == false)
+                {
+                    InitializeSpacialPartition(Bound);
+                    // NaviMesh.Initialize(Bound, 1000.0f, this);
+                }
+            }
+
+            SpawnMarkerRegistry.Initialize();
+            ProgressionGraph = new ();
+            ObjectiveGraph = new(Game, this);
+
+            if (MissionManager != null && !MissionManager.InitializeForRegion(this)) return false;
+
+            /* if (Settings.Affixes.Any)
+             {
+                 RegionAffixTablePrototype affixTableP = GameDatabase.GetPrototype<RegionAffixTablePrototype>(regionProto.AffixTable);
+                 if (affixTableP != null)
+                 {
+                     foreach (var affix in Settings.Affixes)
+                     {
+                         RegionAffixPrototype regionAffixProto = GameDatabase.GetPrototype<RegionAffixPrototype>(affix);
+                         if (regionAffixProto != null)
+                         {
+                             AdjustProperty(regionAffixProto.AdditionalLevels, PropertyEnum.EndlessLevelsTotal);
+                             if (regionAffixProto.Eval != null)
+                             {
+                                 EvalContextData context = new (Game);
+                                 context.SetVar_PropertyCollectionPtr(0, this);
+                                 Eval.Run<bool>(regionAffixProto.Eval, context);
+                             }
+                         }
+                     }
+                 }
+             }
+
+             if (HasProperty(PropertyEnum.DifficultyTier) && settings.DifficultyTierRef != 0)
+                 SetProperty<PrototypeDataRef>(settings.DifficultyTierRef, PropertyEnum.DifficultyTier);
+            */
+
             if (settings.GenerateAreas)
-                GenerateAreas((ulong)PrototypeId);
+            {
+                if (!GenerateAreas((ulong)PrototypeId))
+                {
+                    Logger.Error($"Failed to generate areas for\n  region: {this}\n    seed: {RandomSeed}");
+                    return false;
+                }
+            }
+            /*
+            if (Settings.Affixes.Any())
+            {
+                RegionAffixTablePrototype affixTableProto = GameDatabase.GetPrototype<RegionAffixTablePrototype>(regionProto.AffixTable);
+                if (affixTableProto != null)
+                {
+                    foreach (var affix in Settings.Affixes)
+                    {
+                        RegionAffixPrototype regionAffixProto = GameDatabase.GetPrototype<RegionAffixPrototype>(affix);
+                        if (regionAffixProto != null)
+                        {
+                            SetProperty<bool>(true, new (PropertyEnum.RegionAffix, affix));
+                            AdjustProperty(regionAffixProto.Difficulty, PropertyEnum.RegionAffixDifficulty);
+
+                            if (regionAffixProto.CanApplyToRegion(this))
+                            {
+                                if (regionAffixProto.MetaState != 0)
+                                    SetProperty<bool>(true, new (PropertyEnum.MetaStateApplyOnInit, regionAffixProto.MetaState));
+                                if (regionAffixProto.AvatarPower != 0)
+                                    SetProperty<bool>(true, new (PropertyEnum.RegionAvatarPower, regionAffixProto.AvatarPower));
+                            }
+                        }
+                    }
+
+                    EvalContextData context = new ();
+                    context.SetReadOnlyVar_PropertyCollectionPtr(0, this);
+                    int affixTier = Eval.Run<int>(affixTableProto.EvalTier, context);
+
+                    RegionAffixTableTierEntryPrototype tierEntryProto = affixTableProto.GetByTier(affixTier);
+                    if (tierEntryProto != null)
+                    {
+                        int value = 0;
+                        ulong valueAsset = Property.PropertyEnumToAsset(PropertyEnum.LootSourceTableOverride, 1, value);
+                        SetProperty<PrototypeDataRef>(tierEntryProto.LootTable, new (PropertyEnum.LootSourceTableOverride, affixTableProto.LootSource, valueAsset));
+                    }
+                } else 
+                Logger.Warn($"Region created with affixes, but no RegionAffixTable. REGION={this} AFFIXES={Settings.Affixes}")
+            }
+
+            if (regionProto.AvatarPowers != null)
+                foreach (var avatarPower in regionProto.AvatarPowers)
+                    SetProperty<bool>(true, new (PropertyEnum.RegionAvatarPower, avatarPower));
+
+            if (0 != regionProto.UITopPanel)
+                SetProperty(regionProto.UITopPanel, PropertyEnum.RegionUITopPanel);
+
+            */
+            return true;
+        }
+
+        private bool InitDividedStartLocations(DividedStartLocationPrototype[] dividedStartLocations)
+        {
+            ClearDividedStartLocations();
+            if (dividedStartLocations == null) return false;
+
+            foreach (var location in dividedStartLocations)   
+                DividedStartLocations.Add(new(location));
+
+            return true;
+        }
+
+        private void ClearDividedStartLocations()
+        {
+            DividedStartLocations.Clear();
+        }
+
+        private void SetRegionLevel()
+        {
+            if (RegionLevel == 0) return;
+            var regionProto = RegionPrototype;
+            if (regionProto == null) return;
+
+            if (Settings.DebugLevel == true) RegionLevel = Settings.Level;
+            else if (regionProto.Level > 0)  RegionLevel = regionProto.Level;
+            else Logger.Error("RegionLevel <= 0");
         }
 
         public Aabb CalculateBound()
@@ -572,50 +936,129 @@ namespace MHServerEmu.Games.Regions
             return bound;
         }
 
-        public void SetBound(Aabb bound)
+        public void SetBound(Aabb boundingBox)
         {
-            Bound = bound;
-            // Min = Bound.Min;
-            // Max = Bound.Max;
+            if (boundingBox.Volume <= 0 || (boundingBox.Min == Bound.Min && boundingBox.Max == Bound.Max)) return;
 
-            // init NaviMesh
+            Bound = boundingBox;
+            // Min = Bound.Min; OLD property
+            // Max = Bound.Max; OLD property
+
+            // NaviMesh.Initialize(Bound, 1000.0f, this);
+            InitializeSpacialPartition(Bound);
         }
 
-        public void GenerateAreas(ulong regionPrototypeId)
+        private bool InitializeSpacialPartition(Aabb bound)
+        {
+            if (EntitySpatialPartition != null || CellSpatialPartition != null) return false;
+
+            EntitySpatialPartition = new (bound);
+            CellSpatialPartition = new (bound);
+
+            foreach (var area in AreaList) // IterateAreas()
+                foreach (var cell in area.CellList)
+                    PartitionCell(cell, PartitionContext.Insert);
+
+            SpawnMarkerRegistry.InitializeSpacialPartition(bound);
+
+            return true;
+        }
+
+        public enum PartitionContext
+        {
+            Insert,
+            Remove
+        }
+
+        public object PartitionCell(Cell cell, PartitionContext context)
+        {
+            if (CellSpatialPartition != null)
+                switch (context)
+                {
+                    case PartitionContext.Insert: 
+                        return CellSpatialPartition.Insert(cell); 
+                    case PartitionContext.Remove:
+                        return CellSpatialPartition.Remove(cell);
+                }
+            return null;
+        }
+
+        public bool GenerateAreas(ulong regionPrototypeId)
         {
             RegionPrototype = GameDatabase.GetPrototype<RegionPrototype>(regionPrototypeId);
             RegionGenerator regionGenerator = DRAGSystem.LinkRegionGenerator(RegionPrototype.RegionGenerator);
 
             regionGenerator.GenerateRegion(RandomSeed, this);
-
             StartArea = regionGenerator.StartArea;
-
             SetBound(CalculateBound());
 
-            GenerateHelper(regionGenerator, GenerateFlag.Background);
-            GenerateHelper(regionGenerator, GenerateFlag.PostInitialize);
+            bool success = GenerateHelper(regionGenerator, GenerateFlag.Background)
+                        && GenerateHelper(regionGenerator, GenerateFlag.PostInitialize)
             // GenerateHelper(regionGenerator, GenerateFlag.Navi);
             // GenerateNaviMesh()
-            GenerateHelper(regionGenerator, GenerateFlag.PathCollection);
+                        && GenerateHelper(regionGenerator, GenerateFlag.PathCollection);
             // BuildObjectiveGraph()
             // GenerateMissionPopulation()
-            GenerateHelper(regionGenerator, GenerateFlag.Population);
-            GenerateHelper(regionGenerator, GenerateFlag.PostGenerate);
+            success &= GenerateHelper(regionGenerator, GenerateFlag.Population)
+                    && GenerateHelper(regionGenerator, GenerateFlag.PostGenerate);
+            return success;
         }
 
-        public void GenerateHelper(RegionGenerator regionGenerator, GenerateFlag flag)
+        public bool GenerateHelper(RegionGenerator regionGenerator, GenerateFlag flag)
         {
-            throw new NotImplementedException();
+            bool success = true;
+            foreach (Area area in AreaList)
+            {
+                if (area == null)
+                    success = false;
+                else
+                {
+                    List<ulong> areas = new() { area.GetPrototypeDataRef() };
+                    success &= area.Generate(regionGenerator, areas, flag);
+                    if (!area.TestStatus(GenerateFlag.Background)) Logger.Error("Not generated");
+                }
+            }
+            return success;
         }
 
-        public Area CreateArea(ulong area, Vector3 areaOrigin)
+        public Area CreateArea(ulong areaRef, Vector3 origin)
         {
-            throw new NotImplementedException();
+            RegionManager regionManager = Game.RegionManager;
+            if (regionManager == null) return null;
+
+            AreaSettings settings = new()
+            {
+                Id = regionManager.AllocateAreaId(),
+                AreaDataRef = areaRef,
+                Origin = origin,
+                RegionSettings = Settings
+            };
+
+            return AddArea(settings);
+        }
+
+        public Area AddArea(AreaSettings settings)
+        {
+            if (settings.AreaDataRef == 0 || settings.Id == 0 || settings.RegionSettings == null) return null;
+            Area area = new (Game, this);
+            if (!area.Initialize(settings))
+            {
+                DeallocateArea(area);
+                return null;
+            }
+            AreaList.Add(area); // AreaMap[area.Id]
+            return area;
         }
 
         public MetaStateChallengeTier RegionAffixGetMissionTier()
         {
-            throw new NotImplementedException();
+            foreach (var affix in Settings.Affixes)
+            {
+                var affixProto = GameDatabase.GetPrototype<RegionAffixPrototype>(affix);
+                if (affixProto != null && affixProto.ChallengeTier != MetaStateChallengeTier.None)
+                    return affixProto.ChallengeTier;
+            }
+            return MetaStateChallengeTier.None;
         }
 
         public void DestroyArea(uint id)
@@ -637,9 +1080,13 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        private void DeallocateArea(Area areaToRemove)
+        private void DeallocateArea(Area area)
         {
-            throw new NotImplementedException();
+            if (area != null) return;
+
+            Logger.Trace($"{Game} - Deallocating area id {area.Id}, {area}");
+
+            area.Shutdown();
         }
 
         public Area GetArea(ulong prototypeId)
@@ -664,9 +1111,12 @@ namespace MHServerEmu.Games.Regions
             return minDistance;
         }
 
-        internal IEnumerable<Cell> IterateCellsInVolume(Aabb aabb)
+        public IEnumerable<Cell> IterateCellsInVolume(Aabb aabb)
         {
-            throw new NotImplementedException();
+            if (CellSpatialPartition != null)
+                return CellSpatialPartition.IterateElementsInVolume(aabb);
+            else
+                return new CellSpatialPartition.ElementIterator();
         }
 
         public ulong GetPrototypeDataRef()
@@ -676,7 +1126,7 @@ namespace MHServerEmu.Games.Regions
 
         public override string ToString()
         {
-            return $"{GetPrototypeName()}, ID=0x{Id:X16} ({Id}), DIFF={GameDatabase.GetFormattedPrototypeName(Setting.DifficultyTierRef)}, SEED={RandomSeed}, GAMEID={Game}";
+            return $"{GetPrototypeName()}, ID=0x{Id:X16} ({Id}), DIFF={GameDatabase.GetFormattedPrototypeName(Settings.DifficultyTierRef)}, SEED={RandomSeed}, GAMEID={Game}";
         }
 
         private string GetPrototypeName()
@@ -685,12 +1135,19 @@ namespace MHServerEmu.Games.Regions
         }
     }
 
-    public struct RegionSettings
+    public class RegionSettings
     {
         public int EndlessLevel;
         public int Seed;
         public bool GenerateAreas;
         public ulong DifficultyTierRef;
+        public ulong InstanceAddress; // region ID
+        public RegionPrototype RegionPrototype;
+        public Aabb Bound;
+
+        public List<ulong> Affixes;
+        public int Level;
+        public bool DebugLevel;
     }
 
     #region ProgressionGraph

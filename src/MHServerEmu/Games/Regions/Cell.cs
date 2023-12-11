@@ -5,8 +5,8 @@ namespace MHServerEmu.Games.Regions
     public partial class Cell
     {
         public uint Id { get; }
-        public ulong PrototypeId { get; }
-        public Vector3 PositionInArea { get; }
+        public ulong PrototypeId { get; private set; }
+        public Vector3 PositionInArea { get; private set; }
         public List<ReservedSpawn> EncounterList { get; } = new();
 
         public Cell(uint id, ulong prototypeId, Vector3 positionInArea)

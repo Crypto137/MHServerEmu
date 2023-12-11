@@ -114,6 +114,20 @@ namespace MHServerEmu.Games.Generators.Prototypes
 
             return defaultArea;
         }
+
+        public RegionDifficultySettingsPrototype GetDifficultySettings()
+        {
+            if (DifficultySettings != null) return DifficultySettings;
+
+            DifficultyGlobalsPrototype difficultyGlobals = GameDatabase.GetDifficultyGlobalsPrototype();
+            if (difficultyGlobals == null) return null;
+
+            if (Behavior == RegionBehaviorAsset.PublicCombatZone && difficultyGlobals.RegionSettingsDefaultPCZ != null)
+                return difficultyGlobals.RegionSettingsDefaultPCZ;
+
+            return difficultyGlobals.RegionSettingsDefault;
+        }
+
     }
 
     public class RegionConnectionTargetPrototype : Prototype

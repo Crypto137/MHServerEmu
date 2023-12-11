@@ -321,9 +321,9 @@ namespace MHServerEmu.Games.Generators
             return x >= 0 && x < Width && y >= 0 && y < Height && VerifyIndex(GetIndex(x, y));
         }
 
-        internal void Print3()
+        public void Print3()
         {
-            throw new NotImplementedException();
+            // not used
         }
 
 

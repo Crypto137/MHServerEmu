@@ -2,12 +2,17 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Missions
 {
     public class MissionManager
     {
+        public Player Player { get; private set; }
+        private ulong _regionId;
+
         public ulong PrototypeId { get; set; }
         public Mission[] Missions { get; set; }
         public LegendaryMissionBlacklist[] LegendaryMissionBlacklists { get; set; }
@@ -57,5 +62,21 @@ namespace MHServerEmu.Games.Missions
             for (int i = 0; i < LegendaryMissionBlacklists.Length; i++) sb.AppendLine($"LegendaryMissionBlacklist{i}: {LegendaryMissionBlacklists[i]}");
             return sb.ToString();
         }
+
+        public bool InitializeForRegion(Region region)
+        {
+            if (region == null)  return false;
+
+            Player = null;
+            SetRegion(region);
+
+            return true;
+        }
+
+        private void SetRegion(Region region)
+        {
+            _regionId = region != null ? region.Id : 0;
+        }
+
     }
 }

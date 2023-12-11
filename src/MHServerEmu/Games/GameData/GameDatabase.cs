@@ -145,5 +145,10 @@ namespace MHServerEmu.Games.GameData
         {
             return Path.GetFileNameWithoutExtension(GetPrototypeName(protoId));
         }
+
+        internal static DifficultyGlobalsPrototype GetDifficultyGlobalsPrototype()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

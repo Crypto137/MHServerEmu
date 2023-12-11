@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Generators.Prototypes
 {
@@ -10,7 +11,7 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public int Difficulty;
         public ulong AvatarPower;
         public ulong MetaState;
-        public MetaStateChallengeTierEnum ChallengeTier;
+        public MetaStateChallengeTier ChallengeTier;
         public int AdditionalLevels;
         public ulong Category;
         public ulong[] RestrictsAffixes;
@@ -21,16 +22,13 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public ulong[] AffixRarityRestrictions;
         public EvalPrototype Eval;
         public RegionAffixPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RegionAffixPrototype), proto); }
+
+        internal bool CanApplyToRegion(Region region)
+        {
+            throw new NotImplementedException();
+        }
     }
-    public enum MetaStateChallengeTierEnum
-    {
-        None = 0,
-        Tier1 = 1,
-        Tier2 = 2,
-        Tier3 = 3,
-        Tier4 = 4,
-        Tier5 = 5,
-    }
+
     public class RegionAffixTableTierEntryPrototype : Prototype
     {
         public ulong LootTable;
@@ -54,6 +52,11 @@ namespace MHServerEmu.Games.Generators.Prototypes
         public RegionAffixTableTierEntryPrototype[] Tiers;
         public ulong LootSource;
         public RegionAffixTablePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RegionAffixTablePrototype), proto); }
+
+        internal RegionAffixTableTierEntryPrototype GetByTier(int affixTier)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class RegionAffixCategoryPrototype : Prototype

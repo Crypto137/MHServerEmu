@@ -681,10 +681,5 @@ namespace MHServerEmu.Games.Regions
             }
             return _entityManager.GetLastEntityId() - numEntities;
         }
-
-        public uint AllocateCellId()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

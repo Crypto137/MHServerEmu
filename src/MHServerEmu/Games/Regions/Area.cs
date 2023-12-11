@@ -22,10 +22,5 @@ namespace MHServerEmu.Games.Regions
         }
 
         public void AddCell(Cell cell) => CellList.Add(cell);
-
-        internal void AddSubArea(Area subArea)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
