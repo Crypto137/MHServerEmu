@@ -102,7 +102,7 @@ namespace MHServerEmu.Games.Common
         public static float Length(Vector3 v) => MathF.Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z);
         public static bool EpsilonSphereTest(Vector3 v1, Vector3 v2, float epsilon) => LengthSqr(v1 - v2) < epsilon;
         public static float LengthSqr(Vector3 v) => v.X * v.X + v.Y * v.Y + v.Z * v.Z;
-        public static bool IsNearZero(Vector3 v, float epsilon) => LengthSqr(v) < epsilon;
+        public static bool IsNearZero(Vector3 v, float epsilon = 0.000001f) => LengthSqr(v) < epsilon;
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(this, obj)) return true;
@@ -134,7 +134,7 @@ namespace MHServerEmu.Games.Common
         public static Vector3 Normalize2D(Vector3 v)
         {
             Vector3 vector2D = new(v.X, v.Y, 0f);
-            return IsNearZero(vector2D, 0.000001f) ? XAxis : Normalize(vector2D);
+            return IsNearZero(vector2D) ? XAxis : Normalize(vector2D);
         }
 
         public static Vector3 Normalize(Vector3 v) =>  v / Length(v);

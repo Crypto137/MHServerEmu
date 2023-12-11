@@ -45,6 +45,17 @@ namespace MHServerEmu.Games.Common
                 new Vector3(float.MinValue, float.MinValue, float.MinValue)
             );
         }
+        [JsonIgnore]
+        public static Aabb Zero
+        {
+            get => new(
+                Vector3.Zero,
+                Vector3.Zero
+            );
+        }
+
+        [JsonIgnore]
+        public float Volume { get => Width * Length * Height; }
 
         public void Set(Aabb aabb)
         {
@@ -160,6 +171,18 @@ namespace MHServerEmu.Games.Common
             return  bounds.Min.X <= Max.X && bounds.Max.X >= Min.X &&
                     bounds.Min.Y <= Max.Y && bounds.Max.Y >= Min.Y &&
                     bounds.Min.Z <= Max.Z && bounds.Max.Z >= Min.Z;
+        }
+
+        public bool IsZero()
+        {
+            return Vector3.IsNearZero(Min) && Vector3.IsNearZero(Max);
+        }
+
+        public bool FullyContains(Aabb bounds)
+        {
+            return  bounds.Min.X >= Min.X && bounds.Max.X <= Max.X &&
+                    bounds.Min.Y >= Min.Y && bounds.Max.Y <= Max.Y &&
+                    bounds.Min.Z >= Min.Z && bounds.Max.Z <= Max.Z;
         }
     }
     public enum ContainmentType
