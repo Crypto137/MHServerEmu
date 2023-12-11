@@ -248,7 +248,7 @@ namespace MHServerEmu.Games.Generators.Areas
                     }
                 }
             }
-            return hits.Count > 0;
+            return hits.Any();
         }
 
         private bool ProcessCellTypes(GRandom random)

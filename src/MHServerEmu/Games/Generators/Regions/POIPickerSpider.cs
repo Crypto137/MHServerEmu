@@ -177,7 +177,7 @@ namespace MHServerEmu.Games.Generators.Regions
         {
             bool ret = true;
 
-            if (_poiGroups.Count > 0)
+            if (_poiGroups.Any())
             {
                 Picker<POISpiderNode> poiPicker = new (random);
                 foreach (var spider in _poiGroups)
@@ -191,7 +191,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
         public void DereferenceArea(Area area)
         {
-            if (_poiGroups.Count > 0)
+            if (_poiGroups.Any())
                 foreach (var spider in _poiGroups) spider.DereferenceArea(area);
         }
 

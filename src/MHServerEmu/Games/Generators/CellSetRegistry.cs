@@ -117,7 +117,7 @@ namespace MHServerEmu.Games.Generators
             {
                 bool skip = false;
 
-                if (skipList != null && skipList.Count > 0)
+                if (skipList != null && skipList.Any())
                 {
                     foreach (var skipCell in skipList)
                     {

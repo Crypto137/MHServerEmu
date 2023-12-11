@@ -669,7 +669,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 }
             }
 
-            return deleteList.Count > 0;
+            return deleteList.Any();
         }
 
         private bool GetCornerRadusDeletableCellList(List<Point2> deleteList, int radius, bool clear)
@@ -702,7 +702,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 UniqueAddDeletableCell(CellContainer, deleteList, radius, y); 
             }
 
-            return deleteList.Count > 0;
+            return deleteList.Any();
         }
 
         private static void UniqueAddDeletableCell(GenCellGridContainer cellContainer, List<Point2> deleteList, int x, int y)
@@ -1159,7 +1159,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 }
             }
 
-            while (visitedNodes.Count > 0)
+            while (visitedNodes.Any())
             {
                 var currentNode = visitedNodes.First();
                 var currentInfo = buildGrid[CellContainer.GetIndex(currentNode.X, currentNode.Y)];

@@ -133,7 +133,7 @@ namespace MHServerEmu.Games.Generators.Regions
                 }
             }
 
-            if (nextConnections.Count > 0)
+            if (nextConnections.Any())
             {
                 prevConnections.Clear();
                 prevConnections.AddRange(nextConnections);
