@@ -1,5 +1,10 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
+    #region Enums
+
+    [AssetEnum]
     [Flags]
     public enum RegionDirection
     {
@@ -11,6 +16,8 @@
         NorthSouth = 5,
         EastWest = 10,
     }
+
+    #endregion
 
     public class SequenceRegionGeneratorPrototype : RegionGeneratorPrototype
     {

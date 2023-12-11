@@ -1,7 +1,10 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
+    [AssetEnum]
     public enum ResourceType
     {
         Force = 0,
@@ -11,6 +14,7 @@
         Secondary_Gauge = 4,
     }
 
+    [AssetEnum]
     public enum ComparisonOperatorType
     {
         EqualTo = 0,
@@ -22,6 +26,7 @@
         None = 6,
     }
 
+    [AssetEnum]
     public enum StackingApplicationStyleType
     {
         DontRefresh = 0,
@@ -32,6 +37,7 @@
         MultiStackAddDuration = 5,
     }
 
+    [AssetEnum]
     public enum TeleportType
     {
         None = 0,
@@ -39,7 +45,8 @@
         SpawnPosition = 2,
     }
 
-    public enum SelectEntityTypeType
+    [AssetEnum]
+    public enum SelectEntityType
     {
         None = 0,
         SelectAssistedEntity = 1,
@@ -48,6 +55,7 @@
         SelectTargetByAssistedEntitiesLastTarget = 4,
     }
 
+    [AssetEnum]
     public enum SelectEntityPoolType
     {
         None = 0,
@@ -57,6 +65,7 @@
         PotentialEnemiesOfAgent = 4,
     }
 
+    [AssetEnum]
     public enum SelectEntityMethodType
     {
         None = 0,
@@ -70,6 +79,7 @@
         Self = 9,
     }
 
+    [AssetEnum]
     public enum FlankToType
     {
         AssistedEntity = 1,
@@ -77,6 +87,7 @@
         Target = 3,
     }
 
+    [AssetEnum]
     public enum WanderBasePointType
     {
         CurrentPosition = 0,
@@ -85,6 +96,7 @@
         None = 3,
     }
 
+    [AssetEnum]
     public enum MoveToType
     {
         AssistedEntity = 0,
@@ -95,6 +107,7 @@
         Target = 5,
     }
 
+    [AssetEnum]
     public enum MovementSpeedOverride
     {
         Default,
@@ -246,7 +259,7 @@
 
     public class AIEntityAttributeCanPathToPrototype : AIEntityAttributePrototype
     {
-        public Method LocomotorMethod { get; set; }
+        public LocomotorMethod LocomotorMethod { get; set; }
     }
 
     public class MovementBehaviorPrototype : Prototype
@@ -305,7 +318,7 @@
         public SelectEntityPoolType PoolType { get; set; }
         public SelectEntityMethodType SelectionMethod { get; set; }
         public ulong EntitiesPropertyForComparison { get; set; }
-        public SelectEntityTypeType SelectEntityType { get; set; }
+        public SelectEntityType SelectEntityType { get; set; }
         public bool LockEntityOnceSelected { get; set; }
         public float CellOrRegionAABBScale { get; set; }
         public ulong AlliancePriority { get; set; }

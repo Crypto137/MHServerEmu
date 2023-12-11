@@ -1,6 +1,9 @@
-﻿namespace MHServerEmu.Games.Properties
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.Properties
 {
-    public enum PropertyDataType
+    [AssetEnum]
+    public enum PropertyDataType    // Property/PropertyType.type
     {
         Boolean,
         Real,
@@ -15,13 +18,20 @@
         Int21Vector3
     }
 
-    public enum DatabasePolicy  // Frequent and Infrequent seem to be treated the same by the DBPolicyTable enum
+    [AssetEnum]
+    public enum DatabasePolicy      // Property/DatabasePolicy.type
     {
-        None,
-        Frequent,
-        Infrequent
+        UseParent = -4,
+        PerField = -3,
+        PropertyCollection = -2,
+        Invalid = -1,
+        None = 0,
+        Frequent = 1,               // Frequent and Infrequent seem to be treated as the same thing
+        Infrequent = 1,
+        PlayerLargeBlob = 2,
     }
 
+    [AssetEnum]
     public enum AggregationMethod
     {
         None,

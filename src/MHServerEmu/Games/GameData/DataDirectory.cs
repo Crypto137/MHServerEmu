@@ -107,6 +107,7 @@ namespace MHServerEmu.Games.GameData
             }
 
             // TODO: PrototypeClassManager::BindAssetTypesToEnums()
+            GameDatabase.PrototypeClassManager.BindAssetTypesToEnums(AssetDirectory);
 
             // Populate blueprint hierarchy hash sets
             foreach (LoadedBlueprintRecord record in _blueprintRecordDict.Values)

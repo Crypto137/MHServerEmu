@@ -1,8 +1,11 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    public enum ConditionType
+    [AssetEnum]
+    public enum PowerConditionType
     {
         Neither = 0,
         Buff = 1,
@@ -10,12 +13,14 @@
         Debuff = 3,
     }
 
+    [AssetEnum]
     public enum ConditionScopeType
     {
         Target = 0,
         User = 1,
     }
 
+    [AssetEnum]
     public enum ProcTriggerType
     {
         None = 0,
@@ -95,6 +100,7 @@
         OnControlledEntityReleased = 74,
     }
 
+    [AssetEnum]
     public enum UIConditionType
     {
         None = 0,
@@ -129,7 +135,7 @@
         public ConditionScopeType Scope { get; set; }
         public ulong UnrealClass { get; set; }
         public EvalPrototype ChanceToApplyCondition { get; set; }
-        public ConditionType ConditionType { get; set; }
+        public PowerConditionType ConditionType { get; set; }
         public bool VisualOnly { get; set; }
         public ConditionUnrealPrototype[] UnrealOverrides { get; set; }
         public ulong[] Keywords { get; set; }

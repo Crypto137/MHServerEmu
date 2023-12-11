@@ -1,7 +1,10 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
+    [AssetEnum]
     public enum ChatCommandArgumentType
     {
         Boolean = 1,
@@ -10,7 +13,8 @@
         String = 4,
     }
 
-    public enum ChatMessageFormatTypes
+    [AssetEnum]
+    public enum ChatMessageFormatType
     {
         None = -1,
         ChatLocal = 0,
@@ -44,6 +48,7 @@
         Gifting = 26,
     }
 
+    [AssetEnum]
     public enum LanguageType
     {
         Chinese = 1,
@@ -59,7 +64,6 @@
     }
 
     #endregion
-
 
     public class ChatCommandArgumentPrototype : Prototype
     {
@@ -87,7 +91,7 @@
 
     public class ChatChannelPrototype : Prototype
     {
-        public ChatMessageFormatTypes ChannelType { get; set; }
+        public ChatMessageFormatType ChannelType { get; set; }
         public ulong PromptText { get; set; }
         public ulong TextStyle { get; set; }
         public ulong DisplayName { get; set; }

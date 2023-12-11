@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.GameData
@@ -48,6 +49,22 @@ namespace MHServerEmu.Games.GameData
         public IEnumerable<Type> GetEnumerator()
         {
             return _prototypeNameToClassTypeDict.Values.AsEnumerable();
+        }
+
+        public void BindAssetTypesToEnums(AssetDirectory assetDirectory)
+        {
+            /*
+            foreach (Type classType in _prototypeNameToClassTypeDict.Values)
+            {
+                foreach (var property in classType.GetProperties())
+                {
+                    if (property.PropertyType.IsEnum && property.PropertyType.IsDefined(typeof(AssetEnumAttribute)) == false)
+                    {
+                        Logger.Debug(property.PropertyType.Name);
+                    }
+                }
+            }
+            */
         }
     }
 }

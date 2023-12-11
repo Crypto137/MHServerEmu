@@ -1,7 +1,11 @@
-﻿using MHServerEmu.Games.Loot;
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
+    #region Enums
+
+    [AssetEnum]
     [Flags]
     public enum LootContext
     {
@@ -16,6 +20,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         MissionReward = 128,
         MysteryChest = 256,
     }
+
+    #endregion
 
     public class DropRestrictionPrototype : Prototype
     {

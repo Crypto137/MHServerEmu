@@ -1,6 +1,11 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public enum PathMethod
+    #region Enums
+
+    [AssetEnum]
+    public enum PathMethod  // AI/Misc/Types/MoveToPathMethodType.type
     {
         Invalid = 0,
         Forward = 1,
@@ -10,6 +15,8 @@
         ReverseLoop = 6,
         ReverseBackAndForth = 4,
     }
+
+    #endregion
 
     public class ProceduralContextPrototype : Prototype
     {

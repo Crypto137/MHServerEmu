@@ -1,9 +1,11 @@
 ﻿using Gazillion;
+using MHServerEmu.Games.GameData.Calligraphy;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
+    [AssetEnum]
     public enum MusicStateEndBehavior
     {
         DoNothing = 0,
@@ -11,12 +13,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         StopMusic = 2,
     }
 
+    [AssetEnum]
     public enum CoopOp
     {
         StartForSlot = 0,
         EndForSlot = 1,
     }
 
+    [AssetEnum]
     public enum CoopOpResult
     {
         Success = 0,
@@ -30,6 +34,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         AvatarLocked = 8,
     }
 
+    [AssetEnum]
     public enum ObjectiveTrackerPageType
     {
         SharedQuests = 0,
@@ -40,7 +45,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         StoryMissions = 5,
     }
 
-    public enum MatchQueueStatus
+    [AssetEnum]
+    public enum MatchQueueStatus    // Regions/QueueStatus.type
     {
         Invalid = 1,
         SelectQueueMethod = 2,
@@ -61,6 +67,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         MovingToInstance = 19,
     }
 
+    [AssetEnum]
     public enum GamepadInput
     {
         A = 0,
@@ -80,12 +87,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         None = 14,
     }
 
-    public enum DeathReleaseBehavior
+    [AssetEnum]
+    public enum DeathReleaseBehavior    // Globals/AvatarDeathReleaseBehavior.type
     {
         ReturnToWaypoint = 0,
         ReturnToCheckpoint = 1,
     }
 
+    [AssetEnum]
     public enum GlobalEventCriteriaLogic
     {
         And = 0,
@@ -781,7 +790,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong Vendor { get; set; }
         public int Cap { get; set; }
         public float WallClockTime24Hr { get; set; }
-        public WeekdayEnum WallClockTimeDay { get; set; }
+        public Weekday WallClockTimeDay { get; set; }
     }
 
     public class AffixCategoryTableEntryPrototype : Prototype
@@ -827,7 +836,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MatchQueueStringEntryPrototype : Prototype
     {
-        public RegionRequestQueueUpdateVar StatusKey { get; set; }
+        public RegionRequestQueueUpdateVar StatusKey { get; set; }  // Regions/QueueStatus.type, also appears in protocol
         public ulong StringLog { get; set; }
         public ulong StringStatus { get; set; }
     }

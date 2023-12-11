@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Resources;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -16,6 +17,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         ScreenSize
     }
 
+    [AssetEnum]
     public enum UIWidgetEntityState
     {
         Unknown = 0,
@@ -23,6 +25,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Dead = 2,
     }
 
+    [AssetEnum]
     public enum ButtonStyle
     {
         Default,
@@ -32,18 +35,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Terciary,
     }
 
+    [AssetEnum]
     public enum TransitionUIType
     {
         Environment,
         HeroOwned,
     }
 
+    [AssetEnum]
     public enum TipTypeEnum
     {
         GenericGameplay,
         SpecificGameplay,
     }
 
+    [AssetEnum]
     public enum MissionTrackerFilterTypeEnum
     {
         None = -1,
@@ -54,6 +60,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Challenge = 4,
     }
 
+    [AssetEnum]
     public enum BannerMessageStyle
     {
         Standard = 0,
@@ -64,6 +71,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         TimeBonusGold = 5,
     }
 
+    [AssetEnum]
     public enum BannerMessageType
     {
         Default = 0,
@@ -94,12 +102,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         WaypointError = 27,
     }
 
+    [AssetEnum]
     public enum VOEventType
     {
         Spawned = 1,
         Aggro = 2,
     }
 
+    [AssetEnum]
     public enum ConsoleHUDNotificationType
     {
         NewPower = 1,
@@ -117,6 +127,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         GlobalEventAvailable = 13,
     }
 
+    [AssetEnum]
     public enum MovieType
     {
         None = 0,

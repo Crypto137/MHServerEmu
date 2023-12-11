@@ -1,5 +1,8 @@
-﻿namespace MHServerEmu.Games.Loot
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.Loot
 {
+    [AssetEnum]
     public enum EquipmentInvUISlot
     {
         Invalid = -1,

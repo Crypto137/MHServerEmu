@@ -1,7 +1,10 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
+    [AssetEnum]
     public enum AvatarStat
     {
         Durability = 1,
@@ -12,6 +15,7 @@
         Strength = 6,
     }
 
+    [AssetEnum]
     public enum AvatarMode
     {
         Normal = 0,

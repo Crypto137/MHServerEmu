@@ -1,7 +1,10 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
+    [AssetEnum]
     public enum WhenOutOfRangeType
     {
         MoveIntoRange = 0,
@@ -11,6 +14,7 @@
         ActivateComboMovementPower = 4,
     }
 
+    [AssetEnum]
     public enum ActivationType
     {
         None = 0,
@@ -20,6 +24,7 @@
         TwoStageTargeted = 4,
     }
 
+    [AssetEnum]
     public enum PowerCategoryType
     {
         None = 0,
@@ -36,6 +41,7 @@
         ThrowablePower = 11,
     }
 
+    [AssetEnum]
     public enum ProcChanceMultiplierBehaviorType
     {
         AllowProcChanceMultiplier = 0,
@@ -43,12 +49,14 @@
         IgnoreProcChanceMultiplierUnlessZero = 2,
     }
 
+    [AssetEnum]
     public enum TeleportMethodType
     {
         Teleport = 1,
         Phase = 2,
     }
 
+    [AssetEnum]
     public enum PowerEventType
     {
         None = 0,
@@ -84,6 +92,7 @@
         OnOutOfRangeActivateMovementPower = 30,
     }
 
+    [AssetEnum]
     public enum PowerEventActionType
     {
         None = 0,
@@ -125,7 +134,8 @@
         LocalCoopEnd = 36,
     }
 
-    public enum BlackboardOpertatorType
+    [AssetEnum]
+    public enum BlackboardOperatorType
     {
         Add = 0,
         Div = 1,
@@ -136,6 +146,7 @@
         ClearTargetId = 6,
     }
 
+    [AssetEnum]
     public enum TargetingShapeType
     {
         None = 0,
@@ -154,6 +165,7 @@
         WedgeArea = 13,
     }
 
+    [AssetEnum]
     public enum AOEAngleType
     {
         _0 = 0,
@@ -170,6 +182,7 @@
         _360 = 11,
     }
 
+    [AssetEnum]
     public enum EntityHealthState
     {
         Alive = 0,
@@ -177,6 +190,7 @@
         AliveOrDead = 2,
     }
 
+    [AssetEnum]
     public enum TargetingHeightType
     {
         All = 0,
@@ -185,6 +199,7 @@
         FlyingOnly = 3,
     }
 
+    [AssetEnum]
     public enum SubsequentActivateType
     {
         None = 0,
@@ -561,7 +576,7 @@
 
     public class PowerEventContextCallbackAIChangeBlackboardPropertyPrototype : PowerEventContextCallbackPrototype
     {
-        public BlackboardOpertatorType Operation { get; set; }
+        public BlackboardOperatorType Operation { get; set; }
         public ulong PropertyInfoRef { get; set; }
         public int Value { get; set; }
         public bool UseTargetEntityId { get; set; }

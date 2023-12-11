@@ -1,7 +1,10 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
+    [AssetEnum]
     public enum EvalContext
     {
         Default = 0,
@@ -21,6 +24,7 @@
         Globals = 15,
     }
 
+    [AssetEnum]
     public enum DamageType
     {
         Physical = 0,
@@ -29,6 +33,7 @@
         Any = 4,
     }
 
+    [AssetEnum]
     public enum ConvenienceLabel
     {
         None = 0,

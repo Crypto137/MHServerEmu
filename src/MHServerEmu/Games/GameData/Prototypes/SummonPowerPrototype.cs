@@ -34,7 +34,7 @@
     public class SummonEntityContextPrototype : Prototype
     {
         public ulong SummonEntity { get; set; }
-        public Method PathFilterOverride { get; set; }
+        public LocomotorMethod PathFilterOverride { get; set; }
         public bool RandomSpawnLocation { get; set; }
         public bool IgnoreBlockingOnSpawn { get; set; }
         public bool SnapToFloor { get; set; }

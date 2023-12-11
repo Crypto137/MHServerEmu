@@ -1,7 +1,10 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
+    [AssetEnum]
     public enum MetaGameMeterType
     {
         None = 0,
@@ -9,6 +12,7 @@
         Entity = 2,
     }
 
+    [AssetEnum]
     public enum MetaGameMetricEventType
     {
         None = 0,
@@ -16,6 +20,7 @@
         Holosim = 2,
     }
 
+    [AssetEnum]
     public enum GameNotificationType
     {
         None = 0,
@@ -41,12 +46,14 @@
         PublicEvent = 20,
     }
 
+    [AssetEnum]
     public enum MetaGameModeTimerBannerType
     {
         Interval = 0,
         Once = 1,
     }
 
+    [AssetEnum]
     public enum MetaGameModeShutdownBehaviorType
     {
         Immediate = 0,

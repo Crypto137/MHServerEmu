@@ -1,13 +1,17 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
+    [AssetEnum]
     public enum LeaderboardScoreDisplayFormat
     {
         Integer = 0,
         Time = 1,
     }
 
+    [AssetEnum]
     public enum LeaderboardDurationType
     {
         Indefinite = 0,
@@ -25,6 +29,7 @@
         Month = 12,
     }
 
+    [AssetEnum]
     public enum LeaderboardResetFrequency
     {
         NeverReset = 0,
@@ -42,6 +47,7 @@
         Monthly = 12,
     }
 
+    [AssetEnum]
     public enum LeaderboardType
     {
         Player = 0,
@@ -50,12 +56,14 @@
         MetaLeaderboard = 3,
     }
 
+    [AssetEnum]
     public enum LeaderboardRankingRule
     {
         Ascending = 0,
         Descending = 1,
     }
 
+    [AssetEnum]
     public enum LeaderboardPercentile
     {
         Within10Percent = 0,

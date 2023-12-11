@@ -1,7 +1,10 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
+    [AssetEnum]
     public enum DesignWorkflowState
     {
         None = 0,
@@ -10,6 +13,7 @@
         Live = 4,
     }
 
+    [AssetEnum]
     public enum RegionPlayerAccess
     {
         Open = 1,

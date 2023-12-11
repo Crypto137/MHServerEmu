@@ -1,7 +1,10 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
+    [AssetEnum]
     public enum DuplicateHandlingBehavior
     {
         Fail,
@@ -10,6 +13,7 @@
         Append,
     }
 
+    [AssetEnum]
     public enum OmegaPageType
     {
         Psionics = 12,
@@ -28,6 +32,7 @@
         Xenobiology = 6,
     }
 
+    [AssetEnum]
     public enum InfinityGem
     {
         Soul = 3,
@@ -39,6 +44,7 @@
         None = 7,
     }
 
+    [AssetEnum]
     public enum Rank
     {
         Popcorn,
@@ -51,6 +57,7 @@
         TeamUp,
     }
 
+    [AssetEnum]
     public enum LootDropEventType
     {
         None = 0,
@@ -64,6 +71,8 @@
         OnHit = 8,
         OnDamagedForPctHealth = 9,
     }
+
+    [AssetEnum]
     public enum HealthBarType
     {
         Default = 0,
@@ -73,6 +82,7 @@
         None = 4,
     }
 
+    [AssetEnum]
     public enum OverheadInfoDisplayType
     {
         Default = 0,

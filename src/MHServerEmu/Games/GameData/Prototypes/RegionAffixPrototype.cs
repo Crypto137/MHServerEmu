@@ -1,5 +1,10 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
+    #region Enums
+
+    [AssetEnum]
     public enum MetaStateChallengeTierEnum
     {
         None = 0,
@@ -9,6 +14,8 @@
         Tier4 = 4,
         Tier5 = 5,
     }
+
+    #endregion
 
     public class RegionAffixPrototype : Prototype
     {

@@ -1,7 +1,10 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
+    [AssetEnum]
     public enum VOCategory
     {
         Default = 0,
@@ -16,12 +19,14 @@
         VendorError = 9,
     }
 
+    [AssetEnum]
     public enum OnInteractAction
     {
         Despawn = 1,
         Disable = 2,
     }
 
+    [AssetEnum]
     public enum MetaGameCompleteType
     {
         Success = 0,
@@ -29,7 +34,8 @@
         DidNotParticipate = 2,
     }
 
-    public enum MissionShowObjsSettings
+    [AssetEnum]
+    public enum MissionShowObjsSettings // Missions/Types/ShowObjsSettings.type
     {
         FromTargetMission = 0,
         FromThisMission = 1,

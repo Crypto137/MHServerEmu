@@ -1,10 +1,12 @@
-﻿using MHServerEmu.Games.Loot;
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    public enum Category
+    [AssetEnum]
+    public enum InventoryCategory   // Entity/Inventory/Category.type
     {
         None = 0,
         AvatarEquipment = 1,
@@ -22,6 +24,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         PlayerStashTeamUpGear = 9,
     }
 
+    [AssetEnum]
     public enum InventoryEvent
     {
         Invalid,
@@ -52,7 +55,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool ContentsRecoverFromError { get; set; }
         public int DestroyContainedAfterSecs { get; set; }
         public InventoryEvent DestroyContainedOnEvent { get; set; }
-        public Category Category { get; set; }
+        public InventoryCategory Category { get; set; }
         public OfferingInventoryUIDataPrototype OfferingInventoryUIData { get; set; }
         public bool LockedByDefault { get; set; }
         public bool ReplicateForTransfer { get; set; }

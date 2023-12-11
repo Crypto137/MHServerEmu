@@ -1,7 +1,10 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
+    [AssetEnum]
     public enum MissionTrackerFilterType
     {
         None = -1,
@@ -12,7 +15,8 @@
         Challenge = 4,
     }
 
-    public enum RegionBehaviorAsset
+    [AssetEnum]
+    public enum RegionBehaviorAsset     // Regions/RegionBehavior.type
     {
         Invalid = -1,
         Town = 0,
@@ -23,6 +27,7 @@
         MatchPlay = 4,
     }
 
+    [AssetEnum]
     public enum RegionMusicBehaviorAsset
     {
         None,
@@ -30,6 +35,7 @@
         Mission,
     }
 
+    [AssetEnum]
     public enum FootstepTraceBehaviorAsset
     {
         None,
@@ -37,6 +43,7 @@
         Disable,
     }
 
+    [AssetEnum]
     public enum RegionQueueMethod
     {
         None = 0,
@@ -44,14 +51,16 @@
         DailyQueue = 5,
     }
 
-    public enum ObjectiveGraphModeAsset
+    [AssetEnum]
+    public enum ObjectiveGraphModeAsset         // Regions/EnumObjectiveGraphMode.type
     {
         Off,
         PathDistance,
         PathNavi,
     }
 
-    public enum RegionTransitionDirectionality
+    [AssetEnum]
+    public enum RegionTransitionDirectionality  // Regions/RegionConnectionType.type
     {
         BiDirectional = 0,
         OneWay = 1,

@@ -1,5 +1,10 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
+    #region Enums
+
+    [AssetEnum]
     public enum BoundsCollisionType
     {
         None,
@@ -7,12 +12,15 @@
         Blocking,
     }
 
+    [AssetEnum]
     public enum BoundsMovementPowerBlockType
     {
         None,
         Ground,
         All,
     }
+
+    #endregion
 
     public class BoundsPrototype : Prototype
     {

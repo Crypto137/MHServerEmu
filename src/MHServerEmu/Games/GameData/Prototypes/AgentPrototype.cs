@@ -1,7 +1,10 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
+    [AssetEnum]
     public enum Allegiance
     {
         None = 0,
@@ -10,6 +13,7 @@
         Villain = 3,
     }
 
+    [AssetEnum]
     public enum DramaticEntranceType
     {
         Always = 1,

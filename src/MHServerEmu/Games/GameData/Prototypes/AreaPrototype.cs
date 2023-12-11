@@ -1,5 +1,10 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
+    #region Enums
+
+    [AssetEnum]
     public enum AreaMinimapReveal
     {
         Standard,
@@ -7,6 +12,8 @@
         PlayerCellOnly,
         PlayerAreaGroup,
     }
+
+    #endregion
 
     public class AreaPrototype : Prototype
     {

@@ -1,7 +1,10 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
+    [AssetEnum]
     public enum DistributionType
     {
         AllInOpenMissionRegion,
@@ -9,6 +12,7 @@
         Contributors,
     }
 
+    [AssetEnum]
     public enum ManaType
     {
         Type1 = 0,
@@ -16,6 +20,7 @@
         TypeAll = 3,
     }
 
+    [AssetEnum]
     public enum TriBool
     {
         Undefined = -1,
@@ -23,6 +28,7 @@
         True = 1,
     }
 
+    [AssetEnum]
     public enum EntityTriggerEnum
     {
         NoChange = 0,

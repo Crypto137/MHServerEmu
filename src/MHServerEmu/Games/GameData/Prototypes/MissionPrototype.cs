@@ -1,11 +1,11 @@
-﻿using MHServerEmu.Games.Regions;
-using System.Net;
+﻿using MHServerEmu.Games.GameData.Calligraphy;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    public enum DailyMissionBannerImageType
+    [AssetEnum]
+    public enum DailyMissionBannerImageType     // UI/Types/DailyMissionBannerType.type
     {
         Asgard = 0,
         CastleAndMoon = 1,
@@ -21,27 +21,31 @@ namespace MHServerEmu.Games.GameData.Prototypes
         TowerBaseSunset = 11,
     }
 
-    public enum MissionTimeExpiredResult
+    [AssetEnum]
+    public enum MissionTimeExpiredResult        // Missions/Types/OnTimeExpired.type
     {
         Invalid = 0,
         Complete = 1,
         Fail = 2,
     }
 
-    public enum MissionShowInTracker
+    [AssetEnum]
+    public enum MissionShowInTracker            // Missions/Types/ShowInTracker.type
     {
         Never = 0,
         IfObjectivesVisible = 1,
         Always = 2,
     }
 
-    public enum MissionShowInLog
+    [AssetEnum]
+    public enum MissionShowInLog                // Missions/Types/ShowInMissionLog.type
     {
         Never = 0,
         OnlyWhenActive = 1,
         Always = 2,
     }
 
+    [AssetEnum]
     public enum DailyMissionType
     {
         Patrol = 0,
@@ -49,12 +53,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Terminal = 2,
     }
 
+    [AssetEnum]
     public enum DailyMissionResetFrequency
     {
         Daily = 0,
         Weekly = 1,
     }
 
+    [AssetEnum]
     public enum AdvancedMissionFrequencyType
     {
         Invalid = 0,
@@ -310,7 +316,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class DailyMissionPrototype : MissionPrototype
     {
-        public WeekdayEnum Day { get; set; }
+        public Weekday Day { get; set; }
         public DailyMissionType Type { get; set; }
         public ulong Image { get; set; }
         public DailyMissionResetFrequency ResetFrequency { get; set; }
@@ -318,7 +324,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class AdvancedMissionCategoryPrototype : LegendaryMissionCategoryPrototype
     {
-        public WeekdayEnum WeeklyResetDay { get; set; }
+        public Weekday WeeklyResetDay { get; set; }
         public AdvancedMissionFrequencyType MissionType { get; set; }
         public ulong CategoryLabel { get; set; }
     }

@@ -4,6 +4,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
+    [AssetEnum]
     public enum EntitySelectorAttributeActions
     {
         None,
@@ -11,6 +12,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         EnableInteractions,
     }
 
+    [AssetEnum]
     [Flags]
     public enum EntitySelectorActionEventType
     {
@@ -42,6 +44,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         OnMissionBroadcast = 16777216,
     }
 
+    [AssetEnum]
     public enum ScriptRoleKeyEnum
     {
         Invalid = 0,
@@ -59,7 +62,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         HostileCombatant04 = 12,
     }
 
-    public enum Method
+    [AssetEnum]
+    public enum LocomotorMethod
     {
         Ground = 1,
         Airborne = 2,
@@ -69,6 +73,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         HighFlying = 6,
     }
 
+    [AssetEnum]
     public enum DialogStyle
     {
         ComputerTerminal = 1,
@@ -76,6 +81,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         OverheadText = 3,
     }
 
+    [AssetEnum]
     public enum RegionTransitionType
     {
         Transition,
@@ -91,7 +97,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         EndlessDown,
     }
 
-    public enum EntityAppearanceEnum
+    [AssetEnum]
+    public enum EntityAppearanceEnum    // Entity/Types/AppearanceEnum.type
     {
         None = 0,
         Closed = 1,
@@ -103,6 +110,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Dead = 7,
     }
 
+    [AssetEnum]
     public enum HotspotOverlapEventTriggerType
     {
         None = 0,
@@ -111,13 +119,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         All = 3,
     }
 
+    [AssetEnum]
     public enum SpawnerDefeatCriteria
     {
         Never = 0,
         MaxReachedAndNoHostileMobs = 1,
     }
 
-    public enum FormationFacing
+    [AssetEnum]
+    public enum FormationFacing // Populations/Blueprints/FacingEnum.type
     {
         None = 0,
         FaceParent = 0,
@@ -126,6 +136,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         FaceOriginInverse = 3,
     }
 
+    [AssetEnum]
     public enum SpawnFailBehavior
     {
         Fail = 0,
@@ -133,6 +144,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         RetryForce = 2,
     }
 
+    [AssetEnum]
     public enum FactionColor
     {
         Default = 0,
@@ -141,6 +153,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Blue = 3,
     }
 
+    [AssetEnum]
     public enum WaypointPOIType
     {
         HUB = 0,
@@ -183,7 +196,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong[] Keywords { get; set; }
         public DesignWorkflowState DesignState { get; set; }
         public ulong Rank { get; set; }
-        public Method NaviMethod { get; set; }
+        public LocomotorMethod NaviMethod { get; set; }
         public bool SnapToFloorOnSpawn { get; set; }
         public bool AffectNavigation { get; set; }
         public StateChangePrototype PostInteractState { get; set; }

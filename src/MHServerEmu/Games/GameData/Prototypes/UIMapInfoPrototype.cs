@@ -1,8 +1,10 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    public enum HUDEntityFloorEffect
+    public enum HUDEntityFloorEffect    // What is this? Appears only in UIMapInfoPrototype, and that doesn't have any fields defined
     {
         None = 0,
         Generic = 1,
@@ -10,7 +12,8 @@
         Rescue = 3,
     }
 
-    public enum HUDEntityOverheadIcon
+    [AssetEnum]
+    public enum HUDEntityOverheadIcon   // UI/Types/InteractIndicatorType.type
     {
         None = 0,
         DiscoveryBestower = 1,
@@ -30,6 +33,7 @@
         StoryWarp = 15,
     }
 
+    [AssetEnum]
     public enum ObjectiveVisibility
     {
         VisibleOnlyByMission,
@@ -38,6 +42,7 @@
         VisibleToParty,
     }
 
+    [AssetEnum]
     public enum ScriptRoleKey
     {
         Invalid,

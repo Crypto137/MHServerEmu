@@ -1,8 +1,11 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    public enum PowerActivationEventType
+    [AssetEnum]
+    public enum MissilePowerActivationEventType    // Powers/Types/MissilePowerActivationEvent.type
     {
         Invalid = 0,
         OnBounce = 1,
@@ -14,7 +17,8 @@
         OnOutOfWorld = 7,
     }
 
-    public enum InitialDirectionType
+    [AssetEnum]
+    public enum MissileInitialDirectionType
     {
         Forward = 0,
         Backward = 1,
@@ -24,7 +28,8 @@
         OwnersForward = 5,
     }
 
-    public enum SpawnLocationType
+    [AssetEnum]
+    public enum MissileSpawnLocationType
     {
         CenteredOnOwner = 0,
         InFrontOfOwner = 1,
@@ -40,7 +45,7 @@
     public class MissilePowerContextPrototype : Prototype
     {
         public ulong Power { get; set; }
-        public PowerActivationEventType MissilePowerActivationEvent { get; set; }
+        public MissilePowerActivationEventType MissilePowerActivationEvent { get; set; }
         public EvalPrototype EvalPctChanceToActivate { get; set; }
     }
 
@@ -63,10 +68,10 @@
         public float SizeIncreasePerSec { get; set; }
         public bool IgnoresPitch { get; set; }
         public float Radius { get; set; }
-        public InitialDirectionType InitialDirection { get; set; }
+        public MissileInitialDirectionType InitialDirection { get; set; }
         public Rotator3Prototype InitialDirectionAxisRotation { get; set; }
         public Rotator3Prototype InitialDirectionRandomVariance { get; set; }
-        public SpawnLocationType SpawnLocation { get; set; }
+        public MissileSpawnLocationType SpawnLocation { get; set; }
         public bool InterpolateRotationSpeed { get; set; }
         public float InterpolateRotMultByDist { get; set; }
         public float InterpolateOvershotAccel { get; set; }

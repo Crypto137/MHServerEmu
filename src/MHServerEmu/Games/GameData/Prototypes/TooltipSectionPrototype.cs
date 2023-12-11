@@ -1,7 +1,10 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
+    [AssetEnum]
     public enum TooltipSectionType
     {
         Default = 0,
@@ -16,7 +19,8 @@
         ItemAffixes = 9,
     }
 
-    public enum TooltipSectionKey
+    [AssetEnum]
+    public enum TooltipSectionKey   // UI/Tooltips/TooltipProceduralKey.type
     {
         Invalid = 0,
         PowerStatsCurrentRank = 1,

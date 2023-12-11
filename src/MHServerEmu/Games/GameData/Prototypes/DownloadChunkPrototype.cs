@@ -1,7 +1,10 @@
-﻿using MHServerEmu.Games.Regions;
+﻿using MHServerEmu.Games.GameData.Calligraphy;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
+    #region Enums
+
+    [AssetEnum]
     [Flags]
     public enum Platforms
     {
@@ -13,6 +16,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         XboxOne = 4,
         All = 15,
     }
+
+    #endregion
 
     public class DownloadChunkRegionsPrototype : Prototype
     {

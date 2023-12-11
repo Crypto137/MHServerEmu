@@ -1,13 +1,19 @@
-﻿using MHServerEmu.Games.Regions;
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
+    #region Enums
+
+    [AssetEnum]
     public enum CellDeletionEnum
     {
         Random = 0,
         Edge = 2,
         Corner = 1,
     }
+
+    #endregion
 
     public class BaseGridAreaGeneratorPrototype : GeneratorPrototype
     {

@@ -1,7 +1,10 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
+    [AssetEnum]
     public enum MissionState
     {
         Invalid,
@@ -12,6 +15,7 @@
         Failed,
     }
 
+    [AssetEnum]
     public enum ScoreTableValueType
     {
         Invalid = 0,
@@ -19,7 +23,8 @@
         Float = 2,
     }
 
-    public enum ScoreTableValueEventToEnum
+    [AssetEnum]
+    public enum ScoreTableValueEvent
     {
         Invalid = 0,
         DamageTaken = 1,
@@ -171,7 +176,7 @@
         public EvalPrototype EvalOnPlayerAdd { get; set; }
         public EvalPrototype EvalAuto { get; set; }
         public EntityFilterPrototype OnEntityDeathFilter { get; set; }
-        public ScoreTableValueEventToEnum Event { get; set; }
+        public ScoreTableValueEvent Event { get; set; }
     }
 
     public class ScoreTableSchemaPrototype : Prototype

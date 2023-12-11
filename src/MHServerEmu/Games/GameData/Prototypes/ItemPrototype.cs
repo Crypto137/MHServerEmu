@@ -1,9 +1,11 @@
-﻿using MHServerEmu.Games.Loot;
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
+    [AssetEnum]
     public enum ItemInstrumentedDropGroup
     {
         Character = 1,
@@ -11,6 +13,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         RareArtifact = 3,
     }
 
+    [AssetEnum]
     public enum ItemEventType
     {
         None = 0,
@@ -19,14 +22,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
         OnUsePowerActivated = 3,
     }
 
-    public enum PickMethodType
+    [AssetEnum]
+    public enum PickMethod
     {
         PickWeight = 0,
         PickWeightTryAll = 1,
         PickAll = 2,
     }
 
-    public enum CharacterTokenType
+    [AssetEnum]
+    public enum CharacterTokenType  // Entity/Items/CharacterTokens/TokenType.type
     {
         None = 0,
         UnlockCharacterOnly = 1,
@@ -180,7 +185,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class ItemActionSetPrototype : ItemActionBasePrototype
     {
         public ItemActionBasePrototype[] Choices { get; set; }
-        public PickMethodType PickMethod { get; set; }
+        public PickMethod PickMethod { get; set; }
     }
 
     public class ItemActionOpenUIPanelPrototype : ItemActionPrototype

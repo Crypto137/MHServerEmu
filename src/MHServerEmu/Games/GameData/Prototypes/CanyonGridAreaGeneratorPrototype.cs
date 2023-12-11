@@ -1,10 +1,17 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
+    #region Enums
+
+    [AssetEnum]
     public enum AreaOrientation
     {
         Horizontal,
         Vertical,
     }
+
+    #endregion
 
     public class CanyonGridAreaGeneratorPrototype : GeneratorPrototype
     {

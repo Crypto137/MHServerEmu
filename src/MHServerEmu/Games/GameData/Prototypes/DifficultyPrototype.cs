@@ -1,13 +1,19 @@
-﻿using MHServerEmu.Games.Regions;
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
+    #region Enums
+
+    [AssetEnum]
     public enum DEPRECATEDDifficultyMode
     {
         Normal = 0,
         Heroic = 1,
         SuperHeroic = 2,
     }
+
+    #endregion
 
     public class RegionDifficultySettingsPrototype : Prototype
     {

@@ -1,5 +1,10 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
+    #region Enums
+
+    [AssetEnum]
     public enum EntityGameEventEnum
     {
         Invalid = 0,
@@ -9,6 +14,8 @@
         EntityExitedWorld = 4,
         PlayerInteract = 5,
     }
+
+    #endregion
 
     public class GameEventPrototype : Prototype
     {

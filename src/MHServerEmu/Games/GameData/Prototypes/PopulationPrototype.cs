@@ -1,16 +1,20 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    public enum MarkerType
+    [AssetEnum]
+    public enum MarkerType  // SpawnMarkers/PopulationType.type? Doesn't match exactly
     {
-        Enemies = 1,
+        Enemies = 1,    // Officer / Trash
         Encounter = 2,
         QuestGiver = 3,
         Transition = 4,
         Prop = 5,
     }
 
+    [AssetEnum]
     public enum SpawnOrientationTweak
     {
         Default,
