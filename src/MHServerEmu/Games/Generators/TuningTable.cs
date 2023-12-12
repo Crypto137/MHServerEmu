@@ -1,5 +1,5 @@
 ﻿using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Generators.Prototypes;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Regions
 {

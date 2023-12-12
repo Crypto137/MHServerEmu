@@ -4,7 +4,6 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Common;
-using MHServerEmu.Games.Generators.Prototypes;
 using MHServerEmu.Games.Common;
 
 namespace MHServerEmu.Games.Generators.Areas

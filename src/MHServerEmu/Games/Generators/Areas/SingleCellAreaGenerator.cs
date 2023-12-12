@@ -3,7 +3,6 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
-using MHServerEmu.Games.Generators.Prototypes;
 using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Regions;
 

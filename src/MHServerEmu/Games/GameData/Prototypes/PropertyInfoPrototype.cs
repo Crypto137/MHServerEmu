@@ -5,7 +5,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class PropertyInfoPrototype
     {
         public PropertyPrototype Mixin { get; set; }                   // contains mixin param information
-
+        public long Version { get; }
         public AggregationMethod AggMethod { get; }
         public bool ClientOnly { get; }
         public double CurveDefault { get; }
@@ -28,7 +28,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong TooltipText { get; }                       // P
         public bool TruncatePropertyValueToInt { get; }
         public PropertyType Type { get; }
-        public long Version { get; }
+
 
         public PropertyInfoPrototype(Prototype prototype)
         {
@@ -111,5 +111,71 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 }
             }
         }
+    }
+    // TODO: Delete repeated enums
+    public enum DBPolicyAssetEnum
+    {
+        UseParent = -4,
+        PerField = -3,
+        PropertyCollection = -2,
+        Invalid = -1,
+        None = 0,
+        Frequent = 1,
+        Infrequent = 1,
+        PlayerLargeBlob = 2,
+    }
+    public enum PropertyDataType
+    {
+        Boolean = 0,
+        Real = 1,
+        Integer = 2,
+        Prototype = 3,
+        Curve = 4,
+        Asset = 5,
+        EntityId = 6,
+        Time = 7,
+        Guid = 8,
+        RegionId = 9,
+        Int21Vector3 = 10,
+    }
+
+    public enum PropertyAggregationMethod
+    {
+        None = 0,
+        Min = 1,
+        Max = 2,
+        Sum = 3,
+        Mul = 4,
+        Set = 5,
+    }
+
+    // TODO: Fix Conflicts
+
+    public class PropertyInfoPrototype2 : Prototype
+    {
+        public sbyte Version;
+        public PropertyAggregationMethod AggMethod;
+        public float Min;
+        public float Max;
+        public DBPolicyAssetEnum ReplicateToDatabase;
+        public bool ReplicateToProximity;
+        public bool ReplicateToParty;
+        public bool ReplicateToOwner;
+        public bool ReplicateToDiscovery;
+        public bool ReplicateForTransfer;
+        public PropertyDataType Type;
+        public float CurveDefault;
+        public bool ReplicateToDatabaseAllowedOnItems;
+        public bool ClientOnly;
+        public bool SerializeEntityToPowerPayload;
+        public bool SerializePowerToPowerPayload;
+        public ulong TooltipText;
+        public bool TruncatePropertyValueToInt;
+        public EvalPrototype Eval;
+        public bool EvalAlwaysCalculates;
+        public bool SerializeConditionSrcToCondition;
+        public bool ReplicateToTrader;
+        public ulong ValueDisplayFormat;
+        public PropertyInfoPrototype2(Prototype proto) : base(proto) { FillPrototype(typeof(PropertyInfoPrototype2), proto); }
     }
 }

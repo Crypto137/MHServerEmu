@@ -4,7 +4,7 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class PropertyPrototype
+    public class PropertyPrototype // : Prototype
     {
         private const byte MaxParamCount = 4;
 
@@ -107,5 +107,28 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int ValueMax { get; set; } = 0;
         public int Offset { get; set; } = 0;
         public int Size { get; set; } = 0;
+    }
+
+    public class PropertyEntryPrototype : Prototype
+    {
+        public PropertyEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(PropertyEntryPrototype), proto); }
+    }
+
+    public class PropertyPickInRangeEntryPrototype : PropertyEntryPrototype
+    {
+        public ulong Prop;
+        public EvalPrototype ValueMax;
+        public EvalPrototype ValueMin;
+        public bool RollAsInteger;
+        public ulong TooltipOverrideText;
+        public PropertyPickInRangeEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(PropertyPickInRangeEntryPrototype), proto); }
+    }
+
+    public class PropertySetEntryPrototype : PropertyEntryPrototype
+    {
+        public ulong Prop;
+        public ulong TooltipOverrideText;
+        public EvalPrototype Value;
+        public PropertySetEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(PropertySetEntryPrototype), proto); }
     }
 }

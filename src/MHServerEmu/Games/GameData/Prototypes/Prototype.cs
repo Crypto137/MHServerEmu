@@ -1,8 +1,6 @@
 ﻿using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
-using MHServerEmu.Games.Generators.Prototypes;
-using System;
 using System.Reflection;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -62,7 +60,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     {
                         string className = GameDatabase.DataDirectory.GetPrototypeBlueprint(proto).RuntimeBinding;
                       //  Logger.Info($"Init Prototype {className}");
-                        Type protoType = Type.GetType("MHServerEmu.Games.Generators.Prototypes." + className);
+                        Type protoType = Type.GetType("MHServerEmu.Games.GameData.Prototypes." + className);
                         if (protoType == null)
                         {
                             Logger.Warn($"PrototypeClass {className} not exist");

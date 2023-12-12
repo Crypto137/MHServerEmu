@@ -7,7 +7,6 @@ using MHServerEmu.Common.Logging.Targets;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Generators.Prototypes;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Networking;
 using MHServerEmu.PlayerManagement.Accounts;

@@ -5,7 +5,6 @@ using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Gpak;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Generators.Prototypes;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData

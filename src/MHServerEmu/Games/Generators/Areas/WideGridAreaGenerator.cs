@@ -2,7 +2,6 @@
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Generators.Prototypes;
 using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Regions;
 using static MHServerEmu.Games.Generators.Areas.CellGridGenerator;
