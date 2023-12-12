@@ -1,8 +1,0 @@
-syntax = "proto2";
-
-package Gazillion;
-
-message GetPlayerInfoByName {
-	required string	playerName	= 1;
-}
-

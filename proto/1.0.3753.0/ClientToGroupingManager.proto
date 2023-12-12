@@ -1,8 +1,0 @@
-syntax = "proto2";
-
-package Gazillion;
-
-message ClientIgnoredInvite {
-	required uint64	decliningPlayerId	= 1;
-}
-
