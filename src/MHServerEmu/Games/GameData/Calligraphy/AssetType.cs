@@ -8,7 +8,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         // An AssetType is a collection of references to values, generally either actual assets or enums.
         // All AssetTypes and AssetValues have their own unique ids. AssetValue ids are actually string ids.
 
-        // Enum asset types are bound to enums they represent during game database initialization:
+        // Enum asset types are bound to symbolic enums they represent during game database initialization:
         // DataDirectory.LoadCalligraphyDataFramework() -> PrototypeClassManager.BindAssetTypesToEnums() -> AssetDirectory.BindAssetTypes() -> AssetType.BindEnum()
 
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -16,7 +16,8 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         private readonly AssetTypeGuid _guid;
         private readonly AssetValue[] _assets;
 
-        private Type _enumBinding;                  // Type of a code enum to bind to
+        private Type _enumBinding;                          // Type of a symbolic enum to bind to
+        private Dictionary<int, int> _symbolicLookupDict;   // Symbolic enum value -> asset index
         private bool _enumerated;
 
         public int MaxEnumValue { get; private set; }
@@ -44,12 +45,19 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             }
         }
 
+        /// <summary>
+        /// Sets symbolic enum binding for this asset type.
+        /// </summary>
         public void BindEnum(Type enumBinding)
         {
             _enumBinding = enumBinding;
+            if (_enumBinding != null) _symbolicLookupDict = new();
             Enumerate();
         }
 
+        /// <summary>
+        /// Gets an asset id from its enum value.
+        /// </summary>
         public StringId GetAssetRefFromEnum(int enumValue)
         {
             if (_enumerated == false)
@@ -62,7 +70,10 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             if (assetValue == null) return StringId.Invalid;
             return assetValue.Id;
         }
-
+        
+        /// <summary>
+        /// Enumerates this asset type taking symbolic enum binding into account.
+        /// </summary>
         private void Enumerate()
         {
             // Iterate through all assets of this type
@@ -70,12 +81,13 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             {
                 // Determine enum value
                 int enumValue;
-                if (_enumBinding != null)   // Code enums - NYI
+                if (_enumBinding != null)   // Symbolic enums
                 {
-                    enumValue = 0;
-                    MaxEnumValue = 0;
+                    enumValue = (int)Enum.Parse(_enumBinding, GameDatabase.GetAssetName(_assets[i].Id));    // Parse value from enum type
+                    MaxEnumValue = Math.Max(enumValue, MaxEnumValue);                                       // Update max value
+                    _symbolicLookupDict.Add(enumValue, i);                                                  // Add enumValue -> AssetValue index lookup
                 }
-                else                        // Regular assets
+                else                        // Regular enums
                 {
                     enumValue = i;
                 }
@@ -84,22 +96,38 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 GameDatabase.DataDirectory.AssetDirectory.AddAssetEnumLookup(_assets[i].Id, enumValue);
             }
 
-            // Set max enum value for assets not bound to code enums
+            // Set max enum value for assets not bound to symbolic enums
             if (_enumBinding == null && _assets.Length > 0)
                 MaxEnumValue = _assets.Length - 1;
 
             _enumerated = true;
         }
 
+        /// <summary>
+        /// Gets an <see cref="AssetValue"/> associated with the specified enum value.
+        /// </summary>
         private AssetValue GetAssetValueFromEnum(int enumValue)
         {
             if (_enumerated == false) return null;
-            if (_enumBinding != null) return null;   // Code enums - NYI
+
+            // Symbolic enums
+            if (_enumBinding != null)
+            {
+                if (_symbolicLookupDict.TryGetValue(enumValue, out int index) == false)
+                    return null;
+
+                return _assets[index];
+            }
+                
+            // Regular enums
             if (enumValue < 0 || enumValue >= _assets.Length) return null;
 
             return _assets[enumValue];
         }
 
+        /// <summary>
+        /// A container for references to a specific asset.
+        /// </summary>
         class AssetValue
         {
             public StringId Id { get; }
