@@ -30,6 +30,9 @@ namespace MHServerEmu.Games.GameData
             Logger.Info($"Initialized {ClassCount} prototype classes in {stopwatch.ElapsedMilliseconds} ms");
         }
 
+        /// <summary>
+        /// Gets prototype class type by its name.
+        /// </summary>
         public Type GetPrototypeClassTypeByName(string name)
         {
             if (_prototypeNameToClassTypeDict.TryGetValue(name, out Type type) == false)
@@ -41,19 +44,33 @@ namespace MHServerEmu.Games.GameData
             return type;
         }
 
+        /// <summary>
+        /// Checks if a prototype class belongs to the specified parent class in the hierarchy.
+        /// </summary>
         public bool PrototypeClassIsA(Type classToCheck, Type parent)
         {
             return classToCheck == parent || classToCheck.IsSubclassOf(parent);
         }
 
+        /// <summary>
+        /// Returns an IEnumerable of all prototype class types.
+        /// </summary>
         public IEnumerable<Type> GetEnumerator()
         {
             return _prototypeNameToClassTypeDict.Values.AsEnumerable();
         }
 
+        /// <summary>
+        /// Determines what asset types to bind to what enums and 
+        /// </summary>
         public void BindAssetTypesToEnums(AssetDirectory assetDirectory)
         {
+            Dictionary<AssetType, Type> assetEnumBindingDict = new();
+
+            // TODO: determine what assets to bind to what enums here
+
             /*
+            // Iterate through all fields in all prototype classes and find enums
             foreach (Type classType in _prototypeNameToClassTypeDict.Values)
             {
                 foreach (var property in classType.GetProperties())
@@ -65,6 +82,8 @@ namespace MHServerEmu.Games.GameData
                 }
             }
             */
+
+            assetDirectory.BindAssetTypes(assetEnumBindingDict);
         }
     }
 }

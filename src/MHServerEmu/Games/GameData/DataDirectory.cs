@@ -60,7 +60,7 @@ namespace MHServerEmu.Games.GameData
             // Load resource prototypes
             CreatePrototypeDataRefsForDirectory(resourcePak);
 
-            // Generate prototype lookup for each class and blueprint
+            // Build hierarchy lists and generate enum lookups for each prototype class and blueprint
             InitializeHierarchyCache();
 
             Logger.Info($"Initialized in {stopwatch.ElapsedMilliseconds} ms");
@@ -106,7 +106,7 @@ namespace MHServerEmu.Games.GameData
                 }
             }
 
-            // TODO: PrototypeClassManager::BindAssetTypesToEnums()
+            // Bind asset types to code enums where needed and enumerate all assets
             GameDatabase.PrototypeClassManager.BindAssetTypesToEnums(AssetDirectory);
 
             // Populate blueprint hierarchy hash sets

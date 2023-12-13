@@ -9,6 +9,8 @@
         private readonly Dictionary<StringId, AssetTypeId> _assetIdToTypeIdDict = new();                // assetId => assetTypeId
         private readonly Dictionary<AssetGuid, StringId> _assetGuidToIdDict = new();                    // assetGuid => assetId
 
+        private readonly Dictionary<StringId, int> _assetIdToEnumValueDict = new();                     // assetId => enumValue
+
         public int AssetTypeCount { get => _assetTypeRecordDict.Count; }
         public int AssetCount { get => _assetGuidToIdDict.Count; }
 
@@ -70,6 +72,28 @@
         {
             _assetIdToTypeIdDict.Add(assetId, assetTypeId);
             _assetGuidToIdDict.Add(assetGuid, assetId);
+        }
+
+        /// <summary>
+        /// Adds a new assetId => enumValue lookup.
+        /// </summary>
+        public void AddAssetEnumLookup(StringId assetId, int enumValue)
+        {
+            _assetIdToEnumValueDict.Add(assetId, enumValue);
+        }
+
+        /// <summary>
+        /// Binds asset types to code enums.
+        /// </summary>
+        public void BindAssetTypes(Dictionary<AssetType, Type> assetEnumBindingDict)
+        {
+            // Iterate through all loaded asset types
+            foreach (var record in _assetTypeRecordDict.Values)
+            {
+                // Bind asset type to enum if it's in the binding dictionary
+                assetEnumBindingDict.TryGetValue(record.AssetType, out Type enumBinding);
+                record.AssetType.BindEnum(enumBinding);
+            }
         }
 
         /// <summary>
