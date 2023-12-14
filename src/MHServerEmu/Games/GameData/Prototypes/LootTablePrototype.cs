@@ -21,6 +21,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
     }
 
     [AssetEnum]
+    public enum LootActionType
+    {
+        Spawn = 1,
+        Give = 2
+    }
+
+    [AssetEnum]
     public enum CharacterFilterType
     {
         None = 0,

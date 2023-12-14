@@ -207,6 +207,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
         RepeatActivation = 2,
     }
 
+    [AssetEnum]
+    public enum TargetRestrictionType
+    {
+        None = 0,
+        HealthGreaterThanPercentage = 1,
+        HealthLessThanPercentage = 2,
+        EnduranceGreaterThanPercentage = 3,
+        EnduranceLessThanPercentage = 4,
+        HealthOrEnduranceGreaterThanPercentage = 5,
+        HealthOrEnduranceLessThanPercentage = 6,
+        SecondaryResourceLessThanPercentage = 7,
+        HasKeyword = 8,
+        DoesNotHaveKeyword = 9,
+        HasAI = 10,
+        IsPrototypeOf = 11,
+        HasProperty = 12,
+        DoesNotHaveProperty = 13,
+    }
+
     #endregion
 
     public class PowerPrototype : Prototype

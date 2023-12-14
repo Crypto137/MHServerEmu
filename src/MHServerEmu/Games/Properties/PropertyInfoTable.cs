@@ -5,13 +5,33 @@ using System.Diagnostics;
 
 namespace MHServerEmu.Games.Properties
 {
-    // Old experimental hacky code below, to be properly re-implemented
-
     public class PropertyInfoTable
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private Dictionary<PropertyEnum, PropertyInfoPrototype> _propertyInfoDict = new();
+
+        public static readonly (string, Type)[] AssetEnumBindings = new(string, Type)[]     // s_PropertyParamEnumLookups
+        {
+            ("ProcTriggerType",                 typeof(ProcTriggerType)),
+            ("DamageType",                      typeof(DamageType)),
+            ("TargetRestrictionType",           typeof(TargetRestrictionType)),
+            ("PowerEventType",                  typeof(PowerEventActionType)),
+            ("LootDropEventType",               typeof(LootDropEventType)),
+            ("LootDropActionType",              typeof(LootActionType)),
+            ("PowerConditionType",              typeof(PowerConditionType)),
+            ("ItemEffectUnrealClass",           null),
+            ("HotspotNegateByAllianceType",     typeof(HotspotNegateByAllianceType)),
+            ("DEPRECATEDDifficultyMode",        typeof(DEPRECATEDDifficultyMode)),
+            ("EntityGameEventEnum",             typeof(EntityGameEventEnum)),
+            ("EntitySelectorActionEventType",   typeof(EntitySelectorActionEventType)),
+            ("Weekday",                         typeof(Weekday)),
+            ("AffixPositionType",               typeof(AffixPosition)),
+            ("ManaType",                        typeof(ManaType)),
+            ("Ranks",                           typeof(Rank))
+        };
+
+        // Old experimental hacky code below, to be properly re-implemented
 
         public PropertyInfoTable(DataDirectory dataDirectory)
         {

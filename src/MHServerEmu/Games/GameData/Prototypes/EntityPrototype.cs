@@ -120,6 +120,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
     }
 
     [AssetEnum]
+    public enum HotspotNegateByAllianceType
+    {
+        None = 0,
+        Allies = 1,
+        Enemies = 2,
+        All = 3,
+    }
+
+    [AssetEnum]
     public enum SpawnerDefeatCriteria
     {
         Never = 0,
