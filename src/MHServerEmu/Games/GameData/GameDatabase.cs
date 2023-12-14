@@ -193,9 +193,9 @@ namespace MHServerEmu.Games.GameData
                 return name == pattern;
 
             if (flags.HasFlag(DataFileSearchFlags.CaseInsensitive))
-                return name.ToLower().Contains(pattern.ToLower());
+                return name.Contains(pattern, StringComparison.InvariantCultureIgnoreCase);
 
-            return name.Contains(pattern);
+            return name.Contains(pattern, StringComparison.InvariantCulture);
         }
 
         #endregion
