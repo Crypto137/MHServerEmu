@@ -32,31 +32,26 @@ namespace MHServerEmu.Common.Commands
 
         private static string LookupPrototypes(string pattern, BlueprintId blueprint, FrontendClient client)
         {
-            // Search hierarchy cache for the given pattern
-            List<(PrototypeId, string)> matchList = new();
-            foreach (var record in GameDatabase.DataDirectory.GetIteratedPrototypesInHierarchy(blueprint))
-            {
-                string prototypeName = GameDatabase.GetPrototypeName(record.PrototypeId);
+            // Search game database for the given pattern
+            var matches = GameDatabase.SearchPrototypes(pattern, DataFileSearchFlags.SortMatchesByName | DataFileSearchFlags.CaseInsensitive, blueprint);
 
-                if (prototypeName.ToLower().Contains(pattern.ToLower()))
-                    matchList.Add(new(record.PrototypeId, prototypeName));
-            }
-
-            if (matchList.Count == 0)
-                return "No match found.";
+            if (matches.Any() == false)
+                return "No matches found.";
 
             if (client == null)
             {
                 // Output as a single string with line breaks if the command was invoked from the console
-                return matchList.Aggregate("Lookup Matches:\n",
-                    (current, match) => $"{current}[{match.Item1}] {match.Item2}\n");
+                return matches.Aggregate("Lookup Matches:\n",
+                    (current, match) => $"{current}[{match}] {GameDatabase.GetPrototypeName(match)}\n");
             }
 
-            // Output as a list of chat messages if the command was invoked from the in-game chat
-            // This is because the chat window doesn't handle individual messages with too many lines well (e.g. when the lookup pattern is not specific enough)
+            // Output as a list of chat messages if the command was invoked from the in-game chat.
+            // This is because the chat window doesn't handle individual messages with too many lines well (e.g. when the lookup pattern is not specific enough).
+            // Also we do not add a space between prototype id and name to prevent the client from adding a line break there.
             List<string> outputList = new() { "Lookup Matches:" };
-            outputList.AddRange(matchList.Select(match => $"[{match.Item1}]{match.Item2}"));    // Do not add a space between prototype id and name to prevent the client from adding a line break there
+            outputList.AddRange(matches.Select(match => $"[{match}]{GameDatabase.GetPrototypeName(match)}"));
             ChatHelper.SendMetagameMessages(client, outputList);
+
             return string.Empty;
         }
     }

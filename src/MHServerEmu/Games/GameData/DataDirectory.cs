@@ -16,6 +16,16 @@ namespace MHServerEmu.Games.GameData
         Dynamic         // Unused? Mentioned in DataDirectory::GetPrototypeBlueprintDataRef()
     }
 
+    [Flags]
+    public enum PrototypeIterateFlags : byte    // PrototypeIterator::advanceToValid()
+    {
+        None            = 0,
+        Flag0           = 1 << 0,   // Unused?
+        NoAbstract      = 1 << 1,
+        ApprovedOnly    = 1 << 2,
+        WithEditorOnly  = 1 << 3    // Records that have EditorOnly set are skipped if this is not set
+    }
+
     /// <summary>
     /// A singleton that manages all loaded game data.
     /// </summary>
@@ -413,19 +423,21 @@ namespace MHServerEmu.Games.GameData
             return enumValue;
         }
 
-        public IEnumerable<PrototypeDataRefRecord> GetIteratedPrototypesInHierarchy<T>() where T: Prototype
+        public IEnumerable<PrototypeDataRefRecord> GetIteratedPrototypesInHierarchy(Type prototypeClassType, PrototypeIterateFlags flags)
         {
-            if (_prototypeClassLookupDict.TryGetValue(typeof(T), out var node) == false)
+            // TODO: iterate flags
+            if (_prototypeClassLookupDict.TryGetValue(prototypeClassType, out var node) == false)
             {
-                Logger.Warn($"Failed to get iterated prototype list for class {nameof(T)}");
+                Logger.Warn($"Failed to get iterated prototype list for class {prototypeClassType.Name}");
                 return Enumerable.Empty<PrototypeDataRefRecord>();
             }
 
             return node.PrototypeRecordList;
         }
 
-        public IEnumerable<PrototypeDataRefRecord> GetIteratedPrototypesInHierarchy(BlueprintId blueprintId)
+        public IEnumerable<PrototypeDataRefRecord> GetIteratedPrototypesInHierarchy(BlueprintId blueprintId, PrototypeIterateFlags flags)
         {
+            // TODO: iterate flags
             if (_blueprintRecordDict.TryGetValue(blueprintId, out var record) == false)
             {
                 Logger.Warn($"Failed to get iterated prototype list for blueprint id {blueprintId}");

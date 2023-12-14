@@ -60,16 +60,6 @@
         EditorOnly  = 1 << 2,   // DataDirectory::isEditorOnlyByClassId(), seems to be set for NaviFragmentPrototype only
     }
 
-    [Flags]
-    public enum PrototypeIterateFlags : byte    // PrototypeIterator::advanceToValid(), 
-    {
-        None            = 0,
-        Flag0           = 1 << 0,   // Unused?
-        NoAbstract      = 1 << 1,
-        ApprovedOnly    = 1 << 2,
-        WithEditorOnly  = 1 << 3    // Records that have EditorOnly set are skipped if this is not set
-    }
-
     // Enums for specific data for easy access
 
     /// <summary>

@@ -8,6 +8,16 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData
 {
+    [Flags]
+    public enum DataFileSearchFlags
+    {
+        None                = 0,
+        NoMultipleMatches   = 1 << 0,
+        SortMatchesByName   = 1 << 1,
+        ExactMatchesOnly    = 1 << 2,
+        CaseInsensitive     = 1 << 3    // Our custom flag not present in the client
+    }
+
     public static class GameDatabase
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -122,6 +132,70 @@ namespace MHServerEmu.Games.GameData
 
             string assetName = GetAssetName(assetId);
             return GetPrototypeRefByName(assetName);
+        }
+
+        #endregion
+
+        #region Search
+
+        // NOTE: This search is based on the original client implementation, but it could be organized better in the future while keeping the same API
+
+        public static IEnumerable<PrototypeId> SearchPrototypes(string pattern, DataFileSearchFlags searchFlags,
+            BlueprintId blueprintId = BlueprintId.Invalid, Type prototypeClassType = null)
+        {
+            var matches = GetDataFileSearchMatches<PrototypeId>(pattern, searchFlags, blueprintId, prototypeClassType);
+            return matches.Select(match => (PrototypeId)match);
+        }
+
+        private static List<ulong> GetDataFileSearchMatches<T>(string pattern, DataFileSearchFlags searchFlags,
+            BlueprintId blueprintId, Type prototypeClassType) where T: Enum
+        {
+            List<ulong> matches = new();
+            bool matchAllResults = pattern == "*";
+
+            if (typeof(T) == typeof(PrototypeId))
+            {
+                // Get prototypes, prioritize class type
+                var prototypeRecords = prototypeClassType == null
+                    ? DataDirectory.GetIteratedPrototypesInHierarchy(blueprintId, PrototypeIterateFlags.None)
+                    : DataDirectory.GetIteratedPrototypesInHierarchy(prototypeClassType, PrototypeIterateFlags.None);
+
+                // Iterate (TODO: PrototypeIterator)
+                foreach (var record in prototypeRecords)
+                {
+                    PrototypeId prototypeId = record.PrototypeId;
+                    string prototypeName = GetPrototypeName(prototypeId);
+
+                    // Check pattern
+                    if (matchAllResults || CompareName(prototypeName, pattern, searchFlags))
+                    {
+                        // Early return if no multiple matches is requested and there's more than one match
+                        if (matches.Count > 0 && searchFlags.HasFlag(DataFileSearchFlags.NoMultipleMatches))
+                            return null;
+
+                        matches.Add((ulong)prototypeId);
+                    }
+                }
+
+                // Sort matches by name if needed
+                if (searchFlags.HasFlag(DataFileSearchFlags.SortMatchesByName))
+                    matches = matches.OrderBy(match => GetPrototypeName((PrototypeId)match)).ToList();
+            }
+
+            // TODO: blueprints, asset types
+
+            return matches;
+        }
+
+        private static bool CompareName(string name, string pattern, DataFileSearchFlags flags)
+        {
+            if (flags.HasFlag(DataFileSearchFlags.ExactMatchesOnly))
+                return name == pattern;
+
+            if (flags.HasFlag(DataFileSearchFlags.CaseInsensitive))
+                return name.ToLower().Contains(pattern.ToLower());
+
+            return name.Contains(pattern);
         }
 
         #endregion
