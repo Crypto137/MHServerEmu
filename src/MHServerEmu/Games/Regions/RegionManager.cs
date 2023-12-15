@@ -71,9 +71,13 @@ namespace MHServerEmu.Games.Regions
         private readonly EntityManager _entityManager;
         private readonly Dictionary<RegionPrototypeId, Region> _regionDict = new();
 
+        //----------
         private uint _cellId;
         private uint _areaId;
         private readonly Dictionary<uint, Cell> _allCells = new();
+        private readonly Dictionary<ulong, Region> _allRegions = new();
+        private readonly Dictionary<ulong, Region> _matches = new();
+        public Game Game;
 
         public RegionManager(EntityManager entityManager)
         {
@@ -115,6 +119,44 @@ namespace MHServerEmu.Games.Regions
             return false;
         }
 
+        public Region CreateRegion(RegionSettings settings)
+        {
+            if (settings.RegionDataRef == 0) return null;
+
+            ulong instanceAddress = settings.InstanceAddress;
+            if (instanceAddress == 0 || GetRegion(instanceAddress) != null) return null;
+
+            Region region = new(Game);
+            if (region == null) return null;
+
+            _allRegions[instanceAddress] = region;
+
+            RegionSettings initSettings = settings; // clone?
+            initSettings.InstanceAddress = instanceAddress;
+
+            if (!region.Initialize(initSettings))
+            {
+                _allRegions.Remove(instanceAddress);
+                region.Shutdown();                
+                return null;
+            }
+
+            if (region.GetMatchNumber() != 0)
+                _matches[region.GetMatchNumber()] = region;
+
+            return region;
+        }
+
+        // NEW
+        public Region GetRegion(ulong id)
+        {
+            if (id == 0) return null;
+            if (_allRegions.TryGetValue(id, out Region region))
+                return region;
+            return null;
+        }
+
+        // OLD
         public Region GetRegion(RegionPrototypeId prototype)
         {
             if (IsRegionAvailable(prototype))

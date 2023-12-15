@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -18,10 +19,12 @@ namespace MHServerEmu.Games.Entities
 
         private RegionLocation _location; // TODO init;
         public Cell Cell { get => _location.Cell; }
+        public EntityRegionSpatialPartitionLocation SpatialPartitionLocation { get; }
+        public Aabb RegionBounds { get; set; }
 
-        public WorldEntity(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
+        public WorldEntity(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { SpatialPartitionLocation = new(this); }
 
-        public WorldEntity(EntityBaseData baseData) : base(baseData) { }
+        public WorldEntity(EntityBaseData baseData) : base(baseData) { SpatialPartitionLocation = new(this); }
 
         public WorldEntity(EntityBaseData baseData, uint replicationPolicy, ulong replicationId) : base(baseData)
         {
@@ -31,6 +34,7 @@ namespace MHServerEmu.Games.Entities
             ConditionCollection = Array.Empty<Condition>();
             PowerCollection = Array.Empty<PowerCollectionRecord>();
             UnkEvent = 0;
+            SpatialPartitionLocation = new(this);
         }
 
         public WorldEntity(EntityBaseData baseData, ulong replicationId, Vector3 mapPosition, int health, int mapAreaId,
@@ -53,6 +57,7 @@ namespace MHServerEmu.Games.Entities
             ConditionCollection = Array.Empty<Condition>();
             PowerCollection = Array.Empty<PowerCollectionRecord>();
             UnkEvent = 0;
+            SpatialPartitionLocation = new(this);
         }
 
         protected override void Decode(CodedInputStream stream)

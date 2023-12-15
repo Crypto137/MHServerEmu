@@ -235,5 +235,7 @@ namespace MHServerEmu.Games.Entities
             return _entityDict.Values.Where(entity => entity is WorldEntity worldEntity && worldEntity.Cell == cell);
         }
 
+        // TODO: CreateEntity -> finalizeEntity -> worldEntity.EnterWorld -> _location.SetRegion( region )
+
     }
 }

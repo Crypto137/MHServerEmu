@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Drawing;
+using System.Text.Json.Serialization;
 
 namespace MHServerEmu.Games.Common
 {
@@ -121,7 +122,21 @@ namespace MHServerEmu.Games.Common
             {
                 return ContainmentType.Contains;
             }
+            return ContainmentType.Intersects;
+        }
 
+        public ContainmentType Contains(Aabb2 bounds)
+        {
+            if (bounds.Min.X > Max.X || bounds.Max.X < Min.X ||
+                bounds.Min.Y > Max.Y || bounds.Max.Y < Min.Y)
+            {
+                return ContainmentType.Disjoint;
+            }
+            else if (bounds.Min.X >= Min.X && bounds.Max.X <= Max.X &&
+                     bounds.Min.Y >= Min.Y && bounds.Max.Y <= Max.Y)
+            {
+                return ContainmentType.Contains;
+            }
             return ContainmentType.Intersects;
         }
 
@@ -184,6 +199,8 @@ namespace MHServerEmu.Games.Common
                     bounds.Min.Y >= Min.Y && bounds.Max.Y <= Max.Y &&
                     bounds.Min.Z >= Min.Z && bounds.Max.Z <= Max.Z;
         }
+
+        public float Radius2D() => Math.Max(Width, Length);
     }
     public enum ContainmentType
     {

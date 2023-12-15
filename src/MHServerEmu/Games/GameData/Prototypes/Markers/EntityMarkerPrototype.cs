@@ -11,16 +11,16 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
         public string LastKnownEntityName { get; }
         [JsonPropertyOrder(4)]
         public ulong Modifier1Guid { get; }
-        [JsonPropertyOrder(5)]
-        public string Modifier1Text { get; }
+        //    [JsonPropertyOrder(5)]
+        //    public string Modifier1Text { get; } // has eFlagDontCook set
         [JsonPropertyOrder(6)]
         public ulong Modifier2Guid { get; }
-        [JsonPropertyOrder(7)]
-        public string Modifier2Text { get; }
+        //    [JsonPropertyOrder(7)]
+        //    public string Modifier2Text { get; } // has eFlagDontCook set
         [JsonPropertyOrder(8)]
         public ulong Modifier3Guid { get; }
-        [JsonPropertyOrder(9)]
-        public string Modifier3Text { get; }
+        //    [JsonPropertyOrder(9)]
+        //    public string Modifier3Text { get; } // has eFlagDontCook set
         [JsonPropertyOrder(10)]
         public uint EncounterSpawnPhase { get; }
         [JsonPropertyOrder(11)]
@@ -39,11 +39,11 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
             EntityGuid = reader.ReadUInt64();
             LastKnownEntityName = reader.ReadFixedString32();
             Modifier1Guid = reader.ReadUInt64();
-            if (Modifier1Guid != 0) Modifier1Text = reader.ReadFixedString32();
+            // if (Modifier1Guid != 0) Modifier1Text = reader.ReadFixedString32();
             Modifier2Guid = reader.ReadUInt64();
-            if (Modifier2Guid != 0) Modifier2Text = reader.ReadFixedString32();
+            //  if (Modifier2Guid != 0) Modifier2Text = reader.ReadFixedString32();
             Modifier3Guid = reader.ReadUInt64();
-            if (Modifier3Guid != 0) Modifier3Text = reader.ReadFixedString32();
+            //  if (Modifier3Guid != 0) Modifier3Text = reader.ReadFixedString32();
             EncounterSpawnPhase = reader.ReadUInt32();
             OverrideSnapToFloor = reader.ReadByte();
             OverrideSnapToFloorValue = reader.ReadByte();
@@ -52,6 +52,17 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
 
             Position = reader.ReadVector3();
             Rotation = reader.ReadVector3();
+        }
+
+        public T GetMarkedPrototype<T>()
+        {
+            ulong dataRef = GameDatabase.GetDataRefByPrototypeGuid(EntityGuid);
+            if (dataRef == 0)
+            {
+                Logger.Warn($"Unable to get a data ref from MarkerEntityPrototype. Prototype: {ToString()}.");
+                return default;
+            }
+            return GameDatabase.GetPrototype<T>(dataRef);
         }
     }
 }

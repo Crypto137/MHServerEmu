@@ -1,7 +1,6 @@
 ﻿using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Generators.Areas;
-using MHServerEmu.Games.Generators.Prototypes;
 using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Common;
@@ -105,7 +104,7 @@ namespace MHServerEmu.Games.Regions
         private float SpawnableNavArea;
         public float PlayableArea { get => (PlayableNavArea != -1.0) ? PlayableNavArea : 0.0f; }
         public float SpawnableArea { get => (SpawnableNavArea != -1.0) ? SpawnableNavArea : 0.0f; }
-        public SpatialPartitionLocation SpatialPartitionLocation = new(); // Never Init
+        public CellRegionSpatialPartitionLocation SpatialPartitionLocation { get; }
 
         public Cell(Area area, uint id)
         {
@@ -115,6 +114,7 @@ namespace MHServerEmu.Games.Regions
             Id = id;
             PlayableNavArea = -1.0f;
             SpawnableNavArea = -1.0f;
+            SpatialPartitionLocation = new(this);
         }
 
         public bool Initialize(CellSettings settings)
@@ -150,7 +150,7 @@ namespace MHServerEmu.Games.Regions
         {
             if (CellProto == null) return;
 
-            if (SpatialPartitionLocation.IsValid()) // never
+            if (SpatialPartitionLocation.IsValid()) 
                 GetRegion().PartitionCell(this, Region.PartitionContext.Remove);
 
             PositionInArea = positionInArea;
@@ -164,7 +164,7 @@ namespace MHServerEmu.Games.Regions
             RegionBounds = CellProto.BoundingBox.Translate(AreaOffset);
             RegionBounds.RoundToNearestInteger();
 
-            if (!SpatialPartitionLocation.IsValid()) // always
+            if (!SpatialPartitionLocation.IsValid()) 
                 GetRegion().PartitionCell(this, Region.PartitionContext.Insert); 
         }
 
@@ -253,7 +253,7 @@ namespace MHServerEmu.Games.Regions
         public void Shutdown()
         {
             Region region = GetRegion();
-            if (region != null && SpatialPartitionLocation.IsValid()) // Always not Valid
+            if (region != null && SpatialPartitionLocation.IsValid()) 
                 region.PartitionCell(this, Region.PartitionContext.Remove);
         }
 
@@ -261,6 +261,11 @@ namespace MHServerEmu.Games.Regions
         {
             if (Area == null) return null;
             return Area.Region;
+        }
+
+        public bool IntersectsXY(Vector3 position)
+        {
+            return RegionBounds.IntersectsXY(position);
         }
     }
 
@@ -757,7 +762,7 @@ namespace MHServerEmu.Games.Regions
             
             Id = settings.InstanceAddress; // Region Id
             if (Id == 0) return false;
-            RegionPrototype = settings.RegionPrototype;
+            RegionPrototype = GameDatabase.GetPrototype<RegionPrototype>(settings.RegionDataRef);
             if (RegionPrototype == null) return false;
 
             RegionPrototype regionProto = RegionPrototype;
@@ -1133,6 +1138,32 @@ namespace MHServerEmu.Games.Regions
         {
             return GameDatabase.GetFormattedPrototypeName(GetPrototypeDataRef());
         }
+
+        internal void Shutdown()
+        {
+            throw new NotImplementedException();
+        }
+
+        public ulong GetMatchNumber()
+        {
+            return Settings.MatchNumber;
+        }
+
+        public Cell GetCellAtPosition(Vector3 position)
+        {
+            foreach(var cell in Cells)
+                if (cell.IntersectsXY(position)) return cell;
+            return null;
+        }
+
+        public bool CheckMarkerFilter(ulong filterRef)
+        {
+            if (filterRef == 0) return true;
+            ulong markerFilter = RegionPrototype.MarkerFilter;
+            if (markerFilter == 0) return true;
+            return markerFilter == filterRef;
+        }
+
     }
 
     public class RegionSettings
@@ -1142,12 +1173,13 @@ namespace MHServerEmu.Games.Regions
         public bool GenerateAreas;
         public ulong DifficultyTierRef;
         public ulong InstanceAddress; // region ID
-        public RegionPrototype RegionPrototype;
         public Aabb Bound;
 
         public List<ulong> Affixes;
         public int Level;
         public bool DebugLevel;
+        public ulong RegionDataRef;
+        public ulong MatchNumber;
     }
 
     #region ProgressionGraph

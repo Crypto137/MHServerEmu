@@ -139,6 +139,11 @@ namespace MHServerEmu.Games.Common
 
         public static Vector3 Normalize(Vector3 v) =>  v / Length(v);
 
+        public static bool IsFinite(Vector3 v)
+        {
+            return float.IsFinite(v.X) && float.IsFinite(v.Y) && float.IsFinite(v.Z);
+        }
+
         // static vectors
 
         public static Vector3 Zero { get => new(0.0f, 0.0f, 0.0f); }
