@@ -16,16 +16,6 @@ namespace MHServerEmu.Games.GameData
         Dynamic         // Unused? Mentioned in DataDirectory::GetPrototypeBlueprintDataRef()
     }
 
-    [Flags]
-    public enum PrototypeIterateFlags : byte    // PrototypeIterator::advanceToValid()
-    {
-        None            = 0,
-        Flag0           = 1 << 0,   // Unused?
-        NoAbstract      = 1 << 1,
-        ApprovedOnly    = 1 << 2,
-        WithEditorOnly  = 1 << 3    // Records that have EditorOnly set are skipped if this is not set
-    }
-
     /// <summary>
     /// A singleton that manages all loaded game data.
     /// </summary>
@@ -225,6 +215,7 @@ namespace MHServerEmu.Games.GameData
             // Load the prototype
             PrototypeFile prototypeFile = new(pak.GetFile($"Calligraphy/{filePath}"));
             record.Prototype = prototypeFile.Prototype;
+            record.Prototype.DataRef = prototypeId;
         }
 
         private void CreatePrototypeDataRefsForDirectory(PakFile resourceFile)
@@ -264,7 +255,7 @@ namespace MHServerEmu.Games.GameData
 
             // Load the resource
             string extension = Path.GetExtension(filePath);
-            object resource = extension switch
+            Prototype resource = extension switch
             {
                 ".cell" =>      new CellPrototype(data),
                 ".district" =>  new DistrictPrototype(data),
@@ -276,6 +267,7 @@ namespace MHServerEmu.Games.GameData
             };
 
             record.Prototype = resource;
+            record.Prototype.DataRef = prototypeId;
         }
 
         /// <summary>
@@ -382,7 +374,7 @@ namespace MHServerEmu.Games.GameData
             return GetBlueprint(blueprintId);
         }
 
-        public T GetPrototype<T>(PrototypeId id)
+        public T GetPrototype<T>(PrototypeId id) where T: Prototype
         {
             var record = GetPrototypeDataRefRecord(id);
             if (record == null) return default;
@@ -423,9 +415,8 @@ namespace MHServerEmu.Games.GameData
             return enumValue;
         }
 
-        public IEnumerable<PrototypeDataRefRecord> GetIteratedPrototypesInHierarchy(Type prototypeClassType, PrototypeIterateFlags flags)
+        public IEnumerable<PrototypeDataRefRecord> GetIteratedPrototypesInHierarchy(Type prototypeClassType)
         {
-            // TODO: iterate flags
             if (_prototypeClassLookupDict.TryGetValue(prototypeClassType, out var node) == false)
             {
                 Logger.Warn($"Failed to get iterated prototype list for class {prototypeClassType.Name}");
@@ -435,9 +426,8 @@ namespace MHServerEmu.Games.GameData
             return node.PrototypeRecordList;
         }
 
-        public IEnumerable<PrototypeDataRefRecord> GetIteratedPrototypesInHierarchy(BlueprintId blueprintId, PrototypeIterateFlags flags)
+        public IEnumerable<PrototypeDataRefRecord> GetIteratedPrototypesInHierarchy(BlueprintId blueprintId)
         {
-            // TODO: iterate flags
             if (_blueprintRecordDict.TryGetValue(blueprintId, out var record) == false)
             {
                 Logger.Warn($"Failed to get iterated prototype list for blueprint id {blueprintId}");
@@ -553,6 +543,6 @@ namespace MHServerEmu.Games.GameData
         public Type ClassType { get; set; }                 // We use C# type instead of class id
         public DataOrigin DataOrigin { get; set; }          // Original memory location: PrototypeDataRefRecord + 32
         public Blueprint Blueprint { get; set; }
-        public object Prototype { get; set; }
+        public Prototype Prototype { get; set; }
     }
 }

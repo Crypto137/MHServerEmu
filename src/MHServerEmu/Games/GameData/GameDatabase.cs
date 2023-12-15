@@ -20,6 +20,13 @@ namespace MHServerEmu.Games.GameData
 
     public static class GameDatabase
     {
+        private enum DataFileSet
+        {
+            Prototype,
+            Blueprint,
+            AssetType
+        }
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private static readonly string PakDirectory = Path.Combine(FileHelper.AssetsDirectory, "GPAK");
@@ -98,7 +105,7 @@ namespace MHServerEmu.Games.GameData
         public static AssetType GetAssetType(AssetTypeId assetTypeId) => DataDirectory.AssetDirectory.GetAssetType(assetTypeId);
         public static Curve GetCurve(CurveId curveId) => DataDirectory.CurveDirectory.GetCurve(curveId);
         public static Blueprint GetBlueprint(BlueprintId blueprintId) => DataDirectory.GetBlueprint(blueprintId);
-        public static T GetPrototype<T>(PrototypeId prototypeId) => DataDirectory.GetPrototype<T>(prototypeId);
+        public static T GetPrototype<T>(PrototypeId prototypeId) where T: Prototype => DataDirectory.GetPrototype<T>(prototypeId);
 
         public static string GetAssetName(StringId assetId) => StringRefManager.GetReferenceName(assetId);
         public static string GetAssetTypeName(AssetTypeId assetTypeId) => AssetTypeRefManager.GetReferenceName(assetTypeId);
@@ -155,15 +162,15 @@ namespace MHServerEmu.Games.GameData
 
             if (typeof(T) == typeof(PrototypeId))
             {
-                // Get prototypes, prioritize class type
-                var prototypeRecords = prototypeClassType == null
-                    ? DataDirectory.GetIteratedPrototypesInHierarchy(blueprintId, PrototypeIterateFlags.None)
-                    : DataDirectory.GetIteratedPrototypesInHierarchy(prototypeClassType, PrototypeIterateFlags.None);
+                // Get prototype iterator, prioritize class type
+                PrototypeIterator prototypeIterator = prototypeClassType == null
+                    ? new(blueprintId, PrototypeIterateFlags.None)
+                    : new(prototypeClassType, PrototypeIterateFlags.None);
 
-                // Iterate (TODO: PrototypeIterator)
-                foreach (var record in prototypeRecords)
+                // Iterate
+                foreach (Prototype prototype in prototypeIterator)
                 {
-                    PrototypeId prototypeId = record.PrototypeId;
+                    PrototypeId prototypeId = prototype.DataRef;
                     string prototypeName = GetPrototypeName(prototypeId);
 
                     // Check pattern

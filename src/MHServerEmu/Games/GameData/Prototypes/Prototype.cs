@@ -51,6 +51,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class Prototype
     {
+        public PrototypeId DataRef { get; set; }
+
         public PrototypeDataHeader Header { get; }
         public PrototypeFieldGroup[] FieldGroups { get; }
 
