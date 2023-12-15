@@ -13,18 +13,20 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly AssetTypeGuid _guid;
         private readonly AssetValue[] _assets;
 
         private Type _enumBinding;                          // Type of a symbolic enum to bind to
         private Dictionary<int, int> _symbolicLookupDict;   // Symbolic enum value -> asset index
         private bool _enumerated;
 
+        public AssetTypeId Id { get; }
+        public AssetTypeGuid Guid { get; }
         public int MaxEnumValue { get; private set; }
 
         public AssetType(byte[] data, AssetDirectory assetDirectory, AssetTypeId assetTypeId, AssetTypeGuid assetTypeGuid)
         {
-            _guid = assetTypeGuid;
+            Id = assetTypeId;
+            Guid = assetTypeGuid;
 
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))

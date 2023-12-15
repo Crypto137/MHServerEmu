@@ -1,10 +1,14 @@
-﻿namespace MHServerEmu.Games.GameData.Calligraphy
+﻿using MHServerEmu.Common.Logging;
+
+namespace MHServerEmu.Games.GameData.Calligraphy
 {
     /// <summary>
     /// Manages loaded AssetTypes and Assets.
     /// </summary>
     public class AssetDirectory
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         private readonly Dictionary<AssetTypeId, LoadedAssetTypeRecord> _assetTypeRecordDict = new();   // assetTypeId => LoadedAssetTypeRecord
         private readonly Dictionary<StringId, AssetTypeId> _assetIdToTypeIdDict = new();                // assetId => assetTypeId
         private readonly Dictionary<AssetGuid, StringId> _assetGuidToIdDict = new();                    // assetGuid => assetId
@@ -41,6 +45,22 @@
         public AssetType GetAssetType(AssetTypeId assetTypeId)
         {
             return GetAssetTypeRecord(assetTypeId).AssetType;
+        }
+
+        /// <summary>
+        /// Finds and returns an asset type by its name.
+        /// </summary>
+        public AssetType GetAssetType(string name)  // Same as AssetDirectory::GetWritableAssetType()
+        {
+            var matches = GameDatabase.SearchAssetTypes(name, DataFileSearchFlags.NoMultipleMatches);
+            if (matches.Any() == false)
+            {
+                Logger.Warn($"Failed to find AssetType by pattern {name}");
+                return null;
+            }
+
+            AssetTypeId id = matches.First();
+            return _assetTypeRecordDict[id].AssetType;
         }
 
         /// <summary>
@@ -94,6 +114,15 @@
                 assetEnumBindingDict.TryGetValue(record.AssetType, out Type enumBinding);
                 record.AssetType.BindEnum(enumBinding);
             }
+        }
+
+        /// <summary>
+        /// Provides an IEnumerable collection of all loaded asset types.
+        /// </summary>
+        public IEnumerable<AssetType> IterateAssetTypes()
+        {
+            foreach (var record in _assetTypeRecordDict.Values)
+                yield return record.AssetType;
         }
 
         /// <summary>

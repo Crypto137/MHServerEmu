@@ -157,10 +157,19 @@ namespace MHServerEmu.Games.GameData
             return matches.Select(match => (PrototypeId)match);
         }
 
+        /// <summary>
+        /// Searches for blueprints using specified filters.
+        /// </summary>
         public static IEnumerable<BlueprintId> SearchBlueprints(string pattern, DataFileSearchFlags searchFlags)
         {
             var matches = GetDataFileSearchMatches(DataFileSet.Blueprint, pattern, searchFlags);
             return matches.Select(match => (BlueprintId)match);
+        }
+
+        public static IEnumerable<AssetTypeId> SearchAssetTypes(string pattern, DataFileSearchFlags searchFlags)
+        {
+            var matches = GetDataFileSearchMatches(DataFileSet.AssetType, pattern, searchFlags);
+            return matches.Select(match => (AssetTypeId)match);
         }
 
         private static List<ulong> GetDataFileSearchMatches(DataFileSet set, string pattern, DataFileSearchFlags searchFlags,
@@ -168,6 +177,8 @@ namespace MHServerEmu.Games.GameData
         {
             List<ulong> matches = new();
             bool matchAllResults = pattern == "*";
+
+            // Lots of repetitive code down below. TODO: clean it up
 
             if (set == DataFileSet.Prototype)
             {
@@ -220,7 +231,27 @@ namespace MHServerEmu.Games.GameData
                     matches = matches.OrderBy(match => GetBlueprintName((BlueprintId)match)).ToList();
             }
 
-            // TODO: asset types
+            if (set == DataFileSet.AssetType)
+            {
+                foreach (AssetType assetType in DataDirectory.IterateAssetTypes())
+                {
+                    AssetTypeId assetTypeId = assetType.Id;
+                    string assetTypeName = GetAssetTypeName(assetTypeId);
+
+                    if (matchAllResults || CompareName(assetTypeName, pattern, searchFlags))
+                    {
+                        // Early return if no multiple matches is requested and there's more than one match
+                        if (matches.Count > 0 && searchFlags.HasFlag(DataFileSearchFlags.NoMultipleMatches))
+                            return null;
+
+                        matches.Add((ulong)assetTypeId);
+                    }
+                }
+
+                // Sort matches by name if needed
+                if (searchFlags.HasFlag(DataFileSearchFlags.SortMatchesByName))
+                    matches = matches.OrderBy(match => GetAssetTypeName((AssetTypeId)match)).ToList();
+            }
 
             return matches;
         }

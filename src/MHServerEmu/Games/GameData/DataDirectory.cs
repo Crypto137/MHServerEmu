@@ -448,6 +448,11 @@ namespace MHServerEmu.Games.GameData
                 yield return record.Blueprint;
         }
 
+        public IEnumerable<AssetType> IterateAssetTypes()
+        {
+            return AssetDirectory.IterateAssetTypes();
+        }
+
         public List<ulong> GetPowerPropertyIdList(string filter)
         {
             // TO BE REMOVED: temp bruteforcing of power property ids

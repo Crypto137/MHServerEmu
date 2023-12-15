@@ -55,6 +55,31 @@ namespace MHServerEmu.Common.Commands
             return string.Empty;
         }
 
+        [Command("assettype", "Usage: lookup assettype [pattern]", AccountUserLevel.User)]
+        public string AssetType(string[] @params, FrontendClient client)
+        {
+            if (@params == null) return Fallback();
+            if (@params.Length == 0) return "Invalid arguments. Type 'help lookup assettype' to get help.";
+
+            var matches = GameDatabase.SearchAssetTypes(@params[0], DataFileSearchFlags.SortMatchesByName | DataFileSearchFlags.CaseInsensitive);
+
+            if (matches.Any() == false)
+                return "No matches found.";
+
+            // See LookupPrototypes() for notes on output. TODO: reduce code repetition
+            if (client == null)
+            {
+                return matches.Aggregate("Lookup Matches:\n",
+                    (current, match) => $"{current}[{match}] {GameDatabase.GetAssetTypeName(match)}\n");
+            }
+
+            List<string> outputList = new() { "Lookup Matches:" };
+            outputList.AddRange(matches.Select(match => $"[{match}]{GameDatabase.GetAssetTypeName(match)}"));
+            ChatHelper.SendMetagameMessages(client, outputList);
+
+            return string.Empty;
+        }
+
         private static string LookupPrototypes(string pattern, BlueprintId blueprint, FrontendClient client)
         {
             // Search game database for the given pattern
