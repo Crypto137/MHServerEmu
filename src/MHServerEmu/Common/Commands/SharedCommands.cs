@@ -30,6 +30,31 @@ namespace MHServerEmu.Common.Commands
             return LookupPrototypes(@params[0], blueprint, client);
         }
 
+        [Command("blueprint", "Usage: lookup blueprint [pattern]", AccountUserLevel.User)]
+        public string Blueprint(string[] @params, FrontendClient client)
+        {
+            if (@params == null) return Fallback();
+            if (@params.Length == 0) return "Invalid arguments. Type 'help lookup blueprint' to get help.";
+
+            var matches = GameDatabase.SearchBlueprints(@params[0], DataFileSearchFlags.SortMatchesByName | DataFileSearchFlags.CaseInsensitive);
+
+            if (matches.Any() == false)
+                return "No matches found.";
+
+            // See LookupPrototypes() for notes on output. TODO: reduce code repetition
+            if (client == null)
+            {
+                return matches.Aggregate("Lookup Matches:\n",
+                    (current, match) => $"{current}[{match}] {GameDatabase.GetBlueprintName(match)}\n");
+            }
+
+            List<string> outputList = new() { "Lookup Matches:" };
+            outputList.AddRange(matches.Select(match => $"[{match}]{GameDatabase.GetBlueprintName(match)}"));
+            ChatHelper.SendMetagameMessages(client, outputList);
+
+            return string.Empty;
+        }
+
         private static string LookupPrototypes(string pattern, BlueprintId blueprint, FrontendClient client)
         {
             // Search game database for the given pattern

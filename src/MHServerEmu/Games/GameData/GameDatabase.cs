@@ -147,25 +147,34 @@ namespace MHServerEmu.Games.GameData
 
         // NOTE: This search is based on the original client implementation, but it could be organized better in the future while keeping the same API
 
+        /// <summary>
+        /// Searches for prototypes using specified filters.
+        /// </summary>
         public static IEnumerable<PrototypeId> SearchPrototypes(string pattern, DataFileSearchFlags searchFlags,
-            BlueprintId blueprintId = BlueprintId.Invalid, Type prototypeClassType = null)
+            BlueprintId parentBlueprintId = BlueprintId.Invalid, Type parentPrototypeClassType = null)
         {
-            var matches = GetDataFileSearchMatches<PrototypeId>(pattern, searchFlags, blueprintId, prototypeClassType);
+            var matches = GetDataFileSearchMatches(DataFileSet.Prototype, pattern, searchFlags, parentBlueprintId, parentPrototypeClassType);
             return matches.Select(match => (PrototypeId)match);
         }
 
-        private static List<ulong> GetDataFileSearchMatches<T>(string pattern, DataFileSearchFlags searchFlags,
-            BlueprintId blueprintId, Type prototypeClassType) where T: Enum
+        public static IEnumerable<BlueprintId> SearchBlueprints(string pattern, DataFileSearchFlags searchFlags)
+        {
+            var matches = GetDataFileSearchMatches(DataFileSet.Blueprint, pattern, searchFlags);
+            return matches.Select(match => (BlueprintId)match);
+        }
+
+        private static List<ulong> GetDataFileSearchMatches(DataFileSet set, string pattern, DataFileSearchFlags searchFlags,
+            BlueprintId parentBlueprintId = BlueprintId.Invalid, Type parentPrototypeClassType = null)
         {
             List<ulong> matches = new();
             bool matchAllResults = pattern == "*";
 
-            if (typeof(T) == typeof(PrototypeId))
+            if (set == DataFileSet.Prototype)
             {
                 // Get prototype iterator, prioritize class type
-                PrototypeIterator iterator = prototypeClassType == null
-                    ? DataDirectory.IteratePrototypesInHierarchy(blueprintId, PrototypeIterateFlags.None)
-                    : DataDirectory.IteratePrototypesInHierarchy(prototypeClassType, PrototypeIterateFlags.None);
+                PrototypeIterator iterator = parentPrototypeClassType == null
+                    ? DataDirectory.IteratePrototypesInHierarchy(parentBlueprintId, PrototypeIterateFlags.None)
+                    : DataDirectory.IteratePrototypesInHierarchy(parentPrototypeClassType, PrototypeIterateFlags.None);
 
                 // Iterate
                 foreach (Prototype prototype in iterator)
@@ -189,7 +198,29 @@ namespace MHServerEmu.Games.GameData
                     matches = matches.OrderBy(match => GetPrototypeName((PrototypeId)match)).ToList();
             }
 
-            // TODO: blueprints, asset types
+            if (set == DataFileSet.Blueprint)
+            {
+                foreach (Blueprint blueprint in DataDirectory.IterateBlueprints())
+                {
+                    BlueprintId blueprintId = blueprint.Id;
+                    string blueprintName = GetBlueprintName(blueprintId);
+
+                    if (matchAllResults || CompareName(blueprintName, pattern, searchFlags))
+                    {
+                        // Early return if no multiple matches is requested and there's more than one match
+                        if (matches.Count > 0 && searchFlags.HasFlag(DataFileSearchFlags.NoMultipleMatches))
+                            return null;
+
+                        matches.Add((ulong)blueprintId);
+                    }
+                }
+
+                // Sort matches by name if needed
+                if (searchFlags.HasFlag(DataFileSearchFlags.SortMatchesByName))
+                    matches = matches.OrderBy(match => GetBlueprintName((BlueprintId)match)).ToList();
+            }
+
+            // TODO: asset types
 
             return matches;
         }

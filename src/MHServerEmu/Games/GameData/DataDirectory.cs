@@ -442,6 +442,12 @@ namespace MHServerEmu.Games.GameData
             return new(record.Blueprint.PrototypeRecordList, flags);
         }
 
+        public IEnumerable<Blueprint> IterateBlueprints()
+        {
+            foreach (var record in _blueprintRecordDict.Values)
+                yield return record.Blueprint;
+        }
+
         public List<ulong> GetPowerPropertyIdList(string filter)
         {
             // TO BE REMOVED: temp bruteforcing of power property ids
