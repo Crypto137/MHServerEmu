@@ -19,22 +19,11 @@ namespace MHServerEmu.Games.GameData
         private readonly PrototypeIterateFlags _flags;
 
         /// <summary>
-        /// Constructs a new prototype iterator for the specified prototype class type. Iterates through all prototypes if no class is specified.
+        /// Constructs a new prototype iterator with the provided records and flags.
         /// </summary>
-        public PrototypeIterator(Type prototypeClassType = null, PrototypeIterateFlags flags = PrototypeIterateFlags.None)
+        public PrototypeIterator(IEnumerable<PrototypeDataRefRecord> records, PrototypeIterateFlags flags = PrototypeIterateFlags.None)
         {
-            if (prototypeClassType == null) prototypeClassType = typeof(Prototype);     // Iterate through all prototypes if no class type is specified
-
-            _prototypeRecords = DataDirectory.Instance.GetIteratedPrototypesInHierarchy(prototypeClassType);
-            _flags = flags;
-        }
-
-        /// <summary>
-        /// Constructs a new prototype iterator for the specified blueprint.
-        /// </summary>
-        public PrototypeIterator(BlueprintId blueprintId, PrototypeIterateFlags flags = PrototypeIterateFlags.None)
-        {
-            _prototypeRecords = DataDirectory.Instance.GetIteratedPrototypesInHierarchy(blueprintId);
+            _prototypeRecords = records;
             _flags = flags;
         }
 

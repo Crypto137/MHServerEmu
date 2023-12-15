@@ -163,12 +163,12 @@ namespace MHServerEmu.Games.GameData
             if (typeof(T) == typeof(PrototypeId))
             {
                 // Get prototype iterator, prioritize class type
-                PrototypeIterator prototypeIterator = prototypeClassType == null
-                    ? new(blueprintId, PrototypeIterateFlags.None)
-                    : new(prototypeClassType, PrototypeIterateFlags.None);
+                PrototypeIterator iterator = prototypeClassType == null
+                    ? DataDirectory.IteratePrototypesInHierarchy(blueprintId, PrototypeIterateFlags.None)
+                    : DataDirectory.IteratePrototypesInHierarchy(prototypeClassType, PrototypeIterateFlags.None);
 
                 // Iterate
-                foreach (Prototype prototype in prototypeIterator)
+                foreach (Prototype prototype in iterator)
                 {
                     PrototypeId prototypeId = prototype.DataRef;
                     string prototypeName = GetPrototypeName(prototypeId);

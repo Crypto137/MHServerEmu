@@ -415,26 +415,31 @@ namespace MHServerEmu.Games.GameData
             return enumValue;
         }
 
-        public IEnumerable<PrototypeDataRefRecord> GetIteratedPrototypesInHierarchy(Type prototypeClassType)
+        public PrototypeIterator IterateAllPrototypes(PrototypeIterateFlags flags)
+        {
+            return new(_prototypeRecordDict.Values, flags);
+        }
+
+        public PrototypeIterator IteratePrototypesInHierarchy(Type prototypeClassType, PrototypeIterateFlags flags = PrototypeIterateFlags.None)
         {
             if (_prototypeClassLookupDict.TryGetValue(prototypeClassType, out var node) == false)
             {
                 Logger.Warn($"Failed to get iterated prototype list for class {prototypeClassType.Name}");
-                return Enumerable.Empty<PrototypeDataRefRecord>();
+                return new(Enumerable.Empty<PrototypeDataRefRecord>(), flags);
             }
 
-            return node.PrototypeRecordList;
+            return new(node.PrototypeRecordList, flags);
         }
 
-        public IEnumerable<PrototypeDataRefRecord> GetIteratedPrototypesInHierarchy(BlueprintId blueprintId)
+        public PrototypeIterator IteratePrototypesInHierarchy(BlueprintId blueprintId, PrototypeIterateFlags flags = PrototypeIterateFlags.None)
         {
             if (_blueprintRecordDict.TryGetValue(blueprintId, out var record) == false)
             {
                 Logger.Warn($"Failed to get iterated prototype list for blueprint id {blueprintId}");
-                return Enumerable.Empty<PrototypeDataRefRecord>();
+                return new(Enumerable.Empty<PrototypeDataRefRecord>(), flags);
             }
 
-            return record.Blueprint.PrototypeRecordList;
+            return new(record.Blueprint.PrototypeRecordList, flags);
         }
 
         public List<ulong> GetPowerPropertyIdList(string filter)
