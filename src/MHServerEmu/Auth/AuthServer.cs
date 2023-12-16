@@ -15,17 +15,15 @@ namespace MHServerEmu.Auth
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly CancellationTokenSource _cancellationTokenSource = new();
+        private readonly WebApiHandler _webApiHandler = new();
         private readonly string _url;
-        private readonly CancellationTokenSource _cancellationTokenSource;
-        private readonly WebApiHandler _webApiHandler;
 
         private HttpListener _listener;
 
         public AuthServer()
         {
             _url = $"http://{ConfigManager.Auth.Address}:{ConfigManager.Auth.Port}/";
-            _cancellationTokenSource = new();
-            _webApiHandler = new();
         }
 
         public async void Run()
@@ -46,10 +44,7 @@ namespace MHServerEmu.Auth
                     HandleRequest(context.Request, context.Response);
                     context.Response.Close();
                 }
-                catch (TaskCanceledException)
-                {
-                    return;     // Stop handling connections
-                }
+                catch (TaskCanceledException) { return; }       // Stop handling connections
                 catch (Exception e)
                 {
                     Logger.Error($"Unhandled exception: {e}");
@@ -62,15 +57,15 @@ namespace MHServerEmu.Auth
         /// </summary>
         public void Shutdown()
         {
+            if (_listener == null) return;
             if (_listener.IsListening == false) return;
 
-            if (_listener != null)
-            {
-                // Cancel listening for context and close the listener
-                _cancellationTokenSource.Cancel();
-                _listener.Close();
-                _listener = null;
-            }
+            // Cancel async tasks (listening for context)
+            _cancellationTokenSource.Cancel();
+
+            // Close the listener
+            _listener.Close();
+            _listener = null;
         }
 
         /// <summary>
