@@ -6,16 +6,16 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Networking;
-using MHServerEmu.Networking.Base;
+using MHServerEmu.Networking.Tcp;
 using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Frontend
 {
-    public class FrontendClient : IClient
+    public class FrontendClient : ITcpClient
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public Connection Connection { get; set; }
+        public TcpClientConnection Connection { get; set; }
 
         public ClientSession Session { get; private set; } = null;
         public bool FinishedPlayerManagerHandshake { get; set; } = false;
@@ -34,12 +34,12 @@ namespace MHServerEmu.Frontend
         public ulong ThrowingCancelPower { get; set; }
         public Entity ThrowingObject { get; set; }
 
-        public FrontendClient(Connection connection)
+        public FrontendClient(TcpClientConnection connection)
         {
             Connection = connection;
         }
 
-        public void Parse(ConnectionDataEventArgs e)
+        public void Parse(TcpClientConnectionDataEventArgs e)
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(e.Data.ToArray());
             PacketIn packet = new(stream);

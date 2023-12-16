@@ -2,25 +2,24 @@
 using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Networking;
-using MHServerEmu.Networking.Base;
+using MHServerEmu.Networking.Tcp;
 
 namespace MHServerEmu.Frontend
 {
-    public class FrontendServer : Server, IGameService
+    public class FrontendServer : TcpServer, IGameService
     {
         private new static readonly Logger Logger = LogManager.CreateLogger();  // Hide the Server.Logger so that this logger can show the actual server as log source.
 
         public FrontendServer()
         {
-            OnConnect += FrontendServer_OnConnect;
-            OnDisconnect += FrontendServer_OnDisconnect;
-            DataReceived += FrontendServer_DataReceived;
-            DataSent += (sender, e) => { };
+            ClientConnected += FrontendServer_OnClientConnected;
+            ClientDisconnected += FrontendServer_OnClientDisconnected;
+            DataReceived += FrontendServer_OnDataReceived;
         }
 
         public override void Run()
         {
-            if (Listen(ConfigManager.Frontend.BindIP, int.Parse(ConfigManager.Frontend.Port)) == false) return;
+            if (Start(ConfigManager.Frontend.BindIP, int.Parse(ConfigManager.Frontend.Port)) == false) return;
             Logger.Info($"FrontendServer is listening on {ConfigManager.Frontend.BindIP}:{ConfigManager.Frontend.Port}...");
         }
 
@@ -72,13 +71,13 @@ namespace MHServerEmu.Frontend
 
         #region Event Handling
 
-        private void FrontendServer_OnConnect(object sender, ConnectionEventArgs e)
+        private void FrontendServer_OnClientConnected(object sender, TcpClientConnectionEventArgs e)
         {
             Logger.Info($"Client connected from {e.Connection}");
             e.Connection.Client = new FrontendClient(e.Connection);
         }
 
-        private void FrontendServer_OnDisconnect(object sender, ConnectionEventArgs e)
+        private void FrontendServer_OnClientDisconnected(object sender, TcpClientConnectionEventArgs e)
         {
             FrontendClient client = e.Connection.Client as FrontendClient;
 
@@ -94,7 +93,7 @@ namespace MHServerEmu.Frontend
             }
         }
 
-        private void FrontendServer_DataReceived(object sender, ConnectionDataEventArgs e)
+        private void FrontendServer_OnDataReceived(object sender, TcpClientConnectionDataEventArgs e)
         {
             ((FrontendClient)e.Connection.Client).Parse(e);
         }

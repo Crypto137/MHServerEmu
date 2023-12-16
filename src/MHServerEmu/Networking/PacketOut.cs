@@ -1,10 +1,11 @@
 ﻿using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Networking.Tcp;
 
 namespace MHServerEmu.Networking
 {
-    public class PacketOut
+    public class PacketOut : IPacket
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
