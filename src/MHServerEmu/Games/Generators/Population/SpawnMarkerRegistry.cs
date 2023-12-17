@@ -33,9 +33,29 @@ namespace MHServerEmu.Games.Generators.Population
             return true;
         }
 
-        private void Destroy()
+        public void Destroy()
         {
-            throw new NotImplementedException();
+            if (_reservationOctree != null)
+                foreach (var reservation in _spawnReservations)
+                    _reservationOctree.Remove(reservation);
+
+            foreach (var region in _regionLookup)
+                region.Value.Clear();
+
+            foreach (var area in _areaLookup)
+            {
+                foreach (var areaMap in area.Value)
+                    areaMap.Value.Clear();
+               area.Value.Clear();
+            }
+
+            foreach (var cell in _cellLookup)
+            {
+                foreach (var cellMap in cell.Value)
+                    cellMap.Value.Clear();
+                cell.Value.Clear();
+            }
+            _reservationOctree = null;
         }
 
         public void InitializeSpacialPartition(Aabb bound)
@@ -97,13 +117,13 @@ namespace MHServerEmu.Games.Generators.Population
 
         private void AddSpawnTypeLocation(ulong markerRef, Vector3 position, Vector3 rotation, Cell cell, int id)
         {
-            if (markerRef == 0)  return;
+            if (markerRef == 0) return;
             SpawnMarkerPrototype spawnMarkerProto = GameDatabase.GetPrototype<SpawnMarkerPrototype>(markerRef);
             if (spawnMarkerProto == null) return;
 
             MarkerType type = spawnMarkerProto.Type;
             SpawnReservation spot = new (this, markerRef, type, position, rotation, cell, id);
-            if (spot == null)  return;
+            if (spot == null) return;
 
             _spawnReservations.Add(spot);
 
@@ -150,10 +170,119 @@ namespace MHServerEmu.Games.Generators.Population
             cellList.Add(spot);
         }
 
-        internal void RemoveCell(Cell cell)
+        public void RemoveCell(Cell cell)
         {
-            throw new NotImplementedException();
+            List<SpawnReservation> reservations = new ();
+            GetReservationsInCell(cell.Id, reservations);
+
+            foreach (SpawnReservation reservation in reservations)
+            {
+                reservations.Remove(reservation);
+                if (_reservationOctree != null)
+                {
+                    SpawnReservation managedObject = reservation;
+                    if (managedObject != null && managedObject.SpatialPartitionLocation.IsValid())
+                        _reservationOctree.Remove(managedObject);
+                }
+                if ((reservation != null && reservation.Cell == cell) 
+                    || RemoveFromMasterVector(reservation)
+                    || RemoveFromRegionLookup(reservation)
+                    || RemoveFromAreaLookup(reservation)
+                    || RemoveFromCellLookup(reservation)
+                    // || reservation.use_count() == 1 // std::shared_ptr use_count
+                    ) return;
+            }
         }
+
+        private void GetReservationsInCell(uint cellId, List<SpawnReservation> reservations)
+        {
+            if (cellId == 0) return;
+            if (_cellLookup.TryGetValue(cellId, out var cellMap) && cellMap != null)
+                foreach (var map in cellMap)
+                {
+                    var list = map.Value;
+                    if (list != null)
+                    {
+                        foreach (var reservation in list)
+                            reservations.Add(reservation);
+                    }
+                }
+        }
+
+        private bool RemoveFromMasterVector(SpawnReservation reservation)
+        {
+            return reservation != null && _spawnReservations.Remove(reservation);
+        }
+
+        private bool RemoveFromRegionLookup(SpawnReservation reservation)
+        {
+            if (reservation == null) return false;
+
+            var markerRef = reservation.MarkerRef;
+            if (markerRef == 0) return false;
+
+            if (_regionLookup.TryGetValue(markerRef, out var regionList))
+            {
+                if (regionList != null && regionList.Remove(reservation))
+                {
+                    if (regionList.Count == 0) _regionLookup.Remove(markerRef);
+                    return true;                  
+                }
+            }
+            return false;
+        }
+
+        private bool RemoveFromAreaLookup(SpawnReservation reservation)
+        {
+            if (reservation == null || reservation.Cell == null)  return false;
+
+            var area = reservation.Cell.Area;
+            if (area == null) return false;
+
+            var areaRef = area.GetPrototypeDataRef();
+            if (areaRef == 0) return false;
+
+            var markerRef = reservation.MarkerRef;
+            if (markerRef == 0) return false;
+
+            if (_areaLookup.TryGetValue(areaRef, out var areaMap))
+            {
+                if (areaMap != null && areaMap.TryGetValue(markerRef, out var areaList))
+                {
+                    if (areaList != null && areaList.Remove(reservation))
+                        if (areaList.Count == 0) areaMap.Remove(markerRef);                       
+
+                    if (areaMap.Count == 0) _areaLookup.Remove(areaRef);
+                    return true;
+                }               
+            }
+            return false;
+        }
+
+        private bool RemoveFromCellLookup(SpawnReservation reservation)
+        {
+            if (reservation == null || reservation.Cell == null) return false;
+
+            var cellId = reservation.Cell.Id;
+            if (cellId == 0) return false;
+
+            var markerRef = reservation.MarkerRef;
+            if (markerRef == 0) return false;
+
+            if (_cellLookup.TryGetValue(cellId, out var cellMap))
+            {
+                if (cellMap != null && cellMap.TryGetValue(markerRef, out var cellList))
+                {
+                    if (cellList != null && cellList.Remove(reservation))
+                        if (cellList.Count == 0) cellMap.Remove(markerRef);
+
+                    if (cellMap.Count == 0) _cellLookup.Remove(cellId);
+                    return true;
+                }                
+            }
+            return false;
+        }
+
     }
 
     public class SpawnReservationMap : Dictionary<ulong, SpawnReservationList> { };

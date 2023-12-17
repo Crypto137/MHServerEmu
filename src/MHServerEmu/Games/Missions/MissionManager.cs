@@ -78,5 +78,9 @@ namespace MHServerEmu.Games.Missions
             _regionId = region != null ? region.Id : 0;
         }
 
+        internal void Shutdown(Region region)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

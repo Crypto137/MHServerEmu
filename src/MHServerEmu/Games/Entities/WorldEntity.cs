@@ -17,10 +17,11 @@ namespace MHServerEmu.Games.Entities
         public int UnkEvent { get; set; }
 
 
-        private RegionLocation _location; // TODO init;
+        private RegionLocation _location = new(); // TODO init;
         public Cell Cell { get => _location.Cell; }
         public EntityRegionSpatialPartitionLocation SpatialPartitionLocation { get; }
         public Aabb RegionBounds { get; set; }
+        public Region Region { get; set; }
 
         public WorldEntity(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { SpatialPartitionLocation = new(this); }
 
@@ -125,6 +126,36 @@ namespace MHServerEmu.Games.Entities
                 sb.AppendLine($"PowerCollection{i}: {PowerCollection[i]}");
 
             sb.AppendLine($"UnkEvent: {UnkEvent}");
+        }
+
+        internal Entity GetRootOwner()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool TestStatus(int v)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Destroy()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool IsInWorld()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void ExitWorld()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void EmergencyRegionCleanup(Region region)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -19,8 +19,6 @@ namespace MHServerEmu.Games.Entities
         public bool IsValid() => _region != null;
 
         private Vector3 _position;
-        private Vector3 _orientation;
-
         public Vector3 GetPosition() => IsValid() ? _position : new();
         public bool SetPosition(Vector3 position)
         {
@@ -40,6 +38,13 @@ namespace MHServerEmu.Games.Entities
             }
             _position = position;
             return true;
+        }
+
+        private Vector3 _orientation;
+        public Vector3 GetOrientation() => IsValid() ? _orientation : new();
+        public void SetOrientation(Vector3 orientation)
+        {
+            if (Vector3.IsFinite(orientation)) _orientation = orientation;
         }
 
         public override string ToString()

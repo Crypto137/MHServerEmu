@@ -77,5 +77,10 @@ namespace MHServerEmu.Games.Entities
             BuildString(sb);
             return sb.ToString();
         }
+
+        public virtual void Destroy()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

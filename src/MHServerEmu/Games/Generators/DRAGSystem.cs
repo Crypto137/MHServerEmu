@@ -96,7 +96,7 @@ namespace MHServerEmu.Games.Regions
         public Aabb RegionBounds { get; private set; }
         public Area Area { get; private set; }
         public Game Game { get => (Area != null) ? Area.Game: null; }
-        public IEnumerable<Entity> Entities { get => Game.EntityManager.GetCellEntities(this); } // TODO: Optimize
+        public IEnumerable<Entity> Entities { get => Game.EntityManager.GetEntities(this); } // TODO: Optimize
 
         public List<uint> CellConnections = new();
 
@@ -305,7 +305,6 @@ namespace MHServerEmu.Games.Regions
         private List<TowerFixupData> TowerFixupList;
 
         public readonly List<RandomInstanceRegionPrototype> RandomInstances = new();
-
         public Area(Game game, Region region)
         {
             Game = game;
@@ -745,6 +744,8 @@ namespace MHServerEmu.Games.Regions
         public List<DividedStartLocation> DividedStartLocations { get; } = new ();
         public int RegionLevel { get; private set; }
         public IEnumerable<Cell> Cells { get => IterateCellsInVolume(Bound); }
+        public IEnumerable<Entity> Entities { get => Game.EntityManager.GetEntities(this); }
+        public List<ulong> MetaGames { get; private set; } = new();
 
         public Region(Game game)
         {
@@ -1139,15 +1140,78 @@ namespace MHServerEmu.Games.Regions
             return GameDatabase.GetFormattedPrototypeName(GetPrototypeDataRef());
         }
 
-        internal void Shutdown()
+        public void Shutdown()
         {
-            throw new NotImplementedException();
+            // SetStatus(2, true);
+            /* TODO: When the entities will work
+            int tries = 100;
+            bool found;
+            do
+            {
+                found = false;
+                foreach (var entity in Entities)
+                {
+                    var worldEntity = entity as WorldEntity;
+                    if (worldEntity != null)
+                    {
+                        var owner = worldEntity.GetRootOwner() as Player;
+                        if (owner == null)
+                        {
+                            if (!worldEntity.TestStatus(1))
+                            {
+                                worldEntity.Destroy();
+                                found = true;
+                            }
+                        }
+                        else
+                        {
+                            if (worldEntity.IsInWorld())
+                            {
+                                worldEntity.ExitWorld();
+                                found = true;
+                            }
+                        }
+                    }
+                }
+            } while (found && (tries-- > 0)); 
+
+            if (Game != null && MissionManager != null)
+                MissionManager.Shutdown(this);
+
+            while (MetaGames.Any())
+            {
+                var metaGameId = MetaGames.First();
+                var metaGame = Game.EntityManager.GetEntityByPrototypeId(metaGameId);
+                if (metaGame != null) metaGame.Destroy();
+
+                MetaGames.Remove(metaGameId);
+            }*/
+            
+            while (AreaList.Any())
+            {
+                var area = AreaList.First();
+                DestroyArea(area.Id);
+            }
+
+            ClearDividedStartLocations();
+
+           /* var scheduler = Game?.GameEventScheduler;
+            if (scheduler != null)
+            {
+                scheduler.CancelAllEvents(_events);
+            }
+
+            foreach (var entity in Game.EntityManager.GetEntities())
+            {
+                if (entity is WorldEntity worldEntity)
+                    worldEntity.EmergencyRegionCleanup(this);
+            }
+           */
+
+            //NaviMesh.Release();
         }
 
-        public ulong GetMatchNumber()
-        {
-            return Settings.MatchNumber;
-        }
+        public ulong GetMatchNumber() => Settings.MatchNumber;
 
         public Cell GetCellAtPosition(Vector3 position)
         {

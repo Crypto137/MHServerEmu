@@ -230,11 +230,20 @@ namespace MHServerEmu.Games.Entities
             return avatars;
         }
 
-        public IEnumerable<Entity> GetCellEntities(Cell cell)
+        public IEnumerable<Entity> GetEntities()
+        {
+            return _entityDict.Values;
+        }
+
+        public IEnumerable<Entity> GetEntities(Cell cell)
         {
             return _entityDict.Values.Where(entity => entity is WorldEntity worldEntity && worldEntity.Cell == cell);
         }
 
+        public IEnumerable<Entity> GetEntities(Region region)
+        {
+            return _entityDict.Values.Where(entity => entity is WorldEntity worldEntity && worldEntity.Region == region);
+        }
         // TODO: CreateEntity -> finalizeEntity -> worldEntity.EnterWorld -> _location.SetRegion( region )
 
     }
