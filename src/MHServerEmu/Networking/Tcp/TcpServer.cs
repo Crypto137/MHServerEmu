@@ -12,7 +12,7 @@ namespace MHServerEmu.Networking.Tcp
     {
         protected static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly CancellationTokenSource _cancellationTokenSource = new();
+        private readonly CancellationTokenSource _cts = new();
 
         private readonly Dictionary<Socket, TcpClientConnection> _connectionDict = new();
         private readonly object _connectionLock = new();
@@ -76,7 +76,7 @@ namespace MHServerEmu.Networking.Tcp
             _isListening = true;
 
             // Start accepting connections
-            _ = Task.Run(() => AcceptConnections().WaitAsync(_cancellationTokenSource.Token));
+            _ = Task.Run(async () => await AcceptConnections());
 
             return true;
         }
@@ -90,7 +90,7 @@ namespace MHServerEmu.Networking.Tcp
             if (_isListening == false) return;
 
             // Cancel async tasks
-            _cancellationTokenSource.Cancel();
+            _cts.Cancel();
 
             // Close the listener socket
             _listener?.Close();
@@ -194,7 +194,7 @@ namespace MHServerEmu.Networking.Tcp
                 try
                 {
                     // Wait for a connection
-                    Socket socket = await _listener.AcceptAsync().WaitAsync(_cancellationTokenSource.Token);
+                    Socket socket = await _listener.AcceptAsync().WaitAsync(_cts.Token);
 
                     // Establish a new client connection
                     TcpClientConnection connection = new(this, socket);
@@ -202,7 +202,7 @@ namespace MHServerEmu.Networking.Tcp
                     OnClientConnected(new(connection));
 
                     // Begin receiving data from our new connection
-                    _ = Task.Run(() => ReceiveData(connection).WaitAsync(_cancellationTokenSource.Token));
+                    _ = Task.Run(async () => await ReceiveData(connection));
                 }
                 catch (TaskCanceledException) { return; }
                 catch (Exception e)
@@ -221,7 +221,7 @@ namespace MHServerEmu.Networking.Tcp
             {
                 try
                 {
-                    int bytesReceived = await connection.ReceiveAsync().WaitAsync(_cancellationTokenSource.Token);
+                    int bytesReceived = await connection.ReceiveAsync().WaitAsync(_cts.Token);
 
                     if (bytesReceived == 0)             // Connection lost
                     {

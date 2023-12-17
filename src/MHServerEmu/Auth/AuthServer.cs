@@ -15,7 +15,7 @@ namespace MHServerEmu.Auth
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly CancellationTokenSource _cancellationTokenSource = new();
+        private readonly CancellationTokenSource _cts = new();
         private readonly WebApiHandler _webApiHandler = new();
         private readonly string _url;
 
@@ -40,7 +40,7 @@ namespace MHServerEmu.Auth
                 try
                 {
                     // Wait for a connection, and handle the request
-                    HttpListenerContext context = await _listener.GetContextAsync().WaitAsync(_cancellationTokenSource.Token);
+                    HttpListenerContext context = await _listener.GetContextAsync().WaitAsync(_cts.Token);
                     HandleRequest(context.Request, context.Response);
                     context.Response.Close();
                 }
@@ -61,7 +61,7 @@ namespace MHServerEmu.Auth
             if (_listener.IsListening == false) return;
 
             // Cancel async tasks (listening for context)
-            _cancellationTokenSource.Cancel();
+            _cts.Cancel();
 
             // Close the listener
             _listener.Close();
