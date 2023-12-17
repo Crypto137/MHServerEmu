@@ -57,6 +57,7 @@ namespace MHServerEmu.Frontend
 
                 case MuxCommand.Disconnect:
                     Logger.Trace($"Disconnected from mux channel {packet.MuxId}");
+                    Connection.Disconnect();
                     break;
 
                 case MuxCommand.ConnectWithData:
