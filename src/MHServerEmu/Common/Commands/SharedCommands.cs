@@ -49,6 +49,18 @@ namespace MHServerEmu.Common.Commands
             return OutputLookupMatches(matches.Select(match => ((ulong)match, GameDatabase.GetAssetTypeName(match))), client);
         }
 
+        [Command("asset", "Searches assets.\nUsage: lookup asset [pattern]", AccountUserLevel.User)]
+        public string Asset(string[] @params, FrontendClient client)
+        {
+            if (@params == null) return Fallback();
+            if (@params.Length == 0) return "Invalid arguments. Type 'help lookup asset' to get help.";
+
+            var matches = GameDatabase.SearchAssets(@params[0], DataFileSearchFlags.SortMatchesByName | DataFileSearchFlags.CaseInsensitive);
+            return OutputLookupMatches(matches.Select(match => ((ulong)match,
+                $"{GameDatabase.GetAssetName(match)} ({GameDatabase.GetAssetTypeName(GameDatabase.DataDirectory.AssetDirectory.GetAssetTypeId(match))})")),
+                client);
+        }
+
         private static string LookupPrototypes(string pattern, BlueprintId blueprint, FrontendClient client)
         {
             var matches = GameDatabase.SearchPrototypes(pattern, DataFileSearchFlags.SortMatchesByName | DataFileSearchFlags.CaseInsensitive, blueprint);

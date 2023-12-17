@@ -11,7 +11,8 @@ To see an up to date list of all commands, type !commands in the server console 
 | !lookup costume [pattern]   | Searches for costume prototypes by name.      | All        |
 | !lookup region [pattern]    | Searches for region prototypes by name.       | All        |
 | !lookup blueprint [pattern] | Searches for blueprints by name.              | All        |
-| !lookup assettype [pattern] | Search for asset types by name.               | All        |
+| !lookup assettype [pattern] | Searches for asset types by name.             | All        |
+| !lookup asset [pattern]     | Searches for assets by name.                  | All        |
 
 ## Account Commands
 

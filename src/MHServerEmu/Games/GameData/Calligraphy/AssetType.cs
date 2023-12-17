@@ -72,6 +72,23 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             if (assetValue == null) return StringId.Invalid;
             return assetValue.Id;
         }
+
+        /// <summary>
+        /// Finds an asset id of this type by its name.
+        /// </summary>
+        public StringId FindAssetByName(string assetToFind, DataFileSearchFlags searchFlags)
+        {
+            foreach (AssetValue value in _assets)
+            {
+                string assetName = GameDatabase.GetAssetName(value.Id);
+                var flags = searchFlags.HasFlag(DataFileSearchFlags.CaseInsensitive)
+                    ? StringComparison.InvariantCultureIgnoreCase
+                    : StringComparison.InvariantCulture;
+                if (assetName.Equals(assetToFind, flags)) return value.Id;
+            }
+
+            return StringId.Invalid;
+        }
         
         /// <summary>
         /// Enumerates this asset type taking symbolic enum binding into account.

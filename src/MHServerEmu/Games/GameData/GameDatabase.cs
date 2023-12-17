@@ -166,10 +166,39 @@ namespace MHServerEmu.Games.GameData
             return matches.Select(match => (BlueprintId)match);
         }
 
+        /// <summary>
+        /// Searches for asset types using specified filters.
+        /// </summary>
         public static IEnumerable<AssetTypeId> SearchAssetTypes(string pattern, DataFileSearchFlags searchFlags)
         {
             var matches = GetDataFileSearchMatches(DataFileSet.AssetType, pattern, searchFlags);
             return matches.Select(match => (AssetTypeId)match);
+        }
+
+        /// <summary>
+        /// Searches for assets using specified filters.
+        /// </summary>
+        public static IEnumerable<StringId> SearchAssets(string pattern, DataFileSearchFlags searchFlags, AssetTypeId typeId = AssetTypeId.Invalid)
+        {
+            List<StringId> matches = new();
+
+            foreach (AssetType type in DataDirectory.IterateAssetTypes())
+            {
+                // Search only the type we need if one is specified
+                if (typeId != AssetTypeId.Invalid && type.Id != typeId) continue;
+                var asset = type.FindAssetByName(pattern, searchFlags);
+                if (asset != StringId.Invalid) matches.Add(asset);
+
+                // Early return if no multiple matches is requested and there's more than one match
+                if (matches.Count > 1 && searchFlags.HasFlag(DataFileSearchFlags.NoMultipleMatches))
+                    return null;
+            }
+
+            // Sort matches by name if needed
+            if (searchFlags.HasFlag(DataFileSearchFlags.SortMatchesByName))
+                matches = matches.OrderBy(match => GetAssetName(match)).ToList();
+
+            return matches;
         }
 
         private static List<ulong> GetDataFileSearchMatches(DataFileSet set, string pattern, DataFileSearchFlags searchFlags,
