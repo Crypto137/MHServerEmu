@@ -4,12 +4,14 @@ To see an up to date list of all commands, type !commands in the server console 
 
 ## General Commands
 
-| Command                   | Description                                   | User Level |
-| ------------------------- | --------------------------------------------- | ---------- |
-| !commands                 | Shows a list of all available commands.       | All        |
-| !help [command]           | Shows a description of the specified command. | All        |
-| !lookup costume [pattern] | Looks up a costume prototype.                 | All        |
-| !lookup region [pattern]  | Looks up a region prototype                   | All        |
+| Command                     | Description                                   | User Level |
+| --------------------------- | --------------------------------------------- | ---------- |
+| !commands                   | Shows a list of all available commands.       | All        |
+| !help [command]             | Shows a description of the specified command. | All        |
+| !lookup costume [pattern]   | Searches for costume prototypes by name.      | All        |
+| !lookup region [pattern]    | Searches for region prototypes by name.       | All        |
+| !lookup blueprint [pattern] | Searches for blueprints by name.              | All        |
+| !lookup assettype [pattern] | Search for asset types by name.               | All        |
 
 ## Account Commands
 
