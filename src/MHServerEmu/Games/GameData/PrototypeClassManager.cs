@@ -3,6 +3,7 @@ using System.Reflection;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData
 {
@@ -69,8 +70,8 @@ namespace MHServerEmu.Games.GameData
 
             // TODO: determine what assets to bind to what enums here
 
-            /*
             // Iterate through all fields in all prototype classes and find enums
+            /*
             foreach (Type classType in _prototypeNameToClassTypeDict.Values)
             {
                 foreach (var property in classType.GetProperties())
@@ -82,6 +83,13 @@ namespace MHServerEmu.Games.GameData
                 }
             }
             */
+
+            // Add bindings explicitly defined in PropertyInfoTable
+            foreach (var binding in PropertyInfoTable.AssetEnumBindings)
+            {
+                AssetType assetType = assetDirectory.GetAssetType(binding.Item1);
+                assetEnumBindingDict.Add(assetType, binding.Item2);
+            }
 
             assetDirectory.BindAssetTypes(assetEnumBindingDict);
         }

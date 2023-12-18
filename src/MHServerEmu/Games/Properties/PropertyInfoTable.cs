@@ -16,7 +16,7 @@ namespace MHServerEmu.Games.Properties
             ("ProcTriggerType",                 typeof(ProcTriggerType)),
             ("DamageType",                      typeof(DamageType)),
             ("TargetRestrictionType",           typeof(TargetRestrictionType)),
-            ("PowerEventType",                  typeof(PowerEventActionType)),
+            ("PowerEventType",                  typeof(PowerEventType)),
             ("LootDropEventType",               typeof(LootDropEventType)),
             ("LootDropActionType",              typeof(LootActionType)),
             ("PowerConditionType",              typeof(PowerConditionType)),
