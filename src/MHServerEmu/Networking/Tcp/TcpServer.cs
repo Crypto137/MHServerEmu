@@ -12,10 +12,10 @@ namespace MHServerEmu.Networking.Tcp
     {
         protected static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly CancellationTokenSource _cts = new();
-
         private readonly Dictionary<Socket, TcpClientConnection> _connectionDict = new();
         private readonly object _connectionLock = new();
+
+        private CancellationTokenSource _cts;
 
         private Socket _listener;
         private bool _isListening;
@@ -52,6 +52,10 @@ namespace MHServerEmu.Networking.Tcp
             if (_isDisposed) throw new ObjectDisposedException(GetType().Name, "Server is disposed.");
             if (_isListening) throw new InvalidOperationException("Server is already listening.");
 
+            // Reset CTS
+            _cts?.Dispose();
+            _cts = new();
+
             // Create a new listener socket
             _listener = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
             {
@@ -76,7 +80,7 @@ namespace MHServerEmu.Networking.Tcp
             _isListening = true;
 
             // Start accepting connections
-            _ = Task.Run(async () => await AcceptConnections());
+            Task.Run(async () => await AcceptConnections());
 
             return true;
         }
@@ -152,14 +156,8 @@ namespace MHServerEmu.Networking.Tcp
                     bytesSentTotal += bytesSent;
                 }
             }
-            catch (SocketException)
-            {
-                RemoveClientConnection(connection);
-            }
-            catch (Exception e)
-            {
-                Logger.DebugException(e, nameof(Send));
-            }
+            catch (SocketException) { RemoveClientConnection(connection); }
+            catch (Exception e) { Logger.DebugException(e, nameof(Send)); }
 
             return bytesSentTotal;
         }
@@ -205,10 +203,7 @@ namespace MHServerEmu.Networking.Tcp
                     _ = Task.Run(async () => await ReceiveData(connection));
                 }
                 catch (TaskCanceledException) { return; }
-                catch (Exception e)
-                {
-                    Logger.DebugException(e, nameof(AcceptConnections));
-                }
+                catch (Exception e) { Logger.DebugException(e, nameof(AcceptConnections)); }
             }
         }
 
@@ -265,7 +260,10 @@ namespace MHServerEmu.Networking.Tcp
 
             // Dispose of unmanaged resources here.
             if (disposing)
+            {
                 Shutdown();
+                _cts.Dispose();
+            }
 
             _isDisposed = true;
         }
