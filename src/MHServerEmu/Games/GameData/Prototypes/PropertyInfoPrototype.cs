@@ -4,8 +4,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class PropertyInfoPrototype : Prototype
     {
-        public PropertyPrototype Mixin { get; set; }            // contains mixin param information
-
         public long Version { get; }
         public AggregationMethod AggMethod { get; }             // A Property/AggregationMethod.type
         public double Min { get; }
@@ -30,11 +28,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool ReplicateToTrader { get; }
         public PrototypeId ValueDisplayFormat { get; }          // Localization/Translations/Translation.defaults
 
-        public PropertyInfoPrototype(Prototype prototype)
+        public PropertyInfoPrototype(BinaryReader reader) : base(reader)
         {
             // NOTE: Old misguided experiments below
 
-            foreach (PrototypeSimpleField field in prototype.FieldGroups[0].SimpleFields)
+            foreach (PrototypeSimpleField field in FieldGroups[0].SimpleFields)
             {
                 switch (GameDatabase.GetBlueprintFieldName(field.Id))
                 {

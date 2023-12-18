@@ -46,6 +46,10 @@ namespace MHServerEmu.Games.GameData
         public AssetDirectory AssetDirectory { get; } = new();
         public ReplacementDirectory ReplacementDirectory { get; } = new();
 
+        public BlueprintId KeywordBlueprint { get; private set; } = BlueprintId.Invalid;
+        public BlueprintId PropertyBlueprint { get; private set; } = BlueprintId.Invalid;
+        public BlueprintId PropertyInfoBlueprint { get; private set; } = BlueprintId.Invalid;
+
         private DataDirectory() { }
 
         #region Initialization
@@ -62,6 +66,32 @@ namespace MHServerEmu.Games.GameData
 
             // Build hierarchy lists and generate enum lookups for each prototype class and blueprint
             InitializeHierarchyCache();
+
+            // TEMP HACK: load Calligraphy prototypes here
+            // Load property info prototypes manually first
+            foreach (var record in _blueprintRecordDict[PropertyInfoBlueprint].Blueprint.PrototypeRecordList)
+            {
+                if (record.PrototypeId == (PrototypeId)PropertyInfoBlueprint) continue;  // Skip default property info prototype
+                
+                // Load prototype as property info
+                string filePath = GameDatabase.GetPrototypeName(record.PrototypeId);
+                PrototypeFile prototypeFile = new(calligraphyPak.GetFile($"Calligraphy/{filePath}"), true);
+                record.Prototype = prototypeFile.Prototype;
+                record.Prototype.DataRef = record.PrototypeId;
+            }
+
+            // Load the rest of Calligraphy prototypes
+            foreach (var record in _prototypeRecordDict.Values)
+            {
+                if (record.DataOrigin != DataOrigin.Calligraphy) continue;
+                if (record.Prototype != null) continue;     // skip already loaded prototypes
+
+                // Load the prototype
+                string filePath = GameDatabase.GetPrototypeName(record.PrototypeId);
+                PrototypeFile prototypeFile = new(calligraphyPak.GetFile($"Calligraphy/{filePath}"), false);
+                record.Prototype = prototypeFile.Prototype;
+                record.Prototype.DataRef = record.PrototypeId;
+            }
 
             Logger.Info($"Initialized in {stopwatch.ElapsedMilliseconds} ms");
         }
@@ -108,6 +138,11 @@ namespace MHServerEmu.Games.GameData
 
             // Bind asset types to code enums where needed and enumerate all assets
             GameDatabase.PrototypeClassManager.BindAssetTypesToEnums(AssetDirectory);
+
+            // Set blueprint references for quick access
+            KeywordBlueprint = GameDatabase.BlueprintRefManager.GetDataRefByName("Types/Keyword.blueprint");
+            PropertyBlueprint = GameDatabase.BlueprintRefManager.GetDataRefByName("Property/Property.blueprint");
+            PropertyInfoBlueprint = GameDatabase.BlueprintRefManager.GetDataRefByName("Property/PropertyInfo.blueprint");
 
             // Populate blueprint hierarchy hash sets
             foreach (LoadedBlueprintRecord record in _blueprintRecordDict.Values)
@@ -211,11 +246,6 @@ namespace MHServerEmu.Games.GameData
                 record.Flags |= PrototypeRecordFlags.EditorOnly;
 
             _prototypeRecordDict.Add(prototypeId, record);
-
-            // Load the prototype
-            PrototypeFile prototypeFile = new(pak.GetFile($"Calligraphy/{filePath}"));
-            record.Prototype = prototypeFile.Prototype;
-            record.Prototype.DataRef = prototypeId;
         }
 
         private void CreatePrototypeDataRefsForDirectory(PakFile resourceFile)

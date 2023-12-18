@@ -9,13 +9,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public CalligraphyHeader Header { get; }
         public Prototype Prototype { get; }
 
-        public PrototypeFile(byte[] data)
+        public PrototypeFile(byte[] data, bool isPropertyInfo = false)
         {
             using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
                 Header = new(reader);
-                Prototype = new(reader);
+
+                // TEMP HACK: Manually deserialize PropertyInfo
+                Prototype = isPropertyInfo ? new PropertyInfoPrototype(reader) : new Prototype(reader);
             }
         }
     }

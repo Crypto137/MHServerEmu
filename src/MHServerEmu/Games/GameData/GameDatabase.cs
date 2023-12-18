@@ -72,7 +72,7 @@ namespace MHServerEmu.Games.GameData
             // initializeLocaleManager - do we even need it?
 
             // Initialize PropertyInfoTable
-            PropertyInfoTable = new(DataDirectory);
+            PropertyInfoTable = new();
 
             // initializeKeywordPrototypes
 

@@ -9,7 +9,7 @@ namespace MHServerEmu.Games.Properties
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private Dictionary<PropertyEnum, PropertyInfoPrototype> _propertyInfoDict = new();
+        private readonly Dictionary<PropertyEnum, PropertyInfoPrototype> _propertyInfoDict = new();
 
         public static readonly (string, Type)[] AssetEnumBindings = new(string, Type)[]     // s_PropertyParamEnumLookups
         {
@@ -31,63 +31,20 @@ namespace MHServerEmu.Games.Properties
             ("Ranks",                           typeof(Rank))
         };
 
-        // Old experimental hacky code below, to be properly re-implemented
-
-        public PropertyInfoTable(DataDirectory dataDirectory)
+        public PropertyInfoTable()
         {
             var stopwatch = Stopwatch.StartNew();
 
-            Dictionary<PropertyEnum, PropertyPrototype> mixinDict = new();
+            var propertyBlueprintId = GameDatabase.DataDirectory.PropertyBlueprint;
+            var propertyInfoBlueprintId = GameDatabase.DataDirectory.PropertyInfoBlueprint;
+            var propertyInfoDefaultPrototypeId = GameDatabase.DataDirectory.GetBlueprintDefaultPrototype(propertyInfoBlueprintId);
 
-            // Loop through the main property info directory to get most info
-
-            // hacky reimplementation for compatibility
-            BlueprintId[] blueprintIds = GameDatabase.BlueprintRefManager.Enumerate();
-
-            foreach (var blueprintId in blueprintIds)
+            foreach (Prototype propertyInfo in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(propertyInfoBlueprintId))
             {
-                string filePath = GameDatabase.GetBlueprintName(blueprintId);
-
-                if (filePath.Contains("Property/Info"))
-                {
-                    PropertyEnum property = (PropertyEnum)Enum.Parse(typeof(PropertyEnum), Path.GetFileNameWithoutExtension(filePath));
-                    PrototypeId defaultPrototypeId = dataDirectory.GetBlueprintDefaultPrototype(blueprintId);
-                    PropertyInfoPrototype prototype = new(GameDatabase.GetPrototype<Prototype>(defaultPrototypeId));
-
-                    _propertyInfoDict.Add(property, prototype);
-                }
-                else if (filePath.Contains("Property/Mixin") && filePath.Contains("Prop.blueprint"))   // param mixin information is stored in PropertyPrototypes
-                {
-                    string fileName = Path.GetFileNameWithoutExtension(filePath);
-                    PropertyEnum property = (PropertyEnum)Enum.Parse(typeof(PropertyEnum), fileName.Substring(0, fileName.Length - 4)); // -4 to remove Prop at the end
-                    PropertyPrototype mixin = new((PrototypeId)blueprintId);
-                    mixinDict.Add(property, mixin);
-                }
+                if (propertyInfo.DataRef == propertyInfoDefaultPrototypeId) continue;
+                var propertyEnum = Enum.Parse<PropertyEnum>(Path.GetFileNameWithoutExtension(GameDatabase.GetPrototypeName(propertyInfo.DataRef)));
+                _propertyInfoDict.Add(propertyEnum, (PropertyInfoPrototype)propertyInfo);
             }
-
-            // Manually add property info missed by the loop
-            try
-            {
-                // Property/Info/DisplayNameOverride.prototype
-                _propertyInfoDict.Add(PropertyEnum.DisplayNameOverride,
-                    new(dataDirectory.GetPrototype<Prototype>((PrototypeId)14845682279047958969)));
-
-                // Property/Mixin/BewareOfTiger/MissileAlwaysCollides.blueprint
-                _propertyInfoDict.Add(PropertyEnum.MissileAlwaysCollides,
-                    new(dataDirectory.GetPrototype<Prototype>((PrototypeId)9507546413010851972)));
-
-                // Property/Mixin/BewareOfTiger/StolenPowerAvailable.blueprint
-                _propertyInfoDict.Add(PropertyEnum.StolenPowerAvailable,
-                    new(dataDirectory.GetPrototype<Prototype>((PrototypeId)11450873518952749073)));
-            }
-            catch
-            {
-                Logger.Warn("Failed to manually add additional property info");
-            }
-
-            // Add mixin information to PropertyInfo
-            foreach (var kvp in mixinDict)
-                _propertyInfoDict[kvp.Key].Mixin = kvp.Value;
 
             // Finish initialization
             if (Verify())
