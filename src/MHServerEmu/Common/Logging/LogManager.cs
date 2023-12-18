@@ -20,7 +20,7 @@ namespace MHServerEmu.Common.Logging
             StackFrame stackFrame = new(1, false);
             string callerName = stackFrame.GetMethod().DeclaringType.Name;
             return callerName == null
-                ? throw new Exception("LogManager: failed to get caller name when creating a logger")
+                ? throw new Exception("LogManager failed to get caller name when creating a logger.")
                 : CreateLogger(callerName);
         }
 

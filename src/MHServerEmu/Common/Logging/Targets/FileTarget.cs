@@ -4,8 +4,6 @@ namespace MHServerEmu.Common.Logging.Targets
 {
     public class FileTarget : LogTarget, IDisposable
     {
-        private readonly object _writeLock = new();
-
         private FileStream _fileStream;
         private StreamWriter _logStream;
 
@@ -19,22 +17,10 @@ namespace MHServerEmu.Common.Logging.Targets
             _logStream = new(_fileStream) { AutoFlush = true };
         }
 
-        public override void LogMessage(Logger.Level level, string logger, string message)
+        public override void LogMessage(LogMessage message)
         {
-            lock (_writeLock)
-            {
-                string timestamp = IncludeTimestamps ? $"[{DateTime.Now:yyyy.MM.dd HH:mm:ss.fff}] " : "";
-                if (_disposed == false) _logStream.WriteLine($"{timestamp}[{level,5}] [{logger}] {message}");
-            }
-        }
-
-        public override void LogException(Logger.Level level, string logger, string message, Exception exception)
-        {
-            lock (_writeLock)
-            {
-                string timestamp = IncludeTimestamps ? $"[{DateTime.Now:yyyy.MM.dd HH:mm:ss.fff}] " : "";
-                if (_disposed == false) _logStream.WriteLine($"{timestamp}[{level,5}] [{logger}] {message} - [Exception] {exception}");
-            }
+            if (_disposed == false)
+                _logStream.WriteLine(message.ToString(IncludeTimestamps));
         }
 
         #region IDisposable Implementation

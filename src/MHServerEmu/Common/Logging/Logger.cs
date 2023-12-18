@@ -33,7 +33,7 @@
         public void ErrorException(Exception exception, string message) => LogException(Level.Error, message, exception);
         public void FatalException(Exception exception, string message) => LogException(Level.Fatal, message, exception);
 
-        private void Log(Level level, string message) => LogRouter.RouteMessage(level, Name, message);
-        private void LogException(Level level, string message, Exception exception) => LogRouter.RouteException(level, Name, message, exception);
+        private void Log(Level level, string message) => LogRouter.EnqueueMessage(level, Name, message);
+        private void LogException(Level level, string message, Exception exception) => Log(level, $"{message} - [Exception] {exception}");
     }
 }
