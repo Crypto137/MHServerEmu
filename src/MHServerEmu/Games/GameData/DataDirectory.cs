@@ -185,8 +185,7 @@ namespace MHServerEmu.Games.GameData
             GameDatabase.CurveRefManager.AddDataRef(curveId, filePath);
             var record = CurveDirectory.CreateCurveRecord(curveId, flags);
 
-            using (MemoryStream ms = LoadPakDataFile($"Calligraphy/{filePath}", PakFileId.Calligraphy))
-                record.Curve = new(ms);
+            // Curves are loaded on demand when GetCurve() is called
         }
 
         private void ReadBlueprintDirectoryEntry(BinaryReader reader)
