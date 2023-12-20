@@ -123,12 +123,12 @@ namespace MHServerEmu.Games.GameData
                     {
                         case "CDR":     // Curves
                             for (int j = 0; j < recordCount; j++) ReadCurveDirectoryEntry(reader);
-                            Logger.Info($"Loaded {CurveDirectory.RecordCount} curves");
+                            Logger.Info($"Loaded {CurveDirectory.RecordCount} curve entries");
                             break;
 
                         case "TDR":     // AssetTypes
                             for (int j = 0; j < recordCount; j++) ReadTypeDirectoryEntry(reader);
-                            Logger.Info($"Loaded {AssetDirectory.AssetCount} assets of {AssetDirectory.AssetTypeCount} types");
+                            Logger.Info($"Loaded {AssetDirectory.AssetCount} asset entries of {AssetDirectory.AssetTypeCount} types");
                             break;
 
                         case "BDR":     // Blueprints
@@ -138,7 +138,7 @@ namespace MHServerEmu.Games.GameData
 
                         case "PDR":     // Prototypes
                             for (int j = 0; j < recordCount; j++) ReadPrototypeDirectoryEntry(reader);
-                            Logger.Info($"Loaded {_prototypeRecordDict.Count} Calligraphy prototype files");
+                            Logger.Info($"Loaded {_prototypeRecordDict.Count} Calligraphy prototype entries");
                             break;
 
                         case "RDR":     // Replacement
@@ -268,8 +268,6 @@ namespace MHServerEmu.Games.GameData
 
         private void CreatePrototypeDataRefsForDirectory()
         {
-            // TODO: PakFileSystem::GetResourceFiles()
-
             int numResources = 0;
 
             foreach (string filePath in PakFileSystem.Instance.GetResourceFiles("Resource"))
@@ -278,7 +276,7 @@ namespace MHServerEmu.Games.GameData
                 numResources++;
             }
 
-            Logger.Info($"Loaded {numResources} resource prototype files");
+            Logger.Info($"Loaded {numResources} resource prototype entries");
         }
 
         private void AddResource(string filePath)
