@@ -23,12 +23,11 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         public AssetTypeGuid Guid { get; }
         public int MaxEnumValue { get; private set; }
 
-        public AssetType(byte[] data, AssetDirectory assetDirectory, AssetTypeId assetTypeId, AssetTypeGuid assetTypeGuid)
+        public AssetType(Stream stream, AssetDirectory assetDirectory, AssetTypeId assetTypeId, AssetTypeGuid assetTypeGuid)
         {
             Id = assetTypeId;
             Guid = assetTypeGuid;
 
-            using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
                 CalligraphyHeader header = new(reader);

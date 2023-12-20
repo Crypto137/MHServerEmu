@@ -21,9 +21,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public HeightMapPrototype HeightMap { get; }
         public PrototypeGuid[] HotspotPrototypes { get; }
 
-        public CellPrototype(byte[] data)
+        public CellPrototype(Stream stream)
         {
-            using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
                 ResourceHeader header = new(reader);

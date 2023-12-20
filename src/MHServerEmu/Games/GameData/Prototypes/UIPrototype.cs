@@ -144,9 +144,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public UIPanelPrototype[] UIPanels { get; }
 
-        public UIPrototype(byte[] data)
+        public UIPrototype(Stream stream)
         {
-            using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
                 ResourceHeader header = new(reader);

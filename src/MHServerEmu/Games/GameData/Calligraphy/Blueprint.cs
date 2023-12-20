@@ -24,13 +24,12 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
         public int PrototypeMaxEnumValue { get => _enumValueToPrototypeLookup.Length - 1; }
 
-        public Blueprint(byte[] data, BlueprintId id, BlueprintGuid guid)
+        public Blueprint(Stream stream, BlueprintId id, BlueprintGuid guid)
         {
             Id = id;
             Guid = guid;
 
             // Deserialize
-            using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
                 CalligraphyHeader header = new(reader);

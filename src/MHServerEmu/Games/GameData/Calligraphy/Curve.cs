@@ -4,9 +4,8 @@
     {
         public double[] Values { get; }
 
-        public Curve(byte[] data)
+        public Curve(Stream stream)
         {
-            using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
                 CalligraphyHeader header = new(reader);

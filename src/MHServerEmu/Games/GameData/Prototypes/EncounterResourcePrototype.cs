@@ -11,9 +11,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public MarkerSetPrototype MarkerSet { get; }
         public NaviPatchSourcePrototype NaviPatchSource { get; }
 
-        public EncounterResourcePrototype(byte[] data)
+        public EncounterResourcePrototype(Stream stream)
         {
-            using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
                 ResourceHeader header = new(reader);

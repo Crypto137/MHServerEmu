@@ -72,12 +72,15 @@ namespace MHServerEmu.Games.GameData
             foreach (var record in _blueprintRecordDict[PropertyInfoBlueprint].Blueprint.PrototypeRecordList)
             {
                 if (record.PrototypeId == (PrototypeId)PropertyInfoBlueprint) continue;  // Skip default property info prototype
-                
+
                 // Load prototype as property info
                 string filePath = GameDatabase.GetPrototypeName(record.PrototypeId);
-                PrototypeFile prototypeFile = new(calligraphyPak.GetFile($"Calligraphy/{filePath}"), true);
-                record.Prototype = prototypeFile.Prototype;
-                record.Prototype.DataRef = record.PrototypeId;
+                using (MemoryStream ms = calligraphyPak.LoadFileDataInPak($"Calligraphy/{filePath}"))
+                {
+                    PrototypeFile prototypeFile = new(ms, true);
+                    record.Prototype = prototypeFile.Prototype;
+                    record.Prototype.DataRef = record.PrototypeId;
+                }
             }
 
             // Load the rest of Calligraphy prototypes
@@ -87,10 +90,14 @@ namespace MHServerEmu.Games.GameData
                 if (record.Prototype != null) continue;     // skip already loaded prototypes
 
                 // Load the prototype
+                // Load prototype as property info
                 string filePath = GameDatabase.GetPrototypeName(record.PrototypeId);
-                PrototypeFile prototypeFile = new(calligraphyPak.GetFile($"Calligraphy/{filePath}"), false);
-                record.Prototype = prototypeFile.Prototype;
-                record.Prototype.DataRef = record.PrototypeId;
+                using (MemoryStream ms = calligraphyPak.LoadFileDataInPak($"Calligraphy/{filePath}"))
+                {
+                    PrototypeFile prototypeFile = new(ms, false);
+                    record.Prototype = prototypeFile.Prototype;
+                    record.Prototype.DataRef = record.PrototypeId;
+                }
             }
 
             Logger.Info($"Initialized in {stopwatch.ElapsedMilliseconds} ms");
@@ -101,7 +108,7 @@ namespace MHServerEmu.Games.GameData
             // Load all directories
             for (int i = 0; i < DataDirectoryFiles.Length; i++)
             {
-                using (MemoryStream stream = new(calligraphyPak.GetFile(DataDirectoryFiles[i])))
+                using (MemoryStream stream = calligraphyPak.LoadFileDataInPak(DataDirectoryFiles[i]))
                 using (BinaryReader reader = new(stream))
                 {
                     CalligraphyHeader header = new(reader);
@@ -158,7 +165,9 @@ namespace MHServerEmu.Games.GameData
 
             GameDatabase.AssetTypeRefManager.AddDataRef(dataId, filePath);
             var record = AssetDirectory.CreateAssetTypeRecord(dataId, flags);
-            record.AssetType = new(pak.GetFile($"Calligraphy/{filePath}"), AssetDirectory, dataId, assetTypeGuid);
+
+            using (MemoryStream ms = pak.LoadFileDataInPak($"Calligraphy/{filePath}"))
+                record.AssetType = new(ms, AssetDirectory, dataId, assetTypeGuid);
         }
 
         private void ReadCurveDirectoryEntry(BinaryReader reader, PakFile pak)
@@ -170,7 +179,9 @@ namespace MHServerEmu.Games.GameData
 
             GameDatabase.CurveRefManager.AddDataRef(curveId, filePath);
             var record = CurveDirectory.CreateCurveRecord(curveId, flags);
-            record.Curve = new(pak.GetFile($"Calligraphy/{filePath}"));
+
+            using (MemoryStream ms = pak.LoadFileDataInPak($"Calligraphy/{filePath}"))
+                record.Curve = new(ms);
         }
 
         private void ReadBlueprintDirectoryEntry(BinaryReader reader, PakFile pak)
@@ -209,15 +220,18 @@ namespace MHServerEmu.Games.GameData
             // Add guid lookup
             _blueprintGuidToDataRefDict[guid] = id;
 
-            // Deserialize (blueprint deserialization is not yet properly implemented)
-            Blueprint blueprint = new(pak.GetFile($"Calligraphy/{GameDatabase.GetBlueprintName(id)}"), id, guid);
+            // Deserialize
+            using (MemoryStream ms = pak.LoadFileDataInPak($"Calligraphy/{GameDatabase.GetBlueprintName(id)}"))
+            {
+                Blueprint blueprint = new(ms, id, guid);
 
-            // Add field name refs when loading blueprints
-            foreach (BlueprintMember member in blueprint.Members)
-                GameDatabase.StringRefManager.AddDataRef(member.FieldId, member.FieldName);
+                // Add field name refs when loading blueprints
+                foreach (BlueprintMember member in blueprint.Members)
+                    GameDatabase.StringRefManager.AddDataRef(member.FieldId, member.FieldName);
 
-            // Add a new blueprint record
-            _blueprintRecordDict.Add(id, new(blueprint, flags));
+                // Add a new blueprint record
+                _blueprintRecordDict.Add(id, new(blueprint, flags));
+            }
         }
 
         private void AddCalligraphyPrototype(PrototypeId prototypeId, PrototypeGuid prototypeGuid, BlueprintId blueprintId, PrototypeRecordFlags flags, string filePath, PakFile pak)
@@ -248,19 +262,22 @@ namespace MHServerEmu.Games.GameData
             _prototypeRecordDict.Add(prototypeId, record);
         }
 
-        private void CreatePrototypeDataRefsForDirectory(PakFile resourceFile)
+        private void CreatePrototypeDataRefsForDirectory(PakFile pak)
         {
-            // If we were to support older versions of the game where all data is stored in a single pak,
-            // we would have to implement file filtering by prefix here. See PakFileSystem::GetResourceFiles()
-            // for reference.
+            // TODO: PakFileSystem::GetResourceFiles()
 
-            foreach (PakEntry entry in resourceFile.Entries)
-                AddResource(entry.FilePath, entry.Data);
+            int numResources = 0;
 
-            Logger.Info($"Loaded {resourceFile.Entries.Length} resource prototype files");
+            foreach (string resourceFilePath in pak.GetFilesFromPak("Resource"))
+            {
+                AddResource(resourceFilePath, pak);
+                numResources++;
+            }
+
+            Logger.Info($"Loaded {numResources} resource prototype files");
         }
 
-        private void AddResource(string filePath, byte[] data)
+        private void AddResource(string filePath, PakFile pak)
         {
             // Get class type
             Type classType = GetResourceClassTypeByFileName(filePath);
@@ -284,20 +301,23 @@ namespace MHServerEmu.Games.GameData
             _prototypeRecordDict.Add(prototypeId, record);
 
             // Load the resource
-            string extension = Path.GetExtension(filePath);
-            Prototype resource = extension switch
+            using (MemoryStream ms = pak.LoadFileDataInPak(filePath))
             {
-                ".cell" =>      new CellPrototype(data),
-                ".district" =>  new DistrictPrototype(data),
-                ".encounter" => new EncounterResourcePrototype(data),
-                ".propset" =>   new PropSetPrototype(data),
-                ".prop" =>      new PropPackagePrototype(data),
-                ".ui" =>        new UIPrototype(data),
-                _ =>            throw new NotImplementedException($"Unsupported resource type ({extension})."),
-            };
+                string extension = Path.GetExtension(filePath);
+                Prototype resource = extension switch
+                {
+                    ".cell"         => new CellPrototype(ms),
+                    ".district"     => new DistrictPrototype(ms),
+                    ".encounter"    => new EncounterResourcePrototype(ms),
+                    ".propset"      => new PropSetPrototype(ms),
+                    ".prop"         => new PropPackagePrototype(ms),
+                    ".ui"           => new UIPrototype(ms),
+                    _ => throw new NotImplementedException($"Unsupported resource type ({extension})."),
+                };
 
-            record.Prototype = resource;
-            record.Prototype.DataRef = prototypeId;
+                record.Prototype = resource;
+                record.Prototype.DataRef = prototypeId;
+            }
         }
 
         /// <summary>

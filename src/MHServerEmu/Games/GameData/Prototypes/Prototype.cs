@@ -9,9 +9,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public CalligraphyHeader Header { get; }
         public Prototype Prototype { get; }
 
-        public PrototypeFile(byte[] data, bool isPropertyInfo = false)
+        public PrototypeFile(Stream stream, bool isPropertyInfo = false)
         {
-            using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
                 Header = new(reader);

@@ -8,9 +8,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PropSetTypeListPrototype[] PropShapeLists { get; }
         public string PropSetPackage { get; }
 
-        public PropSetPrototype(byte[] data)
+        public PropSetPrototype(Stream stream)
         {
-            using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
                 ResourceHeader header = new(reader);

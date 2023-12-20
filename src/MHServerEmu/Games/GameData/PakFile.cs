@@ -11,9 +11,7 @@ namespace MHServerEmu.Games.GameData
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Dictionary<string, byte[]> _fileDict = new();
-
-        public PakEntry[] Entries { get; } = Array.Empty<PakEntry>();
+        private readonly Dictionary<string, PakEntry> _entryDict = new();
 
         public PakFile(string pakFilePath)
         {
@@ -44,34 +42,51 @@ namespace MHServerEmu.Games.GameData
                 }
 
                 // Read all entries
-                Entries = new PakEntry[reader.ReadInt32()];
-                for (int i = 0; i < Entries.Length; i++)
-                    Entries[i] = new(reader);
-
-                // Decompress the actual data
-                byte[] buffer = new byte[1024 * 1024 * 6];  // 6 MB should be enough for the largest file (compressed Prototype.directory)
-
-                foreach (PakEntry entry in Entries)
+                uint numEntries = reader.ReadUInt32();
+                for (int i = 0; i < numEntries; i++)
                 {
-                    entry.Data = new byte[entry.UncompressedSize];
-                    stream.Read(buffer, 0, entry.CompressedSize);
-                    LZ4Codec.Decode(buffer, 0, entry.CompressedSize, entry.Data, 0, entry.Data.Length);
-                    _fileDict.Add(entry.FilePath, entry.Data);  // Add data lookup
+                    PakEntry entry = new(reader);
+                    _entryDict.Add(entry.FilePath, entry);
+                }
+
+                // Read and store compressed data
+                long dataOffset = reader.BaseStream.Position;
+                foreach (PakEntry entry in _entryDict.Values)
+                {
+                    reader.BaseStream.Position = dataOffset + entry.Offset;
+                    entry.CompressedData = reader.ReadBytes(entry.CompressedSize);
                 }
             }
 
-            Logger.Info($"Loaded {Entries.Length} entries from {Path.GetFileName(pakFilePath)}");
+            Logger.Info($"Loaded {_entryDict.Count} entries from {Path.GetFileName(pakFilePath)}");
         }
 
-        public byte[] GetFile(string filePath)
+        /// <summary>
+        /// Returns a stream of decompressed pak data.
+        /// </summary>
+        public MemoryStream LoadFileDataInPak(string filePath)
         {
-            if (_fileDict.TryGetValue(filePath, out var file) == false)
+            if (_entryDict.TryGetValue(filePath, out PakEntry entry) == false)
             {
                 Logger.Warn($"File {filePath} not found");
-                return Array.Empty<byte>();
+                return new(Array.Empty<byte>());
             }
-            
-            return file;
+
+            byte[] uncompressedData = new byte[entry.UncompressedSize];
+            LZ4Codec.Decode(entry.CompressedData, uncompressedData);
+            return new(uncompressedData);
+        }
+
+        /// <summary>
+        /// Returns an <see cref="IEnumerable{T}"/> collection of file paths with the specified prefix contained in this pak file.
+        /// </summary>
+        public IEnumerable<string> GetFilesFromPak(string prefix)
+        {
+            foreach (PakEntry entry in _entryDict.Values)
+            {
+                if (entry.FilePath.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
+                    yield return entry.FilePath;
+            }
         }
     }
 
@@ -84,7 +99,7 @@ namespace MHServerEmu.Games.GameData
         public int CompressedSize { get; }
         public int UncompressedSize { get; }
 
-        public byte[] Data { get; set; }
+        public byte[] CompressedData { get; set; }
 
         public PakEntry(BinaryReader reader)
         {
