@@ -40,7 +40,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         // AggMethod is null for some properties
                         string aggMethod = GameDatabase.GetAssetName((StringId)field.Value);
                         if (aggMethod == string.Empty) continue;
-                        AggMethod = (AggregationMethod)Enum.Parse(typeof(AggregationMethod), aggMethod);
+                        AggMethod = Enum.Parse<AggregationMethod>(aggMethod);
                         break;
                     case nameof(ClientOnly):
                         ClientOnly = (bool)field.Value;
@@ -64,7 +64,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         ReplicateForTransfer = (bool)field.Value;
                         break;
                     case nameof(ReplicateToDatabase):
-                        ReplicateToDatabase = (DatabasePolicy)Enum.Parse(typeof(DatabasePolicy), GameDatabase.GetAssetName((StringId)field.Value));
+                        ReplicateToDatabase = Enum.Parse<DatabasePolicy>(GameDatabase.GetAssetName((StringId)field.Value));
                         break;
                     case nameof(ReplicateToDatabaseAllowedOnItems):
                         ReplicateToDatabaseAllowedOnItems = (bool)field.Value;
@@ -103,7 +103,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         TruncatePropertyValueToInt = (bool)field.Value;
                         break;
                     case nameof(Type):
-                        Type = (PropertyDataType)Enum.Parse(typeof(PropertyDataType), GameDatabase.GetAssetName((StringId)field.Value));
+                        Type = Enum.Parse<PropertyDataType>(GameDatabase.GetAssetName((StringId)field.Value));
                         break;
                     case nameof(Version):
                         Version = (long)field.Value;

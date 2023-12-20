@@ -17,11 +17,11 @@ namespace MHServerEmu.Games.Powers
             List<GameMessage> messageList = new();
             List<NetMessagePowerCollectionAssignPower> powerList = new();
 
-            string avatarName = Enum.GetName(typeof(HardcodedAvatarEntityId), avatar);
+            string avatarName = Enum.GetName(avatar);
 
             if (avatarName != null)
             {
-                ulong replicationId = (ulong)Enum.Parse(typeof(HardcodedAvatarPropertyCollectionReplicationId), avatarName);
+                ulong replicationId = (ulong)Enum.Parse<HardcodedAvatarPropertyCollectionReplicationId>(avatarName);
 
                 Type powerPrototypeEnumType = typeof(PowerPrototypes).GetNestedType(avatarName, BindingFlags.Public);
                 if (powerPrototypeEnumType != null)
@@ -66,7 +66,7 @@ namespace MHServerEmu.Games.Powers
                     : $"Powers/Player/{avatarName}";
 
                 List<ulong> powerPropertyIdList = GameDatabase.DataDirectory.GetPowerPropertyIdList(propertyIdFilter);
-                powerPropertyIdList.Add((ulong)Enum.Parse(typeof(TravelPowerProperty), avatarName));
+                powerPropertyIdList.Add((ulong)Enum.Parse<TravelPowerProperty>(avatarName));
 
                 if (powerPropertyIdList.Count > 0)
                 {
