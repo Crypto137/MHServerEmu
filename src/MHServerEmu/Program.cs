@@ -34,8 +34,8 @@ namespace MHServerEmu
             Logger.Info("MHServerEmu starting...");
 
             // Initialize everything else and start the servers
-            if (ProtocolDispatchTable.IsInitialized == false || GameDatabase.IsInitialized == false || LiveTuningManager.IsInitialized == false ||
-                AccountManager.IsInitialized == false)
+            if (PakFileSystem.Instance.Initialize() == false || ProtocolDispatchTable.IsInitialized == false || GameDatabase.IsInitialized == false
+                || LiveTuningManager.IsInitialized == false || AccountManager.IsInitialized == false)
             {
                 Console.ReadLine();
                 return;

@@ -29,10 +29,6 @@ namespace MHServerEmu.Games.GameData
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private static readonly string PakDirectory = Path.Combine(FileHelper.AssetsDirectory, "GPAK");
-        private static readonly string CalligraphyPath = Path.Combine(PakDirectory, "Calligraphy.sip");
-        private static readonly string ResourcePath = Path.Combine(PakDirectory, "mu_cdata.sip");
-
         public static bool IsInitialized { get; }
 
         public static PrototypeClassManager PrototypeClassManager { get; }
@@ -51,14 +47,6 @@ namespace MHServerEmu.Games.GameData
 
         static GameDatabase()
         {
-            // Make sure sip files are present
-            if (File.Exists(CalligraphyPath) == false || File.Exists(ResourcePath) == false)
-            {
-                Logger.Fatal($"Calligraphy.sip and/or mu_cdata.sip are missing! Make sure you copied these files to {PakDirectory}.");
-                IsInitialized = false;
-                return;
-            }
-
             Logger.Info("Initializing game database...");
             var stopwatch = Stopwatch.StartNew();
 
@@ -67,7 +55,7 @@ namespace MHServerEmu.Games.GameData
 
             // Initialize DataDirectory
             DataDirectory = DataDirectory.Instance;
-            DataDirectory.Initialize(new(CalligraphyPath), new(ResourcePath));
+            DataDirectory.Initialize();
 
             // initializeLocaleManager - do we even need it?
 

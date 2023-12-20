@@ -54,15 +54,15 @@ namespace MHServerEmu.Games.GameData
 
         #region Initialization
 
-        public void Initialize(PakFile calligraphyPak, PakFile resourcePak)
+        public void Initialize()
         {
             var stopwatch = Stopwatch.StartNew();
 
             // Load Calligraphy data
-            LoadCalligraphyDataFramework(calligraphyPak);
+            LoadCalligraphyDataFramework();
 
             // Load resource prototypes
-            CreatePrototypeDataRefsForDirectory(resourcePak);
+            CreatePrototypeDataRefsForDirectory();
 
             // Build hierarchy lists and generate enum lookups for each prototype class and blueprint
             InitializeHierarchyCache();
@@ -75,7 +75,7 @@ namespace MHServerEmu.Games.GameData
 
                 // Load prototype as property info
                 string filePath = GameDatabase.GetPrototypeName(record.PrototypeId);
-                using (MemoryStream ms = calligraphyPak.LoadFileDataInPak($"Calligraphy/{filePath}"))
+                using (MemoryStream ms = LoadPakDataFile($"Calligraphy/{filePath}", PakFileId.Calligraphy))
                 {
                     PrototypeFile prototypeFile = new(ms, true);
                     record.Prototype = prototypeFile.Prototype;
@@ -92,7 +92,7 @@ namespace MHServerEmu.Games.GameData
                 // Load the prototype
                 // Load prototype as property info
                 string filePath = GameDatabase.GetPrototypeName(record.PrototypeId);
-                using (MemoryStream ms = calligraphyPak.LoadFileDataInPak($"Calligraphy/{filePath}"))
+                using (MemoryStream ms = LoadPakDataFile($"Calligraphy/{filePath}", PakFileId.Calligraphy))
                 {
                     PrototypeFile prototypeFile = new(ms, false);
                     record.Prototype = prototypeFile.Prototype;
@@ -103,12 +103,17 @@ namespace MHServerEmu.Games.GameData
             Logger.Info($"Initialized in {stopwatch.ElapsedMilliseconds} ms");
         }
 
-        private void LoadCalligraphyDataFramework(PakFile calligraphyPak)
+        private MemoryStream LoadPakDataFile(string filePath, PakFileId pakId)
+        {
+            return PakFileSystem.Instance.LoadFromPak(filePath, pakId);
+        }
+
+        private void LoadCalligraphyDataFramework()
         {
             // Load all directories
             for (int i = 0; i < DataDirectoryFiles.Length; i++)
             {
-                using (MemoryStream stream = calligraphyPak.LoadFileDataInPak(DataDirectoryFiles[i]))
+                using (MemoryStream stream = LoadPakDataFile(DataDirectoryFiles[i], PakFileId.Calligraphy))
                 using (BinaryReader reader = new(stream))
                 {
                     CalligraphyHeader header = new(reader);
@@ -117,22 +122,22 @@ namespace MHServerEmu.Games.GameData
                     switch (header.Magic)
                     {
                         case "CDR":     // Curves
-                            for (int j = 0; j < recordCount; j++) ReadCurveDirectoryEntry(reader, calligraphyPak);
+                            for (int j = 0; j < recordCount; j++) ReadCurveDirectoryEntry(reader);
                             Logger.Info($"Loaded {CurveDirectory.RecordCount} curves");
                             break;
 
                         case "TDR":     // AssetTypes
-                            for (int j = 0; j < recordCount; j++) ReadTypeDirectoryEntry(reader, calligraphyPak);
+                            for (int j = 0; j < recordCount; j++) ReadTypeDirectoryEntry(reader);
                             Logger.Info($"Loaded {AssetDirectory.AssetCount} assets of {AssetDirectory.AssetTypeCount} types");
                             break;
 
                         case "BDR":     // Blueprints
-                            for (int j = 0; j < recordCount; j++) ReadBlueprintDirectoryEntry(reader, calligraphyPak);
+                            for (int j = 0; j < recordCount; j++) ReadBlueprintDirectoryEntry(reader);
                             Logger.Info($"Loaded {_blueprintRecordDict.Count} blueprints");
                             break;
 
                         case "PDR":     // Prototypes
-                            for (int j = 0; j < recordCount; j++) ReadPrototypeDirectoryEntry(reader, calligraphyPak);
+                            for (int j = 0; j < recordCount; j++) ReadPrototypeDirectoryEntry(reader);
                             Logger.Info($"Loaded {_prototypeRecordDict.Count} Calligraphy prototype files");
                             break;
 
@@ -156,7 +161,7 @@ namespace MHServerEmu.Games.GameData
                 record.Blueprint.OnAllDirectoriesLoaded();
         }
 
-        private void ReadTypeDirectoryEntry(BinaryReader reader, PakFile pak)
+        private void ReadTypeDirectoryEntry(BinaryReader reader)
         {
             var dataId = (AssetTypeId)reader.ReadUInt64();
             var assetTypeGuid = (AssetTypeGuid)reader.ReadUInt64();
@@ -166,11 +171,11 @@ namespace MHServerEmu.Games.GameData
             GameDatabase.AssetTypeRefManager.AddDataRef(dataId, filePath);
             var record = AssetDirectory.CreateAssetTypeRecord(dataId, flags);
 
-            using (MemoryStream ms = pak.LoadFileDataInPak($"Calligraphy/{filePath}"))
+            using (MemoryStream ms = LoadPakDataFile($"Calligraphy/{filePath}", PakFileId.Calligraphy))
                 record.AssetType = new(ms, AssetDirectory, dataId, assetTypeGuid);
         }
 
-        private void ReadCurveDirectoryEntry(BinaryReader reader, PakFile pak)
+        private void ReadCurveDirectoryEntry(BinaryReader reader)
         {
             var curveId = (CurveId)reader.ReadUInt64();
             var guid = (CurveGuid)reader.ReadUInt64();          // Doesn't seem to be used at all
@@ -180,11 +185,11 @@ namespace MHServerEmu.Games.GameData
             GameDatabase.CurveRefManager.AddDataRef(curveId, filePath);
             var record = CurveDirectory.CreateCurveRecord(curveId, flags);
 
-            using (MemoryStream ms = pak.LoadFileDataInPak($"Calligraphy/{filePath}"))
+            using (MemoryStream ms = LoadPakDataFile($"Calligraphy/{filePath}", PakFileId.Calligraphy))
                 record.Curve = new(ms);
         }
 
-        private void ReadBlueprintDirectoryEntry(BinaryReader reader, PakFile pak)
+        private void ReadBlueprintDirectoryEntry(BinaryReader reader)
         {
             var dataId = (BlueprintId)reader.ReadUInt64();
             var guid = (BlueprintGuid)reader.ReadUInt64();
@@ -192,10 +197,10 @@ namespace MHServerEmu.Games.GameData
             string filePath = reader.ReadFixedString16().Replace('\\', '/');
 
             GameDatabase.BlueprintRefManager.AddDataRef(dataId, filePath);
-            LoadBlueprint(dataId, guid, flags, pak);
+            LoadBlueprint(dataId, guid, flags);
         }
 
-        private void ReadPrototypeDirectoryEntry(BinaryReader reader, PakFile pak)
+        private void ReadPrototypeDirectoryEntry(BinaryReader reader)
         {
             var prototypeId = (PrototypeId)reader.ReadUInt64();
             var prototypeGuid = (PrototypeGuid)reader.ReadUInt64();
@@ -203,7 +208,7 @@ namespace MHServerEmu.Games.GameData
             var flags = (PrototypeRecordFlags)reader.ReadByte();
             string filePath = reader.ReadFixedString16().Replace('\\', '/');
 
-            AddCalligraphyPrototype(prototypeId, prototypeGuid, blueprintId, flags, filePath, pak);
+            AddCalligraphyPrototype(prototypeId, prototypeGuid, blueprintId, flags, filePath);
         }
 
         private void ReadReplacementDirectoryEntry(BinaryReader reader)
@@ -215,13 +220,13 @@ namespace MHServerEmu.Games.GameData
             ReplacementDirectory.AddReplacementRecord(oldGuid, newGuid, name);
         }
 
-        private void LoadBlueprint(BlueprintId id, BlueprintGuid guid, BlueprintRecordFlags flags, PakFile pak)
+        private void LoadBlueprint(BlueprintId id, BlueprintGuid guid, BlueprintRecordFlags flags)
         {
             // Add guid lookup
             _blueprintGuidToDataRefDict[guid] = id;
 
             // Deserialize
-            using (MemoryStream ms = pak.LoadFileDataInPak($"Calligraphy/{GameDatabase.GetBlueprintName(id)}"))
+            using (MemoryStream ms = LoadPakDataFile($"Calligraphy/{GameDatabase.GetBlueprintName(id)}", PakFileId.Calligraphy))
             {
                 Blueprint blueprint = new(ms, id, guid);
 
@@ -234,7 +239,7 @@ namespace MHServerEmu.Games.GameData
             }
         }
 
-        private void AddCalligraphyPrototype(PrototypeId prototypeId, PrototypeGuid prototypeGuid, BlueprintId blueprintId, PrototypeRecordFlags flags, string filePath, PakFile pak)
+        private void AddCalligraphyPrototype(PrototypeId prototypeId, PrototypeGuid prototypeGuid, BlueprintId blueprintId, PrototypeRecordFlags flags, string filePath)
         {
             // Create a dataRef
             GameDatabase.PrototypeRefManager.AddDataRef(prototypeId, filePath);
@@ -262,22 +267,22 @@ namespace MHServerEmu.Games.GameData
             _prototypeRecordDict.Add(prototypeId, record);
         }
 
-        private void CreatePrototypeDataRefsForDirectory(PakFile pak)
+        private void CreatePrototypeDataRefsForDirectory()
         {
             // TODO: PakFileSystem::GetResourceFiles()
 
             int numResources = 0;
 
-            foreach (string resourceFilePath in pak.GetFilesFromPak("Resource"))
+            foreach (string filePath in PakFileSystem.Instance.GetResourceFiles("Resource"))
             {
-                AddResource(resourceFilePath, pak);
+                AddResource(filePath);
                 numResources++;
             }
 
             Logger.Info($"Loaded {numResources} resource prototype files");
         }
 
-        private void AddResource(string filePath, PakFile pak)
+        private void AddResource(string filePath)
         {
             // Get class type
             Type classType = GetResourceClassTypeByFileName(filePath);
@@ -301,7 +306,7 @@ namespace MHServerEmu.Games.GameData
             _prototypeRecordDict.Add(prototypeId, record);
 
             // Load the resource
-            using (MemoryStream ms = pak.LoadFileDataInPak(filePath))
+            using (MemoryStream ms = LoadPakDataFile(filePath, PakFileId.Default))
             {
                 string extension = Path.GetExtension(filePath);
                 Prototype resource = extension switch
