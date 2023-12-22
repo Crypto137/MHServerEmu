@@ -130,6 +130,14 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
             return enumValue;
         }
+
+        /// <summary>
+        /// Checks if this blueprint belongs to the specified blueprint in the hierarchy.
+        /// </summary>
+        public bool IsA(BlueprintId blueprintId)
+        {
+            return FileIdHashSet.Contains(blueprintId);
+        }
     }
 
     public readonly struct BlueprintReference

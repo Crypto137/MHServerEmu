@@ -68,22 +68,6 @@ namespace MHServerEmu.Games.GameData
             InitializeHierarchyCache();
 
             // TEMP HACK: load Calligraphy prototypes here
-            // Load property info prototypes manually first
-            foreach (var record in _blueprintRecordDict[PropertyInfoBlueprint].Blueprint.PrototypeRecordList)
-            {
-                if (record.PrototypeId == (PrototypeId)PropertyInfoBlueprint) continue;  // Skip default property info prototype
-
-                // Load prototype as property info
-                string filePath = GameDatabase.GetPrototypeName(record.PrototypeId);
-                using (MemoryStream ms = LoadPakDataFile($"Calligraphy/{filePath}", PakFileId.Calligraphy))
-                {
-                    PrototypeFile prototypeFile = new(ms, true);
-                    record.Prototype = prototypeFile.Prototype;
-                    record.Prototype.DataRef = record.PrototypeId;
-                }
-            }
-
-            // Load the rest of Calligraphy prototypes
             foreach (var record in _prototypeRecordDict.Values)
             {
                 if (record.DataOrigin != DataOrigin.Calligraphy) continue;
@@ -94,7 +78,9 @@ namespace MHServerEmu.Games.GameData
                 string filePath = GameDatabase.GetPrototypeName(record.PrototypeId);
                 using (MemoryStream ms = LoadPakDataFile($"Calligraphy/{filePath}", PakFileId.Calligraphy))
                 {
-                    PrototypeFile prototypeFile = new(ms, false);
+                    // HACK: load property info
+                    bool isPropertyInfo = record.Blueprint.IsA(PropertyInfoBlueprint) && record.PrototypeId != (PrototypeId)PropertyInfoBlueprint;
+                    PrototypeFile prototypeFile = new(ms, isPropertyInfo);
                     record.Prototype = prototypeFile.Prototype;
                     record.Prototype.DataRef = record.PrototypeId;
                 }
