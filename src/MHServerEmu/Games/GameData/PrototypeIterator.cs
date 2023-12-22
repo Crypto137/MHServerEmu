@@ -13,7 +13,10 @@ namespace MHServerEmu.Games.GameData
         WithEditorOnly  = 1 << 3    // Records that have EditorOnly set are skipped if this is not set
     }
 
-    public class PrototypeIterator : IEnumerable<Prototype>
+    /// <summary>
+    /// Iterates through prototype records using specified filters.
+    /// </summary>
+    public class PrototypeIterator : IEnumerable<PrototypeId>
     {
         private readonly IEnumerable<PrototypeDataRefRecord> _prototypeRecords;
         private readonly PrototypeIterateFlags _flags;
@@ -27,7 +30,7 @@ namespace MHServerEmu.Games.GameData
             _flags = flags;
         }
 
-        public IEnumerator<Prototype> GetEnumerator()
+        public IEnumerator<PrototypeId> GetEnumerator()
         {
             // Based on PrototypeIterator::advanceToValid()
             foreach (var record in _prototypeRecords)
@@ -42,7 +45,10 @@ namespace MHServerEmu.Games.GameData
 
                 // TODO: skip unapproved prototypes
 
-                yield return record.Prototype;
+                // For now we return PrototypeId instead of Prototype to simplify the implementation.
+                // The more accurate way would be a full IEnumerator where you could get either the id
+                // or the prototype itself after calling MoveNext().
+                yield return record.PrototypeId;
             }
         }
 

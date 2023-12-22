@@ -35,15 +35,18 @@ namespace MHServerEmu.Games.Properties
         {
             var stopwatch = Stopwatch.StartNew();
 
-            var propertyBlueprintId = GameDatabase.DataDirectory.PropertyBlueprint;
-            var propertyInfoBlueprintId = GameDatabase.DataDirectory.PropertyInfoBlueprint;
-            var propertyInfoDefaultPrototypeId = GameDatabase.DataDirectory.GetBlueprintDefaultPrototype(propertyInfoBlueprintId);
+            var dataDirectory = GameDatabase.DataDirectory;
 
-            foreach (Prototype propertyInfo in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(propertyInfoBlueprintId))
+            var propertyBlueprintId = dataDirectory.PropertyBlueprint;
+            var propertyInfoBlueprintId = dataDirectory.PropertyInfoBlueprint;
+            var propertyInfoDefaultPrototypeId = dataDirectory.GetBlueprintDefaultPrototype(propertyInfoBlueprintId);
+
+            foreach (PrototypeId propertyInfoId in dataDirectory.IteratePrototypesInHierarchy(propertyInfoBlueprintId))
             {
-                if (propertyInfo.DataRef == propertyInfoDefaultPrototypeId) continue;
+                if (propertyInfoId == propertyInfoDefaultPrototypeId) continue;
+                PropertyInfoPrototype propertyInfo = GameDatabase.GetPrototype<PropertyInfoPrototype>(propertyInfoId);
                 var propertyEnum = Enum.Parse<PropertyEnum>(Path.GetFileNameWithoutExtension(GameDatabase.GetPrototypeName(propertyInfo.DataRef)));
-                _propertyInfoDict.Add(propertyEnum, (PropertyInfoPrototype)propertyInfo);
+                _propertyInfoDict.Add(propertyEnum, propertyInfo);
             }
 
             // Finish initialization

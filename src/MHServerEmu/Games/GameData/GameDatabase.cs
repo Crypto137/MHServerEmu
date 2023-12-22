@@ -205,9 +205,8 @@ namespace MHServerEmu.Games.GameData
                     : DataDirectory.IteratePrototypesInHierarchy(parentPrototypeClassType, PrototypeIterateFlags.None);
 
                 // Iterate
-                foreach (Prototype prototype in iterator)
+                foreach (PrototypeId prototypeId in iterator)
                 {
-                    PrototypeId prototypeId = prototype.DataRef;
                     string prototypeName = GetPrototypeName(prototypeId);
 
                     // Check pattern

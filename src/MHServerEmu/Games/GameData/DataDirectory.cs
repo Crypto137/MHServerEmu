@@ -453,11 +453,17 @@ namespace MHServerEmu.Games.GameData
             return enumValue;
         }
 
+        /// <summary>
+        /// Returns an iterator for all prototype records.
+        /// </summary>
         public PrototypeIterator IterateAllPrototypes(PrototypeIterateFlags flags)
         {
             return new(_prototypeRecordDict.Values, flags);
         }
 
+        /// <summary>
+        /// Returns an iterator for prototypes belonging to the specified class.
+        /// </summary>
         public PrototypeIterator IteratePrototypesInHierarchy(Type prototypeClassType, PrototypeIterateFlags flags = PrototypeIterateFlags.None)
         {
             if (_prototypeClassLookupDict.TryGetValue(prototypeClassType, out var node) == false)
@@ -469,6 +475,9 @@ namespace MHServerEmu.Games.GameData
             return new(node.PrototypeRecordList, flags);
         }
 
+        /// <summary>
+        /// Returns an iterator for prototypes belonging to the specified blueprint.
+        /// </summary>
         public PrototypeIterator IteratePrototypesInHierarchy(BlueprintId blueprintId, PrototypeIterateFlags flags = PrototypeIterateFlags.None)
         {
             if (_blueprintRecordDict.TryGetValue(blueprintId, out var record) == false)
@@ -480,12 +489,18 @@ namespace MHServerEmu.Games.GameData
             return new(record.Blueprint.PrototypeRecordList, flags);
         }
 
+        /// <summary>
+        /// Returns an iterator for all blueprint records.
+        /// </summary>
         public IEnumerable<Blueprint> IterateBlueprints()
         {
             foreach (var record in _blueprintRecordDict.Values)
                 yield return record.Blueprint;
         }
 
+        /// <summary>
+        /// Returns an iterator for all asset type records.
+        /// </summary>
         public IEnumerable<AssetType> IterateAssetTypes()
         {
             return AssetDirectory.IterateAssetTypes();
