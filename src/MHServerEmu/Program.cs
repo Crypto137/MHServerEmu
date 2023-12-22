@@ -34,8 +34,7 @@ namespace MHServerEmu
             Logger.Info("MHServerEmu starting...");
 
             // Initialize everything else and start the servers
-            if (PakFileSystem.Instance.Initialize() == false || ProtocolDispatchTable.IsInitialized == false || GameDatabase.IsInitialized == false
-                || LiveTuningManager.IsInitialized == false || AccountManager.IsInitialized == false)
+            if (InitSystems() == false)
             {
                 Console.ReadLine();
                 return;
@@ -53,12 +52,18 @@ namespace MHServerEmu
             }
         }
 
+        /// <summary>
+        /// Shuts down all servers and exits the application.
+        /// </summary>
         public static void Shutdown()
         {
             ServerManager.Instance.Shutdown();
             Environment.Exit(0);
         }
-
+        
+        /// <summary>
+        /// Prints a fancy ASCII banner to console.
+        /// </summary>
         private static void PrintBanner()
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
@@ -72,6 +77,9 @@ namespace MHServerEmu
             Console.ResetColor();
         }
 
+        /// <summary>
+        /// Handles unhandled exceptions.
+        /// </summary>
         private static void UnhandledExceptionHandler(object sender, UnhandledExceptionEventArgs e)
         {
             Exception ex = e.ExceptionObject as Exception;
@@ -84,6 +92,9 @@ namespace MHServerEmu
             Console.ReadLine();
         }
 
+        /// <summary>
+        /// Initializes log targets.
+        /// </summary>
         private static void InitLoggers()
         {
             LogManager.Enabled = ConfigManager.Logging.EnableLogging;
@@ -98,6 +109,18 @@ namespace MHServerEmu
                 LogManager.AttachLogTarget(new FileTarget(ConfigManager.Logging.FileIncludeTimestamps,
                     ConfigManager.Logging.FileMinLevel, ConfigManager.Logging.FileMaxLevel,
                     $"MHServerEmu_{StartupTime:yyyy-dd-MM_HH.mm.ss}.log", false));
+        }
+
+        /// <summary>
+        /// Initializes systems needed to run the servers.
+        /// </summary>
+        private static bool InitSystems()
+        {
+            return PakFileSystem.Instance.Initialize()
+                && ProtocolDispatchTable.IsInitialized
+                && GameDatabase.IsInitialized
+                && LiveTuningManager.IsInitialized
+                && AccountManager.IsInitialized;
         }
     }
 }
