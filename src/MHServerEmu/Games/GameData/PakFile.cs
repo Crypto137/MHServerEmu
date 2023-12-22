@@ -13,6 +13,9 @@ namespace MHServerEmu.Games.GameData
 
         private readonly Dictionary<string, PakEntry> _entryDict = new();
 
+        /// <summary>
+        /// Loads a pak file from the specified path.
+        /// </summary>
         public PakFile(string pakFilePath)
         {
             // Make sure the specified file exists
@@ -88,27 +91,30 @@ namespace MHServerEmu.Games.GameData
                     yield return entry.FilePath;
             }
         }
-    }
 
-    public class PakEntry
-    {
-        public ulong FileHash { get; }
-        public string FilePath { get; }
-        public int ModTime { get; }
-        public int Offset { get; }
-        public int CompressedSize { get; }
-        public int UncompressedSize { get; }
-
-        public byte[] CompressedData { get; set; }
-
-        public PakEntry(BinaryReader reader)
+        /// <summary>
+        /// Represents a file contained in a pak.
+        /// </summary>
+        private class PakEntry
         {
-            FileHash = reader.ReadUInt64();
-            FilePath = reader.ReadFixedString32();
-            ModTime = reader.ReadInt32();
-            Offset = reader.ReadInt32();
-            CompressedSize = reader.ReadInt32();
-            UncompressedSize = reader.ReadInt32();
+            public ulong FileHash { get; }
+            public string FilePath { get; }
+            public int ModTime { get; }
+            public int Offset { get; }
+            public int CompressedSize { get; }
+            public int UncompressedSize { get; }
+
+            public byte[] CompressedData { get; set; }
+
+            public PakEntry(BinaryReader reader)
+            {
+                FileHash = reader.ReadUInt64();
+                FilePath = reader.ReadFixedString32();
+                ModTime = reader.ReadInt32();
+                Offset = reader.ReadInt32();
+                CompressedSize = reader.ReadInt32();
+                UncompressedSize = reader.ReadInt32();
+            }
         }
     }
 }
