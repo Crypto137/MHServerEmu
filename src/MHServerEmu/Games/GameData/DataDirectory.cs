@@ -67,25 +67,6 @@ namespace MHServerEmu.Games.GameData
             // Build hierarchy lists and generate enum lookups for each prototype class and blueprint
             InitializeHierarchyCache();
 
-            // TEMP HACK: load Calligraphy prototypes here
-            foreach (var record in _prototypeRecordDict.Values)
-            {
-                if (record.DataOrigin != DataOrigin.Calligraphy) continue;
-                if (record.Prototype != null) continue;     // skip already loaded prototypes
-
-                // Load the prototype
-                // Load prototype as property info
-                string filePath = GameDatabase.GetPrototypeName(record.PrototypeId);
-                using (MemoryStream ms = LoadPakDataFile($"Calligraphy/{filePath}", PakFileId.Calligraphy))
-                {
-                    // HACK: load property info
-                    bool isPropertyInfo = record.Blueprint.IsA(PropertyInfoBlueprint) && record.PrototypeId != (PrototypeId)PropertyInfoBlueprint;
-                    PrototypeFile prototypeFile = new(ms, isPropertyInfo);
-                    record.Prototype = prototypeFile.Prototype;
-                    record.Prototype.DataRef = record.PrototypeId;
-                }
-            }
-
             Logger.Info($"Initialized in {stopwatch.ElapsedMilliseconds} ms");
         }
 
@@ -250,6 +231,7 @@ namespace MHServerEmu.Games.GameData
                 record.Flags |= PrototypeRecordFlags.EditorOnly;
 
             _prototypeRecordDict.Add(prototypeId, record);
+            // Load the prototype on demand
         }
 
         private void CreatePrototypeDataRefsForDirectory()
@@ -287,25 +269,7 @@ namespace MHServerEmu.Games.GameData
             };
 
             _prototypeRecordDict.Add(prototypeId, record);
-
-            // Load the resource
-            using (MemoryStream ms = LoadPakDataFile(filePath, PakFileId.Default))
-            {
-                string extension = Path.GetExtension(filePath);
-                Prototype resource = extension switch
-                {
-                    ".cell"         => new CellPrototype(ms),
-                    ".district"     => new DistrictPrototype(ms),
-                    ".encounter"    => new EncounterResourcePrototype(ms),
-                    ".propset"      => new PropSetPrototype(ms),
-                    ".prop"         => new PropPackagePrototype(ms),
-                    ".ui"           => new UIPrototype(ms),
-                    _ => throw new NotImplementedException($"Unsupported resource type ({extension})."),
-                };
-
-                record.Prototype = resource;
-                record.Prototype.DataRef = prototypeId;
-            }
+            // Load the resource on demand
         }
 
         /// <summary>
@@ -416,7 +380,45 @@ namespace MHServerEmu.Games.GameData
         {
             var record = GetPrototypeDataRefRecord(id);
             if (record == null) return default;
-            if (record.Prototype == null) return default;
+
+            // Load the prototype if not loaded yet
+            if (record.Prototype == null)
+            {
+                string filePath = GameDatabase.GetPrototypeName(record.PrototypeId);
+
+                if (record.DataOrigin == DataOrigin.Calligraphy)
+                {
+                    using (MemoryStream ms = LoadPakDataFile($"Calligraphy/{filePath}", PakFileId.Calligraphy))
+                    {
+                        // HACK: determine if the prototype should be loaded as a property info prototype manually
+                        bool isPropertyInfo = record.Blueprint.IsA(PropertyInfoBlueprint) && record.PrototypeId != (PrototypeId)PropertyInfoBlueprint;
+
+                        PrototypeFile prototypeFile = new(ms, isPropertyInfo);
+                        record.Prototype = prototypeFile.Prototype;
+                        record.Prototype.DataRef = record.PrototypeId;
+                    }
+                }
+                else if (record.DataOrigin == DataOrigin.Resource)
+                {
+                    using (MemoryStream ms = LoadPakDataFile(filePath, PakFileId.Default))
+                    {
+                        string extension = Path.GetExtension(filePath);
+                        Prototype resource = extension switch
+                        {
+                            ".cell"         => new CellPrototype(ms),
+                            ".district"     => new DistrictPrototype(ms),
+                            ".encounter"    => new EncounterResourcePrototype(ms),
+                            ".propset"      => new PropSetPrototype(ms),
+                            ".prop"         => new PropPackagePrototype(ms),
+                            ".ui"           => new UIPrototype(ms),
+                            _ => throw new NotImplementedException($"Unsupported resource type ({extension})."),
+                        };
+
+                        record.Prototype = resource;
+                        record.Prototype.DataRef = record.PrototypeId;
+                    }
+                }
+            }
 
             return (T)record.Prototype;
         }
