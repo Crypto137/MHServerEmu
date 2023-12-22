@@ -63,5 +63,7 @@ namespace MHServerEmu.Networking.Tcp
         }
 
         #endregion
+
+        public override string ToString() => RemoteEndPoint?.ToString();
     }
 }
