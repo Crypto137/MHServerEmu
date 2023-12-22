@@ -13,6 +13,7 @@ namespace MHServerEmu.Common.Config
         public static PlayerManagerConfig PlayerManager { get; }
         public static DefaultPlayerDataConfig DefaultPlayerData { get; }
         public static GroupingManagerConfig GroupingManager { get; }
+        public static GameDataConfig GameData { get; }
         public static GameOptionsConfig GameOptions { get; }
         public static BillingConfig Billing { get; }
 
@@ -30,6 +31,7 @@ namespace MHServerEmu.Common.Config
                 PlayerManager = new(configFile);
                 DefaultPlayerData = new(configFile);
                 GroupingManager = new(configFile);
+                GameData = new(configFile);
                 GameOptions = new(configFile);
                 Billing = new(configFile);
 

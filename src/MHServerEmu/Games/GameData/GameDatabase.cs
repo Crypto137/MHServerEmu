@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Helpers;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Achievements;
@@ -64,7 +65,12 @@ namespace MHServerEmu.Games.GameData
 
             // initializeKeywordPrototypes
 
-            // LoadAllData
+            // Preload all prototypes if needed
+            if (ConfigManager.GameData.LoadAllPrototypes)
+            {
+                foreach (PrototypeId prototypeId in DataDirectory.IterateAllPrototypes())
+                    DataDirectory.GetPrototype<Prototype>(prototypeId);
+            }
 
             // InteractionManager::Initialize 
 

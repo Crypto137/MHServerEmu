@@ -458,7 +458,7 @@ namespace MHServerEmu.Games.GameData
         /// <summary>
         /// Returns an iterator for all prototype records.
         /// </summary>
-        public PrototypeIterator IterateAllPrototypes(PrototypeIterateFlags flags)
+        public PrototypeIterator IterateAllPrototypes(PrototypeIterateFlags flags = PrototypeIterateFlags.None)
         {
             return new(_prototypeRecordDict.Values, flags);
         }
