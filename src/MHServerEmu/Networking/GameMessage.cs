@@ -3,6 +3,9 @@ using MHServerEmu.Common.Logging;
 
 namespace MHServerEmu.Networking
 {
+    /// <summary>
+    /// Contains a serialized <see cref="IMessage"/>.
+    /// </summary>
     public class GameMessage
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -11,10 +14,8 @@ namespace MHServerEmu.Networking
         public byte[] Payload { get; }
 
         /// <summary>
-        /// Constructs a new game message from raw data.
+        /// Constructs a new <see cref="GameMessage"/> from raw data.
         /// </summary>
-        /// <param name="id">Message id.</param>
-        /// <param name="payload">Message payload.</param>
         public GameMessage(byte id, byte[] payload)
         {
             Id = id;
@@ -22,9 +23,8 @@ namespace MHServerEmu.Networking
         }
 
         /// <summary>
-        /// Constructs a new game message from a protobuf message.
+        /// Constructs a new <see cref="GameMessage"/> from an <see cref="IMessage"/>.
         /// </summary>
-        /// <param name="message">Protobuf message.</param>
         public GameMessage(IMessage message)
         {
             Id = ProtocolDispatchTable.GetMessageId(message);
@@ -32,9 +32,8 @@ namespace MHServerEmu.Networking
         }
 
         /// <summary>
-        /// Decodes a game message from the provided CodedInputStream.
+        /// Decodes a <see cref="GameMessage"/> from the provided <see cref="CodedInputStream"/>.
         /// </summary>
-        /// <param name="stream">CodedInputStream to decode from.</param>
         public GameMessage(CodedInputStream stream)
         {
             try
@@ -51,9 +50,8 @@ namespace MHServerEmu.Networking
         }
 
         /// <summary>
-        /// Encodes the game message to the provided CodedOutputStream.
+        /// Encodes the <see cref="GameMessage"/> to the provided <see cref="CodedOutputStream"/>.
         /// </summary>
-        /// <param name="stream">CodedOutputStream to encode to.</param>
         public void Encode(CodedOutputStream stream)
         {
             stream.WriteRawVarint32(Id);
@@ -62,7 +60,7 @@ namespace MHServerEmu.Networking
         }
 
         /// <summary>
-        /// Serializes the game message to a byte array.
+        /// Serializes the <see cref="GameMessage"/> instance to a byte array.
         /// </summary>
         public byte[] Serialize()
         {
@@ -76,10 +74,8 @@ namespace MHServerEmu.Networking
         }
 
         /// <summary>
-        /// Deserializes the payload as the specified message type.
+        /// Deserializes the payload as <typeparamref name="T"/>.
         /// </summary>
-        /// <typeparam name="T">Protobuf message type.</typeparam>
-        /// <returns>Deserialized protobuf message of the specified type.</returns>
         public T Deserialize<T>() where T: IMessage
         {
             try
@@ -95,10 +91,8 @@ namespace MHServerEmu.Networking
         }
 
         /// <summary>
-        /// Deserializes the payload as the specified message type. The return value indicates whether the operation succeeded.
+        /// Deserializes the payload as <typeparamref name="T"/>. The return value indicates whether the operation succeeded.
         /// </summary>
-        /// <typeparam name="T">Protobuf message type.</typeparam>
-        /// <param name="message">Deserialized protobuf message of the specified type.</param>
         public bool TryDeserialize<T>(out T message) where T: IMessage
         {
             message = Deserialize<T>();
@@ -106,16 +100,11 @@ namespace MHServerEmu.Networking
         }
 
         /// <summary>
-        /// Deserializes the payload using the specified protocol.
+        /// Deserializes the payload as an <see cref="IMessage"/> using the specified protocol.
         /// </summary>
-        /// <param name="protocolEnumType">Protocol enum type.</param>
-        /// <returns>Deserialized protobuf message.</returns>
         public IMessage Deserialize(Type protocolEnumType)
         {
-            string name = ProtocolDispatchTable.GetMessageName(protocolEnumType, Id);
-            Type type = ProtocolDispatchTable.GetMessageType(name);
-            var parse = ProtocolDispatchTable.GetParseMessageDelegate(type);
-
+            var parse = ProtocolDispatchTable.GetParseMessageDelegate(protocolEnumType, Id);
             return parse(Payload);
         }
     }
