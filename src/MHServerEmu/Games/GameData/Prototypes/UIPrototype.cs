@@ -140,20 +140,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     #region Resource UI prototypes
 
-    public class UIPrototype : Prototype
+    public class UIPrototype : Prototype, IBinaryResource
     {
-        public UIPanelPrototype[] UIPanels { get; }
+        public UIPanelPrototype[] UIPanels { get; private set; }
 
-        public UIPrototype(Stream stream)
+        public void Deserialize(BinaryReader reader)
         {
-            using (BinaryReader reader = new(stream))
-            {
-                ResourceHeader header = new(reader);
-
-                UIPanels = new UIPanelPrototype[reader.ReadUInt32()];
-                for (int i = 0; i < UIPanels.Length; i++)
-                    UIPanels[i] = UIPanelPrototype.ReadFromBinaryReader(reader);
-            }
+            UIPanels = new UIPanelPrototype[reader.ReadUInt32()];
+            for (int i = 0; i < UIPanels.Length; i++)
+                UIPanels[i] = UIPanelPrototype.ReadFromBinaryReader(reader);
         }
     }
 

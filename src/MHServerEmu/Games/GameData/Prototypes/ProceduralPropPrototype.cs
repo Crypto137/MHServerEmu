@@ -5,20 +5,15 @@ using MHServerEmu.Games.GameData.Resources;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class PropPackagePrototype : Prototype
+    public class PropPackagePrototype : Prototype, IBinaryResource
     {
-        public ProceduralPropGroupPrototype[] PropGroups { get; }
+        public ProceduralPropGroupPrototype[] PropGroups { get; private set; }
 
-        public PropPackagePrototype(Stream stream)
+        public void Deserialize(BinaryReader reader)
         {
-            using (BinaryReader reader = new(stream))
-            {
-                ResourceHeader header = new(reader);
-
-                PropGroups = new ProceduralPropGroupPrototype[reader.ReadUInt32()];
-                for (int i = 0; i < PropGroups.Length; i++)
-                    PropGroups[i] = new(reader);
-            }
+            PropGroups = new ProceduralPropGroupPrototype[reader.ReadUInt32()];
+            for (int i = 0; i < PropGroups.Length; i++)
+                PropGroups[i] = new(reader);
         }
     }
 

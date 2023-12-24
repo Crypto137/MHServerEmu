@@ -3,23 +3,18 @@ using MHServerEmu.Games.GameData.Resources;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class PropSetPrototype : Prototype
+    public class PropSetPrototype : Prototype, IBinaryResource
     {
-        public PropSetTypeListPrototype[] PropShapeLists { get; }
-        public string PropSetPackage { get; }
+        public PropSetTypeListPrototype[] PropShapeLists { get; private set; }
+        public string PropSetPackage { get; private set; }
 
-        public PropSetPrototype(Stream stream)
+        public void Deserialize(BinaryReader reader)
         {
-            using (BinaryReader reader = new(stream))
-            {
-                ResourceHeader header = new(reader);
+            PropShapeLists = new PropSetTypeListPrototype[reader.ReadUInt32()];
+            for (int i = 0; i < PropShapeLists.Length; i++)
+                PropShapeLists[i] = new(reader);
 
-                PropShapeLists = new PropSetTypeListPrototype[reader.ReadUInt32()];
-                for (int i = 0; i < PropShapeLists.Length; i++)
-                    PropShapeLists[i] = new(reader);
-
-                PropSetPackage = reader.ReadFixedString32();
-            }
+            PropSetPackage = reader.ReadFixedString32();
         }
     }
 

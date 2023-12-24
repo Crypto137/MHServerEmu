@@ -5,6 +5,7 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
+using MHServerEmu.Games.GameData.Resources;
 
 namespace MHServerEmu.Games.GameData
 {
@@ -32,6 +33,11 @@ namespace MHServerEmu.Games.GameData
             "Calligraphy/Replacement.directory"
         };
 
+        // Prototype serializers
+        private static readonly CalligraphySerializer CalligraphySerializer = new();
+        private static readonly BinaryResourceSerializer BinaryResourceSerializer = new();
+
+        // Lookup dictionaries
         private readonly Dictionary<BlueprintId, LoadedBlueprintRecord> _blueprintRecordDict = new();
         private readonly Dictionary<BlueprintGuid, BlueprintId> _blueprintGuidToDataRefDict = new();
 
@@ -40,12 +46,15 @@ namespace MHServerEmu.Games.GameData
 
         private readonly Dictionary<Type, PrototypeEnumValueNode> _prototypeClassLookupDict = new(GameDatabase.PrototypeClassManager.ClassCount);
 
+        // Singleton instance
         public static DataDirectory Instance { get; } = new();
 
+        // Subdirectories
         public CurveDirectory CurveDirectory { get; } = new();
         public AssetDirectory AssetDirectory { get; } = new();
         public ReplacementDirectory ReplacementDirectory { get; } = new();
 
+        // Quick access for blueprints
         public BlueprintId KeywordBlueprint { get; private set; } = BlueprintId.Invalid;
         public BlueprintId PropertyBlueprint { get; private set; } = BlueprintId.Invalid;
         public BlueprintId PropertyInfoBlueprint { get; private set; } = BlueprintId.Invalid;
@@ -126,64 +135,6 @@ namespace MHServerEmu.Games.GameData
             // Populate blueprint hierarchy hash sets
             foreach (LoadedBlueprintRecord record in _blueprintRecordDict.Values)
                 record.Blueprint.OnAllDirectoriesLoaded();
-        }
-
-        private void ReadTypeDirectoryEntry(BinaryReader reader)
-        {
-            var dataId = (AssetTypeId)reader.ReadUInt64();
-            var assetTypeGuid = (AssetTypeGuid)reader.ReadUInt64();
-            var flags = (AssetTypeRecordFlags)reader.ReadByte();
-            string filePath = reader.ReadFixedString16().Replace('\\', '/');
-
-            GameDatabase.AssetTypeRefManager.AddDataRef(dataId, filePath);
-            var record = AssetDirectory.CreateAssetTypeRecord(dataId, flags);
-
-            using (MemoryStream ms = LoadPakDataFile($"Calligraphy/{filePath}", PakFileId.Calligraphy))
-                record.AssetType = new(ms, AssetDirectory, dataId, assetTypeGuid);
-        }
-
-        private void ReadCurveDirectoryEntry(BinaryReader reader)
-        {
-            var curveId = (CurveId)reader.ReadUInt64();
-            var guid = (CurveGuid)reader.ReadUInt64();          // Doesn't seem to be used at all
-            var flags = (CurveRecordFlags)reader.ReadByte();    // Neither is this, none of the curve records have any flags set
-            string filePath = reader.ReadFixedString16().Replace('\\', '/');
-
-            GameDatabase.CurveRefManager.AddDataRef(curveId, filePath);
-            var record = CurveDirectory.CreateCurveRecord(curveId, flags);
-
-            // Curves are loaded on demand when GetCurve() is called
-        }
-
-        private void ReadBlueprintDirectoryEntry(BinaryReader reader)
-        {
-            var dataId = (BlueprintId)reader.ReadUInt64();
-            var guid = (BlueprintGuid)reader.ReadUInt64();
-            var flags = (BlueprintRecordFlags)reader.ReadByte();
-            string filePath = reader.ReadFixedString16().Replace('\\', '/');
-
-            GameDatabase.BlueprintRefManager.AddDataRef(dataId, filePath);
-            LoadBlueprint(dataId, guid, flags);
-        }
-
-        private void ReadPrototypeDirectoryEntry(BinaryReader reader)
-        {
-            var prototypeId = (PrototypeId)reader.ReadUInt64();
-            var prototypeGuid = (PrototypeGuid)reader.ReadUInt64();
-            var blueprintId = (BlueprintId)reader.ReadUInt64();
-            var flags = (PrototypeRecordFlags)reader.ReadByte();
-            string filePath = reader.ReadFixedString16().Replace('\\', '/');
-
-            AddCalligraphyPrototype(prototypeId, prototypeGuid, blueprintId, flags, filePath);
-        }
-
-        private void ReadReplacementDirectoryEntry(BinaryReader reader)
-        {
-            ulong oldGuid = reader.ReadUInt64();
-            ulong newGuid = reader.ReadUInt64();
-            string name = reader.ReadFixedString16();
-
-            ReplacementDirectory.AddReplacementRecord(oldGuid, newGuid, name);
         }
 
         private void LoadBlueprint(BlueprintId id, BlueprintGuid guid, BlueprintRecordFlags flags)
@@ -402,18 +353,7 @@ namespace MHServerEmu.Games.GameData
                 {
                     using (MemoryStream ms = LoadPakDataFile(filePath, PakFileId.Default))
                     {
-                        string extension = Path.GetExtension(filePath);
-                        Prototype resource = extension switch
-                        {
-                            ".cell"         => new CellPrototype(ms),
-                            ".district"     => new DistrictPrototype(ms),
-                            ".encounter"    => new EncounterResourcePrototype(ms),
-                            ".propset"      => new PropSetPrototype(ms),
-                            ".prop"         => new PropPackagePrototype(ms),
-                            ".ui"           => new UIPrototype(ms),
-                            _ => throw new NotImplementedException($"Unsupported resource type ({extension})."),
-                        };
-
+                        Prototype resource = DeserializePrototypeFromStream(ms, record);
                         record.Prototype = resource;
                         record.Prototype.DataRef = record.PrototypeId;
                     }
@@ -562,6 +502,86 @@ namespace MHServerEmu.Games.GameData
         }
 
         private bool IsEditorOnlyByClassType(Type type) => type == typeof(NaviFragmentPrototype);   // Only NaviFragmentPrototype is editor only
+
+        #endregion
+
+        #region Deserialization
+
+        private void ReadTypeDirectoryEntry(BinaryReader reader)
+        {
+            var dataId = (AssetTypeId)reader.ReadUInt64();
+            var assetTypeGuid = (AssetTypeGuid)reader.ReadUInt64();
+            var flags = (AssetTypeRecordFlags)reader.ReadByte();
+            string filePath = reader.ReadFixedString16().Replace('\\', '/');
+
+            GameDatabase.AssetTypeRefManager.AddDataRef(dataId, filePath);
+            var record = AssetDirectory.CreateAssetTypeRecord(dataId, flags);
+
+            using (MemoryStream ms = LoadPakDataFile($"Calligraphy/{filePath}", PakFileId.Calligraphy))
+                record.AssetType = new(ms, AssetDirectory, dataId, assetTypeGuid);
+        }
+
+        private void ReadCurveDirectoryEntry(BinaryReader reader)
+        {
+            var curveId = (CurveId)reader.ReadUInt64();
+            var guid = (CurveGuid)reader.ReadUInt64();          // Doesn't seem to be used at all
+            var flags = (CurveRecordFlags)reader.ReadByte();    // Neither is this, none of the curve records have any flags set
+            string filePath = reader.ReadFixedString16().Replace('\\', '/');
+
+            GameDatabase.CurveRefManager.AddDataRef(curveId, filePath);
+            var record = CurveDirectory.CreateCurveRecord(curveId, flags);
+
+            // Curves are loaded on demand when GetCurve() is called
+        }
+
+        private void ReadBlueprintDirectoryEntry(BinaryReader reader)
+        {
+            var dataId = (BlueprintId)reader.ReadUInt64();
+            var guid = (BlueprintGuid)reader.ReadUInt64();
+            var flags = (BlueprintRecordFlags)reader.ReadByte();
+            string filePath = reader.ReadFixedString16().Replace('\\', '/');
+
+            GameDatabase.BlueprintRefManager.AddDataRef(dataId, filePath);
+            LoadBlueprint(dataId, guid, flags);
+        }
+
+        private void ReadPrototypeDirectoryEntry(BinaryReader reader)
+        {
+            var prototypeId = (PrototypeId)reader.ReadUInt64();
+            var prototypeGuid = (PrototypeGuid)reader.ReadUInt64();
+            var blueprintId = (BlueprintId)reader.ReadUInt64();
+            var flags = (PrototypeRecordFlags)reader.ReadByte();
+            string filePath = reader.ReadFixedString16().Replace('\\', '/');
+
+            AddCalligraphyPrototype(prototypeId, prototypeGuid, blueprintId, flags, filePath);
+        }
+
+        private void ReadReplacementDirectoryEntry(BinaryReader reader)
+        {
+            ulong oldGuid = reader.ReadUInt64();
+            ulong newGuid = reader.ReadUInt64();
+            string name = reader.ReadFixedString16();
+
+            ReplacementDirectory.AddReplacementRecord(oldGuid, newGuid, name);
+        }
+
+        /// <summary>
+        /// Deserializes a prototype from a stream using the appropriate serializer.
+        /// </summary>
+        private Prototype DeserializePrototypeFromStream(Stream stream, PrototypeDataRefRecord record)
+        {
+            // Get the appropriate serializer (TODO: CalligraphySerializer).
+            // Note: the client uses a separate getSerializer() method here to achieve the same result.
+            GameDataSerializer serializer = BinaryResourceSerializer;
+
+            // Create a new prototype instance
+            Prototype prototype = (Prototype)Activator.CreateInstance(record.ClassType);
+
+            // Deserialize the prototype
+            serializer.Deserialize(prototype, record.PrototypeId, stream);
+
+            return prototype;
+        }
 
         #endregion
 

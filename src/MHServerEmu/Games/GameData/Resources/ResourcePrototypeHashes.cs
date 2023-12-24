@@ -1,7 +1,7 @@
 ﻿namespace MHServerEmu.Games.GameData.Resources
 {
     /// <summary>
-    /// DJB2 hash used to identify resource prototype class.
+    /// A djb2 hash used to identify the resource prototype class.
     /// </summary>
     public enum ResourcePrototypeHash : uint
     {

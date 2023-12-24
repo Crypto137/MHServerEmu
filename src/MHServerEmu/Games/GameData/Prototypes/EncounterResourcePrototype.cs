@@ -4,24 +4,19 @@ using MHServerEmu.Games.GameData.Resources;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class EncounterResourcePrototype : Prototype
+    public class EncounterResourcePrototype : Prototype, IBinaryResource
     {
-        public PrototypeGuid PopulationMarkerGuid { get; }
-        public string ClientMap { get; }
-        public MarkerSetPrototype MarkerSet { get; }
-        public NaviPatchSourcePrototype NaviPatchSource { get; }
+        public PrototypeGuid PopulationMarkerGuid { get; private set; }
+        public string ClientMap { get; private set; }
+        public MarkerSetPrototype MarkerSet { get; private set; }
+        public NaviPatchSourcePrototype NaviPatchSource { get; private set; }
 
-        public EncounterResourcePrototype(Stream stream)
+        public void Deserialize(BinaryReader reader)
         {
-            using (BinaryReader reader = new(stream))
-            {
-                ResourceHeader header = new(reader);
-
-                PopulationMarkerGuid = (PrototypeGuid)reader.ReadUInt64();
-                ClientMap = reader.ReadFixedString32();
-                MarkerSet = new(reader);
-                NaviPatchSource = new(reader);
-            }
+            PopulationMarkerGuid = (PrototypeGuid)reader.ReadUInt64();
+            ClientMap = reader.ReadFixedString32();
+            MarkerSet = new(reader);
+            NaviPatchSource = new(reader);
         }
     }
 }
