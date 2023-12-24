@@ -24,7 +24,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProceduralPropGroupPrototype : Prototype
     {
-        public ResourcePrototypeHash ProtoNameHash { get; }
         public string NameId { get; }
         public string PrefabPath { get; }
         public Vector3 MarkerPosition { get; }
@@ -36,7 +35,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public ProceduralPropGroupPrototype(BinaryReader reader)
         {
-            ProtoNameHash = (ResourcePrototypeHash)reader.ReadUInt32();
+            var protoNameHash = (ResourcePrototypeHash)reader.ReadUInt32();
+
             NameId = reader.ReadFixedString32();
             PrefabPath = reader.ReadFixedString32();
             MarkerPosition = reader.ReadVector3();

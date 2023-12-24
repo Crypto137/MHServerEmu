@@ -1,5 +1,4 @@
 ﻿using MHServerEmu.Common.Extensions;
-using MHServerEmu.Games.GameData.Resources;
 
 namespace MHServerEmu.Games.GameData.Prototypes.Markers
 {
@@ -11,8 +10,6 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
 
         public UnrealPropMarkerPrototype(BinaryReader reader)
         {
-            ProtoNameHash = ResourcePrototypeHash.UnrealPropMarkerPrototype;
-
             UnrealClassName = reader.ReadFixedString32();
             UnrealQualifiedName = reader.ReadFixedString32();
             UnrealArchetypeName = reader.ReadFixedString32();

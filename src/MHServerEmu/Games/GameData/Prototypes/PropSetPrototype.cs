@@ -25,13 +25,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PropSetTypeListPrototype : Prototype
     {
-        public ResourcePrototypeHash ProtoNameHash { get; }
         public PropSetTypeEntryPrototype[] PropShapeEntries { get; }
         public PrototypeGuid PropType { get; }
 
         public PropSetTypeListPrototype(BinaryReader reader)
         {
-            ProtoNameHash = (ResourcePrototypeHash)reader.ReadUInt32();
+            var protoNameHash = (ResourcePrototypeHash)reader.ReadUInt32();
 
             PropShapeEntries = new PropSetTypeEntryPrototype[reader.ReadUInt32()];
             for (int i = 0; i < PropShapeEntries.Length; i++)
@@ -43,13 +42,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PropSetTypeEntryPrototype : Prototype
     {
-        public ResourcePrototypeHash ProtoNameHash { get; }
         public string NameId { get; }
         public string ResourcePackage { get; }
 
         public PropSetTypeEntryPrototype(BinaryReader reader)
         {
-            ProtoNameHash = (ResourcePrototypeHash)reader.ReadUInt32();
+            var protoNameHash = (ResourcePrototypeHash)reader.ReadUInt32();
+            
             NameId = reader.ReadFixedString32();
             ResourcePackage = reader.ReadFixedString32();
         }

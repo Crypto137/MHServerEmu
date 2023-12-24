@@ -18,14 +18,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PathNodeSetPrototype : Prototype
     {
-        public ResourcePrototypeHash ProtoNameHash { get; }
         public ushort Group { get; }
         public PathNodePrototype[] PathNodes { get; }
         public ushort NumNodes { get; }
 
         public PathNodeSetPrototype(BinaryReader reader)
         {
-            ProtoNameHash = (ResourcePrototypeHash)reader.ReadUInt32();
+            var protoNameHash = (ResourcePrototypeHash)reader.ReadUInt32();
             Group = reader.ReadUInt16();
 
             PathNodes = new PathNodePrototype[reader.ReadUInt32()];
@@ -38,12 +37,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PathNodePrototype : Prototype
     {
-        public ResourcePrototypeHash ProtoNameHash { get; }
         public Vector3 Position { get; }
 
         public PathNodePrototype(BinaryReader reader)
         {
-            ProtoNameHash = (ResourcePrototypeHash)reader.ReadUInt32();
+            var protoNameHash = (ResourcePrototypeHash)reader.ReadUInt32();
             Position = reader.ReadVector3();
         }
     }

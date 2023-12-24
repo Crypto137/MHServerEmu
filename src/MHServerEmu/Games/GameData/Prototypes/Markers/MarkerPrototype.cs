@@ -4,11 +4,10 @@ using MHServerEmu.Games.GameData.Resources;
 namespace MHServerEmu.Games.GameData.Prototypes.Markers
 {
     /// <summary>
-    /// This is the parent class for all other MarkerPrototypes.
+    /// Base class for all MarkerPrototypes.
     /// </summary>
     public class MarkerPrototype : Prototype
     {
-        public ResourcePrototypeHash ProtoNameHash { get; protected set; }    // DJB hash of the class name
         public Vector3 Position { get; protected set; }
         public Vector3 Rotation { get; protected set; }
     }
@@ -30,7 +29,7 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
 
         private MarkerPrototype ReadMarkerPrototype(BinaryReader reader)
         {
-            ResourcePrototypeHash hash = (ResourcePrototypeHash)reader.ReadUInt32();
+            var hash = (ResourcePrototypeHash)reader.ReadUInt32();
 
             switch (hash)
             {
@@ -46,8 +45,9 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
                     return new ResourceMarkerPrototype(reader);
                 case ResourcePrototypeHash.UnrealPropMarkerPrototype:
                     return new UnrealPropMarkerPrototype(reader);
-                default:
-                    throw new($"Unknown ResourcePrototypeHash {(uint)hash}");   // Throw an exception if there's a hash for a type we didn't expect
+
+                default:    // Throw an exception if there's a hash for a type we didn't expect
+                    throw new NotImplementedException($"Unknown ResourcePrototypeHash {(uint)hash}.");
             }
         }
     }

@@ -159,7 +159,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class UIPanelPrototype : Prototype
     {
-        public ResourcePrototypeHash ProtoNameHash { get; protected set; }
         public string PanelName { get; protected set; }
         public string TargetName { get; protected set; }
         public PanelScaleMode ScaleMode { get; protected set; }
@@ -176,7 +175,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public static UIPanelPrototype ReadFromBinaryReader(BinaryReader reader)
         {
-            ResourcePrototypeHash hash = (ResourcePrototypeHash)reader.ReadUInt32();
+            var hash = (ResourcePrototypeHash)reader.ReadUInt32();
 
             switch (hash)
             {
@@ -186,8 +185,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     return new AnchoredPanelPrototype(reader);
                 case ResourcePrototypeHash.None:
                     return null;
-                default:
-                    throw new($"Unknown ResourcePrototypeHash {(uint)hash}");   // Throw an exception if there's a hash for a type we didn't expect
+                default:    // Throw an exception if there's a hash for a type we didn't expect
+                    throw new NotImplementedException($"Unknown ResourcePrototypeHash {(uint)hash}.");
             }
         }
 
@@ -220,8 +219,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public StretchedPanelPrototype(BinaryReader reader)
         {
-            ProtoNameHash = ResourcePrototypeHash.StretchedPanelPrototype;
-
             TopLeftPin = reader.ReadVector2();
             TL_X_TargetName = reader.ReadFixedString32();
             TL_Y_TargetName = reader.ReadFixedString32();
@@ -244,8 +241,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public AnchoredPanelPrototype(BinaryReader reader)
         {
-            ProtoNameHash = ResourcePrototypeHash.AnchoredPanelPrototype;
-
             SourceAttachmentPin = reader.ReadVector2();
             TargetAttachmentPin = reader.ReadVector2();
             VirtualPixelOffset = reader.ReadVector2();

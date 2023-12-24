@@ -1,6 +1,5 @@
 ﻿using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
-using MHServerEmu.Games.GameData.Resources;
 
 namespace MHServerEmu.Games.GameData.Prototypes.Markers
 {
@@ -10,8 +9,6 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
 
         public RoadConnectionMarkerPrototype(BinaryReader reader)
         {
-            ProtoNameHash = ResourcePrototypeHash.RoadConnectionMarkerPrototype;
-
             Extents = reader.ReadVector3();
 
             Position = reader.ReadVector3();
