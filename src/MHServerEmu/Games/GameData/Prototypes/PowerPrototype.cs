@@ -230,225 +230,225 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PowerPrototype : Prototype
     {
-        public ulong Properties { get; set; }
-        public PowerEventActionPrototype[] ActionsTriggeredOnPowerEvent { get; set; }
-        public ActivationType Activation { get; set; }
-        public float AnimationContactTimePercent { get; set; }
-        public int AnimationTimeMS { get; set; }
-        public ConditionPrototype AppliesConditions { get; set; }
-        public bool CancelConditionsOnEnd { get; set; }
-        public bool CancelledOnDamage { get; set; }
-        public bool CancelledOnMove { get; set; }
-        public bool CanBeDodged { get; set; }
-        public bool CanCrit { get; set; }
-        public EvalPrototype ChannelLoopTimeMS { get; set; }
-        public int ChargingTimeMS { get; set; }
-        public ConditionEffectPrototype ConditionEffects { get; set; }
-        public EvalPrototype CooldownTimeMS { get; set; }
-        public DesignWorkflowState DesignState { get; set; }
-        public ulong DisplayName { get; set; }
-        public ulong IconPath { get; set; }
-        public bool IsToggled { get; set; }
-        public PowerCategoryType PowerCategory { get; set; }
-        public ulong PowerUnrealClass { get; set; }
-        public EvalPrototype ProjectileSpeed { get; set; }
-        public float Radius { get; set; }
-        public bool RemovedOnUse { get; set; }
-        public StackingBehaviorPrototype StackingBehaviorLEGACY { get; set; }
-        public bool MovementStopOnActivate { get; set; }
-        public ulong TargetingReach { get; set; }
-        public ulong TargetingStyle { get; set; }
-        public bool UsableByAll { get; set; }
-        public bool HideFloatingNumbers { get; set; }
-        public int PostContactDelayMS { get; set; }
-        public ulong[] Keywords { get; set; }
-        public bool CancelConditionsOnUnassign { get; set; }
-        public float HeightCheckPadding { get; set; }
-        public bool FlyingUsable { get; set; }
-        public ExtraActivatePrototype ExtraActivation { get; set; }
-        public bool CancelledOnButtonRelease { get; set; }
-        public PowerUnrealOverridePrototype[] PowerUnrealOverrides { get; set; }
-        public bool CanBeInterrupted { get; set; }
-        public int ChannelStartTimeMS { get; set; }
-        public int ChannelEndTimeMS { get; set; }
-        public bool ForceNonExclusive { get; set; }
-        public WhenOutOfRangeType WhenOutOfRange { get; set; }
-        public int NoInterruptPreWindowMS { get; set; }
-        public int NoInterruptPostWindowMS { get; set; }
-        public ulong TooltipDescriptionText { get; set; }
-        public float ProjectileTimeToImpactOverride { get; set; }
-        public AbilitySlotRestrictionPrototype SlotRestriction { get; set; }
-        public bool ActiveUntilCancelled { get; set; }
-        public PowerTooltipEntryPrototype[] TooltipInfoCurrentRank { get; set; }
-        public PowerTooltipEntryPrototype[] TooltipInfoNextRank { get; set; }
-        public bool StopsContinuousIfTargetMissing { get; set; }
-        public bool ResetTargetPositionAtContactTime { get; set; }
-        public float RangeMinimum { get; set; }
-        public EvalPrototype Range { get; set; }
-        public int ChannelMinTimeMS { get; set; }
-        public int MaxAOETargets { get; set; }
-        public EvalPrototype[] EvalOnActivate { get; set; }
-        public EvalPrototype[] EvalOnCreate { get; set; }
-        public bool CooldownOnPlayer { get; set; }
-        public bool DisableEnduranceRegenOnEnd { get; set; }
-        public PowerSynergyTooltipEntryPrototype[] TooltipPowerSynergyBonuses { get; set; }
-        public SituationalPowerComponentPrototype SituationalComponent { get; set; }
-        public bool DisableEnduranceRegenOnActivate { get; set; }
-        public EvalPrototype[] EvalOnPreApply { get; set; }
-        public int RecurringCostIntervalMS { get; set; }
-        public ConditionPrototype ConditionsByRef { get; set; }
-        public bool IsRecurring { get; set; }
-        public EvalPrototype EvalCanTrigger { get; set; }
-        public float RangeActivationReduction { get; set; }
-        public EvalPrototype EvalPowerSynergies { get; set; }
-        public bool DisableContinuous { get; set; }
-        public bool CooldownDisableUI { get; set; }
-        public bool DOTIsDirectionalToCaster { get; set; }
-        public bool OmniDurationBonusExclude { get; set; }
-        public ulong ToggleGroup { get; set; }
-        public bool IsUltimate { get; set; }
-        public bool PlayNotifySfxOnAvailable { get; set; }
-        public ulong BounceDamagePctToSameIdCurve { get; set; }
-        public ulong[] RefreshDependentPassivePowers { get; set; }
-        public EvalPrototype TargetRestrictionEval { get; set; }
-        public bool IsUseableWhileDead { get; set; }
-        public float OnHitProcChanceMultiplier { get; set; }
-        public bool ApplyResultsImmediately { get; set; }
-        public bool AllowHitReactOnClient { get; set; }
-        public bool CanCauseHitReact { get; set; }
-        public ProcChanceMultiplierBehaviorType ProcChanceMultiplierBehavior { get; set; }
-        public bool IsSignature { get; set; }
-        public ulong TooltipCharacterSelectScreen { get; set; }
-        public ulong CharacterSelectDescription { get; set; }
-        public bool CooldownIsPersistentToDatabase { get; set; }
-        public float DamageTuningArea { get; set; }
-        public float DamageTuningBuff1 { get; set; }
-        public float DamageTuningBuff2 { get; set; }
-        public float DamageTuningBuff3 { get; set; }
-        public float DamageTuningCooldown { get; set; }
-        public float DamageTuningDebuff1 { get; set; }
-        public float DamageTuningDebuff2 { get; set; }
-        public float DamageTuningDebuff3 { get; set; }
-        public float DamageTuningDmgBonusFreq { get; set; }
-        public float DamageTuningDoTHotspot { get; set; }
-        public float DamageTuningHardCC { get; set; }
-        public float DamageTuningMultiHit { get; set; }
-        public float DamageTuningAnimationDelay { get; set; }
-        public float DamageTuningPowerTag1 { get; set; }
-        public float DamageTuningPowerTag2 { get; set; }
-        public float DamageTuningPowerTag3 { get; set; }
-        public float DamageTuningRangeRisk { get; set; }
-        public float DamageTuningSoftCC { get; set; }
-        public float DamageTuningSummon { get; set; }
-        public float DamageTuningDuration { get; set; }
-        public float DamageTuningTriggerDelay { get; set; }
-        public bool CanBeBlocked { get; set; }
-        public PowerTooltipEntryPrototype[] TooltipInfoAntirequisiteLockout { get; set; }
-        public bool CancelledOnTargetKilled { get; set; }
-        public bool ProjectileReturnsToUser { get; set; }
-        public bool CanCauseTag { get; set; }
-        public ulong[] TooltipPowerReferences { get; set; }
-        public bool BreaksStealth { get; set; }
-        public ulong HUDMessage { get; set; }
-        public bool CancelConditionsOnExitWorld { get; set; }
-        public int TooltipWidthOverride { get; set; }
-        public bool ResetUserPositionAtContactTime { get; set; }
-        public bool MovementOrientToTargetOnActivate { get; set; }
-        public bool MovementPreventWhileActive { get; set; }
-        public float DamageBaseTuningEnduranceCost { get; set; }
-        public int DamageBaseTuningAnimTimeMS { get; set; }
-        public float DamageTuningHeroSpecific { get; set; }
-        public bool MovementPreventChannelEnd { get; set; }
-        public bool MovementPreventChannelLoop { get; set; }
-        public bool MovementPreventChannelStart { get; set; }
-        public ulong CharacterSelectYouTubeVideoID { get; set; }
-        public float DamageBaseTuningEnduranceRatio { get; set; }
-        public ulong CharacterSelectIconPath { get; set; }
-        public ManaType[] DisableEnduranceRegenTypes { get; set; }
-        public bool CanCauseCancelOnDamage { get; set; }
-        public ulong IconPathHiRes { get; set; }
-        public bool PrefetchAsset { get; set; }
-        public bool IsTravelPower { get; set; }
-        public ulong GamepadSettings { get; set; }
-        public EvalPrototype BreaksStealthOverrideEval { get; set; }
+        public ulong Properties { get; private set; }
+        public PowerEventActionPrototype[] ActionsTriggeredOnPowerEvent { get; private set; }
+        public ActivationType Activation { get; private set; }
+        public float AnimationContactTimePercent { get; private set; }
+        public int AnimationTimeMS { get; private set; }
+        public ConditionPrototype AppliesConditions { get; private set; }
+        public bool CancelConditionsOnEnd { get; private set; }
+        public bool CancelledOnDamage { get; private set; }
+        public bool CancelledOnMove { get; private set; }
+        public bool CanBeDodged { get; private set; }
+        public bool CanCrit { get; private set; }
+        public EvalPrototype ChannelLoopTimeMS { get; private set; }
+        public int ChargingTimeMS { get; private set; }
+        public ConditionEffectPrototype ConditionEffects { get; private set; }
+        public EvalPrototype CooldownTimeMS { get; private set; }
+        public DesignWorkflowState DesignState { get; private set; }
+        public ulong DisplayName { get; private set; }
+        public ulong IconPath { get; private set; }
+        public bool IsToggled { get; private set; }
+        public PowerCategoryType PowerCategory { get; private set; }
+        public ulong PowerUnrealClass { get; private set; }
+        public EvalPrototype ProjectileSpeed { get; private set; }
+        public float Radius { get; private set; }
+        public bool RemovedOnUse { get; private set; }
+        public StackingBehaviorPrototype StackingBehaviorLEGACY { get; private set; }
+        public bool MovementStopOnActivate { get; private set; }
+        public ulong TargetingReach { get; private set; }
+        public ulong TargetingStyle { get; private set; }
+        public bool UsableByAll { get; private set; }
+        public bool HideFloatingNumbers { get; private set; }
+        public int PostContactDelayMS { get; private set; }
+        public ulong[] Keywords { get; private set; }
+        public bool CancelConditionsOnUnassign { get; private set; }
+        public float HeightCheckPadding { get; private set; }
+        public bool FlyingUsable { get; private set; }
+        public ExtraActivatePrototype ExtraActivation { get; private set; }
+        public bool CancelledOnButtonRelease { get; private set; }
+        public PowerUnrealOverridePrototype[] PowerUnrealOverrides { get; private set; }
+        public bool CanBeInterrupted { get; private set; }
+        public int ChannelStartTimeMS { get; private set; }
+        public int ChannelEndTimeMS { get; private set; }
+        public bool ForceNonExclusive { get; private set; }
+        public WhenOutOfRangeType WhenOutOfRange { get; private set; }
+        public int NoInterruptPreWindowMS { get; private set; }
+        public int NoInterruptPostWindowMS { get; private set; }
+        public ulong TooltipDescriptionText { get; private set; }
+        public float ProjectileTimeToImpactOverride { get; private set; }
+        public AbilitySlotRestrictionPrototype SlotRestriction { get; private set; }
+        public bool ActiveUntilCancelled { get; private set; }
+        public PowerTooltipEntryPrototype[] TooltipInfoCurrentRank { get; private set; }
+        public PowerTooltipEntryPrototype[] TooltipInfoNextRank { get; private set; }
+        public bool StopsContinuousIfTargetMissing { get; private set; }
+        public bool ResetTargetPositionAtContactTime { get; private set; }
+        public float RangeMinimum { get; private set; }
+        public EvalPrototype Range { get; private set; }
+        public int ChannelMinTimeMS { get; private set; }
+        public int MaxAOETargets { get; private set; }
+        public EvalPrototype[] EvalOnActivate { get; private set; }
+        public EvalPrototype[] EvalOnCreate { get; private set; }
+        public bool CooldownOnPlayer { get; private set; }
+        public bool DisableEnduranceRegenOnEnd { get; private set; }
+        public PowerSynergyTooltipEntryPrototype[] TooltipPowerSynergyBonuses { get; private set; }
+        public SituationalPowerComponentPrototype SituationalComponent { get; private set; }
+        public bool DisableEnduranceRegenOnActivate { get; private set; }
+        public EvalPrototype[] EvalOnPreApply { get; private set; }
+        public int RecurringCostIntervalMS { get; private set; }
+        public ConditionPrototype ConditionsByRef { get; private set; }
+        public bool IsRecurring { get; private set; }
+        public EvalPrototype EvalCanTrigger { get; private set; }
+        public float RangeActivationReduction { get; private set; }
+        public EvalPrototype EvalPowerSynergies { get; private set; }
+        public bool DisableContinuous { get; private set; }
+        public bool CooldownDisableUI { get; private set; }
+        public bool DOTIsDirectionalToCaster { get; private set; }
+        public bool OmniDurationBonusExclude { get; private set; }
+        public ulong ToggleGroup { get; private set; }
+        public bool IsUltimate { get; private set; }
+        public bool PlayNotifySfxOnAvailable { get; private set; }
+        public ulong BounceDamagePctToSameIdCurve { get; private set; }
+        public ulong[] RefreshDependentPassivePowers { get; private set; }
+        public EvalPrototype TargetRestrictionEval { get; private set; }
+        public bool IsUseableWhileDead { get; private set; }
+        public float OnHitProcChanceMultiplier { get; private set; }
+        public bool ApplyResultsImmediately { get; private set; }
+        public bool AllowHitReactOnClient { get; private set; }
+        public bool CanCauseHitReact { get; private set; }
+        public ProcChanceMultiplierBehaviorType ProcChanceMultiplierBehavior { get; private set; }
+        public bool IsSignature { get; private set; }
+        public ulong TooltipCharacterSelectScreen { get; private set; }
+        public ulong CharacterSelectDescription { get; private set; }
+        public bool CooldownIsPersistentToDatabase { get; private set; }
+        public float DamageTuningArea { get; private set; }
+        public float DamageTuningBuff1 { get; private set; }
+        public float DamageTuningBuff2 { get; private set; }
+        public float DamageTuningBuff3 { get; private set; }
+        public float DamageTuningCooldown { get; private set; }
+        public float DamageTuningDebuff1 { get; private set; }
+        public float DamageTuningDebuff2 { get; private set; }
+        public float DamageTuningDebuff3 { get; private set; }
+        public float DamageTuningDmgBonusFreq { get; private set; }
+        public float DamageTuningDoTHotspot { get; private set; }
+        public float DamageTuningHardCC { get; private set; }
+        public float DamageTuningMultiHit { get; private set; }
+        public float DamageTuningAnimationDelay { get; private set; }
+        public float DamageTuningPowerTag1 { get; private set; }
+        public float DamageTuningPowerTag2 { get; private set; }
+        public float DamageTuningPowerTag3 { get; private set; }
+        public float DamageTuningRangeRisk { get; private set; }
+        public float DamageTuningSoftCC { get; private set; }
+        public float DamageTuningSummon { get; private set; }
+        public float DamageTuningDuration { get; private set; }
+        public float DamageTuningTriggerDelay { get; private set; }
+        public bool CanBeBlocked { get; private set; }
+        public PowerTooltipEntryPrototype[] TooltipInfoAntirequisiteLockout { get; private set; }
+        public bool CancelledOnTargetKilled { get; private set; }
+        public bool ProjectileReturnsToUser { get; private set; }
+        public bool CanCauseTag { get; private set; }
+        public ulong[] TooltipPowerReferences { get; private set; }
+        public bool BreaksStealth { get; private set; }
+        public ulong HUDMessage { get; private set; }
+        public bool CancelConditionsOnExitWorld { get; private set; }
+        public int TooltipWidthOverride { get; private set; }
+        public bool ResetUserPositionAtContactTime { get; private set; }
+        public bool MovementOrientToTargetOnActivate { get; private set; }
+        public bool MovementPreventWhileActive { get; private set; }
+        public float DamageBaseTuningEnduranceCost { get; private set; }
+        public int DamageBaseTuningAnimTimeMS { get; private set; }
+        public float DamageTuningHeroSpecific { get; private set; }
+        public bool MovementPreventChannelEnd { get; private set; }
+        public bool MovementPreventChannelLoop { get; private set; }
+        public bool MovementPreventChannelStart { get; private set; }
+        public ulong CharacterSelectYouTubeVideoID { get; private set; }
+        public float DamageBaseTuningEnduranceRatio { get; private set; }
+        public ulong CharacterSelectIconPath { get; private set; }
+        public ManaType[] DisableEnduranceRegenTypes { get; private set; }
+        public bool CanCauseCancelOnDamage { get; private set; }
+        public ulong IconPathHiRes { get; private set; }
+        public bool PrefetchAsset { get; private set; }
+        public bool IsTravelPower { get; private set; }
+        public ulong GamepadSettings { get; private set; }
+        public EvalPrototype BreaksStealthOverrideEval { get; private set; }
     }
 
     public class MovementPowerPrototype : PowerPrototype
     {
-        public bool MoveToExactTargetLocation { get; set; }
-        public bool NoCollideIncludesTarget { get; set; }
-        public bool MoveToOppositeEdgeOfTarget { get; set; }
-        public bool ConstantMoveTime { get; set; }
-        public float AdditionalTargetPosOffset { get; set; }
-        public bool MoveToSecondaryTarget { get; set; }
-        public bool MoveFullDistance { get; set; }
-        public bool IsTeleportDEPRECATED { get; set; }
-        public float MoveMinDistance { get; set; }
-        public bool UserNoEntityCollide { get; set; }
-        public bool AllowOrientationChange { get; set; }
-        public float PowerMovementPathPct { get; set; }
-        public int MovementHeightBonus { get; set; }
-        public bool FollowsMouseWhileActive { get; set; }
-        public EvalPrototype EvalUserMoveSpeed { get; set; }
-        public bool ChanneledMoveTime { get; set; }
-        public MovementBehaviorPrototype CustomBehavior { get; set; }
-        public bool IgnoreTeleportBlockers { get; set; }
-        public bool HighFlying { get; set; }
-        public TeleportMethodType TeleportMethod { get; set; }
+        public bool MoveToExactTargetLocation { get; private set; }
+        public bool NoCollideIncludesTarget { get; private set; }
+        public bool MoveToOppositeEdgeOfTarget { get; private set; }
+        public bool ConstantMoveTime { get; private set; }
+        public float AdditionalTargetPosOffset { get; private set; }
+        public bool MoveToSecondaryTarget { get; private set; }
+        public bool MoveFullDistance { get; private set; }
+        public bool IsTeleportDEPRECATED { get; private set; }
+        public float MoveMinDistance { get; private set; }
+        public bool UserNoEntityCollide { get; private set; }
+        public bool AllowOrientationChange { get; private set; }
+        public float PowerMovementPathPct { get; private set; }
+        public int MovementHeightBonus { get; private set; }
+        public bool FollowsMouseWhileActive { get; private set; }
+        public EvalPrototype EvalUserMoveSpeed { get; private set; }
+        public bool ChanneledMoveTime { get; private set; }
+        public MovementBehaviorPrototype CustomBehavior { get; private set; }
+        public bool IgnoreTeleportBlockers { get; private set; }
+        public bool HighFlying { get; private set; }
+        public TeleportMethodType TeleportMethod { get; private set; }
     }
 
     public class SpecializationPowerPrototype : PowerPrototype
     {
-        public ulong MasterPowerDEPRECATED { get; set; }
-        public EvalPrototype[] EvalCanEnable { get; set; }
+        public ulong MasterPowerDEPRECATED { get; private set; }
+        public EvalPrototype[] EvalCanEnable { get; private set; }
     }
 
     public class StealablePowerInfoPrototype : Prototype
     {
-        public ulong Power { get; set; }
-        public ulong StealablePowerDescription { get; set; }
+        public ulong Power { get; private set; }
+        public ulong StealablePowerDescription { get; private set; }
     }
 
     public class StolenPowerRestrictionPrototype : Prototype
     {
-        public ulong RestrictionKeyword { get; set; }
-        public int RestrictionKeywordCount { get; set; }
-        public ulong RestrictionBannerMessage { get; set; }
+        public ulong RestrictionKeyword { get; private set; }
+        public int RestrictionKeywordCount { get; private set; }
+        public ulong RestrictionBannerMessage { get; private set; }
     }
 
     public class PowerEventContextTransformModePrototype : PowerEventContextPrototype
     {
-        public ulong TransformMode { get; set; }
+        public ulong TransformMode { get; private set; }
     }
 
     public class PowerEventContextShowBannerMessagePrototype : PowerEventContextPrototype
     {
-        public ulong BannerMessage { get; set; }
-        public bool SendToPrimaryTarget { get; set; }
+        public ulong BannerMessage { get; private set; }
+        public bool SendToPrimaryTarget { get; private set; }
     }
 
     public class PowerEventContextLootTablePrototype : PowerEventContextPrototype
     {
-        public ulong LootTable { get; set; }
-        public bool UseItemLevelForLootRoll { get; set; }
-        public bool IncludeNearbyAvatars { get; set; }
-        public bool PlaceLootInGeneralInventory { get; set; }
+        public ulong LootTable { get; private set; }
+        public bool UseItemLevelForLootRoll { get; private set; }
+        public bool IncludeNearbyAvatars { get; private set; }
+        public bool PlaceLootInGeneralInventory { get; private set; }
     }
 
     public class PowerEventContextTeleportRegionPrototype : PowerEventContextPrototype
     {
-        public ulong Destination { get; set; }
+        public ulong Destination { get; private set; }
     }
 
     public class PowerEventContextPetDonateItemPrototype : PowerEventContextPrototype
     {
-        public float Radius { get; set; }
-        public ulong RarityThreshold { get; set; }
+        public float Radius { get; private set; }
+        public ulong RarityThreshold { get; private set; }
     }
 
     public class PowerEventContextCooldownChangePrototype : PowerEventContextPrototype
     {
-        public bool TargetsOwner { get; set; }
+        public bool TargetsOwner { get; private set; }
     }
 
     public class PowerToggleGroupPrototype : Prototype
@@ -461,144 +461,144 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PowerEventContextOffsetActivationAOEPrototype : PowerEventContextPrototype
     {
-        public float PositionOffsetMagnitude { get; set; }
-        public float RotationOffsetDegrees { get; set; }
-        public bool UseIncomingTargetPosAsUserPos { get; set; }
+        public float PositionOffsetMagnitude { get; private set; }
+        public float RotationOffsetDegrees { get; private set; }
+        public bool UseIncomingTargetPosAsUserPos { get; private set; }
     }
 
     public class AbilityAssignmentPrototype : Prototype
     {
-        public ulong Ability { get; set; }
+        public ulong Ability { get; private set; }
     }
 
     public class AbilityAutoAssignmentSlotPrototype : Prototype
     {
-        public ulong Ability { get; set; }
-        public ulong Slot { get; set; }
+        public ulong Ability { get; private set; }
+        public ulong Slot { get; private set; }
     }
 
     public class PowerEventContextCallbackPrototype : PowerEventContextPrototype
     {
-        public bool SetContextOnOwnerAgent { get; set; }
-        public bool SetContextOnOwnerSummonEntities { get; set; }
-        public bool SummonedEntitiesUsePowerTarget { get; set; }
-        public bool SetContextOnTargetEntity { get; set; }
+        public bool SetContextOnOwnerAgent { get; private set; }
+        public bool SetContextOnOwnerSummonEntities { get; private set; }
+        public bool SummonedEntitiesUsePowerTarget { get; private set; }
+        public bool SetContextOnTargetEntity { get; private set; }
     }
 
     public class MapPowerPrototype : Prototype
     {
-        public ulong OriginalPower { get; set; }
-        public ulong MappedPower { get; set; }
+        public ulong OriginalPower { get; private set; }
+        public ulong MappedPower { get; private set; }
     }
 
     public class PowerEventContextMapPowersPrototype : PowerEventContextPrototype
     {
-        public MapPowerPrototype[] MappedPowers { get; set; }
+        public MapPowerPrototype[] MappedPowers { get; private set; }
     }
 
     public class PowerEventContextUnassignMappedPowersPrototype : PowerEventContextPrototype
     {
-        public MapPowerPrototype[] MappedPowersToUnassign { get; set; }
+        public MapPowerPrototype[] MappedPowersToUnassign { get; private set; }
     }
 
     public class AbilitySlotRestrictionPrototype : Prototype
     {
-        public bool ActionKeySlotOK { get; set; }
-        public bool LeftMouseSlotOK { get; set; }
-        public bool RightMouseSlotOK { get; set; }
+        public bool ActionKeySlotOK { get; private set; }
+        public bool LeftMouseSlotOK { get; private set; }
+        public bool RightMouseSlotOK { get; private set; }
     }
 
     public class PowerEventActionPrototype : Prototype
     {
-        public PowerEventActionType EventAction { get; set; }
-        public float EventParam { get; set; }
-        public ulong Power { get; set; }
-        public PowerEventType PowerEvent { get; set; }
-        public PowerEventContextPrototype PowerEventContext { get; set; }
-        public ulong[] Keywords { get; set; }
-        public bool UseTriggerPowerOriginalTargetPos { get; set; }
-        public bool UseTriggeringPowerTargetVerbatim { get; set; }
-        public EvalPrototype EvalEventTriggerChance { get; set; }
-        public EvalPrototype EvalEventParam { get; set; }
-        public bool ResetFXRandomSeed { get; set; }
+        public PowerEventActionType EventAction { get; private set; }
+        public float EventParam { get; private set; }
+        public ulong Power { get; private set; }
+        public PowerEventType PowerEvent { get; private set; }
+        public PowerEventContextPrototype PowerEventContext { get; private set; }
+        public ulong[] Keywords { get; private set; }
+        public bool UseTriggerPowerOriginalTargetPos { get; private set; }
+        public bool UseTriggeringPowerTargetVerbatim { get; private set; }
+        public EvalPrototype EvalEventTriggerChance { get; private set; }
+        public EvalPrototype EvalEventParam { get; private set; }
+        public bool ResetFXRandomSeed { get; private set; }
     }
 
     public class SituationalTriggerPrototype : Prototype
     {
-        public ulong TriggerCollider { get; set; }
-        public float TriggerRadiusScaling { get; set; }
-        public EntityFilterPrototype EntityFilter { get; set; }
-        public bool AllowDead { get; set; }
-        public bool ActivateOnTriggerSuccess { get; set; }
+        public ulong TriggerCollider { get; private set; }
+        public float TriggerRadiusScaling { get; private set; }
+        public EntityFilterPrototype EntityFilter { get; private set; }
+        public bool AllowDead { get; private set; }
+        public bool ActivateOnTriggerSuccess { get; private set; }
     }
 
     public class SituationalTriggerOnKilledPrototype : SituationalTriggerPrototype
     {
-        public bool Friendly { get; set; }
-        public bool Hostile { get; set; }
-        public bool KilledByOther { get; set; }
-        public bool KilledBySelf { get; set; }
-        public bool WasLastInRange { get; set; }
+        public bool Friendly { get; private set; }
+        public bool Hostile { get; private set; }
+        public bool KilledByOther { get; private set; }
+        public bool KilledBySelf { get; private set; }
+        public bool WasLastInRange { get; private set; }
     }
 
     public class SituationalTriggerOnHealthThresholdPrototype : SituationalTriggerPrototype
     {
-        public bool HealthBelow { get; set; }
-        public float HealthPercent { get; set; }
+        public bool HealthBelow { get; private set; }
+        public float HealthPercent { get; private set; }
     }
 
     public class SituationalTriggerOnStatusEffectPrototype : SituationalTriggerPrototype
     {
-        public ulong[] TriggeringProperties { get; set; }
-        public bool TriggersOnStatusApplied { get; set; }
-        public ulong[] TriggeringConditionKeywords { get; set; }
+        public ulong[] TriggeringProperties { get; private set; }
+        public bool TriggersOnStatusApplied { get; private set; }
+        public ulong[] TriggeringConditionKeywords { get; private set; }
     }
 
     public class SituationalTriggerInvAndWorldPrototype : SituationalTriggerPrototype
     {
-        public ulong InventoryRef { get; set; }
+        public ulong InventoryRef { get; private set; }
     }
 
     public class SituationalPowerComponentPrototype : Prototype
     {
-        public int ActivationWindowMS { get; set; }
-        public EvalPrototype ChanceToTrigger { get; set; }
-        public bool ForceRelockOnTriggerRevert { get; set; }
-        public bool RemoveTriggeringEntityOnActivate { get; set; }
-        public SituationalTriggerPrototype SituationalTrigger { get; set; }
-        public bool TargetsTriggeringEntity { get; set; }
-        public bool ForceRelockOnActivate { get; set; }
+        public int ActivationWindowMS { get; private set; }
+        public EvalPrototype ChanceToTrigger { get; private set; }
+        public bool ForceRelockOnTriggerRevert { get; private set; }
+        public bool RemoveTriggeringEntityOnActivate { get; private set; }
+        public SituationalTriggerPrototype SituationalTrigger { get; private set; }
+        public bool TargetsTriggeringEntity { get; private set; }
+        public bool ForceRelockOnActivate { get; private set; }
     }
 
     public class PowerUnrealReplacementPrototype : Prototype
     {
-        public ulong EntityArt { get; set; }
-        public ulong PowerArt { get; set; }
-        public float AnimationContactTimePercent { get; set; }
-        public int AnimationTimeMS { get; set; }
+        public ulong EntityArt { get; private set; }
+        public ulong PowerArt { get; private set; }
+        public float AnimationContactTimePercent { get; private set; }
+        public int AnimationTimeMS { get; private set; }
     }
 
     public class PowerUnrealOverridePrototype : Prototype
     {
-        public float AnimationContactTimePercent { get; set; }
-        public int AnimationTimeMS { get; set; }
-        public ulong EntityArt { get; set; }
-        public ulong PowerArt { get; set; }
-        public PowerUnrealReplacementPrototype[] ArtOnlyReplacements { get; set; }
+        public float AnimationContactTimePercent { get; private set; }
+        public int AnimationTimeMS { get; private set; }
+        public ulong EntityArt { get; private set; }
+        public ulong PowerArt { get; private set; }
+        public PowerUnrealReplacementPrototype[] ArtOnlyReplacements { get; private set; }
     }
 
     public class PowerSynergyTooltipEntryPrototype : Prototype
     {
-        public ulong SynergyPower { get; set; }
-        public ulong Translation { get; set; }
+        public ulong SynergyPower { get; private set; }
+        public ulong Translation { get; private set; }
     }
 
     public class PowerEventContextCallbackAIChangeBlackboardPropertyPrototype : PowerEventContextCallbackPrototype
     {
-        public BlackboardOperatorType Operation { get; set; }
-        public ulong PropertyInfoRef { get; set; }
-        public int Value { get; set; }
-        public bool UseTargetEntityId { get; set; }
+        public BlackboardOperatorType Operation { get; private set; }
+        public ulong PropertyInfoRef { get; private set; }
+        public int Value { get; private set; }
+        public bool UseTargetEntityId { get; private set; }
     }
 
     public class PowerEventContextCallbackAISetAssistedEntityFromCreatorPrototype : PowerEventContextCallbackPrototype
@@ -607,85 +607,85 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PowerEventContextCallbackAISummonsTryActivatePowerPrototype : PowerEventContextCallbackPrototype
     {
-        public ulong PowerToActivate { get; set; }
-        public bool SummonsUsePowerTargetLocation { get; set; }
-        public ulong SummonsKeywordFilter { get; set; }
+        public ulong PowerToActivate { get; private set; }
+        public bool SummonsUsePowerTargetLocation { get; private set; }
+        public ulong SummonsKeywordFilter { get; private set; }
     }
 
     public class TransformModeUnrealOverridePrototype : Prototype
     {
-        public ulong IncomingUnrealClass { get; set; }
-        public ulong TransformedUnrealClass { get; set; }
+        public ulong IncomingUnrealClass { get; private set; }
+        public ulong TransformedUnrealClass { get; private set; }
     }
 
     public class TransformModePrototype : Prototype
     {
-        public AbilityAssignmentPrototype[] DefaultEquippedAbilities { get; set; }
-        public ulong EnterTransformModePower { get; set; }
-        public ulong ExitTransformModePower { get; set; }
-        public ulong UnrealClass { get; set; }
-        public ulong[] HiddenPassivePowers { get; set; }
-        public bool PowersAreSlottable { get; set; }
-        public EvalPrototype DurationMSEval { get; set; }
-        public TransformModeUnrealOverridePrototype[] UnrealClassOverrides { get; set; }
-        public ulong UseRankOfPower { get; set; }
+        public AbilityAssignmentPrototype[] DefaultEquippedAbilities { get; private set; }
+        public ulong EnterTransformModePower { get; private set; }
+        public ulong ExitTransformModePower { get; private set; }
+        public ulong UnrealClass { get; private set; }
+        public ulong[] HiddenPassivePowers { get; private set; }
+        public bool PowersAreSlottable { get; private set; }
+        public EvalPrototype DurationMSEval { get; private set; }
+        public TransformModeUnrealOverridePrototype[] UnrealClassOverrides { get; private set; }
+        public ulong UseRankOfPower { get; private set; }
     }
 
     public class TransformModeEntryPrototype : Prototype
     {
-        public ulong AllowedPowers { get; set; }
-        public ulong TransformMode { get; set; }
+        public ulong AllowedPowers { get; private set; }
+        public ulong TransformMode { get; private set; }
     }
 
     public class GamepadSettingsPrototype : Prototype
     {
-        public bool ClearContinuousInitialTarget { get; set; }
-        public float Range { get; set; }
-        public bool TeleportToTarget { get; set; }
-        public bool MeleeMoveIntoRange { get; set; }
-        public bool ChannelPowerOrientToEnemy { get; set; }
+        public bool ClearContinuousInitialTarget { get; private set; }
+        public float Range { get; private set; }
+        public bool TeleportToTarget { get; private set; }
+        public bool MeleeMoveIntoRange { get; private set; }
+        public bool ChannelPowerOrientToEnemy { get; private set; }
     }
 
     public class TargetingStylePrototype : Prototype
     {
-        public AOEAngleType AOEAngle { get; set; }
-        public bool AOESelfCentered { get; set; }
-        public bool NeedsTarget { get; set; }
-        public bool OffsetWedgeBehindUser { get; set; }
-        public float OrientationOffset { get; set; }
-        public TargetingShapeType TargetingShape { get; set; }
-        public bool TurnsToFaceTarget { get; set; }
-        public float Width { get; set; }
-        public bool AlwaysTargetMousePos { get; set; }
-        public bool MovesToRangeOfPrimaryTarget { get; set; }
-        public bool UseDefaultRotationSpeed { get; set; }
-        public Vector2Prototype PositionOffset { get; set; }
-        public int RandomPositionRadius { get; set; }
-        public bool DisableOrientationDuringPower { get; set; }
+        public AOEAngleType AOEAngle { get; private set; }
+        public bool AOESelfCentered { get; private set; }
+        public bool NeedsTarget { get; private set; }
+        public bool OffsetWedgeBehindUser { get; private set; }
+        public float OrientationOffset { get; private set; }
+        public TargetingShapeType TargetingShape { get; private set; }
+        public bool TurnsToFaceTarget { get; private set; }
+        public float Width { get; private set; }
+        public bool AlwaysTargetMousePos { get; private set; }
+        public bool MovesToRangeOfPrimaryTarget { get; private set; }
+        public bool UseDefaultRotationSpeed { get; private set; }
+        public Vector2Prototype PositionOffset { get; private set; }
+        public int RandomPositionRadius { get; private set; }
+        public bool DisableOrientationDuringPower { get; private set; }
     }
 
     public class TargetingReachPrototype : Prototype
     {
-        public bool ExcludesPrimaryTarget { get; set; }
-        public bool Melee { get; set; }
-        public bool RequiresLineOfSight { get; set; }
-        public bool TargetsEnemy { get; set; }
-        public bool TargetsFlying { get; set; }
-        public bool TargetsFriendly { get; set; }
-        public bool TargetsGround { get; set; }
-        public bool WillTargetCaster { get; set; }
-        public bool LowestHealth { get; set; }
-        public TargetingHeightType TargetingHeightType { get; set; }
-        public bool PartyOnly { get; set; }
-        public bool WillTargetCreator { get; set; }
-        public bool TargetsDestructibles { get; set; }
-        public bool LOSCheckAlongGround { get; set; }
-        public EntityHealthState EntityHealthState { get; set; }
-        public ConvenienceLabel TargetsEntitiesInInventory { get; set; }
-        public bool TargetsFrontSideOnly { get; set; }
-        public bool TargetsNonEnemies { get; set; }
-        public bool WillTargetUltimateCreator { get; set; }
-        public bool RandomAOETargets { get; set; }
+        public bool ExcludesPrimaryTarget { get; private set; }
+        public bool Melee { get; private set; }
+        public bool RequiresLineOfSight { get; private set; }
+        public bool TargetsEnemy { get; private set; }
+        public bool TargetsFlying { get; private set; }
+        public bool TargetsFriendly { get; private set; }
+        public bool TargetsGround { get; private set; }
+        public bool WillTargetCaster { get; private set; }
+        public bool LowestHealth { get; private set; }
+        public TargetingHeightType TargetingHeightType { get; private set; }
+        public bool PartyOnly { get; private set; }
+        public bool WillTargetCreator { get; private set; }
+        public bool TargetsDestructibles { get; private set; }
+        public bool LOSCheckAlongGround { get; private set; }
+        public EntityHealthState EntityHealthState { get; private set; }
+        public ConvenienceLabel TargetsEntitiesInInventory { get; private set; }
+        public bool TargetsFrontSideOnly { get; private set; }
+        public bool TargetsNonEnemies { get; private set; }
+        public bool WillTargetUltimateCreator { get; private set; }
+        public bool RandomAOETargets { get; private set; }
     }
 
     public class ExtraActivatePrototype : Prototype
@@ -694,29 +694,29 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class SecondaryActivateOnReleasePrototype : ExtraActivatePrototype
     {
-        public ulong DamageIncreasePerSecond { get; set; }
-        public DamageType DamageIncreaseType { get; set; }
-        public ulong EnduranceCostIncreasePerSecond { get; set; }
-        public int MaxReleaseTimeMS { get; set; }
-        public int MinReleaseTimeMS { get; set; }
-        public ulong RangeIncreasePerSecond { get; set; }
-        public ulong RadiusIncreasePerSecond { get; set; }
-        public bool ActivateOnMaxReleaseTime { get; set; }
-        public ulong DefensePenetrationIncrPerSec { get; set; }
-        public DamageType DefensePenetrationType { get; set; }
-        public bool FollowsMouseUntilRelease { get; set; }
-        public ManaType EnduranceCostManaType { get; set; }
+        public ulong DamageIncreasePerSecond { get; private set; }
+        public DamageType DamageIncreaseType { get; private set; }
+        public ulong EnduranceCostIncreasePerSecond { get; private set; }
+        public int MaxReleaseTimeMS { get; private set; }
+        public int MinReleaseTimeMS { get; private set; }
+        public ulong RangeIncreasePerSecond { get; private set; }
+        public ulong RadiusIncreasePerSecond { get; private set; }
+        public bool ActivateOnMaxReleaseTime { get; private set; }
+        public ulong DefensePenetrationIncrPerSec { get; private set; }
+        public DamageType DefensePenetrationType { get; private set; }
+        public bool FollowsMouseUntilRelease { get; private set; }
+        public ManaType EnduranceCostManaType { get; private set; }
     }
 
     public class ExtraActivateOnSubsequentPrototype : ExtraActivatePrototype
     {
-        public ulong NumActivatesBeforeCooldown { get; set; }
-        public ulong TimeoutLengthMS { get; set; }
-        public SubsequentActivateType ExtraActivateEffect { get; set; }
+        public ulong NumActivatesBeforeCooldown { get; private set; }
+        public ulong TimeoutLengthMS { get; private set; }
+        public SubsequentActivateType ExtraActivateEffect { get; private set; }
     }
 
     public class ExtraActivateCycleToPowerPrototype : ExtraActivatePrototype
     {
-        public ulong CyclePowerList { get; set; }
+        public ulong CyclePowerList { get; private set; }
     }
 }

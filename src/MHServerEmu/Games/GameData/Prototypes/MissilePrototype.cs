@@ -39,66 +39,66 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissilePrototype : AgentPrototype
     {
-        public ulong SendOrbToPowerUser { get; set; }
+        public ulong SendOrbToPowerUser { get; private set; }
     }
 
     public class MissilePowerContextPrototype : Prototype
     {
-        public ulong Power { get; set; }
-        public MissilePowerActivationEventType MissilePowerActivationEvent { get; set; }
-        public EvalPrototype EvalPctChanceToActivate { get; set; }
+        public ulong Power { get; private set; }
+        public MissilePowerActivationEventType MissilePowerActivationEvent { get; private set; }
+        public EvalPrototype EvalPctChanceToActivate { get; private set; }
     }
 
     public class GravitatedMissileContextPrototype : Prototype
     {
-        public float Gravity { get; set; }
-        public int NumBounces { get; set; }
-        public float OnBounceCoefficientOfRestitution { get; set; }
-        public int OnBounceRandomDegreeFromForward { get; set; }
+        public float Gravity { get; private set; }
+        public int NumBounces { get; private set; }
+        public float OnBounceCoefficientOfRestitution { get; private set; }
+        public int OnBounceRandomDegreeFromForward { get; private set; }
     }
 
     public class MissileCreationContextPrototype : Prototype
     {
-        public bool IndependentClientMovement { get; set; }
-        public bool IsReturningMissile { get; set; }
-        public bool ReturningMissileExplodeOnCollide { get; set; }
-        public bool OneShot { get; set; }
-        public ulong Entity { get; set; }
-        public Vector3Prototype CreationOffset { get; set; }
-        public float SizeIncreasePerSec { get; set; }
-        public bool IgnoresPitch { get; set; }
-        public float Radius { get; set; }
-        public MissileInitialDirectionType InitialDirection { get; set; }
-        public Rotator3Prototype InitialDirectionAxisRotation { get; set; }
-        public Rotator3Prototype InitialDirectionRandomVariance { get; set; }
-        public MissileSpawnLocationType SpawnLocation { get; set; }
-        public bool InterpolateRotationSpeed { get; set; }
-        public float InterpolateRotMultByDist { get; set; }
-        public float InterpolateOvershotAccel { get; set; }
-        public bool NoCollide { get; set; }
-        public MissilePowerContextPrototype[] PowerList { get; set; }
-        public bool ReturnWeaponOnlyOnMiss { get; set; }
-        public float RadiusEffectOverride { get; set; }
-        public bool InfiniteLifespan { get; set; }
-        public int LifespanOverrideMS { get; set; }
-        public GravitatedMissileContextPrototype GravitatedContext { get; set; }
-        public int RandomPickWeight { get; set; }
-        public bool KilledOnOverlappingCollision { get; set; }
-        public bool Ghost { get; set; }
-        public bool CreationOffsetCheckLOS { get; set; }
+        public bool IndependentClientMovement { get; private set; }
+        public bool IsReturningMissile { get; private set; }
+        public bool ReturningMissileExplodeOnCollide { get; private set; }
+        public bool OneShot { get; private set; }
+        public ulong Entity { get; private set; }
+        public Vector3Prototype CreationOffset { get; private set; }
+        public float SizeIncreasePerSec { get; private set; }
+        public bool IgnoresPitch { get; private set; }
+        public float Radius { get; private set; }
+        public MissileInitialDirectionType InitialDirection { get; private set; }
+        public Rotator3Prototype InitialDirectionAxisRotation { get; private set; }
+        public Rotator3Prototype InitialDirectionRandomVariance { get; private set; }
+        public MissileSpawnLocationType SpawnLocation { get; private set; }
+        public bool InterpolateRotationSpeed { get; private set; }
+        public float InterpolateRotMultByDist { get; private set; }
+        public float InterpolateOvershotAccel { get; private set; }
+        public bool NoCollide { get; private set; }
+        public MissilePowerContextPrototype[] PowerList { get; private set; }
+        public bool ReturnWeaponOnlyOnMiss { get; private set; }
+        public float RadiusEffectOverride { get; private set; }
+        public bool InfiniteLifespan { get; private set; }
+        public int LifespanOverrideMS { get; private set; }
+        public GravitatedMissileContextPrototype GravitatedContext { get; private set; }
+        public int RandomPickWeight { get; private set; }
+        public bool KilledOnOverlappingCollision { get; private set; }
+        public bool Ghost { get; private set; }
+        public bool CreationOffsetCheckLOS { get; private set; }
     }
 
     public class MissilePowerPrototype : PowerPrototype
     {
-        public MissileCreationContextPrototype[] MissileCreationContexts { get; set; }
-        public bool MissileAllowCreationAfterPwrEnds { get; set; }
-        public bool MissileUsesActualTargetPos { get; set; }
-        public bool MissileSelectRandomContext { get; set; }
-        public EvalPrototype EvalSelectMissileContextIndex { get; set; }
+        public MissileCreationContextPrototype[] MissileCreationContexts { get; private set; }
+        public bool MissileAllowCreationAfterPwrEnds { get; private set; }
+        public bool MissileUsesActualTargetPos { get; private set; }
+        public bool MissileSelectRandomContext { get; private set; }
+        public EvalPrototype EvalSelectMissileContextIndex { get; private set; }
     }
 
     public class PublicEventTeamPrototype : Prototype
     {
-        public ulong Name { get; set; }
+        public ulong Name { get; private set; }
     }
 }

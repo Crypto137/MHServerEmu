@@ -96,40 +96,40 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootTablePrototype : LootDropPrototype
     {
-        public PickMethod PickMethod { get; set; }
-        public float NoDropPercent { get; set; }
-        public LootNodePrototype[] Choices { get; set; }
-        public ulong MissionLogRewardsText { get; set; }
-        public bool LiveTuningDefaultEnabled { get; set; }
+        public PickMethod PickMethod { get; private set; }
+        public float NoDropPercent { get; private set; }
+        public LootNodePrototype[] Choices { get; private set; }
+        public ulong MissionLogRewardsText { get; private set; }
+        public bool LiveTuningDefaultEnabled { get; private set; }
     }
 
     public class LootTableAssignmentPrototype : Prototype
     {
-        public ulong Name { get; set; }
-        public LootDropEventType Event { get; set; }
-        public ulong Table { get; set; }
+        public ulong Name { get; private set; }
+        public LootDropEventType Event { get; private set; }
+        public ulong Table { get; private set; }
     }
 
     public class LootDropPrototype : LootNodePrototype
     {
-        public short NumMin { get; set; }
-        public short NumMax { get; set; }
+        public short NumMin { get; private set; }
+        public short NumMax { get; private set; }
     }
 
     public class LootNodePrototype : Prototype
     {
-        public short Weight { get; set; }
-        public LootRollModifierPrototype[] Modifiers { get; set; }
+        public short Weight { get; private set; }
+        public LootRollModifierPrototype[] Modifiers { get; private set; }
     }
 
     public class LootActionPrototype : LootNodePrototype
     {
-        public LootNodePrototype Target { get; set; }
+        public LootNodePrototype Target { get; private set; }
     }
 
     public class LootActionFirstTimePrototype : LootActionPrototype
     {
-        public bool FirstTime { get; set; }
+        public bool FirstTime { get; private set; }
     }
 
     public class LootActionLoopOverAvatarsPrototype : LootActionPrototype
@@ -138,29 +138,29 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootCooldownPrototype : Prototype
     {
-        public ulong Channel { get; set; }
+        public ulong Channel { get; private set; }
     }
 
     public class LootCooldownEntityPrototype : LootCooldownPrototype
     {
-        public ulong Entity { get; set; }
+        public ulong Entity { get; private set; }
     }
 
     public class LootCooldownVendorTypePrototype : LootCooldownPrototype
     {
-        public ulong VendorType { get; set; }
+        public ulong VendorType { get; private set; }
     }
 
     public class LootCooldownHierarchyPrototype : Prototype
     {
-        public ulong Entity { get; set; }
-        public ulong[] LocksOut { get; set; }
+        public ulong Entity { get; private set; }
+        public ulong[] LocksOut { get; private set; }
     }
 
     public class LootCooldownRolloverTimeEntryPrototype : Prototype
     {
-        public float WallClockTime24Hr { get; set; }
-        public Weekday WallClockTimeDay { get; set; }
+        public float WallClockTime24Hr { get; private set; }
+        public Weekday WallClockTimeDay { get; private set; }
     }
 
     public class LootCooldownChannelPrototype : Prototype
@@ -169,53 +169,53 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootCooldownChannelRollOverPrototype : LootCooldownChannelPrototype
     {
-        public LootCooldownRolloverTimeEntryPrototype[] RolloverTimeEntries { get; set; }
+        public LootCooldownRolloverTimeEntryPrototype[] RolloverTimeEntries { get; private set; }
     }
 
     public class LootCooldownChannelTimePrototype : LootCooldownChannelPrototype
     {
-        public float DurationMinutes { get; set; }
+        public float DurationMinutes { get; private set; }
     }
 
     public class LootCooldownChannelCountPrototype : LootCooldownChannelPrototype
     {
-        public int MaxDrops { get; set; }
-        public LootCooldownRolloverTimeEntryPrototype[] RolloverTimeEntries { get; set; }
+        public int MaxDrops { get; private set; }
+        public LootCooldownRolloverTimeEntryPrototype[] RolloverTimeEntries { get; private set; }
     }
 
     public class LootDropAgentPrototype : LootDropPrototype
     {
-        public ulong Agent { get; set; }
+        public ulong Agent { get; private set; }
     }
 
     public class LootDropCharacterTokenPrototype : LootNodePrototype
     {
-        public CharacterTokenType AllowedTokenType { get; set; }
-        public CharacterFilterType FilterType { get; set; }
-        public LootNodePrototype OnTokenUnavailable { get; set; }
+        public CharacterTokenType AllowedTokenType { get; private set; }
+        public CharacterFilterType FilterType { get; private set; }
+        public LootNodePrototype OnTokenUnavailable { get; private set; }
     }
 
     public class LootDropClonePrototype : LootNodePrototype
     {
-        public LootMutationPrototype[] Mutations { get; set; }
-        public short SourceIndex { get; set; }
+        public LootMutationPrototype[] Mutations { get; private set; }
+        public short SourceIndex { get; private set; }
     }
 
     public class LootDropCreditsPrototype : LootNodePrototype
     {
-        public ulong Type { get; set; }
+        public ulong Type { get; private set; }
     }
 
     public class LootDropItemPrototype : LootDropPrototype
     {
-        public ulong Item { get; set; }
-        public LootMutationPrototype[] Mutations { get; set; }
+        public ulong Item { get; private set; }
+        public LootMutationPrototype[] Mutations { get; private set; }
     }
 
     public class LootDropItemFilterPrototype : LootDropPrototype
     {
-        public short ItemRank { get; set; }
-        public EquipmentInvUISlot UISlot { get; set; }
+        public short ItemRank { get; private set; }
+        public EquipmentInvUISlot UISlot { get; private set; }
     }
 
     public class LootDropPowerPointsPrototype : LootDropPrototype
@@ -232,46 +232,46 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootDropXPPrototype : LootNodePrototype
     {
-        public ulong XPCurve { get; set; }
+        public ulong XPCurve { get; private set; }
     }
 
     public class LootDropRealMoneyPrototype : LootDropPrototype
     {
-        public ulong CouponCode { get; set; }
-        public ulong TransactionContext { get; set; }
+        public ulong CouponCode { get; private set; }
+        public ulong TransactionContext { get; private set; }
     }
 
     public class LootDropBannerMessagePrototype : LootNodePrototype
     {
-        public ulong BannerMessage { get; set; }
+        public ulong BannerMessage { get; private set; }
     }
 
     public class LootDropUsePowerPrototype : LootNodePrototype
     {
-        public ulong Power { get; set; }
+        public ulong Power { get; private set; }
     }
 
     public class LootDropPlayVisualEffectPrototype : LootNodePrototype
     {
-        public ulong RecipientVisualEffect { get; set; }
-        public ulong DropperVisualEffect { get; set; }
+        public ulong RecipientVisualEffect { get; private set; }
+        public ulong DropperVisualEffect { get; private set; }
     }
 
     public class LootDropChatMessagePrototype : LootNodePrototype
     {
-        public ulong ChatMessage { get; set; }
-        public PlayerScope MessageScope { get; set; }
+        public ulong ChatMessage { get; private set; }
+        public PlayerScope MessageScope { get; private set; }
     }
 
     public class LootDropVanityTitlePrototype : LootNodePrototype
     {
-        public ulong VanityTitle { get; set; }
+        public ulong VanityTitle { get; private set; }
     }
 
     public class LootDropVendorXPPrototype : LootNodePrototype
     {
-        public ulong Vendor { get; set; }
-        public int XP { get; set; }
+        public ulong Vendor { get; private set; }
+        public int XP { get; private set; }
     }
 
     public class LootLocationModifierPrototype : Prototype
@@ -280,34 +280,34 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootSearchRadiusPrototype : LootLocationModifierPrototype
     {
-        public float MinRadius { get; set; }
-        public float MaxRadius { get; set; }
+        public float MinRadius { get; private set; }
+        public float MaxRadius { get; private set; }
     }
 
     public class LootBoundsOverridePrototype : LootLocationModifierPrototype
     {
-        public float Radius { get; set; }
+        public float Radius { get; private set; }
     }
 
     public class LootLocationOffsetPrototype : LootLocationModifierPrototype
     {
-        public float Offset { get; set; }
+        public float Offset { get; private set; }
     }
 
     public class DropInPlacePrototype : LootLocationModifierPrototype
     {
-        public bool Check { get; set; }
+        public bool Check { get; private set; }
     }
 
     public class LootLocationNodePrototype : Prototype
     {
-        public short Weight { get; set; }
-        public LootLocationModifierPrototype[] Modifiers { get; set; }
+        public short Weight { get; private set; }
+        public LootLocationModifierPrototype[] Modifiers { get; private set; }
     }
 
     public class LootLocationTablePrototype : LootLocationNodePrototype
     {
-        public LootLocationNodePrototype[] Choices { get; set; }
+        public LootLocationNodePrototype[] Choices { get; private set; }
     }
 
     #region LootRollModifier
@@ -318,14 +318,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootRollClampLevelPrototype : LootRollModifierPrototype
     {
-        public int LevelMin { get; set; }
-        public int LevelMax { get; set; }
+        public int LevelMin { get; private set; }
+        public int LevelMax { get; private set; }
     }
 
     public class LootRollRequireLevelPrototype : LootRollModifierPrototype
     {
-        public int LevelMin { get; set; }
-        public int LevelMax { get; set; }
+        public int LevelMin { get; private set; }
+        public int LevelMax { get; private set; }
     }
 
     public class LootRollMarkSpecialPrototype : LootRollModifierPrototype
@@ -346,110 +346,110 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootRollOffsetLevelPrototype : LootRollModifierPrototype
     {
-        public int LevelOffset { get; set; }
+        public int LevelOffset { get; private set; }
     }
 
     public class LootRollOnceDailyPrototype : LootRollModifierPrototype
     {
-        public bool PerAccount { get; set; }
+        public bool PerAccount { get; private set; }
     }
 
     public class LootRollCooldownOncePerRolloverPrototype : LootRollModifierPrototype
     {
-        public bool PerAccount { get; set; }
+        public bool PerAccount { get; private set; }
     }
 
     public class LootRollCooldownByChannelPrototype : LootRollModifierPrototype
     {
-        public bool PerAccount { get; set; }
+        public bool PerAccount { get; private set; }
     }
 
     public class LootRollSetAvatarPrototype : LootRollModifierPrototype
     {
-        public ulong Avatar { get; set; }
+        public ulong Avatar { get; private set; }
     }
 
     public class LootRollSetItemLevelPrototype : LootRollModifierPrototype
     {
-        public int Level { get; set; }
+        public int Level { get; private set; }
     }
 
     public class LootRollModifyAffixLimitsPrototype : LootRollModifierPrototype
     {
-        public AffixPosition Position { get; set; }
-        public short ModifyMinBy { get; set; }
-        public short ModifyMaxBy { get; set; }
-        public ulong Category { get; set; }
+        public AffixPosition Position { get; private set; }
+        public short ModifyMinBy { get; private set; }
+        public short ModifyMaxBy { get; private set; }
+        public ulong Category { get; private set; }
     }
 
     public class LootRollSetRarityPrototype : LootRollModifierPrototype
     {
-        public ulong[] Choices { get; set; }
+        public ulong[] Choices { get; private set; }
     }
 
     public class LootRollSetUsablePrototype : LootRollModifierPrototype
     {
-        public float Usable { get; set; }
+        public float Usable { get; private set; }
     }
 
     public class LootRollUseLevelVerbatimPrototype : LootRollModifierPrototype
     {
-        public bool UseLevelVerbatim { get; set; }
+        public bool UseLevelVerbatim { get; private set; }
     }
 
     public class LootRollRequireDifficultyTierPrototype : LootRollModifierPrototype
     {
-        public ulong[] Choices { get; set; }
+        public ulong[] Choices { get; private set; }
     }
 
     public class LootRollModifyDropByDifficultyTierPrototype : LootRollModifierPrototype
     {
-        public ulong ModifierCurve { get; set; }
+        public ulong ModifierCurve { get; private set; }
     }
 
     public class LootRollRequireConditionKeywordPrototype : LootRollModifierPrototype
     {
-        public ulong[] Choices { get; set; }
+        public ulong[] Choices { get; private set; }
     }
 
     public class LootRollForbidConditionKeywordPrototype : LootRollModifierPrototype
     {
-        public ulong[] Choices { get; set; }
+        public ulong[] Choices { get; private set; }
     }
 
     public class LootRollRequireDropperKeywordPrototype : LootRollModifierPrototype
     {
-        public ulong[] Choices { get; set; }
+        public ulong[] Choices { get; private set; }
     }
 
     public class LootRollForbidDropperKeywordPrototype : LootRollModifierPrototype
     {
-        public ulong[] Choices { get; set; }
+        public ulong[] Choices { get; private set; }
     }
 
     public class LootRollRequireRegionKeywordPrototype : LootRollModifierPrototype
     {
-        public ulong[] Choices { get; set; }
+        public ulong[] Choices { get; private set; }
     }
 
     public class LootRollForbidRegionKeywordPrototype : LootRollModifierPrototype
     {
-        public ulong[] Choices { get; set; }
+        public ulong[] Choices { get; private set; }
     }
 
     public class LootRollRequireRegionScenarioRarityPrototype : LootRollModifierPrototype
     {
-        public ulong[] Choices { get; set; }
+        public ulong[] Choices { get; private set; }
     }
 
     public class LootRollRequireKillCountPrototype : LootRollModifierPrototype
     {
-        public int KillsRequired { get; set; }
+        public int KillsRequired { get; private set; }
     }
 
     public class LootRollRequireWeekdayPrototype : LootRollModifierPrototype
     {
-        public Weekday[] Choices { get; set; }
+        public Weekday[] Choices { get; private set; }
     }
 
     public class LootRollIgnoreCooldownPrototype : LootRollModifierPrototype
@@ -462,7 +462,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootRollSetRegionAffixTablePrototype : LootRollModifierPrototype
     {
-        public ulong RegionAffixTable { get; set; }
+        public ulong RegionAffixTable { get; private set; }
     }
 
     public class LootRollIncludeCurrencyBonusPrototype : LootRollModifierPrototype
@@ -471,8 +471,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootRollMissionStateRequiredPrototype : LootRollModifierPrototype
     {
-        public ulong[] Missions { get; set; }
-        public MissionState RequiredState { get; set; }
+        public ulong[] Missions { get; private set; }
+        public MissionState RequiredState { get; private set; }
     }
 
     #endregion
@@ -485,10 +485,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootAddAffixesPrototype : LootMutationPrototype
     {
-        public ulong[] Keywords { get; set; }
-        public short Count { get; set; }
-        public AffixPosition Position { get; set; }
-        public AffixCategoryPrototype Categories { get; set; }
+        public ulong[] Keywords { get; private set; }
+        public short Count { get; private set; }
+        public AffixPosition Position { get; private set; }
+        public AffixCategoryPrototype Categories { get; private set; }
     }
 
     public class LootApplyNoVisualsOverridePrototype : LootMutationPrototype
@@ -497,50 +497,50 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootMutateBindingPrototype : LootMutationPrototype
     {
-        public LootBindingType Binding { get; set; }
+        public LootBindingType Binding { get; private set; }
     }
 
     public class LootClampLevelPrototype : LootMutationPrototype
     {
-        public int MaxLevel { get; set; }
-        public int MinLevel { get; set; }
+        public int MaxLevel { get; private set; }
+        public int MinLevel { get; private set; }
     }
 
     public class LootCloneAffixesPrototype : LootMutationPrototype
     {
-        public ulong[] Keywords { get; set; }
-        public int SourceIndex { get; set; }
-        public AffixPosition Position { get; set; }
-        public bool EnforceAffixLimits { get; set; }
-        public AffixCategoryPrototype Categories { get; set; }
+        public ulong[] Keywords { get; private set; }
+        public int SourceIndex { get; private set; }
+        public AffixPosition Position { get; private set; }
+        public bool EnforceAffixLimits { get; private set; }
+        public AffixCategoryPrototype Categories { get; private set; }
     }
 
     public class LootCloneBuiltinAffixesPrototype : LootMutationPrototype
     {
-        public ulong[] Keywords { get; set; }
-        public int SourceIndex { get; set; }
-        public AffixPosition Position { get; set; }
-        public bool EnforceAffixLimits { get; set; }
-        public AffixCategoryPrototype Categories { get; set; }
+        public ulong[] Keywords { get; private set; }
+        public int SourceIndex { get; private set; }
+        public AffixPosition Position { get; private set; }
+        public bool EnforceAffixLimits { get; private set; }
+        public AffixCategoryPrototype Categories { get; private set; }
     }
 
     public class LootCloneLevelPrototype : LootMutationPrototype
     {
-        public int SourceIndex { get; set; }
+        public int SourceIndex { get; private set; }
     }
 
     public class LootDropAffixesPrototype : LootMutationPrototype
     {
-        public ulong[] Keywords { get; set; }
-        public AffixPosition Position { get; set; }
-        public AffixCategoryPrototype Categories { get; set; }
+        public ulong[] Keywords { get; private set; }
+        public AffixPosition Position { get; private set; }
+        public AffixCategoryPrototype Categories { get; private set; }
     }
 
     public class LootMutateAffixesPrototype : LootMutationPrototype
     {
-        public ulong[] NewItemKeywords { get; set; }
-        public ulong[] OldItemKeywords { get; set; }
-        public bool OnlyReplaceIfAllMatched { get; set; }
+        public ulong[] NewItemKeywords { get; private set; }
+        public ulong[] OldItemKeywords { get; private set; }
+        public bool OnlyReplaceIfAllMatched { get; private set; }
     }
 
     public class LootMutateAvatarPrototype : LootMutationPrototype
@@ -553,22 +553,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class OffsetLootLevelPrototype : LootMutationPrototype
     {
-        public int LevelOffset { get; set; }
+        public int LevelOffset { get; private set; }
     }
 
     public class LootMutateRankPrototype : LootMutationPrototype
     {
-        public int Rank { get; set; }
+        public int Rank { get; private set; }
     }
 
     public class LootMutateRarityPrototype : LootMutationPrototype
     {
-        public bool RerollAffixCount { get; set; }
+        public bool RerollAffixCount { get; private set; }
     }
 
     public class LootMutateSlotPrototype : LootMutationPrototype
     {
-        public EquipmentInvUISlot Slot { get; set; }
+        public EquipmentInvUISlot Slot { get; private set; }
     }
 
     public class LootMutateBuiltinSeedPrototype : LootMutationPrototype
@@ -577,33 +577,33 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootMutateAffixSeedPrototype : LootMutationPrototype
     {
-        public ulong[] Keywords { get; set; }
-        public AffixPosition Position { get; set; }
-        public AffixCategoryPrototype Categories { get; set; }
+        public ulong[] Keywords { get; private set; }
+        public AffixPosition Position { get; private set; }
+        public AffixCategoryPrototype Categories { get; private set; }
     }
 
     public class LootReplaceAffixesPrototype : LootMutationPrototype
     {
-        public int SourceIndex { get; set; }
-        public ulong[] Keywords { get; set; }
-        public AffixPosition Position { get; set; }
-        public bool EnforceAffixLimits { get; set; }
-        public AffixCategoryPrototype Categories { get; set; }
+        public int SourceIndex { get; private set; }
+        public ulong[] Keywords { get; private set; }
+        public AffixPosition Position { get; private set; }
+        public bool EnforceAffixLimits { get; private set; }
+        public AffixCategoryPrototype Categories { get; private set; }
     }
 
     public class LootCloneSeedPrototype : LootMutationPrototype
     {
-        public int SourceIndex { get; set; }
+        public int SourceIndex { get; private set; }
     }
 
     public class LootAddAffixPrototype : LootMutationPrototype
     {
-        public ulong Affix { get; set; }
+        public ulong Affix { get; private set; }
     }
 
     public class LootEvalPrototype : LootMutationPrototype
     {
-        public EvalPrototype Eval { get; set; }
+        public EvalPrototype Eval { get; private set; }
     }
 
     #endregion

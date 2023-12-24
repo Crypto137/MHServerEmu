@@ -64,44 +64,44 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MetaGamePrototype : EntityPrototype
     {
-        public float Duration { get; set; }
-        public ulong[] Teams { get; set; }
-        public ulong[] GameModes { get; set; }
-        public ulong BodysliderOverride { get; set; }
-        public ulong MetaGameMissionText { get; set; }
-        public ulong MetaGameObjectiveText { get; set; }
-        public ulong MapInfoAvatarDefeatedOverride { get; set; }
-        public bool DiscoverAvatarsForPlayers { get; set; }
-        public int SoftLockRegionMode { get; set; }
-        public MetaGameMeterType MetaGameMeter { get; set; }
-        public ulong MetaGameBuffList { get; set; }
-        public MetaGameMetricEventType MetaGameMetricEvent { get; set; }
-        public ulong MetaGameWidget { get; set; }
-        public bool AllowMissionTrackerSorting { get; set; }
-        public ulong InterstitialTextOverride { get; set; }
+        public float Duration { get; private set; }
+        public ulong[] Teams { get; private set; }
+        public ulong[] GameModes { get; private set; }
+        public ulong BodysliderOverride { get; private set; }
+        public ulong MetaGameMissionText { get; private set; }
+        public ulong MetaGameObjectiveText { get; private set; }
+        public ulong MapInfoAvatarDefeatedOverride { get; private set; }
+        public bool DiscoverAvatarsForPlayers { get; private set; }
+        public int SoftLockRegionMode { get; private set; }
+        public MetaGameMeterType MetaGameMeter { get; private set; }
+        public ulong MetaGameBuffList { get; private set; }
+        public MetaGameMetricEventType MetaGameMetricEvent { get; private set; }
+        public ulong MetaGameWidget { get; private set; }
+        public bool AllowMissionTrackerSorting { get; private set; }
+        public ulong InterstitialTextOverride { get; private set; }
     }
 
     public class MetaGameTeamPrototype : Prototype
     {
-        public ulong Name { get; set; }
-        public int MinPlayers { get; set; }
-        public int MaxPlayers { get; set; }
-        public ulong Faction { get; set; }
+        public ulong Name { get; private set; }
+        public int MinPlayers { get; private set; }
+        public int MaxPlayers { get; private set; }
+        public ulong Faction { get; private set; }
     }
 
     public class MatchMetaGamePrototype : MetaGamePrototype
     {
-        public ulong StartRegion { get; set; }
+        public ulong StartRegion { get; private set; }
     }
 
     public class MatchQueuePrototype : Prototype
     {
-        public ulong[] MatchTypes { get; set; }
-        public ulong Name { get; set; }
-        public ulong QueueMsg { get; set; }
-        public int BalanceMethod { get; set; }
-        public int RegionLevel { get; set; }
-        public ulong GameSystem { get; set; }
+        public ulong[] MatchTypes { get; private set; }
+        public ulong Name { get; private set; }
+        public ulong QueueMsg { get; private set; }
+        public int BalanceMethod { get; private set; }
+        public int RegionLevel { get; private set; }
+        public ulong GameSystem { get; private set; }
     }
 
     public class MetaGameEventHandlerPrototype : Prototype
@@ -110,75 +110,75 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PvPScoreEventHandlerPrototype : MetaGameEventHandlerPrototype
     {
-        public int DeathsEntry { get; set; }
-        public int KillsEntry { get; set; }
-        public int DamageTakenEntry { get; set; }
-        public int DamageVsMinionsEntry { get; set; }
-        public int DamageVsPlayersEntry { get; set; }
-        public int DamageVsTotalEntry { get; set; }
-        public int Runestones { get; set; }
-        public int AssistsMS { get; set; }
-        public int AssistsEntry { get; set; }
-        public EvalPrototype EvalRunestoneAssistReward { get; set; }
-        public int KillingSpreeEntry { get; set; }
+        public int DeathsEntry { get; private set; }
+        public int KillsEntry { get; private set; }
+        public int DamageTakenEntry { get; private set; }
+        public int DamageVsMinionsEntry { get; private set; }
+        public int DamageVsPlayersEntry { get; private set; }
+        public int DamageVsTotalEntry { get; private set; }
+        public int Runestones { get; private set; }
+        public int AssistsMS { get; private set; }
+        public int AssistsEntry { get; private set; }
+        public EvalPrototype EvalRunestoneAssistReward { get; private set; }
+        public int KillingSpreeEntry { get; private set; }
     }
 
     public class PvEScoreEventHandlerPrototype : MetaGameEventHandlerPrototype
     {
-        public int DeathsEntry { get; set; }
-        public int KillsEntry { get; set; }
-        public int DamageTakenEntry { get; set; }
-        public int DamageVsMinionsEntry { get; set; }
-        public int DamageVsBossEntry { get; set; }
-        public int DamageVsTotalEntry { get; set; }
+        public int DeathsEntry { get; private set; }
+        public int KillsEntry { get; private set; }
+        public int DamageTakenEntry { get; private set; }
+        public int DamageVsMinionsEntry { get; private set; }
+        public int DamageVsBossEntry { get; private set; }
+        public int DamageVsTotalEntry { get; private set; }
     }
 
     public class PvPTeamPrototype : MetaGameTeamPrototype
     {
-        public ulong Alliance { get; set; }
-        public ulong SpawnMarker { get; set; }
-        public ulong StartHealingAura { get; set; }
-        public ulong StartTarget { get; set; }
-        public ulong IconPath { get; set; }
-        public ulong DisplayName { get; set; }
-        public ulong IconPathHiRes { get; set; }
+        public ulong Alliance { get; private set; }
+        public ulong SpawnMarker { get; private set; }
+        public ulong StartHealingAura { get; private set; }
+        public ulong StartTarget { get; private set; }
+        public ulong IconPath { get; private set; }
+        public ulong DisplayName { get; private set; }
+        public ulong IconPathHiRes { get; private set; }
     }
 
     public class PvPMiniMapIconsPrototype : Prototype
     {
-        public ulong AlliedMinion { get; set; }
-        public ulong Ally { get; set; }
-        public ulong Enemy { get; set; }
-        public ulong EnemyMinion { get; set; }
+        public ulong AlliedMinion { get; private set; }
+        public ulong Ally { get; private set; }
+        public ulong Enemy { get; private set; }
+        public ulong EnemyMinion { get; private set; }
     }
 
     public class PvPPrototype : MatchMetaGamePrototype
     {
-        public int RespawnCooldown { get; set; }
-        public int StartingScore { get; set; }
-        public ulong ScoreSchemaPlayer { get; set; }
-        public ulong ScoreSchemaRegion { get; set; }
-        public ulong MiniMapFilter { get; set; }
-        public ulong AvatarKilledLootTable { get; set; }
-        public bool IsPvP { get; set; }
-        public EvalPrototype EvalOnPlayerAdded { get; set; }
-        public ulong[] RefreshVendorTypes { get; set; }
-        public bool RecordPlayerDeaths { get; set; }
-        public ulong DamageBoostForKDPct { get; set; }
-        public ulong DamageReductionForKDPct { get; set; }
-        public ulong DamageBoostForNoobs { get; set; }
-        public ulong DamageReductionForNoobs { get; set; }
-        public ulong VOEnemyTeamWiped { get; set; }
-        public ulong VOFirstKill { get; set; }
-        public ulong[] VOKillSpreeList { get; set; }
-        public ulong VOKillSpreeShutdown { get; set; }
-        public ulong VORevenge { get; set; }
-        public ulong VOTeammateKilled { get; set; }
-        public ulong DamageBoostForWinPct { get; set; }
-        public ulong DamageReductionForWinPct { get; set; }
-        public ulong DamageBoostForOmegaPct { get; set; }
-        public ulong DamageReductionForOmegaPct { get; set; }
-        public bool ScreenArrowsForNonPartyAvatars { get; set; }
+        public int RespawnCooldown { get; private set; }
+        public int StartingScore { get; private set; }
+        public ulong ScoreSchemaPlayer { get; private set; }
+        public ulong ScoreSchemaRegion { get; private set; }
+        public ulong MiniMapFilter { get; private set; }
+        public ulong AvatarKilledLootTable { get; private set; }
+        public bool IsPvP { get; private set; }
+        public EvalPrototype EvalOnPlayerAdded { get; private set; }
+        public ulong[] RefreshVendorTypes { get; private set; }
+        public bool RecordPlayerDeaths { get; private set; }
+        public ulong DamageBoostForKDPct { get; private set; }
+        public ulong DamageReductionForKDPct { get; private set; }
+        public ulong DamageBoostForNoobs { get; private set; }
+        public ulong DamageReductionForNoobs { get; private set; }
+        public ulong VOEnemyTeamWiped { get; private set; }
+        public ulong VOFirstKill { get; private set; }
+        public ulong[] VOKillSpreeList { get; private set; }
+        public ulong VOKillSpreeShutdown { get; private set; }
+        public ulong VORevenge { get; private set; }
+        public ulong VOTeammateKilled { get; private set; }
+        public ulong DamageBoostForWinPct { get; private set; }
+        public ulong DamageReductionForWinPct { get; private set; }
+        public ulong DamageBoostForOmegaPct { get; private set; }
+        public ulong DamageReductionForOmegaPct { get; private set; }
+        public bool ScreenArrowsForNonPartyAvatars { get; private set; }
     }
 
     public class GameModePrototype : Prototype
@@ -187,240 +187,240 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PvEScaleEnemyBoostEntryPrototype : Prototype
     {
-        public ulong EnemyBoost { get; set; }
-        public ulong UINotification { get; set; }
+        public ulong EnemyBoost { get; private set; }
+        public ulong UINotification { get; private set; }
     }
 
     public class PvEScaleWavePopulationPrototype : Prototype
     {
-        public PopulationRequiredObjectListPrototype[] Choices { get; set; }
+        public PopulationRequiredObjectListPrototype[] Choices { get; private set; }
     }
 
     public class MetaGameNotificationDataPrototype : Prototype
     {
-        public ulong DialogText { get; set; }
-        public ulong WorldEntityPrototype { get; set; }
-        public GameNotificationType NotificationType { get; set; }
+        public ulong DialogText { get; private set; }
+        public ulong WorldEntityPrototype { get; private set; }
+        public GameNotificationType NotificationType { get; private set; }
     }
 
     public class MetaGameBannerTimeDataPrototype : Prototype
     {
-        public int TimerValueMS { get; set; }
-        public ulong BannerText { get; set; }
-        public MetaGameModeTimerBannerType TimerModeType { get; set; }
+        public int TimerValueMS { get; private set; }
+        public ulong BannerText { get; private set; }
+        public MetaGameModeTimerBannerType TimerModeType { get; private set; }
     }
 
     public class MetaGameModePrototype : Prototype
     {
-        public ulong AvatarOnKilledInfoOverride { get; set; }
-        public ulong EventHandler { get; set; }
-        public ulong UINotificationOnActivate { get; set; }
-        public ulong UINotificationOnDeactivate { get; set; }
-        public bool ShowTimer { get; set; }
-        public ulong Name { get; set; }
-        public int ActiveGoalRepeatTimeMS { get; set; }
-        public ulong UINotificationActiveGoalRepeat { get; set; }
-        public bool ShowScoreboard { get; set; }
-        public MetaGameNotificationDataPrototype[] PlayerEnterNotifications { get; set; }
-        public MetaGameBannerTimeDataPrototype[] UITimedBannersOnActivate { get; set; }
-        public ulong PlayerEnterAudioTheme { get; set; }
-        public ulong[] ApplyStates { get; set; }
-        public ulong[] RemoveStates { get; set; }
-        public ulong[] RemoveGroups { get; set; }
+        public ulong AvatarOnKilledInfoOverride { get; private set; }
+        public ulong EventHandler { get; private set; }
+        public ulong UINotificationOnActivate { get; private set; }
+        public ulong UINotificationOnDeactivate { get; private set; }
+        public bool ShowTimer { get; private set; }
+        public ulong Name { get; private set; }
+        public int ActiveGoalRepeatTimeMS { get; private set; }
+        public ulong UINotificationActiveGoalRepeat { get; private set; }
+        public bool ShowScoreboard { get; private set; }
+        public MetaGameNotificationDataPrototype[] PlayerEnterNotifications { get; private set; }
+        public MetaGameBannerTimeDataPrototype[] UITimedBannersOnActivate { get; private set; }
+        public ulong PlayerEnterAudioTheme { get; private set; }
+        public ulong[] ApplyStates { get; private set; }
+        public ulong[] RemoveStates { get; private set; }
+        public ulong[] RemoveGroups { get; private set; }
     }
 
     public class MetaGameModeIdlePrototype : MetaGameModePrototype
     {
-        public int DurationMS { get; set; }
-        public int NextMode { get; set; }
-        public bool PlayersCanMove { get; set; }
-        public bool DisplayScoreInfoOnActivate { get; set; }
-        public bool TeleportPlayersToStartOnActivate { get; set; }
-        public ulong KismetSequenceOnActivate { get; set; }
-        public int PlayerCountToAdvance { get; set; }
-        public ulong DeathRegionTarget { get; set; }
-        public ulong PlayerLockVisualsPower { get; set; }
+        public int DurationMS { get; private set; }
+        public int NextMode { get; private set; }
+        public bool PlayersCanMove { get; private set; }
+        public bool DisplayScoreInfoOnActivate { get; private set; }
+        public bool TeleportPlayersToStartOnActivate { get; private set; }
+        public ulong KismetSequenceOnActivate { get; private set; }
+        public int PlayerCountToAdvance { get; private set; }
+        public ulong DeathRegionTarget { get; private set; }
+        public ulong PlayerLockVisualsPower { get; private set; }
     }
 
     public class MetaGameModeShutdownPrototype : MetaGameModePrototype
     {
-        public ulong ShutdownTarget { get; set; }
-        public MetaGameModeShutdownBehaviorType Behavior { get; set; }
+        public ulong ShutdownTarget { get; private set; }
+        public MetaGameModeShutdownBehaviorType Behavior { get; private set; }
     }
 
     public class PvEScaleGameModePrototype : MetaGameModePrototype
     {
-        public int WaveDurationMS { get; set; }
-        public int WaveDurationCriticalTimeMS { get; set; }
-        public int WaveDurationLowTimeMS { get; set; }
-        public int WaveBossDelayMS { get; set; }
-        public ulong[] BossPopulationObjects { get; set; }
-        public ulong BossUINotification { get; set; }
-        public ulong DeathRegionTarget { get; set; }
-        public ulong PopulationOverrideTheme { get; set; }
-        public ulong PopulationOverrideAreas { get; set; }
-        public ulong PowerUpMarkerType { get; set; }
-        public ulong PowerUpItem { get; set; }
-        public ulong PowerUpPowerToRemove { get; set; }
-        public int NextMode { get; set; }
-        public int FailMode { get; set; }
-        public ulong FailUINotification { get; set; }
-        public ulong SuccessUINotification { get; set; }
-        public int DifficultyIndex { get; set; }
-        public ulong BossModeNameOverride { get; set; }
-        public ulong PowerUpExtraText { get; set; }
-        public ulong WavePopulation { get; set; }
-        public PvEScaleEnemyBoostEntryPrototype[] WaveEnemyBoosts { get; set; }
-        public float WaveDifficultyPerSecond { get; set; }
-        public int PowerUpSpawnMS { get; set; }
-        public float PowerUpDifficultyReduction { get; set; }
-        public float MobTotalDifficultyReduction { get; set; }
-        public ulong PowerUpSpawnUINotification { get; set; }
-        public int WaveDifficultyFailureThreshold { get; set; }
-        public int WaveDifficultyWarningThreshold { get; set; }
-        public int WaveEnemyBoostsPickCount { get; set; }
-        public ulong WaveOnSpawnPower { get; set; }
-        public ulong[] BossEnemyBoosts { get; set; }
-        public int BossEnemyBoostsPicks { get; set; }
-        public ulong WaveOnDespawnPower { get; set; }
-        public ulong PowerUpPickupUINotification { get; set; }
+        public int WaveDurationMS { get; private set; }
+        public int WaveDurationCriticalTimeMS { get; private set; }
+        public int WaveDurationLowTimeMS { get; private set; }
+        public int WaveBossDelayMS { get; private set; }
+        public ulong[] BossPopulationObjects { get; private set; }
+        public ulong BossUINotification { get; private set; }
+        public ulong DeathRegionTarget { get; private set; }
+        public ulong PopulationOverrideTheme { get; private set; }
+        public ulong PopulationOverrideAreas { get; private set; }
+        public ulong PowerUpMarkerType { get; private set; }
+        public ulong PowerUpItem { get; private set; }
+        public ulong PowerUpPowerToRemove { get; private set; }
+        public int NextMode { get; private set; }
+        public int FailMode { get; private set; }
+        public ulong FailUINotification { get; private set; }
+        public ulong SuccessUINotification { get; private set; }
+        public int DifficultyIndex { get; private set; }
+        public ulong BossModeNameOverride { get; private set; }
+        public ulong PowerUpExtraText { get; private set; }
+        public ulong WavePopulation { get; private set; }
+        public PvEScaleEnemyBoostEntryPrototype[] WaveEnemyBoosts { get; private set; }
+        public float WaveDifficultyPerSecond { get; private set; }
+        public int PowerUpSpawnMS { get; private set; }
+        public float PowerUpDifficultyReduction { get; private set; }
+        public float MobTotalDifficultyReduction { get; private set; }
+        public ulong PowerUpSpawnUINotification { get; private set; }
+        public int WaveDifficultyFailureThreshold { get; private set; }
+        public int WaveDifficultyWarningThreshold { get; private set; }
+        public int WaveEnemyBoostsPickCount { get; private set; }
+        public ulong WaveOnSpawnPower { get; private set; }
+        public ulong[] BossEnemyBoosts { get; private set; }
+        public int BossEnemyBoostsPicks { get; private set; }
+        public ulong WaveOnDespawnPower { get; private set; }
+        public ulong PowerUpPickupUINotification { get; private set; }
     }
 
     public class PvEWaveGameModePrototype : MetaGameModePrototype
     {
-        public int WaveDurationMS { get; set; }
-        public int WaveDurationCriticalTimeMS { get; set; }
-        public int WaveDurationLowTimeMS { get; set; }
-        public int WaveBossDelayMS { get; set; }
-        public ulong BossSpawner { get; set; }
-        public ulong BossPopulationObject { get; set; }
-        public ulong BossUINotification { get; set; }
-        public ulong DeathRegionTarget { get; set; }
-        public ulong PopulationOverrideTheme { get; set; }
-        public ulong PopulationOverrideAreas { get; set; }
-        public ulong PowerUpMarkerType { get; set; }
-        public ulong PowerUpItem { get; set; }
-        public ulong PowerUpPowerToRemove { get; set; }
-        public int NextMode { get; set; }
-        public int FailMode { get; set; }
-        public ulong FailUINotification { get; set; }
-        public ulong SuccessUINotification { get; set; }
-        public int DifficultyIndex { get; set; }
-        public ulong BossModeNameOverride { get; set; }
-        public ulong PowerUpExtraText { get; set; }
+        public int WaveDurationMS { get; private set; }
+        public int WaveDurationCriticalTimeMS { get; private set; }
+        public int WaveDurationLowTimeMS { get; private set; }
+        public int WaveBossDelayMS { get; private set; }
+        public ulong BossSpawner { get; private set; }
+        public ulong BossPopulationObject { get; private set; }
+        public ulong BossUINotification { get; private set; }
+        public ulong DeathRegionTarget { get; private set; }
+        public ulong PopulationOverrideTheme { get; private set; }
+        public ulong PopulationOverrideAreas { get; private set; }
+        public ulong PowerUpMarkerType { get; private set; }
+        public ulong PowerUpItem { get; private set; }
+        public ulong PowerUpPowerToRemove { get; private set; }
+        public int NextMode { get; private set; }
+        public int FailMode { get; private set; }
+        public ulong FailUINotification { get; private set; }
+        public ulong SuccessUINotification { get; private set; }
+        public int DifficultyIndex { get; private set; }
+        public ulong BossModeNameOverride { get; private set; }
+        public ulong PowerUpExtraText { get; private set; }
     }
 
     public class PvPAttackerDataPrototype : Prototype
     {
-        public ulong Wave { get; set; }
-        public ulong WaveSpawnPosition { get; set; }
-        public ulong WaveSuperOnTurretDeath { get; set; }
-        public ulong WaveSuperMinion { get; set; }
-        public int WaveSiegeMinionEveryXWave { get; set; }
-        public ulong WaveSiegeMinion { get; set; }
+        public ulong Wave { get; private set; }
+        public ulong WaveSpawnPosition { get; private set; }
+        public ulong WaveSuperOnTurretDeath { get; private set; }
+        public ulong WaveSuperMinion { get; private set; }
+        public int WaveSiegeMinionEveryXWave { get; private set; }
+        public ulong WaveSiegeMinion { get; private set; }
     }
 
     public class PvPDefenderDataPrototype : Prototype
     {
-        public ulong Defender { get; set; }
-        public ulong Boost { get; set; }
-        public ulong UnderAttackUINotification { get; set; }
-        public ulong DeathUINotification { get; set; }
-        public ulong RespawnUINotification { get; set; }
-        public ulong Team { get; set; }
-        public ulong DeathAudioTheme { get; set; }
-        public ulong UnderAttackAudioTheme { get; set; }
+        public ulong Defender { get; private set; }
+        public ulong Boost { get; private set; }
+        public ulong UnderAttackUINotification { get; private set; }
+        public ulong DeathUINotification { get; private set; }
+        public ulong RespawnUINotification { get; private set; }
+        public ulong Team { get; private set; }
+        public ulong DeathAudioTheme { get; private set; }
+        public ulong UnderAttackAudioTheme { get; private set; }
     }
 
     public class PvPTurretDataPrototype : Prototype
     {
-        public PopulationObjectPrototype TurretPopulation { get; set; }
-        public ulong AVSPH { get; set; }
-        public int TurretGroupId { get; set; }
-        public ulong Team { get; set; }
-        public ulong DeathAudioTheme { get; set; }
+        public PopulationObjectPrototype TurretPopulation { get; private set; }
+        public ulong AVSPH { get; private set; }
+        public int TurretGroupId { get; private set; }
+        public ulong Team { get; private set; }
+        public ulong DeathAudioTheme { get; private set; }
     }
 
     public class PvPFactionGameModePrototype : MetaGameModePrototype
     {
-        public PvPDefenderDataPrototype[] Defenders { get; set; }
+        public PvPDefenderDataPrototype[] Defenders { get; private set; }
     }
 
     public class MetaGameTeamStartOverridePrototype : Prototype
     {
-        public ulong StartTarget { get; set; }
-        public ulong Team { get; set; }
+        public ulong StartTarget { get; private set; }
+        public ulong Team { get; private set; }
     }
 
     public class PvPDefenderGameModePrototype : MetaGameModePrototype
     {
-        public PvPAttackerDataPrototype[] Attackers { get; set; }
-        public int AttackerWaveCycleMS { get; set; }
-        public PvPDefenderDataPrototype[] Defenders { get; set; }
-        public int NextMode { get; set; }
-        public MetaGameTeamStartOverridePrototype[] StartTargetOverrides { get; set; }
-        public PvPTurretDataPrototype[] Turrets { get; set; }
-        public MetaGameTeamStartOverridePrototype[] RespawnTargetOverrides { get; set; }
-        public EvalPrototype TimeToRespawn { get; set; }
-        public int SoftLockRegionMS { get; set; }
-        public ulong ChatMessagePlayerDefeatedPlayer { get; set; }
-        public ulong BannerMsgPlayerDefeatAttacker { get; set; }
-        public ulong BannerMsgPlayerDefeatDefender { get; set; }
-        public ulong BannerMsgPlayerDefeatOther { get; set; }
-        public ulong BannerMsgPlayerDefeatLock { get; set; }
-        public ulong BannerMsgPlayerDefeatUnlock { get; set; }
-        public ulong PlayerLockVisualsPower { get; set; }
-        public MetaGameBannerTimeDataPrototype[] UITimedBannersOnDefeatLock { get; set; }
-        public ulong DeathTimerText { get; set; }
-        public ulong DefenderInvinciblePower { get; set; }
-        public ulong TurretInvinciblePower { get; set; }
-        public int AttackerWaveInitialDelayMS { get; set; }
-        public ulong BannerMsgNPDefeatPlayerDefender { get; set; }
-        public ulong BannerMsgNPDefeatPlayerOther { get; set; }
-        public ulong ChatMessageNPDefeatedPlayer { get; set; }
-        public float DidNotParticipateDmgPerMinuteMin { get; set; }
-        public int DefenderVulnerabilityIntervalMS { get; set; }
-        public EvalPrototype DefenderVulnerabilityEval { get; set; }
-        public int TurretVulnerabilityIntervalMS { get; set; }
-        public EvalPrototype TurretVulnerabilityEval { get; set; }
+        public PvPAttackerDataPrototype[] Attackers { get; private set; }
+        public int AttackerWaveCycleMS { get; private set; }
+        public PvPDefenderDataPrototype[] Defenders { get; private set; }
+        public int NextMode { get; private set; }
+        public MetaGameTeamStartOverridePrototype[] StartTargetOverrides { get; private set; }
+        public PvPTurretDataPrototype[] Turrets { get; private set; }
+        public MetaGameTeamStartOverridePrototype[] RespawnTargetOverrides { get; private set; }
+        public EvalPrototype TimeToRespawn { get; private set; }
+        public int SoftLockRegionMS { get; private set; }
+        public ulong ChatMessagePlayerDefeatedPlayer { get; private set; }
+        public ulong BannerMsgPlayerDefeatAttacker { get; private set; }
+        public ulong BannerMsgPlayerDefeatDefender { get; private set; }
+        public ulong BannerMsgPlayerDefeatOther { get; private set; }
+        public ulong BannerMsgPlayerDefeatLock { get; private set; }
+        public ulong BannerMsgPlayerDefeatUnlock { get; private set; }
+        public ulong PlayerLockVisualsPower { get; private set; }
+        public MetaGameBannerTimeDataPrototype[] UITimedBannersOnDefeatLock { get; private set; }
+        public ulong DeathTimerText { get; private set; }
+        public ulong DefenderInvinciblePower { get; private set; }
+        public ulong TurretInvinciblePower { get; private set; }
+        public int AttackerWaveInitialDelayMS { get; private set; }
+        public ulong BannerMsgNPDefeatPlayerDefender { get; private set; }
+        public ulong BannerMsgNPDefeatPlayerOther { get; private set; }
+        public ulong ChatMessageNPDefeatedPlayer { get; private set; }
+        public float DidNotParticipateDmgPerMinuteMin { get; private set; }
+        public int DefenderVulnerabilityIntervalMS { get; private set; }
+        public EvalPrototype DefenderVulnerabilityEval { get; private set; }
+        public int TurretVulnerabilityIntervalMS { get; private set; }
+        public EvalPrototype TurretVulnerabilityEval { get; private set; }
     }
 
     public class MetaGameStateModePrototype : MetaGameModePrototype
     {
-        public ulong[] States { get; set; }
-        public int StatePickIntervalMS { get; set; }
-        public int DifficultyPerStateActivate { get; set; }
-        public ulong UIStateChangeBannerText { get; set; }
-        public ulong DeathRegionTarget { get; set; }
-        public ulong StatePickIntervalLabelOverride { get; set; }
-        public EvalPrototype EvalStateSelection { get; set; }
-        public EvalPrototype EvalModeEnd { get; set; }
-        public ulong UIStatePickIntervalWidget { get; set; }
+        public ulong[] States { get; private set; }
+        public int StatePickIntervalMS { get; private set; }
+        public int DifficultyPerStateActivate { get; private set; }
+        public ulong UIStateChangeBannerText { get; private set; }
+        public ulong DeathRegionTarget { get; private set; }
+        public ulong StatePickIntervalLabelOverride { get; private set; }
+        public EvalPrototype EvalStateSelection { get; private set; }
+        public EvalPrototype EvalModeEnd { get; private set; }
+        public ulong UIStatePickIntervalWidget { get; private set; }
     }
 
     public class NexusPvPCyclePrototype : Prototype
     {
-        public ulong[] Escalations { get; set; }
-        public float NextCycleTimeInSeconds { get; set; }
+        public ulong[] Escalations { get; private set; }
+        public float NextCycleTimeInSeconds { get; private set; }
     }
 
     public class NexusPvPWavePrototype : Prototype
     {
-        public NexusPvPCyclePrototype[] Cycles { get; set; }
+        public NexusPvPCyclePrototype[] Cycles { get; private set; }
     }
 
     public class NexusPvPMainModePrototype : MetaGameModePrototype
     {
-        public int GameOverModeIndex { get; set; }
-        public PopulationEntityPrototype NexusRedPopulationEntity { get; set; }
-        public float TimeBetweenWavesInSeconds { get; set; }
-        public ulong[] Waves { get; set; }
-        public ulong WaveSpawnMarker { get; set; }
+        public int GameOverModeIndex { get; private set; }
+        public PopulationEntityPrototype NexusRedPopulationEntity { get; private set; }
+        public float TimeBetweenWavesInSeconds { get; private set; }
+        public ulong[] Waves { get; private set; }
+        public ulong WaveSpawnMarker { get; private set; }
     }
 
     public class MissionMetaGamePrototype : MetaGamePrototype
     {
-        public int LevelLowerBoundsOffset { get; set; }
-        public int LevelUpperBoundsOffset { get; set; }
+        public int LevelLowerBoundsOffset { get; private set; }
+        public int LevelUpperBoundsOffset { get; private set; }
     }
 }

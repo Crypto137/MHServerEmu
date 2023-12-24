@@ -2,20 +2,20 @@
 {
     public class ProductPrototype : Prototype
     {
-        public bool ForSale { get; set; }
+        public bool ForSale { get; private set; }
     }
 
     public class CurrencyPrototype : Prototype
     {
-        public ulong CostString { get; set; }
-        public ulong DisplayName { get; set; }
-        public ulong Icon { get; set; }
-        public ulong Tooltip { get; set; }
-        public ulong IconSmall { get; set; }
-        public int MaxAmount { get; set; }
-        public ulong IconHiRes { get; set; }
-        public ulong LootBonusFlatCurve { get; set; }
-        public ulong LootBonusPctCurve { get; set; }
+        public ulong CostString { get; private set; }
+        public ulong DisplayName { get; private set; }
+        public ulong Icon { get; private set; }
+        public ulong Tooltip { get; private set; }
+        public ulong IconSmall { get; private set; }
+        public int MaxAmount { get; private set; }
+        public ulong IconHiRes { get; private set; }
+        public ulong LootBonusFlatCurve { get; private set; }
+        public ulong LootBonusPctCurve { get; private set; }
     }
 
     public class ItemCostComponentPrototype : Prototype
@@ -24,38 +24,38 @@
 
     public class ItemCostCreditsPrototype : ItemCostComponentPrototype
     {
-        public EvalPrototype Number { get; set; }
-        public ulong Currency { get; set; }
+        public EvalPrototype Number { get; private set; }
+        public ulong Currency { get; private set; }
     }
 
     public class ItemCostLegendaryMarksPrototype : ItemCostComponentPrototype
     {
-        public EvalPrototype Number { get; set; }
-        public EvalPrototype NumberExt { get; set; }
+        public EvalPrototype Number { get; private set; }
+        public EvalPrototype NumberExt { get; private set; }
     }
 
     public class ItemCostRunestonesPrototype : ItemCostComponentPrototype
     {
-        public EvalPrototype Number { get; set; }
-        public EvalPrototype NumberExt { get; set; }
+        public EvalPrototype Number { get; private set; }
+        public EvalPrototype NumberExt { get; private set; }
     }
 
     public class ItemCostItemStackPrototype : ItemCostComponentPrototype
     {
-        public ulong CurrencyItem { get; set; }
-        public EvalPrototype Number { get; set; }
+        public ulong CurrencyItem { get; private set; }
+        public EvalPrototype Number { get; private set; }
     }
 
     public class ItemCostCurrencyPrototype : ItemCostComponentPrototype
     {
-        public ulong Currency { get; set; }
-        public EvalPrototype Amount { get; set; }
+        public ulong Currency { get; private set; }
+        public EvalPrototype Amount { get; private set; }
     }
 
     public class ItemCostPrototype : Prototype
     {
-        public ItemCostComponentPrototype[] Components { get; set; }
-        public EvalPrototype Credits { get; set; }
-        public EvalPrototype Runestones { get; set; }
+        public ItemCostComponentPrototype[] Components { get; private set; }
+        public EvalPrototype Credits { get; private set; }
+        public EvalPrototype Runestones { get; private set; }
     }
 }

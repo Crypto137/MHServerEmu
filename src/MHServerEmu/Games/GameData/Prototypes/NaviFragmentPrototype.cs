@@ -2,13 +2,13 @@
 {
     public class NaviFragmentPrototype : Prototype
     {
-        public NaviFragmentPolyPrototype[] FragmentPolys;
-        public NaviFragmentPolyPrototype[] PropFragmentPolys;
+        public NaviFragmentPolyPrototype[] FragmentPolys { get; private set; }
+        public NaviFragmentPolyPrototype[] PropFragmentPolys { get; private set; }
     }
 
     public class NaviFragmentPolyPrototype : Prototype
     {
-        public NaviContentTags ContentTag;
-        public ulong Points;
+        public NaviContentTags ContentTag { get; private set; }
+        public ulong Points { get; private set; }
     }
 }

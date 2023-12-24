@@ -2,27 +2,27 @@
 {
     public class ScoringEventContextPrototype : Prototype
     {
-        public ulong ContextAvatar { get; set; }
-        public ulong ContextItemEquipped { get; set; }
-        public ulong ContextParty { get; set; }
-        public ulong ContextPet { get; set; }
-        public ulong ContextRegion { get; set; }
-        public bool ContextRegionIncludeChildren { get; set; }
-        public ulong ContextRegionKeyword { get; set; }
-        public ulong ContextDifficultyTierMin { get; set; }
-        public ulong ContextDifficultyTierMax { get; set; }
-        public ulong ContextTeamUp { get; set; }
-        public ulong ContextPublicEventTeam { get; set; }
+        public ulong ContextAvatar { get; private set; }
+        public ulong ContextItemEquipped { get; private set; }
+        public ulong ContextParty { get; private set; }
+        public ulong ContextPet { get; private set; }
+        public ulong ContextRegion { get; private set; }
+        public bool ContextRegionIncludeChildren { get; private set; }
+        public ulong ContextRegionKeyword { get; private set; }
+        public ulong ContextDifficultyTierMin { get; private set; }
+        public ulong ContextDifficultyTierMax { get; private set; }
+        public ulong ContextTeamUp { get; private set; }
+        public ulong ContextPublicEventTeam { get; private set; }
     }
 
     public class ScoringEventTimerPrototype : Prototype
     {
-        public ulong UIWidget { get; set; }
+        public ulong UIWidget { get; private set; }
     }
 
     public class ScoringEventPrototype : Prototype
     {
-        public ScoringEventContextPrototype Context { get; set; }
+        public ScoringEventContextPrototype Context { get; private set; }
     }
 
     public class ScoringEventAchievementScorePrototype : ScoringEventPrototype
@@ -31,7 +31,7 @@
 
     public class ScoringEventAreaEnterPrototype : ScoringEventPrototype
     {
-        public ulong Area { get; set; }
+        public ulong Area { get; private set; }
     }
 
     public class ScoringEventAvatarDeathPrototype : ScoringEventPrototype
@@ -68,7 +68,7 @@
 
     public class ScoringEventAvatarsAtPrstgLvlPrototype : ScoringEventPrototype
     {
-        public ulong PrestigeLevel { get; set; }
+        public ulong PrestigeLevel { get; private set; }
     }
 
     public class ScoringEventAvatarsAtPrstgLvlCapPrototype : ScoringEventPrototype
@@ -77,64 +77,64 @@
 
     public class ScoringEventAvatarsUnlockedPrototype : ScoringEventPrototype
     {
-        public ulong Avatar { get; set; }
+        public ulong Avatar { get; private set; }
     }
 
     public class ScoringEventAvatarUsedPowerPrototype : ScoringEventPrototype
     {
-        public ulong Power { get; set; }
-        public ulong PowerKeyword { get; set; }
-        public ulong TargetKeyword { get; set; }
-        public ulong TargetPrototype { get; set; }
-        public bool TargetPrototypeIncludeChildren { get; set; }
+        public ulong Power { get; private set; }
+        public ulong PowerKeyword { get; private set; }
+        public ulong TargetKeyword { get; private set; }
+        public ulong TargetPrototype { get; private set; }
+        public bool TargetPrototypeIncludeChildren { get; private set; }
     }
 
     public class ScoringEventCompleteMissionPrototype : ScoringEventPrototype
     {
-        public ulong Mission { get; set; }
-        public ulong MissionKeyword { get; set; }
+        public ulong Mission { get; private set; }
+        public ulong MissionKeyword { get; private set; }
     }
 
     public class ScoringEventCompletionTimePrototype : ScoringEventPrototype
     {
-        public ulong Timer { get; set; }
+        public ulong Timer { get; private set; }
     }
 
     public class ScoringEventCurrencyCollectedPrototype : ScoringEventPrototype
     {
-        public ulong Currency { get; set; }
+        public ulong Currency { get; private set; }
     }
 
     public class ScoringEventCurrencySpentPrototype : ScoringEventPrototype
     {
-        public ulong Currency { get; set; }
+        public ulong Currency { get; private set; }
     }
 
     public class ScoringEventEntityDeathPrototype : ScoringEventPrototype
     {
-        public ulong EntityKeyword { get; set; }
-        public ulong EntityPrototype { get; set; }
-        public bool EntityPrototypeIncludeChildren { get; set; }
-        public ulong Rank { get; set; }
-        public ulong RankKeyword { get; set; }
+        public ulong EntityKeyword { get; private set; }
+        public ulong EntityPrototype { get; private set; }
+        public bool EntityPrototypeIncludeChildren { get; private set; }
+        public ulong Rank { get; private set; }
+        public ulong RankKeyword { get; private set; }
     }
 
     public class ScoringEventEntityDeathViaPowerPrototype : ScoringEventPrototype
     {
-        public ulong EntityKeyword { get; set; }
-        public ulong EntityPrototype { get; set; }
-        public bool EntityPrototypeIncludeChildren { get; set; }
-        public ulong Power { get; set; }
-        public ulong PowerKeyword { get; set; }
-        public ulong Rank { get; set; }
-        public ulong RankKeyword { get; set; }
+        public ulong EntityKeyword { get; private set; }
+        public ulong EntityPrototype { get; private set; }
+        public bool EntityPrototypeIncludeChildren { get; private set; }
+        public ulong Power { get; private set; }
+        public ulong PowerKeyword { get; private set; }
+        public ulong Rank { get; private set; }
+        public ulong RankKeyword { get; private set; }
     }
 
     public class ScoringEventEntityInteractPrototype : ScoringEventPrototype
     {
-        public ulong EntityKeyword { get; set; }
-        public ulong EntityPrototype { get; set; }
-        public bool EntityPrototypeIncludeChildren { get; set; }
+        public ulong EntityKeyword { get; private set; }
+        public ulong EntityPrototype { get; private set; }
+        public bool EntityPrototypeIncludeChildren { get; private set; }
     }
 
     public class ScoringEventFullyUpgradedLgndrysPrototype : ScoringEventPrototype
@@ -147,9 +147,9 @@
 
     public class ScoringEventHotspotEnterPrototype : ScoringEventPrototype
     {
-        public ulong HotspotEntity { get; set; }
-        public bool HotspotEntityIncludeChildren { get; set; }
-        public ulong HotspotKeyword { get; set; }
+        public ulong HotspotEntity { get; private set; }
+        public bool HotspotEntityIncludeChildren { get; private set; }
+        public ulong HotspotKeyword { get; private set; }
     }
 
     public class ScoringEventHoursPlayedPrototype : ScoringEventPrototype
@@ -158,93 +158,93 @@
 
     public class ScoringEventHoursPlayedByAvatarPrototype : ScoringEventPrototype
     {
-        public ulong Avatar { get; set; }
+        public ulong Avatar { get; private set; }
     }
 
     public class ScoringEventItemBoughtPrototype : ScoringEventPrototype
     {
-        public ulong ItemKeyword { get; set; }
-        public ulong ItemPrototype { get; set; }
-        public bool ItemPrototypeIncludeChildren { get; set; }
-        public ulong Rarity { get; set; }
+        public ulong ItemKeyword { get; private set; }
+        public ulong ItemPrototype { get; private set; }
+        public bool ItemPrototypeIncludeChildren { get; private set; }
+        public ulong Rarity { get; private set; }
     }
 
     public class ScoringEventItemCollectedPrototype : ScoringEventPrototype
     {
-        public ulong ItemKeyword { get; set; }
-        public ulong ItemPrototype { get; set; }
-        public bool ItemPrototypeIncludeChildren { get; set; }
-        public ulong Rarity { get; set; }
+        public ulong ItemKeyword { get; private set; }
+        public ulong ItemPrototype { get; private set; }
+        public bool ItemPrototypeIncludeChildren { get; private set; }
+        public ulong Rarity { get; private set; }
     }
 
     public class ScoringEventItemCraftedPrototype : ScoringEventPrototype
     {
-        public ulong Rarity { get; set; }
-        public ulong RecipeKeyword { get; set; }
-        public ulong RecipePrototype { get; set; }
-        public bool RecipePrototypeIncludeChildren { get; set; }
+        public ulong Rarity { get; private set; }
+        public ulong RecipeKeyword { get; private set; }
+        public ulong RecipePrototype { get; private set; }
+        public bool RecipePrototypeIncludeChildren { get; private set; }
     }
 
     public class ScoringEventItemDonatedPrototype : ScoringEventPrototype
     {
-        public ulong ItemKeyword { get; set; }
-        public ulong ItemPrototype { get; set; }
-        public bool ItemPrototypeIncludeChildren { get; set; }
-        public ulong Rarity { get; set; }
+        public ulong ItemKeyword { get; private set; }
+        public ulong ItemPrototype { get; private set; }
+        public bool ItemPrototypeIncludeChildren { get; private set; }
+        public ulong Rarity { get; private set; }
     }
 
     public class ScoringEventItemSpentPrototype : ScoringEventPrototype
     {
-        public ulong ItemKeyword { get; set; }
-        public ulong ItemPrototype { get; set; }
-        public bool ItemPrototypeIncludeChildren { get; set; }
+        public ulong ItemKeyword { get; private set; }
+        public ulong ItemPrototype { get; private set; }
+        public bool ItemPrototypeIncludeChildren { get; private set; }
     }
 
     public class ScoringEventMetaGameModeCompletePrototype : ScoringEventPrototype
     {
-        public ulong MetaGameMode { get; set; }
+        public ulong MetaGameMode { get; private set; }
     }
 
     public class ScoringEventMetaGameStateCompltePrototype : ScoringEventPrototype
     {
-        public ulong MetaGameState { get; set; }
-        public ulong ItemRarity { get; set; }
+        public ulong MetaGameState { get; private set; }
+        public ulong ItemRarity { get; private set; }
     }
 
     public class ScoringEventMetaGameStateCompDifPrototype : ScoringEventPrototype
     {
-        public ulong ItemRarity { get; set; }
-        public ulong MetaGameState { get; set; }
+        public ulong ItemRarity { get; private set; }
+        public ulong MetaGameState { get; private set; }
     }
 
     public class ScoringEventMetaGameStateCompAfxPrototype : ScoringEventPrototype
     {
-        public ulong ItemRarity { get; set; }
-        public ulong MetaGameState { get; set; }
-        public ulong RegionAffix { get; set; }
+        public ulong ItemRarity { get; private set; }
+        public ulong MetaGameState { get; private set; }
+        public ulong RegionAffix { get; private set; }
     }
 
     public class ScoringEventMetaGameWaveCompletePrototype : ScoringEventPrototype
     {
-        public ulong MetaGameMode { get; set; }
+        public ulong MetaGameMode { get; private set; }
     }
 
     public class ScoringEventMinGearLevelPrototype : ScoringEventPrototype
     {
-        public ulong Avatar { get; set; }
+        public ulong Avatar { get; private set; }
     }
 
     public class ScoringEventOrbsCollectedPrototype : ScoringEventPrototype
     {
-        public ulong OrbKeyword { get; set; }
-        public ulong OrbPrototype { get; set; }
-        public bool OrbPrototypeIncludeChildren { get; set; }
+        public ulong OrbKeyword { get; private set; }
+        public ulong OrbPrototype { get; private set; }
+        public bool OrbPrototypeIncludeChildren { get; private set; }
     }
 
     public class ScoringEventPowerRankPrototype : ScoringEventPrototype
     {
-        public ulong Power { get; set; }
-        public ulong PowerKeyword { get; set; }
+        public ulong Power { get; private set; }
+        public ulong PowerKeyword { get; private set; }
     }
 
     public class ScoringEventPowerRankUltimatePrototype : ScoringEventPrototype
@@ -265,11 +265,11 @@
 
     public class ScoringEventVendorLevelPrototype : ScoringEventPrototype
     {
-        public ulong VendorType { get; set; }
+        public ulong VendorType { get; private set; }
     }
 
     public class ScoringEventWaypointUnlockedPrototype : ScoringEventPrototype
     {
-        public ulong Waypoint { get; set; }
+        public ulong Waypoint { get; private set; }
     }
 }

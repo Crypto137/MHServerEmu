@@ -2,6 +2,6 @@
 {
     public class RegionGeneratorPrototype : Prototype
     {
-        public ulong POIGroups { get; set; }
+        public ulong POIGroups { get; private set; }
     }
 }

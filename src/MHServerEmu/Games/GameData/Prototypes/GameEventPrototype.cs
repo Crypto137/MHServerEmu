@@ -23,14 +23,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EntityGameEventPrototype : GameEventPrototype
     {
-        public EntityFilterPrototype EntityFilter { get; set; }
-        public EntityGameEventEnum Event { get; set; }
-        public bool UniqueEntities { get; set; }
+        public EntityFilterPrototype EntityFilter { get; private set; }
+        public EntityGameEventEnum Event { get; private set; }
+        public bool UniqueEntities { get; private set; }
     }
 
     public class EntityGameEventEvalPrototype : Prototype
     {
-        public EntityGameEventPrototype Event { get; set; }
-        public EvalPrototype Eval { get; set; }
+        public EntityGameEventPrototype Event { get; private set; }
+        public EvalPrototype Eval { get; private set; }
     }
 }

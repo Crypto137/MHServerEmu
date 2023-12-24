@@ -119,59 +119,59 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ConditionUnrealPrototype : Prototype
     {
-        public ulong ConditionArt { get; set; }
-        public ulong EntityArt { get; set; }
+        public ulong ConditionArt { get; private set; }
+        public ulong EntityArt { get; private set; }
     }
 
     public class ConditionPrototype : Prototype
     {
-        public bool CancelOnHit { get; set; }
-        public bool CancelOnPowerUse { get; set; }
-        public long DurationMS { get; set; }
-        public ulong TooltipText { get; set; }
-        public ulong IconPath { get; set; }
-        public bool PauseDurationCountdown { get; set; }
-        public ulong Properties { get; set; }
-        public ConditionScopeType Scope { get; set; }
-        public ulong UnrealClass { get; set; }
-        public EvalPrototype ChanceToApplyCondition { get; set; }
-        public PowerConditionType ConditionType { get; set; }
-        public bool VisualOnly { get; set; }
-        public ConditionUnrealPrototype[] UnrealOverrides { get; set; }
-        public ulong[] Keywords { get; set; }
-        public ulong DurationMSCurve { get; set; }
-        public ulong DurationMSCurveIndex { get; set; }
-        public bool ForceShowClientConditionFX { get; set; }
-        public ProcTriggerType[] CancelOnProcTriggers { get; set; }
-        public int UpdateIntervalMS { get; set; }
-        public EvalPrototype DurationMSEval { get; set; }
-        public ulong TooltipStyle { get; set; }
-        public ulong TooltipFont { get; set; }
-        public EvalPrototype[] EvalOnCreate { get; set; }
-        public ulong CancelOnPowerUseKeyword { get; set; }
-        public bool CancelOnPowerUsePost { get; set; }
-        public bool PersistToDB { get; set; }
-        public bool CancelOnKilled { get; set; }
-        public bool ApplyOverTimeEffectsToOriginator { get; set; }
-        public bool TransferToCurrentAvatar { get; set; }
-        public bool CancelOnTransfer { get; set; }
-        public bool RealTime { get; set; }
-        public bool IsBoost { get; set; }
-        public UIConditionType ConditionTypeUI { get; set; }
-        public bool ApplyInitialTickImmediately { get; set; }
-        public bool ForceOpenBuffPage { get; set; }
-        public bool IsPartyBoost { get; set; }
-        public EvalPrototype[] EvalPartyBoost { get; set; }
-        public StackingBehaviorPrototype StackingBehavior { get; set; }
-        public bool CancelOnIntraRegionTeleport { get; set; }
-        public ulong DisplayName { get; set; }
-        public int UrgentTimeMS { get; set; }
-        public ulong IconPathHiRes { get; set; }
+        public bool CancelOnHit { get; private set; }
+        public bool CancelOnPowerUse { get; private set; }
+        public long DurationMS { get; private set; }
+        public ulong TooltipText { get; private set; }
+        public ulong IconPath { get; private set; }
+        public bool PauseDurationCountdown { get; private set; }
+        public ulong Properties { get; private set; }
+        public ConditionScopeType Scope { get; private set; }
+        public ulong UnrealClass { get; private set; }
+        public EvalPrototype ChanceToApplyCondition { get; private set; }
+        public PowerConditionType ConditionType { get; private set; }
+        public bool VisualOnly { get; private set; }
+        public ConditionUnrealPrototype[] UnrealOverrides { get; private set; }
+        public ulong[] Keywords { get; private set; }
+        public ulong DurationMSCurve { get; private set; }
+        public ulong DurationMSCurveIndex { get; private set; }
+        public bool ForceShowClientConditionFX { get; private set; }
+        public ProcTriggerType[] CancelOnProcTriggers { get; private set; }
+        public int UpdateIntervalMS { get; private set; }
+        public EvalPrototype DurationMSEval { get; private set; }
+        public ulong TooltipStyle { get; private set; }
+        public ulong TooltipFont { get; private set; }
+        public EvalPrototype[] EvalOnCreate { get; private set; }
+        public ulong CancelOnPowerUseKeyword { get; private set; }
+        public bool CancelOnPowerUsePost { get; private set; }
+        public bool PersistToDB { get; private set; }
+        public bool CancelOnKilled { get; private set; }
+        public bool ApplyOverTimeEffectsToOriginator { get; private set; }
+        public bool TransferToCurrentAvatar { get; private set; }
+        public bool CancelOnTransfer { get; private set; }
+        public bool RealTime { get; private set; }
+        public bool IsBoost { get; private set; }
+        public UIConditionType ConditionTypeUI { get; private set; }
+        public bool ApplyInitialTickImmediately { get; private set; }
+        public bool ForceOpenBuffPage { get; private set; }
+        public bool IsPartyBoost { get; private set; }
+        public EvalPrototype[] EvalPartyBoost { get; private set; }
+        public StackingBehaviorPrototype StackingBehavior { get; private set; }
+        public bool CancelOnIntraRegionTeleport { get; private set; }
+        public ulong DisplayName { get; private set; }
+        public int UrgentTimeMS { get; private set; }
+        public ulong IconPathHiRes { get; private set; }
     }
 
     public class ConditionEffectPrototype : Prototype
     {
-        public ulong Properties { get; set; }
-        public int ConditionNum { get; set; }
+        public ulong Properties { get; private set; }
+        public int ConditionNum { get; private set; }
     }
 }

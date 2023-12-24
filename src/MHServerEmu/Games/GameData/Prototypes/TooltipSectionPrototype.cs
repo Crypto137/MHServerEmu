@@ -30,66 +30,66 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PowerTooltipSectionPrototype : Prototype
     {
-        public ulong Description { get; set; }
-        public ulong Value { get; set; }
+        public ulong Description { get; private set; }
+        public ulong Value { get; private set; }
     }
 
     public class PowerTooltipSectionOverridePrototype : PowerTooltipSectionPrototype
     {
-        public ulong DescTokenSourcePrefixOverride { get; set; }
-        public ulong ValueTokenSourcePrefixOverride { get; set; }
+        public ulong DescTokenSourcePrefixOverride { get; private set; }
+        public ulong ValueTokenSourcePrefixOverride { get; private set; }
     }
 
     public class PowerTooltipEntryPrototype : Prototype
     {
-        public ulong TokenSourcePrefix { get; set; }
-        public ulong Translation { get; set; }
-        public EvalPrototype EvalCanDisplay { get; set; }
-        public PowerTooltipSectionPrototype[] TooltipSections { get; set; }
+        public ulong TokenSourcePrefix { get; private set; }
+        public ulong Translation { get; private set; }
+        public EvalPrototype EvalCanDisplay { get; private set; }
+        public PowerTooltipSectionPrototype[] TooltipSections { get; private set; }
     }
 
     public class TooltipSectionPrototype : Prototype
     {
-        public ulong Style { get; set; }
-        public ulong Text { get; set; }
-        public bool ShowOnlyIfPreviousSectionHasText { get; set; }
-        public ulong AlignToPreviousSection { get; set; }
-        public ulong Font { get; set; }
-        public bool ShowOnlyIfNextSectionHasText { get; set; }
-        public TooltipSectionType SectionType { get; set; }
-        public int IconSize { get; set; }
-        public bool ShowOnlyWithGamepad { get; set; }
-        public Platforms Platforms { get; set; }
+        public ulong Style { get; private set; }
+        public ulong Text { get; private set; }
+        public bool ShowOnlyIfPreviousSectionHasText { get; private set; }
+        public ulong AlignToPreviousSection { get; private set; }
+        public ulong Font { get; private set; }
+        public bool ShowOnlyIfNextSectionHasText { get; private set; }
+        public TooltipSectionType SectionType { get; private set; }
+        public int IconSize { get; private set; }
+        public bool ShowOnlyWithGamepad { get; private set; }
+        public Platforms Platforms { get; private set; }
     }
 
     public class TooltipSectionIconLabeledPrototype : TooltipSectionPrototype
     {
-        public ulong IconPathDefault { get; set; }
-        public AffixPosition Position { get; set; }
-        public bool ShowIconQualityLayer { get; set; }
+        public ulong IconPathDefault { get; private set; }
+        public AffixPosition Position { get; private set; }
+        public bool ShowIconQualityLayer { get; private set; }
     }
 
     public class TooltipSectionProceduralPrototype : TooltipSectionPrototype
     {
-        public TooltipSectionKey Key { get; set; }
+        public TooltipSectionKey Key { get; private set; }
     }
 
     public class TooltipSectionGamepadIconPrototype : TooltipSectionPrototype
     {
-        public GamepadInput Input { get; set; }
+        public GamepadInput Input { get; private set; }
     }
 
     public class TooltipSectionItemAffixesPrototype : TooltipSectionPrototype
     {
-        public AffixCategoryPrototype IncludeCategories { get; set; }
-        public AffixCategoryPrototype ExcludeCategories { get; set; }
+        public AffixCategoryPrototype IncludeCategories { get; private set; }
+        public AffixCategoryPrototype ExcludeCategories { get; private set; }
     }
 
     public class TooltipSectionBarPrototype : TooltipSectionPrototype
     {
-        public bool DivideBarByRanks { get; set; }
-        public EvalPrototype CurrentValueEval { get; set; }
-        public EvalPrototype MaxValueEval { get; set; }
+        public bool DivideBarByRanks { get; private set; }
+        public EvalPrototype CurrentValueEval { get; private set; }
+        public EvalPrototype MaxValueEval { get; private set; }
     }
 
     public class TooltipSectionLegendaryBarPrototype : TooltipSectionBarPrototype
@@ -98,12 +98,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class TooltipSectionPetTechBarPrototype : TooltipSectionBarPrototype
     {
-        public AffixPosition Position { get; set; }
-        public ulong MaxedStyle { get; set; }
+        public AffixPosition Position { get; private set; }
+        public ulong MaxedStyle { get; private set; }
     }
 
     public class TooltipTemplatePrototype : Prototype
     {
-        public TooltipSectionPrototype[] TooltipSectionList { get; set; }
+        public TooltipSectionPrototype[] TooltipSectionList { get; private set; }
     }
 }

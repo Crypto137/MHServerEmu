@@ -117,17 +117,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PropertyPickInRangeEntryPrototype : PropertyEntryPrototype
     {
-        public ulong Prop { get; set; }
-        public EvalPrototype ValueMax { get; set; }
-        public EvalPrototype ValueMin { get; set; }
-        public bool RollAsInteger { get; set; }
-        public ulong TooltipOverrideText { get; set; }
+        public ulong Prop { get; private set; }
+        public EvalPrototype ValueMax { get; private set; }
+        public EvalPrototype ValueMin { get; private set; }
+        public bool RollAsInteger { get; private set; }
+        public ulong TooltipOverrideText { get; private set; }
     }
 
     public class PropertySetEntryPrototype : PropertyEntryPrototype
     {
-        public ulong Prop { get; set; }
-        public ulong TooltipOverrideText { get; set; }
-        public EvalPrototype Value { get; set; }
+        public ulong Prop { get; private set; }
+        public ulong TooltipOverrideText { get; private set; }
+        public EvalPrototype Value { get; private set; }
     }
 }

@@ -43,93 +43,93 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ItemPrototype : WorldEntityPrototype
     {
-        public bool IsUsable { get; set; }
-        public bool CanBeSoldToVendor { get; set; }
-        public int MaxVisiblePrefixes { get; set; }
-        public int MaxVisibleSuffixes { get; set; }
-        public ulong TooltipDescription { get; set; }
-        public ulong TooltipFlavorText { get; set; }
-        public ulong TooltipTemplate { get; set; }
-        public ItemStackSettingsPrototype StackSettings { get; set; }
-        public bool AlwaysDisplayAsUsable { get; set; }
-        public ulong TooltipEquipRestrictions { get; set; }
-        public AffixEntryPrototype[] AffixesBuiltIn { get; set; }
-        public PropertyEntryPrototype[] PropertiesBuiltIn { get; set; }
-        public ProductPrototype Product { get; set; }
-        public ulong ItemCategory { get; set; }
-        public ulong ItemSubcategory { get; set; }
-        public bool IsAvatarRestricted { get; set; }
-        public DropRestrictionPrototype[] LootDropRestrictions { get; set; }
-        public ItemBindingSettingsPrototype BindingSettings { get; set; }
-        public AffixLimitsPrototype[] AffixLimits { get; set; }
-        public ulong TextStyleOverride { get; set; }
-        public ItemAbilitySettingsPrototype AbilitySettings { get; set; }
-        public ulong StoreIconPath { get; set; }
-        public bool ClonedWhenPurchasedFromVendor { get; set; }
-        public ItemActionSetPrototype ActionsTriggeredOnItemEvent { get; set; }
-        public bool ConfirmOnDonate { get; set; }
-        public bool CanBeDestroyed { get; set; }
-        public bool ConfirmPurchase { get; set; }
-        public ItemCostPrototype Cost { get; set; }
-        public int TooltipDepthOverride { get; set; }
-        public EquipRestrictionPrototype[] EquipRestrictions { get; set; }
-        public EvalPrototype EvalExpirationTimeMS { get; set; }
-        public ItemTooltipPropertyBlockSettingsPrototype[] TooltipCustomPropertyBlocks { get; set; }
-        public float LootDropWeightMultiplier { get; set; }
-        public ConvenienceLabel DestinationFromVendor { get; set; }
-        public EvalPrototype EvalDisplayLevel { get; set; }
-        public bool CanBroadcast { get; set; }
-        public EquipmentInvUISlot DefaultEquipmentSlot { get; set; }
-        public EvalPrototype EvalCanUse { get; set; }
-        public ulong[] CannotEquipWithItemsOfKeyword { get; set; }
-        public ulong SortCategory { get; set; }
-        public ulong SortSubCategory { get; set; }
-        public ItemInstrumentedDropGroup InstrumentedDropGroup { get; set; }
-        public bool IsContainer { get; set; }
+        public bool IsUsable { get; private set; }
+        public bool CanBeSoldToVendor { get; private set; }
+        public int MaxVisiblePrefixes { get; private set; }
+        public int MaxVisibleSuffixes { get; private set; }
+        public ulong TooltipDescription { get; private set; }
+        public ulong TooltipFlavorText { get; private set; }
+        public ulong TooltipTemplate { get; private set; }
+        public ItemStackSettingsPrototype StackSettings { get; private set; }
+        public bool AlwaysDisplayAsUsable { get; private set; }
+        public ulong TooltipEquipRestrictions { get; private set; }
+        public AffixEntryPrototype[] AffixesBuiltIn { get; private set; }
+        public PropertyEntryPrototype[] PropertiesBuiltIn { get; private set; }
+        public ProductPrototype Product { get; private set; }
+        public ulong ItemCategory { get; private set; }
+        public ulong ItemSubcategory { get; private set; }
+        public bool IsAvatarRestricted { get; private set; }
+        public DropRestrictionPrototype[] LootDropRestrictions { get; private set; }
+        public ItemBindingSettingsPrototype BindingSettings { get; private set; }
+        public AffixLimitsPrototype[] AffixLimits { get; private set; }
+        public ulong TextStyleOverride { get; private set; }
+        public ItemAbilitySettingsPrototype AbilitySettings { get; private set; }
+        public ulong StoreIconPath { get; private set; }
+        public bool ClonedWhenPurchasedFromVendor { get; private set; }
+        public ItemActionSetPrototype ActionsTriggeredOnItemEvent { get; private set; }
+        public bool ConfirmOnDonate { get; private set; }
+        public bool CanBeDestroyed { get; private set; }
+        public bool ConfirmPurchase { get; private set; }
+        public ItemCostPrototype Cost { get; private set; }
+        public int TooltipDepthOverride { get; private set; }
+        public EquipRestrictionPrototype[] EquipRestrictions { get; private set; }
+        public EvalPrototype EvalExpirationTimeMS { get; private set; }
+        public ItemTooltipPropertyBlockSettingsPrototype[] TooltipCustomPropertyBlocks { get; private set; }
+        public float LootDropWeightMultiplier { get; private set; }
+        public ConvenienceLabel DestinationFromVendor { get; private set; }
+        public EvalPrototype EvalDisplayLevel { get; private set; }
+        public bool CanBroadcast { get; private set; }
+        public EquipmentInvUISlot DefaultEquipmentSlot { get; private set; }
+        public EvalPrototype EvalCanUse { get; private set; }
+        public ulong[] CannotEquipWithItemsOfKeyword { get; private set; }
+        public ulong SortCategory { get; private set; }
+        public ulong SortSubCategory { get; private set; }
+        public ItemInstrumentedDropGroup InstrumentedDropGroup { get; private set; }
+        public bool IsContainer { get; private set; }
     }
 
     public class ItemAbilitySettingsPrototype : Prototype
     {
-        public AbilitySlotRestrictionPrototype AbilitySlotRestriction { get; set; }
-        public bool OnlySlottableWhileEquipped { get; set; }
+        public AbilitySlotRestrictionPrototype AbilitySlotRestriction { get; private set; }
+        public bool OnlySlottableWhileEquipped { get; private set; }
     }
 
     public class ItemBindingSettingsEntryPrototype : Prototype
     {
-        public bool BindsToAccountOnPickup { get; set; }
-        public bool BindsToCharacterOnEquip { get; set; }
-        public bool IsTradable { get; set; }
-        public ulong RarityFilter { get; set; }
+        public bool BindsToAccountOnPickup { get; private set; }
+        public bool BindsToCharacterOnEquip { get; private set; }
+        public bool IsTradable { get; private set; }
+        public ulong RarityFilter { get; private set; }
     }
 
     public class ItemBindingSettingsPrototype : Prototype
     {
-        public ItemBindingSettingsEntryPrototype DefaultSettings { get; set; }
-        public ItemBindingSettingsEntryPrototype[] PerRaritySettings { get; set; }
+        public ItemBindingSettingsEntryPrototype DefaultSettings { get; private set; }
+        public ItemBindingSettingsEntryPrototype[] PerRaritySettings { get; private set; }
     }
 
     public class ItemStackSettingsPrototype : Prototype
     {
-        public int ItemLevelOverride { get; set; }
-        public int MaxStacks { get; set; }
-        public int RequiredCharLevelOverride { get; set; }
-        public bool AutoStackWhenAddedToInventory { get; set; }
-        public bool StacksCanBeSplit { get; set; }
+        public int ItemLevelOverride { get; private set; }
+        public int MaxStacks { get; private set; }
+        public int RequiredCharLevelOverride { get; private set; }
+        public bool AutoStackWhenAddedToInventory { get; private set; }
+        public bool StacksCanBeSplit { get; private set; }
     }
 
     public class ItemActionBasePrototype : Prototype
     {
-        public int Weight { get; set; }
+        public int Weight { get; private set; }
     }
 
     public class ItemActionPrototype : ItemActionBasePrototype
     {
-        public ItemEventType TriggeringEvent { get; set; }
+        public ItemEventType TriggeringEvent { get; private set; }
     }
 
     public class ItemActionAssignPowerPrototype : ItemActionPrototype
     {
-        public ulong Power { get; set; }
+        public ulong Power { get; private set; }
     }
 
     public class ItemActionDestroySelfPrototype : ItemActionPrototype
@@ -142,13 +142,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ItemActionReplaceSelfItemPrototype : ItemActionPrototype
     {
-        public ulong Item { get; set; }
+        public ulong Item { get; private set; }
     }
 
     public class ItemActionReplaceSelfLootTablePrototype : ItemActionPrototype
     {
-        public LootTablePrototype LootTable { get; set; }
-        public bool UseCurrentAvatarLevelForRoll { get; set; }
+        public LootTablePrototype LootTable { get; private set; }
+        public bool UseCurrentAvatarLevelForRoll { get; private set; }
     }
 
     public class ItemActionSaveDangerRoomScenarioPrototype : ItemActionPrototype
@@ -169,61 +169,61 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ItemActionUsePowerPrototype : ItemActionPrototype
     {
-        public ulong Power { get; set; }
+        public ulong Power { get; private set; }
     }
 
     public class ItemActionUnlockPermaBuffPrototype : ItemActionPrototype
     {
-        public ulong PermaBuff { get; set; }
+        public ulong PermaBuff { get; private set; }
     }
 
     public class ItemActionAwardTeamUpXPPrototype : ItemActionPrototype
     {
-        public int XP { get; set; }
+        public int XP { get; private set; }
     }
 
     public class ItemActionSetPrototype : ItemActionBasePrototype
     {
-        public ItemActionBasePrototype[] Choices { get; set; }
-        public PickMethod PickMethod { get; set; }
+        public ItemActionBasePrototype[] Choices { get; private set; }
+        public PickMethod PickMethod { get; private set; }
     }
 
     public class ItemActionOpenUIPanelPrototype : ItemActionPrototype
     {
-        public ulong PanelName { get; set; }
+        public ulong PanelName { get; private set; }
     }
 
     public class CategorizedAffixEntryPrototype : Prototype
     {
-        public ulong Category { get; set; }
-        public short MinAffixes { get; set; }
+        public ulong Category { get; private set; }
+        public short MinAffixes { get; private set; }
     }
 
     public class AffixLimitsPrototype : Prototype
     {
-        public LootContext[] AllowedContexts { get; set; }
-        public ulong ItemRarity { get; set; }
-        public short MaxPrefixes { get; set; }
-        public short MaxSuffixes { get; set; }
-        public short MinPrefixes { get; set; }
-        public short MinSuffixes { get; set; }
-        public short NumCosmics { get; set; }
-        public short MaxBlessings { get; set; }
-        public short NumUltimates { get; set; }
-        public short MaxRunewords { get; set; }
-        public short MinTeamUps { get; set; }
-        public short MaxTeamUps { get; set; }
-        public short MinUniques { get; set; }
-        public short MaxUniques { get; set; }
-        public short RegionAffixMax { get; set; }
-        public short RegionAffixMin { get; set; }
-        public short NumSocket1 { get; set; }
-        public short NumSocket2 { get; set; }
-        public short NumSocket3 { get; set; }
-        public int RegionDifficultyIndex { get; set; }
-        public float DamageRegionMobToPlayer { get; set; }
-        public float DamageRegionPlayerToMob { get; set; }
-        public CategorizedAffixEntryPrototype[] CategorizedAffixes { get; set; }
+        public LootContext[] AllowedContexts { get; private set; }
+        public ulong ItemRarity { get; private set; }
+        public short MaxPrefixes { get; private set; }
+        public short MaxSuffixes { get; private set; }
+        public short MinPrefixes { get; private set; }
+        public short MinSuffixes { get; private set; }
+        public short NumCosmics { get; private set; }
+        public short MaxBlessings { get; private set; }
+        public short NumUltimates { get; private set; }
+        public short MaxRunewords { get; private set; }
+        public short MinTeamUps { get; private set; }
+        public short MaxTeamUps { get; private set; }
+        public short MinUniques { get; private set; }
+        public short MaxUniques { get; private set; }
+        public short RegionAffixMax { get; private set; }
+        public short RegionAffixMin { get; private set; }
+        public short NumSocket1 { get; private set; }
+        public short NumSocket2 { get; private set; }
+        public short NumSocket3 { get; private set; }
+        public int RegionDifficultyIndex { get; private set; }
+        public float DamageRegionMobToPlayer { get; private set; }
+        public float DamageRegionPlayerToMob { get; private set; }
+        public CategorizedAffixEntryPrototype[] CategorizedAffixes { get; private set; }
     }
 
     public class EquipRestrictionPrototype : Prototype
@@ -232,19 +232,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EquipRestrictionSuperteamPrototype : EquipRestrictionPrototype
     {
-        public ulong SuperteamEquippableBy { get; set; }
+        public ulong SuperteamEquippableBy { get; private set; }
     }
 
     public class EquipRestrictionAgentPrototype : EquipRestrictionPrototype
     {
-        public ulong Agent { get; set; }
+        public ulong Agent { get; private set; }
     }
 
     public class ItemTooltipPropertyBlockSettingsPrototype : Prototype
     {
-        public ulong IncludeAllButProperties { get; set; }
-        public ulong IncludeOnlyProperties { get; set; }
-        public bool UseBuiltinPropertyOrdering { get; set; }
+        public ulong IncludeAllButProperties { get; private set; }
+        public ulong IncludeOnlyProperties { get; private set; }
+        public bool UseBuiltinPropertyOrdering { get; private set; }
     }
 
     public class LimitedEditionPrototype : Prototype
@@ -261,43 +261,43 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class BagItemPrototype : ItemPrototype
     {
-        public bool AllowsPlayerAdds { get; set; }
+        public bool AllowsPlayerAdds { get; private set; }
     }
 
     public class CharacterTokenPrototype : ItemPrototype
     {
-        public ulong Character { get; set; }
-        public CharacterTokenType TokenType { get; set; }
+        public ulong Character { get; private set; }
+        public CharacterTokenType TokenType { get; private set; }
     }
 
     public class InventoryStashTokenPrototype : ItemPrototype
     {
-        public ulong Inventory { get; set; }
+        public ulong Inventory { get; private set; }
     }
 
     public class EmoteTokenPrototype : ItemPrototype
     {
-        public ulong Avatar { get; set; }
-        public ulong EmotePower { get; set; }
+        public ulong Avatar { get; private set; }
+        public ulong EmotePower { get; private set; }
     }
 
     public class CostumePrototype : ItemPrototype
     {
-        public ulong CostumeUnrealClass { get; set; }
-        public ulong FullBodyIconPath { get; set; }
-        public ulong UsableBy { get; set; }
-        public new ulong StoreIconPath { get; set; }
-        public ulong PortraitIconPath { get; set; }
-        public ulong FullBodyIconPathDisabled { get; set; }
-        public ulong PartyPortraitIconPath { get; set; }
-        public ulong MTXStoreInfo { get; set; }
-        public ulong AvatarBioText { get; set; }
-        public ulong AvatarDisplayName { get; set; }
-        public ulong AvatarDisplayNameInformal { get; set; }
-        public ulong AvatarDisplayNameShort { get; set; }
-        public bool EquipTriggersVO { get; set; }
-        public ulong PortraitIconPathHiRes { get; set; }
-        public ulong FulfillmentDuplicateItem { get; set; }
+        public ulong CostumeUnrealClass { get; private set; }
+        public ulong FullBodyIconPath { get; private set; }
+        public ulong UsableBy { get; private set; }
+        public new ulong StoreIconPath { get; private set; }
+        public ulong PortraitIconPath { get; private set; }
+        public ulong FullBodyIconPathDisabled { get; private set; }
+        public ulong PartyPortraitIconPath { get; private set; }
+        public ulong MTXStoreInfo { get; private set; }
+        public ulong AvatarBioText { get; private set; }
+        public ulong AvatarDisplayName { get; private set; }
+        public ulong AvatarDisplayNameInformal { get; private set; }
+        public ulong AvatarDisplayNameShort { get; private set; }
+        public bool EquipTriggersVO { get; private set; }
+        public ulong PortraitIconPathHiRes { get; private set; }
+        public ulong FulfillmentDuplicateItem { get; private set; }
     }
 
     public class LegendaryPrototype : ItemPrototype
@@ -310,12 +310,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class RelicPrototype : ItemPrototype
     {
-        public EvalPrototype EvalOnStackCountChange { get; set; }
+        public EvalPrototype EvalOnStackCountChange { get; private set; }
     }
 
     public class SuperteamPrototype : Prototype
     {
-        public ulong DisplayName { get; set; }
+        public ulong DisplayName { get; private set; }
     }
 
     public class TeamUpGearPrototype : ItemPrototype
@@ -324,6 +324,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PermaBuffPrototype : Prototype
     {
-        public EvalPrototype EvalAvatarProperties { get; set; }
+        public EvalPrototype EvalAvatarProperties { get; private set; }
     }
 }

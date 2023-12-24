@@ -24,48 +24,48 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class BoundsPrototype : Prototype
     {
-        public BoundsCollisionType CollisionType { get; set; }
-        public bool BlocksSpawns { get; set; }
-        public bool ComplexPickingOnly { get; set; }
-        public bool IgnoreCollisionWithAllies { get; set; }
-        public bool BlocksLanding { get; set; }
-        public bool BlocksLineOfSight { get; set; }
-        public BoundsMovementPowerBlockType BlocksMovementPowers { get; set; }
-        public bool IgnoreBlockingWithAvatars { get; set; }
-        public bool BlockOnlyMyself { get; set; }
+        public BoundsCollisionType CollisionType { get; private set; }
+        public bool BlocksSpawns { get; private set; }
+        public bool ComplexPickingOnly { get; private set; }
+        public bool IgnoreCollisionWithAllies { get; private set; }
+        public bool BlocksLanding { get; private set; }
+        public bool BlocksLineOfSight { get; private set; }
+        public BoundsMovementPowerBlockType BlocksMovementPowers { get; private set; }
+        public bool IgnoreBlockingWithAvatars { get; private set; }
+        public bool BlockOnlyMyself { get; private set; }
     }
 
     public class CapsuleBoundsPrototype : BoundsPrototype
     {
-        public float Radius { get; set; }
-        public float HeightFromCenter { get; set; }
+        public float Radius { get; private set; }
+        public float HeightFromCenter { get; private set; }
     }
 
     public class SphereBoundsPrototype : BoundsPrototype
     {
-        public float Radius { get; set; }
+        public float Radius { get; private set; }
     }
 
     public class TriangleBoundsPrototype : BoundsPrototype
     {
-        public float AngleDegrees { get; set; }
-        public float Length { get; set; }
-        public float HeightFromCenter { get; set; }
+        public float AngleDegrees { get; private set; }
+        public float Length { get; private set; }
+        public float HeightFromCenter { get; private set; }
     }
 
     public class WedgeBoundsPrototype : BoundsPrototype
     {
-        public float AngleDegrees { get; set; }
-        public float BaseWidth { get; set; }
-        public float Length { get; set; }
-        public float HeightFromCenter { get; set; }
+        public float AngleDegrees { get; private set; }
+        public float BaseWidth { get; private set; }
+        public float Length { get; private set; }
+        public float HeightFromCenter { get; private set; }
     }
 
     public class BoxBoundsPrototype : BoundsPrototype
     {
-        public float Width { get; set; }
-        public float Length { get; set; }
-        public float Height { get; set; }
-        public bool AxisAligned { get; set; }
+        public float Width { get; private set; }
+        public float Length { get; private set; }
+        public float Height { get; private set; }
+        public bool AxisAligned { get; private set; }
     }
 }

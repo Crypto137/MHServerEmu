@@ -15,23 +15,23 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class CanyonGridAreaGeneratorPrototype : GeneratorPrototype
     {
-        public CanyonCellChoiceListPrototype Cells { get; set; }
-        public short Length { get; set; }
-        public RegionDirection ConnectOnBridgeOnlyDirection { get; set; }
+        public CanyonCellChoiceListPrototype Cells { get; private set; }
+        public short Length { get; private set; }
+        public RegionDirection ConnectOnBridgeOnlyDirection { get; private set; }
     }
 
     public class CanyonCellChoiceListPrototype : Prototype
     {
-        public CellChoicePrototype[] BridgeChoices { get; set; }
-        public CellChoicePrototype[] NormalChoices { get; set; }
-        public CellChoicePrototype[] LeftOrBottomChoices { get; set; }
-        public CellChoicePrototype[] RightOrTopChoices { get; set; }
-        public AreaOrientation Orientation { get; set; }
+        public CellChoicePrototype[] BridgeChoices { get; private set; }
+        public CellChoicePrototype[] NormalChoices { get; private set; }
+        public CellChoicePrototype[] LeftOrBottomChoices { get; private set; }
+        public CellChoicePrototype[] RightOrTopChoices { get; private set; }
+        public AreaOrientation Orientation { get; private set; }
     }
 
     public class CellChoicePrototype : Prototype
     {
-        public ulong Cell { get; set; }
-        public int Weight { get; set; }
+        public ulong Cell { get; private set; }
+        public int Weight { get; private set; }
     }
 }

@@ -2,19 +2,19 @@
 {
     public class PropPrototype : WorldEntityPrototype
     {
-        public bool PreventsSpawnCleanup { get; set; }
+        public bool PreventsSpawnCleanup { get; private set; }
     }
 
     public class PropDensityEntryPrototype : Prototype
     {
-        public ulong Marker { get; set; }
-        public int OverrideDensity { get; set; }
+        public ulong Marker { get; private set; }
+        public int OverrideDensity { get; private set; }
     }
 
     public class PropDensityPrototype : Prototype
     {
-        public PropDensityEntryPrototype[] MarkerDensityOverrides { get; set; }
-        public int DefaultDensity { get; set; }
+        public PropDensityEntryPrototype[] MarkerDensityOverrides { get; private set; }
+        public int DefaultDensity { get; private set; }
     }
 
     public class SmartPropPrototype : AgentPrototype

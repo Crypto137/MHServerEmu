@@ -4,29 +4,29 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class PropertyInfoPrototype : Prototype
     {
-        public long Version { get; }
-        public AggregationMethod AggMethod { get; }             // A Property/AggregationMethod.type
-        public double Min { get; }
-        public double Max { get; }
-        public DatabasePolicy ReplicateToDatabase { get; }      // A Property/DatabasePolicy.type
-        public bool ReplicateToProximity { get; }
-        public bool ReplicateToParty { get; }
-        public bool ReplicateToOwner { get; }
-        public bool ReplicateToDiscovery { get; }
-        public bool ReplicateForTransfer { get; }
-        public PropertyDataType Type { get; }                   // A Property/PropertyType.type
-        public double CurveDefault { get; }
-        public bool ReplicateToDatabaseAllowedOnItems { get; }
-        public bool ClientOnly { get; }
-        public bool SerializeEntityToPowerPayload { get; }
-        public bool SerializePowerToPowerPayload { get; }
-        public PrototypeId TooltipText { get; }                 // Localization/Translations/Properties/PropertyTranslation.defaults
-        public bool TruncatePropertyValueToInt { get; }
-        public object Eval { get; }                             // R Eval/Eval.defaults
-        public bool EvalAlwaysCalculates { get; }
-        public bool SerializeConditionSrcToCondition { get; }
-        public bool ReplicateToTrader { get; }
-        public PrototypeId ValueDisplayFormat { get; }          // Localization/Translations/Translation.defaults
+        public long Version { get; private set; }
+        public AggregationMethod AggMethod { get; private set; }             // A Property/AggregationMethod.type
+        public double Min { get; private set; }
+        public double Max { get; private set; }
+        public DatabasePolicy ReplicateToDatabase { get; private set; }      // A Property/DatabasePolicy.type
+        public bool ReplicateToProximity { get; private set; }
+        public bool ReplicateToParty { get; private set; }
+        public bool ReplicateToOwner { get; private set; }
+        public bool ReplicateToDiscovery { get; private set; }
+        public bool ReplicateForTransfer { get; private set; }
+        public PropertyDataType Type { get; private set; }                   // A Property/PropertyType.type
+        public double CurveDefault { get; private set; }
+        public bool ReplicateToDatabaseAllowedOnItems { get; private set; }
+        public bool ClientOnly { get; private set; }
+        public bool SerializeEntityToPowerPayload { get; private set; }
+        public bool SerializePowerToPowerPayload { get; private set; }
+        public PrototypeId TooltipText { get; private set; }                 // Localization/Translations/Properties/PropertyTranslation.defaults
+        public bool TruncatePropertyValueToInt { get; private set; }
+        public object Eval { get; private set; }                             // R Eval/Eval.defaults
+        public bool EvalAlwaysCalculates { get; private set; }
+        public bool SerializeConditionSrcToCondition { get; private set; }
+        public bool ReplicateToTrader { get; private set; }
+        public PrototypeId ValueDisplayFormat { get; private set; }          // Localization/Translations/Translation.defaults
 
         public PropertyInfoPrototype(BinaryReader reader) : base(reader)
         {

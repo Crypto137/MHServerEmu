@@ -46,27 +46,27 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionItemRequiredEntryPrototype : Prototype
     {
-        public ulong ItemPrototype { get; set; }
-        public long Num { get; set; }
-        public bool Remove { get; set; }
+        public ulong ItemPrototype { get; private set; }
+        public long Num { get; private set; }
+        public bool Remove { get; private set; }
     }
 
     public class MissionConditionPrototype : Prototype
     {
-        public StoryNotificationPrototype StoryNotification { get; set; }
-        public bool NoTrackingOptimization { get; set; }
-        public long MissionConditionGuid { get; set; }
+        public StoryNotificationPrototype StoryNotification { get; private set; }
+        public bool NoTrackingOptimization { get; private set; }
+        public long MissionConditionGuid { get; private set; }
     }
 
     public class MissionPlayerConditionPrototype : MissionConditionPrototype
     {
-        public bool PartyMembersGetCredit { get; set; }
-        public double OpenMissionContributionValue { get; set; }
+        public bool PartyMembersGetCredit { get; private set; }
+        public double OpenMissionContributionValue { get; private set; }
     }
 
     public class MissionConditionListPrototype : MissionConditionPrototype
     {
-        public MissionConditionPrototype[] Conditions { get; set; }
+        public MissionConditionPrototype[] Conditions { get; private set; }
     }
 
     public class MissionConditionAndPrototype : MissionConditionListPrototype
@@ -75,196 +75,196 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionConditionActiveChapterPrototype : MissionPlayerConditionPrototype
     {
-        public ulong Chapter { get; set; }
+        public ulong Chapter { get; private set; }
     }
 
     public class MissionConditionPowerPointsRemainingPrototype : MissionPlayerConditionPrototype
     {
-        public int MinPoints { get; set; }
-        public int MaxPoints { get; set; }
+        public int MinPoints { get; private set; }
+        public int MaxPoints { get; private set; }
     }
 
     public class MissionConditionAreaBeginTravelToPrototype : MissionPlayerConditionPrototype
     {
-        public ulong AreaPrototype { get; set; }
+        public ulong AreaPrototype { get; private set; }
     }
 
     public class MissionConditionAreaContainsPrototype : MissionConditionPrototype
     {
-        public ulong Area { get; set; }
-        public int CountMax { get; set; }
-        public int CountMin { get; set; }
-        public EntityFilterPrototype TargetFilter { get; set; }
+        public ulong Area { get; private set; }
+        public int CountMax { get; private set; }
+        public int CountMin { get; private set; }
+        public EntityFilterPrototype TargetFilter { get; private set; }
     }
 
     public class MissionConditionAreaEnterPrototype : MissionPlayerConditionPrototype
     {
-        public ulong RegionPrototype { get; set; }
-        public ulong AreaPrototype { get; set; }
+        public ulong RegionPrototype { get; private set; }
+        public ulong AreaPrototype { get; private set; }
     }
 
     public class MissionConditionAreaLeavePrototype : MissionPlayerConditionPrototype
     {
-        public ulong AreaPrototype { get; set; }
+        public ulong AreaPrototype { get; private set; }
     }
 
     public class MissionConditionAvatarIsActivePrototype : MissionPlayerConditionPrototype
     {
-        public ulong AvatarPrototype { get; set; }
+        public ulong AvatarPrototype { get; private set; }
     }
 
     public class MissionConditionAvatarIsUnlockedPrototype : MissionPlayerConditionPrototype
     {
-        public ulong AvatarPrototype { get; set; }
+        public ulong AvatarPrototype { get; private set; }
     }
 
     public class MissionConditionAvatarLevelUpPrototype : MissionPlayerConditionPrototype
     {
-        public ulong AvatarPrototype { get; set; }
-        public long Level { get; set; }
+        public ulong AvatarPrototype { get; private set; }
+        public long Level { get; private set; }
     }
 
     public class MissionConditionAvatarUsedPowerPrototype : MissionPlayerConditionPrototype
     {
-        public ulong AreaPrototype { get; set; }
-        public ulong AvatarPrototype { get; set; }
-        public ulong PowerPrototype { get; set; }
-        public ulong RegionPrototype { get; set; }
-        public ulong WithinHotspot { get; set; }
-        public int Count { get; set; }
-        public EntityFilterPrototype TargetFilter { get; set; }
-        public int WithinSeconds { get; set; }
+        public ulong AreaPrototype { get; private set; }
+        public ulong AvatarPrototype { get; private set; }
+        public ulong PowerPrototype { get; private set; }
+        public ulong RegionPrototype { get; private set; }
+        public ulong WithinHotspot { get; private set; }
+        public int Count { get; private set; }
+        public EntityFilterPrototype TargetFilter { get; private set; }
+        public int WithinSeconds { get; private set; }
     }
 
     public class MissionConditionCellEnterPrototype : MissionPlayerConditionPrototype
     {
-        public ulong[] Cells { get; set; }
-        public ulong[] Regions { get; set; }
+        public ulong[] Cells { get; private set; }
+        public ulong[] Regions { get; private set; }
     }
 
     public class MissionConditionCellLeavePrototype : MissionPlayerConditionPrototype
     {
-        public ulong[] Cells { get; set; }
+        public ulong[] Cells { get; private set; }
     }
 
     public class MissionConditionCohortPrototype : MissionConditionPrototype
     {
-        public ulong CohortPrototype { get; set; }
-        public ulong ExperimentPrototype { get; set; }
+        public ulong CohortPrototype { get; private set; }
+        public ulong ExperimentPrototype { get; private set; }
     }
 
     public class MissionConditionCountPrototype : MissionConditionListPrototype
     {
-        public long Count { get; set; }
+        public long Count { get; private set; }
     }
 
     public class MissionConditionCurrencyCollectedPrototype : MissionPlayerConditionPrototype
     {
-        public long AmountRequired { get; set; }
-        public ulong CurrencyType { get; set; }
+        public long AmountRequired { get; private set; }
+        public ulong CurrencyType { get; private set; }
     }
 
     public class MissionConditionEmotePerformedPrototype : MissionPlayerConditionPrototype
     {
-        public EntityFilterPrototype EmoteAvatarFilter { get; set; }
-        public ulong EmotePower { get; set; }
-        public bool ObserverAvatarsOnly { get; set; }
-        public EntityFilterPrototype ObserverFilter { get; set; }
-        public int ObserverRadius { get; set; }
+        public EntityFilterPrototype EmoteAvatarFilter { get; private set; }
+        public ulong EmotePower { get; private set; }
+        public bool ObserverAvatarsOnly { get; private set; }
+        public EntityFilterPrototype ObserverFilter { get; private set; }
+        public int ObserverRadius { get; private set; }
     }
 
     public class MissionConditionEntityAggroPrototype : MissionPlayerConditionPrototype
     {
-        public EntityFilterPrototype EntityFilter { get; set; }
+        public EntityFilterPrototype EntityFilter { get; private set; }
     }
 
     public class MissionConditionEntityDamagedPrototype : MissionPlayerConditionPrototype
     {
-        public EntityFilterPrototype EntityFilter { get; set; }
-        public ulong EncounterResource { get; set; }
-        public bool LimitToDamageFromPlayerOMOnly { get; set; }
+        public EntityFilterPrototype EntityFilter { get; private set; }
+        public ulong EncounterResource { get; private set; }
+        public bool LimitToDamageFromPlayerOMOnly { get; private set; }
     }
 
     public class MissionConditionEntityDeathPrototype : MissionPlayerConditionPrototype
     {
-        public long Count { get; set; }
-        public EntityFilterPrototype EntityFilter { get; set; }
-        public double OpenMissionContribValueDamage { get; set; }
-        public double OpenMissionContribValueTanking { get; set; }
-        public ulong EncounterResource { get; set; }
-        public int DelayDeathMS { get; set; }
-        public bool EncounterResourceValidate { get; set; }
-        public int WithinSeconds { get; set; }
-        public bool MustBeTaggedByPlayer { get; set; }
-        public HUDEntitySettingsPrototype EntityHUDSettingOverride { get; set; }
+        public long Count { get; private set; }
+        public EntityFilterPrototype EntityFilter { get; private set; }
+        public double OpenMissionContribValueDamage { get; private set; }
+        public double OpenMissionContribValueTanking { get; private set; }
+        public ulong EncounterResource { get; private set; }
+        public int DelayDeathMS { get; private set; }
+        public bool EncounterResourceValidate { get; private set; }
+        public int WithinSeconds { get; private set; }
+        public bool MustBeTaggedByPlayer { get; private set; }
+        public HUDEntitySettingsPrototype EntityHUDSettingOverride { get; private set; }
     }
 
     public class MissionConditionEntityInteractPrototype : MissionPlayerConditionPrototype
     {
-        public ulong Cinematic { get; set; }
-        public long Count { get; set; }
-        public ulong DialogText { get; set; }
-        public WeightedTextEntryPrototype[] DialogTextList { get; set; }
-        public EntityFilterPrototype EntityFilter { get; set; }
-        public LootTablePrototype[] GiveItems { get; set; }
-        public bool IsTurnInNPC { get; set; }
-        public OnInteractAction OnInteract { get; set; }
-        public MissionItemRequiredEntryPrototype[] RequiredItems { get; set; }
-        public ulong WithinHotspot { get; set; }
-        public ulong OnInteractBehavior { get; set; }
-        public MissionActionPrototype[] OnInteractEntityActions { get; set; }
-        public IncrementalActionEntryPrototype[] OnIncrementalActions { get; set; }
-        public ulong DialogTextWhenInventoryFull { get; set; }
-        public bool DropLootOnGround { get; set; }
-        public int WithinSeconds { get; set; }
-        public DialogStyle DialogStyle { get; set; }
-        public HUDEntitySettingsPrototype EntityHUDSettingOverride { get; set; }
-        public bool ShowRewards { get; set; }
-        public VOCategory VoiceoverCategory { get; set; }
+        public ulong Cinematic { get; private set; }
+        public long Count { get; private set; }
+        public ulong DialogText { get; private set; }
+        public WeightedTextEntryPrototype[] DialogTextList { get; private set; }
+        public EntityFilterPrototype EntityFilter { get; private set; }
+        public LootTablePrototype[] GiveItems { get; private set; }
+        public bool IsTurnInNPC { get; private set; }
+        public OnInteractAction OnInteract { get; private set; }
+        public MissionItemRequiredEntryPrototype[] RequiredItems { get; private set; }
+        public ulong WithinHotspot { get; private set; }
+        public ulong OnInteractBehavior { get; private set; }
+        public MissionActionPrototype[] OnInteractEntityActions { get; private set; }
+        public IncrementalActionEntryPrototype[] OnIncrementalActions { get; private set; }
+        public ulong DialogTextWhenInventoryFull { get; private set; }
+        public bool DropLootOnGround { get; private set; }
+        public int WithinSeconds { get; private set; }
+        public DialogStyle DialogStyle { get; private set; }
+        public HUDEntitySettingsPrototype EntityHUDSettingOverride { get; private set; }
+        public bool ShowRewards { get; private set; }
+        public VOCategory VoiceoverCategory { get; private set; }
     }
 
     public class MissionConditionFactionPrototype : MissionPlayerConditionPrototype
     {
-        public ulong Faction { get; set; }
-        public bool EventOnly { get; set; }
+        public ulong Faction { get; private set; }
+        public bool EventOnly { get; private set; }
     }
 
     public class MissionConditionGlobalEventCompletePrototype : MissionPlayerConditionPrototype
     {
-        public ulong Event { get; set; }
+        public ulong Event { get; private set; }
     }
 
     public class MissionConditionMemberOfEventTeamPrototype : MissionPlayerConditionPrototype
     {
-        public ulong Team { get; set; }
+        public ulong Team { get; private set; }
     }
 
     public class MissionConditionMetaGameCompletePrototype : MissionPlayerConditionPrototype
     {
-        public ulong MetaGame { get; set; }
-        public MetaGameCompleteType CompleteType { get; set; }
-        public int Count { get; set; }
+        public ulong MetaGame { get; private set; }
+        public MetaGameCompleteType CompleteType { get; private set; }
+        public int Count { get; private set; }
     }
 
     public class MissionConditionMetaStateCompletePrototype : MissionPlayerConditionPrototype
     {
-        public ulong MetaState { get; set; }
-        public int MinDifficulty { get; set; }
-        public ulong RequiredAffix { get; set; }
-        public ulong RequiredRarity { get; set; }
-        public int WaveNum { get; set; }
-        public int Count { get; set; }
+        public ulong MetaState { get; private set; }
+        public int MinDifficulty { get; private set; }
+        public ulong RequiredAffix { get; private set; }
+        public ulong RequiredRarity { get; private set; }
+        public int WaveNum { get; private set; }
+        public int Count { get; private set; }
     }
 
     public class MissionConditionMetaStateDeathLimitHitPrototype : MissionConditionPrototype
     {
-        public ulong MetaState { get; set; }
-        public int Count { get; set; }
+        public ulong MetaState { get; private set; }
+        public int Count { get; private set; }
     }
 
     public class MissionConditionPublicEventIsActivePrototype : MissionConditionPrototype
     {
-        public ulong Event { get; set; }
+        public ulong Event { get; private set; }
     }
 
     public class MissionConditionLogicFalsePrototype : MissionConditionPrototype
@@ -277,43 +277,43 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionConditionMissionCompletePrototype : MissionPlayerConditionPrototype
     {
-        public ulong MissionPrototype { get; set; }
-        public long Count { get; set; }
-        public DistributionType CreditTo { get; set; }
-        public ulong MissionKeyword { get; set; }
-        public RegionPrototype WithinRegions { get; set; }
-        public bool EvaluateOnRegionEnter { get; set; }
-        public bool EvaluateOnReset { get; set; }
-        public AreaPrototype WithinAreas { get; set; }
-        public MissionShowObjsSettings ShowObjs { get; set; }
+        public ulong MissionPrototype { get; private set; }
+        public long Count { get; private set; }
+        public DistributionType CreditTo { get; private set; }
+        public ulong MissionKeyword { get; private set; }
+        public RegionPrototype WithinRegions { get; private set; }
+        public bool EvaluateOnRegionEnter { get; private set; }
+        public bool EvaluateOnReset { get; private set; }
+        public AreaPrototype WithinAreas { get; private set; }
+        public MissionShowObjsSettings ShowObjs { get; private set; }
     }
 
     public class MissionConditionMissionFailedPrototype : MissionPlayerConditionPrototype
     {
-        public ulong MissionPrototype { get; set; }
-        public long Count { get; set; }
-        public DistributionType CreditTo { get; set; }
-        public ulong MissionKeyword { get; set; }
-        public RegionPrototype WithinRegions { get; set; }
-        public bool EvaluateOnRegionEnter { get; set; }
-        public bool EvaluateOnReset { get; set; }
+        public ulong MissionPrototype { get; private set; }
+        public long Count { get; private set; }
+        public DistributionType CreditTo { get; private set; }
+        public ulong MissionKeyword { get; private set; }
+        public RegionPrototype WithinRegions { get; private set; }
+        public bool EvaluateOnRegionEnter { get; private set; }
+        public bool EvaluateOnReset { get; private set; }
     }
 
     public class MissionConditionObjectiveCompletePrototype : MissionPlayerConditionPrototype
     {
-        public long ObjectiveID { get; set; }
-        public ulong MissionPrototype { get; set; }
-        public bool EvaluateOnReset { get; set; }
-        public long Count { get; set; }
-        public DistributionType CreditTo { get; set; }
-        public bool EvaluateOnRegionEnter { get; set; }
-        public bool ShowCountFromTargetObjective { get; set; }
+        public long ObjectiveID { get; private set; }
+        public ulong MissionPrototype { get; private set; }
+        public bool EvaluateOnReset { get; private set; }
+        public long Count { get; private set; }
+        public DistributionType CreditTo { get; private set; }
+        public bool EvaluateOnRegionEnter { get; private set; }
+        public bool ShowCountFromTargetObjective { get; private set; }
     }
 
     public class MissionConditionOrbPickUpPrototype : MissionPlayerConditionPrototype
     {
-        public long Count { get; set; }
-        public EntityFilterPrototype EntityFilter { get; set; }
+        public long Count { get; private set; }
+        public EntityFilterPrototype EntityFilter { get; private set; }
     }
 
     public class MissionConditionOrPrototype : MissionConditionListPrototype
@@ -322,94 +322,94 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionConditionSpawnerDefeatedPrototype : MissionPlayerConditionPrototype
     {
-        public EntityFilterPrototype EntityFilter { get; set; }
-        public int Count { get; set; }
+        public EntityFilterPrototype EntityFilter { get; private set; }
+        public int Count { get; private set; }
     }
 
     public class MissionConditionHealthRangePrototype : MissionPlayerConditionPrototype
     {
-        public EntityFilterPrototype EntityFilter { get; set; }
-        public double HealthMinPct { get; set; }
-        public double HealthMaxPct { get; set; }
+        public EntityFilterPrototype EntityFilter { get; private set; }
+        public double HealthMinPct { get; private set; }
+        public double HealthMaxPct { get; private set; }
     }
 
     public class MissionConditionHotspotContainsPrototype : MissionConditionPrototype
     {
-        public int CountMax { get; set; }
-        public int CountMin { get; set; }
-        public EntityFilterPrototype EntityFilter { get; set; }
-        public EntityFilterPrototype TargetFilter { get; set; }
+        public int CountMax { get; private set; }
+        public int CountMin { get; private set; }
+        public EntityFilterPrototype EntityFilter { get; private set; }
+        public EntityFilterPrototype TargetFilter { get; private set; }
     }
 
     public class MissionConditionHotspotEnterPrototype : MissionPlayerConditionPrototype
     {
-        public EntityFilterPrototype TargetFilter { get; set; }
-        public EntityFilterPrototype EntityFilter { get; set; }
+        public EntityFilterPrototype TargetFilter { get; private set; }
+        public EntityFilterPrototype EntityFilter { get; private set; }
     }
 
     public class MissionConditionHotspotLeavePrototype : MissionPlayerConditionPrototype
     {
-        public EntityFilterPrototype TargetFilter { get; set; }
-        public EntityFilterPrototype EntityFilter { get; set; }
+        public EntityFilterPrototype TargetFilter { get; private set; }
+        public EntityFilterPrototype EntityFilter { get; private set; }
     }
 
     public class MissionConditionItemCollectPrototype : MissionPlayerConditionPrototype
     {
-        public long Count { get; set; }
-        public EntityFilterPrototype EntityFilter { get; set; }
-        public bool MustBeEquippableByAvatar { get; set; }
-        public bool DestroyOnPickup { get; set; }
-        public bool CountItemsOnMissionStart { get; set; }
+        public long Count { get; private set; }
+        public EntityFilterPrototype EntityFilter { get; private set; }
+        public bool MustBeEquippableByAvatar { get; private set; }
+        public bool DestroyOnPickup { get; private set; }
+        public bool CountItemsOnMissionStart { get; private set; }
     }
 
     public class MissionConditionItemEquipPrototype : MissionPlayerConditionPrototype
     {
-        public ulong ItemPrototype { get; set; }
+        public ulong ItemPrototype { get; private set; }
     }
 
     public class MissionConditionInventoryCapacityPrototype : MissionPlayerConditionPrototype
     {
-        public ulong InventoryPrototype { get; set; }
-        public int SlotsRemaining { get; set; }
+        public ulong InventoryPrototype { get; private set; }
+        public int SlotsRemaining { get; private set; }
     }
 
     public class MissionConditionKismetSeqFinishedPrototype : MissionPlayerConditionPrototype
     {
-        public ulong KismetSeqPrototype { get; set; }
+        public ulong KismetSeqPrototype { get; private set; }
     }
 
     public class MissionConditionPowerEquipPrototype : MissionPlayerConditionPrototype
     {
-        public ulong PowerPrototype { get; set; }
+        public ulong PowerPrototype { get; private set; }
     }
 
     public class MissionConditionPartySizePrototype : MissionPlayerConditionPrototype
     {
-        public int MaxSize { get; set; }
-        public int MinSize { get; set; }
+        public int MaxSize { get; private set; }
+        public int MinSize { get; private set; }
     }
 
     public class MissionConditionRegionBeginTravelToPrototype : MissionPlayerConditionPrototype
     {
-        public ulong RegionPrototype { get; set; }
+        public ulong RegionPrototype { get; private set; }
     }
 
     public class MissionConditionRegionContainsPrototype : MissionConditionPrototype
     {
-        public int CountMax { get; set; }
-        public int CountMin { get; set; }
-        public ulong Region { get; set; }
-        public EntityFilterPrototype TargetFilter { get; set; }
-        public bool RegionIncludeChildren { get; set; }
-        public RegionPrototype RegionsExclude { get; set; }
+        public int CountMax { get; private set; }
+        public int CountMin { get; private set; }
+        public ulong Region { get; private set; }
+        public EntityFilterPrototype TargetFilter { get; private set; }
+        public bool RegionIncludeChildren { get; private set; }
+        public RegionPrototype RegionsExclude { get; private set; }
     }
 
     public class MissionConditionRegionEnterPrototype : MissionPlayerConditionPrototype
     {
-        public ulong RegionPrototype { get; set; }
-        public bool WaitForCinematicFinished { get; set; }
-        public RegionKeywordPrototype Keywords { get; set; }
-        public bool RegionIncludeChildren { get; set; }
+        public ulong RegionPrototype { get; private set; }
+        public bool WaitForCinematicFinished { get; private set; }
+        public RegionKeywordPrototype Keywords { get; private set; }
+        public bool RegionIncludeChildren { get; private set; }
     }
 
     public class MissionConditionRegionHasMatchPrototype : MissionPlayerConditionPrototype
@@ -418,60 +418,60 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionConditionRegionLeavePrototype : MissionPlayerConditionPrototype
     {
-        public ulong RegionPrototype { get; set; }
-        public bool RegionIncludeChildren { get; set; }
+        public ulong RegionPrototype { get; private set; }
+        public bool RegionIncludeChildren { get; private set; }
     }
 
     public class MissionConditionRemoteNotificationPrototype : MissionPlayerConditionPrototype
     {
-        public ulong DialogText { get; set; }
-        public ulong WorldEntityPrototype { get; set; }
-        public GameNotificationType NotificationType { get; set; }
-        public ulong VOTrigger { get; set; }
+        public ulong DialogText { get; private set; }
+        public ulong WorldEntityPrototype { get; private set; }
+        public GameNotificationType NotificationType { get; private set; }
+        public ulong VOTrigger { get; private set; }
     }
 
     public class MissionConditionTeamUpIsActivePrototype : MissionPlayerConditionPrototype
     {
-        public ulong TeamUpPrototype { get; set; }
+        public ulong TeamUpPrototype { get; private set; }
     }
 
     public class MissionConditionTeamUpIsUnlockedPrototype : MissionPlayerConditionPrototype
     {
-        public ulong TeamUpPrototype { get; set; }
+        public ulong TeamUpPrototype { get; private set; }
     }
 
     public class MissionConditionThrowablePickUpPrototype : MissionPlayerConditionPrototype
     {
-        public EntityFilterPrototype EntityFilter { get; set; }
+        public EntityFilterPrototype EntityFilter { get; private set; }
     }
 
     public class MissionConditionItemBuyPrototype : MissionPlayerConditionPrototype
     {
-        public long Count { get; set; }
-        public EntityFilterPrototype EntityFilter { get; set; }
+        public long Count { get; private set; }
+        public EntityFilterPrototype EntityFilter { get; private set; }
     }
 
     public class MissionConditionItemDonatePrototype : MissionPlayerConditionPrototype
     {
-        public long Count { get; set; }
-        public EntityFilterPrototype EntityFilter { get; set; }
+        public long Count { get; private set; }
+        public EntityFilterPrototype EntityFilter { get; private set; }
     }
 
     public class MissionConditionItemCraftPrototype : MissionPlayerConditionPrototype
     {
-        public long Count { get; set; }
-        public EntityFilterPrototype EntityFilter { get; set; }
-        public ulong UsingRecipe { get; set; }
+        public long Count { get; private set; }
+        public EntityFilterPrototype EntityFilter { get; private set; }
+        public ulong UsingRecipe { get; private set; }
     }
 
     public class MissionConditionClusterEnemiesClearedPrototype : MissionPlayerConditionPrototype
     {
-        public long Count { get; set; }
-        public bool OnlyCountMissionClusters { get; set; }
-        public ulong[] SpawnedByMission { get; set; }
-        public ulong[] SpecificClusters { get; set; }
-        public RegionPrototype WithinRegions { get; set; }
-        public AreaPrototype WithinAreas { get; set; }
-        public bool PlayerKillerRequired { get; set; }
+        public long Count { get; private set; }
+        public bool OnlyCountMissionClusters { get; private set; }
+        public ulong[] SpawnedByMission { get; private set; }
+        public ulong[] SpecificClusters { get; private set; }
+        public RegionPrototype WithinRegions { get; private set; }
+        public AreaPrototype WithinAreas { get; private set; }
+        public bool PlayerKillerRequired { get; private set; }
     }
 }

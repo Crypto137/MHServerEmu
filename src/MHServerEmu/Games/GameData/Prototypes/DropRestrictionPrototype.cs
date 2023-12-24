@@ -29,84 +29,84 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ConditionalRestrictionPrototype : DropRestrictionPrototype
     {
-        public DropRestrictionPrototype[] Apply { get; set; }
-        public LootContext[] ApplyFor { get; set; }
-        public DropRestrictionPrototype[] Else { get; set; }
+        public DropRestrictionPrototype[] Apply { get; private set; }
+        public LootContext[] ApplyFor { get; private set; }
+        public DropRestrictionPrototype[] Else { get; private set; }
     }
 
     public class ContextRestrictionPrototype : DropRestrictionPrototype
     {
-        public LootContext[] UsableFor { get; set; }
+        public LootContext[] UsableFor { get; private set; }
     }
 
     public class ItemTypeRestrictionPrototype : DropRestrictionPrototype
     {
-        public ulong AllowedTypes { get; set; }
+        public ulong AllowedTypes { get; private set; }
     }
 
     public class ItemParentRestrictionPrototype : DropRestrictionPrototype
     {
-        public ulong AllowedParents { get; set; }
+        public ulong AllowedParents { get; private set; }
     }
 
     public class HasAffixInPositionRestrictionPrototype : DropRestrictionPrototype
     {
-        public AffixPosition Position { get; set; }
+        public AffixPosition Position { get; private set; }
     }
 
     public class HasVisualAffixRestrictionPrototype : DropRestrictionPrototype
     {
-        public bool MustHaveNoVisualAffixes { get; set; }
-        public bool MustHaveVisualAffix { get; set; }
+        public bool MustHaveNoVisualAffixes { get; private set; }
+        public bool MustHaveVisualAffix { get; private set; }
     }
 
     public class LevelRestrictionPrototype : DropRestrictionPrototype
     {
-        public int LevelMin { get; set; }
-        public int LevelRange { get; set; }
+        public int LevelMin { get; private set; }
+        public int LevelRange { get; private set; }
     }
 
     public class OutputLevelPrototype : DropRestrictionPrototype
     {
-        public int Value { get; set; }
-        public bool UseAsFilter { get; set; }
+        public int Value { get; private set; }
+        public bool UseAsFilter { get; private set; }
     }
 
     public class OutputRankPrototype : DropRestrictionPrototype
     {
-        public int Value { get; set; }
-        public bool UseAsFilter { get; set; }
+        public int Value { get; private set; }
+        public bool UseAsFilter { get; private set; }
     }
 
     public class OutputRarityPrototype : DropRestrictionPrototype
     {
-        public ulong Value { get; set; }
-        public bool UseAsFilter { get; set; }
+        public ulong Value { get; private set; }
+        public bool UseAsFilter { get; private set; }
     }
 
     public class RarityRestrictionPrototype : DropRestrictionPrototype
     {
-        public ulong[] AllowedRarities { get; set; }
+        public ulong[] AllowedRarities { get; private set; }
     }
 
     public class RankRestrictionPrototype : DropRestrictionPrototype
     {
-        public int AllowedRanks { get; set; }
+        public int AllowedRanks { get; private set; }
     }
 
     public class RestrictionListPrototype : DropRestrictionPrototype
     {
-        public DropRestrictionPrototype[] Children { get; set; }
+        public DropRestrictionPrototype[] Children { get; private set; }
     }
 
     public class SlotRestrictionPrototype : DropRestrictionPrototype
     {
-        public EquipmentInvUISlot[] AllowedSlots { get; set; }
+        public EquipmentInvUISlot[] AllowedSlots { get; private set; }
     }
 
     public class UsableByRestrictionPrototype : DropRestrictionPrototype
     {
-        public ulong Avatars { get; set; }
+        public ulong Avatars { get; private set; }
     }
 
     public class DistanceRestrictionPrototype : DropRestrictionPrototype

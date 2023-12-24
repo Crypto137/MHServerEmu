@@ -10,6 +10,6 @@
 
     public class PickWeightPrototype : PickMethodPrototype
     {
-        public short Choices { get; set; }
+        public short Choices { get; private set; }
     }
 }
