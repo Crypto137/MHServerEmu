@@ -28,10 +28,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool ReplicateToTrader { get; private set; }
         public PrototypeId ValueDisplayFormat { get; private set; }          // Localization/Translations/Translation.defaults
 
-        public PropertyInfoPrototype(BinaryReader reader) : base(reader)
+        public void FillPropertyInfoFields()
         {
-            // NOTE: Old misguided experiments below
-
+            // temp method for compatibility
             foreach (PrototypeSimpleField field in FieldGroups[0].SimpleFields)
             {
                 switch (GameDatabase.GetBlueprintFieldName(field.Id))

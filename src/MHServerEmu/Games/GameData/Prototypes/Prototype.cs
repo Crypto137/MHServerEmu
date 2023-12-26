@@ -4,23 +4,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     // TODO: Move Calligraphy prototype deserialization to CalligraphySerializer
 
-    public class PrototypeFile
-    {
-        public CalligraphyHeader Header { get; }
-        public Prototype Prototype { get; }
-
-        public PrototypeFile(Stream stream, bool isPropertyInfo = false)
-        {
-            using (BinaryReader reader = new(stream))
-            {
-                Header = new(reader);
-
-                // TEMP HACK: Manually deserialize PropertyInfo
-                Prototype = isPropertyInfo ? new PropertyInfoPrototype(reader) : new Prototype(reader);
-            }
-        }
-    }
-
     public readonly struct PrototypeDataHeader
     {
         // CalligraphyReader::ReadPrototypeHeader
@@ -53,14 +36,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class Prototype
     {
         public PrototypeId DataRef { get; set; }
+        public PrototypeDataRefRecord DataRefRecord { get; set; }
 
-        public PrototypeDataHeader Header { get; }
-        public PrototypeFieldGroup[] FieldGroups { get; }
+        public PrototypeDataHeader Header { get; private set; }
+        public PrototypeFieldGroup[] FieldGroups { get; private set; }
 
         public Prototype() { }
 
         public Prototype(BinaryReader reader)
         {
+            DeserializeCalligraphy(reader);
+        }
+
+        public void DeserializeCalligraphy(BinaryReader reader)
+        {
+            // temp method for compatibility
             Header = new(reader);
             if (Header.DataExists == false) return;
 

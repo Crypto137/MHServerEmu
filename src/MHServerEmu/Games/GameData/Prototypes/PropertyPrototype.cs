@@ -1,11 +1,8 @@
-﻿using MHServerEmu.Common.Extensions;
-using MHServerEmu.Games.GameData.Calligraphy;
-using MHServerEmu.Games.Properties;
-
-namespace MHServerEmu.Games.GameData.Prototypes
+﻿namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class PropertyPrototype : Prototype
     {
+        /* NOTE: Old misguided experiments below
         private const byte MaxParamCount = 4;
 
         private static readonly Dictionary<CalligraphyBaseType, PropertyParamType> ParamTypeDict = new()   // Params can hold only three of the Calligraphy value types
@@ -22,8 +19,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public PropertyPrototype(PrototypeId prototypeId)
         {
-            // NOTE: Old misguided experiments below
-
             Prototype prototype = GameDatabase.GetPrototype<Prototype>(prototypeId);
             Blueprint blueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(prototypeId);
             Array.Fill(Params, new());
@@ -109,6 +104,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             public int Offset { get; set; } = 0;
             public int Size { get; set; } = 0;
         }
+        */
     }
 
     public class PropertyEntryPrototype : Prototype

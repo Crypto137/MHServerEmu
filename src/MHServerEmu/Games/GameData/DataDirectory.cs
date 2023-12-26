@@ -335,28 +335,29 @@ namespace MHServerEmu.Games.GameData
             // Load the prototype if not loaded yet
             if (record.Prototype == null)
             {
-                string filePath = GameDatabase.GetPrototypeName(record.PrototypeId);
+                // Get prototype file path and pak file id
+                // Note: the client uses a separate getPrototypeRelativePath() method here to get the file path.
+                string filePath;
+                PakFileId pakFileId;
 
                 if (record.DataOrigin == DataOrigin.Calligraphy)
                 {
-                    using (MemoryStream ms = LoadPakDataFile($"Calligraphy/{filePath}", PakFileId.Calligraphy))
-                    {
-                        // HACK: determine if the prototype should be loaded as a property info prototype manually
-                        bool isPropertyInfo = record.Blueprint.IsA(PropertyInfoBlueprint) && record.PrototypeId != (PrototypeId)PropertyInfoBlueprint;
-
-                        PrototypeFile prototypeFile = new(ms, isPropertyInfo);
-                        record.Prototype = prototypeFile.Prototype;
-                        record.Prototype.DataRef = record.PrototypeId;
-                    }
+                    filePath = $"Calligraphy/{GameDatabase.GetPrototypeName(record.PrototypeId)}";
+                    pakFileId = PakFileId.Calligraphy;
                 }
                 else if (record.DataOrigin == DataOrigin.Resource)
                 {
-                    using (MemoryStream ms = LoadPakDataFile(filePath, PakFileId.Default))
-                    {
-                        Prototype resource = DeserializePrototypeFromStream(ms, record);
-                        record.Prototype = resource;
-                        record.Prototype.DataRef = record.PrototypeId;
-                    }
+                    filePath = GameDatabase.GetPrototypeName(record.PrototypeId);
+                    pakFileId = PakFileId.Default;
+                }
+                else throw new NotImplementedException($"Prototype deserialization for data origin {record.DataOrigin} is not supported.");
+
+                // Deserialize
+                using (MemoryStream ms = LoadPakDataFile(filePath, pakFileId))
+                {
+                    Prototype prototype = DeserializePrototypeFromStream(ms, record);
+                    record.Prototype = prototype;
+                    prototype.DataRefRecord = record;
                 }
             }
 
@@ -572,9 +573,9 @@ namespace MHServerEmu.Games.GameData
         {
             // Get the appropriate serializer (TODO: CalligraphySerializer).
             // Note: the client uses a separate getSerializer() method here to achieve the same result.
-            GameDataSerializer serializer = BinaryResourceSerializer;
+            GameDataSerializer serializer = record.DataOrigin == DataOrigin.Calligraphy ? CalligraphySerializer : BinaryResourceSerializer;
 
-            // Create a new prototype instance
+            // Create a new prototype instance (this is somewhat slow, may be a good idea to optimize this further)
             Prototype prototype = (Prototype)Activator.CreateInstance(record.ClassType);
 
             // Deserialize the prototype
