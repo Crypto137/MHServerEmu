@@ -68,8 +68,13 @@ namespace MHServerEmu.Games.GameData
             // Preload all prototypes if needed
             if (ConfigManager.GameData.LoadAllPrototypes)
             {
+                var loadAllWatch = Stopwatch.StartNew();
+
                 foreach (PrototypeId prototypeId in DataDirectory.IterateAllPrototypes())
                     DataDirectory.GetPrototype<Prototype>(prototypeId);
+
+                loadAllWatch.Stop();
+                Logger.Info($"Loaded all prototypes in {loadAllWatch.ElapsedMilliseconds} ms");
             }
 
             // InteractionManager::Initialize 
