@@ -364,6 +364,17 @@ namespace MHServerEmu.Games.GameData
             return (T)record.Prototype;
         }
 
+        public Type GetPrototypeClassType(PrototypeId prototypeId)
+        {
+            if (_prototypeRecordDict.TryGetValue(prototypeId, out var record) == false)
+            {
+                Logger.Warn($"Failed to get type for prototype id {prototypeId}");
+                return null;
+            }
+
+            return record.ClassType;
+        }
+
         public PrototypeId GetBlueprintDefaultPrototype(BlueprintId blueprintId)
         {
             var blueprint = GetBlueprint(blueprintId);
@@ -575,10 +586,10 @@ namespace MHServerEmu.Games.GameData
             // Note: the client uses a separate getSerializer() method here to achieve the same result.
             GameDataSerializer serializer = record.DataOrigin == DataOrigin.Calligraphy ? CalligraphySerializer : BinaryResourceSerializer;
 
-            // Create a new prototype instance (this is somewhat slow, may be a good idea to optimize this further)
+            // Create a new prototype instance
             Prototype prototype = (Prototype)Activator.CreateInstance(record.ClassType);
 
-            // Deserialize the prototype
+            // Deserialize the data
             serializer.Deserialize(prototype, record.PrototypeId, stream);
 
             return prototype;
