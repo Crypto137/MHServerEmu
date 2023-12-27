@@ -367,10 +367,7 @@ namespace MHServerEmu.Games.GameData
         public Type GetPrototypeClassType(PrototypeId prototypeId)
         {
             if (_prototypeRecordDict.TryGetValue(prototypeId, out var record) == false)
-            {
-                Logger.Warn($"Failed to get type for prototype id {prototypeId}");
-                return null;
-            }
+                return Logger.WarnReturn<Type>(null, $"Failed to get type for prototype id {prototypeId}");
 
             return record.ClassType;
         }
@@ -386,10 +383,7 @@ namespace MHServerEmu.Games.GameData
         {
             PrototypeId[] enumLookup = _prototypeClassLookupDict[typeof(T)].EnumValueToPrototypeLookup;
             if (enumValue < 0 || enumValue >= enumLookup.Length)
-            {
-                Logger.Warn($"Failed to get prototype for enumValue {enumValue} as {nameof(T)}");
-                return PrototypeId.Invalid;
-            }
+                return Logger.WarnReturn(PrototypeId.Invalid, $"Failed to get prototype for enumValue {enumValue} as {nameof(T)}");
 
             return enumLookup[enumValue];
         }
@@ -399,10 +393,7 @@ namespace MHServerEmu.Games.GameData
             Dictionary<PrototypeId, int> dict = _prototypeClassLookupDict[typeof(T)].PrototypeToEnumValueDict;
 
             if (dict.TryGetValue(prototypeId, out int enumValue) == false)
-            {
-                Logger.Warn($"Failed to get enum value for prototype {GameDatabase.GetPrototypeName(prototypeId)} as {nameof(T)}");
-                return 0;
-            }
+                return Logger.WarnReturn(0, $"Failed to get enum value for prototype {GameDatabase.GetPrototypeName(prototypeId)} as {nameof(T)}");
 
             return enumValue;
         }
@@ -421,10 +412,7 @@ namespace MHServerEmu.Games.GameData
         public PrototypeIterator IteratePrototypesInHierarchy(Type prototypeClassType, PrototypeIterateFlags flags = PrototypeIterateFlags.None)
         {
             if (_prototypeClassLookupDict.TryGetValue(prototypeClassType, out var node) == false)
-            {
-                Logger.Warn($"Failed to get iterated prototype list for class {prototypeClassType.Name}");
-                return new(Enumerable.Empty<PrototypeDataRefRecord>(), flags);
-            }
+                return Logger.WarnReturn(new PrototypeIterator(), $"Failed to get iterated prototype list for class {prototypeClassType.Name}");
 
             return new(node.PrototypeRecordList, flags);
         }
@@ -435,10 +423,7 @@ namespace MHServerEmu.Games.GameData
         public PrototypeIterator IteratePrototypesInHierarchy(BlueprintId blueprintId, PrototypeIterateFlags flags = PrototypeIterateFlags.None)
         {
             if (_blueprintRecordDict.TryGetValue(blueprintId, out var record) == false)
-            {
-                Logger.Warn($"Failed to get iterated prototype list for blueprint id {blueprintId}");
-                return new(Enumerable.Empty<PrototypeDataRefRecord>(), flags);
-            }
+                return Logger.WarnReturn(new PrototypeIterator(), $"Failed to get iterated prototype list for blueprint id {blueprintId}");
 
             return new(record.Blueprint.PrototypeRecordList, flags);
         }
@@ -485,10 +470,7 @@ namespace MHServerEmu.Games.GameData
         private PrototypeDataRefRecord GetPrototypeDataRefRecord(PrototypeId prototypeId)
         {
             if (_prototypeRecordDict.TryGetValue(prototypeId, out var record) == false)
-            {
-                Logger.Warn($"PrototypeId {prototypeId} has no data ref record in the data directory");
-                return null;
-            }
+                return Logger.WarnReturn<PrototypeDataRefRecord>(null, $"PrototypeId {prototypeId} has no data ref record in the data directory");
 
             return record;
         }
@@ -507,9 +489,7 @@ namespace MHServerEmu.Games.GameData
                 case ".ui":         return typeof(UIPrototype);
                 case ".fragment":   return typeof(NaviFragmentPrototype);
 
-                default:
-                    Logger.Warn($"Failed to get class type for resource {fileName}");
-                    return null;
+                default:            return Logger.WarnReturn<Type>(null, $"Failed to get class type for resource {fileName}");
             }
         }
 

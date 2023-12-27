@@ -22,7 +22,16 @@ namespace MHServerEmu.Games.GameData
         private readonly PrototypeIterateFlags _flags;
 
         /// <summary>
-        /// Constructs a new prototype iterator with the provided records and flags.
+        /// Constructs an empty <see cref="PrototypeIterator"/>.
+        /// </summary>
+        public PrototypeIterator()
+        {
+            _prototypeRecords = Enumerable.Empty<PrototypeDataRefRecord>();
+            _flags = PrototypeIterateFlags.None;
+        }
+
+        /// <summary>
+        /// Constructs a new <see cref="PrototypeIterator"/> with the provided records and flags.
         /// </summary>
         public PrototypeIterator(IEnumerable<PrototypeDataRefRecord> records, PrototypeIterateFlags flags = PrototypeIterateFlags.None)
         {
