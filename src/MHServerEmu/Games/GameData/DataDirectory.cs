@@ -24,15 +24,6 @@ namespace MHServerEmu.Games.GameData
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private static readonly string[] DataDirectoryFiles = new string[]
-        {
-            "Calligraphy/Curve.directory",
-            "Calligraphy/Type.directory",
-            "Calligraphy/Blueprint.directory",
-            "Calligraphy/Prototype.directory",
-            "Calligraphy/Replacement.directory"
-        };
-
         // Prototype serializers
         private static readonly CalligraphySerializer CalligraphySerializer = new();
         private static readonly BinaryResourceSerializer BinaryResourceSerializer = new();
@@ -86,41 +77,32 @@ namespace MHServerEmu.Games.GameData
 
         private void LoadCalligraphyDataFramework()
         {
-            // Load all directories
-            for (int i = 0; i < DataDirectoryFiles.Length; i++)
+            // Define directories
+            var directories = new (string, Action<BinaryReader>, Action)[]
             {
-                using (MemoryStream stream = LoadPakDataFile(DataDirectoryFiles[i], PakFileId.Calligraphy))
+                // Directory file path                  // Entry read method            // Callback
+                ("Calligraphy/Curve.directory",         ReadCurveDirectoryEntry,        () => Logger.Info($"Loaded {CurveDirectory.RecordCount} curve entries")),
+                ("Calligraphy/Type.directory",          ReadTypeDirectoryEntry,         () => Logger.Info($"Loaded {AssetDirectory.AssetCount} asset entries of {AssetDirectory.AssetTypeCount} types")),
+                ("Calligraphy/Blueprint.directory",     ReadBlueprintDirectoryEntry,    () => Logger.Info($"Loaded {_blueprintRecordDict.Count} blueprints")),
+                ("Calligraphy/Prototype.directory",     ReadPrototypeDirectoryEntry,    () => Logger.Info($"Loaded {_prototypeRecordDict.Count} Calligraphy prototype entries")),
+                ("Calligraphy/Replacement.directory",   ReadReplacementDirectoryEntry,  () => { } )
+            };
+
+            // Load all directories
+            foreach (var directory in directories)
+            {
+                using (MemoryStream stream = LoadPakDataFile(directory.Item1, PakFileId.Calligraphy))
                 using (BinaryReader reader = new(stream))
                 {
                     CalligraphyHeader header = new(reader);
                     int recordCount = reader.ReadInt32();
 
-                    switch (header.Magic)
-                    {
-                        case "CDR":     // Curves
-                            for (int j = 0; j < recordCount; j++) ReadCurveDirectoryEntry(reader);
-                            Logger.Info($"Loaded {CurveDirectory.RecordCount} curve entries");
-                            break;
+                    // Read all records
+                    for (int i = 0; i < recordCount; i++)
+                        directory.Item2(reader);
 
-                        case "TDR":     // AssetTypes
-                            for (int j = 0; j < recordCount; j++) ReadTypeDirectoryEntry(reader);
-                            Logger.Info($"Loaded {AssetDirectory.AssetCount} asset entries of {AssetDirectory.AssetTypeCount} types");
-                            break;
-
-                        case "BDR":     // Blueprints
-                            for (int j = 0; j < recordCount; j++) ReadBlueprintDirectoryEntry(reader);
-                            Logger.Info($"Loaded {_blueprintRecordDict.Count} blueprints");
-                            break;
-
-                        case "PDR":     // Prototypes
-                            for (int j = 0; j < recordCount; j++) ReadPrototypeDirectoryEntry(reader);
-                            Logger.Info($"Loaded {_prototypeRecordDict.Count} Calligraphy prototype entries");
-                            break;
-
-                        case "RDR":     // Replacement
-                            for (int j = 0; j < recordCount; j++) ReadReplacementDirectoryEntry(reader);
-                            break;
-                    }
+                    // Do the callback
+                    directory.Item3();
                 }
             }
 
