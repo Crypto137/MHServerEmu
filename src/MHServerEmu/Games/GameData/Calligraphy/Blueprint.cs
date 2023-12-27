@@ -10,6 +10,8 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         private PrototypeId[] _enumValueToPrototypeLookup = Array.Empty<PrototypeId>();
         private Dictionary<PrototypeId, int> _prototypeToEnumValueDict;
 
+        private PrototypeId _propertyDataRef = PrototypeId.Invalid;
+
         public BlueprintId Id { get; }
         public BlueprintGuid Guid { get; }
 
@@ -109,13 +111,19 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 _prototypeToEnumValueDict.Add(_enumValueToPrototypeLookup[i], i);
         }
 
+        public void SetPropertyPrototypeDataRef(PrototypeId propertyDataRef)
+        {
+            if (_propertyDataRef != PrototypeId.Invalid)
+                Logger.Warn(string.Format("Trying to bind blueprint {0} to property {1}, but this blueprint is already bound to {2}",
+                            GameDatabase.GetBlueprint(Id), GameDatabase.GetPrototypeName(propertyDataRef), GameDatabase.GetPrototypeName(_propertyDataRef)));
+
+            _propertyDataRef = propertyDataRef;
+        }
+
         public PrototypeId GetPrototypeFromEnumValue(int enumValue)
         {
             if (enumValue < 0 || enumValue >= _enumValueToPrototypeLookup.Length)
-            {
-                Logger.Warn($"Failed to get prototype for enumValue {enumValue} for blueprint {GameDatabase.GetBlueprintName(Id)}");
-                return PrototypeId.Invalid;
-            }
+                return Logger.WarnReturn(PrototypeId.Invalid, $"Failed to get prototype for enumValue {enumValue} for blueprint {GameDatabase.GetBlueprintName(Id)}");
 
             return _enumValueToPrototypeLookup[enumValue];
         }
@@ -123,13 +131,12 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         public int GetPrototypeEnumValue(PrototypeId prototypeId)
         {
             if (_prototypeToEnumValueDict.TryGetValue(prototypeId, out int enumValue) == false)
-            {
-                Logger.Warn($"Failed to get enum value for prototype {GameDatabase.GetPrototypeName(prototypeId)} for blueprint {GameDatabase.GetBlueprintName(Id)}");
-                return 0;
-            }
+                return Logger.WarnReturn(0, $"Failed to get enum value for prototype {GameDatabase.GetPrototypeName(prototypeId)} for blueprint {GameDatabase.GetBlueprintName(Id)}");
 
             return enumValue;
         }
+
+        public PrototypeId GetPropertyPrototypeRef() => _propertyDataRef;
 
         /// <summary>
         /// Checks if this blueprint belongs to the specified blueprint in the hierarchy.
@@ -137,6 +144,11 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         public bool IsA(BlueprintId blueprintId)
         {
             return FileIdHashSet.Contains(blueprintId);
+        }
+
+        public bool IsProperty()
+        {
+            return _propertyDataRef != PrototypeId.Invalid;
         }
     }
 

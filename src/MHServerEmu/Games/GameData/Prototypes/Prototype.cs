@@ -36,6 +36,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class Prototype
     {
         public PrototypeId DataRef { get; set; }
+        public PrototypeId ParentDataRef { get; set; }
         public PrototypeDataRefRecord DataRefRecord { get; set; }
 
         public PrototypeDataHeader Header { get; private set; }
