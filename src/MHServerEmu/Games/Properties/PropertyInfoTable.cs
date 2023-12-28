@@ -1,7 +1,7 @@
-﻿using MHServerEmu.Common.Logging;
+﻿using System.Diagnostics;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using System.Diagnostics;
 
 namespace MHServerEmu.Games.Properties
 {
@@ -9,7 +9,7 @@ namespace MHServerEmu.Games.Properties
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Dictionary<PropertyEnum, PropertyInfoPrototype> _propertyInfoDict = new();
+        private readonly Dictionary<PropertyEnum, PropertyInfo> _propertyInfoDict = new();
 
         public static readonly (string, Type)[] AssetEnumBindings = new(string, Type)[]     // s_PropertyParamEnumLookups
         {
@@ -41,11 +41,20 @@ namespace MHServerEmu.Games.Properties
             var propertyInfoBlueprintId = dataDirectory.PropertyInfoBlueprint;
             var propertyInfoDefaultPrototypeId = dataDirectory.GetBlueprintDefaultPrototype(propertyInfoBlueprintId);
 
-            foreach (PrototypeId propertyInfoId in dataDirectory.IteratePrototypesInHierarchy(propertyInfoBlueprintId))
+            foreach (PrototypeId propertyInfoPrototypeRef in dataDirectory.IteratePrototypesInHierarchy(propertyInfoBlueprintId))
             {
-                if (propertyInfoId == propertyInfoDefaultPrototypeId) continue;
-                PropertyInfoPrototype propertyInfo = GameDatabase.GetPrototype<PropertyInfoPrototype>(propertyInfoId);
-                var propertyEnum = Enum.Parse<PropertyEnum>(Path.GetFileNameWithoutExtension(GameDatabase.GetPrototypeName(propertyInfo.DataRef)));
+                if (propertyInfoPrototypeRef == propertyInfoDefaultPrototypeId) continue;
+
+                string prototypeName = GameDatabase.GetPrototypeName(propertyInfoPrototypeRef);
+                string propertyName = Path.GetFileNameWithoutExtension(prototypeName);
+
+                // Note: in the client there are enums that are not pre-defined in the property enum. The game handles this
+                // by adding them to the property info table here, but we just have them in the enum.
+                // See PropertyEnum.cs for more details.
+                var propertyEnum = Enum.Parse<PropertyEnum>(propertyName);
+
+                PropertyInfo propertyInfo = new(propertyEnum, propertyName, propertyInfoPrototypeRef);
+                LoadPropertyInfo(propertyInfo);
                 _propertyInfoDict.Add(propertyEnum, propertyInfo);
             }
 
@@ -56,7 +65,16 @@ namespace MHServerEmu.Games.Properties
                 Logger.Error("Failed to initialize PropertyInfoTable");
         }
 
+        public PropertyInfo LookupPropertyInfo(PropertyEnum property)
+        {
+            return _propertyInfoDict[property];
+        }
+
         public bool Verify() => _propertyInfoDict.Count > 0;
-        public PropertyInfoPrototype GetInfo(PropertyEnum property) => _propertyInfoDict[property];
+
+        private void LoadPropertyInfo(PropertyInfo propertyInfo)
+        {
+            propertyInfo.PropertyInfoPrototype = GameDatabase.GetPrototype<PropertyInfoPrototype>(propertyInfo.PropertyInfoPrototypeRef);
+        }
     }
 }

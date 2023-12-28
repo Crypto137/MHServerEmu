@@ -1003,6 +1003,9 @@
         XPTransfer,
         XPTransferToID,
         UISystemLock,
+        // Properties below are ordered by their property info prototype id rather than alphabetically because
+        // they are added to the PropertyInfoTable dynamically during initialization rather than being pre-defined.
+        // We just add them to the enum and save ourselves the hassle of dealing with this edge case.
         InterruptRatingDefense,
         CritChanceReductionPct,
         LootBonusBIFStackCount,

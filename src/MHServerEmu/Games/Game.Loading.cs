@@ -117,7 +117,7 @@ namespace MHServerEmu.Games
 
             foreach (Property property in player.PropertyCollection.List)
             {
-                switch (property.Enum)
+                switch (property.Id.Enum)
                 {
                     // Unlock starter avatars
                     case PropertyEnum.AvatarUnlock:
@@ -200,7 +200,7 @@ namespace MHServerEmu.Games
 
                     foreach (Property property in avatar.PropertyCollection.List)
                     {
-                        switch (property.Enum)
+                        switch (property.Id.Enum)
                         {
                             case PropertyEnum.CostumeCurrent:
                                 try

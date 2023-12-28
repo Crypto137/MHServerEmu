@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.Properties
 
         public Property GetPropertyByEnum(PropertyEnum propertyEnum)
         {
-            return PropertyList.Find(property => property.Enum == propertyEnum);
+            return PropertyList.Find(property => property.Id.Enum == propertyEnum);
         }
 
         public void Encode(CodedOutputStream stream)
