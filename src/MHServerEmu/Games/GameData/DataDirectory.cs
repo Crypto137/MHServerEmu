@@ -146,7 +146,7 @@ namespace MHServerEmu.Games.GameData
 
             // Get blueprint and class type
             Blueprint blueprint = GetBlueprint(blueprintId);
-            Type classType = GameDatabase.PrototypeClassManager.GetPrototypeClassTypeByName(blueprint.RuntimeBinding);
+            Type classType = blueprint.RuntimeBindingClassType;
 
             // Add a new prototype record
             PrototypeDataRefRecord record = new()

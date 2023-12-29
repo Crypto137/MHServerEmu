@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.UI
                 for (int j = 0; j < areas.Length; j++)
                     areas[j] = stream.ReadPrototypeEnum<Prototype>();
 
-                string className = GameDatabase.DataDirectory.GetPrototypeBlueprint(widgetR).RuntimeBinding;
+                string className = GameDatabase.DataDirectory.GetPrototypeBlueprint(widgetR).RuntimeBindingClassType.Name;
 
                 switch (className)
                 {

@@ -18,7 +18,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         public HashSet<BlueprintId> FileIdHashSet { get; } = new();                 // Contains ids of all blueprints related to this one in the hierarchy
         public List<PrototypeDataRefRecord> PrototypeRecordList { get; } = new();   // A list of all prototype records that use this blueprint for iteration
 
-        public string RuntimeBinding { get; }                                       // Name of the C++ class that handles prototypes that use this blueprint
+        public Type RuntimeBindingClassType { get; }                                // Type of the class that handles prototypes that use this blueprint
         public PrototypeId DefaultPrototypeId { get; }                              // .defaults prototype file id
         public BlueprintReference[] Parents { get; }
         public BlueprintReference[] ContributingBlueprints { get; }
@@ -36,7 +36,10 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             {
                 CalligraphyHeader header = new(reader);
 
-                RuntimeBinding = reader.ReadFixedString16();
+                // Read runtime binding name and get a matching prototype class type from the prototype class manager
+                string runtimeBinding = reader.ReadFixedString16();
+                RuntimeBindingClassType = GameDatabase.PrototypeClassManager.GetPrototypeClassTypeByName(runtimeBinding);
+                
                 DefaultPrototypeId = (PrototypeId)reader.ReadUInt64();
 
                 Parents = new BlueprintReference[reader.ReadUInt16()];

@@ -158,10 +158,10 @@ namespace MHServerEmu.Networking
 
                                 // Get blueprint for this entity
                                 Blueprint blueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(baseData.PrototypeId);
-                                writer.WriteLine($"Blueprint: {blueprint.RuntimeBinding}");
+                                writer.WriteLine($"Blueprint: {GameDatabase.GetBlueprintName(blueprint.Id)} (bound to {blueprint.RuntimeBindingClassType.Name})");
 
                                 // Parse entity depending on its blueprint class
-                                switch (blueprint.RuntimeBinding)
+                                switch (blueprint.RuntimeBindingClassType.Name)
                                 {
                                     case "EntityPrototype":
                                         writer.WriteLine($"ArchiveData: {new Entity(baseData, entityCreate.ArchiveData)}");
@@ -238,7 +238,7 @@ namespace MHServerEmu.Networking
                                         break;
 
                                     default:
-                                        writer.WriteLine($"ArchiveData: unsupported entity ({blueprint.RuntimeBinding})");
+                                        writer.WriteLine($"ArchiveData: unsupported entity ({blueprint.RuntimeBindingClassType.Name})");
                                         break;
                                 }
                                 
