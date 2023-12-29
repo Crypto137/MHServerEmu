@@ -12,7 +12,7 @@ namespace MHServerEmu.Games.Properties
         public PrototypeId PropertyInfoPrototypeRef { get; }
         public PropertyInfoPrototype PropertyInfoPrototype { get; set; }
 
-        public BlueprintId PropertyMixinBlueprintRef { get; } = BlueprintId.Invalid;
+        public BlueprintId PropertyMixinBlueprintRef { get; set; } = BlueprintId.Invalid;
 
         public PropertyDataType DataType { get => PropertyInfoPrototype.Type; }
 
