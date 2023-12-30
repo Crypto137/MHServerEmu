@@ -138,8 +138,20 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             if (sourceType != destType)
                 return Logger.WarnReturn(false, $"Failed to copy prototype fields: source type ({sourceType.Name}) does not match destination type ({destType.Name})");
 
-            // todo: actual copying
-            //Logger.Trace($"Prototype field copying not implemented, skipping...");
+            foreach (var property in destType.GetProperties())
+            {
+                if (property.DeclaringType == typeof(Prototype)) continue;      // Skip base prototype properties
+
+                Logger.Debug(property.Name);
+
+                // Set value if property is a value type
+                if (property.PropertyType.IsValueType)
+                    property.SetValue(destPrototype, property.GetValue(sourcePrototype));
+
+                // todo: reference type copy, deep copy
+                //Logger.Trace($"Reference type field copying not implemented, skipping...");
+            }
+
             return true;
         }
     }
