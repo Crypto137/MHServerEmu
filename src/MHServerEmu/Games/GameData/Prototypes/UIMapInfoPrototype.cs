@@ -64,49 +64,49 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class HUDEntitySettingsPrototype : Prototype
     {
-        public HUDEntityFloorEffect FloorEffect { get; private set; }
-        public HUDEntityOverheadIcon OverheadIcon { get; private set; }
-        public ulong MapIcon { get; private set; }
-        public ulong EdgeIcon { get; private set; }
+        public HUDEntityFloorEffect FloorEffect { get; protected set; }
+        public HUDEntityOverheadIcon OverheadIcon { get; protected set; }
+        public ulong MapIcon { get; protected set; }
+        public ulong EdgeIcon { get; protected set; }
     }
 
     public class UIMapInfoIconBehaviorPrototype : Prototype
     {
-        public ulong IconPath { get; private set; }
-        public ulong IconPathHiRes { get; private set; }
+        public ulong IconPath { get; protected set; }
+        public ulong IconPathHiRes { get; protected set; }
     }
 
     public class UIMapInfoIconAppearancePrototype : Prototype
     {
-        public ulong IconOnScreen { get; private set; }
-        public ulong IconOffScreen { get; private set; }
+        public ulong IconOnScreen { get; protected set; }
+        public ulong IconOffScreen { get; protected set; }
     }
 
     public class ObjectiveInfoPrototype : Prototype
     {
-        public ulong EdgeColor { get; private set; }
-        public bool EdgeEnabled { get; private set; }
-        public bool EdgeOnlyInArea { get; private set; }
-        public int EdgeRange { get; private set; }
-        public bool FloorRingAnimation { get; private set; }
-        public bool MapEnabled { get; private set; }
-        public int MapRange { get; private set; }
-        public bool ShowToSummonerOnly { get; private set; }
-        public bool TrackAfterDiscovery { get; private set; }
-        public ObjectiveVisibility Visibility { get; private set; }
+        public ulong EdgeColor { get; protected set; }
+        public bool EdgeEnabled { get; protected set; }
+        public bool EdgeOnlyInArea { get; protected set; }
+        public int EdgeRange { get; protected set; }
+        public bool FloorRingAnimation { get; protected set; }
+        public bool MapEnabled { get; protected set; }
+        public int MapRange { get; protected set; }
+        public bool ShowToSummonerOnly { get; protected set; }
+        public bool TrackAfterDiscovery { get; protected set; }
+        public ObjectiveVisibility Visibility { get; protected set; }
     }
 
     public class EntityFilterSettingsPrototype : Prototype
     {
-        public EntityFilterPrototype EntityFilter { get; private set; }
-        public ScriptRoleKeyEnum ScriptRoleKey { get; private set; }
-        public TranslationPrototype[] NameList { get; private set; }
-        public HUDEntitySettingsPrototype HUDEntitySettingOverride { get; private set; }
+        public EntityFilterPrototype EntityFilter { get; protected set; }
+        public ScriptRoleKeyEnum ScriptRoleKey { get; protected set; }
+        public TranslationPrototype[] NameList { get; protected set; }
+        public HUDEntitySettingsPrototype HUDEntitySettingOverride { get; protected set; }
     }
 
     public class FormationTypePrototype : Prototype
     {
-        public FormationFacing Facing { get; private set; }
-        public float Spacing { get; private set; }
+        public FormationFacing Facing { get; protected set; }
+        public float Spacing { get; protected set; }
     }
 }

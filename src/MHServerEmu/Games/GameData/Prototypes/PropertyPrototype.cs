@@ -113,17 +113,17 @@
 
     public class PropertyPickInRangeEntryPrototype : PropertyEntryPrototype
     {
-        public ulong Prop { get; private set; }
-        public EvalPrototype ValueMax { get; private set; }
-        public EvalPrototype ValueMin { get; private set; }
-        public bool RollAsInteger { get; private set; }
-        public ulong TooltipOverrideText { get; private set; }
+        public ulong Prop { get; protected set; }
+        public EvalPrototype ValueMax { get; protected set; }
+        public EvalPrototype ValueMin { get; protected set; }
+        public bool RollAsInteger { get; protected set; }
+        public ulong TooltipOverrideText { get; protected set; }
     }
 
     public class PropertySetEntryPrototype : PropertyEntryPrototype
     {
-        public ulong Prop { get; private set; }
-        public ulong TooltipOverrideText { get; private set; }
-        public EvalPrototype Value { get; private set; }
+        public ulong Prop { get; protected set; }
+        public ulong TooltipOverrideText { get; protected set; }
+        public EvalPrototype Value { get; protected set; }
     }
 }

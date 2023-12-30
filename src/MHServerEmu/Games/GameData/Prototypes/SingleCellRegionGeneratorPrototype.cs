@@ -2,7 +2,7 @@
 {
     public class SingleCellRegionGeneratorPrototype : RegionGeneratorPrototype
     {
-        public ulong AreaInterface { get; private set; }
-        public ulong Cell { get; private set; }
+        public ulong AreaInterface { get; protected set; }
+        public ulong Cell { get; protected set; }
     }
 }

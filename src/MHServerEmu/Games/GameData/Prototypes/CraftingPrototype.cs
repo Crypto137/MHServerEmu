@@ -2,39 +2,39 @@
 {
     public class CraftingInputPrototype : Prototype
     {
-        public ulong SlotDisplayInfo { get; private set; }
-        public bool OnlyDroppableForThisAvatar { get; private set; }
-        public bool OnlyNotDroppableForThisAvatar { get; private set; }
-        public bool OnlyEquippableAtThisAvatarLevel { get; private set; }
-        public bool MatchFirstInput { get; private set; }
+        public ulong SlotDisplayInfo { get; protected set; }
+        public bool OnlyDroppableForThisAvatar { get; protected set; }
+        public bool OnlyNotDroppableForThisAvatar { get; protected set; }
+        public bool OnlyEquippableAtThisAvatarLevel { get; protected set; }
+        public bool MatchFirstInput { get; protected set; }
     }
 
     public class AutoPopulatedInputPrototype : CraftingInputPrototype
     {
-        public ulong Ingredient { get; private set; }
-        public int Quantity { get; private set; }
+        public ulong Ingredient { get; protected set; }
+        public int Quantity { get; protected set; }
     }
 
     public class RestrictionSetInputPrototype : CraftingInputPrototype
     {
-        public DropRestrictionPrototype[] Restrictions { get; private set; }
+        public DropRestrictionPrototype[] Restrictions { get; protected set; }
     }
 
     public class AllowedItemListInputPrototype : CraftingInputPrototype
     {
-        public ulong[] AllowedItems { get; private set; }
+        public ulong[] AllowedItems { get; protected set; }
     }
 
     public class CraftingCostPrototype : Prototype
     {
-        public EvalPrototype CostEvalCredits { get; private set; }
-        public bool DependsOnInput1 { get; private set; }
-        public bool DependsOnInput2 { get; private set; }
-        public bool DependsOnInput3 { get; private set; }
-        public bool DependsOnInput4 { get; private set; }
-        public bool DependsOnInput5 { get; private set; }
-        public EvalPrototype CostEvalLegendaryMarks { get; private set; }
-        public EvalPrototype CostEvalCurrencies { get; private set; }
+        public EvalPrototype CostEvalCredits { get; protected set; }
+        public bool DependsOnInput1 { get; protected set; }
+        public bool DependsOnInput2 { get; protected set; }
+        public bool DependsOnInput3 { get; protected set; }
+        public bool DependsOnInput4 { get; protected set; }
+        public bool DependsOnInput5 { get; protected set; }
+        public EvalPrototype CostEvalLegendaryMarks { get; protected set; }
+        public EvalPrototype CostEvalCurrencies { get; protected set; }
     }
 
     public class CraftingIngredientPrototype : ItemPrototype
@@ -47,16 +47,16 @@
 
     public class CraftingRecipePrototype : ItemPrototype
     {
-        public CraftingInputPrototype[] RecipeInputs { get; private set; }
-        public LootTablePrototype RecipeOutput { get; private set; }
-        public ulong RecipeDescription { get; private set; }
-        public ulong RecipeIconPath { get; private set; }
-        public int SortOrder { get; private set; }
-        public ulong RecipeTooltip { get; private set; }
-        public CraftingCostPrototype CraftingCost { get; private set; }
-        public int UnlockAtCrafterRank { get; private set; }
-        public EvalPrototype OnRecipeComplete { get; private set; }
-        public ulong RecipeCategory { get; private set; }
-        public ulong RecipeIconPathHiRes { get; private set; }
+        public CraftingInputPrototype[] RecipeInputs { get; protected set; }
+        public LootTablePrototype RecipeOutput { get; protected set; }
+        public ulong RecipeDescription { get; protected set; }
+        public ulong RecipeIconPath { get; protected set; }
+        public int SortOrder { get; protected set; }
+        public ulong RecipeTooltip { get; protected set; }
+        public CraftingCostPrototype CraftingCost { get; protected set; }
+        public int UnlockAtCrafterRank { get; protected set; }
+        public EvalPrototype OnRecipeComplete { get; protected set; }
+        public ulong RecipeCategory { get; protected set; }
+        public ulong RecipeIconPathHiRes { get; protected set; }
     }
 }

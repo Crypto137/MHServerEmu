@@ -251,54 +251,54 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class UILocalizedInfoPrototype : Prototype
     {
-        public ulong DisplayText { get; private set; }
-        public ulong TooltipText { get; private set; }
-        public ulong TooltipStyle { get; private set; }
-        public ulong TooltipFont { get; private set; }
+        public ulong DisplayText { get; protected set; }
+        public ulong TooltipText { get; protected set; }
+        public ulong TooltipStyle { get; protected set; }
+        public ulong TooltipFont { get; protected set; }
     }
 
     public class UILocalizedStatInfoPrototype : UILocalizedInfoPrototype
     {
-        public ulong Stat { get; private set; }
-        public int StatValue { get; private set; }
-        public ulong LevelUnlockTooltipStyle { get; private set; }
-        public TooltipSectionPrototype[] TooltipSectionList { get; private set; }
+        public ulong Stat { get; protected set; }
+        public int StatValue { get; protected set; }
+        public ulong LevelUnlockTooltipStyle { get; protected set; }
+        public TooltipSectionPrototype[] TooltipSectionList { get; protected set; }
     }
 
     public class UICraftingTabLabelPrototype : UILocalizedInfoPrototype
     {
-        public int SortOrder { get; private set; }
+        public int SortOrder { get; protected set; }
     }
 
     public class InventoryUIDataPrototype : Prototype
     {
-        public ulong EmptySlotTooltip { get; private set; }
-        public ulong SlotBackgroundIcon { get; private set; }
-        public ulong InventoryItemDisplayName { get; private set; }
-        public bool HintSlots { get; private set; }
-        public ulong SlotBackgroundIconHiRes { get; private set; }
+        public ulong EmptySlotTooltip { get; protected set; }
+        public ulong SlotBackgroundIcon { get; protected set; }
+        public ulong InventoryItemDisplayName { get; protected set; }
+        public bool HintSlots { get; protected set; }
+        public ulong SlotBackgroundIconHiRes { get; protected set; }
     }
 
     public class OfferingInventoryUIDataPrototype : Prototype
     {
-        public ulong NotificationIcon { get; private set; }
-        public ulong NotificationTooltip { get; private set; }
-        public ulong OfferingDescription { get; private set; }
-        public ulong OfferingTitle { get; private set; }
+        public ulong NotificationIcon { get; protected set; }
+        public ulong NotificationTooltip { get; protected set; }
+        public ulong OfferingDescription { get; protected set; }
+        public ulong OfferingTitle { get; protected set; }
     }
 
     public class TipEntryPrototype : Prototype
     {
-        public ulong Entry { get; private set; }
-        public int Weight { get; private set; }
-        public bool SkipIfOnPC { get; private set; }
-        public bool SkipIfOnPS4 { get; private set; }
-        public bool SkipIfOnXBox { get; private set; }
+        public ulong Entry { get; protected set; }
+        public int Weight { get; protected set; }
+        public bool SkipIfOnPC { get; protected set; }
+        public bool SkipIfOnPS4 { get; protected set; }
+        public bool SkipIfOnXBox { get; protected set; }
     }
 
     public class TipEntryCollectionPrototype : Prototype
     {
-        public TipEntryPrototype[] TipEntries { get; private set; }
+        public TipEntryPrototype[] TipEntries { get; protected set; }
     }
 
     public class GenericTipEntryCollectionPrototype : TipEntryCollectionPrototype
@@ -307,68 +307,68 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class RegionTipEntryCollectionPrototype : TipEntryCollectionPrototype
     {
-        public ulong RegionBindings { get; private set; }
+        public ulong RegionBindings { get; protected set; }
     }
 
     public class AvatarTipEntryCollectionPrototype : TipEntryCollectionPrototype
     {
-        public ulong AvatarBindings { get; private set; }
+        public ulong AvatarBindings { get; protected set; }
     }
 
     public class WeightedTipCategoryPrototype : Prototype
     {
-        public TipTypeEnum TipType { get; private set; }
-        public int Weight { get; private set; }
+        public TipTypeEnum TipType { get; protected set; }
+        public int Weight { get; protected set; }
     }
 
     public class TransitionUIPrototype : Prototype
     {
-        public WeightedTipCategoryPrototype[] TipCategories { get; private set; }
-        public TransitionUIType TransitionType { get; private set; }
-        public int Weight { get; private set; }
+        public WeightedTipCategoryPrototype[] TipCategories { get; protected set; }
+        public TransitionUIType TransitionType { get; protected set; }
+        public int Weight { get; protected set; }
     }
 
     public class AvatarSynergyUIDataPrototype : Prototype
     {
-        public ulong DisplayName { get; private set; }
-        public ulong IconPath { get; private set; }
-        public ulong SynergyActiveValue { get; private set; }
-        public ulong SynergyInactiveValue { get; private set; }
-        public ulong TooltipTextForList { get; private set; }
-        public ulong IconPathHiRes { get; private set; }
+        public ulong DisplayName { get; protected set; }
+        public ulong IconPath { get; protected set; }
+        public ulong SynergyActiveValue { get; protected set; }
+        public ulong SynergyInactiveValue { get; protected set; }
+        public ulong TooltipTextForList { get; protected set; }
+        public ulong IconPathHiRes { get; protected set; }
     }
 
     public class MetaGameDataPrototype : Prototype
     {
-        public ulong Descriptor { get; private set; }
-        public bool DisplayMissionName { get; private set; }
-        public int SortPriority { get; private set; }
-        public ulong IconHeader { get; private set; }
-        public int Justification { get; private set; }
-        public ulong WidgetMovieClipOverride { get; private set; }
-        public ulong IconHeaderHiRes { get; private set; }
+        public ulong Descriptor { get; protected set; }
+        public bool DisplayMissionName { get; protected set; }
+        public int SortPriority { get; protected set; }
+        public ulong IconHeader { get; protected set; }
+        public int Justification { get; protected set; }
+        public ulong WidgetMovieClipOverride { get; protected set; }
+        public ulong IconHeaderHiRes { get; protected set; }
     }
 
     public class UIWidgetGenericFractionPrototype : MetaGameDataPrototype
     {
-        public ulong IconComplete { get; private set; }
-        public ulong IconIncomplete { get; private set; }
-        public int IconSpacing { get; private set; }
-        public ulong IconCompleteHiRes { get; private set; }
-        public ulong IconIncompleteHiRes { get; private set; }
+        public ulong IconComplete { get; protected set; }
+        public ulong IconIncomplete { get; protected set; }
+        public int IconSpacing { get; protected set; }
+        public ulong IconCompleteHiRes { get; protected set; }
+        public ulong IconIncompleteHiRes { get; protected set; }
     }
 
     public class UIWidgetEntityIconsEntryPrototype : Prototype
     {
-        public EntityFilterPrototype Filter { get; private set; }
-        public int Count { get; private set; }
-        public UIWidgetEntityState TreatUnknownAs { get; private set; }
-        public ulong Icon { get; private set; }
-        public ulong Descriptor { get; private set; }
-        public ulong IconDead { get; private set; }
-        public int IconSpacing { get; private set; }
-        public ulong IconHiRes { get; private set; }
-        public ulong IconDeadHiRes { get; private set; }
+        public EntityFilterPrototype Filter { get; protected set; }
+        public int Count { get; protected set; }
+        public UIWidgetEntityState TreatUnknownAs { get; protected set; }
+        public ulong Icon { get; protected set; }
+        public ulong Descriptor { get; protected set; }
+        public ulong IconDead { get; protected set; }
+        public int IconSpacing { get; protected set; }
+        public ulong IconHiRes { get; protected set; }
+        public ulong IconDeadHiRes { get; protected set; }
     }
 
     public class UIWidgetEnrageEntryPrototype : UIWidgetEntityIconsEntryPrototype
@@ -377,37 +377,37 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class WidgetPropertyEntryPrototype : Prototype
     {
-        public ulong Color { get; private set; }
-        public ulong Descriptor { get; private set; }
-        public ulong Icon { get; private set; }
-        public EvalPrototype PropertyEval { get; private set; }
-        public ulong IconHiRes { get; private set; }
+        public ulong Color { get; protected set; }
+        public ulong Descriptor { get; protected set; }
+        public ulong Icon { get; protected set; }
+        public EvalPrototype PropertyEval { get; protected set; }
+        public ulong IconHiRes { get; protected set; }
     }
 
     public class UIWidgetEntityPropertyEntryPrototype : UIWidgetEntityIconsEntryPrototype
     {
-        public WidgetPropertyEntryPrototype[] PropertyEntryTable { get; private set; }
-        public EvalPrototype PropertyEval { get; private set; }
+        public WidgetPropertyEntryPrototype[] PropertyEntryTable { get; protected set; }
+        public EvalPrototype PropertyEval { get; protected set; }
     }
 
     public class HealthPercentIconPrototype : Prototype
     {
-        public ulong Color { get; private set; }
-        public int HealthPercent { get; private set; }
-        public ulong Icon { get; private set; }
-        public ulong Descriptor { get; private set; }
-        public ulong IconHiRes { get; private set; }
+        public ulong Color { get; protected set; }
+        public int HealthPercent { get; protected set; }
+        public ulong Icon { get; protected set; }
+        public ulong Descriptor { get; protected set; }
+        public ulong IconHiRes { get; protected set; }
     }
 
     public class UIWidgetHealthPercentEntryPrototype : UIWidgetEntityIconsEntryPrototype
     {
-        public bool ColorBasedOnHealth { get; private set; }
-        public HealthPercentIconPrototype[] HealthDisplayTable { get; private set; }
+        public bool ColorBasedOnHealth { get; protected set; }
+        public HealthPercentIconPrototype[] HealthDisplayTable { get; protected set; }
     }
 
     public class UIWidgetEntityIconsPrototype : MetaGameDataPrototype
     {
-        public UIWidgetEntityIconsEntryPrototype[] Entities { get; private set; }
+        public UIWidgetEntityIconsEntryPrototype[] Entities { get; protected set; }
     }
 
     public class UIWidgetMissionTextPrototype : MetaGameDataPrototype
@@ -424,7 +424,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class UIWidgetPanelPrototype : Prototype
     {
-        public ulong[] Widgets { get; private set; }
+        public ulong[] Widgets { get; protected set; }
     }
 
     public class UIWidgetTopPanelPrototype : UIWidgetPanelPrototype
@@ -433,126 +433,126 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LogoffPanelEntryPrototype : Prototype
     {
-        public ulong Description { get; private set; }
-        public ulong GameModeType { get; private set; }
-        public new ulong Header { get; private set; }
-        public ulong Image { get; private set; }
-        public int Priority { get; private set; }
-        public ulong Title { get; private set; }
+        public ulong Description { get; protected set; }
+        public ulong GameModeType { get; protected set; }
+        public new ulong Header { get; protected set; }
+        public ulong Image { get; protected set; }
+        public int Priority { get; protected set; }
+        public ulong Title { get; protected set; }
     }
 
     public class StoreCategoryPrototype : Prototype
     {
-        public ulong Icon { get; private set; }
-        public ulong Identifier { get; private set; }
-        public ulong Label { get; private set; }
+        public ulong Icon { get; protected set; }
+        public ulong Identifier { get; protected set; }
+        public ulong Label { get; protected set; }
     }
 
     public class ReputationLevelDisplayInfoPrototype : Prototype
     {
-        public ulong DisplayName { get; private set; }
-        public ulong IconPath { get; private set; }
-        public int ReputationLevel { get; private set; }
+        public ulong DisplayName { get; protected set; }
+        public ulong IconPath { get; protected set; }
+        public int ReputationLevel { get; protected set; }
     }
 
     public class ReputationDisplayInfoPrototype : Prototype
     {
-        public ulong DisplayName { get; private set; }
-        public ReputationLevelDisplayInfoPrototype ReputationLevels { get; private set; }
+        public ulong DisplayName { get; protected set; }
+        public ReputationLevelDisplayInfoPrototype ReputationLevels { get; protected set; }
     }
 
     public class UISystemLockPrototype : Prototype
     {
-        public ulong GameNotification { get; private set; }
-        public ulong UISystem { get; private set; }
-        public int UnlockLevel { get; private set; }
-        public bool IsNewPlayerExperienceLocked { get; private set; }
+        public ulong GameNotification { get; protected set; }
+        public ulong UISystem { get; protected set; }
+        public int UnlockLevel { get; protected set; }
+        public bool IsNewPlayerExperienceLocked { get; protected set; }
     }
 
     public class IconPackagePrototype : Prototype
     {
-        public ulong Package { get; private set; }
-        public bool AlwaysLoaded { get; private set; }
-        public bool EnableStreaming { get; private set; }
-        public bool HighPriorityStreaming { get; private set; }
-        public bool RemoveUnreferencedContent { get; private set; }
+        public ulong Package { get; protected set; }
+        public bool AlwaysLoaded { get; protected set; }
+        public bool EnableStreaming { get; protected set; }
+        public bool HighPriorityStreaming { get; protected set; }
+        public bool RemoveUnreferencedContent { get; protected set; }
     }
 
     public class RadialMenuEntryPrototype : Prototype
     {
-        public ulong ImageNormal { get; private set; }
-        public ulong ImageSelected { get; private set; }
-        public ulong LocalizedName { get; private set; }
-        public ulong Panel { get; private set; }
+        public ulong ImageNormal { get; protected set; }
+        public ulong ImageSelected { get; protected set; }
+        public ulong LocalizedName { get; protected set; }
+        public ulong Panel { get; protected set; }
     }
 
     public class InputBindingPrototype : Prototype
     {
-        public ulong DisplayText { get; private set; }
-        public ulong BindingName { get; private set; }
-        public ulong TutorialImage { get; private set; }
-        public ulong TutorialImageOverlayText { get; private set; }
-        public ulong ControlScheme { get; private set; }
+        public ulong DisplayText { get; protected set; }
+        public ulong BindingName { get; protected set; }
+        public ulong TutorialImage { get; protected set; }
+        public ulong TutorialImageOverlayText { get; protected set; }
+        public ulong ControlScheme { get; protected set; }
     }
 
     public class PanelLoaderTabPrototype : Prototype
     {
-        public ulong Context { get; private set; }
-        public ulong DisplayName { get; private set; }
-        public ulong Panel { get; private set; }
-        public bool ShowAvatarInfo { get; private set; }
-        public ulong SubTabs { get; private set; }
-        public ulong Icon { get; private set; }
-        public bool ShowLocalPlayerName { get; private set; }
+        public ulong Context { get; protected set; }
+        public ulong DisplayName { get; protected set; }
+        public ulong Panel { get; protected set; }
+        public bool ShowAvatarInfo { get; protected set; }
+        public ulong SubTabs { get; protected set; }
+        public ulong Icon { get; protected set; }
+        public bool ShowLocalPlayerName { get; protected set; }
     }
 
     public class PanelLoaderTabListPrototype : Prototype
     {
-        public ulong[] Tabs { get; private set; }
-        public bool IsSubTabList { get; private set; }
+        public ulong[] Tabs { get; protected set; }
+        public bool IsSubTabList { get; protected set; }
     }
 
     public class ConsoleRadialMenuEntryPrototype : Prototype
     {
-        public ulong DisplayName { get; private set; }
-        public ulong ImageNormal { get; private set; }
-        public ulong ImageSelected { get; private set; }
-        public ulong TabList { get; private set; }
+        public ulong DisplayName { get; protected set; }
+        public ulong ImageNormal { get; protected set; }
+        public ulong ImageSelected { get; protected set; }
+        public ulong TabList { get; protected set; }
     }
 
     public class DialogPrototype : Prototype
     {
-        public ulong Text { get; private set; }
-        public ulong Button1 { get; private set; }
-        public ulong Button2 { get; private set; }
-        public ButtonStyle Button1Style { get; private set; }
-        public ButtonStyle Button2Style { get; private set; }
+        public ulong Text { get; protected set; }
+        public ulong Button1 { get; protected set; }
+        public ulong Button2 { get; protected set; }
+        public ButtonStyle Button1Style { get; protected set; }
+        public ButtonStyle Button2Style { get; protected set; }
     }
 
     public class MissionTrackerFilterPrototype : Prototype
     {
-        public MissionTrackerFilterTypeEnum FilterType { get; private set; }
-        public ulong Label { get; private set; }
-        public bool DisplayByDefault { get; private set; }
-        public int DisplayOrder { get; private set; }
+        public MissionTrackerFilterTypeEnum FilterType { get; protected set; }
+        public ulong Label { get; protected set; }
+        public bool DisplayByDefault { get; protected set; }
+        public int DisplayOrder { get; protected set; }
     }
 
     public class LocalizedTextAndImagePrototype : Prototype
     {
-        public ulong Image { get; private set; }
-        public ulong Text { get; private set; }
+        public ulong Image { get; protected set; }
+        public ulong Text { get; protected set; }
     }
 
     public class TextStylePrototype : Prototype
     {
-        public bool Bold { get; private set; }
-        public ulong Color { get; private set; }
-        public ulong Tag { get; private set; }
-        public bool Underline { get; private set; }
-        public int FontSize { get; private set; }
-        public ulong Alignment { get; private set; }
-        public bool Hidden { get; private set; }
-        public int FontSizeConsole { get; private set; }
+        public bool Bold { get; protected set; }
+        public ulong Color { get; protected set; }
+        public ulong Tag { get; protected set; }
+        public bool Underline { get; protected set; }
+        public int FontSize { get; protected set; }
+        public ulong Alignment { get; protected set; }
+        public bool Hidden { get; protected set; }
+        public int FontSizeConsole { get; protected set; }
     }
 
     public class UINotificationPrototype : Prototype
@@ -561,140 +561,140 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class BannerMessagePrototype : UINotificationPrototype
     {
-        public ulong BannerText { get; private set; }
-        public int TimeToLiveMS { get; private set; }
-        public BannerMessageStyle MessageStyle { get; private set; }
-        public bool DoNotQueue { get; private set; }
-        public ulong TextStyle { get; private set; }
-        public bool ShowImmediately { get; private set; }
+        public ulong BannerText { get; protected set; }
+        public int TimeToLiveMS { get; protected set; }
+        public BannerMessageStyle MessageStyle { get; protected set; }
+        public bool DoNotQueue { get; protected set; }
+        public ulong TextStyle { get; protected set; }
+        public bool ShowImmediately { get; protected set; }
     }
 
     public class GameNotificationPrototype : UINotificationPrototype
     {
-        public ulong BannerText { get; private set; }
-        public GameNotificationType GameNotificationType { get; private set; }
-        public ulong IconPath { get; private set; }
-        public ulong TooltipText { get; private set; }
-        public bool PlayAudio { get; private set; }
-        public BannerMessageType BannerType { get; private set; }
-        public bool FlashContinuously { get; private set; }
-        public bool StackNotifications { get; private set; }
-        public bool ShowTimer { get; private set; }
-        public bool ShowScore { get; private set; }
-        public ulong TooltipStyle { get; private set; }
-        public ulong TooltipFont { get; private set; }
-        public ulong DisplayText { get; private set; }
-        public int MinimizeTimeDelayMS { get; private set; }
-        public int DurationMS { get; private set; }
-        public bool ShowAnimatedCircle { get; private set; }
-        public bool Unique { get; private set; }
-        public ulong[] OnCreateRemoveNotifications { get; private set; }
-        public bool RemoveOnRegionChange { get; private set; }
-        public bool ShowOnSystemLock { get; private set; }
+        public ulong BannerText { get; protected set; }
+        public GameNotificationType GameNotificationType { get; protected set; }
+        public ulong IconPath { get; protected set; }
+        public ulong TooltipText { get; protected set; }
+        public bool PlayAudio { get; protected set; }
+        public BannerMessageType BannerType { get; protected set; }
+        public bool FlashContinuously { get; protected set; }
+        public bool StackNotifications { get; protected set; }
+        public bool ShowTimer { get; protected set; }
+        public bool ShowScore { get; protected set; }
+        public ulong TooltipStyle { get; protected set; }
+        public ulong TooltipFont { get; protected set; }
+        public ulong DisplayText { get; protected set; }
+        public int MinimizeTimeDelayMS { get; protected set; }
+        public int DurationMS { get; protected set; }
+        public bool ShowAnimatedCircle { get; protected set; }
+        public bool Unique { get; protected set; }
+        public ulong[] OnCreateRemoveNotifications { get; protected set; }
+        public bool RemoveOnRegionChange { get; protected set; }
+        public bool ShowOnSystemLock { get; protected set; }
     }
 
     public class StoryNotificationPrototype : UINotificationPrototype
     {
-        public ulong DisplayText { get; private set; }
-        public int TimeToLiveMS { get; private set; }
-        public ulong SpeakingEntity { get; private set; }
-        public ulong VOTrigger { get; private set; }
+        public ulong DisplayText { get; protected set; }
+        public int TimeToLiveMS { get; protected set; }
+        public ulong SpeakingEntity { get; protected set; }
+        public ulong VOTrigger { get; protected set; }
     }
 
     public class VOStoryNotificationPrototype : Prototype
     {
-        public VOEventType VOEventType { get; private set; }
-        public StoryNotificationPrototype StoryNotification { get; private set; }
+        public VOEventType VOEventType { get; protected set; }
+        public StoryNotificationPrototype StoryNotification { get; protected set; }
     }
 
     public class ConsoleHUDNotificationPrototype : Prototype
     {
-        public ulong DisplayName { get; private set; }
-        public int DurationMS { get; private set; }
-        public ConsoleHUDNotificationType NotificationType { get; private set; }
-        public ulong OpensPanel { get; private set; }
-        public ulong PanelContext { get; private set; }
+        public ulong DisplayName { get; protected set; }
+        public int DurationMS { get; protected set; }
+        public ConsoleHUDNotificationType NotificationType { get; protected set; }
+        public ulong OpensPanel { get; protected set; }
+        public ulong PanelContext { get; protected set; }
     }
 
     public class HUDTutorialPrototype : UINotificationPrototype
     {
-        public ulong Description { get; private set; }
-        public int DisplayDurationMS { get; private set; }
-        public ulong Image { get; private set; }
-        public ulong ImageOverlayText { get; private set; }
-        public ulong Title { get; private set; }
-        public ulong[] HighlightAvatars { get; private set; }
-        public ulong[] HighlightPowers { get; private set; }
-        public bool AllowMovement { get; private set; }
-        public bool AllowPowerUsage { get; private set; }
-        public bool AllowTakingDamage { get; private set; }
-        public bool CanDismiss { get; private set; }
-        public bool HighlightFirstEmptyPowerSlot { get; private set; }
-        public bool HighlightUpgradeablePowers { get; private set; }
-        public bool HighlightUnusedPowers { get; private set; }
-        public bool HighlightUnequippedItem { get; private set; }
-        public bool CloseOnRegionLeave { get; private set; }
-        public ulong ImageFromCommand { get; private set; }
-        public ulong DescriptionGamepad { get; private set; }
-        public ulong DescriptionNoBindings { get; private set; }
-        public ulong ImageFromCommandGamepad { get; private set; }
-        public ulong[] HighlightTeamUps { get; private set; }
-        public bool SkipIfOnConsole { get; private set; }
-        public bool SkipIfOnPC { get; private set; }
-        public bool SkipIfUsingGamepad { get; private set; }
-        public bool SkipIfUsingKeyboardMouse { get; private set; }
-        public float ScreenPositionConsoleX { get; private set; }
-        public float ScreenPositionConsoleY { get; private set; }
-        public float ScreenPositionX { get; private set; }
-        public float ScreenPositionY { get; private set; }
-        public int FlashDelayMS { get; private set; }
-        public bool ShowOncePerAccount { get; private set; }
+        public ulong Description { get; protected set; }
+        public int DisplayDurationMS { get; protected set; }
+        public ulong Image { get; protected set; }
+        public ulong ImageOverlayText { get; protected set; }
+        public ulong Title { get; protected set; }
+        public ulong[] HighlightAvatars { get; protected set; }
+        public ulong[] HighlightPowers { get; protected set; }
+        public bool AllowMovement { get; protected set; }
+        public bool AllowPowerUsage { get; protected set; }
+        public bool AllowTakingDamage { get; protected set; }
+        public bool CanDismiss { get; protected set; }
+        public bool HighlightFirstEmptyPowerSlot { get; protected set; }
+        public bool HighlightUpgradeablePowers { get; protected set; }
+        public bool HighlightUnusedPowers { get; protected set; }
+        public bool HighlightUnequippedItem { get; protected set; }
+        public bool CloseOnRegionLeave { get; protected set; }
+        public ulong ImageFromCommand { get; protected set; }
+        public ulong DescriptionGamepad { get; protected set; }
+        public ulong DescriptionNoBindings { get; protected set; }
+        public ulong ImageFromCommandGamepad { get; protected set; }
+        public ulong[] HighlightTeamUps { get; protected set; }
+        public bool SkipIfOnConsole { get; protected set; }
+        public bool SkipIfOnPC { get; protected set; }
+        public bool SkipIfUsingGamepad { get; protected set; }
+        public bool SkipIfUsingKeyboardMouse { get; protected set; }
+        public float ScreenPositionConsoleX { get; protected set; }
+        public float ScreenPositionConsoleY { get; protected set; }
+        public float ScreenPositionX { get; protected set; }
+        public float ScreenPositionY { get; protected set; }
+        public int FlashDelayMS { get; protected set; }
+        public bool ShowOncePerAccount { get; protected set; }
     }
 
     public class SessionImagePrototype : Prototype
     {
-        public ulong SessionImageAsset { get; private set; }
+        public ulong SessionImageAsset { get; protected set; }
     }
 
     public class CurrencyDisplayPrototype : Prototype
     {
-        public ulong DisplayName { get; private set; }
-        public ulong DisplayColor { get; private set; }
-        public ulong IconPath { get; private set; }
-        public ulong PropertyValueToDisplay { get; private set; }
-        public ulong TooltipText { get; private set; }
-        public bool UseGsBalance { get; private set; }
-        public ulong CurrencyToDisplay { get; private set; }
-        public ulong IconPathHiRes { get; private set; }
-        public sbyte CategoryIndex { get; private set; }
-        public ulong CategoryName { get; private set; }
-        public bool HideIfOnConsole { get; private set; }
-        public bool HideIfOnPC { get; private set; }
+        public ulong DisplayName { get; protected set; }
+        public ulong DisplayColor { get; protected set; }
+        public ulong IconPath { get; protected set; }
+        public ulong PropertyValueToDisplay { get; protected set; }
+        public ulong TooltipText { get; protected set; }
+        public bool UseGsBalance { get; protected set; }
+        public ulong CurrencyToDisplay { get; protected set; }
+        public ulong IconPathHiRes { get; protected set; }
+        public sbyte CategoryIndex { get; protected set; }
+        public ulong CategoryName { get; protected set; }
+        public bool HideIfOnConsole { get; protected set; }
+        public bool HideIfOnPC { get; protected set; }
     }
 
     public class FullscreenMoviePrototype : Prototype
     {
-        public ulong MovieName { get; private set; }
-        public bool Skippable { get; private set; }
-        public MovieType MovieType { get; private set; }
-        public bool ExitGameAfterPlay { get; private set; }
-        public ulong MovieTitle { get; private set; }
-        public ulong Banter { get; private set; }
-        public ulong YouTubeVideoID { get; private set; }
-        public bool YouTubeControlsEnabled { get; private set; }
-        public ulong StreamingMovieNameHQ { get; private set; }
-        public ulong StreamingMovieNameLQ { get; private set; }
-        public ulong StreamingMovieNameMQ { get; private set; }
+        public ulong MovieName { get; protected set; }
+        public bool Skippable { get; protected set; }
+        public MovieType MovieType { get; protected set; }
+        public bool ExitGameAfterPlay { get; protected set; }
+        public ulong MovieTitle { get; protected set; }
+        public ulong Banter { get; protected set; }
+        public ulong YouTubeVideoID { get; protected set; }
+        public bool YouTubeControlsEnabled { get; protected set; }
+        public ulong StreamingMovieNameHQ { get; protected set; }
+        public ulong StreamingMovieNameLQ { get; protected set; }
+        public ulong StreamingMovieNameMQ { get; protected set; }
     }
 
     public class LoadingScreenPrototype : Prototype
     {
-        public ulong LoadingScreenAsset { get; private set; }
-        public ulong Title { get; private set; }
+        public ulong LoadingScreenAsset { get; protected set; }
+        public ulong Title { get; protected set; }
     }
 
     public class UICinematicsListPrototype : Prototype
     {
-        public ulong CinematicsListToPopulate { get; private set; }
+        public ulong CinematicsListToPopulate { get; protected set; }
     }
 }

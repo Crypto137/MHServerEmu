@@ -2,29 +2,29 @@
 {
     public class ChapterPrototype : Prototype
     {
-        public ulong ChapterName { get; private set; }
-        public int ChapterNumber { get; private set; }
-        public ulong ChapterTooltip { get; private set; }
-        public bool IsDevOnly { get; private set; }
-        public ulong HubWaypoint { get; private set; }
-        public bool ShowInShippingUI { get; private set; }
-        public ulong Description { get; private set; }
-        public bool ResetsOnStoryWarp { get; private set; }
-        public bool ShowInUI { get; private set; }
-        public bool StartLocked { get; private set; }
-        public ulong ChapterEndMission { get; private set; }
-        public ulong MapDescription { get; private set; }
-        public ulong MapImage { get; private set; }
-        public int RecommendedLevelMax { get; private set; }
-        public int RecommendedLevelMin { get; private set; }
-        public ulong MapImageConsole { get; private set; }
-        public ulong LocationImageConsole { get; private set; }
-        public ulong ConsoleDescription { get; private set; }
+        public ulong ChapterName { get; protected set; }
+        public int ChapterNumber { get; protected set; }
+        public ulong ChapterTooltip { get; protected set; }
+        public bool IsDevOnly { get; protected set; }
+        public ulong HubWaypoint { get; protected set; }
+        public bool ShowInShippingUI { get; protected set; }
+        public ulong Description { get; protected set; }
+        public bool ResetsOnStoryWarp { get; protected set; }
+        public bool ShowInUI { get; protected set; }
+        public bool StartLocked { get; protected set; }
+        public ulong ChapterEndMission { get; protected set; }
+        public ulong MapDescription { get; protected set; }
+        public ulong MapImage { get; protected set; }
+        public int RecommendedLevelMax { get; protected set; }
+        public int RecommendedLevelMin { get; protected set; }
+        public ulong MapImageConsole { get; protected set; }
+        public ulong LocationImageConsole { get; protected set; }
+        public ulong ConsoleDescription { get; protected set; }
     }
 
     public class StoryWarpPrototype : Prototype
     {
-        public ulong Chapter { get; private set; }
-        public ulong Waypoint { get; private set; }
+        public ulong Chapter { get; protected set; }
+        public ulong Waypoint { get; protected set; }
     }
 }

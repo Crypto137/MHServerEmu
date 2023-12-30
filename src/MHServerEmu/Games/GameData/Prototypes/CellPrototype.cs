@@ -8,18 +8,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class CellPrototype : Prototype, IBinaryResource
     {
-        public Aabb BoundingBox { get; private set; }
-        public Cell.Type Type { get; private set; }
-        public uint Walls { get; private set; }
-        public Cell.Filler FillerEdges { get; private set; }
-        public Cell.Type RoadConnections { get; private set; }
-        public string ClientMap { get; private set; }
-        public MarkerSetPrototype InitializeSet { get; private set; }
-        public MarkerSetPrototype MarkerSet { get; private set; }
-        public NaviPatchSourcePrototype NaviPatchSource { get; private set; }
-        public byte IsOffsetInMapFile { get; private set; }
-        public HeightMapPrototype HeightMap { get; private set; }
-        public PrototypeGuid[] HotspotPrototypes { get; private set; }
+        public Aabb BoundingBox { get; protected set; }
+        public Cell.Type Type { get; protected set; }
+        public uint Walls { get; protected set; }
+        public Cell.Filler FillerEdges { get; protected set; }
+        public Cell.Type RoadConnections { get; protected set; }
+        public string ClientMap { get; protected set; }
+        public MarkerSetPrototype InitializeSet { get; protected set; }
+        public MarkerSetPrototype MarkerSet { get; protected set; }
+        public NaviPatchSourcePrototype NaviPatchSource { get; protected set; }
+        public byte IsOffsetInMapFile { get; protected set; }
+        public HeightMapPrototype HeightMap { get; protected set; }
+        public PrototypeGuid[] HotspotPrototypes { get; protected set; }
 
         public void Deserialize(BinaryReader reader)
         {

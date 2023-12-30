@@ -29,84 +29,84 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ConditionalRestrictionPrototype : DropRestrictionPrototype
     {
-        public DropRestrictionPrototype[] Apply { get; private set; }
-        public LootContext[] ApplyFor { get; private set; }
-        public DropRestrictionPrototype[] Else { get; private set; }
+        public DropRestrictionPrototype[] Apply { get; protected set; }
+        public LootContext[] ApplyFor { get; protected set; }
+        public DropRestrictionPrototype[] Else { get; protected set; }
     }
 
     public class ContextRestrictionPrototype : DropRestrictionPrototype
     {
-        public LootContext[] UsableFor { get; private set; }
+        public LootContext[] UsableFor { get; protected set; }
     }
 
     public class ItemTypeRestrictionPrototype : DropRestrictionPrototype
     {
-        public ulong AllowedTypes { get; private set; }
+        public ulong AllowedTypes { get; protected set; }
     }
 
     public class ItemParentRestrictionPrototype : DropRestrictionPrototype
     {
-        public ulong AllowedParents { get; private set; }
+        public ulong AllowedParents { get; protected set; }
     }
 
     public class HasAffixInPositionRestrictionPrototype : DropRestrictionPrototype
     {
-        public AffixPosition Position { get; private set; }
+        public AffixPosition Position { get; protected set; }
     }
 
     public class HasVisualAffixRestrictionPrototype : DropRestrictionPrototype
     {
-        public bool MustHaveNoVisualAffixes { get; private set; }
-        public bool MustHaveVisualAffix { get; private set; }
+        public bool MustHaveNoVisualAffixes { get; protected set; }
+        public bool MustHaveVisualAffix { get; protected set; }
     }
 
     public class LevelRestrictionPrototype : DropRestrictionPrototype
     {
-        public int LevelMin { get; private set; }
-        public int LevelRange { get; private set; }
+        public int LevelMin { get; protected set; }
+        public int LevelRange { get; protected set; }
     }
 
     public class OutputLevelPrototype : DropRestrictionPrototype
     {
-        public int Value { get; private set; }
-        public bool UseAsFilter { get; private set; }
+        public int Value { get; protected set; }
+        public bool UseAsFilter { get; protected set; }
     }
 
     public class OutputRankPrototype : DropRestrictionPrototype
     {
-        public int Value { get; private set; }
-        public bool UseAsFilter { get; private set; }
+        public int Value { get; protected set; }
+        public bool UseAsFilter { get; protected set; }
     }
 
     public class OutputRarityPrototype : DropRestrictionPrototype
     {
-        public ulong Value { get; private set; }
-        public bool UseAsFilter { get; private set; }
+        public ulong Value { get; protected set; }
+        public bool UseAsFilter { get; protected set; }
     }
 
     public class RarityRestrictionPrototype : DropRestrictionPrototype
     {
-        public ulong[] AllowedRarities { get; private set; }
+        public ulong[] AllowedRarities { get; protected set; }
     }
 
     public class RankRestrictionPrototype : DropRestrictionPrototype
     {
-        public int AllowedRanks { get; private set; }
+        public int AllowedRanks { get; protected set; }
     }
 
     public class RestrictionListPrototype : DropRestrictionPrototype
     {
-        public DropRestrictionPrototype[] Children { get; private set; }
+        public DropRestrictionPrototype[] Children { get; protected set; }
     }
 
     public class SlotRestrictionPrototype : DropRestrictionPrototype
     {
-        public EquipmentInvUISlot[] AllowedSlots { get; private set; }
+        public EquipmentInvUISlot[] AllowedSlots { get; protected set; }
     }
 
     public class UsableByRestrictionPrototype : DropRestrictionPrototype
     {
-        public ulong Avatars { get; private set; }
+        public ulong Avatars { get; protected set; }
     }
 
     public class DistanceRestrictionPrototype : DropRestrictionPrototype

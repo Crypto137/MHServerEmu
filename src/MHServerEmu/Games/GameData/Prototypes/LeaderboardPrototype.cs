@@ -82,68 +82,68 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LeaderboardPrototype : Prototype
     {
-        public ulong Category { get; private set; }
-        public int DepthOfStandings { get; private set; }
-        public ulong DescriptionBrief { get; private set; }
-        public DesignWorkflowState DesignState { get; private set; }
-        public LeaderboardDurationType Duration { get; private set; }
-        public int MaxArchivedInstances { get; private set; }
-        public ulong Name { get; private set; }
-        public bool Public { get; private set; }
-        public LeaderboardResetFrequency ResetFrequency { get; private set; }
-        public LeaderboardRewardEntryPrototype[] Rewards { get; private set; }
-        public LeaderboardScoringRulePrototype[] ScoringRules { get; private set; }
-        public LeaderboardType Type { get; private set; }
-        public ulong DescriptionExtended { get; private set; }
-        public LeaderboardRankingRule RankingRule { get; private set; }
-        public LeaderboardScoreDisplayFormat ScoreDisplayFormat { get; private set; }
-        public MetaLeaderboardEntryPrototype[] MetaLeaderboardEntries { get; private set; }
+        public ulong Category { get; protected set; }
+        public int DepthOfStandings { get; protected set; }
+        public ulong DescriptionBrief { get; protected set; }
+        public DesignWorkflowState DesignState { get; protected set; }
+        public LeaderboardDurationType Duration { get; protected set; }
+        public int MaxArchivedInstances { get; protected set; }
+        public ulong Name { get; protected set; }
+        public bool Public { get; protected set; }
+        public LeaderboardResetFrequency ResetFrequency { get; protected set; }
+        public LeaderboardRewardEntryPrototype[] Rewards { get; protected set; }
+        public LeaderboardScoringRulePrototype[] ScoringRules { get; protected set; }
+        public LeaderboardType Type { get; protected set; }
+        public ulong DescriptionExtended { get; protected set; }
+        public LeaderboardRankingRule RankingRule { get; protected set; }
+        public LeaderboardScoreDisplayFormat ScoreDisplayFormat { get; protected set; }
+        public MetaLeaderboardEntryPrototype[] MetaLeaderboardEntries { get; protected set; }
     }
 
     public class LeaderboardCategoryPrototype : Prototype
     {
-        public ulong Name { get; private set; }
+        public ulong Name { get; protected set; }
     }
 
     public class LeaderboardRewardEntryPrototype : Prototype
     {
-        public ulong RewardItem { get; private set; }
+        public ulong RewardItem { get; protected set; }
     }
 
     public class LeaderboardRewardEntryPercentilePrototype : LeaderboardRewardEntryPrototype
     {
-        public LeaderboardPercentile PercentileBucket { get; private set; }
+        public LeaderboardPercentile PercentileBucket { get; protected set; }
     }
 
     public class LeaderboardRewardEntryPositionPrototype : LeaderboardRewardEntryPrototype
     {
-        public long Position { get; private set; }
+        public long Position { get; protected set; }
     }
 
     public class LeaderboardRewardEntryScorePrototype : LeaderboardRewardEntryPrototype
     {
-        public int Score { get; private set; }
+        public int Score { get; protected set; }
     }
 
     public class LeaderboardScoringRulePrototype : Prototype
     {
-        public ScoringEventPrototype Event { get; private set; }
-        public long GUID { get; private set; }
+        public ScoringEventPrototype Event { get; protected set; }
+        public long GUID { get; protected set; }
     }
 
     public class LeaderboardScoringRuleCurvePrototype : LeaderboardScoringRulePrototype
     {
-        public ulong ValueCurve { get; private set; }
+        public ulong ValueCurve { get; protected set; }
     }
 
     public class LeaderboardScoringRuleIntPrototype : LeaderboardScoringRulePrototype
     {
-        public int ValueInt { get; private set; }
+        public int ValueInt { get; protected set; }
     }
 
     public class MetaLeaderboardEntryPrototype : Prototype
     {
-        public ulong Leaderboard { get; private set; }
-        public LeaderboardRewardEntryPrototype[] Rewards { get; private set; }
+        public ulong Leaderboard { get; protected set; }
+        public LeaderboardRewardEntryPrototype[] Rewards { get; protected set; }
     }
 }

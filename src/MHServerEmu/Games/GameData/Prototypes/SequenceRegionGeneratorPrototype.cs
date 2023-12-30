@@ -21,56 +21,56 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class SequenceRegionGeneratorPrototype : RegionGeneratorPrototype
     {
-        public AreaSequenceInfoPrototype[] AreaSequence { get; private set; }
-        public ulong RegionPOIPicker { get; private set; }
-        public int EndlessLevelsPerTheme { get; private set; }
-        public EndlessThemePrototype[] EndlessThemes { get; private set; }
-        public SubGenerationPrototype[] SubAreaSequences { get; private set; }
+        public AreaSequenceInfoPrototype[] AreaSequence { get; protected set; }
+        public ulong RegionPOIPicker { get; protected set; }
+        public int EndlessLevelsPerTheme { get; protected set; }
+        public EndlessThemePrototype[] EndlessThemes { get; protected set; }
+        public SubGenerationPrototype[] SubAreaSequences { get; protected set; }
     }
 
     public class SubGenerationPrototype : Prototype
     {
-        public AreaSequenceInfoPrototype[] AreaSequence { get; private set; }
-        public float MinRootSeparation { get; private set; }
-        public int Tries { get; private set; }
+        public AreaSequenceInfoPrototype[] AreaSequence { get; protected set; }
+        public float MinRootSeparation { get; protected set; }
+        public int Tries { get; protected set; }
     }
 
     public class EndlessThemePrototype : Prototype
     {
-        public EndlessThemeEntryPrototype Boss { get; private set; }
-        public EndlessThemeEntryPrototype Normal { get; private set; }
-        public EndlessThemeEntryPrototype TreasureRoom { get; private set; }
+        public EndlessThemeEntryPrototype Boss { get; protected set; }
+        public EndlessThemeEntryPrototype Normal { get; protected set; }
+        public EndlessThemeEntryPrototype TreasureRoom { get; protected set; }
     }
 
     public class EndlessThemeEntryPrototype : Prototype
     {
-        public AreaSequenceInfoPrototype[] AreaSequence { get; private set; }
-        public EndlessStateEntryPrototype[] Challenges { get; private set; }
+        public AreaSequenceInfoPrototype[] AreaSequence { get; protected set; }
+        public EndlessStateEntryPrototype[] Challenges { get; protected set; }
     }
 
     public class EndlessStateEntryPrototype : Prototype
     {
-        public ulong MetaState { get; private set; }
-        public ulong RegionPOIPicker { get; private set; }
-        public MetaStateChallengeTierEnum Tier { get; private set; }
+        public ulong MetaState { get; protected set; }
+        public ulong RegionPOIPicker { get; protected set; }
+        public MetaStateChallengeTierEnum Tier { get; protected set; }
     }
 
     public class AreaSequenceInfoPrototype : Prototype
     {
-        public WeightedAreaPrototype[] AreaChoices { get; private set; }
-        public AreaSequenceInfoPrototype[] ConnectedTo { get; private set; }
-        public short ConnectedToPicks { get; private set; }
-        public bool ConnectAllShared { get; private set; }
-        public short SharedEdgeMinimum { get; private set; }
-        public short Weight { get; private set; }
+        public WeightedAreaPrototype[] AreaChoices { get; protected set; }
+        public AreaSequenceInfoPrototype[] ConnectedTo { get; protected set; }
+        public short ConnectedToPicks { get; protected set; }
+        public bool ConnectAllShared { get; protected set; }
+        public short SharedEdgeMinimum { get; protected set; }
+        public short Weight { get; protected set; }
     }
 
     public class WeightedAreaPrototype : Prototype
     {
-        public ulong Area { get; private set; }
-        public int Weight { get; private set; }
-        public RegionDirection ConnectOn { get; private set; }
-        public ulong RespawnOverride { get; private set; }
-        public bool AlignedToPrevious { get; private set; }
+        public ulong Area { get; protected set; }
+        public int Weight { get; protected set; }
+        public RegionDirection ConnectOn { get; protected set; }
+        public ulong RespawnOverride { get; protected set; }
+        public bool AlignedToPrevious { get; protected set; }
     }
 }

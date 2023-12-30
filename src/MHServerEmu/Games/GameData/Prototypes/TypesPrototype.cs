@@ -2,28 +2,28 @@
 {
     public class IPoint2Prototype : Prototype
     {
-        public int X { get; private set; }
-        public int Y { get; private set; }
+        public int X { get; protected set; }
+        public int Y { get; protected set; }
     }
 
     public class Vector2Prototype : Prototype
     {
-        public float X { get; private set; }
-        public float Y { get; private set; }
+        public float X { get; protected set; }
+        public float Y { get; protected set; }
     }
 
     public class Vector3Prototype : Prototype
     {
-        public float X { get; private set; }
-        public float Y { get; private set; }
-        public float Z { get; private set; }
+        public float X { get; protected set; }
+        public float Y { get; protected set; }
+        public float Z { get; protected set; }
     }
 
     public class Rotator3Prototype : Prototype
     {
-        public float Yaw { get; private set; }
-        public float Pitch { get; private set; }
-        public float Roll { get; private set; }
+        public float Yaw { get; protected set; }
+        public float Pitch { get; protected set; }
+        public float Roll { get; protected set; }
     }
 
     public class ContextPrototype : Prototype
@@ -32,30 +32,30 @@
 
     public class TranslationPrototype : Prototype
     {
-        public ulong Value { get; private set; }
+        public ulong Value { get; protected set; }
     }
 
     public class LocomotorPrototype : Prototype
     {
-        public float Height { get; private set; }
-        public float Speed { get; private set; }
-        public float RotationSpeed { get; private set; }
-        public bool WalkEnabled { get; private set; }
-        public float WalkSpeed { get; private set; }
-        public bool Immobile { get; private set; }
-        public bool DisableOrientationForSyncMove { get; private set; }
+        public float Height { get; protected set; }
+        public float Speed { get; protected set; }
+        public float RotationSpeed { get; protected set; }
+        public bool WalkEnabled { get; protected set; }
+        public float WalkSpeed { get; protected set; }
+        public bool Immobile { get; protected set; }
+        public bool DisableOrientationForSyncMove { get; protected set; }
     }
 
     #region KeywordPrototype
 
     public class KeywordPrototype : Prototype
     {
-        public ulong IsAKeyword { get; private set; }
+        public ulong IsAKeyword { get; protected set; }
     }
 
     public class EntityKeywordPrototype : KeywordPrototype
     {
-        public ulong DisplayName { get; private set; }
+        public ulong DisplayName { get; protected set; }
     }
 
     public class MobKeywordPrototype : EntityKeywordPrototype
@@ -72,8 +72,8 @@
 
     public class PowerKeywordPrototype : KeywordPrototype
     {
-        public ulong DisplayName { get; private set; }
-        public bool DisplayInPowerKeywordsList { get; private set; }
+        public ulong DisplayName { get; protected set; }
+        public bool DisplayInPowerKeywordsList { get; protected set; }
     }
 
     public class RankKeywordPrototype : KeywordPrototype

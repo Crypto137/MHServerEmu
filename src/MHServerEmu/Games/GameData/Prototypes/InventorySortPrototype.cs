@@ -2,9 +2,9 @@
 {
     public class InventorySortPrototype : Prototype
     {
-        public ulong DisplayName { get; private set; }
-        public bool Ascending { get; private set; }
-        public bool DisplayInUI { get; private set; }
+        public ulong DisplayName { get; protected set; }
+        public bool Ascending { get; protected set; }
+        public bool DisplayInUI { get; protected set; }
     }
 
     public class InventorySortAlphaPrototype : InventorySortPrototype

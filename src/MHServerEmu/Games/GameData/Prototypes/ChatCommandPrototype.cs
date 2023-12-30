@@ -67,46 +67,46 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ChatCommandArgumentPrototype : Prototype
     {
-        public ulong Description { get; private set; }
-        public ChatCommandArgumentType Type { get; private set; }
-        public bool Required { get; private set; }
+        public ulong Description { get; protected set; }
+        public ChatCommandArgumentType Type { get; protected set; }
+        public bool Required { get; protected set; }
     }
 
     public class ChatCommandPrototype : Prototype
     {
-        public ulong Command { get; private set; }
-        public ulong Description { get; private set; }
-        public int Function { get; private set; }
-        public ChatCommandArgumentPrototype[] Parameters { get; private set; }
-        public bool ShowInHelp { get; private set; }
-        public bool RespondsToSpacebar { get; private set; }
-        public DesignWorkflowState DesignState { get; private set; }
+        public ulong Command { get; protected set; }
+        public ulong Description { get; protected set; }
+        public int Function { get; protected set; }
+        public ChatCommandArgumentPrototype[] Parameters { get; protected set; }
+        public bool ShowInHelp { get; protected set; }
+        public bool RespondsToSpacebar { get; protected set; }
+        public DesignWorkflowState DesignState { get; protected set; }
     }
 
     public class EmoteChatCommandPrototype : ChatCommandPrototype
     {
-        public ulong EmotePower { get; private set; }
-        public ulong EmoteText { get; private set; }
+        public ulong EmotePower { get; protected set; }
+        public ulong EmoteText { get; protected set; }
     }
 
     public class ChatChannelPrototype : Prototype
     {
-        public ChatMessageFormatType ChannelType { get; private set; }
-        public ulong PromptText { get; private set; }
-        public ulong TextStyle { get; private set; }
-        public ulong DisplayName { get; private set; }
-        public ulong ChatCommand { get; private set; }
-        public bool ShowChannelNameInChat { get; private set; }
-        public ulong ShortName { get; private set; }
-        public bool ShowInChannelList { get; private set; }
-        public bool VisibleOnAllTabs { get; private set; }
-        public DesignWorkflowState DesignState { get; private set; }
-        public bool IsGlobalChannel { get; private set; }
-        public bool AllowPlayerFilter { get; private set; }
-        public bool SubscribeByDefault { get; private set; }
-        public bool DoHashtagFormatting { get; private set; }
-        public ulong ChatPanelTabName { get; private set; }
-        public bool AllowChatPanelTab { get; private set; }
-        public LanguageType Language { get; private set; }
+        public ChatMessageFormatType ChannelType { get; protected set; }
+        public ulong PromptText { get; protected set; }
+        public ulong TextStyle { get; protected set; }
+        public ulong DisplayName { get; protected set; }
+        public ulong ChatCommand { get; protected set; }
+        public bool ShowChannelNameInChat { get; protected set; }
+        public ulong ShortName { get; protected set; }
+        public bool ShowInChannelList { get; protected set; }
+        public bool VisibleOnAllTabs { get; protected set; }
+        public DesignWorkflowState DesignState { get; protected set; }
+        public bool IsGlobalChannel { get; protected set; }
+        public bool AllowPlayerFilter { get; protected set; }
+        public bool SubscribeByDefault { get; protected set; }
+        public bool DoHashtagFormatting { get; protected set; }
+        public ulong ChatPanelTabName { get; protected set; }
+        public bool AllowChatPanelTab { get; protected set; }
+        public LanguageType Language { get; protected set; }
     }
 }

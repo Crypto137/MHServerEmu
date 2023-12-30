@@ -39,66 +39,66 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissilePrototype : AgentPrototype
     {
-        public ulong SendOrbToPowerUser { get; private set; }
+        public ulong SendOrbToPowerUser { get; protected set; }
     }
 
     public class MissilePowerContextPrototype : Prototype
     {
-        public ulong Power { get; private set; }
-        public MissilePowerActivationEventType MissilePowerActivationEvent { get; private set; }
-        public EvalPrototype EvalPctChanceToActivate { get; private set; }
+        public ulong Power { get; protected set; }
+        public MissilePowerActivationEventType MissilePowerActivationEvent { get; protected set; }
+        public EvalPrototype EvalPctChanceToActivate { get; protected set; }
     }
 
     public class GravitatedMissileContextPrototype : Prototype
     {
-        public float Gravity { get; private set; }
-        public int NumBounces { get; private set; }
-        public float OnBounceCoefficientOfRestitution { get; private set; }
-        public int OnBounceRandomDegreeFromForward { get; private set; }
+        public float Gravity { get; protected set; }
+        public int NumBounces { get; protected set; }
+        public float OnBounceCoefficientOfRestitution { get; protected set; }
+        public int OnBounceRandomDegreeFromForward { get; protected set; }
     }
 
     public class MissileCreationContextPrototype : Prototype
     {
-        public bool IndependentClientMovement { get; private set; }
-        public bool IsReturningMissile { get; private set; }
-        public bool ReturningMissileExplodeOnCollide { get; private set; }
-        public bool OneShot { get; private set; }
-        public ulong Entity { get; private set; }
-        public Vector3Prototype CreationOffset { get; private set; }
-        public float SizeIncreasePerSec { get; private set; }
-        public bool IgnoresPitch { get; private set; }
-        public float Radius { get; private set; }
-        public MissileInitialDirectionType InitialDirection { get; private set; }
-        public Rotator3Prototype InitialDirectionAxisRotation { get; private set; }
-        public Rotator3Prototype InitialDirectionRandomVariance { get; private set; }
-        public MissileSpawnLocationType SpawnLocation { get; private set; }
-        public bool InterpolateRotationSpeed { get; private set; }
-        public float InterpolateRotMultByDist { get; private set; }
-        public float InterpolateOvershotAccel { get; private set; }
-        public bool NoCollide { get; private set; }
-        public MissilePowerContextPrototype[] PowerList { get; private set; }
-        public bool ReturnWeaponOnlyOnMiss { get; private set; }
-        public float RadiusEffectOverride { get; private set; }
-        public bool InfiniteLifespan { get; private set; }
-        public int LifespanOverrideMS { get; private set; }
-        public GravitatedMissileContextPrototype GravitatedContext { get; private set; }
-        public int RandomPickWeight { get; private set; }
-        public bool KilledOnOverlappingCollision { get; private set; }
-        public bool Ghost { get; private set; }
-        public bool CreationOffsetCheckLOS { get; private set; }
+        public bool IndependentClientMovement { get; protected set; }
+        public bool IsReturningMissile { get; protected set; }
+        public bool ReturningMissileExplodeOnCollide { get; protected set; }
+        public bool OneShot { get; protected set; }
+        public ulong Entity { get; protected set; }
+        public Vector3Prototype CreationOffset { get; protected set; }
+        public float SizeIncreasePerSec { get; protected set; }
+        public bool IgnoresPitch { get; protected set; }
+        public float Radius { get; protected set; }
+        public MissileInitialDirectionType InitialDirection { get; protected set; }
+        public Rotator3Prototype InitialDirectionAxisRotation { get; protected set; }
+        public Rotator3Prototype InitialDirectionRandomVariance { get; protected set; }
+        public MissileSpawnLocationType SpawnLocation { get; protected set; }
+        public bool InterpolateRotationSpeed { get; protected set; }
+        public float InterpolateRotMultByDist { get; protected set; }
+        public float InterpolateOvershotAccel { get; protected set; }
+        public bool NoCollide { get; protected set; }
+        public MissilePowerContextPrototype[] PowerList { get; protected set; }
+        public bool ReturnWeaponOnlyOnMiss { get; protected set; }
+        public float RadiusEffectOverride { get; protected set; }
+        public bool InfiniteLifespan { get; protected set; }
+        public int LifespanOverrideMS { get; protected set; }
+        public GravitatedMissileContextPrototype GravitatedContext { get; protected set; }
+        public int RandomPickWeight { get; protected set; }
+        public bool KilledOnOverlappingCollision { get; protected set; }
+        public bool Ghost { get; protected set; }
+        public bool CreationOffsetCheckLOS { get; protected set; }
     }
 
     public class MissilePowerPrototype : PowerPrototype
     {
-        public MissileCreationContextPrototype[] MissileCreationContexts { get; private set; }
-        public bool MissileAllowCreationAfterPwrEnds { get; private set; }
-        public bool MissileUsesActualTargetPos { get; private set; }
-        public bool MissileSelectRandomContext { get; private set; }
-        public EvalPrototype EvalSelectMissileContextIndex { get; private set; }
+        public MissileCreationContextPrototype[] MissileCreationContexts { get; protected set; }
+        public bool MissileAllowCreationAfterPwrEnds { get; protected set; }
+        public bool MissileUsesActualTargetPos { get; protected set; }
+        public bool MissileSelectRandomContext { get; protected set; }
+        public EvalPrototype EvalSelectMissileContextIndex { get; protected set; }
     }
 
     public class PublicEventTeamPrototype : Prototype
     {
-        public ulong Name { get; private set; }
+        public ulong Name { get; protected set; }
     }
 }

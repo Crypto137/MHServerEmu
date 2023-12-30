@@ -123,70 +123,70 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ManaBehaviorPrototype : Prototype
     {
-        public ulong DisplayName { get; private set; }
-        public ResourceType MeterType { get; private set; }
-        public ulong Powers { get; private set; }
-        public bool StartsEmpty { get; private set; }
-        public ulong Description { get; private set; }
-        public ulong MeterColor { get; private set; }
-        public ulong ResourceBarStyle { get; private set; }
-        public ulong ResourcePipStyle { get; private set; }
-        public bool DepleteOnDeath { get; private set; }
+        public ulong DisplayName { get; protected set; }
+        public ResourceType MeterType { get; protected set; }
+        public ulong Powers { get; protected set; }
+        public bool StartsEmpty { get; protected set; }
+        public ulong Description { get; protected set; }
+        public ulong MeterColor { get; protected set; }
+        public ulong ResourceBarStyle { get; protected set; }
+        public ulong ResourcePipStyle { get; protected set; }
+        public bool DepleteOnDeath { get; protected set; }
     }
 
     public class PrimaryResourceManaBehaviorPrototype : ManaBehaviorPrototype
     {
-        public bool StartsWithRegenEnabled { get; private set; }
-        public int RegenUpdateTimeMS { get; private set; }
-        public EvalPrototype EvalOnEnduranceUpdate { get; private set; }
-        public ManaType ManaType { get; private set; }
-        public ulong BaseEndurancePerLevel { get; private set; }
-        public bool RestoreToMaxOnLevelUp { get; private set; }
+        public bool StartsWithRegenEnabled { get; protected set; }
+        public int RegenUpdateTimeMS { get; protected set; }
+        public EvalPrototype EvalOnEnduranceUpdate { get; protected set; }
+        public ManaType ManaType { get; protected set; }
+        public ulong BaseEndurancePerLevel { get; protected set; }
+        public bool RestoreToMaxOnLevelUp { get; protected set; }
     }
 
     public class SecondaryResourceManaBehaviorPrototype : ManaBehaviorPrototype
     {
-        public EvalPrototype EvalGetCurrentForDisplay { get; private set; }
-        public EvalPrototype EvalGetCurrentPipsForDisplay { get; private set; }
-        public EvalPrototype EvalGetMaxForDisplay { get; private set; }
-        public EvalPrototype EvalGetMaxPipsForDisplay { get; private set; }
-        public bool DepleteOnExitWorld { get; private set; }
-        public bool ResetOnAvatarSwap { get; private set; }
+        public EvalPrototype EvalGetCurrentForDisplay { get; protected set; }
+        public EvalPrototype EvalGetCurrentPipsForDisplay { get; protected set; }
+        public EvalPrototype EvalGetMaxForDisplay { get; protected set; }
+        public EvalPrototype EvalGetMaxPipsForDisplay { get; protected set; }
+        public bool DepleteOnExitWorld { get; protected set; }
+        public bool ResetOnAvatarSwap { get; protected set; }
     }
 
     public class AlliancePrototype : Prototype
     {
-        public ulong HostileTo { get; private set; }
-        public ulong FriendlyTo { get; private set; }
-        public ulong WhileConfused { get; private set; }
-        public ulong WhileControlled { get; private set; }
+        public ulong HostileTo { get; protected set; }
+        public ulong FriendlyTo { get; protected set; }
+        public ulong WhileConfused { get; protected set; }
+        public ulong WhileControlled { get; protected set; }
     }
 
     public class BotDefinitionEntryPrototype : Prototype
     {
-        public ulong Avatar { get; private set; }
-        public BehaviorProfilePrototype BehaviorProfile { get; private set; }
+        public ulong Avatar { get; protected set; }
+        public BehaviorProfilePrototype BehaviorProfile { get; protected set; }
     }
 
     public class BotSettingsPrototype : Prototype
     {
-        public BotDefinitionEntryPrototype[] BotDefinitions { get; private set; }
-        public BehaviorProfilePrototype DefaultProceduralBotProfile { get; private set; }
+        public BotDefinitionEntryPrototype[] BotDefinitions { get; protected set; }
+        public BehaviorProfilePrototype DefaultProceduralBotProfile { get; protected set; }
     }
 
     public class AIEntityAttributePrototype : Prototype
     {
-        public ComparisonOperatorType OperatorType { get; private set; }
+        public ComparisonOperatorType OperatorType { get; protected set; }
     }
 
     public class AIEntityAttributeHasKeywordPrototype : AIEntityAttributePrototype
     {
-        public ulong Keyword { get; private set; }
+        public ulong Keyword { get; protected set; }
     }
 
     public class AIEntityAttributeHasConditionKeywordPrototype : AIEntityAttributePrototype
     {
-        public ulong ConditionKeyword { get; private set; }
+        public ulong ConditionKeyword { get; protected set; }
     }
 
     public class AIEntityAttributeIsHostilePrototype : AIEntityAttributePrototype
@@ -207,12 +207,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class AIEntityAttributeIsPrototypeRefPrototype : AIEntityAttributePrototype
     {
-        public ulong ProtoRef { get; private set; }
+        public ulong ProtoRef { get; protected set; }
     }
 
     public class AIEntityAttributeIsPrototypePrototype : AIEntityAttributePrototype
     {
-        public ulong RefToPrototype { get; private set; }
+        public ulong RefToPrototype { get; protected set; }
     }
 
     public class AIEntityAttributeIsSimulatedPrototype : AIEntityAttributePrototype
@@ -225,12 +225,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class AIEntityAttributeIsCurrentTargetEntityOfAgentOfTypePrototype : AIEntityAttributePrototype
     {
-        public ulong OtherAgentProtoRef { get; private set; }
+        public ulong OtherAgentProtoRef { get; protected set; }
     }
 
     public class AIEntityAttributeIsSummonedByPowerPrototype : AIEntityAttributePrototype
     {
-        public ulong Power { get; private set; }
+        public ulong Power { get; protected set; }
     }
 
     public class AIEntityAttributeCanBePlayerOwnedPrototype : AIEntityAttributePrototype
@@ -239,18 +239,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class AIEntityAttributeHasBlackboardPropertyValuePrototype : AIEntityAttributePrototype
     {
-        public ulong PropertyInfoRef { get; private set; }
-        public int Value { get; private set; }
+        public ulong PropertyInfoRef { get; protected set; }
+        public int Value { get; protected set; }
     }
 
     public class AIEntityAttributeHasPropertyPrototype : AIEntityAttributePrototype
     {
-        public ulong PropertyInfoRef { get; private set; }
+        public ulong PropertyInfoRef { get; protected set; }
     }
 
     public class AIEntityAttributeHasHealthValuePercentPrototype : AIEntityAttributePrototype
     {
-        public float Value { get; private set; }
+        public float Value { get; protected set; }
     }
 
     public class AIEntityAttributeIsDestructiblePrototype : AIEntityAttributePrototype
@@ -259,7 +259,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class AIEntityAttributeCanPathToPrototype : AIEntityAttributePrototype
     {
-        public LocomotorMethod LocomotorMethod { get; private set; }
+        public LocomotorMethod LocomotorMethod { get; protected set; }
     }
 
     public class MovementBehaviorPrototype : Prototype
@@ -268,37 +268,37 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class StrafeTargetPrototype : MovementBehaviorPrototype
     {
-        public float StrafeDistanceMult { get; private set; }
+        public float StrafeDistanceMult { get; protected set; }
     }
 
     public class RandomPositionAroundTargetPrototype : MovementBehaviorPrototype
     {
-        public float StrafeAngle { get; private set; }
+        public float StrafeAngle { get; protected set; }
     }
 
     public class FixedRotationPrototype : MovementBehaviorPrototype
     {
-        public float RotationSpeed { get; private set; }
-        public float PivotAngle { get; private set; }
-        public int MaxPivotTimeMS { get; private set; }
-        public float PostPivotAcceleration { get; private set; }
+        public float RotationSpeed { get; protected set; }
+        public float PivotAngle { get; protected set; }
+        public int MaxPivotTimeMS { get; protected set; }
+        public float PostPivotAcceleration { get; protected set; }
     }
 
     public class StackingBehaviorPrototype : Prototype
     {
-        public StackingApplicationStyleType ApplicationStyle { get; private set; }
-        public int MaxNumStacks { get; private set; }
-        public bool RemoveStackOnMaxNumStacksReached { get; private set; }
-        public bool StacksFromDifferentCreators { get; private set; }
-        public int NumStacksToApply { get; private set; }
-        public ulong[] StacksByKeyword { get; private set; }
-        public ulong StacksWithOtherPower { get; private set; }
+        public StackingApplicationStyleType ApplicationStyle { get; protected set; }
+        public int MaxNumStacks { get; protected set; }
+        public bool RemoveStackOnMaxNumStacksReached { get; protected set; }
+        public bool StacksFromDifferentCreators { get; protected set; }
+        public int NumStacksToApply { get; protected set; }
+        public ulong[] StacksByKeyword { get; protected set; }
+        public ulong StacksWithOtherPower { get; protected set; }
     }
 
     public class DelayContextPrototype : Prototype
     {
-        public int MaxDelayMS { get; private set; }
-        public int MinDelayMS { get; private set; }
+        public int MaxDelayMS { get; protected set; }
+        public int MinDelayMS { get; protected set; }
     }
 
     public class InteractContextPrototype : Prototype
@@ -307,62 +307,62 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class TeleportContextPrototype : Prototype
     {
-        public TeleportType TeleportType { get; private set; }
+        public TeleportType TeleportType { get; protected set; }
     }
 
     public class SelectEntityContextPrototype : Prototype
     {
-        public AIEntityAttributePrototype[] AttributeList { get; private set; }
-        public float MaxDistanceThreshold { get; private set; }
-        public float MinDistanceThreshold { get; private set; }
-        public SelectEntityPoolType PoolType { get; private set; }
-        public SelectEntityMethodType SelectionMethod { get; private set; }
-        public ulong EntitiesPropertyForComparison { get; private set; }
-        public SelectEntityType SelectEntityType { get; private set; }
-        public bool LockEntityOnceSelected { get; private set; }
-        public float CellOrRegionAABBScale { get; private set; }
-        public ulong AlliancePriority { get; private set; }
+        public AIEntityAttributePrototype[] AttributeList { get; protected set; }
+        public float MaxDistanceThreshold { get; protected set; }
+        public float MinDistanceThreshold { get; protected set; }
+        public SelectEntityPoolType PoolType { get; protected set; }
+        public SelectEntityMethodType SelectionMethod { get; protected set; }
+        public ulong EntitiesPropertyForComparison { get; protected set; }
+        public SelectEntityType SelectEntityType { get; protected set; }
+        public bool LockEntityOnceSelected { get; protected set; }
+        public float CellOrRegionAABBScale { get; protected set; }
+        public ulong AlliancePriority { get; protected set; }
     }
 
     public class FlankContextPrototype : Prototype
     {
-        public float RangeMax { get; private set; }
-        public float RangeMin { get; private set; }
-        public bool StopAtFlankingWaypoint { get; private set; }
-        public float ToTargetFlankingAngle { get; private set; }
-        public float WaypointRadius { get; private set; }
-        public int TimeoutMS { get; private set; }
-        public bool FailOnTimeout { get; private set; }
-        public bool RandomizeFlankingAngle { get; private set; }
-        public FlankToType FlankTo { get; private set; }
+        public float RangeMax { get; protected set; }
+        public float RangeMin { get; protected set; }
+        public bool StopAtFlankingWaypoint { get; protected set; }
+        public float ToTargetFlankingAngle { get; protected set; }
+        public float WaypointRadius { get; protected set; }
+        public int TimeoutMS { get; protected set; }
+        public bool FailOnTimeout { get; protected set; }
+        public bool RandomizeFlankingAngle { get; protected set; }
+        public FlankToType FlankTo { get; protected set; }
     }
 
     public class FleeContextPrototype : Prototype
     {
-        public float FleeTime { get; private set; }
-        public float FleeTimeVariance { get; private set; }
-        public float FleeHalfAngle { get; private set; }
-        public float FleeDistanceMin { get; private set; }
-        public bool FleeTowardAllies { get; private set; }
-        public float FleeTowardAlliesPercentChance { get; private set; }
+        public float FleeTime { get; protected set; }
+        public float FleeTimeVariance { get; protected set; }
+        public float FleeHalfAngle { get; protected set; }
+        public float FleeDistanceMin { get; protected set; }
+        public bool FleeTowardAllies { get; protected set; }
+        public float FleeTowardAlliesPercentChance { get; protected set; }
     }
 
     public class FlockContextPrototype : Prototype
     {
-        public float RangeMax { get; private set; }
-        public float RangeMin { get; private set; }
-        public float SeparationWeight { get; private set; }
-        public float AlignmentWeight { get; private set; }
-        public float CohesionWeight { get; private set; }
-        public float SeparationThreshold { get; private set; }
-        public float AlignmentThreshold { get; private set; }
-        public float CohesionThreshold { get; private set; }
-        public float MaxSteeringForce { get; private set; }
-        public float ForceToLeaderWeight { get; private set; }
-        public bool SwitchLeaderOnCompletion { get; private set; }
-        public bool ChooseRandomPointAsDestination { get; private set; }
-        public WanderBasePointType WanderFromPointType { get; private set; }
-        public float WanderRadius { get; private set; }
+        public float RangeMax { get; protected set; }
+        public float RangeMin { get; protected set; }
+        public float SeparationWeight { get; protected set; }
+        public float AlignmentWeight { get; protected set; }
+        public float CohesionWeight { get; protected set; }
+        public float SeparationThreshold { get; protected set; }
+        public float AlignmentThreshold { get; protected set; }
+        public float CohesionThreshold { get; protected set; }
+        public float MaxSteeringForce { get; protected set; }
+        public float ForceToLeaderWeight { get; protected set; }
+        public bool SwitchLeaderOnCompletion { get; protected set; }
+        public bool ChooseRandomPointAsDestination { get; protected set; }
+        public WanderBasePointType WanderFromPointType { get; protected set; }
+        public float WanderRadius { get; protected set; }
     }
 
     public class UseAffixPowerContextPrototype : Prototype
@@ -371,98 +371,98 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class UsePowerContextPrototype : Prototype
     {
-        public ulong Power { get; private set; }
-        public float TargetOffset { get; private set; }
-        public bool RequireOriPriorToActivate { get; private set; }
-        public float OrientationThreshold { get; private set; }
-        public bool ForceIgnoreLOS { get; private set; }
-        public float OffsetVarianceMagnitude { get; private set; }
-        public bool ChooseRandomTargetPosition { get; private set; }
-        public float OwnerOffset { get; private set; }
-        public SelectEntityContextPrototype SecondaryTargetSelection { get; private set; }
-        public bool TargetsWorldPosition { get; private set; }
-        public bool ForceCheckTargetRegionLocation { get; private set; }
-        public float TargetAngleOffset { get; private set; }
-        public bool UseMainTargetForAOEActivation { get; private set; }
-        public float MinDistanceFromOwner { get; private set; }
-        public bool ForceInvalidTargetActivation { get; private set; }
-        public bool AllowMovementClipping { get; private set; }
-        public float MinDistanceToTarget { get; private set; }
-        public float MaxDistanceToTarget { get; private set; }
-        public bool IgnoreOutOfPositionFailure { get; private set; }
-        public ulong[] DifficultyTierRestrictions { get; private set; }
+        public ulong Power { get; protected set; }
+        public float TargetOffset { get; protected set; }
+        public bool RequireOriPriorToActivate { get; protected set; }
+        public float OrientationThreshold { get; protected set; }
+        public bool ForceIgnoreLOS { get; protected set; }
+        public float OffsetVarianceMagnitude { get; protected set; }
+        public bool ChooseRandomTargetPosition { get; protected set; }
+        public float OwnerOffset { get; protected set; }
+        public SelectEntityContextPrototype SecondaryTargetSelection { get; protected set; }
+        public bool TargetsWorldPosition { get; protected set; }
+        public bool ForceCheckTargetRegionLocation { get; protected set; }
+        public float TargetAngleOffset { get; protected set; }
+        public bool UseMainTargetForAOEActivation { get; protected set; }
+        public float MinDistanceFromOwner { get; protected set; }
+        public bool ForceInvalidTargetActivation { get; protected set; }
+        public bool AllowMovementClipping { get; protected set; }
+        public float MinDistanceToTarget { get; protected set; }
+        public float MaxDistanceToTarget { get; protected set; }
+        public bool IgnoreOutOfPositionFailure { get; protected set; }
+        public ulong[] DifficultyTierRestrictions { get; protected set; }
     }
 
     public class MoveToContextPrototype : Prototype
     {
-        public float LOSSweepPadding { get; private set; }
-        public float RangeMax { get; private set; }
-        public float RangeMin { get; private set; }
-        public bool EnforceLOS { get; private set; }
-        public MoveToType MoveTo { get; private set; }
-        public PathMethod PathNodeSetMethod { get; private set; }
-        public int PathNodeSetGroup { get; private set; }
-        public MovementSpeedOverride MovementSpeed { get; private set; }
-        public bool StopLocomotorOnMoveToFail { get; private set; }
+        public float LOSSweepPadding { get; protected set; }
+        public float RangeMax { get; protected set; }
+        public float RangeMin { get; protected set; }
+        public bool EnforceLOS { get; protected set; }
+        public MoveToType MoveTo { get; protected set; }
+        public PathMethod PathNodeSetMethod { get; protected set; }
+        public int PathNodeSetGroup { get; protected set; }
+        public MovementSpeedOverride MovementSpeed { get; protected set; }
+        public bool StopLocomotorOnMoveToFail { get; protected set; }
     }
 
     public class OrbitContextPrototype : Prototype
     {
-        public float ThetaInDegrees { get; private set; }
+        public float ThetaInDegrees { get; protected set; }
     }
 
     public class RotateContextPrototype : Prototype
     {
-        public bool Clockwise { get; private set; }
-        public int Degrees { get; private set; }
-        public bool RotateTowardsTarget { get; private set; }
-        public float SpeedOverride { get; private set; }
+        public bool Clockwise { get; protected set; }
+        public int Degrees { get; protected set; }
+        public bool RotateTowardsTarget { get; protected set; }
+        public float SpeedOverride { get; protected set; }
     }
 
     public class WanderContextPrototype : Prototype
     {
-        public WanderBasePointType FromPoint { get; private set; }
-        public float RangeMax { get; private set; }
-        public float RangeMin { get; private set; }
-        public MovementSpeedOverride MovementSpeed { get; private set; }
+        public WanderBasePointType FromPoint { get; protected set; }
+        public float RangeMax { get; protected set; }
+        public float RangeMin { get; protected set; }
+        public MovementSpeedOverride MovementSpeed { get; protected set; }
     }
 
     public class DespawnContextPrototype : Prototype
     {
-        public bool DespawnOwner { get; private set; }
-        public bool DespawnTarget { get; private set; }
-        public bool UseKillInsteadOfDestroy { get; private set; }
+        public bool DespawnOwner { get; protected set; }
+        public bool DespawnTarget { get; protected set; }
+        public bool UseKillInsteadOfDestroy { get; protected set; }
     }
 
     public class TriggerSpawnersContextPrototype : Prototype
     {
-        public bool DoPulse { get; private set; }
-        public bool EnableSpawner { get; private set; }
-        public ulong Spawners { get; private set; }
-        public bool KillSummonedInventory { get; private set; }
-        public bool SearchWholeRegion { get; private set; }
+        public bool DoPulse { get; protected set; }
+        public bool EnableSpawner { get; protected set; }
+        public ulong Spawners { get; protected set; }
+        public bool KillSummonedInventory { get; protected set; }
+        public bool SearchWholeRegion { get; protected set; }
     }
 
     public class BehaviorProfilePrototype : Prototype
     {
-        public float AggroDropChanceLOS { get; private set; }
-        public float AggroDropDistance { get; private set; }
-        public float AggroRangeAlly { get; private set; }
-        public float AggroRangeHostile { get; private set; }
-        public ulong Brain { get; private set; }
-        public ulong[] EquippedPassivePowers { get; private set; }
-        public bool IsBot { get; private set; }
-        public int InterruptCooldownMS { get; private set; }
-        public bool CanLeash { get; private set; }
-        public ulong Properties { get; private set; }
-        public bool AlwaysAggroed { get; private set; }
+        public float AggroDropChanceLOS { get; protected set; }
+        public float AggroDropDistance { get; protected set; }
+        public float AggroRangeAlly { get; protected set; }
+        public float AggroRangeHostile { get; protected set; }
+        public ulong Brain { get; protected set; }
+        public ulong[] EquippedPassivePowers { get; protected set; }
+        public bool IsBot { get; protected set; }
+        public int InterruptCooldownMS { get; protected set; }
+        public bool CanLeash { get; protected set; }
+        public ulong Properties { get; protected set; }
+        public bool AlwaysAggroed { get; protected set; }
     }
 
     public class KismetSequencePrototype : Prototype
     {
-        public ulong KismetSeqName { get; private set; }
-        public bool KismetSeqBlocking { get; private set; }
-        public bool AudioListenerAtCamera { get; private set; }
-        public bool HideAvatarsDuringPlayback { get; private set; }
+        public ulong KismetSeqName { get; protected set; }
+        public bool KismetSeqBlocking { get; protected set; }
+        public bool AudioListenerAtCamera { get; protected set; }
+        public bool HideAvatarsDuringPlayback { get; protected set; }
     }
 }

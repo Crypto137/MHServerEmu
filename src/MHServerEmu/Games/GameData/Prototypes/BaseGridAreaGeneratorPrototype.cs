@@ -17,50 +17,50 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class BaseGridAreaGeneratorPrototype : GeneratorPrototype
     {
-        public CellSetEntryPrototype[] CellSets { get; private set; }
-        public int CellSize { get; private set; }
-        public int CellsX { get; private set; }
-        public int CellsY { get; private set; }
-        public CellDeletionEnum RoomKillMethod { get; private set; }
-        public float RoomKillChancePct { get; private set; }
-        public CellDeletionProfilePrototype[] SecondaryDeletionProfiles { get; private set; }
-        public RequiredCellPrototype[] RequiredCells { get; private set; }
-        public bool SupressMissingCellErrors { get; private set; }
-        public bool NoConnectionsOnCorners { get; private set; }
-        public RandomInstanceListPrototype RandomInstances { get; private set; }
-        public int DeadEndMax { get; private set; }
-        public RequiredSuperCellEntryPrototype[] RequiredSuperCells { get; private set; }
-        public RequiredSuperCellEntryPrototype[] NonRequiredSuperCells { get; private set; }
-        public int NonRequiredSuperCellsMin { get; private set; }
-        public int NonRequiredSuperCellsMax { get; private set; }
-        public RequiredCellPrototype[] NonRequiredNormalCells { get; private set; }
-        public int NonRequiredNormalCellsMin { get; private set; }
-        public int NonRequiredNormalCellsMax { get; private set; }
-        public RoadGeneratorPrototype Roads { get; private set; }
-        public IPoint2Prototype[] AllowedConnections { get; private set; }
+        public CellSetEntryPrototype[] CellSets { get; protected set; }
+        public int CellSize { get; protected set; }
+        public int CellsX { get; protected set; }
+        public int CellsY { get; protected set; }
+        public CellDeletionEnum RoomKillMethod { get; protected set; }
+        public float RoomKillChancePct { get; protected set; }
+        public CellDeletionProfilePrototype[] SecondaryDeletionProfiles { get; protected set; }
+        public RequiredCellPrototype[] RequiredCells { get; protected set; }
+        public bool SupressMissingCellErrors { get; protected set; }
+        public bool NoConnectionsOnCorners { get; protected set; }
+        public RandomInstanceListPrototype RandomInstances { get; protected set; }
+        public int DeadEndMax { get; protected set; }
+        public RequiredSuperCellEntryPrototype[] RequiredSuperCells { get; protected set; }
+        public RequiredSuperCellEntryPrototype[] NonRequiredSuperCells { get; protected set; }
+        public int NonRequiredSuperCellsMin { get; protected set; }
+        public int NonRequiredSuperCellsMax { get; protected set; }
+        public RequiredCellPrototype[] NonRequiredNormalCells { get; protected set; }
+        public int NonRequiredNormalCellsMin { get; protected set; }
+        public int NonRequiredNormalCellsMax { get; protected set; }
+        public RoadGeneratorPrototype Roads { get; protected set; }
+        public IPoint2Prototype[] AllowedConnections { get; protected set; }
     }
 
     public class GridAreaGeneratorPrototype : BaseGridAreaGeneratorPrototype
     {
-        public CellGridBehaviorPrototype[] Behaviors { get; private set; }
-        public float ConnectionKillChancePct { get; private set; }
+        public CellGridBehaviorPrototype[] Behaviors { get; protected set; }
+        public float ConnectionKillChancePct { get; protected set; }
     }
 
     public class WideGridAreaGeneratorPrototype : BaseGridAreaGeneratorPrototype
     {
-        public CellGridBorderBehaviorPrototype BorderBehavior { get; private set; }
-        public bool ProceduralSuperCells { get; private set; }
+        public CellGridBorderBehaviorPrototype BorderBehavior { get; protected set; }
+        public bool ProceduralSuperCells { get; protected set; }
     }
 
     public class RoadGeneratorPrototype : Prototype
     {
-        public ulong[] Cells { get; private set; }
+        public ulong[] Cells { get; protected set; }
     }
 
     public class CellDeletionProfilePrototype : Prototype
     {
-        public CellDeletionEnum RoomKillMethod { get; private set; }
-        public float RoomKillPct { get; private set; }
+        public CellDeletionEnum RoomKillMethod { get; protected set; }
+        public float RoomKillPct { get; protected set; }
     }
 
     #region RequiredCellRestrictBasePrototype
@@ -71,21 +71,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class RequiredCellRestrictSegPrototype : RequiredCellRestrictBasePrototype
     {
-        public int StartX { get; private set; }
-        public int StartY { get; private set; }
-        public int EndX { get; private set; }
-        public int EndY { get; private set; }
+        public int StartX { get; protected set; }
+        public int StartY { get; protected set; }
+        public int EndX { get; protected set; }
+        public int EndY { get; protected set; }
     }
 
     public class RequiredCellRestrictEdgePrototype : RequiredCellRestrictBasePrototype
     {
-        public Cell.Type Edge { get; private set; }
+        public Cell.Type Edge { get; protected set; }
     }
 
     public class RequiredCellRestrictPosPrototype : RequiredCellRestrictBasePrototype
     {
-        public int X { get; private set; }
-        public int Y { get; private set; }
+        public int X { get; protected set; }
+        public int Y { get; protected set; }
     }
 
     #endregion
@@ -94,42 +94,42 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class RequiredCellBasePrototype : Prototype
     {
-        public int DisableAfterUsedMax { get; private set; }
-        public ulong PopulationThemeOverride { get; private set; }
-        public RequiredCellRestrictBasePrototype[] LocationRestrictions { get; private set; }
+        public int DisableAfterUsedMax { get; protected set; }
+        public ulong PopulationThemeOverride { get; protected set; }
+        public RequiredCellRestrictBasePrototype[] LocationRestrictions { get; protected set; }
     }
 
     public class RequiredCellPrototype : RequiredCellBasePrototype
     {
-        public ulong Cell { get; private set; }
-        public int Num { get; private set; }
-        public bool Destination { get; private set; }
+        public ulong Cell { get; protected set; }
+        public int Num { get; protected set; }
+        public bool Destination { get; protected set; }
     }
 
     public class RandomInstanceRegionPrototype : RequiredCellBasePrototype
     {
-        public ulong OriginCell { get; private set; }
-        public ulong OriginEntity { get; private set; }
-        public ulong OverrideLocalPopulation { get; private set; }
-        public ulong Target { get; private set; }
-        public int Weight { get; private set; }
+        public ulong OriginCell { get; protected set; }
+        public ulong OriginEntity { get; protected set; }
+        public ulong OverrideLocalPopulation { get; protected set; }
+        public ulong Target { get; protected set; }
+        public int Weight { get; protected set; }
     }
 
     public class RequiredCellBaseListPrototype : RequiredCellBasePrototype
     {
-        public RequiredCellBasePrototype[] RequiredCells { get; private set; }
+        public RequiredCellBasePrototype[] RequiredCells { get; protected set; }
     }
 
     public class RequiredSuperCellEntryPrototype : RequiredCellBasePrototype
     {
-        public ulong SuperCell { get; private set; }
+        public ulong SuperCell { get; protected set; }
     }
 
     #endregion
 
     public class RandomInstanceListPrototype : Prototype
     {
-        public RandomInstanceRegionPrototype[] List { get; private set; }
-        public int Picks { get; private set; }
+        public RandomInstanceRegionPrototype[] List { get; protected set; }
+        public int Picks { get; protected set; }
     }
 }

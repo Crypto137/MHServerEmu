@@ -21,21 +21,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class DownloadChunkRegionsPrototype : Prototype
     {
-        public RegionPrototype Regions { get; private set; }
-        public Platforms Platform { get; private set; }
+        public RegionPrototype Regions { get; protected set; }
+        public Platforms Platform { get; protected set; }
     }
 
     public class DownloadChunkPrototype : Prototype
     {
-        public ulong Chapter { get; private set; }
-        public ulong[] Data { get; private set; }
-        public DownloadChunkRegionsPrototype[] RegionsPerPlatform { get; private set; }
+        public ulong Chapter { get; protected set; }
+        public ulong[] Data { get; protected set; }
+        public DownloadChunkRegionsPrototype[] RegionsPerPlatform { get; protected set; }
     }
 
     public class DownloadChunksPrototype : Prototype
     {
-        public DownloadChunkPrototype ChunksPC { get; private set; }
-        public DownloadChunkPrototype ChunksPS4 { get; private set; }
-        public DownloadChunkPrototype ChunksXboxOne { get; private set; }
+        public DownloadChunkPrototype ChunksPC { get; protected set; }
+        public DownloadChunkPrototype ChunksPS4 { get; protected set; }
+        public DownloadChunkPrototype ChunksXboxOne { get; protected set; }
     }
 }

@@ -174,73 +174,73 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EntityPrototype : Prototype
     {
-        public LocaleStringId DisplayName { get; private set; }
-        public StringId IconPath { get; private set; }                                  // A Entity/Types/EntityIconPathType.type
-        public PrototypePropertyCollection Properties { get; private set; }             // Populated from mixins? Parsed from the game as ulong?
-        public bool ReplicateToProximity { get; private set; }
-        public bool ReplicateToParty { get; private set; }
-        public bool ReplicateToOwner { get; private set; }
-        public bool ReplicateToDiscovered { get; private set; }
-        public EntityInventoryAssignmentPrototype[] Inventories { get; private set; }
-        public EvalPrototype[] EvalOnCreate { get; private set; }
-        public LocaleStringId DisplayNameInformal { get; private set; }
-        public LocaleStringId DisplayNameShort { get; private set; }
-        public bool ReplicateToTrader { get; private set; }
-        public int LifespanMS { get; private set; }
-        public StringId IconPathTooltipHeader { get; private set; }                     // A Entity/Types/EntityIconPathType.type
-        public StringId IconPathHiRes { get; private set; }                             // A Entity/Types/EntityIconPathType.type
+        public LocaleStringId DisplayName { get; protected set; }
+        public StringId IconPath { get; protected set; }                                  // A Entity/Types/EntityIconPathType.type
+        public PrototypePropertyCollection Properties { get; protected set; }             // Populated from mixins? Parsed from the game as ulong?
+        public bool ReplicateToProximity { get; protected set; }
+        public bool ReplicateToParty { get; protected set; }
+        public bool ReplicateToOwner { get; protected set; }
+        public bool ReplicateToDiscovered { get; protected set; }
+        public EntityInventoryAssignmentPrototype[] Inventories { get; protected set; }
+        public EvalPrototype[] EvalOnCreate { get; protected set; }
+        public LocaleStringId DisplayNameInformal { get; protected set; }
+        public LocaleStringId DisplayNameShort { get; protected set; }
+        public bool ReplicateToTrader { get; protected set; }
+        public int LifespanMS { get; protected set; }
+        public StringId IconPathTooltipHeader { get; protected set; }                     // A Entity/Types/EntityIconPathType.type
+        public StringId IconPathHiRes { get; protected set; }                             // A Entity/Types/EntityIconPathType.type
     }
 
     public class WorldEntityPrototype : EntityPrototype
     {
-        public ulong Alliance { get; private set; }
-        public BoundsPrototype Bounds { get; private set; }
-        public ulong DialogText { get; private set; }
-        public ulong UnrealClass { get; private set; }
-        public ulong XPGrantedCurve { get; private set; }
-        public bool HACKBuildMouseCollision { get; private set; }
-        public ulong PreInteractPower { get; private set; }
-        public DialogStyle DialogStyle { get; private set; }
-        public WeightedTextEntryPrototype[] DialogTextList { get; private set; }
-        public ulong[] Keywords { get; private set; }
-        public DesignWorkflowState DesignState { get; private set; }
-        public ulong Rank { get; private set; }
-        public LocomotorMethod NaviMethod { get; private set; }
-        public bool SnapToFloorOnSpawn { get; private set; }
-        public bool AffectNavigation { get; private set; }
-        public StateChangePrototype PostInteractState { get; private set; }
-        public StateChangePrototype PostKilledState { get; private set; }
-        public bool OrientToInteractor { get; private set; }
-        public ulong TooltipInWorldTemplate { get; private set; }
-        public bool InteractIgnoreBoundsForDistance { get; private set; }
-        public float PopulationWeight { get; private set; }
-        public bool VisibleByDefault { get; private set; }
-        public int RemoveFromWorldTimerMS { get; private set; }
-        public bool RemoveNavInfluenceOnKilled { get; private set; }
-        public bool AlwaysSimulated { get; private set; }
-        public bool XPIsShared { get; private set; }
-        public ulong TutorialTip { get; private set; }
-        public bool TrackingDisabled { get; private set; }
-        public ulong[] ModifiersGuaranteed { get; private set; }
-        public float InteractRangeBonus { get; private set; }
-        public bool ShouldIgnoreMaxDeadBodies { get; private set; }
-        public bool ModifierSetEnable { get; private set; }
-        public bool LiveTuningDefaultEnabled { get; private set; }
-        public bool UpdateOrientationWithParent { get; private set; }
-        public bool MissionEntityDeathCredit { get; private set; }
-        public bool HACKDiscoverInRegion { get; private set; }
-        public bool CanCollideWithPowerUserItems { get; private set; }
-        public bool ForwardOnHitProcsToOwner { get; private set; }
-        public ObjectiveInfoPrototype ObjectiveInfo { get; private set; }
-        public WorldEntityIconsPrototype Icons { get; private set; }
-        public EntitySelectorActionPrototype[] EntitySelectorActions { get; private set; }
-        public bool OverheadIndicator { get; private set; }
-        public bool RequireCombatActiveForKillCredit { get; private set; }
-        public bool ClonePerPlayer { get; private set; }
-        public bool PrefetchMarkedAssets { get; private set; }
-        public ulong MarvelModelRenderClass { get; private set; }
-        public DesignWorkflowState DesignStatePS4 { get; private set; }
-        public DesignWorkflowState DesignStateXboxOne { get; private set; }
+        public ulong Alliance { get; protected set; }
+        public BoundsPrototype Bounds { get; protected set; }
+        public ulong DialogText { get; protected set; }
+        public ulong UnrealClass { get; protected set; }
+        public ulong XPGrantedCurve { get; protected set; }
+        public bool HACKBuildMouseCollision { get; protected set; }
+        public ulong PreInteractPower { get; protected set; }
+        public DialogStyle DialogStyle { get; protected set; }
+        public WeightedTextEntryPrototype[] DialogTextList { get; protected set; }
+        public ulong[] Keywords { get; protected set; }
+        public DesignWorkflowState DesignState { get; protected set; }
+        public ulong Rank { get; protected set; }
+        public LocomotorMethod NaviMethod { get; protected set; }
+        public bool SnapToFloorOnSpawn { get; protected set; }
+        public bool AffectNavigation { get; protected set; }
+        public StateChangePrototype PostInteractState { get; protected set; }
+        public StateChangePrototype PostKilledState { get; protected set; }
+        public bool OrientToInteractor { get; protected set; }
+        public ulong TooltipInWorldTemplate { get; protected set; }
+        public bool InteractIgnoreBoundsForDistance { get; protected set; }
+        public float PopulationWeight { get; protected set; }
+        public bool VisibleByDefault { get; protected set; }
+        public int RemoveFromWorldTimerMS { get; protected set; }
+        public bool RemoveNavInfluenceOnKilled { get; protected set; }
+        public bool AlwaysSimulated { get; protected set; }
+        public bool XPIsShared { get; protected set; }
+        public ulong TutorialTip { get; protected set; }
+        public bool TrackingDisabled { get; protected set; }
+        public ulong[] ModifiersGuaranteed { get; protected set; }
+        public float InteractRangeBonus { get; protected set; }
+        public bool ShouldIgnoreMaxDeadBodies { get; protected set; }
+        public bool ModifierSetEnable { get; protected set; }
+        public bool LiveTuningDefaultEnabled { get; protected set; }
+        public bool UpdateOrientationWithParent { get; protected set; }
+        public bool MissionEntityDeathCredit { get; protected set; }
+        public bool HACKDiscoverInRegion { get; protected set; }
+        public bool CanCollideWithPowerUserItems { get; protected set; }
+        public bool ForwardOnHitProcsToOwner { get; protected set; }
+        public ObjectiveInfoPrototype ObjectiveInfo { get; protected set; }
+        public WorldEntityIconsPrototype Icons { get; protected set; }
+        public EntitySelectorActionPrototype[] EntitySelectorActions { get; protected set; }
+        public bool OverheadIndicator { get; protected set; }
+        public bool RequireCombatActiveForKillCredit { get; protected set; }
+        public bool ClonePerPlayer { get; protected set; }
+        public bool PrefetchMarkedAssets { get; protected set; }
+        public ulong MarvelModelRenderClass { get; protected set; }
+        public DesignWorkflowState DesignStatePS4 { get; protected set; }
+        public DesignWorkflowState DesignStateXboxOne { get; protected set; }
     }
 
     public class StateChangePrototype : Prototype
@@ -249,159 +249,159 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class StateTogglePrototype : StateChangePrototype
     {
-        public ulong StateA { get; private set; }
-        public ulong StateB { get; private set; }
+        public ulong StateA { get; protected set; }
+        public ulong StateB { get; protected set; }
     }
 
     public class StateSetPrototype : StateChangePrototype
     {
-        public ulong State { get; private set; }
+        public ulong State { get; protected set; }
     }
 
     public class WorldEntityIconsPrototype : Prototype
     {
-        public ulong EdgeIcon { get; private set; }
-        public ulong MapIcon { get; private set; }
-        public ulong EdgeIconHiRes { get; private set; }
+        public ulong EdgeIcon { get; protected set; }
+        public ulong MapIcon { get; protected set; }
+        public ulong EdgeIconHiRes { get; protected set; }
     }
 
     #region EntityAction
 
     public class EntityActionBasePrototype : Prototype
     {
-        public int Weight { get; private set; }
+        public int Weight { get; protected set; }
     }
 
     public class EntityActionAIOverridePrototype : EntityActionBasePrototype
     {
-        public ulong Power { get; private set; }
-        public bool PowerRemove { get; private set; }
-        public ulong Brain { get; private set; }
-        public bool BrainRemove { get; private set; }
-        public bool SelectorReferencedPowerRemove { get; private set; }
-        public int AIAggroRangeOverrideAlly { get; private set; }
-        public int AIAggroRangeOverrideEnemy { get; private set; }
-        public int AIProximityRangeOverride { get; private set; }
-        public int LifespanMS { get; private set; }
-        public ulong LifespanEndPower { get; private set; }
+        public ulong Power { get; protected set; }
+        public bool PowerRemove { get; protected set; }
+        public ulong Brain { get; protected set; }
+        public bool BrainRemove { get; protected set; }
+        public bool SelectorReferencedPowerRemove { get; protected set; }
+        public int AIAggroRangeOverrideAlly { get; protected set; }
+        public int AIAggroRangeOverrideEnemy { get; protected set; }
+        public int AIProximityRangeOverride { get; protected set; }
+        public int LifespanMS { get; protected set; }
+        public ulong LifespanEndPower { get; protected set; }
     }
 
     public class EntityActionOverheadTextPrototype : EntityActionBasePrototype
     {
-        public ulong Text { get; private set; }
-        public int Duration { get; private set; }
+        public ulong Text { get; protected set; }
+        public int Duration { get; protected set; }
     }
 
     public class EntityActionEventBroadcastPrototype : EntityActionBasePrototype
     {
-        public EntitySelectorActionEventType EventToBroadcast { get; private set; }
-        public int BroadcastRange { get; private set; }
+        public EntitySelectorActionEventType EventToBroadcast { get; protected set; }
+        public int BroadcastRange { get; protected set; }
     }
 
     public class EntityActionSpawnerTriggerPrototype : EntityActionBasePrototype
     {
-        public bool EnableClusterLocalSpawner { get; private set; }
+        public bool EnableClusterLocalSpawner { get; protected set; }
     }
 
     public class EntitySelectorActionBasePrototype : Prototype
     {
-        public ulong[] AIOverrides { get; private set; }
-        public EntityActionAIOverridePrototype[] AIOverridesList { get; private set; }
-        public ulong[] OverheadTexts { get; private set; }
-        public EntityActionOverheadTextPrototype[] OverheadTextsList { get; private set; }
-        public ulong[] Rewards { get; private set; }
-        public EntitySelectorAttributeActions[] AttributeActions { get; private set; }
-        public HUDEntitySettingsPrototype HUDEntitySettingOverride { get; private set; }
+        public ulong[] AIOverrides { get; protected set; }
+        public EntityActionAIOverridePrototype[] AIOverridesList { get; protected set; }
+        public ulong[] OverheadTexts { get; protected set; }
+        public EntityActionOverheadTextPrototype[] OverheadTextsList { get; protected set; }
+        public ulong[] Rewards { get; protected set; }
+        public EntitySelectorAttributeActions[] AttributeActions { get; protected set; }
+        public HUDEntitySettingsPrototype HUDEntitySettingOverride { get; protected set; }
     }
 
     public class EntitySelectorActionPrototype : EntitySelectorActionBasePrototype
     {
-        public EntitySelectorActionEventType[] EventTypes { get; private set; }
-        public int ReactionTimeMS { get; private set; }
-        public EntitySelectorActionEventType[] CancelOnEventTypes { get; private set; }
-        public ulong SpawnerTrigger { get; private set; }
-        public ulong AllianceOverride { get; private set; }
-        public ulong BroadcastEvent { get; private set; }
+        public EntitySelectorActionEventType[] EventTypes { get; protected set; }
+        public int ReactionTimeMS { get; protected set; }
+        public EntitySelectorActionEventType[] CancelOnEventTypes { get; protected set; }
+        public ulong SpawnerTrigger { get; protected set; }
+        public ulong AllianceOverride { get; protected set; }
+        public ulong BroadcastEvent { get; protected set; }
     }
 
     public class EntitySelectorActionSetPrototype : Prototype
     {
-        public EntitySelectorActionPrototype[] EntitySelectorActions { get; private set; }
+        public EntitySelectorActionPrototype[] EntitySelectorActions { get; protected set; }
     }
 
     public class EntitySelectorPrototype : Prototype
     {
-        public ulong[] Entities { get; private set; }
-        public EntitySelectorActionPrototype[] EntitySelectorActions { get; private set; }
-        public ulong EntitySelectorActionsTemplate { get; private set; }
-        public ulong DefaultBrainOnSimulated { get; private set; }
-        public bool IgnoreMissionOwnerForTargeting { get; private set; }
-        public float DefaultAggroRangeAlly { get; private set; }
-        public float DefaultAggroRangeHostile { get; private set; }
-        public float DefaultProximityRangeHostile { get; private set; }
-        public EvalPrototype EvalSpawnProperties { get; private set; }
-        public bool SelectUniqueEntities { get; private set; }
+        public ulong[] Entities { get; protected set; }
+        public EntitySelectorActionPrototype[] EntitySelectorActions { get; protected set; }
+        public ulong EntitySelectorActionsTemplate { get; protected set; }
+        public ulong DefaultBrainOnSimulated { get; protected set; }
+        public bool IgnoreMissionOwnerForTargeting { get; protected set; }
+        public float DefaultAggroRangeAlly { get; protected set; }
+        public float DefaultAggroRangeHostile { get; protected set; }
+        public float DefaultProximityRangeHostile { get; protected set; }
+        public EvalPrototype EvalSpawnProperties { get; protected set; }
+        public bool SelectUniqueEntities { get; protected set; }
     }
 
     public class EntityActionTimelineScriptActionPrototype : EntitySelectorActionBasePrototype
     {
-        public ScriptRoleKeyEnum[] ScriptRoleKeys { get; private set; }
-        public ulong SpawnerTrigger { get; private set; }
+        public ScriptRoleKeyEnum[] ScriptRoleKeys { get; protected set; }
+        public ulong SpawnerTrigger { get; protected set; }
     }
 
     public class EntityActionTimelineScriptEventPrototype : Prototype
     {
-        public ulong[] ActionsList { get; private set; }
-        public EntityActionTimelineScriptActionPrototype[] ActionsVector { get; private set; }
-        public int EventTime { get; private set; }
-        public EntitySelectorActionEventType[] InterruptOnEventTypes { get; private set; }
+        public ulong[] ActionsList { get; protected set; }
+        public EntityActionTimelineScriptActionPrototype[] ActionsVector { get; protected set; }
+        public int EventTime { get; protected set; }
+        public EntitySelectorActionEventType[] InterruptOnEventTypes { get; protected set; }
     }
 
     public class EntityActionTimelineScriptPrototype : Prototype
     {
-        public EntitySelectorActionEventType[] TriggerOnEventTypes { get; private set; }
-        public EntitySelectorActionEventType[] CancelOnEventTypes { get; private set; }
-        public EntityActionTimelineScriptEventPrototype[] ScriptEvents { get; private set; }
-        public bool RunOnceOnly { get; private set; }
+        public EntitySelectorActionEventType[] TriggerOnEventTypes { get; protected set; }
+        public EntitySelectorActionEventType[] CancelOnEventTypes { get; protected set; }
+        public EntityActionTimelineScriptEventPrototype[] ScriptEvents { get; protected set; }
+        public bool RunOnceOnly { get; protected set; }
     }
 
     #endregion
 
     public class WeightedTextEntryPrototype : Prototype
     {
-        public ulong Text { get; private set; }
-        public long Weight { get; private set; }
+        public ulong Text { get; protected set; }
+        public long Weight { get; protected set; }
     }
 
     public class TransitionPrototype : WorldEntityPrototype
     {
-        public RegionTransitionType Type { get; private set; }
-        public int SpawnOffset { get; private set; }
-        public ulong Waypoint { get; private set; }
-        public bool SupressBlackout { get; private set; }
-        public bool ShowIndicator { get; private set; }
-        public bool ShowConfirmationDialog { get; private set; }
-        public ulong DirectTarget { get; private set; }
-        public ulong[] RegionAffixesBySummonerRarity { get; private set; }
-        public ulong ShowConfirmationDialogOverride { get; private set; }
-        public ulong ShowConfirmationDialogTemplate { get; private set; }
-        public ulong ShowConfirmationDialogEnemy { get; private set; }
+        public RegionTransitionType Type { get; protected set; }
+        public int SpawnOffset { get; protected set; }
+        public ulong Waypoint { get; protected set; }
+        public bool SupressBlackout { get; protected set; }
+        public bool ShowIndicator { get; protected set; }
+        public bool ShowConfirmationDialog { get; protected set; }
+        public ulong DirectTarget { get; protected set; }
+        public ulong[] RegionAffixesBySummonerRarity { get; protected set; }
+        public ulong ShowConfirmationDialogOverride { get; protected set; }
+        public ulong ShowConfirmationDialogTemplate { get; protected set; }
+        public ulong ShowConfirmationDialogEnemy { get; protected set; }
     }
 
     public class EntityAppearancePrototype : Prototype
     {
-        public EntityAppearanceEnum AppearanceEnum { get; private set; }
+        public EntityAppearanceEnum AppearanceEnum { get; protected set; }
     }
 
     public class EntityStatePrototype : Prototype
     {
-        public ulong Appearance { get; private set; }
-        public ulong OnActivatePowers { get; private set; }
+        public ulong Appearance { get; protected set; }
+        public ulong OnActivatePowers { get; protected set; }
     }
 
     public class DoorEntityStatePrototype : EntityStatePrototype
     {
-        public bool IsOpen { get; private set; }
+        public bool IsOpen { get; protected set; }
     }
 
     public class InteractionSpecPrototype : Prototype
@@ -410,157 +410,157 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ConnectionTargetEnableSpecPrototype : InteractionSpecPrototype
     {
-        public ulong ConnectionTarget { get; private set; }
-        public bool Enabled { get; private set; }
+        public ulong ConnectionTarget { get; protected set; }
+        public bool Enabled { get; protected set; }
     }
 
     public class EntityBaseSpecPrototype : InteractionSpecPrototype
     {
-        public EntityFilterPrototype EntityFilter { get; private set; }
+        public EntityFilterPrototype EntityFilter { get; protected set; }
     }
 
     public class EntityVisibilitySpecPrototype : EntityBaseSpecPrototype
     {
-        public bool Visible { get; private set; }
+        public bool Visible { get; protected set; }
     }
 
     public class EntityAppearanceSpecPrototype : EntityBaseSpecPrototype
     {
-        public ulong Appearance { get; private set; }
-        public ulong FailureReasonText { get; private set; }
-        public TriBool InteractionEnabled { get; private set; }
+        public ulong Appearance { get; protected set; }
+        public ulong FailureReasonText { get; protected set; }
+        public TriBool InteractionEnabled { get; protected set; }
     }
 
     public class HotspotDirectApplyToMissilesDataPrototype : Prototype
     {
-        public bool AffectsAllyMissiles { get; private set; }
-        public bool AffectsHostileMissiles { get; private set; }
-        public EvalPrototype EvalPropertiesToApply { get; private set; }
-        public bool AffectsReflectedMissilesOnly { get; private set; }
-        public bool IsPermanent { get; private set; }
+        public bool AffectsAllyMissiles { get; protected set; }
+        public bool AffectsHostileMissiles { get; protected set; }
+        public EvalPrototype EvalPropertiesToApply { get; protected set; }
+        public bool AffectsReflectedMissilesOnly { get; protected set; }
+        public bool IsPermanent { get; protected set; }
     }
 
     public class HotspotPrototype : WorldEntityPrototype
     {
-        public PowerPrototype AppliesPowers { get; private set; }
-        public PowerPrototype AppliesIntervalPowers { get; private set; }
-        public int IntervalPowersTimeDelayMS { get; private set; }
-        public bool IntervalPowersRandomTarget { get; private set; }
-        public int IntervalPowersNumRandomTargets { get; private set; }
-        public UINotificationPrototype UINotificationOnEnter { get; private set; }
-        public int MaxSimultaneousTargets { get; private set; }
-        public bool KillCreatorWhenHotspotIsEmpty { get; private set; }
-        public ulong KismetSeq { get; private set; }
-        public bool Negatable { get; private set; }
-        public bool KillSelfWhenPowerApplied { get; private set; }
-        public HotspotOverlapEventTriggerType OverlapEventsTriggerOn { get; private set; }
-        public int OverlapEventsMaxTargets { get; private set; }
-        public HotspotDirectApplyToMissilesDataPrototype DirectApplyToMissilesData { get; private set; }
-        public int ApplyEffectsDelayMS { get; private set; }
-        public ulong CameraSettings { get; private set; }
-        public int MaxLifetimeTargets { get; private set; }
+        public PowerPrototype AppliesPowers { get; protected set; }
+        public PowerPrototype AppliesIntervalPowers { get; protected set; }
+        public int IntervalPowersTimeDelayMS { get; protected set; }
+        public bool IntervalPowersRandomTarget { get; protected set; }
+        public int IntervalPowersNumRandomTargets { get; protected set; }
+        public UINotificationPrototype UINotificationOnEnter { get; protected set; }
+        public int MaxSimultaneousTargets { get; protected set; }
+        public bool KillCreatorWhenHotspotIsEmpty { get; protected set; }
+        public ulong KismetSeq { get; protected set; }
+        public bool Negatable { get; protected set; }
+        public bool KillSelfWhenPowerApplied { get; protected set; }
+        public HotspotOverlapEventTriggerType OverlapEventsTriggerOn { get; protected set; }
+        public int OverlapEventsMaxTargets { get; protected set; }
+        public HotspotDirectApplyToMissilesDataPrototype DirectApplyToMissilesData { get; protected set; }
+        public int ApplyEffectsDelayMS { get; protected set; }
+        public ulong CameraSettings { get; protected set; }
+        public int MaxLifetimeTargets { get; protected set; }
     }
 
     public class OverheadTextPrototype : Prototype
     {
-        public EntityFilterFilterListPrototype OverheadTextEntityFilter { get; private set; }
-        public ulong OverheadText { get; private set; }
+        public EntityFilterFilterListPrototype OverheadTextEntityFilter { get; protected set; }
+        public ulong OverheadText { get; protected set; }
     }
 
     public class SpawnerSequenceEntryPrototype : PopulationRequiredObjectPrototype
     {
-        public bool OnKilledDefeatSpawner { get; private set; }
-        public ulong OnDefeatAIOverride { get; private set; }
-        public bool Unique { get; private set; }
-        public OverheadTextPrototype[] OnSpawnOverheadTexts { get; private set; }
+        public bool OnKilledDefeatSpawner { get; protected set; }
+        public ulong OnDefeatAIOverride { get; protected set; }
+        public bool Unique { get; protected set; }
+        public OverheadTextPrototype[] OnSpawnOverheadTexts { get; protected set; }
     }
 
     public class SpawnerPrototype : WorldEntityPrototype
     {
-        public int SpawnLifetimeMax { get; private set; }
-        public int SpawnDistanceMin { get; private set; }
-        public int SpawnDistanceMax { get; private set; }
-        public int SpawnIntervalMS { get; private set; }
-        public int SpawnSimultaneousMax { get; private set; }
-        public ulong SpawnedEntityInventory { get; private set; }
-        public SpawnerSequenceEntryPrototype[] SpawnSequence { get; private set; }
-        public bool SpawnsInheritMissionPrototype { get; private set; }
-        public bool StartEnabled { get; private set; }
-        public bool OnDestroyCleanupSpawnedEntities { get; private set; }
-        public int SpawnIntervalVarianceMS { get; private set; }
-        public ulong HotspotTrigger { get; private set; }
-        public BannerMessagePrototype OnDefeatBannerMessage { get; private set; }
-        public bool OnDefeatDefeatGroup { get; private set; }
-        public SpawnerDefeatCriteria DefeatCriteria { get; private set; }
-        public EvalPrototype EvalSpawnProperties { get; private set; }
-        public FormationFacing SpawnFacing { get; private set; }
-        public SpawnFailBehavior SpawnFailBehavior { get; private set; }
-        public int DefeatTimeoutMS { get; private set; }
+        public int SpawnLifetimeMax { get; protected set; }
+        public int SpawnDistanceMin { get; protected set; }
+        public int SpawnDistanceMax { get; protected set; }
+        public int SpawnIntervalMS { get; protected set; }
+        public int SpawnSimultaneousMax { get; protected set; }
+        public ulong SpawnedEntityInventory { get; protected set; }
+        public SpawnerSequenceEntryPrototype[] SpawnSequence { get; protected set; }
+        public bool SpawnsInheritMissionPrototype { get; protected set; }
+        public bool StartEnabled { get; protected set; }
+        public bool OnDestroyCleanupSpawnedEntities { get; protected set; }
+        public int SpawnIntervalVarianceMS { get; protected set; }
+        public ulong HotspotTrigger { get; protected set; }
+        public BannerMessagePrototype OnDefeatBannerMessage { get; protected set; }
+        public bool OnDefeatDefeatGroup { get; protected set; }
+        public SpawnerDefeatCriteria DefeatCriteria { get; protected set; }
+        public EvalPrototype EvalSpawnProperties { get; protected set; }
+        public FormationFacing SpawnFacing { get; protected set; }
+        public SpawnFailBehavior SpawnFailBehavior { get; protected set; }
+        public int DefeatTimeoutMS { get; protected set; }
     }
 
     public class KismetSequenceEntityPrototype : WorldEntityPrototype
     {
-        public ulong KismetSequence { get; private set; }
+        public ulong KismetSequence { get; protected set; }
     }
 
     public class FactionPrototype : Prototype
     {
-        public ulong IconPath { get; private set; }
-        public ulong TextStyle { get; private set; }
-        public FactionColor HealthColor { get; private set; }
+        public ulong IconPath { get; protected set; }
+        public ulong TextStyle { get; protected set; }
+        public FactionColor HealthColor { get; protected set; }
     }
 
     public class WaypointPrototype : Prototype
     {
-        public ulong Destination { get; private set; }
-        public ulong Name { get; private set; }
-        public bool SupressBannerMessage { get; private set; }
-        public bool IsCheckpoint { get; private set; }
-        public ulong WaypointGraph { get; private set; }
-        public ulong WaypointGraphList { get; private set; }
-        public ulong RequiresItem { get; private set; }
-        public EvalPrototype EvalShouldDisplay { get; private set; }
-        public ulong Tooltip { get; private set; }
-        public bool IncludeWaypointPrefixInName { get; private set; }
-        public bool StartLocked { get; private set; }
-        public ulong DestinationBossEntities { get; private set; }
-        public bool IsAccountWaypoint { get; private set; }
-        public int MigrationUnlockedByLevel { get; private set; }
-        public ulong MigrationUnlockedByChapters { get; private set; }
-        public WaypointPOIType MapPOIType { get; private set; }
-        public ulong MapConnectTo { get; private set; }
-        public ulong MapDescription { get; private set; }
-        public float MapPOIXCoord { get; private set; }
-        public float MapPOIYCoord { get; private set; }
-        public ulong MapImage { get; private set; }
-        public ulong OpenToWaypointGraph { get; private set; }
-        public ulong MapImageConsole { get; private set; }
-        public ulong LocationImageConsole { get; private set; }
-        public ulong ConsoleRegionDescription { get; private set; }
-        public ulong ConsoleLocationName { get; private set; }
-        public ulong ConsoleRegionType { get; private set; }
-        public ulong ConsoleLevelRange { get; private set; }
-        public LocalizedTextAndImagePrototype[] ConsoleRegionItems { get; private set; }
-        public ulong ConsoleWaypointGraphList { get; private set; }
+        public ulong Destination { get; protected set; }
+        public ulong Name { get; protected set; }
+        public bool SupressBannerMessage { get; protected set; }
+        public bool IsCheckpoint { get; protected set; }
+        public ulong WaypointGraph { get; protected set; }
+        public ulong WaypointGraphList { get; protected set; }
+        public ulong RequiresItem { get; protected set; }
+        public EvalPrototype EvalShouldDisplay { get; protected set; }
+        public ulong Tooltip { get; protected set; }
+        public bool IncludeWaypointPrefixInName { get; protected set; }
+        public bool StartLocked { get; protected set; }
+        public ulong DestinationBossEntities { get; protected set; }
+        public bool IsAccountWaypoint { get; protected set; }
+        public int MigrationUnlockedByLevel { get; protected set; }
+        public ulong MigrationUnlockedByChapters { get; protected set; }
+        public WaypointPOIType MapPOIType { get; protected set; }
+        public ulong MapConnectTo { get; protected set; }
+        public ulong MapDescription { get; protected set; }
+        public float MapPOIXCoord { get; protected set; }
+        public float MapPOIYCoord { get; protected set; }
+        public ulong MapImage { get; protected set; }
+        public ulong OpenToWaypointGraph { get; protected set; }
+        public ulong MapImageConsole { get; protected set; }
+        public ulong LocationImageConsole { get; protected set; }
+        public ulong ConsoleRegionDescription { get; protected set; }
+        public ulong ConsoleLocationName { get; protected set; }
+        public ulong ConsoleRegionType { get; protected set; }
+        public ulong ConsoleLevelRange { get; protected set; }
+        public LocalizedTextAndImagePrototype[] ConsoleRegionItems { get; protected set; }
+        public ulong ConsoleWaypointGraphList { get; protected set; }
     }
 
     public class WaypointChapterPrototype : Prototype
     {
-        public ulong Chapter { get; private set; }
-        public ulong[] Waypoints { get; private set; }
+        public ulong Chapter { get; protected set; }
+        public ulong[] Waypoints { get; protected set; }
     }
 
     public class WaypointGraphPrototype : Prototype
     {
-        public WaypointChapterPrototype[] Chapters { get; private set; }
-        public ulong DisplayName { get; private set; }
-        public ulong MapDescription { get; private set; }
-        public ulong MapImage { get; private set; }
-        public ulong Tooltip { get; private set; }
+        public WaypointChapterPrototype[] Chapters { get; protected set; }
+        public ulong DisplayName { get; protected set; }
+        public ulong MapDescription { get; protected set; }
+        public ulong MapImage { get; protected set; }
+        public ulong Tooltip { get; protected set; }
     }
 
     public class CheckpointPrototype : Prototype
     {
-        public ulong Destination { get; private set; }
+        public ulong Destination { get; protected set; }
     }
 }
