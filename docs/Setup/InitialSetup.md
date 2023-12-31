@@ -15,7 +15,7 @@ After getting the client, you need to set up a web server to serve SiteConfig.xm
 4. Open ```Apache24\conf\extra\httpd-ssl.conf``` with any text editor, find the `<VirtualHost _default_:443>` section, and add the following two lines to it:
    `RewriteEngine on` and `RewriteRule ^/AuthServer(.*) http://%{HTTP_HOST}:8080$1 [P]`.
 
-5. Put [server.crt](./../../assets/ssl/server.crt) and [server.crt](./../../assets/ssl/server.key) provided in this repository in `Apache24\conf`. Alternatively, you can generate your own OpenSSL certificate.
+5. Put [server.crt](./../../assets/ssl/server.crt) and [server.key](./../../assets/ssl/server.key) provided in this repository in `Apache24\conf`. Alternatively, you can generate your own SSL certificate.
 
 6. Put [SiteConfig.xml](./../../assets/SiteConfig.xml) provided in this repository in ```Apache24\htdocs```.
 
