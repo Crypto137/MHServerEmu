@@ -40,25 +40,25 @@
     <None Update="Data\Account.db">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\AuthServer\AccountCreateForm.html">
+    <None Update="Data\Auth\AccountCreateForm.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\AuthServer\Response.html">
+    <None Update="Data\Auth\Response.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\Catalog.json">
+    <None Update="Data\Billing\Catalog.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\CatalogPatch.json">
+    <None Update="Data\Billing\CatalogPatch.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\CompressedAchievementDatabaseDump.bin">
+    <None Update="Data\Game\CompressedAchievementDatabaseDump.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\GPAK\IMPORTANT.txt">
+    <None Update="Data\Game\IMPORTANT.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\LiveTuningData.json">
+    <None Update="Data\Game\LiveTuningData.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Data\Packets\NetMessageEntityCreateAvatars.bin">

@@ -17,17 +17,18 @@ namespace MHServerEmu.Billing
         private const ushort MuxChannel = 1;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
+        private static readonly string BillingDataDirectory = Path.Combine(FileHelper.DataDirectory, "Billing");
 
         private readonly Catalog _catalog;
 
         public BillingService()
         {
-            _catalog = FileHelper.DeserializeJson<Catalog>(Path.Combine(FileHelper.DataDirectory, "Catalog.json"));
+            _catalog = FileHelper.DeserializeJson<Catalog>(Path.Combine(BillingDataDirectory, "Catalog.json"));
 
             // Apply a patch to the catalog if it's enabled and there's one
             if (ConfigManager.Billing.ApplyCatalogPatch)
             {
-                string patchPath = Path.Combine(FileHelper.DataDirectory, "CatalogPatch.json");
+                string patchPath = Path.Combine(BillingDataDirectory, "CatalogPatch.json");
                 if (File.Exists(patchPath))
                 {
                     CatalogEntry[] catalogPatch = FileHelper.DeserializeJson<CatalogEntry[]>(patchPath);
