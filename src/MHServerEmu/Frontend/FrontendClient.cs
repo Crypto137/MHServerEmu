@@ -109,7 +109,7 @@ namespace MHServerEmu.Frontend
 
         public void SendPacketFromFile(string fileName)
         {
-            string path = Path.Combine(FileHelper.AssetsDirectory, "Packets", fileName);
+            string path = Path.Combine(FileHelper.DataDirectory, "Packets", fileName);
 
             if (File.Exists(path))
             {

@@ -9,7 +9,7 @@ namespace MHServerEmu.Common.Helpers
     public static class FileHelper
     {
         public static readonly string ServerRoot = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        public static readonly string AssetsDirectory = Path.Combine(ServerRoot, "Assets");
+        public static readonly string DataDirectory = Path.Combine(ServerRoot, "Data");
 
         /// <summary>
         /// Deserializes an object from a JSON file located at the specified path.

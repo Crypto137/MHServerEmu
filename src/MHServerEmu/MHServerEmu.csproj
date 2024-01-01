@@ -37,34 +37,34 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Assets\Account.db">
+    <None Update="Data\Account.db">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\AuthServer\AccountCreateForm.html">
+    <None Update="Data\AuthServer\AccountCreateForm.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\AuthServer\Response.html">
+    <None Update="Data\AuthServer\Response.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\Catalog.json">
+    <None Update="Data\Catalog.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\CatalogPatch.json">
+    <None Update="Data\CatalogPatch.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\CompressedAchievementDatabaseDump.bin">
+    <None Update="Data\CompressedAchievementDatabaseDump.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\GPAK\IMPORTANT.txt">
+    <None Update="Data\GPAK\IMPORTANT.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\LiveTuningData.json">
+    <None Update="Data\LiveTuningData.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\Packets\NetMessageEntityCreateAvatars.bin">
+    <None Update="Data\Packets\NetMessageEntityCreateAvatars.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\Packets\NetMessageEntityCreatePlayer.bin">
+    <None Update="Data\Packets\NetMessageEntityCreatePlayer.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Config.ini">

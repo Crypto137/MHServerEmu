@@ -14,7 +14,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
         static LiveTuningManager()
         {
-            LiveTuningData = new(Path.Combine(FileHelper.AssetsDirectory, "LiveTuningData.json"));
+            LiveTuningData = new(Path.Combine(FileHelper.DataDirectory, "LiveTuningData.json"));
             Logger.Info($"Loaded {LiveTuningData.Count} live tuning settings");
             IsInitialized = true;
         }

@@ -15,7 +15,7 @@ namespace MHServerEmu.PlayerManagement.Accounts
 
         static DBManager()
         {
-            string dbPath = Path.Combine(FileHelper.AssetsDirectory, "Account.db");
+            string dbPath = Path.Combine(FileHelper.DataDirectory, "Account.db");
             if (File.Exists(dbPath) == false)
             {
                 Logger.Fatal($"{dbPath} not found");

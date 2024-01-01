@@ -22,12 +22,12 @@ namespace MHServerEmu.Billing
 
         public BillingService()
         {
-            _catalog = FileHelper.DeserializeJson<Catalog>(Path.Combine(FileHelper.AssetsDirectory, "Catalog.json"));
+            _catalog = FileHelper.DeserializeJson<Catalog>(Path.Combine(FileHelper.DataDirectory, "Catalog.json"));
 
             // Apply a patch to the catalog if it's enabled and there's one
             if (ConfigManager.Billing.ApplyCatalogPatch)
             {
-                string patchPath = Path.Combine(FileHelper.AssetsDirectory, "CatalogPatch.json");
+                string patchPath = Path.Combine(FileHelper.DataDirectory, "CatalogPatch.json");
                 if (File.Exists(patchPath))
                 {
                     CatalogEntry[] catalogPatch = FileHelper.DeserializeJson<CatalogEntry[]>(patchPath);

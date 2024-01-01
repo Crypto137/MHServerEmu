@@ -22,7 +22,7 @@ namespace MHServerEmu.Games.Achievements
 
         public void Initialize()
         {
-            string compressedDumpPath = Path.Combine(FileHelper.AssetsDirectory, "CompressedAchievementDatabaseDump.bin");
+            string compressedDumpPath = Path.Combine(FileHelper.DataDirectory, "CompressedAchievementDatabaseDump.bin");
             byte[] compressedDump = File.ReadAllBytes(compressedDumpPath);
 
             // Decompress the dump

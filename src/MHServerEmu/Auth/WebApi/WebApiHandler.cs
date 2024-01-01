@@ -21,7 +21,7 @@ namespace MHServerEmu.Auth.WebApi
 
         public WebApiHandler()
         {
-            string assetDirectory = Path.Combine(FileHelper.AssetsDirectory, "AuthServer");
+            string assetDirectory = Path.Combine(FileHelper.DataDirectory, "AuthServer");
             ResponseHtml = File.ReadAllText(Path.Combine(assetDirectory, "Response.html"));
             AccountCreateFormHtml = File.ReadAllText(Path.Combine(assetDirectory, "AccountCreateForm.html"));
         }

@@ -19,7 +19,7 @@ namespace MHServerEmu.Networking
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private static readonly string PacketDirectory = Path.Combine(FileHelper.AssetsDirectory, "Packets");
+        private static readonly string PacketDirectory = Path.Combine(FileHelper.DataDirectory, "Packets");
 
         public static void ParseServerMessagesFromPacketFile(string fileName)
         {

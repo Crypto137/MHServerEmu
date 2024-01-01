@@ -14,7 +14,7 @@ namespace MHServerEmu.Games.GameData
     /// </summary>
     public class PakFileSystem
     {
-        private static readonly string PakDirectory = Path.Combine(FileHelper.AssetsDirectory, "GPAK");
+        private static readonly string PakDirectory = Path.Combine(FileHelper.DataDirectory, "GPAK");
         private static readonly string[] PakFilePaths = new string[]
         {
             Path.Combine(PakDirectory, "mu_cdata.sip"),
