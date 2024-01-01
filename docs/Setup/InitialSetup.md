@@ -23,7 +23,7 @@ After getting the client, you need to set up a web server to serve SiteConfig.xm
 
 8. Build MHServerEmu with Visual Studio or any other tool you prefer. You can download Visual Studio Community [here](https://visualstudio.microsoft.com/vs/community/). If this is your first time building a .NET project, you can find instructions for Visual Studio [here](https://learn.microsoft.com/en-us/visualstudio/ide/building-and-cleaning-projects-and-solutions-in-visual-studio?view=vs-2022).
 
-9. Copy `Calligraphy.sip` and `mu_cdata.sip` located in `Marvel Heroes\Data\Game` to `MHServerEmu\Assets\GPAK`. Make sure to copy these files to where your compiled emulator is (e.g. `src\MHServerEmu\bin\x64\Debug\net6.0\Assets\GPAK`), and not to one of the source directories.
+9. Copy `Calligraphy.sip` and `mu_cdata.sip` located in `Marvel Heroes\Data\Game` to `MHServerEmu\Data\Game`. Make sure to copy these files to where your compiled emulator is (e.g. `src\MHServerEmu\bin\x64\Debug\net6.0\Data\Game`), and not to one of the source directories.
 
 Now you can actually start everything and get in-game.
 
