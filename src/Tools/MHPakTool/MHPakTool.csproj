@@ -9,10 +9,10 @@
 
   <ItemGroup>
     <Reference Include="K4os.Compression.LZ4">
-      <HintPath>..\..\dep\K4os.Compression.LZ4\K4os.Compression.LZ4.dll</HintPath>
+      <HintPath>..\..\..\dep\K4os.Compression.LZ4\K4os.Compression.LZ4.dll</HintPath>
     </Reference>
     <Reference Include="System.IO.Hashing">
-      <HintPath>..\..\dep\System.IO.Hashing\System.IO.Hashing.dll</HintPath>
+      <HintPath>..\..\..\dep\System.IO.Hashing\System.IO.Hashing.dll</HintPath>
     </Reference>
   </ItemGroup>
 
