@@ -3,14 +3,15 @@ using MHServerEmu.Common.Logging;
 
 namespace MHServerEmu.Games.GameData.Calligraphy
 {
+    /// <summary>
+    /// Provides field group definitions for Calligraphy prototypes.
+    /// </summary>
     public class Blueprint
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private PrototypeId[] _enumValueToPrototypeLookup = Array.Empty<PrototypeId>();
         private Dictionary<PrototypeId, int> _prototypeToEnumValueDict;
-
-        private PrototypeId _propertyDataRef = PrototypeId.Invalid;
 
         public BlueprintId Id { get; }
         public BlueprintGuid Guid { get; }
@@ -24,8 +25,13 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         public BlueprintReference[] ContributingBlueprints { get; }
         public BlueprintMember[] Members { get; }                                   // Field definitions for prototypes that use this blueprint  
 
+        public PrototypeId PropertyDataRef { get; private set; } = PrototypeId.Invalid;
+
         public int PrototypeMaxEnumValue { get => _enumValueToPrototypeLookup.Length - 1; }
 
+        /// <summary>
+        /// Deserializes a new <see cref="Blueprint"/> instance from a <see cref="Stream"/>.
+        /// </summary>
         public Blueprint(Stream stream, BlueprintId id, BlueprintGuid guid)
         {
             Id = id;
@@ -56,11 +62,17 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             }
         }
 
+        /// <summary>
+        /// Returns the first blueprint member with the specified <see cref="StringId"/>.
+        /// </summary>
         public BlueprintMember GetMember(StringId id)
         {
             return Members.First(member => member.FieldId == id);
         }
 
+        /// <summary>
+        /// Begins file id hash set population for this blueprint.
+        /// </summary>
         public void OnAllDirectoriesLoaded()
         {
             // Data ref fixups happen here in the client - we don't really need those right now
@@ -68,6 +80,9 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             PopulateFileIds(FileIdHashSet);
         }
 
+        /// <summary>
+        /// Populates file id hash set for this blueprint. This should be called only from this or related blueprints.
+        /// </summary>
         public void PopulateFileIds(HashSet<BlueprintId> callerFileIdHashSet)
         {
             // Begin building a new hash set if ours is empty
@@ -91,16 +106,16 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             }
         }
 
-        public void GenerateEnumLookups()
+        /// <summary>
+        /// Generates EnumValue -> PrototypeId and PrototypeId -> EnumValue lookups for this blueprint.
+        /// </summary>
+        public bool GenerateEnumLookups()
         {
             // Note: this method is not present in the original game where this is done
             // within DataDirectory::initializeHierarchyCache() instead.
 
             if (_enumValueToPrototypeLookup.Length > 0)
-            {
-                Logger.Warn($"Failed to generate enum lookups for blueprint {GameDatabase.GetBlueprintName(Id)}: already generated");
-                return;
-            }
+                Logger.WarnReturn(false, $"Failed to generate enum lookups for blueprint {GameDatabase.GetBlueprintName(Id)}: already generated");
 
             // EnumValue -> PrototypeId
             _enumValueToPrototypeLookup = new PrototypeId[PrototypeRecordList.Count + 1];
@@ -112,17 +127,15 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             _prototypeToEnumValueDict = new(_enumValueToPrototypeLookup.Length);
             for (int i = 0; i < _enumValueToPrototypeLookup.Length; i++)
                 _prototypeToEnumValueDict.Add(_enumValueToPrototypeLookup[i], i);
+
+            return true;
         }
 
-        public void SetPropertyPrototypeDataRef(PrototypeId propertyDataRef)
-        {
-            if (_propertyDataRef != PrototypeId.Invalid)
-                Logger.Warn(string.Format("Trying to bind blueprint {0} to property {1}, but this blueprint is already bound to {2}",
-                            GameDatabase.GetBlueprint(Id), GameDatabase.GetPrototypeName(propertyDataRef), GameDatabase.GetPrototypeName(_propertyDataRef)));
-
-            _propertyDataRef = propertyDataRef;
-        }
-
+        /// <summary>
+        /// Gets a <see cref="PrototypeId"/> for the specified enum value. Returns 0 if the enum value is out of range.
+        /// </summary>
+        /// <param name="enumValue"></param>
+        /// <returns></returns>
         public PrototypeId GetPrototypeFromEnumValue(int enumValue)
         {
             if (enumValue < 0 || enumValue >= _enumValueToPrototypeLookup.Length)
@@ -131,6 +144,9 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return _enumValueToPrototypeLookup[enumValue];
         }
 
+        /// <summary>
+        /// Gets an enum value for the specified <see cref="PrototypeId"/>. Returns 0 if the prototype does not belong to this blueprint.
+        /// </summary>
         public int GetPrototypeEnumValue(PrototypeId prototypeId)
         {
             if (_prototypeToEnumValueDict.TryGetValue(prototypeId, out int enumValue) == false)
@@ -139,7 +155,25 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return enumValue;
         }
 
-        public PrototypeId GetPropertyPrototypeRef() => _propertyDataRef;
+        /// <summary>
+        /// Binds this blueprint to a property prototype.
+        /// </summary>
+        public void SetPropertyPrototypeDataRef(PrototypeId propertyDataRef)
+        {
+            if (PropertyDataRef != PrototypeId.Invalid)
+                Logger.Warn(string.Format("Trying to bind blueprint {0} to property {1}, but this blueprint is already bound to {2}",
+                            GameDatabase.GetBlueprint(Id), GameDatabase.GetPrototypeName(propertyDataRef), GameDatabase.GetPrototypeName(PropertyDataRef)));
+
+            PropertyDataRef = propertyDataRef;
+        }
+
+        /// <summary>
+        /// Returns if this blueprint is bound to a property. 
+        /// </summary>
+        public bool IsProperty()
+        {
+            return PropertyDataRef != PrototypeId.Invalid;
+        }
 
         /// <summary>
         /// Checks if this blueprint belongs to the specified blueprint in the hierarchy.
@@ -149,17 +183,30 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return FileIdHashSet.Contains(blueprintId);
         }
 
-        public bool IsProperty()
+        /// <summary>
+        /// Checks if this blueprint is a child of the provided blueprint in the prototype class hierarchy.
+        /// </summary>
+        public bool IsRuntimeChildOf(Blueprint parent)
         {
-            return _propertyDataRef != PrototypeId.Invalid;
+            // Check against itself
+            if (parent == this) return true;
+
+            // Check runtime bindings
+            return GameDatabase.PrototypeClassManager.PrototypeClassIsA(RuntimeBindingClassType, parent.RuntimeBindingClassType);
         }
     }
 
+    /// <summary>
+    /// Contains a reference to another blueprint.
+    /// </summary>
     public readonly struct BlueprintReference
     {
         public BlueprintId BlueprintId { get; }
         public byte NumOfCopies { get; }
 
+        /// <summary>
+        /// Deserializes a <see cref="BlueprintReference"/>.
+        /// </summary>
         public BlueprintReference(BinaryReader reader)
         {
             BlueprintId = (BlueprintId)reader.ReadUInt64();
@@ -167,6 +214,9 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         }
     }
 
+    /// <summary>
+    /// Defines a field in a Calligraphy prototype.
+    /// </summary>
     public class BlueprintMember
     {
         public StringId FieldId { get; }
@@ -175,6 +225,9 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         public CalligraphyStructureType StructureType { get; }
         public ulong Subtype { get; }
 
+        /// <summary>
+        /// Deserializes a new <see cref="BlueprintMember"/> instance.
+        /// </summary>
         public BlueprintMember(BinaryReader reader)
         {
             FieldId = (StringId)reader.ReadUInt64();
