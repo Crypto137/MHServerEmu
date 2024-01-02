@@ -103,13 +103,61 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
         private void DeserializeFieldGroup(Prototype prototype, Blueprint blueprint, byte fieldGroupCopyNum, string prototypeName, BinaryReader reader, string groupTag)
         {
-            // todo
+            // Placeholder implementation for testing
+
+            short numFields = reader.ReadInt16();
+            for (int i = 0; i < numFields; i++)
+            {
+                var id = (StringId)reader.ReadUInt64();
+                var type = (CalligraphyBaseType)reader.ReadByte();
+
+                if (groupTag == "Simple Fields")
+                {
+                    object value = type switch
+                    {
+                        CalligraphyBaseType.Boolean => Convert.ToBoolean(reader.ReadUInt64()),
+                        CalligraphyBaseType.Double => reader.ReadDouble(),
+                        CalligraphyBaseType.Long => reader.ReadInt64(),
+                        CalligraphyBaseType.RHStruct => new Prototype(reader),
+                        _ => reader.ReadUInt64(),
+                    };
+                }
+                else if (groupTag == "List Fields")
+                {
+                    var values = new object[reader.ReadInt16()];
+                    for (int j = 0; j < values.Length; j++)
+                    {
+                        values[j] = type switch
+                        {
+                            CalligraphyBaseType.Boolean => Convert.ToBoolean(reader.ReadUInt64()),
+                            CalligraphyBaseType.Double => reader.ReadDouble(),
+                            CalligraphyBaseType.Long => reader.ReadInt64(),
+                            CalligraphyBaseType.RHStruct => new Prototype(reader),
+                            _ => reader.ReadUInt64(),
+                        };
+                    }
+                }
+            }
         }
 
         private void DeserializePropertyMixin(Prototype prototype, Blueprint blueprint, Blueprint groupBlueprint, byte fieldGroupCopyNum,
             PrototypeId prototypeDataRef, string prototypeName, BinaryReader reader)
         {
-            // todo
+            // Skip property fields groups for now
+            // todo: do actual deserialization in DeserializeFieldGroupIntoProperty()
+            short numSimpleFields = reader.ReadInt16();
+            for (int i = 0; i < numSimpleFields; i++)
+            {
+                var id = (StringId)reader.ReadUInt64();
+                var type = (CalligraphyBaseType)reader.ReadByte();
+
+                // Property mixins don't have any RHStructs, so we can always read the value as uint64
+                // (also no types or localized string refs)
+                var value = reader.ReadUInt64();
+            }
+
+            // Property field groups do not have any list fields, so numListFields should always be 0
+            short numListFields = reader.ReadInt16();
         }
 
         /// <summary>
@@ -142,7 +190,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             {
                 if (property.DeclaringType == typeof(Prototype)) continue;      // Skip base prototype properties
 
-                Logger.Debug(property.Name);
+                //Logger.Debug(property.Name);
 
                 // Set value if property is a value type
                 if (property.PropertyType.IsValueType)
