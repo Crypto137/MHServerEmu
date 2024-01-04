@@ -13,7 +13,7 @@ namespace MHServerEmu.Games.GameData
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private static readonly string GpakDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "GPAK");
+        private static readonly string GpakDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "GPAK").Replace("MHServerEmuTests", "MHServerEmu");
         private static readonly string CalligraphyPath = Path.Combine(GpakDirectory, "Calligraphy.sip");
         private static readonly string ResourcePath = Path.Combine(GpakDirectory, "mu_cdata.sip");
 
