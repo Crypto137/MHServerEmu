@@ -129,10 +129,6 @@ namespace MHServerEmu.Games.GameData
             {
                 Blueprint blueprint = new(ms, id, guid);
 
-                // Add field name refs when loading blueprints
-                foreach (BlueprintMember member in blueprint.Members)
-                    GameDatabase.StringRefManager.AddDataRef(member.FieldId, member.FieldName);
-
                 // Add a new blueprint record
                 _blueprintRecordDict.Add(id, new(blueprint, flags));
             }

@@ -10,6 +10,8 @@ namespace MHServerEmu.Games.GameData.Calligraphy
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private Dictionary<StringId, BlueprintMember> _memberDict;                  // Field definitions for prototypes that use this blueprint  
+
         private PrototypeId[] _enumValueToPrototypeLookup = Array.Empty<PrototypeId>();
         private Dictionary<PrototypeId, int> _prototypeToEnumValueDict;
 
@@ -23,7 +25,6 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         public PrototypeId DefaultPrototypeId { get; }                              // .defaults prototype file id
         public BlueprintReference[] Parents { get; }
         public BlueprintReference[] ContributingBlueprints { get; }
-        public BlueprintMember[] Members { get; }                                   // Field definitions for prototypes that use this blueprint  
 
         public PrototypeId PropertyDataRef { get; private set; } = PrototypeId.Invalid;
 
@@ -48,7 +49,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 
                 DefaultPrototypeId = (PrototypeId)reader.ReadUInt64();
 
-                Parents = new BlueprintReference[reader.ReadUInt16()];
+                Parents = new BlueprintReference[reader.ReadInt16()];
                 for (int i = 0; i < Parents.Length; i++)
                     Parents[i] = new(reader);
 
@@ -56,18 +57,47 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 for (int i = 0; i < ContributingBlueprints.Length; i++)
                     ContributingBlueprints[i] = new(reader);
 
-                Members = new BlueprintMember[reader.ReadUInt16()];
-                for (int i = 0; i < Members.Length; i++)
-                    Members[i] = new(reader);
+                // Deserialize members
+                short numMembers = reader.ReadInt16();
+                _memberDict = new(numMembers);
+                for (int i = 0; i < numMembers; i++)
+                {
+                    BlueprintMember member = new(reader);
+                    _memberDict.Add(member.FieldId, member);
+
+                    // Add a reference to this member to the game database
+                    GameDatabase.StringRefManager.AddDataRef(member.FieldId, member.FieldName);
+                }
             }
         }
 
         /// <summary>
-        /// Returns the first blueprint member with the specified <see cref="StringId"/>.
+        /// Gets a struct that contains a reference to a <see cref="BlueprintMember"/> and the <see cref="Blueprint"/> it belongs to.
+        /// This method searches this blueprint, as well as all of its parents recursively.
         /// </summary>
-        public BlueprintMember GetMember(StringId id)
+        public bool TryGetBlueprintMemberInfo(StringId fieldId, out BlueprintMemberInfo memberInfo)
         {
-            return Members.First(member => member.FieldId == id);
+            // Note: this is called GetBlueprintMemberInfo in the client, but we're calling it TryGetBlueprintMemberInfo here
+            // to match the usual .NET naming conventions.
+            
+            // Check if the specified member belongs to this blueprint
+            if (_memberDict.TryGetValue(fieldId, out var member))
+            {
+                memberInfo = new(this, member);
+                return true;
+            }
+
+            // Check if the specified member belongs to any of our parents
+            foreach (BlueprintReference parentRef in Parents)
+            {
+                Blueprint parent = GameDatabase.GetBlueprint(parentRef.BlueprintId);
+                if (parent.TryGetBlueprintMemberInfo(fieldId, out memberInfo))
+                    return true;
+            }
+
+            // Fallback if no such member belongs to this blueprint
+            memberInfo = default;
+            return Logger.WarnReturn(false, $"Failed to find member {GameDatabase.GetBlueprintFieldName(fieldId)} in blueprint {GameDatabase.GetBlueprintName(Id)}");
         }
 
         /// <summary>
@@ -245,6 +275,21 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                     Subtype = reader.ReadUInt64();
                     break;
             }
+        }
+    }
+
+    /// <summary>
+    /// Container for a blueprint member reference along with the blueprint it belongs to.
+    /// </summary>
+    public readonly struct BlueprintMemberInfo
+    {
+        public Blueprint Blueprint { get; }
+        public BlueprintMember Member { get; }
+
+        public BlueprintMemberInfo(Blueprint blueprint, BlueprintMember member)
+        {
+            Blueprint = blueprint;
+            Member = member;
         }
     }
 }
