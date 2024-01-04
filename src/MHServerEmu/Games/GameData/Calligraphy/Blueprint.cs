@@ -97,7 +97,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
             // Fallback if no such member belongs to this blueprint
             memberInfo = default;
-            return Logger.WarnReturn(false, $"Failed to find member {GameDatabase.GetBlueprintFieldName(fieldId)} in blueprint {GameDatabase.GetBlueprintName(Id)}");
+            return false;
         }
 
         /// <summary>
