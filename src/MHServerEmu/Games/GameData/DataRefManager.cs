@@ -1,4 +1,6 @@
-﻿namespace MHServerEmu.Games.GameData
+﻿using System.Xml.Linq;
+
+namespace MHServerEmu.Games.GameData
 {
     // Note: in the client DataRef is a container class for ulong data ids.
     // We are currently using ulong values as is. Every time something mentions
@@ -94,6 +96,21 @@
             }
 
             return matchList;
+        }
+
+        public List<ulong> GetCellRefs(string cellSetPath)
+        {
+            var cellRefs = new List<ulong>();
+
+            foreach (KeyValuePair<string, ulong> kvp in _reverseLookupDict)
+            {
+                if (kvp.Key.StartsWith(cellSetPath) && kvp.Key.EndsWith(".cell"))
+                {
+                    cellRefs.Add(kvp.Value);
+                }
+            }
+
+            return cellRefs;
         }
     }
 }

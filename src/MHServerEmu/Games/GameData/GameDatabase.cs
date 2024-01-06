@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
+using System.Xml.Linq;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Gpak;
@@ -95,6 +96,7 @@ namespace MHServerEmu.Games.GameData
         public static Curve GetCurve(ulong curveId) => DataDirectory.CurveDirectory.GetCurve(curveId);
         public static Blueprint GetBlueprint(ulong blueprintId) => DataDirectory.GetBlueprint(blueprintId);
         public static T GetPrototype<T>(ulong prototypeId) => DataDirectory.GetPrototype<T>(prototypeId);
+        public static Prototype GetPrototypeExt(ulong prototypeId) => DataDirectory.GetPrototypeExt(prototypeId);
         public static ulong GetDataRefByAsset(ulong assetId)
         {
             if (assetId == 0) return 0;
@@ -130,9 +132,13 @@ namespace MHServerEmu.Games.GameData
                 && PropertyInfoTable.Verify();
         }
 
-        internal static List<CellPrototype> GetCellPrototypesByPath(string cellSetPath)
+        public static List<CellPrototype> GetCellPrototypesByPath(string cellSetPath)
         {
-            throw new NotImplementedException();
+           List<ulong> protos = PrototypeRefManager.GetCellRefs(cellSetPath);
+           var cells = new List<CellPrototype>();
+           foreach (var proto in protos)
+                cells.Add(GetPrototype<CellPrototype>(proto));
+           return cells;
         }
 
         internal static GlobalsPrototype GetGlobalsPrototype()

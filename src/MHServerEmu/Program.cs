@@ -29,7 +29,7 @@ namespace MHServerEmu
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;    // Watch for unhandled exceptions
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;         // Make sure thread culture is invariant
 
-            PrintBanner();  
+            PrintBanner();
 
             // Initialize config and loggers before doing anything else
             if (ConfigManager.IsInitialized == false)
@@ -50,7 +50,7 @@ namespace MHServerEmu
             }
 
             StartServers();
-            
+
             // Begin processing console input
             Logger.Info("Type '!commands' for a list of available commands");
             while (true)

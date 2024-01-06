@@ -353,6 +353,30 @@ namespace MHServerEmu.Games.GameData
             throw new NotImplementedException();
         }
 
+        public Prototype GetPrototypeExt(ulong id)
+        {
+            if (_prototypeDict.TryGetValue(id, out object prototype))
+            {
+                if (prototype.GetType().Name == "Prototype")
+                {
+                    string className = GetPrototypeBlueprint((Prototype)prototype).RuntimeBinding;
+                    Type protoType = Type.GetType("MHServerEmu.Games.GameData.Prototypes." + className);
+                    if (protoType == null)
+                    {
+                        Logger.Warn($"PrototypeClass {className} not exist");
+                        return null;
+                    }
+                    var newPrototype = Activator.CreateInstance(protoType, new object[] { prototype });
+                    _prototypeDict[id] = newPrototype;
+                    return (Prototype)newPrototype;
+                }
+                else
+                    return (Prototype)prototype;
+            }
+
+            return default;
+        }
+
         #endregion
     }
 
