@@ -29,4 +29,10 @@
     <ProjectReference Include="..\MHServerEmu\MHServerEmu.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="Google.ProtocolBuffers">
+      <HintPath>..\..\dep\protobuf-csharp\Google.ProtocolBuffers.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

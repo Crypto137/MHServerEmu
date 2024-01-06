@@ -49,7 +49,7 @@ namespace MHServerEmu
                 return;
             }
 
-            //StartServers();
+            StartServers();
             
             // Begin processing console input
             Logger.Info("Type '!commands' for a list of available commands");
