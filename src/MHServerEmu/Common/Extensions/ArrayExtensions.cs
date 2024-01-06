@@ -25,18 +25,6 @@ namespace MHServerEmu.Common.Extensions
             0x0f, 0x8f, 0x4f, 0xcf, 0x2f, 0xaf, 0x6f, 0xef, 0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff
         };
 
-        /// <summary>
-        /// Enumerates a generic array.
-        /// </summary>
-        public static IEnumerable<T> Enumerate<T>(this T[] array, int start, int count)
-        {
-            if (array == null)
-                throw new ArgumentNullException(nameof(array));
-
-            for (int i = 0; i < count; i++)
-                yield return array[start + i];
-        }
-
         #region Hex/ByteString Helpers
 
         /// <summary>

@@ -10,18 +10,42 @@ namespace MHServerEmu.Frontend
     {
         private new static readonly Logger Logger = LogManager.CreateLogger();  // Hide the Server.Logger so that this logger can show the actual server as log source.
 
-        public FrontendServer()
-        {
-            ClientConnected += FrontendServer_OnClientConnected;
-            ClientDisconnected += FrontendServer_OnClientDisconnected;
-            DataReceived += FrontendServer_OnDataReceived;
-        }
-
         public override void Run()
         {
             if (Start(ConfigManager.Frontend.BindIP, int.Parse(ConfigManager.Frontend.Port)) == false) return;
             Logger.Info($"FrontendServer is listening on {ConfigManager.Frontend.BindIP}:{ConfigManager.Frontend.Port}...");
         }
+
+        #region Event Handling
+
+        protected override void OnClientConnected(TcpClientConnection connection)
+        {
+            Logger.Info($"Client connected from {connection}");
+            connection.Client = new FrontendClient(connection);
+        }
+
+        protected override void OnClientDisconnected(TcpClientConnection connection)
+        {
+            var client = (FrontendClient)connection.Client;
+
+            if (client.Session == null)
+            {
+                Logger.Info("Client disconnected");
+            }
+            else
+            {
+                ServerManager.Instance.PlayerManagerService.RemovePlayer(client);
+                ServerManager.Instance.GroupingManagerService.RemovePlayer(client);
+                Logger.Info($"Client {client.Session.Account} disconnected");
+            }
+        }
+
+        protected override void OnDataReceived(TcpClientConnection connection, byte[] data)
+        {
+            ((FrontendClient)connection.Client).Parse(data);
+        }
+
+        #endregion
 
         #region Message Self-Handling
 
@@ -64,38 +88,8 @@ namespace MHServerEmu.Frontend
 
         public void Handle(FrontendClient client, ushort muxId, IEnumerable<GameMessage> messages)
         {
-            foreach (GameMessage message in messages) Handle(client, muxId, message);
-        }
-
-        #endregion
-
-        #region Event Handling
-
-        private void FrontendServer_OnClientConnected(object sender, TcpClientConnectionEventArgs e)
-        {
-            Logger.Info($"Client connected from {e.Connection}");
-            e.Connection.Client = new FrontendClient(e.Connection);
-        }
-
-        private void FrontendServer_OnClientDisconnected(object sender, TcpClientConnectionEventArgs e)
-        {
-            FrontendClient client = e.Connection.Client as FrontendClient;
-
-            if (client.Session == null)
-            {
-                Logger.Info("Client disconnected");
-            }
-            else
-            {
-                ServerManager.Instance.PlayerManagerService.RemovePlayer(client);
-                ServerManager.Instance.GroupingManagerService.RemovePlayer(client);
-                Logger.Info($"Client {client.Session.Account} disconnected");
-            }
-        }
-
-        private void FrontendServer_OnDataReceived(object sender, TcpClientConnectionDataEventArgs e)
-        {
-            ((FrontendClient)e.Connection.Client).Parse(e);
+            foreach (GameMessage message in messages)
+                Handle(client, muxId, message);
         }
 
         #endregion

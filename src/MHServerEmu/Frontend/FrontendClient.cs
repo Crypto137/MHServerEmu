@@ -39,9 +39,9 @@ namespace MHServerEmu.Frontend
             Connection = connection;
         }
 
-        public void Parse(TcpClientConnectionDataEventArgs e)
+        public void Parse(byte[] data)
         {
-            CodedInputStream stream = CodedInputStream.CreateInstance(e.Data.ToArray());
+            CodedInputStream stream = CodedInputStream.CreateInstance(data);
             PacketIn packet = new(stream);
 
             switch (packet.Command)

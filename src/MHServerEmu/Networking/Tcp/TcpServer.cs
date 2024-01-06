@@ -1,6 +1,5 @@
 ﻿using System.Net;
 using System.Net.Sockets;
-using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 
 namespace MHServerEmu.Networking.Tcp
@@ -21,28 +20,10 @@ namespace MHServerEmu.Networking.Tcp
         private bool _isListening;
         private bool _isDisposed;
 
-        public delegate void TcpClientConnectionEventHandler(object sender, TcpClientConnectionEventArgs e);
-        public delegate void TcpClientConnectionDataEventHandler(object sender, TcpClientConnectionDataEventArgs e);
-
         /// <summary>
-        /// Raised when a client connects.
+        /// Runs the server. This method should generally be executed by its own <see cref="Thread"/>.
         /// </summary>
-        public event TcpClientConnectionEventHandler ClientConnected;
-
-        /// <summary>
-        /// Raised when a client disconnects.
-        /// </summary>
-        public event TcpClientConnectionEventHandler ClientDisconnected;
-
-        /// <summary>
-        /// Raised when the server receives data from a client connection.
-        /// </summary>
-        public event TcpClientConnectionDataEventHandler DataReceived;
-
-        /// <summary>
-        /// A method for running the server on its own thread.
-        /// </summary>
-        public virtual void Run() { }
+        public abstract void Run();
 
         /// <summary>
         /// Creates a new socket and begins listening on the specified IP and port.
@@ -129,7 +110,7 @@ namespace MHServerEmu.Networking.Tcp
                 {
                     if (connection.Connected == false) continue;
                     connection.Socket.Disconnect(false);
-                    OnClientDisconnected(new(connection));
+                    OnClientDisconnected(connection);
                 }
 
                 _connectionDict.Clear();
@@ -164,9 +145,20 @@ namespace MHServerEmu.Networking.Tcp
 
         #region Events
 
-        protected virtual void OnClientConnected(TcpClientConnectionEventArgs e) => ClientConnected?.Invoke(this, e);
-        protected virtual void OnClientDisconnected(TcpClientConnectionEventArgs e) => ClientDisconnected?.Invoke(this, e);
-        protected virtual void OnDataReceived(TcpClientConnectionDataEventArgs e) => DataReceived?.Invoke(this, e);
+        /// <summary>
+        /// Raised when a client connects.
+        /// </summary>
+        protected abstract void OnClientConnected(TcpClientConnection connection);
+
+        /// <summary>
+        /// Raised when a client disconnects.
+        /// </summary>
+        protected abstract void OnClientDisconnected(TcpClientConnection connection);
+
+        /// <summary>
+        /// Raised when the server receives data from a client connection.
+        /// </summary>
+        protected abstract void OnDataReceived(TcpClientConnection connection, byte[] data);
 
         #endregion
 
@@ -178,7 +170,7 @@ namespace MHServerEmu.Networking.Tcp
             lock (_connectionLock)
             {
                 if (_connectionDict.Remove(connection.Socket))
-                    OnClientDisconnected(new(connection));
+                    OnClientDisconnected(connection);
             }
         }
 
@@ -197,7 +189,7 @@ namespace MHServerEmu.Networking.Tcp
                     // Establish a new client connection
                     TcpClientConnection connection = new(this, socket);
                     lock (_connectionLock) _connectionDict.Add(socket, connection);
-                    OnClientConnected(new(connection));
+                    OnClientConnected(connection);
 
                     // Begin receiving data from our new connection
                     _ = Task.Run(async () => await ReceiveData(connection));
@@ -224,9 +216,12 @@ namespace MHServerEmu.Networking.Tcp
                         return;
                     }
 
-                    OnDataReceived(new(connection, connection.ReceiveBuffer.Enumerate(0, bytesReceived)));
+                    // Copy the data we received from the buffer to a new array
+                    byte[] data = new byte[bytesReceived];
+                    Array.Copy(connection.ReceiveBuffer, data, bytesReceived);
+                    OnDataReceived(connection, data);
 
-                    if (connection.Connected == false)  // No longer connected
+                    if (connection.Connected == false)  // Stop receiving if no longer connected
                     {
                         RemoveClientConnection(connection);
                         return;
