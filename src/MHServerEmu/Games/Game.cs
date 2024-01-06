@@ -48,7 +48,7 @@ namespace MHServerEmu.Games
         {
             EventManager = new(this);
             EntityManager = new();
-            RegionManager = new(EntityManager);
+            RegionManager = new(EntityManager, this);
 
             _random = new();
             _powerMessageHandler = new(EventManager);
@@ -140,7 +140,8 @@ namespace MHServerEmu.Games
 
         private void EnqueueResponses(FrontendClient client, IEnumerable<GameMessage> messages)
         {
-            if (_responseListDict.TryGetValue(client, out _) == false) _responseListDict.Add(client, new());
+            if (_responseListDict.TryGetValue(client, out _) == false) 
+                _responseListDict.Add(client, new());
             _responseListDict[client].AddRange(messages);                
         }
 
