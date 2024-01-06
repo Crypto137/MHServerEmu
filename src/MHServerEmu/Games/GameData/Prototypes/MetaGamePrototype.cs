@@ -335,7 +335,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class PvPTurretDataPrototype : Prototype
     {
         public PopulationObjectPrototype TurretPopulation { get; protected set; }
-        public ulong AVSPH { get; protected set; }
+        public ulong DeathUINotification { get; protected set; }
         public int TurretGroupId { get; protected set; }
         public ulong Team { get; protected set; }
         public ulong DeathAudioTheme { get; protected set; }

@@ -1,5 +1,7 @@
-﻿using MHServerEmu.Common.Extensions;
+﻿using System.Reflection;
+using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.GameData.Calligraphy
 {
@@ -67,6 +69,21 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
                     // Add a reference to this member to the game database
                     GameDatabase.StringRefManager.AddDataRef(member.FieldId, member.FieldName);
+                }
+            }
+
+            // Bind non-property blueprint members to C# properties
+            foreach (var member in _memberDict.Values)
+            {
+                Type classBinding = RuntimeBindingClassType;
+                while (classBinding != typeof(Prototype))
+                {
+                    // Try to find a matching property info in our runtime binding
+                    member.RuntimeClassFieldInfo = classBinding.GetProperty(member.FieldName, BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public);
+                    if (member.RuntimeClassFieldInfo != null) break;
+
+                    // Go up in the hierarchy if we didn't find it
+                    classBinding = classBinding.BaseType;
                 }
             }
         }
@@ -254,6 +271,8 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         public CalligraphyBaseType BaseType { get; }
         public CalligraphyStructureType StructureType { get; }
         public ulong Subtype { get; }
+
+        public PropertyInfo RuntimeClassFieldInfo { get; set; }     // This is C# reflection property info, not to be confused with entity properties
 
         /// <summary>
         /// Deserializes a new <see cref="BlueprintMember"/> instance.
