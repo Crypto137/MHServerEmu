@@ -5,6 +5,9 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
+using static MHServerEmu.Common.IdGenerator;
+using static MHServerEmu.Games.Powers.PowerPrototypes;
+using static MHServerEmu.Games.Regions.Cell;
 
 namespace MHServerEmu.Games.Generators
 {
@@ -271,7 +274,7 @@ namespace MHServerEmu.Games.Generators
 
             string cellSetPath = GameDatabase.GetAssetName(cellSet);
             Logger.Trace($"CellSetRegistry::LoadCellSet({cellSetPath})");
-
+            cellSetPath = "Resource/Cells/" + cellSetPath;
             List<CellPrototype> cellPrototypes;
             cellPrototypes = GameDatabase.GetCellPrototypesByPath(cellSetPath);
 

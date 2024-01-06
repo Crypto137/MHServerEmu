@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
+using System.Xml.Linq;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Gpak;
@@ -131,9 +132,13 @@ namespace MHServerEmu.Games.GameData
                 && PropertyInfoTable.Verify();
         }
 
-        internal static List<CellPrototype> GetCellPrototypesByPath(string cellSetPath)
+        public static List<CellPrototype> GetCellPrototypesByPath(string cellSetPath)
         {
-            throw new NotImplementedException();
+           List<ulong> protos = PrototypeRefManager.GetCellRefs(cellSetPath);
+           var cells = new List<CellPrototype>();
+           foreach (var proto in protos)
+                cells.Add(GetPrototype<CellPrototype>(proto));
+           return cells;
         }
 
         internal static GlobalsPrototype GetGlobalsPrototype()

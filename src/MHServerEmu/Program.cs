@@ -66,7 +66,17 @@ namespace MHServerEmu
                 Logger.Debug($"XaviersMansionRegion.RegionGenerator\n.StaticAreas[0]\n.Area = {(r as StaticRegionGeneratorPrototype).StaticAreas[0].Area}");
                 regionPrototype = GameDatabase.GetPrototype<RegionPrototype>(7293929583592937434); // cashed prototype
                 Logger.Debug($"XaviersMansionRegion.Level = {regionPrototype.Level}");
-/*
+
+                // Test GetCellPrototypesByPath
+                string cellSetPath = "Latveria/Courtyard_B/";
+                cellSetPath = "Resource/Cells/" + cellSetPath;
+                Logger.Debug($"cell path = {cellSetPath}");
+                List<ulong> protos = GameDatabase.PrototypeRefManager.GetCellRefs(cellSetPath);
+                var cells = new List<CellPrototype>();
+                foreach (var proto in protos)
+                    Logger.Debug($" {GameDatabase.GetPrototypeName(proto)}");
+
+                /*
                 // 9142075282174842340	Regions/HUBRevamp/NPEAvengersTowerHUBRegion.prototype
                 regionPrototype = GameDatabase.GetPrototype<RegionPrototype>(9142075282174842340);
                 r = regionPrototype.RegionGenerator;
@@ -88,7 +98,7 @@ namespace MHServerEmu
                     regionPrototype = GameDatabase.GetPrototype<RegionPrototype>(regionProtoId);
                     Logger.Debug($"region[{regionProtoId}].RegionName = {regionPrototype.RegionName}");
                 }
-*/
+                */
                 Logger.Debug($"end load");
             }
             Logger.Debug($"End Test");
