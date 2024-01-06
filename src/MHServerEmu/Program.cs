@@ -56,7 +56,7 @@ namespace MHServerEmu
             Logger.Debug($"Start Test");
             {
                 //Prototype proto = 7293929583592937434u.GetPrototype();
-                RegionPrototype regionPrototype = GameDatabase.GetPrototype<RegionPrototype>(7293929583592937434);
+                var regionPrototype = (RegionPrototype)GameDatabase.GetPrototypeExt(7293929583592937434);
 
                 Logger.Debug($"XaviersMansionRegion.Level = {regionPrototype.Level}");
                 Logger.Debug($"XaviersMansionRegion.PlayerLimit = {regionPrototype.PlayerLimit}");
@@ -66,7 +66,7 @@ namespace MHServerEmu
                 Logger.Debug($"XaviersMansionRegion.RegionGenerator\n.StaticAreas[0]\n.Area = {(r as StaticRegionGeneratorPrototype).StaticAreas[0].Area}");
                 regionPrototype = GameDatabase.GetPrototype<RegionPrototype>(7293929583592937434); // cashed prototype
                 Logger.Debug($"XaviersMansionRegion.Level = {regionPrototype.Level}");
-
+/*
                 // 9142075282174842340	Regions/HUBRevamp/NPEAvengersTowerHUBRegion.prototype
                 regionPrototype = GameDatabase.GetPrototype<RegionPrototype>(9142075282174842340);
                 r = regionPrototype.RegionGenerator;
@@ -88,6 +88,7 @@ namespace MHServerEmu
                     regionPrototype = GameDatabase.GetPrototype<RegionPrototype>(regionProtoId);
                     Logger.Debug($"region[{regionProtoId}].RegionName = {regionPrototype.RegionName}");
                 }
+*/
                 Logger.Debug($"end load");
             }
             Logger.Debug($"End Test");

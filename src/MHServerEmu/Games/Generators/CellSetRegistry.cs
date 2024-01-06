@@ -211,7 +211,7 @@ namespace MHServerEmu.Games.Generators
                             ulong entityRef = GameDatabase.GetDataRefByPrototypeGuid(entityGuid);
                             if (entityRef != 0)
                             {
-                                Prototype markedProto = GameDatabase.GetPrototype<Prototype>(entityRef); // TODO: Load Prototypes
+                                Prototype markedProto = GameDatabase.GetPrototypeExt(entityRef);  //  GameDatabase.GetPrototype<Prototype>(entityRef); 
 
                                 if (markedProto is AreaTransitionPrototype areaProto)
                                 {
