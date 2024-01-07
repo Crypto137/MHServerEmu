@@ -21,31 +21,22 @@ namespace MHServerEmuTests.Maps
         }
 
         [Fact]
-        public void WaypointToXaviersMansionRegion_HeroicDifficulty_IsSuccess()
+        public void WaypointToXaviersMansionRegion_NormalDifficulty_IsSuccess()
         {
             UnitTestLogHelper.Logger.Error("WaypointToXaviersMansionRegion_NormalDifficulty_IsSuccess");
 
-            List<GameMessage> gameMessages = new List<GameMessage>();
-            GameMessage handshake =
-               new GameMessage(InitialClientHandshake.CreateBuilder()
-               .SetProtocolVersion(FrontendProtocolVersion.CURRENT_VERSION)
-               .SetServerType(PubSubServerTypes.FRONTEND_SERVER)
-               .Build());
-            gameMessages.Add(handshake);
-            ServersHelper.SendDataToFrontEndServer(OneTimeSetUpBeforeMapGenerationTests.AuthTicket, gameMessages);
-
-            gameMessages.Clear();
-            GameMessage useWaypointMessage =
+            List<GameMessage> gameMessages = new()
+            {
                 new GameMessage(NetMessageUseWaypoint.CreateBuilder()
                 .SetAvatarIndex(0)
                 .SetDifficultyProtoId(18016845980090109785)
                 .SetIdTransitionEntity(12)
                 .SetRegionProtoId(7293929583592937434)
-                .SetWaypointDataRef(3105225438095544636).Build());
-            gameMessages.Add(useWaypointMessage);
+                .SetWaypointDataRef(3105225438095544636).Build())
+            };
+
             ServersHelper.SendDataToFrontEndServer(OneTimeSetUpBeforeMapGenerationTests.AuthTicket, gameMessages);
             Assert.True(true);
-
             UnitTestLogHelper.DisplayLogs(_output);
         }
     }

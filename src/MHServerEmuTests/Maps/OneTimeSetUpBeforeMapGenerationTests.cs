@@ -18,7 +18,18 @@ namespace MHServerEmuTests.Maps
             task.Wait();
 
             if (ServersHelper.EtablishConnectionWithFrontEndServer(task.Result))
+            {
                 AuthTicket = task.Result;
+                List<GameMessage> gameMessages = new List<GameMessage>
+                {
+                    new GameMessage(InitialClientHandshake.CreateBuilder()
+                        .SetProtocolVersion(FrontendProtocolVersion.CURRENT_VERSION)
+                        .SetServerType(PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND)
+                        .Build())
+                };
+
+                ServersHelper.SendDataToFrontEndServer(AuthTicket, gameMessages);
+            }
         }
 
         /// <summary>
