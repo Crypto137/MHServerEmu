@@ -48,7 +48,8 @@ namespace MHServerEmu.Games
         {
             EventManager = new(this);
             EntityManager = new();
-            RegionManager = new(EntityManager, this);
+            RegionManager = new(EntityManager);
+            RegionManager.Initialize(this);
 
             _random = new();
             _powerMessageHandler = new(EventManager);

@@ -79,12 +79,17 @@ namespace MHServerEmu.Games.Regions
         private readonly Dictionary<ulong, Region> _matches = new();
         public Game Game { get; private set; }
 
-        public RegionManager(EntityManager entityManager, Game game)
+        public RegionManager(EntityManager entityManager)
         {
             _entityManager = entityManager;
-            Game = game;
             _areaId = 1;
             _cellId = 1;
+        }
+
+        public bool Initialize(Game game)
+        {
+            Game = game;
+            return true;
         }
 
         public uint AllocateCellId() => _cellId++;
