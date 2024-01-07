@@ -34,8 +34,9 @@ namespace MHServerEmuTests.Business
         /// <summary>
         /// Displays all the logs registered in the file
         /// </summary>
-        public static void DisplayLogs(ITestOutputHelper output)
+        public static List<string> DisplayLogs(ITestOutputHelper output)
         {
+            var logs = new List<string>();
             try
             {
                 string logDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Logs");
@@ -48,6 +49,7 @@ namespace MHServerEmuTests.Business
                         while ((line = streamReader.ReadLine()) != null)
                         {
                             output.WriteLine(line);
+                            logs.Add(line);
                         }
                     }
                 }
@@ -57,6 +59,8 @@ namespace MHServerEmuTests.Business
                 output.WriteLine("An error occured during the reading");
                 output.WriteLine(e.Message);
             }
+
+            return logs;
         }
     }
 }
