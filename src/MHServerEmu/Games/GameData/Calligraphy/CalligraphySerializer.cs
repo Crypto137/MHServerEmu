@@ -68,6 +68,9 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             // Make sure there is data to deserialize
             if (header.ReferenceExists == false) return;
 
+            // Get class type (we get it from the blueprint's binding instead of calling GetRuntimeClassId())
+            Type classType = blueprint.RuntimeBindingClassType;
+
             // Copy parent data if there is any
             if (header.ReferenceType != PrototypeId.Invalid)
             {
@@ -88,21 +91,23 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
                 if (groupBlueprint.IsProperty())
                 {
-                    DeserializePropertyMixin(prototype, blueprint, groupBlueprint, fieldGroupCopyNum, prototypeDataRef, prototypeName, reader);
+                    DeserializePropertyMixin(prototype, blueprint, groupBlueprint, fieldGroupCopyNum, prototypeDataRef, prototypeName, classType, reader);
                 }
                 else
                 {
                     // Simple fields
-                    DeserializeFieldGroup(prototype, blueprint, fieldGroupCopyNum, prototypeName, reader, "Simple Fields");
+                    DeserializeFieldGroup(prototype, blueprint, fieldGroupCopyNum, prototypeName, classType, reader, "Simple Fields");
 
                     // List fields
-                    DeserializeFieldGroup(prototype, blueprint, fieldGroupCopyNum, prototypeName, reader, "List Fields");
+                    DeserializeFieldGroup(prototype, blueprint, fieldGroupCopyNum, prototypeName, classType, reader, "List Fields");
                 }
             }
         }
 
-        private bool DeserializeFieldGroup(Prototype prototype, Blueprint blueprint, byte fieldGroupCopyNum, string prototypeName, BinaryReader reader, string groupTag)
+        private bool DeserializeFieldGroup(Prototype prototype, Blueprint blueprint, byte fieldGroupCopyNum, string prototypeName, Type classType, BinaryReader reader, string groupTag)
         {
+            var classManager = GameDatabase.PrototypeClassManager;
+
             short numFields = reader.ReadInt16();
             for (int i = 0; i < numFields; i++)
             {
@@ -117,7 +122,38 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 if (blueprintMemberInfo.Member.BaseType != fieldBaseType)
                     return Logger.WarnReturn(false, $"Type mismatch between blueprint and prototype");
 
-                // TODO: Check if this field group belongs the prototype itself or one of its mixins using blueprint.IsRuntimeChildOf()
+                // Determine where this field belongs
+                Prototype fieldOwnerPrototype = prototype;
+                Blueprint fieldOwnerBlueprint = blueprint;
+
+                System.Reflection.PropertyInfo fieldInfo;
+                if (blueprint.IsRuntimeChildOf(blueprintMemberInfo.Blueprint))
+                {
+                    // For regular fields we just get field info straight away
+                    fieldInfo = classManager.GetFieldInfo(blueprint.RuntimeBindingClassType, blueprintMemberInfo, false);
+                }
+                else
+                {
+                    // The blueprint for this field is not a runtime child of our main blueprint, meaning it belongs to one of the mixins
+                    Type mixinType = blueprintMemberInfo.Blueprint.RuntimeBindingClassType;
+
+                    // First we look for a mixin field
+                    var mixinFieldInfo = classManager.GetMixinFieldInfo(classType, mixinType);
+                    if (mixinFieldInfo != null)
+                    {
+                        // Create a mixin instance if there isn't one
+                        if (mixinFieldInfo.GetValue(prototype) == null)
+                            mixinFieldInfo.SetValue(prototype, Activator.CreateInstance(mixinType));
+
+                        // Get the field info from our mixin
+                        fieldInfo = classManager.GetFieldInfo(mixinType, blueprintMemberInfo, false);
+                    }
+                    else
+                    {
+                        // TODO: list mixins
+                        Logger.Warn($"Failed to get field info for {blueprintMemberInfo.Member.FieldName}: list mixins are not implemented");
+                    }
+                }
 
                 // Test parsing
                 var parser = GetParser(fieldBaseType, blueprintMemberInfo.Member.StructureType);
@@ -128,7 +164,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         }
 
         private void DeserializePropertyMixin(Prototype prototype, Blueprint blueprint, Blueprint groupBlueprint, byte fieldGroupCopyNum,
-            PrototypeId prototypeDataRef, string prototypeName, BinaryReader reader)
+            PrototypeId prototypeDataRef, string prototypeName, Type classType, BinaryReader reader)
         {
             // Skip property fields groups for now
             // todo: do actual deserialization in DeserializeFieldGroupIntoProperty()

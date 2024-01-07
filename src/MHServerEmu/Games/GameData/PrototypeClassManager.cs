@@ -93,5 +93,43 @@ namespace MHServerEmu.Games.GameData
 
             assetDirectory.BindAssetTypes(assetEnumBindingDict);
         }
+
+        /// <summary>
+        /// Returns a <see cref="System.Reflection.PropertyInfo"/> for a field in a Calligraphy prototype.
+        /// </summary>
+        public System.Reflection.PropertyInfo GetFieldInfo(Type prototypeClassType, BlueprintMemberInfo blueprintMemberInfo, bool getPropertyCollection)
+        {
+            if (getPropertyCollection == false)
+            {
+                // Return the C# property info the blueprint member is bound to if we are not looking for a property collection
+                return blueprintMemberInfo.Member.RuntimeClassFieldInfo;
+            }
+
+            // TODO: look for a property collection field for this prototype
+            return null;
+        }
+
+        /// <summary>
+        /// Returns a <see cref="System.Reflection.PropertyInfo"/> for a mixin field in a Calligraphy prototype.
+        /// </summary>
+        public System.Reflection.PropertyInfo GetMixinFieldInfo(Type ownerClassType, Type fieldClassType)
+        {
+            // Search the entire class hierarchy for a mixin of the matching type
+            while (ownerClassType != typeof(Prototype))
+            {
+                foreach (var property in ownerClassType.GetProperties())
+                {
+                    // Return the mixin if found
+                    if (property.PropertyType == fieldClassType)
+                        return property;
+                }
+
+                // Go up in the hierarchy if not found
+                ownerClassType = ownerClassType.BaseType;
+            }
+
+            // Mixin not found
+            return null;
+        }
     }
 }

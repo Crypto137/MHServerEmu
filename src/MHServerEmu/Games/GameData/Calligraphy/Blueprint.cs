@@ -231,7 +231,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         }
 
         /// <summary>
-        /// Checks if this blueprint is a child of the provided blueprint in the prototype class hierarchy.
+        /// Checks if this blueprint is a child of the provided blueprint in the prototype class hierarchy. Blueprints are also considered children of themselves.
         /// </summary>
         public bool IsRuntimeChildOf(Blueprint parent)
         {
