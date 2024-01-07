@@ -35,7 +35,7 @@ namespace MHServerEmuTests.Maps
                 .SetWaypointDataRef(3105225438095544636).Build())
             };
 
-            ServersHelper.SendDataToFrontEndServer(OneTimeSetUpBeforeMapGenerationTests.AuthTicket, gameMessages);
+            OneTimeSetUpBeforeMapGenerationTests.TcpClientManager.SendDataToFrontEndServer(gameMessages);
             Assert.True(true);
             UnitTestLogHelper.DisplayLogs(_output);
         }

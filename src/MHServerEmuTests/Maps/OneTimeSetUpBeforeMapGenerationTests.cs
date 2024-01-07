@@ -5,7 +5,7 @@ namespace MHServerEmuTests.Maps
 {
     public class OneTimeSetUpBeforeMapGenerationTests : IDisposable
     {
-        public static AuthTicket AuthTicket { get; private set; }
+        public static TcpClientManager TcpClientManager { get; private set; }
 
         /// <summary>
         /// Code to execute before the first test
@@ -17,9 +17,10 @@ namespace MHServerEmuTests.Maps
             Task<AuthTicket> task = Task.Run(() => ServersHelper.ConnectWithUnitTestCredentials());
             task.Wait();
 
-            if (ServersHelper.EtablishConnectionWithFrontEndServer(task.Result))
+            TcpClientManager = new TcpClientManager(task.Result.FrontendServer, int.Parse(task.Result.FrontendPort));
+
+            if (TcpClientManager.EtablishConnectionWithFrontEndServer())
             {
-                AuthTicket = task.Result;
                 List<GameMessage> gameMessages = new List<GameMessage>
                 {
                     new GameMessage(InitialClientHandshake.CreateBuilder()
@@ -28,7 +29,7 @@ namespace MHServerEmuTests.Maps
                         .Build())
                 };
 
-                ServersHelper.SendDataToFrontEndServer(AuthTicket, gameMessages);
+                TcpClientManager.SendDataToFrontEndServer(gameMessages);
             }
         }
 
@@ -37,7 +38,7 @@ namespace MHServerEmuTests.Maps
         /// </summary>
         public void Dispose()
         {
-            // Do something
+            TcpClientManager.Close();
         }
     }
 }

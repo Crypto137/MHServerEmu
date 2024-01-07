@@ -55,7 +55,10 @@ namespace MHServerEmuTests.Auth
             task.Wait();
             AuthTicket authTicket = task.Result;
             Assert.NotNull(authTicket);
-            Assert.True(ServersHelper.EtablishConnectionWithFrontEndServer(authTicket));
+
+            TcpClientManager tcpClientManager = new(authTicket.FrontendServer, int.Parse(authTicket.FrontendPort));
+
+            Assert.True(tcpClientManager.EtablishConnectionWithFrontEndServer());
         }
 
         [Fact]
@@ -65,7 +68,9 @@ namespace MHServerEmuTests.Auth
             task.Wait();
             AuthTicket authTicket = task.Result;
             Assert.NotNull(authTicket);
-            Assert.True(ServersHelper.EtablishConnectionWithFrontEndServer(authTicket));
+
+            TcpClientManager tcpClientManager = new(authTicket.FrontendServer, int.Parse(authTicket.FrontendPort));
+            Assert.True(tcpClientManager.EtablishConnectionWithFrontEndServer());
 
             List<GameMessage> gameMessages = new List<GameMessage>
             {
@@ -75,7 +80,7 @@ namespace MHServerEmuTests.Auth
                     .Build())
             };
 
-            PacketIn packetIn = ServersHelper.SendDataToFrontEndServer(authTicket, gameMessages);
+            PacketIn packetIn = tcpClientManager.SendDataToFrontEndServer(gameMessages);
             Assert.NotNull(packetIn);
             Assert.Equal(MuxCommand.Data, packetIn.Command);
             Assert.Equal((int)GameServerToClientMessage.NetMessageQueueLoadingScreen, packetIn.Messages.FirstOrDefault().Id);
