@@ -2,11 +2,14 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Auth;
 using MHServerEmu.Frontend;
+using MHServerEmu.Networking;
+using MHServerEmuTests.Maps;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http.Headers;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -39,7 +42,7 @@ namespace MHServerEmuTests.Business
             StartServers();
         }
 
-        public static async Task<AuthTicket> ConnectWithUnitTestCredential()
+        public static async Task<AuthTicket> ConnectWithUnitTestCredentials()
         {
             return await ConnectWithCredentials(
                 "MHEmuServer@test.com",
@@ -83,6 +86,49 @@ namespace MHServerEmuTests.Business
             {
                 Console.WriteLine($"Connection error : {e.Message}");
                 return null;
+            }
+        }
+
+        public static bool EtablishConnectionWithFrontEndServer(AuthTicket authTicket)
+        {
+            try
+            {
+                using (TcpClient client = new TcpClient(authTicket.FrontendServer, int.Parse(authTicket.FrontendPort)))
+                using (NetworkStream stream = client.GetStream())
+                {
+                    PacketOut packetOut = new(1, MuxCommand.Connect);
+                    byte[] data = packetOut.Data;
+                    stream.Write(data, 0, data.Length);
+
+                    CodedInputStream codedInputStream = CodedInputStream.CreateInstance(stream);
+                    PacketIn packet = new(codedInputStream);
+                    return packet.Command == MuxCommand.ConnectAck;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error : {e.Message}");
+                return false;
+            }
+        }
+
+        public static void SendDataToFrontEndServer(AuthTicket authTicket, List<GameMessage> gameMessages)
+        {
+            try
+            {
+                using (TcpClient client = new TcpClient(authTicket.FrontendServer, int.Parse(authTicket.FrontendPort)))
+                using (NetworkStream stream = client.GetStream())
+                {
+
+                    PacketOut packetOut = new(1, MuxCommand.Connect);
+                    packetOut.AddMessages(gameMessages);
+                    byte[] data = packetOut.Data;
+                    stream.Write(data, 0, data.Length);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Erreur : {e.Message}");
             }
         }
 

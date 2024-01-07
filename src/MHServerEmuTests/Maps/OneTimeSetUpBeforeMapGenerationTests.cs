@@ -1,34 +1,32 @@
 ﻿using Gazillion;
-using Google.ProtocolBuffers;
-using MHServerEmu.Auth;
-using MHServerEmu.Frontend;
 using MHServerEmuTests.Business;
-using System.Globalization;
-using System.Net.Http.Headers;
-using System.Net.Mail;
-using System.Text;
-using Xunit.Sdk;
-using static MHServerEmu.Common.IdGenerator;
 
 namespace MHServerEmuTests.Maps
 {
     public class OneTimeSetUpBeforeMapGenerationTests : IDisposable
     {
+        public static AuthTicket AuthTicket { get; private set; }
+
         /// <summary>
         /// Code to execute before the first test
         /// </summary>
         public OneTimeSetUpBeforeMapGenerationTests()
         {
+            UnitTestLogHelper.StartRegisterLogs();
             ServersHelper.LaunchServers();
-            Task.Run(() => ServersHelper.ConnectWithUnitTestCredential()).Wait();
-        }
+            Task<AuthTicket> task = Task.Run(() => ServersHelper.ConnectWithUnitTestCredentials());
+            task.Wait();
 
+            if (ServersHelper.EtablishConnectionWithFrontEndServer(task.Result))
+                AuthTicket = task.Result;
+        }
 
         /// <summary>
         /// Code to execute after the last test
         /// </summary>
         public void Dispose()
         {
+            // Do something
         }
     }
 }

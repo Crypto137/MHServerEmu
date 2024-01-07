@@ -15,11 +15,11 @@ namespace MHServerEmuTests.Auth
         [Fact]
         public void AuthStep_AllInformation_AreValid()
         {
-            Task<AuthTicket> task = Task.Run(() => ServersHelper.ConnectWithUnitTestCredential());
+            Task<AuthTicket> task = Task.Run(() => ServersHelper.ConnectWithUnitTestCredentials());
             task.Wait();
-            AuthTicket ticket = task.Result;
-            Assert.NotNull(ticket);
-            Assert.NotEqual(0ul, ticket.SessionId);
+            AuthTicket authTicket = task.Result;
+            Assert.NotNull(authTicket);
+            Assert.NotEqual(0ul, authTicket.SessionId);
         }
 
         [Fact]
@@ -31,8 +31,8 @@ namespace MHServerEmuTests.Auth
                 "Any Value Agent",
                 "Steam"));
             task.Wait();
-            AuthTicket ticket = task.Result;
-            Assert.Null(ticket);
+            AuthTicket authTicket = task.Result;
+            Assert.Null(authTicket);
         }
 
         [Fact]
@@ -44,8 +44,18 @@ namespace MHServerEmuTests.Auth
                 "Any Value Agent",
                 "Not Steam"));
             task.Wait();
-            AuthTicket ticket = task.Result;
-            Assert.Null(ticket);
+            AuthTicket authTicket = task.Result;
+            Assert.Null(authTicket);
+        }
+
+        [Fact]
+        public void AuthStep_ConnectAck_IsSuccess()
+        {
+            Task<AuthTicket> task = Task.Run(() => ServersHelper.ConnectWithUnitTestCredentials());
+            task.Wait();
+            AuthTicket authTicket = task.Result;
+            Assert.NotNull(authTicket);
+            Assert.True(ServersHelper.EtablishConnectionWithFrontEndServer(authTicket));
         }
     }
 }
