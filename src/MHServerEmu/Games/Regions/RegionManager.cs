@@ -77,13 +77,19 @@ namespace MHServerEmu.Games.Regions
         private readonly Dictionary<uint, Cell> _allCells = new();
         private readonly Dictionary<ulong, Region> _allRegions = new();
         private readonly Dictionary<ulong, Region> _matches = new();
-        public Game Game;
+        public Game Game { get; private set; }
 
         public RegionManager(EntityManager entityManager)
         {
             _entityManager = entityManager;
             _areaId = 1;
             _cellId = 1;
+        }
+
+        public bool Initialize(Game game)
+        {
+            Game = game;
+            return true;
         }
 
         public uint AllocateCellId() => _cellId++;
@@ -137,7 +143,7 @@ namespace MHServerEmu.Games.Regions
             if (!region.Initialize(initSettings))
             {
                 _allRegions.Remove(instanceAddress);
-                region.Shutdown();                
+                region.Shutdown();
                 return null;
             }
 
@@ -295,10 +301,10 @@ namespace MHServerEmu.Games.Regions
                         new(2432.0f, 2432.0f, 2432.0f),
                         new(10, DifficultyTier.Normal));
 
-                        area = new(1,(AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/EndGame/TierX/HoloSim/HoloSimAArea.prototype"), new(), true);
-                        area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/EndGame/DR_Survival_A.cell"), new()));
+                    area = new(1, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/EndGame/TierX/HoloSim/HoloSimAArea.prototype"), new(), true);
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/EndGame/DR_Survival_A.cell"), new()));
 
-                        region.AddArea(area);
+                    region.AddArea(area);
 
                     region.EntrancePosition = new(-2004.0f, -896.0f, 184.0f);
                     region.EntranceOrientation = new();
@@ -309,7 +315,7 @@ namespace MHServerEmu.Games.Regions
 
                 case RegionPrototypeId.XaviersMansionRegion:
 
-                    archiveData = new byte[] {    
+                    archiveData = new byte[] {
                     };
 
                     region = new(RegionPrototypeId.XaviersMansionRegion,
@@ -424,7 +430,7 @@ namespace MHServerEmu.Games.Regions
                     Area entryArea = new(2, AreaPrototype.GenoshaHUBEntryArea, new(-11049f, -12336f, 0f), false);
                     entryArea.AddCell(new(18, GameDatabase.GetDataRefByPrototypeName("Resource/Cells/DistrictCells/Genosha/GenoshaEntryArea/GenoshaEntry_X1Y1.cell"), new()));
                     region.AddArea(entryArea);*/
-                    
+
 
                     region.EntrancePosition = new(3483.125f, 2724.875f, -1304f);
                     region.EntranceOrientation = new(2.046875f, 0.0f, 0.0f);
@@ -554,7 +560,7 @@ namespace MHServerEmu.Games.Regions
                     region = new(RegionPrototypeId.OpDailyBugleRegionL11To60,
                         1038711701,
                         archiveData,
-                        new(-10240.0f,	-10240.0f,	-2048.0f),
+                        new(-10240.0f, -10240.0f, -2048.0f),
                         new(10240.0f, 10240.0f, 2048.0f),
                         new(20, DifficultyTier.Normal));
 
@@ -647,7 +653,7 @@ namespace MHServerEmu.Games.Regions
                     // can be only one Area
                     else
                     {
-                        
+
                         AreaPrototypeId CH0102HellsKitchenNorthArea = (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH01HellsKitchen/Brownstones/CH0102HellsKitchenNorthArea.prototype");
                         area = new(1, CH0102HellsKitchenNorthArea, new(), true);
                         districtPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Districts/Hells_Kitchen_Brownstones_B.district");
@@ -667,7 +673,7 @@ namespace MHServerEmu.Games.Regions
                     break;
 
                 case RegionPrototypeId.CH0105NightclubRegion:
-                    
+
                     archiveData = new byte[] {
                     };
                     region = new(RegionPrototypeId.CH0105NightclubRegion,
@@ -701,7 +707,7 @@ namespace MHServerEmu.Games.Regions
                     };
                     region = new(RegionPrototypeId.CH0201ShippingYardRegion,
                         1883928786,
-                        archiveData, 
+                        archiveData,
                         new(-1152.0f, -1152.0f, -1152.0f),
                         new(12672.0f, 14976.0f, 1152.0f),
                         new(60, DifficultyTier.Normal));
@@ -719,7 +725,7 @@ namespace MHServerEmu.Games.Regions
                     region.AddArea(area);
 
                     region.EntrancePosition = new(48.0f, 4944.0f, 48.0f);
-                    region.EntranceOrientation = new(-0.392705f, 0.0f, 0.0f); 
+                    region.EntranceOrientation = new(-0.392705f, 0.0f, 0.0f);
                     region.WaypointPosition = new(368.0f, 5040.0f, 0.0f);
                     region.WaypointOrientation = new(1.57082f, 0.0f, 0.0f);
 
@@ -738,7 +744,7 @@ namespace MHServerEmu.Games.Regions
                     string Madripoor = "Resource/Cells/Madripoor/";
                     string MadripoorArea = "Regions/StoryRevamp/CH03Madripoor/";
 
-                    area = new(1, (AreaPrototypeId) GameDatabase.GetPrototypeRefByName(MadripoorArea + "Beach/BeachArea.prototype"), new(), false);
+                    area = new(1, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName(MadripoorArea + "Beach/BeachArea.prototype"), new(), false);
                     area.AddCell(new(93, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Cove_C/Madripoor_SuperPier_A_X1_Y0.cell"), new(0.0f, -20736.0f, -4.0f)));
                     area.AddCell(new(87, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Cove_C/Madripoor_Beach_C_NESW_A.cell"), new(0.0f, -25344.0f, -4.0f)));
                     area.AddCell(new(84, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Cove_C/Madripoor_Beach_C_NESW_B.cell"), new(0.0f, -27648.0f, -4.0f)));
@@ -770,7 +776,7 @@ namespace MHServerEmu.Games.Regions
                     area.AddCell(new(78, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/Bamboo_Wide_BaseEntry_EW_A.cell"), new(0.0f, -11520.0f, -4.0f)));
                     region.AddArea(area);
 
-                    area = new(4, (AreaPrototypeId) GameDatabase.GetPrototypeRefByName(MadripoorArea + "BambooForest/BambooForestArea.prototype"), new(), false);
+                    area = new(4, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName(MadripoorArea + "BambooForest/BambooForestArea.prototype"), new(), false);
                     area.AddCell(new(70, GameDatabase.GetPrototypeRefByName(Madripoor + "Bamboo_Forest_Wide_C/Bamboo_Village_X1_Y1_A.cell"), new(-2304.0f, -4608.0f, -4.0f)));
                     area.AddCell(new(71, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/Bamboo_GroveEntry_NESW_A.cell"), new(0.0f, -4608.0f, -4.0f)));
                     area.AddCell(new(65, GameDatabase.GetPrototypeRefByName(Madripoor + "Bamboo_Forest_Wide_C/Bamboo_Village_X1_Y0_A.cell"), new(-2304.0f, -6912.0f, -4.0f)));
@@ -830,7 +836,7 @@ namespace MHServerEmu.Games.Regions
                     area = new(10, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName(MadripoorArea + "LowTown/LowTownArea1.prototype"), new(), true);
                     area.AddCell(new(38, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Lower_C/Madripoor_Lower_C_SW_A.cell"), new(0.0f, 20736.0f, 4.0f)));
                     region.AddArea(area);
-                    
+
                     area = new(11, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName(MadripoorArea + "LowTown/LowTownArea2.prototype"), new(), false);
                     area.AddCell(new(34, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NE_A.cell"), new(-4608.0f, 20736.0f, 4.0f)));
                     area.AddCell(new(37, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/LowTown_SCAlleyEntry_N_A.cell"), new(-2304.0f, 23040.0f, 4.0f)));
@@ -840,7 +846,7 @@ namespace MHServerEmu.Games.Regions
 
                     ulong fillerLower = GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_FILLER_A.cell");
 
-                    area = new(20, (AreaPrototypeId) GameDatabase.GetPrototypeRefByName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
+                    area = new(20, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
                     area.AddCell(new(101, fillerLower, new(-6912.0f, 23040.0f, 4.0f)));
                     area.AddCell(new(102, fillerLower, new(-4608.0f, 32256.0f, 4.0f)));
                     area.AddCell(new(103, fillerLower, new(-6912.0f, 32256.0f, 4.0f)));
@@ -901,7 +907,7 @@ namespace MHServerEmu.Games.Regions
                     region.AddArea(area);
 
                     area = new(23, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName(MadripoorArea + "LowTown/LowTownPrincessBarArea.prototype"), new(), false);
-                    area.AddCell(new(27, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/Madripoor_Lower_PrincessBar.cell"), new(-2304.0f, 25344.0f, 4.0f))); 
+                    area.AddCell(new(27, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Trans/Madripoor_Lower_PrincessBar.cell"), new(-2304.0f, 25344.0f, 4.0f)));
                     region.AddArea(area);
 
                     area = new(24, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName(MadripoorArea + "LowTown/LowTownArea4.prototype"), new(), false);
@@ -927,7 +933,7 @@ namespace MHServerEmu.Games.Regions
                     // Beach WaypointPosition -2050.0f, -29787.0f, -4.0f
                     // BambooForest WaypointPosition -240.0f, -7142.0f, -4.0f
                     // LowTown WaypointPosition 0.0f, 18432.0f, 4.0f
-                    region.WaypointPosition = new(0.0f, 18432.0f, 4.0f); 
+                    region.WaypointPosition = new(0.0f, 18432.0f, 4.0f);
                     region.WaypointOrientation = new();
                     break;
 
@@ -1150,7 +1156,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-2176.0f, -2176.0f, -2176.0f),
                         new(2176.0f, 2176.0f, 2176.0f),
-                        new(60, DifficultyTier.Normal));                    
+                        new(60, DifficultyTier.Normal));
 
                     area = new(1, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH04EastSide/Areas/LowerEastSide/WaxMuseum/CH0405WaxMuseumArea1.prototype"), new(), true);
                     area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/Hells_Kitchen_02/RedLight_SC_Instances/RedLight_WaxMuseum_B.cell"), new()));
@@ -1158,7 +1164,7 @@ namespace MHServerEmu.Games.Regions
 
                     region.EntrancePosition = new(-1096.0f, -128.0f, 5.0f);
                     region.EntranceOrientation = new();
-                    region.WaypointPosition = new(1158.0f, 1498.0f, 5.0f) ;
+                    region.WaypointPosition = new(1158.0f, 1498.0f, 5.0f);
                     region.WaypointOrientation = new();
 
                     break;
@@ -1194,7 +1200,7 @@ namespace MHServerEmu.Games.Regions
                         new(-10368.0f - fixOffset, -12544.0f - fixOffset, -2176.0f),
                         new(10368.0f + fixOffset, 12544.0f + fixOffset, 2176.0f),
                         new(60, DifficultyTier.Normal));
-                    
+
                     string FiskTower = "Regions/StoryRevamp/CH04EastSide/Areas/UpperEastSide/FiskTower/";
 
                     area = new(1, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName(FiskTower + "CH0410FiskTowerArea1Lobby.prototype"), new(), true);
@@ -1279,7 +1285,7 @@ namespace MHServerEmu.Games.Regions
                     region.AddArea(area);
 
                     ulong fillerDino = GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_FILLER_A.cell");
-                    
+
                     area = new(24, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
                     // 117 - 208
                     uint areaid = 117;
@@ -1404,7 +1410,7 @@ namespace MHServerEmu.Games.Regions
 
                     ulong fillerMarch = GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_FILLER_A.cell");
                     area = new(25, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
-                   
+
                     areaid = 209;
                     for (uint i = 0; i < 6; i++)
                     {
@@ -1423,7 +1429,7 @@ namespace MHServerEmu.Games.Regions
                     region.AddArea(area);
 
                     region.EntrancePosition = new(-6100.0f, 2210.0f, 0.0f);
-                    region.EntranceOrientation = new(); 
+                    region.EntranceOrientation = new();
                     region.WaypointPosition = new(-6100.0f, 2210.0f, -10.0f);
                     region.WaypointOrientation = new();
 
@@ -1519,7 +1525,7 @@ namespace MHServerEmu.Games.Regions
 
                     break;
 
-               case RegionPrototypeId.CH0808DoomCastleRegion:
+                case RegionPrototypeId.CH0808DoomCastleRegion:
                     archiveData = new byte[] {
                     };
 
@@ -1591,7 +1597,7 @@ namespace MHServerEmu.Games.Regions
 
                     break;
 
-               case RegionPrototypeId.CH0901NorwayPCZRegion:
+                case RegionPrototypeId.CH0901NorwayPCZRegion:
                     archiveData = new byte[] {
                     };
 
@@ -1783,7 +1789,7 @@ namespace MHServerEmu.Games.Regions
 
                     region.EntrancePosition = new(-5648.0f, -10752.0f, 0.0f);
                     region.EntranceOrientation = new();
-                    region.WaypointPosition = new(-5648.0f, -10752.0f, 0.0f); 
+                    region.WaypointPosition = new(-5648.0f, -10752.0f, 0.0f);
                     region.WaypointOrientation = new(3.141640f, 0.0f, 0.0f);
 
                     break;
@@ -1800,7 +1806,7 @@ namespace MHServerEmu.Games.Regions
                         new(60, DifficultyTier.Normal));
 
                     string SiegeCity = "Resource/Cells/Asgard/SiegePCZ/SiegeCity/";
-                    area = new(1, (AreaPrototypeId) GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH09Asgard/Areas/Asgard/LowerAsgard/SiegeS2NCityArea.prototype"), new(), true);
+                    area = new(1, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH09Asgard/Areas/Asgard/LowerAsgard/SiegeS2NCityArea.prototype"), new(), true);
                     area.AddCell(new(26, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_Super/SiegeCity_SuperFour_X0Y1_A.cell"), new(1152.0f, 3456.0f, 0.0f)));
                     area.AddCell(new(35, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_A/SiegeCity_A_FILLER_A.cell"), new(-5760.0f, -5760.0f, 0.0f)));
                     area.AddCell(new(3, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCityTrans/Estate_TR_Entry_NES_A.cell"), new(1152.0f, -5760.0f, 0.0f)));
@@ -1919,11 +1925,11 @@ namespace MHServerEmu.Games.Regions
                     area.AddCell(new(6, GameDatabase.GetPrototypeRefByName("Resource/Cells/EndGame/DangerDailies/SinisterLab/SinisterLabTerminal_Entry_A.cell"), new(0.0f, -8960.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(2, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH07SavageLand/Areas/MutateMarsh/MutateCaves/SinisterLab/SinisterLabBAreaReaverConstruction.prototype"), new(), false);                    
+                    area = new(2, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH07SavageLand/Areas/MutateMarsh/MutateCaves/SinisterLab/SinisterLabBAreaReaverConstruction.prototype"), new(), false);
                     area.AddCell(new(5, GameDatabase.GetPrototypeRefByName("Resource/Cells/Savagelands/SinisterLab/SinisterLab_A/SinisterLab_B.cell"), new(0.0f, -5376.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(3, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH07SavageLand/Areas/MutateMarsh/MutateCaves/SinisterLab/SinisterLabDAreaCloneMonitoring.prototype"), new(), false);                    
+                    area = new(3, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH07SavageLand/Areas/MutateMarsh/MutateCaves/SinisterLab/SinisterLabDAreaCloneMonitoring.prototype"), new(), false);
                     area.AddCell(new(4, GameDatabase.GetPrototypeRefByName("Resource/Cells/Savagelands/SinisterLab/SinisterLab_A/SinisterLab_D.cell"), new(0.0f, -1792.0f, 0.0f)));
                     region.AddArea(area);
 
@@ -1941,9 +1947,9 @@ namespace MHServerEmu.Games.Regions
 
                     region.EntrancePosition = new(1000.0f, -10100.0f, 0.0f);
                     region.EntranceOrientation = new(3.14159f, 0f, 0f);
-                    region.WaypointPosition = new(-500.0f, 6025.0f, 0.0f);                    
+                    region.WaypointPosition = new(-500.0f, 6025.0f, 0.0f);
                     region.WaypointOrientation = new();
-                    
+
                     break;
 
                 case RegionPrototypeId.DailyGFiskTowerRegionL60:
@@ -1959,14 +1965,14 @@ namespace MHServerEmu.Games.Regions
                         new(4352.0f + fixTower, 4352.0f + fixTower, 1536.0f), // new(13056.0f, 13056.0f, 1536.0f)
                         new(60, DifficultyTier.Normal));
 
-                   
+
                     area = new(1, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/EndGame/Terminals/Green/FiskTower/Areas/DailyGFiskTowerArea.prototype"), new(), true);
 
                     area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/FiskTower/FiskTower_Trans/FiskTowerDaily_Lobby_Entry_A.cell"), new(-fixTower, -fixTower, 0.0f)));
-                  /*  area.AddCell(new(2, GameDatabase.GetPrototypeRefByName("Resource/Cells/FiskTower/FiskTower_A/FiskTower_A_Floor_A.cell"), new(-fixTower, 0.0f, 0.0f)));
-                    area.AddCell(new(3, GameDatabase.GetPrototypeRefByName("Resource/Cells/FiskTower/FiskTower_A/FiskTower_A_Floor_B.cell"), new(-fixTower, fixTower, 0.0f)));
-                    area.AddCell(new(4, GameDatabase.GetPrototypeRefByName("Resource/Cells/FiskTower/FiskTower_A/FiskTower_A_Floor_D.cell"), new(0.0f, fixTower, 0.0f)));
-                    area.AddCell(new(5, GameDatabase.GetPrototypeRefByName("Resource/Cells/FiskTower/FiskTower_Trans/FiskTower_BossRoom_A.cell"), new(0.0f, 0.0f, 0.0f)));*/
+                    /*  area.AddCell(new(2, GameDatabase.GetPrototypeRefByName("Resource/Cells/FiskTower/FiskTower_A/FiskTower_A_Floor_A.cell"), new(-fixTower, 0.0f, 0.0f)));
+                      area.AddCell(new(3, GameDatabase.GetPrototypeRefByName("Resource/Cells/FiskTower/FiskTower_A/FiskTower_A_Floor_B.cell"), new(-fixTower, fixTower, 0.0f)));
+                      area.AddCell(new(4, GameDatabase.GetPrototypeRefByName("Resource/Cells/FiskTower/FiskTower_A/FiskTower_A_Floor_D.cell"), new(0.0f, fixTower, 0.0f)));
+                      area.AddCell(new(5, GameDatabase.GetPrototypeRefByName("Resource/Cells/FiskTower/FiskTower_Trans/FiskTower_BossRoom_A.cell"), new(0.0f, 0.0f, 0.0f)));*/
 
                     region.AddArea(area);
 
@@ -1989,39 +1995,39 @@ namespace MHServerEmu.Games.Regions
                         new(60, DifficultyTier.Normal));
 
                     string Rzoo = "Resource/Cells/Bronx_Zoo/";
-                    
-                    area = new(1, (AreaPrototypeId) GameDatabase.GetPrototypeRefByName("Regions/EndGame/OneShotMissions/NonChapterBound/BronxZoo/ZooAreas/ZooArea1SN.prototype"), new(), true);
 
-                    area.AddCell(new(24, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_NE_Entry_A.cell"), new(-1024.0f, -7488.0f, 0.0f)));
-                    area.AddCell(new(9, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_NEW_Entry_A.cell"), new(-1024.0f, -5184.0f, 0.0f)));
-                    area.AddCell(new(13, GameDatabase.GetPrototypeRefByName(Rzoo+ "Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NEW_A.cell"), new(-1024.0f, -2880.0f, 0.0f))); // Bronx_Zoo_A/Bronx_Zoo_A_NEW_B.cell
-                    area.AddCell(new(14, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_TR_Stadium_Entry_A.cell"), new(-1024.0f, -576.0f, 0.0f)));
-                    area.AddCell(new(22, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_NES_Entry_A.cell"), new(1280.0f, -7488.0f, 0.0f)));
-                    area.AddCell(new(3, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_NESW_Attractions_A/Bronx_Zoo_FoodCourt_NESW_A.cell"), new(1280.0f, -5184.0f, 0.0f)));
-                    area.AddCell(new(5, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_NESW_Attractions_A/Bronx_Zoo_Carousel_NESW_A.cell"), new(1280.0f, -2880.0f, 0.0f)));
-                    area.AddCell(new(11, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NSW_B.cell"), new(1280.0f, -576.0f, 0.0f)));
+                    area = new(1, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/EndGame/OneShotMissions/NonChapterBound/BronxZoo/ZooAreas/ZooArea1SN.prototype"), new(), true);
 
-                    area.AddCell(new(19, GameDatabase.GetPrototypeRefByName(Rzoo+ "Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NES_A.cell"), new(3584.0f, -7488.0f, 0.0f)));//Bronx_Zoo_A/Bronx_Zoo_A_NES_B.cell
-                    area.AddCell(new(21, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NES_A.cell"), new(5888.0f, -7488.0f, 0.0f)));
-                    area.AddCell(new(20, GameDatabase.GetPrototypeRefByName(Rzoo+ "Bronx_Zoo_A/Bronx_Zoo_A_NES_B.cell"), new(8192.0f, -7488.0f, 0.0f)));//Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NES_A.cell
-                    area.AddCell(new(23, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_TR_Employee_Entry_A.cell"), new(10496.0f, -7488.0f, 0.0f)));  
+                    area.AddCell(new(24, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_NE_Entry_A.cell"), new(-1024.0f, -7488.0f, 0.0f)));
+                    area.AddCell(new(9, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_NEW_Entry_A.cell"), new(-1024.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(13, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NEW_A.cell"), new(-1024.0f, -2880.0f, 0.0f))); // Bronx_Zoo_A/Bronx_Zoo_A_NEW_B.cell
+                    area.AddCell(new(14, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_TR_Stadium_Entry_A.cell"), new(-1024.0f, -576.0f, 0.0f)));
+                    area.AddCell(new(22, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_NES_Entry_A.cell"), new(1280.0f, -7488.0f, 0.0f)));
+                    area.AddCell(new(3, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_NESW_Attractions_A/Bronx_Zoo_FoodCourt_NESW_A.cell"), new(1280.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(5, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_NESW_Attractions_A/Bronx_Zoo_Carousel_NESW_A.cell"), new(1280.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(11, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_NSW_B.cell"), new(1280.0f, -576.0f, 0.0f)));
 
-                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NESW_A.cell"), new(8192.0f, -2880.0f, 0.0f)));
-                    area.AddCell(new(4, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_NESW_Attractions_A/Bronx_Zoo_Theater_NESW_A.cell"), new(8192.0f, -5184.0f, 0.0f)));                    
-                    area.AddCell(new(6, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NSW_A.cell"), new(5888.0f, -576.0f, 0.0f)));
+                    area.AddCell(new(19, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NES_A.cell"), new(3584.0f, -7488.0f, 0.0f)));//Bronx_Zoo_A/Bronx_Zoo_A_NES_B.cell
+                    area.AddCell(new(21, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_NES_A.cell"), new(5888.0f, -7488.0f, 0.0f)));
+                    area.AddCell(new(20, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_NES_B.cell"), new(8192.0f, -7488.0f, 0.0f)));//Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NES_A.cell
+                    area.AddCell(new(23, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_TR_Employee_Entry_A.cell"), new(10496.0f, -7488.0f, 0.0f)));
 
-                    area.AddCell(new(7, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_TopLeft_A.cell"), new(5888.0f, -5184.0f, 0.0f)));
-                    area.AddCell(new(12, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_TopRight_A.cell"), new(5888.0f, -2880.0f, 0.0f)));
-                    area.AddCell(new(2, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_BotLeft_A.cell"), new(3584.0f, -5184.0f, 0.0f)));                    
-                    area.AddCell(new(15, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_BotRight_A.cell"), new(3584.0f, -2880.0f, 0.0f)));
-                    
-                    area.AddCell(new(8, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NSW_B.cell"), new(8192.0f, -576.0f, 0.0f)));                 
-                    area.AddCell(new(10, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NSW_A.cell"), new(3584.0f, -576.0f, 0.0f)));                    
-                                        
-                    area.AddCell(new(16, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_A/Bronx_Zoo_A_NESWcN_A.cell"), new(10496.0f, -5184.0f, 0.0f))); 
-                    area.AddCell(new(17, GameDatabase.GetPrototypeRefByName(Rzoo+ "Bronx_Zoo_A/Bronx_Zoo_A_NESWdNE_A.cell"), new(10496.0f, -2880.0f, 0.0f))); // Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_ESW_A
-                    area.AddCell(new(18, GameDatabase.GetPrototypeRefByName(Rzoo+"Bronx_Zoo_Trans/Bronx_Zoo_TR_Aquarium_Entry_A.cell"), new(10496.0f, -576.0f, 0.0f)));
-                  
+                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_NESW_A.cell"), new(8192.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(4, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_NESW_Attractions_A/Bronx_Zoo_Theater_NESW_A.cell"), new(8192.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(6, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_NSW_A.cell"), new(5888.0f, -576.0f, 0.0f)));
+
+                    area.AddCell(new(7, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_TopLeft_A.cell"), new(5888.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(12, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_TopRight_A.cell"), new(5888.0f, -2880.0f, 0.0f)));
+                    area.AddCell(new(2, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_BotLeft_A.cell"), new(3584.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(15, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_Pens_A/Bronx_Zoo_Pen_BotRight_A.cell"), new(3584.0f, -2880.0f, 0.0f)));
+
+                    area.AddCell(new(8, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_NSW_B.cell"), new(8192.0f, -576.0f, 0.0f)));
+                    area.AddCell(new(10, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_NSW_A.cell"), new(3584.0f, -576.0f, 0.0f)));
+
+                    area.AddCell(new(16, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_NESWcN_A.cell"), new(10496.0f, -5184.0f, 0.0f)));
+                    area.AddCell(new(17, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_NESWdNE_A.cell"), new(10496.0f, -2880.0f, 0.0f))); // Bronx_Zoo_Pens_B/Bronx_Zoo_OpenPen_ESW_A
+                    area.AddCell(new(18, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_TR_Aquarium_Entry_A.cell"), new(10496.0f, -576.0f, 0.0f)));
+
                     region.AddArea(area);
 
                     ulong filler = GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_FILLER_A.cell");
@@ -2052,7 +2058,7 @@ namespace MHServerEmu.Games.Regions
                     area.AddCell(new(221, filler, new(-3328.0f, -9792.0f, 0.0f)));
                     region.AddArea(area);
 
-                    area = new(2, (AreaPrototypeId) GameDatabase.GetPrototypeRefByName("Regions/EndGame/OneShotMissions/NonChapterBound/BronxZoo/ZooAreas/ZooArea2.prototype"), new(), false);
+                    area = new(2, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/EndGame/OneShotMissions/NonChapterBound/BronxZoo/ZooAreas/ZooArea2.prototype"), new(), false);
                     area.AddCell(new(122, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_CagedCivisMission_A.cell"), new(15104.0f, -5184.0f, 0.0f)));
                     area.AddCell(new(125, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_Trans/Bronx_Zoo_NSW_JungleExit_A.cell"), new(15104.0f, -2880.0f, 0.0f)));
                     area.AddCell(new(121, GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_NESWcS_A.cell"), new(12800.0f, -5184.0f, 0.0f)));
@@ -2066,7 +2072,7 @@ namespace MHServerEmu.Games.Regions
 
                     // fillers for ZooArea2
 
-                    area = new(11, (AreaPrototypeId) GameDatabase.GetPrototypeRefByName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
+                    area = new(11, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
                     area.AddCell(new(222, filler, new(17408.0f, -576.0f, 0.0f)));
                     area.AddCell(new(223, filler, new(15104.0f, -9792.0f, 0.0f)));
                     area.AddCell(new(224, filler, new(15104.0f, -576.0f, 0.0f)));
@@ -2078,11 +2084,11 @@ namespace MHServerEmu.Games.Regions
                     area.AddCell(new(230, filler, new(19712.0f, -576.0f, 0.0f)));
                     region.AddArea(area);
 
-                    region.EntrancePosition = new(-1024.0f, -8100.0f, 0.0f); 
+                    region.EntrancePosition = new(-1024.0f, -8100.0f, 0.0f);
                     region.EntranceOrientation = new(1.5625f, 0f, 0f); ;
                     region.WaypointPosition = new(15104.0f, -3100.0f, 0.0f);
                     region.WaypointOrientation = new();
-                    
+
                     break;
 
                 case RegionPrototypeId.HYDRAIslandPartDeuxRegionL60:
@@ -2168,7 +2174,7 @@ namespace MHServerEmu.Games.Regions
                     area.AddCell(new(100, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_NE.cell"), new(17024.0f, 28928.0f, -1152.0f)));
                     area.AddCell(new(101, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_A/Hydra1S_A_FILLER_A.cell"), new(896.0f, 12800.0f, -1152.0f)));
                     region.AddArea(area);
-                    
+
                     area = new(2, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName(HydraIslandArea + "HydraIslandPartDeuxBaseEntryArea.prototype"), new(), false);
                     area.AddCell(new(73, GameDatabase.GetPrototypeRefByName(HydraIsland + "HydraIsland1Shot/HydraIsland1S_Trans/Hydra1S_FakeEW_BaseEntry.cell"), new(-12800.0f, -896.0f, -1152.0f)));
                     region.AddArea(area);
@@ -2283,7 +2289,7 @@ namespace MHServerEmu.Games.Regions
                         archiveData,
                         new(-1152.0f, -1152.0f, -1152.0f),
                         new(19584.0f, 19584.0f, 1152.0f),
-                        new(60, DifficultyTier.Normal));                    
+                        new(60, DifficultyTier.Normal));
 
                     AreaPrototypeId CentralPark = (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/EndGame/TierX/UltronGameMode/UltronRaidMainArea.prototype");
                     area = new(1, CentralPark, new(), true);
@@ -2298,8 +2304,8 @@ namespace MHServerEmu.Games.Regions
                     region.AddArea(area);
 
                     region.EntrancePosition = new(4900.0f, 100.0f, 0.0f);
-                    region.EntranceOrientation = new(1.570796f, 0.0f, 0.0f); 
-                    region.WaypointPosition =  new(16428.0f, 11820.0f, 0.0f);
+                    region.EntranceOrientation = new(1.570796f, 0.0f, 0.0f);
+                    region.WaypointPosition = new(16428.0f, 11820.0f, 0.0f);
                     region.WaypointOrientation = new(1.570796f, 0.0f, 0.0f);
 
                     break;
@@ -2453,17 +2459,17 @@ namespace MHServerEmu.Games.Regions
                     archiveData = new byte[] {
                     };
 
-                    CreateRegionParams diff = (prototype ==  RegionPrototypeId.UpperMadripoorRegionL60)?
-                        new(60, DifficultyTier.Normal) : new(63, DifficultyTier.Superheroic); 
+                    CreateRegionParams diff = (prototype == RegionPrototypeId.UpperMadripoorRegionL60) ?
+                        new(60, DifficultyTier.Normal) : new(63, DifficultyTier.Superheroic);
 
                     region = new(prototype,
                         1883928786,
-                        archiveData, 
-                        new(-1152.0f, -11136.0f, -3328.0f), 
+                        archiveData,
+                        new(-1152.0f, -11136.0f, -3328.0f),
                         new(26496.0f, 24192.0f, 3328.0f),
                         diff);
 
-                    area = new(1, (AreaPrototypeId) GameDatabase.GetPrototypeRefByName("Regions/Story/CH10SecretInvasion/UpperMadripoor/UpperMadripoorAreaA.prototype"), new(), true);
+                    area = new(1, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/Story/CH10SecretInvasion/UpperMadripoor/UpperMadripoorAreaA.prototype"), new(), true);
 
                     districtPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Districts/MadripoorHightownDistrict.district");
                     district = GameDatabase.GetPrototype<DistrictPrototype>(districtPrototypeId);
