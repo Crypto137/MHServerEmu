@@ -57,5 +57,28 @@ namespace MHServerEmuTests.Auth
             Assert.NotNull(authTicket);
             Assert.True(ServersHelper.EtablishConnectionWithFrontEndServer(authTicket));
         }
+
+        [Fact]
+        public void AuthStep_Handshake_IsSuccess()
+        {
+            Task<AuthTicket> task = Task.Run(() => ServersHelper.ConnectWithUnitTestCredentials());
+            task.Wait();
+            AuthTicket authTicket = task.Result;
+            Assert.NotNull(authTicket);
+            Assert.True(ServersHelper.EtablishConnectionWithFrontEndServer(authTicket));
+
+            List<GameMessage> gameMessages = new List<GameMessage>
+            {
+                new GameMessage(InitialClientHandshake.CreateBuilder()
+                    .SetProtocolVersion(FrontendProtocolVersion.CURRENT_VERSION)
+                    .SetServerType(PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND)
+                    .Build())
+            };
+
+            PacketIn packetIn = ServersHelper.SendDataToFrontEndServer(authTicket, gameMessages);
+            Assert.NotNull(packetIn);
+            Assert.Equal(MuxCommand.Data, packetIn.Command);
+            Assert.Equal((int)GameServerToClientMessage.NetMessageQueueLoadingScreen, packetIn.Messages.FirstOrDefault().Id);
+        }
     }
 }

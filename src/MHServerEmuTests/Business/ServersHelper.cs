@@ -112,23 +112,26 @@ namespace MHServerEmuTests.Business
             }
         }
 
-        public static void SendDataToFrontEndServer(AuthTicket authTicket, List<GameMessage> gameMessages)
+        public static PacketIn SendDataToFrontEndServer(AuthTicket authTicket, List<GameMessage> gameMessages)
         {
             try
             {
                 using (TcpClient client = new TcpClient(authTicket.FrontendServer, int.Parse(authTicket.FrontendPort)))
                 using (NetworkStream stream = client.GetStream())
                 {
-
-                    PacketOut packetOut = new(1, MuxCommand.Connect);
+                    PacketOut packetOut = new(1, MuxCommand.Data);
                     packetOut.AddMessages(gameMessages);
                     byte[] data = packetOut.Data;
                     stream.Write(data, 0, data.Length);
+
+                    CodedInputStream codedInputStream = CodedInputStream.CreateInstance(stream);
+                    return new PacketIn(codedInputStream);
                 }
             }
             catch (Exception e)
             {
                 Console.WriteLine($"Erreur : {e.Message}");
+                return null;
             }
         }
 
