@@ -740,8 +740,14 @@ namespace MHServerEmu.Games.Regions
         {
             get
             {
-                if (_startArea == null && AreaList.Any())
-                    _startArea = AreaList.First();
+                if (_startArea == null)
+                {
+                    foreach (Area area in IterateAreas())
+                    {
+                        _startArea = area;
+                        break;
+                    }
+                }
                 return _startArea;
             }
             set
@@ -955,7 +961,7 @@ namespace MHServerEmu.Games.Regions
         {
             Aabb bound = Aabb.InvertedLimit;
 
-            foreach (var area in AreaList) // IterateAreas()
+            foreach (var area in IterateAreas()) 
                 bound += area.RegionBounds;
 
             return bound;
@@ -980,7 +986,7 @@ namespace MHServerEmu.Games.Regions
             EntitySpatialPartition = new (bound);
             CellSpatialPartition = new (bound);
 
-            foreach (var area in AreaList) // IterateAreas()
+            foreach (var area in IterateAreas()) 
                 foreach (var cell in area.CellList)
                     PartitionCell(cell, PartitionContext.Insert);
 
@@ -1032,7 +1038,7 @@ namespace MHServerEmu.Games.Regions
         public bool GenerateHelper(RegionGenerator regionGenerator, GenerateFlag flag)
         {
             bool success = true;
-            foreach (Area area in AreaList)
+            foreach (Area area in IterateAreas())
             {
                 if (area == null)
                     success = false;
@@ -1125,7 +1131,7 @@ namespace MHServerEmu.Games.Regions
         public float GetDistanceToClosestAreaBounds(Vector3 position)
         {
             float minDistance = float.MaxValue;
-            foreach (var area in AreaList) // IterateAreas()
+            foreach (var area in IterateAreas())
             {
                 float distance = area.RegionBounds.DistanceToPoint2D(position);
                 minDistance = Math.Min(distance, minDistance);
@@ -1247,6 +1253,12 @@ namespace MHServerEmu.Games.Regions
             return markerFilter == filterRef;
         }
 
+        public IEnumerable<Area> IterateAreas(Aabb bound = null)
+        {
+           foreach (var area in AreaList)
+                if (bound == null || area.RegionBounds.Intersects(bound)) 
+                    yield return area;
+        }
     }
 
     public class RegionSettings

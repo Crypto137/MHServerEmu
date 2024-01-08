@@ -459,7 +459,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
                             bool testCollision = false;
 
-                            foreach (var testArea in Region.AreaList) // IterateAreas()
+                            foreach (var testArea in Region.IterateAreas())
                             {
                                 if (testArea == area) continue;
 

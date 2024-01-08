@@ -44,13 +44,13 @@ namespace MHServerEmuTests.Maps
 
             _outputHelper.WriteLine($"ConnectionNodes = {itr}");
         }
+
         [Fact]
         public void MapGeneration_SecondTestPrototypeIterator_IsValid()
         {
             IEnumerable<Prototype> iterateProtos = GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(RegionConnectionNodePrototype), 2 | 4);
             int itr = 0;
             Assert.NotEmpty(iterateProtos);
-
             foreach (Prototype itrProto in iterateProtos)
             {
                 if (itrProto is RegionConnectionNodePrototype proto)

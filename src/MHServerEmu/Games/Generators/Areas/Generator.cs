@@ -100,7 +100,7 @@ namespace MHServerEmu.Games.Generators.Areas
             bool inAreas = true;
             Aabb cellBounds = registry.CellBounds;
 
-            foreach (Area testArea in region.AreaList) // IterateAreas()
+            foreach (Area testArea in region.IterateAreas())
             {
                 Aabb regionBounds = testArea.RegionBounds;
                 Aabb testBounds = new(position, cellBounds.Width - 128.0f, cellBounds.Length - 128.0f, cellBounds.Height - 128.0f);
