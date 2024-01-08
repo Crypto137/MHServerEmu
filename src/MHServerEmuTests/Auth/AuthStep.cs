@@ -1,15 +1,8 @@
 ﻿using Gazillion;
 using MHServerEmu.Common;
 using MHServerEmuTests.Business;
-using MHServerEmuTests.Maps;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Mail;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace MHServerEmuTests.Auth
+namespace MHServerEmuTests
 {
     public class AuthStep : IClassFixture<OneTimeSetUpBeforeAuthStepTests>
     {
@@ -81,7 +74,8 @@ namespace MHServerEmuTests.Auth
                     .Build())
             };
 
-            PacketIn packetIn = tcpClientManager.SendDataToFrontEndServer(gameMessages);
+            tcpClientManager.SendDataToFrontEndServer(gameMessages);
+            PacketIn packetIn = tcpClientManager.WaitForAnswerFromFrontEndServer();
             Assert.NotNull(packetIn);
             Assert.Equal(MuxCommand.Data, packetIn.Command);
             Assert.Equal((int)GameServerToClientMessage.NetMessageQueueLoadingScreen, packetIn.Messages.FirstOrDefault().Id);

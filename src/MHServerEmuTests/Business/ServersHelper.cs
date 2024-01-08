@@ -3,15 +3,10 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Auth;
 using MHServerEmu.Frontend;
 using MHServerEmu.Networking;
-using MHServerEmuTests.Maps;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Net.Http.Headers;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MHServerEmuTests.Business
 {

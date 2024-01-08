@@ -45,17 +45,29 @@ namespace MHServerEmuTests.Business
             }
         }
 
-        public PacketIn SendDataToFrontEndServer(List<GameMessage> gameMessages)
+        public bool SendDataToFrontEndServer(List<GameMessage> gameMessages, ushort muxId = 1)
         {
             try
             {
-                    PacketOut packetOut = new(1, MuxCommand.Data);
-                    packetOut.AddMessages(gameMessages);
-                    byte[] data = packetOut.Data;
-                    _stream.Write(data, 0, data.Length);
+                PacketOut packetOut = new(muxId, MuxCommand.Data);
+                packetOut.AddMessages(gameMessages);
+                byte[] data = packetOut.Data;
+                _stream.Write(data, 0, data.Length);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error : {e.Message}");
+                return false;
+            }
+        }
 
-                    CodedInputStream codedInputStream = CodedInputStream.CreateInstance(_stream);
-                    return new PacketIn(codedInputStream);
+        public PacketIn WaitForAnswerFromFrontEndServer()
+        {
+            try
+            {
+                CodedInputStream codedInputStream = CodedInputStream.CreateInstance(_stream);
+                return new PacketIn(codedInputStream);
             }
             catch (Exception e)
             {

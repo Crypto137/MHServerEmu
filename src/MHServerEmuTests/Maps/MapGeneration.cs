@@ -1,15 +1,9 @@
 using Gazillion;
-using MHServerEmu.Common.Logging;
-using MHServerEmu.Common.Logging.Targets;
-using MHServerEmu.PlayerManagement;
+using MHServerEmu.Games.Entities;
 using MHServerEmuTests.Business;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
-using Microsoft.VisualStudio.TestPlatform.Utilities;
-using System.Net.Mail;
 using Xunit.Abstractions;
-using Xunit.Sdk;
 
-namespace MHServerEmuTests.Maps
+namespace MHServerEmuTests
 {
     public class MapGeneration : IClassFixture<OneTimeSetUpBeforeMapGenerationTests>
     {
@@ -20,7 +14,7 @@ namespace MHServerEmuTests.Maps
             _output = output;
         }
 
-        [Fact]
+        [Fact] // For debug purpose : Ignore it
         public void WaypointToXaviersMansionRegion_NormalDifficulty_IsSuccess()
         {
             UnitTestLogHelper.Logger.Error("WaypointToXaviersMansionRegion_NormalDifficulty_IsSuccess");
@@ -36,8 +30,50 @@ namespace MHServerEmuTests.Maps
             };
 
             OneTimeSetUpBeforeMapGenerationTests.TcpClientManager.SendDataToFrontEndServer(gameMessages);
+            PacketIn packetIn = OneTimeSetUpBeforeMapGenerationTests.TcpClientManager.WaitForAnswerFromFrontEndServer();
+            packetIn = OneTimeSetUpBeforeMapGenerationTests.TcpClientManager.WaitForAnswerFromFrontEndServer();
+            packetIn = OneTimeSetUpBeforeMapGenerationTests.TcpClientManager.WaitForAnswerFromFrontEndServer();
+            LogGameServerToClientGameMessages(packetIn.Messages);
             Assert.True(true);
             UnitTestLogHelper.DisplayLogs(_output);
+        }
+
+        private void LogGameMessage(GameMessage message)
+        {
+            switch ((GameServerToClientMessage)message.Id)
+            {
+                
+                case GameServerToClientMessage.NetMessageEntityCreate:
+                    if (message.TryDeserialize(out NetMessageEntityCreate result))
+                    {
+                        EntityBaseData baseData = new(result.BaseData);
+                        Entity entity = new(baseData, result.ArchiveData);
+
+                        UnitTestLogHelper.Logger.Error("baseData:");
+                        UnitTestLogHelper.Logger.Error(baseData.ToString());
+                        UnitTestLogHelper.Logger.Error("archiveData:");
+                        UnitTestLogHelper.Logger.Error(entity.ToString());
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        private void LogGameServerToClientGameMessages(GameMessage[] messages)
+        {
+            foreach (GameMessage message in messages)
+            {
+                try
+                {
+                    LogGameMessage(message);
+                }
+                catch (Exception e)
+                {
+                    UnitTestLogHelper.Logger.Error("Unable to log message : " + message.Id);
+                }
+            }
         }
     }
 }
