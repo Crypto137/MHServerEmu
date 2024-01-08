@@ -37,13 +37,37 @@ namespace MHServerEmu.Common
             }
         }
 
+        public static byte[] EncryptToken(byte[] tokenToEncrypt, byte[] key, out byte[] iv)
+        {
+            using (Aes aesAlgorithm = Aes.Create())
+            {
+                aesAlgorithm.Key = key;
+                aesAlgorithm.GenerateIV();
+                iv = aesAlgorithm.IV;
+
+                ICryptoTransform encryptor = aesAlgorithm.CreateEncryptor();
+
+                byte[] encryptedData;
+
+                using (MemoryStream memoryStream = new())
+                {
+                    using (CryptoStream cryptoStream = new(memoryStream, encryptor, CryptoStreamMode.Write))
+                    {
+                        cryptoStream.Write(tokenToEncrypt, 0, tokenToEncrypt.Length);
+                    }
+                        encryptedData = memoryStream.ToArray();
+                }
+
+                return encryptedData;
+            }
+        }
+
         public static bool TryDecryptToken(byte[] encryptedToken, byte[] key, byte[] iv, out byte[] decryptedToken)
         {
             using (Aes aesAlgorithm = Aes.Create())
             {
                 aesAlgorithm.Key = key;
                 aesAlgorithm.IV = iv;
-
                 ICryptoTransform decryptor = aesAlgorithm.CreateDecryptor();
 
                 try

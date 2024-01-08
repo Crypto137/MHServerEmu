@@ -1,4 +1,5 @@
 ﻿using Gazillion;
+using MHServerEmu.Common;
 using MHServerEmuTests.Business;
 using MHServerEmuTests.Maps;
 using System;
@@ -84,6 +85,17 @@ namespace MHServerEmuTests.Auth
             Assert.NotNull(packetIn);
             Assert.Equal(MuxCommand.Data, packetIn.Command);
             Assert.Equal((int)GameServerToClientMessage.NetMessageQueueLoadingScreen, packetIn.Messages.FirstOrDefault().Id);
+        }
+
+        [Fact]
+        public void AuthStep_EncryptionDecryption_AreEqual()
+        {
+            byte[] tokenToEncrypt = Cryptography.GenerateToken();
+            byte[] key = Cryptography.GenerateAesKey();
+            byte[] encryptedToken = Cryptography.EncryptToken(tokenToEncrypt, key, out byte[] iv);
+
+            Cryptography.TryDecryptToken(encryptedToken, key, iv, out byte[] decryptedToken);
+            Assert.True(Cryptography.VerifyToken(decryptedToken, tokenToEncrypt));
         }
     }
 }
