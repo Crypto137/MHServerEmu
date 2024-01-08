@@ -170,7 +170,26 @@ namespace MHServerEmu.Games.Regions
 
         public void AddNavigationDataToRegion()
         {
-            throw new NotImplementedException();
+           /* TODO NaviMesh
+            
+            Region region = GetRegion();
+            if (region == null) return;
+            NaviMesh naviMesh = region.NaviMesh;
+            if (CellProto == null) return;
+
+            Transform3 cellToRegion = Transform3.Identity;
+
+            if (!CellProto.IsOffsetInMapFile)
+                cellToRegion = RegionTransform;
+            else
+                cellToRegion = Transform3.BuildTransform(Area.Origin, Vector3.Zero);
+
+            if (!naviMesh.Stitch(CellProto.NaviPatchSource.NaviPatch, cellToRegion)) return;
+            if (!naviMesh.StitchProjZ(CellProto.NaviPatchSource.PropPatch, cellToRegion)) return;
+
+            VisitPropSpawns(new NaviPropSpawnVisitor(naviMesh, cellToRegion));
+            VisitEncounters(new NaviEncounterVisitor(naviMesh, cellToRegion));
+           */
         }
 
         public void AddCellConnection(uint id)
