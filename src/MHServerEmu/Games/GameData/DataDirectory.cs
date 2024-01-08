@@ -453,6 +453,28 @@ namespace MHServerEmu.Games.GameData
             return record;
         }
 
+        /// <summary>
+        /// Checks if the specified prototype is approved for use (i.e. it's not a prototype for something in development). Note: this forces the prototype to load.
+        /// </summary>
+        public bool PrototypeIsApproved(PrototypeId prototypeId, Prototype prototype = null)
+        {
+            var record = GetPrototypeDataRefRecord(prototypeId);
+            if (record == null) return false;
+            return PrototypeIsApproved(record, prototype);
+        }
+
+        /// <summary>
+        /// Checks if the specified prototype is approved for use (i.e. it's not a prototype for something in development). Note: this forces the prototype to load.
+        /// </summary>
+        public bool PrototypeIsApproved(PrototypeDataRefRecord record, Prototype prototype = null)
+        {
+            // If no prototype is provided we use the prototype from the record
+            if (prototype == null)
+                prototype = record.Prototype ?? GetPrototype<Prototype>(record.PrototypeId);
+
+            return prototype.ApprovedForUse();
+        }
+
         private Type GetResourceClassTypeByFileName(string fileName)
         {
             // Replacement for Gazillion's GetResourceClassIdByFilename

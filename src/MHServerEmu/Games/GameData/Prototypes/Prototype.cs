@@ -67,6 +67,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
 
         public PrototypeFieldGroup GetFieldGroup(HardcodedBlueprintId blueprintId) => GetFieldGroup((BlueprintId)blueprintId);
+
+        /// <summary>
+        /// Returns <see langword="false"/> if this is a prototype in development.
+        /// </summary>
+        public virtual bool ApprovedForUse()
+        {
+            return true;
+        }
     }
 
     public class PrototypeFieldGroup

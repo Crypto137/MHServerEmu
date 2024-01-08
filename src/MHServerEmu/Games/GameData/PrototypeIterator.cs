@@ -1,5 +1,4 @@
-﻿using MHServerEmu.Games.GameData.Prototypes;
-using System.Collections;
+﻿using System.Collections;
 
 namespace MHServerEmu.Games.GameData
 {
@@ -52,7 +51,9 @@ namespace MHServerEmu.Games.GameData
                 if (record.Flags.HasFlag(Calligraphy.PrototypeRecordFlags.EditorOnly) && _flags.HasFlag(PrototypeIterateFlags.WithEditorOnly) == false)
                     continue;
 
-                // TODO: skip unapproved prototypes
+                // Skip unapproved prototypes if needed (note: PrototypeIsApproved() forces the prototype to load)
+                if (_flags.HasFlag(PrototypeIterateFlags.ApprovedOnly) && GameDatabase.DataDirectory.PrototypeIsApproved(record) == false)
+                    continue;
 
                 // For now we return PrototypeId instead of Prototype to simplify the implementation.
                 // The more accurate way would be a full IEnumerator where you could get either the id
