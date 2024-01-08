@@ -20,7 +20,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public MarkerSetPrototype InitializeSet { get; }
         public MarkerSetPrototype MarkerSet { get; }
         public NaviPatchSourcePrototype NaviPatchSource { get; }
-        public byte IsOffsetInMapFile { get; }
+        public bool IsOffsetInMapFile { get; }
         public HeightMapPrototype HeightMap { get; }
         public ulong[] HotspotPrototypes { get; }
 
@@ -47,7 +47,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 MarkerSet = new(reader);
 
                 NaviPatchSource = new(reader);
-                IsOffsetInMapFile = reader.ReadByte();
+                IsOffsetInMapFile = reader.ReadByte()>0;
                 HeightMap = new(reader);
 
                 HotspotPrototypes = new ulong[reader.ReadUInt32()];
