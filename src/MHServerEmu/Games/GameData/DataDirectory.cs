@@ -228,7 +228,8 @@ namespace MHServerEmu.Games.GameData
                 case ".ui":         resource = new UIPrototype(data);           break;
                 default:            throw new($"Unsupported resource type ({extension}).");
             }
-
+            Prototype prototype = resource as Prototype;
+            prototype.SetDataRef(prototypeId);
             _prototypeDict.Add(prototypeId, resource);
         }
 

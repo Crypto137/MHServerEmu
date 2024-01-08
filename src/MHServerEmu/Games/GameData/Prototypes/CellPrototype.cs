@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public HeightMapPrototype HeightMap { get; }
         public ulong[] HotspotPrototypes { get; }
 
-        public ulong DataRef { get { throw new NotImplementedException(); } }
+        public ulong DataRef { get => GetDataRef(); }
 
         public CellPrototype(byte[] data)
         {

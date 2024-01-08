@@ -17,6 +17,7 @@ namespace MHServerEmu.Games.GameData
         private static readonly string GpakDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "GPAK").Replace("MHServerEmuTests", "MHServerEmu");
         private static readonly string CalligraphyPath = Path.Combine(GpakDirectory, "Calligraphy.sip");
         private static readonly string ResourcePath = Path.Combine(GpakDirectory, "mu_cdata.sip");
+        private static readonly ulong _globalsProtoRef;
 
         public static bool IsInitialized { get; }
 
@@ -61,6 +62,10 @@ namespace MHServerEmu.Games.GameData
                 IsInitialized = false;
                 return;
             }
+
+            // Get Global Prototypes
+            _globalsProtoRef = GetPrototypeRefByName("Globals/Globals.defaults");
+
 
             // Finish game database initialization
             stopwatch.Stop();
@@ -141,9 +146,9 @@ namespace MHServerEmu.Games.GameData
            return cells;
         }
 
-        internal static GlobalsPrototype GetGlobalsPrototype()
+        public static GlobalsPrototype GetGlobalsPrototype()
         {
-            throw new NotImplementedException();
+            return DataDirectory.GetPrototype<GlobalsPrototype>(_globalsProtoRef);
         }
 
         public static string GetFormattedPrototypeName(ulong protoId)
@@ -151,9 +156,9 @@ namespace MHServerEmu.Games.GameData
             return Path.GetFileNameWithoutExtension(GetPrototypeName(protoId));
         }
 
-        internal static DifficultyGlobalsPrototype GetDifficultyGlobalsPrototype()
+        public static DifficultyGlobalsPrototype GetDifficultyGlobalsPrototype()
         {
-            throw new NotImplementedException();
+            return DataDirectory.GetPrototype<DifficultyGlobalsPrototype>(GetGlobalsPrototype().DifficultyGlobals);
         }
     }
 }

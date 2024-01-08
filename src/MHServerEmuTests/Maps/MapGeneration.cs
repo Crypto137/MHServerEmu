@@ -85,9 +85,11 @@ namespace MHServerEmuTests.Maps
             cellSetPath = "Latveria/Courtyard_B/";
             cellSetPath = "Resource/Cells/" + cellSetPath;
             _outputHelper.WriteLine($"cellPath = {cellSetPath}");
-            protos = GameDatabase.PrototypeRefManager.GetCellRefs(cellSetPath);
-            foreach (var proto in protos)
-                _outputHelper.WriteLine($" {GameDatabase.GetPrototypeName(proto)}");
+            List<CellPrototype> cellPrototypes;
+            cellPrototypes = GameDatabase.GetCellPrototypesByPath(cellSetPath);
+
+            foreach (CellPrototype cell in cellPrototypes)
+                _outputHelper.WriteLine($" [{GameDatabase.GetPrototypeName(cell.GetDataRef())}] {cell.BoundingBox}");
             Assert.NotEmpty(protos);
 
         }
