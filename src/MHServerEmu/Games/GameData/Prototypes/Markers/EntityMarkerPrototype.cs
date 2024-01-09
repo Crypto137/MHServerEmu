@@ -54,7 +54,7 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
             Rotation = reader.ReadVector3();
         }
 
-        public T GetMarkedPrototype<T>()
+        public T GetMarkedPrototype<T>() where T : Prototype
         {
             ulong dataRef = GameDatabase.GetDataRefByPrototypeGuid(EntityGuid);
             if (dataRef == 0)

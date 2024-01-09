@@ -194,6 +194,7 @@ namespace MHServerEmu.Games.GameData
 
             // Load the prototype
             PrototypeFile prototypeFile = new(gpakDict[$"Calligraphy/{filePath}"]);
+            prototypeFile.Prototype.SetDataRef(prototypeId);
             _prototypeDict.Add(prototypeId, prototypeFile.Prototype);
         }
 
@@ -227,7 +228,8 @@ namespace MHServerEmu.Games.GameData
                 case ".ui":         resource = new UIPrototype(data);           break;
                 default:            throw new($"Unsupported resource type ({extension}).");
             }
-
+            Prototype prototype = resource as Prototype;
+            prototype.SetDataRef(prototypeId);
             _prototypeDict.Add(prototypeId, resource);
         }
 
@@ -279,14 +281,14 @@ namespace MHServerEmu.Games.GameData
             return null;
         }
 
-        public T GetPrototype<T>(ulong id)
+        public T GetPrototype<T>(ulong id) where T : Prototype
         {
             if (_prototypeDict.TryGetValue(id, out object prototype))
             {
-                if (typeof(T).Name != "Prototype" && prototype.GetType().Name == "Prototype")
+                if (typeof(T) != typeof(Prototype) && prototype.GetType() == typeof(Prototype))
                 {
                    var newPrototype = (T)Activator.CreateInstance(typeof(T), new object[] { prototype });
-                    _prototypeDict[id] = newPrototype;
+                    ReplacePrototypeDict(id, newPrototype);
                     return newPrototype;
                 }
                 else
@@ -305,7 +307,10 @@ namespace MHServerEmu.Games.GameData
         {
             while (prototype.ParentId != 0)                     // Go up until we get to the parentless prototype (.defaults)
                 prototype = GetPrototype<Prototype>(prototype.ParentId);
-            return _prototypeBlueprintDict[prototype];          // Use .defaults prototype as a key to get the blueprint for it
+            if (_prototypeBlueprintDict.TryGetValue(prototype, out Blueprint blueprint))
+                return blueprint;          // Use .defaults prototype as a key to get the blueprint for it
+            else
+                return null;
         }
 
         public Blueprint GetPrototypeBlueprint(ulong prototypeId) => GetPrototypeBlueprint(GetPrototype<Prototype>(prototypeId));
@@ -348,16 +353,48 @@ namespace MHServerEmu.Games.GameData
             // todo: reimplement export
         }
 
+        private void ReplacePrototypeDict(ulong id, Prototype newPrototype) 
+        {
+            Prototype oldPrototype = (Prototype)_prototypeDict[id];
+            _prototypeDict[id] = newPrototype;
+            if (_prototypeBlueprintDict.TryGetValue(oldPrototype, out Blueprint blueprint))
+            {
+                _prototypeBlueprintDict.Add(newPrototype, blueprint);
+                _prototypeBlueprintDict.Remove(oldPrototype);
+            }
+        }
+
         public IEnumerable<Prototype> IteratePrototypesInHierarchy(Type prototypeType, int flags)
         {
-            throw new NotImplementedException();
+            // Get list of all prototypes with this type
+            foreach (var kvp in _prototypeDict)
+            {
+                ulong id = kvp.Key;
+                object prototype = kvp.Value;
+
+                if (prototype.GetType() == typeof(Prototype))
+                {
+                    string className = GetPrototypeBlueprint((Prototype)prototype).RuntimeBinding;
+                    Type protoType = Type.GetType("MHServerEmu.Games.GameData.Prototypes." + className);
+
+                    if (protoType != null && protoType == prototypeType) {
+                        var newPrototype = Activator.CreateInstance(prototypeType, new object[] { prototype });
+                        ReplacePrototypeDict(id, (Prototype)newPrototype);                       
+                        yield return (Prototype)newPrototype; 
+                    }
+
+                } else if (prototype.GetType() == prototypeType)
+                {
+                    yield return (Prototype)prototype;
+                }
+            }
         }
 
         public Prototype GetPrototypeExt(ulong id)
         {
             if (_prototypeDict.TryGetValue(id, out object prototype))
             {
-                if (prototype.GetType().Name == "Prototype")
+                if (prototype.GetType() == typeof(Prototype))
                 {
                     string className = GetPrototypeBlueprint((Prototype)prototype).RuntimeBinding;
                     Type protoType = Type.GetType("MHServerEmu.Games.GameData.Prototypes." + className);
@@ -367,7 +404,7 @@ namespace MHServerEmu.Games.GameData
                         return null;
                     }
                     var newPrototype = Activator.CreateInstance(protoType, new object[] { prototype });
-                    _prototypeDict[id] = newPrototype;
+                    ReplacePrototypeDict(id, (Prototype)newPrototype);
                     return (Prototype)newPrototype;
                 }
                 else

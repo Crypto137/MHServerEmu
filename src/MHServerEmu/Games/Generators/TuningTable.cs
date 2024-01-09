@@ -1,19 +1,34 @@
-﻿using MHServerEmu.Games.GameData;
+﻿using MHServerEmu.Common.Logging;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Regions
 {
     public class TuningTable
     {
+        public static readonly Logger Logger = LogManager.CreateLogger();
+
         private Region _region;
         private ulong _tuningRef;
         private TuningPrototype _tuningProto;
+        private int _difficultyIndexMin;
+        private int _difficultyIndexMax;
 
         public TuningTable(Region region)
         {
             _region = region;
 
-            // TODO init difficultyGlobals
+            DifficultyGlobalsPrototype difficultyGlobals = GameDatabase.GetDifficultyGlobalsPrototype();
+            if (difficultyGlobals == null) return;
+
+            var difficultyIndexC = GameDatabase.GetCurve(difficultyGlobals.DifficultyIndexDamageDefaultPtoM);
+            if (difficultyIndexC != null)
+            {
+                _difficultyIndexMin = difficultyIndexC.MinPosition;
+                _difficultyIndexMax = difficultyIndexC.MaxPosition;
+            }
+            else 
+                Logger.Error("Failed to retrieve DifficultyIndexDamageDefaultPtoM from DifficultyGlobals! Is it set?");
         }
 
         public void SetTuningTable(ulong tuningTable)

@@ -232,17 +232,22 @@ namespace MHServerEmu.Games.Entities
 
         public IEnumerable<Entity> GetEntities()
         {
-            return _entityDict.Values;
+            foreach (var entity in _entityDict.Values)
+                yield return entity;
         }
 
         public IEnumerable<Entity> GetEntities(Cell cell)
         {
-            return _entityDict.Values.Where(entity => entity is WorldEntity worldEntity && worldEntity.Cell == cell);
+            foreach (var entity in _entityDict.Values)
+                if (entity is WorldEntity worldEntity && worldEntity.Cell == cell)
+                    yield return entity;
         }
 
         public IEnumerable<Entity> GetEntities(Region region)
         {
-            return _entityDict.Values.Where(entity => entity is WorldEntity worldEntity && worldEntity.Region == region);
+            foreach (var entity in _entityDict.Values)
+                if (entity is WorldEntity worldEntity && worldEntity.Region == region)
+                    yield return entity;
         }
         // TODO: CreateEntity -> finalizeEntity -> worldEntity.EnterWorld -> _location.SetRegion( region )
 

@@ -17,6 +17,7 @@ namespace MHServerEmu.Games.GameData
         private static readonly string GpakDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "GPAK").Replace("MHServerEmuTests", "MHServerEmu");
         private static readonly string CalligraphyPath = Path.Combine(GpakDirectory, "Calligraphy.sip");
         private static readonly string ResourcePath = Path.Combine(GpakDirectory, "mu_cdata.sip");
+        private static readonly ulong _globalsProtoRef;
 
         public static bool IsInitialized { get; }
 
@@ -62,6 +63,10 @@ namespace MHServerEmu.Games.GameData
                 return;
             }
 
+            // Get Global Prototypes
+            _globalsProtoRef = GetPrototypeRefByName("Globals/Globals.defaults");
+
+
             // Finish game database initialization
             stopwatch.Stop();
             Logger.Info($"Finished initializing game database in {stopwatch.ElapsedMilliseconds} ms");
@@ -95,7 +100,7 @@ namespace MHServerEmu.Games.GameData
         public static AssetType GetAssetType(ulong assetId) => DataDirectory.AssetDirectory.GetAssetType(assetId);
         public static Curve GetCurve(ulong curveId) => DataDirectory.CurveDirectory.GetCurve(curveId);
         public static Blueprint GetBlueprint(ulong blueprintId) => DataDirectory.GetBlueprint(blueprintId);
-        public static T GetPrototype<T>(ulong prototypeId) => DataDirectory.GetPrototype<T>(prototypeId);
+        public static T GetPrototype<T>(ulong prototypeId) where T : Prototype => DataDirectory.GetPrototype<T>(prototypeId);
         public static Prototype GetPrototypeExt(ulong prototypeId) => DataDirectory.GetPrototypeExt(prototypeId);
         public static ulong GetDataRefByAsset(ulong assetId)
         {
@@ -141,9 +146,9 @@ namespace MHServerEmu.Games.GameData
            return cells;
         }
 
-        internal static GlobalsPrototype GetGlobalsPrototype()
+        public static GlobalsPrototype GetGlobalsPrototype()
         {
-            throw new NotImplementedException();
+            return DataDirectory.GetPrototype<GlobalsPrototype>(_globalsProtoRef);
         }
 
         public static string GetFormattedPrototypeName(ulong protoId)
@@ -151,9 +156,9 @@ namespace MHServerEmu.Games.GameData
             return Path.GetFileNameWithoutExtension(GetPrototypeName(protoId));
         }
 
-        internal static DifficultyGlobalsPrototype GetDifficultyGlobalsPrototype()
+        public static DifficultyGlobalsPrototype GetDifficultyGlobalsPrototype()
         {
-            throw new NotImplementedException();
+            return DataDirectory.GetPrototype<DifficultyGlobalsPrototype>(GetGlobalsPrototype().DifficultyGlobals);
         }
     }
 }

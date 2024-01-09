@@ -170,7 +170,26 @@ namespace MHServerEmu.Games.Regions
 
         public void AddNavigationDataToRegion()
         {
-            throw new NotImplementedException();
+           /* TODO NaviMesh
+            
+            Region region = GetRegion();
+            if (region == null) return;
+            NaviMesh naviMesh = region.NaviMesh;
+            if (CellProto == null) return;
+
+            Transform3 cellToRegion = Transform3.Identity;
+
+            if (!CellProto.IsOffsetInMapFile)
+                cellToRegion = RegionTransform;
+            else
+                cellToRegion = Transform3.BuildTransform(Area.Origin, Vector3.Zero);
+
+            if (!naviMesh.Stitch(CellProto.NaviPatchSource.NaviPatch, cellToRegion)) return;
+            if (!naviMesh.StitchProjZ(CellProto.NaviPatchSource.PropPatch, cellToRegion)) return;
+
+            VisitPropSpawns(new NaviPropSpawnVisitor(naviMesh, cellToRegion));
+            VisitEncounters(new NaviEncounterVisitor(naviMesh, cellToRegion));
+           */
         }
 
         public void AddCellConnection(uint id)
@@ -721,8 +740,14 @@ namespace MHServerEmu.Games.Regions
         {
             get
             {
-                if (_startArea == null && AreaList.Any())
-                    _startArea = AreaList.First();
+                if (_startArea == null)
+                {
+                    foreach (Area area in IterateAreas())
+                    {
+                        _startArea = area;
+                        break;
+                    }
+                }
                 return _startArea;
             }
             set
@@ -936,7 +961,7 @@ namespace MHServerEmu.Games.Regions
         {
             Aabb bound = Aabb.InvertedLimit;
 
-            foreach (var area in AreaList) // IterateAreas()
+            foreach (var area in IterateAreas()) 
                 bound += area.RegionBounds;
 
             return bound;
@@ -961,7 +986,7 @@ namespace MHServerEmu.Games.Regions
             EntitySpatialPartition = new (bound);
             CellSpatialPartition = new (bound);
 
-            foreach (var area in AreaList) // IterateAreas()
+            foreach (var area in IterateAreas()) 
                 foreach (var cell in area.CellList)
                     PartitionCell(cell, PartitionContext.Insert);
 
@@ -1013,7 +1038,7 @@ namespace MHServerEmu.Games.Regions
         public bool GenerateHelper(RegionGenerator regionGenerator, GenerateFlag flag)
         {
             bool success = true;
-            foreach (Area area in AreaList)
+            foreach (Area area in IterateAreas())
             {
                 if (area == null)
                     success = false;
@@ -1106,7 +1131,7 @@ namespace MHServerEmu.Games.Regions
         public float GetDistanceToClosestAreaBounds(Vector3 position)
         {
             float minDistance = float.MaxValue;
-            foreach (var area in AreaList) // IterateAreas()
+            foreach (var area in IterateAreas())
             {
                 float distance = area.RegionBounds.DistanceToPoint2D(position);
                 minDistance = Math.Min(distance, minDistance);
@@ -1117,10 +1142,10 @@ namespace MHServerEmu.Games.Regions
             return minDistance;
         }
 
-        public IEnumerable<Cell> IterateCellsInVolume(Aabb aabb)
+        public IEnumerable<Cell> IterateCellsInVolume(Aabb bound)
         {
             if (CellSpatialPartition != null)
-                return CellSpatialPartition.IterateElementsInVolume(aabb);
+                return CellSpatialPartition.IterateElementsInVolume(bound);
             else
                 return new CellSpatialPartition.ElementIterator();
         }
@@ -1228,6 +1253,12 @@ namespace MHServerEmu.Games.Regions
             return markerFilter == filterRef;
         }
 
+        public IEnumerable<Area> IterateAreas(Aabb bound = null)
+        {
+           foreach (var area in AreaList)
+                if (bound == null || area.RegionBounds.Intersects(bound)) 
+                    yield return area;
+        }
     }
 
     public class RegionSettings

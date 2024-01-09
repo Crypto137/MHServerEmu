@@ -24,17 +24,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class Prototype
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
+        private ulong _dataRef;
+
         public byte Flags { get; }
-        public ulong ParentId { get; }  // 0 for .defaults
+        public ulong ParentId { get; private set; }  // 0 for .defaults
         public PrototypeEntry[] Entries { get; }
 
         public virtual void PostProcess() { }
 
         public Prototype() { } // for Resource Prototype
 
-        public ulong GetDataRef() {
-            ulong DataRef = 0; // TODO: Get DataRef
-            return DataRef; 
+        public ulong GetDataRef() 
+        {
+            return _dataRef; 
+        }
+
+        public void SetDataRef(ulong prototypeId)
+        {
+            _dataRef = prototypeId;
         }
 
         public Prototype(Prototype proto) { }
@@ -185,6 +192,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public void FillPrototype(Type protoType, Prototype proto)
         {
+            // copy data from old proto
+            _dataRef = proto._dataRef; 
+            ParentId = proto.ParentId;
+
             Blueprint blueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(proto);
 
             LoadDefault(protoType, blueprint);
@@ -193,11 +204,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             List<Prototype> parents = new();
             while (parent != blueprint.DefaultPrototypeId)
             {
+                if (parent == 0) break;
                 //Logger.Info($"{GameDatabase.GetPrototypeName(parent)}");
                 Prototype parentProto = parent.GetPrototype();
                 parents.Add(parentProto);
-                parent = parentProto.ParentId;
+                parent = parentProto.ParentId;                
             }
+
             if (parents.Count > 0)
             {
                 parents.Reverse();
