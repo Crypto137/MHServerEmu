@@ -10,11 +10,10 @@ namespace MHServerEmuTests
     public class MapGeneration : IClassFixture<OneTimeSetUpBeforeMapGenerationTests>
     {
         private readonly ITestOutputHelper _outputHelper;
-        ITestOutputHelper _output;
 
-        public MapGeneration(ITestOutputHelper output)
+        public MapGeneration(ITestOutputHelper outputHelper)
         {
-            _output = output;
+            _outputHelper = outputHelper;
         }
 
         [Fact]
@@ -88,7 +87,7 @@ namespace MHServerEmuTests
             packetIn = OneTimeSetUpBeforeMapGenerationTests.TcpClientManager.WaitForAnswerFromFrontEndServer();
             LogGameServerToClientGameMessages(packetIn.Messages);
             Assert.True(true);
-            UnitTestLogHelper.DisplayLogs(_output);
+            UnitTestLogHelper.DisplayLogs(_outputHelper);
         }
 
         private void LogGameMessage(GameMessage message)
