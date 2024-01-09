@@ -87,7 +87,6 @@ namespace MHServerEmu.Games.Regions
     public partial class Cell
     {
         public CellPrototype CellProto { get; private set; }
-        public Vector3 OrientationInArea { get; private set; }
         public Vector3 AreaOffset { get; private set; }
         public CellSettings Settings { get; private set; }
         public Type _type { get; private set; }
@@ -105,11 +104,13 @@ namespace MHServerEmu.Games.Regions
         public float PlayableArea { get => (PlayableNavArea != -1.0) ? PlayableNavArea : 0.0f; }
         public float SpawnableArea { get => (SpawnableNavArea != -1.0) ? SpawnableNavArea : 0.0f; }
         public CellRegionSpatialPartitionLocation SpatialPartitionLocation { get; }
+        public Vector3 AreaOrientation { get; private set; }
 
         public Cell(Area area, uint id)
         {
             RegionBounds = Aabb.Zero;
-            PositionInArea = Vector3.Zero;
+            AreaPosition = Vector3.Zero;
+            AreaOrientation = Vector3.Zero;
             Area = area;
             Id = id;
             PlayableNavArea = -1.0f;
@@ -146,15 +147,15 @@ namespace MHServerEmu.Games.Regions
             return true;
         }
 
-        private void SetAreaPosition(Vector3 positionInArea, Vector3 orientationInArea)
+        public void SetAreaPosition(Vector3 positionInArea, Vector3 orientationInArea)
         {
             if (CellProto == null) return;
 
             if (SpatialPartitionLocation.IsValid()) 
                 GetRegion().PartitionCell(this, Region.PartitionContext.Remove);
 
-            PositionInArea = positionInArea;
-            OrientationInArea = orientationInArea;
+            AreaPosition = positionInArea;
+            AreaOrientation = orientationInArea;
 
             // AreaTransform = Transform3.BuildTransform(positionInArea, orientationInArea);
             // RegionTransform = Transform3.BuildTransform(positionInArea + Area.Origin, orientationInArea);
@@ -597,6 +598,28 @@ namespace MHServerEmu.Games.Regions
         public bool TestStatus(GenerateFlag status)
         {
             return _statusFlag.HasFlag(status);
+        }
+
+        public void SetOrigin(Vector3 newPostion)
+        {
+            Vector3 offset = newPostion - Origin;
+            Origin = newPostion;
+
+            RegionBounds = LocalBounds.Translate(Origin);
+            RegionBounds.RoundToNearestInteger();
+
+            if (AreaConnections.Count > 0)
+                foreach (var connection in AreaConnections)
+                    connection.Position += offset;
+
+            if (TestStatus(GenerateFlag.Background))
+            {
+                foreach (var cell in CellList)
+                {
+                    if (cell == null) continue;
+                    cell.SetAreaPosition(cell.AreaPosition, cell.AreaOrientation);
+                }
+            }
         }
 
         public static void CreateConnection(Area areaA, Area areaB, Vector3 position, ConnectPosition connectPosition)

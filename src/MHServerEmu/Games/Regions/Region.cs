@@ -95,7 +95,7 @@ namespace MHServerEmu.Games.Regions
                         .SetAreaId(area.Id)
                         .SetCellId(cell.Id)
                         .SetCellPrototypeId(cell.PrototypeId)
-                        .SetPositionInArea(cell.PositionInArea.ToNetStructPoint3())
+                        .SetPositionInArea(cell.AreaPosition.ToNetStructPoint3())
                         .SetCellRandomSeed(RandomSeed)
                         .SetBufferwidth(0)
                         .SetOverrideLocationName(0);

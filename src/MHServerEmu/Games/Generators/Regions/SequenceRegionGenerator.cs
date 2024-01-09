@@ -416,7 +416,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
             if (entry.Previous == null)
             {
-                area.Origin.Set(origin);
+                area.SetOrigin(origin);
                 success = true;
             }
             else
@@ -479,7 +479,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
                             if (testCollision) continue;
 
-                            area.Origin.Set(translation);
+                            area.SetOrigin(translation);
 
                             if (RegionGenerator.GetSharedConnections(sharedConnections, area, previousArea))
                             {
