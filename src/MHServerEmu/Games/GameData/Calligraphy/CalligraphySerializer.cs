@@ -137,8 +137,13 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                     // The blueprint for this field is not a runtime child of our main blueprint, meaning it belongs to one of the mixins
                     Type mixinType = blueprintMemberInfo.Blueprint.RuntimeBindingClassType;
 
-                    // First we look for a mixin field
-                    var mixinFieldInfo = classManager.GetMixinFieldInfo(classType, mixinType);
+                    // Currently known cases for non-property mixins:
+                    // - LocomotorPrototype and PopulationInfoPrototype in AgentPrototype (simple mixins, PopulationInfoPrototype seems to be unused)
+                    // - ConditionPrototype and and ConditionEffectPrototype in PowerPrototype (list mixins)
+                    // We use MixinAttribute and ListMixinAttribute to differentiate them from RHStruct lists.
+
+                    // First we look for a non-list mixin field
+                    var mixinFieldInfo = classManager.GetMixinFieldInfo(classType, mixinType, typeof(MixinAttribute));
                     if (mixinFieldInfo != null)
                     {
                         // Create a mixin instance if there isn't one
@@ -147,11 +152,21 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
                         // Get the field info from our mixin
                         fieldInfo = classManager.GetFieldInfo(mixinType, blueprintMemberInfo, false);
+                        Logger.Debug($"Found field info for mixin {mixinType.Name}, field name {blueprintMemberInfo.Member.FieldName}");
                     }
                     else
                     {
-                        // TODO: list mixins
-                        Logger.Warn($"Failed to get field info for {blueprintMemberInfo.Member.FieldName}: list mixins are not implemented");
+                        // Look for a list mixin
+                        mixinFieldInfo = classManager.GetMixinFieldInfo(classType, mixinType, typeof(ListMixinAttribute));
+                        if (mixinFieldInfo == null)
+                        {
+                            Logger.Warn($"Mixin {mixinType.Name}, field name {blueprintMemberInfo.Member.FieldName} is a list mixin, not yet implemented!");
+                        }
+                        else
+                        {
+                            // Nowhere to put this field, something went very wrong, time to reevaluate life choices
+                            Logger.WarnReturn(false, $"Failed to find field info for mixin {mixinType.Name}, field name {blueprintMemberInfo.Member.FieldName}");
+                        }
                     }
                 }
 

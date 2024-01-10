@@ -235,7 +235,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ActivationType Activation { get; protected set; }
         public float AnimationContactTimePercent { get; protected set; }
         public int AnimationTimeMS { get; protected set; }
-        public ConditionPrototype AppliesConditions { get; protected set; }
+        [ListMixin]
+        public ConditionPrototype[] AppliesConditions { get; protected set; }
         public bool CancelConditionsOnEnd { get; protected set; }
         public bool CancelledOnDamage { get; protected set; }
         public bool CancelledOnMove { get; protected set; }
@@ -243,7 +244,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool CanCrit { get; protected set; }
         public EvalPrototype ChannelLoopTimeMS { get; protected set; }
         public int ChargingTimeMS { get; protected set; }
-        public ConditionEffectPrototype ConditionEffects { get; protected set; }
+        [ListMixin]
+        public ConditionEffectPrototype[] ConditionEffects { get; protected set; }
         public EvalPrototype CooldownTimeMS { get; protected set; }
         public DesignWorkflowState DesignState { get; protected set; }
         public ulong DisplayName { get; protected set; }

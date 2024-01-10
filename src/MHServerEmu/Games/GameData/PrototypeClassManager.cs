@@ -112,7 +112,7 @@ namespace MHServerEmu.Games.GameData
         /// <summary>
         /// Returns a <see cref="System.Reflection.PropertyInfo"/> for a mixin field in a Calligraphy prototype.
         /// </summary>
-        public System.Reflection.PropertyInfo GetMixinFieldInfo(Type ownerClassType, Type fieldClassType)
+        public System.Reflection.PropertyInfo GetMixinFieldInfo(Type ownerClassType, Type fieldClassType, Type mixinAttribute)
         {
             // Search the entire class hierarchy for a mixin of the matching type
             while (ownerClassType != typeof(Prototype))
@@ -120,7 +120,7 @@ namespace MHServerEmu.Games.GameData
                 foreach (var property in ownerClassType.GetProperties())
                 {
                     // Return the mixin if found
-                    if (property.PropertyType == fieldClassType)
+                    if (property.PropertyType == fieldClassType && property.IsDefined(mixinAttribute))
                         return property;
                 }
 

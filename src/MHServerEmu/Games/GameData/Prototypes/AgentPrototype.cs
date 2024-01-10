@@ -26,10 +26,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class AgentPrototype : WorldEntityPrototype
     {
         public Allegiance Allegiance { get; protected set; }
+        [Mixin]
         public LocomotorPrototype Locomotion { get; protected set; }
         public ulong HitReactCondition { get; protected set; }
         public BehaviorProfilePrototype BehaviorProfile { get; protected set; }
-        public PopulationInfoPrototype PopulationInfo { get; protected set; }
+        [Mixin]
+        public PopulationInfoPrototype PopulationInfo { get; protected set; }   // This does not seem to be actually used anywhere
         public int WakeDelayMS { get; protected set; }
         public int WakeRandomStartMS { get; protected set; }
         public float WakeRange { get; protected set; }
