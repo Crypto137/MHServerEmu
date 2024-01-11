@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Common.Logging;
+﻿using System.Reflection;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.GameData.Calligraphy
@@ -53,6 +54,45 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         }
 
         /// <summary>
+        /// Creates if needed and returns a list mixin from the specified field of the provided <see cref="Prototype"/> instance that belongs to it.
+        /// </summary>
+        public List<PrototypeMixinListItem> AcquireOwnedMixinList(Prototype prototype, System.Reflection.PropertyInfo mixinFieldInfo, bool copyItemsFromParent)
+        {
+            // Make sure the field info we have is for a list mixin
+            if (mixinFieldInfo.IsDefined(typeof(ListMixinAttribute)) == false)
+                Logger.WarnReturn<List<PrototypeMixinListItem>>(null, $"Tried to acquire owned mixin list for a field that is not a list mixin");
+
+            // Create a new list if there isn't one or it belongs to another prototype
+            var list = (List<PrototypeMixinListItem>)mixinFieldInfo.GetValue(prototype);
+            if (list == null || prototype.IsDynamicFieldOwnedBy(list) == false)
+            {
+                List<PrototypeMixinListItem> newList = new();
+
+                // Fill the new list
+                if (list != null)
+                {
+                    if (copyItemsFromParent)
+                    {
+                        // TODO: if requested, create copies of each item from the parent and assign ownership of them
+                        // addMixinListItemCopy() for each element
+                    }
+                    else
+                    {
+                        // Do a shallow copy of the parent list and do not take ownership of any of its items
+                        newList.AddRange(list);
+                    }
+                }
+
+                // Assign the new list to the field and take ownership of it
+                prototype.SetDynamicFieldOwner(newList);
+
+                list = newList;
+            }
+
+            return list;
+        }
+
+        /// <summary>
         /// Deserializes data for a Calligraphy prototype.
         /// </summary>
         private void DoDeserialize(Prototype prototype, PrototypeDataHeader header, PrototypeId prototypeDataRef, string prototypeName, BinaryReader reader)
@@ -86,25 +126,25 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             {
                 // Read blueprint information and get the specified blueprint
                 BlueprintId groupBlueprintDataRef = (BlueprintId)reader.ReadUInt64();
-                byte fieldGroupCopyNum = reader.ReadByte();
+                byte blueprintCopyNum = reader.ReadByte();
                 Blueprint groupBlueprint = GameDatabase.GetBlueprint(groupBlueprintDataRef);
 
                 if (groupBlueprint.IsProperty())
                 {
-                    DeserializePropertyMixin(prototype, blueprint, groupBlueprint, fieldGroupCopyNum, prototypeDataRef, prototypeName, classType, reader);
+                    DeserializePropertyMixin(prototype, blueprint, groupBlueprint, blueprintCopyNum, prototypeDataRef, prototypeName, classType, reader);
                 }
                 else
                 {
                     // Simple fields
-                    DeserializeFieldGroup(prototype, blueprint, fieldGroupCopyNum, prototypeName, classType, reader, "Simple Fields");
+                    DeserializeFieldGroup(prototype, blueprint, blueprintCopyNum, prototypeName, classType, reader, "Simple Fields");
 
                     // List fields
-                    DeserializeFieldGroup(prototype, blueprint, fieldGroupCopyNum, prototypeName, classType, reader, "List Fields");
+                    DeserializeFieldGroup(prototype, blueprint, blueprintCopyNum, prototypeName, classType, reader, "List Fields");
                 }
             }
         }
 
-        private bool DeserializeFieldGroup(Prototype prototype, Blueprint blueprint, byte fieldGroupCopyNum, string prototypeName, Type classType, BinaryReader reader, string groupTag)
+        private bool DeserializeFieldGroup(Prototype prototype, Blueprint blueprint, byte blueprintCopyNum, string prototypeName, Type classType, BinaryReader reader, string groupTag)
         {
             var classManager = GameDatabase.PrototypeClassManager;
 
@@ -139,16 +179,20 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
                     // Currently known cases for non-property mixins:
                     // - LocomotorPrototype and PopulationInfoPrototype in AgentPrototype (simple mixins, PopulationInfoPrototype seems to be unused)
-                    // - ConditionPrototype and and ConditionEffectPrototype in PowerPrototype (list mixins)
-                    // We use MixinAttribute and ListMixinAttribute to differentiate them from RHStruct lists.
+                    // - ConditionPrototype and ConditionEffectPrototype in PowerPrototype (list mixins)
+                    // We use MixinAttribute and ListMixinAttribute to differentiate them from RHStructs.
 
                     // First we look for a non-list mixin field
                     var mixinFieldInfo = classManager.GetMixinFieldInfo(classType, mixinType, typeof(MixinAttribute));
                     if (mixinFieldInfo != null)
                     {
-                        // Create a mixin instance if there isn't one
-                        if (mixinFieldInfo.GetValue(prototype) == null)
-                            mixinFieldInfo.SetValue(prototype, Activator.CreateInstance(mixinType));
+                        // Set owner prototype to the existing mixin instance or create a new instance if there isn't one
+                        fieldOwnerPrototype = (Prototype)mixinFieldInfo.GetValue(prototype);
+                        if (fieldOwnerPrototype == null)
+                        {
+                            fieldOwnerPrototype = (Prototype)Activator.CreateInstance(mixinType);
+                            mixinFieldInfo.SetValue(prototype, fieldOwnerPrototype);
+                        }
 
                         // Get the field info from our mixin
                         fieldInfo = classManager.GetFieldInfo(mixinType, blueprintMemberInfo, false);
@@ -160,7 +204,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                         mixinFieldInfo = classManager.GetMixinFieldInfo(classType, mixinType, typeof(ListMixinAttribute));
                         if (mixinFieldInfo == null)
                         {
-                            Logger.Warn($"Mixin {mixinType.Name}, field name {blueprintMemberInfo.Member.FieldName} is a list mixin, not yet implemented!");
+                            Logger.Warn($"Mixin {mixinType.Name}, copy num {blueprintCopyNum}, field name {blueprintMemberInfo.Member.FieldName} is a list mixin, not yet implemented!");
                         }
                         else
                         {
@@ -284,5 +328,16 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Contains an item and its blueprint information for a list of mixin prototypes.
+    /// </summary>
+    public class PrototypeMixinListItem
+    {
+        // TODO: Maybe move this somewhere else?
+        public Prototype Prototype { get; set; }
+        public BlueprintId BlueprintId { get; set; }
+        public byte BlueprintCopyNum { get; set; }
     }
 }
