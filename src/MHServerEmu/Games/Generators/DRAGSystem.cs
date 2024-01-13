@@ -444,7 +444,7 @@ namespace MHServerEmu.Games.Regions
                 DistrictPrototype district = GameDatabase.GetPrototype<DistrictPrototype>(DistrictDataRef);
                 if (district != null)
                     Region.PathCache.AppendPathCollection(district.PathCollection, Origin);
-            }
+                }
 
             if (success && flags.HasFlag(GenerateFlag.Population))
                 success &= GeneratePopulation();
@@ -799,6 +799,7 @@ namespace MHServerEmu.Games.Regions
             Game = game;
             SpawnMarkerRegistry = new(this);
             Settings = new();
+            PathCache = new();
         }
 
         public bool Initialize(RegionSettings settings)
