@@ -1,9 +1,11 @@
-﻿using MHServerEmu.Common.Logging;
+﻿using MHServerEmu.Common;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
+using MHServerEmu.Games.Generators.Regions;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -160,12 +162,12 @@ namespace MHServerEmu.Games.Regions
             {
                 Seed = 1488502313,
                 DifficultyTierRef = (ulong)DifficultyTier.Normal,
-                InstanceAddress = 1150669705055451881,
+                InstanceAddress = IdGenerator.Generate(IdType.Region),
                 Level = 10,
                 Bound = Aabb.Zero,
                 GenerateAreas = true,
                 Affixes = new List<ulong>(),
-                RegionDataRef = (ulong)RegionPrototypeId.AvengersTowerHUBRegion
+                RegionDataRef = (ulong)prototype
             };
             return CreateRegion(settings);
         }
