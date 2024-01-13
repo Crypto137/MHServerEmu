@@ -90,7 +90,7 @@ namespace MHServerEmu.Games.Generators.Population
 
             ulong packageRef = GameDatabase.GetPrototypeRefByName(packageName);
             PropPackagePrototype packageProto = GameDatabase.GetPrototype<PropPackagePrototype>(packageRef);
-            if (packageProto == null)
+            if (packageProto == null) // TODO: fix Resource/Props/Global_Shared_Containers.prop
             {
                 Console.WriteLine($"Unable to find Prop Package with Resource Guid {packageName}");
                 return null;

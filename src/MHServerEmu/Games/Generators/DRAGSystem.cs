@@ -75,8 +75,8 @@ namespace MHServerEmu.Games.Regions
 
     public class CellSettings
     {
-        public Vector3 PositionInArea;
-        public Vector3 OrientationInArea;
+        public Vector3 PositionInArea = new();
+        public Vector3 OrientationInArea = new();
         public ulong CellRef;
         public int Seed;
         public ulong OverrideLocationName;
