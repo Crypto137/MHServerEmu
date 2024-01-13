@@ -54,45 +54,6 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         }
 
         /// <summary>
-        /// Creates if needed and returns a list mixin from the specified field of the provided <see cref="Prototype"/> instance that belongs to it.
-        /// </summary>
-        public List<PrototypeMixinListItem> AcquireOwnedMixinList(Prototype prototype, System.Reflection.PropertyInfo mixinFieldInfo, bool copyItemsFromParent)
-        {
-            // Make sure the field info we have is for a list mixin
-            if (mixinFieldInfo.IsDefined(typeof(ListMixinAttribute)) == false)
-                Logger.WarnReturn<List<PrototypeMixinListItem>>(null, $"Tried to acquire owned mixin list for a field that is not a list mixin");
-
-            // Create a new list if there isn't one or it belongs to another prototype
-            var list = (List<PrototypeMixinListItem>)mixinFieldInfo.GetValue(prototype);
-            if (list == null || prototype.IsDynamicFieldOwnedBy(list) == false)
-            {
-                List<PrototypeMixinListItem> newList = new();
-
-                // Fill the new list
-                if (list != null)
-                {
-                    if (copyItemsFromParent)
-                    {
-                        // TODO: if requested, create copies of each item from the parent and assign ownership of them
-                        // addMixinListItemCopy() for each element
-                    }
-                    else
-                    {
-                        // Do a shallow copy of the parent list and do not take ownership of any of its items
-                        newList.AddRange(list);
-                    }
-                }
-
-                // Assign the new list to the field and take ownership of it
-                prototype.SetDynamicFieldOwner(newList);
-
-                list = newList;
-            }
-
-            return list;
-        }
-
-        /// <summary>
         /// Deserializes data for a Calligraphy prototype.
         /// </summary>
         private void DoDeserialize(Prototype prototype, PrototypeDataHeader header, PrototypeId prototypeDataRef, string prototypeName, BinaryReader reader)
@@ -175,6 +136,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 else
                 {
                     // The blueprint for this field is not a runtime child of our main blueprint, meaning it belongs to one of the mixins
+                    fieldOwnerBlueprint = blueprintMemberInfo.Blueprint;
                     Type mixinType = blueprintMemberInfo.Blueprint.RuntimeBindingClassType;
 
                     // Currently known cases for non-property mixins:
@@ -201,10 +163,19 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                     else
                     {
                         // Look for a list mixin
-                        mixinFieldInfo = classManager.GetMixinFieldInfo(classType, mixinType, typeof(ListMixinAttribute));
-                        if (mixinFieldInfo == null)
+                        // temp hack: use typeof(List<PrototypeMixinListItem>) instead of mixinType
+                        mixinFieldInfo = classManager.GetMixinFieldInfo(classType, typeof(List<PrototypeMixinListItem>), typeof(ListMixinAttribute));
+                        if (mixinFieldInfo != null)
                         {
-                            Logger.Warn($"Mixin {mixinType.Name}, copy num {blueprintCopyNum}, field name {blueprintMemberInfo.Member.FieldName} is a list mixin, not yet implemented!");
+                            List<PrototypeMixinListItem> list = AcquireOwnedMixinList(prototype, mixinFieldInfo, false);
+
+                            // Get a matching list element
+                            Prototype element = AcquireOwnedUniqueMixinListElement(prototype, list, mixinType, fieldOwnerBlueprint, blueprintCopyNum);
+                            if (element == null)
+                                Logger.WarnReturn(false, $"Failed to acquire element of a list mixin to deserialize field into");
+
+                            fieldOwnerPrototype = element;
+                            fieldInfo = classManager.GetFieldInfo(mixinType, blueprintMemberInfo, false);
                         }
                         else
                         {
@@ -284,6 +255,147 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
             return true;
         }
+
+        #region List Mixin Management
+
+        /// <summary>
+        /// Creates if needed and returns a list mixin from the specified field of the provided <see cref="Prototype"/> instance that belongs to it.
+        /// </summary>
+        public List<PrototypeMixinListItem> AcquireOwnedMixinList(Prototype prototype, System.Reflection.PropertyInfo mixinFieldInfo, bool copyItemsFromParent)
+        {
+            // Make sure the field info we have is for a list mixin
+            if (mixinFieldInfo.IsDefined(typeof(ListMixinAttribute)) == false)
+                Logger.WarnReturn<List<PrototypeMixinListItem>>(null, $"Tried to acquire owned mixin list for a field that is not a list mixin");
+
+            // Create a new list if there isn't one or it belongs to another prototype
+            var list = (List<PrototypeMixinListItem>)mixinFieldInfo.GetValue(prototype);
+            if (list == null || prototype.IsDynamicFieldOwnedBy(list) == false)
+            {
+                List<PrototypeMixinListItem> newList = new();
+
+                // Fill the new list
+                if (list != null)
+                {
+                    if (copyItemsFromParent)
+                    {
+                        // TODO: if requested, create copies of each item from the parent and assign ownership of them
+                        // addMixinListItemCopy() for each element
+                        throw new NotImplementedException("Copying items from parent list mixins is not implemented");
+                    }
+                    else
+                    {
+                        // Do a shallow copy of the parent list and do not take ownership of any of its items
+                        newList.AddRange(list);
+                    }
+                }
+
+                // Assign the new list to the field and take ownership of it
+                prototype.SetDynamicFieldOwner(newList);
+
+                list = newList;
+            }
+
+            return list;
+        }
+
+        /// <summary>
+        /// Creates if needed and returns an element from a list mixin.
+        /// </summary>
+        private Prototype AcquireOwnedUniqueMixinListElement(Prototype owner, List<PrototypeMixinListItem> list, Type elementClassType,
+            Blueprint elementBlueprint, byte blueprintCopyNum)
+        {
+            // Look for a unique list element
+            // Instead of calling a separate findUniqueMixinListElement() method like the client does, we'll just look for it here
+            PrototypeMixinListItem uniqueListElement = null;
+            foreach (var element in list)
+            {
+                if (element.Prototype.GetType() == elementClassType && element.BlueprintId == elementBlueprint.Id && element.BlueprintCopyNum == blueprintCopyNum)
+                {
+                    uniqueListElement = element;
+                    break;
+                }
+            }
+
+            if (uniqueListElement == null)
+            {
+                // Create the element we're looking for if it's not in our list
+                Prototype prototype = AllocateDynamicPrototype(elementClassType, elementBlueprint.DefaultPrototypeId, null);
+                prototype.ParentDataRef = elementBlueprint.DefaultPrototypeId;
+
+                // Assign ownership of the new mixin
+                owner.SetDynamicFieldOwner(prototype);
+
+                // Add the new mixin to the list
+                PrototypeMixinListItem newListItem = new()
+                {
+                    Prototype = prototype,
+                    BlueprintId = elementBlueprint.Id,
+                    BlueprintCopyNum = blueprintCopyNum
+                };
+
+                list.Add(newListItem);
+
+                // Return the new mixin
+                return prototype;
+            }
+            else
+            {
+                // Return the item we found
+
+                // Return the prototype as is if it belongs to our owner
+                if (owner.IsDynamicFieldOwnedBy(uniqueListElement.Prototype))
+                    return uniqueListElement.Prototype;
+
+                // If there is a matching item but it doesn't belong to the owner, then we need to replace it with a copy
+                list.Remove(uniqueListElement);
+                return AddMixinListItemCopy(owner, list, uniqueListElement);
+            }
+        }
+
+        /// <summary>
+        /// Creates a copy of an element from a parent list mixin and assigns it to the child.
+        /// </summary>
+        private Prototype AddMixinListItemCopy(Prototype owner, List<PrototypeMixinListItem> list, PrototypeMixinListItem item)
+        {
+            // Copy the prototype from the provided list item
+            Prototype element = AllocateDynamicPrototype(item.Prototype.GetType(), PrototypeId.Invalid, item.Prototype);
+
+            // Update parent
+            element.ParentDataRef = item.Prototype.DataRef;
+
+            // Update ownership
+            owner.SetDynamicFieldOwner(element);
+
+            // Add the copied item to the list
+            item.Prototype = element;
+            list.Add(item);
+
+            return element;
+        }
+
+        /// <summary>
+        /// Creates a new prototype of the specified type and fills it with data from the specified source (either a default prototype or a prototype instance).
+        /// </summary>
+        private Prototype AllocateDynamicPrototype(Type classType, PrototypeId defaults, Prototype instanceToCopy)
+        {
+            // Create a new prototype of the specified type
+            var prototype = (Prototype)Activator.CreateInstance(classType);
+
+            // Copy fields either from the specified defaults prototype or the provided prototype
+            if (defaults != PrototypeId.Invalid && instanceToCopy == null)
+            {
+                var defaultsProto = GameDatabase.GetPrototype<Prototype>(defaults);
+                CopyPrototypeFields(prototype, defaultsProto);
+            }
+            else if (instanceToCopy != null)
+            {
+                CopyPrototypeFields(prototype, instanceToCopy);
+            }
+
+            return prototype;
+        }
+
+        #endregion
 
         #region Parsers
 
