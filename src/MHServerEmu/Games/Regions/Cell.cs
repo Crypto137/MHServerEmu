@@ -6,14 +6,14 @@ namespace MHServerEmu.Games.Regions
     {
         public uint Id { get; }
         public ulong PrototypeId { get; private set; }
-        public Vector3 PositionInArea { get; private set; }
+        public Vector3 AreaPosition { get; private set; }
         public List<ReservedSpawn> EncounterList { get; } = new();
 
         public Cell(uint id, ulong prototypeId, Vector3 positionInArea)
         {
             Id = id;
             PrototypeId = prototypeId;
-            PositionInArea = positionInArea;
+            AreaPosition = positionInArea;
         }
 
         public void AddEncounter(ulong asset, uint id, bool useMarkerOrientation) => EncounterList.Add(new(asset, id, useMarkerOrientation));

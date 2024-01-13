@@ -48,8 +48,8 @@ namespace MHServerEmu.Games.Generators.Regions
             Aabb bound = region.CalculateBound();
             Vector3 center = bound.Center;
 
-            foreach (Area area in region.AreaList)  
-                area.Origin -= center;
+            foreach (Area area in region.IterateAreas())  
+                 area.SetOrigin(area.Origin - center);
         }
 
         public static bool GetSharedConnections(ConnectionList sharedConnections, Area areaA, Area areaB)

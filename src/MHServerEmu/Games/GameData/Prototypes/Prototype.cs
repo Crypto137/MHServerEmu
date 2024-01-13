@@ -66,7 +66,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     if (proto.ParentId != 0)
                     {
                         string className = GameDatabase.DataDirectory.GetPrototypeBlueprint(proto).RuntimeBinding;
-                      //  Logger.Info($"Init Prototype {className}");
+                        // Logger.Info($"Init Prototype {className}");
+                        if (className == "PropertyPrototype")
+                        {
+                            /*   Blueprint blueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(proto);
+                               Prototype defaultData = GameDatabase.DataDirectory.GetBlueprintDefaultPrototype(blueprint);
+                               convertedValue = new PropertyPrototype(defaultData);*/
+                            return null;
+                        }
                         Type protoType = Type.GetType("MHServerEmu.Games.GameData.Prototypes." + className);
                         if (protoType == null)
                         {
