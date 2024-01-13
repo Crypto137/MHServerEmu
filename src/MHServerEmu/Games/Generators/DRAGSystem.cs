@@ -292,7 +292,6 @@ namespace MHServerEmu.Games.Regions
     public class AreaSettings
     {
         public uint Id;
-        public AreaPrototypeId AreaPrototype;
         public Vector3 Origin;
         public RegionSettings RegionSettings;
         public ulong AreaDataRef;
@@ -339,8 +338,8 @@ namespace MHServerEmu.Games.Regions
             Id = settings.Id;
             if (Id == 0) return false;
 
-            PrototypeId = settings.AreaPrototype;
-            AreaPrototype = GameDatabase.GetPrototype<AreaPrototype>((ulong)PrototypeId);
+            PrototypeId = (AreaPrototypeId)settings.AreaDataRef;
+            AreaPrototype = GameDatabase.GetPrototype<AreaPrototype>(settings.AreaDataRef);
             if (AreaPrototype == null) return false;
 
             Origin = settings.Origin;
@@ -811,6 +810,7 @@ namespace MHServerEmu.Games.Regions
             
             Id = settings.InstanceAddress; // Region Id
             if (Id == 0) return false;
+            PrototypeId = (RegionPrototypeId)settings.RegionDataRef;
             RegionPrototype = GameDatabase.GetPrototype<RegionPrototype>(settings.RegionDataRef);
             if (RegionPrototype == null) return false;
 

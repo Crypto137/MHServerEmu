@@ -179,6 +179,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
         public SequenceStack() { 
             _entries = new();
+            SelectedAreaInfos = new();
         }
 
         public void Initialize(Region region, SequenceRegionGenerator generator, AreaSequenceInfoPrototype[] areaInfos)

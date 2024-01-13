@@ -8,7 +8,7 @@ namespace MHServerEmu.Games.Regions
 {
     public partial class Region
     {
-        public RegionPrototypeId PrototypeId { get; }
+        public RegionPrototypeId PrototypeId { get; private set;}
         public ulong Id { get; private set; }
         public int RandomSeed { get; private set; }
         public byte[] ArchiveData { get; }
