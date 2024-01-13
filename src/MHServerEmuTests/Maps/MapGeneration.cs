@@ -64,6 +64,14 @@ namespace MHServerEmuTests.Maps
         }
 
         [Fact]
+        public void TestGlobalsPrototype_Loaded()
+        {
+            GlobalsPrototype globals = GameDatabase.GetGlobalsPrototype();
+            _outputHelper.WriteLine($"DynamicArea = {globals.DynamicArea}");
+            Assert.Equal(4444103529891762304u, globals.DynamicArea); 
+        }
+
+        [Fact]
         public void XaviersMansionRegion_SeedNumber_IsValid()
         {
             // TODO

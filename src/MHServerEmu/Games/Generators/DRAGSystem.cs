@@ -897,7 +897,7 @@ namespace MHServerEmu.Games.Regions
 
             if (settings.GenerateAreas)
             {
-                if (!GenerateAreas((ulong)PrototypeId))
+                if (!GenerateAreas())
                 {
                     Logger.Error($"Failed to generate areas for\n  region: {this}\n    seed: {RandomSeed}");
                     return false;
@@ -1037,9 +1037,8 @@ namespace MHServerEmu.Games.Regions
             return null;
         }
 
-        public bool GenerateAreas(ulong regionPrototypeId)
-        {
-            RegionPrototype = GameDatabase.GetPrototype<RegionPrototype>(regionPrototypeId);
+        public bool GenerateAreas()
+        {            
             RegionGenerator regionGenerator = DRAGSystem.LinkRegionGenerator(RegionPrototype.RegionGenerator);
 
             regionGenerator.GenerateRegion(RandomSeed, this);

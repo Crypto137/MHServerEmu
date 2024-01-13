@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Common.Logging;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -153,6 +154,22 @@ namespace MHServerEmu.Games.Regions
             return region;
         }
 
+        public Region TestRegion(RegionPrototypeId prototype) 
+        {
+            RegionSettings settings = new()
+            {
+                Seed = 1488502313,
+                DifficultyTierRef = (ulong)DifficultyTier.Normal,
+                InstanceAddress = 1150669705055451881,
+                Level = 10,
+                Bound = Aabb.Zero,
+                GenerateAreas = true,
+                Affixes = new List<ulong>(),
+                RegionDataRef = (ulong)RegionPrototypeId.AvengersTowerHUBRegion
+            };
+            return CreateRegion(settings);
+        }
+
         // NEW
         public Region GetRegion(ulong id)
         {
@@ -170,9 +187,9 @@ namespace MHServerEmu.Games.Regions
                 if (_regionDict.TryGetValue(prototype, out Region region) == false)
                 {
                     // Generate the region and create entities for it if needed
-                    region = GenerateRegion(prototype);
-                    ulong entities = CreateEntities(region);
-                    Logger.Debug($"Entities generated = {entities}");
+                    region = TestRegion(prototype);//GenerateRegion(prototype);
+                   // ulong entities = CreateEntities(region);
+                   // Logger.Debug($"Entities generated = {entities}");
                     _regionDict.Add(prototype, region);
                 }
 
