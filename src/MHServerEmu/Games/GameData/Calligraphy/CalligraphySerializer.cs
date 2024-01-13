@@ -278,13 +278,14 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 {
                     if (copyItemsFromParent)
                     {
-                        // TODO: if requested, create copies of each item from the parent and assign ownership of them
-                        // addMixinListItemCopy() for each element
-                        throw new NotImplementedException("Copying items from parent list mixins is not implemented");
+                        // Create copies of all parent items and take ownership of those copies
+                        foreach (var item in list)
+                            AddMixinListItemCopy(prototype, newList, item);
                     }
                     else
                     {
                         // Do a shallow copy of the parent list and do not take ownership of any of its items
+                        // In this case copies are created when each list element is acquired with AcquireOwnedUniqueMixinListElement()
                         newList.AddRange(list);
                     }
                 }
