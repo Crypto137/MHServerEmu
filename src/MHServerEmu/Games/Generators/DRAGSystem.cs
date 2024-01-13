@@ -267,7 +267,7 @@ namespace MHServerEmu.Games.Regions
 
         public override string ToString()
         {
-            return $"{GameDatabase.GetPrototypeName(PrototypeId)}, cellid={Id}, cellpos={RegionBounds.Center}, game={Game}";
+            return $"{GameDatabase.GetPrototypeName(PrototypeId)}, cellid={Id}, cellpos={RegionBounds.Center.ToStringFloat()}, game={Game}";
         }
 
         public void Shutdown()
