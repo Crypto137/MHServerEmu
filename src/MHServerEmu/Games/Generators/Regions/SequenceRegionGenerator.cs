@@ -46,7 +46,7 @@ namespace MHServerEmu.Games.Generators.Regions
             RegionProgressionGraph graph = region.ProgressionGraph;
             bool success = sequenceStack.ProcessSequence(random, null, graph, new());
             bool subSuccess = true;
-            if (regionGeneratorProto.SubAreaSequences != null)
+            if (regionGeneratorProto.SubAreaSequences.Any())
             {
                 foreach (SubGenerationPrototype subArea in regionGeneratorProto.SubAreaSequences)
                 {   
@@ -274,7 +274,7 @@ namespace MHServerEmu.Games.Generators.Regions
                                 graph.AddLink(entry.Previous.Area, entry.Area);
                         }
 
-                        if (entry.SequenceInfo.ConnectedTo != null)
+                        if (entry.SequenceInfo.ConnectedTo.Any())
                         {
                             int picks = entry.SequenceInfo.ConnectedToPicks != 0 ? entry.SequenceInfo.ConnectedToPicks : 1;
 
