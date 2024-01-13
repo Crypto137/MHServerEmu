@@ -8,13 +8,13 @@ namespace MHServerEmu.Games.Regions
 {
     public partial class Region
     {
-        public RegionPrototypeId PrototypeId { get; }
+        public RegionPrototypeId PrototypeId { get; private set;}
         public ulong Id { get; private set; }
         public int RandomSeed { get; private set; }
         public byte[] ArchiveData { get; }
         public Vector3 Min { get; }
         public Vector3 Max { get; }
-        public CreateRegionParams CreateParams { get; }
+        public CreateRegionParams CreateParams { get; private set; }
 
         public List<Area> AreaList { get; } = new();
 
@@ -95,7 +95,7 @@ namespace MHServerEmu.Games.Regions
                         .SetAreaId(area.Id)
                         .SetCellId(cell.Id)
                         .SetCellPrototypeId(cell.PrototypeId)
-                        .SetPositionInArea(cell.PositionInArea.ToNetStructPoint3())
+                        .SetPositionInArea(cell.AreaPosition.ToNetStructPoint3())
                         .SetCellRandomSeed(RandomSeed)
                         .SetBufferwidth(0)
                         .SetOverrideLocationName(0);

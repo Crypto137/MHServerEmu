@@ -66,6 +66,14 @@ namespace MHServerEmuTests
             _outputHelper.WriteLine($"ConnectionNodes = {itr}");
         }
 
+        [Fact]
+        public void TestGlobalsPrototype_Loaded()
+        {
+            GlobalsPrototype globals = GameDatabase.GetGlobalsPrototype();
+            _outputHelper.WriteLine($"DynamicArea = {globals.DynamicArea}");
+            Assert.Equal(4444103529891762304u, globals.DynamicArea);
+        }
+
         [Fact] // For debug purpose : Ignore it
         public void WaypointToXaviersMansionRegion_NormalDifficulty_IsSuccess()
         {

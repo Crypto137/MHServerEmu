@@ -218,7 +218,7 @@ namespace MHServerEmu.Games.Regions
                         cellid = (int)entryArea.CellList[c].Id;
                         areaid = (int)entryArea.Id;
                         entry = GameDatabase.GetPrototype<CellPrototype>(entryArea.CellList[c].PrototypeId);
-                        areaOrigin = entryArea.CellList[c].PositionInArea;
+                        areaOrigin = entryArea.CellList[c].AreaPosition;
                         if (addMarkers)
                             MarkersAdd(entry, cellid, addProp);
                         if (targets != null && targets.Count > 0)
@@ -536,7 +536,7 @@ namespace MHServerEmu.Games.Regions
                     for (int j = 0; j < region.AreaList[0].CellList.Count; j++)
                     {
                         cellid = (int)areaDoop.CellList[j].Id;
-                        areaOrigin = areaDoop.CellList[j].PositionInArea;
+                        areaOrigin = areaDoop.CellList[j].AreaPosition;
                         CellPrototype cell = GameDatabase.GetPrototype<CellPrototype>(areaDoop.CellList[j].PrototypeId);
                         int num = 0;
                         foreach (var marker in cell.MarkerSet.Markers)
