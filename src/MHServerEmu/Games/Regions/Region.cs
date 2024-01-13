@@ -11,9 +11,9 @@ namespace MHServerEmu.Games.Regions
         public RegionPrototypeId PrototypeId { get; private set;}
         public ulong Id { get; private set; }
         public int RandomSeed { get; private set; }
-        public byte[] ArchiveData { get; }
-        public Vector3 Min { get; }
-        public Vector3 Max { get; }
+        public byte[] ArchiveData { get; private set; }
+        public Vector3 Min { get; private set; }
+        public Vector3 Max { get; private set; }
         public CreateRegionParams CreateParams { get; private set; }
 
         public List<Area> AreaList { get; } = new();

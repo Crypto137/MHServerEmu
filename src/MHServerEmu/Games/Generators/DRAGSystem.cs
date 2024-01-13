@@ -267,7 +267,7 @@ namespace MHServerEmu.Games.Regions
 
         public override string ToString()
         {
-            return $"{GameDatabase.GetPrototypeName(PrototypeId)}, cellid={Id}, cellpos=({RegionBounds.Center.X:0.00}, {RegionBounds.Center.Y:0.00}, {RegionBounds.Center.Z:0.00}), game={Game}";
+            return $"{GameDatabase.GetPrototypeName(PrototypeId)}, cellid={Id}, cellpos={RegionBounds.Center}, game={Game}";
         }
 
         public void Shutdown()
@@ -952,6 +952,13 @@ namespace MHServerEmu.Games.Regions
                 SetProperty(regionProto.UITopPanel, PropertyEnum.RegionUITopPanel);
 
             */
+
+            ArchiveData = new byte[] { }; // TODO: Gen ArchiveData
+            EntrancePosition = new();
+            EntranceOrientation = new();
+            WaypointPosition = new();
+            WaypointOrientation = new(); // TODO: Gen positions
+
             return true;
         }
 
@@ -997,8 +1004,8 @@ namespace MHServerEmu.Games.Regions
             if (boundingBox.Volume <= 0 || (boundingBox.Min == Bound.Min && boundingBox.Max == Bound.Max)) return;
 
             Bound = boundingBox;
-            // Min = Bound.Min; OLD property
-            // Max = Bound.Max; OLD property
+            Min = Bound.Min; // OLD property
+            Max = Bound.Max; // OLD property
 
             // NaviMesh.Initialize(Bound, 1000.0f, this);
             InitializeSpacialPartition(Bound);
@@ -1186,7 +1193,7 @@ namespace MHServerEmu.Games.Regions
 
         private string GetPrototypeName()
         {
-            return GameDatabase.GetFormattedPrototypeName(GetPrototypeDataRef());
+            return GameDatabase.GetPrototypeName(GetPrototypeDataRef());
         }
 
         public void Shutdown()
