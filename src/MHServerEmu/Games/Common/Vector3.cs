@@ -144,6 +144,8 @@ namespace MHServerEmu.Games.Common
             return float.IsFinite(v.X) && float.IsFinite(v.Y) && float.IsFinite(v.Z);
         }
 
+        public string ToStringFloat() => $"({X:0.00}, {Y:0.00}, {Z:0.00})";
+
         // static vectors
 
         public static Vector3 Zero { get => new(0.0f, 0.0f, 0.0f); }

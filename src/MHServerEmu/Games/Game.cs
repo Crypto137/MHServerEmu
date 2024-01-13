@@ -44,6 +44,8 @@ namespace MHServerEmu.Games
         public RegionManager RegionManager { get; }
         public ConcurrentDictionary<FrontendClient, Player> PlayerDict { get; } = new();
 
+        public override string ToString() => $"serverGameId=0x{Id:X16}";
+
         public Game(ServerManager serverManager, ulong id)
         {
             EventManager = new(this);

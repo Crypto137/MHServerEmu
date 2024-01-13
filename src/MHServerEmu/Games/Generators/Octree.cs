@@ -52,8 +52,12 @@ namespace MHServerEmu.Games.Generators
 
         public void PushDown(Quadtree<T> tree, Node<T> child)
         {
-            foreach (var element in Elements)
+            var next = Elements.First;
+            for (var current = next; next != null; current = next)
             {
+                next = current.Next;
+                var element = current.Value;
+
                 Aabb elementBounds = element.GetBounds();
                 if (child.LooseBounds.FullyContainsXY(elementBounds))
                 {
