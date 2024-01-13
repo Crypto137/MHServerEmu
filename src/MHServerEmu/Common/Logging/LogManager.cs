@@ -6,7 +6,7 @@ namespace MHServerEmu.Common.Logging
     {
         public static bool Enabled { get; set; }
 
-        internal static readonly List<LogTarget> TargetList = new();
+        public static readonly List<LogTarget> TargetList = new();
         internal static readonly Dictionary<string, Logger> LoggerDict = new();
 
         public static void AttachLogTarget(LogTarget target) => TargetList.Add(target);

@@ -2,13 +2,11 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Auth;
 using MHServerEmu.Frontend;
+using MHServerEmu.Networking;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Net.Http.Headers;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MHServerEmuTests.Business
 {
@@ -39,7 +37,7 @@ namespace MHServerEmuTests.Business
             StartServers();
         }
 
-        public static async Task<AuthTicket> ConnectWithUnitTestCredential()
+        public static async Task<AuthTicket> ConnectWithUnitTestCredentials()
         {
             return await ConnectWithCredentials(
                 "MHEmuServer@test.com",
