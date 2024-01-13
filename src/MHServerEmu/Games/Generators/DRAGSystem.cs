@@ -850,6 +850,8 @@ namespace MHServerEmu.Games.Regions
              */
             }
 
+            CreateParams = new((uint)RegionLevel, (DifficultyTier)settings.DifficultyTierRef); // OLD params
+
             if (regionProto.DividedStartLocations != null)
                 InitDividedStartLocations(regionProto.DividedStartLocations);
 

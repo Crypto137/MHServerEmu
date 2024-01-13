@@ -14,7 +14,7 @@ namespace MHServerEmu.Games.Regions
         public byte[] ArchiveData { get; }
         public Vector3 Min { get; }
         public Vector3 Max { get; }
-        public CreateRegionParams CreateParams { get; }
+        public CreateRegionParams CreateParams { get; private set; }
 
         public List<Area> AreaList { get; } = new();
 
