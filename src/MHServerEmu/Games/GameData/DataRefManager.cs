@@ -23,7 +23,7 @@ namespace MHServerEmu.Games.GameData
         public void AddDataRef(ulong value, string name)
         {
             _referenceDict.Add(value, name);
-            if (_reverseLookupDict != null) _reverseLookupDict.Add(name, value);
+            if (_reverseLookupDict != null) _reverseLookupDict.Add(name.ToLower(), value);
         }
 
         public ulong GetDataRefByName(string name)
@@ -31,7 +31,7 @@ namespace MHServerEmu.Games.GameData
             // Try to use a lookup dict first
             if (_reverseLookupDict != null)
             {
-                if (_reverseLookupDict.TryGetValue(name, out ulong id))
+                if (_reverseLookupDict.TryGetValue(name.ToLower(), out ulong id))
                     return id;
 
                 return 0;

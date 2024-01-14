@@ -231,6 +231,7 @@ namespace MHServerEmu.Games.GameData
             Prototype prototype = resource as Prototype;
             prototype.SetDataRef(prototypeId);
             _prototypeDict.Add(prototypeId, resource);
+            prototype.PostProcess();
         }
 
         private void InitializeHierarchyCache()

@@ -6,7 +6,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class PropPackagePrototype : Prototype
     {
-        private readonly Dictionary<StringHashKey, ProceduralPropGroupPrototype> _propGroupMap = new();
+        private readonly Dictionary<uint, ProceduralPropGroupPrototype> _propGroupMap = new();
 
         public uint Header { get; }
         public uint Version { get; }
@@ -33,14 +33,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PostProcess();
             //if (GameDatabase.DataDirectory.PrototypeIsAbstract(GetDataRef())){ return;}
 
-            if (PropGroups != null)
+            if (PropGroups.Any())
             {
                 foreach (ProceduralPropGroupPrototype propGroup in PropGroups)
                 {
                     if (propGroup != null && propGroup.NameId != null)
                     {
                         string str = propGroup.NameId.ToLower();
-                        _propGroupMap.Add(new(str), propGroup);
+                        _propGroupMap.Add(str.Hash(), propGroup);
                     }
                 }
             }
@@ -49,7 +49,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralPropGroupPrototype GetPropGroupFromName(string nameId)
         {
             string name = nameId.ToLower();
-            if (_propGroupMap.TryGetValue(new(name), out var value))
+            if (_propGroupMap.TryGetValue(name.Hash(), out var value))
             {
                 if (value is ProceduralPropGroupPrototype proto) return proto;
             }

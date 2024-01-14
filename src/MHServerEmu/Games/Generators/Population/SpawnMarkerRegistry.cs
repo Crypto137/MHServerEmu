@@ -71,12 +71,11 @@ namespace MHServerEmu.Games.Generators.Population
                 SpawnReservation managedObject = reservation;
                 if (_region.Bound.FullyContains(managedObject.RegionBounds) == false)
                 {
-                    Console.WriteLine("Trying to insert Marker out of bounds in Spatial Partition! " +
+                    Logger.Trace("Trying to insert Marker out of bounds in Spatial Partition! " +
                                       $"MARKER={GameDatabase.GetFormattedPrototypeName(managedObject.MarkerRef)} " +
                                       $"REGION={_region} CELL={managedObject.Cell} MARKERPOS={managedObject.MarkerPos}");
                     continue;
                 }
-
                 _reservationOctree.Insert(managedObject);
             }
         }
