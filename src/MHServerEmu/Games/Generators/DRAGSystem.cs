@@ -444,7 +444,7 @@ namespace MHServerEmu.Games.Regions
                 DistrictPrototype district = GameDatabase.GetPrototype<DistrictPrototype>(DistrictDataRef);
                 if (district != null)
                     Region.PathCache.AppendPathCollection(district.PathCollection, Origin);
-            }
+                }
 
             if (success && flags.HasFlag(GenerateFlag.Population))
                 success &= GeneratePopulation();
@@ -799,6 +799,7 @@ namespace MHServerEmu.Games.Regions
             Game = game;
             SpawnMarkerRegistry = new(this);
             Settings = new();
+            PathCache = new();
         }
 
         public bool Initialize(RegionSettings settings)
@@ -1188,7 +1189,7 @@ namespace MHServerEmu.Games.Regions
 
         public override string ToString()
         {
-            return $"{GetPrototypeName()}, ID=0x{Id:X16} ({Id}), DIFF={GameDatabase.GetFormattedPrototypeName(Settings.DifficultyTierRef)}, SEED={RandomSeed}, GAMEID={Game}";
+            return $"{GameDatabase.GetPrototypeName(GetPrototypeDataRef())}, ID=0x{Id:X} ({Id}), DIFF={GameDatabase.GetFormattedPrototypeName(Settings.DifficultyTierRef)}, SEED={RandomSeed}, GAMEID={Game}";
         }
 
         private string GetPrototypeName()
