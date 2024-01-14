@@ -100,7 +100,15 @@ namespace MHServerEmu.Games.GameData
         public static AssetType GetAssetType(ulong assetId) => DataDirectory.AssetDirectory.GetAssetType(assetId);
         public static Curve GetCurve(ulong curveId) => DataDirectory.CurveDirectory.GetCurve(curveId);
         public static Blueprint GetBlueprint(ulong blueprintId) => DataDirectory.GetBlueprint(blueprintId);
-        public static T GetPrototype<T>(ulong prototypeId) where T : Prototype => DataDirectory.GetPrototype<T>(prototypeId);
+
+        public static T GetPrototype<T>(ulong prototypeId) where T : Prototype
+        {
+            if (DataDirectory.GetPrototypeExt(prototypeId) is T proto)
+                return proto;
+            else
+                return null;
+        }
+
         public static Prototype GetPrototypeExt(ulong prototypeId) => DataDirectory.GetPrototypeExt(prototypeId);
         public static ulong GetDataRefByAsset(ulong assetId)
         {
