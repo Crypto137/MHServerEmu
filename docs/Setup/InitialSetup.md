@@ -21,9 +21,11 @@ After getting the client, you need to set up a web server to serve SiteConfig.xm
 
 7. Open ```ClientConfig.xml``` located in ```Marvel Heroes\Data\Configs``` with any text editor and replace the ```SiteConfigLocation``` value with ```localhost/SiteConfig.xml```. The line should look like this: `<str name="SiteConfigLocation" value="localhost/SiteConfig.xml" />`.
 
-8. Download the latest MHServerEmu nightly build [here](https://nightly.link/Crypto137/MHServerEmu/workflows/nightly-release-windows-x64/master?preview) and extract it wherever you like. Alternatively, you can build the source code yourself with Visual Studio or any other tool you prefer.
+8. Download and install .NET 6 Runtime if you do not have it already. You can get it [here](https://dotnet.microsoft.com/en-us/download/dotnet/6.0).
 
-9. Copy `Calligraphy.sip` and `mu_cdata.sip` located in `Marvel Heroes\Data\Game` to `MHServerEmu\Data\Game`.
+9. Download the latest MHServerEmu nightly build [here](https://nightly.link/Crypto137/MHServerEmu/workflows/nightly-release-windows-x64/master?preview) and extract it wherever you like. Alternatively, you can build the source code yourself with Visual Studio or any other tool you prefer.
+
+10. Copy `Calligraphy.sip` and `mu_cdata.sip` located in `Marvel Heroes\Data\Game` to `MHServerEmu\Data\Game`.
 
 ## Running the Server
 
