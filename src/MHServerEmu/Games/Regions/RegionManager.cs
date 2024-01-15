@@ -103,7 +103,7 @@ namespace MHServerEmu.Games.Regions
             if (cell != null && _allCells.ContainsKey(cell.Id) == false)
             {
                 _allCells[cell.Id] = cell;
-                Logger.Trace($"Adding cell {cell} in region {cell.GetRegion()}");
+                Logger.Trace($"Adding cell {cell} in region {cell.GetRegion()} area id={cell.Area.Id}");
                 return true;
             }
             return false;
@@ -156,6 +156,21 @@ namespace MHServerEmu.Games.Regions
             return region;
         }
 
+        public Region EmptyRegion(RegionPrototypeId prototype)
+        {
+            Region region = new(prototype,
+             1488502313,
+             Array.Empty<byte>(),
+             new(),
+             new(),
+             new(10, DifficultyTier.Normal));
+            region.EntrancePosition = new();
+            region.EntranceOrientation = new();
+            region.WaypointPosition = new();
+            region.WaypointOrientation = new();
+            return region;
+        }
+
         public Region TestRegion(RegionPrototypeId prototype) 
         {
             RegionSettings settings = new()
@@ -186,13 +201,14 @@ namespace MHServerEmu.Games.Regions
         {
             if (IsRegionAvailable(prototype))
             {
-                //prototype = (RegionPrototypeId)2777924139474164138;
+                prototype = (RegionPrototypeId)2777924139474164138;
                 if (_regionDict.TryGetValue(prototype, out Region region) == false)
                 {
                     // Generate the region and create entities for it if needed
-                    region = TestRegion(prototype);//GenerateRegion(prototype);
-                   // ulong entities = CreateEntities(region);
-                   // Logger.Debug($"Entities generated = {entities}");
+                     region = TestRegion(prototype);//GenerateRegion(prototype);
+                   // region = EmptyRegion(prototype);
+                    // ulong entities = CreateEntities(region);
+                    // Logger.Debug($"Entities generated = {entities}");
                     _regionDict.Add(prototype, region);
                 }
 
