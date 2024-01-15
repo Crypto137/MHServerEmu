@@ -746,7 +746,6 @@ namespace MHServerEmu.Games.Generators.Regions
 
     public class EdgeReport
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
         public Area Area { get; }
         public List<AreaEdge> Edges { get; }
         public Cell.Type EdgeType { get; private set; }
@@ -807,10 +806,6 @@ namespace MHServerEmu.Games.Generators.Regions
             {
                 Edges.Add(edge);
                 EdgeType |= edge.Type;
-            }
-            else
-            {
-                Logger.Error("PushOrCleanEdge edge = null");
             }
         }
 
