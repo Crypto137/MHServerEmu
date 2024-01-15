@@ -98,16 +98,18 @@ namespace MHServerEmu.Games.Generators
 
         public ulong GetCellSetAssetPickedByFiller(GRandom random, Cell.Filler fillerType)
         {
-            EntryList entryList = _cellsFiller[fillerType];
-            if (entryList == null || entryList.Count == 0) return 0;
-
-            Picker<CellSetRegistryEntry> picker = new(random);
-            if (PopulatePickerPhases(picker, entryList, null))
+            if (_cellsFiller.TryGetValue(fillerType, out EntryList entryList))
             {
-                if (!picker.Empty() && picker.Pick(out CellSetRegistryEntry entry))
+                if (entryList == null || entryList.Count == 0) return 0;
+
+                Picker<CellSetRegistryEntry> picker = new(random);
+                if (PopulatePickerPhases(picker, entryList, null))
                 {
-                    entry.Picked = true;
-                    return entry.CellRef;
+                    if (!picker.Empty() && picker.Pick(out CellSetRegistryEntry entry))
+                    {
+                        entry.Picked = true;
+                        return entry.CellRef;
+                    }
                 }
             }
             return 0;
