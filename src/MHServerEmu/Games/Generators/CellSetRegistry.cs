@@ -189,16 +189,16 @@ namespace MHServerEmu.Games.Generators
 
             if (!filler)
             {
-                if (_cellsType[cellType] == null) _cellsType[cellType] = new();
+                if (!_cellsType.ContainsKey(cellType)) _cellsType[cellType] = new();
                 _cellsType[cellType].Add(entry);
             }
             else
             {
-                if (_cellsFiller[fillerEdges] == null) _cellsFiller[fillerEdges] = new();
+                if (!_cellsFiller.ContainsKey(fillerEdges)) _cellsFiller[fillerEdges] = new();
                 _cellsFiller[fillerEdges].Add(entry);
             }
 
-            if (_cellsWalls[cellWalls] == null) _cellsWalls[cellWalls] = new();
+            if (!_cellsWalls.ContainsKey(cellWalls)) _cellsWalls[cellWalls] = new();
             _cellsWalls[cellWalls].Add(entry);
 
             if (cellProto.MarkerSet.Markers != null)
