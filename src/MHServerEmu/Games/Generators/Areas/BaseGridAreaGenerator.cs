@@ -21,7 +21,7 @@ namespace MHServerEmu.Games.Generators.Areas
         
         public override Aabb PreGenerate(GRandom random)
         {            
-            if (GetPrototype(out var proto)) return null;
+            if (!GetPrototype(out var proto)) return null;
             if (!CellSetRegistry.IsInitialized) return null;
 
             Aabb cellBounds = CellSetRegistry.CellBounds;
@@ -78,7 +78,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         private bool InitializeCellRegistry()
         {
-            if (GetPrototype(out var proto)) return false;
+            if (!GetPrototype(out var proto)) return false;
 
             CellSetRegistry.Initialize(proto.SupressMissingCellErrors);
 
@@ -117,7 +117,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         public virtual bool InitializeContainer()
         {
-            if (GetPrototype(out var proto)) return false; 
+            if (!GetPrototype(out var proto)) return false; 
 
             if (!CellContainer.Initialize(proto.CellsX, proto.CellsY, CellSetRegistry, proto.DeadEndMax))
             {
@@ -133,7 +133,7 @@ namespace MHServerEmu.Games.Generators.Areas
         {
             if (CellContainer == null)  return false;
             connections.Clear();
-            if (GetPrototype(out var proto)) return false;
+            if (!GetPrototype(out var proto)) return false;
 
             Vector3 origin = Area.Origin;
             float cellSize = proto.CellSize;
@@ -202,7 +202,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         private bool CheckAllowedConnections(int x, int y)
         {
-            if (GetPrototype(out var proto)) return false;
+            if (!GetPrototype(out var proto)) return false;
 
             if (proto.AllowedConnections != null)
             {
@@ -232,7 +232,7 @@ namespace MHServerEmu.Games.Generators.Areas
             if (CellContainer == null) return false;
 
             Picker<Point2> picker = new(random);
-            if (GetPrototype(out var proto)) return false;
+            if (!GetPrototype(out var proto)) return false;
 
             bool failed = false;
 
@@ -545,7 +545,7 @@ namespace MHServerEmu.Games.Generators.Areas
             List<RandomInstanceRegionPrototype> randomInstances = Area.RandomInstances;
             randomInstances.Clear();
 
-            if (GetPrototype(out var proto)) return false;
+            if (!GetPrototype(out var proto)) return false;
 
             if (proto.RandomInstances != null)
             {
@@ -603,7 +603,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         private void DeleteCreep(GRandom random, int cells, GetRadiusDelegate getDeletableCellList)
         {
-            if (GetPrototype(out var proto)) return;
+            if (!GetPrototype(out var proto)) return;
 
             List<Point2> deleteList = new ();
             int min = Math.Min(proto.CellsX / 2, proto.CellsY / 2);
@@ -634,7 +634,7 @@ namespace MHServerEmu.Games.Generators.Areas
         private bool GetEdgeRadiusDeletableCellList(List<Point2> deleteList, int radius, bool clear)
         {
             if (clear) deleteList.Clear();
-            if (GetPrototype(out var proto)) return false;
+            if (!GetPrototype(out var proto)) return false;
 
             if (radius < proto.CellsX - radius - 1)
             {
@@ -675,7 +675,7 @@ namespace MHServerEmu.Games.Generators.Areas
         {
             if (clear) deleteList.Clear();
 
-            if (GetPrototype(out var proto)) return false;
+            if (!GetPrototype(out var proto)) return false;
             
             for (int x = 0; x <= radius; ++x)
             {
@@ -1223,7 +1223,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         private bool CellsBothInSuperCell(GenCell cellA, GenCell cellB)
         {
-            if (GetPrototype(out var proto)) return false;
+            if (!GetPrototype(out var proto)) return false;
             if (proto.RequiredSuperCells == null) return false;
             if (cellA == null || cellB == null || cellA.CellRef == 0 || cellB.CellRef == 0) return false;
 
