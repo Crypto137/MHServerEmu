@@ -5,9 +5,6 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
-using static MHServerEmu.Common.IdGenerator;
-using static MHServerEmu.Games.Powers.PowerPrototypes;
-using static MHServerEmu.Games.Regions.Cell;
 
 namespace MHServerEmu.Games.Generators
 {
@@ -60,39 +57,43 @@ namespace MHServerEmu.Games.Generators
 
         public ulong GetCellSetAssetPicked(GRandom random, Cell.Type cellType, List<ulong> excludedList)
         {
-            EntryList entryList = _cellsType[cellType];
-            if (entryList == null || entryList.Count == 0) return 0;
-
-            Picker<CellSetRegistryEntry> picker = new(random);
-            if (PopulatePickerPhases(picker, entryList, excludedList))
+            if (_cellsType.TryGetValue(cellType, out EntryList entryList))
             {
-                if (!picker.Empty() && picker.Pick(out CellSetRegistryEntry entry))
-                {
-                    entry.Picked = true;
-                    return entry.CellRef;
-                }
-            }
-            else
-                Logger.Warn($"Warning: Generator tried to prevent choosing a type {cellType} cell that was similar to it's neighbors but failed doing so due to a lack of alternatives, consider making more variations of that type.");
+                if (entryList == null || entryList.Count == 0) return 0;
 
+                Picker<CellSetRegistryEntry> picker = new(random);
+                if (PopulatePickerPhases(picker, entryList, excludedList))
+                {
+                    if (!picker.Empty() && picker.Pick(out CellSetRegistryEntry entry))
+                    {
+                        entry.Picked = true;
+                        return entry.CellRef;
+                    }
+                }
+                else
+                    Logger.Warn($"Warning: Generator tried to prevent choosing a type {cellType} cell that was similar to it's neighbors but failed doing so due to a lack of alternatives, consider making more variations of that type.");
+            }
             return 0;
         }
 
         public ulong GetCellSetAssetPickedByWall(GRandom random, Cell.Walls wallType, List<ulong> excludedList = null)
         {
-            EntryList entryList = _cellsWalls[wallType];
-
-            Picker<CellSetRegistryEntry> picker = new(random);
-            if (PopulatePickerPhases(picker, entryList, excludedList))
+            if (_cellsWalls.TryGetValue(wallType, out EntryList entryList))
             {
-                if (!picker.Empty() && picker.Pick(out CellSetRegistryEntry entry))
-                {
-                    entry.Picked = true;
-                    return entry.CellRef;
-                }
-            } else 
-                Logger.Warn("Warning: Generator tried to prevent choosing a type UnknownWallType cell that was similar to its neighbors but failed doing so due to a lack of alternatives, consider making more variations of that type.");
+                if (entryList == null) return 0;
 
+                Picker<CellSetRegistryEntry> picker = new(random);
+                if (PopulatePickerPhases(picker, entryList, excludedList))
+                {
+                    if (!picker.Empty() && picker.Pick(out CellSetRegistryEntry entry))
+                    {
+                        entry.Picked = true;
+                        return entry.CellRef;
+                    }
+                }
+                else
+                    Logger.Warn("Warning: Generator tried to prevent choosing a type UnknownWallType cell that was similar to its neighbors but failed doing so due to a lack of alternatives, consider making more variations of that type.");
+            }
             return 0;
         }
 
@@ -191,12 +192,12 @@ namespace MHServerEmu.Games.Generators
 
             if (!filler)
             {
-                if (!_cellsType.ContainsKey(cellType)) _cellsType[cellType] = new();
+                if (!HasCellOfType(cellType)) _cellsType[cellType] = new();
                 _cellsType[cellType].Add(entry);
             }
             else
             {
-                if (!_cellsFiller.ContainsKey(fillerEdges)) _cellsFiller[fillerEdges] = new();
+                if (!HasCellOfFiller(fillerEdges)) _cellsFiller[fillerEdges] = new();
                 _cellsFiller[fillerEdges].Add(entry);
             }
 
@@ -330,7 +331,7 @@ namespace MHServerEmu.Games.Generators
             for (int i = 1; i < 16; ++i)
             {
                 Cell.Type type = (Cell.Type)i;
-                if (!_cellsType.ContainsKey(type) && !_supressMissingCellErrors)
+                if (!HasCellOfType(type) && !_supressMissingCellErrors)
                 {
                     Logger.Trace($"CellSetRegistry Missing {type}");
                 }
@@ -341,6 +342,11 @@ namespace MHServerEmu.Games.Generators
         public bool HasCellOfType(Cell.Type cellType)
         {
             return _cellsType.ContainsKey(cellType);
+        }
+
+        public bool HasCellOfFiller(Cell.Filler fillerEdges)
+        {
+            return _cellsFiller.ContainsKey(fillerEdges);
         }
 
         public bool HasCellWithWalls(Cell.Walls wallType)
