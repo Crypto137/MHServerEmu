@@ -170,13 +170,15 @@ namespace MHServerEmu.Games.Generators.Regions
         public bool GetRequiredPOICellsForArea(Area area, GRandom random, out List<Prototype> list)
         {
             list = new ();
-            if (area != null && POIPickerCollection != null)
+            if (area == null) return false;
+            bool success = true;
+            if (POIPickerCollection != null)
             {
                 POIPickerCollection.DereferenceArea(area);
-                return POIPickerCollection.GetCellsForArea(area, random, list);
+                success &= POIPickerCollection.GetCellsForArea(area, random, list);
             }
 
-            return false;
+            return success;
         }
 
     }
