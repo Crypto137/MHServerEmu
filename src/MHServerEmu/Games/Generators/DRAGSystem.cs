@@ -11,6 +11,7 @@ using MHServerEmu.Common;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Missions;
+using MHServerEmu.Games.GameData.Prototypes.Markers;
 
 namespace MHServerEmu.Games.Generators
 {
@@ -105,6 +106,8 @@ namespace MHServerEmu.Games.Regions
         public float SpawnableArea { get => (SpawnableNavArea != -1.0) ? SpawnableNavArea : 0.0f; }
         public CellRegionSpatialPartitionLocation SpatialPartitionLocation { get; }
         public Vector3 AreaOrientation { get; private set; }
+        public Transform3 AreaTransform { get; private set; }
+        public Transform3 RegionTransform { get; private set; }
 
         public Cell(Area area, uint id)
         {
@@ -157,8 +160,8 @@ namespace MHServerEmu.Games.Regions
             AreaPosition = positionInArea;
             AreaOrientation = orientationInArea;
 
-            // AreaTransform = Transform3.BuildTransform(positionInArea, orientationInArea);
-            // RegionTransform = Transform3.BuildTransform(positionInArea + Area.Origin, orientationInArea);
+            AreaTransform = Transform3.BuildTransform(positionInArea, orientationInArea);
+            RegionTransform = Transform3.BuildTransform(positionInArea + Area.Origin, orientationInArea);
 
             AreaOffset = Area.AreaToRegion(positionInArea);
 
@@ -287,6 +290,66 @@ namespace MHServerEmu.Games.Regions
         {
             return RegionBounds.IntersectsXY(position);
         }
+
+        public void PostGenerate()
+        {
+            VisitPropSpawns(new InstanceMarkerSetPropSpawnVisitor(this));
+        }
+
+        private void VisitPropSpawns(PropSpawnVisitor visitor)
+        {
+            PropTable propTable = Area.PropTable;
+            if (propTable != null)
+            {
+                int randomSeed = Seed;
+                Random random = new (randomSeed);
+                int randomNext = 0;
+
+                CellPrototype cellProto = CellProto;
+                if (cellProto == null) return;
+                
+                foreach (var marker in cellProto.MarkerSet.Markers)
+                {
+                    if (marker is not EntityMarkerPrototype entityMarker) continue;
+                    ulong propMarkerRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
+
+                    PropMarkerPrototype propMarkerProto = entityMarker.GetMarkedPrototype<PropMarkerPrototype>();
+                    if (propMarkerProto != null && propMarkerRef != 0 && propMarkerProto.Type == MarkerType.Prop)
+                    {
+                        ulong propDensityRef = Area.AreaPrototype.PropDensity;
+                        if (propDensityRef != 0)
+                        {
+                            PropDensityPrototype propDensityProto = GameDatabase.GetPrototype<PropDensityPrototype>(propDensityRef);
+                            if (propDensityProto != null && random.Next(0, 101) > propDensityProto.GetPropDensity(propMarkerRef)) continue;
+                        }
+                        if (propTable.GetRandomPropMarkerOfType(random, propMarkerRef, out var propGroup))
+                            visitor.Visit(randomSeed + randomNext++, propTable, propGroup.PropSetRef, propGroup.PropGroup, entityMarker);
+                    }
+                }                
+            }
+        }
+
+        public void InstanceMarkerSet(MarkerSetPrototype markerSet, Transform3 transform, MarkerSetOptions instanceMarkerSetOptions, string prefabPath)
+        {
+            if (!(instanceMarkerSetOptions.HasFlag(MarkerSetOptions.SpawnMissionAssociated)
+                && instanceMarkerSetOptions.HasFlag(MarkerSetOptions.NoSpawnMissionAssociated)))
+            {
+                if (markerSet.Markers.Any())
+                    foreach (var marker in markerSet.Markers)
+                        if (marker != null)
+                            SpawnMarker(marker, transform, instanceMarkerSetOptions, prefabPath);
+            }
+        }
+
+        public void SpawnMarker(MarkerPrototype marker, Transform3 transform, MarkerSetOptions instanceMarkerSetOptions, string prefabPath)
+        {
+            if (marker is EntityMarkerPrototype entityMarker)
+            {
+                // TODO Check Entity Prototype, Add transform to Marker position
+                Vector3 areaOrigin = Area.Origin;
+                Game.EntityManager.AddEntityMarker(CellProto, entityMarker, areaOrigin, GetRegion(), (ulong)Area.PrototypeId, (int)Area.Id, (int)Id);
+            }
+        }
     }
 
     public class AreaSettings
@@ -313,7 +376,7 @@ namespace MHServerEmu.Games.Regions
         public int MinimapRevealGroupId { get; set; }
 
         private GenerateFlag _statusFlag;
-        private PropTable PropTable;
+        public PropTable PropTable;
         
         public Generator Generator { get; set; }
 
@@ -379,7 +442,8 @@ namespace MHServerEmu.Games.Regions
 
         public AreaGenerationInterface GetAreaGenerationInterface()
         {
-            return TestStatus(GenerateFlag.Background) ? Generator as AreaGenerationInterface : null;
+            if (TestStatus(GenerateFlag.Background)) return null;
+            return  Generator as AreaGenerationInterface;
         }
 
         public List<TowerFixupData> GetTowerFixup(bool toCreate)
@@ -456,8 +520,11 @@ namespace MHServerEmu.Games.Regions
         }
 
         private bool PostGenerate()
-        {
-            // TODO Write Spawn Entities here
+        {            
+        /*    if (AreaPrototype.FullyGenerateCells) // only TheRaft
+                foreach (var cell in CellList)
+                    cell.PostGenerate(); // can be here?
+        */
             return true;
         }
 
@@ -955,9 +1022,9 @@ namespace MHServerEmu.Games.Regions
             */
 
             ArchiveData = new byte[] { }; // TODO: Gen ArchiveData
-            EntrancePosition = new();
+            EntrancePosition = Bound.Center;
             EntranceOrientation = new();
-            WaypointPosition = new();
+            WaypointPosition = Bound.Center;
             WaypointOrientation = new(); // TODO: Gen positions
 
             return true;
@@ -1078,7 +1145,7 @@ namespace MHServerEmu.Games.Regions
                 {
                     List<ulong> areas = new() { area.GetPrototypeDataRef() };
                     success &= area.Generate(regionGenerator, areas, flag);
-                    if (!area.TestStatus(GenerateFlag.Background)) Logger.Error("Not generated");
+                    if (!area.TestStatus(GenerateFlag.Background)) Logger.Error($"{area} Not generated");
                 }
             }
             return success;
@@ -1287,9 +1354,11 @@ namespace MHServerEmu.Games.Regions
 
         public IEnumerable<Area> IterateAreas(Aabb bound = null)
         {
-           foreach (var area in AreaList)
-                if (bound == null || area.RegionBounds.Intersects(bound)) 
+            for (int i = 0; i < AreaList.Count; i++) { 
+                Area area = AreaList[i];
+                if (bound == null || area.RegionBounds.Intersects(bound))
                     yield return area;
+            }
         }
     }
 

@@ -1,6 +1,10 @@
 ﻿using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.GameData.Prototypes.Markers;
+using MHServerEmu.Games.Common;
+using MHServerEmu.Common;
 
 namespace MHServerEmu.Games.Generators.Population
 {
@@ -90,7 +94,7 @@ namespace MHServerEmu.Games.Generators.Population
 
             ulong packageRef = GameDatabase.GetPrototypeRefByName(packageName);
             PropPackagePrototype packageProto = GameDatabase.GetPrototype<PropPackagePrototype>(packageRef);
-            if (packageProto == null) // TODO: fix Resource/Props/Global_Shared_Containers.prop
+            if (packageProto == null) 
             {
                 Console.WriteLine($"Unable to find Prop Package with Resource Guid {packageName}");
                 return null;
@@ -105,18 +109,96 @@ namespace MHServerEmu.Games.Generators.Population
             return propGroupProto;
         }
 
+        internal bool GetRandomPropMarkerOfType(Random random, ulong propMarkerRef, out PropGroupListEntry propGroup)
+        {
+            throw new NotImplementedException();
+        }
+
         public class PropGroupList : List<PropGroupListEntry> { }
 
         public class PropGroupListEntry
         {
-            private ProceduralPropGroupPrototype _propGroup;
-            private ulong _propSetRef;
+            public ProceduralPropGroupPrototype PropGroup;
+            public ulong PropSetRef;
 
             public PropGroupListEntry(ProceduralPropGroupPrototype propGroup, ulong propSetRef)
             {
-                _propGroup = propGroup;
-                _propSetRef = propSetRef;
+                PropGroup = propGroup;
+                PropSetRef = propSetRef;
             }
         }
+
+        public static void GetPropRandomOffsetAndRotation(out Vector3 randomOffset, out float randomRotation, int randomSeed, ProceduralPropGroupPrototype propGroup)
+        {
+            randomOffset = Vector3.Zero;
+            randomRotation = 0;
+
+            if (propGroup.RandomPosition > 0 || propGroup.RandomRotationDegrees > 0)
+            {                
+                GRandom random = new (randomSeed);
+
+                if (propGroup.RandomPosition > 0)
+                    randomOffset = Vector3.RandomUnitVector2D(random);
+
+                if (propGroup.RandomRotationDegrees > 0)
+                    randomRotation = Vector3.ToRadians((propGroup.RandomRotationDegrees * 2)) * (float)random.NextFloat() - Vector3.ToRadians(propGroup.RandomRotationDegrees);
+
+            }
+        }
+
+    }
+
+    public class PropSpawnVisitor
+    {
+        public PropSpawnVisitor()
+        {
+        }
+
+        public virtual void Visit(int randomSeed, PropTable propTable, ulong propSetRef, ProceduralPropGroupPrototype propGroup, EntityMarkerPrototype markerPrototype)
+        {           
+        }
+    }
+
+    [Flags]
+    public enum MarkerSetOptions
+    {
+        None = 0,
+        NoOffset = 1,
+        Default = 2,
+        SpawnMissionAssociated = 4,
+        NoSpawnMissionAssociated = 8
+    }
+
+    public class InstanceMarkerSetPropSpawnVisitor : PropSpawnVisitor
+    {
+        private Cell _cell;
+
+        public InstanceMarkerSetPropSpawnVisitor(Cell cell) {
+            _cell = cell;
+        }
+
+        public override void Visit(int randomSeed, PropTable propTable, ulong propSetRef, ProceduralPropGroupPrototype propGroup, EntityMarkerPrototype markerPrototype)
+        {
+            if (_cell != null && propTable != null && propGroup != null && markerPrototype != null)
+            {
+                MarkerSetPrototype markerSet = propGroup.Objects;
+                
+                PropTable.GetPropRandomOffsetAndRotation(out Vector3 randomOffset, out float randomRotation, randomSeed, propGroup);
+
+                Vector3 position = markerPrototype.Position;
+                position += randomOffset;
+
+                Vector3 rotation = markerPrototype.Rotation;
+                rotation.Yaw += randomRotation;
+
+                Transform3 transform = Transform3.BuildTransform(position, rotation);
+
+                MarkerSetOptions instanceMarkerSetOptions = MarkerSetOptions.Default;
+                if (!_cell.CellProto.IsOffsetInMapFile) instanceMarkerSetOptions |= MarkerSetOptions.NoOffset;
+
+                _cell.InstanceMarkerSet(markerSet, transform, instanceMarkerSetOptions, propGroup.PrefabPath);
+            }
+        }
+
     }
 }

@@ -18,6 +18,19 @@
         public PropDensityEntryPrototype[] MarkerDensityOverrides;
         public int DefaultDensity;
         public PropDensityPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(PropDensityPrototype), proto); }
+
+        public int GetPropDensity(ulong marker)
+        {
+            if (marker == 0) return 0;
+            if (MarkerDensityOverrides.Any())
+            {
+                foreach (var densityEntry in MarkerDensityOverrides)
+                    if (densityEntry != null && densityEntry.Marker == marker)
+                        return densityEntry.OverrideDensity;
+            }
+            return DefaultDensity;
+        }
+
     }
 
     public class SmartPropPrototype : AgentPrototype
