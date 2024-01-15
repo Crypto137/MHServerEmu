@@ -104,7 +104,7 @@ namespace MHServerEmu.Games.GameData
 
             foreach (KeyValuePair<string, ulong> kvp in _reverseLookupDict)
             {
-                if (kvp.Key.StartsWith(cellSetPath) && kvp.Key.EndsWith(".cell"))
+                if (kvp.Key.StartsWith(cellSetPath.ToLower()) && kvp.Key.EndsWith(".cell"))
                 {
                     cellRefs.Add(kvp.Value);
                 }
