@@ -8,6 +8,7 @@ using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Networking;
@@ -251,5 +252,68 @@ namespace MHServerEmu.Games.Entities
         }
         // TODO: CreateEntity -> finalizeEntity -> worldEntity.EnterWorld -> _location.SetRegion( region )
 
+        public static float GetEntityFloor(ulong prototypeId)
+        {
+            Prototype entity = prototypeId.GetPrototype();
+            if (entity.ParentId == (ulong)BlueprintId.NPCTemplateHub)
+                return 46f; // AgentUntargetableInvulnerable.WorldEntity.Bounds.CapsuleBounds.HeightFromCenter
+            PrototypeEntry TestWorldEntity = entity.GetEntry(BlueprintId.WorldEntity);
+            if (TestWorldEntity == null)
+                return GetEntityFloor(entity.ParentId);
+
+            PrototypeEntryElement TestBounds = TestWorldEntity.GetField(FieldId.Bounds);
+            if (TestBounds == null)
+                return GetEntityFloor(entity.ParentId);
+
+            Prototype bounds = (Prototype)TestBounds.Value;
+            float height = 0f;
+            if (bounds.ParentId == (ulong)BlueprintId.BoxBounds || bounds.ParentId == (ulong)BlueprintId.ObjectSmall)
+                height = (float)(double)bounds.GetEntry(BlueprintId.BoxBounds).GetField(FieldId.Height).Value;
+            else if (bounds.ParentId == (ulong)BlueprintId.SphereBounds)
+                height = (float)(double)bounds.GetEntry(BlueprintId.SphereBounds).GetField(FieldId.Radius).Value;
+            else if (bounds.ParentId == (ulong)BlueprintId.CapsuleBounds)
+                height = (float)(double)bounds.GetEntry(BlueprintId.CapsuleBounds).GetField(FieldId.HeightFromCenter).Value * 2f;
+            else Logger.Warn($"ParentId = {bounds.ParentId}");
+
+            return height / 2;
+        }
+
+        public static bool GetSnapToFloorOnSpawn(ulong prototypeId)
+        {
+            if (prototypeId == (ulong)BlueprintId.ThrowableProp) return true;
+            if (prototypeId == (ulong)BlueprintId.DestructibleProp) return true;
+            Prototype entity = prototypeId.GetPrototype();
+            PrototypeEntry TestWorldEntity = entity.GetEntry(BlueprintId.WorldEntity);
+            if (TestWorldEntity == null)
+                return GetSnapToFloorOnSpawn(entity.ParentId);
+            PrototypeEntryElement TestSnapToFloorOnSpawn = TestWorldEntity.GetField(FieldId.SnapToFloorOnSpawn);
+            if (TestSnapToFloorOnSpawn == null)
+                return GetSnapToFloorOnSpawn(entity.ParentId);
+            return (bool)TestSnapToFloorOnSpawn.Value;
+        }
+
+        public void AddEntityMarker(CellPrototype cell, EntityMarkerPrototype entityMarker, Vector3 areaOrigin, Region region, ulong area, int areaid, int cellId)
+        {
+            Vector3 entityPosition = entityMarker.Position + areaOrigin;
+
+            ulong proto = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
+            bool entitySnapToFloor = GetSnapToFloorOnSpawn(proto);
+
+            bool snapToFloor = (entityMarker.OverrideSnapToFloor == 1) ? (entityMarker.OverrideSnapToFloorValue == 1) : entitySnapToFloor;
+
+            if (snapToFloor)
+            {
+                float projectHeight = RegionLocation.ProjectToFloor(cell, areaOrigin, entityMarker.Position);
+                if (entityPosition.Z > projectHeight)
+                    entityPosition.Z = projectHeight;
+            }
+
+            entityPosition.Z += GetEntityFloor(proto);
+
+            CreateWorldEntity(
+                region.Id, proto,
+                entityPosition, entityMarker.Rotation,
+                608, areaid, 608, cellId, area, false, snapToFloor != entitySnapToFloor);
+        }
     }
 }
