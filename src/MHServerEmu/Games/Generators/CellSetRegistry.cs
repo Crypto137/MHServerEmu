@@ -328,7 +328,7 @@ namespace MHServerEmu.Games.Generators
             for (int i = 1; i < 16; ++i)
             {
                 Cell.Type type = (Cell.Type)i;
-                if (_cellsType[type] == null && !_supressMissingCellErrors)
+                if (!_cellsType.ContainsKey(type) && !_supressMissingCellErrors)
                 {
                     Logger.Trace($"CellSetRegistry Missing {type}");
                 }
