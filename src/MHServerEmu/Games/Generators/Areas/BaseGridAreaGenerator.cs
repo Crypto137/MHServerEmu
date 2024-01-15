@@ -575,7 +575,7 @@ namespace MHServerEmu.Games.Generators.Areas
         public void ProcessDeleteExtraneousCells(GRandom random, int chance)
         {
             if (CellContainer == null) return;
-
+            // number of cells to be deleted
             int cells = chance * CellContainer.NumCells / 100;
             GetPrototype(out BaseGridAreaGeneratorPrototype proto);
 
@@ -584,9 +584,9 @@ namespace MHServerEmu.Games.Generators.Areas
                 if (method == CellDeletionEnum.Random)
                     DeleteGuessAndCheck(random, cells);
                 else if (method == CellDeletionEnum.Edge)
-                    DeleteCreep(random, cells, GetEdgeRadiusDeletableCellList);
+                    DeleteEdgeCreep(random, cells);
                 else if (method == CellDeletionEnum.Corner)
-                    DeleteCreep(random, cells, GetCornerRadusDeletableCellList);
+                    DeleteCornerCreep(random, cells);
             }
 
             CheckRoomKill(proto.RoomKillMethod);
@@ -601,7 +601,7 @@ namespace MHServerEmu.Games.Generators.Areas
             }
         }
 
-        private void DeleteCreep(GRandom random, int cells, GetRadiusDelegate getDeletableCellList)
+        private void DeleteEdgeCreep(GRandom random, int cells)
         {
             if (!GetPrototype(out var proto)) return;
 
@@ -610,7 +610,36 @@ namespace MHServerEmu.Games.Generators.Areas
             for (int radius = 0; radius < min && cells > 0; ++radius)
             {
                 Picker<Point2> picker = new (random);
-                while (cells > 0 && getDeletableCellList(deleteList, radius, true))
+                while (cells > 0 && GetEdgeRadiusDeletableCellList(deleteList, radius, true))
+                {
+                    picker.Clear();
+                    foreach (var point in deleteList)
+                        picker.Add(point);
+
+                    if (picker.PickRemove(out Point2 cellCoord))
+                    {
+                        if (CellContainer.GetCell(cellCoord.X, cellCoord.Y) != null
+                            && CellContainer.DestroyableCell(cellCoord.X, cellCoord.Y))
+                        {
+                            CellContainer.DestroyCell(cellCoord.X, cellCoord.Y);
+                            --cells;
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
+
+        private void DeleteCornerCreep(GRandom random, int cells)
+        {
+            if (!GetPrototype(out var proto)) return;
+
+            List<Point2> deleteList = new();
+            int max = Math.Max(proto.CellsX / 2, proto.CellsY / 2);
+            for (int radius = 0; radius < max && cells > 0; ++radius)
+            {
+                Picker<Point2> picker = new(random);
+                while (cells > 0 && GetCornerRadusDeletableCellList(deleteList, radius, true))
                 {
                     picker.Clear();
                     foreach (var point in deleteList)
@@ -628,8 +657,6 @@ namespace MHServerEmu.Games.Generators.Areas
                 }
             }
         }
-
-        private delegate bool GetRadiusDelegate(List<Point2> deleteList, int radius, bool clear);
 
         private bool GetEdgeRadiusDeletableCellList(List<Point2> deleteList, int radius, bool clear)
         {
