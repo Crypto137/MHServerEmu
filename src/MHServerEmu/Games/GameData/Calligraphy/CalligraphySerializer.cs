@@ -163,8 +163,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                     else
                     {
                         // Look for a list mixin
-                        // temp hack: use typeof(List<PrototypeMixinListItem>) instead of mixinType
-                        mixinFieldInfo = classManager.GetMixinFieldInfo(classType, typeof(List<PrototypeMixinListItem>), typeof(ListMixinAttribute));
+                        mixinFieldInfo = classManager.GetMixinFieldInfo(classType, mixinType, typeof(ListMixinAttribute));
                         if (mixinFieldInfo != null)
                         {
                             List<PrototypeMixinListItem> list = AcquireOwnedMixinList(prototype, mixinFieldInfo, false);
@@ -176,6 +175,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
                             fieldOwnerPrototype = element;
                             fieldInfo = classManager.GetFieldInfo(mixinType, blueprintMemberInfo, false);
+                            Logger.Debug($"Found field info for list mixin {mixinType.Name}, field name {blueprintMemberInfo.Member.FieldName}");
                         }
                         else
                         {

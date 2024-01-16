@@ -114,14 +114,31 @@ namespace MHServerEmu.Games.GameData
         /// </summary>
         public System.Reflection.PropertyInfo GetMixinFieldInfo(Type ownerClassType, Type fieldClassType, Type mixinAttribute)
         {
+            // Make sure we have a valid attribute type
+            if ((mixinAttribute == typeof(MixinAttribute) || mixinAttribute == typeof(ListMixinAttribute)) == false)
+                throw new ArgumentException($"{mixinAttribute.Name} is not a mixin attribute.");
+
             // Search the entire class hierarchy for a mixin of the matching type
             while (ownerClassType != typeof(Prototype))
             {
+                // We do what PrototypeFieldSet::GetMixinFieldInfo() does right here using reflection
                 foreach (var property in ownerClassType.GetProperties())
                 {
-                    // Return the mixin if found
-                    if (property.PropertyType == fieldClassType && property.IsDefined(mixinAttribute))
-                        return property;
+                    if (property.IsDefined(mixinAttribute) == false) continue;  // We look for a property that has our mixin attribute defined
+
+                    if (mixinAttribute == typeof(MixinAttribute))
+                    {
+                        // For simple mixins we just return the property if it matches our field type
+                        if (property.PropertyType == fieldClassType)
+                            return property;
+                    }
+                    else if (mixinAttribute == typeof(ListMixinAttribute))
+                    {
+                        // For list mixins we have to make sure the list is compatible with our requested field type
+                        var attribute = property.GetCustomAttribute<ListMixinAttribute>();
+                        if (attribute.FieldType == fieldClassType)
+                            return property;
+                    }
                 }
 
                 // Go up in the hierarchy if not found

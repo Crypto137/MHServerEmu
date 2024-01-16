@@ -15,5 +15,13 @@ namespace MHServerEmu.Games.GameData.Calligraphy
     /// Indicates that a prototype field is a list mixin prototype. As far as we currently know, these are used only in <see cref="PowerPrototype"/>.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
-    public class ListMixinAttribute : Attribute { }
+    public class ListMixinAttribute : Attribute
+    {
+        public Type FieldType { get; }      // This property is used to indicate what prototype class type is expected in this list mixin
+
+        public ListMixinAttribute(Type fieldType)
+        {
+            FieldType = fieldType;
+        }
+    }
 }
