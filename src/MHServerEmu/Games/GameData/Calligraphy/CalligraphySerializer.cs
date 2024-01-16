@@ -180,14 +180,16 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                         else
                         {
                             // Nowhere to put this field, something went very wrong, time to reevaluate life choices
-                            Logger.WarnReturn(false, $"Failed to find field info for mixin {mixinType.Name}, field name {blueprintMemberInfo.Member.FieldName}");
+                            return Logger.WarnReturn(false, $"Failed to find field info for mixin {mixinType.Name}, field name {blueprintMemberInfo.Member.FieldName}");
                         }
                     }
                 }
 
                 // Test parsing
                 var parser = GetParser(fieldBaseType, blueprintMemberInfo.Member.StructureType);
-                var value = parser(reader);
+                FieldParserParams @params = new(reader, fieldInfo, fieldOwnerPrototype, fieldOwnerBlueprint, blueprintMemberInfo);
+
+                var value = parser(@params);
             }
 
             return true;
