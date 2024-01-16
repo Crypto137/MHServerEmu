@@ -15,7 +15,7 @@ namespace MHServerEmu.Games.Generators.Areas
             Generate
         }
 
-        public class CellDeterminationMap : Dictionary<int, List<Point2>> {}
+        public class CellDeterminationMap : SortedDictionary<int, List<Point2>> {}
 
         public override bool InitializeContainer()
         {
