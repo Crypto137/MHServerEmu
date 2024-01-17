@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using MHServerEmu.Common.Commands;
 using MHServerEmu.Common.Config;
+using MHServerEmu.Common.Helpers;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Common.Logging.Targets;
 using MHServerEmu.Games.GameData;
@@ -12,7 +13,15 @@ namespace MHServerEmu
 {
     class Program
     {
+#if DEBUG
+        public const string BuildConfiguration = "Debug";
+#elif RELEASE
+        public const string BuildConfiguration = "Release";
+#endif
+
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public static readonly string VersionInfo = $"Version {AssemblyHelper.GetAssemblyInformationalVersion()} | {AssemblyHelper.ParseAssemblyBuildTime():yyyy.MM.dd HH:mm:ss} UTC | {BuildConfiguration}";
         public static readonly DateTime StartupTime = DateTime.Now;
 
         static void Main(string[] args)
@@ -20,7 +29,12 @@ namespace MHServerEmu
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;    // Watch for unhandled exceptions
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;         // Make sure thread culture is invariant
 
-            PrintBanner();  
+            Console.Title = $"MHServerEmu ({VersionInfo})";
+
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            PrintBanner();
+            PrintVersionInfo();
+            Console.ResetColor();
 
             // Initialize config and loggers before doing anything else
             if (ConfigManager.IsInitialized == false)
@@ -66,7 +80,6 @@ namespace MHServerEmu
         /// </summary>
         private static void PrintBanner()
         {
-            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine(@"  __  __ _    _  _____                          ______                 ");
             Console.WriteLine(@" |  \/  | |  | |/ ____|                        |  ____|                ");
             Console.WriteLine(@" | \  / | |__| | (___   ___ _ ____   _____ _ __| |__   _ __ ___  _   _ ");
@@ -74,7 +87,15 @@ namespace MHServerEmu
             Console.WriteLine(@" | |  | | |  | |____) |  __/ |   \ V /  __/ |  | |____| | | | | | |_| |");
             Console.WriteLine(@" |_|  |_|_|  |_|_____/ \___|_|    \_/ \___|_|  |______|_| |_| |_|\__,_|");
             Console.WriteLine();
-            Console.ResetColor();
+        }
+
+        /// <summary>
+        /// Prints formatted version info to console.
+        /// </summary>
+        private static void PrintVersionInfo()
+        {
+            Console.WriteLine($"\t{VersionInfo}");
+            Console.WriteLine();
         }
 
         /// <summary>
