@@ -162,6 +162,7 @@ namespace MHServerEmu.Games.Generators.Areas
             RunBehaviors(random, proto.Behaviors, ProcessEnum.Generate);
 
             ProcessDeleteExtraneousCells(random, (int)proto.RoomKillChancePct);
+           // Logger.Warn($"[DeleteConnections]{CellContainer} ChancePct = {proto.RoomKillChancePct}");
             ProcessDeleteExtraneousConnections(random, (int)proto.ConnectionKillChancePct);
             ProcessRegionConnectionsAndDepth();
             ProcessAssignUniqueCellIds();

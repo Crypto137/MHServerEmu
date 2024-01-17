@@ -3,6 +3,7 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Regions;
 using System.Collections;
+using System.Text;
 
 namespace MHServerEmu.Games.Generators
 {
@@ -112,11 +113,9 @@ namespace MHServerEmu.Games.Generators
             if (requiredCell == null) return false;
             Reset(container);
 
-            foreach (GenCell connection in requiredCell.Connections)
-            {
-                if (connection == null) continue;
-                RunTreeWithExcludedCell(connection, requiredCell);
-            }
+            var connection = requiredCell.Connections.FirstOrDefault();
+            if (connection == null) return false;
+            RunTreeWithExcludedCell(connection, requiredCell);
 
             foreach (var item in _connectivity)
                 if (!item.Value && item.Key != requiredCell) return true;
@@ -387,6 +386,22 @@ namespace MHServerEmu.Games.Generators
                 return check;
             }
             return false;
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new ("[");
+            foreach (GenCell cell in Cells)
+            {
+                if (cell!= null)
+                    sb.Append(cell.Id).Append(", ");
+                else
+                    sb.Append("N, ");
+            }
+            if (Cells.Count > 0)
+                sb.Length -= 2; 
+            sb.Append("]");
+            return sb.ToString();
         }
 
     }

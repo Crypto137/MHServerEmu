@@ -175,7 +175,7 @@ namespace MHServerEmu.Games.Regions
         {
             RegionSettings settings = new()
             {
-                Seed = 1488502313,
+                Seed = 1677339646,
                 DifficultyTierRef = (ulong)DifficultyTier.Normal,
                 InstanceAddress = IdGenerator.Generate(IdType.Region),
                 Level = 10,
