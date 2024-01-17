@@ -1,49 +1,139 @@
-﻿using MHServerEmu.Games.GameData.Prototypes;
+﻿using System.Globalization;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.GameData.Calligraphy
 {
+    // TODO: Maybe move parsing to a helper static class? This won't be gazlike, but it would be cleaner.
+
     public partial class CalligraphySerializer
     {
-        // Rough early experiments implementing field parsers
-
-        private static Func<FieldParserParams, object> GetParser(CalligraphyBaseType baseType, CalligraphyStructureType structureType)
+        private static readonly Dictionary<Type, Func<FieldParserParams, bool>> ParserDict = new()
         {
-            // We're currently using Calligraphy types here as a temporary solution
-            // Probably need some kind of lookup dictionary to avoid unnecessary branching here
-            switch (baseType)
+            { typeof(bool),         ParseBool },
+            { typeof(sbyte),        ParseInt8 },
+            { typeof(short),        ParseInt16 },
+            { typeof(int),          ParseInt32 },
+            { typeof(long),         ParseInt64 },
+            //{ typeof(ulong),        ParseUInt64 },          // ulong fields are actually data refs
+            { typeof(float),        ParseFloat32 },
+            { typeof(double),       ParseFloat64 },
+            { typeof(Prototype),    ParsePrototypePtr },
+            { typeof(bool[]),       ParseListBool },
+            { typeof(sbyte[]),      ParseListInt8 },
+            { typeof(short[]),      ParseListInt16 },
+            { typeof(int[]),        ParseListInt32 },
+            { typeof(long[]),       ParseListInt64 },
+            //{ typeof(ulong[]),      ParseListUInt64 },
+            { typeof(float[]),      ParseListFloat32 },
+            { typeof(double[]),     ParseListFloat64 },
+            { typeof(Prototype[]),  ParseListPrototypePtr }
+        };
+
+        private static Func<FieldParserParams, bool> GetParser(Type prototypeFieldType)
+        {
+            // Adjust type for prototype pointer fields
+            if (prototypeFieldType.IsPrimitive == false && prototypeFieldType.IsEnum == false)
             {
-                case CalligraphyBaseType.Boolean:   return structureType == CalligraphyStructureType.Simple ? ParseBool : ParseListBool;
-                case CalligraphyBaseType.Double:    return structureType == CalligraphyStructureType.Simple ? ParseDouble : ParseListDouble;
-                case CalligraphyBaseType.Long:      return structureType == CalligraphyStructureType.Simple ? ParseInt64 : ParseListInt64;
-                case CalligraphyBaseType.RHStruct:  return structureType == CalligraphyStructureType.Simple ? ParseRHStruct : ParseListRHStruct;
-                default: return structureType == CalligraphyStructureType.Simple ? ParseUInt64 : ParseListUInt64;
+                if (prototypeFieldType.IsSubclassOf(typeof(Prototype)))
+                    prototypeFieldType = typeof(Prototype);
+                else if (prototypeFieldType.GetElementType().IsSubclassOf(typeof(Prototype)))
+                    prototypeFieldType = typeof(Prototype[]);
+                else if (prototypeFieldType != typeof(ulong[]))
+                    throw new ArgumentException($"Unsupported prototype field reference type {prototypeFieldType.Name}.");
             }
+
+            // Try to get a defined parser from our dict
+            if (ParserDict.TryGetValue(prototypeFieldType, out var parser))
+                return parser;
+
+            // Fall back to UInt64 for unimplemented data ref types
+            if (prototypeFieldType.IsEnum || prototypeFieldType == typeof(ulong))
+                return ParseUInt64;
+
+            return ParseListUInt64;
         }
 
-        // TODO: parseValue()
-        // TODO: Maybe move this to a helper static class?
+        private static bool ParseValue<T>(FieldParserParams @params, bool parseAsFloat = false) where T: IConvertible
+        {
+            // Note: the client uses unsafe pointer hacks here.
 
-        private static object ParseBool(FieldParserParams @params) => Convert.ToBoolean(@params.Reader.ReadUInt64());
-        private static object ParseInt64(FieldParserParams @params) => @params.Reader.ReadInt64();
-        private static object ParseUInt64(FieldParserParams @params) => @params.Reader.ReadUInt64();
-        private static object ParseDouble(FieldParserParams @params) => @params.Reader.ReadDouble();
-        private static object ParseRHStruct(FieldParserParams @params) => new Prototype(@params.Reader);
+            var rawValue = parseAsFloat ? @params.Reader.ReadDouble() : @params.Reader.ReadInt64();
+            var value = Convert.ChangeType(rawValue, typeof(T), CultureInfo.InvariantCulture);
 
-        private static object ParseListBool(FieldParserParams @params) => ParseCollection(@params, ParseBool);
-        private static object ParseListInt64(FieldParserParams @params) => ParseCollection(@params, ParseInt64);
-        private static object ParseListUInt64(FieldParserParams @params) => ParseCollection(@params, ParseUInt64);
-        private static object ParseListDouble(FieldParserParams @params) => ParseCollection(@params, ParseDouble);
-        private static object ParseListRHStruct(FieldParserParams @params) => ParseCollection(@params, ParseRHStruct);
+            @params.FieldInfo.SetValue(@params.OwnerPrototype, value);
+            return true;
+        }
 
-        private static object ParseCollection(FieldParserParams @params, Func<FieldParserParams, object> itemParser)
+        private static bool ParsePrototypePtr(FieldParserParams @params)
+        {
+            var prototype = new Prototype(@params.Reader);
+            return true;
+        }
+
+        private static bool ParseCollection<T>(FieldParserParams @params, bool parseAsFloat = false) where T : IConvertible
         {
             var reader = @params.Reader;
 
-            var values = new object[reader.ReadInt16()];
+            var values = new T[reader.ReadInt16()];
             for (int i = 0; i < values.Length; i++)
-                values[i] = itemParser(@params);
-            return values;
+            {
+                var rawValue = parseAsFloat ? @params.Reader.ReadDouble() : @params.Reader.ReadInt64();
+                values[i] = (T)Convert.ChangeType(rawValue, typeof(T), CultureInfo.InvariantCulture);
+            }
+
+            @params.FieldInfo.SetValue(@params.OwnerPrototype, values);
+
+            return true;
         }
+
+        private static bool ParseListPrototypePtr(FieldParserParams @params)
+        {
+            var reader = @params.Reader;
+
+            var values = new Prototype[reader.ReadInt16()];
+            for (int i = 0; i < values.Length; i++)
+                values[i] = new(reader);
+
+            //@params.FieldInfo.SetValue(@params.OwnerPrototype, values);
+
+            return true;
+        }
+
+        private static bool ParseUInt64(FieldParserParams @params)
+        {
+            var value = @params.Reader.ReadUInt64();
+            //@params.FieldInfo.SetValue(@params.OwnerPrototype, value);
+            return true;
+        }
+
+        private static bool ParseListUInt64(FieldParserParams @params)
+        {
+            var reader = @params.Reader;
+
+            var values = new ulong[reader.ReadInt16()];
+            for (int i = 0; i < values.Length; i++)
+                values[i] = reader.ReadUInt64();
+
+            //@params.FieldInfo.SetValue(@params.OwnerPrototype, values);
+
+            return true;
+        }
+
+        private static bool ParseBool(FieldParserParams @params) => ParseValue<bool>(@params);
+        private static bool ParseInt8(FieldParserParams @params) => ParseValue<sbyte>(@params);
+        private static bool ParseInt16(FieldParserParams @params) => ParseValue<short>(@params);
+        private static bool ParseInt32(FieldParserParams @params) => ParseValue<int>(@params);
+        private static bool ParseInt64(FieldParserParams @params) => ParseValue<long>(@params);
+        private static bool ParseFloat32(FieldParserParams @params) => ParseValue<float>(@params, true);
+        private static bool ParseFloat64(FieldParserParams @params) => ParseValue<double>(@params, true);
+
+        private static bool ParseListBool(FieldParserParams @params) => ParseCollection<bool>(@params);
+        private static bool ParseListInt8(FieldParserParams @params) => ParseCollection<sbyte>(@params);
+        private static bool ParseListInt16(FieldParserParams @params) => ParseCollection<short>(@params);
+        private static bool ParseListInt32(FieldParserParams @params) => ParseCollection<int>(@params);
+        private static bool ParseListInt64(FieldParserParams @params) => ParseCollection<long>(@params);
+        private static bool ParseListFloat32(FieldParserParams @params) => ParseCollection<float>(@params, true);
+        private static bool ParseListFloat64(FieldParserParams @params) => ParseCollection<double>(@params, true);
 
         /// <summary>
         /// Contains parameters for field parsing methods.

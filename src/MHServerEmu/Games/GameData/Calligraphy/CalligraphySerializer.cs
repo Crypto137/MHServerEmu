@@ -186,7 +186,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 }
 
                 // Test parsing
-                var parser = GetParser(fieldBaseType, blueprintMemberInfo.Member.StructureType);
+                var parser = GetParser(fieldInfo.PropertyType);
                 FieldParserParams @params = new(reader, fieldInfo, fieldOwnerPrototype, fieldOwnerBlueprint, blueprintMemberInfo);
 
                 var value = parser(@params);
