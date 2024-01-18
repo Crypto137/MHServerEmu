@@ -690,6 +690,7 @@ namespace MHServerEmu.Games.Regions
 
         public static void CreateConnection(Area areaA, Area areaB, Vector3 position, ConnectPosition connectPosition)
         {
+            Logger.Debug($"connect {position.ToStringFloat()} {areaA.Id} <> {areaB.Id}");
             areaA.AddConnection(position, areaB, connectPosition);
             areaB.AddConnection(position, areaA, connectPosition);
         }
@@ -718,7 +719,7 @@ namespace MHServerEmu.Games.Regions
 
         public override string ToString()
         {
-            return $"{GetPrototypeName()}, areaid={Id}, aabb=[{RegionBounds}], game={Game}";
+            return $"{GetPrototypeName()}, areaid={Id}, aabb={RegionBounds.ToStringFloat()}, game={Game}";
         }
 
         private string GetPrototypeName()
@@ -1205,7 +1206,7 @@ namespace MHServerEmu.Games.Regions
 
         private void DeallocateArea(Area area)
         {
-            if (area != null) return;
+            if (area == null) return;
 
             Logger.Trace($"{Game} - Deallocating area id {area.Id}, {area}");
 

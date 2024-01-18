@@ -394,7 +394,7 @@ namespace MHServerEmu.Games.Generators
             foreach (GenCell cell in Cells)
             {
                 if (cell!= null)
-                    sb.Append(cell.Id).Append(", ");
+                    sb.Append((int)cell.PreventWalls).Append(", ");
                 else
                     sb.Append("N, ");
             }

@@ -101,7 +101,7 @@ namespace MHServerEmu.Games.Common
         }
 
         public override string ToString() => $"Min:{Min} Max:{Max}";
-
+        public string ToStringFloat() => $"[{Min.ToStringFloat()}, {Max.ToStringFloat()}]";
         public Aabb Translate(Vector3 newPosition) => new(Min + newPosition, Max + newPosition);
 
         public Aabb Expand(float expandSize)
@@ -201,6 +201,7 @@ namespace MHServerEmu.Games.Common
         }
 
         public float Radius2D() => Math.Max(Width, Length);
+
     }
     public enum ContainmentType
     {
