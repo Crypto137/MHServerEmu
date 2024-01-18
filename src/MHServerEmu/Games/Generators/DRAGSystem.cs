@@ -829,14 +829,7 @@ namespace MHServerEmu.Games.Regions
         {
             get
             {
-                if (_startArea == null)
-                {
-                    foreach (Area area in IterateAreas())
-                    {
-                        _startArea = area;
-                        break;
-                    }
-                }
+                if (_startArea == null) _startArea = IterateAreas().First();
                 return _startArea;
             }
             set
