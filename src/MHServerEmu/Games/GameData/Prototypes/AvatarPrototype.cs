@@ -16,18 +16,18 @@
         public ulong PartyBonusPower;
         public ulong UnlockDialogText;
         public ulong SecondaryResourceBehavior;
-        public ulong LoadingScreens;
+        public ulong[] LoadingScreens;
         public int PowerProgressionVersion;
         public ulong OnLevelUpEval;
         public EvalPrototype OnPartySizeChange;
         public ulong StatsPower;
         public ulong SocialIconPath;
         public ulong CharacterSelectIconPath;
-        public ulong StatProgressionTable;
+        public ulong[] StatProgressionTable;
         public TransformModeEntryPrototype[] TransformModes;
         public AvatarSynergyEntryPrototype[] SynergyTable;
         public ulong[] SuperteamMemberships;
-        public ulong CharacterSelectPowers;
+        public ulong[] CharacterSelectPowers;
         public PrimaryResourceManaBehaviorPrototype PrimaryResourceBehaviors;
         public StealablePowerInfoPrototype StealablePowersAllowed;
         public bool ShowInRosterIfLocked;
@@ -41,7 +41,7 @@
         public TalentGroupPrototype[] TalentGroups;
         public ulong TravelPower;
         public AbilityAutoAssignmentSlotPrototype[] AbilityAutoAssignmentSlot;
-        public ulong LoadingScreensConsole;
+        public ulong[] LoadingScreensConsole;
         public ItemAssignmentPrototype StartingCostumePS4;
         public ItemAssignmentPrototype StartingCostumeXboxOne;
         public AvatarPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AvatarPrototype), proto); }

@@ -37,13 +37,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ItemTypeRestrictionPrototype : DropRestrictionPrototype
     {
-        public ulong AllowedTypes;
+        public ulong[] AllowedTypes;
         public ItemTypeRestrictionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ItemTypeRestrictionPrototype), proto); }
     }
 
     public class ItemParentRestrictionPrototype : DropRestrictionPrototype
     {
-        public ulong AllowedParents;
+        public ulong[] AllowedParents;
         public ItemParentRestrictionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ItemParentRestrictionPrototype), proto); }
     }
 
@@ -114,7 +114,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class UsableByRestrictionPrototype : DropRestrictionPrototype
     {
-        public ulong Avatars;
+        public ulong[] Avatars;
         public UsableByRestrictionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(UsableByRestrictionPrototype), proto); }
     }
 

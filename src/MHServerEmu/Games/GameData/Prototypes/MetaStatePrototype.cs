@@ -162,9 +162,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MetaStateMissionStateListenerPrototype : MetaStatePrototype
     {
-        public ulong CompleteMissions;
+        public ulong[] CompleteMissions;
         public int CompleteMode;
-        public ulong FailMissions;
+        public ulong[] FailMissions;
         public int FailMode;
         public MetaStateMissionStateListenerPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(MetaStateMissionStateListenerPrototype), proto); }
     }

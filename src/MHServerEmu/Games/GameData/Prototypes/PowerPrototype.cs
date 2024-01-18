@@ -566,7 +566,7 @@
 
     public class TransformModeEntryPrototype : Prototype
     {
-        public ulong AllowedPowers;
+        public ulong[] AllowedPowers;
         public ulong TransformMode;
         public TransformModeEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(TransformModeEntryPrototype), proto); }
     }
@@ -707,7 +707,7 @@
     }
     public class ExtraActivateCycleToPowerPrototype : ExtraActivatePrototype
     {
-        public ulong CyclePowerList;
+        public ulong[] CyclePowerList;
         public ExtraActivateCycleToPowerPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ExtraActivateCycleToPowerPrototype), proto); }
     }
 

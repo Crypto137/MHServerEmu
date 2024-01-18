@@ -28,7 +28,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong[] UIConfigFiles;
         public int InteractRange;
         public ulong CreditsItemPrototype;
-        public ulong NegStatusEffectList;
+        public ulong[] NegStatusEffectList;
         public ulong PvPPrototype;
         public ulong MissionPrototype;
         public EvalPrototype ItemPriceMultiplierBuyFromVendor;
@@ -109,7 +109,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int AssistPvPDurationMS;
         public ulong FulfillmentReceiptPrototype;
         public ulong PetTechVacuumPower;
-        public ulong StolenPowerRestrictions;
+        public ulong[] StolenPowerRestrictions;
         public ulong PowerVisualsGlobals;
         public ulong KeywordGlobals;
         public ulong CurrencyGlobals;
@@ -373,7 +373,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong MapInfoMissionGiver;
         public ulong MapInfoMissionObjectiveTalk;
         public int NumAvatarsToDisplayInItemUsableLists;
-        public ulong LoadingScreens;
+        public ulong[] LoadingScreens;
         public int ChatFadeInMS;
         public int ChatBeginFadeOutMS;
         public int ChatFadeOutMS;
@@ -441,7 +441,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AffixDisplaySlotPrototype[] CostumeAffixDisplaySlots;
         public ulong MessagePartyError;
         public ulong MessageRegionRestricted;
-        public ulong CreditsMovies;
+        public ulong[] CreditsMovies;
         public ulong MessageMetaGameDefault;
         public ulong MessagePartyPvPPortalFail;
         public int ChatNewMsgDarkenBgMS;
@@ -466,7 +466,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong VanityTitleNoTitle;
         public ulong MessageStealablePowerOccupied;
         public ulong MessageStolenPowerDuplicate;
-        public ulong CurrencyDisplayList;
+        public ulong[] CurrencyDisplayList;
         public ulong CinematicOpener;
         public ulong MessageCantQueueInQueueRegion;
         public int LogoffPanelStoryMissionLevelCap;
@@ -489,7 +489,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong[] ItemSortCategoryList;
         public ulong[] ItemSortSubCategoryList;
         public AffixRollQualityPrototype[] AffixRollRangeRollQuality;
-        public ulong RadialMenuEntriesList;
+        public ulong[] RadialMenuEntriesList;
         public ulong TextStylePowerChargesEmpty;
         public ulong TextStylePowerChargesFull;
         public ulong MessageLeaderboardRewarded;
@@ -499,7 +499,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong GamepadIconMoveAction;
         public ulong GamepadIconSelectAction;
         public ulong GamepadIconSellAction;
-        public ulong ConsoleRadialMenuEntriesList;
+        public ulong[] ConsoleRadialMenuEntriesList;
         public CoopOpUIDataEntryPrototype[] CoopOpUIDatas;
         public ulong MessageOpenMissionEntered;
         public ulong MessageInfinityPointsAwarded;
@@ -981,7 +981,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class GlobalEventPrototype : Prototype
     {
         public bool Active;
-        public ulong CriteriaList;
+        public ulong[] CriteriaList;
         public GlobalEventCriteriaLogic CriteriaLogic;
         public ulong DisplayName;
         public int LeaderboardLength;

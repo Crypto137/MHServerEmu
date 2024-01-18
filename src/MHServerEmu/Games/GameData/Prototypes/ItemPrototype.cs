@@ -13,7 +13,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong TooltipTemplate;
         public ItemStackSettingsPrototype StackSettings;
         public bool AlwaysDisplayAsUsable;
-        public ulong TooltipEquipRestrictions;
+        public ulong[] TooltipEquipRestrictions;
         public AffixEntryPrototype[] AffixesBuiltIn;
         public PropertyEntryPrototype[] PropertiesBuiltIn;
         public ProductPrototype Product;
@@ -248,8 +248,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ItemTooltipPropertyBlockSettingsPrototype : Prototype
     {
-        public ulong IncludeAllButProperties;
-        public ulong IncludeOnlyProperties;
+        public ulong[] IncludeAllButProperties;
+        public ulong[] IncludeOnlyProperties;
         public bool UseBuiltinPropertyOrdering;
         public ItemTooltipPropertyBlockSettingsPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ItemTooltipPropertyBlockSettingsPrototype), proto); }
     }

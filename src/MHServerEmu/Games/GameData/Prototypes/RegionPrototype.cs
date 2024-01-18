@@ -11,9 +11,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public RegionGeneratorPrototype RegionGenerator;
         public RegionBehaviorAsset Behavior;
         public ulong RegionName;
-        public ulong MetaGames;
+        public ulong[] MetaGames;
         public bool ForceSimulation;
-        public ulong LoadingScreens;
+        public ulong[] LoadingScreens;
         public bool AlwaysRevealFullMap;
         public ulong Chapter;
         public int PlayerLimit;
@@ -36,7 +36,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong PlayerCameraSettings;
         public RegionQueueMethod RegionQueueMethod;
         public EvalPrototype EvalAccessRestriction;
-        public ulong WaypointAutoUnlockList;
+        public ulong[] WaypointAutoUnlockList;
         public bool AlwaysShutdownWhenVacant;
         public bool SynergyEditAllowed;
         public ulong[] Keywords;
@@ -77,7 +77,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong Tuning;
         public int BonusItemFindMultiplier;
         public ulong PlayerCameraSettingsOrbis;
-        public ulong LoadingScreensConsole;
+        public ulong[] LoadingScreensConsole;
         public bool AllowLocalCoopMode;
 
         public RegionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RegionPrototype), proto); }

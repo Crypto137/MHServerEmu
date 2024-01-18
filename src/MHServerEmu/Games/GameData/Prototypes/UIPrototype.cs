@@ -229,13 +229,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class RegionTipEntryCollectionPrototype : TipEntryCollectionPrototype
     {
-        public ulong RegionBindings;
+        public ulong[] RegionBindings;
         public RegionTipEntryCollectionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RegionTipEntryCollectionPrototype), proto); }
     }
 
     public class AvatarTipEntryCollectionPrototype : TipEntryCollectionPrototype
     {
-        public ulong AvatarBindings;
+        public ulong[] AvatarBindings;
         public AvatarTipEntryCollectionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AvatarTipEntryCollectionPrototype), proto); }
     }
 
@@ -759,7 +759,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     }
     public class UICinematicsListPrototype : Prototype
     {
-        public ulong CinematicsListToPopulate;
+        public ulong[] CinematicsListToPopulate;
         public UICinematicsListPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(UICinematicsListPrototype), proto); }
     }
 }

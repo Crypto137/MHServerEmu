@@ -12,7 +12,7 @@
         public bool DiscoverAvatarsForPlayers;
         public int SoftLockRegionMode;
         public MetaGameMeterType MetaGameMeter;
-        public ulong MetaGameBuffList;
+        public ulong[] MetaGameBuffList;
         public MetaGameMetricEventType MetaGameMetricEvent;
         public ulong MetaGameWidget;
         public bool AllowMissionTrackerSorting;

@@ -347,7 +347,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class EntityStatePrototype : Prototype
     {
         public ulong Appearance;
-        public ulong OnActivatePowers;
+        public ulong[] OnActivatePowers;
         public EntityStatePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityStatePrototype), proto); }
     }
 
@@ -513,18 +513,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool SupressBannerMessage;
         public bool IsCheckpoint;
         public ulong WaypointGraph;
-        public ulong WaypointGraphList;
+        public ulong[] WaypointGraphList;
         public ulong RequiresItem;
         public EvalPrototype EvalShouldDisplay;
         public ulong Tooltip;
         public bool IncludeWaypointPrefixInName;
         public bool StartLocked;
-        public ulong DestinationBossEntities;
+        public ulong[] DestinationBossEntities;
         public bool IsAccountWaypoint;
         public int MigrationUnlockedByLevel;
-        public ulong MigrationUnlockedByChapters;
+        public ulong[] MigrationUnlockedByChapters;
         public WaypointPOIType MapPOIType;
-        public ulong MapConnectTo;
+        public ulong[] MapConnectTo;
         public ulong MapDescription;
         public float MapPOIXCoord;
         public float MapPOIYCoord;
@@ -537,7 +537,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong ConsoleRegionType;
         public ulong ConsoleLevelRange;
         public LocalizedTextAndImagePrototype[] ConsoleRegionItems;
-        public ulong ConsoleWaypointGraphList;
+        public ulong[] ConsoleWaypointGraphList;
         public WaypointPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(WaypointPrototype), proto); }
     }
 

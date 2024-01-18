@@ -12,7 +12,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public ulong DisplayName;
         public ResourceType MeterType;
-        public ulong Powers;
+        public ulong[] Powers;
         public bool StartsEmpty;
         public ulong Description;
         public ulong MeterColor;
@@ -54,8 +54,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class AlliancePrototype : Prototype
     {
-        public ulong HostileTo;
-        public ulong FriendlyTo;
+        public ulong[] HostileTo;
+        public ulong[] FriendlyTo;
         public ulong WhileConfused;
         public ulong WhileControlled;
         public AlliancePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AlliancePrototype), proto); }
@@ -454,7 +454,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public bool DoPulse;
         public bool EnableSpawner;
-        public ulong Spawners;
+        public ulong[] Spawners;
         public bool KillSummonedInventory;
         public bool SearchWholeRegion;
         public TriggerSpawnersContextPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(TriggerSpawnersContextPrototype), proto); }

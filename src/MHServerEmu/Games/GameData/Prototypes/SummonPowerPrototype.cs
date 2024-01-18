@@ -12,7 +12,7 @@
         public bool TrackInInventory;
         public bool AttachSummonsToCaster;
         public EvalPrototype SummonMaxSimultaneous;
-        public ulong SummonMaxCountWithOthers;
+        public ulong[] SummonMaxCountWithOthers;
         public bool PersistAcrossRegions;
         public EvalPrototype EvalSelectSummonContextIndex;
         public bool UseTargetAsSource;
@@ -29,8 +29,8 @@
 
     public class SummonRemovalPrototype : Prototype
     {
-        public ulong FromPowers;
-        public ulong Keywords;
+        public ulong[] FromPowers;
+        public ulong[] Keywords;
         public SummonRemovalPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(SummonRemovalPrototype), proto); }
     }
 

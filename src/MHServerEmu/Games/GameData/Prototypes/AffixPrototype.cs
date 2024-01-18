@@ -7,7 +7,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong Properties;
         public ulong DisplayNameText;
         public int Weight;
-        public ulong TypeFilters;
+        public ulong[] TypeFilters;
         public PropertyPickInRangeEntryPrototype[] PropertyEntries;
         public ulong[] Keywords;
         public DropRestrictionPrototype[] DropRestrictions;
@@ -102,7 +102,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong UIIcon;
         public ulong TooltipDescription;
         public ulong Properties;
-        public ulong PassivePowers;
+        public ulong[] PassivePowers;
         public ulong Type;
         public int RanksMax;
         public ulong RankCostCurve;

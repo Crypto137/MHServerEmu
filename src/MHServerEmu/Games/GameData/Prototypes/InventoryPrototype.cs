@@ -5,7 +5,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class InventoryPrototype : Prototype
     {
         public short Capacity;
-        public ulong EntityTypeFilter;
+        public ulong[] EntityTypeFilter;
         public bool ExitWorldOnAdd;
         public bool ExitWorldOnRemove;
         public bool PersistedToDatabase;
@@ -28,7 +28,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public OfferingInventoryUIDataPrototype OfferingInventoryUIData;
         public bool LockedByDefault;
         public bool ReplicateForTransfer;
-        public ulong ItemSortPreferences;
+        public ulong[] ItemSortPreferences;
         public InventoryUIDataPrototype UIData;
         public InventoryExtraSlotsGroupPrototype SoftCapacitySlotGroupsPC;
         public int SoftCapacityDefaultSlotsPC;

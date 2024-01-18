@@ -56,7 +56,7 @@
 
     public class PopulationInfoPrototype : PopulatablePrototype
     {
-        public ulong Ranks;
+        public ulong[] Ranks;
         public bool Unique;
         public PopulationInfoPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(PopulationInfoPrototype), proto); }
     }
