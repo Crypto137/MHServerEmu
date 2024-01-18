@@ -17,6 +17,18 @@ namespace MHServerEmuTests
         }
 
         [Fact]
+        public void MapGeneration_DeadEndMax_IsLoaded()
+        {            
+            ulong areaProtoId = 2281390145700437704;
+            var areaProto = (AreaPrototype)GameDatabase.GetPrototypeExt(areaProtoId);
+            Assert.Equal(14685585692178187529, areaProto.AreaName);
+
+            GeneratorPrototype r = areaProto.Generator;
+            Assert.IsType<GridAreaGeneratorPrototype>(r);
+            Assert.Equal(2, (r as GridAreaGeneratorPrototype).DeadEndMax);
+        }
+
+        [Fact]
         public void MapGeneration_XaviersMansionPrototype_IsValid()
         {
             ulong regionPrototypeId = (ulong)RegionPrototypeId.XaviersMansionRegion;

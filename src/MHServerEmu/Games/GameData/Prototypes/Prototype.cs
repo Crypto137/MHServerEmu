@@ -225,6 +225,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     FillFieldsFromData(parentProto, blueprint, protoType);
             }
 
+            foreach (var parentRef in blueprint.Parents)
+            {
+                Prototype parentProto = parentRef.Id.GetPrototype();
+                Blueprint parentBlueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(parentProto);
+                FillFieldsFromData(proto, parentBlueprint, protoType);
+            }
+
             FillFieldsFromData(proto, blueprint, protoType);            
         }
 
