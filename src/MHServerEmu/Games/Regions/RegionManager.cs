@@ -201,7 +201,7 @@ namespace MHServerEmu.Games.Regions
         {
             if (IsRegionAvailable(prototype))
             {
-                prototype = (RegionPrototypeId)2777924139474164138;
+                //prototype = (RegionPrototypeId)2777924139474164138;
                 if (_regionDict.TryGetValue(prototype, out Region region) == false)
                 {
                     // Generate the region and create entities for it if needed
@@ -221,7 +221,7 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        public static bool IsRegionAvailable(RegionPrototypeId prototype) => AvailableRegions.Contains(prototype);
+        public static bool IsRegionAvailable(RegionPrototypeId prototype) => true; // AvailableRegions.Contains(prototype);
         public static bool RegionIsHub(RegionPrototypeId prototype) => HubRegions.Contains(prototype);
 
         private static Region GenerateRegion(RegionPrototypeId prototype)
