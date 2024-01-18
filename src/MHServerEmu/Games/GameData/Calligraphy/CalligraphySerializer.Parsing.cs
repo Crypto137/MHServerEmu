@@ -10,26 +10,36 @@ namespace MHServerEmu.Games.GameData.Calligraphy
     {
         private static readonly Dictionary<Type, Func<FieldParserParams, bool>> ParserDict = new()
         {
-            { typeof(bool),         ParseBool },
-            { typeof(sbyte),        ParseInt8 },
-            { typeof(short),        ParseInt16 },
-            { typeof(int),          ParseInt32 },
-            { typeof(long),         ParseInt64 },
-            //{ typeof(ulong),        ParseUInt64 },          // ulong fields are actually data refs
-            { typeof(float),        ParseFloat32 },
-            { typeof(double),       ParseFloat64 },
-            { typeof(Enum),         ParseEnum },
-            { typeof(Prototype),    ParsePrototypePtr },
-            { typeof(bool[]),       ParseListBool },
-            { typeof(sbyte[]),      ParseListInt8 },
-            { typeof(short[]),      ParseListInt16 },
-            { typeof(int[]),        ParseListInt32 },
-            { typeof(long[]),       ParseListInt64 },
-            //{ typeof(ulong[]),      ParseListUInt64 },
-            { typeof(float[]),      ParseListFloat32 },
-            { typeof(double[]),     ParseListFloat64 },
-            { typeof(Enum[]),       ParseListEnum },
-            { typeof(Prototype[]),  ParseListPrototypePtr }
+            { typeof(bool),             ParseBool },
+            { typeof(sbyte),            ParseInt8 },
+            { typeof(short),            ParseInt16 },
+            { typeof(int),              ParseInt32 },
+            { typeof(long),             ParseInt64 },
+            { typeof(float),            ParseFloat32 },
+            { typeof(double),           ParseFloat64 },
+            { typeof(Enum),             ParseEnum },
+            { typeof(ulong),            ParseDataRef },         // ulong fields are data refs we haven't defined exact types for yet
+            { typeof(StringId),         ParseDataRef },
+            { typeof(AssetTypeId),      ParseDataRef },
+            { typeof(CurveId),          ParseDataRef },
+            { typeof(PrototypeId),      ParseDataRef },
+            { typeof(LocaleStringId),   ParseDataRef },
+            { typeof(Prototype),        ParsePrototypePtr },
+            { typeof(bool[]),           ParseListBool },
+            { typeof(sbyte[]),          ParseListInt8 },
+            { typeof(short[]),          ParseListInt16 },
+            { typeof(int[]),            ParseListInt32 },
+            { typeof(long[]),           ParseListInt64 },
+            { typeof(float[]),          ParseListFloat32 },
+            { typeof(double[]),         ParseListFloat64 },
+            { typeof(Enum[]),           ParseListEnum },
+            { typeof(ulong[]),          ParseListDataRef },     // ulong fields are data refs we haven't defined exact types for yet
+            { typeof(StringId[]),       ParseListDataRef },
+            { typeof(AssetTypeId[]),    ParseListDataRef },
+            { typeof(CurveId[]),        ParseListDataRef },
+            { typeof(PrototypeId[]),    ParseListDataRef },
+            { typeof(LocaleStringId[]), ParseListDataRef },
+            { typeof(Prototype[]),      ParseListPrototypePtr }
         };
 
         private static Func<FieldParserParams, bool> GetParser(Type prototypeFieldType)
@@ -61,11 +71,8 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             if (ParserDict.TryGetValue(prototypeFieldType, out var parser))
                 return parser;
 
-            // Fall back to UInt64 for unimplemented data ref types
-            if (prototypeFieldType.IsEnum || prototypeFieldType == typeof(ulong))
-                return ParseUInt64;
-
-            return ParseListUInt64;
+            Logger.Warn($"Failed to get parser for unsupported prototype field type {prototypeFieldType.Name}");
+            return null;
         }
 
         private static bool ParseValue<T>(FieldParserParams @params, bool parseAsFloat = false) where T: IConvertible
@@ -87,6 +94,16 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             var assetName = GameDatabase.GetAssetName(assetId);
             var value = Enum.Parse(@params.FieldInfo.PropertyType, assetName);
 
+            @params.FieldInfo.SetValue(@params.OwnerPrototype, value);
+            return true;
+        }
+
+        private static bool ParseDataRef(FieldParserParams @params)
+        {
+            // Data refs can be StringId, AssetTypeId, CurveId, PrototypeId, LocaleStringId or ulong.
+            // Eventually we will assign appropriate data ref types to all ulong fields.
+            // C# enums are not picky when assigning values with reflection, so we can reuse the same code for all of them.
+            var value = @params.Reader.ReadUInt64();
             @params.FieldInfo.SetValue(@params.OwnerPrototype, value);
             return true;
         }
@@ -134,6 +151,23 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return true;
         }
 
+        private static bool ParseListDataRef(FieldParserParams @params)
+        {
+            var reader = @params.Reader;
+
+            // Same as with enums, we use Array.CreateInstance()
+            var values = Array.CreateInstance(@params.FieldInfo.PropertyType.GetElementType(), reader.ReadInt16());
+            for (int i = 0; i < values.Length; i++)
+            {
+                var value = reader.ReadUInt64();
+                values.SetValue(value, i);
+            }
+
+            @params.FieldInfo.SetValue(@params.OwnerPrototype, values);
+
+            return true;
+        }
+
         private static bool ParseListPrototypePtr(FieldParserParams @params)
         {
             var reader = @params.Reader;
@@ -141,26 +175,6 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             var values = new Prototype[reader.ReadInt16()];
             for (int i = 0; i < values.Length; i++)
                 values[i] = new(reader);
-
-            //@params.FieldInfo.SetValue(@params.OwnerPrototype, values);
-
-            return true;
-        }
-
-        private static bool ParseUInt64(FieldParserParams @params)
-        {
-            var value = @params.Reader.ReadUInt64();
-            //@params.FieldInfo.SetValue(@params.OwnerPrototype, value);
-            return true;
-        }
-
-        private static bool ParseListUInt64(FieldParserParams @params)
-        {
-            var reader = @params.Reader;
-
-            var values = new ulong[reader.ReadInt16()];
-            for (int i = 0; i < values.Length; i++)
-                values[i] = reader.ReadUInt64();
 
             //@params.FieldInfo.SetValue(@params.OwnerPrototype, values);
 
