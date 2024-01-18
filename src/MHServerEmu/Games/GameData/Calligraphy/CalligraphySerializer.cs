@@ -103,6 +103,8 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                     DeserializeFieldGroup(prototype, blueprint, blueprintCopyNum, prototypeName, classType, reader, "List Fields");
                 }
             }
+
+            Logger.Debug("Done!");
         }
 
         private bool DeserializeFieldGroup(Prototype prototype, Blueprint blueprint, byte blueprintCopyNum, string prototypeName, Type classType, BinaryReader reader, string groupTag)

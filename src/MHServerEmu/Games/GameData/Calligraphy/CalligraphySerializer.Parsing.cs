@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Reflection;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.GameData.Calligraphy
@@ -17,6 +18,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             //{ typeof(ulong),        ParseUInt64 },          // ulong fields are actually data refs
             { typeof(float),        ParseFloat32 },
             { typeof(double),       ParseFloat64 },
+            { typeof(Enum),         ParseEnum },
             { typeof(Prototype),    ParsePrototypePtr },
             { typeof(bool[]),       ParseListBool },
             { typeof(sbyte[]),      ParseListInt8 },
@@ -26,20 +28,33 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             //{ typeof(ulong[]),      ParseListUInt64 },
             { typeof(float[]),      ParseListFloat32 },
             { typeof(double[]),     ParseListFloat64 },
+            { typeof(Enum[]),       ParseListEnum },
             { typeof(Prototype[]),  ParseListPrototypePtr }
         };
 
         private static Func<FieldParserParams, bool> GetParser(Type prototypeFieldType)
         {
-            // Adjust type for prototype pointer fields
-            if (prototypeFieldType.IsPrimitive == false && prototypeFieldType.IsEnum == false)
+            // Adjust type for enums and prototype pointers
+            if (prototypeFieldType.IsPrimitive == false)
             {
-                if (prototypeFieldType.IsSubclassOf(typeof(Prototype)))
-                    prototypeFieldType = typeof(Prototype);
-                else if (prototypeFieldType.GetElementType().IsSubclassOf(typeof(Prototype)))
-                    prototypeFieldType = typeof(Prototype[]);
-                else if (prototypeFieldType != typeof(ulong[]))
-                    throw new ArgumentException($"Unsupported prototype field reference type {prototypeFieldType.Name}.");
+                if (prototypeFieldType.IsArray == false)
+                {
+                    // Check the type itself if it's a simple field
+                    if (prototypeFieldType.IsSubclassOf(typeof(Prototype)))
+                        prototypeFieldType = typeof(Prototype);
+                    else if (prototypeFieldType.IsDefined(typeof(AssetEnumAttribute)))
+                        prototypeFieldType = typeof(Enum);
+                }
+                else
+                {
+                    // Check element type instead if it's a list field
+                    var elementType = prototypeFieldType.GetElementType();
+
+                    if (elementType.IsSubclassOf(typeof(Prototype)))
+                        prototypeFieldType = typeof(Prototype[]);
+                    else if (elementType.IsDefined(typeof(AssetEnumAttribute)))
+                        prototypeFieldType = typeof(Enum[]);
+                }
             }
 
             // Try to get a defined parser from our dict
@@ -55,10 +70,22 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
         private static bool ParseValue<T>(FieldParserParams @params, bool parseAsFloat = false) where T: IConvertible
         {
-            // Note: the client uses unsafe pointer hacks here.
-
+            // Boolean and numeric values are stored in Calligraphy as 64-bit values.
+            // We read the value as either Int64 or Float64 and then cast it to the appropriate type for our field.
             var rawValue = parseAsFloat ? @params.Reader.ReadDouble() : @params.Reader.ReadInt64();
             var value = Convert.ChangeType(rawValue, typeof(T), CultureInfo.InvariantCulture);
+
+            @params.FieldInfo.SetValue(@params.OwnerPrototype, value);
+            return true;
+        }
+
+        private static bool ParseEnum(FieldParserParams @params)
+        {
+            // Enums are represented in Calligraphy by assets.
+            // We get asset name from the serialized asset id, and then parse the actual enum value from it.
+            var assetId = (StringId)@params.Reader.ReadUInt64();
+            var assetName = GameDatabase.GetAssetName(assetId);
+            var value = Enum.Parse(@params.FieldInfo.PropertyType, assetName);
 
             @params.FieldInfo.SetValue(@params.OwnerPrototype, value);
             return true;
@@ -79,6 +106,27 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             {
                 var rawValue = parseAsFloat ? @params.Reader.ReadDouble() : @params.Reader.ReadInt64();
                 values[i] = (T)Convert.ChangeType(rawValue, typeof(T), CultureInfo.InvariantCulture);
+            }
+
+            @params.FieldInfo.SetValue(@params.OwnerPrototype, values);
+
+            return true;
+        }
+
+        private static bool ParseListEnum(FieldParserParams @params)
+        {
+            var reader = @params.Reader;
+
+            // We have only type info for our enum, so we have to use Array.CreateInstance() to create our enum array
+            var values = Array.CreateInstance(@params.FieldInfo.PropertyType.GetElementType(), reader.ReadInt16());
+            for (int i = 0; i < values.Length; i++)
+            {
+                // Enums are represented in Calligraphy by assets.
+                // We get asset name from the serialized asset id, and then parse the actual enum value from it.
+                var assetId = (StringId)@params.Reader.ReadUInt64();
+                var assetName = GameDatabase.GetAssetName(assetId);
+                var value = Enum.Parse(@params.FieldInfo.PropertyType, assetName);
+                values.SetValue(value, i);
             }
 
             @params.FieldInfo.SetValue(@params.OwnerPrototype, values);
