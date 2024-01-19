@@ -137,9 +137,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MetaStateMissionStateListenerPrototype : MetaStatePrototype
     {
-        public ulong CompleteMissions { get; protected set; }
+        public ulong[] CompleteMissions { get; protected set; }
         public int CompleteMode { get; protected set; }
-        public ulong FailMissions { get; protected set; }
+        public ulong[] FailMissions { get; protected set; }
         public int FailMode { get; protected set; }
     }
 

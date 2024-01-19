@@ -52,7 +52,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong TooltipTemplate { get; protected set; }
         public ItemStackSettingsPrototype StackSettings { get; protected set; }
         public bool AlwaysDisplayAsUsable { get; protected set; }
-        public ulong TooltipEquipRestrictions { get; protected set; }
+        public ulong[] TooltipEquipRestrictions { get; protected set; }
         public AffixEntryPrototype[] AffixesBuiltIn { get; protected set; }
         public PropertyEntryPrototype[] PropertiesBuiltIn { get; protected set; }
         public ProductPrototype Product { get; protected set; }
@@ -242,8 +242,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ItemTooltipPropertyBlockSettingsPrototype : Prototype
     {
-        public ulong IncludeAllButProperties { get; protected set; }
-        public ulong IncludeOnlyProperties { get; protected set; }
+        public ulong[] IncludeAllButProperties { get; protected set; }
+        public ulong[] IncludeOnlyProperties { get; protected set; }
         public bool UseBuiltinPropertyOrdering { get; protected set; }
     }
 

@@ -98,7 +98,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong Properties { get; protected set; }
         public ulong DisplayNameText { get; protected set; }
         public int Weight { get; protected set; }
-        public ulong TypeFilters { get; protected set; }
+        public ulong[] TypeFilters { get; protected set; }
         public PropertyPickInRangeEntryPrototype[] PropertyEntries { get; protected set; }
         public ulong[] Keywords { get; protected set; }
         public DropRestrictionPrototype[] DropRestrictions { get; protected set; }
@@ -174,7 +174,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong UIIcon { get; protected set; }
         public ulong TooltipDescription { get; protected set; }
         public ulong Properties { get; protected set; }
-        public ulong PassivePowers { get; protected set; }
+        public ulong[] PassivePowers { get; protected set; }
         public ulong Type { get; protected set; }
         public int RanksMax { get; protected set; }
         public ulong RankCostCurve { get; protected set; }

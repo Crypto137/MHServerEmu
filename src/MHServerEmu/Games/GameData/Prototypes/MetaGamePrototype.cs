@@ -74,7 +74,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool DiscoverAvatarsForPlayers { get; protected set; }
         public int SoftLockRegionMode { get; protected set; }
         public MetaGameMeterType MetaGameMeter { get; protected set; }
-        public ulong MetaGameBuffList { get; protected set; }
+        public ulong[] MetaGameBuffList { get; protected set; }
         public MetaGameMetricEventType MetaGameMetricEvent { get; protected set; }
         public ulong MetaGameWidget { get; protected set; }
         public bool AllowMissionTrackerSorting { get; protected set; }

@@ -396,7 +396,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class EntityStatePrototype : Prototype
     {
         public ulong Appearance { get; protected set; }
-        public ulong OnActivatePowers { get; protected set; }
+        public ulong[] OnActivatePowers { get; protected set; }
     }
 
     public class DoorEntityStatePrototype : EntityStatePrototype
@@ -517,18 +517,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool SupressBannerMessage { get; protected set; }
         public bool IsCheckpoint { get; protected set; }
         public ulong WaypointGraph { get; protected set; }
-        public ulong WaypointGraphList { get; protected set; }
+        public ulong[] WaypointGraphList { get; protected set; }
         public ulong RequiresItem { get; protected set; }
         public EvalPrototype EvalShouldDisplay { get; protected set; }
         public ulong Tooltip { get; protected set; }
         public bool IncludeWaypointPrefixInName { get; protected set; }
         public bool StartLocked { get; protected set; }
-        public ulong DestinationBossEntities { get; protected set; }
+        public ulong[] DestinationBossEntities { get; protected set; }
         public bool IsAccountWaypoint { get; protected set; }
         public int MigrationUnlockedByLevel { get; protected set; }
-        public ulong MigrationUnlockedByChapters { get; protected set; }
+        public ulong[] MigrationUnlockedByChapters { get; protected set; }
         public WaypointPOIType MapPOIType { get; protected set; }
-        public ulong MapConnectTo { get; protected set; }
+        public ulong[] MapConnectTo { get; protected set; }
         public ulong MapDescription { get; protected set; }
         public float MapPOIXCoord { get; protected set; }
         public float MapPOIYCoord { get; protected set; }
@@ -541,7 +541,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong ConsoleRegionType { get; protected set; }
         public ulong ConsoleLevelRange { get; protected set; }
         public LocalizedTextAndImagePrototype[] ConsoleRegionItems { get; protected set; }
-        public ulong ConsoleWaypointGraphList { get; protected set; }
+        public ulong[] ConsoleWaypointGraphList { get; protected set; }
     }
 
     public class WaypointChapterPrototype : Prototype

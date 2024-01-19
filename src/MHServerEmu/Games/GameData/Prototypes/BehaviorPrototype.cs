@@ -125,7 +125,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public ulong DisplayName { get; protected set; }
         public ResourceType MeterType { get; protected set; }
-        public ulong Powers { get; protected set; }
+        public ulong[] Powers { get; protected set; }
         public bool StartsEmpty { get; protected set; }
         public ulong Description { get; protected set; }
         public ulong MeterColor { get; protected set; }
@@ -156,8 +156,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class AlliancePrototype : Prototype
     {
-        public ulong HostileTo { get; protected set; }
-        public ulong FriendlyTo { get; protected set; }
+        public ulong[] HostileTo { get; protected set; }
+        public ulong[] FriendlyTo { get; protected set; }
         public ulong WhileConfused { get; protected set; }
         public ulong WhileControlled { get; protected set; }
     }
@@ -438,7 +438,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public bool DoPulse { get; protected set; }
         public bool EnableSpawner { get; protected set; }
-        public ulong Spawners { get; protected set; }
+        public ulong[] Spawners { get; protected set; }
         public bool KillSummonedInventory { get; protected set; }
         public bool SearchWholeRegion { get; protected set; }
     }

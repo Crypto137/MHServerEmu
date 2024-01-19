@@ -307,12 +307,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class RegionTipEntryCollectionPrototype : TipEntryCollectionPrototype
     {
-        public ulong RegionBindings { get; protected set; }
+        public ulong[] RegionBindings { get; protected set; }
     }
 
     public class AvatarTipEntryCollectionPrototype : TipEntryCollectionPrototype
     {
-        public ulong AvatarBindings { get; protected set; }
+        public ulong[] AvatarBindings { get; protected set; }
     }
 
     public class WeightedTipCategoryPrototype : Prototype
@@ -695,6 +695,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class UICinematicsListPrototype : Prototype
     {
-        public ulong CinematicsListToPopulate { get; protected set; }
+        public ulong[] CinematicsListToPopulate { get; protected set; }
     }
 }

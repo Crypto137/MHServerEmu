@@ -635,7 +635,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class TransformModeEntryPrototype : Prototype
     {
-        public ulong AllowedPowers { get; protected set; }
+        public ulong[] AllowedPowers { get; protected set; }
         public ulong TransformMode { get; protected set; }
     }
 
@@ -719,6 +719,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ExtraActivateCycleToPowerPrototype : ExtraActivatePrototype
     {
-        public ulong CyclePowerList { get; protected set; }
+        public ulong[] CyclePowerList { get; protected set; }
     }
 }

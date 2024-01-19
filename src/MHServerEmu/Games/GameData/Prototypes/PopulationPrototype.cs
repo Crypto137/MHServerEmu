@@ -67,7 +67,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PopulationInfoPrototype : PopulatablePrototype
     {
-        public ulong Ranks { get; protected set; }
+        public ulong[] Ranks { get; protected set; }
         public bool Unique { get; protected set; }
     }
 

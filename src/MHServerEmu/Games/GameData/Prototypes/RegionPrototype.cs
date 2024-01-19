@@ -78,9 +78,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public RegionGeneratorPrototype RegionGenerator { get; protected set; }
         public RegionBehaviorAsset Behavior { get; protected set; }
         public ulong RegionName { get; protected set; }
-        public ulong MetaGames { get; protected set; }
+        public ulong[] MetaGames { get; protected set; }
         public bool ForceSimulation { get; protected set; }
-        public ulong LoadingScreens { get; protected set; }
+        public ulong[] LoadingScreens { get; protected set; }
         public bool AlwaysRevealFullMap { get; protected set; }
         public ulong Chapter { get; protected set; }
         public int PlayerLimit { get; protected set; }
@@ -103,7 +103,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong PlayerCameraSettings { get; protected set; }
         public RegionQueueMethod RegionQueueMethod { get; protected set; }
         public EvalPrototype EvalAccessRestriction { get; protected set; }
-        public ulong WaypointAutoUnlockList { get; protected set; }
+        public ulong[] WaypointAutoUnlockList { get; protected set; }
         public bool AlwaysShutdownWhenVacant { get; protected set; }
         public bool SynergyEditAllowed { get; protected set; }
         public ulong[] Keywords { get; protected set; }
@@ -144,7 +144,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong Tuning { get; protected set; }
         public int BonusItemFindMultiplier { get; protected set; }
         public ulong PlayerCameraSettingsOrbis { get; protected set; }
-        public ulong LoadingScreensConsole { get; protected set; }
+        public ulong[] LoadingScreensConsole { get; protected set; }
         public bool AllowLocalCoopMode { get; protected set; }
     }
 
