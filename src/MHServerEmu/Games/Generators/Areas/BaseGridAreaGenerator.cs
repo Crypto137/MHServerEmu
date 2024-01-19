@@ -5,6 +5,8 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Regions;
+using System.Drawing;
+using System.Reflection;
 
 namespace MHServerEmu.Games.Generators.Areas
 {
@@ -18,9 +20,9 @@ namespace MHServerEmu.Games.Generators.Areas
         public float IncrementZ { get; set; }
         public float IncrementX { get; set; }
         public float IncrementY { get; set; }
-        
+
         public override Aabb PreGenerate(GRandom random)
-        {            
+        {
             if (!GetPrototype(out var proto)) return null;
             if (!CellSetRegistry.IsInitialized) return null;
 
@@ -38,12 +40,12 @@ namespace MHServerEmu.Games.Generators.Areas
             float halfWidth = width / 2.0f;
             float halfHeight = cellBounds.Height / 2.0f;
 
-            Vector3 min = new (-halfWidth, -halfWidth, -halfHeight);
-            Vector3 max = new (сellsX * width - halfWidth, сellsY * width - halfWidth, halfHeight);
+            Vector3 min = new(-halfWidth, -halfWidth, -halfHeight);
+            Vector3 max = new(сellsX * width - halfWidth, сellsY * width - halfWidth, halfHeight);
 
             PreGenerated = true;
 
-            return new (min, max);
+            return new(min, max);
         }
 
         private bool GetPrototype(out BaseGridAreaGeneratorPrototype proto)
@@ -66,7 +68,7 @@ namespace MHServerEmu.Games.Generators.Areas
                     RegionPrototype.Equivalent(GameDatabase.GetPrototype<RegionPrototype>(target.Region), regionProto) &&
                     target.Area == area.GetPrototypeDataRef() && target.Cell != 0)
                 {
-                    RegionTransitionSpec spec = new (target.Cell, target.Entity, true);
+                    RegionTransitionSpec spec = new(target.Cell, target.Entity, true);
                     _regionTransitions.Add(spec);
                 }
             }
@@ -103,7 +105,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
             foreach (var cellSetEntry in cellSets)
             {
-                if (cellSetEntry == null)  continue;
+                if (cellSetEntry == null) continue;
                 CellSetRegistry.LoadDirectory(cellSetEntry.CellSet, cellSetEntry, cellSetEntry.Weight, cellSetEntry.Unique);
             }
 
@@ -117,7 +119,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         public virtual bool InitializeContainer()
         {
-            if (!GetPrototype(out var proto)) return false; 
+            if (!GetPrototype(out var proto)) return false;
 
             if (!CellContainer.Initialize(proto.CellsX, proto.CellsY, CellSetRegistry, proto.DeadEndMax))
             {
@@ -129,9 +131,14 @@ namespace MHServerEmu.Games.Generators.Areas
             return true;
         }
 
+        public bool AreCornerCoordinates(int x, int y, int xmin, int xmax, int ymin, int ymax)
+        {
+            return (x == xmin && y == ymin) || (x == xmax && y == ymax) || (x == xmin && y == ymax) || (x == xmax && y == ymin);
+        }
+
         public override bool GetPossibleConnections(ConnectionList connections, Segment segment)
         {
-            if (CellContainer == null)  return false;
+            if (CellContainer == null) return false;
             connections.Clear();
             if (!GetPrototype(out var proto)) return false;
 
@@ -140,10 +147,10 @@ namespace MHServerEmu.Games.Generators.Areas
 
             void AddConnection(int x, int y, Vector3 point, int endX, int endY)
             {
-                if (proto.NoConnectionsOnCorners && ((x == 0 || x == endX) || (y == 0 || y == endY))) return;
+                if (proto.NoConnectionsOnCorners && AreCornerCoordinates(x, y, 0, endX, 0, endY)) return;
                 if (!CheckAllowedConnections(x, y) || CellContainer.GetCell(x, y) == null) return;
 
-                connections.Add(new (
+                connections.Add(new(
                     origin.X + x * cellSize + point.X,
                     origin.Y + y * cellSize + point.Y,
                     origin.Z + IncrementZ + IncrementX * x + IncrementY * y + point.Z));
@@ -159,7 +166,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
                 if (Segment.EpsilonTest(start, end, 10.0f))
                 {
-                    for (int y = 0; y <= endy; ++y) 
+                    for (int y = 0; y <= endy; ++y)
                         AddConnection(endx, y, pointN, endx, endy);
                     return true;
                 }
@@ -264,7 +271,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 foreach (RegionTransitionSpec spec in _requiredTransitions)
                 {
                     ulong cellRef = spec.GetCellRef();
-                    if (proto.RequiresCell(cellRef))  continue;
+                    if (proto.RequiresCell(cellRef)) continue;
 
                     if (cellRef == 0)
                     {
@@ -276,7 +283,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
                     if (!picker.Empty() && picker.Pick(out Point2 cellCoord))
                     {
-                        CellContainer.ReserveCell(cellCoord.X, cellCoord.Y, cellRef, 
+                        CellContainer.ReserveCell(cellCoord.X, cellCoord.Y, cellRef,
                             spec.Start ? GenCell.GenCellType.Start : GenCell.GenCellType.Destination);
                     }
                     else
@@ -376,8 +383,8 @@ namespace MHServerEmu.Games.Generators.Areas
             {
                 for (int x = 0; x < CellContainer.Width; ++x)
                 {
-                    if ((requiredCell == null || CheckRequiredCellLocationRestrictions(requiredCell, x, y)) 
-                        && CellContainer.ReservableCell(x, y, cellRef))  
+                    if ((requiredCell == null || CheckRequiredCellLocationRestrictions(requiredCell, x, y))
+                        && CellContainer.ReservableCell(x, y, cellRef))
                         picker.Add(new(x, y));
                 }
             }
@@ -396,7 +403,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         private bool SpawnNonRequiredCellList(GRandom random, Picker<Point2> picker, Picker<RequiredCellBasePrototype> cellPicker, int min, int max)
         {
-            if (max <= 0 || min > max)  return false;
+            if (max <= 0 || min > max) return false;
 
             int next = random.Next(min, max + 1);
             int cellIndex = 0;
@@ -418,7 +425,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         private static void AddCellsToPicker(Picker<RequiredCellBasePrototype> cellPicker, RequiredCellBasePrototype[] requiredCellBase)
         {
-            foreach( var cell in requiredCellBase) cellPicker.Add(cell);
+            foreach (var cell in requiredCellBase) cellPicker.Add(cell);
         }
 
         private bool SpawnRequiredCellBase(GRandom random, Picker<Point2> picker, RequiredCellBasePrototype requiredCellBase)
@@ -454,7 +461,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
                 if (!picker.Empty() && picker.Pick(out Point2 cellCoord))
                 {
-                    CellContainer.ReserveCell(cellCoord.X, cellCoord.Y, cellRef, 
+                    CellContainer.ReserveCell(cellCoord.X, cellCoord.Y, cellRef,
                         requiredCell.Destination ? GenCell.GenCellType.Destination : GenCell.GenCellType.None);
 
                     if (requiredCell.PopulationThemeOverride != 0)
@@ -474,13 +481,13 @@ namespace MHServerEmu.Games.Generators.Areas
         {
             if (superCell == null || superCell.Entries == null) return false;
 
-            Picker<Point2> picker = new (random);
+            Picker<Point2> picker = new(random);
             for (int x = 0; x < CellContainer.Width - superCell.Max.X; x++)
             {
                 for (int y = 0; y < CellContainer.Height - superCell.Max.Y; y++)
                 {
                     if (CheckRequiredCellLocationRestrictions(requiredSuperCellEntry, x, y))
-                        picker.Add(new (x, y));
+                        picker.Add(new(x, y));
                 }
             }
 
@@ -495,7 +502,7 @@ namespace MHServerEmu.Games.Generators.Areas
                     {
                         if (superCellEntry == null) continue;
 
-                        Point2 cellCoord = new (pick.X + superCellEntry.X, pick.Y + superCellEntry.Y);
+                        Point2 cellCoord = new(pick.X + superCellEntry.X, pick.Y + superCellEntry.Y);
                         if (!CellContainer.ReservableCell(cellCoord.X, cellCoord.Y, GameDatabase.GetDataRefByAsset(superCellEntry.Cell)))
                         {
                             success = false;
@@ -507,12 +514,12 @@ namespace MHServerEmu.Games.Generators.Areas
 
             if (success)
             {
-                List<ulong> list = new ();
+                List<ulong> list = new();
                 foreach (SuperCellEntryPrototype superCellEntry in superCell.Entries)
                 {
                     if (superCellEntry == null) continue;
 
-                    Point2 cellCoord = new (pick.X + superCellEntry.X, pick.Y + superCellEntry.Y);
+                    Point2 cellCoord = new(pick.X + superCellEntry.X, pick.Y + superCellEntry.Y);
 
                     if (!CellContainer.ReservableCell(cellCoord.X, cellCoord.Y, GameDatabase.GetDataRefByAsset(superCellEntry.Cell))) continue;
 
@@ -552,7 +559,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 RandomInstanceListPrototype randomInstanceList = proto.RandomInstances;
                 if (randomInstanceList != null && randomInstanceList.List != null)
                 {
-                    Picker<RandomInstanceRegionPrototype> picker = new (random);
+                    Picker<RandomInstanceRegionPrototype> picker = new(random);
                     foreach (var randomInstanceRegion in randomInstanceList.List)
                     {
                         if (randomInstanceRegion == null) continue;
@@ -580,7 +587,7 @@ namespace MHServerEmu.Games.Generators.Areas
             GetPrototype(out BaseGridAreaGeneratorPrototype proto);
 
             void CheckRoomKill(CellDeletionEnum method)
-            { 
+            {
                 if (method == CellDeletionEnum.Random)
                     DeleteGuessAndCheck(random, cells);
                 else if (method == CellDeletionEnum.Edge)
@@ -605,11 +612,11 @@ namespace MHServerEmu.Games.Generators.Areas
         {
             if (!GetPrototype(out var proto)) return;
 
-            List<Point2> deleteList = new ();
+            List<Point2> deleteList = new();
             int min = Math.Min(proto.CellsX / 2, proto.CellsY / 2);
             for (int radius = 0; radius < min && cells > 0; ++radius)
             {
-                Picker<Point2> picker = new (random);
+                Picker<Point2> picker = new(random);
                 while (cells > 0 && GetEdgeRadiusDeletableCellList(deleteList, radius, true))
                 {
                     picker.Clear();
@@ -668,14 +675,14 @@ namespace MHServerEmu.Games.Generators.Areas
                 for (int x = radius; x < proto.CellsX - radius - 1; ++x)
                 {
                     UniqueAddDeletableCell(CellContainer, deleteList, x, radius);
-                    UniqueAddDeletableCell(CellContainer, deleteList, x, proto.CellsY - radius - 1); 
+                    UniqueAddDeletableCell(CellContainer, deleteList, x, proto.CellsY - radius - 1);
                 }
             }
             else if (radius == proto.CellsX - radius - 1)
             {
                 for (int x = radius; x < proto.CellsX - radius - 1; ++x)
                 {
-                    UniqueAddDeletableCell(CellContainer, deleteList, x, radius); 
+                    UniqueAddDeletableCell(CellContainer, deleteList, x, radius);
                 }
             }
 
@@ -684,14 +691,14 @@ namespace MHServerEmu.Games.Generators.Areas
                 for (int y = radius + 1; y < proto.CellsY - radius - 2; ++y)
                 {
                     UniqueAddDeletableCell(CellContainer, deleteList, radius, y);
-                    UniqueAddDeletableCell(CellContainer, deleteList, proto.CellsX - radius - 1, y); 
+                    UniqueAddDeletableCell(CellContainer, deleteList, proto.CellsX - radius - 1, y);
                 }
             }
             else if (radius + 1 == proto.CellsY - radius - 2)
             {
                 for (int y = radius + 1; y < proto.CellsY - radius - 2; ++y)
                 {
-                    UniqueAddDeletableCell(CellContainer, deleteList, radius, radius + 1); 
+                    UniqueAddDeletableCell(CellContainer, deleteList, radius, radius + 1);
                 }
             }
 
@@ -703,11 +710,11 @@ namespace MHServerEmu.Games.Generators.Areas
             if (clear) deleteList.Clear();
 
             if (!GetPrototype(out var proto)) return false;
-            
+
             for (int x = 0; x <= radius; ++x)
             {
                 UniqueAddDeletableCell(CellContainer, deleteList, x, radius);
-                UniqueAddDeletableCell(CellContainer, deleteList, x, proto.CellsY - 1 - radius); 
+                UniqueAddDeletableCell(CellContainer, deleteList, x, proto.CellsY - 1 - radius);
             }
 
             for (int y = 0; y <= radius; ++y)
@@ -725,7 +732,7 @@ namespace MHServerEmu.Games.Generators.Areas
             for (int y = proto.CellsY - 1; y >= proto.CellsY - 1 - radius; --y)
             {
                 UniqueAddDeletableCell(CellContainer, deleteList, proto.CellsX - 1 - radius, y);
-                UniqueAddDeletableCell(CellContainer, deleteList, radius, y); 
+                UniqueAddDeletableCell(CellContainer, deleteList, radius, y);
             }
 
             return deleteList.Any();
@@ -736,7 +743,7 @@ namespace MHServerEmu.Games.Generators.Areas
             if (cellContainer.GetCell(x, y) != null
                 && cellContainer.DestroyableCell(x, y))
             {
-                Point2 cellCoord = new (x, y);
+                Point2 cellCoord = new(x, y);
                 foreach (var deleteCoord in deleteList)
                     if (deleteCoord == cellCoord) return;
 
@@ -746,15 +753,15 @@ namespace MHServerEmu.Games.Generators.Areas
 
         private void DeleteGuessAndCheck(GRandom random, int cells)
         {
-            Picker<Point2> picker = new (random);
-            
+            Picker<Point2> picker = new(random);
+
             for (int y = 0; y < CellContainer.Height; ++y)
             {
                 for (int x = 0; x < CellContainer.Width; ++x)
                 {
-                    if (CellContainer.GetCell(x, y) != null 
+                    if (CellContainer.GetCell(x, y) != null
                         && CellContainer.DestroyableCell(x, y))
-                        picker.Add(new (x, y));
+                        picker.Add(new(x, y));
                 }
             }
 
@@ -762,7 +769,7 @@ namespace MHServerEmu.Games.Generators.Areas
             {
                 if (picker.PickRemove(out Point2 cellCoord))
                 {
-                    if (CellContainer.GetCell(cellCoord.X, cellCoord.Y) != null 
+                    if (CellContainer.GetCell(cellCoord.X, cellCoord.Y) != null
                         && CellContainer.DestroyableCell(cellCoord.X, cellCoord.Y))
                     {
                         CellContainer.DestroyCell(cellCoord.X, cellCoord.Y);
@@ -794,7 +801,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 int yCell = (int)(y / cellSize);
 
                 GenCell cell = CellContainer.GetCell(xCell, yCell);
-                if (cell == null)  continue;
+                if (cell == null) continue;
 
                 GenCell.GenCellType type = GenCell.GenCellType.Destination;
                 if (previousArea != null && previousArea == areaConnection.ConnectedArea)
@@ -832,14 +839,14 @@ namespace MHServerEmu.Games.Generators.Areas
                 for (int y = 0; y < CellContainer.Height; y++)
                 {
                     GenCell cell = CellContainer.GetCell(x, y);
-                    if (cell != null) cell.Position = GetCellOffset(x, y, cellSize);                    
+                    if (cell != null) cell.Position = GetCellOffset(x, y, cellSize);
                 }
             }
         }
 
         private Vector3 GetCellOffset(int x, int y, float cellSize)
         {
-            return new (x * cellSize, y * cellSize, IncrementZ + IncrementX * x + IncrementY * y);
+            return new(x * cellSize, y * cellSize, IncrementZ + IncrementX * x + IncrementY * y);
         }
 
         public void ProcessAssignUniqueCellIds()
@@ -984,7 +991,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 if (BuildRoad(buildGrid, roadPoints[indexA], roadPoints[indexB]))
                 {
                     for (int n = 0; n < buildGrid.Count; ++n)
-                        buildGrid[n].RoadType |= buildGrid[n].RoadType;                 
+                        buildGrid[n].RoadType |= buildGrid[n].RoadType;
                 }
                 else return false;
             }
@@ -1034,7 +1041,7 @@ namespace MHServerEmu.Games.Generators.Areas
             }
 
             if (CellsBothInSuperCell(
-                CellContainer.GetCell(pointA.X, pointA.Y), 
+                CellContainer.GetCell(pointA.X, pointA.Y),
                 CellContainer.GetCell(pointB.X, pointB.Y))) return true;
 
             if (!GetPointTo(infoA.RoadType, pointA, out Point2 roadA)
@@ -1042,7 +1049,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
             if (roadB == pointA || roadA == pointB) return true;
 
-            List<Point2> road = new ();
+            List<Point2> road = new();
             DijkstraRoad(buildGrid, roadA, roadB, road);
             if (road.Count == 0) return false;
 
@@ -1081,7 +1088,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         private static bool GetPointTo(Cell.Type direction, Point2 point, out Point2 pointTo)
         {
-            pointTo = new (point);
+            pointTo = new(point);
 
             switch (direction)
             {
@@ -1129,13 +1136,13 @@ namespace MHServerEmu.Games.Generators.Areas
         {
             Cell.Filler filler = Cell.Filler.None;
 
-            if (CellContainer.GetCell(x + 1, y, false) != null)     filler |= Cell.Filler.N;
+            if (CellContainer.GetCell(x + 1, y, false) != null) filler |= Cell.Filler.N;
             if (CellContainer.GetCell(x + 1, y + 1, false) != null) filler |= Cell.Filler.NE;
-            if (CellContainer.GetCell(x, y + 1, false) != null)     filler |= Cell.Filler.E;
+            if (CellContainer.GetCell(x, y + 1, false) != null) filler |= Cell.Filler.E;
             if (CellContainer.GetCell(x - 1, y + 1, false) != null) filler |= Cell.Filler.SE;
-            if (CellContainer.GetCell(x - 1, y, false) != null)     filler |= Cell.Filler.S;
+            if (CellContainer.GetCell(x - 1, y, false) != null) filler |= Cell.Filler.S;
             if (CellContainer.GetCell(x - 1, y - 1, false) != null) filler |= Cell.Filler.SW;
-            if (CellContainer.GetCell(x, y - 1, false) != null)     filler |= Cell.Filler.W;
+            if (CellContainer.GetCell(x, y - 1, false) != null) filler |= Cell.Filler.W;
             if (CellContainer.GetCell(x + 1, y - 1, false) != null) filler |= Cell.Filler.NW;
 
             ulong cellRef = CellSetRegistry.GetCellSetAssetPickedByFiller(random, filler);
@@ -1155,7 +1162,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         private bool DijkstraRoad(List<RoadInfo> buildGrid, Point2 pointA, Point2 pointB, List<Point2> road)
         {
-            Point2 invalidPoint = new (-1, -1);
+            Point2 invalidPoint = new(-1, -1);
             List<Point2> visitedNodes = new();
 
             foreach (var roadInfo in buildGrid)
@@ -1236,7 +1243,7 @@ namespace MHServerEmu.Games.Generators.Areas
                     break;
             }
 
-            if (!CellContainer.CheckCoord(x, y)) return false; 
+            if (!CellContainer.CheckCoord(x, y)) return false;
 
             int index = CellContainer.GetIndex(x, y);
             RoadInfo info = roadInfo[index];
@@ -1268,7 +1275,7 @@ namespace MHServerEmu.Games.Generators.Areas
             if (workingStack.Count == count)
                 results.Add(new(workingStack));
 
-            List<int> indexes = new (setIndexes);
+            List<int> indexes = new(setIndexes);
             foreach (var index in indexes)
             {
                 workingStack.Add(index);
