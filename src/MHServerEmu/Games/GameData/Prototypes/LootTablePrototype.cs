@@ -20,9 +20,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         OnDamagedForPctHealth = 9,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)None)]
     public enum LootActionType
     {
+        None = 0,
         Spawn = 1,
         Give = 2
     }
@@ -35,7 +36,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         DropUnownedAvatarOnly = 2,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)CurrentRecipientOnly)]
     public enum PlayerScope
     {
         CurrentRecipientOnly = 0,
@@ -45,7 +46,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Guild = 4,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)None)]
     public enum AffixPosition
     {
         None = 0,
@@ -70,7 +71,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Socket3 = 19,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)All)]
     public enum Weekday
     {
         Sunday = 0,

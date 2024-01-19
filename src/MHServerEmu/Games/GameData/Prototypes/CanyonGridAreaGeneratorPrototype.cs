@@ -4,7 +4,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    [AssetEnum]
+    [AssetEnum((int)Horizontal)]
     public enum AreaOrientation
     {
         Horizontal,

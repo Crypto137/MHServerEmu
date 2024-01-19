@@ -4,9 +4,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum AvatarStat
     {
+        Invalid = 0,
         Durability = 1,
         Energy = 2,
         Fighting = 3,
@@ -15,9 +16,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Strength = 6,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum AvatarMode
     {
+        Invalid = -1,
         Normal = 0,
         Hardcore = 1,
         Ladder = 2,

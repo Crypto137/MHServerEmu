@@ -4,7 +4,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    [AssetEnum]
+    [AssetEnum((int)None)]
     public enum Allegiance
     {
         None = 0,
@@ -13,9 +13,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Villain = 3,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)None)]
     public enum DramaticEntranceType
     {
+        None = 0,
         Always = 1,
         Once = 2,
         Never = 3,

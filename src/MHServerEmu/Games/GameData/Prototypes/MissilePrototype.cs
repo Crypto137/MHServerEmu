@@ -4,7 +4,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum MissilePowerActivationEventType    // Powers/Types/MissilePowerActivationEvent.type
     {
         Invalid = 0,
@@ -17,7 +17,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         OnOutOfWorld = 7,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Forward)]
     public enum MissileInitialDirectionType
     {
         Forward = 0,
@@ -28,7 +28,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         OwnersForward = 5,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)InFrontOfOwner)]
     public enum MissileSpawnLocationType
     {
         CenteredOnOwner = 0,

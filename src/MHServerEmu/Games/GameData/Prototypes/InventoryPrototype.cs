@@ -5,7 +5,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    [AssetEnum]
+    [AssetEnum((int)None)]
     public enum InventoryCategory   // Entity/Inventory/Category.type
     {
         None = 0,
@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         PlayerStashTeamUpGear = 9,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum InventoryEvent
     {
         Invalid,

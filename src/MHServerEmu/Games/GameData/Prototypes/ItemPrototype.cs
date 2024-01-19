@@ -5,15 +5,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    [AssetEnum]
+    [AssetEnum((int)None)]
     public enum ItemInstrumentedDropGroup
     {
+        None = 0,
         Character = 1,
         Costume = 2,
         RareArtifact = 3,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)None)]
     public enum ItemEventType
     {
         None = 0,
@@ -22,7 +23,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         OnUsePowerActivated = 3,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)PickWeight)]
     public enum PickMethod
     {
         PickWeight = 0,

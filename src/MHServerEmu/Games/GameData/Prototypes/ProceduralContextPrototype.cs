@@ -4,7 +4,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum PathMethod  // AI/Misc/Types/MoveToPathMethodType.type
     {
         Invalid = 0,

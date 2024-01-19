@@ -4,6 +4,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
+    [AssetEnum((int)None)]
     public enum HUDEntityFloorEffect    // What is this? Appears only in UIMapInfoPrototype, and that doesn't have any fields defined
     {
         None = 0,
@@ -12,7 +13,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Rescue = 3,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)None)]
     public enum HUDEntityOverheadIcon   // UI/Types/InteractIndicatorType.type
     {
         None = 0,

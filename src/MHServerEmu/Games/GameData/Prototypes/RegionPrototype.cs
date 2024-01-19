@@ -4,7 +4,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    [AssetEnum]
+    [AssetEnum((int)None)]
     public enum MissionTrackerFilterType
     {
         None = -1,
@@ -15,7 +15,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Challenge = 4,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum RegionBehaviorAsset     // Regions/RegionBehavior.type
     {
         Invalid = -1,
@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         MatchPlay = 4,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)None)]
     public enum RegionMusicBehaviorAsset
     {
         None,
@@ -35,7 +35,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Mission,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)None)]
     public enum FootstepTraceBehaviorAsset
     {
         None,
@@ -43,7 +43,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Disable,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)None)]
     public enum RegionQueueMethod
     {
         None = 0,
@@ -51,7 +51,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         DailyQueue = 5,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Off)]
     public enum ObjectiveGraphModeAsset         // Regions/EnumObjectiveGraphMode.type
     {
         Off,
@@ -59,7 +59,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         PathNavi,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)BiDirectional)]
     public enum RegionTransitionDirectionality  // Regions/RegionConnectionType.type
     {
         BiDirectional = 0,

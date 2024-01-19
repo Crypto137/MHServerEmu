@@ -4,7 +4,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    [AssetEnum]
+    [AssetEnum((int)None)]
     public enum BoundsCollisionType
     {
         None,
@@ -12,7 +12,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Blocking,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)None)]
     public enum BoundsMovementPowerBlockType
     {
         None,

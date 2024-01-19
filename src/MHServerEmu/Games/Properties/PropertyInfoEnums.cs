@@ -2,7 +2,7 @@
 
 namespace MHServerEmu.Games.Properties
 {
-    [AssetEnum]
+    [AssetEnum((int)Real)]
     public enum PropertyDataType    // Property/PropertyType.type
     {
         Boolean,
@@ -18,7 +18,7 @@ namespace MHServerEmu.Games.Properties
         Int21Vector3
     }
 
-    [AssetEnum]
+    [AssetEnum((int)None)]
     public enum DatabasePolicy      // Property/DatabasePolicy.type
     {
         UseParent = -4,
@@ -31,7 +31,7 @@ namespace MHServerEmu.Games.Properties
         PlayerLargeBlob = 2,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)None)]
     public enum AggregationMethod
     {
         None,

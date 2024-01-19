@@ -21,7 +21,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         TowerBaseSunset = 11,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum MissionTimeExpiredResult        // Missions/Types/OnTimeExpired.type
     {
         Invalid = 0,
@@ -29,7 +29,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Fail = 2,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Never)]
     public enum MissionShowInTracker            // Missions/Types/ShowInTracker.type
     {
         Never = 0,
@@ -37,9 +37,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Always = 2,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum MissionShowInLog                // Missions/Types/ShowInMissionLog.type
     {
+        Invalid = -1,
         Never = 0,
         OnlyWhenActive = 1,
         Always = 2,
@@ -53,14 +54,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Terminal = 2,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum DailyMissionResetFrequency
     {
+        Invalid = -1,
         Daily = 0,
         Weekly = 1,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum AdvancedMissionFrequencyType
     {
         Invalid = 0,

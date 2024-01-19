@@ -5,7 +5,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    [AssetEnum]
+    [AssetEnum((int)Random)]
     public enum CellDeletionEnum
     {
         Random = 0,

@@ -4,7 +4,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum EntityGameEventEnum
     {
         Invalid = 0,

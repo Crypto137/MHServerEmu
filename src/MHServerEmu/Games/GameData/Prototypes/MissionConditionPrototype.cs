@@ -19,14 +19,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         VendorError = 9,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)None)]
     public enum OnInteractAction
     {
+        None = 0,
         Despawn = 1,
         Disable = 2,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Success)]
     public enum MetaGameCompleteType
     {
         Success = 0,
@@ -34,9 +35,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         DidNotParticipate = 2,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum MissionShowObjsSettings // Missions/Types/ShowObjsSettings.type
     {
+        Invalid = -1,
         FromTargetMission = 0,
         FromThisMission = 1,
         SuppressAllObjs = 2,

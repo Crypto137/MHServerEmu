@@ -17,7 +17,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         ScreenSize
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Unknown)]
     public enum UIWidgetEntityState
     {
         Unknown = 0,

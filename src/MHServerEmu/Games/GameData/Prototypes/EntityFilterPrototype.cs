@@ -4,7 +4,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum MissionState
     {
         Invalid,
@@ -15,7 +15,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Failed,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum ScoreTableValueType
     {
         Invalid = 0,
@@ -23,7 +23,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Float = 2,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum ScoreTableValueEvent
     {
         Invalid = 0,

@@ -4,7 +4,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    [AssetEnum]
+    [AssetEnum((int)Default)]
     public enum EvalContext
     {
         Default = 0,
@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Globals = 15,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Physical)]
     public enum DamageType
     {
         Physical = 0,
@@ -33,7 +33,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Any = 4,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)None)]
     public enum ConvenienceLabel
     {
         None = 0,

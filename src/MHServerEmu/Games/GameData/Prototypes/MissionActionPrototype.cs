@@ -4,15 +4,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum DistributionType
     {
+        Invalid,
         AllInOpenMissionRegion,
         Participants,
         Contributors,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Type1)]
     public enum ManaType
     {
         Type1 = 0,
@@ -20,7 +21,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         TypeAll = 3,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Undefined)]
     public enum TriBool
     {
         Undefined = -1,
@@ -28,7 +29,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         True = 1,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)NoChange)]
     public enum EntityTriggerEnum
     {
         NoChange = 0,

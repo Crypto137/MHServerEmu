@@ -5,9 +5,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum DEPRECATEDDifficultyMode
     {
+        Invalid = -1,
         Normal = 0,
         Heroic = 1,
         SuperHeroic = 2,

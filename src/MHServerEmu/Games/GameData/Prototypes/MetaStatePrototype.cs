@@ -4,7 +4,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    [AssetEnum]
+    [AssetEnum((int)None)]
     public enum DesignWorkflowState
     {
         None = 0,
@@ -13,7 +13,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Live = 4,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Open)]
     public enum RegionPlayerAccess
     {
         Open = 1,

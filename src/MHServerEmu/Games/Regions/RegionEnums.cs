@@ -1,5 +1,6 @@
 ﻿namespace MHServerEmu.Games.Regions
 {
+    // TODO: remove hardcoded prototype ids
     public enum DifficultyTier : ulong
     {
         Normal = 18016845980090109785,

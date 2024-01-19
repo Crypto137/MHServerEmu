@@ -4,16 +4,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum LeaderboardScoreDisplayFormat
     {
+        Invalid = -1,
         Integer = 0,
         Time = 1,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum LeaderboardDurationType
     {
+        Invalid = -1,
         Indefinite = 0,
         _10minutes = 1,
         _15minutes = 2,
@@ -29,9 +31,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Month = 12,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum LeaderboardResetFrequency
     {
+        Invalid = -1,
         NeverReset = 0,
         Every10minutes = 1,
         Every15minutes = 2,
@@ -47,25 +50,28 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Monthly = 12,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum LeaderboardType
     {
+        Invalid = -1,
         Player = 0,
         Avatar = 1,
         Guild = 2,
         MetaLeaderboard = 3,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum LeaderboardRankingRule
     {
+        Invalid = -1,
         Ascending = 0,
         Descending = 1,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum LeaderboardPercentile
     {
+        Invalid = -1,
         Within10Percent = 0,
         Within20Percent = 1,
         Within30Percent = 2,

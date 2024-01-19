@@ -6,10 +6,12 @@
     [AttributeUsage(AttributeTargets.Enum)]
     public class AssetEnumAttribute : Attribute
     {
+        public int DefaultValue { get; }
         public string AssetBinding { get; }
 
-        public AssetEnumAttribute(string assetBinding = null)
+        public AssetEnumAttribute(int defaultValue = 0, string assetBinding = null)
         {
+            DefaultValue = defaultValue;
             AssetBinding = assetBinding;
         }
     }

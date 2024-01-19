@@ -5,7 +5,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    [AssetEnum]
+    [AssetEnum((int)DoNothing)]
     public enum MusicStateEndBehavior
     {
         DoNothing = 0,
@@ -13,14 +13,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         StopMusic = 2,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)StartForSlot)]
     public enum CoopOp
     {
         StartForSlot = 0,
         EndForSlot = 1,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)GenericError)]
     public enum CoopOpResult
     {
         Success = 0,
@@ -67,7 +67,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         MovingToInstance = 19,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)None)]
     public enum GamepadInput
     {
         A = 0,
@@ -87,16 +87,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         None = 14,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)ReturnToWaypoint)]
     public enum DeathReleaseBehavior    // Globals/AvatarDeathReleaseBehavior.type
     {
         ReturnToWaypoint = 0,
         ReturnToCheckpoint = 1,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum GlobalEventCriteriaLogic
     {
+        Invalid = -1,
         And = 0,
         Or = 1,
     }

@@ -4,7 +4,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    [AssetEnum]
+    [AssetEnum((int)Fail)]
     public enum DuplicateHandlingBehavior
     {
         Fail,
@@ -32,7 +32,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Xenobiology = 6,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)None)]
     public enum InfinityGem
     {
         Soul = 3,
@@ -44,7 +44,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         None = 7,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Popcorn)]
     public enum Rank
     {
         Popcorn,
@@ -57,7 +57,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         TeamUp,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)None)]
     public enum LootDropEventType
     {
         None = 0,
@@ -72,7 +72,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         OnDamagedForPctHealth = 9,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Default)]
     public enum HealthBarType
     {
         Default = 0,
@@ -82,7 +82,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         None = 4,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Default)]
     public enum OverheadInfoDisplayType
     {
         Default = 0,

@@ -4,9 +4,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    [AssetEnum]
+    [AssetEnum((int)None)]
     public enum ChatCommandArgumentType
     {
+        None = 0,
         Boolean = 1,
         Float = 2,
         Integer = 3,

@@ -2,7 +2,7 @@
 
 namespace MHServerEmu.Games.Loot
 {
-    [AssetEnum]
+    [AssetEnum((int)Invalid)]
     public enum EquipmentInvUISlot
     {
         Invalid = -1,
@@ -22,7 +22,7 @@ namespace MHServerEmu.Games.Loot
         Legendary = 13,
         Artifact04 = 14,
         UruForged = 15,
-        Slot16 = 16,
+        _16 = 16,
         Misc = 17,
         CostumeCore = 18,
         InteractiveVisual = 19,

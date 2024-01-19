@@ -4,7 +4,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    [AssetEnum]
+    [AssetEnum((int)Neither)]
     public enum PowerConditionType
     {
         Neither = 0,
@@ -13,14 +13,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Debuff = 3,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)Target)]
     public enum ConditionScopeType
     {
         Target = 0,
         User = 1,
     }
 
-    [AssetEnum]
+    [AssetEnum((int)None)]
     public enum ProcTriggerType
     {
         None = 0,
