@@ -92,7 +92,9 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             // We get asset name from the serialized asset id, and then parse the actual enum value from it.
             var assetId = (StringId)@params.Reader.ReadUInt64();
             var assetName = GameDatabase.GetAssetName(assetId);
-            var value = Enum.Parse(@params.FieldInfo.PropertyType, assetName);
+            // GetAssetName returns string.Empty for invalid asset ids (empty fields), which we can't parse, so we default to 0 in that case
+            // TODO: specify correct default values for each enum in AssetEnum
+            var value = assetName != string.Empty ? Enum.Parse(@params.FieldInfo.PropertyType, assetName) : 0;
 
             @params.FieldInfo.SetValue(@params.OwnerPrototype, value);
             return true;
