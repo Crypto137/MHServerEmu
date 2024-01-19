@@ -298,7 +298,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool DisableEnduranceRegenOnActivate { get; protected set; }
         public EvalPrototype[] EvalOnPreApply { get; protected set; }
         public int RecurringCostIntervalMS { get; protected set; }
-        public ConditionPrototype ConditionsByRef { get; protected set; }
+        public ulong[] ConditionsByRef { get; protected set; }   // VectorPrototypeRefPtr ConditionPrototype 
         public bool IsRecurring { get; protected set; }
         public EvalPrototype EvalCanTrigger { get; protected set; }
         public float RangeActivationReduction { get; protected set; }

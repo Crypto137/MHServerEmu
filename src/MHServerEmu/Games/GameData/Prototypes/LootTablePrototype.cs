@@ -488,7 +488,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong[] Keywords { get; protected set; }
         public short Count { get; protected set; }
         public AffixPosition Position { get; protected set; }
-        public AffixCategoryPrototype Categories { get; protected set; }
+        public ulong[] Categories { get; protected set; }       // VectorPrototypeRefPtr AffixCategoryPrototype 
     }
 
     public class LootApplyNoVisualsOverridePrototype : LootMutationPrototype
@@ -512,7 +512,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int SourceIndex { get; protected set; }
         public AffixPosition Position { get; protected set; }
         public bool EnforceAffixLimits { get; protected set; }
-        public AffixCategoryPrototype Categories { get; protected set; }
+        public ulong[] Categories { get; protected set; }    // VectorPrototypeRefPtr AffixCategoryPrototype 
     }
 
     public class LootCloneBuiltinAffixesPrototype : LootMutationPrototype
@@ -521,7 +521,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int SourceIndex { get; protected set; }
         public AffixPosition Position { get; protected set; }
         public bool EnforceAffixLimits { get; protected set; }
-        public AffixCategoryPrototype Categories { get; protected set; }
+        public ulong[] Categories { get; protected set; }    // VectorPrototypeRefPtr AffixCategoryPrototype 
     }
 
     public class LootCloneLevelPrototype : LootMutationPrototype
@@ -533,7 +533,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public ulong[] Keywords { get; protected set; }
         public AffixPosition Position { get; protected set; }
-        public AffixCategoryPrototype Categories { get; protected set; }
+        public ulong[] Categories { get; protected set; }    // VectorPrototypeRefPtr AffixCategoryPrototype 
     }
 
     public class LootMutateAffixesPrototype : LootMutationPrototype
@@ -579,7 +579,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public ulong[] Keywords { get; protected set; }
         public AffixPosition Position { get; protected set; }
-        public AffixCategoryPrototype Categories { get; protected set; }
+        public ulong[] Categories { get; protected set; }    // VectorPrototypeRefPtr AffixCategoryPrototype 
     }
 
     public class LootReplaceAffixesPrototype : LootMutationPrototype
@@ -588,7 +588,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong[] Keywords { get; protected set; }
         public AffixPosition Position { get; protected set; }
         public bool EnforceAffixLimits { get; protected set; }
-        public AffixCategoryPrototype Categories { get; protected set; }
+        public ulong[] Categories { get; protected set; }    // VectorPrototypeRefPtr AffixCategoryPrototype 
     }
 
     public class LootCloneSeedPrototype : LootMutationPrototype

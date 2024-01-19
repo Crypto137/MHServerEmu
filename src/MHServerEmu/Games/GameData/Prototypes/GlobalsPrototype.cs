@@ -243,7 +243,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong PublicEventPrototype { get; protected set; }
         public ulong AvatarCoopStartPower { get; protected set; }
         public ulong AvatarCoopEndPower { get; protected set; }
-        public DifficultyTierPrototype DifficultyTiers { get; protected set; }
+        public ulong[] DifficultyTiers { get; protected set; }      // VectorPrototypeRefPtr DifficultyTierPrototype
         public ulong DefaultLoadingLobbyRegion { get; protected set; }
         public ulong DifficultyTierDefault { get; protected set; }
         public ulong AvatarHealPower { get; protected set; }
@@ -289,7 +289,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype VendorRollTableLevelEval { get; protected set; }
         public float RestedHealthPerMinMult { get; protected set; }
         public int PowerBoostMax { get; protected set; }
-        public PrestigeLevelPrototype PrestigeLevels { get; protected set; }
+        public ulong[] PrestigeLevels { get; protected set; }   // VectorPrototypeRefPtr PrestigeLevelPrototype
         public ulong ItemAffixLevelingCurve { get; protected set; }
         public ulong ExperienceBonusAvatarSynergy { get; protected set; }
         public float ExperienceBonusAvatarSynergyMax { get; protected set; }
@@ -310,7 +310,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong PctXPFromLevelDeltaCurve { get; protected set; }
         public int InfinitySystemUnlockLevel { get; protected set; }
         public long InfinityPointsCapPerGem { get; protected set; }
-        public InfinityGemSetPrototype InfinityGemSets { get; protected set; }
+        public ulong[] InfinityGemSets { get; protected set; }  // VectorPrototypeRefPtr InfinityGemSetPrototype
         public long InfinityXPCap { get; protected set; }
         public int TravelPowerUnlockLevel { get; protected set; }
         public float ExperienceBonusCoop { get; protected set; }

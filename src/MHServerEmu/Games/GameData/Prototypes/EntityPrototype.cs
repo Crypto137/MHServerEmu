@@ -442,8 +442,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class HotspotPrototype : WorldEntityPrototype
     {
-        public PowerPrototype AppliesPowers { get; protected set; }
-        public PowerPrototype AppliesIntervalPowers { get; protected set; }
+        public ulong[] AppliesPowers { get; protected set; }             // VectorPrototypeRefPtr PowerPrototype
+        public ulong[] AppliesIntervalPowers { get; protected set; }     // VectorPrototypeRefPtr PowerPrototype
         public int IntervalPowersTimeDelayMS { get; protected set; }
         public bool IntervalPowersRandomTarget { get; protected set; }
         public int IntervalPowersNumRandomTargets { get; protected set; }

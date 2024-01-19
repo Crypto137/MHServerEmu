@@ -21,7 +21,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class DownloadChunkRegionsPrototype : Prototype
     {
-        public RegionPrototype Regions { get; protected set; }
+        public ulong[] Regions { get; protected set; }  // VectorPrototypeRefPtr RegionPrototype
         public Platforms Platform { get; protected set; }
     }
 
@@ -34,8 +34,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class DownloadChunksPrototype : Prototype
     {
-        public DownloadChunkPrototype ChunksPC { get; protected set; }
-        public DownloadChunkPrototype ChunksPS4 { get; protected set; }
-        public DownloadChunkPrototype ChunksXboxOne { get; protected set; }
+        public ulong[] ChunksPC { get; protected set; }      // VectorPrototypeRefPtr DownloadChunkPrototype
+        public ulong[] ChunksPS4 { get; protected set; }     // VectorPrototypeRefPtr DownloadChunkPrototype
+        public ulong[] ChunksXboxOne { get; protected set; } // VectorPrototypeRefPtr DownloadChunkPrototype
     }
 }

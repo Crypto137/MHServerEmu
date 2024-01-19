@@ -53,8 +53,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AvatarSynergyEntryPrototype[] SynergyTable { get; protected set; }
         public ulong[] SuperteamMemberships { get; protected set; }
         public ulong[] CharacterSelectPowers { get; protected set; }
-        public PrimaryResourceManaBehaviorPrototype PrimaryResourceBehaviors { get; protected set; }
-        public StealablePowerInfoPrototype StealablePowersAllowed { get; protected set; }
+        public ulong[] PrimaryResourceBehaviors { get; protected set; }     // VectorPrototypeRefPtr PrimaryResourceManaBehaviorPrototype
+        public ulong[] StealablePowersAllowed { get; protected set; }       // VectorPrototypeRefPtr StealablePowerInfoPrototype
         public bool ShowInRosterIfLocked { get; protected set; }
         public ulong CharacterVideoUrl { get; protected set; }
         public ulong CharacterSelectIconPortraitSmall { get; protected set; }

@@ -61,9 +61,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool ReplicateForTransfer { get; protected set; }
         public ulong[] ItemSortPreferences { get; protected set; }
         public InventoryUIDataPrototype UIData { get; protected set; }
-        public InventoryExtraSlotsGroupPrototype SoftCapacitySlotGroupsPC { get; protected set; }
+        public ulong[] SoftCapacitySlotGroupsPC { get; protected set; }       // VectorPrototypeRefPtr InventoryExtraSlotsGroupPrototype
         public int SoftCapacityDefaultSlotsPC { get; protected set; }
-        public InventoryExtraSlotsGroupPrototype SoftCapacitySlotGroupsConsole { get; protected set; }
+        public ulong[] SoftCapacitySlotGroupsConsole { get; protected set; }  // VectorPrototypeRefPtr InventoryExtraSlotsGroupPrototype
         public int SoftCapacityDefaultSlotsConsole { get; protected set; }
         public ulong DisplayName { get; protected set; }
     }

@@ -83,7 +83,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public float HealthThreshold { get; protected set; }
         public ulong PowerToUse { get; protected set; }
-        public AgentPrototype Targets { get; protected set; }
+        public ulong[] Targets { get; protected set; }   // VectorPrototypeRefPtr AgentPrototype
     }
 
     public class ProceduralAIProfilePrototype : BrainPrototype
@@ -994,7 +994,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProceduralProfileShieldEngineerPrototype : ProceduralProfileMissionAllyPrototype
     {
-        public AgentPrototype PsychicNullifierTargets { get; protected set; }
+        public ulong[] PsychicNullifierTargets { get; protected set; }   // VectorPrototypeRefPtr AgentPrototype
         public ProceduralUsePowerContextPrototype ChargeNullifierPower { get; protected set; }
         public float NullifierSearchRadius { get; protected set; }
         public ulong NullifierAntiShield { get; protected set; }
@@ -1002,7 +1002,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProcProfileNullifierAntiShieldPrototype : ProceduralProfileWithEnragePrototype
     {
-        public AgentPrototype Nullifiers { get; protected set; }
+        public ulong[] Nullifiers { get; protected set; }    // VectorPrototypeRefPtr AgentPrototype
         public ulong ShieldDamagePower { get; protected set; }
         public ulong ShieldEngineerSpawner { get; protected set; }
         public float SpawnerSearchRadius { get; protected set; }

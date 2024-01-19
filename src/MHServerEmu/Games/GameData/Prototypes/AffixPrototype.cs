@@ -246,7 +246,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class InfinityGemSetPrototype : ModPrototype
     {
         public ulong UITitle { get; protected set; }
-        public InfinityGemBonusPrototype Bonuses { get; protected set; }
+        public ulong[] Bonuses { get; protected set; }    // VectorPrototypeRefPtr InfinityGemBonusPrototype
         public InfinityGem Gem { get; protected set; }
         public bool Unlocked { get; protected set; }
         public ulong UIColor { get; protected set; }

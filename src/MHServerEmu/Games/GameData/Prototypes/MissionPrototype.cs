@@ -116,8 +116,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public long Count { get; protected set; }
         public PopulationObjectPrototype Population { get; protected set; }
         public ulong[] RestrictToAreas { get; protected set; }
-        public RegionPrototype RestrictToRegions { get; protected set; }
-        public RegionPrototype RestrictToRegionsExclude { get; protected set; }
+        public ulong[] RestrictToRegions { get; protected set; }            // VectorPrototypeRefPtr RegionPrototype
+        public ulong[] RestrictToRegionsExclude { get; protected set; }     // VectorPrototypeRefPtr RegionPrototype
         public bool RestrictToRegionsIncludeChildren { get; protected set; }
         public ulong[] RestrictToCells { get; protected set; }
         public ulong RestrictToDifficultyMin { get; protected set; }
@@ -285,9 +285,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool ParticipationBasedOnAreaCell { get; protected set; }
         public OpenMissionRewardEntryPrototype[] RewardsByContribution { get; protected set; }
         public StoryNotificationPrototype StoryNotification { get; protected set; }
-        public RegionPrototype ActiveInRegions { get; protected set; }
+        public ulong[] ActiveInRegions { get; protected set; }          // VectorPrototypeRefPtr RegionPrototype
         public bool ActiveInRegionsIncludeChildren { get; protected set; }
-        public RegionPrototype ActiveInRegionsExclude { get; protected set; }
+        public ulong[] ActiveInRegionsExclude { get; protected set; }   // VectorPrototypeRefPtr RegionPrototype
         public ulong[] ActiveInAreas { get; protected set; }
         public ulong[] ActiveInCells { get; protected set; }
         public bool ResetWhenUnsimulated { get; protected set; }

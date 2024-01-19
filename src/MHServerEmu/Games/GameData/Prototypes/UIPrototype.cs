@@ -458,7 +458,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class ReputationDisplayInfoPrototype : Prototype
     {
         public ulong DisplayName { get; protected set; }
-        public ReputationLevelDisplayInfoPrototype ReputationLevels { get; protected set; }
+        public ulong[] ReputationLevels { get; protected set; }     // VectorPrototypeRefPtr ReputationLevelDisplayInfoPrototype
     }
 
     public class UISystemLockPrototype : Prototype
