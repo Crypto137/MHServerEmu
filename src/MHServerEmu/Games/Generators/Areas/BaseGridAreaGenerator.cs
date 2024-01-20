@@ -481,6 +481,8 @@ namespace MHServerEmu.Games.Generators.Areas
         {
             if (superCell == null || superCell.Entries == null) return false;
 
+            superCell.PostProcess(); // Fix to avoid Max == null
+
             Picker<Point2> picker = new(random);
             for (int x = 0; x < CellContainer.Width - superCell.Max.X; x++)
             {
