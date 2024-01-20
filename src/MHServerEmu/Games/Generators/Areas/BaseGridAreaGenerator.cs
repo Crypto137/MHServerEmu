@@ -138,10 +138,9 @@ namespace MHServerEmu.Games.Generators.Areas
             Vector3 origin = Area.Origin;
             float cellSize = proto.CellSize;
 
-            void AddConnection(int x, int y, Vector3 point, int endX, int endY)
+            void AddConnection(int x, int y, Vector3 point)
             {
-                if (proto.NoConnectionsOnCorners && ((x == 0 || x == endX) || (y == 0 || y == endY))) return;
-                if (!CheckAllowedConnections(x, y) || CellContainer.GetCell(x, y) == null) return;
+                if (!CheckAllowedConnections(x, y) || CellContainer.GetCell(x, y) == null) return;         
 
                 connections.Add(new (
                     origin.X + x * cellSize + point.X,
@@ -159,8 +158,11 @@ namespace MHServerEmu.Games.Generators.Areas
 
                 if (Segment.EpsilonTest(start, end, 10.0f))
                 {
-                    for (int y = 0; y <= endy; ++y) 
-                        AddConnection(endx, y, pointN, endx, endy);
+                    for (int y = 0; y <= endy; ++y)
+                    {
+                        if (proto.NoConnectionsOnCorners && (y == 0 || y == endy)) continue; 
+                        AddConnection(endx, y, pointN);
+                    }
                     return true;
                 }
 
@@ -170,7 +172,10 @@ namespace MHServerEmu.Games.Generators.Areas
                 if (Segment.EpsilonTest(start, end, 10.0f))
                 {
                     for (int y = 0; y <= endy; ++y)
-                        AddConnection(0, y, pointS, 0, endy);
+                    {
+                        if (proto.NoConnectionsOnCorners && (y == 0 || y == endy)) continue;
+                        AddConnection(0, y, pointS);
+                    }
                     return true;
                 }
             }
@@ -183,7 +188,10 @@ namespace MHServerEmu.Games.Generators.Areas
                 if (Segment.EpsilonTest(start, end, 10.0f))
                 {
                     for (int x = 0; x <= endx; ++x)
-                        AddConnection(x, endy, pointE, endx, endy);
+                    {
+                        if (proto.NoConnectionsOnCorners && (x == 0 || x == endx)) continue;
+                        AddConnection(x, endy, pointE);
+                    }
                     return true;
                 }
 
@@ -193,7 +201,10 @@ namespace MHServerEmu.Games.Generators.Areas
                 if (Segment.EpsilonTest(start, end, 10.0f))
                 {
                     for (int x = 0; x <= endx; ++x)
-                        AddConnection(x, 0, pointW, endx, 0);
+                    {
+                        if (proto.NoConnectionsOnCorners && (x == 0 || x == endx)) continue;
+                        AddConnection(x, 0, pointW);
+                    }
                     return true;
                 }
             }
@@ -386,11 +397,11 @@ namespace MHServerEmu.Games.Generators.Areas
 
         private bool CheckRequiredCellLocationRestrictions(RequiredCellBasePrototype requiredCell, int x, int y)
         {
-            if (requiredCell != null && requiredCell.LocationRestrictions != null)
-            {
-                foreach (var requiredCellRestrict in requiredCell.LocationRestrictions)
-                    if (requiredCellRestrict.CheckPoint(x, y, CellContainer.Width, CellContainer.Height)) return true;
-            }
+            if (requiredCell == null || requiredCell.LocationRestrictions == null) return true;
+
+            foreach (var requiredCellRestrict in requiredCell.LocationRestrictions)
+                if (requiredCellRestrict.CheckPoint(x, y, CellContainer.Width, CellContainer.Height)) return true;
+
             return false;
         }
 
@@ -495,12 +506,9 @@ namespace MHServerEmu.Games.Generators.Areas
                     {
                         if (superCellEntry == null) continue;
 
-                        Point2 cellCoord = new (pick.X + superCellEntry.X, pick.Y + superCellEntry.Y);
+                        Point2 cellCoord = new (pick.X + superCellEntry.Offset.X, pick.Y + superCellEntry.Offset.Y);
                         if (!CellContainer.ReservableCell(cellCoord.X, cellCoord.Y, GameDatabase.GetDataRefByAsset(superCellEntry.Cell)))
-                        {
                             success = false;
-                            break;
-                        }
                     }
                 }
             }
@@ -512,7 +520,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 {
                     if (superCellEntry == null) continue;
 
-                    Point2 cellCoord = new (pick.X + superCellEntry.X, pick.Y + superCellEntry.Y);
+                    Point2 cellCoord = new (pick.X + superCellEntry.Offset.X, pick.Y + superCellEntry.Offset.Y);
 
                     if (!CellContainer.ReservableCell(cellCoord.X, cellCoord.Y, GameDatabase.GetDataRefByAsset(superCellEntry.Cell))) continue;
 
