@@ -124,6 +124,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong RespawnOverride;
         public bool AlignedToPrevious;
         public WeightedAreaPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(WeightedAreaPrototype), proto); }
+
+        public override string ToString() => $"{GameDatabase.GetFormattedPrototypeName(Area)} weight = {Weight}";
     }
 
     [Flags]

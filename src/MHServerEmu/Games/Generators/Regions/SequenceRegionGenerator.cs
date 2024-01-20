@@ -303,6 +303,11 @@ namespace MHServerEmu.Games.Generators.Regions
                                 success = false;
                             }
                         }
+
+                        if (success)
+                        {
+                            return true;
+                        }
                         else
                         {
                             if (entry != _root && graph != null)
@@ -546,10 +551,7 @@ namespace MHServerEmu.Games.Generators.Regions
                 foreach (var weightedArea in weightedAreas)
                 {
                     if (weightedArea == areaChoice)
-                    {
                         skip = true;
-                        break;
-                    }
                 }
 
                 if (!skip && Region.GetArea(areaChoice.Area) != null)
