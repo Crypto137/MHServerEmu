@@ -305,7 +305,7 @@ namespace MHServerEmu.Games.Generators
             GenCell cell = GetCell(x, y);
             if (cell == null) return type;
 
-            if (cell.ExternalConnections != Cell.Type.None) type |= cell.ExternalConnections;
+            type = cell.ExternalConnections; // None |= ExternalConnections
 
             if (y + 1 < Height && cell.IsConnected(GetCell(x, y + 1)))  type |= Cell.Type.E;
             if (x + 1 < Width && cell.IsConnected(GetCell(x + 1, y)))   type |= Cell.Type.N;
