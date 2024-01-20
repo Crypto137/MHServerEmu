@@ -635,7 +635,7 @@ namespace MHServerEmu.Games.Regions
             GRandom random = new(RandomSeed);
 
             bool success = Generator.Generate(random, regionGenerator, areas);
-            if (!success) Logger.Trace($"Area {ToString()} in region {Region} failed to generate");
+            if (!success) Logger.Error($"Area {ToString()} in region {Region} failed to generate");
 
             Generator = null;
 
@@ -722,7 +722,7 @@ namespace MHServerEmu.Games.Regions
             return $"{GetPrototypeName()}, areaid={Id}, aabb={RegionBounds.ToStringFloat()}, game={Game}";
         }
 
-        private string GetPrototypeName()
+        public string GetPrototypeName()
         {
             return GameDatabase.GetFormattedPrototypeName(GetPrototypeDataRef());
         }
@@ -1177,6 +1177,7 @@ namespace MHServerEmu.Games.Regions
                 return null;
             }
             AreaList.Add(area); // AreaMap[area.Id]
+            Logger.Debug($"Adding area {area.GetPrototypeName()}, id={area.Id}, areapos = {area.Origin.ToStringFloat()}, seed = {RandomSeed}");
             return area;
         }
 

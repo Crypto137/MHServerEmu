@@ -235,7 +235,7 @@ namespace MHServerEmu.Games.Generators
 
             if (!type.HasFlag(externalConnections)) return false;
 
-            if (!type.HasFlag(externalConnections | determineType)) return false;
+            if (type != (externalConnections | determineType)) return false;
 
             if (!TestTypeConnection(x, y, cell, determineType, type, Cell.Type.E)) return false;
             if (!TestTypeConnection(x, y, cell, determineType, type, Cell.Type.N)) return false;
