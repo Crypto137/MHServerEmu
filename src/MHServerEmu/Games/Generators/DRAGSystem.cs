@@ -739,7 +739,8 @@ namespace MHServerEmu.Games.Regions
 
         private void RemoveAllCells()
         {
-            foreach (var cell in CellList) RemoveCell(cell.Id);
+            for (int i = CellList.Count - 1; i >= 0; i--)
+                RemoveCell(CellList[i].Id);
         }
 
         private void RemoveCell(uint id)

@@ -369,7 +369,7 @@ namespace MHServerEmu.Games.Generators.Regions
                 {
                     if (child != null)
                     {
-                        CleanStackFromPoint(child, cleanAll);
+                        CleanStackFromPoint(child, true);
                         toRemove.Add(child);
                     }
                 }
