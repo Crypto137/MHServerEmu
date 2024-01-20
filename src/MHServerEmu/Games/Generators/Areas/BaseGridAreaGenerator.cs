@@ -5,8 +5,6 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Regions;
-using System.Drawing;
-using System.Reflection;
 
 namespace MHServerEmu.Games.Generators.Areas
 {
@@ -129,11 +127,6 @@ namespace MHServerEmu.Games.Generators.Areas
 
             CellContainer.ConnectAll();
             return true;
-        }
-
-        public bool AreCornerCoordinates(int x, int y, int xmin, int xmax, int ymin, int ymax)
-        {
-            return (x == xmin && y == ymin) || (x == xmax && y == ymax) || (x == xmin && y == ymax) || (x == xmax && y == ymin);
         }
 
         public override bool GetPossibleConnections(ConnectionList connections, Segment segment)
@@ -304,7 +297,6 @@ namespace MHServerEmu.Games.Generators.Areas
                     }
                 }
             }
-
 
             if (Area != null)
             {
