@@ -307,7 +307,7 @@ namespace MHServerEmu.Games.Generators.Areas
             GeneratorPrototype generatorProto = area.AreaPrototype.Generator;
             GridAreaGeneratorPrototype gridAreaGeneratorProto = generatorProto as GridAreaGeneratorPrototype;
 
-            if (gridAreaGeneratorProto != null && gridAreaGeneratorProto.Behaviors != null)
+            if (gridAreaGeneratorProto != null && gridAreaGeneratorProto.Behaviors.Any())
                 borderBehaviorProto = gridAreaGeneratorProto.Behaviors.Last() as CellGridBorderBehaviorPrototype;
 
             if (borderBehaviorProto == null || gridAreaGeneratorProto.CellSets == null) return true;
