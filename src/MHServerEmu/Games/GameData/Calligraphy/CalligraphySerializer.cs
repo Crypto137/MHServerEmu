@@ -50,13 +50,15 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
                 // Begin deserialization
                 DoDeserialize(prototype, prototypeHeader, dataRef, prototypeName, reader);
+
+                Logger.Debug("Done!");
             }
         }
 
         /// <summary>
         /// Deserializes data for a Calligraphy prototype.
         /// </summary>
-        private void DoDeserialize(Prototype prototype, PrototypeDataHeader header, PrototypeId prototypeDataRef, string prototypeName, BinaryReader reader)
+        private static void DoDeserialize(Prototype prototype, PrototypeDataHeader header, PrototypeId prototypeDataRef, string prototypeName, BinaryReader reader)
         {
             DataDirectory dataDirectory = GameDatabase.DataDirectory;
 
@@ -103,11 +105,9 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                     DeserializeFieldGroup(prototype, blueprint, blueprintCopyNum, prototypeName, classType, reader, "List Fields");
                 }
             }
-
-            Logger.Debug("Done!");
         }
 
-        private bool DeserializeFieldGroup(Prototype prototype, Blueprint blueprint, byte blueprintCopyNum, string prototypeName, Type classType, BinaryReader reader, string groupTag)
+        private static bool DeserializeFieldGroup(Prototype prototype, Blueprint blueprint, byte blueprintCopyNum, string prototypeName, Type classType, BinaryReader reader, string groupTag)
         {
             var classManager = GameDatabase.PrototypeClassManager;
 
@@ -189,7 +189,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
                 // Test parsing
                 var parser = GetParser(fieldInfo.PropertyType);
-                FieldParserParams @params = new(reader, fieldInfo, fieldOwnerPrototype, fieldOwnerBlueprint, blueprintMemberInfo);
+                FieldParserParams @params = new(reader, fieldInfo, fieldOwnerPrototype, fieldOwnerBlueprint, prototypeName, blueprintMemberInfo);
 
                 var value = parser(@params);
             }
@@ -197,7 +197,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return true;
         }
 
-        private void DeserializePropertyMixin(Prototype prototype, Blueprint blueprint, Blueprint groupBlueprint, byte fieldGroupCopyNum,
+        private static void DeserializePropertyMixin(Prototype prototype, Blueprint blueprint, Blueprint groupBlueprint, byte fieldGroupCopyNum,
             PrototypeId prototypeDataRef, string prototypeName, Type classType, BinaryReader reader)
         {
             // Skip property fields groups for now
@@ -220,7 +220,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// <summary>
         /// Copies field values from a prototype with the specified data ref.
         /// </summary>
-        private bool CopyPrototypeDataRefFields(Prototype destPrototype, PrototypeId sourceDataRef)
+        private static bool CopyPrototypeDataRefFields(Prototype destPrototype, PrototypeId sourceDataRef)
         {
             // Check to make sure our reference is valid
             if (sourceDataRef == PrototypeId.Invalid)
@@ -234,7 +234,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// <summary>
         /// Copies field values from one prototype to another.
         /// </summary>
-        private bool CopyPrototypeFields(Prototype destPrototype, Prototype sourcePrototype)
+        private static bool CopyPrototypeFields(Prototype destPrototype, Prototype sourcePrototype)
         {
             // Get type information for both prototypes and make sure they are the same
             Type destType = destPrototype.GetType();
@@ -265,7 +265,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// <summary>
         /// Creates if needed and returns a list mixin from the specified field of the provided <see cref="Prototype"/> instance that belongs to it.
         /// </summary>
-        public List<PrototypeMixinListItem> AcquireOwnedMixinList(Prototype prototype, System.Reflection.PropertyInfo mixinFieldInfo, bool copyItemsFromParent)
+        public static List<PrototypeMixinListItem> AcquireOwnedMixinList(Prototype prototype, System.Reflection.PropertyInfo mixinFieldInfo, bool copyItemsFromParent)
         {
             // Make sure the field info we have is for a list mixin
             if (mixinFieldInfo.IsDefined(typeof(ListMixinAttribute)) == false)
@@ -306,7 +306,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// <summary>
         /// Creates if needed and returns an element from a list mixin.
         /// </summary>
-        private Prototype AcquireOwnedUniqueMixinListElement(Prototype owner, List<PrototypeMixinListItem> list, Type elementClassType,
+        private static Prototype AcquireOwnedUniqueMixinListElement(Prototype owner, List<PrototypeMixinListItem> list, Type elementClassType,
             Blueprint elementBlueprint, byte blueprintCopyNum)
         {
             // Look for a unique list element
@@ -360,7 +360,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// <summary>
         /// Creates a copy of an element from a parent list mixin and assigns it to the child.
         /// </summary>
-        private Prototype AddMixinListItemCopy(Prototype owner, List<PrototypeMixinListItem> list, PrototypeMixinListItem item)
+        private static Prototype AddMixinListItemCopy(Prototype owner, List<PrototypeMixinListItem> list, PrototypeMixinListItem item)
         {
             // Copy the prototype from the provided list item
             Prototype element = AllocateDynamicPrototype(item.Prototype.GetType(), PrototypeId.Invalid, item.Prototype);
@@ -381,7 +381,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// <summary>
         /// Creates a new prototype of the specified type and fills it with data from the specified source (either a default prototype or a prototype instance).
         /// </summary>
-        private Prototype AllocateDynamicPrototype(Type classType, PrototypeId defaults, Prototype instanceToCopy)
+        private static Prototype AllocateDynamicPrototype(Type classType, PrototypeId defaults, Prototype instanceToCopy)
         {
             // Create a new prototype of the specified type
             var prototype = (Prototype)Activator.CreateInstance(classType);

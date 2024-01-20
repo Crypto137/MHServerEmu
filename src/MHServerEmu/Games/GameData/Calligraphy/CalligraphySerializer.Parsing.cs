@@ -4,8 +4,6 @@ using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.GameData.Calligraphy
 {
-    // TODO: Maybe move parsing to a helper static class? This won't be gazlike, but it would be cleaner.
-
     public partial class CalligraphySerializer
     {
         private static readonly Dictionary<Type, Func<FieldParserParams, bool>> ParserDict = new()
@@ -121,7 +119,38 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
         private static bool ParsePrototypePtr(FieldParserParams @params)
         {
-            var prototype = new Prototype(@params.Reader);
+            // The client nests multiple methods for deserializing embedded prototypes:
+            // ParsePrototypePtr -> deserializePrototypePtr -> deserializePrototypePtrNoTemplate
+            // We combine deserializePrototypePtr and deserializePrototypePtrNoTemplate in a single method.
+            DeserializePrototypePtr(@params, false, out var prototype);
+            @params.FieldInfo.SetValue(@params.OwnerPrototype, prototype);
+            return true;
+        }
+
+        private static bool DeserializePrototypePtr(FieldParserParams @params, bool polymorphicSetAllowed, out Prototype prototype)
+        {
+            prototype = null;
+            var reader = @params.Reader;
+
+            // Parse header
+            PrototypeDataHeader header = new(reader);
+            if (header.ReferenceExists == false) return true;   // Early return if this is an empty prototype
+            if (header.PolymorphicData && (polymorphicSetAllowed == false))
+                return Logger.WarnReturn(false, $"Polymorphic prototype data encountered but not expected");
+            
+            // If this prototype has no data of its own, but it references a parent, we interpret it as its parent
+            if (header.DataExists == false)
+            {
+                prototype = GameDatabase.GetPrototype<Prototype>(header.ReferenceType);
+                return true;
+            }
+
+            // Deserialize
+            Type classType = GameDatabase.DataDirectory.GetPrototypeClassType(header.ReferenceType);
+            prototype = (Prototype)Activator.CreateInstance(classType);
+
+            DoDeserialize(prototype, header, PrototypeId.Invalid, @params.FileName, reader);
+
             return true;
         }
 
@@ -217,15 +246,17 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             public System.Reflection.PropertyInfo FieldInfo { get; }
             public Prototype OwnerPrototype { get; }
             public Blueprint OwnerBlueprint { get; }
+            public string FileName { get; }
             public BlueprintMemberInfo BlueprintMemberInfo { get; }
 
             public FieldParserParams(BinaryReader reader, System.Reflection.PropertyInfo fieldInfo, Prototype ownerPrototype,
-                Blueprint ownerBlueprint, BlueprintMemberInfo blueprintMemberInfo)
+                Blueprint ownerBlueprint, string fileName, BlueprintMemberInfo blueprintMemberInfo)
             {
                 Reader = reader;
                 FieldInfo = fieldInfo;
                 OwnerPrototype = ownerPrototype;
                 OwnerBlueprint = ownerBlueprint;
+                FileName = fileName;
                 BlueprintMemberInfo = blueprintMemberInfo;
             }
         }
