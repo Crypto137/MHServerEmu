@@ -232,7 +232,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 FillFieldsFromData(proto, parentBlueprint, protoType);
             }
 
-            FillFieldsFromData(proto, blueprint, protoType);            
+            FillFieldsFromData(proto, blueprint, protoType);
+            PostProcess();
         }
 
         public Prototype(BinaryReader reader)
