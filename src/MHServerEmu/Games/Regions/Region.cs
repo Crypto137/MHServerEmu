@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Networking;
@@ -82,6 +83,11 @@ namespace MHServerEmu.Games.Regions
             {
                 Area currentArea = queue.Dequeue();
                 LoadMessagesForArea(currentArea, messageList, currentArea == startArea);
+                foreach (uint subAreaId in currentArea.SubAreas)
+                {
+                    Area area = GetAreaById(subAreaId);
+                    if (area != null) LoadMessagesForArea(area, messageList, false);
+                }
 
                 foreach (var connection in currentArea.AreaConnections)
                 {
@@ -96,6 +102,7 @@ namespace MHServerEmu.Games.Regions
                     }                
                 }
             }
+                    
         }
 
         public GameMessage[] GetLoadingMessages(ulong serverGameId, ulong waypointDataRef)

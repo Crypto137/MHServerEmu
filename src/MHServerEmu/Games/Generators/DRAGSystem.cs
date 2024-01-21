@@ -1188,18 +1188,16 @@ namespace MHServerEmu.Games.Regions
             return MetaStateChallengeTier.None;
         }
 
+        public Area GetAreaById(uint id)
+        {
+            foreach (Area area in AreaList)
+                if (area.Id == id) return area;
+            return null;
+        }
+
         public void DestroyArea(uint id)
         {
-            Area areaToRemove = null;
-            foreach (Area area in AreaList)
-            {
-                if (area.Id == id)
-                {
-                    areaToRemove = area;
-                    break;
-                }
-            }
-
+            Area areaToRemove = GetAreaById(id);
             if (areaToRemove != null)
             {
                 DeallocateArea(areaToRemove);
