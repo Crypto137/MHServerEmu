@@ -510,7 +510,8 @@ namespace MHServerEmu.Games.Generators.Areas
         public bool ReservableWideCell(int x, int y, Walls walls)
         {
             GenCell cell = GetCell(x, y);
-            if ((~walls & Walls.All).HasFlag(cell.RequiredWalls) || walls.HasFlag(cell.PreventWalls))  return false;
+            if ((~walls & Walls.All & cell.RequiredWalls) != 0) return false;
+            if ((walls & cell.PreventWalls) != 0)  return false;
 
             for (int i = 0; i < _offsets.GetLength(0); i++)
             {

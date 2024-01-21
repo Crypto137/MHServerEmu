@@ -238,7 +238,7 @@ namespace MHServerEmu.Games.Generators
 
         public bool CheckWallMask(Cell.Walls walls, CellSetRegistry registry)
         {
-            if (PreventWalls.HasFlag(walls)) return false;
+            if ((PreventWalls & walls) != 0) return false;
             if (registry == null) return true;
             return registry.HasCellWithWalls(RequiredWalls | walls);
         }
