@@ -272,8 +272,6 @@ namespace MHServerEmu.Games.Generators
         private bool GatherCellSet(ulong cellSet, CellSetEntryPrototype cellSetEntry, out List<ulong> cells)
         {
             cells = new();
-            CellBounds = Aabb.InvertedLimit;
-
             if (cellSet == 0) return false;
 
             string cellSetPath = GameDatabase.GetAssetName(cellSet);
