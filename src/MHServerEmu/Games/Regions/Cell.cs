@@ -52,6 +52,7 @@ namespace MHServerEmu.Games.Regions
             NESWcW = 207,
         }
 
+        [AssetEnum((int)WideNESW)]      // DRAG/CellWallTypes.type
         public enum WallGroup
         {
             N = 254,
