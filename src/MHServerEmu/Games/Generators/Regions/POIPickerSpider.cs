@@ -19,6 +19,7 @@ namespace MHServerEmu.Games.Generators.Regions
             Prototype = protoNode;
             Parent = parent;
             Childrens = new();
+            Reference = new();
 
             if (IsList() && Prototype is RequiredCellBaseListPrototype baseList && baseList.RequiredCells != null)
                 AddChildrenFromList(baseList.RequiredCells);           
