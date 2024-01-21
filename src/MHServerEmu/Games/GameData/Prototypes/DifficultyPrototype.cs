@@ -101,7 +101,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class DifficultyTierPrototype : Prototype
     {
         public int DEPTier { get; protected set; }
-        public DifficultyTier Tier { get; protected set; }
+        public DifficultyTierAsset Tier { get; protected set; }
         public float BonusExperiencePct { get; protected set; }
         public float DamageMobToPlayerPct { get; protected set; }
         public float DamagePlayerToMobPct { get; protected set; }

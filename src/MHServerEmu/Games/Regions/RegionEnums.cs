@@ -1,6 +1,19 @@
-﻿namespace MHServerEmu.Games.Regions
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.Regions
 {
-    // TODO: remove hardcoded prototype ids
+    // TODO: remove hardcoded prototype ids and combine these two enums
+
+    [AssetEnum((int)Normal)]
+    public enum DifficultyTierAsset
+    {
+        Normal,
+        Heroic,
+        Superheroic,
+        Cosmic,
+        Omega1
+    }
+
     public enum DifficultyTier : ulong
     {
         Normal = 18016845980090109785,
