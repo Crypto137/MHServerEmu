@@ -39,7 +39,8 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             { typeof(CurveId[]),        ParseListDataRef },
             { typeof(PrototypeId[]),    ParseListDataRef },
             { typeof(LocaleStringId[]), ParseListDataRef },
-            { typeof(Prototype[]),      ParseListPrototypePtr }
+            { typeof(Prototype[]),      ParseListPrototypePtr },
+            { typeof(PrototypePropertyCollection), ParsePropertyList }      // should this be a property collection or some other type? used only in ModPrototype
         };
 
         private static Func<FieldParserParams, bool> GetParser(Type prototypeFieldType)
@@ -129,13 +130,6 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return true;
         }
 
-        private static bool ParsePropertyId(FieldParserParams @params)
-        {
-            // todo: proper property id deserialization
-            DeserializePrototypePtr(@params, false, out var prototype);
-            return true;
-        }
-
         private static bool DeserializePrototypePtr(FieldParserParams @params, bool polymorphicSetAllowed, out Prototype prototype)
         {
             prototype = null;
@@ -159,6 +153,13 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             prototype = (Prototype)Activator.CreateInstance(classType);
 
             DoDeserialize(prototype, header, PrototypeId.Invalid, @params.FileName, reader);
+            return true;
+        }
+
+        private static bool ParsePropertyId(FieldParserParams @params)
+        {
+            // todo: proper property id deserialization
+            DeserializePrototypePtr(@params, false, out var prototype);
             return true;
         }
 
@@ -225,6 +226,18 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             }
 
             @params.FieldInfo.SetValue(@params.OwnerPrototype, values);
+            return true;
+        }
+
+        private static bool ParsePropertyList(FieldParserParams @params)
+        {
+            // todo: proper property list deserialization
+            var reader = @params.Reader;
+
+            short numValues = reader.ReadInt16();
+            for (int i = 0; i < numValues; i++)
+                DeserializePrototypePtr(@params, true, out var prototype);
+
             return true;
         }
 
