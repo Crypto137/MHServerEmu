@@ -29,7 +29,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
             while (!success && (--tries > 0))
             {
-                success &= EstablishExternalConnections() 
+                success = EstablishExternalConnections()
                     && GenerateRandomInstanceLinks(random)
                     && CreateRequiredCells(random, regionGenerator, areas)
                     && GenerateRoads(random, proto.Roads);
@@ -510,7 +510,7 @@ namespace MHServerEmu.Games.Generators.Areas
         public bool ReservableWideCell(int x, int y, Walls walls)
         {
             GenCell cell = GetCell(x, y);
-            if ((~walls & Walls.All).HasFlag(cell.RequiredWalls) || walls.HasFlag(cell.PreventWalls))  return false;
+            if ((~walls & Walls.All).HasFlag(cell.RequiredWalls) || walls.HasFlag(cell.PreventWalls)) return false;
 
             for (int i = 0; i < _offsets.GetLength(0); i++)
             {
@@ -519,7 +519,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
                 cell = GetCell(x + offsetX, y + offsetY, false);
                 if (cell != null && !cell.CheckWallMask(GetWallMask(walls, (Dir)i), CellSetRegistry))
-                    return false;      
+                    return false;
             }
             return true;
         }
