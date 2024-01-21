@@ -139,11 +139,14 @@ namespace MHServerEmu.Games.Regions
 
             CellsInRegion = 0;
             // Get starArea to load by Waypoint
-            if (RegionTransition.GetDestination(waypointDataRef, out RegionConnectionTargetPrototype target) 
-                    && FindAreaByDataRef(out Area startArea, target.Area)) 
-                LoadMessagesForConnectedAreas(startArea, messageList);
-            else
-                LoadMessagesForConnectedAreas(StartArea, messageList);
+            if (StartArea != null)
+            {
+                if (RegionTransition.GetDestination(waypointDataRef, out RegionConnectionTargetPrototype target)
+                        && FindAreaByDataRef(out Area startArea, target.Area))
+                    LoadMessagesForConnectedAreas(startArea, messageList);
+                else
+                    LoadMessagesForConnectedAreas(StartArea, messageList);
+            }
 
             messageList.Add(new(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build()));
 
