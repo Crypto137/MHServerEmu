@@ -232,10 +232,8 @@ namespace MHServerEmu.Games.Generators
             Cell.Type externalConnections = cell.ExternalConnections;
 
             if (cell.CellRef != 0) return false;
-
-            if (!type.HasFlag(externalConnections)) return false;
-
-            if (type != (externalConnections | determineType)) return false;
+            if ((type & externalConnections) != externalConnections) return false;
+            if ((type & (externalConnections | determineType)) != type) return false;
 
             if (!TestTypeConnection(x, y, cell, determineType, type, Cell.Type.E)) return false;
             if (!TestTypeConnection(x, y, cell, determineType, type, Cell.Type.N)) return false;
@@ -263,9 +261,9 @@ namespace MHServerEmu.Games.Generators
         private bool TestTypeConnection(int x, int y, GenCell cell, Cell.Type determineType, Cell.Type type, Cell.Type side)
         {
             Cell.Type externalConnections = cell.ExternalConnections;
-            if (!type.HasFlag(externalConnections)) return false;
-            if (side.HasFlag(externalConnections)) return true;
-            if (determineType.HasFlag(side))
+            if (externalConnections != (type & externalConnections)) return false;
+            if ((side & externalConnections) != 0) return true;
+            if ((determineType & side) != 0)
             {
                 GenCell other;
                 switch (side)
@@ -291,7 +289,7 @@ namespace MHServerEmu.Games.Generators
                         return false;
                 }
 
-                if (type.HasFlag(side))
+                if ((type & side) != 0)
                     if (!cell.IsConnected(other)) return false;
                     else
                     if (cell.IsConnected(other) && other.CellRef != 0) return false;
