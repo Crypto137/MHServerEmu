@@ -21,12 +21,14 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
 
         public AvatarPrototypeId Avatar { get; set; }
         public long RawAvatar { get => (long)Avatar; private set => Avatar = (AvatarPrototypeId)value; }
+        public ulong Waypoint { get; set; }
 
         public DBPlayer(ulong accountId)
         {
             AccountId = accountId;
             Region = RegionPrototypeId.NPEAvengersTowerHUBRegion;
             Avatar = AvatarPrototypeId.CaptainAmerica;
+            Waypoint = 10137590415717831231; // Waypoints/HUBS/NPEAvengersTowerHub
         }
 
         public DBPlayer() { }

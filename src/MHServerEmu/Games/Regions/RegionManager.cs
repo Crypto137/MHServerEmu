@@ -175,7 +175,7 @@ namespace MHServerEmu.Games.Regions
         {
             RegionSettings settings = new()
             {
-                Seed = 188433272, //Game.GetRandom().Next(),
+                Seed = Game.GetRandom().Next(),
                 DifficultyTierRef = (ulong)DifficultyTier.Normal,
                 InstanceAddress = IdGenerator.Generate(IdType.Region),
                 Level = 10,
@@ -201,7 +201,7 @@ namespace MHServerEmu.Games.Regions
         {
             if (IsRegionAvailable(prototype))
             {
-                prototype = (RegionPrototypeId)8702251210467252908;
+                //prototype = (RegionPrototypeId)8702251210467252908;
                 if (_regionDict.TryGetValue(prototype, out Region region) == false)
                 {
                     // Generate the region and create entities for it if needed

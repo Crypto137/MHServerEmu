@@ -55,6 +55,15 @@ namespace MHServerEmu.Games.Generators.Regions
             return found;
         }
 
+        public static bool GetDestination(ulong waypointDataRef, out RegionConnectionTargetPrototype target)
+        {            
+            target = null;
+            if (waypointDataRef == 0) return false;
+            WaypointPrototype waypointProto = GameDatabase.GetPrototype<WaypointPrototype>(waypointDataRef);
+            if (waypointProto == null || waypointProto.Destination == 0) return false;
+            target = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(waypointProto.Destination);
+            return (target != null);
+        }
     }
 
     public class RegionTransitionSpec

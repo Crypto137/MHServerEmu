@@ -121,12 +121,13 @@ namespace MHServerEmu.Games
             }
         }
 
-        public void MovePlayerToRegion(FrontendClient client, RegionPrototypeId region)
+        public void MovePlayerToRegion(FrontendClient client, RegionPrototypeId region, ulong waypointDataRef = 0)
         {
             lock (_gameLock)
             {
                 EnqueueResponses(client, GetExitGameMessages());
                 client.Session.Account.Player.Region = region;
+                client.Session.Account.Player.Waypoint = waypointDataRef;
                 EnqueueResponses(client, GetBeginLoadingMessages(client.Session.Account));
                 client.LoadedCellCount = 0;
                 client.IsLoading = true;
@@ -370,9 +371,10 @@ namespace MHServerEmu.Games
             Logger.Trace(useWaypoint.ToString());
 
             RegionPrototypeId destinationRegion = (RegionPrototypeId)useWaypoint.RegionProtoId;
+            ulong waypointDataRef = useWaypoint.WaypointDataRef;
 
             if (RegionManager.IsRegionAvailable(destinationRegion))
-                MovePlayerToRegion(client, destinationRegion);
+                MovePlayerToRegion(client, destinationRegion, waypointDataRef);
             else
                 Logger.Warn($"Region {destinationRegion} is not available");
         }

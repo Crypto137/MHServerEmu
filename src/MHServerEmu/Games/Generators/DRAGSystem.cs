@@ -1021,10 +1021,6 @@ namespace MHServerEmu.Games.Regions
             Bound ??= new Aabb(Min, Max);
 
             ArchiveData = new byte[] { }; // TODO: Gen ArchiveData
-            EntrancePosition = Bound.Center;
-            EntranceOrientation = new();
-            WaypointPosition = Bound.Center;
-            WaypointOrientation = new(); // TODO: Gen positions
 
             return true;
         }
@@ -1361,6 +1357,55 @@ namespace MHServerEmu.Games.Regions
                 if (bound == null || area.RegionBounds.Intersects(bound))
                     yield return area;
             }
+        }
+        private bool FindAreaByDataRef(out Area startArea, ulong targetArea)
+        {
+            startArea = null;
+            if (targetArea == 0) return false;
+            foreach (Area area in AreaList)
+            {
+                if (targetArea == area.AreaPrototype.GetDataRef()) {
+                    startArea = area;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public bool FindWaypointMarker(ulong waypointDataRef, out Vector3 waypointPosition, out Vector3 waypointOrientation)
+        {
+            waypointPosition = Bound.Center; // default
+            waypointOrientation = new();
+
+            if (RegionTransition.GetDestination(waypointDataRef, out RegionConnectionTargetPrototype target) == false) return false;
+
+            if (target == null || target.Entity == 0) return false;
+
+            if (FindAreaByDataRef(out Area area, target.Area))
+            {
+                foreach (Cell cell in area.CellList)
+                {
+                    // if (target.Cell != 0 && target.Cell != cell.CellProto.GetDataRef()) continue;
+                    if (cell.CellProto != null && cell.CellProto.InitializeSet.Markers.Any())
+                    {
+                        foreach (var marker in cell.CellProto.InitializeSet.Markers)
+                        {
+                            if (marker is EntityMarkerPrototype entityMarker)
+                            {
+                                ulong dataRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
+                                if (dataRef == target.Entity)
+                                {
+                                    waypointPosition = area.Origin + cell.AreaOrientation + entityMarker.Position;
+                                    waypointOrientation = entityMarker.Rotation;
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return false;
         }
     }
 

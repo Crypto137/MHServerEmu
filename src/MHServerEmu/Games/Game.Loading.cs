@@ -38,9 +38,10 @@ namespace MHServerEmu.Games
             messageList.Add(new(NetMessageReadyAndLoadedOnGameServer.DefaultInstance));
 
             // Load region data
-            messageList.AddRange(RegionManager.GetRegion(account.Player.Region).GetLoadingMessages(Id));
+            messageList.AddRange(RegionManager.GetRegion(account.Player.Region).GetLoadingMessages(Id, account.Player.Waypoint));
 
-            // Create a waypoint entity
+            // Create a waypoint entity            
+            // TODO: Add account.Player.Waypoint as Entity
             messageList.Add(new(EntityManager.Waypoint.ToNetMessageEntityCreate()));
 
             return messageList.ToArray();
@@ -52,7 +53,19 @@ namespace MHServerEmu.Games
 
             Region region = RegionManager.GetRegion(account.Player.Region);
 
-            EnterGameWorldArchive avatarEnterGameWorldArchive = new((ulong)account.Player.Avatar.ToEntityId(), region.EntrancePosition, region.EntranceOrientation.X, 350f);
+           ;
+            // TODO get pos from Entity Manager
+            Common.Vector3 entrancePosition = new();
+            Common.Vector3 entranceOrientation = new();
+
+            if (region.FindWaypointMarker(account.Player.Waypoint, out Common.Vector3 waypointPosition, out Common.Vector3 waypointOrientation))
+            { // TODO Fix Player Pos, Rot
+                entrancePosition = new(waypointPosition);
+                entranceOrientation = new(waypointOrientation);
+                entrancePosition.Z += 42; // TODO project to floor
+            } 
+
+            EnterGameWorldArchive avatarEnterGameWorldArchive = new((ulong)account.Player.Avatar.ToEntityId(), entrancePosition, entranceOrientation.Yaw, 350f);
             messageList.Add(new(NetMessageEntityEnterGameWorld.CreateBuilder()
                 .SetArchiveData(avatarEnterGameWorldArchive.Serialize())
                 .Build()));
@@ -63,7 +76,7 @@ namespace MHServerEmu.Games
             ));
 
             // Put waypoint entity in the game world
-            EnterGameWorldArchive waypointEnterGameWorldArchiveData = new(12, region.WaypointPosition, region.WaypointOrientation.X);
+            EnterGameWorldArchive waypointEnterGameWorldArchiveData = new(12, waypointPosition, waypointOrientation.Yaw);
             messageList.Add(new(NetMessageEntityEnterGameWorld.CreateBuilder()
                 .SetArchiveData(waypointEnterGameWorldArchiveData.Serialize())
                 .Build()));
