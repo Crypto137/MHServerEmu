@@ -1,4 +1,6 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.Properties;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class PropertyPrototype : Prototype
     {
@@ -113,7 +115,7 @@
 
     public class PropertyPickInRangeEntryPrototype : PropertyEntryPrototype
     {
-        public ulong Prop { get; protected set; }
+        public PropertyId Prop { get; protected set; }
         public EvalPrototype ValueMax { get; protected set; }
         public EvalPrototype ValueMin { get; protected set; }
         public bool RollAsInteger { get; protected set; }
@@ -122,7 +124,7 @@
 
     public class PropertySetEntryPrototype : PropertyEntryPrototype
     {
-        public ulong Prop { get; protected set; }
+        public PropertyId Prop { get; protected set; }
         public ulong TooltipOverrideText { get; protected set; }
         public EvalPrototype Value { get; protected set; }
     }

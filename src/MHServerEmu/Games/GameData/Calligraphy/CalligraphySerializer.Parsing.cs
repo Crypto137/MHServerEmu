@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System.Reflection;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Calligraphy
 {
@@ -23,6 +24,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             { typeof(PrototypeId),      ParseDataRef },
             { typeof(LocaleStringId),   ParseDataRef },
             { typeof(Prototype),        ParsePrototypePtr },
+            { typeof(PropertyId),       ParsePropertyId },
             { typeof(bool[]),           ParseListBool },
             { typeof(sbyte[]),          ParseListInt8 },
             { typeof(short[]),          ParseListInt16 },
@@ -127,6 +129,13 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return true;
         }
 
+        private static bool ParsePropertyId(FieldParserParams @params)
+        {
+            // todo: proper property id deserialization
+            DeserializePrototypePtr(@params, false, out var prototype);
+            return true;
+        }
+
         private static bool DeserializePrototypePtr(FieldParserParams @params, bool polymorphicSetAllowed, out Prototype prototype)
         {
             prototype = null;
@@ -150,7 +159,6 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             prototype = (Prototype)Activator.CreateInstance(classType);
 
             DoDeserialize(prototype, header, PrototypeId.Invalid, @params.FileName, reader);
-
             return true;
         }
 
@@ -166,7 +174,6 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             }
 
             @params.FieldInfo.SetValue(@params.OwnerPrototype, values);
-
             return true;
         }
 
@@ -187,7 +194,6 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             }
 
             @params.FieldInfo.SetValue(@params.OwnerPrototype, values);
-
             return true;
         }
 
@@ -204,7 +210,6 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             }
 
             @params.FieldInfo.SetValue(@params.OwnerPrototype, values);
-
             return true;
         }
 
@@ -212,12 +217,14 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         {
             var reader = @params.Reader;
 
-            var values = new Prototype[reader.ReadInt16()];
+            var values = Array.CreateInstance(@params.FieldInfo.PropertyType.GetElementType(), reader.ReadInt16());
             for (int i = 0; i < values.Length; i++)
-                values[i] = new(reader);
+            {
+                DeserializePrototypePtr(@params, true, out var prototype);
+                values.SetValue(prototype, i);
+            }
 
-            //@params.FieldInfo.SetValue(@params.OwnerPrototype, values);
-
+            @params.FieldInfo.SetValue(@params.OwnerPrototype, values);
             return true;
         }
 

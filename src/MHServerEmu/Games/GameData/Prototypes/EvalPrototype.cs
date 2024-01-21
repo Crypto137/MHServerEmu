@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -82,14 +83,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class AssignPropPrototype : EvalPrototype
     {
         public EvalContext Context { get; protected set; }
-        public ulong Prop { get; protected set; }
+        public PropertyId Prop { get; protected set; }
         public EvalPrototype Eval { get; protected set; }
     }
 
     public class SwapPropPrototype : EvalPrototype
     {
         public EvalContext LeftContext { get; protected set; }
-        public ulong Prop { get; protected set; }
+        public PropertyId Prop { get; protected set; }
         public EvalContext RightContext { get; protected set; }
     }
 
@@ -107,13 +108,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class HasPropPrototype : EvalPrototype
     {
         public EvalContext Context { get; protected set; }
-        public ulong Prop { get; protected set; }
+        public PropertyId Prop { get; protected set; }
     }
 
     public class LoadPropPrototype : EvalPrototype
     {
         public EvalContext Context { get; protected set; }
-        public ulong Prop { get; protected set; }
+        public PropertyId Prop { get; protected set; }
     }
 
     public class LoadPropContextParamsPrototype : EvalPrototype
