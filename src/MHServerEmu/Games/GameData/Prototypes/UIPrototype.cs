@@ -49,7 +49,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         SpecificGameplay,
     }
 
-    [AssetEnum]
+    // There are two MissionTrackerFilterType (asset and symbolic), the symbolic one is the one that fits our data files,
+    // and it seems to be UI-related
+    //[AssetEnum((int)None)]
     public enum MissionTrackerFilterTypeEnum
     {
         None = -1,
@@ -58,6 +60,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
         PvP = 2,
         Daily = 3,
         Challenge = 4,
+    }
+
+    [AssetEnum((int)StoryMissions)]
+    public enum UIMissionTrackerFilterTypeEnum
+    {
+        AccountMissions = 0,
+        Achievements = 1,
+        GlobalEventMissions = 2,
+        InfluenceMissions = 3,
+        LegendaryQuests = 4,
+        LoreMissions = 5,
+        RegionEventMissions = 6,
+        SharedQuests = 7,
+        StoryMissions = 8,
     }
 
     [AssetEnum]
@@ -531,7 +547,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionTrackerFilterPrototype : Prototype
     {
-        public MissionTrackerFilterTypeEnum FilterType { get; protected set; }
+        public UIMissionTrackerFilterTypeEnum FilterType { get; protected set; }
         public ulong Label { get; protected set; }
         public bool DisplayByDefault { get; protected set; }
         public int DisplayOrder { get; protected set; }
