@@ -28,7 +28,7 @@ namespace MHServerEmu.Games.Generators
     public class CellSetRegistry
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
-        public Aabb CellBounds;
+        public Aabb CellBounds { get; private set; }
         public bool IsInitialized { get; private set; }
 
         private bool _supressMissingCellErrors;
@@ -42,6 +42,7 @@ namespace MHServerEmu.Games.Generators
         {
             IsInitialized = false;
             _supressMissingCellErrors = false;
+            CellBounds = Aabb.Zero;
             for (int i = 0; i < 4; i++)
             {
                 Cell.Type type = (Cell.Type)(1 << i);
@@ -153,7 +154,7 @@ namespace MHServerEmu.Games.Generators
         {
             if (weight <= 0) return;
 
-            if (GatherCellSet(cellSet, cellSetEntry, out List<ulong> cells, out CellBounds))
+            if (GatherCellSet(cellSet, cellSetEntry, out List<ulong> cells))
             {
                 foreach (var cellRef in cells)
                     AddReference(cellRef, weight, unique);
@@ -268,10 +269,10 @@ namespace MHServerEmu.Games.Generators
             return false;
         }
 
-        private static bool GatherCellSet(ulong cellSet, CellSetEntryPrototype cellSetEntry, out List<ulong> cells, out Aabb cellBox)
+        private bool GatherCellSet(ulong cellSet, CellSetEntryPrototype cellSetEntry, out List<ulong> cells)
         {
             cells = new();
-            cellBox = Aabb.InvertedLimit;
+            CellBounds = Aabb.InvertedLimit;
 
             if (cellSet == 0) return false;
 
@@ -287,7 +288,7 @@ namespace MHServerEmu.Games.Generators
                 if (IsInCellSet(cellSetEntry, cellSetPath, cell))
                 {
                     cells.Add(cell.DataRef);
-                    cellBox = cell.BoundingBox;
+                    CellBounds = cell.BoundingBox;
                     ++numCells;
                 }
             }
