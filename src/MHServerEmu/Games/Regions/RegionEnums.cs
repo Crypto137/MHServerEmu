@@ -4,14 +4,12 @@ namespace MHServerEmu.Games.Regions
 {
     // TODO: remove hardcoded prototype ids and combine these two enums
 
-    [AssetEnum((int)Normal)]
+    [AssetEnum((int)Green)]
     public enum DifficultyTierAsset
     {
-        Normal,
-        Heroic,
-        Superheroic,
-        Cosmic,
-        Omega1
+        Green,
+        Red,
+        Cosmic
     }
 
     public enum DifficultyTier : ulong
