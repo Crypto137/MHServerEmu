@@ -22,7 +22,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool SerializePowerToPowerPayload { get; protected set; }
         public PrototypeId TooltipText { get; protected set; }                 // Localization/Translations/Properties/PropertyTranslation.defaults
         public bool TruncatePropertyValueToInt { get; protected set; }
-        public object Eval { get; protected set; }                             // R Eval/Eval.defaults
+        public Prototype Eval { get; protected set; }                           // TODO: replace type with EvalPrototype | R Eval/Eval.defaults
         public bool EvalAlwaysCalculates { get; protected set; }
         public bool SerializeConditionSrcToCondition { get; protected set; }
         public bool ReplicateToTrader { get; protected set; }
@@ -48,7 +48,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         CurveDefault = (double)field.Value;
                         break;
                     case nameof(Eval):
-                        Eval = field.Value;
+                        Eval = (Prototype)field.Value;
                         break;
                     case nameof(EvalAlwaysCalculates):
                         EvalAlwaysCalculates = (bool)field.Value;
