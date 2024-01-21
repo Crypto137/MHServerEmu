@@ -104,6 +104,10 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 return true;
             }
 
+            // Fix asset names that start with a digit (C# doesn't allow enum members to start with a digit)
+            if (char.IsDigit(assetName[0]))
+                assetName = $"_{assetName}";
+
             // Parse enum value from its name if we got a valid asset
             var value = Enum.Parse(@params.FieldInfo.PropertyType, assetName, true);
             @params.FieldInfo.SetValue(@params.OwnerPrototype, value);
@@ -190,6 +194,11 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 // We get asset name from the serialized asset id, and then parse the actual enum value from it.
                 var assetId = (StringId)@params.Reader.ReadUInt64();
                 var assetName = GameDatabase.GetAssetName(assetId);
+
+                // Fix asset names that start with a digit (C# doesn't allow enum members to start with a digit)
+                if (char.IsDigit(assetName[0]))
+                    assetName = $"_{assetName}";
+
                 var value = Enum.Parse(@params.FieldInfo.PropertyType.GetElementType(), assetName, true);
                 values.SetValue(value, i);
             }
