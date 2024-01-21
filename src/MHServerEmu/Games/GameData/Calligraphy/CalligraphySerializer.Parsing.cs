@@ -104,7 +104,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             }
 
             // Parse enum value from its name if we got a valid asset
-            var value = Enum.Parse(@params.FieldInfo.PropertyType, assetName);
+            var value = Enum.Parse(@params.FieldInfo.PropertyType, assetName, true);
             @params.FieldInfo.SetValue(@params.OwnerPrototype, value);
             return true;
         }
@@ -189,7 +189,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 // We get asset name from the serialized asset id, and then parse the actual enum value from it.
                 var assetId = (StringId)@params.Reader.ReadUInt64();
                 var assetName = GameDatabase.GetAssetName(assetId);
-                var value = Enum.Parse(@params.FieldInfo.PropertyType.GetElementType(), assetName);
+                var value = Enum.Parse(@params.FieldInfo.PropertyType.GetElementType(), assetName, true);
                 values.SetValue(value, i);
             }
 
