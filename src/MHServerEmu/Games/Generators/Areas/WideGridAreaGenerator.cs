@@ -520,7 +520,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
                 cell = GetCell(x + offsetX, y + offsetY, false);
                 if (cell != null && !cell.CheckWallMask(GetWallMask(walls, (Dir)i), CellSetRegistry))
-                    return false;      
+                    return false;
             }
             return true;
         }
