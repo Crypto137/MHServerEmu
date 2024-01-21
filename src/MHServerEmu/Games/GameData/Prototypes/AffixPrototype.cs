@@ -231,7 +231,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class OmegaBonusSetPrototype : ModPrototype
     {
         public ulong UITitle { get; protected set; }
-        public OmegaBonusPrototype OmegaBonuses { get; protected set; }
+        public ulong[] OmegaBonuses { get; protected set; }
         public OmegaPageType UIPageType { get; protected set; }
         public bool Unlocked { get; protected set; }
         public ulong UIColor { get; protected set; }
