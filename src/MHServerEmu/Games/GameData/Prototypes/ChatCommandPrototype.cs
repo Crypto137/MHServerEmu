@@ -77,7 +77,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public ulong Command { get; protected set; }
         public ulong Description { get; protected set; }
-        public int Function { get; protected set; }
+        public ulong Function { get; protected set; }     // TODO: this is an asset id that needs to be bound to a function (CalligraphySerializer::ParseFunctionPtr)
         public ChatCommandArgumentPrototype[] Parameters { get; protected set; }
         public bool ShowInHelp { get; protected set; }
         public bool RespondsToSpacebar { get; protected set; }
