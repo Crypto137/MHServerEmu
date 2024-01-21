@@ -56,6 +56,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong[] TooltipEquipRestrictions { get; protected set; }
         public AffixEntryPrototype[] AffixesBuiltIn { get; protected set; }
         public PropertyEntryPrototype[] PropertiesBuiltIn { get; protected set; }
+        [Mixin]
         public ProductPrototype Product { get; protected set; }
         public ulong ItemCategory { get; protected set; }
         public ulong ItemSubcategory { get; protected set; }

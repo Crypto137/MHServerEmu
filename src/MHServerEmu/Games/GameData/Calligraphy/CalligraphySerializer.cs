@@ -143,6 +143,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
                     // Currently known cases for non-property mixins:
                     // - LocomotorPrototype and PopulationInfoPrototype in AgentPrototype (simple mixins, PopulationInfoPrototype seems to be unused)
+                    // - ProductPrototype in ItemPrototype (simple mixin)
                     // - ConditionPrototype and ConditionEffectPrototype in PowerPrototype (list mixins)
                     // We use MixinAttribute and ListMixinAttribute to differentiate them from RHStructs.
 
