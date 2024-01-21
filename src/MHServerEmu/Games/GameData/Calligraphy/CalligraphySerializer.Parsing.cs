@@ -81,9 +81,22 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             // Boolean and numeric values are stored in Calligraphy as 64-bit values.
             // We read the value as either Int64 or Float64 and then cast it to the appropriate type for our field.
             var rawValue = parseAsFloat ? @params.Reader.ReadDouble() : @params.Reader.ReadInt64();
-            var value = Convert.ChangeType(rawValue, typeof(T), CultureInfo.InvariantCulture);
 
-            @params.FieldInfo.SetValue(@params.OwnerPrototype, value);
+            try
+            {
+                var value = Convert.ChangeType(rawValue, typeof(T), CultureInfo.InvariantCulture);
+                @params.FieldInfo.SetValue(@params.OwnerPrototype, value);
+            }
+            catch (OverflowException)
+            {
+                // Hacky overflow handling for AI/ProceduralAI/Blueprints/Profiles/Special/DrDoom/ProceduralProfileDrDoomPhase1.defaults
+                if (typeof(T) != typeof(int))
+                    throw new($"Unexpected overflow for type {typeof(T).Name}");
+
+                @params.FieldInfo.SetValue(@params.OwnerPrototype, int.MaxValue);
+                Logger.Warn($"ParseValue overflow for field {@params.BlueprintMemberInfo.Member.FieldName} in {@params.FileName}");
+            }
+            
             return true;
         }
 
