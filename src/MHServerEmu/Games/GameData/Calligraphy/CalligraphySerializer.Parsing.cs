@@ -107,22 +107,24 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             var assetId = (StringId)@params.Reader.ReadUInt64();
             var assetName = GameDatabase.GetAssetName(assetId);
 
-            // GetAssetName returns string.Empty for invalid asset ids (empty fields), which we can't parse,
-            // so instead we assign the default value defined in the AssetEnum attribute.
-            if (assetName == string.Empty)
+            // Fix asset names that start with a digit (C# doesn't allow enum members to start with a digit)
+            if (assetName.Length > 0 && char.IsDigit(assetName[0]))
+                assetName = $"_{assetName}";
+
+            // Try to parse enum value from its name if we got a valid asset
+            if (Enum.TryParse(@params.FieldInfo.PropertyType, assetName, true, out var value) == false)
             {
+                if (assetName != string.Empty)
+                    Logger.Warn($"Missing enum member {assetName} in {@params.BlueprintMemberInfo.Member.RuntimeClassFieldInfo.Name}");
+
+                // Set value to default for enums we can't parse
                 var attribute = @params.FieldInfo.PropertyType.GetCustomAttribute<AssetEnumAttribute>();
                 var defaultValue = attribute.DefaultValue;
                 @params.FieldInfo.SetValue(@params.OwnerPrototype, defaultValue);
                 return true;
             }
 
-            // Fix asset names that start with a digit (C# doesn't allow enum members to start with a digit)
-            if (char.IsDigit(assetName[0]))
-                assetName = $"_{assetName}";
-
-            // Parse enum value from its name if we got a valid asset
-            var value = Enum.Parse(@params.FieldInfo.PropertyType, assetName, true);
+            // Set value to what we parsed if everything is okay
             @params.FieldInfo.SetValue(@params.OwnerPrototype, value);
             return true;
         }
