@@ -567,7 +567,7 @@ namespace MHServerEmu.Games.GameData
             GameDataSerializer serializer = record.DataOrigin == DataOrigin.Calligraphy ? CalligraphySerializer : BinaryResourceSerializer;
 
             // Create a new prototype instance
-            Prototype prototype = (Prototype)Activator.CreateInstance(record.ClassType);
+            Prototype prototype = GameDatabase.PrototypeClassManager.AllocatePrototype(record.ClassType);
 
             // Deserialize the data
             serializer.Deserialize(prototype, record.PrototypeId, stream);

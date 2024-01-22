@@ -193,7 +193,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
             // Deserialize
             Type classType = GameDatabase.DataDirectory.GetPrototypeClassType(header.ReferenceType);
-            prototype = (Prototype)Activator.CreateInstance(classType);
+            prototype = GameDatabase.PrototypeClassManager.AllocatePrototype(classType);
 
             DoDeserialize(prototype, header, PrototypeId.Invalid, @params.FileName, reader);
             return true;

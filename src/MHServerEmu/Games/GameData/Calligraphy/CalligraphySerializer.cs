@@ -390,7 +390,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         private static Prototype AllocateDynamicPrototype(Type classType, PrototypeId defaults, Prototype instanceToCopy)
         {
             // Create a new prototype of the specified type
-            var prototype = (Prototype)Activator.CreateInstance(classType);
+            var prototype = GameDatabase.PrototypeClassManager.AllocatePrototype(classType);
 
             // Copy fields either from the specified defaults prototype or the provided prototype
             if (defaults != PrototypeId.Invalid && instanceToCopy == null)
