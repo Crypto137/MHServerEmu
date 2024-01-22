@@ -143,9 +143,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int MobLOSVisUpdatePeriodMS { get; protected set; }
         public int MobLOSVisStayVisibleDelayMS { get; protected set; }
         public bool MobLOSVisEnabled { get; protected set; }
-        public ulong BeginPlayAssetTypes { get; protected set; }
-        public ulong CachedAssetTypes { get; protected set; }
-        public ulong FileVerificationAssetTypes { get; protected set; }
+        public ulong[] BeginPlayAssetTypes { get; protected set; }
+        public ulong[] CachedAssetTypes { get; protected set; }
+        public ulong[] FileVerificationAssetTypes { get; protected set; }
         public ulong LoadingMusic { get; protected set; }
         public ulong SystemLocalized { get; protected set; }
         public ulong PopulationGlobals { get; protected set; }
@@ -219,7 +219,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong PointerArrowTemplate { get; protected set; }
         public ulong ObjectiveMarkerTemplate { get; protected set; }
         public int VaporizedLootLifespanMS { get; protected set; }
-        public ulong CookedIconAssetTypes { get; protected set; }
+        public ulong[] CookedIconAssetTypes { get; protected set; }
         public ulong LiveTuneAvatarXPDisplayCondition { get; protected set; }
         public ulong LiveTuneCreditsDisplayCondition { get; protected set; }
         public ulong LiveTuneRegionXPDisplayCondition { get; protected set; }
@@ -228,7 +228,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong LiveTuneXPDisplayCondition { get; protected set; }
         public ulong ItemLinkInventory { get; protected set; }
         public ulong LimitedEditionBlueprint { get; protected set; }
-        public ulong MobileIconAssetTypes { get; protected set; }
+        public ulong[] MobileIconAssetTypes { get; protected set; }
         public ulong PetItemBlueprint { get; protected set; }
         public ulong AvatarPrototype { get; protected set; }
         public int ServerBonusUnlockLevel { get; protected set; }
