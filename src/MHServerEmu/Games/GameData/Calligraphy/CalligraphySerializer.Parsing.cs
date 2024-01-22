@@ -89,12 +89,15 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             }
             catch (OverflowException)
             {
-                // Hacky overflow handling for AI/ProceduralAI/Blueprints/Profiles/Special/DrDoom/ProceduralProfileDrDoomPhase1.defaults
+                // Some prototypes (e.g. ProceduralProfileDrDoomPhase1.defaults) use very high values for int fields that cause overflows.
+                // The client handles this by taking the first 4 bytes of the value and throwing away everything else.
+                // We handle this by setting those fields to int.MaxValue, since the intention is apparently to have the value be as high
+                // as possible. This doesn't seem to happen with other types, but we'll leave this check here just in case.
                 if (typeof(T) != typeof(int))
-                    throw new($"Unexpected overflow for type {typeof(T).Name}");
+                    throw new($"Unexpected overflow for type {typeof(T).Name}.");
 
                 @params.FieldInfo.SetValue(@params.OwnerPrototype, int.MaxValue);
-                Logger.Warn($"ParseValue overflow for field {@params.BlueprintMemberInfo.Member.FieldName} in {@params.FileName}");
+                Logger.Warn($"ParseValue overflow for field {@params.BlueprintMemberInfo.Member.FieldName} in {@params.FileName}, raw value {rawValue}");
             }
             
             return true;
