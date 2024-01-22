@@ -11,6 +11,9 @@ namespace MHServerEmu.Games.GameData.Calligraphy
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        /// <summary>
+        /// Deserializes a Calligraphy prototype from stream.
+        /// </summary>
         public override void Deserialize(Prototype prototype, PrototypeId dataRef, Stream stream)
         {
             // Temp implementation
@@ -51,7 +54,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 // Begin deserialization
                 DoDeserialize(prototype, prototypeHeader, dataRef, prototypeName, reader);
 
-                Logger.Debug("Done!");
+                //Logger.Debug("Done!");
             }
         }
 
@@ -107,6 +110,9 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             }
         }
 
+        /// <summary>
+        /// Deserializes a field group of a Calligraphy prototype.
+        /// </summary>
         private static bool DeserializeFieldGroup(Prototype prototype, Blueprint blueprint, byte blueprintCopyNum, string prototypeName, Type classType, BinaryReader reader, string groupTag)
         {
             var classManager = GameDatabase.PrototypeClassManager;
@@ -119,11 +125,11 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
                 // Get blueprint member info for this field
                 if (blueprint.TryGetBlueprintMemberInfo(fieldId, out var blueprintMemberInfo) == false)
-                    return Logger.WarnReturn(false, $"Failed to find member {GameDatabase.GetBlueprintFieldName(fieldId)} in blueprint {GameDatabase.GetBlueprintName(blueprint.Id)}");
+                    return Logger.ErrorReturn(false, $"Failed to find member {GameDatabase.GetBlueprintFieldName(fieldId)} in blueprint {GameDatabase.GetBlueprintName(blueprint.Id)}");
 
                 // Check to make sure the type matches (do we need this?)
                 if (blueprintMemberInfo.Member.BaseType != fieldBaseType)
-                    return Logger.WarnReturn(false, $"Type mismatch between blueprint and prototype");
+                    return Logger.ErrorReturn(false, $"Type mismatch between blueprint and prototype");
 
                 // Determine where this field belongs
                 Prototype fieldOwnerPrototype = prototype;
@@ -161,7 +167,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
                         // Get the field info from our mixin
                         fieldInfo = classManager.GetFieldInfo(mixinType, blueprintMemberInfo, false);
-                        Logger.Debug($"Found field info for mixin {mixinType.Name}, field name {blueprintMemberInfo.Member.FieldName}");
+                        //Logger.Debug($"Found field info for mixin {mixinType.Name}, field name {blueprintMemberInfo.Member.FieldName}");
                     }
                     else
                     {
@@ -178,26 +184,35 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
                             fieldOwnerPrototype = element;
                             fieldInfo = classManager.GetFieldInfo(mixinType, blueprintMemberInfo, false);
-                            Logger.Debug($"Found field info for list mixin {mixinType.Name}, field name {blueprintMemberInfo.Member.FieldName}");
+                            //Logger.Debug($"Found field info for list mixin {mixinType.Name}, field name {blueprintMemberInfo.Member.FieldName}");
                         }
                         else
                         {
                             // Nowhere to put this field, something went very wrong, time to reevaluate life choices
-                            return Logger.WarnReturn(false, $"Failed to find field info for mixin {mixinType.Name}, field name {blueprintMemberInfo.Member.FieldName}");
+                            return Logger.ErrorReturn(false, $"Failed to find field info for mixin {mixinType.Name}, field name {blueprintMemberInfo.Member.FieldName}");
                         }
                     }
                 }
 
-                // Test parsing
+                // Parse
                 var parser = GetParser(fieldInfo.PropertyType);
                 FieldParserParams @params = new(reader, fieldInfo, fieldOwnerPrototype, fieldOwnerBlueprint, prototypeName, blueprintMemberInfo);
-
-                var value = parser(@params);
+                
+                if (parser(@params) == false)
+                {
+                    Logger.ErrorReturn(false, string.Format("Failed to parse field {0} of field group {1} in {2}",
+                        blueprintMemberInfo.Member.FieldName,
+                        GameDatabase.GetBlueprintName(blueprint.Id),
+                        prototypeName));
+                };
             }
 
             return true;
         }
 
+        /// <summary>
+        /// Deserializes a property mixin field group of a Calligraphy prototype.
+        /// </summary>
         private static void DeserializePropertyMixin(Prototype prototype, Blueprint blueprint, Blueprint groupBlueprint, byte fieldGroupCopyNum,
             PrototypeId prototypeDataRef, string prototypeName, Type classType, BinaryReader reader)
         {

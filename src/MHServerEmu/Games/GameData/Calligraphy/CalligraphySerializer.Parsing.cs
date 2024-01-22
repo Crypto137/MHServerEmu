@@ -43,6 +43,9 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             { typeof(PrototypePropertyCollection), ParsePropertyList }      // should this be a property collection or some other type? used only in ModPrototype
         };
 
+        /// <summary>
+        /// Returns a parser for the specified prototype field type.
+        /// </summary>
         private static Func<FieldParserParams, bool> GetParser(Type prototypeFieldType)
         {
             // Adjust type for enums and prototype pointers
@@ -76,6 +79,9 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return null;
         }
 
+        /// <summary>
+        /// Parses an integer or float value and assigns it to a prototype field.
+        /// </summary>
         private static bool ParseValue<T>(FieldParserParams @params, bool parseAsFloat = false) where T: IConvertible
         {
             // Boolean and numeric values are stored in Calligraphy as 64-bit values.
@@ -103,6 +109,9 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return true;
         }
 
+        /// <summary>
+        /// Parses an asset enum and assigns it to a prototype field.
+        /// </summary>
         private static bool ParseEnum(FieldParserParams @params)
         {
             // Enums are represented in Calligraphy by assets.
@@ -135,6 +144,9 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return true;
         }
 
+        /// <summary>
+        /// Parses a data reference and assigns it to a prototype field.
+        /// </summary>
         private static bool ParseDataRef(FieldParserParams @params)
         {
             // Data refs can be StringId, AssetTypeId, CurveId, PrototypeId, LocaleStringId or ulong.
@@ -145,6 +157,9 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return true;
         }
 
+        /// <summary>
+        /// Deserializes an embedded prototype and assigns it to a prototype field.
+        /// </summary>
         private static bool ParsePrototypePtr(FieldParserParams @params)
         {
             // The client nests multiple methods for deserializing embedded prototypes:
@@ -155,6 +170,9 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return true;
         }
 
+        /// <summary>
+        /// Deserializes an embedded prototype WITHOUT assigning it to a field.
+        /// </summary>
         private static bool DeserializePrototypePtr(FieldParserParams @params, bool polymorphicSetAllowed, out Prototype prototype)
         {
             prototype = null;
@@ -181,13 +199,19 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return true;
         }
 
+        /// <summary>
+        /// Parses a property id and assigns it to a prototype field.
+        /// </summary>
         private static bool ParsePropertyId(FieldParserParams @params)
         {
-            // todo: proper property id deserialization
+            // todo: proper property id deserialization and assignment
             DeserializePrototypePtr(@params, false, out var prototype);
             return true;
         }
-
+        
+        /// <summary>
+        /// Parses a collection of integer or float values and assigns it to a prototype field.
+        /// </summary>
         private static bool ParseCollection<T>(FieldParserParams @params, bool parseAsFloat = false) where T : IConvertible
         {
             var reader = @params.Reader;
@@ -203,6 +227,9 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return true;
         }
 
+        /// <summary>
+        /// Parses a collection of asset enum values and assigns it to a prototype field.
+        /// </summary>
         private static bool ParseListEnum(FieldParserParams @params)
         {
             var reader = @params.Reader;
@@ -226,6 +253,9 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return true;
         }
 
+        /// <summary>
+        /// Parses a collection of data references and assigns it to a prototype field.
+        /// </summary>
         private static bool ParseListDataRef(FieldParserParams @params)
         {
             var reader = @params.Reader;
@@ -242,6 +272,9 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return true;
         }
 
+        /// <summary>
+        /// Parses a collection of embedded prototypes and assigns it to a prototype field.
+        /// </summary>
         private static bool ParseListPrototypePtr(FieldParserParams @params)
         {
             var reader = @params.Reader;
@@ -257,9 +290,14 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return true;
         }
 
+        /// <summary>
+        /// Parses a property collection and assigns it to a prototype field.
+        /// </summary>
+        /// <param name="params"></param>
+        /// <returns></returns>
         private static bool ParsePropertyList(FieldParserParams @params)
         {
-            // todo: proper property list deserialization
+            // todo: proper property list deserialization and assignment
             var reader = @params.Reader;
 
             short numValues = reader.ReadInt16();
