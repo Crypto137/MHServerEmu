@@ -298,7 +298,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong ExperienceBonusLevel60Synergy { get; protected set; }
         public int TeamUpPowersPerTier { get; protected set; }
         public ulong TeamUpPowerTiersCurve { get; protected set; }
-        public OmegaBonusSetPrototype OmegaBonusSets { get; protected set; }
+        public ulong[] OmegaBonusSets { get; protected set; }   // VectorPrototypeRefPtr OmegaBonusSetPrototype
         public int OmegaPointsCap { get; protected set; }
         public int OmegaSystemLevelUnlock { get; protected set; }
         public PetTechAffixInfoPrototype[] PetTechAffixInfo { get; protected set; }
