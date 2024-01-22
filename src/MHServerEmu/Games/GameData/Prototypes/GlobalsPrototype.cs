@@ -45,8 +45,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         StoryMissions = 5,
     }
 
-    [AssetEnum]
-    public enum MatchQueueStatus    // Regions/QueueStatus.type
+    [AssetEnum((int)Invalid)]
+    public enum MatchQueueStatus    // Regions/QueueStatus.type, equivalent to Gazillion::RegionRequestQueueUpdateVar from the protocol
     {
         Invalid = 1,
         SelectQueueMethod = 2,
@@ -837,7 +837,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MatchQueueStringEntryPrototype : Prototype
     {
-        public RegionRequestQueueUpdateVar StatusKey { get; protected set; }  // Regions/QueueStatus.type, also appears in protocol
+        public MatchQueueStatus StatusKey { get; protected set; }  // Regions/QueueStatus.type, also appears in the protocol
         public ulong StringLog { get; protected set; }
         public ulong StringStatus { get; protected set; }
     }
