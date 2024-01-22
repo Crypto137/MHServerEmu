@@ -57,15 +57,13 @@ namespace MHServerEmu.Games.Powers
             return Array.Empty<QueuedGameMessage>();
         }
 
-        private bool PowerHasKeyword(PrototypeId powerId, HardcodedBlueprintId Keyword)
+        private bool PowerHasKeyword(PrototypeId powerId, HardcodedBlueprintId keyword)
         {
-            PrototypeFieldGroup Power = powerId.GetPrototype().GetFieldGroup(HardcodedBlueprintId.Power);
-            if (Power == null) return false;
-            PrototypeListField Keywords = Power.GetListField(FieldId.Keywords);
-            if (Keywords == null) return false;
+            var power = GameDatabase.GetPrototype<PowerPrototype>(powerId);
+            if (power == null) return false;
 
-            for (int i = 0; i < Keywords.Values.Length; i++)
-                if ((ulong)Keywords.Values[i] == (ulong)Keyword) return true;
+            for (int i = 0; i < power.Keywords.Length; i++)
+                if (power.Keywords[i] == (ulong)keyword) return true;
 
             return false;
         }
@@ -112,14 +110,8 @@ namespace MHServerEmu.Games.Powers
             if (powerPrototypePath.Contains("ThrowablePowers/"))
             {
                 Logger.Trace($"AddEvent EndThrowing for {tryActivatePower.PowerPrototypeId}");
-                PrototypeFieldGroup Power = powerPrototypeId.GetPrototype().GetFieldGroup(HardcodedBlueprintId.Power);
-                long animationTimeMS = 1100;
-                if (Power != null)
-                {
-                    PrototypeSimpleField AnimationTimeMS = Power.GetField(FieldId.AnimationTimeMS);
-                    if (AnimationTimeMS != null) animationTimeMS = (long)AnimationTimeMS.Value;
-                }
-                _eventManager.AddEvent(client, EventEnum.EndThrowing, animationTimeMS, tryActivatePower.PowerPrototypeId);
+                var power = GameDatabase.GetPrototype<PowerPrototype>(powerPrototypeId);
+                _eventManager.AddEvent(client, EventEnum.EndThrowing, power.AnimationTimeMS, tryActivatePower.PowerPrototypeId);
                 return messageList;
             }
             else if (powerPrototypePath.Contains("EmmaFrost/"))

@@ -451,7 +451,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public ulong Description { get; protected set; }
         public ulong GameModeType { get; protected set; }
-        public new ulong Header { get; protected set; }
+        public ulong Header { get; protected set; }
         public ulong Image { get; protected set; }
         public int Priority { get; protected set; }
         public ulong Title { get; protected set; }

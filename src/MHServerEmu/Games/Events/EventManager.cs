@@ -140,9 +140,9 @@ namespace MHServerEmu.Games.Events
                 case EventEnum.OnPreInteractPower:
                     interactObject = (Entity)queuedEvent.Data;
                     proto = interactObject.BaseData.PrototypeId;
-                    PrototypeFieldGroup world = proto.GetPrototype().GetFieldGroup(HardcodedBlueprintId.WorldEntity);
+                    var world = GameDatabase.GetPrototype<WorldEntityPrototype>(proto);
                     if (world == null) break;
-                    var preIteractPower = (PrototypeId)world.GetFieldDef(FieldId.PreInteractPower);
+                    var preIteractPower = (PrototypeId)world.PreInteractPower;
                     if (preIteractPower == PrototypeId.Invalid) break;
                     Logger.Trace($"OnPreInteractPower {GameDatabase.GetPrototypeName(preIteractPower)}");
 
@@ -178,9 +178,9 @@ namespace MHServerEmu.Games.Events
 
                     interactObject = (Entity)queuedEvent.Data;
                     proto = interactObject.BaseData.PrototypeId;
-                    world = proto.GetPrototype().GetFieldGroup(HardcodedBlueprintId.WorldEntity);
+                    world = GameDatabase.GetPrototype<WorldEntityPrototype>(proto);
                     if (world == null) break;
-                    preIteractPower = (PrototypeId)world.GetFieldDef(FieldId.PreInteractPower);
+                    preIteractPower = (PrototypeId)world.PreInteractPower;
                     if (preIteractPower == 0) break;
                     Logger.Trace($"OnPreInteractPowerEnd");
 
@@ -345,19 +345,19 @@ namespace MHServerEmu.Games.Events
                     messageList.Add(new(client, new(property.ToNetMessageSetProperty(avatarRepId))));
                     Logger.Warn($"{GameDatabase.GetPrototypeName(client.ThrowingObject.BaseData.PrototypeId)}");
                     // ThrowObject.Prototype.WorldEntity.UnrealClass
-                    Prototype throwPrototype = client.ThrowingObject.BaseData.PrototypeId.GetPrototype();
-                    PrototypeFieldGroup worldEntity = throwPrototype.GetFieldGroup(HardcodedBlueprintId.WorldEntity);
-                    if (worldEntity == null) break;
-                    ulong unrealClass = (ulong)worldEntity.GetField(FieldId.UnrealClass).Value;
+
+                    var throwPrototype = GameDatabase.GetPrototype<WorldEntityPrototype>(client.ThrowingObject.BaseData.PrototypeId);
+                    if (throwPrototype == null) break;
+                    ulong unrealClass = throwPrototype.UnrealClass;
                     client.IsThrowing = true;
-                    if (throwPrototype.Header.ReferenceType != (PrototypeId)HardcodedBlueprintId.ThrowableProp)
-                        if (throwPrototype.Header.ReferenceType != (PrototypeId)HardcodedBlueprintId.ThrowableSmartProp)
-                            throwPrototype = throwPrototype.Header.ReferenceType.GetPrototype();
+                    //if (throwPrototype.Header.ReferenceType != (PrototypeId)HardcodedBlueprintId.ThrowableProp)
+                    //    if (throwPrototype.Header.ReferenceType != (PrototypeId)HardcodedBlueprintId.ThrowableSmartProp)
+                    //        throwPrototype = throwPrototype.Header.ReferenceType.GetPrototype();
                     property = new(PropertyEnum.ThrowableOriginatorAssetRef, unrealClass);
                     messageList.Add(new(client, new(property.ToNetMessageSetProperty(avatarRepId))));
 
                     // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
-                    client.ThrowingCancelPower = (ulong)throwPrototype.GetFieldGroup(HardcodedBlueprintId.ThrowableRestorePowerProp).SimpleFields[0].Value;
+                    client.ThrowingCancelPower = throwPrototype.Properties.GetPropertyContainer((BlueprintId)HardcodedBlueprintId.ThrowableRestorePowerProp).Value;
                     messageList.Add(new(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
                         .SetPowerProtoId(client.ThrowingCancelPower)
@@ -369,7 +369,7 @@ namespace MHServerEmu.Games.Events
                         .Build())));
 
                     // ThrowObject.Prototype.ThrowablePowerProp.Value
-                    client.ThrowingPower = (ulong)throwPrototype.GetFieldGroup(HardcodedBlueprintId.ThrowablePowerProp).SimpleFields[0].Value;
+                    client.ThrowingPower = throwPrototype.Properties.GetPropertyContainer((BlueprintId)HardcodedBlueprintId.ThrowablePowerProp).Value;
                     messageList.Add(new(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
                         .SetPowerProtoId(client.ThrowingPower)
@@ -437,7 +437,7 @@ namespace MHServerEmu.Games.Events
                     if (emmaCostume == PrototypeId.Invalid)
                         emmaCostume = GameDatabase.GetPrototypeRefByName("Entity/Items/Costumes/Prototypes/EmmaFrost/Modern.prototype");
 
-                    var asset = (StringId)emmaCostume.GetPrototype().GetFieldGroup(HardcodedBlueprintId.Costume).GetField(FieldId.CostumeUnrealClass).Value;
+                    var asset = (StringId)GameDatabase.GetPrototype<CostumePrototype>(emmaCostume).CostumeUnrealClass;
                     conditionArchive.Condition.AssetDataRef = asset;  // MarvelPlayer_EmmaFrost_Modern
 
                     messageList.Add(new(client, new(NetMessageAddCondition.CreateBuilder()

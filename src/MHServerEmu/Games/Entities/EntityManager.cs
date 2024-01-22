@@ -124,17 +124,17 @@ namespace MHServerEmu.Games.Entities
             EntityBaseData baseData = (requiresEnterGameWorld == false)
                 ? new EntityBaseData(GetNextEntityId(), prototypeId, position, orientation, OverrideSnapToFloor)
                 : new EntityBaseData(GetNextEntityId(), prototypeId, null, null);
-            
-            PrototypeFieldGroup regionConnectionTarget = targetPrototype.GetPrototype().GetFieldGroup(HardcodedBlueprintId.RegionConnectionTarget);
 
-            var cellAssetId = (StringId)regionConnectionTarget.GetFieldDef(FieldId.Cell);
+            var regionConnectionTarget = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetPrototype);
+
+            var cellAssetId = (StringId)regionConnectionTarget.Cell;
             var cellPrototypeId = cellAssetId != StringId.Invalid ? GameDatabase.GetPrototypeRefByName(GameDatabase.GetAssetName(cellAssetId)) : PrototypeId.Invalid;
 
-            var targetRegion = (PrototypeId)regionConnectionTarget.GetFieldDef(FieldId.Region);
+            var targetRegion = (PrototypeId)regionConnectionTarget.Region;
             // Logger.Debug($"SpawnDirectTeleport {targetRegion}");
             if (targetRegion == 0) { // get Parent value
-                PrototypeFieldGroup parentTarget = targetPrototype.GetPrototype().Header.ReferenceType.GetPrototype().GetFieldGroup(HardcodedBlueprintId.RegionConnectionTarget);
-                if (parentTarget != null) targetRegion = (PrototypeId)parentTarget.GetFieldDef(FieldId.Region);
+                var parentTarget = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetPrototype);
+                if (parentTarget != null) targetRegion = (PrototypeId)parentTarget.Region;
             }
 
             if (RegionManager.IsRegionAvailable((RegionPrototypeId)targetRegion) == false) // TODO: change region test
@@ -147,11 +147,11 @@ namespace MHServerEmu.Games.Entities
             {
                 Type = type,
                 Region = targetRegion,
-                Area = (PrototypeId)regionConnectionTarget.GetFieldDef(FieldId.Area),
+                Area = (PrototypeId)regionConnectionTarget.Area,
                 Cell = cellPrototypeId,
-                Entity = (PrototypeId)regionConnectionTarget.GetField(FieldId.Entity).Value,
+                Entity = (PrototypeId)regionConnectionTarget.Entity,
                 Name = "",
-                NameId = regionConnectionTarget.GetFieldDef(FieldId.Name),
+                NameId = regionConnectionTarget.Name,
                 Target = targetPrototype,
                 Position = new()
             };

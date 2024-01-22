@@ -16,29 +16,6 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// </summary>
         public override void Deserialize(Prototype prototype, PrototypeId dataRef, Stream stream)
         {
-            // Temp implementation
-
-            // Set this prototype's id data ref
-            prototype.DataRef = dataRef;
-
-            // Deserialize
-            using (BinaryReader reader = new(stream))
-            {
-                // Read Calligraphy prototype file header
-                CalligraphyHeader header = new(reader);
-
-                // Temp deserialization
-                prototype.DeserializeCalligraphy(reader);
-
-                // Temp hack for property info
-                if (prototype is PropertyInfoPrototype propertyInfo)
-                    propertyInfo.FillPropertyInfoFields();
-            }
-        }
-
-        public void DeserializeWip(Prototype prototype, PrototypeId dataRef, Stream stream)
-        {
-            // WIP proper deserialization
             string prototypeName = GameDatabase.GetPrototypeName(dataRef);
 
             using (BinaryReader reader = new(stream))
