@@ -114,16 +114,19 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             if (assetName.Length > 0 && char.IsDigit(assetName[0]))
                 assetName = $"_{assetName}";
 
-            // Try to parse enum value from its name if we got a valid asset
+            // Try to parse enum value from its name
             if (Enum.TryParse(@params.FieldInfo.PropertyType, assetName, true, out var value) == false)
             {
                 if (assetName != string.Empty)
-                    Logger.Warn($"Missing enum member {assetName} in {@params.BlueprintMemberInfo.Member.RuntimeClassFieldInfo.Name}");
+                    Logger.Warn(string.Format("Missing enum member {0} in {1}, field {2}, file name {3}",
+                        assetName,
+                        @params.FieldInfo.PropertyType.Name,
+                        @params.BlueprintMemberInfo.Member.RuntimeClassFieldInfo.Name,
+                        @params.FileName));
 
                 // Set value to default for enums we can't parse
                 var attribute = @params.FieldInfo.PropertyType.GetCustomAttribute<AssetEnumAttribute>();
-                var defaultValue = attribute.DefaultValue;
-                @params.FieldInfo.SetValue(@params.OwnerPrototype, defaultValue);
+                @params.FieldInfo.SetValue(@params.OwnerPrototype, attribute.DefaultValue);
                 return true;
             }
 
@@ -213,10 +216,8 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 var assetId = (StringId)@params.Reader.ReadUInt64();
                 var assetName = GameDatabase.GetAssetName(assetId);
 
-                // Fix asset names that start with a digit (C# doesn't allow enum members to start with a digit)
-                if (char.IsDigit(assetName[0]))
-                    assetName = $"_{assetName}";
-
+                // Looks like there are no numeric or invalid enum values in list enums, so we can speed this up
+                // by just parsing whatever asset name we have as is.
                 var value = Enum.Parse(@params.FieldInfo.PropertyType.GetElementType(), assetName, true);
                 values.SetValue(value, i);
             }
