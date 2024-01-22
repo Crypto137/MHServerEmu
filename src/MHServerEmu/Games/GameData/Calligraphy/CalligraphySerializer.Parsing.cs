@@ -88,24 +88,18 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             // We read the value as either Int64 or Float64 and then cast it to the appropriate type for our field.
             var rawValue = parseAsFloat ? @params.Reader.ReadDouble() : @params.Reader.ReadInt64();
 
-            try
+            // Some prototypes (e.g. ProceduralProfileDrDoomPhase1.defaults) use very high values for int fields that cause overflows.
+            // The client handles this by taking the first 4 bytes of the value and throwing away everything else.
+            // We handle this by setting those fields to int.MaxValue, since the intention is apparently to have the value be as high
+            // as possible. This doesn't seem to happen with other types.
+            if (typeof(T) == typeof(int) && rawValue > int.MaxValue)
             {
-                var value = Convert.ChangeType(rawValue, typeof(T), CultureInfo.InvariantCulture);
-                @params.FieldInfo.SetValue(@params.OwnerPrototype, value);
+                Logger.Warn($"ParseValue overflow for Int32 field {@params.BlueprintMemberInfo.Member.FieldName}, raw value {rawValue}, file name {@params.FileName}");
+                rawValue = int.MaxValue;
             }
-            catch (OverflowException)
-            {
-                // Some prototypes (e.g. ProceduralProfileDrDoomPhase1.defaults) use very high values for int fields that cause overflows.
-                // The client handles this by taking the first 4 bytes of the value and throwing away everything else.
-                // We handle this by setting those fields to int.MaxValue, since the intention is apparently to have the value be as high
-                // as possible. This doesn't seem to happen with other types, but we'll leave this check here just in case.
-                if (typeof(T) != typeof(int))
-                    throw new($"Unexpected overflow for type {typeof(T).Name}.");
 
-                @params.FieldInfo.SetValue(@params.OwnerPrototype, int.MaxValue);
-                Logger.Warn($"ParseValue overflow for field {@params.BlueprintMemberInfo.Member.FieldName} in {@params.FileName}, raw value {rawValue}");
-            }
-            
+            var value = Convert.ChangeType(rawValue, typeof(T), CultureInfo.InvariantCulture);
+            @params.FieldInfo.SetValue(@params.OwnerPrototype, value);
             return true;
         }
 
