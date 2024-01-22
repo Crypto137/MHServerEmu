@@ -699,7 +699,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class GlobalPropertiesPrototype : Prototype
     {
-        public ulong Properties { get; protected set; }
+        public PrototypePropertyCollection Properties { get; protected set; }
     }
 
     public class PowerVisualsGlobalsPrototype : Prototype

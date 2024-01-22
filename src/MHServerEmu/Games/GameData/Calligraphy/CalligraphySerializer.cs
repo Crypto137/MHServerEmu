@@ -213,11 +213,10 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// <summary>
         /// Deserializes a property mixin field group of a Calligraphy prototype.
         /// </summary>
-        private static void DeserializePropertyMixin(Prototype prototype, Blueprint blueprint, Blueprint groupBlueprint, byte fieldGroupCopyNum,
+        private static void DeserializePropertyMixin(Prototype prototype, Blueprint blueprint, Blueprint groupBlueprint, byte blueprintCopyNum,
             PrototypeId prototypeDataRef, string prototypeName, Type classType, BinaryReader reader)
         {
-            // Skip property fields groups for now
-            // todo: do actual deserialization in DeserializeFieldGroupIntoProperty()
+            // TODO: do actual deserialization in DeserializeFieldGroupIntoProperty()
             short numSimpleFields = reader.ReadInt16();
             for (int i = 0; i < numSimpleFields; i++)
             {
@@ -227,6 +226,20 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 // Property mixins don't have any RHStructs, so we can always read the value as uint64
                 // (also no types or localized string refs)
                 var value = reader.ReadUInt64();
+
+                // hack: write data to a temporary PrototypePropertyCollection implementation
+                if (classType == typeof(PropertyPrototype)) continue;
+                var propertyCollectionFieldInfo = classType.GetProperty("Properties");
+                var propertyCollection = (PrototypePropertyCollection)propertyCollectionFieldInfo.GetValue(prototype);
+
+                if (propertyCollection == null)
+                {
+                    propertyCollection = new();
+                    propertyCollectionFieldInfo.SetValue(prototype, propertyCollection);
+                }
+
+                string fieldName = GameDatabase.GetBlueprintFieldName(id);
+                propertyCollection.AddPropertyFieldValue(groupBlueprint.Id, blueprintCopyNum, fieldName, value);
             }
 
             // Property field groups do not have any list fields, so numListFields should always be 0

@@ -95,7 +95,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class AffixPrototype : Prototype
     {
         public AffixPosition Position { get; protected set; }
-        public ulong Properties { get; protected set; }
+        public PrototypePropertyCollection Properties { get; protected set; }
         public ulong DisplayNameText { get; protected set; }
         public int Weight { get; protected set; }
         public ulong[] TypeFilters { get; protected set; }

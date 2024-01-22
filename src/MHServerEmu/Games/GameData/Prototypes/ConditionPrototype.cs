@@ -131,7 +131,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong TooltipText { get; protected set; }
         public ulong IconPath { get; protected set; }
         public bool PauseDurationCountdown { get; protected set; }
-        public ulong Properties { get; protected set; }
+        public PrototypePropertyCollection Properties { get; protected set; }
         public ConditionScopeType Scope { get; protected set; }
         public ulong UnrealClass { get; protected set; }
         public EvalPrototype ChanceToApplyCondition { get; protected set; }
@@ -171,7 +171,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ConditionEffectPrototype : Prototype
     {
-        public ulong Properties { get; protected set; }
+        public PrototypePropertyCollection Properties { get; protected set; }
         public int ConditionNum { get; protected set; }
     }
 }

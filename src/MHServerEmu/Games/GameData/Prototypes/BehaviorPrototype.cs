@@ -454,7 +454,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool IsBot { get; protected set; }
         public int InterruptCooldownMS { get; protected set; }
         public bool CanLeash { get; protected set; }
-        public ulong Properties { get; protected set; }
+        public PrototypePropertyCollection Properties { get; protected set; }
         public bool AlwaysAggroed { get; protected set; }
     }
 

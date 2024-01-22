@@ -231,7 +231,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PowerPrototype : Prototype
     {
-        public ulong Properties { get; protected set; }
+        public PrototypePropertyCollection Properties { get; protected set; }
         public PowerEventActionPrototype[] ActionsTriggeredOnPowerEvent { get; protected set; }
         public ActivationType Activation { get; protected set; }
         public float AnimationContactTimePercent { get; protected set; }
