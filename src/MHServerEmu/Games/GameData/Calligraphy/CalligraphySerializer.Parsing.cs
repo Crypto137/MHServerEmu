@@ -254,12 +254,17 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         {
             var reader = @params.Reader;
 
-            // Same as with enums, we use Array.CreateInstance()
-            var values = Array.CreateInstance(@params.FieldInfo.PropertyType.GetElementType(), reader.ReadInt16());
+            // Same as with enums, we use Array.CreateInstance() because we know the type only during runtime
+            var elementType = @params.FieldInfo.PropertyType.GetElementType();
+            var values = Array.CreateInstance(elementType, reader.ReadInt16());
             for (int i = 0; i < values.Length; i++)
             {
+                // All data refs ideally should be typed. Until we do this, check and convert the value to an enum member if needed.
                 var value = reader.ReadUInt64();
-                values.SetValue(value, i);
+                if (elementType.IsEnum)
+                    values.SetValue(Enum.ToObject(elementType, value), i);
+                else
+                    values.SetValue(value, i);
             }
 
             @params.FieldInfo.SetValue(@params.OwnerPrototype, values);
