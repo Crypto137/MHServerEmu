@@ -281,10 +281,12 @@ namespace MHServerEmu.Games.Generators
             cellPrototypes = GameDatabase.GetCellPrototypesByPath(cellSetPath);
 
             int numCells = 0;
+            cellPrototypes.Sort((a, b) => a.DataRef.CompareTo(b.DataRef)); // Sort by PrototypeId
             foreach (CellPrototype cell in cellPrototypes)
             {
                 if (IsInCellSet(cellSetEntry, cellSetPath, cell))
                 {
+                    //Logger.Debug($"0x{cell.DataRef:X16}i64 [{cell.DataRef}] {GameDatabase.GetPrototypeName(cell.DataRef)}");
                     cells.Add(cell.DataRef);
                     CellBounds = cell.BoundingBox;
                     ++numCells;
