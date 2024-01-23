@@ -290,9 +290,13 @@ namespace MHServerEmu.Games.Generators
                 }
 
                 if ((type & side) != 0)
+                {
                     if (!cell.IsConnected(other)) return false;
-                    else
+                }
+                else
+                {
                     if (cell.IsConnected(other) && other.CellRef != 0) return false;
+                }
             }
             return true;
         }
