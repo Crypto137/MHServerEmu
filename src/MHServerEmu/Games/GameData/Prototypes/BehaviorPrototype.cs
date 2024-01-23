@@ -123,14 +123,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ManaBehaviorPrototype : Prototype
     {
-        public ulong DisplayName { get; protected set; }
+        public LocaleStringId DisplayName { get; protected set; }
         public ResourceType MeterType { get; protected set; }
-        public ulong[] Powers { get; protected set; }
+        public PrototypeId[] Powers { get; protected set; }
         public bool StartsEmpty { get; protected set; }
-        public ulong Description { get; protected set; }
-        public ulong MeterColor { get; protected set; }
-        public ulong ResourceBarStyle { get; protected set; }
-        public ulong ResourcePipStyle { get; protected set; }
+        public LocaleStringId Description { get; protected set; }
+        public StringId MeterColor { get; protected set; }
+        public StringId ResourceBarStyle { get; protected set; }
+        public StringId ResourcePipStyle { get; protected set; }
         public bool DepleteOnDeath { get; protected set; }
     }
 
@@ -140,7 +140,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int RegenUpdateTimeMS { get; protected set; }
         public EvalPrototype EvalOnEnduranceUpdate { get; protected set; }
         public ManaType ManaType { get; protected set; }
-        public ulong BaseEndurancePerLevel { get; protected set; }
+        public CurveId BaseEndurancePerLevel { get; protected set; }
         public bool RestoreToMaxOnLevelUp { get; protected set; }
     }
 
@@ -156,15 +156,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class AlliancePrototype : Prototype
     {
-        public ulong[] HostileTo { get; protected set; }
-        public ulong[] FriendlyTo { get; protected set; }
-        public ulong WhileConfused { get; protected set; }
-        public ulong WhileControlled { get; protected set; }
+        public PrototypeId[] HostileTo { get; protected set; }
+        public PrototypeId[] FriendlyTo { get; protected set; }
+        public PrototypeId WhileConfused { get; protected set; }
+        public PrototypeId WhileControlled { get; protected set; }
     }
 
     public class BotDefinitionEntryPrototype : Prototype
     {
-        public ulong Avatar { get; protected set; }
+        public PrototypeId Avatar { get; protected set; }
         public BehaviorProfilePrototype BehaviorProfile { get; protected set; }
     }
 
@@ -181,12 +181,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class AIEntityAttributeHasKeywordPrototype : AIEntityAttributePrototype
     {
-        public ulong Keyword { get; protected set; }
+        public PrototypeId Keyword { get; protected set; }
     }
 
     public class AIEntityAttributeHasConditionKeywordPrototype : AIEntityAttributePrototype
     {
-        public ulong ConditionKeyword { get; protected set; }
+        public PrototypeId ConditionKeyword { get; protected set; }
     }
 
     public class AIEntityAttributeIsHostilePrototype : AIEntityAttributePrototype
@@ -207,12 +207,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class AIEntityAttributeIsPrototypeRefPrototype : AIEntityAttributePrototype
     {
-        public ulong ProtoRef { get; protected set; }
+        public PrototypeId ProtoRef { get; protected set; }
     }
 
     public class AIEntityAttributeIsPrototypePrototype : AIEntityAttributePrototype
     {
-        public ulong RefToPrototype { get; protected set; }
+        public PrototypeId RefToPrototype { get; protected set; }
     }
 
     public class AIEntityAttributeIsSimulatedPrototype : AIEntityAttributePrototype
@@ -225,12 +225,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class AIEntityAttributeIsCurrentTargetEntityOfAgentOfTypePrototype : AIEntityAttributePrototype
     {
-        public ulong OtherAgentProtoRef { get; protected set; }
+        public PrototypeId OtherAgentProtoRef { get; protected set; }
     }
 
     public class AIEntityAttributeIsSummonedByPowerPrototype : AIEntityAttributePrototype
     {
-        public ulong Power { get; protected set; }
+        public PrototypeId Power { get; protected set; }
     }
 
     public class AIEntityAttributeCanBePlayerOwnedPrototype : AIEntityAttributePrototype
@@ -239,13 +239,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class AIEntityAttributeHasBlackboardPropertyValuePrototype : AIEntityAttributePrototype
     {
-        public ulong PropertyInfoRef { get; protected set; }
+        public PrototypeId PropertyInfoRef { get; protected set; }
         public int Value { get; protected set; }
     }
 
     public class AIEntityAttributeHasPropertyPrototype : AIEntityAttributePrototype
     {
-        public ulong PropertyInfoRef { get; protected set; }
+        public PrototypeId PropertyInfoRef { get; protected set; }
     }
 
     public class AIEntityAttributeHasHealthValuePercentPrototype : AIEntityAttributePrototype
@@ -291,8 +291,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool RemoveStackOnMaxNumStacksReached { get; protected set; }
         public bool StacksFromDifferentCreators { get; protected set; }
         public int NumStacksToApply { get; protected set; }
-        public ulong[] StacksByKeyword { get; protected set; }
-        public ulong StacksWithOtherPower { get; protected set; }
+        public PrototypeId[] StacksByKeyword { get; protected set; }
+        public PrototypeId StacksWithOtherPower { get; protected set; }
     }
 
     public class DelayContextPrototype : Prototype
@@ -317,11 +317,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float MinDistanceThreshold { get; protected set; }
         public SelectEntityPoolType PoolType { get; protected set; }
         public SelectEntityMethodType SelectionMethod { get; protected set; }
-        public ulong EntitiesPropertyForComparison { get; protected set; }
+        public PrototypeId EntitiesPropertyForComparison { get; protected set; }
         public SelectEntityType SelectEntityType { get; protected set; }
         public bool LockEntityOnceSelected { get; protected set; }
         public float CellOrRegionAABBScale { get; protected set; }
-        public ulong AlliancePriority { get; protected set; }
+        public PrototypeId AlliancePriority { get; protected set; }
     }
 
     public class FlankContextPrototype : Prototype
@@ -371,7 +371,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class UsePowerContextPrototype : Prototype
     {
-        public ulong Power { get; protected set; }
+        public PrototypeId Power { get; protected set; }
         public float TargetOffset { get; protected set; }
         public bool RequireOriPriorToActivate { get; protected set; }
         public float OrientationThreshold { get; protected set; }
@@ -390,7 +390,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float MinDistanceToTarget { get; protected set; }
         public float MaxDistanceToTarget { get; protected set; }
         public bool IgnoreOutOfPositionFailure { get; protected set; }
-        public ulong[] DifficultyTierRestrictions { get; protected set; }
+        public PrototypeId[] DifficultyTierRestrictions { get; protected set; }
     }
 
     public class MoveToContextPrototype : Prototype
@@ -438,7 +438,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public bool DoPulse { get; protected set; }
         public bool EnableSpawner { get; protected set; }
-        public ulong[] Spawners { get; protected set; }
+        public PrototypeId[] Spawners { get; protected set; }
         public bool KillSummonedInventory { get; protected set; }
         public bool SearchWholeRegion { get; protected set; }
     }
@@ -449,8 +449,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float AggroDropDistance { get; protected set; }
         public float AggroRangeAlly { get; protected set; }
         public float AggroRangeHostile { get; protected set; }
-        public ulong Brain { get; protected set; }
-        public ulong[] EquippedPassivePowers { get; protected set; }
+        public PrototypeId Brain { get; protected set; }
+        public PrototypeId[] EquippedPassivePowers { get; protected set; }
         public bool IsBot { get; protected set; }
         public int InterruptCooldownMS { get; protected set; }
         public bool CanLeash { get; protected set; }
@@ -460,7 +460,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class KismetSequencePrototype : Prototype
     {
-        public ulong KismetSeqName { get; protected set; }
+        public StringId KismetSeqName { get; protected set; }
         public bool KismetSeqBlocking { get; protected set; }
         public bool AudioListenerAtCamera { get; protected set; }
         public bool HideAvatarsDuringPlayback { get; protected set; }

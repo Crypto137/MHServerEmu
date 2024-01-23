@@ -68,16 +68,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ChatCommandArgumentPrototype : Prototype
     {
-        public ulong Description { get; protected set; }
+        public LocaleStringId Description { get; protected set; }
         public ChatCommandArgumentType Type { get; protected set; }
         public bool Required { get; protected set; }
     }
 
     public class ChatCommandPrototype : Prototype
     {
-        public ulong Command { get; protected set; }
-        public ulong Description { get; protected set; }
-        public ulong Function { get; protected set; }     // TODO: this is an asset id that needs to be bound to a function (CalligraphySerializer::ParseFunctionPtr)
+        public LocaleStringId Command { get; protected set; }
+        public LocaleStringId Description { get; protected set; }
+        public StringId Function { get; protected set; }     // TODO: this is an asset id that needs to be bound to a function (CalligraphySerializer::ParseFunctionPtr)
         public ChatCommandArgumentPrototype[] Parameters { get; protected set; }
         public bool ShowInHelp { get; protected set; }
         public bool RespondsToSpacebar { get; protected set; }
@@ -86,19 +86,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EmoteChatCommandPrototype : ChatCommandPrototype
     {
-        public ulong EmotePower { get; protected set; }
-        public ulong EmoteText { get; protected set; }
+        public PrototypeId EmotePower { get; protected set; }
+        public LocaleStringId EmoteText { get; protected set; }
     }
 
     public class ChatChannelPrototype : Prototype
     {
         public ChatMessageFormatType ChannelType { get; protected set; }
-        public ulong PromptText { get; protected set; }
-        public ulong TextStyle { get; protected set; }
-        public ulong DisplayName { get; protected set; }
-        public ulong ChatCommand { get; protected set; }
+        public LocaleStringId PromptText { get; protected set; }
+        public PrototypeId TextStyle { get; protected set; }
+        public LocaleStringId DisplayName { get; protected set; }
+        public PrototypeId ChatCommand { get; protected set; }
         public bool ShowChannelNameInChat { get; protected set; }
-        public ulong ShortName { get; protected set; }
+        public LocaleStringId ShortName { get; protected set; }
         public bool ShowInChannelList { get; protected set; }
         public bool VisibleOnAllTabs { get; protected set; }
         public DesignWorkflowState DesignState { get; protected set; }
@@ -106,7 +106,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool AllowPlayerFilter { get; protected set; }
         public bool SubscribeByDefault { get; protected set; }
         public bool DoHashtagFormatting { get; protected set; }
-        public ulong ChatPanelTabName { get; protected set; }
+        public LocaleStringId ChatPanelTabName { get; protected set; }
         public bool AllowChatPanelTab { get; protected set; }
         public LanguageType Language { get; protected set; }
     }

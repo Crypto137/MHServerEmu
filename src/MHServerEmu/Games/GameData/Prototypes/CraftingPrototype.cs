@@ -2,7 +2,7 @@
 {
     public class CraftingInputPrototype : Prototype
     {
-        public ulong SlotDisplayInfo { get; protected set; }
+        public PrototypeId SlotDisplayInfo { get; protected set; }
         public bool OnlyDroppableForThisAvatar { get; protected set; }
         public bool OnlyNotDroppableForThisAvatar { get; protected set; }
         public bool OnlyEquippableAtThisAvatarLevel { get; protected set; }
@@ -11,7 +11,7 @@
 
     public class AutoPopulatedInputPrototype : CraftingInputPrototype
     {
-        public ulong Ingredient { get; protected set; }
+        public PrototypeId Ingredient { get; protected set; }
         public int Quantity { get; protected set; }
     }
 
@@ -22,7 +22,7 @@
 
     public class AllowedItemListInputPrototype : CraftingInputPrototype
     {
-        public ulong[] AllowedItems { get; protected set; }
+        public PrototypeId[] AllowedItems { get; protected set; }
     }
 
     public class CraftingCostPrototype : Prototype
@@ -49,14 +49,14 @@
     {
         public CraftingInputPrototype[] RecipeInputs { get; protected set; }
         public LootTablePrototype RecipeOutput { get; protected set; }
-        public ulong RecipeDescription { get; protected set; }
-        public ulong RecipeIconPath { get; protected set; }
+        public LocaleStringId RecipeDescription { get; protected set; }
+        public StringId RecipeIconPath { get; protected set; }
         public int SortOrder { get; protected set; }
-        public ulong RecipeTooltip { get; protected set; }
+        public LocaleStringId RecipeTooltip { get; protected set; }
         public CraftingCostPrototype CraftingCost { get; protected set; }
         public int UnlockAtCrafterRank { get; protected set; }
         public EvalPrototype OnRecipeComplete { get; protected set; }
-        public ulong RecipeCategory { get; protected set; }
-        public ulong RecipeIconPathHiRes { get; protected set; }
+        public PrototypeId RecipeCategory { get; protected set; }
+        public StringId RecipeIconPathHiRes { get; protected set; }
     }
 }

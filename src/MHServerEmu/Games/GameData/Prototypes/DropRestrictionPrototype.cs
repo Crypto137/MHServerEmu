@@ -41,12 +41,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ItemTypeRestrictionPrototype : DropRestrictionPrototype
     {
-        public ulong[] AllowedTypes { get; protected set; }
+        public PrototypeId[] AllowedTypes { get; protected set; }
     }
 
     public class ItemParentRestrictionPrototype : DropRestrictionPrototype
     {
-        public ulong[] AllowedParents { get; protected set; }
+        public PrototypeId[] AllowedParents { get; protected set; }
     }
 
     public class HasAffixInPositionRestrictionPrototype : DropRestrictionPrototype
@@ -80,13 +80,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class OutputRarityPrototype : DropRestrictionPrototype
     {
-        public ulong Value { get; protected set; }
+        public PrototypeId Value { get; protected set; }
         public bool UseAsFilter { get; protected set; }
     }
 
     public class RarityRestrictionPrototype : DropRestrictionPrototype
     {
-        public ulong[] AllowedRarities { get; protected set; }
+        public PrototypeId[] AllowedRarities { get; protected set; }
     }
 
     public class RankRestrictionPrototype : DropRestrictionPrototype
@@ -106,7 +106,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class UsableByRestrictionPrototype : DropRestrictionPrototype
     {
-        public ulong[] Avatars { get; protected set; }
+        public PrototypeId[] Avatars { get; protected set; }
     }
 
     public class DistanceRestrictionPrototype : DropRestrictionPrototype

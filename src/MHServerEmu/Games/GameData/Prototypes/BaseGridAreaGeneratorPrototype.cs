@@ -54,7 +54,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class RoadGeneratorPrototype : Prototype
     {
-        public ulong[] Cells { get; protected set; }
+        public StringId[] Cells { get; protected set; }
     }
 
     public class CellDeletionProfilePrototype : Prototype
@@ -95,23 +95,23 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class RequiredCellBasePrototype : Prototype
     {
         public int DisableAfterUsedMax { get; protected set; }
-        public ulong PopulationThemeOverride { get; protected set; }
+        public PrototypeId PopulationThemeOverride { get; protected set; }
         public RequiredCellRestrictBasePrototype[] LocationRestrictions { get; protected set; }
     }
 
     public class RequiredCellPrototype : RequiredCellBasePrototype
     {
-        public ulong Cell { get; protected set; }
+        public StringId Cell { get; protected set; }
         public int Num { get; protected set; }
         public bool Destination { get; protected set; }
     }
 
     public class RandomInstanceRegionPrototype : RequiredCellBasePrototype
     {
-        public ulong OriginCell { get; protected set; }
-        public ulong OriginEntity { get; protected set; }
-        public ulong OverrideLocalPopulation { get; protected set; }
-        public ulong Target { get; protected set; }
+        public StringId OriginCell { get; protected set; }
+        public PrototypeId OriginEntity { get; protected set; }
+        public PrototypeId OverrideLocalPopulation { get; protected set; }
+        public PrototypeId Target { get; protected set; }
         public int Weight { get; protected set; }
     }
 
@@ -122,7 +122,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class RequiredSuperCellEntryPrototype : RequiredCellBasePrototype
     {
-        public ulong SuperCell { get; protected set; }
+        public PrototypeId SuperCell { get; protected set; }
     }
 
     #endregion

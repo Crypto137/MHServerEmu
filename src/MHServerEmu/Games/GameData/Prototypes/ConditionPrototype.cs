@@ -119,8 +119,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ConditionUnrealPrototype : Prototype
     {
-        public ulong ConditionArt { get; protected set; }
-        public ulong EntityArt { get; protected set; }
+        public StringId ConditionArt { get; protected set; }
+        public StringId EntityArt { get; protected set; }
     }
 
     public class ConditionPrototype : Prototype
@@ -128,27 +128,27 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool CancelOnHit { get; protected set; }
         public bool CancelOnPowerUse { get; protected set; }
         public long DurationMS { get; protected set; }
-        public ulong TooltipText { get; protected set; }
-        public ulong IconPath { get; protected set; }
+        public LocaleStringId TooltipText { get; protected set; }
+        public StringId IconPath { get; protected set; }
         public bool PauseDurationCountdown { get; protected set; }
         public PrototypePropertyCollection Properties { get; protected set; }
         public ConditionScopeType Scope { get; protected set; }
-        public ulong UnrealClass { get; protected set; }
+        public StringId UnrealClass { get; protected set; }
         public EvalPrototype ChanceToApplyCondition { get; protected set; }
         public PowerConditionType ConditionType { get; protected set; }
         public bool VisualOnly { get; protected set; }
         public ConditionUnrealPrototype[] UnrealOverrides { get; protected set; }
-        public ulong[] Keywords { get; protected set; }
-        public ulong DurationMSCurve { get; protected set; }
-        public ulong DurationMSCurveIndex { get; protected set; }
+        public PrototypeId[] Keywords { get; protected set; }
+        public CurveId DurationMSCurve { get; protected set; }
+        public PrototypeId DurationMSCurveIndex { get; protected set; }
         public bool ForceShowClientConditionFX { get; protected set; }
         public ProcTriggerType[] CancelOnProcTriggers { get; protected set; }
         public int UpdateIntervalMS { get; protected set; }
         public EvalPrototype DurationMSEval { get; protected set; }
-        public ulong TooltipStyle { get; protected set; }
-        public ulong TooltipFont { get; protected set; }
+        public PrototypeId TooltipStyle { get; protected set; }
+        public StringId TooltipFont { get; protected set; }
         public EvalPrototype[] EvalOnCreate { get; protected set; }
-        public ulong CancelOnPowerUseKeyword { get; protected set; }
+        public PrototypeId CancelOnPowerUseKeyword { get; protected set; }
         public bool CancelOnPowerUsePost { get; protected set; }
         public bool PersistToDB { get; protected set; }
         public bool CancelOnKilled { get; protected set; }
@@ -164,9 +164,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype[] EvalPartyBoost { get; protected set; }
         public StackingBehaviorPrototype StackingBehavior { get; protected set; }
         public bool CancelOnIntraRegionTeleport { get; protected set; }
-        public ulong DisplayName { get; protected set; }
+        public LocaleStringId DisplayName { get; protected set; }
         public int UrgentTimeMS { get; protected set; }
-        public ulong IconPathHiRes { get; protected set; }
+        public StringId IconPathHiRes { get; protected set; }
     }
 
     public class ConditionEffectPrototype : Prototype

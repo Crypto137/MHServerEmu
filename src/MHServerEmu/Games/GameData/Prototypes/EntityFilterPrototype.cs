@@ -52,7 +52,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EntityFilterHasAlliancePrototype : EntityFilterPrototype
     {
-        public ulong Alliance { get; protected set; }
+        public PrototypeId Alliance { get; protected set; }
     }
 
     public class EntityFilterScriptKeyPrototype : EntityFilterPrototype
@@ -62,7 +62,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EntityFilterHasKeywordPrototype : EntityFilterPrototype
     {
-        public ulong Keyword { get; protected set; }
+        public PrototypeId Keyword { get; protected set; }
     }
 
     public class EntityFilterHasNegStatusEffectPrototype : EntityFilterPrototype
@@ -71,33 +71,33 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EntityFilterHasPrototypePrototype : EntityFilterPrototype
     {
-        public ulong EntityPrototype { get; protected set; }
+        public PrototypeId EntityPrototype { get; protected set; }
         public bool IncludeChildPrototypes { get; protected set; }
     }
 
     public class EntityFilterInAreaPrototype : EntityFilterPrototype
     {
-        public ulong InArea { get; protected set; }
+        public PrototypeId InArea { get; protected set; }
     }
 
     public class EntityFilterInCellPrototype : EntityFilterPrototype
     {
-        public ulong[] InCells { get; protected set; }
+        public StringId[] InCells { get; protected set; }
     }
 
     public class EntityFilterInLocationWithKeywordPrototype : EntityFilterPrototype
     {
-        public ulong Keyword { get; protected set; }
+        public PrototypeId Keyword { get; protected set; }
     }
 
     public class EntityFilterInRegionPrototype : EntityFilterPrototype
     {
-        public ulong InRegion { get; protected set; }
+        public PrototypeId InRegion { get; protected set; }
     }
 
     public class EntityFilterMissionStatePrototype : EntityFilterPrototype
     {
-        public ulong Mission { get; protected set; }
+        public PrototypeId Mission { get; protected set; }
         public MissionState State { get; protected set; }
     }
 
@@ -107,7 +107,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EntityFilterIsMemberOfSuperteamPrototype : EntityFilterPrototype
     {
-        public ulong Superteam { get; protected set; }
+        public PrototypeId Superteam { get; protected set; }
     }
 
     public class EntityFilterIsMissionContributorPrototype : EntityFilterPrototype
@@ -141,38 +141,38 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EntityFilterSpawnedByEncounterPrototype : EntityFilterPrototype
     {
-        public ulong EncounterResource { get; protected set; }
+        public StringId EncounterResource { get; protected set; }
     }
 
     public class EntityFilterSpawnedByMissionPrototype : EntityFilterPrototype
     {
-        public ulong MissionPrototype { get; protected set; }
+        public PrototypeId MissionPrototype { get; protected set; }
     }
 
     public class EntityFilterSpawnedBySpawnerPrototype : EntityFilterPrototype
     {
-        public ulong SpawnerPrototype { get; protected set; }
+        public PrototypeId SpawnerPrototype { get; protected set; }
     }
 
     public class EntityFilterHasPrestigeLevelPrototype : EntityFilterPrototype
     {
-        public ulong PrestigeLevel { get; protected set; }
+        public PrototypeId PrestigeLevel { get; protected set; }
     }
 
     public class EntityFilterHasRankPrototype : EntityFilterPrototype
     {
-        public ulong RankPrototype { get; protected set; }
+        public PrototypeId RankPrototype { get; protected set; }
     }
 
     public class EntityFilterItemRarityPrototype : EntityFilterPrototype
     {
-        public ulong Rarity { get; protected set; }
+        public PrototypeId Rarity { get; protected set; }
     }
 
     public class ScoreTableSchemaEntryPrototype : Prototype
     {
         public ScoreTableValueType Type { get; protected set; }
-        public ulong Name { get; protected set; }
+        public LocaleStringId Name { get; protected set; }
         public EvalPrototype EvalOnPlayerAdd { get; protected set; }
         public EvalPrototype EvalAuto { get; protected set; }
         public EntityFilterPrototype OnEntityDeathFilter { get; protected set; }

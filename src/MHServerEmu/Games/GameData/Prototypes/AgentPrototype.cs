@@ -29,7 +29,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public Allegiance Allegiance { get; protected set; }
         [Mixin]
         public LocomotorPrototype Locomotion { get; protected set; }
-        public ulong HitReactCondition { get; protected set; }
+        public PrototypeId HitReactCondition { get; protected set; }
         public BehaviorProfilePrototype BehaviorProfile { get; protected set; }
         [Mixin]
         public PopulationInfoPrototype PopulationInfo { get; protected set; }   // This does not seem to be actually used anywhere
@@ -39,21 +39,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float ReturnToDormantRange { get; protected set; }
         public bool TriggersOcclusion { get; protected set; }
         public int HitReactCooldownMS { get; protected set; }
-        public ulong BriefDescription { get; protected set; }
+        public LocaleStringId BriefDescription { get; protected set; }
         public float HealthBarRadius { get; protected set; }
-        public ulong OnResurrectedPower { get; protected set; }
+        public PrototypeId OnResurrectedPower { get; protected set; }
         public bool WakeStartsVisible { get; protected set; }
         public VOStoryNotificationPrototype[] VOStoryNotifications { get; protected set; }
         public bool HitReactOnClient { get; protected set; }
-        public ulong CCReactCondition { get; protected set; }
+        public PrototypeId CCReactCondition { get; protected set; }
         public int InCombatTimerMS { get; protected set; }
         public DramaticEntranceType PlayDramaticEntrance { get; protected set; }
-        public ulong StealablePower { get; protected set; }
-        public ulong BossRewardIconPath { get; protected set; }
+        public PrototypeId StealablePower { get; protected set; }
+        public StringId BossRewardIconPath { get; protected set; }
         public bool SpawnLootForMissionContributors { get; protected set; }
         public int InteractRangeThrow { get; protected set; }
         public bool DamageMeterEnabled { get; protected set; }
-        public ulong MobHealthBaseCurveDCL { get; protected set; }
+        public CurveId MobHealthBaseCurveDCL { get; protected set; }
     }
 
     public class OrbPrototype : AgentPrototype
@@ -64,13 +64,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class TeamUpCostumeOverridePrototype : Prototype
     {
-        public ulong AvatarCostumeUnrealClass { get; protected set; }
-        public ulong TeamUpCostumeUnrealClass { get; protected set; }
+        public StringId AvatarCostumeUnrealClass { get; protected set; }
+        public StringId TeamUpCostumeUnrealClass { get; protected set; }
     }
 
     public class TeamUpStylePrototype : Prototype
     {
-        public ulong Power { get; protected set; }
+        public PrototypeId Power { get; protected set; }
         public bool PowerIsOnAvatarWhileAway { get; protected set; }
         public bool PowerIsOnAvatarWhileSummoned { get; protected set; }
         public bool IsPermanent { get; protected set; }
@@ -82,12 +82,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class TeamUpPowerProgressionEntryPrototype : ProgressionEntryPrototype
     {
-        public ulong Power { get; protected set; }
+        public PrototypeId Power { get; protected set; }
         public bool IsPassiveOnAvatarWhileAway { get; protected set; }
         public bool IsPassiveOnAvatarWhileSummoned { get; protected set; }
-        public ulong[] Antirequisites { get; protected set; }
-        public ulong[] Prerequisites { get; protected set; }
-        public ulong MaxRankForPowerAtCharacterLevel { get; protected set; }
+        public PrototypeId[] Antirequisites { get; protected set; }
+        public PrototypeId[] Prerequisites { get; protected set; }
+        public CurveId MaxRankForPowerAtCharacterLevel { get; protected set; }
         public int RequiredLevel { get; protected set; }
         public int StartingRank { get; protected set; }
         public float UIPositionPctX { get; protected set; }
@@ -97,16 +97,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class AgentTeamUpPrototype : AgentPrototype
     {
         public AvatarEquipInventoryAssignmentPrototype[] EquipmentInventories { get; protected set; }
-        public ulong PortraitPath { get; protected set; }
-        public ulong TooltipDescription { get; protected set; }
+        public StringId PortraitPath { get; protected set; }
+        public LocaleStringId TooltipDescription { get; protected set; }
         public TeamUpCostumeOverridePrototype[] CostumeUnrealOverrides { get; protected set; }
-        public ulong UnlockDialogImage { get; protected set; }
-        public ulong UnlockDialogText { get; protected set; }
-        public ulong FulfillmentName { get; protected set; }
+        public StringId UnlockDialogImage { get; protected set; }
+        public LocaleStringId UnlockDialogText { get; protected set; }
+        public LocaleStringId FulfillmentName { get; protected set; }
         public bool ShowInRosterIfLocked { get; protected set; }
         public TeamUpStylePrototype[] Styles { get; protected set; }
         public TeamUpPowerProgressionEntryPrototype[] PowerProgression { get; protected set; }
         public int PowerProgressionVersion { get; protected set; }
-        public ulong PowerUIDefault { get; protected set; }
+        public PrototypeId PowerUIDefault { get; protected set; }
     }
 }
