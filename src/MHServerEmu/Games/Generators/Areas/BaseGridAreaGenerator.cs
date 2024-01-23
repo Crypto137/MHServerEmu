@@ -10,8 +10,7 @@ namespace MHServerEmu.Games.Generators.Areas
 {
     public class BaseGridAreaGenerator : Generator
     {
-        private List<RegionTransitionSpec> _regionTransitions = new();
-        private readonly List<RegionTransitionSpec> _requiredTransitions = new();
+        private List<RegionTransitionSpec> _requiredTransitions = new();
 
         public readonly CellSetRegistry CellSetRegistry = new();
         public GenCellGridContainer CellContainer { get; set; }
@@ -67,11 +66,11 @@ namespace MHServerEmu.Games.Generators.Areas
                     target.Area == area.GetPrototypeDataRef() && target.Cell != 0)
                 {
                     RegionTransitionSpec spec = new(target.Cell, target.Entity, true);
-                    _regionTransitions.Add(spec);
+                    _requiredTransitions.Add(spec);
                 }
             }
 
-            RegionTransition.GetRequiredTransitionData(region.GetPrototypeDataRef(), area.GetPrototypeDataRef(), out _regionTransitions);
+            RegionTransition.GetRequiredTransitionData(region.GetPrototypeDataRef(), area.GetPrototypeDataRef(), ref _requiredTransitions);
 
             return InitializeCellRegistry() && InitializeContainer();
         }

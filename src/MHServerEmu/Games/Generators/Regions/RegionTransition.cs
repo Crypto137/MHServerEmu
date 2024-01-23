@@ -7,10 +7,8 @@ namespace MHServerEmu.Games.Generators.Regions
     {
         public RegionTransition() { }
 
-        public static bool GetRequiredTransitionData(ulong regionRef, ulong areaRef, out List<RegionTransitionSpec> specList)
+        public static bool GetRequiredTransitionData(ulong regionRef, ulong areaRef, ref List<RegionTransitionSpec> specList)
         {
-            specList = new ();
-
             IEnumerable<Prototype> iterateProtos = GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(RegionConnectionNodePrototype), 2 | 4);
 
             // ulong InvalidPrototype = 0;  This variable has no logic!!!

@@ -83,7 +83,7 @@ namespace MHServerEmu.Games.Generators
 
         public bool TestCellConnected(GenCellContainer container, GenCell cell)
         {
-            if (cell.Connections.First() == cell.Connections.Last()) return false;
+            if (cell.Connections.Any() == false) return false;
 
             Reset(container);
             RunTreeWithExcludedCell(cell, null);
