@@ -348,12 +348,11 @@ namespace MHServerEmu.Games.Events
 
                     var throwPrototype = GameDatabase.GetPrototype<WorldEntityPrototype>(client.ThrowingObject.BaseData.PrototypeId);
                     if (throwPrototype == null) break;
-                    ulong unrealClass = throwPrototype.UnrealClass;
                     client.IsThrowing = true;
                     //if (throwPrototype.Header.ReferenceType != (PrototypeId)HardcodedBlueprintId.ThrowableProp)
                     //    if (throwPrototype.Header.ReferenceType != (PrototypeId)HardcodedBlueprintId.ThrowableSmartProp)
                     //        throwPrototype = throwPrototype.Header.ReferenceType.GetPrototype();
-                    property = new(PropertyEnum.ThrowableOriginatorAssetRef, unrealClass);
+                    property = new(PropertyEnum.ThrowableOriginatorAssetRef, (ulong)throwPrototype.UnrealClass);
                     messageList.Add(new(client, new(property.ToNetMessageSetProperty(avatarRepId))));
 
                     // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
