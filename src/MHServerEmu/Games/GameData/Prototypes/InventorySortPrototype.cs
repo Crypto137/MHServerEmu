@@ -2,7 +2,7 @@
 {
     public class InventorySortPrototype : Prototype
     {
-        public ulong DisplayName { get; protected set; }
+        public LocaleStringId DisplayName { get; protected set; }
         public bool Ascending { get; protected set; }
         public bool DisplayInUI { get; protected set; }
     }

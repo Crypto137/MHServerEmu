@@ -6,22 +6,22 @@
 
     public class PartyFilterRuleHasKeywordPrototype : PartyFilterRulePrototype
     {
-        public ulong Keyword { get; protected set; }
+        public PrototypeId Keyword { get; protected set; }
     }
 
     public class PartyFilterRuleHasPrototypePrototype : PartyFilterRulePrototype
     {
-        public ulong Avatar { get; protected set; }
+        public PrototypeId Avatar { get; protected set; }
     }
 
     public class PartyFilterRuleMemberOfTeamPrototype : PartyFilterRulePrototype
     {
-        public ulong Superteam { get; protected set; }
+        public PrototypeId Superteam { get; protected set; }
     }
 
     public class PartyFilterRuleWearingCostumePrototype : PartyFilterRulePrototype
     {
-        public ulong Costume { get; protected set; }
+        public PrototypeId Costume { get; protected set; }
     }
 
     public class PartyFilterPrototype : Prototype
@@ -36,8 +36,8 @@
     public class PublicEventPrototype : Prototype
     {
         public bool DefaultEnabled { get; protected set; }
-        public ulong Name { get; protected set; }
-        public ulong[] Teams { get; protected set; }
-        public ulong PanelName { get; protected set; }
+        public LocaleStringId Name { get; protected set; }
+        public PrototypeId[] Teams { get; protected set; }
+        public StringId PanelName { get; protected set; }
     }
 }

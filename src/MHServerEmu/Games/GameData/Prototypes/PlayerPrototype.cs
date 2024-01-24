@@ -21,6 +21,6 @@
 
     public class CohortExperimentPrototype : Prototype
     {
-        public ulong[] Cohorts { get; protected set; }      // VectorPrototypeRefPtr CohortPrototype 
+        public PrototypeId[] Cohorts { get; protected set; }      // VectorPrototypeRefPtr CohortPrototype 
     }
 }

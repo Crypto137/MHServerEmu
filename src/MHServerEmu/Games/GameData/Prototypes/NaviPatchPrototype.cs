@@ -90,10 +90,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class NaviPatchFragmentPrototype : Prototype
     {
-        public Vector3 Position;
-        public Vector3 Rotation;
-        public Vector3 Scale;
-        public Vector3 PrePivot;
-        public ulong FragmentResource;
+        public Vector3 Position { get; }
+        public Vector3 Rotation { get; }
+        public Vector3 Scale { get; }
+        public Vector3 PrePivot { get; }
+        public ulong FragmentResource { get; }
     }
 }

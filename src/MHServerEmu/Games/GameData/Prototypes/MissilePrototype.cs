@@ -39,12 +39,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissilePrototype : AgentPrototype
     {
-        public ulong SendOrbToPowerUser { get; protected set; }
+        public PrototypeId SendOrbToPowerUser { get; protected set; }
     }
 
     public class MissilePowerContextPrototype : Prototype
     {
-        public ulong Power { get; protected set; }
+        public PrototypeId Power { get; protected set; }
         public MissilePowerActivationEventType MissilePowerActivationEvent { get; protected set; }
         public EvalPrototype EvalPctChanceToActivate { get; protected set; }
     }
@@ -63,7 +63,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool IsReturningMissile { get; protected set; }
         public bool ReturningMissileExplodeOnCollide { get; protected set; }
         public bool OneShot { get; protected set; }
-        public ulong Entity { get; protected set; }
+        public PrototypeId Entity { get; protected set; }
         public Vector3Prototype CreationOffset { get; protected set; }
         public float SizeIncreasePerSec { get; protected set; }
         public bool IgnoresPitch { get; protected set; }
@@ -99,6 +99,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PublicEventTeamPrototype : Prototype
     {
-        public ulong Name { get; protected set; }
+        public LocaleStringId Name { get; protected set; }
     }
 }

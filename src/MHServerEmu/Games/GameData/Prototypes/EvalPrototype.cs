@@ -120,7 +120,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LoadPropContextParamsPrototype : EvalPrototype
     {
         public EvalContext PropertyCollectionContext { get; protected set; }
-        public ulong Prop { get; protected set; }
+        public PrototypeId Prop { get; protected set; }
         public EvalContext PropertyIdContext { get; protected set; }
     }
 
@@ -131,7 +131,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype Param1 { get; protected set; }
         public EvalPrototype Param2 { get; protected set; }
         public EvalPrototype Param3 { get; protected set; }
-        public ulong Prop { get; protected set; }
+        public PrototypeId Prop { get; protected set; }
     }
 
     public class LoadBoolPrototype : EvalPrototype
@@ -151,18 +151,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LoadCurvePrototype : EvalPrototype
     {
-        public ulong Curve { get; protected set; }
+        public CurveId Curve { get; protected set; }
         public EvalPrototype Index { get; protected set; }
     }
 
     public class LoadAssetRefPrototype : EvalPrototype
     {
-        public ulong Value { get; protected set; }
+        public StringId Value { get; protected set; }
     }
 
     public class LoadProtoRefPrototype : EvalPrototype
     {
-        public ulong Value { get; protected set; }
+        public PrototypeId Value { get; protected set; }
     }
 
     public class LoadContextIntPrototype : EvalPrototype
@@ -261,14 +261,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class DifficultyTierRangePrototype : EvalPrototype
     {
         public EvalContext Context { get; protected set; }
-        public ulong Min { get; protected set; }
-        public ulong Max { get; protected set; }
+        public PrototypeId Min { get; protected set; }
+        public PrototypeId Max { get; protected set; }
     }
 
     public class MissionIsActivePrototype : EvalPrototype
     {
         public EvalContext Context { get; protected set; }
-        public ulong Mission { get; protected set; }
+        public PrototypeId Mission { get; protected set; }
     }
 
     public class GetCombatLevelPrototype : EvalPrototype
@@ -279,13 +279,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class GetPowerRankPrototype : EvalPrototype
     {
         public EvalContext Context { get; protected set; }
-        public ulong Power { get; protected set; }
+        public PrototypeId Power { get; protected set; }
     }
 
     public class CalcPowerRankPrototype : EvalPrototype
     {
         public EvalContext Context { get; protected set; }
-        public ulong Power { get; protected set; }
+        public PrototypeId Power { get; protected set; }
     }
 
     public class GetDamageReductionPctPrototype : EvalPrototype
@@ -304,7 +304,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class HasEntityInInventoryPrototype : EvalPrototype
     {
         public EvalContext Context { get; protected set; }
-        public ulong Entity { get; protected set; }
+        public PrototypeId Entity { get; protected set; }
         public ConvenienceLabel Inventory { get; protected set; }
     }
 
@@ -320,7 +320,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionIsCompletePrototype : EvalPrototype
     {
         public EvalContext Context { get; protected set; }
-        public ulong Mission { get; protected set; }
+        public PrototypeId Mission { get; protected set; }
     }
 
     public class MaxPrototype : EvalPrototype
@@ -397,13 +397,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class EntityHasKeywordPrototype : EvalPrototype
     {
         public EvalContext Context { get; protected set; }
-        public ulong Keyword { get; protected set; }
+        public PrototypeId Keyword { get; protected set; }
         public bool ConditionKeywordOnly { get; protected set; }
     }
 
     public class EntityHasTalentPrototype : EvalPrototype
     {
         public EvalContext Context { get; protected set; }
-        public ulong Talent { get; protected set; }
+        public PrototypeId Talent { get; protected set; }
     }
 }

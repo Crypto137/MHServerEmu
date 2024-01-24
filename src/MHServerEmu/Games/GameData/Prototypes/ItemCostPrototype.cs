@@ -7,15 +7,15 @@
 
     public class CurrencyPrototype : Prototype
     {
-        public ulong CostString { get; protected set; }
-        public ulong DisplayName { get; protected set; }
-        public ulong Icon { get; protected set; }
-        public ulong Tooltip { get; protected set; }
-        public ulong IconSmall { get; protected set; }
+        public LocaleStringId CostString { get; protected set; }
+        public LocaleStringId DisplayName { get; protected set; }
+        public StringId Icon { get; protected set; }
+        public LocaleStringId Tooltip { get; protected set; }
+        public StringId IconSmall { get; protected set; }
         public int MaxAmount { get; protected set; }
-        public ulong IconHiRes { get; protected set; }
-        public ulong LootBonusFlatCurve { get; protected set; }
-        public ulong LootBonusPctCurve { get; protected set; }
+        public StringId IconHiRes { get; protected set; }
+        public CurveId LootBonusFlatCurve { get; protected set; }
+        public CurveId LootBonusPctCurve { get; protected set; }
     }
 
     public class ItemCostComponentPrototype : Prototype
@@ -25,7 +25,7 @@
     public class ItemCostCreditsPrototype : ItemCostComponentPrototype
     {
         public EvalPrototype Number { get; protected set; }
-        public ulong Currency { get; protected set; }
+        public PrototypeId Currency { get; protected set; }
     }
 
     public class ItemCostLegendaryMarksPrototype : ItemCostComponentPrototype
@@ -42,13 +42,13 @@
 
     public class ItemCostItemStackPrototype : ItemCostComponentPrototype
     {
-        public ulong CurrencyItem { get; protected set; }
+        public PrototypeId CurrencyItem { get; protected set; }
         public EvalPrototype Number { get; protected set; }
     }
 
     public class ItemCostCurrencyPrototype : ItemCostComponentPrototype
     {
-        public ulong Currency { get; protected set; }
+        public PrototypeId Currency { get; protected set; }
         public EvalPrototype Amount { get; protected set; }
     }
 

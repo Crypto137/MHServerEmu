@@ -48,25 +48,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool CanBeSoldToVendor { get; protected set; }
         public int MaxVisiblePrefixes { get; protected set; }
         public int MaxVisibleSuffixes { get; protected set; }
-        public ulong TooltipDescription { get; protected set; }
-        public ulong TooltipFlavorText { get; protected set; }
-        public ulong TooltipTemplate { get; protected set; }
+        public LocaleStringId TooltipDescription { get; protected set; }
+        public LocaleStringId TooltipFlavorText { get; protected set; }
+        public PrototypeId TooltipTemplate { get; protected set; }
         public ItemStackSettingsPrototype StackSettings { get; protected set; }
         public bool AlwaysDisplayAsUsable { get; protected set; }
-        public ulong[] TooltipEquipRestrictions { get; protected set; }
+        public PrototypeId[] TooltipEquipRestrictions { get; protected set; }
         public AffixEntryPrototype[] AffixesBuiltIn { get; protected set; }
         public PropertyEntryPrototype[] PropertiesBuiltIn { get; protected set; }
         [Mixin]
         public ProductPrototype Product { get; protected set; }
-        public ulong ItemCategory { get; protected set; }
-        public ulong ItemSubcategory { get; protected set; }
+        public LocaleStringId ItemCategory { get; protected set; }
+        public LocaleStringId ItemSubcategory { get; protected set; }
         public bool IsAvatarRestricted { get; protected set; }
         public DropRestrictionPrototype[] LootDropRestrictions { get; protected set; }
         public ItemBindingSettingsPrototype BindingSettings { get; protected set; }
         public AffixLimitsPrototype[] AffixLimits { get; protected set; }
-        public ulong TextStyleOverride { get; protected set; }
+        public PrototypeId TextStyleOverride { get; protected set; }
         public ItemAbilitySettingsPrototype AbilitySettings { get; protected set; }
-        public ulong StoreIconPath { get; protected set; }
+        public StringId StoreIconPath { get; protected set; }
         public bool ClonedWhenPurchasedFromVendor { get; protected set; }
         public ItemActionSetPrototype ActionsTriggeredOnItemEvent { get; protected set; }
         public bool ConfirmOnDonate { get; protected set; }
@@ -83,9 +83,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool CanBroadcast { get; protected set; }
         public EquipmentInvUISlot DefaultEquipmentSlot { get; protected set; }
         public EvalPrototype EvalCanUse { get; protected set; }
-        public ulong[] CannotEquipWithItemsOfKeyword { get; protected set; }
-        public ulong SortCategory { get; protected set; }
-        public ulong SortSubCategory { get; protected set; }
+        public PrototypeId[] CannotEquipWithItemsOfKeyword { get; protected set; }
+        public PrototypeId SortCategory { get; protected set; }
+        public PrototypeId SortSubCategory { get; protected set; }
         public ItemInstrumentedDropGroup InstrumentedDropGroup { get; protected set; }
         public bool IsContainer { get; protected set; }
     }
@@ -101,7 +101,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool BindsToAccountOnPickup { get; protected set; }
         public bool BindsToCharacterOnEquip { get; protected set; }
         public bool IsTradable { get; protected set; }
-        public ulong RarityFilter { get; protected set; }
+        public PrototypeId RarityFilter { get; protected set; }
     }
 
     public class ItemBindingSettingsPrototype : Prototype
@@ -131,7 +131,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ItemActionAssignPowerPrototype : ItemActionPrototype
     {
-        public ulong Power { get; protected set; }
+        public PrototypeId Power { get; protected set; }
     }
 
     public class ItemActionDestroySelfPrototype : ItemActionPrototype
@@ -144,7 +144,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ItemActionReplaceSelfItemPrototype : ItemActionPrototype
     {
-        public ulong Item { get; protected set; }
+        public PrototypeId Item { get; protected set; }
     }
 
     public class ItemActionReplaceSelfLootTablePrototype : ItemActionPrototype
@@ -171,12 +171,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ItemActionUsePowerPrototype : ItemActionPrototype
     {
-        public ulong Power { get; protected set; }
+        public PrototypeId Power { get; protected set; }
     }
 
     public class ItemActionUnlockPermaBuffPrototype : ItemActionPrototype
     {
-        public ulong PermaBuff { get; protected set; }
+        public PrototypeId PermaBuff { get; protected set; }
     }
 
     public class ItemActionAwardTeamUpXPPrototype : ItemActionPrototype
@@ -192,19 +192,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ItemActionOpenUIPanelPrototype : ItemActionPrototype
     {
-        public ulong PanelName { get; protected set; }
+        public StringId PanelName { get; protected set; }
     }
 
     public class CategorizedAffixEntryPrototype : Prototype
     {
-        public ulong Category { get; protected set; }
+        public PrototypeId Category { get; protected set; }
         public short MinAffixes { get; protected set; }
     }
 
     public class AffixLimitsPrototype : Prototype
     {
         public LootContext[] AllowedContexts { get; protected set; }
-        public ulong ItemRarity { get; protected set; }
+        public PrototypeId ItemRarity { get; protected set; }
         public short MaxPrefixes { get; protected set; }
         public short MaxSuffixes { get; protected set; }
         public short MinPrefixes { get; protected set; }
@@ -234,18 +234,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EquipRestrictionSuperteamPrototype : EquipRestrictionPrototype
     {
-        public ulong SuperteamEquippableBy { get; protected set; }
+        public PrototypeId SuperteamEquippableBy { get; protected set; }
     }
 
     public class EquipRestrictionAgentPrototype : EquipRestrictionPrototype
     {
-        public ulong Agent { get; protected set; }
+        public PrototypeId Agent { get; protected set; }
     }
 
     public class ItemTooltipPropertyBlockSettingsPrototype : Prototype
     {
-        public ulong[] IncludeAllButProperties { get; protected set; }
-        public ulong[] IncludeOnlyProperties { get; protected set; }
+        public PrototypeId[] IncludeAllButProperties { get; protected set; }
+        public PrototypeId[] IncludeOnlyProperties { get; protected set; }
         public bool UseBuiltinPropertyOrdering { get; protected set; }
     }
 
@@ -268,38 +268,38 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class CharacterTokenPrototype : ItemPrototype
     {
-        public ulong Character { get; protected set; }
+        public PrototypeId Character { get; protected set; }
         public CharacterTokenType TokenType { get; protected set; }
     }
 
     public class InventoryStashTokenPrototype : ItemPrototype
     {
-        public ulong Inventory { get; protected set; }
+        public PrototypeId Inventory { get; protected set; }
     }
 
     public class EmoteTokenPrototype : ItemPrototype
     {
-        public ulong Avatar { get; protected set; }
-        public ulong EmotePower { get; protected set; }
+        public PrototypeId Avatar { get; protected set; }
+        public PrototypeId EmotePower { get; protected set; }
     }
 
     public class CostumePrototype : ItemPrototype
     {
-        public ulong CostumeUnrealClass { get; protected set; }
-        public ulong FullBodyIconPath { get; protected set; }
-        public ulong UsableBy { get; protected set; }
-        public new ulong StoreIconPath { get; protected set; }
-        public ulong PortraitIconPath { get; protected set; }
-        public ulong FullBodyIconPathDisabled { get; protected set; }
-        public ulong PartyPortraitIconPath { get; protected set; }
-        public ulong MTXStoreInfo { get; protected set; }
-        public ulong AvatarBioText { get; protected set; }
-        public ulong AvatarDisplayName { get; protected set; }
-        public ulong AvatarDisplayNameInformal { get; protected set; }
-        public ulong AvatarDisplayNameShort { get; protected set; }
+        public StringId CostumeUnrealClass { get; protected set; }
+        public StringId FullBodyIconPath { get; protected set; }
+        public PrototypeId UsableBy { get; protected set; }
+        public new StringId StoreIconPath { get; protected set; }
+        public StringId PortraitIconPath { get; protected set; }
+        public StringId FullBodyIconPathDisabled { get; protected set; }
+        public StringId PartyPortraitIconPath { get; protected set; }
+        public LocaleStringId MTXStoreInfo { get; protected set; }
+        public LocaleStringId AvatarBioText { get; protected set; }
+        public LocaleStringId AvatarDisplayName { get; protected set; }
+        public LocaleStringId AvatarDisplayNameInformal { get; protected set; }
+        public LocaleStringId AvatarDisplayNameShort { get; protected set; }
         public bool EquipTriggersVO { get; protected set; }
-        public ulong PortraitIconPathHiRes { get; protected set; }
-        public ulong FulfillmentDuplicateItem { get; protected set; }
+        public StringId PortraitIconPathHiRes { get; protected set; }
+        public PrototypeId FulfillmentDuplicateItem { get; protected set; }
     }
 
     public class LegendaryPrototype : ItemPrototype
@@ -317,7 +317,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class SuperteamPrototype : Prototype
     {
-        public ulong DisplayName { get; protected set; }
+        public LocaleStringId DisplayName { get; protected set; }
     }
 
     public class TeamUpGearPrototype : ItemPrototype

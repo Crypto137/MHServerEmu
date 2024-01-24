@@ -52,7 +52,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class WeightedMissionEntryPrototype : Prototype
     {
-        public ulong Mission { get; protected set; }
+        public PrototypeId Mission { get; protected set; }
         public int Weight { get; protected set; }
     }
 
@@ -63,7 +63,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionSetActiveChapterPrototype : MissionActionPrototype
     {
-        public ulong Chapter { get; protected set; }
+        public PrototypeId Chapter { get; protected set; }
     }
 
     public class MissionActionSetAvatarEndurancePrototype : MissionActionPrototype
@@ -85,7 +85,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionEncounterSpawnPrototype : MissionActionPrototype
     {
-        public ulong EncounterResource { get; protected set; }
+        public StringId EncounterResource { get; protected set; }
         public int Phase { get; protected set; }
         public bool MissionSpawnOnly { get; protected set; }
     }
@@ -94,7 +94,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public int DifficultyIncrement { get; protected set; }
         public int DifficultyIndex { get; protected set; }
-        public ulong DifficultyOverride { get; protected set; }
+        public PrototypeId DifficultyOverride { get; protected set; }
     }
 
     public class MissionActionRegionScorePrototype : MissionActionPrototype
@@ -110,7 +110,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionEntityCreatePrototype : MissionActionPrototype
     {
-        public ulong EntityPrototype { get; protected set; }
+        public PrototypeId EntityPrototype { get; protected set; }
     }
 
     public class MissionActionEntityDestroyPrototype : MissionActionEntityTargetPrototype
@@ -125,9 +125,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionEntityPerformPowerPrototype : MissionActionEntityTargetPrototype
     {
-        public ulong PowerPrototype { get; protected set; }
+        public PrototypeId PowerPrototype { get; protected set; }
         public bool PowerRemove { get; protected set; }
-        public ulong BrainOverride { get; protected set; }
+        public PrototypeId BrainOverride { get; protected set; }
         public bool BrainOverrideRemove { get; protected set; }
         public bool MissionReferencedPowerRemove { get; protected set; }
         public EvalPrototype EvalProperties { get; protected set; }
@@ -135,18 +135,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionEntitySetStatePrototype : MissionActionEntityTargetPrototype
     {
-        public ulong EntityState { get; protected set; }
+        public PrototypeId EntityState { get; protected set; }
         public TriBool Interactable { get; protected set; }
     }
 
     public class MissionActionEventTeamAssignPrototype : MissionActionPrototype
     {
-        public ulong Team { get; protected set; }
+        public PrototypeId Team { get; protected set; }
     }
 
     public class MissionActionFactionSetPrototype : MissionActionPrototype
     {
-        public ulong Faction { get; protected set; }
+        public PrototypeId Faction { get; protected set; }
         public DistributionType SendTo { get; protected set; }
     }
 
@@ -163,42 +163,42 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionInventoryGiveAvatarPrototype : MissionActionPrototype
     {
-        public ulong AvatarPrototype { get; protected set; }
+        public PrototypeId AvatarPrototype { get; protected set; }
     }
 
     public class MissionActionInventoryGiveTeamUpPrototype : MissionActionPrototype
     {
-        public ulong TeamUpPrototype { get; protected set; }
+        public PrototypeId TeamUpPrototype { get; protected set; }
     }
 
     public class MissionActionInventoryRemoveItemPrototype : MissionActionPrototype
     {
-        public ulong ItemPrototype { get; protected set; }
+        public PrototypeId ItemPrototype { get; protected set; }
         public long Count { get; protected set; }
         public MissionActionPrototype[] OnRemoveActions { get; protected set; }
     }
 
     public class MissionActionMetaStateWaveForcePrototype : MissionActionPrototype
     {
-        public ulong SetStateProto { get; protected set; }
-        public ulong WaveStateProto { get; protected set; }
+        public PrototypeId SetStateProto { get; protected set; }
+        public PrototypeId WaveStateProto { get; protected set; }
     }
 
     public class MissionActionMissionActivatePrototype : MissionActionPrototype
     {
-        public ulong MissionPrototype { get; protected set; }
+        public PrototypeId MissionPrototype { get; protected set; }
         public WeightedMissionEntryPrototype[] WeightedMissionPickList { get; protected set; }
         public bool WeightedMissionPickUseRegionSeed { get; protected set; }
     }
 
     public class MissionActionRegionShutdownPrototype : MissionActionPrototype
     {
-        public ulong RegionPrototype { get; protected set; }
+        public PrototypeId RegionPrototype { get; protected set; }
     }
 
     public class MissionActionResetAllMissionsPrototype : MissionActionPrototype
     {
-        public ulong MissionPrototype { get; protected set; }
+        public PrototypeId MissionPrototype { get; protected set; }
     }
 
     public class MissionActionTimedActionPrototype : MissionActionPrototype
@@ -210,17 +210,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionScoringEventTimerEndPrototype : MissionActionPrototype
     {
-        public ulong Timer { get; protected set; }
+        public PrototypeId Timer { get; protected set; }
     }
 
     public class MissionActionScoringEventTimerStartPrototype : MissionActionPrototype
     {
-        public ulong Timer { get; protected set; }
+        public PrototypeId Timer { get; protected set; }
     }
 
     public class MissionActionScoringEventTimerStopPrototype : MissionActionPrototype
     {
-        public ulong Timer { get; protected set; }
+        public PrototypeId Timer { get; protected set; }
     }
 
     public class MissionActionStoryNotificationPrototype : MissionActionPrototype
@@ -243,13 +243,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionShowWaypointNotificationPrototype : MissionActionPrototype
     {
-        public ulong Waypoint { get; protected set; }
+        public PrototypeId Waypoint { get; protected set; }
         public DistributionType SendTo { get; protected set; }
     }
 
     public class MissionActionHideWaypointNotificationPrototype : MissionActionPrototype
     {
-        public ulong Waypoint { get; protected set; }
+        public PrototypeId Waypoint { get; protected set; }
         public DistributionType SendTo { get; protected set; }
     }
 
@@ -263,7 +263,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionSwapAvatarPrototype : MissionActionPrototype
     {
-        public ulong AvatarPrototype { get; protected set; }
+        public PrototypeId AvatarPrototype { get; protected set; }
         public bool UseAvatarSwapPowers { get; protected set; }
     }
 
@@ -277,13 +277,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionUnlockUISystemPrototype : MissionActionPrototype
     {
-        public ulong UISystem { get; protected set; }
+        public StringId UISystem { get; protected set; }
     }
 
     public class MissionActionShowMotionComicPrototype : MissionActionPrototype
     {
-        public ulong MotionComic { get; protected set; }
-        public ulong DownloadChunkOverride { get; protected set; }
+        public PrototypeId MotionComic { get; protected set; }
+        public PrototypeId DownloadChunkOverride { get; protected set; }
         public DistributionType SendTo { get; protected set; }
     }
 
@@ -294,53 +294,53 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionShowOverheadTextPrototype : MissionActionEntityTargetPrototype
     {
-        public ulong DisplayText { get; protected set; }
+        public LocaleStringId DisplayText { get; protected set; }
         public int DurationMS { get; protected set; }
     }
 
     public class MissionActionWaypointUnlockPrototype : MissionActionPrototype
     {
-        public ulong WaypointToUnlock { get; protected set; }
+        public PrototypeId WaypointToUnlock { get; protected set; }
     }
 
     public class MissionActionWaypointLockPrototype : MissionActionPrototype
     {
-        public ulong WaypointToLock { get; protected set; }
+        public PrototypeId WaypointToLock { get; protected set; }
     }
 
     public class MissionActionPlayBanterPrototype : MissionActionPrototype
     {
-        public ulong BanterAsset { get; protected set; }
+        public StringId BanterAsset { get; protected set; }
         public DistributionType SendTo { get; protected set; }
     }
 
     public class MissionActionPlayKismetSeqPrototype : MissionActionPrototype
     {
-        public ulong KismetSeqPrototype { get; protected set; }
+        public PrototypeId KismetSeqPrototype { get; protected set; }
         public DistributionType SendTo { get; protected set; }
     }
 
     public class MissionActionParticipantPerformPowerPrototype : MissionActionPrototype
     {
-        public ulong Power { get; protected set; }
+        public PrototypeId Power { get; protected set; }
         public DistributionType SendTo { get; protected set; }
     }
 
     public class MissionActionOpenUIPanelPrototype : MissionActionPrototype
     {
-        public ulong PanelName { get; protected set; }
+        public StringId PanelName { get; protected set; }
         public DistributionType SendTo { get; protected set; }
     }
 
     public class MissionActionPlayerTeleportPrototype : MissionActionPrototype
     {
-        public ulong TeleportRegionTarget { get; protected set; }
+        public PrototypeId TeleportRegionTarget { get; protected set; }
         public DistributionType SendTo { get; protected set; }
     }
 
     public class MissionActionRemoveConditionsKwdPrototype : MissionActionPrototype
     {
-        public ulong Keyword { get; protected set; }
+        public PrototypeId Keyword { get; protected set; }
         public DistributionType SendTo { get; protected set; }
     }
 
@@ -351,11 +351,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionAllianceSetPrototype : MissionActionEntityTargetPrototype
     {
-        public ulong Alliance { get; protected set; }
+        public PrototypeId Alliance { get; protected set; }
     }
 
     public class MissionActionShowTeamSelectDialogPrototype : MissionActionPrototype
     {
-        public ulong PublicEvent { get; protected set; }
+        public PrototypeId PublicEvent { get; protected set; }
     }
 }
