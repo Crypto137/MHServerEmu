@@ -12,6 +12,7 @@ using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
+using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.Games.Generators
 {
@@ -334,7 +335,7 @@ namespace MHServerEmu.Games.Regions
             if (!(instanceMarkerSetOptions.HasFlag(MarkerSetOptions.SpawnMissionAssociated)
                 && instanceMarkerSetOptions.HasFlag(MarkerSetOptions.NoSpawnMissionAssociated)))
             {
-                if (markerSet.Markers.Any())
+                if (markerSet.Markers.IsNullOrEmpty() == false)
                     foreach (var marker in markerSet.Markers)
                         if (marker != null)
                             SpawnMarker(marker, transform, instanceMarkerSetOptions, prefabPath);
@@ -429,7 +430,7 @@ namespace MHServerEmu.Games.Regions
 
             PropTable = new();
 
-            if (AreaPrototype.PropSets != null)
+            if (AreaPrototype.PropSets.IsNullOrEmpty() == false)
             {
                 foreach (var propSet in AreaPrototype.PropSets)
                     PropTable.AppendPropSet(propSet);
@@ -881,7 +882,7 @@ namespace MHServerEmu.Games.Regions
             RandomSeed = settings.Seed;
             Bound = settings.Bound;
             AvatarSwapEnabled = RegionPrototype.EnableAvatarSwap;
-            RestrictedRosterEnabled = (RegionPrototype.RestrictedRoster != null && RegionPrototype.RestrictedRoster.Length > 0);
+            RestrictedRosterEnabled = (RegionPrototype.RestrictedRoster.IsNullOrEmpty() == false);
 
             SetRegionLevel();
 
@@ -915,7 +916,7 @@ namespace MHServerEmu.Games.Regions
 
             CreateParams = new((uint)RegionLevel, (DifficultyTier)settings.DifficultyTierRef); // OLD params
 
-            if (regionProto.DividedStartLocations != null)
+            if (regionProto.DividedStartLocations.IsNullOrEmpty() == false)
                 InitDividedStartLocations(regionProto.DividedStartLocations);
 
             // if (!NaviSystem.Initialize(this))  return false;
@@ -1007,7 +1008,7 @@ namespace MHServerEmu.Games.Regions
                 Logger.Warn($"Region created with affixes, but no RegionAffixTable. REGION={this} AFFIXES={Settings.Affixes}")
             }
 
-            if (regionProto.AvatarPowers != null)
+            if (regionProto.AvatarPowers.IsNullOrEmpty() == false)
                 foreach (var avatarPower in regionProto.AvatarPowers)
                     SetProperty<bool>(true, new (PropertyEnum.RegionAvatarPower, avatarPower));
 
@@ -1384,7 +1385,7 @@ namespace MHServerEmu.Games.Regions
                 foreach (Cell cell in area.CellList)
                 {
                     // if (target.Cell != 0 && target.Cell != cell.CellProto.GetDataRef()) continue;
-                    if (cell.CellProto != null && cell.CellProto.InitializeSet.Markers.Any())
+                    if (cell.CellProto != null && cell.CellProto.InitializeSet.Markers.IsNullOrEmpty() == false)
                     {
                         foreach (var marker in cell.CellProto.InitializeSet.Markers)
                         {

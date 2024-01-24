@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Common;
+using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -19,7 +20,7 @@ namespace MHServerEmu.Games.Generators.Regions
             GeneratorPrototype = generatorPrototype;
             AreaMap = new();
 
-            if (GeneratorPrototype.POIGroups != null)
+            if (GeneratorPrototype.POIGroups.IsNullOrEmpty() == false)
                 POIPickerCollection = new(generatorPrototype);
         }
 

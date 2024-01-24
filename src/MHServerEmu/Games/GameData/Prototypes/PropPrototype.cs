@@ -1,4 +1,6 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Common.Extensions;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class PropPrototype : WorldEntityPrototype
     {
@@ -22,7 +24,7 @@
         public int GetPropDensity(ulong marker)
         {
             if (marker == 0) return 0;
-            if (MarkerDensityOverrides.Any())
+            if (MarkerDensityOverrides.IsNullOrEmpty() == false)
             {
                 foreach (var densityEntry in MarkerDensityOverrides)
                     if (densityEntry != null && densityEntry.Marker == marker)

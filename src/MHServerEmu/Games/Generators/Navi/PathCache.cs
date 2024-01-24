@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Generators.Navi
@@ -13,7 +14,7 @@ namespace MHServerEmu.Games.Generators.Navi
 
         public void AppendPathCollection(PathCollectionPrototype PathNodeCollection, Vector3 offset) 
         {
-            if (PathNodeCollection.PathNodeSets != null)
+            if (PathNodeCollection.PathNodeSets.IsNullOrEmpty() == false)
             {
                 foreach (var pathNodeSet in PathNodeCollection.PathNodeSets)
                 {

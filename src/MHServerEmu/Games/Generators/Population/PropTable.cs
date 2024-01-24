@@ -5,6 +5,7 @@ using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Common;
+using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.Games.Generators.Population
 {
@@ -24,7 +25,7 @@ namespace MHServerEmu.Games.Generators.Population
             PropSetPrototype propSetProto = GetPropSetPrototypeFromRef(propSetRef);
             if (propSetProto == null) return false;
 
-            if (propSetProto.PropShapeLists != null && propSetProto.PropShapeLists.Length > 0)
+            if (propSetProto.PropShapeLists.IsNullOrEmpty() == false)
             {
                 foreach (PropSetTypeListPrototype propList in propSetProto.PropShapeLists)
                 {
@@ -44,7 +45,7 @@ namespace MHServerEmu.Games.Generators.Population
                         continue;
                     }
 
-                    if (propList.PropShapeEntries != null && propList.PropShapeEntries.Length > 0)
+                    if (propList.PropShapeEntries.IsNullOrEmpty() == false)
                     {
                         if (!Map.TryGetValue(propTypeDataRef, out PropGroupList groupList))
                         {

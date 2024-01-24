@@ -55,6 +55,11 @@
             return BitConverter.ToUInt64(bytes);
         }
 
+        public static bool IsNullOrEmpty<T>(this T[] array)
+        {
+            return array == null || array.Length == 0;
+        }
+
         #region uint <-> bool[] conversion
         /* uint mask cheat sheet for getting bools (1 << i)
          0 == 0x1,       1 == 0x2,       2 == 0x4,       3 == 0x8,       4 == 0x10,      5 == 0x20,     6 == 0x40,     7 == 0x80,

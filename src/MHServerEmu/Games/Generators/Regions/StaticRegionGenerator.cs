@@ -3,6 +3,7 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.Games.Generators.Regions
 {
@@ -28,7 +29,7 @@ namespace MHServerEmu.Games.Generators.Regions
                         StartArea = area;
                 }
             }
-            if (staticAreas != null)
+            if (staticAreas.IsNullOrEmpty() == false)
                 DoConnection(random, region, staticAreas, regionGeneratorProto);
 
         }

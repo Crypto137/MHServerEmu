@@ -6,6 +6,7 @@ using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Regions;
 using static MHServerEmu.Games.Generators.Areas.CellGridGenerator;
 using static MHServerEmu.Games.Regions.Cell;
+using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.Games.Generators.Areas
 {
@@ -379,7 +380,7 @@ namespace MHServerEmu.Games.Generators.Areas
             GeneratorPrototype generatorProto = area.AreaPrototype.Generator;
             WideGridAreaGeneratorPrototype gridAreaGeneratorProto = generatorProto as WideGridAreaGeneratorPrototype;
 
-            if (gridAreaGeneratorProto != null && gridAreaGeneratorProto.BorderBehavior != null && gridAreaGeneratorProto.CellSets != null)
+            if (gridAreaGeneratorProto != null && gridAreaGeneratorProto.BorderBehavior != null && gridAreaGeneratorProto.CellSets.IsNullOrEmpty() == false)
             {
                 CellSetRegistry registry = new ();
                 registry.Initialize(true);

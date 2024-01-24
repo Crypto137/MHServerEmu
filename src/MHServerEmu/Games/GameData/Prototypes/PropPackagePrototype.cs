@@ -33,7 +33,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PostProcess();
             //if (GameDatabase.DataDirectory.PrototypeIsAbstract(GetDataRef())){ return;}
 
-            if (PropGroups.Any())
+            if (PropGroups.IsNullOrEmpty() == false)
             {
                 foreach (ProceduralPropGroupPrototype propGroup in PropGroups)
                 {

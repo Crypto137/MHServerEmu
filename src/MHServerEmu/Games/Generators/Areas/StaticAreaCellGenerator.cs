@@ -5,6 +5,7 @@ using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Common;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.Games.Generators.Areas
 {
@@ -16,7 +17,7 @@ namespace MHServerEmu.Games.Generators.Areas
         {
             Aabb bounds = Aabb.InvertedLimit;
             DistrictPrototype protoDistrict = GetDistrictPrototype();
-            if (protoDistrict == null || protoDistrict.CellMarkerSet.Markers == null) return bounds;
+            if (protoDistrict == null || protoDistrict.CellMarkerSet.Markers.IsNullOrEmpty()) return bounds;
 
             foreach (var cellMarker in protoDistrict.CellMarkerSet.Markers)
             {
@@ -131,7 +132,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 return false;
             }
 
-            if (protoDistrict.CellMarkerSet.Markers == null)
+            if (protoDistrict.CellMarkerSet.Markers.IsNullOrEmpty())
             {
                 Logger.Warn($"StaticArea's District contains no cells");
                 return false;
@@ -148,7 +149,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 CellPrototype cellProto = GameDatabase.GetPrototype<CellPrototype>(cellRef);
                 if (cellProto == null) continue;
 
-                if (cellProto.MarkerSet.Markers != null)
+                if (cellProto.MarkerSet.Markers.IsNullOrEmpty() == false)
                 {
                     foreach (var marker in cellProto.MarkerSet.Markers)
                     {

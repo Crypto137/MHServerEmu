@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Common;
+using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -21,7 +22,7 @@ namespace MHServerEmu.Games.Generators.Areas
         {
             if (!base.InitializeContainer()) return false;
             if (Area.AreaPrototype.Generator is not GridAreaGeneratorPrototype proto) return false;
-            if (proto.Behaviors != null)
+            if (proto.Behaviors.IsNullOrEmpty() == false)
                 RunBehaviors(null, proto.Behaviors, ProcessEnum.Initialize);
 
             return true;
@@ -117,7 +118,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         private bool CellGridBlacklistBehavior(CellGridBlacklistBehaviorPrototype behavior)
         {
-            if (CellContainer == null || behavior.Blacklist == null) return false;
+            if (CellContainer == null || behavior.Blacklist.IsNullOrEmpty()) return false;
 
             bool success = true;
             foreach (var cell in behavior.Blacklist)
@@ -307,10 +308,10 @@ namespace MHServerEmu.Games.Generators.Areas
             GeneratorPrototype generatorProto = area.AreaPrototype.Generator;
             GridAreaGeneratorPrototype gridAreaGeneratorProto = generatorProto as GridAreaGeneratorPrototype;
 
-            if (gridAreaGeneratorProto != null && gridAreaGeneratorProto.Behaviors.Any())
+            if (gridAreaGeneratorProto != null && gridAreaGeneratorProto.Behaviors.IsNullOrEmpty() == false)
                 borderBehaviorProto = gridAreaGeneratorProto.Behaviors.Last() as CellGridBorderBehaviorPrototype;
 
-            if (borderBehaviorProto == null || gridAreaGeneratorProto.CellSets == null) return true;
+            if (borderBehaviorProto == null || gridAreaGeneratorProto.CellSets.IsNullOrEmpty()) return true;
 
             CellSetRegistry registry = new ();
             registry.Initialize(true);

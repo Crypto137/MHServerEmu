@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Common;
+using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -58,8 +59,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         private static CellPrototype GetFirstCellChoiceFromPrototypePtrList(CellChoicePrototype[] bridgeChoices)
         {
-            if (bridgeChoices == null) return null;
-            if (bridgeChoices.Length > 0)
+            if (bridgeChoices.IsNullOrEmpty() == false)
             {
                 CellChoicePrototype firstChoice = bridgeChoices[0];
                 ulong cellRef = GameDatabase.GetDataRefByAsset(firstChoice.Cell);
@@ -121,7 +121,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         private static ulong PickCellChoiceFromPrototypePtrList(GRandom random, CellChoicePrototype[] cellChoices)
         {
-            if (cellChoices == null || cellChoices.Length == 0) return 0;
+            if (cellChoices.IsNullOrEmpty()) return 0;
             Picker<ulong> picker = new (random);
 
             foreach (CellChoicePrototype choiceProto in cellChoices)

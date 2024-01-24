@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Common;
+using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
@@ -214,7 +215,7 @@ namespace MHServerEmu.Games.Generators.Areas
         {
             if (!GetPrototype(out var proto)) return false;
 
-            if (proto.AllowedConnections != null)
+            if (proto.AllowedConnections.IsNullOrEmpty() == false)
             {
                 foreach (var connection in proto.AllowedConnections)
                 {
@@ -246,7 +247,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
             bool failed = false;
 
-            if (!failed && proto.RequiredSuperCells != null)
+            if (!failed && proto.RequiredSuperCells.IsNullOrEmpty() == false)
             {
                 foreach (var requiredCellBase in proto.RequiredSuperCells)
                 {
@@ -258,7 +259,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 }
             }
 
-            if (!failed && proto.NonRequiredSuperCells != null)
+            if (!failed && proto.NonRequiredSuperCells.IsNullOrEmpty() == false)
             {
                 Picker<RequiredCellBasePrototype> cellPicker = new(random);
                 AddCellsToPicker(cellPicker, proto.NonRequiredSuperCells);
@@ -299,11 +300,9 @@ namespace MHServerEmu.Games.Generators.Areas
 
             if (Area != null)
             {
-                var randomInstances = Area.RandomInstances;
-
-                if (!failed && randomInstances.Any())
+                if (!failed && Area.RandomInstances.Any())
                 {
-                    foreach (var randomInstance in randomInstances)
+                    foreach (var randomInstance in Area.RandomInstances)
                     {
                         if (randomInstance == null) continue;
 
@@ -335,7 +334,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 }
             }
 
-            if (!failed && proto.RequiredCells != null)
+            if (!failed && proto.RequiredCells.IsNullOrEmpty() == false)
             {
                 foreach (var requiredCellBase in proto.RequiredCells)
                 {
@@ -363,7 +362,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 }
             }
 
-            if (!failed && proto.NonRequiredNormalCells != null)
+            if (!failed && proto.NonRequiredNormalCells.IsNullOrEmpty() == false)
             {
                 Picker<RequiredCellBasePrototype> cellPicker = new(random);
                 AddCellsToPicker(cellPicker, proto.NonRequiredNormalCells);
@@ -481,7 +480,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         private bool TrySpawningSuperCell(RequiredSuperCellEntryPrototype requiredSuperCellEntry, GRandom random, SuperCellPrototype superCell)
         {
-            if (superCell == null || superCell.Entries == null) return false;
+            if (superCell == null || superCell.Entries.IsNullOrEmpty()) return false;
 
             Picker<Point2> picker = new(random);
             for (int x = 0; x < CellContainer.Width - superCell.Max.X; x++)
@@ -503,7 +502,6 @@ namespace MHServerEmu.Games.Generators.Areas
                     foreach (SuperCellEntryPrototype superCellEntry in superCell.Entries)
                     {
                         if (superCellEntry == null) continue;
-
                         Point2 cellCoord = new (pick.X + superCellEntry.Offset.X, pick.Y + superCellEntry.Offset.Y);
                         if (!CellContainer.ReservableCell(cellCoord.X, cellCoord.Y, GameDatabase.GetDataRefByAsset(superCellEntry.Cell)))
                             success = false;
@@ -517,9 +515,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 foreach (SuperCellEntryPrototype superCellEntry in superCell.Entries)
                 {
                     if (superCellEntry == null) continue;
-
                     Point2 cellCoord = new (pick.X + superCellEntry.Offset.X, pick.Y + superCellEntry.Offset.Y);
-
                     if (!CellContainer.ReservableCell(cellCoord.X, cellCoord.Y, GameDatabase.GetDataRefByAsset(superCellEntry.Cell))) continue;
 
                     ulong cellRef = superCellEntry.PickCell(random, list);
@@ -1257,7 +1253,7 @@ namespace MHServerEmu.Games.Generators.Areas
         private bool CellsBothInSuperCell(GenCell cellA, GenCell cellB)
         {
             if (!GetPrototype(out var proto)) return false;
-            if (proto.RequiredSuperCells == null) return false;
+            if (proto.RequiredSuperCells.IsNullOrEmpty()) return false;
             if (cellA == null || cellB == null || cellA.CellRef == 0 || cellB.CellRef == 0) return false;
 
             foreach (var superCellEntry in proto.RequiredSuperCells)

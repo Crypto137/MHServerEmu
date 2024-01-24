@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Common;
+using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -41,7 +42,7 @@ namespace MHServerEmu.Games.Generators.Areas
         {
             if (Area.AreaPrototype.Generator is not TowerAreaGeneratorPrototype proto) return Aabb.InvertedLimit;
 
-            if (proto.Entries != null)
+            if (proto.Entries.IsNullOrEmpty() == false)
             {
                 int totalCells = 0;
                 foreach (var entry in proto.Entries)

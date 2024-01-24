@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Common;
+using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -21,7 +22,7 @@ namespace MHServerEmu.Games.Generators.Regions
             Childrens = new();
             Reference = new();
 
-            if (IsList() && Prototype is RequiredCellBaseListPrototype baseList && baseList.RequiredCells != null)
+            if (IsList() && Prototype is RequiredCellBaseListPrototype baseList && baseList.RequiredCells.IsNullOrEmpty() == false)
                 AddChildrenFromList(baseList.RequiredCells);           
         }
 
@@ -100,7 +101,7 @@ namespace MHServerEmu.Games.Generators.Regions
             _root = null;
 
             RequiredPOIGroupPrototype poiPicker = GameDatabase.GetPrototype<RequiredPOIGroupPrototype>(groupProto);
-            if (poiPicker != null && poiPicker.RequiredCells != null)
+            if (poiPicker != null && poiPicker.RequiredCells.IsNullOrEmpty() == false)
             {
                 _root = new (null, null);
                 _root.AddChildrenFromList(poiPicker.RequiredCells);
@@ -112,7 +113,7 @@ namespace MHServerEmu.Games.Generators.Regions
             if (area == null) return 0;
 
             RequiredPOIGroupPrototype proto = GameDatabase.GetPrototype<RequiredPOIGroupPrototype>(_poiGroupProto);
-            if (proto != null && proto.Areas != null)
+            if (proto != null && proto.Areas.IsNullOrEmpty() == false)
             {
                 foreach (var entry in proto.Areas)
                     if (entry != null && entry.Area == area.GetPrototypeDataRef()) return entry.Picks;
@@ -158,7 +159,7 @@ namespace MHServerEmu.Games.Generators.Regions
         {
             _poiGroups = new();
 
-            if (regionGenerator != null && regionGenerator.POIGroups != null)
+            if (regionGenerator != null && regionGenerator.POIGroups.IsNullOrEmpty() == false)
                 foreach (var group in regionGenerator.POIGroups) RegisterPOIGroup(group);
         }
 

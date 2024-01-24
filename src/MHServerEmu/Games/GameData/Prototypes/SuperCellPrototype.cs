@@ -1,6 +1,6 @@
 ﻿using MHServerEmu.Common;
 using MHServerEmu.Games.Common;
-using MHServerEmu.Games.GameData;
+using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Generators;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -18,7 +18,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public ulong PickCell(GRandom random, List<ulong> list)
         {
-            if (Alts == null)
+            if (Alts.IsNullOrEmpty())
             {
                 return GameDatabase.GetDataRefByAsset(Cell);
             }
