@@ -93,6 +93,14 @@ namespace MHServerEmu.Common.Extensions
         #region Misc
 
         /// <summary>
+        /// Indicates whether this array of <typeparamref name="T"/> is <see langword="null"/> or empty.
+        /// </summary>
+        public static bool IsNullOrEmpty<T>(this T[] array)
+        {
+            return array == null || array.Length == 0;
+        }
+
+        /// <summary>
         /// Converts a data directory path to a Calligraphy path. Used before hashing to get a data id.
         /// </summary>
         public static string ToCalligraphyPath(this string path)
