@@ -14,7 +14,10 @@ namespace MHServerEmu.Games.Generators.Regions
             // ulong InvalidPrototype = 0;  This variable has no logic!!!
             bool found = false;
 
-            foreach (var itrProto in iterateProtos) // they check ALL prototypes... TODO: Rewrite!!!
+            List<Prototype> connectionNodes = new (iterateProtos); // Order for Prototypes
+            connectionNodes.Sort((a, b) => a.GetDataRef().CompareTo(b.GetDataRef())); // Sort by PrototypeId
+
+            foreach (var itrProto in connectionNodes) // they check ALL prototypes... TODO: Rewrite!!!
             {
                 if (itrProto is RegionConnectionNodePrototype proto)
                 {
