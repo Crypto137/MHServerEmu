@@ -835,7 +835,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype PrimaryPower { get; protected set; }
         public PrototypeId BrimstoneProtoRef { get; protected set; }
         public ProceduralUsePowerContextPrototype SpecialPower { get; protected set; }
-        public ulong SpecialSummonPower { get; protected set; }
+        public PrototypeId SpecialSummonPower { get; protected set; }
         public int SpecialPowerNumSummons { get; protected set; }
         public float SpecialPowerMaxRadius { get; protected set; }
         public float SpecialPowerMinRadius { get; protected set; }
@@ -913,7 +913,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float HulkBusterHealthThreshold2 { get; protected set; }
         public float HulkBusterHealthThreshold3 { get; protected set; }
         public float HulkBusterHealthThreshold4 { get; protected set; }
-        public ulong WeaponsCrate { get; protected set; }
+        public PrototypeId WeaponsCrate { get; protected set; }
         public ProceduralUsePowerContextPrototype[] WeaponsCratesAnimOnlyPowers { get; protected set; }
         public MoveToContextPrototype MoveToWeaponsCrate { get; protected set; }
         public PrototypeId WeaponCrate1UnlockPower { get; protected set; }

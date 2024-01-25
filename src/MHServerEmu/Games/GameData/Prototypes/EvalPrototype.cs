@@ -101,7 +101,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype Param1 { get; protected set; }
         public EvalPrototype Param2 { get; protected set; }
         public EvalPrototype Param3 { get; protected set; }
-        public ulong Prop { get; protected set; }
+        public PrototypeId Prop { get; protected set; }
         public EvalPrototype Eval { get; protected set; }
     }
 
