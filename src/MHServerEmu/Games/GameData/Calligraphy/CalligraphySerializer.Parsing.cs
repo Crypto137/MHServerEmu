@@ -17,7 +17,6 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             { typeof(float),            ParseFloat32 },
             { typeof(double),           ParseFloat64 },
             { typeof(Enum),             ParseEnum },
-            { typeof(ulong),            ParseDataRef },         // ulong fields are data refs we haven't defined exact types for yet
             { typeof(AssetId),          ParseDataRef },
             { typeof(AssetTypeId),      ParseDataRef },
             { typeof(CurveId),          ParseDataRef },
@@ -33,7 +32,6 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             { typeof(float[]),          ParseListFloat32 },
             { typeof(double[]),         ParseListFloat64 },
             { typeof(Enum[]),           ParseListEnum },
-            { typeof(ulong[]),          ParseListDataRef },     // ulong fields are data refs we haven't defined exact types for yet
             { typeof(AssetId[]),        ParseListDataRef },
             { typeof(AssetTypeId[]),    ParseListDataRef },
             { typeof(CurveId[]),        ParseListDataRef },
