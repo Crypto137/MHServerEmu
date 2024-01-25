@@ -103,7 +103,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public LocaleStringId Name { get; protected set; }
         public int Priority { get; protected set; }
-        public StringId EdgeIcon { get; protected set; }
+        public AssetId EdgeIcon { get; protected set; }
         public PrototypeId MapIcon { get; protected set; }
     }
 
@@ -121,7 +121,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] RestrictToRegions { get; protected set; }            // VectorPrototypeRefPtr RegionPrototype
         public PrototypeId[] RestrictToRegionsExclude { get; protected set; }     // VectorPrototypeRefPtr RegionPrototype
         public bool RestrictToRegionsIncludeChildren { get; protected set; }
-        public StringId[] RestrictToCells { get; protected set; }
+        public AssetId[] RestrictToCells { get; protected set; }
         public PrototypeId RestrictToDifficultyMin { get; protected set; }
         public PrototypeId RestrictToDifficultyMax { get; protected set; }
     }
@@ -185,7 +185,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int CounterType { get; protected set; }
         public LocaleStringId MetaGameDetails { get; protected set; }
         public int MetaGameDetailsDelayMS { get; protected set; }
-        public StringId MetaGameDetailsNPCIconPath { get; protected set; }
+        public AssetId MetaGameDetailsNPCIconPath { get; protected set; }
         public PrototypeId LogoffEntryDisplayIfNotComplete { get; protected set; }
         public LocaleStringId MissionLogObjectiveHint { get; protected set; }
         public PrototypeId MusicState { get; protected set; }
@@ -262,7 +262,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId MetaGameDetails { get; protected set; }
         public int MetaGameDetailsDelayMS { get; protected set; }
         public bool ShowTimerInUI { get; protected set; }
-        public StringId MetaGameDetailsNPCIconPath { get; protected set; }
+        public AssetId MetaGameDetailsNPCIconPath { get; protected set; }
         public bool DropLootOnGround { get; protected set; }
         public PrototypeId[] Keywords { get; protected set; }
         public PrototypeId[] RegionRestrictionKeywords { get; protected set; }
@@ -291,7 +291,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool ActiveInRegionsIncludeChildren { get; protected set; }
         public PrototypeId[] ActiveInRegionsExclude { get; protected set; }   // VectorPrototypeRefPtr RegionPrototype
         public PrototypeId[] ActiveInAreas { get; protected set; }
-        public StringId[] ActiveInCells { get; protected set; }
+        public AssetId[] ActiveInCells { get; protected set; }
         public bool ResetWhenUnsimulated { get; protected set; }
         public double MinimumContributionForCredit { get; protected set; }
         public bool RespawnInPlace { get; protected set; }
@@ -320,7 +320,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public Weekday Day { get; protected set; }
         public DailyMissionType Type { get; protected set; }
-        public StringId Image { get; protected set; }
+        public AssetId Image { get; protected set; }
         public DailyMissionResetFrequency ResetFrequency { get; protected set; }
     }
 

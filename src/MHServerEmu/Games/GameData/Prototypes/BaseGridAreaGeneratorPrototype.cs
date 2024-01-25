@@ -54,7 +54,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class RoadGeneratorPrototype : Prototype
     {
-        public StringId[] Cells { get; protected set; }
+        public AssetId[] Cells { get; protected set; }
     }
 
     public class CellDeletionProfilePrototype : Prototype
@@ -101,14 +101,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class RequiredCellPrototype : RequiredCellBasePrototype
     {
-        public StringId Cell { get; protected set; }
+        public AssetId Cell { get; protected set; }
         public int Num { get; protected set; }
         public bool Destination { get; protected set; }
     }
 
     public class RandomInstanceRegionPrototype : RequiredCellBasePrototype
     {
-        public StringId OriginCell { get; protected set; }
+        public AssetId OriginCell { get; protected set; }
         public PrototypeId OriginEntity { get; protected set; }
         public PrototypeId OverrideLocalPopulation { get; protected set; }
         public PrototypeId Target { get; protected set; }

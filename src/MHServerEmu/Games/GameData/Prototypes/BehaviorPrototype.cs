@@ -128,9 +128,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] Powers { get; protected set; }
         public bool StartsEmpty { get; protected set; }
         public LocaleStringId Description { get; protected set; }
-        public StringId MeterColor { get; protected set; }
-        public StringId ResourceBarStyle { get; protected set; }
-        public StringId ResourcePipStyle { get; protected set; }
+        public AssetId MeterColor { get; protected set; }
+        public AssetId ResourceBarStyle { get; protected set; }
+        public AssetId ResourcePipStyle { get; protected set; }
         public bool DepleteOnDeath { get; protected set; }
     }
 
@@ -460,7 +460,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class KismetSequencePrototype : Prototype
     {
-        public StringId KismetSeqName { get; protected set; }
+        public AssetId KismetSeqName { get; protected set; }
         public bool KismetSeqBlocking { get; protected set; }
         public bool AudioListenerAtCamera { get; protected set; }
         public bool HideAvatarsDuringPlayback { get; protected set; }

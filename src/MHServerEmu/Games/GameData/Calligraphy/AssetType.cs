@@ -59,23 +59,23 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// <summary>
         /// Gets an asset id from its enum value.
         /// </summary>
-        public StringId GetAssetRefFromEnum(int enumValue)
+        public AssetId GetAssetRefFromEnum(int enumValue)
         {
             if (_enumerated == false)
             {
                 Logger.Warn("Failed to get asset ref from enum: not enumerated");
-                return StringId.Invalid;
+                return AssetId.Invalid;
             }
 
             var assetValue = GetAssetValueFromEnum(enumValue);
-            if (assetValue == null) return StringId.Invalid;
+            if (assetValue == null) return AssetId.Invalid;
             return assetValue.Id;
         }
 
         /// <summary>
         /// Finds an asset id of this type by its name.
         /// </summary>
-        public StringId FindAssetByName(string assetToFind, DataFileSearchFlags searchFlags)
+        public AssetId FindAssetByName(string assetToFind, DataFileSearchFlags searchFlags)
         {
             foreach (AssetValue value in _assets)
             {
@@ -86,7 +86,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 if (assetName.Equals(assetToFind, flags)) return value.Id;
             }
 
-            return StringId.Invalid;
+            return AssetId.Invalid;
         }
         
         /// <summary>
@@ -148,13 +148,13 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// </summary>
         class AssetValue
         {
-            public StringId Id { get; }
+            public AssetId Id { get; }
             public AssetGuid Guid { get; }
             public AssetValueFlags Flags { get; }
 
             public AssetValue(BinaryReader reader)
             {
-                Id = (StringId)reader.ReadUInt64();
+                Id = (AssetId)reader.ReadUInt64();
                 Guid = (AssetGuid)reader.ReadUInt64();
                 Flags = (AssetValueFlags)reader.ReadByte();
             }

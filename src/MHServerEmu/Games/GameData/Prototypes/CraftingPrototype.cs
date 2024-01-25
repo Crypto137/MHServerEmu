@@ -50,13 +50,13 @@
         public CraftingInputPrototype[] RecipeInputs { get; protected set; }
         public LootTablePrototype RecipeOutput { get; protected set; }
         public LocaleStringId RecipeDescription { get; protected set; }
-        public StringId RecipeIconPath { get; protected set; }
+        public AssetId RecipeIconPath { get; protected set; }
         public int SortOrder { get; protected set; }
         public LocaleStringId RecipeTooltip { get; protected set; }
         public CraftingCostPrototype CraftingCost { get; protected set; }
         public int UnlockAtCrafterRank { get; protected set; }
         public EvalPrototype OnRecipeComplete { get; protected set; }
         public PrototypeId RecipeCategory { get; protected set; }
-        public StringId RecipeIconPathHiRes { get; protected set; }
+        public AssetId RecipeIconPathHiRes { get; protected set; }
     }
 }

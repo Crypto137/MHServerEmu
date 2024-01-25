@@ -90,7 +90,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class DifficultyModePrototype : Prototype
     {
-        public StringId IconPath { get; protected set; }
+        public AssetId IconPath { get; protected set; }
         public LocaleStringId Name { get; protected set; }
         public DEPRECATEDDifficultyMode DifficultyModeEnum { get; protected set; }
         public int MigrationUnlocksAtLevel { get; protected set; }
@@ -109,7 +109,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float ItemFindRarePct { get; protected set; }
         public float ItemFindSpecialPct { get; protected set; }
         public int UnlockLevel { get; protected set; }
-        public StringId UIColor { get; protected set; }
+        public AssetId UIColor { get; protected set; }
         public LocaleStringId UIDisplayName { get; protected set; }
         public int BonusItemFindBonusDifficultyMult { get; protected set; }
     }

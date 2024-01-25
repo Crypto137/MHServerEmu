@@ -76,9 +76,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class PlayerStashInventoryPrototype : InventoryPrototype
     {
         public PrototypeId ForAvatar { get; protected set; }
-        public StringId IconPath { get; protected set; }
+        public AssetId IconPath { get; protected set; }
         public LocaleStringId FulfillmentName { get; protected set; }
-        public StringId[] StashTabCustomIcons { get; protected set; }
+        public AssetId[] StashTabCustomIcons { get; protected set; }
     }
 
     public class EntityInventoryAssignmentPrototype : Prototype

@@ -35,8 +35,9 @@ namespace MHServerEmu.Games.GameData
         public static DataDirectory DataDirectory { get; }
         public static PropertyInfoTable PropertyInfoTable { get; }
 
-        // DataRef is a unique ulong id that may change across different versions of the game (e.g. resource DataRef is hashed file path).
-        public static DataRefManager<StringId> StringRefManager { get; } = new(false);
+        // DataRef is a unique ulong id that may change across different versions of the game (e.g. a prototype DataRef is hashed file path).
+        // In the client data refs are structs that encapsulate a 64-bit DataId.
+        public static DataRefManager<AssetId> StringRefManager { get; } = new(false);   // AssetId inherits from StringId in the client, which is why this is called StringRefManager
         public static DataRefManager<AssetTypeId> AssetTypeRefManager { get; } = new(true);
         public static DataRefManager<CurveId> CurveRefManager { get; } = new(true);
         public static DataRefManager<BlueprintId> BlueprintRefManager { get; } = new(true);
@@ -105,11 +106,10 @@ namespace MHServerEmu.Games.GameData
         public static Blueprint GetBlueprint(BlueprintId blueprintId) => DataDirectory.GetBlueprint(blueprintId);
         public static T GetPrototype<T>(PrototypeId prototypeId) where T: Prototype => DataDirectory.GetPrototype<T>(prototypeId);
 
-        public static string GetAssetName(StringId assetId) => StringRefManager.GetReferenceName(assetId);
+        public static string GetAssetName(AssetId assetId) => StringRefManager.GetReferenceName(assetId);
         public static string GetAssetTypeName(AssetTypeId assetTypeId) => AssetTypeRefManager.GetReferenceName(assetTypeId);
         public static string GetCurveName(CurveId curveId) => CurveRefManager.GetReferenceName(curveId);
         public static string GetBlueprintName(BlueprintId blueprintId) => BlueprintRefManager.GetReferenceName(blueprintId);
-        public static string GetBlueprintFieldName(StringId fieldId) => StringRefManager.GetReferenceName(fieldId);
         public static string GetPrototypeName(PrototypeId prototypeId) => PrototypeRefManager.GetReferenceName(prototypeId);
 
         public static string GetPrototypeNameByGuid(PrototypeGuid guid)
@@ -131,9 +131,9 @@ namespace MHServerEmu.Games.GameData
 
         public static PrototypeGuid GetPrototypeGuid(PrototypeId id) => DataDirectory.GetPrototypeGuid(id);
 
-        public static PrototypeId GetDataRefByAsset(StringId assetId)
+        public static PrototypeId GetDataRefByAsset(AssetId assetId)
         {
-            if (assetId == StringId.Invalid) return PrototypeId.Invalid;
+            if (assetId == AssetId.Invalid) return PrototypeId.Invalid;
 
             string assetName = GetAssetName(assetId);
             return GetPrototypeRefByName(assetName);
@@ -176,16 +176,16 @@ namespace MHServerEmu.Games.GameData
         /// <summary>
         /// Searches for assets using specified filters.
         /// </summary>
-        public static IEnumerable<StringId> SearchAssets(string pattern, DataFileSearchFlags searchFlags, AssetTypeId typeId = AssetTypeId.Invalid)
+        public static IEnumerable<AssetId> SearchAssets(string pattern, DataFileSearchFlags searchFlags, AssetTypeId typeId = AssetTypeId.Invalid)
         {
-            List<StringId> matches = new();
+            List<AssetId> matches = new();
 
             foreach (AssetType type in DataDirectory.IterateAssetTypes())
             {
                 // Search only the type we need if one is specified
                 if (typeId != AssetTypeId.Invalid && type.Id != typeId) continue;
                 var asset = type.FindAssetByName(pattern, searchFlags);
-                if (asset != StringId.Invalid) matches.Add(asset);
+                if (asset != AssetId.Invalid) matches.Add(asset);
 
                 // Early return if no multiple matches is requested and there's more than one match
                 if (matches.Count > 1 && searchFlags.HasFlag(DataFileSearchFlags.NoMultipleMatches))

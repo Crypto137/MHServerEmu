@@ -49,7 +49,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int InCombatTimerMS { get; protected set; }
         public DramaticEntranceType PlayDramaticEntrance { get; protected set; }
         public PrototypeId StealablePower { get; protected set; }
-        public StringId BossRewardIconPath { get; protected set; }
+        public AssetId BossRewardIconPath { get; protected set; }
         public bool SpawnLootForMissionContributors { get; protected set; }
         public int InteractRangeThrow { get; protected set; }
         public bool DamageMeterEnabled { get; protected set; }
@@ -64,8 +64,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class TeamUpCostumeOverridePrototype : Prototype
     {
-        public StringId AvatarCostumeUnrealClass { get; protected set; }
-        public StringId TeamUpCostumeUnrealClass { get; protected set; }
+        public AssetId AvatarCostumeUnrealClass { get; protected set; }
+        public AssetId TeamUpCostumeUnrealClass { get; protected set; }
     }
 
     public class TeamUpStylePrototype : Prototype
@@ -97,10 +97,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class AgentTeamUpPrototype : AgentPrototype
     {
         public AvatarEquipInventoryAssignmentPrototype[] EquipmentInventories { get; protected set; }
-        public StringId PortraitPath { get; protected set; }
+        public AssetId PortraitPath { get; protected set; }
         public LocaleStringId TooltipDescription { get; protected set; }
         public TeamUpCostumeOverridePrototype[] CostumeUnrealOverrides { get; protected set; }
-        public StringId UnlockDialogImage { get; protected set; }
+        public AssetId UnlockDialogImage { get; protected set; }
         public LocaleStringId UnlockDialogText { get; protected set; }
         public LocaleStringId FulfillmentName { get; protected set; }
         public bool ShowInRosterIfLocked { get; protected set; }

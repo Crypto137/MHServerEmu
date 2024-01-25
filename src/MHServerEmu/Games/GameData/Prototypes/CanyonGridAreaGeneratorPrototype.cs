@@ -31,7 +31,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class CellChoicePrototype : Prototype
     {
-        public StringId Cell { get; protected set; }
+        public AssetId Cell { get; protected set; }
         public int Weight { get; protected set; }
     }
 }

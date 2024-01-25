@@ -102,7 +102,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
                 // Get blueprint member info for this field
                 if (blueprint.TryGetBlueprintMemberInfo(fieldId, out var blueprintMemberInfo) == false)
-                    return Logger.ErrorReturn(false, $"Failed to find member {GameDatabase.GetBlueprintFieldName(fieldId)} in blueprint {GameDatabase.GetBlueprintName(blueprint.Id)}");
+                    return Logger.ErrorReturn(false, $"Failed to find member id {fieldId} in blueprint {GameDatabase.GetBlueprintName(blueprint.Id)}");
 
                 // Check to make sure the type matches (do we need this?)
                 if (blueprintMemberInfo.Member.BaseType != fieldBaseType)
@@ -217,7 +217,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
                 // Get blueprint member info for this field
                 if (blueprint.TryGetBlueprintMemberInfo(fieldId, out var blueprintMemberInfo) == false)
-                    return Logger.ErrorReturn(false, $"Failed to find member {GameDatabase.GetBlueprintFieldName(fieldId)} in blueprint {GameDatabase.GetBlueprintName(blueprint.Id)}");
+                    return Logger.ErrorReturn(false, $"Failed to find member id {fieldId} in blueprint {GameDatabase.GetBlueprintName(blueprint.Id)}");
 
                 propertyCollection.AddPropertyFieldValue(groupBlueprint.Id, blueprintCopyNum, blueprintMemberInfo.Member.FieldName, value);
             }

@@ -18,7 +18,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             { typeof(double),           ParseFloat64 },
             { typeof(Enum),             ParseEnum },
             { typeof(ulong),            ParseDataRef },         // ulong fields are data refs we haven't defined exact types for yet
-            { typeof(StringId),         ParseDataRef },
+            { typeof(AssetId),          ParseDataRef },
             { typeof(AssetTypeId),      ParseDataRef },
             { typeof(CurveId),          ParseDataRef },
             { typeof(PrototypeId),      ParseDataRef },
@@ -34,7 +34,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             { typeof(double[]),         ParseListFloat64 },
             { typeof(Enum[]),           ParseListEnum },
             { typeof(ulong[]),          ParseListDataRef },     // ulong fields are data refs we haven't defined exact types for yet
-            { typeof(StringId[]),       ParseListDataRef },
+            { typeof(AssetId[]),        ParseListDataRef },
             { typeof(AssetTypeId[]),    ParseListDataRef },
             { typeof(CurveId[]),        ParseListDataRef },
             { typeof(PrototypeId[]),    ParseListDataRef },
@@ -110,7 +110,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         {
             // Enums are represented in Calligraphy by assets.
             // We get asset name from the serialized asset id, and then parse the actual enum value from it.
-            var assetId = (StringId)@params.Reader.ReadUInt64();
+            var assetId = (AssetId)@params.Reader.ReadUInt64();
             var assetName = GameDatabase.GetAssetName(assetId);
 
             // Fix asset names that start with a digit (C# doesn't allow enum members to start with a digit)
@@ -234,7 +234,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             {
                 // Enums are represented in Calligraphy by assets.
                 // We get asset name from the serialized asset id, and then parse the actual enum value from it.
-                var assetId = (StringId)@params.Reader.ReadUInt64();
+                var assetId = (AssetId)@params.Reader.ReadUInt64();
                 var assetName = GameDatabase.GetAssetName(assetId);
 
                 // Looks like there are no numeric or invalid enum values in list enums, so we can speed this up

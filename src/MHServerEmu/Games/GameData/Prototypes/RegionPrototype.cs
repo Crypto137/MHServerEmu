@@ -71,10 +71,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class RegionPrototype : Prototype
     {
-        public StringId ClientMap { get; protected set; }
+        public AssetId ClientMap { get; protected set; }
         public PrototypeId BodySliderTarget { get; protected set; }
         public PrototypeId StartTarget { get; protected set; }
-        public StringId[] Music { get; protected set; }
+        public AssetId[] Music { get; protected set; }
         public RegionGeneratorPrototype RegionGenerator { get; protected set; }
         public RegionBehaviorAsset Behavior { get; protected set; }
         public LocaleStringId RegionName { get; protected set; }
@@ -88,7 +88,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId WaypointAutoUnlock { get; protected set; }
         public bool PartyFormationAllowed { get; protected set; }
         public TransitionUIPrototype[] TransitionUITypes { get; protected set; }
-        public StringId AmbientSfx { get; protected set; }
+        public AssetId AmbientSfx { get; protected set; }
         public PrototypeId[] PowerKeywordBlacklist { get; protected set; }
         public bool CloseWhenReservationsReachesZero { get; protected set; }
         public float UIMapWallThickness { get; protected set; }
@@ -120,7 +120,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public FootstepTraceBehaviorAsset FootstepTraceOverride { get; protected set; }
         public bool QueueDoNotWaitToFull { get; protected set; }
         public bool DisplayCommunityNews { get; protected set; }
-        public StringId UnrealClass { get; protected set; }
+        public AssetId UnrealClass { get; protected set; }
         public bool RespawnDestructibles { get; protected set; }
         public PrototypeId PropertyGameModeSetOnEntry { get; protected set; }
         public bool UsePrevRegionPlayerDeathCount { get; protected set; }
@@ -152,7 +152,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId Region { get; protected set; }
         public PrototypeId Area { get; protected set; }
-        public StringId Cell { get; protected set; }
+        public AssetId Cell { get; protected set; }
         public PrototypeId Entity { get; protected set; }
         public PrototypeId IntroKismetSeq { get; protected set; }
         public LocaleStringId Name { get; protected set; }

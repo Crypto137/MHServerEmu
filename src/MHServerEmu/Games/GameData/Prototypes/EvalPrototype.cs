@@ -157,7 +157,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LoadAssetRefPrototype : EvalPrototype
     {
-        public StringId Value { get; protected set; }
+        public AssetId Value { get; protected set; }
     }
 
     public class LoadProtoRefPrototype : EvalPrototype

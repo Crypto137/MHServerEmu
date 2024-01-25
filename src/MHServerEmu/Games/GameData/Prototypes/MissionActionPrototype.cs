@@ -85,7 +85,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionEncounterSpawnPrototype : MissionActionPrototype
     {
-        public StringId EncounterResource { get; protected set; }
+        public AssetId EncounterResource { get; protected set; }
         public int Phase { get; protected set; }
         public bool MissionSpawnOnly { get; protected set; }
     }
@@ -277,7 +277,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionUnlockUISystemPrototype : MissionActionPrototype
     {
-        public StringId UISystem { get; protected set; }
+        public AssetId UISystem { get; protected set; }
     }
 
     public class MissionActionShowMotionComicPrototype : MissionActionPrototype
@@ -310,7 +310,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionPlayBanterPrototype : MissionActionPrototype
     {
-        public StringId BanterAsset { get; protected set; }
+        public AssetId BanterAsset { get; protected set; }
         public DistributionType SendTo { get; protected set; }
     }
 
@@ -328,7 +328,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionActionOpenUIPanelPrototype : MissionActionPrototype
     {
-        public StringId PanelName { get; protected set; }
+        public AssetId PanelName { get; protected set; }
         public DistributionType SendTo { get; protected set; }
     }
 

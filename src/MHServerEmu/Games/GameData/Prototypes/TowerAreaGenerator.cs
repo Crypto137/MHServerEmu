@@ -22,7 +22,7 @@
 
     public class TowerAreaStaticCellEntryPrototype : TowerAreaEntryPrototype
     {
-        public StringId Cell { get; protected set; }
+        public AssetId Cell { get; protected set; }
         public LocaleStringId Name { get; protected set; }
     }
 

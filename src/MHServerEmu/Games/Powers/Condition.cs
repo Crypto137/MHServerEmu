@@ -35,7 +35,7 @@ namespace MHServerEmu.Games.Powers
         public PrototypeId ConditionPrototypeId { get; set; }
         public PrototypeId CreatorPowerPrototypeId { get; set; }
         public uint Index { get; set; }
-        public StringId AssetDataRef { get; set; }
+        public AssetId AssetDataRef { get; set; }
         public long StartTime { get; set; }
         public long PauseTime { get; set; }
         public long Duration { get; set; }  // 7200000 == 2 hours
@@ -65,7 +65,7 @@ namespace MHServerEmu.Games.Powers
 
             if (SerializationFlags.HasFlag(ConditionSerializationFlags.HasAssetDataRef)
                 && SerializationFlags.HasFlag(ConditionSerializationFlags.AssetDataRefIsNotFromOwner))
-                AssetDataRef = (StringId)stream.ReadRawVarint64();
+                AssetDataRef = (AssetId)stream.ReadRawVarint64();
 
             StartTime = stream.ReadRawInt64();
 

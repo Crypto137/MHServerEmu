@@ -10,10 +10,10 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Dictionary<AssetTypeId, LoadedAssetTypeRecord> _assetTypeRecordDict = new();   // assetTypeId => LoadedAssetTypeRecord
-        private readonly Dictionary<StringId, AssetTypeId> _assetIdToTypeIdDict = new();                // assetId => assetTypeId
-        private readonly Dictionary<AssetGuid, StringId> _assetGuidToIdDict = new();                    // assetGuid => assetId
+        private readonly Dictionary<AssetId, AssetTypeId> _assetIdToTypeIdDict = new();                // assetId => assetTypeId
+        private readonly Dictionary<AssetGuid, AssetId> _assetGuidToIdDict = new();                    // assetGuid => assetId
 
-        private readonly Dictionary<StringId, int> _assetIdToEnumValueDict = new();                     // assetId => enumValue
+        private readonly Dictionary<AssetId, int> _assetIdToEnumValueDict = new();                     // assetId => enumValue
 
         public int AssetTypeCount { get => _assetTypeRecordDict.Count; }
         public int AssetCount { get => _assetGuidToIdDict.Count; }
@@ -66,7 +66,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// <summary>
         /// Gets the id of the AssetType that the specified asset belong to.
         /// </summary>
-        public AssetTypeId GetAssetTypeId(StringId assetId)
+        public AssetTypeId GetAssetTypeId(AssetId assetId)
         {
             if (_assetIdToTypeIdDict.TryGetValue(assetId, out var assetTypeId) == false)
                 return AssetTypeId.Invalid;
@@ -77,7 +77,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// <summary>
         /// Gets the AssetType that the specified asset belongs to.
         /// </summary>
-        public AssetType GetAssetTypeByAssetId(StringId assetId)
+        public AssetType GetAssetTypeByAssetId(AssetId assetId)
         {
             var assetTypeId = GetAssetTypeId(assetId);
             if (assetTypeId == AssetTypeId.Invalid) return null;
@@ -88,7 +88,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// <summary>
         /// Adds new assetId => assetTypeId and assetGuid => assetId lookups.
         /// </summary>
-        public void AddAssetLookup(AssetTypeId assetTypeId, StringId assetId, AssetGuid assetGuid)
+        public void AddAssetLookup(AssetTypeId assetTypeId, AssetId assetId, AssetGuid assetGuid)
         {
             _assetIdToTypeIdDict.Add(assetId, assetTypeId);
             _assetGuidToIdDict.Add(assetGuid, assetId);
@@ -97,7 +97,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// <summary>
         /// Adds a new assetId => enumValue lookup.
         /// </summary>
-        public void AddAssetEnumLookup(StringId assetId, int enumValue)
+        public void AddAssetEnumLookup(AssetId assetId, int enumValue)
         {
             _assetIdToEnumValueDict.Add(assetId, enumValue);
         }

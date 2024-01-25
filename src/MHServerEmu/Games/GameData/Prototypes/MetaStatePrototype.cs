@@ -27,12 +27,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MetaStatePrototype : Prototype
     {
         public DesignWorkflowState DesignState { get; protected set; }
-        public StringId[] Groups { get; protected set; }
-        public StringId[] PreventGroups { get; protected set; }
+        public AssetId[] Groups { get; protected set; }
+        public AssetId[] PreventGroups { get; protected set; }
         public PrototypeId[] PreventStates { get; protected set; }
         public long CooldownMS { get; protected set; }
         public EvalPrototype EvalCanActivate { get; protected set; }
-        public StringId[] RemoveGroups { get; protected set; }
+        public AssetId[] RemoveGroups { get; protected set; }
         public PrototypeId[] RemoveStates { get; protected set; }
         public PrototypeId[] SubStates { get; protected set; }
         public PrototypeId UIWidget { get; protected set; }
@@ -129,7 +129,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PopulationRequiredObjectPrototype[] PopulationObjects { get; protected set; }
         public PrototypeId[] RestrictToAreas { get; protected set; }
-        public StringId[] RestrictToCells { get; protected set; }
+        public AssetId[] RestrictToCells { get; protected set; }
         public int RespawnDelayMS { get; protected set; }
         public bool Respawn { get; protected set; }
         public bool RemovePopObjectsOnSpawnFail { get; protected set; }

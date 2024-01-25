@@ -61,7 +61,7 @@ namespace MHServerEmu.Games.Powers
         public uint DamageEnergy { get; set; }
         public uint DamageMental { get; set; }
         public uint Healing { get; set; }
-        public StringId PowerAssetRefOverride { get; set; }
+        public AssetId PowerAssetRefOverride { get; set; }
         public Vector3 PowerOwnerPosition { get; set; }
         public ulong TransferToEntityId { get; set; }
 
@@ -100,7 +100,7 @@ namespace MHServerEmu.Games.Powers
                 Healing = stream.ReadRawVarint32();
 
             if (Flags.HasFlag(PowerResultMessageFlags.HasPowerAssetRefOverride))
-                PowerAssetRefOverride = (StringId)stream.ReadRawVarint64();
+                PowerAssetRefOverride = (AssetId)stream.ReadRawVarint64();
 
             if (Flags.HasFlag(PowerResultMessageFlags.HasPowerOwnerPosition))
                 PowerOwnerPosition = new(stream, 2);

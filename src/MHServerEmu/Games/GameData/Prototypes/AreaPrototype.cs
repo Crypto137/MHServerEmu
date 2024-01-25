@@ -21,13 +21,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId Population { get; protected set; }
         public LocaleStringId AreaName { get; protected set; }
         public PrototypeId PropDensity { get; protected set; }
-        public StringId[] PropSets { get; protected set; }
+        public AssetId[] PropSets { get; protected set; }
         public StyleEntryPrototype[] Styles { get; protected set; }
-        public StringId ClientMap { get; protected set; }
-        public StringId[] Music { get; protected set; }
+        public AssetId ClientMap { get; protected set; }
+        public AssetId[] Music { get; protected set; }
         public bool FullyGenerateCells { get; protected set; }
         public AreaMinimapReveal MinimapRevealMode { get; protected set; }
-        public StringId AmbientSfx { get; protected set; }
+        public AssetId AmbientSfx { get; protected set; }
         public LocaleStringId MinimapName { get; protected set; }
         public int MinimapRevealGroupId { get; protected set; }
         public PrototypeId RespawnOverride { get; protected set; }
@@ -42,19 +42,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class AreaTransitionPrototype : Prototype
     {
-        public StringId Type { get; protected set; }
+        public AssetId Type { get; protected set; }
     }
 
     public class RespawnCellOverridePrototype : Prototype
     {
-        public StringId[] Cells { get; protected set; }
+        public AssetId[] Cells { get; protected set; }
         public PrototypeId RespawnOverride { get; protected set; }
     }
 
     public class StyleEntryPrototype : Prototype
     {
         public PrototypeId Population { get; protected set; }
-        public StringId[] PropSets { get; protected set; }
+        public AssetId[] PropSets { get; protected set; }
         public int Weight { get; protected set; }
     }
 

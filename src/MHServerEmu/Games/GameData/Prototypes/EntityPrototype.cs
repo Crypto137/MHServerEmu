@@ -178,7 +178,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class EntityPrototype : Prototype
     {
         public LocaleStringId DisplayName { get; protected set; }
-        public StringId IconPath { get; protected set; }                                  // A Entity/Types/EntityIconPathType.type
+        public AssetId IconPath { get; protected set; }                                  // A Entity/Types/EntityIconPathType.type
         public PrototypePropertyCollection Properties { get; protected set; }             // Populated from mixins? Parsed from the game as ulong?
         public bool ReplicateToProximity { get; protected set; }
         public bool ReplicateToParty { get; protected set; }
@@ -190,8 +190,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId DisplayNameShort { get; protected set; }
         public bool ReplicateToTrader { get; protected set; }
         public int LifespanMS { get; protected set; }
-        public StringId IconPathTooltipHeader { get; protected set; }                     // A Entity/Types/EntityIconPathType.type
-        public StringId IconPathHiRes { get; protected set; }                             // A Entity/Types/EntityIconPathType.type
+        public AssetId IconPathTooltipHeader { get; protected set; }                     // A Entity/Types/EntityIconPathType.type
+        public AssetId IconPathHiRes { get; protected set; }                             // A Entity/Types/EntityIconPathType.type
     }
 
     public class WorldEntityPrototype : EntityPrototype
@@ -199,7 +199,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId Alliance { get; protected set; }
         public BoundsPrototype Bounds { get; protected set; }
         public LocaleStringId DialogText { get; protected set; }
-        public StringId UnrealClass { get; protected set; }
+        public AssetId UnrealClass { get; protected set; }
         public CurveId XPGrantedCurve { get; protected set; }
         public bool HACKBuildMouseCollision { get; protected set; }
         public PrototypeId PreInteractPower { get; protected set; }
@@ -241,7 +241,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool RequireCombatActiveForKillCredit { get; protected set; }
         public bool ClonePerPlayer { get; protected set; }
         public bool PrefetchMarkedAssets { get; protected set; }
-        public StringId MarvelModelRenderClass { get; protected set; }
+        public AssetId MarvelModelRenderClass { get; protected set; }
         public DesignWorkflowState DesignStatePS4 { get; protected set; }
         public DesignWorkflowState DesignStateXboxOne { get; protected set; }
     }
@@ -263,9 +263,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class WorldEntityIconsPrototype : Prototype
     {
-        public StringId EdgeIcon { get; protected set; }
+        public AssetId EdgeIcon { get; protected set; }
         public PrototypeId MapIcon { get; protected set; }
-        public StringId EdgeIconHiRes { get; protected set; }
+        public AssetId EdgeIconHiRes { get; protected set; }
     }
 
     #region EntityAction
@@ -508,7 +508,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class FactionPrototype : Prototype
     {
-        public StringId IconPath { get; protected set; }
+        public AssetId IconPath { get; protected set; }
         public PrototypeId TextStyle { get; protected set; }
         public FactionColor HealthColor { get; protected set; }
     }
@@ -535,10 +535,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId MapDescription { get; protected set; }
         public float MapPOIXCoord { get; protected set; }
         public float MapPOIYCoord { get; protected set; }
-        public StringId MapImage { get; protected set; }
+        public AssetId MapImage { get; protected set; }
         public PrototypeId OpenToWaypointGraph { get; protected set; }
-        public StringId MapImageConsole { get; protected set; }
-        public StringId LocationImageConsole { get; protected set; }
+        public AssetId MapImageConsole { get; protected set; }
+        public AssetId LocationImageConsole { get; protected set; }
         public LocaleStringId ConsoleRegionDescription { get; protected set; }
         public LocaleStringId ConsoleLocationName { get; protected set; }
         public LocaleStringId ConsoleRegionType { get; protected set; }
@@ -558,7 +558,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public WaypointChapterPrototype[] Chapters { get; protected set; }
         public LocaleStringId DisplayName { get; protected set; }
         public LocaleStringId MapDescription { get; protected set; }
-        public StringId MapImage { get; protected set; }
+        public AssetId MapImage { get; protected set; }
         public LocaleStringId Tooltip { get; protected set; }
     }
 

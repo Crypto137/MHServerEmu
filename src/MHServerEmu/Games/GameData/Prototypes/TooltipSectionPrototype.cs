@@ -53,8 +53,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId Style { get; protected set; }
         public LocaleStringId Text { get; protected set; }
         public bool ShowOnlyIfPreviousSectionHasText { get; protected set; }
-        public StringId AlignToPreviousSection { get; protected set; }
-        public StringId Font { get; protected set; }
+        public AssetId AlignToPreviousSection { get; protected set; }
+        public AssetId Font { get; protected set; }
         public bool ShowOnlyIfNextSectionHasText { get; protected set; }
         public TooltipSectionType SectionType { get; protected set; }
         public int IconSize { get; protected set; }
@@ -64,7 +64,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class TooltipSectionIconLabeledPrototype : TooltipSectionPrototype
     {
-        public StringId IconPathDefault { get; protected set; }
+        public AssetId IconPathDefault { get; protected set; }
         public AffixPosition Position { get; protected set; }
         public bool ShowIconQualityLayer { get; protected set; }
     }

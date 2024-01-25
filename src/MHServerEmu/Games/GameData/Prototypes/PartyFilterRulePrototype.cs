@@ -38,6 +38,6 @@
         public bool DefaultEnabled { get; protected set; }
         public LocaleStringId Name { get; protected set; }
         public PrototypeId[] Teams { get; protected set; }
-        public StringId PanelName { get; protected set; }
+        public AssetId PanelName { get; protected set; }
     }
 }

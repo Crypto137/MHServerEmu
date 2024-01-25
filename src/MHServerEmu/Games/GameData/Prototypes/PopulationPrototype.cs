@@ -51,7 +51,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public MarkerType Type { get; protected set; }
         public PrototypeId Shape { get; protected set; }
-        public StringId EditorIcon { get; protected set; }
+        public AssetId EditorIcon { get; protected set; }
     }
 
     public class PopulationMarkerPrototype : SpawnMarkerPrototype
@@ -137,7 +137,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId RankOverride { get; protected set; }
         public bool Critical { get; protected set; }
         public float Density { get; protected set; }
-        public StringId[] RestrictToCells { get; protected set; }
+        public AssetId[] RestrictToCells { get; protected set; }
         public PrototypeId[] RestrictToAreas { get; protected set; }
         public PrototypeId RestrictToDifficultyMin { get; protected set; }
         public PrototypeId RestrictToDifficultyMax { get; protected set; }
@@ -220,7 +220,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PopulationEncounterPrototype : PopulationObjectPrototype
     {
-        public StringId EncounterResource { get; protected set; }
+        public AssetId EncounterResource { get; protected set; }
     }
 
     public class PopulationFormationPrototype : PopulationObjectPrototype

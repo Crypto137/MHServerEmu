@@ -28,7 +28,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class DownloadChunkPrototype : Prototype
     {
         public PrototypeId Chapter { get; protected set; }
-        public StringId[] Data { get; protected set; }
+        public AssetId[] Data { get; protected set; }
         public DownloadChunkRegionsPrototype[] RegionsPerPlatform { get; protected set; }
     }
 

@@ -100,7 +100,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int Weight { get; protected set; }
         public PrototypeId[] TypeFilters { get; protected set; }
         public PropertyPickInRangeEntryPrototype[] PropertyEntries { get; protected set; }
-        public StringId[] Keywords { get; protected set; }
+        public AssetId[] Keywords { get; protected set; }
         public DropRestrictionPrototype[] DropRestrictions { get; protected set; }
         public DuplicateHandlingBehavior DuplicateHandlingBehavior { get; protected set; }
     }
@@ -164,14 +164,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class AffixDisplaySlotPrototype : Prototype
     {
-        public StringId[] AffixKeywords { get; protected set; }
+        public AssetId[] AffixKeywords { get; protected set; }
         public LocaleStringId DisplayText { get; protected set; }
     }
 
     public class ModPrototype : Prototype
     {
         public LocaleStringId TooltipTitle { get; protected set; }
-        public StringId UIIcon { get; protected set; }
+        public AssetId UIIcon { get; protected set; }
         public LocaleStringId TooltipDescription { get; protected set; }
         public PrototypePropertyCollection Properties { get; protected set; }     // Property list, should this be a property collection?
         public PrototypeId[] PassivePowers { get; protected set; }
@@ -182,7 +182,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype[] EvalOnCreate { get; protected set; }
         public PrototypeId TooltipTemplateNextRank { get; protected set; }
         public PropertySetEntryPrototype[] PropertiesForTooltips { get; protected set; }
-        public StringId UIIconHiRes { get; protected set; }
+        public AssetId UIIconHiRes { get; protected set; }
     }
 
     public class ModTypePrototype : Prototype
@@ -234,8 +234,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] OmegaBonuses { get; protected set; }
         public OmegaPageType UIPageType { get; protected set; }
         public bool Unlocked { get; protected set; }
-        public StringId UIColor { get; protected set; }
-        public StringId UIBackgroundImage { get; protected set; }
+        public AssetId UIColor { get; protected set; }
+        public AssetId UIBackgroundImage { get; protected set; }
     }
 
     public class InfinityGemBonusPrototype : ModPrototype
@@ -249,12 +249,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] Bonuses { get; protected set; }    // VectorPrototypeRefPtr InfinityGemBonusPrototype
         public InfinityGem Gem { get; protected set; }
         public bool Unlocked { get; protected set; }
-        public StringId UIColor { get; protected set; }
-        public StringId UIBackgroundImage { get; protected set; }
+        public AssetId UIColor { get; protected set; }
+        public AssetId UIBackgroundImage { get; protected set; }
         public LocaleStringId UIDescription { get; protected set; }
-        public new StringId UIIcon { get; protected set; }
-        public StringId UIIconRadialNormal { get; protected set; }
-        public StringId UIIconRadialSelected { get; protected set; }
+        public new AssetId UIIcon { get; protected set; }
+        public AssetId UIIconRadialNormal { get; protected set; }
+        public AssetId UIIconRadialSelected { get; protected set; }
     }
 
     public class RankPrototype : ModPrototype

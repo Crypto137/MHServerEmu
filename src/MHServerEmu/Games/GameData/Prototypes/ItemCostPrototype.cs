@@ -9,11 +9,11 @@
     {
         public LocaleStringId CostString { get; protected set; }
         public LocaleStringId DisplayName { get; protected set; }
-        public StringId Icon { get; protected set; }
+        public AssetId Icon { get; protected set; }
         public LocaleStringId Tooltip { get; protected set; }
-        public StringId IconSmall { get; protected set; }
+        public AssetId IconSmall { get; protected set; }
         public int MaxAmount { get; protected set; }
-        public StringId IconHiRes { get; protected set; }
+        public AssetId IconHiRes { get; protected set; }
         public CurveId LootBonusFlatCurve { get; protected set; }
         public CurveId LootBonusPctCurve { get; protected set; }
     }

@@ -55,7 +55,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype EvalXPBonus { get; protected set; }
         public RegionAffixWeightedEntryPrototype[] RegionAffixes { get; protected set; }
         public RegionAffixTableTierEntryPrototype[] Tiers { get; protected set; }
-        public StringId LootSource { get; protected set; }
+        public AssetId LootSource { get; protected set; }
     }
 
     public class RegionAffixCategoryPrototype : Prototype

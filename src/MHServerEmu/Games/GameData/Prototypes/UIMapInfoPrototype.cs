@@ -67,14 +67,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public HUDEntityFloorEffect FloorEffect { get; protected set; }
         public HUDEntityOverheadIcon OverheadIcon { get; protected set; }
-        public StringId MapIcon { get; protected set; }
-        public StringId EdgeIcon { get; protected set; }
+        public AssetId MapIcon { get; protected set; }
+        public AssetId EdgeIcon { get; protected set; }
     }
 
     public class UIMapInfoIconBehaviorPrototype : Prototype
     {
-        public StringId IconPath { get; protected set; }
-        public StringId IconPathHiRes { get; protected set; }
+        public AssetId IconPath { get; protected set; }
+        public AssetId IconPathHiRes { get; protected set; }
     }
 
     public class UIMapInfoIconAppearancePrototype : Prototype
@@ -85,7 +85,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ObjectiveInfoPrototype : Prototype
     {
-        public StringId EdgeColor { get; protected set; }
+        public AssetId EdgeColor { get; protected set; }
         public bool EdgeEnabled { get; protected set; }
         public bool EdgeOnlyInArea { get; protected set; }
         public int EdgeRange { get; protected set; }

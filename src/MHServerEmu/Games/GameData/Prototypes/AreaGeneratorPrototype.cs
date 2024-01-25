@@ -8,7 +8,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class DistrictAreaGeneratorPrototype : GeneratorPrototype
     {
-        public StringId District { get; protected set; }
+        public AssetId District { get; protected set; }
     }
 
     public class AreaGenerationInterfacePrototype : GeneratorPrototype
@@ -17,14 +17,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class SingleCellAreaGeneratorPrototype : GeneratorPrototype
     {
-        public StringId Cell { get; protected set; }
+        public AssetId Cell { get; protected set; }
         public int BorderWidth { get; protected set; }
         public CellSetEntryPrototype[] BorderCellSets { get; protected set; }
     }
 
     public class CellSetEntryPrototype : Prototype
     {
-        public StringId CellSet { get; protected set; }
+        public AssetId CellSet { get; protected set; }
         public int Weight { get; protected set; }
         public bool Unique { get; protected set; }
         public IgnoreOfTypeEntryPrototype[] IgnoreOfType { get; protected set; }
@@ -51,7 +51,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class CellGridBehaviorPrototype : Prototype
     {
-        public StringId BehaviorId { get; protected set; }
+        public AssetId BehaviorId { get; protected set; }
     }
 
     public class BlacklistCellPrototype : Prototype
@@ -73,8 +73,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class CellGridRampBehaviorPrototype : CellGridBehaviorPrototype
     {
-        public StringId EdgeStart { get; protected set; }
-        public StringId EdgeEnd { get; protected set; }
+        public AssetId EdgeStart { get; protected set; }
+        public AssetId EdgeEnd { get; protected set; }
         public float Increment { get; protected set; }
     }
 
@@ -84,8 +84,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public sbyte X { get; protected set; }
         public sbyte Y { get; protected set; }
-        public StringId Cell { get; protected set; }
-        public StringId[] Alts { get; protected set; }
+        public AssetId Cell { get; protected set; }
+        public AssetId[] Alts { get; protected set; }
     }
 
     public class SuperCellPrototype : Prototype

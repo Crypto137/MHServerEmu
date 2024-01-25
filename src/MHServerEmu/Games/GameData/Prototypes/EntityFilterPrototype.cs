@@ -82,7 +82,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EntityFilterInCellPrototype : EntityFilterPrototype
     {
-        public StringId[] InCells { get; protected set; }
+        public AssetId[] InCells { get; protected set; }
     }
 
     public class EntityFilterInLocationWithKeywordPrototype : EntityFilterPrototype
@@ -141,7 +141,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EntityFilterSpawnedByEncounterPrototype : EntityFilterPrototype
     {
-        public StringId EncounterResource { get; protected set; }
+        public AssetId EncounterResource { get; protected set; }
     }
 
     public class EntityFilterSpawnedByMissionPrototype : EntityFilterPrototype

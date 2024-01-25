@@ -127,7 +127,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float NaviBudgetBaseCellSizeLength { get; protected set; }
         public int NaviBudgetBaseCellMaxPoints { get; protected set; }
         public int NaviBudgetBaseCellMaxEdges { get; protected set; }
-        public StringId[] UIConfigFiles { get; protected set; }
+        public AssetId[] UIConfigFiles { get; protected set; }
         public int InteractRange { get; protected set; }
         public PrototypeId CreditsItemPrototype { get; protected set; }
         public PrototypeId[] NegStatusEffectList { get; protected set; }
@@ -137,15 +137,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype ItemPriceMultiplierSellToVendor { get; protected set; }
         public ModGlobalsPrototype ModGlobals { get; protected set; }
         public float MouseMoveDrivePathMaxLengthMult { get; protected set; }
-        public StringId AudioGlobalEventsClass { get; protected set; }
+        public AssetId AudioGlobalEventsClass { get; protected set; }
         public PrototypeId MetaGamePrototype { get; protected set; }
         public int MobLOSVisUpdatePeriodMS { get; protected set; }
         public int MobLOSVisStayVisibleDelayMS { get; protected set; }
         public bool MobLOSVisEnabled { get; protected set; }
-        public StringId[] BeginPlayAssetTypes { get; protected set; }
-        public StringId[] CachedAssetTypes { get; protected set; }
-        public StringId[] FileVerificationAssetTypes { get; protected set; }
-        public StringId LoadingMusic { get; protected set; }
+        public AssetId[] BeginPlayAssetTypes { get; protected set; }
+        public AssetId[] CachedAssetTypes { get; protected set; }
+        public AssetId[] FileVerificationAssetTypes { get; protected set; }
+        public AssetId LoadingMusic { get; protected set; }
         public LocaleStringId SystemLocalized { get; protected set; }
         public PrototypeId PopulationGlobals { get; protected set; }
         public PrototypeId PlayerAlliance { get; protected set; }
@@ -153,11 +153,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId DownloadChunks { get; protected set; }
         public PrototypeId UIItemInventory { get; protected set; }
         public PrototypeId AIGlobals { get; protected set; }
-        public StringId MusicAssetType { get; protected set; }
+        public AssetId MusicAssetType { get; protected set; }
         public PrototypeId ResurrectionDefaultInfo { get; protected set; }
         public PrototypeId PartyJoinPortal { get; protected set; }
         public PrototypeId MatchJoinPortal { get; protected set; }
-        public StringId MovieAssetType { get; protected set; }
+        public AssetId MovieAssetType { get; protected set; }
         public PrototypeId WaypointGraph { get; protected set; }
         public PrototypeId WaypointHotspot { get; protected set; }
         public float MouseHoldDeadZoneRadius { get; protected set; }
@@ -171,7 +171,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId AreaPrototype { get; protected set; }
         public PrototypeId PopulationObjectPrototype { get; protected set; }
         public PrototypeId RegionPrototype { get; protected set; }
-        public StringId AmbientSfxType { get; protected set; }
+        public AssetId AmbientSfxType { get; protected set; }
         public PrototypeId CombatGlobals { get; protected set; }
         public float OrientForPowerMaxTimeSecs { get; protected set; }
         public PrototypeId KismetSequenceEntityPrototype { get; protected set; }
@@ -334,8 +334,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MusicStatePrototype : Prototype
     {
-        public StringId StateGroupName { get; protected set; }
-        public StringId StateName { get; protected set; }
+        public AssetId StateGroupName { get; protected set; }
+        public AssetId StateName { get; protected set; }
         public MusicStateEndBehavior EndBehavior { get; protected set; }
     }
 
@@ -385,7 +385,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId Format { get; protected set; }
         public LocaleStringId Label { get; protected set; }
         public LocaleStringId Tooltip { get; protected set; }
-        public StringId Icon { get; protected set; }
+        public AssetId Icon { get; protected set; }
     }
 
     public class HelpGameTermPrototype : Prototype
@@ -431,7 +431,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int AvatarSwitchUIDeathDelayMS { get; protected set; }
         public PrototypeId UINotificationGlobals { get; protected set; }
         public int RosterPageSize { get; protected set; }
-        public StringId LocalizedInfoDirectory { get; protected set; }
+        public AssetId LocalizedInfoDirectory { get; protected set; }
         public int TooltipHideDelayMS { get; protected set; }
         public PrototypeId MessagePowerError { get; protected set; }
         public PrototypeId MessageWaypointError { get; protected set; }
@@ -551,7 +551,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId AffixStatDiffTooltipText { get; protected set; }
         public PrototypeId AffixStatDiffNeutralStyle { get; protected set; }
         public PrototypeId AffixStatFoundAffixStyle { get; protected set; }
-        public StringId[] StashTabCustomIcons { get; protected set; }
+        public AssetId[] StashTabCustomIcons { get; protected set; }
         public PrototypeId PropertyValueDefaultFormat { get; protected set; }
         public PrototypeId[] ItemSortCategoryList { get; protected set; }
         public PrototypeId[] ItemSortSubCategoryList { get; protected set; }
@@ -633,9 +633,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int FullScreenMapResolutionWidth { get; protected set; }
         public float FullScreenMapScale { get; protected set; }
         public float LowResRevealMultiplier { get; protected set; }
-        public StringId MapColorFiller { get; protected set; }
-        public StringId MapColorWalkable { get; protected set; }
-        public StringId MapColorWall { get; protected set; }
+        public AssetId MapColorFiller { get; protected set; }
+        public AssetId MapColorWalkable { get; protected set; }
+        public AssetId MapColorWall { get; protected set; }
         public float MiniMapAlpha { get; protected set; }
         public int MiniMapResolution { get; protected set; }
         public float CameraAngleX { get; protected set; }
@@ -651,9 +651,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float DefaultZoomMax { get; protected set; }
         public float MiniMapPOISizeMin { get; protected set; }
         public float MiniMapPOISizeMax { get; protected set; }
-        public StringId MapColorFillerConsole { get; protected set; }
-        public StringId MapColorWalkableConsole { get; protected set; }
-        public StringId MapColorWallConsole { get; protected set; }
+        public AssetId MapColorFillerConsole { get; protected set; }
+        public AssetId MapColorWalkableConsole { get; protected set; }
+        public AssetId MapColorWallConsole { get; protected set; }
         public float DefaultZoomConsole { get; protected set; }
         public float DefaultZoomMinConsole { get; protected set; }
         public float DefaultZoomMaxConsole { get; protected set; }
@@ -703,22 +703,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PowerVisualsGlobalsPrototype : Prototype
     {
-        public StringId DailyMissionCompleteClass { get; protected set; }
-        public StringId UnlockPetTechR1CommonClass { get; protected set; }
-        public StringId UnlockPetTechR2UncommonClass { get; protected set; }
-        public StringId UnlockPetTechR3RareClass { get; protected set; }
-        public StringId UnlockPetTechR4EpicClass { get; protected set; }
-        public StringId UnlockPetTechR5CosmicClass { get; protected set; }
-        public StringId LootVaporizedClass { get; protected set; }
-        public StringId AchievementUnlockedClass { get; protected set; }
-        public StringId OmegaPointGainedClass { get; protected set; }
-        public StringId AvatarLeashTeleportClass { get; protected set; }
-        public StringId InfinityTimePointEarnedClass { get; protected set; }
-        public StringId InfinitySpacePointEarnedClass { get; protected set; }
-        public StringId InfinitySoulPointEarnedClass { get; protected set; }
-        public StringId InfinityMindPointEarnedClass { get; protected set; }
-        public StringId InfinityRealityPointEarnedClass { get; protected set; }
-        public StringId InfinityPowerPointEarnedClass { get; protected set; }
+        public AssetId DailyMissionCompleteClass { get; protected set; }
+        public AssetId UnlockPetTechR1CommonClass { get; protected set; }
+        public AssetId UnlockPetTechR2UncommonClass { get; protected set; }
+        public AssetId UnlockPetTechR3RareClass { get; protected set; }
+        public AssetId UnlockPetTechR4EpicClass { get; protected set; }
+        public AssetId UnlockPetTechR5CosmicClass { get; protected set; }
+        public AssetId LootVaporizedClass { get; protected set; }
+        public AssetId AchievementUnlockedClass { get; protected set; }
+        public AssetId OmegaPointGainedClass { get; protected set; }
+        public AssetId AvatarLeashTeleportClass { get; protected set; }
+        public AssetId InfinityTimePointEarnedClass { get; protected set; }
+        public AssetId InfinitySpacePointEarnedClass { get; protected set; }
+        public AssetId InfinitySoulPointEarnedClass { get; protected set; }
+        public AssetId InfinityMindPointEarnedClass { get; protected set; }
+        public AssetId InfinityRealityPointEarnedClass { get; protected set; }
+        public AssetId InfinityPowerPointEarnedClass { get; protected set; }
     }
 
     public class RankDefaultEntryPrototype : Prototype
@@ -847,7 +847,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId EnabledState { get; protected set; }
         public PrototypeId DisabledState { get; protected set; }
         public MatchQueueStringEntryPrototype[] QueueStrings { get; protected set; }
-        public StringId TransitionEmptyClass { get; protected set; }
+        public AssetId TransitionEmptyClass { get; protected set; }
     }
 
     public class KeywordGlobalsPrototype : Prototype
@@ -907,8 +907,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class GamepadInputAssetPrototype : Prototype
     {
         public GamepadInput Input { get; protected set; }
-        public StringId DualShockPath { get; protected set; }
-        public StringId XboxPath { get; protected set; }
+        public AssetId DualShockPath { get; protected set; }
+        public AssetId XboxPath { get; protected set; }
     }
 
     public class GamepadSlotBindingPrototype : Prototype
@@ -980,7 +980,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class GlobalEventCriteriaPrototype : Prototype
     {
-        public StringId DisplayColor { get; protected set; }
+        public AssetId DisplayColor { get; protected set; }
         public LocaleStringId DisplayName { get; protected set; }
         public int Score { get; protected set; }
         public int ThresholdCount { get; protected set; }

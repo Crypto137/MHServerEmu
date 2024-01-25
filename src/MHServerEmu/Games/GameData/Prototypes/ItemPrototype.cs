@@ -66,7 +66,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AffixLimitsPrototype[] AffixLimits { get; protected set; }
         public PrototypeId TextStyleOverride { get; protected set; }
         public ItemAbilitySettingsPrototype AbilitySettings { get; protected set; }
-        public StringId StoreIconPath { get; protected set; }
+        public AssetId StoreIconPath { get; protected set; }
         public bool ClonedWhenPurchasedFromVendor { get; protected set; }
         public ItemActionSetPrototype ActionsTriggeredOnItemEvent { get; protected set; }
         public bool ConfirmOnDonate { get; protected set; }
@@ -192,7 +192,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ItemActionOpenUIPanelPrototype : ItemActionPrototype
     {
-        public StringId PanelName { get; protected set; }
+        public AssetId PanelName { get; protected set; }
     }
 
     public class CategorizedAffixEntryPrototype : Prototype
@@ -285,20 +285,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class CostumePrototype : ItemPrototype
     {
-        public StringId CostumeUnrealClass { get; protected set; }
-        public StringId FullBodyIconPath { get; protected set; }
+        public AssetId CostumeUnrealClass { get; protected set; }
+        public AssetId FullBodyIconPath { get; protected set; }
         public PrototypeId UsableBy { get; protected set; }
-        public new StringId StoreIconPath { get; protected set; }
-        public StringId PortraitIconPath { get; protected set; }
-        public StringId FullBodyIconPathDisabled { get; protected set; }
-        public StringId PartyPortraitIconPath { get; protected set; }
+        public new AssetId StoreIconPath { get; protected set; }
+        public AssetId PortraitIconPath { get; protected set; }
+        public AssetId FullBodyIconPathDisabled { get; protected set; }
+        public AssetId PartyPortraitIconPath { get; protected set; }
         public LocaleStringId MTXStoreInfo { get; protected set; }
         public LocaleStringId AvatarBioText { get; protected set; }
         public LocaleStringId AvatarDisplayName { get; protected set; }
         public LocaleStringId AvatarDisplayNameInformal { get; protected set; }
         public LocaleStringId AvatarDisplayNameShort { get; protected set; }
         public bool EquipTriggersVO { get; protected set; }
-        public StringId PortraitIconPathHiRes { get; protected set; }
+        public AssetId PortraitIconPathHiRes { get; protected set; }
         public PrototypeId FulfillmentDuplicateItem { get; protected set; }
     }
 

@@ -101,7 +101,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId QueueMsg { get; protected set; }
         public int BalanceMethod { get; protected set; }
         public int RegionLevel { get; protected set; }
-        public StringId GameSystem { get; protected set; }
+        public AssetId GameSystem { get; protected set; }
     }
 
     public class MetaGameEventHandlerPrototype : Prototype
@@ -139,9 +139,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId SpawnMarker { get; protected set; }
         public PrototypeId StartHealingAura { get; protected set; }
         public PrototypeId StartTarget { get; protected set; }
-        public StringId IconPath { get; protected set; }
+        public AssetId IconPath { get; protected set; }
         public LocaleStringId DisplayName { get; protected set; }
-        public StringId IconPathHiRes { get; protected set; }
+        public AssetId IconPathHiRes { get; protected set; }
     }
 
     public class PvPMiniMapIconsPrototype : Prototype
@@ -168,12 +168,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public CurveId DamageReductionForKDPct { get; protected set; }
         public CurveId DamageBoostForNoobs { get; protected set; }
         public CurveId DamageReductionForNoobs { get; protected set; }
-        public StringId VOEnemyTeamWiped { get; protected set; }
-        public StringId VOFirstKill { get; protected set; }
-        public StringId[] VOKillSpreeList { get; protected set; }
-        public StringId VOKillSpreeShutdown { get; protected set; }
-        public StringId VORevenge { get; protected set; }
-        public StringId VOTeammateKilled { get; protected set; }
+        public AssetId VOEnemyTeamWiped { get; protected set; }
+        public AssetId VOFirstKill { get; protected set; }
+        public AssetId[] VOKillSpreeList { get; protected set; }
+        public AssetId VOKillSpreeShutdown { get; protected set; }
+        public AssetId VORevenge { get; protected set; }
+        public AssetId VOTeammateKilled { get; protected set; }
         public CurveId DamageBoostForWinPct { get; protected set; }
         public CurveId DamageReductionForWinPct { get; protected set; }
         public CurveId DamageBoostForOmegaPct { get; protected set; }
@@ -223,10 +223,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool ShowScoreboard { get; protected set; }
         public MetaGameNotificationDataPrototype[] PlayerEnterNotifications { get; protected set; }
         public MetaGameBannerTimeDataPrototype[] UITimedBannersOnActivate { get; protected set; }
-        public StringId PlayerEnterAudioTheme { get; protected set; }
+        public AssetId PlayerEnterAudioTheme { get; protected set; }
         public PrototypeId[] ApplyStates { get; protected set; }
         public PrototypeId[] RemoveStates { get; protected set; }
-        public StringId[] RemoveGroups { get; protected set; }
+        public AssetId[] RemoveGroups { get; protected set; }
     }
 
     public class MetaGameModeIdlePrototype : MetaGameModePrototype
@@ -328,8 +328,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId DeathUINotification { get; protected set; }
         public PrototypeId RespawnUINotification { get; protected set; }
         public PrototypeId Team { get; protected set; }
-        public StringId DeathAudioTheme { get; protected set; }
-        public StringId UnderAttackAudioTheme { get; protected set; }
+        public AssetId DeathAudioTheme { get; protected set; }
+        public AssetId UnderAttackAudioTheme { get; protected set; }
     }
 
     public class PvPTurretDataPrototype : Prototype
@@ -338,7 +338,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId DeathUINotification { get; protected set; }
         public int TurretGroupId { get; protected set; }
         public PrototypeId Team { get; protected set; }
-        public StringId DeathAudioTheme { get; protected set; }
+        public AssetId DeathAudioTheme { get; protected set; }
     }
 
     public class PvPFactionGameModePrototype : MetaGameModePrototype

@@ -119,8 +119,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ConditionUnrealPrototype : Prototype
     {
-        public StringId ConditionArt { get; protected set; }
-        public StringId EntityArt { get; protected set; }
+        public AssetId ConditionArt { get; protected set; }
+        public AssetId EntityArt { get; protected set; }
     }
 
     public class ConditionPrototype : Prototype
@@ -129,11 +129,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool CancelOnPowerUse { get; protected set; }
         public long DurationMS { get; protected set; }
         public LocaleStringId TooltipText { get; protected set; }
-        public StringId IconPath { get; protected set; }
+        public AssetId IconPath { get; protected set; }
         public bool PauseDurationCountdown { get; protected set; }
         public PrototypePropertyCollection Properties { get; protected set; }
         public ConditionScopeType Scope { get; protected set; }
-        public StringId UnrealClass { get; protected set; }
+        public AssetId UnrealClass { get; protected set; }
         public EvalPrototype ChanceToApplyCondition { get; protected set; }
         public PowerConditionType ConditionType { get; protected set; }
         public bool VisualOnly { get; protected set; }
@@ -146,7 +146,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int UpdateIntervalMS { get; protected set; }
         public EvalPrototype DurationMSEval { get; protected set; }
         public PrototypeId TooltipStyle { get; protected set; }
-        public StringId TooltipFont { get; protected set; }
+        public AssetId TooltipFont { get; protected set; }
         public EvalPrototype[] EvalOnCreate { get; protected set; }
         public PrototypeId CancelOnPowerUseKeyword { get; protected set; }
         public bool CancelOnPowerUsePost { get; protected set; }
@@ -166,7 +166,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool CancelOnIntraRegionTeleport { get; protected set; }
         public LocaleStringId DisplayName { get; protected set; }
         public int UrgentTimeMS { get; protected set; }
-        public StringId IconPathHiRes { get; protected set; }
+        public AssetId IconPathHiRes { get; protected set; }
     }
 
     public class ConditionEffectPrototype : Prototype

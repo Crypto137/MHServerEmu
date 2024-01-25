@@ -106,7 +106,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootTableAssignmentPrototype : Prototype
     {
-        public StringId Name { get; protected set; }
+        public AssetId Name { get; protected set; }
         public LootDropEventType Event { get; protected set; }
         public PrototypeId Table { get; protected set; }
     }
@@ -254,8 +254,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootDropPlayVisualEffectPrototype : LootNodePrototype
     {
-        public StringId RecipientVisualEffect { get; protected set; }
-        public StringId DropperVisualEffect { get; protected set; }
+        public AssetId RecipientVisualEffect { get; protected set; }
+        public AssetId DropperVisualEffect { get; protected set; }
     }
 
     public class LootDropChatMessagePrototype : LootNodePrototype
@@ -486,7 +486,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootAddAffixesPrototype : LootMutationPrototype
     {
-        public StringId[] Keywords { get; protected set; }
+        public AssetId[] Keywords { get; protected set; }
         public short Count { get; protected set; }
         public AffixPosition Position { get; protected set; }
         public PrototypeId[] Categories { get; protected set; }       // VectorPrototypeRefPtr AffixCategoryPrototype 
@@ -509,7 +509,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootCloneAffixesPrototype : LootMutationPrototype
     {
-        public StringId[] Keywords { get; protected set; }
+        public AssetId[] Keywords { get; protected set; }
         public int SourceIndex { get; protected set; }
         public AffixPosition Position { get; protected set; }
         public bool EnforceAffixLimits { get; protected set; }
@@ -518,7 +518,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootCloneBuiltinAffixesPrototype : LootMutationPrototype
     {
-        public StringId[] Keywords { get; protected set; }
+        public AssetId[] Keywords { get; protected set; }
         public int SourceIndex { get; protected set; }
         public AffixPosition Position { get; protected set; }
         public bool EnforceAffixLimits { get; protected set; }
@@ -532,15 +532,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootDropAffixesPrototype : LootMutationPrototype
     {
-        public StringId[] Keywords { get; protected set; }
+        public AssetId[] Keywords { get; protected set; }
         public AffixPosition Position { get; protected set; }
         public PrototypeId[] Categories { get; protected set; }    // VectorPrototypeRefPtr AffixCategoryPrototype 
     }
 
     public class LootMutateAffixesPrototype : LootMutationPrototype
     {
-        public StringId[] NewItemKeywords { get; protected set; }
-        public StringId[] OldItemKeywords { get; protected set; }
+        public AssetId[] NewItemKeywords { get; protected set; }
+        public AssetId[] OldItemKeywords { get; protected set; }
         public bool OnlyReplaceIfAllMatched { get; protected set; }
     }
 
@@ -578,7 +578,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootMutateAffixSeedPrototype : LootMutationPrototype
     {
-        public StringId[] Keywords { get; protected set; }
+        public AssetId[] Keywords { get; protected set; }
         public AffixPosition Position { get; protected set; }
         public PrototypeId[] Categories { get; protected set; }    // VectorPrototypeRefPtr AffixCategoryPrototype 
     }
@@ -586,7 +586,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LootReplaceAffixesPrototype : LootMutationPrototype
     {
         public int SourceIndex { get; protected set; }
-        public StringId[] Keywords { get; protected set; }
+        public AssetId[] Keywords { get; protected set; }
         public AffixPosition Position { get; protected set; }
         public bool EnforceAffixLimits { get; protected set; }
         public PrototypeId[] Categories { get; protected set; }    // VectorPrototypeRefPtr AffixCategoryPrototype 

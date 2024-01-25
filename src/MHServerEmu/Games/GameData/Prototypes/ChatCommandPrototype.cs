@@ -77,7 +77,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public LocaleStringId Command { get; protected set; }
         public LocaleStringId Description { get; protected set; }
-        public StringId Function { get; protected set; }     // TODO: this is an asset id that needs to be bound to a function (CalligraphySerializer::ParseFunctionPtr)
+        public AssetId Function { get; protected set; }     // TODO: this is an asset id that needs to be bound to a function (CalligraphySerializer::ParseFunctionPtr)
         public ChatCommandArgumentPrototype[] Parameters { get; protected set; }
         public bool ShowInHelp { get; protected set; }
         public bool RespondsToSpacebar { get; protected set; }

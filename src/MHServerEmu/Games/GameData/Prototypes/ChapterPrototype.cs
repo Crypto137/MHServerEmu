@@ -14,11 +14,11 @@
         public bool StartLocked { get; protected set; }
         public PrototypeId ChapterEndMission { get; protected set; }
         public LocaleStringId MapDescription { get; protected set; }
-        public StringId MapImage { get; protected set; }
+        public AssetId MapImage { get; protected set; }
         public int RecommendedLevelMax { get; protected set; }
         public int RecommendedLevelMin { get; protected set; }
-        public StringId MapImageConsole { get; protected set; }
-        public StringId LocationImageConsole { get; protected set; }
+        public AssetId MapImageConsole { get; protected set; }
+        public AssetId LocationImageConsole { get; protected set; }
         public LocaleStringId ConsoleDescription { get; protected set; }
     }
 

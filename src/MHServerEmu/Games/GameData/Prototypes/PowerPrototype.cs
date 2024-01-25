@@ -250,10 +250,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype CooldownTimeMS { get; protected set; }
         public DesignWorkflowState DesignState { get; protected set; }
         public LocaleStringId DisplayName { get; protected set; }
-        public StringId IconPath { get; protected set; }
+        public AssetId IconPath { get; protected set; }
         public bool IsToggled { get; protected set; }
         public PowerCategoryType PowerCategory { get; protected set; }
-        public StringId PowerUnrealClass { get; protected set; }
+        public AssetId PowerUnrealClass { get; protected set; }
         public EvalPrototype ProjectileSpeed { get; protected set; }
         public float Radius { get; protected set; }
         public bool RemovedOnUse { get; protected set; }
@@ -366,10 +366,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool MovementPreventChannelStart { get; protected set; }
         public LocaleStringId CharacterSelectYouTubeVideoID { get; protected set; }
         public float DamageBaseTuningEnduranceRatio { get; protected set; }
-        public StringId CharacterSelectIconPath { get; protected set; }
+        public AssetId CharacterSelectIconPath { get; protected set; }
         public ManaType[] DisableEnduranceRegenTypes { get; protected set; }
         public bool CanCauseCancelOnDamage { get; protected set; }
-        public StringId IconPathHiRes { get; protected set; }
+        public AssetId IconPathHiRes { get; protected set; }
         public bool PrefetchAsset { get; protected set; }
         public bool IsTravelPower { get; protected set; }
         public PrototypeId GamepadSettings { get; protected set; }
@@ -575,8 +575,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PowerUnrealReplacementPrototype : Prototype
     {
-        public StringId EntityArt { get; protected set; }
-        public StringId PowerArt { get; protected set; }
+        public AssetId EntityArt { get; protected set; }
+        public AssetId PowerArt { get; protected set; }
         public float AnimationContactTimePercent { get; protected set; }
         public int AnimationTimeMS { get; protected set; }
     }
@@ -585,8 +585,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public float AnimationContactTimePercent { get; protected set; }
         public int AnimationTimeMS { get; protected set; }
-        public StringId EntityArt { get; protected set; }
-        public StringId PowerArt { get; protected set; }
+        public AssetId EntityArt { get; protected set; }
+        public AssetId PowerArt { get; protected set; }
         public PowerUnrealReplacementPrototype[] ArtOnlyReplacements { get; protected set; }
     }
 
@@ -617,8 +617,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class TransformModeUnrealOverridePrototype : Prototype
     {
-        public StringId IncomingUnrealClass { get; protected set; }
-        public StringId TransformedUnrealClass { get; protected set; }
+        public AssetId IncomingUnrealClass { get; protected set; }
+        public AssetId TransformedUnrealClass { get; protected set; }
     }
 
     public class TransformModePrototype : Prototype
@@ -626,7 +626,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AbilityAssignmentPrototype[] DefaultEquippedAbilities { get; protected set; }
         public PrototypeId EnterTransformModePower { get; protected set; }
         public PrototypeId ExitTransformModePower { get; protected set; }
-        public StringId UnrealClass { get; protected set; }
+        public AssetId UnrealClass { get; protected set; }
         public PrototypeId[] HiddenPassivePowers { get; protected set; }
         public bool PowersAreSlottable { get; protected set; }
         public EvalPrototype DurationMSEval { get; protected set; }

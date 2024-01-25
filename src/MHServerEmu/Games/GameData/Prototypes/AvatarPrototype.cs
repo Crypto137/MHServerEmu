@@ -31,10 +31,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public LocaleStringId BioText { get; protected set; }
         public AbilityAssignmentPrototype[] HiddenPassivePowers { get; protected set; }
-        public StringId PortraitPath { get; protected set; }
+        public AssetId PortraitPath { get; protected set; }
         public PrototypeId StartingLootTable { get; protected set; }
-        public StringId UnlockDialogImage { get; protected set; }
-        public StringId HUDTheme { get; protected set; }
+        public AssetId UnlockDialogImage { get; protected set; }
+        public AssetId HUDTheme { get; protected set; }
         public AvatarPrimaryStatPrototype[] PrimaryStats { get; protected set; }
         public PowerProgressionTablePrototype[] PowerProgressionTables { get; protected set; }
         public ItemAssignmentPrototype StartingCostume { get; protected set; }
@@ -48,8 +48,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId OnLevelUpEval { get; protected set; }
         public EvalPrototype OnPartySizeChange { get; protected set; }
         public PrototypeId StatsPower { get; protected set; }
-        public StringId SocialIconPath { get; protected set; }
-        public StringId CharacterSelectIconPath { get; protected set; }
+        public AssetId SocialIconPath { get; protected set; }
+        public AssetId CharacterSelectIconPath { get; protected set; }
         public PrototypeId[] StatProgressionTable { get; protected set; }
         public TransformModeEntryPrototype[] TransformModes { get; protected set; }
         public AvatarSynergyEntryPrototype[] SynergyTable { get; protected set; }
@@ -59,8 +59,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] StealablePowersAllowed { get; protected set; }       // VectorPrototypeRefPtr StealablePowerInfoPrototype
         public bool ShowInRosterIfLocked { get; protected set; }
         public LocaleStringId CharacterVideoUrl { get; protected set; }
-        public StringId CharacterSelectIconPortraitSmall { get; protected set; }
-        public StringId CharacterSelectIconPortraitFull { get; protected set; }
+        public AssetId CharacterSelectIconPortraitSmall { get; protected set; }
+        public AssetId CharacterSelectIconPortraitFull { get; protected set; }
         public LocaleStringId PrimaryResourceBehaviorNames { get; protected set; }
         public bool IsStarterAvatar { get; protected set; }
         public int CharacterSelectDisplayOrder { get; protected set; }

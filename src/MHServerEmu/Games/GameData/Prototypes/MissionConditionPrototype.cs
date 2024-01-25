@@ -140,13 +140,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MissionConditionCellEnterPrototype : MissionPlayerConditionPrototype
     {
-        public StringId[] Cells { get; protected set; }
+        public AssetId[] Cells { get; protected set; }
         public PrototypeId[] Regions { get; protected set; }
     }
 
     public class MissionConditionCellLeavePrototype : MissionPlayerConditionPrototype
     {
-        public StringId[] Cells { get; protected set; }
+        public AssetId[] Cells { get; protected set; }
     }
 
     public class MissionConditionCohortPrototype : MissionConditionPrototype
@@ -183,7 +183,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionConditionEntityDamagedPrototype : MissionPlayerConditionPrototype
     {
         public EntityFilterPrototype EntityFilter { get; protected set; }
-        public StringId EncounterResource { get; protected set; }
+        public AssetId EncounterResource { get; protected set; }
         public bool LimitToDamageFromPlayerOMOnly { get; protected set; }
     }
 
@@ -193,7 +193,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EntityFilterPrototype EntityFilter { get; protected set; }
         public double OpenMissionContribValueDamage { get; protected set; }
         public double OpenMissionContribValueTanking { get; protected set; }
-        public StringId EncounterResource { get; protected set; }
+        public AssetId EncounterResource { get; protected set; }
         public int DelayDeathMS { get; protected set; }
         public bool EncounterResourceValidate { get; protected set; }
         public int WithinSeconds { get; protected set; }
@@ -429,7 +429,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId DialogText { get; protected set; }
         public PrototypeId WorldEntityPrototype { get; protected set; }
         public GameNotificationType NotificationType { get; protected set; }
-        public StringId VOTrigger { get; protected set; }
+        public AssetId VOTrigger { get; protected set; }
     }
 
     public class MissionConditionTeamUpIsActivePrototype : MissionPlayerConditionPrototype

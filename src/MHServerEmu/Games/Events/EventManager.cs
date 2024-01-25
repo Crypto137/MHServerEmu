@@ -1,5 +1,4 @@
 ﻿using Gazillion;
-using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
@@ -142,7 +141,7 @@ namespace MHServerEmu.Games.Events
                     proto = interactObject.BaseData.PrototypeId;
                     var world = GameDatabase.GetPrototype<WorldEntityPrototype>(proto);
                     if (world == null) break;
-                    var preIteractPower = (PrototypeId)world.PreInteractPower;
+                    var preIteractPower = world.PreInteractPower;
                     if (preIteractPower == PrototypeId.Invalid) break;
                     Logger.Trace($"OnPreInteractPower {GameDatabase.GetPrototypeName(preIteractPower)}");
 
@@ -180,7 +179,7 @@ namespace MHServerEmu.Games.Events
                     proto = interactObject.BaseData.PrototypeId;
                     world = GameDatabase.GetPrototype<WorldEntityPrototype>(proto);
                     if (world == null) break;
-                    preIteractPower = (PrototypeId)world.PreInteractPower;
+                    preIteractPower = world.PreInteractPower;
                     if (preIteractPower == 0) break;
                     Logger.Trace($"OnPreInteractPowerEnd");
 
@@ -436,7 +435,7 @@ namespace MHServerEmu.Games.Events
                     if (emmaCostume == PrototypeId.Invalid)
                         emmaCostume = GameDatabase.GetPrototypeRefByName("Entity/Items/Costumes/Prototypes/EmmaFrost/Modern.prototype");
 
-                    var asset = (StringId)GameDatabase.GetPrototype<CostumePrototype>(emmaCostume).CostumeUnrealClass;
+                    var asset = GameDatabase.GetPrototype<CostumePrototype>(emmaCostume).CostumeUnrealClass;
                     conditionArchive.Condition.AssetDataRef = asset;  // MarvelPlayer_EmmaFrost_Modern
 
                     messageList.Add(new(client, new(NetMessageAddCondition.CreateBuilder()
