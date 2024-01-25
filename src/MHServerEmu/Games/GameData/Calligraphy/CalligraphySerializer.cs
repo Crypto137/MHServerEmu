@@ -190,14 +190,14 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// <summary>
         /// Deserializes a property mixin field group of a Calligraphy prototype.
         /// </summary>
-        private static void DeserializePropertyMixin(Prototype prototype, Blueprint blueprint, Blueprint groupBlueprint, byte blueprintCopyNum,
+        private static bool DeserializePropertyMixin(Prototype prototype, Blueprint blueprint, Blueprint groupBlueprint, byte blueprintCopyNum,
             PrototypeId prototypeDataRef, string prototypeName, Type classType, BinaryReader reader)
         {
             // TODO: do actual deserialization in DeserializeFieldGroupIntoProperty()
             short numSimpleFields = reader.ReadInt16();
             for (int i = 0; i < numSimpleFields; i++)
             {
-                var id = (StringId)reader.ReadUInt64();
+                var fieldId = (StringId)reader.ReadUInt64();
                 var type = (CalligraphyBaseType)reader.ReadByte();
 
                 // Property mixins don't have any RHStructs, so we can always read the value as uint64
@@ -215,12 +215,16 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                     propertyCollectionFieldInfo.SetValue(prototype, propertyCollection);
                 }
 
-                string fieldName = GameDatabase.GetBlueprintFieldName(id);
-                propertyCollection.AddPropertyFieldValue(groupBlueprint.Id, blueprintCopyNum, fieldName, value);
+                // Get blueprint member info for this field
+                if (blueprint.TryGetBlueprintMemberInfo(fieldId, out var blueprintMemberInfo) == false)
+                    return Logger.ErrorReturn(false, $"Failed to find member {GameDatabase.GetBlueprintFieldName(fieldId)} in blueprint {GameDatabase.GetBlueprintName(blueprint.Id)}");
+
+                propertyCollection.AddPropertyFieldValue(groupBlueprint.Id, blueprintCopyNum, blueprintMemberInfo.Member.FieldName, value);
             }
 
             // Property field groups do not have any list fields, so numListFields should always be 0
             short numListFields = reader.ReadInt16();
+            return true;
         }
 
         /// <summary>

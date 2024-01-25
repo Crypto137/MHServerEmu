@@ -66,9 +66,6 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 {
                     BlueprintMember member = new(reader);
                     _memberDict.Add(member.FieldId, member);
-
-                    // Add a reference to this member to the game database
-                    GameDatabase.StringRefManager.AddDataRef(member.FieldId, member.FieldName);
                 }
             }
 
