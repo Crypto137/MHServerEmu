@@ -7,7 +7,7 @@
 
     public class PropDensityEntryPrototype : Prototype
     {
-        public ulong Marker { get; protected set; }
+        public PrototypeId Marker { get; protected set; }
         public int OverrideDensity { get; protected set; }
     }
 

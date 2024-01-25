@@ -38,8 +38,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int PickWeight { get; protected set; }
         public ProceduralUsePowerContextSwitchTargetPrototype TargetSwitch { get; protected set; }
         public int InitialCooldownMaxMS { get; protected set; }
-        public ulong RestrictToDifficultyMin { get; protected set; }
-        public ulong RestrictToDifficultyMax { get; protected set; }
+        public PrototypeId RestrictToDifficultyMin { get; protected set; }
+        public PrototypeId RestrictToDifficultyMax { get; protected set; }
     }
 
     public class ProceduralUseAffixPowerContextPrototype : ProceduralContextPrototype
@@ -69,8 +69,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProceduralSyncAttackContextPrototype : Prototype
     {
-        public ulong TargetEntity { get; protected set; }
-        public ulong TargetEntityPower { get; protected set; }
+        public PrototypeId TargetEntity { get; protected set; }
+        public PrototypeId TargetEntityPower { get; protected set; }
         public ProceduralUsePowerContextPrototype LeaderPower { get; protected set; }
     }
 
@@ -82,8 +82,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class ProceduralPowerWithSpecificTargetsPrototype : Prototype
     {
         public float HealthThreshold { get; protected set; }
-        public ulong PowerToUse { get; protected set; }
-        public ulong[] Targets { get; protected set; }   // VectorPrototypeRefPtr AgentPrototype
+        public PrototypeId PowerToUse { get; protected set; }
+        public PrototypeId[] Targets { get; protected set; }   // VectorPrototypeRefPtr AgentPrototype
     }
 
     public class ProceduralAIProfilePrototype : BrainPrototype
@@ -93,7 +93,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class ProceduralProfileWithTargetPrototype : ProceduralAIProfilePrototype
     {
         public SelectEntityContextPrototype SelectTarget { get; protected set; }
-        public ulong NoTargetOverrideProfile { get; protected set; }
+        public PrototypeId NoTargetOverrideProfile { get; protected set; }
     }
 
     public class ProceduralProfileWithAttackPrototype : ProceduralProfileWithTargetPrototype
@@ -116,21 +116,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int MaxSubscriptionsPerActivation { get; protected set; }
         public float Radius { get; protected set; }
         public AIEntityAttributePrototype[] EnticeeAttributes { get; protected set; }
-        public ulong EnticedBehavior { get; protected set; }
+        public PrototypeId EnticedBehavior { get; protected set; }
     }
 
     public class ProceduralProfileEnticedBehaviorPrototype : ProceduralAIProfilePrototype
     {
         public FlankContextPrototype FlankToEnticer { get; protected set; }
         public MoveToContextPrototype MoveToEnticer { get; protected set; }
-        public ulong DynamicBehavior { get; protected set; }
+        public PrototypeId DynamicBehavior { get; protected set; }
         public bool OrientToEnticerOrientation { get; protected set; }
     }
 
     public class ProceduralProfileSenseOnlyPrototype : ProceduralAIProfilePrototype
     {
         public AIEntityAttributePrototype[] AttributeList { get; protected set; }
-        public ulong AllianceOverride { get; protected set; }
+        public PrototypeId AllianceOverride { get; protected set; }
     }
 
     public class ProceduralProfileInteractEnticerOverridePrototype : ProceduralAIProfilePrototype
@@ -152,12 +152,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProceduralProfileLeashOverridePrototype : ProceduralAIProfilePrototype
     {
-        public ulong LeashReturnHeal { get; protected set; }
-        public ulong LeashReturnImmunity { get; protected set; }
+        public PrototypeId LeashReturnHeal { get; protected set; }
+        public PrototypeId LeashReturnImmunity { get; protected set; }
         public MoveToContextPrototype MoveToSpawn { get; protected set; }
         public TeleportContextPrototype TeleportToSpawn { get; protected set; }
-        public ulong LeashReturnTeleport { get; protected set; }
-        public ulong LeashReturnInvulnerability { get; protected set; }
+        public PrototypeId LeashReturnTeleport { get; protected set; }
+        public PrototypeId LeashReturnInvulnerability { get; protected set; }
     }
 
     public class ProceduralProfileRunToExitAndDespawnOverridePrototype : ProceduralAIProfilePrototype
@@ -172,7 +172,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProceduralProfileRunToTargetAndDespawnOverridePrototype : ProceduralProfileWithTargetPrototype
     {
-        public ulong Invulnerability { get; protected set; }
+        public PrototypeId Invulnerability { get; protected set; }
         public int NumberOfWandersBeforeDestroy { get; protected set; }
         public MoveToContextPrototype RunToTarget { get; protected set; }
         public WanderContextPrototype WanderIfMoveFails { get; protected set; }
@@ -196,7 +196,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int InitialMoveToDelayMS { get; protected set; }
         public StateChangePrototype InvalidTargetState { get; protected set; }
         public float OrbRadius { get; protected set; }
-        public ulong EffectPower { get; protected set; }
+        public PrototypeId EffectPower { get; protected set; }
         public bool AcceptsAggroRangeBonus { get; protected set; }
         public int ShrinkageDelayMS { get; protected set; }
         public int ShrinkageDurationMS { get; protected set; }
@@ -325,7 +325,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public MoveToContextPrototype MoveIntoMeleeRange { get; protected set; }
         public ProceduralUsePowerContextPrototype MeleePower { get; protected set; }
         public ProceduralUsePowerContextPrototype SpecialPower { get; protected set; }
-        public ulong SpecialSummonPower { get; protected set; }
+        public PrototypeId SpecialSummonPower { get; protected set; }
         public float MaxDistToMoveIntoMelee { get; protected set; }
         public int SpecialPowerNumSummons { get; protected set; }
         public float SpecialPowerMaxRadius { get; protected set; }
@@ -402,7 +402,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float AggroDropRadius { get; protected set; }
         public float AggroDropByLOSChance { get; protected set; }
         public long AttentionSpanMS { get; protected set; }
-        public ulong PrimaryPower { get; protected set; }
+        public PrototypeId PrimaryPower { get; protected set; }
         public int PathGroup { get; protected set; }
         public PathMethod PathMethod { get; protected set; }
         public float PathThreshold { get; protected set; }
@@ -472,7 +472,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class ProceduralProfileBlobPrototype : ProceduralProfileBasicRangePrototype
     {
         public ProceduralUsePowerContextPrototype SummonToadPower { get; protected set; }
-        public ulong ToadPrototype { get; protected set; }
+        public PrototypeId ToadPrototype { get; protected set; }
     }
 
     public class ProceduralProfileRangedHotspotDropperPrototype : ProceduralProfileWithAttackPrototype
@@ -539,22 +539,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int ShardBurstsPerSecond { get; protected set; }
         public int ShardsPerBurst { get; protected set; }
         public int ShardRotationSpeed { get; protected set; }
-        public ulong ShardPower { get; protected set; }
+        public PrototypeId ShardPower { get; protected set; }
     }
 
     public class ProceduralProfileDrDoomPhase1Prototype : ProceduralProfileWithAttackPrototype
     {
         public MoveToContextPrototype MoveToTarget { get; protected set; }
         public OrbitContextPrototype OrbitTarget { get; protected set; }
-        public ulong DeathStun { get; protected set; }
+        public PrototypeId DeathStun { get; protected set; }
         public ProceduralUsePowerContextPrototype SummonTurretPowerAnimOnly { get; protected set; }
         public UsePowerContextPrototype SummonDoombotBlockades { get; protected set; }
         public UsePowerContextPrototype SummonDoombotInfernos { get; protected set; }
         public UsePowerContextPrototype SummonDoombotFlyers { get; protected set; }
         public ProceduralUsePowerContextPrototype SummonDoombotAnimOnly { get; protected set; }
-        public ulong SummonDoombotBlockadesCurve { get; protected set; }
-        public ulong SummonDoombotInfernosCurve { get; protected set; }
-        public ulong SummonDoombotFlyersCurve { get; protected set; }
+        public CurveId SummonDoombotBlockadesCurve { get; protected set; }
+        public CurveId SummonDoombotInfernosCurve { get; protected set; }
+        public CurveId SummonDoombotFlyersCurve { get; protected set; }
         public int SummonDoombotWaveIntervalMS { get; protected set; }
         public ProceduralUsePowerContextPrototype SummonOrbSpawners { get; protected set; }
         public TriggerSpawnersContextPrototype SpawnTurrets { get; protected set; }
@@ -566,8 +566,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public MoveToContextPrototype MoveToTarget { get; protected set; }
         public OrbitContextPrototype OrbitTarget { get; protected set; }
-        public ulong DeathStun { get; protected set; }
-        public ulong StarryExpanseAnimOnly { get; protected set; }
+        public PrototypeId DeathStun { get; protected set; }
+        public PrototypeId StarryExpanseAnimOnly { get; protected set; }
         public TriggerSpawnersContextPrototype SpawnDrDoomPhase3 { get; protected set; }
         public TriggerSpawnersContextPrototype SpawnStarryExpanseAreas { get; protected set; }
     }
@@ -578,11 +578,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public OrbitContextPrototype OrbitTarget { get; protected set; }
         public RotateContextPrototype RapidFireRotate { get; protected set; }
         public ProceduralUsePowerContextPrototype RapidFirePower { get; protected set; }
-        public ulong StarryExpanseAnimOnly { get; protected set; }
+        public PrototypeId StarryExpanseAnimOnly { get; protected set; }
         public ProceduralUsePowerContextPrototype CosmicSummonsAnimOnly { get; protected set; }
         public UsePowerContextPrototype CosmicSummonsPower { get; protected set; }
-        public ulong[] CosmicSummonEntities { get; protected set; }
-        public ulong CosmicSummonsNumEntities { get; protected set; }
+        public PrototypeId[] CosmicSummonEntities { get; protected set; }
+        public CurveId CosmicSummonsNumEntities { get; protected set; }
         public TriggerSpawnersContextPrototype SpawnStarryExpanseAreas { get; protected set; }
     }
 
@@ -728,7 +728,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class ProceduralProfileMeleeFlockerPrototype : ProceduralProfileWithAttackPrototype
     {
         public FlockContextPrototype FlockContext { get; protected set; }
-        public ulong FleeOnAllyDeathOverride { get; protected set; }
+        public PrototypeId FleeOnAllyDeathOverride { get; protected set; }
     }
 
     public class ProceduralProfileLizardBossPrototype : ProceduralProfileBasicMeleePrototype
@@ -752,9 +752,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public MoveToContextPrototype MoveToTarget { get; protected set; }
         public OrbitContextPrototype OrbitTarget { get; protected set; }
         public ProceduralUsePowerContextPrototype InverseRings { get; protected set; }
-        public ulong InverseRingsTargetedVFXOnly { get; protected set; }
-        public ulong LokiBossSafeZoneKeyword { get; protected set; }
-        public ulong InverseRingsVFXRemoval { get; protected set; }
+        public PrototypeId InverseRingsTargetedVFXOnly { get; protected set; }
+        public PrototypeId LokiBossSafeZoneKeyword { get; protected set; }
+        public PrototypeId InverseRingsVFXRemoval { get; protected set; }
     }
 
     public class ProceduralProfileDrStrangeProjectionPrototype : ProceduralProfileWithAttackPrototype
@@ -775,7 +775,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MistressOfMagmaTeleportDestPrototype : Prototype
     {
         public SelectEntityContextPrototype DestinationSelector { get; protected set; }
-        public ulong ImmunityBoost { get; protected set; }
+        public PrototypeId ImmunityBoost { get; protected set; }
     }
 
     public class ProceduralProfileSpikedBallPrototype : ProceduralProfileWithTargetPrototype
@@ -811,7 +811,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public OrbitContextPrototype OrbitTarget { get; protected set; }
         public MoveToContextPrototype MoveIntoMeleeRange { get; protected set; }
         public ProceduralUsePowerContextPrototype MeleePower { get; protected set; }
-        public ulong HellfireProtoRef { get; protected set; }
+        public PrototypeId HellfireProtoRef { get; protected set; }
     }
 
     public class ProceduralProfileSlagPrototype : ProceduralProfileWithEnragePrototype
@@ -823,9 +823,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProceduralProfileMonolithPrototype : ProceduralProfileWithEnragePrototype
     {
-        public ulong ObeliskKeyword { get; protected set; }
-        public ulong[] ObeliskDamageMonolithPowers { get; protected set; }
-        public ulong DisableShield { get; protected set; }
+        public PrototypeId ObeliskKeyword { get; protected set; }
+        public PrototypeId[] ObeliskDamageMonolithPowers { get; protected set; }
+        public PrototypeId DisableShield { get; protected set; }
     }
 
     public class ProceduralProfileHellfirePrototype : ProceduralProfileWithEnragePrototype
@@ -833,7 +833,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
         public MoveToContextPrototype MoveToTarget { get; protected set; }
         public ProceduralUsePowerContextPrototype PrimaryPower { get; protected set; }
-        public ulong BrimstoneProtoRef { get; protected set; }
+        public PrototypeId BrimstoneProtoRef { get; protected set; }
         public ProceduralUsePowerContextPrototype SpecialPower { get; protected set; }
         public ulong SpecialSummonPower { get; protected set; }
         public int SpecialPowerNumSummons { get; protected set; }
@@ -850,20 +850,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProceduralProfileSurturPrototype : ProceduralProfileWithEnragePrototype
     {
-        public ulong FirePillarPower { get; protected set; }
+        public PrototypeId FirePillarPower { get; protected set; }
         public int FirePillarMinCooldownMS { get; protected set; }
         public int FirePillarMaxCooldownMS { get; protected set; }
         public int FirePillarPowerMaxTargets { get; protected set; }
-        public ulong PowerUnlockBrimstone { get; protected set; }
-        public ulong PowerUnlockHellfire { get; protected set; }
-        public ulong PowerUnlockMistress { get; protected set; }
-        public ulong PowerUnlockMonolith { get; protected set; }
-        public ulong PowerUnlockSlag { get; protected set; }
-        public ulong MiniBossBrimstone { get; protected set; }
-        public ulong MiniBossHellfire { get; protected set; }
-        public ulong MiniBossMistress { get; protected set; }
-        public ulong MiniBossMonolith { get; protected set; }
-        public ulong MiniBossSlag { get; protected set; }
+        public PrototypeId PowerUnlockBrimstone { get; protected set; }
+        public PrototypeId PowerUnlockHellfire { get; protected set; }
+        public PrototypeId PowerUnlockMistress { get; protected set; }
+        public PrototypeId PowerUnlockMonolith { get; protected set; }
+        public PrototypeId PowerUnlockSlag { get; protected set; }
+        public PrototypeId MiniBossBrimstone { get; protected set; }
+        public PrototypeId MiniBossHellfire { get; protected set; }
+        public PrototypeId MiniBossMistress { get; protected set; }
+        public PrototypeId MiniBossMonolith { get; protected set; }
+        public PrototypeId MiniBossSlag { get; protected set; }
     }
 
     public class ProceduralProfileSurturPortalPrototype : ProceduralProfileNoMoveNoSensePrototype
@@ -872,20 +872,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProceduralProfileObeliskHealerPrototype : ProceduralProfileBasicMeleePrototype
     {
-        public ulong[] ObeliskTargets { get; protected set; }
+        public PrototypeId[] ObeliskTargets { get; protected set; }
     }
 
     public class ProceduralProfileObeliskPrototype : ProceduralProfileNoMoveDefaultSensoryPrototype
     {
-        public ulong DeadEntityForDetonateIslandPower { get; protected set; }
-        public ulong DetonateIslandPower { get; protected set; }
-        public ulong FullyHealedPower { get; protected set; }
+        public PrototypeId DeadEntityForDetonateIslandPower { get; protected set; }
+        public PrototypeId DetonateIslandPower { get; protected set; }
+        public PrototypeId FullyHealedPower { get; protected set; }
     }
 
     public class ProceduralProfileFireGiantChaserPrototype : ProceduralProfileBasicMeleePrototype
     {
         public ProceduralUsePowerContextPrototype MarkTargetPower { get; protected set; }
-        public ulong MarkTargetVFXRemoval { get; protected set; }
+        public PrototypeId MarkTargetVFXRemoval { get; protected set; }
     }
 
     public class ProceduralProfileMissionAllyPrototype : ProceduralProfileWithAttackPrototype
@@ -907,7 +907,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProceduralProfileRedSkullOneShotPrototype : ProceduralProfileWithAttackPrototype
     {
-        public ulong[] HulkBustersToActivate { get; protected set; }
+        public PrototypeId[] HulkBustersToActivate { get; protected set; }
         public ProceduralUsePowerContextPrototype ActivateHulkBusterAnimOnly { get; protected set; }
         public float HulkBusterHealthThreshold1 { get; protected set; }
         public float HulkBusterHealthThreshold2 { get; protected set; }
@@ -916,10 +916,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ulong WeaponsCrate { get; protected set; }
         public ProceduralUsePowerContextPrototype[] WeaponsCratesAnimOnlyPowers { get; protected set; }
         public MoveToContextPrototype MoveToWeaponsCrate { get; protected set; }
-        public ulong WeaponCrate1UnlockPower { get; protected set; }
-        public ulong WeaponCrate2UnlockPower { get; protected set; }
-        public ulong WeaponCrate3UnlockPower { get; protected set; }
-        public ulong WeaponCrate4UnlockPower { get; protected set; }
+        public PrototypeId WeaponCrate1UnlockPower { get; protected set; }
+        public PrototypeId WeaponCrate2UnlockPower { get; protected set; }
+        public PrototypeId WeaponCrate3UnlockPower { get; protected set; }
+        public PrototypeId WeaponCrate4UnlockPower { get; protected set; }
         public MoveToContextPrototype MoveToTarget { get; protected set; }
         public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
     }
@@ -928,7 +928,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public MoveToContextPrototype MoveToTarget { get; protected set; }
         public OrbitContextPrototype OrbitTarget { get; protected set; }
-        public ulong RedSkullAxis { get; protected set; }
+        public PrototypeId RedSkullAxis { get; protected set; }
         public ProceduralUsePowerContextPrototype ShieldRedSkull { get; protected set; }
         public ProceduralUsePowerContextPrototype DeactivatedAnimOnly { get; protected set; }
         public ProceduralUsePowerContextPrototype ActivatingAnimOnly { get; protected set; }
@@ -943,9 +943,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProceduralProfileOnslaughtPrototype : ProceduralProfileWithEnragePrototype
     {
-        public ulong PlatformMarkerLeft { get; protected set; }
-        public ulong PlatformMarkerCenter { get; protected set; }
-        public ulong PlatformMarkerRight { get; protected set; }
+        public PrototypeId PlatformMarkerLeft { get; protected set; }
+        public PrototypeId PlatformMarkerCenter { get; protected set; }
+        public PrototypeId PlatformMarkerRight { get; protected set; }
         public ProceduralUsePowerContextPrototype PsionicBlastLeft { get; protected set; }
         public ProceduralUsePowerContextPrototype PsionicBlastCenter { get; protected set; }
         public ProceduralUsePowerContextPrototype PsionicBlastRight { get; protected set; }
@@ -953,24 +953,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype PrisonBeamPowerCenter { get; protected set; }
         public ProceduralUsePowerContextPrototype PrisonPowerCenter { get; protected set; }
         public ProceduralUsePowerContextPrototype SpikeDanceSingleVFXOnly { get; protected set; }
-        public ulong CallSentinelPower { get; protected set; }
-        public ulong CallSentinelPowerVFXOnly { get; protected set; }
+        public PrototypeId CallSentinelPower { get; protected set; }
+        public PrototypeId CallSentinelPowerVFXOnly { get; protected set; }
         public float SummonPowerThreshold1 { get; protected set; }
         public float SummonPowerThreshold2 { get; protected set; }
         public ProceduralUsePowerContextPrototype PrisonBeamPowerLeft { get; protected set; }
         public ProceduralUsePowerContextPrototype PrisonBeamPowerRight { get; protected set; }
         public ProceduralUsePowerContextPrototype PrisonPowerLeft { get; protected set; }
         public ProceduralUsePowerContextPrototype PrisonPowerRight { get; protected set; }
-        public ulong PrisonKeyword { get; protected set; }
-        public ulong CenterPlatformKeyword { get; protected set; }
-        public ulong RightPlatformKeyword { get; protected set; }
-        public ulong LeftPlatformKeyword { get; protected set; }
+        public PrototypeId PrisonKeyword { get; protected set; }
+        public PrototypeId CenterPlatformKeyword { get; protected set; }
+        public PrototypeId RightPlatformKeyword { get; protected set; }
+        public PrototypeId LeftPlatformKeyword { get; protected set; }
     }
 
     public class ProcProfileSpikeDanceControllerPrototype : ProceduralAIProfilePrototype
     {
-        public ulong Onslaught { get; protected set; }
-        public ulong SpikeDanceMob { get; protected set; }
+        public PrototypeId Onslaught { get; protected set; }
+        public PrototypeId SpikeDanceMob { get; protected set; }
         public int MaxSpikeDanceActivations { get; protected set; }
         public float SpikeDanceMobSearchRadius { get; protected set; }
     }
@@ -982,29 +982,29 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ProceduralProfileNullifierPrototype : ProceduralProfileNoMoveNoSensePrototype
     {
-        public ulong ShieldEngineerKeyword { get; protected set; }
+        public PrototypeId ShieldEngineerKeyword { get; protected set; }
         public ProceduralUsePowerContextPrototype BeamPower { get; protected set; }
-        public ulong NullifierAntiShield { get; protected set; }
+        public PrototypeId NullifierAntiShield { get; protected set; }
     }
 
     public class ProceduralProfileStrangeCauldronPrototype : ProceduralProfileNoMoveNoSensePrototype
     {
-        public ulong KaeciliusPrototype { get; protected set; }
+        public PrototypeId KaeciliusPrototype { get; protected set; }
     }
 
     public class ProceduralProfileShieldEngineerPrototype : ProceduralProfileMissionAllyPrototype
     {
-        public ulong[] PsychicNullifierTargets { get; protected set; }   // VectorPrototypeRefPtr AgentPrototype
+        public PrototypeId[] PsychicNullifierTargets { get; protected set; }   // VectorPrototypeRefPtr AgentPrototype
         public ProceduralUsePowerContextPrototype ChargeNullifierPower { get; protected set; }
         public float NullifierSearchRadius { get; protected set; }
-        public ulong NullifierAntiShield { get; protected set; }
+        public PrototypeId NullifierAntiShield { get; protected set; }
     }
 
     public class ProcProfileNullifierAntiShieldPrototype : ProceduralProfileWithEnragePrototype
     {
-        public ulong[] Nullifiers { get; protected set; }    // VectorPrototypeRefPtr AgentPrototype
-        public ulong ShieldDamagePower { get; protected set; }
-        public ulong ShieldEngineerSpawner { get; protected set; }
+        public PrototypeId[] Nullifiers { get; protected set; }    // VectorPrototypeRefPtr AgentPrototype
+        public PrototypeId ShieldDamagePower { get; protected set; }
+        public PrototypeId ShieldEngineerSpawner { get; protected set; }
         public float SpawnerSearchRadius { get; protected set; }
     }
 
@@ -1012,8 +1012,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public MoveToContextPrototype MoveToTarget { get; protected set; }
         public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
-        public ulong SummonHydraPower { get; protected set; }
-        public ulong InvulnerablePower { get; protected set; }
+        public PrototypeId SummonHydraPower { get; protected set; }
+        public PrototypeId InvulnerablePower { get; protected set; }
         public ProceduralUsePowerContextPrototype TeleportPower { get; protected set; }
         public int SummonHydraMinCooldownMS { get; protected set; }
         public int SummonHydraMaxCooldownMS { get; protected set; }
@@ -1073,13 +1073,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralUsePowerContextPrototype CommandTurretPower { get; protected set; }
         public int CratePowerUseCount { get; protected set; }
         public ProceduralUsePowerContextPrototype DiscardWeaponPower { get; protected set; }
-        public ulong CrateUsedState { get; protected set; }
+        public PrototypeId CrateUsedState { get; protected set; }
     }
 
     public class ProceduralProfileNickFuryTurretPrototype : ProceduralProfileRotatingTurretWithTargetPrototype
     {
         public ProceduralUsePowerContextPrototype SpecialCommandPower { get; protected set; }
-        public ulong SkrullNickFuryRef { get; protected set; }
+        public PrototypeId SkrullNickFuryRef { get; protected set; }
     }
 
     public class ProceduralProfileKaeciliusPrototype : ProceduralProfileBasicRangePrototype
@@ -1088,24 +1088,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralThresholdPowerContextPrototype FalseDeathPower { get; protected set; }
         public ProceduralUsePowerContextPrototype HealFinalFormPower { get; protected set; }
         public ProceduralUsePowerContextPrototype DeathPreventerPower { get; protected set; }
-        public ulong Cauldron { get; protected set; }
+        public PrototypeId Cauldron { get; protected set; }
     }
 
     public class ProceduralProfileMeleeRevengePrototype : ProceduralProfileBasicMeleePrototype
     {
         public ProceduralUsePowerContextPrototype RevengePower { get; protected set; }
-        public ulong RevengeSupport { get; protected set; }
+        public PrototypeId RevengeSupport { get; protected set; }
     }
 
     public class ProceduralProfileRangedRevengePrototype : ProceduralProfileBasicRangePrototype
     {
         public ProceduralUsePowerContextPrototype RevengePower { get; protected set; }
-        public ulong RevengeSupport { get; protected set; }
+        public PrototypeId RevengeSupport { get; protected set; }
     }
 
     public class ProceduralProfileTaserTrapPrototype : ProceduralProfileWithTargetPrototype
     {
-        public ulong TaserHotspot { get; protected set; }
+        public PrototypeId TaserHotspot { get; protected set; }
     }
 
     public class ProceduralProfileVulturePrototype : ProceduralProfileWithAttackPrototype

@@ -12,7 +12,7 @@
         public bool TrackInInventory { get; protected set; }
         public bool AttachSummonsToCaster { get; protected set; }
         public EvalPrototype SummonMaxSimultaneous { get; protected set; }
-        public ulong[] SummonMaxCountWithOthers { get; protected set; }
+        public PrototypeId[] SummonMaxCountWithOthers { get; protected set; }
         public bool PersistAcrossRegions { get; protected set; }
         public EvalPrototype EvalSelectSummonContextIndex { get; protected set; }
         public bool UseTargetAsSource { get; protected set; }
@@ -22,18 +22,18 @@
 
     public class SummonPowerOverridePrototype : PowerUnrealOverridePrototype
     {
-        public ulong SummonEntity { get; protected set; }
+        public PrototypeId SummonEntity { get; protected set; }
     }
 
     public class SummonRemovalPrototype : Prototype
     {
-        public ulong[] FromPowers { get; protected set; }
-        public ulong[] Keywords { get; protected set; }
+        public PrototypeId[] FromPowers { get; protected set; }
+        public PrototypeId[] Keywords { get; protected set; }
     }
 
     public class SummonEntityContextPrototype : Prototype
     {
-        public ulong SummonEntity { get; protected set; }
+        public PrototypeId SummonEntity { get; protected set; }
         public LocomotorMethod PathFilterOverride { get; protected set; }
         public bool RandomSpawnLocation { get; protected set; }
         public bool IgnoreBlockingOnSpawn { get; protected set; }
@@ -53,6 +53,6 @@
         public PowerPrototype[] PowersToAssignToOwnerOnKilled { get; protected set; }
         public PowerPrototype[] PowersToUnassignFromOwnerOnEnter { get; protected set; }
         public EvalPrototype EvalCanSummon { get; protected set; }
-        public ulong TrackInInventoryOwnerCondition { get; protected set; }
+        public PrototypeId TrackInInventoryOwnerCondition { get; protected set; }
     }
 }

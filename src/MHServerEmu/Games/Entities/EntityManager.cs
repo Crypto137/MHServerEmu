@@ -127,14 +127,14 @@ namespace MHServerEmu.Games.Entities
 
             var regionConnectionTarget = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetPrototype);
 
-            var cellAssetId = (StringId)regionConnectionTarget.Cell;
+            var cellAssetId = regionConnectionTarget.Cell;
             var cellPrototypeId = cellAssetId != StringId.Invalid ? GameDatabase.GetPrototypeRefByName(GameDatabase.GetAssetName(cellAssetId)) : PrototypeId.Invalid;
 
-            var targetRegion = (PrototypeId)regionConnectionTarget.Region;
+            var targetRegion = regionConnectionTarget.Region;
             // Logger.Debug($"SpawnDirectTeleport {targetRegion}");
             if (targetRegion == 0) { // get Parent value
                 var parentTarget = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetPrototype);
-                if (parentTarget != null) targetRegion = (PrototypeId)parentTarget.Region;
+                if (parentTarget != null) targetRegion = parentTarget.Region;
             }
 
             if (RegionManager.IsRegionAvailable((RegionPrototypeId)targetRegion) == false) // TODO: change region test
@@ -147,9 +147,9 @@ namespace MHServerEmu.Games.Entities
             {
                 Type = type,
                 Region = targetRegion,
-                Area = (PrototypeId)regionConnectionTarget.Area,
+                Area = regionConnectionTarget.Area,
                 Cell = cellPrototypeId,
-                Entity = (PrototypeId)regionConnectionTarget.Entity,
+                Entity = regionConnectionTarget.Entity,
                 Name = "",
                 NameId = regionConnectionTarget.Name,
                 Target = targetPrototype,

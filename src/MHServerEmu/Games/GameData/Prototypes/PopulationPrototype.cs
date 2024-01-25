@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PopulationPrototype : Prototype
     {
-        public ulong RespawnMethod { get; protected set; }
+        public PrototypeId RespawnMethod { get; protected set; }
         public float ClusterDensityPct { get; protected set; }
         public float ClusterDensityPeak { get; protected set; }
         public float EncounterDensityBase { get; protected set; }
@@ -50,8 +50,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class SpawnMarkerPrototype : Prototype
     {
         public MarkerType Type { get; protected set; }
-        public ulong Shape { get; protected set; }
-        public ulong EditorIcon { get; protected set; }
+        public PrototypeId Shape { get; protected set; }
+        public StringId EditorIcon { get; protected set; }
     }
 
     public class PopulationMarkerPrototype : SpawnMarkerPrototype
@@ -68,7 +68,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PopulationInfoPrototype : PopulatablePrototype
     {
-        public ulong[] Ranks { get; protected set; }
+        public PrototypeId[] Ranks { get; protected set; }
         public bool Unique { get; protected set; }
     }
 
@@ -89,29 +89,29 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PopulationObjectPrototype : Prototype
     {
-        public ulong AllianceOverride { get; protected set; }
+        public PrototypeId AllianceOverride { get; protected set; }
         public bool AllowCrossMissionHostility { get; protected set; }
-        public ulong EntityActionTimelineScript { get; protected set; }
+        public PrototypeId EntityActionTimelineScript { get; protected set; }
         public EntityFilterSettingsPrototype[] EntityFilterSettings { get; protected set; }
-        public ulong[] EntityFilterSettingTemplates { get; protected set; }
+        public PrototypeId[] EntityFilterSettingTemplates { get; protected set; }
         public EvalPrototype EvalSpawnProperties { get; protected set; }
         public FormationTypePrototype Formation { get; protected set; }
-        public ulong FormationTemplate { get; protected set; }
+        public PrototypeId FormationTemplate { get; protected set; }
         public int GameModeScoreValue { get; protected set; }
         public bool IgnoreBlackout { get; protected set; }
         public bool IgnoreNaviCheck { get; protected set; }
         public float LeashDistance { get; protected set; }
-        public ulong OnDefeatLootTable { get; protected set; }
+        public PrototypeId OnDefeatLootTable { get; protected set; }
         public SpawnOrientationTweak OrientationTweak { get; protected set; }
         public PopulationRiderPrototype[] Riders { get; protected set; }
         public bool UseMarkerOrientation { get; protected set; }
-        public ulong UsePopulationMarker { get; protected set; }
-        public ulong CleanUpPolicy { get; protected set; }
+        public PrototypeId UsePopulationMarker { get; protected set; }
+        public PrototypeId CleanUpPolicy { get; protected set; }
     }
 
     public class PopulationEntityPrototype : PopulationObjectPrototype
     {
-        public ulong Entity { get; protected set; }
+        public PrototypeId Entity { get; protected set; }
     }
 
     public class PopulationRiderPrototype : Prototype
@@ -120,27 +120,27 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PopulationRiderEntityPrototype : PopulationRiderPrototype
     {
-        public ulong Entity { get; protected set; }
+        public PrototypeId Entity { get; protected set; }
     }
 
     public class PopulationRiderBlackOutPrototype : PopulationRiderPrototype
     {
-        public ulong BlackOutZone { get; protected set; }
+        public PrototypeId BlackOutZone { get; protected set; }
     }
 
     public class PopulationRequiredObjectPrototype : Prototype
     {
         public PopulationObjectPrototype Object { get; protected set; }
-        public ulong ObjectTemplate { get; protected set; }
+        public PrototypeId ObjectTemplate { get; protected set; }
         public short Count { get; protected set; }
         public EvalPrototype EvalSpawnProperties { get; protected set; }
-        public ulong RankOverride { get; protected set; }
+        public PrototypeId RankOverride { get; protected set; }
         public bool Critical { get; protected set; }
         public float Density { get; protected set; }
-        public ulong[] RestrictToCells { get; protected set; }
-        public ulong[] RestrictToAreas { get; protected set; }
-        public ulong RestrictToDifficultyMin { get; protected set; }
-        public ulong RestrictToDifficultyMax { get; protected set; }
+        public StringId[] RestrictToCells { get; protected set; }
+        public PrototypeId[] RestrictToAreas { get; protected set; }
+        public PrototypeId RestrictToDifficultyMin { get; protected set; }
+        public PrototypeId RestrictToDifficultyMax { get; protected set; }
     }
 
     public class PopulationRequiredObjectListPrototype : Prototype
@@ -186,13 +186,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EntityCountEntryPrototype : Prototype
     {
-        public ulong Entity { get; protected set; }
+        public PrototypeId Entity { get; protected set; }
         public int Count { get; protected set; }
     }
 
     public class PopulationClusterFixedPrototype : PopulationObjectPrototype
     {
-        public ulong[] Entities { get; protected set; }
+        public PrototypeId[] Entities { get; protected set; }
         public EntityCountEntryPrototype[] EntityEntries { get; protected set; }
     }
 
@@ -201,7 +201,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public short Max { get; protected set; }
         public short Min { get; protected set; }
         public float RandomOffset { get; protected set; }
-        public ulong Entity { get; protected set; }
+        public PrototypeId Entity { get; protected set; }
     }
 
     public class PopulationClusterMixedPrototype : PopulationObjectPrototype
@@ -214,13 +214,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PopulationLeaderPrototype : PopulationObjectPrototype
     {
-        public ulong Leader { get; protected set; }
+        public PrototypeId Leader { get; protected set; }
         public PopulationObjectPrototype[] Henchmen { get; protected set; }
     }
 
     public class PopulationEncounterPrototype : PopulationObjectPrototype
     {
-        public ulong EncounterResource { get; protected set; }
+        public StringId EncounterResource { get; protected set; }
     }
 
     public class PopulationFormationPrototype : PopulationObjectPrototype
@@ -243,7 +243,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class PopulationObjectInstancePrototype : Prototype
     {
         public short Weight { get; protected set; }
-        public ulong Object { get; protected set; }
+        public PrototypeId Object { get; protected set; }
     }
 
     public class PopulationObjectListPrototype : Prototype
@@ -265,12 +265,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PopulationThemeSetPrototype : Prototype
     {
-        public ulong[] Themes { get; protected set; }
+        public PrototypeId[] Themes { get; protected set; }
     }
 
     public class EncounterDensityOverrideEntryPrototype : Prototype
     {
-        public ulong MarkerType { get; protected set; }
+        public PrototypeId MarkerType { get; protected set; }
         public float Density { get; protected set; }
     }
 }

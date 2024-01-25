@@ -32,7 +32,7 @@
 
     public class TranslationPrototype : Prototype
     {
-        public ulong Value { get; protected set; }
+        public LocaleStringId Value { get; protected set; }
     }
 
     public class LocomotorPrototype : Prototype
@@ -50,12 +50,12 @@
 
     public class KeywordPrototype : Prototype
     {
-        public ulong IsAKeyword { get; protected set; }
+        public PrototypeId IsAKeyword { get; protected set; }
     }
 
     public class EntityKeywordPrototype : KeywordPrototype
     {
-        public ulong DisplayName { get; protected set; }
+        public LocaleStringId DisplayName { get; protected set; }
     }
 
     public class MobKeywordPrototype : EntityKeywordPrototype
@@ -72,7 +72,7 @@
 
     public class PowerKeywordPrototype : KeywordPrototype
     {
-        public ulong DisplayName { get; protected set; }
+        public LocaleStringId DisplayName { get; protected set; }
         public bool DisplayInPowerKeywordsList { get; protected set; }
     }
 

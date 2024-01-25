@@ -89,7 +89,7 @@ namespace MHServerEmu.Games.Entities
         public PrototypeId Target {get; set; }
         public int Unk2 { get; set; }
         public string Name { get; set; }
-        public ulong NameId { get; set; }
+        public LocaleStringId NameId { get; set; }
         public ulong RegionId { get; set; }
         public Vector3 Position { get; set; }
         public ulong UnkId1 { get; set; }
@@ -109,7 +109,7 @@ namespace MHServerEmu.Games.Entities
             Unk2 = stream.ReadRawInt32();
 
             Name = stream.ReadRawString();
-            NameId = stream.ReadRawVarint64();
+            NameId = (LocaleStringId)stream.ReadRawVarint64();
 
             RegionId = stream.ReadRawVarint64();
 
@@ -123,7 +123,7 @@ namespace MHServerEmu.Games.Entities
         }
 
         public Destination(int type, PrototypeId region, PrototypeId area, PrototypeId cell, PrototypeId entity, PrototypeId target, 
-            int unk2, string name, ulong nameId, ulong regionId, 
+            int unk2, string name, LocaleStringId nameId, ulong regionId, 
             Vector3 position, ulong unkId1, ulong unkId2)
         {
             Type = type;
@@ -154,7 +154,7 @@ namespace MHServerEmu.Games.Entities
             stream.WriteRawInt32(Unk2);
 
             stream.WriteRawString(Name);
-            stream.WriteRawVarint64(NameId);
+            stream.WriteRawVarint64((ulong)NameId);
 
             stream.WriteRawVarint64(RegionId);
 

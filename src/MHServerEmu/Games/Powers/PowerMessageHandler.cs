@@ -63,7 +63,7 @@ namespace MHServerEmu.Games.Powers
             if (power == null) return false;
 
             for (int i = 0; i < power.Keywords.Length; i++)
-                if (power.Keywords[i] == (ulong)keyword) return true;
+                if (power.Keywords[i] == (PrototypeId)keyword) return true;
 
             return false;
         }

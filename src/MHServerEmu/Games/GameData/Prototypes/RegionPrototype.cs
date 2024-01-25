@@ -71,91 +71,91 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class RegionPrototype : Prototype
     {
-        public ulong ClientMap { get; protected set; }
-        public ulong BodySliderTarget { get; protected set; }
-        public ulong StartTarget { get; protected set; }
-        public ulong[] Music { get; protected set; }
+        public StringId ClientMap { get; protected set; }
+        public PrototypeId BodySliderTarget { get; protected set; }
+        public PrototypeId StartTarget { get; protected set; }
+        public StringId[] Music { get; protected set; }
         public RegionGeneratorPrototype RegionGenerator { get; protected set; }
         public RegionBehaviorAsset Behavior { get; protected set; }
-        public ulong RegionName { get; protected set; }
-        public ulong[] MetaGames { get; protected set; }
+        public LocaleStringId RegionName { get; protected set; }
+        public PrototypeId[] MetaGames { get; protected set; }
         public bool ForceSimulation { get; protected set; }
-        public ulong[] LoadingScreens { get; protected set; }
+        public PrototypeId[] LoadingScreens { get; protected set; }
         public bool AlwaysRevealFullMap { get; protected set; }
-        public ulong Chapter { get; protected set; }
+        public PrototypeId Chapter { get; protected set; }
         public int PlayerLimit { get; protected set; }
         public float LifetimeInMinutes { get; protected set; }
-        public ulong WaypointAutoUnlock { get; protected set; }
+        public PrototypeId WaypointAutoUnlock { get; protected set; }
         public bool PartyFormationAllowed { get; protected set; }
         public TransitionUIPrototype[] TransitionUITypes { get; protected set; }
-        public ulong AmbientSfx { get; protected set; }
-        public ulong[] PowerKeywordBlacklist { get; protected set; }
+        public StringId AmbientSfx { get; protected set; }
+        public PrototypeId[] PowerKeywordBlacklist { get; protected set; }
         public bool CloseWhenReservationsReachesZero { get; protected set; }
         public float UIMapWallThickness { get; protected set; }
-        public ulong[] PopulationOverrides { get; protected set; }
+        public PrototypeId[] PopulationOverrides { get; protected set; }
         public int Level { get; protected set; }
         public MissionTrackerFilterType[] MissionTrackerFilterList { get; protected set; }
         public bool AllowAutoPartyOnEnter { get; protected set; }
         public float AutoPartyWindowSecs { get; protected set; }
         public bool DailyCheckpointStartTarget { get; protected set; }
         public int LowPopulationPlayerLimit { get; protected set; }
-        public ulong RespawnOverride { get; protected set; }
-        public ulong PlayerCameraSettings { get; protected set; }
+        public PrototypeId RespawnOverride { get; protected set; }
+        public PrototypeId PlayerCameraSettings { get; protected set; }
         public RegionQueueMethod RegionQueueMethod { get; protected set; }
         public EvalPrototype EvalAccessRestriction { get; protected set; }
-        public ulong[] WaypointAutoUnlockList { get; protected set; }
+        public PrototypeId[] WaypointAutoUnlockList { get; protected set; }
         public bool AlwaysShutdownWhenVacant { get; protected set; }
         public bool SynergyEditAllowed { get; protected set; }
-        public ulong[] Keywords { get; protected set; }
-        public ulong UITopPanel { get; protected set; }
-        public ulong[] AltRegions { get; protected set; }
+        public PrototypeId[] Keywords { get; protected set; }
+        public PrototypeId UITopPanel { get; protected set; }
+        public PrototypeId[] AltRegions { get; protected set; }
         public RegionAccessCheckPrototype[] AccessChecks { get; protected set; }
-        public ulong UIDescription { get; protected set; }
-        public ulong UILocation { get; protected set; }
+        public LocaleStringId UIDescription { get; protected set; }
+        public LocaleStringId UILocation { get; protected set; }
         public bool PausesBoostConditions { get; protected set; }
         public bool ShowTransitionIndicators { get; protected set; }
         public RegionQueueStateEntryPrototype[] RegionQueueStates { get; protected set; }
-        public ulong MarkerFilter { get; protected set; }
+        public PrototypeId MarkerFilter { get; protected set; }
         public bool LevelBandedRegionUsesPlayerLevel { get; protected set; }
         public FootstepTraceBehaviorAsset FootstepTraceOverride { get; protected set; }
         public bool QueueDoNotWaitToFull { get; protected set; }
         public bool DisplayCommunityNews { get; protected set; }
-        public ulong UnrealClass { get; protected set; }
+        public StringId UnrealClass { get; protected set; }
         public bool RespawnDestructibles { get; protected set; }
-        public ulong PropertyGameModeSetOnEntry { get; protected set; }
+        public PrototypeId PropertyGameModeSetOnEntry { get; protected set; }
         public bool UsePrevRegionPlayerDeathCount { get; protected set; }
         public LootTableAssignmentPrototype[] LootTables { get; protected set; }
-        public ulong AffixTable { get; protected set; }
+        public PrototypeId AffixTable { get; protected set; }
         public ObjectiveGraphSettingsPrototype ObjectiveGraph { get; protected set; }
         public DividedStartLocationPrototype[] DividedStartLocations { get; protected set; }
         public RegionMusicBehaviorAsset MusicBehavior { get; protected set; }
-        public ulong AvatarObjectiveInfoOverride { get; protected set; }
+        public PrototypeId AvatarObjectiveInfoOverride { get; protected set; }
         public RegionDifficultySettingsPrototype DifficultySettings { get; protected set; }
         public bool LevelOverridesCharacterLevel { get; protected set; }
         public bool LevelUseAreaOffset { get; protected set; }
-        public ulong EvalAccessRestrictionMessage { get; protected set; }
+        public LocaleStringId EvalAccessRestrictionMessage { get; protected set; }
         public bool BodySliderOneWay { get; protected set; }
         public bool EnableAvatarSwap { get; protected set; }
-        public ulong[] RestrictedRoster { get; protected set; }
-        public ulong[] AvatarPowers { get; protected set; }
+        public PrototypeId[] RestrictedRoster { get; protected set; }
+        public PrototypeId[] AvatarPowers { get; protected set; }
         public bool IsNPE { get; protected set; }
-        public ulong PresenceStatusText { get; protected set; }
-        public ulong[] AccessDifficulties { get; protected set; }
-        public ulong Tuning { get; protected set; }
+        public LocaleStringId PresenceStatusText { get; protected set; }
+        public PrototypeId[] AccessDifficulties { get; protected set; }
+        public PrototypeId Tuning { get; protected set; }
         public int BonusItemFindMultiplier { get; protected set; }
-        public ulong PlayerCameraSettingsOrbis { get; protected set; }
-        public ulong[] LoadingScreensConsole { get; protected set; }
+        public PrototypeId PlayerCameraSettingsOrbis { get; protected set; }
+        public PrototypeId[] LoadingScreensConsole { get; protected set; }
         public bool AllowLocalCoopMode { get; protected set; }
     }
 
     public class RegionConnectionTargetPrototype : Prototype
     {
-        public ulong Region { get; protected set; }
-        public ulong Area { get; protected set; }
-        public ulong Cell { get; protected set; }
-        public ulong Entity { get; protected set; }
-        public ulong IntroKismetSeq { get; protected set; }
-        public ulong Name { get; protected set; }
+        public PrototypeId Region { get; protected set; }
+        public PrototypeId Area { get; protected set; }
+        public StringId Cell { get; protected set; }
+        public PrototypeId Entity { get; protected set; }
+        public PrototypeId IntroKismetSeq { get; protected set; }
+        public LocaleStringId Name { get; protected set; }
         public bool EnabledByDefault { get; protected set; }
         public int UISortOrder { get; protected set; }
     }
@@ -167,7 +167,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class FactionLimitPrototype : Prototype
     {
-        public ulong Faction { get; protected set; }
+        public PrototypeId Faction { get; protected set; }
         public int PlayerLimit { get; protected set; }
     }
 
@@ -179,38 +179,38 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LevelAccessCheckPrototype : RegionAccessCheckPrototype
     {
-        public ulong UIResponseMessage { get; protected set; }
-        public ulong UILevelRangeFormat { get; protected set; }
-        public ulong UIMapDescriptionTag { get; protected set; }
-        public ulong UIWaypointNameTag { get; protected set; }
+        public LocaleStringId UIResponseMessage { get; protected set; }
+        public LocaleStringId UILevelRangeFormat { get; protected set; }
+        public LocaleStringId UIMapDescriptionTag { get; protected set; }
+        public LocaleStringId UIWaypointNameTag { get; protected set; }
         public int LevelMin { get; protected set; }
         public int LevelMax { get; protected set; }
     }
 
     public class RegionQueueStateEntryPrototype : Prototype
     {
-        public ulong StateParent { get; protected set; }
-        public ulong State { get; protected set; }
-        public ulong QueueText { get; protected set; }
+        public PrototypeId StateParent { get; protected set; }
+        public PrototypeId State { get; protected set; }
+        public LocaleStringId QueueText { get; protected set; }
     }
 
     public class DividedStartLocationPrototype : Prototype
     {
-        public ulong Target { get; protected set; }
+        public PrototypeId Target { get; protected set; }
         public int Players { get; protected set; }
     }
 
     public class RegionPortalControlEntryPrototype : Prototype
     {
-        public ulong Region { get; protected set; }
+        public PrototypeId Region { get; protected set; }
         public int UnlockDurationMinutes { get; protected set; }
         public int UnlockPeriodMinutes { get; protected set; }
     }
 
     public class RegionConnectionNodePrototype : Prototype
     {
-        public ulong Origin { get; protected set; }
-        public ulong Target { get; protected set; }
+        public PrototypeId Origin { get; protected set; }
+        public PrototypeId Target { get; protected set; }
         public RegionTransitionDirectionality Type { get; protected set; }
     }
 

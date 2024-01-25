@@ -22,8 +22,8 @@
 
     public class TowerAreaStaticCellEntryPrototype : TowerAreaEntryPrototype
     {
-        public ulong Cell { get; protected set; }
-        public ulong Name { get; protected set; }
+        public StringId Cell { get; protected set; }
+        public LocaleStringId Name { get; protected set; }
     }
 
     #endregion

@@ -2,6 +2,6 @@
 {
     public class RegionGeneratorPrototype : Prototype
     {
-        public ulong[] POIGroups { get; protected set; }
+        public PrototypeId[] POIGroups { get; protected set; }
     }
 }

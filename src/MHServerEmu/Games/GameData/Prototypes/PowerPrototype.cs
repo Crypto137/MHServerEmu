@@ -249,22 +249,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public List<PrototypeMixinListItem> ConditionEffects { get; protected set; }
         public EvalPrototype CooldownTimeMS { get; protected set; }
         public DesignWorkflowState DesignState { get; protected set; }
-        public ulong DisplayName { get; protected set; }
-        public ulong IconPath { get; protected set; }
+        public LocaleStringId DisplayName { get; protected set; }
+        public StringId IconPath { get; protected set; }
         public bool IsToggled { get; protected set; }
         public PowerCategoryType PowerCategory { get; protected set; }
-        public ulong PowerUnrealClass { get; protected set; }
+        public StringId PowerUnrealClass { get; protected set; }
         public EvalPrototype ProjectileSpeed { get; protected set; }
         public float Radius { get; protected set; }
         public bool RemovedOnUse { get; protected set; }
         public StackingBehaviorPrototype StackingBehaviorLEGACY { get; protected set; }
         public bool MovementStopOnActivate { get; protected set; }
-        public ulong TargetingReach { get; protected set; }
-        public ulong TargetingStyle { get; protected set; }
+        public PrototypeId TargetingReach { get; protected set; }
+        public PrototypeId TargetingStyle { get; protected set; }
         public bool UsableByAll { get; protected set; }
         public bool HideFloatingNumbers { get; protected set; }
         public int PostContactDelayMS { get; protected set; }
-        public ulong[] Keywords { get; protected set; }
+        public PrototypeId[] Keywords { get; protected set; }
         public bool CancelConditionsOnUnassign { get; protected set; }
         public float HeightCheckPadding { get; protected set; }
         public bool FlyingUsable { get; protected set; }
@@ -278,7 +278,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public WhenOutOfRangeType WhenOutOfRange { get; protected set; }
         public int NoInterruptPreWindowMS { get; protected set; }
         public int NoInterruptPostWindowMS { get; protected set; }
-        public ulong TooltipDescriptionText { get; protected set; }
+        public LocaleStringId TooltipDescriptionText { get; protected set; }
         public float ProjectileTimeToImpactOverride { get; protected set; }
         public AbilitySlotRestrictionPrototype SlotRestriction { get; protected set; }
         public bool ActiveUntilCancelled { get; protected set; }
@@ -299,7 +299,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool DisableEnduranceRegenOnActivate { get; protected set; }
         public EvalPrototype[] EvalOnPreApply { get; protected set; }
         public int RecurringCostIntervalMS { get; protected set; }
-        public ulong[] ConditionsByRef { get; protected set; }   // VectorPrototypeRefPtr ConditionPrototype 
+        public PrototypeId[] ConditionsByRef { get; protected set; }   // VectorPrototypeRefPtr ConditionPrototype 
         public bool IsRecurring { get; protected set; }
         public EvalPrototype EvalCanTrigger { get; protected set; }
         public float RangeActivationReduction { get; protected set; }
@@ -308,11 +308,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool CooldownDisableUI { get; protected set; }
         public bool DOTIsDirectionalToCaster { get; protected set; }
         public bool OmniDurationBonusExclude { get; protected set; }
-        public ulong ToggleGroup { get; protected set; }
+        public PrototypeId ToggleGroup { get; protected set; }
         public bool IsUltimate { get; protected set; }
         public bool PlayNotifySfxOnAvailable { get; protected set; }
-        public ulong BounceDamagePctToSameIdCurve { get; protected set; }
-        public ulong[] RefreshDependentPassivePowers { get; protected set; }
+        public CurveId BounceDamagePctToSameIdCurve { get; protected set; }
+        public PrototypeId[] RefreshDependentPassivePowers { get; protected set; }
         public EvalPrototype TargetRestrictionEval { get; protected set; }
         public bool IsUseableWhileDead { get; protected set; }
         public float OnHitProcChanceMultiplier { get; protected set; }
@@ -321,8 +321,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool CanCauseHitReact { get; protected set; }
         public ProcChanceMultiplierBehaviorType ProcChanceMultiplierBehavior { get; protected set; }
         public bool IsSignature { get; protected set; }
-        public ulong TooltipCharacterSelectScreen { get; protected set; }
-        public ulong CharacterSelectDescription { get; protected set; }
+        public PrototypeId TooltipCharacterSelectScreen { get; protected set; }
+        public LocaleStringId CharacterSelectDescription { get; protected set; }
         public bool CooldownIsPersistentToDatabase { get; protected set; }
         public float DamageTuningArea { get; protected set; }
         public float DamageTuningBuff1 { get; protected set; }
@@ -350,9 +350,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool CancelledOnTargetKilled { get; protected set; }
         public bool ProjectileReturnsToUser { get; protected set; }
         public bool CanCauseTag { get; protected set; }
-        public ulong[] TooltipPowerReferences { get; protected set; }
+        public PrototypeId[] TooltipPowerReferences { get; protected set; }
         public bool BreaksStealth { get; protected set; }
-        public ulong HUDMessage { get; protected set; }
+        public PrototypeId HUDMessage { get; protected set; }
         public bool CancelConditionsOnExitWorld { get; protected set; }
         public int TooltipWidthOverride { get; protected set; }
         public bool ResetUserPositionAtContactTime { get; protected set; }
@@ -364,15 +364,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool MovementPreventChannelEnd { get; protected set; }
         public bool MovementPreventChannelLoop { get; protected set; }
         public bool MovementPreventChannelStart { get; protected set; }
-        public ulong CharacterSelectYouTubeVideoID { get; protected set; }
+        public LocaleStringId CharacterSelectYouTubeVideoID { get; protected set; }
         public float DamageBaseTuningEnduranceRatio { get; protected set; }
-        public ulong CharacterSelectIconPath { get; protected set; }
+        public StringId CharacterSelectIconPath { get; protected set; }
         public ManaType[] DisableEnduranceRegenTypes { get; protected set; }
         public bool CanCauseCancelOnDamage { get; protected set; }
-        public ulong IconPathHiRes { get; protected set; }
+        public StringId IconPathHiRes { get; protected set; }
         public bool PrefetchAsset { get; protected set; }
         public bool IsTravelPower { get; protected set; }
-        public ulong GamepadSettings { get; protected set; }
+        public PrototypeId GamepadSettings { get; protected set; }
         public EvalPrototype BreaksStealthOverrideEval { get; protected set; }
     }
 
@@ -402,37 +402,37 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class SpecializationPowerPrototype : PowerPrototype
     {
-        public ulong MasterPowerDEPRECATED { get; protected set; }
+        public PrototypeId MasterPowerDEPRECATED { get; protected set; }
         public EvalPrototype[] EvalCanEnable { get; protected set; }
     }
 
     public class StealablePowerInfoPrototype : Prototype
     {
-        public ulong Power { get; protected set; }
-        public ulong StealablePowerDescription { get; protected set; }
+        public PrototypeId Power { get; protected set; }
+        public LocaleStringId StealablePowerDescription { get; protected set; }
     }
 
     public class StolenPowerRestrictionPrototype : Prototype
     {
-        public ulong RestrictionKeyword { get; protected set; }
+        public PrototypeId RestrictionKeyword { get; protected set; }
         public int RestrictionKeywordCount { get; protected set; }
-        public ulong RestrictionBannerMessage { get; protected set; }
+        public PrototypeId RestrictionBannerMessage { get; protected set; }
     }
 
     public class PowerEventContextTransformModePrototype : PowerEventContextPrototype
     {
-        public ulong TransformMode { get; protected set; }
+        public PrototypeId TransformMode { get; protected set; }
     }
 
     public class PowerEventContextShowBannerMessagePrototype : PowerEventContextPrototype
     {
-        public ulong BannerMessage { get; protected set; }
+        public PrototypeId BannerMessage { get; protected set; }
         public bool SendToPrimaryTarget { get; protected set; }
     }
 
     public class PowerEventContextLootTablePrototype : PowerEventContextPrototype
     {
-        public ulong LootTable { get; protected set; }
+        public PrototypeId LootTable { get; protected set; }
         public bool UseItemLevelForLootRoll { get; protected set; }
         public bool IncludeNearbyAvatars { get; protected set; }
         public bool PlaceLootInGeneralInventory { get; protected set; }
@@ -440,13 +440,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PowerEventContextTeleportRegionPrototype : PowerEventContextPrototype
     {
-        public ulong Destination { get; protected set; }
+        public PrototypeId Destination { get; protected set; }
     }
 
     public class PowerEventContextPetDonateItemPrototype : PowerEventContextPrototype
     {
         public float Radius { get; protected set; }
-        public ulong RarityThreshold { get; protected set; }
+        public PrototypeId RarityThreshold { get; protected set; }
     }
 
     public class PowerEventContextCooldownChangePrototype : PowerEventContextPrototype
@@ -471,13 +471,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class AbilityAssignmentPrototype : Prototype
     {
-        public ulong Ability { get; protected set; }
+        public PrototypeId Ability { get; protected set; }
     }
 
     public class AbilityAutoAssignmentSlotPrototype : Prototype
     {
-        public ulong Ability { get; protected set; }
-        public ulong Slot { get; protected set; }
+        public PrototypeId Ability { get; protected set; }
+        public PrototypeId Slot { get; protected set; }
     }
 
     public class PowerEventContextCallbackPrototype : PowerEventContextPrototype
@@ -490,8 +490,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MapPowerPrototype : Prototype
     {
-        public ulong OriginalPower { get; protected set; }
-        public ulong MappedPower { get; protected set; }
+        public PrototypeId OriginalPower { get; protected set; }
+        public PrototypeId MappedPower { get; protected set; }
     }
 
     public class PowerEventContextMapPowersPrototype : PowerEventContextPrototype
@@ -515,10 +515,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PowerEventActionType EventAction { get; protected set; }
         public float EventParam { get; protected set; }
-        public ulong Power { get; protected set; }
+        public PrototypeId Power { get; protected set; }
         public PowerEventType PowerEvent { get; protected set; }
         public PowerEventContextPrototype PowerEventContext { get; protected set; }
-        public ulong[] Keywords { get; protected set; }
+        public PrototypeId[] Keywords { get; protected set; }
         public bool UseTriggerPowerOriginalTargetPos { get; protected set; }
         public bool UseTriggeringPowerTargetVerbatim { get; protected set; }
         public EvalPrototype EvalEventTriggerChance { get; protected set; }
@@ -528,7 +528,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class SituationalTriggerPrototype : Prototype
     {
-        public ulong TriggerCollider { get; protected set; }
+        public PrototypeId TriggerCollider { get; protected set; }
         public float TriggerRadiusScaling { get; protected set; }
         public EntityFilterPrototype EntityFilter { get; protected set; }
         public bool AllowDead { get; protected set; }
@@ -552,14 +552,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class SituationalTriggerOnStatusEffectPrototype : SituationalTriggerPrototype
     {
-        public ulong[] TriggeringProperties { get; protected set; }
+        public PrototypeId[] TriggeringProperties { get; protected set; }
         public bool TriggersOnStatusApplied { get; protected set; }
-        public ulong[] TriggeringConditionKeywords { get; protected set; }
+        public PrototypeId[] TriggeringConditionKeywords { get; protected set; }
     }
 
     public class SituationalTriggerInvAndWorldPrototype : SituationalTriggerPrototype
     {
-        public ulong InventoryRef { get; protected set; }
+        public PrototypeId InventoryRef { get; protected set; }
     }
 
     public class SituationalPowerComponentPrototype : Prototype
@@ -575,8 +575,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PowerUnrealReplacementPrototype : Prototype
     {
-        public ulong EntityArt { get; protected set; }
-        public ulong PowerArt { get; protected set; }
+        public StringId EntityArt { get; protected set; }
+        public StringId PowerArt { get; protected set; }
         public float AnimationContactTimePercent { get; protected set; }
         public int AnimationTimeMS { get; protected set; }
     }
@@ -585,21 +585,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public float AnimationContactTimePercent { get; protected set; }
         public int AnimationTimeMS { get; protected set; }
-        public ulong EntityArt { get; protected set; }
-        public ulong PowerArt { get; protected set; }
+        public StringId EntityArt { get; protected set; }
+        public StringId PowerArt { get; protected set; }
         public PowerUnrealReplacementPrototype[] ArtOnlyReplacements { get; protected set; }
     }
 
     public class PowerSynergyTooltipEntryPrototype : Prototype
     {
-        public ulong SynergyPower { get; protected set; }
-        public ulong Translation { get; protected set; }
+        public PrototypeId SynergyPower { get; protected set; }
+        public PrototypeId Translation { get; protected set; }
     }
 
     public class PowerEventContextCallbackAIChangeBlackboardPropertyPrototype : PowerEventContextCallbackPrototype
     {
         public BlackboardOperatorType Operation { get; protected set; }
-        public ulong PropertyInfoRef { get; protected set; }
+        public PrototypeId PropertyInfoRef { get; protected set; }
         public int Value { get; protected set; }
         public bool UseTargetEntityId { get; protected set; }
     }
@@ -610,34 +610,34 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PowerEventContextCallbackAISummonsTryActivatePowerPrototype : PowerEventContextCallbackPrototype
     {
-        public ulong PowerToActivate { get; protected set; }
+        public PrototypeId PowerToActivate { get; protected set; }
         public bool SummonsUsePowerTargetLocation { get; protected set; }
-        public ulong SummonsKeywordFilter { get; protected set; }
+        public PrototypeId SummonsKeywordFilter { get; protected set; }
     }
 
     public class TransformModeUnrealOverridePrototype : Prototype
     {
-        public ulong IncomingUnrealClass { get; protected set; }
-        public ulong TransformedUnrealClass { get; protected set; }
+        public StringId IncomingUnrealClass { get; protected set; }
+        public StringId TransformedUnrealClass { get; protected set; }
     }
 
     public class TransformModePrototype : Prototype
     {
         public AbilityAssignmentPrototype[] DefaultEquippedAbilities { get; protected set; }
-        public ulong EnterTransformModePower { get; protected set; }
-        public ulong ExitTransformModePower { get; protected set; }
-        public ulong UnrealClass { get; protected set; }
-        public ulong[] HiddenPassivePowers { get; protected set; }
+        public PrototypeId EnterTransformModePower { get; protected set; }
+        public PrototypeId ExitTransformModePower { get; protected set; }
+        public StringId UnrealClass { get; protected set; }
+        public PrototypeId[] HiddenPassivePowers { get; protected set; }
         public bool PowersAreSlottable { get; protected set; }
         public EvalPrototype DurationMSEval { get; protected set; }
         public TransformModeUnrealOverridePrototype[] UnrealClassOverrides { get; protected set; }
-        public ulong UseRankOfPower { get; protected set; }
+        public PrototypeId UseRankOfPower { get; protected set; }
     }
 
     public class TransformModeEntryPrototype : Prototype
     {
-        public ulong[] AllowedPowers { get; protected set; }
-        public ulong TransformMode { get; protected set; }
+        public PrototypeId[] AllowedPowers { get; protected set; }
+        public PrototypeId TransformMode { get; protected set; }
     }
 
     public class GamepadSettingsPrototype : Prototype
@@ -697,15 +697,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class SecondaryActivateOnReleasePrototype : ExtraActivatePrototype
     {
-        public ulong DamageIncreasePerSecond { get; protected set; }
+        public CurveId DamageIncreasePerSecond { get; protected set; }
         public DamageType DamageIncreaseType { get; protected set; }
-        public ulong EnduranceCostIncreasePerSecond { get; protected set; }
+        public CurveId EnduranceCostIncreasePerSecond { get; protected set; }
         public int MaxReleaseTimeMS { get; protected set; }
         public int MinReleaseTimeMS { get; protected set; }
-        public ulong RangeIncreasePerSecond { get; protected set; }
-        public ulong RadiusIncreasePerSecond { get; protected set; }
+        public CurveId RangeIncreasePerSecond { get; protected set; }
+        public CurveId RadiusIncreasePerSecond { get; protected set; }
         public bool ActivateOnMaxReleaseTime { get; protected set; }
-        public ulong DefensePenetrationIncrPerSec { get; protected set; }
+        public CurveId DefensePenetrationIncrPerSec { get; protected set; }
         public DamageType DefensePenetrationType { get; protected set; }
         public bool FollowsMouseUntilRelease { get; protected set; }
         public ManaType EnduranceCostManaType { get; protected set; }
@@ -713,13 +713,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ExtraActivateOnSubsequentPrototype : ExtraActivatePrototype
     {
-        public ulong NumActivatesBeforeCooldown { get; protected set; }
-        public ulong TimeoutLengthMS { get; protected set; }
+        public CurveId NumActivatesBeforeCooldown { get; protected set; }
+        public CurveId TimeoutLengthMS { get; protected set; }
         public SubsequentActivateType ExtraActivateEffect { get; protected set; }
     }
 
     public class ExtraActivateCycleToPowerPrototype : ExtraActivatePrototype
     {
-        public ulong[] CyclePowerList { get; protected set; }
+        public PrototypeId[] CyclePowerList { get; protected set; }
     }
 }

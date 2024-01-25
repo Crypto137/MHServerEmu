@@ -267,17 +267,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class UILocalizedInfoPrototype : Prototype
     {
-        public ulong DisplayText { get; protected set; }
-        public ulong TooltipText { get; protected set; }
-        public ulong TooltipStyle { get; protected set; }
-        public ulong TooltipFont { get; protected set; }
+        public LocaleStringId DisplayText { get; protected set; }
+        public LocaleStringId TooltipText { get; protected set; }
+        public PrototypeId TooltipStyle { get; protected set; }
+        public StringId TooltipFont { get; protected set; }
     }
 
     public class UILocalizedStatInfoPrototype : UILocalizedInfoPrototype
     {
-        public ulong Stat { get; protected set; }
+        public PrototypeId Stat { get; protected set; }
         public int StatValue { get; protected set; }
-        public ulong LevelUnlockTooltipStyle { get; protected set; }
+        public PrototypeId LevelUnlockTooltipStyle { get; protected set; }
         public TooltipSectionPrototype[] TooltipSectionList { get; protected set; }
     }
 
@@ -288,24 +288,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class InventoryUIDataPrototype : Prototype
     {
-        public ulong EmptySlotTooltip { get; protected set; }
-        public ulong SlotBackgroundIcon { get; protected set; }
-        public ulong InventoryItemDisplayName { get; protected set; }
+        public PrototypeId EmptySlotTooltip { get; protected set; }
+        public StringId SlotBackgroundIcon { get; protected set; }
+        public LocaleStringId InventoryItemDisplayName { get; protected set; }
         public bool HintSlots { get; protected set; }
-        public ulong SlotBackgroundIconHiRes { get; protected set; }
+        public StringId SlotBackgroundIconHiRes { get; protected set; }
     }
 
     public class OfferingInventoryUIDataPrototype : Prototype
     {
-        public ulong NotificationIcon { get; protected set; }
-        public ulong NotificationTooltip { get; protected set; }
-        public ulong OfferingDescription { get; protected set; }
-        public ulong OfferingTitle { get; protected set; }
+        public StringId NotificationIcon { get; protected set; }
+        public LocaleStringId NotificationTooltip { get; protected set; }
+        public LocaleStringId OfferingDescription { get; protected set; }
+        public LocaleStringId OfferingTitle { get; protected set; }
     }
 
     public class TipEntryPrototype : Prototype
     {
-        public ulong Entry { get; protected set; }
+        public LocaleStringId Entry { get; protected set; }
         public int Weight { get; protected set; }
         public bool SkipIfOnPC { get; protected set; }
         public bool SkipIfOnPS4 { get; protected set; }
@@ -323,12 +323,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class RegionTipEntryCollectionPrototype : TipEntryCollectionPrototype
     {
-        public ulong[] RegionBindings { get; protected set; }
+        public PrototypeId[] RegionBindings { get; protected set; }
     }
 
     public class AvatarTipEntryCollectionPrototype : TipEntryCollectionPrototype
     {
-        public ulong[] AvatarBindings { get; protected set; }
+        public PrototypeId[] AvatarBindings { get; protected set; }
     }
 
     public class WeightedTipCategoryPrototype : Prototype
@@ -346,32 +346,32 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class AvatarSynergyUIDataPrototype : Prototype
     {
-        public ulong DisplayName { get; protected set; }
-        public ulong IconPath { get; protected set; }
-        public ulong SynergyActiveValue { get; protected set; }
-        public ulong SynergyInactiveValue { get; protected set; }
-        public ulong TooltipTextForList { get; protected set; }
-        public ulong IconPathHiRes { get; protected set; }
+        public LocaleStringId DisplayName { get; protected set; }
+        public StringId IconPath { get; protected set; }
+        public PrototypeId SynergyActiveValue { get; protected set; }
+        public PrototypeId SynergyInactiveValue { get; protected set; }
+        public LocaleStringId TooltipTextForList { get; protected set; }
+        public StringId IconPathHiRes { get; protected set; }
     }
 
     public class MetaGameDataPrototype : Prototype
     {
-        public ulong Descriptor { get; protected set; }
+        public LocaleStringId Descriptor { get; protected set; }
         public bool DisplayMissionName { get; protected set; }
         public int SortPriority { get; protected set; }
-        public ulong IconHeader { get; protected set; }
+        public StringId IconHeader { get; protected set; }
         public int Justification { get; protected set; }
-        public ulong WidgetMovieClipOverride { get; protected set; }
-        public ulong IconHeaderHiRes { get; protected set; }
+        public StringId WidgetMovieClipOverride { get; protected set; }
+        public StringId IconHeaderHiRes { get; protected set; }
     }
 
     public class UIWidgetGenericFractionPrototype : MetaGameDataPrototype
     {
-        public ulong IconComplete { get; protected set; }
-        public ulong IconIncomplete { get; protected set; }
+        public StringId IconComplete { get; protected set; }
+        public StringId IconIncomplete { get; protected set; }
         public int IconSpacing { get; protected set; }
-        public ulong IconCompleteHiRes { get; protected set; }
-        public ulong IconIncompleteHiRes { get; protected set; }
+        public StringId IconCompleteHiRes { get; protected set; }
+        public StringId IconIncompleteHiRes { get; protected set; }
     }
 
     public class UIWidgetEntityIconsEntryPrototype : Prototype
@@ -379,12 +379,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EntityFilterPrototype Filter { get; protected set; }
         public int Count { get; protected set; }
         public UIWidgetEntityState TreatUnknownAs { get; protected set; }
-        public ulong Icon { get; protected set; }
-        public ulong Descriptor { get; protected set; }
-        public ulong IconDead { get; protected set; }
+        public StringId Icon { get; protected set; }
+        public PrototypeId Descriptor { get; protected set; }
+        public StringId IconDead { get; protected set; }
         public int IconSpacing { get; protected set; }
-        public ulong IconHiRes { get; protected set; }
-        public ulong IconDeadHiRes { get; protected set; }
+        public StringId IconHiRes { get; protected set; }
+        public StringId IconDeadHiRes { get; protected set; }
     }
 
     public class UIWidgetEnrageEntryPrototype : UIWidgetEntityIconsEntryPrototype
@@ -393,11 +393,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class WidgetPropertyEntryPrototype : Prototype
     {
-        public ulong Color { get; protected set; }
-        public ulong Descriptor { get; protected set; }
-        public ulong Icon { get; protected set; }
+        public StringId Color { get; protected set; }
+        public LocaleStringId Descriptor { get; protected set; }
+        public StringId Icon { get; protected set; }
         public EvalPrototype PropertyEval { get; protected set; }
-        public ulong IconHiRes { get; protected set; }
+        public StringId IconHiRes { get; protected set; }
     }
 
     public class UIWidgetEntityPropertyEntryPrototype : UIWidgetEntityIconsEntryPrototype
@@ -408,11 +408,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class HealthPercentIconPrototype : Prototype
     {
-        public ulong Color { get; protected set; }
+        public StringId Color { get; protected set; }
         public int HealthPercent { get; protected set; }
-        public ulong Icon { get; protected set; }
-        public ulong Descriptor { get; protected set; }
-        public ulong IconHiRes { get; protected set; }
+        public StringId Icon { get; protected set; }
+        public PrototypeId Descriptor { get; protected set; }
+        public StringId IconHiRes { get; protected set; }
     }
 
     public class UIWidgetHealthPercentEntryPrototype : UIWidgetEntityIconsEntryPrototype
@@ -440,7 +440,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class UIWidgetPanelPrototype : Prototype
     {
-        public ulong[] Widgets { get; protected set; }
+        public PrototypeId[] Widgets { get; protected set; }
     }
 
     public class UIWidgetTopPanelPrototype : UIWidgetPanelPrototype
@@ -449,45 +449,45 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LogoffPanelEntryPrototype : Prototype
     {
-        public ulong Description { get; protected set; }
-        public ulong GameModeType { get; protected set; }
-        public ulong Header { get; protected set; }
-        public ulong Image { get; protected set; }
+        public LocaleStringId Description { get; protected set; }
+        public PrototypeId GameModeType { get; protected set; }
+        public LocaleStringId Header { get; protected set; }
+        public StringId Image { get; protected set; }
         public int Priority { get; protected set; }
-        public ulong Title { get; protected set; }
+        public LocaleStringId Title { get; protected set; }
     }
 
     public class StoreCategoryPrototype : Prototype
     {
-        public ulong Icon { get; protected set; }
-        public ulong Identifier { get; protected set; }
-        public ulong Label { get; protected set; }
+        public StringId Icon { get; protected set; }
+        public StringId Identifier { get; protected set; }
+        public PrototypeId Label { get; protected set; }
     }
 
     public class ReputationLevelDisplayInfoPrototype : Prototype
     {
-        public ulong DisplayName { get; protected set; }
-        public ulong IconPath { get; protected set; }
+        public LocaleStringId DisplayName { get; protected set; }
+        public StringId IconPath { get; protected set; }
         public int ReputationLevel { get; protected set; }
     }
 
     public class ReputationDisplayInfoPrototype : Prototype
     {
-        public ulong DisplayName { get; protected set; }
-        public ulong[] ReputationLevels { get; protected set; }     // VectorPrototypeRefPtr ReputationLevelDisplayInfoPrototype
+        public LocaleStringId DisplayName { get; protected set; }
+        public PrototypeId[] ReputationLevels { get; protected set; }     // VectorPrototypeRefPtr ReputationLevelDisplayInfoPrototype
     }
 
     public class UISystemLockPrototype : Prototype
     {
-        public ulong GameNotification { get; protected set; }
-        public ulong UISystem { get; protected set; }
+        public PrototypeId GameNotification { get; protected set; }
+        public StringId UISystem { get; protected set; }
         public int UnlockLevel { get; protected set; }
         public bool IsNewPlayerExperienceLocked { get; protected set; }
     }
 
     public class IconPackagePrototype : Prototype
     {
-        public ulong Package { get; protected set; }
+        public StringId Package { get; protected set; }
         public bool AlwaysLoaded { get; protected set; }
         public bool EnableStreaming { get; protected set; }
         public bool HighPriorityStreaming { get; protected set; }
@@ -496,51 +496,51 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class RadialMenuEntryPrototype : Prototype
     {
-        public ulong ImageNormal { get; protected set; }
-        public ulong ImageSelected { get; protected set; }
-        public ulong LocalizedName { get; protected set; }
-        public ulong Panel { get; protected set; }
+        public StringId ImageNormal { get; protected set; }
+        public StringId ImageSelected { get; protected set; }
+        public PrototypeId LocalizedName { get; protected set; }
+        public StringId Panel { get; protected set; }
     }
 
     public class InputBindingPrototype : Prototype
     {
-        public ulong DisplayText { get; protected set; }
-        public ulong BindingName { get; protected set; }
-        public ulong TutorialImage { get; protected set; }
-        public ulong TutorialImageOverlayText { get; protected set; }
-        public ulong ControlScheme { get; protected set; }
+        public PrototypeId DisplayText { get; protected set; }
+        public LocaleStringId BindingName { get; protected set; }
+        public StringId TutorialImage { get; protected set; }
+        public LocaleStringId TutorialImageOverlayText { get; protected set; }
+        public StringId ControlScheme { get; protected set; }
     }
 
     public class PanelLoaderTabPrototype : Prototype
     {
-        public ulong Context { get; protected set; }
-        public ulong DisplayName { get; protected set; }
-        public ulong Panel { get; protected set; }
+        public LocaleStringId Context { get; protected set; }
+        public PrototypeId DisplayName { get; protected set; }
+        public StringId Panel { get; protected set; }
         public bool ShowAvatarInfo { get; protected set; }
-        public ulong SubTabs { get; protected set; }
-        public ulong Icon { get; protected set; }
+        public PrototypeId SubTabs { get; protected set; }
+        public StringId Icon { get; protected set; }
         public bool ShowLocalPlayerName { get; protected set; }
     }
 
     public class PanelLoaderTabListPrototype : Prototype
     {
-        public ulong[] Tabs { get; protected set; }
+        public PrototypeId[] Tabs { get; protected set; }
         public bool IsSubTabList { get; protected set; }
     }
 
     public class ConsoleRadialMenuEntryPrototype : Prototype
     {
-        public ulong DisplayName { get; protected set; }
-        public ulong ImageNormal { get; protected set; }
-        public ulong ImageSelected { get; protected set; }
-        public ulong TabList { get; protected set; }
+        public PrototypeId DisplayName { get; protected set; }
+        public StringId ImageNormal { get; protected set; }
+        public StringId ImageSelected { get; protected set; }
+        public PrototypeId TabList { get; protected set; }
     }
 
     public class DialogPrototype : Prototype
     {
-        public ulong Text { get; protected set; }
-        public ulong Button1 { get; protected set; }
-        public ulong Button2 { get; protected set; }
+        public LocaleStringId Text { get; protected set; }
+        public LocaleStringId Button1 { get; protected set; }
+        public LocaleStringId Button2 { get; protected set; }
         public ButtonStyle Button1Style { get; protected set; }
         public ButtonStyle Button2Style { get; protected set; }
     }
@@ -548,25 +548,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionTrackerFilterPrototype : Prototype
     {
         public UIMissionTrackerFilterTypeEnum FilterType { get; protected set; }
-        public ulong Label { get; protected set; }
+        public LocaleStringId Label { get; protected set; }
         public bool DisplayByDefault { get; protected set; }
         public int DisplayOrder { get; protected set; }
     }
 
     public class LocalizedTextAndImagePrototype : Prototype
     {
-        public ulong Image { get; protected set; }
-        public ulong Text { get; protected set; }
+        public StringId Image { get; protected set; }
+        public LocaleStringId Text { get; protected set; }
     }
 
     public class TextStylePrototype : Prototype
     {
         public bool Bold { get; protected set; }
-        public ulong Color { get; protected set; }
-        public ulong Tag { get; protected set; }
+        public StringId Color { get; protected set; }
+        public LocaleStringId Tag { get; protected set; }
         public bool Underline { get; protected set; }
         public int FontSize { get; protected set; }
-        public ulong Alignment { get; protected set; }
+        public StringId Alignment { get; protected set; }
         public bool Hidden { get; protected set; }
         public int FontSizeConsole { get; protected set; }
     }
@@ -577,44 +577,44 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class BannerMessagePrototype : UINotificationPrototype
     {
-        public ulong BannerText { get; protected set; }
+        public LocaleStringId BannerText { get; protected set; }
         public int TimeToLiveMS { get; protected set; }
         public BannerMessageStyle MessageStyle { get; protected set; }
         public bool DoNotQueue { get; protected set; }
-        public ulong TextStyle { get; protected set; }
+        public PrototypeId TextStyle { get; protected set; }
         public bool ShowImmediately { get; protected set; }
     }
 
     public class GameNotificationPrototype : UINotificationPrototype
     {
-        public ulong BannerText { get; protected set; }
+        public LocaleStringId BannerText { get; protected set; }
         public GameNotificationType GameNotificationType { get; protected set; }
-        public ulong IconPath { get; protected set; }
-        public ulong TooltipText { get; protected set; }
+        public StringId IconPath { get; protected set; }
+        public LocaleStringId TooltipText { get; protected set; }
         public bool PlayAudio { get; protected set; }
         public BannerMessageType BannerType { get; protected set; }
         public bool FlashContinuously { get; protected set; }
         public bool StackNotifications { get; protected set; }
         public bool ShowTimer { get; protected set; }
         public bool ShowScore { get; protected set; }
-        public ulong TooltipStyle { get; protected set; }
-        public ulong TooltipFont { get; protected set; }
-        public ulong DisplayText { get; protected set; }
+        public PrototypeId TooltipStyle { get; protected set; }
+        public StringId TooltipFont { get; protected set; }
+        public LocaleStringId DisplayText { get; protected set; }
         public int MinimizeTimeDelayMS { get; protected set; }
         public int DurationMS { get; protected set; }
         public bool ShowAnimatedCircle { get; protected set; }
         public bool Unique { get; protected set; }
-        public ulong[] OnCreateRemoveNotifications { get; protected set; }
+        public PrototypeId[] OnCreateRemoveNotifications { get; protected set; }
         public bool RemoveOnRegionChange { get; protected set; }
         public bool ShowOnSystemLock { get; protected set; }
     }
 
     public class StoryNotificationPrototype : UINotificationPrototype
     {
-        public ulong DisplayText { get; protected set; }
+        public LocaleStringId DisplayText { get; protected set; }
         public int TimeToLiveMS { get; protected set; }
-        public ulong SpeakingEntity { get; protected set; }
-        public ulong VOTrigger { get; protected set; }
+        public PrototypeId SpeakingEntity { get; protected set; }
+        public StringId VOTrigger { get; protected set; }
     }
 
     public class VOStoryNotificationPrototype : Prototype
@@ -625,22 +625,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ConsoleHUDNotificationPrototype : Prototype
     {
-        public ulong DisplayName { get; protected set; }
+        public PrototypeId DisplayName { get; protected set; }
         public int DurationMS { get; protected set; }
         public ConsoleHUDNotificationType NotificationType { get; protected set; }
-        public ulong OpensPanel { get; protected set; }
-        public ulong PanelContext { get; protected set; }
+        public StringId OpensPanel { get; protected set; }
+        public LocaleStringId PanelContext { get; protected set; }
     }
 
     public class HUDTutorialPrototype : UINotificationPrototype
     {
-        public ulong Description { get; protected set; }
+        public LocaleStringId Description { get; protected set; }
         public int DisplayDurationMS { get; protected set; }
-        public ulong Image { get; protected set; }
-        public ulong ImageOverlayText { get; protected set; }
-        public ulong Title { get; protected set; }
-        public ulong[] HighlightAvatars { get; protected set; }
-        public ulong[] HighlightPowers { get; protected set; }
+        public StringId Image { get; protected set; }
+        public LocaleStringId ImageOverlayText { get; protected set; }
+        public LocaleStringId Title { get; protected set; }
+        public PrototypeId[] HighlightAvatars { get; protected set; }
+        public PrototypeId[] HighlightPowers { get; protected set; }
         public bool AllowMovement { get; protected set; }
         public bool AllowPowerUsage { get; protected set; }
         public bool AllowTakingDamage { get; protected set; }
@@ -650,11 +650,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool HighlightUnusedPowers { get; protected set; }
         public bool HighlightUnequippedItem { get; protected set; }
         public bool CloseOnRegionLeave { get; protected set; }
-        public ulong ImageFromCommand { get; protected set; }
-        public ulong DescriptionGamepad { get; protected set; }
-        public ulong DescriptionNoBindings { get; protected set; }
-        public ulong ImageFromCommandGamepad { get; protected set; }
-        public ulong[] HighlightTeamUps { get; protected set; }
+        public LocaleStringId ImageFromCommand { get; protected set; }
+        public LocaleStringId DescriptionGamepad { get; protected set; }
+        public LocaleStringId DescriptionNoBindings { get; protected set; }
+        public LocaleStringId ImageFromCommandGamepad { get; protected set; }
+        public PrototypeId[] HighlightTeamUps { get; protected set; }
         public bool SkipIfOnConsole { get; protected set; }
         public bool SkipIfOnPC { get; protected set; }
         public bool SkipIfUsingGamepad { get; protected set; }
@@ -669,48 +669,48 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class SessionImagePrototype : Prototype
     {
-        public ulong SessionImageAsset { get; protected set; }
+        public StringId SessionImageAsset { get; protected set; }
     }
 
     public class CurrencyDisplayPrototype : Prototype
     {
-        public ulong DisplayName { get; protected set; }
-        public ulong DisplayColor { get; protected set; }
-        public ulong IconPath { get; protected set; }
-        public ulong PropertyValueToDisplay { get; protected set; }
-        public ulong TooltipText { get; protected set; }
+        public LocaleStringId DisplayName { get; protected set; }
+        public StringId DisplayColor { get; protected set; }
+        public StringId IconPath { get; protected set; }
+        public PrototypeId PropertyValueToDisplay { get; protected set; }
+        public LocaleStringId TooltipText { get; protected set; }
         public bool UseGsBalance { get; protected set; }
-        public ulong CurrencyToDisplay { get; protected set; }
-        public ulong IconPathHiRes { get; protected set; }
+        public PrototypeId CurrencyToDisplay { get; protected set; }
+        public StringId IconPathHiRes { get; protected set; }
         public sbyte CategoryIndex { get; protected set; }
-        public ulong CategoryName { get; protected set; }
+        public LocaleStringId CategoryName { get; protected set; }
         public bool HideIfOnConsole { get; protected set; }
         public bool HideIfOnPC { get; protected set; }
     }
 
     public class FullscreenMoviePrototype : Prototype
     {
-        public ulong MovieName { get; protected set; }
+        public StringId MovieName { get; protected set; }
         public bool Skippable { get; protected set; }
         public MovieType MovieType { get; protected set; }
         public bool ExitGameAfterPlay { get; protected set; }
-        public ulong MovieTitle { get; protected set; }
-        public ulong Banter { get; protected set; }
-        public ulong YouTubeVideoID { get; protected set; }
+        public LocaleStringId MovieTitle { get; protected set; }
+        public StringId Banter { get; protected set; }
+        public LocaleStringId YouTubeVideoID { get; protected set; }
         public bool YouTubeControlsEnabled { get; protected set; }
-        public ulong StreamingMovieNameHQ { get; protected set; }
-        public ulong StreamingMovieNameLQ { get; protected set; }
-        public ulong StreamingMovieNameMQ { get; protected set; }
+        public LocaleStringId StreamingMovieNameHQ { get; protected set; }
+        public LocaleStringId StreamingMovieNameLQ { get; protected set; }
+        public LocaleStringId StreamingMovieNameMQ { get; protected set; }
     }
 
     public class LoadingScreenPrototype : Prototype
     {
-        public ulong LoadingScreenAsset { get; protected set; }
-        public ulong Title { get; protected set; }
+        public StringId LoadingScreenAsset { get; protected set; }
+        public LocaleStringId Title { get; protected set; }
     }
 
     public class UICinematicsListPrototype : Prototype
     {
-        public ulong[] CinematicsListToPopulate { get; protected set; }
+        public PrototypeId[] CinematicsListToPopulate { get; protected set; }
     }
 }

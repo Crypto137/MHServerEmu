@@ -22,7 +22,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class SequenceRegionGeneratorPrototype : RegionGeneratorPrototype
     {
         public AreaSequenceInfoPrototype[] AreaSequence { get; protected set; }
-        public ulong RegionPOIPicker { get; protected set; }
+        public PrototypeId RegionPOIPicker { get; protected set; }
         public int EndlessLevelsPerTheme { get; protected set; }
         public EndlessThemePrototype[] EndlessThemes { get; protected set; }
         public SubGenerationPrototype[] SubAreaSequences { get; protected set; }
@@ -50,8 +50,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EndlessStateEntryPrototype : Prototype
     {
-        public ulong MetaState { get; protected set; }
-        public ulong RegionPOIPicker { get; protected set; }
+        public PrototypeId MetaState { get; protected set; }
+        public PrototypeId RegionPOIPicker { get; protected set; }
         public MetaStateChallengeTierEnum Tier { get; protected set; }
     }
 
@@ -67,10 +67,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class WeightedAreaPrototype : Prototype
     {
-        public ulong Area { get; protected set; }
+        public PrototypeId Area { get; protected set; }
         public int Weight { get; protected set; }
         public RegionDirection ConnectOn { get; protected set; }
-        public ulong RespawnOverride { get; protected set; }
+        public PrototypeId RespawnOverride { get; protected set; }
         public bool AlignedToPrevious { get; protected set; }
     }
 }

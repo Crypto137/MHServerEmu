@@ -30,31 +30,31 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PowerTooltipSectionPrototype : Prototype
     {
-        public ulong Description { get; protected set; }
-        public ulong Value { get; protected set; }
+        public PrototypeId Description { get; protected set; }
+        public PrototypeId Value { get; protected set; }
     }
 
     public class PowerTooltipSectionOverridePrototype : PowerTooltipSectionPrototype
     {
-        public ulong DescTokenSourcePrefixOverride { get; protected set; }
-        public ulong ValueTokenSourcePrefixOverride { get; protected set; }
+        public LocaleStringId DescTokenSourcePrefixOverride { get; protected set; }
+        public LocaleStringId ValueTokenSourcePrefixOverride { get; protected set; }
     }
 
     public class PowerTooltipEntryPrototype : Prototype
     {
-        public ulong TokenSourcePrefix { get; protected set; }
-        public ulong Translation { get; protected set; }
+        public LocaleStringId TokenSourcePrefix { get; protected set; }
+        public PrototypeId Translation { get; protected set; }
         public EvalPrototype EvalCanDisplay { get; protected set; }
         public PowerTooltipSectionPrototype[] TooltipSections { get; protected set; }
     }
 
     public class TooltipSectionPrototype : Prototype
     {
-        public ulong Style { get; protected set; }
-        public ulong Text { get; protected set; }
+        public PrototypeId Style { get; protected set; }
+        public LocaleStringId Text { get; protected set; }
         public bool ShowOnlyIfPreviousSectionHasText { get; protected set; }
-        public ulong AlignToPreviousSection { get; protected set; }
-        public ulong Font { get; protected set; }
+        public StringId AlignToPreviousSection { get; protected set; }
+        public StringId Font { get; protected set; }
         public bool ShowOnlyIfNextSectionHasText { get; protected set; }
         public TooltipSectionType SectionType { get; protected set; }
         public int IconSize { get; protected set; }
@@ -64,7 +64,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class TooltipSectionIconLabeledPrototype : TooltipSectionPrototype
     {
-        public ulong IconPathDefault { get; protected set; }
+        public StringId IconPathDefault { get; protected set; }
         public AffixPosition Position { get; protected set; }
         public bool ShowIconQualityLayer { get; protected set; }
     }
@@ -81,8 +81,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class TooltipSectionItemAffixesPrototype : TooltipSectionPrototype
     {
-        public ulong[] IncludeCategories { get; protected set; }     // VectorPrototypeRefPtr AffixCategoryPrototype
-        public ulong[] ExcludeCategories { get; protected set; }     // VectorPrototypeRefPtr AffixCategoryPrototype
+        public PrototypeId[] IncludeCategories { get; protected set; }     // VectorPrototypeRefPtr AffixCategoryPrototype
+        public PrototypeId[] ExcludeCategories { get; protected set; }     // VectorPrototypeRefPtr AffixCategoryPrototype
     }
 
     public class TooltipSectionBarPrototype : TooltipSectionPrototype
@@ -99,7 +99,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class TooltipSectionPetTechBarPrototype : TooltipSectionBarPrototype
     {
         public AffixPosition Position { get; protected set; }
-        public ulong MaxedStyle { get; protected set; }
+        public PrototypeId MaxedStyle { get; protected set; }
     }
 
     public class TooltipTemplatePrototype : Prototype
