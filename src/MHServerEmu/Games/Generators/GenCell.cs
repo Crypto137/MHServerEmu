@@ -243,5 +243,9 @@ namespace MHServerEmu.Games.Generators
             return registry.HasCellWithWalls(RequiredWalls | walls);
         }
 
+        public override string ToString()
+        {
+            return CellRef == 0 ? RequiredWalls.ToString() : GameDatabase.GetFormattedPrototypeName(CellRef);
+        }
     }
 }
