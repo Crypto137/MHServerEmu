@@ -86,5 +86,16 @@ namespace MHServerEmu.Games.Generators.Regions
         {
             return GameDatabase.GetDataRefByAsset(Cell);
         }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Cell);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is not RegionTransitionSpec other) return false;
+            return Cell == other.Cell;
+        }
     }
 }
