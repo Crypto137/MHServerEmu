@@ -1394,7 +1394,7 @@ namespace MHServerEmu.Games.Regions
                                 ulong dataRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
                                 if (dataRef == target.Entity)
                                 {
-                                    waypointPosition = area.Origin + cell.AreaOrientation + entityMarker.Position;
+                                    waypointPosition = cell.RegionBounds.Center + entityMarker.Position - cell.CellProto.BoundingBox.Center;
                                     waypointOrientation = entityMarker.Rotation;
                                     return true;
                                 }
