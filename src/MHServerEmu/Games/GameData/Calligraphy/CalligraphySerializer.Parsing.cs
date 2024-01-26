@@ -92,7 +92,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             // as possible. This doesn't seem to happen with other types.
             if (typeof(T) == typeof(int) && rawValue > int.MaxValue)
             {
-                Logger.Warn($"ParseValue overflow for Int32 field {@params.BlueprintMemberInfo.Member.FieldName}, raw value {rawValue}, file name {@params.FileName}");
+                Logger.Trace($"ParseValue overflow for Int32 field {@params.BlueprintMemberInfo.Member.FieldName}, raw value {rawValue}, file name {@params.FileName}");
                 rawValue = int.MaxValue;
             }
 
@@ -119,7 +119,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             if (Enum.TryParse(@params.FieldInfo.PropertyType, assetName, true, out var value) == false)
             {
                 if (assetName != string.Empty)
-                    Logger.Warn(string.Format("Missing enum member {0} in {1}, field {2}, file name {3}",
+                    Logger.Trace(string.Format("Missing enum member {0} in {1}, field {2}, file name {3}",
                         assetName,
                         @params.FieldInfo.PropertyType.Name,
                         @params.BlueprintMemberInfo.Member.RuntimeClassFieldInfo.Name,
@@ -257,12 +257,9 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             var values = Array.CreateInstance(elementType, reader.ReadInt16());
             for (int i = 0; i < values.Length; i++)
             {
-                // All data refs ideally should be typed. Until we do this, check and convert the value to an enum member if needed.
+                // All data refs are ulong values strongly typed using enums
                 var value = reader.ReadUInt64();
-                if (elementType.IsEnum)
-                    values.SetValue(Enum.ToObject(elementType, value), i);
-                else
-                    values.SetValue(value, i);
+                values.SetValue(Enum.ToObject(elementType, value), i);
             }
 
             @params.FieldInfo.SetValue(@params.OwnerPrototype, values);
