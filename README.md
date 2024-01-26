@@ -4,24 +4,28 @@ MHServerEmu is an experimental server emulator for Marvel Heroes.
 
 The only currently supported version of the game client is **1.52.0.1700** (also known as **2.16a**).
 
-You can find additional information on various topics in our [documentation](./docs/Index.md).
+The latest nightly build is available [here](https://nightly.link/Crypto137/MHServerEmu/workflows/nightly-release-windows-x64/master?preview).
 
-If you would like to ask questions about the server emulator or help with the development, feel free to join our Discord: https://discord.gg/hjR8Bj52t3
+We post development progress reports on our [blog](https://crypto137.github.io/MHServerEmu/). You can find additional information on various topics in the [documentation](./docs/Index.md). If you would like to discuss this project and/or help with its development, feel free to join our [Discord](https://discord.gg/hjR8Bj52t3).
 
 ## Features
 
-This server emulator is currently in early stages of development. Currently it features:
+MHServerEmu is in early stages of development. Currently it features:
 
-- Network protocol implementation.
+- Complete network protocol implementation.
 
-- Exploration of all hubs, as well as a number of combat zones.
-
-- Hero and costume selection.
-
-- Rudimentary implementation of hero powers.
+- Account system with simple web API for registering new accounts.
 
 - Basic multiplayer functionality: handling multiple clients, remote connections, chat.
 
+- Exploration of all hubs, as well as a number of public combat zones and private instances.
+
+- In-game hero and costume selection.
+
+- Rudimentary implementation of hero powers.
+
+- Early implementation of NPCs and interactable objects in some static regions.
+
 ## Setup
 
-See [Setup.md](https://github.com/Crypto137/MHServerEmu/blob/master/docs/Setup.md) for information on how to set the server up. Please note that since MHServerEmu is still in early stages in development, the process is currently not particularly user friendly.
+See [Initial Setup](./docs/Setup/InitialSetup.md) for information on how to set the server up. Please note that since MHServerEmu is still in early stages in development, the process is currently not particularly user friendly.

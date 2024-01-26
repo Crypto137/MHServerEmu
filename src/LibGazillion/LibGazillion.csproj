@@ -6,6 +6,12 @@
     <Nullable>disable</Nullable>
     <Platforms>x64</Platforms>
   </PropertyGroup>
+  
+  <PropertyGroup>
+    <AssemblyVersion>1.52.0.1700</AssemblyVersion>
+    <FileVersion>$(AssemblyVersion)</FileVersion>
+    <InformationalVersion>$(AssemblyVersion)</InformationalVersion>
+  </PropertyGroup>
 
   <ItemGroup>
     <Reference Include="Google.ProtocolBuffers">

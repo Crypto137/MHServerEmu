@@ -1,6 +1,0 @@
-syntax = "proto2";
-
-package Gazillion;
-
-import "google/protobuf/descriptor.proto";
-
