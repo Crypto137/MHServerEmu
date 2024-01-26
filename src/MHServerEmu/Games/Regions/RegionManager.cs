@@ -159,7 +159,7 @@ namespace MHServerEmu.Games.Regions
         public Region EmptyRegion(RegionPrototypeId prototype)
         {
             Region region = new(prototype,
-             188433272,
+             1488502313,
              Array.Empty<byte>(),
              new(),
              new(),
@@ -175,7 +175,7 @@ namespace MHServerEmu.Games.Regions
         {
             RegionSettings settings = new()
             {
-                Seed = Game.GetRandom().Next(),
+                Seed = 1488502313, //Game.GetRandom().Next(),
                 DifficultyTierRef = (ulong)DifficultyTier.Normal,
                 InstanceAddress = IdGenerator.Generate(IdType.Region),
                 Level = 10,
@@ -201,12 +201,12 @@ namespace MHServerEmu.Games.Regions
         {
             if (IsRegionAvailable(prototype))
             {
-                //prototype = (RegionPrototypeId)8702251210467252908;
+               // prototype = (RegionPrototypeId)7814783688219433201;
                 if (_regionDict.TryGetValue(prototype, out Region region) == false)
                 {
                     // Generate the region and create entities for it if needed
-                    region = TestRegion(prototype);//GenerateRegion(prototype);
-                   // region = EmptyRegion(prototype);
+                     region = TestRegion(prototype);//GenerateRegion(prototype);
+                    // region = EmptyRegion(prototype);
                     // ulong entities = CreateEntities(region);
                     // Logger.Debug($"Entities generated = {entities}");
                     _regionDict.Add(prototype, region);

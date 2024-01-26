@@ -6,6 +6,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Regions;
+using System.Reflection;
 
 namespace MHServerEmu.Games.Generators.Areas
 {
@@ -241,7 +242,7 @@ namespace MHServerEmu.Games.Generators.Areas
         public bool CreateRequiredCells(GRandom random, RegionGenerator regionGenerator, List<ulong> areas)
         {
             if (CellContainer == null) return false;
-
+            Logger.Debug($"[{MethodBase.GetCurrentMethod().Name}] => {random}");
             Picker<Point2> picker = new(random);
             if (!GetPrototype(out var proto)) return false;
 
@@ -543,7 +544,7 @@ namespace MHServerEmu.Games.Generators.Areas
         public bool GenerateRandomInstanceLinks(GRandom random)
         {
             if (Area == null) return false;
-
+            Logger.Debug($"[{MethodBase.GetCurrentMethod().Name}] => {random}");
             List<RandomInstanceRegionPrototype> randomInstances = Area.RandomInstances;
             randomInstances.Clear();
 
@@ -577,6 +578,7 @@ namespace MHServerEmu.Games.Generators.Areas
         public void ProcessDeleteExtraneousCells(GRandom random, int chance)
         {
             if (CellContainer == null) return;
+            Logger.Debug($"[{MethodBase.GetCurrentMethod().Name}] => {random}");
             // number of cells to be deleted
             int cells = chance * CellContainer.NumCells / 100;
             GetPrototype(out BaseGridAreaGeneratorPrototype proto);
@@ -868,7 +870,7 @@ namespace MHServerEmu.Games.Generators.Areas
         public bool GenerateRoads(GRandom random, RoadGeneratorPrototype roadGeneratorProto)
         {
             if (CellContainer == null || roadGeneratorProto == null || roadGeneratorProto.Cells == null) return true;
-
+            Logger.Debug($"[{MethodBase.GetCurrentMethod().Name}] => {random}");
             List<Point2> roadPoints = new();
 
             for (int x = 0; x < CellContainer.Width; ++x)

@@ -31,7 +31,7 @@ namespace MHServerEmu.Games.Entities
         private ulong GenReplicationId() { return _nextReplicationId++; }
         public ulong GetLastEntityId() { return _nextEntityId; }
 
-        public WorldEntity Waypoint { get; }
+        public Transition Waypoint { get; }
 
         public EntityManager()
         {

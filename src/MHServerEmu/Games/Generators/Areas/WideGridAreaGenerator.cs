@@ -7,6 +7,7 @@ using MHServerEmu.Games.Regions;
 using static MHServerEmu.Games.Generators.Areas.CellGridGenerator;
 using static MHServerEmu.Games.Regions.Cell;
 using MHServerEmu.Common.Extensions;
+using System.Reflection;
 
 namespace MHServerEmu.Games.Generators.Areas
 {
@@ -59,7 +60,7 @@ namespace MHServerEmu.Games.Generators.Areas
         bool CreateProceduralSuperCells(GRandom random)
         {
             if (CellContainer is not WideGenCellGridContainer container) return false;
-
+            Logger.Debug($"[{MethodBase.GetCurrentMethod().Name}] => {random}");
             List<PatternHit> hits = new();
             Walls[] patternWide = {
                 (Walls) WallGroup.WideNES, (Walls) WallGroup.WideNES,
@@ -259,7 +260,7 @@ namespace MHServerEmu.Games.Generators.Areas
             int randomSeed = Area.RandomSeed;
 
             if (!BuildCellDeterminationMap(out CellDeterminationMap cellMap)) return false;
-
+            Logger.Debug($"[{MethodBase.GetCurrentMethod().Name}] => {random}");
             foreach (var item in cellMap)
             {
                 List<Point2> coordsOfType = item.Value;
