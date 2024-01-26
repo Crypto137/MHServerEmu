@@ -171,5 +171,44 @@ namespace MHServerEmu.Games.GameData
             // Mixin not found
             return null;
         }
+
+        public void PostProcessContainedPrototypes(Prototype prototype)
+        {
+            foreach (var property in prototype.GetType().GetProperties())
+            {
+                // Instead of storing a PrototypeFieldType enum value in our fields like the client,
+                // we do a bunch of messy if checks here to determine if a field is a prototype field
+                // that needs to be post-processed. TODO: make this cleaner and faster somehow.
+
+                var fieldType = property.PropertyType;
+
+                // Skip primitive and enum types since those are not prototypes for sure
+                if (fieldType.IsPrimitive) continue;
+                if (fieldType.IsEnum) continue;
+
+                if (fieldType.IsSubclassOf(typeof(Prototype)))
+                {
+                    // Simple embedded prototypes
+                    var embeddedPrototype = (Prototype)property.GetValue(prototype);
+                    embeddedPrototype?.PostProcess();
+                }
+                else if (fieldType.IsArray && fieldType.GetElementType().IsSubclassOf(typeof(Prototype)))
+                {
+                    // List / vector collections of embedded prototypes (that we implemented as arrays)
+                    var prototypeCollection = (IEnumerable<Prototype>)property.GetValue(prototype);
+                    if (prototypeCollection == null) continue;
+                    foreach (var element in prototypeCollection)
+                        element.PostProcess();
+                }
+                else if (fieldType == typeof(List<PrototypeMixinListItem>))
+                {
+                    // List mixins
+                    var mixinList = (List<PrototypeMixinListItem>)property.GetValue(prototype);
+                    if (mixinList == null) continue;
+                    foreach (var mixin in mixinList)
+                        mixin.Prototype.PostProcess();
+                }
+            }
+        }
     }
 }
