@@ -1357,17 +1357,46 @@ namespace MHServerEmu.Games.Regions
                     yield return area;
             }
         }
-        private bool FindAreaByDataRef(out Area startArea, ulong targetArea)
+
+        private bool FindAreaByTarget(out Area startArea, RegionConnectionTargetPrototype target)
         {
             startArea = null;
-            if (targetArea == 0) return false;
-            foreach (Area area in AreaList)
+            if (target.Entity == 0) return false;
+            // fast search
+            if (target.Area != 0)
             {
-                if (targetArea == area.AreaPrototype.GetDataRef()) {
-                    startArea = area;
-                    return true;
+                foreach (Area area in AreaList)
+                {
+                    if (target.Area == area.AreaPrototype.GetDataRef())
+                    {
+                        startArea = area;
+                        return true;
+                    }
                 }
             }
+            // slow search
+            foreach (Area area in AreaList)
+            {
+                foreach (Cell cell in area.CellList)
+                {
+                    if (cell.CellProto != null && cell.CellProto.InitializeSet.Markers.IsNullOrEmpty() == false)
+                    {
+                        foreach (var marker in cell.CellProto.InitializeSet.Markers)
+                        {
+                            if (marker is EntityMarkerPrototype entityMarker)
+                            {
+                                ulong dataRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
+                                if (dataRef == target.Entity)
+                                {
+                                    startArea = area;
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             return false;
         }
 
@@ -1380,7 +1409,7 @@ namespace MHServerEmu.Games.Regions
 
             if (target == null || target.Entity == 0) return false;
 
-            if (FindAreaByDataRef(out Area area, target.Area))
+            if (FindAreaByTarget(out Area area, target))
             {
                 foreach (Cell cell in area.CellList)
                 {

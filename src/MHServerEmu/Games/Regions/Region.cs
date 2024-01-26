@@ -149,7 +149,7 @@ namespace MHServerEmu.Games.Regions
             if (StartArea != null)
             {
                 if (RegionTransition.GetDestination(waypointDataRef, out RegionConnectionTargetPrototype target)
-                        && FindAreaByDataRef(out Area startArea, target.Area))
+                        && FindAreaByTarget(out Area startArea, target))
                     LoadMessagesForConnectedAreas(startArea, messageList);
                 else
                     LoadMessagesForConnectedAreas(StartArea, messageList);
