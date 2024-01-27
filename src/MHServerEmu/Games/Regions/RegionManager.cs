@@ -201,7 +201,7 @@ namespace MHServerEmu.Games.Regions
         {
             if (IsRegionAvailable(prototype))
             {
-               // prototype = (RegionPrototypeId)7814783688219433201;
+                prototype = (RegionPrototypeId)15546930156792977757;
                 if (_regionDict.TryGetValue(prototype, out Region region) == false)
                 {
                     // Generate the region and create entities for it if needed
