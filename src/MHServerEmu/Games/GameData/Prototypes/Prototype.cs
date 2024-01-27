@@ -102,9 +102,5 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return _ownedDynamicFields.Contains(fieldData);
         }
-
-        public virtual void PostProcess()
-        {
-        }
     }
 }
