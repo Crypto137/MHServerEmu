@@ -1,19 +1,73 @@
-﻿using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Common.Logging;
+using MHServerEmu.Common;
+using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.Generators.Areas;
+using MHServerEmu.Games.Generators.Population;
+using MHServerEmu.Games.Generators.Regions;
 
 namespace MHServerEmu.Games.Regions
 {
-    public partial class Area
+    [Flags]
+    public enum GenerateFlag
     {
+        Background = 0x1,
+        Population = 0x2,
+        Navi = 0x4,
+        PathCollection = 0x8,
+        PostInitialize = 0x10,
+        PostGenerate = 0x20,
+    }
+    public class AreaSettings
+    {
+        public uint Id;
+        public Vector3 Origin;
+        public RegionSettings RegionSettings;
+        public PrototypeId AreaDataRef;
+    }
+
+    public class Area
+    {
+        // old
         public uint Id { get; private set; }
         public AreaPrototypeId PrototypeId { get; private set; }
         public Vector3 Origin { get; set; }
         public bool IsStartArea { get; }
 
+        // New
+        private static readonly Logger Logger = LogManager.CreateLogger();
+        public Aabb RegionBounds { get; set; }
+        public Aabb LocalBounds { get; set; }
+        public int RandomSeed { get; set; }
+        public List<uint> SubAreas = new();
+
+        public PrototypeId RespawnOverride { get; set; }
+        public PrototypeId DistrictDataRef { get; set; }
+        public Game Game { get; private set; }
+        public Region Region { get; private set; }
+        public AreaPrototype AreaPrototype { get; set; }
+        public int MinimapRevealGroupId { get; set; }
+
+        private GenerateFlag _statusFlag;
+        public PropTable PropTable;
+
+        public Generator Generator { get; set; }
+
+        public float PlayableNavArea;
+        public float SpawnableNavArea;
+
+        public List<AreaConnectionPoint> AreaConnections = new();
+        private List<TowerFixupData> TowerFixupList;
+
+        public readonly List<RandomInstanceRegionPrototype> RandomInstances = new();
+
         public List<Cell> CellList { get; } = new();
 
-        public Area(uint id, AreaPrototypeId prototype, Vector3 origin, bool isStartArea)
+        public Area(uint id, AreaPrototypeId prototype, Vector3 origin, bool isStartArea) // old
         {
             Id = id;
             PrototypeId = prototype;
@@ -21,6 +75,425 @@ namespace MHServerEmu.Games.Regions
             IsStartArea = isStartArea;
         }
 
-        public void AddCell(Cell cell) => CellList.Add(cell);
+        public void AddCell(Cell cell) => CellList.Add(cell); // old
+        public Area(Game game, Region region)
+        {
+            Game = game;
+            Region = region;
+            Origin = new();
+            LocalBounds = Aabb.InvertedLimit;
+            RegionBounds = Aabb.InvertedLimit;
+        }
+
+        public bool Initialize(AreaSettings settings)
+        {
+            Id = settings.Id;
+            if (Id == 0) return false;
+
+            PrototypeId = (AreaPrototypeId)settings.AreaDataRef;
+            AreaPrototype = GameDatabase.GetPrototype<AreaPrototype>(settings.AreaDataRef);
+            if (AreaPrototype == null) return false;
+
+            Origin = settings.Origin;
+            RegionBounds = new Aabb(Origin, Origin);
+
+            RandomSeed = Region.RandomSeed;
+
+            if (settings.RegionSettings.GenerateAreas)
+            {
+                Generator = DRAGSystem.LinkGenerator(AreaPrototype.Generator, this);
+                if (Generator == null)
+                {
+                    Logger.Error("Area failed to link to a required generator.");
+                    return false;
+                }
+
+                GRandom random = new(RandomSeed);
+
+                LocalBounds = Generator.PreGenerate(random);
+
+                RegionBounds = LocalBounds.Translate(Origin);
+                RegionBounds.RoundToNearestInteger();
+            }
+
+            PropTable = new();
+
+            if (AreaPrototype.PropSets.IsNullOrEmpty() == false)
+            {
+                foreach (var propSet in AreaPrototype.PropSets)
+                    PropTable.AppendPropSet(propSet);
+            }
+
+            MinimapRevealGroupId = AreaPrototype.MinimapRevealGroupId;
+
+            return true;
+        }
+
+        public AreaGenerationInterface GetAreaGenerationInterface()
+        {
+            if (TestStatus(GenerateFlag.Background)) return null;
+            return Generator as AreaGenerationInterface;
+        }
+
+        public List<TowerFixupData> GetTowerFixup(bool toCreate)
+        {
+            if (TowerFixupList == null && toCreate) TowerFixupList = new();
+            return TowerFixupList;
+        }
+
+        public Cell AddCell(uint cellid, CellSettings settings)
+        {
+            if (settings.Seed == 0) settings.Seed = RandomSeed;
+
+            Cell cell = new(this, cellid);
+            CellList.Add(cell);
+            cell.Initialize(settings);
+
+            PlayableNavArea += cell.PlayableArea;
+            SpawnableNavArea += cell.SpawnableArea;
+
+            RegionManager regionManager = Game.RegionManager;
+            regionManager.AddCell(cell);
+
+            Region.SpawnMarkerRegistry.AddCell(cell);
+
+            return cell;
+        }
+
+        public bool IntersectsXY(Vector3 position) => RegionBounds.IntersectsXY(position);
+
+        public Cell GetCellAtPosition(Vector3 position)
+        {
+            Aabb volume = new(position, 0.000001f, 0.000001f, RegionBounds.Height * 2.0f);
+            foreach (Cell cell in Region.IterateCellsInVolume(volume))
+                if (cell.Area == this) return cell;
+
+            return null;
+        }
+
+        public bool CreateCellConnection(Cell cellA, Cell cellB)
+        {
+            if (cellA.Area != this || cellB.Area != this) return false;
+
+            cellA.AddCellConnection(cellB.Id);
+            cellB.AddCellConnection(cellA.Id);
+
+            return true;
+        }
+
+        public bool Generate(RegionGenerator generator, List<PrototypeId> areas, GenerateFlag flags)
+        {
+            bool success = true;
+            if (success && flags.HasFlag(GenerateFlag.Background))
+                success &= GenerateBackground(generator, areas);
+
+            if (success && flags.HasFlag(GenerateFlag.PostInitialize))
+                success &= GeneratePostInitialize();
+            if (success && flags.HasFlag(GenerateFlag.Navi))
+                success &= GenerateNavi();
+
+            if (success && flags.HasFlag(GenerateFlag.PathCollection))
+            {
+                DistrictPrototype district = GameDatabase.GetPrototype<DistrictPrototype>(DistrictDataRef);
+                if (district != null)
+                    Region.PathCache.AppendPathCollection(district.PathCollection, Origin);
+            }
+
+            if (success && flags.HasFlag(GenerateFlag.Population))
+                success &= GeneratePopulation();
+
+            if (success && flags.HasFlag(GenerateFlag.PostGenerate))
+                success &= PostGenerate();
+
+            return success;
+        }
+
+        private bool PostGenerate()
+        {
+            /*    if (AreaPrototype.FullyGenerateCells) // only TheRaft
+                    foreach (var cell in CellList)
+                        cell.PostGenerate(); // can be here?
+            */
+            return true;
+        }
+
+        private bool GeneratePopulation()
+        {
+            // TODO Write generation Entities here
+            return true;
+        }
+
+        private bool GenerateNavi()
+        {
+            if (!TestStatus(GenerateFlag.Background))
+            {
+                Logger.Warn($"[Engineering Issue] Navi is getting generated out of order with, or after a failed area generator\nRegion:{Region}\nArea:{ToString}");
+                return false;
+            }
+
+            if (TestStatus(GenerateFlag.Navi)) return true;
+
+            SetStatus(GenerateFlag.Navi, true);
+
+            foreach (var cell in CellList)
+                cell.AddNavigationDataToRegion();
+
+            return true;
+        }
+
+        private bool GeneratePostInitialize()
+        {
+            bool success = true;
+
+            if (!TestStatus(GenerateFlag.Background)) return false;
+
+            CellGridGenerator.CellGridBorderBehavior(this);
+            WideGridAreaGenerator.CellGridBorderBehavior(this);
+            SingleCellAreaGenerator.CellGridBorderBehavior(this);
+
+            foreach (var cell in CellList)
+            {
+                if (cell == null) continue;
+                success &= cell.PostInitialize();
+            }
+
+            if (TowerFixupList != null && TowerFixupList.Any())
+            {
+                foreach (var towerData in TowerFixupList)
+                {
+                    Cell cell = towerData.Id != 0 ? GetCell(towerData.Id) : null;
+                    Cell previous = towerData.Previous != 0 ? GetCell(towerData.Previous) : null;
+
+                    if (cell != null && previous != null)
+                    {
+                        Transition towerUpTrans = null;
+                        Transition towerDownTrans = null;
+
+                        foreach (var entity in previous.Entities)
+                        {
+                            if (entity is Transition transition)
+                            {
+                                if (transition.TransitionPrototype.Type == RegionTransitionType.TowerUp)
+                                {
+                                    towerUpTrans = transition;
+                                    break;
+                                }
+                            }
+                        }
+
+                        foreach (var entity in cell.Entities)
+                        {
+                            if (entity is Transition transition)
+                            {
+                                if (transition.TransitionPrototype.Type == RegionTransitionType.TowerDown)
+                                {
+                                    towerDownTrans = transition;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (towerUpTrans != null && towerDownTrans != null)
+                        {
+                            towerUpTrans.ConfigureTowerGen(towerDownTrans);
+                            towerDownTrans.ConfigureTowerGen(towerUpTrans);
+                        }
+                    }
+                }
+            }
+
+            return success;
+        }
+
+        public void AddSubArea(Area newarea)
+        {
+            if (newarea != null) SubAreas.Add(newarea.Id);
+        }
+
+        private Cell GetCell(uint id)
+        {
+            return CellList.FirstOrDefault(pair => pair.Id == id);
+        }
+
+        public bool GenerateBackground(RegionGenerator regionGenerator, List<PrototypeId> areas)
+        {
+            if (Region == null) return false;
+            if (TestStatus(GenerateFlag.Background)) return true;
+            if (Generator == null) return false;
+
+            GRandom random = new(RandomSeed);
+
+            bool success = Generator.Generate(random, regionGenerator, areas);
+            if (!success) Logger.Error($"Area {ToString()} in region {Region} failed to generate");
+
+            Generator = null;
+
+            if (success && SubAreas.Any())
+            {
+                foreach (var areaId in SubAreas)
+                    if (areaId != 0)
+                    {
+                        Area area = Region.GetAreaById(areaId);
+                        if (area != null)
+                            success &= area.GenerateBackground(regionGenerator, areas);
+                    }
+
+            }
+
+            if (success) SetStatus(GenerateFlag.Background, true);
+            return success;
+        }
+
+        private void SetStatus(GenerateFlag status, bool enable)
+        {
+            if (enable) _statusFlag |= status;
+            else _statusFlag ^= status;
+        }
+
+        public bool TestStatus(GenerateFlag status)
+        {
+            return _statusFlag.HasFlag(status);
+        }
+
+        public void SetOrigin(Vector3 newPostion)
+        {
+            Vector3 offset = newPostion - Origin;
+            Origin = newPostion;
+
+            RegionBounds = LocalBounds.Translate(Origin);
+            RegionBounds.RoundToNearestInteger();
+
+            if (AreaConnections.Count > 0)
+                foreach (var connection in AreaConnections)
+                    connection.Position += offset;
+
+            if (TestStatus(GenerateFlag.Background))
+            {
+                foreach (var cell in CellList)
+                {
+                    if (cell == null) continue;
+                    cell.SetAreaPosition(cell.AreaPosition, cell.AreaOrientation);
+                }
+            }
+        }
+
+        public static void CreateConnection(Area areaA, Area areaB, Vector3 position, ConnectPosition connectPosition)
+        {
+            Logger.Debug($"connect {position.ToStringFloat()} {areaA.Id} <> {areaB.Id}");
+            areaA.AddConnection(position, areaB, connectPosition);
+            areaB.AddConnection(position, areaA, connectPosition);
+        }
+
+        public void AddConnection(Vector3 position, Area area, ConnectPosition connectPosition)
+        {
+            AreaConnectionPoint areaConnection = new()
+            {
+                Position = position,
+                ConnectedArea = area,
+                ConnectPosition = connectPosition
+            };
+
+            AreaConnections.Add(areaConnection);
+        }
+        public bool GetPossibleAreaConnections(ConnectionList connections, Segment segment)
+        {
+            if (Generator == null) return false;
+            return Generator.GetPossibleConnections(connections, segment);
+        }
+
+        public PrototypeId GetPrototypeDataRef()
+        {
+            return (PrototypeId)PrototypeId;
+        }
+
+        public override string ToString()
+        {
+            return $"{GetPrototypeName()}, areaid={Id}, aabb={RegionBounds.ToStringFloat()}, game={Game}";
+        }
+
+        public string GetPrototypeName()
+        {
+            return GameDatabase.GetFormattedPrototypeName(GetPrototypeDataRef());
+        }
+
+        public void Shutdown()
+        {
+            DestroyAllConnections();
+            RemoveAllCells();
+
+            PropTable = null;
+            Generator = null;
+            TowerFixupList = null;
+        }
+
+        private void RemoveAllCells()
+        {
+            for (int i = CellList.Count - 1; i >= 0; i--)
+                RemoveCell(CellList[i].Id);
+        }
+
+        private void RemoveCell(uint id)
+        {
+            Cell cell = GetCell(id);
+            if (cell != null)
+            {
+                Region.SpawnMarkerRegistry.RemoveCell(cell);
+                DeleteCellAt(cell);
+            }
+        }
+
+        private void DeleteCellAt(Cell cell)
+        {
+            if (cell.Area == this)
+            {
+                RegionManager regionManager = Game.RegionManager;
+                if (regionManager != null) regionManager.RemoveCell(cell);
+
+                cell.Shutdown();
+                CellList.Remove(cell);
+            }
+        }
+
+        private void DestroyAllConnections()
+        {
+            foreach (var point in AreaConnections)
+                if (point.ConnectedArea != null) point.ConnectedArea.DestroyConnectionsWithArea(this);
+
+            AreaConnections.Clear();
+        }
+
+        private void DestroyConnectionsWithArea(Area area)
+        {
+            AreaConnections.RemoveAll(point => point.ConnectedArea == area);
+        }
+
+        public Vector3 AreaToRegion(Vector3 positionInArea)
+        {
+            return positionInArea + Origin;
+        }
+    }
+
+    public enum ConnectPosition
+    {
+        One,
+        Begin,
+        Inside,
+        End
+    }
+
+    public class AreaConnectionPoint
+    {
+        public Area ConnectedArea { get; set; }
+        public Vector3 Position { get; set; }
+        public ulong Id { get; set; }
+        public ConnectPosition ConnectPosition { get; set; }
+
+        public AreaConnectionPoint()
+        {
+            ConnectedArea = null;
+            Position = new();
+            Id = 0;
+            ConnectPosition = ConnectPosition.One;
+        }
     }
 }

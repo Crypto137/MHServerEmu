@@ -176,13 +176,13 @@ namespace MHServerEmu.Games.Regions
             RegionSettings settings = new()
             {
                 Seed = 1488502313, //Game.GetRandom().Next(),
-                DifficultyTierRef = (ulong)DifficultyTier.Normal,
+                DifficultyTierRef = (PrototypeId)DifficultyTier.Normal,
                 InstanceAddress = IdGenerator.Generate(IdType.Region),
                 Level = 10,
                 Bound = Aabb.Zero,
                 GenerateAreas = true,
-                Affixes = new List<ulong>(),
-                RegionDataRef = (ulong)prototype
+                Affixes = new List<PrototypeId>(),
+                RegionDataRef = (PrototypeId)prototype
             };
             return CreateRegion(settings);
         }
@@ -232,7 +232,7 @@ namespace MHServerEmu.Games.Regions
             byte[] archiveData = Array.Empty<byte>();
             Area area;
             uint cellid;
-            ulong districtPrototypeId;
+            PrototypeId districtPrototypeId;
             DistrictPrototype district = null;
 
             switch (prototype)
@@ -337,8 +337,8 @@ namespace MHServerEmu.Games.Regions
                         new(2432.0f, 2432.0f, 2432.0f),
                         new(10, DifficultyTier.Normal));
 
-                    area = new(1, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/EndGame/TierX/HoloSim/HoloSimAArea.prototype"), new(), true);
-                    area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/EndGame/DR_Survival_A.cell"), new()));
+                        area = new(1,(AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/EndGame/TierX/HoloSim/HoloSimAArea.prototype"), new(), true);
+                        area.AddCell(new(1, GameDatabase.GetPrototypeRefByName("Resource/Cells/EndGame/DR_Survival_A.cell"), new()));
 
                     region.AddArea(area);
 
@@ -689,7 +689,7 @@ namespace MHServerEmu.Games.Regions
                     // can be only one Area
                     else
                     {
-
+                        
                         AreaPrototypeId CH0102HellsKitchenNorthArea = (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("Regions/StoryRevamp/CH01HellsKitchen/Brownstones/CH0102HellsKitchenNorthArea.prototype");
                         area = new(1, CH0102HellsKitchenNorthArea, new(), true);
                         districtPrototypeId = GameDatabase.GetPrototypeRefByName("Resource/Districts/Hells_Kitchen_Brownstones_B.district");
@@ -709,7 +709,7 @@ namespace MHServerEmu.Games.Regions
                     break;
 
                 case RegionPrototypeId.CH0105NightclubRegion:
-
+                    
                     archiveData = new byte[] {
                     };
                     region = new(RegionPrototypeId.CH0105NightclubRegion,
@@ -880,7 +880,7 @@ namespace MHServerEmu.Games.Regions
                     area.AddCell(new(36, GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_NEW_B.cell"), new(-4608.0f, 23040.0f, 4.0f)));
                     region.AddArea(area);
 
-                    ulong fillerLower = GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_FILLER_A.cell");
+                    PrototypeId fillerLower = GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Lower_A/Madripoor_Lower_A_FILLER_A.cell");
 
                     area = new(20, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
                     area.AddCell(new(101, fillerLower, new(-6912.0f, 23040.0f, 4.0f)));
@@ -909,7 +909,7 @@ namespace MHServerEmu.Games.Regions
                     area.AddCell(new(142, fillerLower, new(-6912.0f, 18432.0f, 4.0f)));
                     region.AddArea(area);
 
-                    ulong fillerShore = GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_FILLER_A.cell");
+                    PrototypeId fillerShore = GameDatabase.GetPrototypeRefByName(Madripoor + "Madripoor_Shore_A/Madripoor_Shore_A_FILLER_A.cell");
 
                     area = new(21, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
                     area.AddCell(new(110, fillerShore, new(-2304.0f, 2304.0f, -4.0f)));
@@ -1320,7 +1320,7 @@ namespace MHServerEmu.Games.Regions
                     area.AddCell(new(110, GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_SW_A.cell"), new(-3456.0f, 11520.0f, 0.0f)));
                     region.AddArea(area);
 
-                    ulong fillerDino = GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_FILLER_A.cell");
+                    PrototypeId fillerDino = GameDatabase.GetPrototypeRefByName(Savage + "Dino_Jungle_A/Dino_Jungle_A_NESW_FILLER_A.cell");
 
                     area = new(24, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
                     // 117 - 208
@@ -1444,7 +1444,7 @@ namespace MHServerEmu.Games.Regions
                     area.AddCell(new(1, GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_NE_A.cell"), new(3456.0f, -13824.0f, 0.0f)));
                     region.AddArea(area);
 
-                    ulong fillerMarch = GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_FILLER_A.cell");
+                    PrototypeId fillerMarch = GameDatabase.GetPrototypeRefByName(Savage + "Marsh_A/Marsh_A_FILLER_A.cell");
                     area = new(25, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
 
                     areaid = 209;
@@ -1881,7 +1881,7 @@ namespace MHServerEmu.Games.Regions
                     area.AddCell(new(1, GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_A/SiegeCity_A_NE_B.cell"), new(-3456.0f, -5760.0f, 0.0f)));
                     region.AddArea(area);
 
-                    ulong fillerSiege = GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_A/SiegeCity_A_FILLER_A.cell");
+                    PrototypeId fillerSiege = GameDatabase.GetPrototypeRefByName(SiegeCity + "SiegeCity_A/SiegeCity_A_FILLER_A.cell");
 
                     area = new(2, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
 
@@ -2066,7 +2066,7 @@ namespace MHServerEmu.Games.Regions
 
                     region.AddArea(area);
 
-                    ulong filler = GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_FILLER_A.cell");
+                    PrototypeId filler = GameDatabase.GetPrototypeRefByName(Rzoo + "Bronx_Zoo_A/Bronx_Zoo_A_FILLER_A.cell");
 
                     // fillers for ZooArea1SN
 
@@ -2445,8 +2445,8 @@ namespace MHServerEmu.Games.Regions
                     region.AddArea(area);
 
                     // Filler
-                    ulong Dockyard_Filler = GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_Dockyard_A/DP_Dockyard_A_FILLER_A.cell");
-                    ulong Shipping_Filler = GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_FILLER_A.cell");
+                    PrototypeId Dockyard_Filler = GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_Dockyard_A/DP_Dockyard_A_FILLER_A.cell");
+                    PrototypeId Shipping_Filler = GameDatabase.GetPrototypeRefByName(DocksPatrol + "DocksPatrol_Shipping_A/DP_Shipping_A_FILLER_A.cell");
 
                     area = new(5, (AreaPrototypeId)GameDatabase.GetPrototypeRefByName("DRAG/AreaGenerators/DynamicArea.prototype"), new(), false);
                     area.AddCell(new(32, Dockyard_Filler, new(3456.0f, -4608.0f, 0.0f)));
