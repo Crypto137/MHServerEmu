@@ -2,29 +2,30 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Common
 {
     public class EntityTrackingContextMap
     {
-        public ulong Context { get; set; }
+        public PrototypeId Context { get; set; }
         public uint Flag { get; set; }
 
         public EntityTrackingContextMap(CodedInputStream stream)
         {
-            Context = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            Context = stream.ReadPrototypeEnum<Prototype>();
             Flag = stream.ReadRawVarint32();
         }
 
-        public EntityTrackingContextMap(ulong prototypeId, uint value)
+        public EntityTrackingContextMap(PrototypeId context, uint value)
         {
-            Context = prototypeId;
+            Context = context;
             Flag = value;
         }
 
         public void Encode(CodedOutputStream stream)
         {
-            stream.WritePrototypeEnum(Context, PrototypeEnumType.All);
+            stream.WritePrototypeEnum<Prototype>(Context);
             stream.WriteRawVarint32(Flag);
         }
 

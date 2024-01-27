@@ -1,27 +1,27 @@
 ﻿using Google.ProtocolBuffers;
+using MHServerEmu.Common.Helpers;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Networking;
-using MHServerEmu.Networking.Base;
+using MHServerEmu.Networking.Tcp;
 using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Frontend
 {
-    public class FrontendClient : IClient
+    public class FrontendClient : ITcpClient
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private readonly ServerManager _serverManager;
 
-        public Connection Connection { get; set; }
+        public TcpClientConnection Connection { get; set; }
 
         public ClientSession Session { get; private set; } = null;
         public bool FinishedPlayerManagerHandshake { get; set; } = false;
         public bool FinishedGroupingManagerHandshake { get; set; } = false;
         public ulong GameId { get; set; }
-        public Game CurrentGame { get => _serverManager.PlayerManagerService.GetGameByPlayer(this); }
+        public Game CurrentGame { get => ServerManager.Instance.PlayerManagerService.GetGameByPlayer(this); }
         public Region Region { get => CurrentGame.RegionManager.GetRegion(Session.Account.Player.Region); }
 
         // Temporarily store state here instead of Game
@@ -34,15 +34,14 @@ namespace MHServerEmu.Frontend
         public ulong ThrowingCancelPower { get; set; }
         public Entity ThrowingObject { get; set; }
 
-        public FrontendClient(Connection connection, ServerManager serverManager)
+        public FrontendClient(TcpClientConnection connection)
         {
             Connection = connection;
-            _serverManager = serverManager;
         }
 
-        public void Parse(ConnectionDataEventArgs e)
+        public void Parse(byte[] data)
         {
-            CodedInputStream stream = CodedInputStream.CreateInstance(e.Data.ToArray());
+            CodedInputStream stream = CodedInputStream.CreateInstance(data);
             PacketIn packet = new(stream);
 
             switch (packet.Command)
@@ -58,6 +57,7 @@ namespace MHServerEmu.Frontend
 
                 case MuxCommand.Disconnect:
                     Logger.Trace($"Disconnected from mux channel {packet.MuxId}");
+                    Connection.Disconnect();
                     break;
 
                 case MuxCommand.ConnectWithData:
@@ -65,7 +65,7 @@ namespace MHServerEmu.Frontend
                     break;
 
                 case MuxCommand.Data:
-                    _serverManager.Handle(this, packet.MuxId, packet.Messages);
+                    ServerManager.Instance.Handle(this, packet.MuxId, packet.Messages);
                     break;
             }
         }
@@ -109,7 +109,7 @@ namespace MHServerEmu.Frontend
 
         public void SendPacketFromFile(string fileName)
         {
-            string path = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Packets", fileName);
+            string path = Path.Combine(FileHelper.DataDirectory, "Packets", fileName);
 
             if (File.Exists(path))
             {

@@ -5,6 +5,7 @@ using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
+using MHServerEmu.Games.Achievements;
 using MHServerEmu.Networking;
 using MHServerEmu.PlayerManagement.Accounts;
 
@@ -16,8 +17,6 @@ namespace MHServerEmu.PlayerManagement
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly ServerManager _serverManager;
-
         private readonly SessionManager _sessionManager;
         private readonly GameManager _gameManager;
         private readonly object _playerLock = new();
@@ -25,11 +24,10 @@ namespace MHServerEmu.PlayerManagement
 
         public int SessionCount { get => _sessionManager.SessionCount; }
 
-        public PlayerManagerService(ServerManager serverManager)
+        public PlayerManagerService()
         {
-            _serverManager = serverManager;
             _sessionManager = new();
-            _gameManager = new(_serverManager);
+            _gameManager = new();
         }
 
         #region Client Management
@@ -43,22 +41,27 @@ namespace MHServerEmu.PlayerManagement
             client.SendMessage(MuxChannel, new(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build()));
 
             // Send achievement database
-            client.SendMessage(MuxChannel, new(_serverManager.AchievementDatabase.ToNetMessageAchievementDatabaseDump()));
+            client.SendMessage(MuxChannel, new(AchievementDatabase.Instance.ToNetMessageAchievementDatabaseDump()));
             // NetMessageQueryIsRegionAvailable regionPrototype: 9833127629697912670 should go in the same packet as AchievementDatabaseDump
         }
 
-        public void AddPlayer(FrontendClient client)
+        public bool AddPlayer(FrontendClient client)
         {
             lock (_playerLock)
             {
-                if (_playerList.Contains(client))
+                // TODO: make this check better
+                foreach (FrontendClient player in _playerList)
                 {
-                    Logger.Warn("Failed to add player: already added");
-                    return;
+                    if (player.Session.Account.Id == client.Session.Account.Id)
+                    {
+                        Logger.Warn("Failed to add player: already added");
+                        return false;
+                    }
                 }
 
                 _playerList.Add(client);
                 _gameManager.GetAvailableGame().AddPlayer(client);
+                return true;
             }
         }
 
@@ -166,7 +169,7 @@ namespace MHServerEmu.PlayerManagement
                 case ClientToGameServerMessage.NetMessageTell:
                 case ClientToGameServerMessage.NetMessageReportPlayer:
                 case ClientToGameServerMessage.NetMessageChatBanVote:
-                    _serverManager.GroupingManagerService.Handle(client, message);
+                    ServerManager.Instance.GroupingManagerService.Handle(client, message);
                     break;
 
                 // Billing
@@ -176,7 +179,7 @@ namespace MHServerEmu.PlayerManagement
                 case ClientToGameServerMessage.NetMessageBuyGiftForOtherPlayer:
                 case ClientToGameServerMessage.NetMessagePurchaseUnlock:
                 case ClientToGameServerMessage.NetMessageGetGiftHistory:
-                    _serverManager.BillingService.Handle(client, message);
+                    ServerManager.Instance.BillingService.Handle(client, message);
                     break;
 
                 default:

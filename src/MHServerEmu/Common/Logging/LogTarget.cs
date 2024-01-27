@@ -13,7 +13,6 @@
             MaximumLevel = maximumLevel;
         }
 
-        public virtual void LogMessage(Logger.Level level, string logger, string message) { throw new NotSupportedException(); }
-        public virtual void LogException(Logger.Level level, string logger, string message, Exception exception) { throw new NotSupportedException(); }
+        public virtual void LogMessage(LogMessage message) { throw new NotSupportedException(); }
     }
 }

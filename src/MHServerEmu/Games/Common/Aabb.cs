@@ -1,20 +1,14 @@
-﻿using System.Drawing;
-using System.Text.Json.Serialization;
-
-namespace MHServerEmu.Games.Common
+﻿namespace MHServerEmu.Games.Common
 {
     public class Aabb
     {
         public Vector3 Min { get; set; }
         public Vector3 Max { get; set; }
 
-        [JsonIgnore]
         public float Width { get => Max.X - Min.X; }
-        [JsonIgnore]
         public float Length { get => Max.Y - Min.Y; }
-        [JsonIgnore]
         public float Height { get => Max.Z - Min.Z; }
-        [JsonIgnore]
+        
         public Vector3 Center { get => Min + ((Max - Min) / 2.0f); }
         public Aabb(Vector3 min, Vector3 max)
         {
@@ -37,8 +31,6 @@ namespace MHServerEmu.Games.Common
             Max = new (center.X + halfWidth, center.Y + halfLength, center.Z + halfHeight);
         }
 
-        [JsonIgnore]
-
         public static Aabb InvertedLimit
         {
             get => new(
@@ -46,7 +38,7 @@ namespace MHServerEmu.Games.Common
                 new Vector3(float.MinValue, float.MinValue, float.MinValue)
             );
         }
-        [JsonIgnore]
+
         public static Aabb Zero
         {
             get => new(
@@ -55,7 +47,6 @@ namespace MHServerEmu.Games.Common
             );
         }
 
-        [JsonIgnore]
         public float Volume { get => Width * Length * Height; }
 
         public void Set(Aabb aabb)

@@ -4,99 +4,167 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Powers
 {
+    [Flags]
+    public enum PowerResultMessageFlags
+    {
+        None                        = 0,
+        NoPowerOwnerEntityId        = 1 << 0,
+        IsSelfTarget                = 1 << 1,
+        NoUltimateOwnerEntityId     = 1 << 2,
+        UltimateOwnerIsPowerOwner   = 1 << 3,
+        HasResultFlags              = 1 << 4,
+        HasPowerOwnerPosition       = 1 << 5,
+        HasDamagePhysical           = 1 << 6,
+        HasDamageEnergy             = 1 << 7,
+        HasDamageMental             = 1 << 8,
+        HasHealing                  = 1 << 9,
+        HasPowerAssetRefOverride    = 1 << 10,
+        HasTransferToEntityId       = 1 << 11
+    }
+
+    [Flags]
+    public enum PowerResultFlags    // PowerResults::getStringForFlag
+    {
+        None            = 0,
+        Hostile         = 1 << 0,
+        Proc            = 1 << 1,
+        OverTime        = 1 << 2,
+        Critical        = 1 << 3,
+        Dodged          = 1 << 4,
+        Resisted        = 1 << 5,
+        Blocked         = 1 << 6,
+        SuperCritical   = 1 << 7,   // Brutal Strike
+        Unaffected      = 1 << 8,
+        Teleport        = 1 << 9,
+        NoDamage        = 1 << 10,
+        Resurrect       = 1 << 11,
+        InstantKill     = 1 << 12
+    }
+
     public class PowerResultArchive
     {
-        private const int FlagCount = 12;
+        private static readonly Random Random = new();  // For testing, remove this later
 
-        public uint ReplicationPolicy { get; set; }
-        public bool[] Flags { get; set; }
-        public ulong PowerPrototypeId { get; set; }
-        public ulong TargetId { get; set; }
-        public ulong PowerOwnerId { get; set; }
-        public ulong UltimateOwnerId { get; set; }
-        public ulong ResultFlags { get; set; }
-        public uint Damage0 { get; set; }
-        public uint Damage1 { get; set; }
-        public uint Damage2 { get; set; }
+        public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
+        public PowerResultMessageFlags Flags { get; set; }
+        public PrototypeId PowerPrototypeId { get; set; }
+        public ulong TargetEntityId { get; set; }
+        public ulong PowerOwnerEntityId { get; set; }
+        public ulong UltimateOwnerEntityId { get; set; }
+        public PowerResultFlags ResultFlags { get; set; }
+        public uint DamagePhysical { get; set; }
+        public uint DamageEnergy { get; set; }
+        public uint DamageMental { get; set; }
         public uint Healing { get; set; }
-        public ulong AssetGuid { get; set; }
-        public Vector3 Position { get; set; }
-        public ulong TransferToId { get; set; }
+        public AssetId PowerAssetRefOverride { get; set; }
+        public Vector3 PowerOwnerPosition { get; set; }
+        public ulong TransferToEntityId { get; set; }
 
         public PowerResultArchive(ByteString data)
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
 
-            ReplicationPolicy = stream.ReadRawVarint32();
-            Flags = stream.ReadRawVarint32().ToBoolArray(FlagCount);
-            PowerPrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.Power);
-            TargetId = stream.ReadRawVarint64();
+            ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
+            Flags = (PowerResultMessageFlags)stream.ReadRawVarint32();
+            PowerPrototypeId = stream.ReadPrototypeEnum<PowerPrototype>();
+            TargetEntityId = stream.ReadRawVarint64();
 
-            if (Flags[1])
-                PowerOwnerId = TargetId;
-            else if (Flags[0] == false)
-                PowerOwnerId = stream.ReadRawVarint64();
+            if (Flags.HasFlag(PowerResultMessageFlags.IsSelfTarget))
+                PowerOwnerEntityId = TargetEntityId;
+            else if (Flags.HasFlag(PowerResultMessageFlags.NoPowerOwnerEntityId) == false)
+                PowerOwnerEntityId = stream.ReadRawVarint64();
             
-            if (Flags[3])
-                UltimateOwnerId = PowerOwnerId;
-            else if (Flags[2] == false)
-                UltimateOwnerId = stream.ReadRawVarint64();
+            if (Flags.HasFlag(PowerResultMessageFlags.UltimateOwnerIsPowerOwner))
+                UltimateOwnerEntityId = PowerOwnerEntityId;
+            else if (Flags.HasFlag(PowerResultMessageFlags.NoUltimateOwnerEntityId) == false)
+                UltimateOwnerEntityId = stream.ReadRawVarint64();
 
-            if (Flags[4]) ResultFlags = stream.ReadRawVarint64();
-            if (Flags[6]) Damage0 = stream.ReadRawVarint32();
-            if (Flags[7]) Damage1 = stream.ReadRawVarint32();
-            if (Flags[8]) Damage2 = stream.ReadRawVarint32();
-            if (Flags[9]) Healing = stream.ReadRawVarint32();
-            if (Flags[10]) AssetGuid = stream.ReadRawVarint64();
-            if (Flags[5]) Position = new(stream, 2);
-            if (Flags[11]) TransferToId = stream.ReadRawVarint64();
+            if (Flags.HasFlag(PowerResultMessageFlags.HasResultFlags))
+                ResultFlags = (PowerResultFlags)stream.ReadRawVarint64();
+
+            if (Flags.HasFlag(PowerResultMessageFlags.HasDamagePhysical))
+                DamagePhysical = stream.ReadRawVarint32();
+
+            if (Flags.HasFlag(PowerResultMessageFlags.HasDamageEnergy))
+                DamageEnergy = stream.ReadRawVarint32();
+
+            if (Flags.HasFlag(PowerResultMessageFlags.HasDamageMental))
+                DamageMental = stream.ReadRawVarint32();
+
+            if (Flags.HasFlag(PowerResultMessageFlags.HasHealing))
+                Healing = stream.ReadRawVarint32();
+
+            if (Flags.HasFlag(PowerResultMessageFlags.HasPowerAssetRefOverride))
+                PowerAssetRefOverride = (AssetId)stream.ReadRawVarint64();
+
+            if (Flags.HasFlag(PowerResultMessageFlags.HasPowerOwnerPosition))
+                PowerOwnerPosition = new(stream, 2);
+
+            if (Flags.HasFlag(PowerResultMessageFlags.HasTransferToEntityId))
+                TransferToEntityId = stream.ReadRawVarint64();
         }
 
         public PowerResultArchive(NetMessageTryActivatePower tryActivatePower)
         {
-            // damage test
-            ReplicationPolicy = 0x1;
-            Flags = 0u.ToBoolArray(FlagCount);
-            PowerPrototypeId = tryActivatePower.PowerPrototypeId;
-            TargetId = tryActivatePower.IdTargetEntity;
-            PowerOwnerId = tryActivatePower.IdUserEntity;
-            Flags[3] = true;    // UltimateOwnerId same as PowerOwnerId
-            
+            // Damage test
+            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0;
+            Flags = PowerResultMessageFlags.None;
+            PowerPrototypeId = (PrototypeId)tryActivatePower.PowerPrototypeId;
+            TargetEntityId = tryActivatePower.IdTargetEntity;
+            PowerOwnerEntityId = tryActivatePower.IdUserEntity;
+            Flags |= PowerResultMessageFlags.UltimateOwnerIsPowerOwner;    // UltimateOwnerEntityId same as PowerOwnerEntityId
+
             if (tryActivatePower.IdTargetEntity != 0)
             {
-                //ResultFlags = 0x85;   // brutal strike
-                //Flags[4] = true;
+                ResultFlags = PowerResultFlags.Hostile;
+                Flags |= PowerResultMessageFlags.HasResultFlags;
 
-                Position = new(tryActivatePower.TargetPosition);
-                Flags[5] = true;
+                PowerOwnerPosition = new(tryActivatePower.TargetPosition);
+                Flags |= PowerResultMessageFlags.HasPowerOwnerPosition;
 
-                if (TargetId != PowerOwnerId) Damage0 = 100;
-                Flags[6] = true;
+                if (TargetEntityId != PowerOwnerEntityId)
+                {
+                    DamagePhysical = (uint)Random.NextInt64(80, 120);
+                    Flags |= PowerResultMessageFlags.HasDamagePhysical;
+
+                    if (Random.NextSingle() < 0.35f)
+                    {
+                        DamagePhysical = (uint)(DamagePhysical * 1.5f);
+                        ResultFlags |= PowerResultFlags.Critical;
+                        if (Random.NextSingle() < 0.35f)
+                        {
+                            DamagePhysical = (uint)(DamagePhysical * 1.5f);
+                            ResultFlags |= PowerResultFlags.SuperCritical;
+                        }
+                    }
+                }
             }
         }
 
         public PowerResultArchive(NetMessageContinuousPowerUpdateToServer continuousPowerUpdate)
         {
             // damage test
-            ReplicationPolicy = 0x1;
-            Flags = 0u.ToBoolArray(FlagCount);
-            PowerPrototypeId = continuousPowerUpdate.PowerPrototypeId;
-            TargetId = continuousPowerUpdate.IdTargetEntity;
-            Flags[3] = true;    // UltimateOwnerId same as PowerOwnerId
+            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0;
+            Flags = PowerResultMessageFlags.None;
+            PowerPrototypeId = (PrototypeId)continuousPowerUpdate.PowerPrototypeId;
+            TargetEntityId = continuousPowerUpdate.IdTargetEntity;
+            Flags |= PowerResultMessageFlags.UltimateOwnerIsPowerOwner;    // UltimateOwnerEntityId same as PowerOwnerEntityId
 
             if (continuousPowerUpdate.IdTargetEntity != 0)
             {
-                //ResultFlags = 0x85;   // brutal strike
-                //Flags[4] = true;
+                ResultFlags = PowerResultFlags.Hostile;
+                Flags |= PowerResultMessageFlags.HasResultFlags;
 
-                Position = new(continuousPowerUpdate.TargetPosition);
-                Flags[5] = true;
+                PowerOwnerPosition = new(continuousPowerUpdate.TargetPosition);
+                Flags |= PowerResultMessageFlags.HasPowerOwnerPosition;
 
-                Damage0 = 100;
-                Flags[6] = true;
+                DamagePhysical = 100;
+                Flags |= PowerResultMessageFlags.HasDamagePhysical;
             }
         }
 
@@ -108,20 +176,40 @@ namespace MHServerEmu.Games.Powers
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                cos.WriteRawVarint32(ReplicationPolicy);
-                cos.WriteRawVarint32(Flags.ToUInt32());
-                cos.WritePrototypeEnum(PowerPrototypeId, PrototypeEnumType.Power);
-                cos.WriteRawVarint64(TargetId);
-                if (Flags[1] == false && Flags[0] == false) cos.WriteRawVarint64(PowerOwnerId);
-                if (Flags[3] == false && Flags[2] == false) cos.WriteRawVarint64(UltimateOwnerId);
-                if (Flags[4]) cos.WriteRawVarint64(ResultFlags);
-                if (Flags[6]) cos.WriteRawVarint32(Damage0);
-                if (Flags[7]) cos.WriteRawVarint32(Damage1);
-                if (Flags[8]) cos.WriteRawVarint32(Damage2);
-                if (Flags[9]) cos.WriteRawVarint32(Healing);
-                if (Flags[10]) cos.WriteRawVarint64(AssetGuid);
-                if (Flags[5]) Position.Encode(cos, 2);
-                if (Flags[11]) cos.WriteRawVarint64(TransferToId);
+                cos.WriteRawVarint32((uint)ReplicationPolicy);
+                cos.WriteRawVarint32((uint)Flags);
+                cos.WritePrototypeEnum<PowerPrototype>(PowerPrototypeId);
+                cos.WriteRawVarint64(TargetEntityId);
+
+                if (Flags.HasFlag(PowerResultMessageFlags.IsSelfTarget) == false && Flags.HasFlag(PowerResultMessageFlags.NoPowerOwnerEntityId) == false)
+                    cos.WriteRawVarint64(PowerOwnerEntityId);
+
+                if (Flags.HasFlag(PowerResultMessageFlags.UltimateOwnerIsPowerOwner) == false && Flags.HasFlag(PowerResultMessageFlags.NoUltimateOwnerEntityId) == false)
+                    cos.WriteRawVarint64(UltimateOwnerEntityId);
+
+                if (Flags.HasFlag(PowerResultMessageFlags.HasResultFlags))
+                    cos.WriteRawVarint64((ulong)ResultFlags);
+
+                if (Flags.HasFlag(PowerResultMessageFlags.HasDamagePhysical))
+                    cos.WriteRawVarint32(DamagePhysical);
+
+                if (Flags.HasFlag(PowerResultMessageFlags.HasDamageEnergy))
+                    cos.WriteRawVarint32(DamageEnergy);
+
+                if (Flags.HasFlag(PowerResultMessageFlags.HasDamageMental))
+                    cos.WriteRawVarint32(DamageMental);
+
+                if (Flags.HasFlag(PowerResultMessageFlags.HasHealing))
+                    cos.WriteRawVarint32(Healing);
+
+                if (Flags.HasFlag(PowerResultMessageFlags.HasPowerAssetRefOverride))
+                    cos.WriteRawVarint64((ulong)PowerAssetRefOverride);
+
+                if (Flags.HasFlag(PowerResultMessageFlags.HasPowerOwnerPosition))
+                    PowerOwnerPosition.Encode(cos, 2);
+
+                if (Flags.HasFlag(PowerResultMessageFlags.HasTransferToEntityId))
+                    cos.WriteRawVarint64(TransferToEntityId);
 
                 cos.Flush();
                 return ByteString.CopyFrom(ms.ToArray());
@@ -131,24 +219,20 @@ namespace MHServerEmu.Games.Powers
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
-
-            sb.Append("Flags: ");
-            for (int i = 0; i < Flags.Length; i++) if (Flags[i]) sb.Append($"{i} ");
-            sb.AppendLine();
-
-            sb.AppendLine($"PowerPrototype: {GameDatabase.GetPrototypeName(PowerPrototypeId)}");
-            sb.AppendLine($"TargetId: {TargetId}");
-            sb.AppendLine($"PowerOwnerId: {PowerOwnerId}");
-            sb.AppendLine($"UltimateOwnerId: {UltimateOwnerId}");
-            sb.AppendLine($"ResultFlags: 0x{ResultFlags:X}");
-            sb.AppendLine($"Damage0: {Damage0}");
-            sb.AppendLine($"Damage1: {Damage1}");
-            sb.AppendLine($"Damage2: {Damage2}");
+            sb.AppendLine($"ReplicationPolicy: {ReplicationPolicy}");
+            sb.AppendLine($"Flags: {Flags}");
+            sb.AppendLine($"PowerPrototypeId: {GameDatabase.GetPrototypeName(PowerPrototypeId)}");
+            sb.AppendLine($"TargetEntityId: {TargetEntityId}");
+            sb.AppendLine($"PowerOwnerEntityId: {PowerOwnerEntityId}");
+            sb.AppendLine($"UltimateOwnerEntityId: {UltimateOwnerEntityId}");
+            sb.AppendLine($"ResultFlags: {ResultFlags}");
+            sb.AppendLine($"DamagePhysical: {DamagePhysical}");
+            sb.AppendLine($"DamageEnergy: {DamageEnergy}");
+            sb.AppendLine($"DamageMental: {DamageMental}");
             sb.AppendLine($"Healing: {Healing}");
-            sb.AppendLine($"AssetGuid: {AssetGuid}");
-            sb.AppendLine($"Position: {Position}");
-            sb.AppendLine($"TransferToId: {TransferToId}");
+            sb.AppendLine($"PowerAssetRefOverride: {PowerAssetRefOverride}");
+            sb.AppendLine($"PowerOwnerPosition: {PowerOwnerPosition}");
+            sb.AppendLine($"TransferToEntityId: {TransferToEntityId}");
 
             return sb.ToString();
         }

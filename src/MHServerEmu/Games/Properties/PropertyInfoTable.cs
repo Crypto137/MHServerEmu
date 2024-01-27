@@ -1,5 +1,7 @@
-﻿using MHServerEmu.Common.Logging;
+﻿using System.Diagnostics;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Properties
@@ -8,66 +10,128 @@ namespace MHServerEmu.Games.Properties
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private Dictionary<PropertyEnum, PropertyInfoPrototype> _propertyInfoDict = new();
+        private readonly Dictionary<PropertyEnum, PropertyInfo> _propertyInfoDict = new();
 
-        public PropertyInfoTable(DataDirectory calligraphy)
+        public static readonly (string, Type)[] AssetEnumBindings = new(string, Type)[]     // s_PropertyParamEnumLookups
         {
-            Dictionary<PropertyEnum, PropertyPrototype> mixinDict = new();
+            ("ProcTriggerType",                 typeof(ProcTriggerType)),
+            ("DamageType",                      typeof(DamageType)),
+            ("TargetRestrictionType",           typeof(TargetRestrictionType)),
+            ("PowerEventType",                  typeof(PowerEventType)),
+            ("LootDropEventType",               typeof(LootDropEventType)),
+            ("LootDropActionType",              typeof(LootActionType)),
+            ("PowerConditionType",              typeof(PowerConditionType)),
+            ("ItemEffectUnrealClass",           null),
+            ("HotspotNegateByAllianceType",     typeof(HotspotNegateByAllianceType)),
+            ("DEPRECATEDDifficultyMode",        typeof(DEPRECATEDDifficultyMode)),
+            ("EntityGameEventEnum",             typeof(EntityGameEventEnum)),
+            ("EntitySelectorActionEventType",   typeof(EntitySelectorActionEventType)),
+            ("Weekday",                         typeof(Weekday)),
+            ("AffixPositionType",               typeof(AffixPosition)),
+            ("ManaType",                        typeof(ManaType)),
+            ("Ranks",                           typeof(Rank))
+        };
 
-            // Loop through the main property info directory to get most info
+        public PropertyInfoTable()
+        {
+            var stopwatch = Stopwatch.StartNew();
 
-            // hacky reimplementation for compatibility
-            ulong[] blueprintIds = GameDatabase.BlueprintRefManager.Enumerate();
+            var dataDirectory = GameDatabase.DataDirectory;
 
-            foreach (ulong blueprintId in blueprintIds)
+            var propertyBlueprintId = dataDirectory.PropertyBlueprint;
+            var propertyInfoBlueprintId = dataDirectory.PropertyInfoBlueprint;
+            var propertyInfoDefaultPrototypeId = dataDirectory.GetBlueprintDefaultPrototype(propertyInfoBlueprintId);
+
+            // Create property infos
+            foreach (PrototypeId propertyInfoPrototypeRef in dataDirectory.IteratePrototypesInHierarchy(propertyInfoBlueprintId))
             {
-                string filePath = GameDatabase.GetBlueprintName(blueprintId);
+                if (propertyInfoPrototypeRef == propertyInfoDefaultPrototypeId) continue;
 
-                if (filePath.Contains("Property/Info"))
+                string prototypeName = GameDatabase.GetPrototypeName(propertyInfoPrototypeRef);
+                string propertyName = Path.GetFileNameWithoutExtension(prototypeName);
+
+                // Note: in the client there are enums that are not pre-defined in the property enum. The game handles this
+                // by adding them to the property info table here, but we just have them in the enum.
+                // See PropertyEnum.cs for more details.
+                var propertyEnum = Enum.Parse<PropertyEnum>(propertyName);
+
+                PropertyInfo propertyInfo = new(propertyEnum, propertyName, propertyInfoPrototypeRef);
+                _propertyInfoDict.Add(propertyEnum, propertyInfo);
+            }
+
+            // Match property infos with mixing prototypes where possible
+            foreach (var blueprint in GameDatabase.DataDirectory.IterateBlueprints())
+            {
+                // Skip irrelevant blueprints
+                if (blueprint.Id == propertyBlueprintId) continue;
+                if (blueprint.RuntimeBindingClassType != typeof(PropertyPrototype)) continue;
+
+                // Get property name from blueprint file path
+                string propertyBlueprintName = GameDatabase.GetBlueprintName(blueprint.Id);
+                string propertyName = Path.GetFileNameWithoutExtension(propertyBlueprintName);
+
+                // Try to find a matching property info for this property mixin
+                bool infoFound = false;
+                foreach (var propertyInfo in _propertyInfoDict.Values)
                 {
-                    PropertyEnum property = (PropertyEnum)Enum.Parse(typeof(PropertyEnum), Path.GetFileNameWithoutExtension(filePath));
-                    PropertyInfoPrototype prototype = new(calligraphy.GetBlueprintDefaultPrototype(filePath));
-
-                    _propertyInfoDict.Add(property, prototype);
+                    // Property mixin blueprints are inconsistently named: most have the Prop suffix, but some do not
+                    if (propertyInfo.PropertyName == propertyName || propertyInfo.PropertyInfoName == propertyName)
+                    {
+                        blueprint.SetPropertyPrototypeDataRef(propertyInfo.PropertyInfoPrototypeRef);
+                        propertyInfo.PropertyMixinBlueprintRef = blueprint.Id;
+                        infoFound = true;
+                        break;
+                    }
                 }
-                else if (filePath.Contains("Property/Mixin") && filePath.Contains("Prop.blueprint"))   // param mixin information is stored in PropertyPrototypes
-                {
-                    string fileName = Path.GetFileNameWithoutExtension(filePath);
-                    PropertyEnum property = (PropertyEnum)Enum.Parse(typeof(PropertyEnum), fileName.Substring(0, fileName.Length - 4)); // -4 to remove Prop at the end
-                    PropertyPrototype mixin = new(calligraphy.GetBlueprintDefaultPrototype(filePath));
-                    mixinDict.Add(property, mixin);
-                }
+
+                // All mixins should have a matching info. If this goes off, something went wrong
+                if (infoFound == false)
+                    Logger.Warn($"Failed to find matching property info for property mixin {propertyName}");
             }
 
-            // Manually add property info missed by the loop
-            try
-            {
-                _propertyInfoDict.Add(PropertyEnum.DisplayNameOverride,
-                    new(calligraphy.GetPrototype<Prototype>(GameDatabase.GetPrototypeRefByName("Property/Info/DisplayNameOverride.prototype"))));
+            // Preload infos
+            foreach (var propertyInfo in _propertyInfoDict.Values)
+                LoadPropertyInfo(propertyInfo);                
 
-                _propertyInfoDict.Add(PropertyEnum.MissileAlwaysCollides,
-                    new(calligraphy.GetBlueprintDefaultPrototype("Property/Mixin/BewareOfTiger/MissileAlwaysCollides.blueprint")));
+            // Preload property default prototypes
+            foreach (var propertyPrototypeId in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(PropertyPrototype)))
+                GameDatabase.GetPrototype<Prototype>(propertyPrototypeId);
 
-                _propertyInfoDict.Add(PropertyEnum.StolenPowerAvailable,
-                    new(calligraphy.GetBlueprintDefaultPrototype("Property/Mixin/BewareOfTiger/StolenPowerAvailable.blueprint")));
-            }
-            catch
-            {
-                Logger.Warn("Failed to manually add additional property info");
-            }
-
-            // Add mixin information to PropertyInfo
-            foreach (var kvp in mixinDict)
-                _propertyInfoDict[kvp.Key].Mixin = kvp.Value;
+            // todo: eval dependencies
 
             // Finish initialization
             if (Verify())
-                Logger.Info($"Loaded info for {_propertyInfoDict.Count} properties");
+                Logger.Info($"Initialized info for {_propertyInfoDict.Count} properties in {stopwatch.ElapsedMilliseconds} ms");
             else
                 Logger.Error("Failed to initialize PropertyInfoTable");
         }
 
+        public PropertyInfo LookupPropertyInfo(PropertyEnum property)
+        {
+            return _propertyInfoDict[property];
+        }
+
         public bool Verify() => _propertyInfoDict.Count > 0;
-        public PropertyInfoPrototype GetInfo(PropertyEnum property) => _propertyInfoDict[property];
+
+        private void LoadPropertyInfo(PropertyInfo propertyInfo)
+        {
+            // Load mixin property prototype if there is one
+            if (propertyInfo.PropertyMixinBlueprintRef != BlueprintId.Invalid)
+            {
+                Blueprint blueprint = GameDatabase.GetBlueprint(propertyInfo.PropertyMixinBlueprintRef);
+                GameDatabase.GetPrototype<PropertyPrototype>(blueprint.DefaultPrototypeId);
+            }
+
+            // Load property info prototype
+            if (propertyInfo.PropertyInfoPrototypeRef != PrototypeId.Invalid)
+            {
+                propertyInfo.PropertyInfoPrototype = GameDatabase.GetPrototype<PropertyInfoPrototype>(propertyInfo.PropertyInfoPrototypeRef);
+
+                if (propertyInfo.DataType == PropertyDataType.Curve)
+                {
+                    // todo: do something special for curve properties
+                }
+            }
+        }
     }
 }

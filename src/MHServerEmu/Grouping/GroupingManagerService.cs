@@ -13,14 +13,10 @@ namespace MHServerEmu.Grouping
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly ServerManager _serverManager;
         private readonly object _playerLock = new();
         private readonly Dictionary<string, FrontendClient> _playerDict = new();    // Store players in a name-client dictionary because tell messages are sent by player name
 
-        public GroupingManagerService(ServerManager serverManager)
-        {
-            _serverManager = serverManager;
-        }
+        public GroupingManagerService() { }
 
         #region Player Management
 
@@ -29,18 +25,21 @@ namespace MHServerEmu.Grouping
             client.FinishedGroupingManagerHandshake = true;
         }
 
-        public void AddPlayer(FrontendClient client)
+        public bool AddPlayer(FrontendClient client)
         {
             lock (_playerLock)
             {
-                if (_playerDict.ContainsValue(client))
+                string playerName = client.Session.Account.PlayerName.ToLower();
+
+                if (_playerDict.ContainsKey(playerName))
                 {
                     Logger.Warn("Failed to add player: already added");
-                    return;
+                    return false;
                 }
 
-                _playerDict.Add(client.Session.Account.PlayerName.ToLower(), client);
+                _playerDict.Add(playerName, client);
                 client.SendMessage(MuxChannel, new(ChatHelper.Motd));
+                return true;
             }
         }
 

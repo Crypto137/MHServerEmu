@@ -1,5 +1,6 @@
 ﻿using System.Data.SQLite;
 using Dapper;
+using MHServerEmu.Common.Helpers;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
@@ -14,7 +15,14 @@ namespace MHServerEmu.PlayerManagement.Accounts
 
         static DBManager()
         {
-            ConnectionString = $"Data Source={Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Account.db")}";
+            string dbPath = Path.Combine(FileHelper.DataDirectory, "Account.db");
+            if (File.Exists(dbPath) == false)
+            {
+                Logger.Fatal($"{dbPath} not found");
+                return;
+            }
+
+            ConnectionString = $"Data Source={dbPath}";
             IsInitialized = true;
         }
 

@@ -89,7 +89,7 @@
         }
     }
 
-    public class Rand : RandMWC
+    public class Rand : RandMwc
     {
         public Rand(uint seed) : base(seed) { }
 
@@ -181,12 +181,13 @@
 
     }
 
-    public class RandMWC
+    // More info on MWC random: https://en.wikipedia.org/wiki/Multiply-with-carry_pseudorandom_number_generator
+    public class RandMwc
     {
         private ulong _seed;
         public const uint RandMax = 0xffffffff;
 
-        public RandMWC(uint seed)
+        public RandMwc(uint seed)
         {
             SetSeed(seed == 0 ? (uint)DateTime.Now.Ticks : seed);
         }

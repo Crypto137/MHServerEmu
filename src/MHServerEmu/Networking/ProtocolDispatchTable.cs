@@ -12,10 +12,11 @@ namespace MHServerEmu.Networking
         private static readonly Assembly LibGazillionAssembly = typeof(NetMessageReadyAndLoggedIn).Assembly;
         private static readonly Type[] ParseMethodArgumentTypes = new Type[] { typeof(byte[]) };
 
-        private static readonly Dictionary<Type, Dictionary<byte, string>> IdToNameDict = new();        // Id -> Class name
-        private static readonly Dictionary<string, Dictionary<string, byte>> MessageToIdDict = new();   // IMessage -> Id
-        private static readonly Dictionary<string, Type> NameToTypeDict = new();                        // Class name -> Type 
-        private static readonly Dictionary<Type, ParseMessage> TypeToParseDelegateDict = new();         // Type -> ParseMessage Delegate
+        // Lookups
+        private static readonly Dictionary<(string, string), byte> DescriptorToIdDict = new();      // Proto file name + message name -> Id
+        private static readonly Dictionary<Type, ParseMessage> TypeToParseDelegateDict = new();     // Class type -> ParseMessage delegate
+        private static readonly Dictionary<(Type, byte), string> IdToNameDict = new();              // Protocol enum type + id -> message name
+        private static readonly Dictionary<string, Type> NameToTypeDict = new();                    // Message name -> class type 
 
         public static bool IsInitialized { get; }
 
@@ -40,29 +41,61 @@ namespace MHServerEmu.Networking
             IsInitialized = true;
         }
 
-        public static string GetMessageName(Type enumType, byte id) => IdToNameDict[enumType][id];
-        public static byte GetMessageId(IMessage message) => MessageToIdDict[message.DescriptorForType.File.Name][message.DescriptorForType.Name];
-        public static Type GetMessageType(string name) => NameToTypeDict[name];
-        public static ParseMessage GetParseMessageDelegate<T>() => TypeToParseDelegateDict[typeof(T)];
-        public static ParseMessage GetParseMessageDelegate(Type messageType) => TypeToParseDelegateDict[messageType];
-
-        private static void ParseMessageEnum(Type type, string protocolName)
+        /// <summary>
+        /// Returns the id of the provided <see cref="IMessage"/>.
+        /// </summary>
+        public static byte GetMessageId(IMessage message)
         {
-            IdToNameDict.Add(type, new());
-            MessageToIdDict.Add(protocolName, new());
+            return DescriptorToIdDict[(message.DescriptorForType.File.Name, message.DescriptorForType.Name)];
+        }
 
-            string[] names = Enum.GetNames(type);
-            for (int i = 0; i < names.Length; i++)
+        /// <summary>
+        /// Returns a delegate for parsing an <see cref="IMessage"/> of the provided type.
+        /// </summary>
+        public static ParseMessage GetParseMessageDelegate(Type messageType)
+        {
+            return TypeToParseDelegateDict[messageType];
+        }
+
+        /// <summary>
+        /// Returns a delegate for parsing <typeparamref name="T"/>.
+        /// </summary>
+        public static ParseMessage GetParseMessageDelegate<T>() where T : IMessage
+        {
+            return GetParseMessageDelegate(typeof(T));
+        }
+
+        /// <summary>
+        /// Returns a delegate for parsing an <see cref="IMessage"/> of the specified id and protocol.
+        /// </summary>
+        public static ParseMessage GetParseMessageDelegate(Type protocolEnumType, byte id)
+        {
+            string messageName = IdToNameDict[(protocolEnumType, id)];
+            Type messageType = NameToTypeDict[messageName];
+            return GetParseMessageDelegate(messageType);
+        }
+
+        /// <summary>
+        /// Parses a message enum to generate lookups and cache parse delegates.
+        /// </summary>
+        private static void ParseMessageEnum(Type protocolEnumType, string protoFileName)
+        {
+            string[] names = Enum.GetNames(protocolEnumType);
+            if (names.Length > 255) throw new OverflowException("Message enum contains more than 255 values.");
+
+            // Iterate through message ids
+            for (byte i = 0; i < names.Length; i++)
             {
-                IdToNameDict[type].Add((byte)i, names[i]);
-                MessageToIdDict[protocolName].Add(names[i], (byte)i);
-                
                 // Use reflection to get message type and ParseFrom MethodInfo
                 Type messageType = LibGazillionAssembly.GetType($"Gazillion.{names[i]}") ?? throw new("Message type is null.");
                 MethodInfo parseMethod = messageType.GetMethod("ParseFrom", ParseMethodArgumentTypes) ?? throw new("Message ParseFrom method is null.");
 
-                // Create delegates from MethodInfo to speed up deserialization
+                // Add lookups
+                DescriptorToIdDict[(protoFileName, names[i])] = i;
+                IdToNameDict.Add((protocolEnumType, i), names[i]);
                 NameToTypeDict.Add(names[i], messageType);
+
+                // Create a delegate from MethodInfo to speed up deserialization
                 TypeToParseDelegateDict.Add(messageType, parseMethod.CreateDelegate<ParseMessage>());
             }
         }

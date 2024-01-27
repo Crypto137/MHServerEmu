@@ -2,23 +2,24 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Entities.Items
 {
     public class ItemSpec
     {
-        public ulong ItemProto { get; set; }
-        public ulong Rarity { get; set; }
+        public PrototypeId ItemProto { get; set; }
+        public PrototypeId Rarity { get; set; }
         public int ItemLevel { get; set; }
         public int CreditsAmount { get; set; }
         public AffixSpec[] AffixSpec { get; set; }
         public int Seed { get; set; }
-        public ulong EquippableBy { get; set; }
+        public PrototypeId EquippableBy { get; set; }
 
         public ItemSpec(CodedInputStream stream)
         {            
-            ItemProto = stream.ReadPrototypeEnum(PrototypeEnumType.All);
-            Rarity = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            ItemProto = stream.ReadPrototypeEnum<Prototype>();
+            Rarity = stream.ReadPrototypeEnum<Prototype>();
             ItemLevel = stream.ReadRawInt32();
             CreditsAmount = stream.ReadRawInt32();
 
@@ -27,10 +28,10 @@ namespace MHServerEmu.Games.Entities.Items
                 AffixSpec[i] = new(stream);
 
             Seed = stream.ReadRawInt32();
-            EquippableBy = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            EquippableBy = stream.ReadPrototypeEnum<Prototype>();
         }
 
-        public ItemSpec(ulong itemProto, ulong rarity, int itemLevel, int creditsAmount, AffixSpec[] affixSpec, int seed, ulong equippableBy)
+        public ItemSpec(PrototypeId itemProto, PrototypeId rarity, int itemLevel, int creditsAmount, AffixSpec[] affixSpec, int seed, PrototypeId equippableBy)
         {
             ItemProto = itemProto;
             Rarity = rarity;
@@ -43,14 +44,14 @@ namespace MHServerEmu.Games.Entities.Items
 
         public void Encode(CodedOutputStream stream)
         {
-            stream.WritePrototypeEnum(ItemProto, PrototypeEnumType.All);
-            stream.WritePrototypeEnum(Rarity, PrototypeEnumType.All);
+            stream.WritePrototypeEnum<Prototype>(ItemProto);
+            stream.WritePrototypeEnum<Prototype>(Rarity);
             stream.WriteRawInt32(ItemLevel);
             stream.WriteRawInt32(CreditsAmount);
             stream.WriteRawVarint64((ulong)AffixSpec.Length);
             foreach (AffixSpec affixSpec in AffixSpec) affixSpec.Encode(stream);
             stream.WriteRawInt32(Seed);
-            stream.WritePrototypeEnum(EquippableBy, PrototypeEnumType.All);
+            stream.WritePrototypeEnum<Prototype>(EquippableBy);
         }
 
         public override string ToString()

@@ -3,6 +3,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.UI.Widgets;
 
 namespace MHServerEmu.Games.UI
@@ -16,14 +17,14 @@ namespace MHServerEmu.Games.UI
             UISyncData = new UISyncData[stream.ReadRawVarint32()];
             for (int i = 0; i < UISyncData.Length; i++)
             {
-                ulong widgetR = stream.ReadPrototypeEnum(PrototypeEnumType.All);
-                ulong contextR = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+                PrototypeId widgetR = stream.ReadPrototypeEnum<Prototype>();
+                PrototypeId contextR = stream.ReadPrototypeEnum<Prototype>();
 
-                ulong[] areas = new ulong[stream.ReadRawInt32()];
+                PrototypeId[] areas = new PrototypeId[stream.ReadRawInt32()];
                 for (int j = 0; j < areas.Length; j++)
-                    areas[j] = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+                    areas[j] = stream.ReadPrototypeEnum<Prototype>();
 
-                string className = GameDatabase.DataDirectory.GetPrototypeBlueprint(widgetR).RuntimeBinding;
+                string className = GameDatabase.DataDirectory.GetPrototypeBlueprint(widgetR).RuntimeBindingClassType.Name;
 
                 switch (className)
                 {

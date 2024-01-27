@@ -2,29 +2,70 @@
 {
     // Type enums
 
-    public enum CalligraphyValueType : byte
+    public enum CalligraphyBaseType : byte
     {
-        A = 0x41,   // asset
-        B = 0x42,   // bool
-        C = 0x43,   // curve
-        D = 0x44,   // double
-        L = 0x4c,   // long
-        P = 0x50,   // prototype
-        R = 0x52,   // ??? (embedded / anonymous prototype)
-        S = 0x53,   // string
-        T = 0x54    // type
+        Asset = 0x41,       // A (Id reference to an asset)
+        Boolean = 0x42,     // B (Stored as a UInt64)
+        Curve = 0x43,       // C (Id reference to a curve)
+        Double = 0x44,      // D (For all floating point values)
+        Long = 0x4c,        // L (For all integer values)
+        Prototype = 0x50,   // P (Id reference to another prototype)
+        RHStruct = 0x52,    // R (Embedded prototype without an id, the name is mentioned in EntitySelectorActionPrototype::Validate)
+        String = 0x53,      // S (Id reference to a localized string)
+        Type = 0x54         // T (Id reference to an AssetType)
     }
 
-    public enum CalligraphyContainerType : byte
+    public enum CalligraphyStructureType : byte
     {
-        L = 0x4c,   // list (A P R T only)
-        S = 0x53    // single
+        Simple = 0x53,      // Simple
+        List = 0x4c         // List (only for assets, prototypes, rhstructs, and types)
     }
 
+    // Bit field enums
+
+    [Flags]
+    public enum CurveRecordFlags : byte
+    {
+        None        = 0
+        // Although curve records do have a field for flags, it's 0 for all records
+    }
+
+    [Flags]
+    public enum AssetTypeRecordFlags : byte
+    {
+        None        = 0,
+        Protected   = 1 << 0    // AssetDirectory::AssetTypeIsProtected()
+    }
+
+    [Flags]
+    public enum AssetValueFlags : byte
+    {
+        None        = 0,
+        Protected   = 1 << 0    // AssetType::AssetIsProtected()
+    }
+
+    [Flags]
+    public enum BlueprintRecordFlags : byte
+    {
+        None        = 0,
+        Protected   = 1 << 0    // DataDirectory::BlueprintIsProtected()
+    }
+
+    [Flags]
+    public enum PrototypeRecordFlags : byte
+    {
+        None        = 0,
+        Abstract    = 1 << 0,   // DataDirectory::PrototypeIsAbstract()
+        Protected   = 1 << 1,   // DataDirectory::PrototypeIsProtected()
+        EditorOnly  = 1 << 2,   // DataDirectory::isEditorOnlyByClassId(), seems to be set for NaviFragmentPrototype only
+    }
 
     // Enums for specific data for easy access
 
-    public enum BlueprintId : ulong
+    /// <summary>
+    /// Represents a hardcoded blueprint id.
+    /// </summary>
+    public enum HardcodedBlueprintId : ulong
     {
         WorldEntity = 7901305308382563236,
         ThrowableProp = 14997899060839977779,
@@ -47,6 +88,9 @@
         DiamondFormActivatePower = 18066325974134561036,
     }
 
+    /// <summary>
+    /// Represents a hardcoded prototype field id.
+    /// </summary>
     public enum FieldId : ulong
     {
         // WorldEntity

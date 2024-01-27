@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 using Gazillion;
+using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Billing.Catalogs
 {
@@ -46,7 +47,7 @@ namespace MHServerEmu.Billing.Catalogs
         /// <param name="skuId">Catalog entry SKU id.</param>
         /// <param name="prototypeId">Costume prototype id.</param>
         /// <param name="text">Text to use for title and description.</param>
-        public CatalogEntry(long skuId, ulong prototypeId, string text, long price)
+        public CatalogEntry(long skuId, PrototypeId prototypeId, string text, long price)
         {
             SkuId = skuId;
             GuidItems = new CatalogGuidEntry[] { new(0, prototypeId, 1) };

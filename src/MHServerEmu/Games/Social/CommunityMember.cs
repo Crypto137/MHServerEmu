@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Social
 {
@@ -16,8 +17,8 @@ namespace MHServerEmu.Games.Social
     {
         public string Name { get; set; }
         public ulong DbId { get; set; }
-        public ulong RegionRef { get; set; }
-        public ulong DifficultyRef { get; set; }
+        public PrototypeId RegionRef { get; set; }
+        public PrototypeId DifficultyRef { get; set; }
         public AvatarSlotInfo[] Slots { get; set; }
         public CommunityMemberOnlineStatus OnlineStatus { get; set; }
         public string MemberName { get; set; }
@@ -30,8 +31,8 @@ namespace MHServerEmu.Games.Social
         {
             Name = stream.ReadRawString();
             DbId = stream.ReadRawVarint64();
-            RegionRef = stream.ReadPrototypeEnum(PrototypeEnumType.All);
-            DifficultyRef = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            RegionRef = stream.ReadPrototypeEnum<Prototype>();
+            DifficultyRef = stream.ReadPrototypeEnum<Prototype>();
             Slots = new AvatarSlotInfo[stream.ReadRawByte()];  
             for (int i = 0; i < Slots.Length; i++)
                 Slots[i] = new(stream);
@@ -45,7 +46,7 @@ namespace MHServerEmu.Games.Social
                 ArchiveCircleIds[i] = stream.ReadRawInt32();
         }
 
-        public CommunityMember(string name, ulong dbId, ulong regionRef, ulong difficultyRef, 
+        public CommunityMember(string name, ulong dbId, PrototypeId regionRef, PrototypeId difficultyRef, 
             AvatarSlotInfo[] slots, CommunityMemberOnlineStatus onlineStatus, string unkName, int[] archiveCircleIds)
         {
             Name = name;
@@ -65,8 +66,8 @@ namespace MHServerEmu.Games.Social
         {
             stream.WriteRawString(Name);
             stream.WriteRawVarint64(DbId);
-            stream.WriteRawVarint64(RegionRef);
-            stream.WriteRawVarint64(DifficultyRef);
+            stream.WritePrototypeEnum<Prototype>(RegionRef);
+            stream.WritePrototypeEnum<Prototype>(DifficultyRef);
 
             stream.WriteRawByte((byte)Slots.Length);
             foreach (AvatarSlotInfo slot in Slots) slot.Encode(stream);

@@ -2,12 +2,13 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Entities.Options
 {
     public class StashTabOption
     {
-        public ulong PrototypeId { get; set; }
+        public PrototypeId PrototypeId { get; set; }
         public string Name { get; set; }
         public ulong AssetRef { get; set; }
         public int Field2 { get; set; }
@@ -15,14 +16,14 @@ namespace MHServerEmu.Games.Entities.Options
 
         public StashTabOption(CodedInputStream stream)
         {
-            PrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            PrototypeId = stream.ReadPrototypeEnum<Prototype>();
             Name = stream.ReadRawString();
             AssetRef = stream.ReadRawVarint64();
             Field2 = stream.ReadRawInt32();
             Field3 = stream.ReadRawInt32();            
         }
 
-        public StashTabOption(ulong prototypeId, string name, ulong assetRef, int field2, int field3)
+        public StashTabOption(PrototypeId prototypeId, string name, ulong assetRef, int field2, int field3)
         {
             PrototypeId = prototypeId;
             Name = name;
@@ -33,7 +34,7 @@ namespace MHServerEmu.Games.Entities.Options
 
         public void Encode(CodedOutputStream stream)
         {
-            stream.WritePrototypeEnum(PrototypeId, PrototypeEnumType.All);
+            stream.WritePrototypeEnum<Prototype>(PrototypeId);
             stream.WriteRawString(Name);
             stream.WriteRawVarint64(AssetRef);
             stream.WriteRawInt32(Field2);

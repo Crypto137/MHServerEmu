@@ -1,5 +1,8 @@
-﻿namespace MHServerEmu.Games.Loot
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.Loot
 {
+    [AssetEnum((int)Invalid)]
     public enum EquipmentInvUISlot
     {
         Invalid = -1,
@@ -19,7 +22,7 @@
         Legendary = 13,
         Artifact04 = 14,
         UruForged = 15,
-        Slot16 = 16,
+        _16 = 16,
         Misc = 17,
         CostumeCore = 18,
         InteractiveVisual = 19,

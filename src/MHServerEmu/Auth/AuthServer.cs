@@ -15,19 +15,15 @@ namespace MHServerEmu.Auth
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly CancellationTokenSource _cts = new();
+        private readonly WebApiHandler _webApiHandler = new();
         private readonly string _url;
-        private readonly PlayerManagerService _playerManager;
-        private readonly CancellationTokenSource _cancellationTokenSource;
-        private readonly WebApiHandler _webApiHandler;
 
         private HttpListener _listener;
 
-        public AuthServer(PlayerManagerService playerManager)
+        public AuthServer()
         {
             _url = $"http://{ConfigManager.Auth.Address}:{ConfigManager.Auth.Port}/";
-            _playerManager = playerManager;
-            _cancellationTokenSource = new();
-            _webApiHandler = new();
         }
 
         public async void Run()
@@ -44,14 +40,11 @@ namespace MHServerEmu.Auth
                 try
                 {
                     // Wait for a connection, and handle the request
-                    HttpListenerContext context = await _listener.GetContextAsync().WaitAsync(_cancellationTokenSource.Token);
+                    HttpListenerContext context = await _listener.GetContextAsync().WaitAsync(_cts.Token);
                     HandleRequest(context.Request, context.Response);
                     context.Response.Close();
                 }
-                catch (TaskCanceledException)
-                {
-                    return;     // Stop handling connections
-                }
+                catch (TaskCanceledException) { return; }       // Stop handling connections
                 catch (Exception e)
                 {
                     Logger.Error($"Unhandled exception: {e}");
@@ -64,15 +57,15 @@ namespace MHServerEmu.Auth
         /// </summary>
         public void Shutdown()
         {
+            if (_listener == null) return;
             if (_listener.IsListening == false) return;
 
-            if (_listener != null)
-            {
-                // Cancel listening for context and close the listener
-                _cancellationTokenSource.Cancel();
-                _listener.Close();
-                _listener = null;
-            }
+            // Cancel async tasks (listening for context)
+            _cts.Cancel();
+
+            // Close the listener
+            _listener.Close();
+            _listener = null;
         }
 
         /// <summary>
@@ -152,7 +145,7 @@ namespace MHServerEmu.Auth
                     }
 
                     // Try to create a new session from the data we received
-                    AuthStatusCode statusCode = _playerManager.OnLoginDataPB(loginDataPB, out ClientSession session);
+                    AuthStatusCode statusCode = ServerManager.Instance.PlayerManagerService.OnLoginDataPB(loginDataPB, out ClientSession session);
 
                     // Respond with an error if session creation didn't succeed
                     if (statusCode != AuthStatusCode.Success)

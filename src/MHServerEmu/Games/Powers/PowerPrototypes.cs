@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MHServerEmu.Games.Powers
+﻿namespace MHServerEmu.Games.Powers
 {
     public static class PowerPrototypes
     {
@@ -9,6 +7,7 @@ namespace MHServerEmu.Games.Powers
         {
             BowlingBallItemPower = 18211158277448213692,
         }
+
         public enum Emotes : ulong
         {
 

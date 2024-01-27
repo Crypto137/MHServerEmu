@@ -1,0 +1,137 @@
+[
+  {
+    "TuningVarProtoId": 0,
+    "TuningVarEnum": 3,
+    "TuningVarValue": 2
+  },
+  {
+    "TuningVarProtoId": 0,
+    "TuningVarEnum": 4,
+    "TuningVarValue": 1.5
+  },
+  {
+    "TuningVarProtoId": 12612937294753306787,
+    "TuningVarEnum": 1,
+    "TuningVarValue": 0.3
+  },
+  {
+    "TuningVarProtoId": 17000886226452486371,
+    "TuningVarEnum": 3,
+    "TuningVarValue": 0
+  },
+  {
+    "TuningVarProtoId": 17248286895443024071,
+    "TuningVarEnum": 3,
+    "TuningVarValue": 0
+  },
+  {
+    "TuningVarProtoId": 13734086204368230731,
+    "TuningVarEnum": 3,
+    "TuningVarValue": 0
+  },
+  {
+    "TuningVarProtoId": 755197498896033129,
+    "TuningVarEnum": 3,
+    "TuningVarValue": 0
+  },
+  {
+    "TuningVarProtoId": 827025185215546882,
+    "TuningVarEnum": 1,
+    "TuningVarValue": 0.5
+  },
+  {
+    "TuningVarProtoId": 1475028683115218062,
+    "TuningVarEnum": 1,
+    "TuningVarValue": 0
+  },
+  {
+    "TuningVarProtoId": 7463421879569683085,
+    "TuningVarEnum": 1,
+    "TuningVarValue": 0.7
+  },
+  {
+    "TuningVarProtoId": 7730225442388978756,
+    "TuningVarEnum": 3,
+    "TuningVarValue": 0
+  },
+  {
+    "TuningVarProtoId": 11687756965819254368,
+    "TuningVarEnum": 1,
+    "TuningVarValue": 0
+  },
+  {
+    "TuningVarProtoId": 4612195871754505114,
+    "TuningVarEnum": 1,
+    "TuningVarValue": 0
+  },
+  {
+    "TuningVarProtoId": 6397739743060319104,
+    "TuningVarEnum": 1,
+    "TuningVarValue": 0
+  },
+  {
+    "TuningVarProtoId": 6741567881953674753,
+    "TuningVarEnum": 1,
+    "TuningVarValue": 0
+  },
+  {
+    "TuningVarProtoId": 18067635370081994089,
+    "TuningVarEnum": 4,
+    "TuningVarValue": 10
+  },
+  {
+    "TuningVarProtoId": 15462956894047984563,
+    "TuningVarEnum": 1,
+    "TuningVarValue": 0
+  },
+  {
+    "TuningVarProtoId": 17349141366572844637,
+    "TuningVarEnum": 1,
+    "TuningVarValue": 0
+  },
+  {
+    "TuningVarProtoId": 12091302432201396733,
+    "TuningVarEnum": 1,
+    "TuningVarValue": 0
+  },
+  {
+    "TuningVarProtoId": 9242622113664415748,
+    "TuningVarEnum": 0,
+    "TuningVarValue": 0.75
+  },
+  {
+    "TuningVarProtoId": 4310269234636392033,
+    "TuningVarEnum": 1,
+    "TuningVarValue": 0
+  },
+  {
+    "TuningVarProtoId": 5202045921431062053,
+    "TuningVarEnum": 4,
+    "TuningVarValue": 0
+  },
+  {
+    "TuningVarProtoId": 11938912801954793010,
+    "TuningVarEnum": 1,
+    "TuningVarValue": 0
+  },
+  {
+    "TuningVarProtoId": 13860399004098583470,
+    "TuningVarEnum": 1,
+    "TuningVarValue": 0
+  },
+  {
+    "TuningVarProtoId": 12979713949016000006,
+    "TuningVarEnum": 1,
+    "TuningVarValue": 0
+  },
+  {
+    "TuningVarProtoId": 2950583692197561917,
+    "TuningVarEnum": 0,
+    "TuningVarValue": 0
+  },
+  {
+    "TuningVarProtoId": 2950583692197561917,
+    "TuningVarEnum": 1,
+    "TuningVarValue": 14
+  }
+]

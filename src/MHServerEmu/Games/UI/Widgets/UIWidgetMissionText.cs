@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoders;
+using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.UI.Widgets
 {
@@ -9,7 +10,7 @@ namespace MHServerEmu.Games.UI.Widgets
         public ulong MissionName { get; set; }
         public ulong MissionObjectiveName { get; set; }
 
-        public UIWidgetMissionText(ulong widgetR, ulong contextR, ulong[] areas, CodedInputStream stream) : base(widgetR, contextR, areas)
+        public UIWidgetMissionText(PrototypeId widgetR, PrototypeId contextR, PrototypeId[] areas, CodedInputStream stream) : base(widgetR, contextR, areas)
         {
             MissionName = stream.ReadRawVarint64();
             MissionObjectiveName = stream.ReadRawVarint64();

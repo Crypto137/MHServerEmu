@@ -3,17 +3,17 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Entities.Locomotion
 {
     public class LocomotionStateUpdateArchive
     {
-        private const int LocFlagCount = 16;
-
-        public uint ReplicationPolicy { get; set; }
+        public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
         public ulong EntityId { get; set; }
-        public bool[] LocFlags { get; set; }
-        public ulong PrototypeId { get; set; }
+        public LocomotionMessageFlags FieldFlags { get; set; }
+        public PrototypeId PrototypeId { get; set; }
         public Vector3 Position { get; set; }
         public Vector3 Orientation { get; set; }
         public LocomotionState LocomotionState { get; set; }
@@ -22,16 +22,20 @@ namespace MHServerEmu.Games.Entities.Locomotion
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
 
-            ReplicationPolicy = stream.ReadRawVarint32();
+            ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
             EntityId = stream.ReadRawVarint64();
-            LocFlags = stream.ReadRawVarint32().ToBoolArray(LocFlagCount);
-            if (LocFlags[11]) PrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.Entity);
+            FieldFlags = (LocomotionMessageFlags)stream.ReadRawVarint32();
+
+            if (FieldFlags.HasFlag(LocomotionMessageFlags.HasEntityPrototypeId))
+                PrototypeId = stream.ReadPrototypeEnum<EntityPrototype>();
+            
             Position = new(stream, 3);
-            if (LocFlags[0])
-                Orientation = new(stream, 6);
-            else
-                Orientation = new(stream.ReadRawZigZagFloat(6), 0f, 0f);
-            LocomotionState = new(stream, LocFlags);
+
+            Orientation = FieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation)
+                ? new(stream, 6)
+                : new(stream.ReadRawZigZagFloat(6), 0f, 0f);
+
+            LocomotionState = new(stream, FieldFlags);
         }
 
         public LocomotionStateUpdateArchive() { }
@@ -42,16 +46,21 @@ namespace MHServerEmu.Games.Entities.Locomotion
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                cos.WriteRawVarint32(ReplicationPolicy);
+                cos.WriteRawVarint32((uint)ReplicationPolicy);
                 cos.WriteRawVarint64(EntityId);
-                cos.WriteRawVarint32(LocFlags.ToUInt32());
-                if (LocFlags[11]) cos.WritePrototypeEnum(PrototypeId, PrototypeEnumType.Entity);
+                cos.WriteRawVarint32((uint)FieldFlags);
+
+                if (FieldFlags.HasFlag(LocomotionMessageFlags.HasEntityPrototypeId))
+                    cos.WritePrototypeEnum<EntityPrototype>(PrototypeId);
+
                 Position.Encode(cos, 3);
-                if (LocFlags[0])
+
+                if (FieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation))
                     Orientation.Encode(cos, 6);
                 else
                     cos.WriteRawZigZagFloat(Orientation.X, 6);
-                LocomotionState.Encode(cos, LocFlags);
+
+                LocomotionState.Encode(cos, FieldFlags);
 
                 cos.Flush();
                 return ByteString.CopyFrom(ms.ToArray());
@@ -61,13 +70,9 @@ namespace MHServerEmu.Games.Entities.Locomotion
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
+            sb.AppendLine($"ReplicationPolicy: {ReplicationPolicy}");
             sb.AppendLine($"EntityId: {EntityId}");
-
-            sb.Append("LocFlags: ");
-            for (int i = 0; i < LocFlags.Length; i++) if (LocFlags[i]) sb.Append($"{i} ");
-            sb.AppendLine();
-
+            sb.AppendLine($"FieldFlags: {FieldFlags}");
             sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypeName(PrototypeId)}");
             sb.AppendLine($"Position: {Position}");
             sb.AppendLine($"Orientation: {Orientation}");

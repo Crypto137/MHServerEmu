@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using Gazillion;
+using MHServerEmu.Common;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
@@ -10,12 +11,12 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Grouping;
 using MHServerEmu.Networking;
-using MHServerEmu.Common;
 
 namespace MHServerEmu.Games
 {
@@ -31,40 +32,44 @@ namespace MHServerEmu.Games
         private readonly Dictionary<FrontendClient, List<GameMessage>> _responseListDict = new();
         private readonly Stopwatch _tickWatch = new();
 
-        private readonly ServerManager _serverManager;
-
         private readonly PowerMessageHandler _powerMessageHandler;
-        private readonly GRandom _random;
 
         private int _tickCount;
+        private ulong _currentRepId;
 
         public ulong Id { get; }
+        public GRandom Random { get; } = new();
         public EventManager EventManager { get; }
         public EntityManager EntityManager { get; }
         public RegionManager RegionManager { get; }
         public ConcurrentDictionary<FrontendClient, Player> PlayerDict { get; } = new();
 
+        public ulong CurrentRepId { get => ++_currentRepId; }
+        // We use a dictionary property instead of AccessMessageHandlerHash(), which is essentially just a getter
+        public Dictionary<ulong, ArchiveMessageHandler> MessageHandlerDict { get; } = new();
+        
         public override string ToString() => $"serverGameId=0x{Id:X}";
 
-        public Game(ServerManager serverManager, ulong id)
+        public Game(ulong id)
         {
+            Id = id;
+
+            // The game uses 16 bits of the current UTC time in seconds as the initial replication id
+            _currentRepId = (ulong)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond) & 0xFFFF;
+            Logger.Debug($"Initial repId: {_currentRepId}");
+
             EventManager = new(this);
-            EntityManager = new();
+            EntityManager = new(this);
             RegionManager = new(EntityManager);
             RegionManager.Initialize(this);
 
-            _random = new();
+            Random = new();
             _powerMessageHandler = new(EventManager);
-
-            _serverManager = serverManager;
-            Id = id;
 
             // Start main game loop
             Thread gameThread = new(Update) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
             gameThread.Start();
         }
-
-        public GRandom GetRandom() { return _random; }
 
         public void Update()
         {
@@ -121,7 +126,7 @@ namespace MHServerEmu.Games
             }
         }
 
-        public void MovePlayerToRegion(FrontendClient client, RegionPrototypeId region, ulong waypointDataRef = 0)
+        public void MovePlayerToRegion(FrontendClient client, RegionPrototypeId region, PrototypeId waypointDataRef = 0)
         {
             lock (_gameLock)
             {
@@ -214,14 +219,14 @@ namespace MHServerEmu.Games
                         OnSetPlayerGameplayOptions(client, setPlayerGameplayOptions);
                     break;
 
-                case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:
-                    if (message.TryDeserialize<NetMessageRequestInterestInAvatarEquipment>(out var requestInterestInAvatarEquipment))
-                        OnRequestInterestInAvatarEquipment(client, requestInterestInAvatarEquipment);
-                    break;
-
                 case ClientToGameServerMessage.NetMessageRequestInterestInInventory:
                     if (message.TryDeserialize<NetMessageRequestInterestInInventory>(out var requestInterestInInventory))
                         OnRequestInterestInInventory(client, requestInterestInInventory);
+                    break;
+
+                case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:
+                    if (message.TryDeserialize<NetMessageRequestInterestInAvatarEquipment>(out var requestInterestInAvatarEquipment))
+                        OnRequestInterestInAvatarEquipment(client, requestInterestInAvatarEquipment);
                     break;
 
                 case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:
@@ -283,10 +288,11 @@ namespace MHServerEmu.Games
         private void OnUseInteractableObject(FrontendClient client, NetMessageUseInteractableObject useInteractableObject)
         {
             Logger.Info($"Received UseInteractableObject message");
+            var missionPrototypeRef = (PrototypeId)useInteractableObject.MissionPrototypeRef;
 
-            if (useInteractableObject.MissionPrototypeRef != 0)
+            if (missionPrototypeRef != PrototypeId.Invalid)
             {
-                Logger.Debug($"UseInteractableObject message contains missionPrototypeRef: {GameDatabase.GetPrototypeName(useInteractableObject.MissionPrototypeRef)}");
+                Logger.Debug($"UseInteractableObject message contains missionPrototypeRef: {GameDatabase.GetPrototypeName(missionPrototypeRef)}");
                 EnqueueResponse(client, new(NetMessageMissionInteractRelease.DefaultInstance));
             }
 
@@ -300,7 +306,7 @@ namespace MHServerEmu.Games
 
                     if (teleport.Destinations[0].Type == 2)
                     {
-                        ulong currentRegion = (ulong)client.Session.Account.Player.Region;
+                        var currentRegion = (PrototypeId)client.Session.Account.Player.Region;
                         if (currentRegion != teleport.Destinations[0].Region)
                         {
                             Logger.Trace($"Destination region {teleport.Destinations[0].Region}");
@@ -371,7 +377,7 @@ namespace MHServerEmu.Games
             Logger.Trace(useWaypoint.ToString());
 
             RegionPrototypeId destinationRegion = (RegionPrototypeId)useWaypoint.RegionProtoId;
-            ulong waypointDataRef = useWaypoint.WaypointDataRef;
+            PrototypeId waypointDataRef = (PrototypeId)useWaypoint.WaypointDataRef;
 
             if (RegionManager.IsRegionAvailable(destinationRegion))
                 MovePlayerToRegion(client, destinationRegion, waypointDataRef);

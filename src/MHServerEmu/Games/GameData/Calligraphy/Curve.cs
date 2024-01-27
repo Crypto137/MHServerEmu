@@ -1,6 +1,4 @@
-﻿using MHServerEmu.Common.Extensions;
-
-namespace MHServerEmu.Games.GameData.Calligraphy
+﻿namespace MHServerEmu.Games.GameData.Calligraphy
 {
     public class Curve
     {
@@ -10,12 +8,11 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         public int MinPosition { get => _startPosition; }
         public int MaxPosition { get =>  _endPosition; }
 
-        public Curve(byte[] data)
+        public Curve(Stream stream)
         {
-            using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                CalligraphyHeader header = reader.ReadCalligraphyHeader();
+                CalligraphyHeader header = new(reader);
                 _startPosition = reader.ReadInt32();
                 _endPosition = reader.ReadInt32();
 

@@ -6,19 +6,19 @@ namespace MHServerEmu.Games.Missions
 {
     public class LegendaryMissionBlacklist
     {
-        public ulong Category { get; set; }         // Prototype GUID
-        public ulong[] Missions { get; set; }       // Prototype GUIDs
+        public PrototypeGuid Category { get; set; }
+        public PrototypeGuid[] Missions { get; set; }
 
         public LegendaryMissionBlacklist(CodedInputStream stream)
         {
-            Category = stream.ReadRawVarint64();
+            Category = (PrototypeGuid)stream.ReadRawVarint64();
 
-            Missions = new ulong[stream.ReadRawVarint64()];
+            Missions = new PrototypeGuid[stream.ReadRawVarint64()];
             for (int i = 0; i < Missions.Length; i++)
-                Missions[i] = stream.ReadRawVarint64();
+                Missions[i] = (PrototypeGuid)stream.ReadRawVarint64();
         }
 
-        public LegendaryMissionBlacklist(ulong category, ulong[] missions)
+        public LegendaryMissionBlacklist(PrototypeGuid category, PrototypeGuid[] missions)
         {
             Category = category;
             Missions = missions;
@@ -26,7 +26,7 @@ namespace MHServerEmu.Games.Missions
 
         public void Encode(CodedOutputStream stream)
         {
-            stream.WriteRawVarint64(Category);
+            stream.WriteRawVarint64((ulong)Category);
             stream.WriteRawVarint64((ulong)Missions.Length);
             foreach (ulong mission in Missions) stream.WriteRawVarint64(mission);
         }
@@ -34,8 +34,8 @@ namespace MHServerEmu.Games.Missions
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"Category: {GameDatabase.GetPrototypeName(GameDatabase.GetDataRefByPrototypeGuid(Category))}");
-            for (int i = 0; i < Missions.Length; i++) sb.AppendLine($"Mission{i}: {GameDatabase.GetPrototypeName(GameDatabase.GetDataRefByPrototypeGuid(Missions[i]))}");
+            sb.AppendLine($"Category: {GameDatabase.GetPrototypeNameByGuid(Category)}");
+            for (int i = 0; i < Missions.Length; i++) sb.AppendLine($"Mission{i}: {GameDatabase.GetPrototypeNameByGuid(Missions[i])}");
             return sb.ToString();
         }
     }

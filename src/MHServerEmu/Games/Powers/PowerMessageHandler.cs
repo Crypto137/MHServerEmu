@@ -57,38 +57,36 @@ namespace MHServerEmu.Games.Powers
             return Array.Empty<QueuedGameMessage>();
         }
 
-        private bool PowerHasKeyword(ulong PowerId, BlueprintId Keyword)
+        private bool PowerHasKeyword(PrototypeId powerId, HardcodedBlueprintId keyword)
         {
-            PrototypeEntry Power = PowerId.GetPrototype().GetEntry(BlueprintId.Power);
-            if (Power == null) return false;
-            PrototypeEntryListElement Keywords = Power.GetListField(FieldId.Keywords);
-            if (Keywords == null) return false;
+            var power = GameDatabase.GetPrototype<PowerPrototype>(powerId);
+            if (power == null) return false;
 
-            for (int i = 0; i < Keywords.Values.Length; i++)
-                if ((ulong)Keywords.Values[i] == (ulong)Keyword) return true;
+            for (int i = 0; i < power.Keywords.Length; i++)
+                if (power.Keywords[i] == (PrototypeId)keyword) return true;
 
             return false;
         }
 
-        private void HandleTravelPower(FrontendClient client, ulong PowerId)
+        private void HandleTravelPower(FrontendClient client, PrototypeId powerId)
         {
             uint delta = 65; // TODO: Sync server-client
-            switch (PowerId)
+            switch (powerId)
             {   // Power.AnimationContactTimePercent
-                case (ulong)PowerPrototypes.GhostRider.GhostRiderRide:
-                case (ulong)PowerPrototypes.Wolverine.WolverineRide:
-                case (ulong)PowerPrototypes.Deadpool.DeadpoolRide:
-                case (ulong)PowerPrototypes.NickFury.NickFuryRide:
-                case (ulong)PowerPrototypes.Cyclops.CyclopsRide:
-                case (ulong)PowerPrototypes.BlackWidow.BlackWidowRide:
-                case (ulong)PowerPrototypes.Blade.BladeRide:
-                    _eventManager.AddEvent(client, EventEnum.StartTravel, 100 - delta, PowerId);
+                case (PrototypeId)PowerPrototypes.GhostRider.GhostRiderRide:
+                case (PrototypeId)PowerPrototypes.Wolverine.WolverineRide:
+                case (PrototypeId)PowerPrototypes.Deadpool.DeadpoolRide:
+                case (PrototypeId)PowerPrototypes.NickFury.NickFuryRide:
+                case (PrototypeId)PowerPrototypes.Cyclops.CyclopsRide:
+                case (PrototypeId)PowerPrototypes.BlackWidow.BlackWidowRide:
+                case (PrototypeId)PowerPrototypes.Blade.BladeRide:
+                    _eventManager.AddEvent(client, EventEnum.StartTravel, 100 - delta, powerId);
                     break;
-                case (ulong)PowerPrototypes.AntMan.AntmanFlight:
-                    _eventManager.AddEvent(client, EventEnum.StartTravel, 210 - delta, PowerId);
+                case (PrototypeId)PowerPrototypes.AntMan.AntmanFlight:
+                    _eventManager.AddEvent(client, EventEnum.StartTravel, 210 - delta, powerId);
                     break;
-                case (ulong)PowerPrototypes.Thing.ThingFlight:
-                    _eventManager.AddEvent(client, EventEnum.StartTravel, 235 - delta, PowerId);
+                case (PrototypeId)PowerPrototypes.Thing.ThingFlight:
+                    _eventManager.AddEvent(client, EventEnum.StartTravel, 235 - delta, powerId);
                     break;
             }
         }
@@ -105,27 +103,22 @@ namespace MHServerEmu.Games.Powers
             */
 
             List<QueuedGameMessage> messageList = new();
-            string powerPrototypePath = GameDatabase.GetPrototypeName(tryActivatePower.PowerPrototypeId);
+            var powerPrototypeId = (PrototypeId)tryActivatePower.PowerPrototypeId;
+            string powerPrototypePath = GameDatabase.GetPrototypeName(powerPrototypeId);
             Logger.Trace($"Received TryActivatePower for {powerPrototypePath}");
 
             if (powerPrototypePath.Contains("ThrowablePowers/"))
             {
                 Logger.Trace($"AddEvent EndThrowing for {tryActivatePower.PowerPrototypeId}");
-                PrototypeEntry Power = tryActivatePower.PowerPrototypeId.GetPrototype().GetEntry(BlueprintId.Power);
-                long animationTimeMS = 1100;
-                if (Power != null)
-                {
-                    PrototypeEntryElement AnimationTimeMS = Power.GetField(FieldId.AnimationTimeMS);
-                    if (AnimationTimeMS != null) animationTimeMS = (long)AnimationTimeMS.Value;
-                }
-                _eventManager.AddEvent(client, EventEnum.EndThrowing, animationTimeMS, tryActivatePower.PowerPrototypeId);
+                var power = GameDatabase.GetPrototype<PowerPrototype>(powerPrototypeId);
+                _eventManager.AddEvent(client, EventEnum.EndThrowing, power.AnimationTimeMS, tryActivatePower.PowerPrototypeId);
                 return messageList;
             }
             else if (powerPrototypePath.Contains("EmmaFrost/"))
             {
-                if (PowerHasKeyword(tryActivatePower.PowerPrototypeId, BlueprintId.DiamondFormActivatePower))
+                if (PowerHasKeyword(powerPrototypeId, HardcodedBlueprintId.DiamondFormActivatePower))
                     _eventManager.AddEvent(client, EventEnum.DiamondFormActivate, 0, tryActivatePower.PowerPrototypeId);
-                else if (PowerHasKeyword(tryActivatePower.PowerPrototypeId, BlueprintId.Mental))
+                else if (PowerHasKeyword(powerPrototypeId, HardcodedBlueprintId.Mental))
                     _eventManager.AddEvent(client, EventEnum.DiamondFormDeactivate, 0, tryActivatePower.PowerPrototypeId);
             }
             else if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.Magik.Ultimate)
@@ -135,7 +128,7 @@ namespace MHServerEmu.Games.Powers
             }
             else if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.Items.BowlingBallItemPower)
             {
-                Item bowlingBall = (Item)client.CurrentGame.EntityManager.GetEntityByPrototypeId(7835010736274089329); // BowlingBallItem
+                Item bowlingBall = (Item)client.CurrentGame.EntityManager.GetEntityByPrototypeId((PrototypeId)7835010736274089329); // BowlingBallItem
                 if (bowlingBall != null)
                 {
                     messageList.Add(new(client, new(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(bowlingBall.BaseData.EntityId).Build())));
@@ -149,7 +142,7 @@ namespace MHServerEmu.Games.Powers
             //Logger.Trace(tryActivatePower.ToString());
 
             PowerResultArchive archive = new(tryActivatePower);
-            if (archive.TargetId > 0)
+            if (archive.TargetEntityId > 0)
                 messageList.Add(new(client, new(NetMessagePowerResult.CreateBuilder()
                     .SetArchiveData(archive.Serialize())
                     .Build())));
@@ -159,13 +152,13 @@ namespace MHServerEmu.Games.Powers
 
         private IEnumerable<QueuedGameMessage> OnPowerRelease(FrontendClient client, NetMessagePowerRelease powerRelease)
         {
-            Logger.Trace($"Received PowerRelease for {GameDatabase.GetPrototypeName(powerRelease.PowerPrototypeId)}");
+            Logger.Trace($"Received PowerRelease for {GameDatabase.GetPrototypeName((PrototypeId)powerRelease.PowerPrototypeId)}");
             return Array.Empty<QueuedGameMessage>();
         }
 
         private IEnumerable<QueuedGameMessage> OnTryCancelPower(FrontendClient client, NetMessageTryCancelPower tryCancelPower)
         {
-            string powerPrototypePath = GameDatabase.GetPrototypeName(tryCancelPower.PowerPrototypeId);
+            string powerPrototypePath = GameDatabase.GetPrototypeName((PrototypeId)tryCancelPower.PowerPrototypeId);
             Logger.Trace($"Received TryCancelPower for {powerPrototypePath}");
 
             if (powerPrototypePath.Contains("TravelPower/"))
@@ -182,11 +175,12 @@ namespace MHServerEmu.Games.Powers
 
         private IEnumerable<QueuedGameMessage> OnContinuousPowerUpdate(FrontendClient client, NetMessageContinuousPowerUpdateToServer continuousPowerUpdate)
         {
-            string powerPrototypePath = GameDatabase.GetPrototypeName(continuousPowerUpdate.PowerPrototypeId);
+            var powerPrototypeId = (PrototypeId)continuousPowerUpdate.PowerPrototypeId;
+            string powerPrototypePath = GameDatabase.GetPrototypeName(powerPrototypeId);
             Logger.Trace($"Received ContinuousPowerUpdate for {powerPrototypePath}");
 
             if (powerPrototypePath.Contains("TravelPower/"))
-                HandleTravelPower(client, continuousPowerUpdate.PowerPrototypeId);
+                HandleTravelPower(client, powerPrototypeId);
             // Logger.Trace(continuousPowerUpdate.ToString());
 
             return Array.Empty<QueuedGameMessage>();

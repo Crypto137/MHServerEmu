@@ -1,6 +1,7 @@
 ﻿using Google.ProtocolBuffers;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Properties
 {
@@ -58,10 +59,10 @@ namespace MHServerEmu.Games.Properties
     {
         public PropertyValuePrototype(ulong rawValue) : base(rawValue) { }
 
-        public override object Get() => GameDatabase.DataDirectory.GetPrototypeFromEnumValue(RawValue, PrototypeEnumType.All);
-        public override void Set(object value) => RawValue = GameDatabase.DataDirectory.GetPrototypeEnumValue((ulong)value, PrototypeEnumType.All);
+        public override object Get() => GameDatabase.DataDirectory.GetPrototypeFromEnumValue<Prototype>((int)RawValue);
+        public override void Set(object value) => RawValue = (ulong)GameDatabase.DataDirectory.GetPrototypeEnumValue<Prototype>((PrototypeId)value);
 
-        public override string ToString() => GameDatabase.GetPrototypeName((ulong)Get());
+        public override string ToString() => GameDatabase.GetPrototypeName((PrototypeId)Get());
     }
 
     public class PropertyValueInt21Vector3 : PropertyValue

@@ -5,7 +5,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 {
     public class LiveTuningSetting
     {
-        public ulong TuningVarProtoId { get; set; }
+        public PrototypeGuid TuningVarProtoId { get; set; }
         public int TuningVarEnum { get; set; }
         public float TuningVarValue { get; set; }
 
@@ -16,7 +16,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
         }
 
         [JsonConstructor]
-        public LiveTuningSetting(ulong tuningVarProtoId, int tuningVarEnum, float tuningVarValue)
+        public LiveTuningSetting(PrototypeGuid tuningVarProtoId, int tuningVarEnum, float tuningVarValue)
         {
             TuningVarProtoId = tuningVarProtoId;
             TuningVarEnum = tuningVarEnum;
@@ -31,7 +31,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
         public LiveTuningSetting(NetStructLiveTuningSettingProtoEnumValue netStruct)
         {
-            TuningVarProtoId = netStruct.TuningVarProtoId;
+            TuningVarProtoId = (PrototypeGuid)netStruct.TuningVarProtoId;
             TuningVarEnum = netStruct.TuningVarEnum;
             TuningVarValue = netStruct.TuningVarValue;
         }
@@ -47,10 +47,15 @@ namespace MHServerEmu.Games.GameData.LiveTuning
         public NetStructLiveTuningSettingProtoEnumValue ToNetStructProtoEnumValue()
         {
             return NetStructLiveTuningSettingProtoEnumValue.CreateBuilder()
-                .SetTuningVarProtoId(TuningVarProtoId)
+                .SetTuningVarProtoId((ulong)TuningVarProtoId)
                 .SetTuningVarEnum(TuningVarEnum)
                 .SetTuningVarValue(TuningVarValue)
                 .Build();
+        }
+
+        public override string ToString()
+        {
+            return $"Proto: {GameDatabase.GetPrototypeNameByGuid(TuningVarProtoId)} Enum: {TuningVarEnum} Value: {TuningVarValue}";
         }
     }
 }

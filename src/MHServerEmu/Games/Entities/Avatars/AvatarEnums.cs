@@ -4,13 +4,12 @@
     {
         public static HardcodedAvatarEntityId ToEntityId(this AvatarPrototypeId prototype)
         {
-            return (HardcodedAvatarEntityId)Enum.Parse(typeof(HardcodedAvatarEntityId), Enum.GetName(typeof(AvatarPrototypeId), prototype));
+            return Enum.Parse<HardcodedAvatarEntityId>(Enum.GetName(prototype));
         }
 
         public static HardcodedAvatarPropertyCollectionReplicationId ToPropertyCollectionReplicationId(this AvatarPrototypeId prototype)
         {
-            return (HardcodedAvatarPropertyCollectionReplicationId)Enum.Parse(typeof(HardcodedAvatarPropertyCollectionReplicationId),
-                Enum.GetName(typeof(AvatarPrototypeId), prototype));
+            return Enum.Parse<HardcodedAvatarPropertyCollectionReplicationId>(Enum.GetName(prototype));
         }
     }
 

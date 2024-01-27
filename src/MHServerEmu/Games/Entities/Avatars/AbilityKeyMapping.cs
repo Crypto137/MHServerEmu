@@ -3,6 +3,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Entities.Avatars
 {
@@ -10,25 +11,25 @@ namespace MHServerEmu.Games.Entities.Avatars
     {
         public int PowerSpecIndex { get; set; }
         public bool ShouldPersist { get; set; }
-        public ulong AssociatedTransformMode { get; set; }  // Prototype
-        public ulong Slot0 { get; set; }                    // Prototype
-        public ulong Slot1 { get; set; }                    // Prototype
-        public ulong[] PowerSlots { get; set; }             // Prototypes
+        public PrototypeId AssociatedTransformMode { get; set; }
+        public PrototypeId Slot0 { get; set; }
+        public PrototypeId Slot1 { get; set; }
+        public PrototypeId[] PowerSlots { get; set; }
 
         public AbilityKeyMapping(CodedInputStream stream, BoolDecoder boolDecoder)
         {
             PowerSpecIndex = stream.ReadRawInt32();
             ShouldPersist = boolDecoder.ReadBool(stream);
-            AssociatedTransformMode = stream.ReadPrototypeEnum(PrototypeEnumType.All);
-            Slot0 = stream.ReadPrototypeEnum(PrototypeEnumType.All);
-            Slot1 = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            AssociatedTransformMode = stream.ReadPrototypeEnum<Prototype>();
+            Slot0 = stream.ReadPrototypeEnum<Prototype>();
+            Slot1 = stream.ReadPrototypeEnum<Prototype>();
 
-            PowerSlots = new ulong[stream.ReadRawVarint64()];
+            PowerSlots = new PrototypeId[stream.ReadRawVarint64()];
             for (int i = 0; i < PowerSlots.Length; i++)
-                PowerSlots[i] = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+                PowerSlots[i] = stream.ReadPrototypeEnum<Prototype>();
         }
 
-        public AbilityKeyMapping(int powerSpecIndex, bool shouldPersist, ulong associatedTransformMode, ulong slot0, ulong slot1, ulong[] powerSlots)
+        public AbilityKeyMapping(int powerSpecIndex, bool shouldPersist, PrototypeId associatedTransformMode, PrototypeId slot0, PrototypeId slot1, PrototypeId[] powerSlots)
         {
             PowerSpecIndex = powerSpecIndex;
             ShouldPersist = shouldPersist;
@@ -47,13 +48,13 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             stream.WriteRawInt32(PowerSpecIndex);
             boolEncoder.WriteBuffer(stream);   // ShouldPersist
-            stream.WritePrototypeEnum(AssociatedTransformMode, PrototypeEnumType.All);
-            stream.WritePrototypeEnum(Slot0, PrototypeEnumType.All);
-            stream.WritePrototypeEnum(Slot1, PrototypeEnumType.All);
+            stream.WritePrototypeEnum<Prototype>(AssociatedTransformMode);
+            stream.WritePrototypeEnum<Prototype>(Slot0);
+            stream.WritePrototypeEnum<Prototype>(Slot1);
 
             stream.WriteRawVarint64((ulong)PowerSlots.Length);
-            foreach (ulong powerSlot in PowerSlots)
-                stream.WritePrototypeEnum(powerSlot, PrototypeEnumType.All);
+            foreach (PrototypeId powerSlot in PowerSlots)
+                stream.WritePrototypeEnum<Prototype>(powerSlot);
         }
 
         public override string ToString()

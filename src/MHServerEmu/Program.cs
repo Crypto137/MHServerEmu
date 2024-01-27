@@ -1,13 +1,11 @@
 ﻿using System.Globalization;
-using MHServerEmu.Auth;
 using MHServerEmu.Common.Commands;
 using MHServerEmu.Common.Config;
+using MHServerEmu.Common.Helpers;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Common.Logging.Targets;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Networking;
 using MHServerEmu.PlayerManagement.Accounts;
 
@@ -15,21 +13,28 @@ namespace MHServerEmu
 {
     class Program
     {
+#if DEBUG
+        public const string BuildConfiguration = "Debug";
+#elif RELEASE
+        public const string BuildConfiguration = "Release";
+#endif
+
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public static readonly string VersionInfo = $"Version {AssemblyHelper.GetAssemblyInformationalVersion()} | {AssemblyHelper.ParseAssemblyBuildTime():yyyy.MM.dd HH:mm:ss} UTC | {BuildConfiguration}";
         public static readonly DateTime StartupTime = DateTime.Now;
-
-        public static FrontendServer FrontendServer { get; private set; }
-        public static AuthServer AuthServer { get; private set; }
-
-        public static Thread FrontendServerThread { get; private set; }
-        public static Thread AuthServerThread { get; private set; }
 
         static void Main(string[] args)
         {
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;    // Watch for unhandled exceptions
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;         // Make sure thread culture is invariant
 
+            Console.Title = $"MHServerEmu ({VersionInfo})";
+
+            Console.ForegroundColor = ConsoleColor.Yellow;
             PrintBanner();
+            PrintVersionInfo();
+            Console.ResetColor();
 
             // Initialize config and loggers before doing anything else
             if (ConfigManager.IsInitialized == false)
@@ -43,13 +48,14 @@ namespace MHServerEmu
             Logger.Info("MHServerEmu starting...");
 
             // Initialize everything else and start the servers
-            if (ProtocolDispatchTable.IsInitialized == false || GameDatabase.IsInitialized == false || AccountManager.IsInitialized == false)
+            if (InitSystems() == false)
             {
                 Console.ReadLine();
                 return;
             }
 
-            StartServers();
+            ServerManager.Instance.Initialize();
+            ServerManager.Instance.StartServers();
 
             // Begin processing console input
             Logger.Info("Type '!commands' for a list of available commands");
@@ -60,31 +66,20 @@ namespace MHServerEmu
             }
         }
 
+        /// <summary>
+        /// Shuts down all servers and exits the application.
+        /// </summary>
         public static void Shutdown()
         {
-            if (AuthServer != null)
-            {
-                Logger.Info("Shutting down AuthServer...");
-                AuthServer.Shutdown();
-            }
-
-            if (FrontendServer != null)
-            {
-                Logger.Info("Shutting down FrontendServer...");
-                FrontendServer.Shutdown();
-            }
-
+            ServerManager.Instance.Shutdown();
             Environment.Exit(0);
         }
-
-        public static string GetServerStatus()
-        {
-            return $"Server Status\nUptime: {DateTime.Now - StartupTime:hh\\:mm\\:ss}\nSessions: {FrontendServer.PlayerManagerService.SessionCount}";
-        }
-
+        
+        /// <summary>
+        /// Prints a fancy ASCII banner to console.
+        /// </summary>
         private static void PrintBanner()
         {
-            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine(@"  __  __ _    _  _____                          ______                 ");
             Console.WriteLine(@" |  \/  | |  | |/ ____|                        |  ____|                ");
             Console.WriteLine(@" | \  / | |__| | (___   ___ _ ____   _____ _ __| |__   _ __ ___  _   _ ");
@@ -92,9 +87,20 @@ namespace MHServerEmu
             Console.WriteLine(@" | |  | | |  | |____) |  __/ |   \ V /  __/ |  | |____| | | | | | |_| |");
             Console.WriteLine(@" |_|  |_|_|  |_|_____/ \___|_|    \_/ \___|_|  |______|_| |_| |_|\__,_|");
             Console.WriteLine();
-            Console.ResetColor();
         }
 
+        /// <summary>
+        /// Prints formatted version info to console.
+        /// </summary>
+        private static void PrintVersionInfo()
+        {
+            Console.WriteLine($"\t{VersionInfo}");
+            Console.WriteLine();
+        }
+
+        /// <summary>
+        /// Handles unhandled exceptions.
+        /// </summary>
         private static void UnhandledExceptionHandler(object sender, UnhandledExceptionEventArgs e)
         {
             Exception ex = e.ExceptionObject as Exception;
@@ -107,6 +113,9 @@ namespace MHServerEmu
             Console.ReadLine();
         }
 
+        /// <summary>
+        /// Initializes log targets.
+        /// </summary>
         private static void InitLoggers()
         {
             LogManager.Enabled = ConfigManager.Logging.EnableLogging;
@@ -123,36 +132,16 @@ namespace MHServerEmu
                     $"MHServerEmu_{StartupTime:yyyy-dd-MM_HH.mm.ss}.log", false));
         }
 
-        #region Server Control
-
-        private static void StartServers()
+        /// <summary>
+        /// Initializes systems needed to run the servers.
+        /// </summary>
+        private static bool InitSystems()
         {
-            StartFrontendServer();
-            StartAuthServer();
+            return PakFileSystem.Instance.Initialize()
+                && ProtocolDispatchTable.IsInitialized
+                && GameDatabase.IsInitialized
+                && LiveTuningManager.IsInitialized
+                && AccountManager.IsInitialized;
         }
-
-        private static bool StartFrontendServer()
-        {
-            if (FrontendServer != null) return false;
-
-            FrontendServer = new FrontendServer();
-            FrontendServerThread = new(FrontendServer.Run) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
-            FrontendServerThread.Start();
-
-            return true;
-        }
-
-        private static bool StartAuthServer()
-        {
-            if (AuthServer != null) return false;
-
-            AuthServer = new(FrontendServer.PlayerManagerService);
-            AuthServerThread = new(AuthServer.Run) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
-            AuthServerThread.Start();
-
-            return true;
-        }
-
-        #endregion
     }
 }

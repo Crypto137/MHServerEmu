@@ -4,21 +4,22 @@ using Gazillion;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Entities.Options
 {
     public class ChatChannelFilter
     {
-        public ulong ChannelProtoId { get; set; }
+        public PrototypeId ChannelProtoId { get; set; }
         public bool IsSubscribed { get; set; }
 
         public ChatChannelFilter(CodedInputStream stream, BoolDecoder boolDecoder)
         {
-            ChannelProtoId = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            ChannelProtoId = stream.ReadPrototypeEnum<Prototype>();
             IsSubscribed = boolDecoder.ReadBool(stream);
         }
 
-        public ChatChannelFilter(ulong channelProtoId, bool isSubscribed)
+        public ChatChannelFilter(PrototypeId channelProtoId, bool isSubscribed)
         {
             ChannelProtoId = channelProtoId;
             IsSubscribed = isSubscribed;
@@ -26,17 +27,17 @@ namespace MHServerEmu.Games.Entities.Options
 
         public ChatChannelFilter(NetStructChatChannelFilterState netStruct)
         {
-            ChannelProtoId = netStruct.ChannelProtoId;
+            ChannelProtoId = (PrototypeId)netStruct.ChannelProtoId;
             IsSubscribed = netStruct.IsSubscribed;
         }
 
         public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
-            stream.WritePrototypeEnum(ChannelProtoId, PrototypeEnumType.All);
+            stream.WritePrototypeEnum<Prototype>(ChannelProtoId);
             boolEncoder.WriteBuffer(stream);   // IsSubscribed
         }
 
-        public NetStructChatChannelFilterState ToNetStruct() => NetStructChatChannelFilterState.CreateBuilder().SetChannelProtoId(ChannelProtoId).SetIsSubscribed(IsSubscribed).Build();
+        public NetStructChatChannelFilterState ToNetStruct() => NetStructChatChannelFilterState.CreateBuilder().SetChannelProtoId((ulong)ChannelProtoId).SetIsSubscribed(IsSubscribed).Build();
 
         public override string ToString()
         {

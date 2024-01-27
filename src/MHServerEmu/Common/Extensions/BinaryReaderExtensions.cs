@@ -1,23 +1,21 @@
 ﻿using System.Text;
 using MHServerEmu.Games.Common;
-using MHServerEmu.Games.GameData.Calligraphy;
 
 namespace MHServerEmu.Common.Extensions
 {
     public static class BinaryReaderExtensions
     {
-        public static CalligraphyHeader ReadCalligraphyHeader(this BinaryReader reader)
-        {
-            string magic = Encoding.UTF8.GetString(reader.ReadBytes(3));
-            byte version = reader.ReadByte();
-            return new(magic, version);
-        }
-
+        /// <summary>
+        /// Reads a fixed-length string preceded by its length as a 16-bit unsigned integer.
+        /// </summary>
         public static string ReadFixedString16(this BinaryReader reader)
         {
             return Encoding.UTF8.GetString(reader.ReadBytes(reader.ReadUInt16()));
         }
 
+        /// <summary>
+        /// Reads a fixed-length string preceded by its length as a 32-bit signed integer.
+        /// </summary>
         public static string ReadFixedString32(this BinaryReader reader)
         {
             return Encoding.UTF8.GetString(reader.ReadBytes(reader.ReadInt32()));
@@ -28,16 +26,16 @@ namespace MHServerEmu.Common.Extensions
         /// </summary>
         public static string ReadNullTerminatedString(this BinaryReader reader)
         {
-            StringBuilder sb = new();
+            List<byte> byteList = new();
 
             while (true)
             {
                 byte b = reader.ReadByte();
                 if (b == 0x00) break;
-                sb.Append((char)b);
+                byteList.Add(b);
             }
 
-            return sb.ToString();
+            return Encoding.UTF8.GetString(byteList.ToArray());
         }
 
         /// <summary>

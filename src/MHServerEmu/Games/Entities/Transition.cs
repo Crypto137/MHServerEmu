@@ -1,11 +1,12 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Games.GameData;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
-using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -15,10 +16,10 @@ namespace MHServerEmu.Games.Entities
         public Destination[] Destinations { get; set; }
 
         public TransitionPrototype TransitionPrototype { get { return EntityPrototype as TransitionPrototype; } }
-        public Transition(EntityBaseData baseData, ulong replicationId, ulong mapRegionId, int mapAreaId, int mapCellId, ulong contextAreaRef, 
+        public Transition(EntityBaseData baseData, ulong replicationId, ulong mapRegionId, int mapAreaId, int mapCellId, PrototypeId contextAreaRef, 
             Vector3 mapPosition, Destination destination) : base(baseData)
         {
-            ReplicationPolicy = 0x21;
+            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0 | AoiNetworkPolicyValues.AoiChannel5;
             PropertyCollection = new(replicationId, new()
             {
                 new(PropertyEnum.MapPosition, mapPosition),
@@ -89,14 +90,14 @@ namespace MHServerEmu.Games.Entities
     public class Destination
     {
         public int Type { get; set; }
-        public ulong Region { get; set; }
-        public ulong Area { get; set; }
-        public ulong Cell { get; set; }
-        public ulong Entity { get; set; }
-        public ulong Target {get; set; }
+        public PrototypeId Region { get; set; }
+        public PrototypeId Area { get; set; }
+        public PrototypeId Cell { get; set; }
+        public PrototypeId Entity { get; set; }
+        public PrototypeId Target {get; set; }
         public int Unk2 { get; set; }
         public string Name { get; set; }
-        public ulong NameId { get; set; }
+        public LocaleStringId NameId { get; set; }
         public ulong RegionId { get; set; }
         public Vector3 Position { get; set; }
         public ulong UnkId1 { get; set; }
@@ -107,16 +108,16 @@ namespace MHServerEmu.Games.Entities
         {
             Type = stream.ReadRawInt32();
 
-            Region = stream.ReadPrototypeEnum(PrototypeEnumType.All);
-            Area = stream.ReadPrototypeEnum(PrototypeEnumType.All);
-            Cell = stream.ReadPrototypeEnum(PrototypeEnumType.All);
-            Entity = stream.ReadPrototypeEnum(PrototypeEnumType.All);
-            Target = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            Region = stream.ReadPrototypeEnum<Prototype>();
+            Area = stream.ReadPrototypeEnum<Prototype>();
+            Cell = stream.ReadPrototypeEnum<Prototype>();
+            Entity = stream.ReadPrototypeEnum<Prototype>();
+            Target = stream.ReadPrototypeEnum<Prototype>();
 
             Unk2 = stream.ReadRawInt32();
 
             Name = stream.ReadRawString();
-            NameId = stream.ReadRawVarint64();
+            NameId = (LocaleStringId)stream.ReadRawVarint64();
 
             RegionId = stream.ReadRawVarint64();
 
@@ -129,8 +130,8 @@ namespace MHServerEmu.Games.Entities
             UnkId2 = stream.ReadRawVarint64();
         }
 
-        public Destination(int type, ulong region, ulong area, ulong cell, ulong entity, ulong target, 
-            int unk2, string name, ulong nameId, ulong regionId, 
+        public Destination(int type, PrototypeId region, PrototypeId area, PrototypeId cell, PrototypeId entity, PrototypeId target, 
+            int unk2, string name, LocaleStringId nameId, ulong regionId, 
             Vector3 position, ulong unkId1, ulong unkId2)
         {
             Type = type;
@@ -152,16 +153,16 @@ namespace MHServerEmu.Games.Entities
         {
             stream.WriteRawInt32(Type);
 
-            stream.WritePrototypeEnum(Region, PrototypeEnumType.All);
-            stream.WritePrototypeEnum(Area, PrototypeEnumType.All);
-            stream.WritePrototypeEnum(Cell, PrototypeEnumType.All);
-            stream.WritePrototypeEnum(Entity, PrototypeEnumType.All);
-            stream.WritePrototypeEnum(Target, PrototypeEnumType.All);
+            stream.WritePrototypeEnum<Prototype>(Region);
+            stream.WritePrototypeEnum<Prototype>(Area);
+            stream.WritePrototypeEnum<Prototype>(Cell);
+            stream.WritePrototypeEnum<Prototype>(Entity);
+            stream.WritePrototypeEnum<Prototype>(Target);
 
             stream.WriteRawInt32(Unk2);
 
             stream.WriteRawString(Name);
-            stream.WriteRawVarint64(NameId);
+            stream.WriteRawVarint64((ulong)NameId);
 
             stream.WriteRawVarint64(RegionId);
 

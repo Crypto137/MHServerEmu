@@ -17,7 +17,7 @@ namespace MHServerEmu.PlayerManagement.Accounts
 
     public static class AccountManager
     {
-        public static readonly DBAccount DefaultAccount = new(ConfigManager.DefaultPlayerData.PlayerName, ConfigManager.DefaultPlayerData.StartingRegion, ConfigManager.DefaultPlayerData.StartingAvatar);
+        public static readonly DBAccount DefaultAccount = new(ConfigManager.DefaultPlayerData.PlayerName, ConfigManager.DefaultPlayerData.StartingRegionEnum, ConfigManager.DefaultPlayerData.StartingAvatarEnum);
 
         public static bool IsInitialized { get; }
 
@@ -33,11 +33,11 @@ namespace MHServerEmu.PlayerManagement.Accounts
             // Try to query an account to check
             string email = loginDataPB.EmailAddress.ToLower();
             if (DBManager.TryQueryAccountByEmail(email, out DBAccount accountToCheck) == false)
-                return AuthStatusCode.IncorrectUsernameOrPassword401;
+                return AuthStatusCode.IncorrectUsernameOrPassword403;
 
             // Check the account we queried
             if (Cryptography.VerifyPassword(loginDataPB.Password, accountToCheck.PasswordHash, accountToCheck.Salt) == false)
-                return AuthStatusCode.IncorrectUsernameOrPassword401;
+                return AuthStatusCode.IncorrectUsernameOrPassword403;
 
             if (accountToCheck.IsBanned) return AuthStatusCode.AccountBanned;
             if (accountToCheck.IsArchived) return AuthStatusCode.AccountArchived;

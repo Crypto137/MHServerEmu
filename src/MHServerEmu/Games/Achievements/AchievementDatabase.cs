@@ -1,6 +1,7 @@
 ﻿using Google.ProtocolBuffers;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using Gazillion;
+using MHServerEmu.Common.Helpers;
 using MHServerEmu.Common.Logging;
 
 namespace MHServerEmu.Games.Achievements
@@ -11,12 +12,19 @@ namespace MHServerEmu.Games.Achievements
 
         private NetMessageAchievementDatabaseDump _cachedDump = null;
 
+        public static AchievementDatabase Instance { get; } = new();
+
         public byte[] LocalizedAchievementStringBuffer { get; set; }
         public AchievementInfo[] AchievementInfos { get; set; }
         public ulong AchievementNewThresholdUS { get; set; }
 
-        public AchievementDatabase(byte[] compressedDump)
+        private AchievementDatabase() { }
+
+        public void Initialize()
         {
+            string compressedDumpPath = Path.Combine(FileHelper.DataDirectory, "Game", "CompressedAchievementDatabaseDump.bin");
+            byte[] compressedDump = File.ReadAllBytes(compressedDumpPath);
+
             // Decompress the dump
             using (MemoryStream input = new(compressedDump))
             using (MemoryStream output = new())
@@ -41,7 +49,7 @@ namespace MHServerEmu.Games.Achievements
 
         private void CompressAndCacheDump()
         {
-            // this produces different output from our existing dumped database. why?
+            // This produces different output from our existing dumped database. Why?
             var dumpBuffer = AchievementDatabaseDump.CreateBuilder()
                 .SetLocalizedAchievementStringBuffer(ByteString.CopyFrom(LocalizedAchievementStringBuffer))
                 .AddRangeAchievementInfos(AchievementInfos.Select(item => item.ToNetStruct()))

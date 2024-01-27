@@ -8,7 +8,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
     public class LocomotionPathNode
     {
         public Vector3 Vertex { get; set; }
-        public int VertexSideRadius { get; set; }  // zigzag int
+        public int VertexSideRadius { get; set; }
 
         public LocomotionPathNode(CodedInputStream stream)
         {
@@ -32,7 +32,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         {
             StringBuilder sb = new();
             sb.AppendLine($"Vertex: {Vertex}");
-            sb.AppendLine($"VertexSideRadius: 0x{VertexSideRadius:X}");
+            sb.AppendLine($"VertexSideRadius: {VertexSideRadius}");
             return sb.ToString();
         }
     }

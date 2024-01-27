@@ -1,7 +1,6 @@
 ﻿using MHServerEmu.Common;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games;
-using MHServerEmu.Networking;
 
 namespace MHServerEmu.PlayerManagement
 {
@@ -9,19 +8,17 @@ namespace MHServerEmu.PlayerManagement
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly ServerManager _serverManager;
         private readonly Dictionary<ulong, Game> _gameDict = new();
 
-        public GameManager(ServerManager serverManager)
+        public GameManager()
         {
-            _serverManager = serverManager;
             CreateGame();
         }
 
         public void CreateGame()
         {
             ulong id = IdGenerator.Generate(IdType.Game);
-            _gameDict.Add(id, new(_serverManager, id));
+            _gameDict.Add(id, new(id));
         }
 
         public Game GetGameById(ulong id)

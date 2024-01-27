@@ -1,12 +1,14 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Powers
 {
     public class AddConditionArchive
     {
-        public uint ReplicationPolicy { get; set; }
+        public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
         public ulong EntityId { get; set; }
         public Condition Condition { get; set; }
 
@@ -14,22 +16,24 @@ namespace MHServerEmu.Games.Powers
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
 
-            ReplicationPolicy = stream.ReadRawVarint32();
+            ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
             EntityId = stream.ReadRawVarint64();
             Condition = new(stream);
         }
 
         public AddConditionArchive() { }
 
-        public AddConditionArchive(ulong entityId, ulong id, uint flags, ulong prototypeId, int startTime)
+        public AddConditionArchive(ulong entityId, ulong id, ConditionSerializationFlags serializationFlags, PrototypeId prototypeId, int startTime)
         {
-            ReplicationPolicy = 239;
+            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0 | AoiNetworkPolicyValues.AoiChannel1 | AoiNetworkPolicyValues.AoiChannel2
+                | AoiNetworkPolicyValues.AoiChannel3 |  AoiNetworkPolicyValues.AoiChannel5 | AoiNetworkPolicyValues.AoiChannelClientOnly
+                | AoiNetworkPolicyValues.AoiChannel7;
             EntityId = entityId;
 
             Condition = new()
             {
                 Id = id,
-                Flags = flags.ToBoolArray(16),
+                SerializationFlags = serializationFlags,
                 CreatorPowerPrototypeId = prototypeId,
                 StartTime = startTime,
                 PropertyCollection = new(0)
@@ -42,7 +46,7 @@ namespace MHServerEmu.Games.Powers
             {
                 CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
 
-                cos.WriteRawVarint32(ReplicationPolicy);
+                cos.WriteRawVarint32((uint)ReplicationPolicy);
                 cos.WriteRawVarint64(EntityId);
                 Condition.Encode(cos);
 
@@ -54,7 +58,7 @@ namespace MHServerEmu.Games.Powers
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
+            sb.AppendLine($"ReplicationPolicy: {ReplicationPolicy}");
             sb.AppendLine($"EntityId: {EntityId}");
             sb.AppendLine($"Condition: {Condition}");
 

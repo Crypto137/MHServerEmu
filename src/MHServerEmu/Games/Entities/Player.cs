@@ -6,7 +6,9 @@ using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Missions;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Social;
 
@@ -31,7 +33,7 @@ namespace MHServerEmu.Games.Entities
         public bool HasCommunity { get; set; }
         public Community Community { get; set; }
         public bool UnkBool { get; set; }
-        public ulong[] StashInventories { get; set; }
+        public PrototypeId[] StashInventories { get; set; }
         public uint[] AvailableBadges { get; set; }
         public GameplayOptions GameplayOptions { get; set; }
         public AchievementState[] AchievementStates { get; set; }
@@ -40,11 +42,11 @@ namespace MHServerEmu.Games.Entities
         public Player(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
         // note: this is ugly
-        public Player(EntityBaseData baseData, uint replicationPolicy, ReplicatedPropertyCollection propertyCollection,
+        public Player(EntityBaseData baseData, AoiNetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection propertyCollection,
             MissionManager missionManager, ReplicatedPropertyCollection avatarProperties,
             ulong shardId, ReplicatedVariable<string> playerName, ReplicatedVariable<string> unkName,
             ulong matchQueueStatus, bool emailVerified, ulong accountCreationTimestamp, ReplicatedVariable<ulong> partyId,
-            Community community, bool unkBool, ulong[] stashInventories, uint[] availableBadges,
+            Community community, bool unkBool, PrototypeId[] stashInventories, uint[] availableBadges,
             GameplayOptions gameplayOptions, AchievementState[] achievementStates, StashTabOption[] stashTabOptions) : base(baseData)
         {
             ReplicationPolicy = replicationPolicy;
@@ -100,9 +102,9 @@ namespace MHServerEmu.Games.Entities
 
             UnkBool = boolDecoder.ReadBool(stream);
 
-            StashInventories = new ulong[stream.ReadRawVarint64()];
+            StashInventories = new PrototypeId[stream.ReadRawVarint64()];
             for (int i = 0; i < StashInventories.Length; i++)
-                StashInventories[i] = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+                StashInventories[i] = stream.ReadPrototypeEnum<Prototype>();
 
             AvailableBadges = new uint[stream.ReadRawVarint64()];
             for (int i = 0; i < AvailableBadges.Length; i++) AvailableBadges[i] = stream.ReadRawVarint32();
@@ -162,7 +164,7 @@ namespace MHServerEmu.Games.Entities
             boolEncoder.WriteBuffer(stream);   // UnkBool
 
             stream.WriteRawVarint64((ulong)StashInventories.Length);
-            foreach (ulong stashInventory in StashInventories) stream.WritePrototypeEnum(stashInventory, PrototypeEnumType.All);
+            foreach (PrototypeId stashInventory in StashInventories) stream.WritePrototypeEnum<Prototype>(stashInventory);
 
             stream.WriteRawVarint64((ulong)AvailableBadges.Length);
             foreach (uint badge in AvailableBadges) stream.WriteRawVarint32(badge);

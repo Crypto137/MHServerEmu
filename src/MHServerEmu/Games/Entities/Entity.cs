@@ -4,6 +4,7 @@ using Gazillion;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -12,7 +13,7 @@ namespace MHServerEmu.Games.Entities
         public EntityBaseData BaseData { get; set; }
         public ulong RegionId { get; set; } = 0;
 
-        public uint ReplicationPolicy { get; set; }
+        public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
         public ReplicatedPropertyCollection PropertyCollection { get; set; }
 
         public EntityPrototype EntityPrototype { get { return GameDatabase.GetPrototype<EntityPrototype>(BaseData.PrototypeId); } }
@@ -27,7 +28,7 @@ namespace MHServerEmu.Games.Entities
         // Base data is required for all entities, so there's no parameterless constructor
         public Entity(EntityBaseData baseData) { BaseData = baseData; }
 
-        public Entity(EntityBaseData baseData, uint replicationPolicy, ReplicatedPropertyCollection propertyCollection)
+        public Entity(EntityBaseData baseData, AoiNetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection propertyCollection)
         {
             BaseData = baseData;
             ReplicationPolicy = replicationPolicy;
@@ -36,13 +37,13 @@ namespace MHServerEmu.Games.Entities
 
         protected virtual void Decode(CodedInputStream stream)
         {
-            ReplicationPolicy = stream.ReadRawVarint32();
+            ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
             PropertyCollection = new(stream);
         }
 
         public virtual void Encode(CodedOutputStream stream)
         {
-            stream.WriteRawVarint32(ReplicationPolicy);
+            stream.WriteRawVarint32((uint)ReplicationPolicy);
             PropertyCollection.Encode(stream);
         }
 
@@ -67,7 +68,7 @@ namespace MHServerEmu.Games.Entities
 
         protected virtual void BuildString(StringBuilder sb)
         {
-            sb.AppendLine($"ReplicationPolicy: 0x{ReplicationPolicy:X}");
+            sb.AppendLine($"ReplicationPolicy: {ReplicationPolicy}");
             sb.AppendLine($"PropertyCollection: {PropertyCollection}");
         }
 

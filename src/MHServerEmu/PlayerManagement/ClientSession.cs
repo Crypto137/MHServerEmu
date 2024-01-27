@@ -27,7 +27,7 @@ namespace MHServerEmu.PlayerManagement
         {
             Id = id;
             Account = account;
-            Downloader = (ClientDownloader)Enum.Parse(typeof(ClientDownloader), downloader);
+            Downloader = Enum.Parse<ClientDownloader>(downloader);
             Locale = locale;
 
             Key = Cryptography.GenerateAesKey();

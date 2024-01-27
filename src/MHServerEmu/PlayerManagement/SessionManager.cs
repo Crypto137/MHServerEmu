@@ -3,7 +3,6 @@ using MHServerEmu.Auth;
 using MHServerEmu.Common.Config;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Logging;
-using MHServerEmu.Networking;
 using MHServerEmu.PlayerManagement.Accounts;
 using MHServerEmu.PlayerManagement.Accounts.DBModels;
 using MHServerEmu.Frontend;

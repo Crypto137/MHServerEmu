@@ -8,6 +8,13 @@
     <Platforms>x64</Platforms>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <InformationalVersion>0.1.0</InformationalVersion>
+    <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</SourceRevisionId>
+    <AssemblyVersion>$(InformationalVersion).0</AssemblyVersion>
+    <FileVersion>$(AssemblyVersion)</FileVersion>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\LibGazillion\LibGazillion.csproj" />
   </ItemGroup>
@@ -37,34 +44,34 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Assets\Account.db">
+    <None Update="Data\Account.db">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\AuthServer\AccountCreateForm.html">
+    <None Update="Data\Auth\AccountCreateForm.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\AuthServer\Response.html">
+    <None Update="Data\Auth\Response.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\Catalog.json">
+    <None Update="Data\Billing\Catalog.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\CatalogPatch.json">
+    <None Update="Data\Billing\CatalogPatch.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\CompressedAchievementDatabaseDump.bin">
+    <None Update="Data\Game\CompressedAchievementDatabaseDump.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\GPAK\IMPORTANT.txt">
+    <None Update="Data\Game\IMPORTANT.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\LiveTuning.json">
+    <None Update="Data\Game\LiveTuningData.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\Packets\NetMessageEntityCreateAvatars.bin">
+    <None Update="Data\Packets\NetMessageEntityCreateAvatars.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Assets\Packets\NetMessageEntityCreatePlayer.bin">
+    <None Update="Data\Packets\NetMessageEntityCreatePlayer.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Config.ini">

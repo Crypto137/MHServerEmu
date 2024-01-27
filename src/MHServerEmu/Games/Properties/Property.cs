@@ -3,61 +3,57 @@ using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Properties
 {
     public class Property
     {
-        public const int MaxParamBits = 53;     // The first 11 bits is the actual id, the rest are parameters defined by PropertyInfo
-
-        public ulong Id { get; set; }   
+        public PropertyId Id { get; set; }   
         public PropertyValue Value { get; set; }
-        public PropertyEnum Enum { get => (PropertyEnum)(Id >> MaxParamBits); }
-        public PropertyInfoPrototype Info { get; }
+        public PropertyInfo PropertyInfo { get; }
 
         public Property(CodedInputStream stream)
         {
-            Id = stream.ReadRawVarint64().ReverseBytes();       // Id is reversed so that it can be optimally encoded into varint when all subvalues are 0
-            Info = GameDatabase.PropertyInfoTable.GetInfo(Enum);
+            Id = new(stream.ReadRawVarint64().ReverseBytes());       // Id is reversed so that it can be optimally encoded into varint when all params are 0
+            PropertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(Id.Enum);
             CreateValueContainer(stream.ReadRawVarint64());
         }
 
-        public Property(ulong id, ulong rawValue = 0)
+        public Property(ulong rawId, ulong rawValue = 0)
         {
-            Id = id;
-            Info = GameDatabase.PropertyInfoTable.GetInfo(Enum);
+            Id = new(rawId);
+            PropertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(Id.Enum);
             CreateValueContainer(rawValue);
         }
 
-        public Property(PropertyEnum enumid, object value)
+        public Property(PropertyEnum propertyEnum, object value)
         {
-            Id = (ulong)enumid << MaxParamBits;
-            Info = GameDatabase.PropertyInfoTable.GetInfo(Enum);
+            Id = new(propertyEnum);
+            PropertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(Id.Enum);
             CreateValueContainer(0);
             Value.Set(value);
         }
 
         public Property(NetMessageSetProperty setPropertyMessage)
         {
-            Id = setPropertyMessage.PropertyId.ReverseBits();
-            Info = GameDatabase.PropertyInfoTable.GetInfo(Enum);
+            Id = new(setPropertyMessage.PropertyId.ReverseBits());
+            PropertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(Id.Enum);
             CreateValueContainer(setPropertyMessage.ValueBits);
         }
 
         public void Encode(CodedOutputStream stream)
         {
-            stream.WriteRawVarint64(Id.ReverseBytes());
+            stream.WriteRawVarint64(Id.RawId.ReverseBytes());
             stream.WriteRawVarint64(Value.RawValue);
         }
 
-        public NetStructProperty ToNetStruct() => NetStructProperty.CreateBuilder().SetId(Id).SetValue(Value.RawValue).Build();
+        public NetStructProperty ToNetStruct() => NetStructProperty.CreateBuilder().SetId(Id.RawId).SetValue(Value.RawValue).Build();
 
         public NetMessageSetProperty ToNetMessageSetProperty(ulong replicationId)
         {
             return NetMessageSetProperty.CreateBuilder()
                 .SetReplicationId(replicationId)
-                .SetPropertyId(Id.ReverseBits())
+                .SetPropertyId(Id.RawId.ReverseBits())    // In NetMessageSetProperty all bits are reversed rather than bytes
                 .SetValueBits(Value.RawValue)
                 .Build();
         }
@@ -66,42 +62,42 @@ namespace MHServerEmu.Games.Properties
         {
             return NetMessageRemoveProperty.CreateBuilder()
                 .SetReplicationId(replicationId)
-                .SetPropertyId(Id.ReverseBits())
+                .SetPropertyId(Id.RawId.ReverseBits())
                 .Build();
         }
 
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"Id: 0x{Id:X}");
-            sb.AppendLine($"Enum: {Enum}");
+            sb.AppendLine($"Id: 0x{Id.RawId:X}");
+            sb.AppendLine($"Enum: {Id.Enum}");
             sb.AppendLine($"Value: {Value}");
-            sb.AppendLine($"PropertyType: {Info.Type}");
+            sb.AppendLine($"PropertyDataType: {PropertyInfo.DataType}");
             return sb.ToString();
         }
 
         private void CreateValueContainer(ulong rawValue)
         {
-            switch (Info.Type)
+            switch (PropertyInfo.DataType)
             {
-                case PropertyType.Boolean:
+                case PropertyDataType.Boolean:
                     Value = new PropertyValueBoolean(rawValue);
                     break;
 
-                case PropertyType.Real:
+                case PropertyDataType.Real:
                     Value = new PropertyValueReal(rawValue);
                     break;
 
-                case PropertyType.Integer:
-                case PropertyType.Time:
+                case PropertyDataType.Integer:
+                case PropertyDataType.Time:
                     Value = new PropertyValueInteger(rawValue);
                     break;
 
-                case PropertyType.Prototype:
+                case PropertyDataType.Prototype:
                     Value = new PropertyValuePrototype(rawValue);
                     break;
 
-                case PropertyType.Int21Vector3:
+                case PropertyDataType.Int21Vector3:
                     Value = new PropertyValueInt21Vector3(rawValue);
                     break;
 

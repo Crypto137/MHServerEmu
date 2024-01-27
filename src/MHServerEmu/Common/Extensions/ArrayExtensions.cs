@@ -1,4 +1,7 @@
-﻿namespace MHServerEmu.Common.Extensions
+﻿using System.Text;
+using Google.ProtocolBuffers;
+
+namespace MHServerEmu.Common.Extensions
 {
     public static class ArrayExtensions
     {
@@ -22,20 +25,47 @@
             0x0f, 0x8f, 0x4f, 0xcf, 0x2f, 0xaf, 0x6f, 0xef, 0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff
         };
 
-        public static IEnumerable<T> Enumerate<T>(this T[] array, int start, int count)
-        {
-            if (array == null)
-                throw new ArgumentNullException("array");
+        #region Hex/ByteString Helpers
 
-            for (int i = 0; i < count; i++)
-                yield return array[start + i];
-        }
-
+        /// <summary>
+        /// Converts a byte array to a hex string.
+        /// </summary>
         public static string ToHexString(this byte[] byteArray)
         {
             return byteArray.Aggregate("", (current, b) => current + b.ToString("X2"));
         }
 
+        /// <summary>
+        /// Converts a byte array to a protobuf-compatible ByteString.
+        /// </summary>
+        public static ByteString ToByteString(this byte[] byteArray)
+        {
+            return ByteString.CopyFrom(byteArray);
+        }
+        
+        /// <summary>
+        /// Converts a hex string to a byte array.
+        /// </summary>
+        public static byte[] ToByteArray(this string hexString)
+        {
+            return Convert.FromHexString(hexString);
+        }
+
+        /// <summary>
+        /// Converts a hex string to a protobuf-compatible ByteString.
+        /// </summary>
+        public static ByteString ToByteString(this string hexString)
+        {
+            return hexString.ToByteArray().ToByteString();
+        }
+
+        #endregion
+
+        #region Bit/Byte Manipulation
+
+        /// <summary>
+        /// Reverses the order of bytes in a ulong value.
+        /// </summary>
         public static ulong ReverseBytes(this ulong value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
@@ -43,6 +73,9 @@
             return BitConverter.ToUInt64(bytes);
         }
 
+        /// <summary>
+        /// Reverses the order of bits in a ulong value.
+        /// </summary>
         public static ulong ReverseBits(this ulong value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
@@ -54,41 +87,30 @@
 
             return BitConverter.ToUInt64(bytes);
         }
+        
+        #endregion
 
+        #region Misc
+
+        /// <summary>
+        /// Indicates whether this array of <typeparamref name="T"/> is <see langword="null"/> or empty.
+        /// </summary>
         public static bool IsNullOrEmpty<T>(this T[] array)
         {
             return array == null || array.Length == 0;
         }
 
-        #region uint <-> bool[] conversion
-        /* uint mask cheat sheet for getting bools (1 << i)
-         0 == 0x1,       1 == 0x2,       2 == 0x4,       3 == 0x8,       4 == 0x10,      5 == 0x20,     6 == 0x40,     7 == 0x80,
-         8 == 0x100,     9 == 0x200,    10 == 0x400,    11 == 0x800,    12 == 0x1000,   13 == 0x2000,  14 == 0x4000,  15 == 0x8000
-        16 == 0x10000,  17 == 0x20000,  18 == 0x40000,  19 == 0x80000,  20 == 0x100000
-        */
-        public static bool[] ToBoolArray(this uint value, int arraySize = 32)
+        /// <summary>
+        /// Converts a data directory path to a Calligraphy path. Used before hashing to get a data id.
+        /// </summary>
+        public static string ToCalligraphyPath(this string path)
         {
-            if (arraySize > 32) throw new("Cannot decode more than 32 bools from a uint.");
-
-            bool[] output = new bool[arraySize];
-
-            for (int i = 0; i < output.Length; i++)
-                output[i] = (value & (1 << i)) > 0;
-
-            return output;
+            StringBuilder sb = new(path);
+            sb.Replace('.', '?');
+            sb.Replace('/', '.');
+            return sb.ToString();
         }
 
-        public static uint ToUInt32(this bool[] boolArray)
-        {
-            if (boolArray.Length > 32) throw new("Cannot encode more than 32 bools in a uint.");
-
-            uint output = 0;
-
-            for (int i = 0; i < boolArray.Length; i++)
-                if (boolArray[i]) output |= (uint)(1 << i);
-
-            return output;
-        }
         #endregion
     }
 }

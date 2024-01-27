@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.UI.Widgets
 {
@@ -9,7 +10,7 @@ namespace MHServerEmu.Games.UI.Widgets
     {
         public FilterEntry[] FilterEntries { get; set; }
 
-        public UIWidgetEntityIconsSyncData(ulong widgetR, ulong contextR, ulong[] areas, CodedInputStream stream, BoolDecoder boolDecoder) : base(widgetR, contextR, areas)
+        public UIWidgetEntityIconsSyncData(PrototypeId widgetR, PrototypeId contextR, PrototypeId[] areas, CodedInputStream stream, BoolDecoder boolDecoder) : base(widgetR, contextR, areas)
         {
             FilterEntries = new FilterEntry[stream.ReadRawVarint64()];
             for (int i = 0; i < FilterEntries.Length; i++)

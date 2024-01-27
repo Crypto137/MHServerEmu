@@ -3,15 +3,16 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Missions
 {
     public class Mission
     {
-        public ulong PrototypeGuid { get; set; }
+        public PrototypeGuid PrototypeGuid { get; set; }
         public ulong State { get; set; }
         public ulong TimeExpireCurrentState { get; set; }
-        public ulong PrototypeId { get; set; }
+        public PrototypeId PrototypeId { get; set; }
         public int Random { get; set; }
         public Objective[] Objectives { get; set; }
         public ulong[] Participants { get; set; }
@@ -19,10 +20,10 @@ namespace MHServerEmu.Games.Missions
 
         public Mission(CodedInputStream stream, BoolDecoder boolDecoder)
         {
-            PrototypeGuid = stream.ReadRawVarint64();
+            PrototypeGuid = (PrototypeGuid)stream.ReadRawVarint64();
             State = stream.ReadRawVarint64();
             TimeExpireCurrentState = stream.ReadRawVarint64();
-            PrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            PrototypeId = stream.ReadPrototypeEnum<Prototype>();
             Random = stream.ReadRawInt32();
 
             Objectives = new Objective[stream.ReadRawVarint64()];
@@ -36,7 +37,7 @@ namespace MHServerEmu.Games.Missions
             Suspended = boolDecoder.ReadBool(stream);
         }
 
-        public Mission(ulong prototypeGuid, ulong state, ulong timeExpireCurrentState, ulong prototypeId,
+        public Mission(PrototypeGuid prototypeGuid, ulong state, ulong timeExpireCurrentState, PrototypeId prototypeId,
             Objective[] objectives, ulong[] participants, bool suspended)
         {
             PrototypeGuid = prototypeGuid;
@@ -50,10 +51,10 @@ namespace MHServerEmu.Games.Missions
 
         public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
-            stream.WriteRawVarint64(PrototypeGuid);
+            stream.WriteRawVarint64((ulong)PrototypeGuid);
             stream.WriteRawVarint64(State);
             stream.WriteRawVarint64(TimeExpireCurrentState);
-            stream.WritePrototypeEnum(PrototypeId, PrototypeEnumType.All);
+            stream.WritePrototypeEnum<Prototype>(PrototypeId);
             stream.WriteRawInt32(Random);
 
             stream.WriteRawVarint64((ulong)Objectives.Length);
@@ -68,7 +69,7 @@ namespace MHServerEmu.Games.Missions
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"PrototypeGuid: {GameDatabase.GetPrototypeName(GameDatabase.GetDataRefByPrototypeGuid(PrototypeGuid))}");
+            sb.AppendLine($"PrototypeGuid: {GameDatabase.GetPrototypeNameByGuid(PrototypeGuid)}");
             sb.AppendLine($"State: 0x{State:X}");
             sb.AppendLine($"TimeExpireCurrentState: 0x{TimeExpireCurrentState:X}");
             sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypeName(PrototypeId)}");

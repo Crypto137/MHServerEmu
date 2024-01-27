@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.Entities.Options
@@ -9,15 +10,15 @@ namespace MHServerEmu.Games.Entities.Options
     public class ArmorRarityVaporizeThreshold
     {
         public EquipmentInvUISlot Slot { get; set; }
-        public ulong RarityPrototypeId { get; set; }
+        public PrototypeId RarityPrototypeId { get; set; }
 
         public ArmorRarityVaporizeThreshold(CodedInputStream stream)
         {
             Slot = (EquipmentInvUISlot)stream.ReadRawVarint64();
-            RarityPrototypeId = stream.ReadPrototypeEnum(PrototypeEnumType.All);
+            RarityPrototypeId = stream.ReadPrototypeEnum<Prototype>();
         }
 
-        public ArmorRarityVaporizeThreshold(EquipmentInvUISlot slot, ulong rarityPrototypeId)
+        public ArmorRarityVaporizeThreshold(EquipmentInvUISlot slot, PrototypeId rarityPrototypeId)
         {
             Slot = slot;
             RarityPrototypeId = rarityPrototypeId;
@@ -26,7 +27,7 @@ namespace MHServerEmu.Games.Entities.Options
         public void Encode(CodedOutputStream stream)
         {
             stream.WriteRawVarint64((ulong)Slot);
-            stream.WritePrototypeEnum(RarityPrototypeId, PrototypeEnumType.All);
+            stream.WritePrototypeEnum<Prototype>(RarityPrototypeId);
         }
 
         public override string ToString()

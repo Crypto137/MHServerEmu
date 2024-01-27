@@ -1,47 +1,41 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Properties
 {
-    public class ReplicatedPropertyCollection
+    public class ReplicatedPropertyCollection : ArchiveMessageHandler
     {
-        public ulong ReplicationId { get; set; }
-        public List<Property> List { get; set; } = new();
+        // C# doesn't support multiple inheritance, so we'll have to have an instance of PropertyCollection to wrap around
+        private readonly PropertyCollection _propertyCollection;
 
-        public ReplicatedPropertyCollection(CodedInputStream stream)
+        public List<Property> List { get => _propertyCollection.PropertyList; }
+
+        public ReplicatedPropertyCollection(CodedInputStream stream) : base(stream)
         {
-            ReplicationId = stream.ReadRawVarint64();
-
-            uint propertyCount = stream.ReadRawUInt32();
-            for (int i = 0; i < propertyCount; i++)
-                List.Add(new(stream));
+            _propertyCollection = new(stream);
         }
 
-        public ReplicatedPropertyCollection(ulong replicationId, List<Property> propertyList = null)
+        public ReplicatedPropertyCollection(ulong replicationId, List<Property> propertyList = null) : base(replicationId)
         {
-            ReplicationId = replicationId;
-            if (propertyList != null) List.AddRange(propertyList);
+            _propertyCollection = new(propertyList);
         }
 
-        public void Encode(CodedOutputStream stream)
+        public override void Encode(CodedOutputStream stream)
         {
-            stream.WriteRawVarint64(ReplicationId);
-            stream.WriteRawUInt32((uint)List.Count);
-            foreach (Property property in List) property.Encode(stream);
+            base.Encode(stream);
+            _propertyCollection.Encode(stream);
         }
 
-        public Property GetPropertyByEnum(PropertyEnum id)
+        public Property GetPropertyByEnum(PropertyEnum propertyEnum)
         {
-            return List.Find(property => property.Enum == id);
+            return _propertyCollection.GetPropertyByEnum(propertyEnum);
         }
 
-        public override string ToString()
+        protected override void BuildString(StringBuilder sb)
         {
-            StringBuilder sb = new();
-            sb.AppendLine($"ReplicationId: {ReplicationId}");
-            for (int i = 0; i < List.Count; i++) sb.AppendLine($"Property{i}: {List[i]}");
-            return sb.ToString();
+            base.BuildString(sb);
+            sb.AppendLine(_propertyCollection.ToString());
         }
     }
 }

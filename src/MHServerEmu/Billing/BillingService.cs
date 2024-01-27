@@ -2,6 +2,7 @@
 using Gazillion;
 using MHServerEmu.Billing.Catalogs;
 using MHServerEmu.Common.Config;
+using MHServerEmu.Common.Helpers;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities.Avatars;
@@ -16,22 +17,21 @@ namespace MHServerEmu.Billing
         private const ushort MuxChannel = 1;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
+        private static readonly string BillingDataDirectory = Path.Combine(FileHelper.DataDirectory, "Billing");
 
-        private readonly ServerManager _serverManager;
         private readonly Catalog _catalog;
 
-        public BillingService(ServerManager serverManager)
+        public BillingService()
         {
-            _serverManager = serverManager;
-            _catalog = JsonSerializer.Deserialize<Catalog>(File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Catalog.json")));
+            _catalog = FileHelper.DeserializeJson<Catalog>(Path.Combine(BillingDataDirectory, "Catalog.json"));
 
             // Apply a patch to the catalog if it's enabled and there's one
             if (ConfigManager.Billing.ApplyCatalogPatch)
             {
-                string patchPath = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "CatalogPatch.json");
+                string patchPath = Path.Combine(BillingDataDirectory, "CatalogPatch.json");
                 if (File.Exists(patchPath))
                 {
-                    CatalogEntry[] catalogPatch = JsonSerializer.Deserialize<CatalogEntry[]>(File.ReadAllText(patchPath));
+                    CatalogEntry[] catalogPatch = FileHelper.DeserializeJson<CatalogEntry[]>(patchPath);
                     _catalog.ApplyPatch(catalogPatch);
                 }
             }
@@ -115,7 +115,7 @@ namespace MHServerEmu.Billing
                     ulong replicationId = (ulong)client.Session.Account.Player.Avatar.ToPropertyCollectionReplicationId();
 
                     // Update account data
-                    client.Session.Account.CurrentAvatar.Costume = entry.GuidItems[0].ItemPrototypeRuntimeIdForClient;
+                    client.Session.Account.CurrentAvatar.Costume = (ulong)entry.GuidItems[0].ItemPrototypeRuntimeIdForClient;
 
                     // Send NetMessageSetProperty message
                     client.SendMessage(MuxChannel, new(property.ToNetMessageSetProperty(replicationId)));
