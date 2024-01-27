@@ -130,7 +130,7 @@
         /// <summary>
         /// Logs a message on the specified level.
         /// </summary>
-        private void Log(Level level, string message) => LogRouter.EnqueueMessage(level, _name, message);
+        private void Log(Level level, string message) => LogRouter.AddMessage(level, _name, message);
 
         /// <summary>
         /// Logs an exception on the specified level.

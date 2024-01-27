@@ -305,11 +305,11 @@ namespace MHServerEmu.Games.GameData
             return GetBlueprint(blueprintId);
         }
 
-        public T GetPrototype<T>(PrototypeId id) where T: Prototype
+        public T GetPrototype<T>(PrototypeId prototypeId) where T: Prototype
         {
             // NOTE: the original client implementation appears to be thread-safe, while ours is not
 
-            var record = GetPrototypeDataRefRecord(id);
+            var record = GetPrototypeDataRefRecord(prototypeId);
             if (record == null) return default;
 
             // Load the prototype if not loaded yet
@@ -342,7 +342,12 @@ namespace MHServerEmu.Games.GameData
                 }
             }
 
-            return record.Prototype as T;
+            // Make sure the requested type is valid for this prototype
+            var typedPrototype = record.Prototype as T;
+            if (typedPrototype == null)
+                Logger.Warn($"Failed to cast {typedPrototype.GetType().Name} to {typeof(T).Name}, file name {GameDatabase.GetPrototypeName(prototypeId)}");
+
+            return typedPrototype;
         }
 
         public Type GetPrototypeClassType(PrototypeId prototypeId)
@@ -450,6 +455,8 @@ namespace MHServerEmu.Games.GameData
 
         private PrototypeDataRefRecord GetPrototypeDataRefRecord(PrototypeId prototypeId)
         {
+            if (prototypeId == PrototypeId.Invalid) return null;
+
             if (_prototypeRecordDict.TryGetValue(prototypeId, out var record) == false)
                 return Logger.WarnReturn<PrototypeDataRefRecord>(null, $"PrototypeId {prototypeId} has no data ref record in the data directory");
 
