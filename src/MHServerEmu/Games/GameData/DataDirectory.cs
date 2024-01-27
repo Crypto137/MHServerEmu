@@ -342,7 +342,7 @@ namespace MHServerEmu.Games.GameData
                 }
             }
 
-            return (T)record.Prototype;
+            return record.Prototype as T;
         }
 
         public Type GetPrototypeClassType(PrototypeId prototypeId)
