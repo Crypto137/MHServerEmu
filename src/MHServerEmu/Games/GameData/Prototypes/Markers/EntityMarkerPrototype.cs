@@ -46,7 +46,7 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
                 Logger.Warn($"Unable to get a data ref from MarkerEntityPrototype. Prototype: {ToString()}.");
                 return default;
             }
-            return GameDatabase.GetPrototype<T>(dataRef);
+            return GameDatabase.GetPrototype<Prototype>(dataRef) as T;
         }
     }
 }
