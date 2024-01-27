@@ -12,12 +12,12 @@ namespace MHServerEmu.Games.Generators.Population
     public class PropTable
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
-        public List<ulong> PropSetRefs = new();
-        public Dictionary<ulong, PropGroupList> Map = new();
+        public List<AssetId> PropSetRefs = new();
+        public Dictionary<PrototypeId, PropGroupList> Map = new();
 
         public PropTable() { }
 
-        public bool AppendPropSet(ulong propSetRef)
+        public bool AppendPropSet(AssetId propSetRef)
         {
             if (propSetRef == 0) return false;
 
@@ -35,10 +35,10 @@ namespace MHServerEmu.Games.Generators.Population
                         continue;
                     }
 
-                    ulong propTypeGuid = propList.PropType;
+                    PrototypeGuid propTypeGuid = propList.PropType;
                     if (propTypeGuid == 0) continue;
 
-                    ulong propTypeDataRef = GameDatabase.GetDataRefByPrototypeGuid(propTypeGuid);
+                    PrototypeId propTypeDataRef = GameDatabase.GetDataRefByPrototypeGuid(propTypeGuid);
                     if (propTypeDataRef == 0)
                     {
                         Logger.Warn($"propTypeDataRef PropSetRef: {GameDatabase.GetAssetName(propSetRef)}");
@@ -67,7 +67,7 @@ namespace MHServerEmu.Games.Generators.Population
             return true;
         }
 
-        private static PropSetPrototype GetPropSetPrototypeFromRef(ulong propSetRef)
+        private static PropSetPrototype GetPropSetPrototypeFromRef(AssetId propSetRef)
         {
             if (propSetRef == 0)
             {
@@ -75,7 +75,7 @@ namespace MHServerEmu.Games.Generators.Population
                 return null;
             }
 
-            ulong proto = GameDatabase.GetDataRefByAsset(propSetRef);
+            PrototypeId proto = GameDatabase.GetDataRefByAsset(propSetRef);
             if (proto == 0)
             {
                 Console.WriteLine("Area contains a PropSet Asset that does not match any files in the resource folder.");
@@ -93,7 +93,7 @@ namespace MHServerEmu.Games.Generators.Population
                 return null;
             }
 
-            ulong packageRef = GameDatabase.GetPrototypeRefByName(packageName);
+            PrototypeId packageRef = GameDatabase.GetPrototypeRefByName(packageName);
             PropPackagePrototype packageProto = GameDatabase.GetPrototype<PropPackagePrototype>(packageRef);
             if (packageProto == null) 
             {
@@ -110,7 +110,7 @@ namespace MHServerEmu.Games.Generators.Population
             return propGroupProto;
         }
 
-        internal bool GetRandomPropMarkerOfType(Random random, ulong propMarkerRef, out PropGroupListEntry propGroup)
+        internal bool GetRandomPropMarkerOfType(Random random, PrototypeId propMarkerRef, out PropGroupListEntry propGroup)
         {
             throw new NotImplementedException();
         }
@@ -120,9 +120,9 @@ namespace MHServerEmu.Games.Generators.Population
         public class PropGroupListEntry
         {
             public ProceduralPropGroupPrototype PropGroup;
-            public ulong PropSetRef;
+            public AssetId PropSetRef;
 
-            public PropGroupListEntry(ProceduralPropGroupPrototype propGroup, ulong propSetRef)
+            public PropGroupListEntry(ProceduralPropGroupPrototype propGroup, AssetId propSetRef)
             {
                 PropGroup = propGroup;
                 PropSetRef = propSetRef;
@@ -155,7 +155,7 @@ namespace MHServerEmu.Games.Generators.Population
         {
         }
 
-        public virtual void Visit(int randomSeed, PropTable propTable, ulong propSetRef, ProceduralPropGroupPrototype propGroup, EntityMarkerPrototype markerPrototype)
+        public virtual void Visit(int randomSeed, PropTable propTable, AssetId propSetRef, ProceduralPropGroupPrototype propGroup, EntityMarkerPrototype markerPrototype)
         {           
         }
     }
@@ -178,7 +178,7 @@ namespace MHServerEmu.Games.Generators.Population
             _cell = cell;
         }
 
-        public override void Visit(int randomSeed, PropTable propTable, ulong propSetRef, ProceduralPropGroupPrototype propGroup, EntityMarkerPrototype markerPrototype)
+        public override void Visit(int randomSeed, PropTable propTable, AssetId propSetRef, ProceduralPropGroupPrototype propGroup, EntityMarkerPrototype markerPrototype)
         {
             if (_cell != null && propTable != null && propGroup != null && markerPrototype != null)
             {

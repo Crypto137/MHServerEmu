@@ -93,9 +93,9 @@ namespace MHServerEmu.Games.Generators.Regions
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly POISpiderNode _root;
-        private readonly ulong _poiGroupProto;
+        private readonly PrototypeId _poiGroupProto;
 
-        public RegionPOIPickerSpider(ulong groupProto)
+        public RegionPOIPickerSpider(PrototypeId groupProto)
         {
             _poiGroupProto = groupProto;
             _root = null;
@@ -146,7 +146,7 @@ namespace MHServerEmu.Games.Generators.Regions
             _root.DereferenceArea(area);
         }
 
-        public ulong GetRef()
+        public PrototypeId GetRef()
         {
             return _poiGroupProto;
         }
@@ -163,7 +163,7 @@ namespace MHServerEmu.Games.Generators.Regions
                 foreach (var group in regionGenerator.POIGroups) RegisterPOIGroup(group);
         }
 
-        public void RegisterPOIGroup(ulong groupProto)
+        public void RegisterPOIGroup(PrototypeId groupProto)
         {
             if (groupProto == 0) return;
 

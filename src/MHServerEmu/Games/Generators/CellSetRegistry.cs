@@ -10,7 +10,7 @@ namespace MHServerEmu.Games.Generators
 {
     public class CellSetRegistryEntry
     {
-        public ulong CellRef;
+        public PrototypeId CellRef;
         public bool Picked;
         public bool Unique;
         public int Weight;
@@ -18,6 +18,12 @@ namespace MHServerEmu.Games.Generators
         public List<AreaTransition> AreaTransitions = new();
 
         public CellSetRegistryEntry() { }
+    }
+    public class AreaTransition
+    {
+        public Vector3 Position;
+        public Vector3 Rotation;
+        public AreaTransitionPrototype Prototype;
     }
 
     public class EntryList : List<CellSetRegistryEntry>
@@ -56,7 +62,7 @@ namespace MHServerEmu.Games.Generators
             IsInitialized = true;
         }
 
-        public ulong GetCellSetAssetPicked(GRandom random, Cell.Type cellType, List<ulong> excludedList)
+        public PrototypeId GetCellSetAssetPicked(GRandom random, Cell.Type cellType, List<PrototypeId> excludedList)
         {
             if (_cellsType.TryGetValue(cellType, out EntryList entryList))
             {
@@ -77,7 +83,7 @@ namespace MHServerEmu.Games.Generators
             return 0;
         }
 
-        public ulong GetCellSetAssetPickedByWall(GRandom random, Cell.Walls wallType, List<ulong> excludedList = null)
+        public PrototypeId GetCellSetAssetPickedByWall(GRandom random, Cell.Walls wallType, List<PrototypeId> excludedList = null)
         {
             if (_cellsWalls.TryGetValue(wallType, out EntryList entryList))
             {
@@ -98,7 +104,7 @@ namespace MHServerEmu.Games.Generators
             return 0;
         }
 
-        public ulong GetCellSetAssetPickedByFiller(GRandom random, Cell.Filler fillerType)
+        public PrototypeId GetCellSetAssetPickedByFiller(GRandom random, Cell.Filler fillerType)
         {
             if (_cellsFiller.TryGetValue(fillerType, out EntryList entryList))
             {
@@ -117,7 +123,7 @@ namespace MHServerEmu.Games.Generators
             return 0;
         }
 
-        private static void PopulatePicker(Picker<CellSetRegistryEntry> picker, List<CellSetRegistryEntry> entryList, List<ulong> skipList, bool skipPicked, bool skipUnique)
+        private static void PopulatePicker(Picker<CellSetRegistryEntry> picker, List<CellSetRegistryEntry> entryList, List<PrototypeId> skipList, bool skipPicked, bool skipUnique)
         {
             foreach (var entry in entryList)
             {
@@ -141,7 +147,7 @@ namespace MHServerEmu.Games.Generators
             }
         }
 
-        private bool PopulatePickerPhases(Picker<CellSetRegistryEntry> picker, List<CellSetRegistryEntry> entryList, List<ulong> skipList)
+        private bool PopulatePickerPhases(Picker<CellSetRegistryEntry> picker, List<CellSetRegistryEntry> entryList, List<PrototypeId> skipList)
         {
             PopulatePicker(picker, entryList, skipList, false, false);
             if (picker.Empty()) PopulatePicker(picker, entryList, skipList, true, false);
@@ -150,18 +156,18 @@ namespace MHServerEmu.Games.Generators
             return !picker.Empty();
         }
 
-        public void LoadDirectory(ulong cellSet, CellSetEntryPrototype cellSetEntry, int weight, bool unique)
+        public void LoadDirectory(AssetId cellSet, CellSetEntryPrototype cellSetEntry, int weight, bool unique)
         {
             if (weight <= 0) return;
 
-            if (GatherCellSet(cellSet, cellSetEntry, out List<ulong> cells))
+            if (GatherCellSet(cellSet, cellSetEntry, out List<PrototypeId> cells))
             {
                 foreach (var cellRef in cells)
                     AddReference(cellRef, weight, unique);
             }
         }
 
-        private void AddReference(ulong cellRef, int weight, bool unique)
+        private void AddReference(PrototypeId cellRef, int weight, bool unique)
         {
             if (cellRef == 0 || weight <= 0) return;
 
@@ -212,13 +218,13 @@ namespace MHServerEmu.Games.Generators
                     if (marker == null) continue;
                     if (marker is EntityMarkerPrototype entityMarker)
                     {
-                        ulong entityGuid = entityMarker.EntityGuid;
+                        PrototypeGuid entityGuid = entityMarker.EntityGuid;
                         if (entityGuid != 0)
                         {
-                            ulong entityRef = GameDatabase.GetDataRefByPrototypeGuid(entityGuid);
+                            PrototypeId entityRef = GameDatabase.GetDataRefByPrototypeGuid(entityGuid);
                             if (entityRef != 0)
                             {
-                                Prototype markedProto = GameDatabase.GetPrototypeExt(entityRef);  //  GameDatabase.GetPrototype<Prototype>(entityRef); 
+                                Prototype markedProto = GameDatabase.GetPrototype<Prototype>(entityRef); 
 
                                 if (markedProto is AreaTransitionPrototype areaProto)
                                 {
@@ -256,7 +262,7 @@ namespace MHServerEmu.Games.Generators
             }
         }
 
-        private bool AddNewConnectionMapEntry(Cell.Type type, Vector3 position, ulong cellRef)
+        private bool AddNewConnectionMapEntry(Cell.Type type, Vector3 position, PrototypeId cellRef)
         {
             if (Vector3.Zero == _connectionsType[type] || Vector3.EpsilonSphereTest(position, _connectionsType[type], 64.0f))
             {
@@ -269,7 +275,7 @@ namespace MHServerEmu.Games.Generators
             return false;
         }
 
-        private bool GatherCellSet(ulong cellSet, CellSetEntryPrototype cellSetEntry, out List<ulong> cells)
+        private bool GatherCellSet(AssetId cellSet, CellSetEntryPrototype cellSetEntry, out List<PrototypeId> cells)
         {
             cells = new();
             if (cellSet == 0) return false;
@@ -277,17 +283,16 @@ namespace MHServerEmu.Games.Generators
             string cellSetPath = GameDatabase.GetAssetName(cellSet);
             Logger.Trace($"CellSetRegistry::LoadCellSet({cellSetPath})");
             cellSetPath = "Resource/Cells/" + cellSetPath;
-            List<CellPrototype> cellPrototypes;
-            cellPrototypes = GameDatabase.GetCellPrototypesByPath(cellSetPath);
 
             int numCells = 0;
-            cellPrototypes.Sort((a, b) => a.DataRef.CompareTo(b.DataRef)); // Sort by PrototypeId
-            foreach (CellPrototype cell in cellPrototypes)
-            {
-                if (IsInCellSet(cellSetEntry, cellSetPath, cell))
+
+            foreach (var cellRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(CellPrototype)))
+            {                
+                if (IsInCellSet(cellSetEntry, cellSetPath, cellRef))
                 {
+                    CellPrototype cell = GameDatabase.GetPrototype<CellPrototype>(cellRef);
                     //Logger.Debug($"0x{cell.DataRef:X16}i64 [{cell.DataRef}] {GameDatabase.GetPrototypeName(cell.DataRef)}");
-                    cells.Add(cell.DataRef);
+                    cells.Add(cellRef);
                     CellBounds = cell.BoundingBox;
                     ++numCells;
                 }
@@ -296,11 +301,8 @@ namespace MHServerEmu.Games.Generators
             return true;
         }
 
-        public static bool IsInCellSet(CellSetEntryPrototype cellSetEntry, string cellSetPath, CellPrototype cell)
-        {
-            if (cell == null) return false;
-
-            ulong cellRef = cell.DataRef;
+        public static bool IsInCellSet(CellSetEntryPrototype cellSetEntry, string cellSetPath, PrototypeId cellRef)
+        {         
             if (cellRef == 0) return false;
 
             string cellPath = GameDatabase.GetPrototypeName(cellRef);
@@ -311,6 +313,9 @@ namespace MHServerEmu.Games.Generators
             {
                 return false;
             }
+
+            CellPrototype cell = GameDatabase.GetPrototype<CellPrototype>(cellRef);
+            if (cell == null) return false;
 
             Cell.WallGroup walls = (Cell.WallGroup)cell.Walls;
             if (cellSetEntry != null && cellSetEntry.IgnoreOfType != null)

@@ -2,6 +2,7 @@
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -11,7 +12,7 @@ namespace MHServerEmu.Games.Generators.Regions
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
         public Area StartArea { get; set; }
-        public Dictionary<ulong, Area> AreaMap { get; private set; }
+        public Dictionary<PrototypeId, Area> AreaMap { get; private set; }
         public RegionGeneratorPrototype GeneratorPrototype { get; private set; }
         public RegionPOIPickerCollection POIPickerCollection { get; set; }
 
@@ -26,13 +27,13 @@ namespace MHServerEmu.Games.Generators.Regions
 
         public virtual void GenerateRegion(int randomSeed, Region region) { }
 
-        public void AddAreaToMap(ulong areaProtoId, Area area)
+        public void AddAreaToMap(PrototypeId areaProtoId, Area area)
         {
             if (areaProtoId != 0)
                 AreaMap.Add(areaProtoId, area);
         }
 
-        public Area GetAreaFromPrototypeRef(ulong dataRef)
+        public Area GetAreaFromPrototypeRef(PrototypeId dataRef)
         {
             if (dataRef != 0 && AreaMap.TryGetValue(dataRef, out Area area)) return area;
             return null;

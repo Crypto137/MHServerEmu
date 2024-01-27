@@ -108,7 +108,7 @@ namespace MHServerEmu.Games.Generators.Areas
             return false;
         }
 
-        private static Cell.Type GetEdgeFromAssetName(ulong edge)
+        private static Cell.Type GetEdgeFromAssetName(AssetId edge)
         {
             if (edge != 0 && Enum.TryParse(GameDatabase.GetAssetName(edge), out Cell.Type edgeType))
                     return edgeType;            
@@ -138,7 +138,7 @@ namespace MHServerEmu.Games.Generators.Areas
             return base.Initialize(area);
         }
 
-        public override bool Generate(GRandom random, RegionGenerator regionGenerator, List<ulong> areas)
+        public override bool Generate(GRandom random, RegionGenerator regionGenerator, List<PrototypeId> areas)
         {
             if (CellContainer == null) return false;
             if (Area.AreaPrototype.Generator is not GridAreaGeneratorPrototype proto) return false;
@@ -224,9 +224,9 @@ namespace MHServerEmu.Games.Generators.Areas
                         else
                         {
                             Cell.Type cellType = CellContainer.DetermineType(point.X, point.Y);
-                            ulong cellRef = 0;
+                            PrototypeId cellRef = 0;
 
-                            List<ulong> excludedList = new ();
+                            List<PrototypeId> excludedList = new ();
                             BuildExcludedListLikeCells(point.X, point.Y, cellType, excludedList);
 
                             if (CellSetRegistry.HasCellOfType(cellType))

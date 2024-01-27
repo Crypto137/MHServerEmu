@@ -162,16 +162,6 @@ namespace MHServerEmu.Games.Generators.Navi
             public int Id;
         }
 
-        public enum PathMethod {
-			Invalid = 0,
-			Forward = 1,
-			ForwardLoop = 5,
-			ForwardBackAndForth = 3,
-			Reverse = 2,
-			ReverseLoop = 6,
-			ReverseBackAndForth = 4,
-		}
-
     }
 
 }

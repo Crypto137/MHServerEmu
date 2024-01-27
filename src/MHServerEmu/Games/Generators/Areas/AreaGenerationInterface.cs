@@ -30,7 +30,7 @@ namespace MHServerEmu.Games.Generators.Areas
             return Aabb.InvertedLimit;
         }
 
-        public override bool Generate(GRandom random, RegionGenerator regionGenerator, List<ulong> areas)
+        public override bool Generate(GRandom random, RegionGenerator regionGenerator, List<PrototypeId> areas)
         {          
             if (Area.AreaPrototype.Generator is not AreaGenerationInterfacePrototype) return false; 
 
@@ -56,7 +56,7 @@ namespace MHServerEmu.Games.Generators.Areas
             return false;
         }
 
-        private static bool UpdateBounds(Area area, ulong cellRef, Vector3 position)
+        private static bool UpdateBounds(Area area, PrototypeId cellRef, Vector3 position)
         {
             CellPrototype cellProto = GameDatabase.GetPrototype<CellPrototype>(cellRef);
             if (cellProto == null) return false;
@@ -68,7 +68,7 @@ namespace MHServerEmu.Games.Generators.Areas
             return true;
         }
 
-        public bool PlaceCell(ulong cellRef, Vector3 position)
+        public bool PlaceCell(PrototypeId cellRef, Vector3 position)
         {
             if (!UpdateBounds(Area, cellRef, position)) return false;
 

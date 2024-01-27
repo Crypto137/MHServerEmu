@@ -7,19 +7,17 @@ namespace MHServerEmu.Games.Generators.Regions
     {
         public RegionTransition() { }
 
-        public static bool GetRequiredTransitionData(ulong regionRef, ulong areaRef, ref List<RegionTransitionSpec> specList)
+        public static bool GetRequiredTransitionData(PrototypeId regionRef, PrototypeId areaRef, ref List<RegionTransitionSpec> specList)
         {
-            IEnumerable<Prototype> iterateProtos = GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(RegionConnectionNodePrototype), 2 | 4);
+            var iterateProtos = GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(RegionConnectionNodePrototype), PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly);
 
             // ulong InvalidPrototype = 0;  This variable has no logic!!!
             bool found = false;
 
-            List<Prototype> connectionNodes = new (iterateProtos); // Order for Prototypes
-            connectionNodes.Sort((a, b) => a.GetDataRef().CompareTo(b.GetDataRef())); // Sort by PrototypeId
-
-            foreach (var itrProto in connectionNodes) // they check ALL prototypes... TODO: Rewrite!!!
+            foreach (var itrProtoId in iterateProtos) // they check ALL prototypes... TODO: Rewrite!!!
             {
-                if (itrProto is RegionConnectionNodePrototype proto)
+                RegionConnectionNodePrototype proto = GameDatabase.GetPrototype<RegionConnectionNodePrototype>(itrProtoId);
+                if (proto != null)
                 {
                     var origin = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(proto.Origin);
                     var target = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(proto.Target);
@@ -56,7 +54,7 @@ namespace MHServerEmu.Games.Generators.Regions
             return found;
         }
 
-        public static bool GetDestination(ulong waypointDataRef, out RegionConnectionTargetPrototype target)
+        public static bool GetDestination(PrototypeId waypointDataRef, out RegionConnectionTargetPrototype target)
         {            
             target = null;
             if (waypointDataRef == 0) return false;
@@ -69,20 +67,20 @@ namespace MHServerEmu.Games.Generators.Regions
 
     public class RegionTransitionSpec
     {
-        public ulong Cell; // assetRef
-        public ulong Entity;
+        public AssetId Cell; 
+        public PrototypeId Entity;
         public bool Start;
 
         public RegionTransitionSpec() { }
 
-        public RegionTransitionSpec(ulong cell, ulong entity, bool start)
+        public RegionTransitionSpec(AssetId cell, PrototypeId entity, bool start)
         {
             Cell = cell;
             Entity = entity;
             Start = start;
         }
 
-        public ulong GetCellRef()
+        public PrototypeId GetCellRef()
         {
             return GameDatabase.GetDataRefByAsset(Cell);
         }

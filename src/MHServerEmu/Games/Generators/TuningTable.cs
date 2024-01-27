@@ -9,7 +9,7 @@ namespace MHServerEmu.Games.Regions
         public static readonly Logger Logger = LogManager.CreateLogger();
 
         private Region _region;
-        private ulong _tuningRef;
+        private PrototypeId _tuningRef;
         private TuningPrototype _tuningProto;
         private int _difficultyIndexMin;
         private int _difficultyIndexMax;
@@ -31,7 +31,7 @@ namespace MHServerEmu.Games.Regions
                 Logger.Error("Failed to retrieve DifficultyIndexDamageDefaultPtoM from DifficultyGlobals! Is it set?");
         }
 
-        public void SetTuningTable(ulong tuningTable)
+        public void SetTuningTable(PrototypeId tuningTable)
         {
             if (_tuningRef != tuningTable)
             {

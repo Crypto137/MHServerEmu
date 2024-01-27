@@ -18,8 +18,8 @@ namespace MHServerEmu.Games.Generators
 
         public uint Id { get; set; }
         public Vector3 Position { get; set; }
-        public ulong CellRef { get; private set; }
-        public ulong PopulationThemeOverrideRef { get; set; }
+        public PrototypeId CellRef { get; private set; }
+        public PrototypeId PopulationThemeOverrideRef { get; set; }
 
         public Cell.Type ExternalConnections { get; private set; }
         public Cell.Walls RequiredWalls { get; private set; }
@@ -45,7 +45,7 @@ namespace MHServerEmu.Games.Generators
             Position = new(); 
         }
 
-        public GenCell(uint id, Vector3 position, ulong cellRef)
+        public GenCell(uint id, Vector3 position, PrototypeId cellRef)
         {
             Id = id;
             Position = position;
@@ -211,7 +211,7 @@ namespace MHServerEmu.Games.Generators
             Prev = null;
         }
 
-        public void SetCellRef(ulong cellRef)
+        public void SetCellRef(PrototypeId cellRef)
         {
             if (cellRef != 0)
             {

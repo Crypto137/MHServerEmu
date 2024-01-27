@@ -4,6 +4,7 @@ using MHServerEmu.Common;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Generators.Regions
 {
@@ -16,7 +17,7 @@ namespace MHServerEmu.Games.Generators.Regions
             GRandom random = new(randomSeed);
             StaticRegionGeneratorPrototype regionGeneratorProto = (StaticRegionGeneratorPrototype)GeneratorPrototype;
             StaticAreaPrototype[] staticAreas = regionGeneratorProto.StaticAreas;
-            ulong areaRef = region.RegionPrototype.GetDefaultArea(region);
+            PrototypeId areaRef = region.RegionPrototype.GetDefaultArea(region);
 
             foreach (StaticAreaPrototype staticAreaProto in staticAreas)
             {
@@ -51,8 +52,8 @@ namespace MHServerEmu.Games.Generators.Regions
                         return;
                     }
 
-                    List<ulong> nextConnections = new();
-                    List<ulong> prevConnections = new()
+                    List<PrototypeId> nextConnections = new();
+                    List<PrototypeId> prevConnections = new()
                     {
                         StartArea.GetPrototypeDataRef()
                     };
@@ -61,7 +62,7 @@ namespace MHServerEmu.Games.Generators.Regions
             }
         }
 
-        public static bool ConnectionListContainsArea(List<ulong> connections, ulong area)
+        public static bool ConnectionListContainsArea(List<PrototypeId> connections, PrototypeId area)
         {
             return connections.Contains(area);
         }
@@ -83,7 +84,7 @@ namespace MHServerEmu.Games.Generators.Regions
             return true;
         }
 
-        public void ConnectNextAreas(GRandom random, List<AreaConnectionPrototype> workingConnectionList, List<ulong> prevConnections, List<ulong> nextConnections, RegionProgressionGraph graph)
+        public void ConnectNextAreas(GRandom random, List<AreaConnectionPrototype> workingConnectionList, List<PrototypeId> prevConnections, List<PrototypeId> nextConnections, RegionProgressionGraph graph)
         {
             int failout = 100;
             foreach (var areaConnectProto in workingConnectionList.TakeWhile(_ => failout-- > 0))

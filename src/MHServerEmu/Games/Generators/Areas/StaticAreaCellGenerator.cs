@@ -22,7 +22,7 @@ namespace MHServerEmu.Games.Generators.Areas
             foreach (var cellMarker in protoDistrict.CellMarkerSet.Markers)
             {
                 if (cellMarker is not ResourceMarkerPrototype resourceMarker) continue;
-                ulong cellRef = GameDatabase.GetPrototypeRefByName(resourceMarker.Resource);
+                PrototypeId cellRef = GameDatabase.GetPrototypeRefByName(resourceMarker.Resource);
                 if (cellRef == 0)
                 {
                     Logger.Warn($"Unable to link Resource {resourceMarker.Resource} to a corresponding .cell file");
@@ -39,7 +39,7 @@ namespace MHServerEmu.Games.Generators.Areas
             return bounds;
         }
 
-        public override bool Generate(GRandom random, RegionGenerator regionGenerator, List<ulong> areas)
+        public override bool Generate(GRandom random, RegionGenerator regionGenerator, List<PrototypeId> areas)
         {
             
             DistrictPrototype protoDistrict = GetDistrictPrototype();
@@ -49,7 +49,7 @@ namespace MHServerEmu.Games.Generators.Areas
             {
                 if (cellMarker is not ResourceMarkerPrototype resourceMarker) continue;
 
-                ulong cellRef = GameDatabase.GetPrototypeRefByName(resourceMarker.Resource); // GetDataRefByResourceGuid 
+                PrototypeId cellRef = GameDatabase.GetPrototypeRefByName(resourceMarker.Resource); // GetDataRefByResourceGuid 
                 if (cellRef == 0) continue;
 
                 CellSettings cellSettings = new()
@@ -102,14 +102,14 @@ namespace MHServerEmu.Games.Generators.Areas
 
             if (Area.AreaPrototype.Generator is not DistrictAreaGeneratorPrototype proto) return null;
 
-            ulong districtAssetRef = proto.District;
+            AssetId districtAssetRef = proto.District;
             if (districtAssetRef == 0)
             {
                 Logger.Warn("StaticAreaCellGenerator called with no layout specified.");
                 return null;
             }
 
-            ulong districtRef = GameDatabase.GetDataRefByAsset(districtAssetRef);
+            PrototypeId districtRef = GameDatabase.GetDataRefByAsset(districtAssetRef);
             DistrictPrototype protoDistrict = GameDatabase.GetPrototype<DistrictPrototype>(districtRef);
             if (protoDistrict == null)
                 Logger.Warn($"District Prototype is not available. Likely a missing file. Looking for Asset: {GameDatabase.GetAssetName(districtAssetRef)}");
@@ -142,7 +142,7 @@ namespace MHServerEmu.Games.Generators.Areas
             {
                 if (cellMarker is not ResourceMarkerPrototype resourceMarker) continue;
 
-                ulong cellRef = GameDatabase.GetPrototypeRefByName(resourceMarker.Resource);
+                PrototypeId cellRef = GameDatabase.GetPrototypeRefByName(resourceMarker.Resource);
                 if (cellRef == 0) continue;
 
                 Vector3 offset = resourceMarker.Position;

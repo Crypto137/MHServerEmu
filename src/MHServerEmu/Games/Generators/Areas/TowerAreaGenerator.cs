@@ -82,7 +82,7 @@ namespace MHServerEmu.Games.Generators.Areas
         }
 
 
-        public override bool Generate(GRandom random, RegionGenerator regionGenerator, List<ulong> areas)
+        public override bool Generate(GRandom random, RegionGenerator regionGenerator, List<PrototypeId> areas)
         {
             if (Area.AreaPrototype.Generator is not TowerAreaGeneratorPrototype) return false;
 
@@ -96,8 +96,8 @@ namespace MHServerEmu.Games.Generators.Areas
                     {
                         if (staticEntry != null && staticEntry.Cell != 0)
                         {
-                            ulong cellRef = GameDatabase.GetDataRefByAsset(staticEntry.Cell);
-                            ulong name = staticEntry.Name;
+                            PrototypeId cellRef = GameDatabase.GetDataRefByAsset(staticEntry.Cell);
+                            LocaleStringId name = staticEntry.Name;
                             if (cellRef != 0)
                             {
                                 Cell cell = AddCell(cellRef, name);
@@ -118,7 +118,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
                             for (int i = 0; i < section.NumCells; ++i)
                             {
-                                ulong cellRef = registry.GetCellSetAssetPicked(random, Cell.Type.None, null);
+                                PrototypeId cellRef = registry.GetCellSetAssetPicked(random, Cell.Type.None, null);
                                 if (cellRef != 0)
                                 {
                                     Cell cell = AddCell(cellRef, 0);
@@ -149,7 +149,7 @@ namespace MHServerEmu.Games.Generators.Areas
             return true;
         }
 
-        public Cell AddCell(ulong cellRef, ulong locationName)
+        public Cell AddCell(PrototypeId cellRef, LocaleStringId locationName)
         {
             if (Area.AreaPrototype.Generator is not TowerAreaGeneratorPrototype proto) return null;
 

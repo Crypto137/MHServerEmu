@@ -157,7 +157,7 @@ namespace MHServerEmu.Games.Generators
             return VerifyCoord(x, y) && DestroyCell(GetIndex(x, y));
         }
 
-        public virtual bool ReserveCell(int x, int y, ulong cellRef, GenCell.GenCellType genCellType)
+        public virtual bool ReserveCell(int x, int y, PrototypeId cellRef, GenCell.GenCellType genCellType)
         {
             if (!ReservableCell(x, y, cellRef)) return false;
 
@@ -215,7 +215,7 @@ namespace MHServerEmu.Games.Generators
             return true;
         }
 
-        public virtual bool ReservableCell(int x, int y, ulong cellRef)
+        public virtual bool ReservableCell(int x, int y, PrototypeId cellRef)
         {
             if (!VerifyCoord(x, y)) return false;
             CellPrototype cellProto = GameDatabase.GetPrototype<CellPrototype>(cellRef);

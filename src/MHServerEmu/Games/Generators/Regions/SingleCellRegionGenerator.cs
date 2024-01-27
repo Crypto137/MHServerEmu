@@ -11,11 +11,11 @@ namespace MHServerEmu.Games.Generators.Regions
         {
             SingleCellRegionGeneratorPrototype proto = (SingleCellRegionGeneratorPrototype)GeneratorPrototype;
 
-            ulong dynamicAreaProto = proto.AreaInterface; // DRAG\AreaGenerators\DynamicArea.prototype
+            PrototypeId dynamicAreaProto = proto.AreaInterface; // DRAG\AreaGenerators\DynamicArea.prototype
             if (dynamicAreaProto == 0) return;
 
-            ulong cellAsset = proto.Cell; // Resource/Cells/Lobby.cell
-            ulong cellRef = proto.CellProto;
+            AssetId cellAsset = proto.Cell; // Resource/Cells/Lobby.cell
+            PrototypeId cellRef = proto.CellProto;
             if (cellAsset == 0 && cellRef == 0)  return;
 
             if (cellRef == 0)

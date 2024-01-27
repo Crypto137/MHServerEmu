@@ -19,7 +19,7 @@ namespace MHServerEmu.Games.Generators.Areas
             return base.Initialize(area);
         }
 
-        public override bool Generate(GRandom random, RegionGenerator regionGenerator, List<ulong> areas)
+        public override bool Generate(GRandom random, RegionGenerator regionGenerator, List<PrototypeId> areas)
         {
             if (Area.AreaPrototype.Generator is not WideGridAreaGeneratorPrototype proto) return false;
 
@@ -295,9 +295,9 @@ namespace MHServerEmu.Games.Generators.Areas
                         else
                         {
                             Walls wallType = genCell.RequiredWalls;
-                            ulong cellRef = 0;
+                            PrototypeId cellRef = 0;
 
-                            List<ulong> excludedList = new();
+                            List<PrototypeId> excludedList = new();
 
                             if (CellSetRegistry.HasCellWithWalls(wallType))
                             {
@@ -363,7 +363,7 @@ namespace MHServerEmu.Games.Generators.Areas
         private bool PlaceFillerRoom(GRandom random, Vector3 position)
         {
             if (CellSetRegistry.HasCellWithWalls(Walls.All)) { 
-                ulong cellRef = CellSetRegistry.GetCellSetAssetPickedByWall(random, Walls.All);
+                PrototypeId cellRef = CellSetRegistry.GetCellSetAssetPickedByWall(random, Walls.All);
                 CellSettings cellSettings = new()
                 {
                     CellRef = cellRef,
@@ -597,7 +597,7 @@ namespace MHServerEmu.Games.Generators.Areas
             return destroyable;
         }
 
-        public override bool ReservableCell(int x, int y, ulong cellRef)
+        public override bool ReservableCell(int x, int y, PrototypeId cellRef)
         {
             if (!VerifyCoord(x, y)) return false;
 
@@ -635,7 +635,7 @@ namespace MHServerEmu.Games.Generators.Areas
             return ReservableWideCell(x, y, walls);
         }
 
-        public override bool ReserveCell(int x, int y, ulong cellRef, GenCell.GenCellType type)
+        public override bool ReserveCell(int x, int y, PrototypeId cellRef, GenCell.GenCellType type)
         {
             if (!ReservableCell(x, y, cellRef))  return false;
             if (!base.ReserveCell(x, y, cellRef, type)) return false;

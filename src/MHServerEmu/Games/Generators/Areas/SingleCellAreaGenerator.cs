@@ -13,14 +13,14 @@ namespace MHServerEmu.Games.Generators.Areas
     {
         public SingleCellAreaGenerator(){}
 
-        public override bool Generate(GRandom random, RegionGenerator regionGenerator, List<ulong> areas)
+        public override bool Generate(GRandom random, RegionGenerator regionGenerator, List<PrototypeId> areas)
         {
             if (Area.AreaPrototype.Generator is not SingleCellAreaGeneratorPrototype proto) return false;
 
-            ulong cellAssetRef = proto.Cell;
+            AssetId cellAssetRef = proto.Cell;
             if (cellAssetRef == 0) return false;
 
-            ulong cellRef = GameDatabase.GetDataRefByAsset(cellAssetRef);
+            PrototypeId cellRef = GameDatabase.GetDataRefByAsset(cellAssetRef);
             if (cellRef == 0) return false;
 
             CellSettings cellSettings = new ()
@@ -74,14 +74,14 @@ namespace MHServerEmu.Games.Generators.Areas
             return connected;
         }
 
-        public ulong GetCellPrototypeDataRef()
+        public PrototypeId GetCellPrototypeDataRef()
         {
             if (Area.AreaPrototype.Generator is not SingleCellAreaGeneratorPrototype generatorProto) return 0;
 
-            ulong cellAssetRef = generatorProto.Cell;
+            AssetId cellAssetRef = generatorProto.Cell;
             if (cellAssetRef == 0) return 0;
 
-            ulong cellRef = GameDatabase.GetDataRefByAsset(cellAssetRef);
+            PrototypeId cellRef = GameDatabase.GetDataRefByAsset(cellAssetRef);
             if (cellRef == 0) return 0;
 
             return cellRef;
@@ -89,7 +89,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         public CellPrototype GetCellPrototype()
         {
-            ulong cellRef = GetCellPrototypeDataRef();
+            PrototypeId cellRef = GetCellPrototypeDataRef();
             if (cellRef == 0) return null;
 
             CellPrototype proto = GameDatabase.GetPrototype<CellPrototype>(cellRef);
@@ -122,8 +122,8 @@ namespace MHServerEmu.Games.Generators.Areas
 
             if (singleCellGeneratorProto != null && singleCellGeneratorProto.BorderCellSets.IsNullOrEmpty() == false && singleCellGeneratorProto.Cell != 0)
             {
-                ulong assetRef = singleCellGeneratorProto.Cell;
-                ulong cellRef = GameDatabase.GetDataRefByAsset(assetRef);
+                AssetId assetRef = singleCellGeneratorProto.Cell;
+                PrototypeId cellRef = GameDatabase.GetDataRefByAsset(assetRef);
                 CellPrototype cellP = GameDatabase.GetPrototype<CellPrototype>(cellRef);
 
                 if (cellP == null) return false;

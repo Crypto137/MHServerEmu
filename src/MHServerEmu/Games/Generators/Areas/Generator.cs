@@ -23,7 +23,7 @@ namespace MHServerEmu.Games.Generators.Areas
             return true;
         }
 
-        public virtual bool Generate(GRandom random, RegionGenerator regionGenerator, List<ulong> areas) { return false; }
+        public virtual bool Generate(GRandom random, RegionGenerator regionGenerator, List<PrototypeId> areas) { return false; }
 
         public virtual Aabb PreGenerate(GRandom random) { return null; }
 
@@ -44,7 +44,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         public static bool DoBorderBehavior(Area area, int borderWidth, CellSetRegistry registry, float cellSize, int cellsX, int cellsY)
         {
-            GRandom random = area.Game.GetRandom();
+            GRandom random = area.Game.Random;
             Vector3 origin = area.Origin;
             Vector3 offset = Vector3.Zero;
             Cell.Filler filler;
@@ -114,13 +114,13 @@ namespace MHServerEmu.Games.Generators.Areas
 
             if (inAreas)
             {
-                ulong dynamicAreaRef = GameDatabase.GetGlobalsPrototype().DynamicArea;
+                PrototypeId dynamicAreaRef = GameDatabase.GetGlobalsPrototype().DynamicArea;
                 Area dynamicArea = region.CreateArea(dynamicAreaRef, position);
                 AreaGenerationInterface generatorInterface = dynamicArea.GetAreaGenerationInterface();
 
                 if (generatorInterface != null)
                 {
-                    ulong cellRef = registry.GetCellSetAssetPickedByFiller(random, fillerType);
+                    PrototypeId cellRef = registry.GetCellSetAssetPickedByFiller(random, fillerType);
                     if (cellRef == 0) cellRef = registry.GetCellSetAssetPickedByFiller(random, Cell.Filler.None);
 
                     if (cellRef != 0)
@@ -128,7 +128,7 @@ namespace MHServerEmu.Games.Generators.Areas
                         generatorInterface.PlaceCell(cellRef, new());
                         area.AddSubArea(dynamicArea);
 
-                        List<ulong> areas = new() { area.GetPrototypeDataRef() };
+                        List<PrototypeId> areas = new() { area.GetPrototypeDataRef() };
                         dynamicArea.Generate(null, areas, GenerateFlag.Background);
                         return true;
                     }

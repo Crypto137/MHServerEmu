@@ -2,6 +2,7 @@
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -26,7 +27,7 @@ namespace MHServerEmu.Games.Generators.Regions
                 // TODO for DangerRoom 
                 int endlessLevelsTotal = 0;// TODO region.PropertyCollection.GetProperty(PropertyEnum.EndlessLevelsTotal);
                 EndlessThemeEntryPrototype endlessTheme = regionGeneratorProto.GetEndlessGeneration(randomSeed, setting.EndlessLevel, endlessLevelsTotal);
-                MetaStateChallengeTier missionTier = region.RegionAffixGetMissionTier();
+                MetaStateChallengeTierEnum missionTier = region.RegionAffixGetMissionTier();
                 EndlessStateEntryPrototype endlessState = endlessTheme.GetState(randomSeed, setting.EndlessLevel, missionTier);
 
                 if (endlessState.MetaState != 0)
@@ -291,7 +292,7 @@ namespace MHServerEmu.Games.Generators.Regions
                             Area area = entry.Area;
                             if (area != null)
                             {
-                                List<ulong> areas = new();
+                                List<PrototypeId> areas = new();
                                 entry.GetAreaSequence(areas);
                                 success &= area.Generate(Generator, areas, GenerateFlag.Background);
                                 if (success == false)
@@ -678,11 +679,11 @@ namespace MHServerEmu.Games.Generators.Regions
             Area = null;
         }
 
-        public bool GetAreaSequence(List<ulong> areas)
+        public bool GetAreaSequence(List<PrototypeId> areas)
         {
             if (Previous != null) Previous.GetAreaSequence(areas);
 
-            ulong area = WeightedArea.Area;
+            PrototypeId area = WeightedArea.Area;
             areas.Add(area);
             return areas.Any();
         }

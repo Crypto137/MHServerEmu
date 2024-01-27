@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Common;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
 using System.Collections;
 using System.Text;
@@ -151,7 +152,7 @@ namespace MHServerEmu.Games.Generators
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         public IEnumerator<GenCell> GetEnumerator() => Cells.GetEnumerator();
 
-        public bool CreateCell(uint id, Vector3 position, ulong cellRef)
+        public bool CreateCell(uint id, Vector3 position, PrototypeId cellRef)
         {
             GenCell cell = new(id, position, cellRef);
             Cells.Add(cell);

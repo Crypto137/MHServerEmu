@@ -14,7 +14,7 @@ namespace MHServerEmu.Games.Generators.Population
         private SpawnReservationSpatialPartition _reservationOctree;
         private SpawnReservationList _spawnReservations = new();
         private SpawnReservationMap _regionLookup = new();
-        private Dictionary<ulong, SpawnReservationMap> _areaLookup = new();
+        private Dictionary<PrototypeId, SpawnReservationMap> _areaLookup = new();
         private Dictionary<uint, SpawnReservationMap> _cellLookup = new();
 
         public SpawnMarkerRegistry(Region region)
@@ -114,7 +114,7 @@ namespace MHServerEmu.Games.Generators.Population
             }
         }
 
-        private void AddSpawnTypeLocation(ulong markerRef, Vector3 position, Vector3 rotation, Cell cell, int id)
+        private void AddSpawnTypeLocation(PrototypeId markerRef, Vector3 position, Vector3 rotation, Cell cell, int id)
         {
             if (markerRef == 0) return;
             SpawnMarkerPrototype spawnMarkerProto = GameDatabase.GetPrototype<SpawnMarkerPrototype>(markerRef);
@@ -140,7 +140,7 @@ namespace MHServerEmu.Games.Generators.Population
             }
             regionList.Add(spot);
 
-            ulong areaRef = cell.Area.GetPrototypeDataRef();
+            PrototypeId areaRef = cell.Area.GetPrototypeDataRef();
             if (!_areaLookup.TryGetValue(areaRef, out var areaMap))
             {
                 areaMap = new ();
@@ -284,7 +284,7 @@ namespace MHServerEmu.Games.Generators.Population
 
     }
 
-    public class SpawnReservationMap : Dictionary<ulong, SpawnReservationList> { };
+    public class SpawnReservationMap : Dictionary<PrototypeId, SpawnReservationList> { };
     public class SpawnReservationList : List<SpawnReservation> { };
 
     public class SpawnReservation
@@ -295,12 +295,12 @@ namespace MHServerEmu.Games.Generators.Population
         public Cell Cell { get; private set; }
         public Vector3 MarkerPos { get; private set; }
         public Vector3 MarkerRot { get; private set; }
-        public ulong MarkerRef { get; private set; }
+        public PrototypeId MarkerRef { get; private set; }
         public Sphere RegionSphere { get; private set; }
         public Aabb RegionBounds { get; private set; }
         public SpawnReservationSpatialPartitionLocation SpatialPartitionLocation { get; }
 
-        public SpawnReservation(SpawnMarkerRegistry registry, ulong markerRef, MarkerType type, Vector3 position, Vector3 rotation, Cell cell, int id)
+        public SpawnReservation(SpawnMarkerRegistry registry, PrototypeId markerRef, MarkerType type, Vector3 position, Vector3 rotation, Cell cell, int id)
         {
             this.registry = registry;
             MarkerRef = markerRef;

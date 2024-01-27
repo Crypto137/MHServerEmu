@@ -239,7 +239,7 @@ namespace MHServerEmu.Games.Generators.Areas
             }
         }
 
-        public bool CreateRequiredCells(GRandom random, RegionGenerator regionGenerator, List<ulong> areas)
+        public bool CreateRequiredCells(GRandom random, RegionGenerator regionGenerator, List<PrototypeId> areas)
         {
             if (CellContainer == null) return false;
             Logger.Debug($"[{MethodBase.GetCurrentMethod().Name}] => {random}");
@@ -275,7 +275,7 @@ namespace MHServerEmu.Games.Generators.Areas
             {
                 foreach (RegionTransitionSpec spec in _requiredTransitions)
                 {
-                    ulong cellRef = spec.GetCellRef();
+                    PrototypeId cellRef = spec.GetCellRef();
                     if (proto.RequiresCell(cellRef)) continue;
 
                     if (cellRef == 0)
@@ -307,10 +307,10 @@ namespace MHServerEmu.Games.Generators.Areas
                     {
                         if (randomInstance == null) continue;
 
-                        ulong cellAsset = randomInstance.OriginCell;
+                        AssetId cellAsset = randomInstance.OriginCell;
                         if (cellAsset == 0) continue;
 
-                        ulong cellRef = GameDatabase.GetDataRefByAsset(cellAsset);
+                        PrototypeId cellRef = GameDatabase.GetDataRefByAsset(cellAsset);
                         if (cellRef == 0) continue;
 
                         FillPickerWithReservableCells(picker, cellRef, randomInstance);
@@ -376,7 +376,7 @@ namespace MHServerEmu.Games.Generators.Areas
             return !failed;
         }
 
-        private bool FillPickerWithReservableCells(Picker<Point2> picker, ulong cellRef, RequiredCellBasePrototype requiredCell = null)
+        private bool FillPickerWithReservableCells(Picker<Point2> picker, PrototypeId cellRef, RequiredCellBasePrototype requiredCell = null)
         {
             if (CellContainer == null) return false;
             picker.Clear();
@@ -445,14 +445,14 @@ namespace MHServerEmu.Games.Generators.Areas
 
             if (requiredCellBase is RequiredCellPrototype requiredCell)
             {
-                ulong cellAssetRef = requiredCell.Cell;
+                AssetId cellAssetRef = requiredCell.Cell;
                 if (cellAssetRef == 0)
                 {
                     Logger.Trace($"{Region}\n  Generator contains a RequiredCell entry that has an empty cell field.");
                     return false;
                 }
 
-                ulong cellRef = GameDatabase.GetDataRefByAsset(cellAssetRef);
+                PrototypeId cellRef = GameDatabase.GetDataRefByAsset(cellAssetRef);
                 if (cellRef == 0)
                 {
                     Logger.Trace($"{Region}\n  Generator contains a RequiredCell Asset, {GameDatabase.GetAssetName(cellAssetRef)}, that does not match the corresponding filename");
@@ -512,14 +512,14 @@ namespace MHServerEmu.Games.Generators.Areas
 
             if (success)
             {
-                List<ulong> list = new();
+                List<PrototypeId> list = new();
                 foreach (SuperCellEntryPrototype superCellEntry in superCell.Entries)
                 {
                     if (superCellEntry == null) continue;
                     Point2 cellCoord = new (pick.X + superCellEntry.Offset.X, pick.Y + superCellEntry.Offset.Y);
                     if (!CellContainer.ReservableCell(cellCoord.X, cellCoord.Y, GameDatabase.GetDataRefByAsset(superCellEntry.Cell))) continue;
 
-                    ulong cellRef = superCellEntry.PickCell(random, list);
+                    PrototypeId cellRef = superCellEntry.PickCell(random, list);
                     CellContainer.ReserveCell(cellCoord.X, cellCoord.Y, cellRef, GenCell.GenCellType.None);
                     list.Add(cellRef);
 
@@ -536,7 +536,7 @@ namespace MHServerEmu.Games.Generators.Areas
             return success;
         }
 
-        private void RemoveCellFromRegionTransitionSpecList(ulong cell)
+        private void RemoveCellFromRegionTransitionSpecList(AssetId cell)
         {
             _requiredTransitions.RemoveAll(transition => cell == transition.Cell);
         }
@@ -883,7 +883,7 @@ namespace MHServerEmu.Games.Generators.Areas
                         if (cell.ExternalConnections != Cell.Type.None && cell.CellRef == 0)
                         {
                             Cell.Walls requiredWalls = cell.RequiredWalls;
-                            ulong cellRef = CellSetRegistry.HasCellWithWalls(requiredWalls) ? CellSetRegistry.GetCellSetAssetPickedByWall(random, requiredWalls) : 0;
+                            PrototypeId cellRef = CellSetRegistry.HasCellWithWalls(requiredWalls) ? CellSetRegistry.GetCellSetAssetPickedByWall(random, requiredWalls) : 0;
 
                             if (!CellContainer.ReservableCell(x, y, cellRef)) return false;
                             CellContainer.ReserveCell(x, y, cellRef, GenCell.GenCellType.Destination);
@@ -907,7 +907,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
             int gridSize = CellContainer.Width * CellContainer.Height;
             RoadInfo[] roadGrid = new RoadInfo[gridSize];
-            ulong firstCellRef = GameDatabase.GetDataRefByAsset(roadGeneratorProto.Cells.First());
+            PrototypeId firstCellRef = GameDatabase.GetDataRefByAsset(roadGeneratorProto.Cells.First());
             for (int x = 0; x < CellContainer.Width; ++x)
             {
                 for (int y = 0; y < CellContainer.Height; ++y)
@@ -998,16 +998,16 @@ namespace MHServerEmu.Games.Generators.Areas
                 RoadInfo info = listRoads[i];
                 if (info.RoadType != Cell.Type.None && !info.InCell)
                 {
-                    Picker<ulong> picker = new(random);
+                    Picker<PrototypeId> picker = new(random);
                     foreach (var cellAsset in roadGeneratorProto.Cells)
                     {
-                        ulong cellRef = GameDatabase.GetDataRefByAsset(cellAsset);
+                        PrototypeId cellRef = GameDatabase.GetDataRefByAsset(cellAsset);
                         CellPrototype cellProto = GameDatabase.GetPrototype<CellPrototype>(cellRef);
                         if (cellProto != null && cellProto.RoadConnections == info.RoadType)
                             picker.Add(cellRef);
                     }
 
-                    if (!picker.Empty() && picker.Pick(out ulong pickedCell))
+                    if (!picker.Empty() && picker.Pick(out PrototypeId pickedCell))
                     {
                         int x = i % CellContainer.Width;
                         int y = i / CellContainer.Width;
@@ -1109,7 +1109,7 @@ namespace MHServerEmu.Games.Generators.Areas
             return false;
         }
 
-        public void BuildExcludedListLikeCells(int x, int y, Cell.Type cellType, List<ulong> excludedList)
+        public void BuildExcludedListLikeCells(int x, int y, Cell.Type cellType, List<PrototypeId> excludedList)
         {
             if (CellContainer == null) return;
 
@@ -1142,7 +1142,7 @@ namespace MHServerEmu.Games.Generators.Areas
             if (CellContainer.GetCell(x, y - 1, false) != null) filler |= Cell.Filler.W;
             if (CellContainer.GetCell(x + 1, y - 1, false) != null) filler |= Cell.Filler.NW;
 
-            ulong cellRef = CellSetRegistry.GetCellSetAssetPickedByFiller(random, filler);
+            PrototypeId cellRef = CellSetRegistry.GetCellSetAssetPickedByFiller(random, filler);
             if (cellRef == 0) cellRef = CellSetRegistry.GetCellSetAssetPickedByFiller(random, Cell.Filler.None);
 
             if (cellRef != 0)

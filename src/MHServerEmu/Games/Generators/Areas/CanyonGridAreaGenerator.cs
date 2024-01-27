@@ -62,14 +62,14 @@ namespace MHServerEmu.Games.Generators.Areas
             if (bridgeChoices.IsNullOrEmpty() == false)
             {
                 CellChoicePrototype firstChoice = bridgeChoices[0];
-                ulong cellRef = GameDatabase.GetDataRefByAsset(firstChoice.Cell);
+                PrototypeId cellRef = GameDatabase.GetDataRefByAsset(firstChoice.Cell);
                 CellPrototype cellProto = GameDatabase.GetPrototype<CellPrototype>(cellRef);
                 if (cellProto != null) return cellProto;
             }
             return null;
         }
 
-        public override bool Generate(GRandom random, RegionGenerator regionGenerator, List<ulong> areas)
+        public override bool Generate(GRandom random, RegionGenerator regionGenerator, List<PrototypeId> areas)
         {
             if (Area.AreaPrototype.Generator is not CanyonGridAreaGeneratorPrototype proto) return false;
 
@@ -119,10 +119,10 @@ namespace MHServerEmu.Games.Generators.Areas
             return true;
         }
 
-        private static ulong PickCellChoiceFromPrototypePtrList(GRandom random, CellChoicePrototype[] cellChoices)
+        private static PrototypeId PickCellChoiceFromPrototypePtrList(GRandom random, CellChoicePrototype[] cellChoices)
         {
             if (cellChoices.IsNullOrEmpty()) return 0;
-            Picker<ulong> picker = new (random);
+            Picker<AssetId> picker = new (random);
 
             foreach (CellChoicePrototype choiceProto in cellChoices)
             {
@@ -130,9 +130,9 @@ namespace MHServerEmu.Games.Generators.Areas
                         picker.Add(choiceProto.Cell, choiceProto.Weight);
             }
 
-            if (!picker.Empty() && picker.Pick(out ulong assetRef))
+            if (!picker.Empty() && picker.Pick(out AssetId assetRef))
             {
-                ulong cellRef = GameDatabase.GetDataRefByAsset(assetRef);
+                PrototypeId cellRef = GameDatabase.GetDataRefByAsset(assetRef);
                 CellPrototype cellProto = GameDatabase.GetPrototype<CellPrototype>(cellRef);
 
                 if (cellProto != null) return cellRef;
