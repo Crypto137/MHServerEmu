@@ -395,7 +395,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
         private bool CheckRequiredCellLocationRestrictions(RequiredCellBasePrototype requiredCell, int x, int y)
         {
-            if (requiredCell == null || requiredCell.LocationRestrictions == null) return true;
+            if (requiredCell == null || requiredCell.LocationRestrictions.IsNullOrEmpty()) return true;
 
             foreach (var requiredCellRestrict in requiredCell.LocationRestrictions)
                 if (requiredCellRestrict.CheckPoint(x, y, CellContainer.Width, CellContainer.Height)) return true;
