@@ -130,6 +130,9 @@ namespace MHServerEmu
                 LogManager.AttachLogTarget(new FileTarget(ConfigManager.Logging.FileIncludeTimestamps,
                     ConfigManager.Logging.FileMinLevel, ConfigManager.Logging.FileMaxLevel,
                     $"MHServerEmu_{StartupTime:yyyy-dd-MM_HH.mm.ss}.log", false));
+
+            if (ConfigManager.Logging.SynchronousMode)
+                Logger.Debug($"Synchronous logging enabled");
         }
 
         /// <summary>

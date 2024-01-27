@@ -5,6 +5,7 @@ namespace MHServerEmu.Common.Config.Containers
     public class LoggingConfig : ConfigContainer
     {
         public bool EnableLogging { get; private set; }
+        public bool SynchronousMode { get; private set; }
 
         public bool EnableConsole { get; private set; }
         public bool ConsoleIncludeTimestamps { get; private set; }
