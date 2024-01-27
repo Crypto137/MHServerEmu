@@ -4,10 +4,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class StaticRegionGeneratorPrototype : RegionGeneratorPrototype
     {
-        public StaticAreaPrototype[] StaticAreas;
-        public AreaConnectionPrototype[] Connections;
+        public StaticAreaPrototype[] StaticAreas { get; protected set; }
+        public AreaConnectionPrototype[] Connections { get; protected set; }
 
-        public override ulong GetStartAreaRef(Region region)
+        public override PrototypeId GetStartAreaRef(Region region)
         {
 
             if (StaticAreas != null && StaticAreas.Length > 0)
@@ -15,24 +15,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return 0;
         }
-
-        public StaticRegionGeneratorPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(StaticRegionGeneratorPrototype), proto); }
     }
 
     public class AreaConnectionPrototype : Prototype
     {
-        public ulong AreaA;
-        public ulong AreaB;
-        public bool ConnectAllShared;
-        public AreaConnectionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AreaConnectionPrototype), proto); }
+        public PrototypeId AreaA { get; protected set; }
+        public PrototypeId AreaB { get; protected set; }
+        public bool ConnectAllShared { get; protected set; }
     }
 
     public class StaticAreaPrototype : Prototype
     {
-        public ulong Area;
-        public int X;
-        public int Y;
-        public int Z;
-        public StaticAreaPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(StaticAreaPrototype), proto); }
+        public PrototypeId Area { get; protected set; }
+        public int X { get; protected set; }
+        public int Y { get; protected set; }
+        public int Z { get; protected set; }
     }
 }

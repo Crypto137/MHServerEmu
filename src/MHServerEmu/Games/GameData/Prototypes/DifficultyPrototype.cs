@@ -1,139 +1,136 @@
-﻿using MHServerEmu.Games.Regions;
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class RegionDifficultySettingsPrototype : Prototype
-    {
-        public ulong TuningTable;
-        public RegionDifficultySettingsPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RegionDifficultySettingsPrototype), proto); }
-    }
+    #region Enums
 
-    public class NumNearbyPlayersDmgByRankPrototype : Prototype
-    {
-        public Rank Rank;
-        public ulong MobToPlayerCurve;
-        public ulong PlayerToMobCurve;
-        public NumNearbyPlayersDmgByRankPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(NumNearbyPlayersDmgByRankPrototype), proto); }
-    }
-
-    public class DifficultyIndexDamageByRankPrototype : Prototype
-    {
-        public Rank Rank;
-        public ulong MobToPlayerCurve;
-        public ulong PlayerToMobCurve;
-        public DifficultyIndexDamageByRankPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(DifficultyIndexDamageByRankPrototype), proto); }
-    }
-
-    public class TuningDamageByRankPrototype : Prototype
-    {
-        public Rank Rank;
-        public float TuningMobToPlayer;
-        public float TuningPlayerToMob;
-        public TuningDamageByRankPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(TuningDamageByRankPrototype), proto); }
-    }
-
-    public class NegStatusRankCurveEntryPrototype : Prototype
-    {
-        public Rank Rank;
-        public ulong TenacityModifierCurve;
-        public NegStatusRankCurveEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(NegStatusRankCurveEntryPrototype), proto); }
-    }
-
-    public class NegStatusPropCurveEntryPrototype : Prototype
-    {
-        public ulong NegStatusProp;
-        public NegStatusRankCurveEntryPrototype[] RankEntries;
-        public NegStatusPropCurveEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(NegStatusPropCurveEntryPrototype), proto); }
-    }
-    public class RankAffixTableByDifficultyEntryPrototype : Prototype
-    {
-        public ulong DifficultyMin;
-        public ulong DifficultyMax;
-        public RankAffixEntryPrototype[] RankAffixTable;
-        public RankAffixTableByDifficultyEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RankAffixTableByDifficultyEntryPrototype), proto); }
-    }
-
-    public class TuningPrototype : Prototype
-    {
-        public ulong Name;
-        public float PlayerInflictedDamageTimerSec;
-        public float PlayerNearbyRange;
-        public NegStatusPropCurveEntryPrototype[] NegativeStatusCurves;
-        public ulong LootFindByLevelDeltaCurve;
-        public ulong SpecialItemFindByLevelDeltaCurve;
-        public ulong LootFindByDifficultyIndexCurve;
-        public ulong PlayerXPByDifficultyIndexCurve;
-        public ulong DeathPenaltyCondition;
-        public ulong PctXPFromParty;
-        public ulong PctXPFromRaid;
-        public ulong Tier;
-        public bool UseTierMinimapColor;
-        public RankAffixEntryPrototype[] RankAffixTable;
-        public float PctXPMultiplier;
-        public bool NumNearbyPlayersScalingEnabled;
-        public float TuningDamageMobToPlayer;
-        public float TuningDamageMobToPlayerDCL;
-        public float TuningDamagePlayerToMob;
-        public float TuningDamagePlayerToMobDCL;
-        public TuningDamageByRankPrototype[] TuningDamageByRank;
-        public TuningDamageByRankPrototype[] TuningDamageByRankDCL;
-        public RankAffixTableByDifficultyEntryPrototype[] RankAffixTableByDifficulty;
-        public TuningPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(TuningPrototype), proto); }
-    }
-
-    public class DifficultyModePrototype : Prototype
-    {
-        public ulong IconPath;
-        public ulong Name;
-        public DEPRECATEDDifficultyMode DifficultyModeEnum;
-        public int MigrationUnlocksAtLevel;
-        public ulong UnlockNotification;
-        public ulong TextStyle;
-        public DifficultyModePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(DifficultyModePrototype), proto); }
-    }
-
+    [AssetEnum((int)Invalid)]
     public enum DEPRECATEDDifficultyMode
     {
+        Invalid = -1,
         Normal = 0,
         Heroic = 1,
         SuperHeroic = 2,
     }
 
+    #endregion
+
+    public class RegionDifficultySettingsPrototype : Prototype
+    {
+        public PrototypeId TuningTable { get; protected set; }
+    }
+
+    public class NumNearbyPlayersDmgByRankPrototype : Prototype
+    {
+        public Rank Rank { get; protected set; }
+        public CurveId MobToPlayerCurve { get; protected set; }
+        public CurveId PlayerToMobCurve { get; protected set; }
+    }
+
+    public class DifficultyIndexDamageByRankPrototype : Prototype
+    {
+        public Rank Rank { get; protected set; }
+        public CurveId MobToPlayerCurve { get; protected set; }
+        public CurveId PlayerToMobCurve { get; protected set; }
+    }
+
+    public class TuningDamageByRankPrototype : Prototype
+    {
+        public Rank Rank { get; protected set; }
+        public float TuningMobToPlayer { get; protected set; }
+        public float TuningPlayerToMob { get; protected set; }
+    }
+
+    public class NegStatusRankCurveEntryPrototype : Prototype
+    {
+        public Rank Rank { get; protected set; }
+        public CurveId TenacityModifierCurve { get; protected set; }
+    }
+
+    public class NegStatusPropCurveEntryPrototype : Prototype
+    {
+        public PrototypeId NegStatusProp { get; protected set; }
+        public NegStatusRankCurveEntryPrototype[] RankEntries { get; protected set; }
+    }
+
+    public class RankAffixTableByDifficultyEntryPrototype : Prototype
+    {
+        public PrototypeId DifficultyMin { get; protected set; }
+        public PrototypeId DifficultyMax { get; protected set; }
+        public RankAffixEntryPrototype[] RankAffixTable { get; protected set; }
+    }
+
+    public class TuningPrototype : Prototype
+    {
+        public LocaleStringId Name { get; protected set; }
+        public float PlayerInflictedDamageTimerSec { get; protected set; }
+        public float PlayerNearbyRange { get; protected set; }
+        public NegStatusPropCurveEntryPrototype[] NegativeStatusCurves { get; protected set; }
+        public CurveId LootFindByLevelDeltaCurve { get; protected set; }
+        public CurveId SpecialItemFindByLevelDeltaCurve { get; protected set; }
+        public CurveId LootFindByDifficultyIndexCurve { get; protected set; }
+        public CurveId PlayerXPByDifficultyIndexCurve { get; protected set; }
+        public PrototypeId DeathPenaltyCondition { get; protected set; }
+        public CurveId PctXPFromParty { get; protected set; }
+        public CurveId PctXPFromRaid { get; protected set; }
+        public PrototypeId Tier { get; protected set; }
+        public bool UseTierMinimapColor { get; protected set; }
+        public RankAffixEntryPrototype[] RankAffixTable { get; protected set; }
+        public float PctXPMultiplier { get; protected set; }
+        public bool NumNearbyPlayersScalingEnabled { get; protected set; }
+        public float TuningDamageMobToPlayer { get; protected set; }
+        public float TuningDamageMobToPlayerDCL { get; protected set; }
+        public float TuningDamagePlayerToMob { get; protected set; }
+        public float TuningDamagePlayerToMobDCL { get; protected set; }
+        public TuningDamageByRankPrototype[] TuningDamageByRank { get; protected set; }
+        public TuningDamageByRankPrototype[] TuningDamageByRankDCL { get; protected set; }
+        public RankAffixTableByDifficultyEntryPrototype[] RankAffixTableByDifficulty { get; protected set; }
+    }
+
+    public class DifficultyModePrototype : Prototype
+    {
+        public AssetId IconPath { get; protected set; }
+        public LocaleStringId Name { get; protected set; }
+        public DEPRECATEDDifficultyMode DifficultyModeEnum { get; protected set; }
+        public int MigrationUnlocksAtLevel { get; protected set; }
+        public PrototypeId UnlockNotification { get; protected set; }
+        public PrototypeId TextStyle { get; protected set; }
+    }
+
     public class DifficultyTierPrototype : Prototype
     {
-        public int DEPTier;
-        public DifficultyTier Tier;
-        public float BonusExperiencePct;
-        public float DamageMobToPlayerPct;
-        public float DamagePlayerToMobPct;
-        public float ItemFindCreditsPct;
-        public float ItemFindRarePct;
-        public float ItemFindSpecialPct;
-        public int UnlockLevel;
-        public ulong UIColor;
-        public ulong UIDisplayName;
-        public int BonusItemFindBonusDifficultyMult;
-        public DifficultyTierPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(DifficultyTierPrototype), proto); }
+        public int DEPTier { get; protected set; }
+        public DifficultyTierAsset Tier { get; protected set; }
+        public float BonusExperiencePct { get; protected set; }
+        public float DamageMobToPlayerPct { get; protected set; }
+        public float DamagePlayerToMobPct { get; protected set; }
+        public float ItemFindCreditsPct { get; protected set; }
+        public float ItemFindRarePct { get; protected set; }
+        public float ItemFindSpecialPct { get; protected set; }
+        public int UnlockLevel { get; protected set; }
+        public AssetId UIColor { get; protected set; }
+        public LocaleStringId UIDisplayName { get; protected set; }
+        public int BonusItemFindBonusDifficultyMult { get; protected set; }
     }
 
     public class DifficultyGlobalsPrototype : Prototype
     {
-        public ulong MobConLevelCurve;
-        public RegionDifficultySettingsPrototype RegionSettingsDefault;
-        public RegionDifficultySettingsPrototype RegionSettingsDefaultPCZ;
-        public ulong NumNearbyPlayersDmgDefaultMtoP;
-        public ulong NumNearbyPlayersDmgDefaultPtoM;
-        public NumNearbyPlayersDmgByRankPrototype[] NumNearbyPlayersDmgByRank;
-        public NumNearbyPlayersDmgByRankPrototype[] NumNearbyPlayersDmgByRankPCZ;
-        public ulong DifficultyIndexDamageDefaultMtoP;
-        public ulong DifficultyIndexDamageDefaultPtoM;
-        public DifficultyIndexDamageByRankPrototype[] DifficultyIndexDamageByRank;
-        public float PvPDamageMultiplier;
-        public float PvPCritDamageMultiplier;
-        public ulong PvPDamageScalarFromLevelCurve;
-        public ulong TeamUpDamageScalarFromLevelCurve;
-        public EvalPrototype EvalDamageLevelDeltaMtoP;
-        public EvalPrototype EvalDamageLevelDeltaPtoM;
-        public DifficultyGlobalsPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(DifficultyGlobalsPrototype), proto); }
+        public CurveId MobConLevelCurve { get; protected set; }
+        public RegionDifficultySettingsPrototype RegionSettingsDefault { get; protected set; }
+        public RegionDifficultySettingsPrototype RegionSettingsDefaultPCZ { get; protected set; }
+        public CurveId NumNearbyPlayersDmgDefaultMtoP { get; protected set; }
+        public CurveId NumNearbyPlayersDmgDefaultPtoM { get; protected set; }
+        public NumNearbyPlayersDmgByRankPrototype[] NumNearbyPlayersDmgByRank { get; protected set; }
+        public NumNearbyPlayersDmgByRankPrototype[] NumNearbyPlayersDmgByRankPCZ { get; protected set; }
+        public CurveId DifficultyIndexDamageDefaultMtoP { get; protected set; }
+        public CurveId DifficultyIndexDamageDefaultPtoM { get; protected set; }
+        public DifficultyIndexDamageByRankPrototype[] DifficultyIndexDamageByRank { get; protected set; }
+        public float PvPDamageMultiplier { get; protected set; }
+        public float PvPCritDamageMultiplier { get; protected set; }
+        public CurveId PvPDamageScalarFromLevelCurve { get; protected set; }
+        public CurveId TeamUpDamageScalarFromLevelCurve { get; protected set; }
+        public EvalPrototype EvalDamageLevelDeltaMtoP { get; protected set; }
+        public EvalPrototype EvalDamageLevelDeltaPtoM { get; protected set; }
     }
 }

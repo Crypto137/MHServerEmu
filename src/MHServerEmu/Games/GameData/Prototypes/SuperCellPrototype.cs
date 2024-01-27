@@ -8,15 +8,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class SuperCellEntryPrototype : Prototype
     {
-        public sbyte X;
-        public sbyte Y;
-        public ulong Cell;
-        public ulong[] Alts;
+        public sbyte X { get; protected set; }
+        public sbyte Y { get; protected set; }
+        public AssetId Cell { get; protected set; }
+        public AssetId[] Alts { get; protected set; }
 
         public Point2 Offset { get => new(X, Y); }
-        public SuperCellEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(SuperCellEntryPrototype), proto); }
 
-        public ulong PickCell(GRandom random, List<ulong> list)
+        public PrototypeId PickCell(GRandom random, List<PrototypeId> list)
         {
             if (Alts.IsNullOrEmpty())
             {
@@ -24,21 +23,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
             else
             {
-                Picker<ulong> picker = new(random);
+                Picker<PrototypeId> picker = new(random);
 
                 if (Cell != 0)
                 {
-                    ulong cellRef = GameDatabase.GetDataRefByAsset(Cell);
+                    PrototypeId cellRef = GameDatabase.GetDataRefByAsset(Cell);
                     if (cellRef != 0) picker.Add(cellRef);
                 }
 
-                foreach (ulong alt in Alts)
+                foreach (AssetId alt in Alts)
                 {
-                    ulong altRef = GameDatabase.GetDataRefByAsset(alt);
+                    PrototypeId altRef = GameDatabase.GetDataRefByAsset(alt);
                     if (altRef != 0)
                     {
                         bool isUnique = true;
-                        foreach (ulong item in list)
+                        foreach (PrototypeId item in list)
                         {
                             if (altRef == item)
                             {
@@ -51,7 +50,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     }
                 }
 
-                ulong pickCell = 0;
+                PrototypeId pickCell = 0;
                 if (!picker.Empty())
                 {
                     picker.Pick(out pickCell);
@@ -66,10 +65,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class SuperCellPrototype : Prototype
     {
-        new public SuperCellEntryPrototype[] Entries;
+        public SuperCellEntryPrototype[] Entries { get; protected set; }
 
         public Point2 Max;
-        public SuperCellPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(SuperCellPrototype), proto); }
 
         public override void PostProcess()
         {
@@ -90,7 +88,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
 
-        public bool ContainsCell(ulong cellRef)
+        public bool ContainsCell(PrototypeId cellRef)
         {
             if (Entries != null)
             {

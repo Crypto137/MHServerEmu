@@ -1,65 +1,54 @@
-﻿using System.Text.Json.Serialization;
-using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Games.Common;
+using MHServerEmu.Games.GameData.Resources;
 
 namespace MHServerEmu.Games.GameData.Prototypes.Markers
 {
     /// <summary>
-    /// This is a parent class for all other MarkerPrototypes.
+    /// Base class for all MarkerPrototypes.
     /// </summary>
     public class MarkerPrototype : Prototype
     {
-        [JsonPropertyOrder(1), JsonConverter(typeof(JsonStringEnumConverter))]
-        public ResourcePrototypeHash ProtoNameHash { get; protected set; }    // DJB hash of the class name
-        [JsonPropertyOrder(15)]
         public Vector3 Position { get; protected set; }
-        [JsonPropertyOrder(16)]
         public Vector3 Rotation { get; protected set; }
     }
 
     public class MarkerFilterPrototype : Prototype
     {
-        public MarkerFilterPrototype() { }
     }
 
     public class MarkerSetPrototype : Prototype
     {
         public MarkerPrototype[] Markers { get; }
+
         public MarkerSetPrototype(BinaryReader reader)
         {
             Markers = new MarkerPrototype[reader.ReadInt32()];
             for (int i = 0; i < Markers.Length; i++)
                 Markers[i] = ReadMarkerPrototype(reader);
         }
+
         private MarkerPrototype ReadMarkerPrototype(BinaryReader reader)
         {
-            MarkerPrototype markerPrototype;
-            ResourcePrototypeHash hash = (ResourcePrototypeHash)reader.ReadUInt32();
+            var hash = (ResourcePrototypeHash)reader.ReadUInt32();
 
             switch (hash)
             {
                 case ResourcePrototypeHash.CellConnectorMarkerPrototype:
-                    markerPrototype = new CellConnectorMarkerPrototype(reader);
-                    break;
+                    return new CellConnectorMarkerPrototype(reader);
                 case ResourcePrototypeHash.DotCornerMarkerPrototype:
-                    markerPrototype = new DotCornerMarkerPrototype(reader);
-                    break;
+                    return new DotCornerMarkerPrototype(reader);
                 case ResourcePrototypeHash.EntityMarkerPrototype:
-                    markerPrototype = new EntityMarkerPrototype(reader);
-                    break;
+                    return new EntityMarkerPrototype(reader);
                 case ResourcePrototypeHash.RoadConnectionMarkerPrototype:
-                    markerPrototype = new RoadConnectionMarkerPrototype(reader);
-                    break;
+                    return new RoadConnectionMarkerPrototype(reader);
                 case ResourcePrototypeHash.ResourceMarkerPrototype:
-                    markerPrototype = new ResourceMarkerPrototype(reader);
-                    break;
+                    return new ResourceMarkerPrototype(reader);
                 case ResourcePrototypeHash.UnrealPropMarkerPrototype:
-                    markerPrototype = new UnrealPropMarkerPrototype(reader);
-                    break;
-                default:
-                    throw new($"Unknown ResourcePrototypeHash {(uint)hash}");   // Throw an exception if there's a hash for a type we didn't expect
-            }
+                    return new UnrealPropMarkerPrototype(reader);
 
-            return markerPrototype;
+                default:    // Throw an exception if there's a hash for a type we didn't expect
+                    throw new NotImplementedException($"Unknown ResourcePrototypeHash {(uint)hash}.");
+            }
         }
     }
 }

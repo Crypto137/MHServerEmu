@@ -1,37 +1,10 @@
-﻿
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class AgentPrototype : WorldEntityPrototype
-    {
-        public Allegiance Allegiance;
-        public LocomotorPrototype Locomotion;
-        public ulong HitReactCondition;
-        public BehaviorProfilePrototype BehaviorProfile;
-        public PopulationInfoPrototype PopulationInfo;
-        public int WakeDelayMS;
-        public int WakeRandomStartMS;
-        public float WakeRange;
-        public float ReturnToDormantRange;
-        public bool TriggersOcclusion;
-        public int HitReactCooldownMS;
-        public ulong BriefDescription;
-        public float HealthBarRadius;
-        public ulong OnResurrectedPower;
-        public bool WakeStartsVisible;
-        public VOStoryNotificationPrototype[] VOStoryNotifications;
-        public bool HitReactOnClient;
-        public ulong CCReactCondition;
-        public int InCombatTimerMS;
-        public DramaticEntranceType PlayDramaticEntrance;
-        public ulong StealablePower;
-        public ulong BossRewardIconPath;
-        public bool SpawnLootForMissionContributors;
-        public int InteractRangeThrow;
-        public bool DamageMeterEnabled;
-        public ulong MobHealthBaseCurveDCL;
-        public AgentPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AgentPrototype), proto); }
-    }
+    #region Enums
 
+    [AssetEnum((int)None)]
     public enum Allegiance
     {
         None = 0,
@@ -39,71 +12,101 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Neutral = 2,
         Villain = 3,
     }
+
+    [AssetEnum((int)None)]
     public enum DramaticEntranceType
     {
+        None = 0,
         Always = 1,
         Once = 2,
         Never = 3,
     }
 
+    #endregion
+
+    public class AgentPrototype : WorldEntityPrototype
+    {
+        public Allegiance Allegiance { get; protected set; }
+        [Mixin]
+        public LocomotorPrototype Locomotion { get; protected set; }
+        public PrototypeId HitReactCondition { get; protected set; }
+        public BehaviorProfilePrototype BehaviorProfile { get; protected set; }
+        [Mixin]
+        public PopulationInfoPrototype PopulationInfo { get; protected set; }   // This does not seem to be actually used anywhere
+        public int WakeDelayMS { get; protected set; }
+        public int WakeRandomStartMS { get; protected set; }
+        public float WakeRange { get; protected set; }
+        public float ReturnToDormantRange { get; protected set; }
+        public bool TriggersOcclusion { get; protected set; }
+        public int HitReactCooldownMS { get; protected set; }
+        public LocaleStringId BriefDescription { get; protected set; }
+        public float HealthBarRadius { get; protected set; }
+        public PrototypeId OnResurrectedPower { get; protected set; }
+        public bool WakeStartsVisible { get; protected set; }
+        public VOStoryNotificationPrototype[] VOStoryNotifications { get; protected set; }
+        public bool HitReactOnClient { get; protected set; }
+        public PrototypeId CCReactCondition { get; protected set; }
+        public int InCombatTimerMS { get; protected set; }
+        public DramaticEntranceType PlayDramaticEntrance { get; protected set; }
+        public PrototypeId StealablePower { get; protected set; }
+        public AssetId BossRewardIconPath { get; protected set; }
+        public bool SpawnLootForMissionContributors { get; protected set; }
+        public int InteractRangeThrow { get; protected set; }
+        public bool DamageMeterEnabled { get; protected set; }
+        public CurveId MobHealthBaseCurveDCL { get; protected set; }
+    }
+
     public class OrbPrototype : AgentPrototype
     {
-        public bool IgnoreRegionDifficultyForXPCalc;
-        public bool XPAwardRestrictedToAvatar;
-        public OrbPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(OrbPrototype), proto); }
+        public bool IgnoreRegionDifficultyForXPCalc { get; protected set; }
+        public bool XPAwardRestrictedToAvatar { get; protected set; }
     }
 
     public class TeamUpCostumeOverridePrototype : Prototype
     {
-        public ulong AvatarCostumeUnrealClass;
-        public ulong TeamUpCostumeUnrealClass;
-        public TeamUpCostumeOverridePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(TeamUpCostumeOverridePrototype), proto); }
+        public AssetId AvatarCostumeUnrealClass { get; protected set; }
+        public AssetId TeamUpCostumeUnrealClass { get; protected set; }
     }
 
     public class TeamUpStylePrototype : Prototype
     {
-        public ulong Power;
-        public bool PowerIsOnAvatarWhileAway;
-        public bool PowerIsOnAvatarWhileSummoned;
-        public bool IsPermanent;
-        public TeamUpStylePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(TeamUpStylePrototype), proto); }
+        public PrototypeId Power { get; protected set; }
+        public bool PowerIsOnAvatarWhileAway { get; protected set; }
+        public bool PowerIsOnAvatarWhileSummoned { get; protected set; }
+        public bool IsPermanent { get; protected set; }
     }
 
     public class ProgressionEntryPrototype : Prototype
     {
-        public ProgressionEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProgressionEntryPrototype), proto); }
     }
 
     public class TeamUpPowerProgressionEntryPrototype : ProgressionEntryPrototype
     {
-        public ulong Power;
-        public bool IsPassiveOnAvatarWhileAway;
-        public bool IsPassiveOnAvatarWhileSummoned;
-        public ulong[] Antirequisites;
-        public ulong[] Prerequisites;
-        public ulong MaxRankForPowerAtCharacterLevel;
-        public int RequiredLevel;
-        public int StartingRank;
-        public float UIPositionPctX;
-        public float UIPositionPctY;
-        public TeamUpPowerProgressionEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(TeamUpPowerProgressionEntryPrototype), proto); }
+        public PrototypeId Power { get; protected set; }
+        public bool IsPassiveOnAvatarWhileAway { get; protected set; }
+        public bool IsPassiveOnAvatarWhileSummoned { get; protected set; }
+        public PrototypeId[] Antirequisites { get; protected set; }
+        public PrototypeId[] Prerequisites { get; protected set; }
+        public CurveId MaxRankForPowerAtCharacterLevel { get; protected set; }
+        public int RequiredLevel { get; protected set; }
+        public int StartingRank { get; protected set; }
+        public float UIPositionPctX { get; protected set; }
+        public float UIPositionPctY { get; protected set; }
     }
 
     public class AgentTeamUpPrototype : AgentPrototype
     {
-        public AvatarEquipInventoryAssignmentPrototype[] EquipmentInventories;
-        public ulong PortraitPath;
-        public ulong TooltipDescription;
-        public TeamUpCostumeOverridePrototype[] CostumeUnrealOverrides;
-        public ulong UnlockDialogImage;
-        public ulong UnlockDialogText;
-        public ulong FulfillmentName;
-        public bool ShowInRosterIfLocked;
-        public TeamUpStylePrototype[] Styles;
-        public TeamUpPowerProgressionEntryPrototype[] PowerProgression;
-        public int PowerProgressionVersion;
-        public ulong PowerUIDefault;
-        public AgentTeamUpPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AgentTeamUpPrototype), proto); }
+        public AvatarEquipInventoryAssignmentPrototype[] EquipmentInventories { get; protected set; }
+        public AssetId PortraitPath { get; protected set; }
+        public LocaleStringId TooltipDescription { get; protected set; }
+        public TeamUpCostumeOverridePrototype[] CostumeUnrealOverrides { get; protected set; }
+        public AssetId UnlockDialogImage { get; protected set; }
+        public LocaleStringId UnlockDialogText { get; protected set; }
+        public LocaleStringId FulfillmentName { get; protected set; }
+        public bool ShowInRosterIfLocked { get; protected set; }
+        public TeamUpStylePrototype[] Styles { get; protected set; }
+        public TeamUpPowerProgressionEntryPrototype[] PowerProgression { get; protected set; }
+        public int PowerProgressionVersion { get; protected set; }
+        public PrototypeId PowerUIDefault { get; protected set; }
     }
-
 }

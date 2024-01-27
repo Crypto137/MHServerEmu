@@ -1,11 +1,11 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class DownloadChunkRegionsPrototype : Prototype
-    {
-        public RegionPrototype Regions;
-        public Platforms Platform;
-        public DownloadChunkRegionsPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(DownloadChunkRegionsPrototype), proto); }
-    }
+    #region Enums
+
+    [AssetEnum((int)All)]
+    [Flags]
     public enum Platforms
     {
         None = 0,
@@ -16,19 +16,26 @@
         XboxOne = 4,
         All = 15,
     }
+
+    #endregion
+
+    public class DownloadChunkRegionsPrototype : Prototype
+    {
+        public PrototypeId[] Regions { get; protected set; }  // VectorPrototypeRefPtr RegionPrototype
+        public Platforms Platform { get; protected set; }
+    }
+
     public class DownloadChunkPrototype : Prototype
     {
-        public ulong Chapter;
-        public ulong[] Data;
-        public DownloadChunkRegionsPrototype[] RegionsPerPlatform;
-        public DownloadChunkPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(DownloadChunkPrototype), proto); }
+        public PrototypeId Chapter { get; protected set; }
+        public AssetId[] Data { get; protected set; }
+        public DownloadChunkRegionsPrototype[] RegionsPerPlatform { get; protected set; }
     }
 
     public class DownloadChunksPrototype : Prototype
     {
-        public DownloadChunkPrototype ChunksPC;
-        public DownloadChunkPrototype ChunksPS4;
-        public DownloadChunkPrototype ChunksXboxOne;
-        public DownloadChunksPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(DownloadChunksPrototype), proto); }
+        public PrototypeId[] ChunksPC { get; protected set; }      // VectorPrototypeRefPtr DownloadChunkPrototype
+        public PrototypeId[] ChunksPS4 { get; protected set; }     // VectorPrototypeRefPtr DownloadChunkPrototype
+        public PrototypeId[] ChunksXboxOne { get; protected set; } // VectorPrototypeRefPtr DownloadChunkPrototype
     }
 }

@@ -3,11 +3,9 @@
 
     public class SingleCellRegionGeneratorPrototype : RegionGeneratorPrototype
     {
-        public ulong AreaInterface;
-        public ulong Cell;
+        public PrototypeId AreaInterface { get; protected set; }
+        public AssetId Cell { get; protected set; }
 
-        public ulong CellProto;
-
-        public SingleCellRegionGeneratorPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(SingleCellRegionGeneratorPrototype), proto); }
+        public PrototypeId CellProto;
     }
 }

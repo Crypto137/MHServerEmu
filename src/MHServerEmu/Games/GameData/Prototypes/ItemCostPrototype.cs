@@ -2,69 +2,60 @@
 {
     public class ProductPrototype : Prototype
     {
-        public bool ForSale;
-        public ProductPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProductPrototype), proto); }
+        public bool ForSale { get; protected set; }
     }
 
     public class CurrencyPrototype : Prototype
     {
-        public ulong CostString;
-        public ulong DisplayName;
-        public ulong Icon;
-        public ulong Tooltip;
-        public ulong IconSmall;
-        public int MaxAmount;
-        public ulong IconHiRes;
-        public ulong LootBonusFlatCurve;
-        public ulong LootBonusPctCurve;
-        public CurrencyPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(CurrencyPrototype), proto); }
+        public LocaleStringId CostString { get; protected set; }
+        public LocaleStringId DisplayName { get; protected set; }
+        public AssetId Icon { get; protected set; }
+        public LocaleStringId Tooltip { get; protected set; }
+        public AssetId IconSmall { get; protected set; }
+        public int MaxAmount { get; protected set; }
+        public AssetId IconHiRes { get; protected set; }
+        public CurveId LootBonusFlatCurve { get; protected set; }
+        public CurveId LootBonusPctCurve { get; protected set; }
     }
 
     public class ItemCostComponentPrototype : Prototype
     {
-        public ItemCostComponentPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ItemCostComponentPrototype), proto); }
     }
 
     public class ItemCostCreditsPrototype : ItemCostComponentPrototype
     {
-        public EvalPrototype Number;
-        public ulong Currency;
-        public ItemCostCreditsPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ItemCostCreditsPrototype), proto); }
+        public EvalPrototype Number { get; protected set; }
+        public PrototypeId Currency { get; protected set; }
     }
 
     public class ItemCostLegendaryMarksPrototype : ItemCostComponentPrototype
     {
-        public EvalPrototype Number;
-        public EvalPrototype NumberExt;
-        public ItemCostLegendaryMarksPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ItemCostLegendaryMarksPrototype), proto); }
+        public EvalPrototype Number { get; protected set; }
+        public EvalPrototype NumberExt { get; protected set; }
     }
 
     public class ItemCostRunestonesPrototype : ItemCostComponentPrototype
     {
-        public EvalPrototype Number;
-        public EvalPrototype NumberExt;
-        public ItemCostRunestonesPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ItemCostRunestonesPrototype), proto); }
+        public EvalPrototype Number { get; protected set; }
+        public EvalPrototype NumberExt { get; protected set; }
     }
 
     public class ItemCostItemStackPrototype : ItemCostComponentPrototype
     {
-        public ulong CurrencyItem;
-        public EvalPrototype Number;
-        public ItemCostItemStackPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ItemCostItemStackPrototype), proto); }
+        public PrototypeId CurrencyItem { get; protected set; }
+        public EvalPrototype Number { get; protected set; }
     }
 
     public class ItemCostCurrencyPrototype : ItemCostComponentPrototype
     {
-        public ulong Currency;
-        public EvalPrototype Amount;
-        public ItemCostCurrencyPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ItemCostCurrencyPrototype), proto); }
+        public PrototypeId Currency { get; protected set; }
+        public EvalPrototype Amount { get; protected set; }
     }
 
     public class ItemCostPrototype : Prototype
     {
-        public ItemCostComponentPrototype[] Components;
-        public EvalPrototype Credits;
-        public EvalPrototype Runestones;
-        public ItemCostPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ItemCostPrototype), proto); }
+        public ItemCostComponentPrototype[] Components { get; protected set; }
+        public EvalPrototype Credits { get; protected set; }
+        public EvalPrototype Runestones { get; protected set; }
     }
 }

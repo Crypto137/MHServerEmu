@@ -2,28 +2,25 @@
 {
     public class PlayerPrototype : EntityPrototype
     {
-        public float CameraFacingDirX;
-        public float CameraFacingDirY;
-        public float CameraFacingDirZ;
-        public float CameraFOV;
-        public float CameraZoomDistance;
-        public float ResurrectWaitTime;
-        public int NumConsumableSlots;
-        public AbilityAssignmentPrototype[] StartingEmotes;
-        public EntityInventoryAssignmentPrototype[] StashInventories;
-        public int MaxDroppedItems;
-        public PlayerPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(PlayerPrototype), proto); }
+        public float CameraFacingDirX { get; protected set; }
+        public float CameraFacingDirY { get; protected set; }
+        public float CameraFacingDirZ { get; protected set; }
+        public float CameraFOV { get; protected set; }
+        public float CameraZoomDistance { get; protected set; }
+        public float ResurrectWaitTime { get; protected set; }
+        public int NumConsumableSlots { get; protected set; }
+        public AbilityAssignmentPrototype[] StartingEmotes { get; protected set; }
+        public EntityInventoryAssignmentPrototype[] StashInventories { get; protected set; }
+        public int MaxDroppedItems { get; protected set; }
     }
 
     public class CohortPrototype : Prototype
     {
-        public int Weight;
-        public CohortPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(CohortPrototype), proto); }
+        public int Weight { get; protected set; }
     }
 
     public class CohortExperimentPrototype : Prototype
     {
-        public CohortPrototype Cohorts;
-        public CohortExperimentPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(CohortExperimentPrototype), proto); }
+        public PrototypeId[] Cohorts { get; protected set; }      // VectorPrototypeRefPtr CohortPrototype 
     }
 }

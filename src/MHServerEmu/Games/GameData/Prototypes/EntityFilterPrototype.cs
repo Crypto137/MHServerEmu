@@ -1,76 +1,10 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class EntityFilterPrototype : Prototype
-    {
-        public EntityFilterPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterPrototype), proto); }
+    #region Enums
 
-    }
-
-    public class EntityFilterFilterListPrototype : EntityFilterPrototype
-    {
-        public EntityFilterPrototype[] Filters;
-        public EntityFilterFilterListPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterFilterListPrototype), proto); }
-    }
-
-    public class EntityFilterAndPrototype : EntityFilterFilterListPrototype
-    {
-        public EntityFilterAndPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterAndPrototype), proto); }
-    }
-
-    public class EntityFilterHasAlliancePrototype : EntityFilterPrototype
-    {
-        public ulong Alliance;
-        public EntityFilterHasAlliancePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterHasAlliancePrototype), proto); }
-    }
-
-    public class EntityFilterScriptKeyPrototype : EntityFilterPrototype
-    {
-        public ScriptRoleKey ScriptKey;
-        public EntityFilterScriptKeyPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterScriptKeyPrototype), proto); }
-    }
-
-    public class EntityFilterHasKeywordPrototype : EntityFilterPrototype
-    {
-        public ulong Keyword;
-        public EntityFilterHasKeywordPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterHasKeywordPrototype), proto); }
-    }
-
-    public class EntityFilterHasNegStatusEffectPrototype : EntityFilterPrototype
-    {
-        public EntityFilterHasNegStatusEffectPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterHasNegStatusEffectPrototype), proto); }
-    }
-
-    public class EntityFilterHasPrototypePrototype : EntityFilterPrototype
-    {
-        public ulong EntityPrototype;
-        public bool IncludeChildPrototypes;
-        public EntityFilterHasPrototypePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterHasPrototypePrototype), proto); }
-    }
-
-    public class EntityFilterInAreaPrototype : EntityFilterPrototype
-    {
-        public ulong InArea;
-        public EntityFilterInAreaPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterInAreaPrototype), proto); }
-    }
-
-    public class EntityFilterInCellPrototype : EntityFilterPrototype
-    {
-        public ulong[] InCells;
-        public EntityFilterInCellPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterInCellPrototype), proto); }
-    }
-
-    public class EntityFilterInLocationWithKeywordPrototype : EntityFilterPrototype
-    {
-        public ulong Keyword;
-        public EntityFilterInLocationWithKeywordPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterInLocationWithKeywordPrototype), proto); }
-    }
-
-    public class EntityFilterInRegionPrototype : EntityFilterPrototype
-    {
-        public ulong InRegion;
-        public EntityFilterInRegionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterInRegionPrototype), proto); }
-    }
-
+    [AssetEnum((int)Invalid)]
     public enum MissionState
     {
         Invalid,
@@ -81,107 +15,7 @@
         Failed,
     }
 
-    public class EntityFilterMissionStatePrototype : EntityFilterPrototype
-    {
-        public ulong Mission;
-        public MissionState State;
-        public EntityFilterMissionStatePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterMissionStatePrototype), proto); }
-    }
-
-    public class EntityFilterIsHostileToPlayersPrototype : EntityFilterPrototype
-    {
-        public EntityFilterIsHostileToPlayersPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterIsHostileToPlayersPrototype), proto); }
-    }
-
-    public class EntityFilterIsMemberOfSuperteamPrototype : EntityFilterPrototype
-    {
-        public ulong Superteam;
-        public EntityFilterIsMemberOfSuperteamPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterIsMemberOfSuperteamPrototype), proto); }
-    }
-
-    public class EntityFilterIsMissionContributorPrototype : EntityFilterPrototype
-    {
-        public EntityFilterIsMissionContributorPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterIsMissionContributorPrototype), proto); }
-    }
-
-    public class EntityFilterIsMissionParticipantPrototype : EntityFilterPrototype
-    {
-        public EntityFilterIsMissionParticipantPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterIsMissionParticipantPrototype), proto); }
-    }
-
-    public class EntityFilterIsPartyMemberPrototype : EntityFilterPrototype
-    {
-        public EntityFilterIsPartyMemberPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterIsPartyMemberPrototype), proto); }
-    }
-
-    public class EntityFilterIsPlayerAvatarPrototype : EntityFilterPrototype
-    {
-        public EntityFilterIsPlayerAvatarPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterIsPlayerAvatarPrototype), proto); }
-    }
-
-    public class EntityFilterIsPowerOwnerPrototype : EntityFilterPrototype
-    {
-        public EntityFilterIsPowerOwnerPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterIsPowerOwnerPrototype), proto); }
-    }
-
-    public class EntityFilterNotPrototype : EntityFilterPrototype
-    {
-        public EntityFilterPrototype EntityFilter;
-        public EntityFilterNotPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterNotPrototype), proto); }
-    }
-
-    public class EntityFilterOrPrototype : EntityFilterFilterListPrototype
-    {
-        public EntityFilterOrPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterOrPrototype), proto); }
-    }
-
-    public class EntityFilterSpawnedByEncounterPrototype : EntityFilterPrototype
-    {
-        public ulong EncounterResource;
-        public EntityFilterSpawnedByEncounterPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterSpawnedByEncounterPrototype), proto); }
-    }
-
-    public class EntityFilterSpawnedByMissionPrototype : EntityFilterPrototype
-    {
-        public ulong MissionPrototype;
-        public EntityFilterSpawnedByMissionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterSpawnedByMissionPrototype), proto); }
-    }
-
-    public class EntityFilterSpawnedBySpawnerPrototype : EntityFilterPrototype
-    {
-        public ulong SpawnerPrototype;
-        public EntityFilterSpawnedBySpawnerPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterSpawnedBySpawnerPrototype), proto); }
-    }
-
-    public class EntityFilterHasPrestigeLevelPrototype : EntityFilterPrototype
-    {
-        public ulong PrestigeLevel;
-        public EntityFilterHasPrestigeLevelPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterHasPrestigeLevelPrototype), proto); }
-    }
-
-    public class EntityFilterHasRankPrototype : EntityFilterPrototype
-    {
-        public ulong RankPrototype;
-        public EntityFilterHasRankPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterHasRankPrototype), proto); }
-    }
-
-    public class EntityFilterItemRarityPrototype : EntityFilterPrototype
-    {
-        public ulong Rarity;
-        public EntityFilterItemRarityPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterItemRarityPrototype), proto); }
-    }
-
-    public class ScoreTableSchemaEntryPrototype : Prototype
-    {
-        public ScoreTableValueType Type;
-        public ulong Name;
-        public EvalPrototype EvalOnPlayerAdd;
-        public EvalPrototype EvalAuto;
-        public EntityFilterPrototype OnEntityDeathFilter;
-        public ScoreTableValueEventToEnum Event;
-        public ScoreTableSchemaEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ScoreTableSchemaEntryPrototype), proto); }
-    }
-
+    [AssetEnum((int)Invalid)]
     public enum ScoreTableValueType
     {
         Invalid = 0,
@@ -189,7 +23,8 @@
         Float = 2,
     }
 
-    public enum ScoreTableValueEventToEnum
+    [AssetEnum((int)Invalid)]
+    public enum ScoreTableValueEvent
     {
         Invalid = 0,
         DamageTaken = 1,
@@ -200,10 +35,152 @@
         PlayerKills = 6,
     }
 
-    public class ScoreTableSchemaPrototype : Prototype
+    #endregion
+
+    public class EntityFilterPrototype : Prototype
     {
-        public ScoreTableSchemaEntryPrototype[] Schema;
-        public ScoreTableSchemaPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ScoreTableSchemaPrototype), proto); }
     }
 
+    public class EntityFilterFilterListPrototype : EntityFilterPrototype
+    {
+        public EntityFilterPrototype[] Filters { get; protected set; }
+    }
+
+    public class EntityFilterAndPrototype : EntityFilterFilterListPrototype
+    {
+    }
+
+    public class EntityFilterHasAlliancePrototype : EntityFilterPrototype
+    {
+        public PrototypeId Alliance { get; protected set; }
+    }
+
+    public class EntityFilterScriptKeyPrototype : EntityFilterPrototype
+    {
+        public ScriptRoleKeyEnum ScriptKey { get; protected set; }
+    }
+
+    public class EntityFilterHasKeywordPrototype : EntityFilterPrototype
+    {
+        public PrototypeId Keyword { get; protected set; }
+    }
+
+    public class EntityFilterHasNegStatusEffectPrototype : EntityFilterPrototype
+    {
+    }
+
+    public class EntityFilterHasPrototypePrototype : EntityFilterPrototype
+    {
+        public PrototypeId EntityPrototype { get; protected set; }
+        public bool IncludeChildPrototypes { get; protected set; }
+    }
+
+    public class EntityFilterInAreaPrototype : EntityFilterPrototype
+    {
+        public PrototypeId InArea { get; protected set; }
+    }
+
+    public class EntityFilterInCellPrototype : EntityFilterPrototype
+    {
+        public AssetId[] InCells { get; protected set; }
+    }
+
+    public class EntityFilterInLocationWithKeywordPrototype : EntityFilterPrototype
+    {
+        public PrototypeId Keyword { get; protected set; }
+    }
+
+    public class EntityFilterInRegionPrototype : EntityFilterPrototype
+    {
+        public PrototypeId InRegion { get; protected set; }
+    }
+
+    public class EntityFilterMissionStatePrototype : EntityFilterPrototype
+    {
+        public PrototypeId Mission { get; protected set; }
+        public MissionState State { get; protected set; }
+    }
+
+    public class EntityFilterIsHostileToPlayersPrototype : EntityFilterPrototype
+    {
+    }
+
+    public class EntityFilterIsMemberOfSuperteamPrototype : EntityFilterPrototype
+    {
+        public PrototypeId Superteam { get; protected set; }
+    }
+
+    public class EntityFilterIsMissionContributorPrototype : EntityFilterPrototype
+    {
+    }
+
+    public class EntityFilterIsMissionParticipantPrototype : EntityFilterPrototype
+    {
+    }
+
+    public class EntityFilterIsPartyMemberPrototype : EntityFilterPrototype
+    {
+    }
+
+    public class EntityFilterIsPlayerAvatarPrototype : EntityFilterPrototype
+    {
+    }
+
+    public class EntityFilterIsPowerOwnerPrototype : EntityFilterPrototype
+    {
+    }
+
+    public class EntityFilterNotPrototype : EntityFilterPrototype
+    {
+        public EntityFilterPrototype EntityFilter { get; protected set; }
+    }
+
+    public class EntityFilterOrPrototype : EntityFilterFilterListPrototype
+    {
+    }
+
+    public class EntityFilterSpawnedByEncounterPrototype : EntityFilterPrototype
+    {
+        public AssetId EncounterResource { get; protected set; }
+    }
+
+    public class EntityFilterSpawnedByMissionPrototype : EntityFilterPrototype
+    {
+        public PrototypeId MissionPrototype { get; protected set; }
+    }
+
+    public class EntityFilterSpawnedBySpawnerPrototype : EntityFilterPrototype
+    {
+        public PrototypeId SpawnerPrototype { get; protected set; }
+    }
+
+    public class EntityFilterHasPrestigeLevelPrototype : EntityFilterPrototype
+    {
+        public PrototypeId PrestigeLevel { get; protected set; }
+    }
+
+    public class EntityFilterHasRankPrototype : EntityFilterPrototype
+    {
+        public PrototypeId RankPrototype { get; protected set; }
+    }
+
+    public class EntityFilterItemRarityPrototype : EntityFilterPrototype
+    {
+        public PrototypeId Rarity { get; protected set; }
+    }
+
+    public class ScoreTableSchemaEntryPrototype : Prototype
+    {
+        public ScoreTableValueType Type { get; protected set; }
+        public LocaleStringId Name { get; protected set; }
+        public EvalPrototype EvalOnPlayerAdd { get; protected set; }
+        public EvalPrototype EvalAuto { get; protected set; }
+        public EntityFilterPrototype OnEntityDeathFilter { get; protected set; }
+        public ScoreTableValueEvent Event { get; protected set; }
+    }
+
+    public class ScoreTableSchemaPrototype : Prototype
+    {
+        public ScoreTableSchemaEntryPrototype[] Schema { get; protected set; }
+    }
 }

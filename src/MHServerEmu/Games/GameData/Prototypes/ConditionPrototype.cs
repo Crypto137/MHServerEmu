@@ -1,71 +1,26 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
+    #region Enums
 
-    public class ConditionUnrealPrototype : Prototype
-    {
-        public ulong ConditionArt;
-        public ulong EntityArt;
-        public ConditionUnrealPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ConditionUnrealPrototype), proto); }
-    }
-
-    public class ConditionPrototype : Prototype
-    {
-        public bool CancelOnHit;
-        public bool CancelOnPowerUse;
-        public long DurationMS;
-        public ulong TooltipText;
-        public ulong IconPath;
-        public bool PauseDurationCountdown;
-        public ulong Properties;
-        public ConditionScopeType Scope;
-        public ulong UnrealClass;
-        public EvalPrototype ChanceToApplyCondition;
-        public ConditionType ConditionType;
-        public bool VisualOnly;
-        public ConditionUnrealPrototype[] UnrealOverrides;
-        public ulong[] Keywords;
-        public ulong DurationMSCurve;
-        public ulong DurationMSCurveIndex;
-        public bool ForceShowClientConditionFX;
-        public ProcTriggerType[] CancelOnProcTriggers;
-        public int UpdateIntervalMS;
-        public EvalPrototype DurationMSEval;
-        public ulong TooltipStyle;
-        public ulong TooltipFont;
-        public EvalPrototype[] EvalOnCreate;
-        public ulong CancelOnPowerUseKeyword;
-        public bool CancelOnPowerUsePost;
-        public bool PersistToDB;
-        public bool CancelOnKilled;
-        public bool ApplyOverTimeEffectsToOriginator;
-        public bool TransferToCurrentAvatar;
-        public bool CancelOnTransfer;
-        public bool RealTime;
-        public bool IsBoost;
-        public UIConditionType ConditionTypeUI;
-        public bool ApplyInitialTickImmediately;
-        public bool ForceOpenBuffPage;
-        public bool IsPartyBoost;
-        public EvalPrototype[] EvalPartyBoost;
-        public StackingBehaviorPrototype StackingBehavior;
-        public bool CancelOnIntraRegionTeleport;
-        public ulong DisplayName;
-        public int UrgentTimeMS;
-        public ulong IconPathHiRes;
-        public ConditionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ConditionPrototype), proto); }
-    }
-    public enum ConditionType
+    [AssetEnum((int)Neither)]
+    public enum PowerConditionType
     {
         Neither = 0,
         Buff = 1,
         Boost = 2,
         Debuff = 3,
     }
+
+    [AssetEnum((int)Target)]
     public enum ConditionScopeType
     {
         Target = 0,
         User = 1,
     }
+
+    [AssetEnum((int)None)]
     public enum ProcTriggerType
     {
         None = 0,
@@ -145,6 +100,7 @@
         OnControlledEntityReleased = 74,
     }
 
+    [AssetEnum]
     public enum UIConditionType
     {
         None = 0,
@@ -159,11 +115,64 @@
         PlayerPower = 10,
     }
 
+    #endregion
+
+    public class ConditionUnrealPrototype : Prototype
+    {
+        public AssetId ConditionArt { get; protected set; }
+        public AssetId EntityArt { get; protected set; }
+    }
+
+    public class ConditionPrototype : Prototype
+    {
+        public bool CancelOnHit { get; protected set; }
+        public bool CancelOnPowerUse { get; protected set; }
+        public long DurationMS { get; protected set; }
+        public LocaleStringId TooltipText { get; protected set; }
+        public AssetId IconPath { get; protected set; }
+        public bool PauseDurationCountdown { get; protected set; }
+        public PrototypePropertyCollection Properties { get; protected set; }
+        public ConditionScopeType Scope { get; protected set; }
+        public AssetId UnrealClass { get; protected set; }
+        public EvalPrototype ChanceToApplyCondition { get; protected set; }
+        public PowerConditionType ConditionType { get; protected set; }
+        public bool VisualOnly { get; protected set; }
+        public ConditionUnrealPrototype[] UnrealOverrides { get; protected set; }
+        public PrototypeId[] Keywords { get; protected set; }
+        public CurveId DurationMSCurve { get; protected set; }
+        public PrototypeId DurationMSCurveIndex { get; protected set; }
+        public bool ForceShowClientConditionFX { get; protected set; }
+        public ProcTriggerType[] CancelOnProcTriggers { get; protected set; }
+        public int UpdateIntervalMS { get; protected set; }
+        public EvalPrototype DurationMSEval { get; protected set; }
+        public PrototypeId TooltipStyle { get; protected set; }
+        public AssetId TooltipFont { get; protected set; }
+        public EvalPrototype[] EvalOnCreate { get; protected set; }
+        public PrototypeId CancelOnPowerUseKeyword { get; protected set; }
+        public bool CancelOnPowerUsePost { get; protected set; }
+        public bool PersistToDB { get; protected set; }
+        public bool CancelOnKilled { get; protected set; }
+        public bool ApplyOverTimeEffectsToOriginator { get; protected set; }
+        public bool TransferToCurrentAvatar { get; protected set; }
+        public bool CancelOnTransfer { get; protected set; }
+        public bool RealTime { get; protected set; }
+        public bool IsBoost { get; protected set; }
+        public UIConditionType ConditionTypeUI { get; protected set; }
+        public bool ApplyInitialTickImmediately { get; protected set; }
+        public bool ForceOpenBuffPage { get; protected set; }
+        public bool IsPartyBoost { get; protected set; }
+        public EvalPrototype[] EvalPartyBoost { get; protected set; }
+        public StackingBehaviorPrototype StackingBehavior { get; protected set; }
+        public bool CancelOnIntraRegionTeleport { get; protected set; }
+        public LocaleStringId DisplayName { get; protected set; }
+        public int UrgentTimeMS { get; protected set; }
+        public AssetId IconPathHiRes { get; protected set; }
+    }
+
     public class ConditionEffectPrototype : Prototype
     {
-        public ulong Properties;
-        public int ConditionNum;
-        public ConditionEffectPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ConditionEffectPrototype), proto); }
+        public PrototypePropertyCollection Properties { get; protected set; }
+        public int ConditionNum { get; protected set; }
     }
 
 }

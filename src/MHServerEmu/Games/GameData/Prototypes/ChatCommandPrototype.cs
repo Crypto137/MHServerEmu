@@ -1,63 +1,21 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
-{
+﻿using MHServerEmu.Games.GameData.Calligraphy;
 
-    public class ChatCommandArgumentPrototype : Prototype
-    {
-        public ulong Description;
-        public ChatCommandArgumentType Type;
-        public bool Required;
-        public ChatCommandArgumentPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ChatCommandArgumentPrototype), proto); }
-    }
+namespace MHServerEmu.Games.GameData.Prototypes
+{
+    #region Enums
+
+    [AssetEnum((int)None)]
     public enum ChatCommandArgumentType
     {
+        None = 0,
         Boolean = 1,
         Float = 2,
         Integer = 3,
         String = 4,
     }
 
-    public class ChatCommandPrototype : Prototype
-    {
-        public ulong Command;
-        public ulong Description;
-        public int Function;
-        public ChatCommandArgumentPrototype[] Parameters;
-        public bool ShowInHelp;
-        public bool RespondsToSpacebar;
-        public DesignWorkflowState DesignState;
-        public ChatCommandPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ChatCommandPrototype), proto); }
-    }
-
-    public class EmoteChatCommandPrototype : ChatCommandPrototype
-    {
-        public ulong EmotePower;
-        public ulong EmoteText;
-        public EmoteChatCommandPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EmoteChatCommandPrototype), proto); }
-    }
-
-    public class ChatChannelPrototype : Prototype
-    {
-        public ChatMessageFormatTypes ChannelType;
-        public ulong PromptText;
-        public ulong TextStyle;
-        public ulong DisplayName;
-        public ulong ChatCommand;
-        public bool ShowChannelNameInChat;
-        public ulong ShortName;
-        public bool ShowInChannelList;
-        public bool VisibleOnAllTabs;
-        public DesignWorkflowState DesignState;
-        public bool IsGlobalChannel;
-        public bool AllowPlayerFilter;
-        public bool SubscribeByDefault;
-        public bool DoHashtagFormatting;
-        public ulong ChatPanelTabName;
-        public bool AllowChatPanelTab;
-        public LanguageType Language;
-        public ChatChannelPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ChatChannelPrototype), proto); }
-    }
-
-    public enum ChatMessageFormatTypes
+    [AssetEnum]
+    public enum ChatMessageFormatType
     {
         None = -1,
         ChatLocal = 0,
@@ -91,6 +49,7 @@
         Gifting = 26,
     }
 
+    [AssetEnum]
     public enum LanguageType
     {
         Chinese = 1,
@@ -103,5 +62,52 @@
         Portuguese = 8,
         Russian = 9,
         Spanish = 10,
+    }
+
+    #endregion
+
+    public class ChatCommandArgumentPrototype : Prototype
+    {
+        public LocaleStringId Description { get; protected set; }
+        public ChatCommandArgumentType Type { get; protected set; }
+        public bool Required { get; protected set; }
+    }
+
+    public class ChatCommandPrototype : Prototype
+    {
+        public LocaleStringId Command { get; protected set; }
+        public LocaleStringId Description { get; protected set; }
+        public AssetId Function { get; protected set; }     // TODO: this is an asset id that needs to be bound to a function (CalligraphySerializer::ParseFunctionPtr)
+        public ChatCommandArgumentPrototype[] Parameters { get; protected set; }
+        public bool ShowInHelp { get; protected set; }
+        public bool RespondsToSpacebar { get; protected set; }
+        public DesignWorkflowState DesignState { get; protected set; }
+    }
+
+    public class EmoteChatCommandPrototype : ChatCommandPrototype
+    {
+        public PrototypeId EmotePower { get; protected set; }
+        public LocaleStringId EmoteText { get; protected set; }
+    }
+
+    public class ChatChannelPrototype : Prototype
+    {
+        public ChatMessageFormatType ChannelType { get; protected set; }
+        public LocaleStringId PromptText { get; protected set; }
+        public PrototypeId TextStyle { get; protected set; }
+        public LocaleStringId DisplayName { get; protected set; }
+        public PrototypeId ChatCommand { get; protected set; }
+        public bool ShowChannelNameInChat { get; protected set; }
+        public LocaleStringId ShortName { get; protected set; }
+        public bool ShowInChannelList { get; protected set; }
+        public bool VisibleOnAllTabs { get; protected set; }
+        public DesignWorkflowState DesignState { get; protected set; }
+        public bool IsGlobalChannel { get; protected set; }
+        public bool AllowPlayerFilter { get; protected set; }
+        public bool SubscribeByDefault { get; protected set; }
+        public bool DoHashtagFormatting { get; protected set; }
+        public LocaleStringId ChatPanelTabName { get; protected set; }
+        public bool AllowChatPanelTab { get; protected set; }
+        public LanguageType Language { get; protected set; }
     }
 }

@@ -1,1239 +1,1118 @@
-﻿using static MHServerEmu.Games.Generators.Navi.PathCache;
+﻿using MHServerEmu.Games.GameData.Calligraphy;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
+    #region Enums
+
+    [AssetEnum((int)Invalid)]
+    public enum PathMethod  // AI/Misc/Types/MoveToPathMethodType.type
+    {
+        Invalid = 0,
+        Forward = 1,
+        ForwardLoop = 5,
+        ForwardBackAndForth = 3,
+        Reverse = 2,
+        ReverseLoop = 6,
+        ReverseBackAndForth = 4,
+    }
+
+    #endregion
+
     public class ProceduralContextPrototype : Prototype
     {
-        public ProceduralContextPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralContextPrototype), proto); }
     }
 
     public class ProceduralUsePowerContextSwitchTargetPrototype : Prototype
     {
-        public SelectEntityContextPrototype SelectTarget;
-        public bool SwitchPermanently;
-        public bool UsePowerOnCurTargetIfSwitchFails;
-        public ProceduralUsePowerContextSwitchTargetPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralUsePowerContextSwitchTargetPrototype), proto); }
+        public SelectEntityContextPrototype SelectTarget { get; protected set; }
+        public bool SwitchPermanently { get; protected set; }
+        public bool UsePowerOnCurTargetIfSwitchFails { get; protected set; }
     }
 
     public class ProceduralUsePowerContextPrototype : ProceduralContextPrototype
     {
-        public int InitialCooldownMinMS;
-        public int MaxCooldownMS;
-        public int MinCooldownMS;
-        public UsePowerContextPrototype PowerContext;
-        public int PickWeight;
-        public ProceduralUsePowerContextSwitchTargetPrototype TargetSwitch;
-        public int InitialCooldownMaxMS;
-        public ulong RestrictToDifficultyMin;
-        public ulong RestrictToDifficultyMax;
-        public ProceduralUsePowerContextPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralUsePowerContextPrototype), proto); }
+        public int InitialCooldownMinMS { get; protected set; }
+        public int MaxCooldownMS { get; protected set; }
+        public int MinCooldownMS { get; protected set; }
+        public UsePowerContextPrototype PowerContext { get; protected set; }
+        public int PickWeight { get; protected set; }
+        public ProceduralUsePowerContextSwitchTargetPrototype TargetSwitch { get; protected set; }
+        public int InitialCooldownMaxMS { get; protected set; }
+        public PrototypeId RestrictToDifficultyMin { get; protected set; }
+        public PrototypeId RestrictToDifficultyMax { get; protected set; }
     }
 
     public class ProceduralUseAffixPowerContextPrototype : ProceduralContextPrototype
     {
-        public UseAffixPowerContextPrototype AffixContext;
-        public int PickWeight;
-        public ProceduralUseAffixPowerContextPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralUseAffixPowerContextPrototype), proto); }
+        public UseAffixPowerContextPrototype AffixContext { get; protected set; }
+        public int PickWeight { get; protected set; }
     }
 
     public class ProceduralFlankContextPrototype : ProceduralContextPrototype
     {
-        public int MaxFlankCooldownMS;
-        public int MinFlankCooldownMS;
-        public FlankContextPrototype FlankContext;
-        public ProceduralFlankContextPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralFlankContextPrototype), proto); }
+        public int MaxFlankCooldownMS { get; protected set; }
+        public int MinFlankCooldownMS { get; protected set; }
+        public FlankContextPrototype FlankContext { get; protected set; }
     }
 
     public class ProceduralInteractContextPrototype : ProceduralContextPrototype
     {
-        public InteractContextPrototype InteractContext;
-        public ProceduralInteractContextPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralInteractContextPrototype), proto); }
+        public InteractContextPrototype InteractContext { get; protected set; }
     }
 
     public class ProceduralFleeContextPrototype : ProceduralContextPrototype
     {
-        public int MaxFleeCooldownMS;
-        public int MinFleeCooldownMS;
-        public FleeContextPrototype FleeContext;
-        public ProceduralFleeContextPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralFleeContextPrototype), proto); }
+        public int MaxFleeCooldownMS { get; protected set; }
+        public int MinFleeCooldownMS { get; protected set; }
+        public FleeContextPrototype FleeContext { get; protected set; }
     }
 
     public class ProceduralSyncAttackContextPrototype : Prototype
     {
-        public ulong TargetEntity;
-        public ulong TargetEntityPower;
-        public ProceduralUsePowerContextPrototype LeaderPower;
-        public ProceduralSyncAttackContextPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralSyncAttackContextPrototype), proto); }
+        public PrototypeId TargetEntity { get; protected set; }
+        public PrototypeId TargetEntityPower { get; protected set; }
+        public ProceduralUsePowerContextPrototype LeaderPower { get; protected set; }
     }
 
     public class ProceduralThresholdPowerContextPrototype : ProceduralUsePowerContextPrototype
     {
-        public float HealthThreshold;
-        public ProceduralThresholdPowerContextPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralThresholdPowerContextPrototype), proto); }
+        public float HealthThreshold { get; protected set; }
     }
 
     public class ProceduralPowerWithSpecificTargetsPrototype : Prototype
     {
-        public float HealthThreshold;
-        public ulong PowerToUse;
-        public AgentPrototype Targets;
-        public ProceduralPowerWithSpecificTargetsPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralPowerWithSpecificTargetsPrototype), proto); }
+        public float HealthThreshold { get; protected set; }
+        public PrototypeId PowerToUse { get; protected set; }
+        public PrototypeId[] Targets { get; protected set; }   // VectorPrototypeRefPtr AgentPrototype
     }
 
     public class ProceduralAIProfilePrototype : BrainPrototype
     {
-        public ProceduralAIProfilePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralAIProfilePrototype), proto); }
     }
 
     public class ProceduralProfileWithTargetPrototype : ProceduralAIProfilePrototype
     {
-        public SelectEntityContextPrototype SelectTarget;
-        public ulong NoTargetOverrideProfile;
-        public ProceduralProfileWithTargetPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileWithTargetPrototype), proto); }
+        public SelectEntityContextPrototype SelectTarget { get; protected set; }
+        public PrototypeId NoTargetOverrideProfile { get; protected set; }
     }
 
     public class ProceduralProfileWithAttackPrototype : ProceduralProfileWithTargetPrototype
     {
-        public int AttackRateMaxMS;
-        public int AttackRateMinMS;
-        public ProceduralUsePowerContextPrototype[] GenericProceduralPowers;
-        public ProceduralUseAffixPowerContextPrototype AffixSettings;
-        public ProceduralProfileWithAttackPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileWithAttackPrototype), proto); }
+        public int AttackRateMaxMS { get; protected set; }
+        public int AttackRateMinMS { get; protected set; }
+        public ProceduralUsePowerContextPrototype[] GenericProceduralPowers { get; protected set; }
+        public ProceduralUseAffixPowerContextPrototype AffixSettings { get; protected set; }
     }
 
     public class ProceduralProfileEnticerPrototype : ProceduralAIProfilePrototype
     {
-        public int CooldownMinMS;
-        public int CooldownMaxMS;
-        public int EnticeeEnticerCooldownMaxMS;
-        public int EnticeeEnticerCooldownMinMS;
-        public int EnticeeGlobalEnticerCDMaxMS;
-        public int EnticeeGlobalEnticerCDMinMS;
-        public int MaxSubscriptions;
-        public int MaxSubscriptionsPerActivation;
-        public float Radius;
-        public AIEntityAttributePrototype[] EnticeeAttributes;
-        public ulong EnticedBehavior;
-        public ProceduralProfileEnticerPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileEnticerPrototype), proto); }
+        public int CooldownMinMS { get; protected set; }
+        public int CooldownMaxMS { get; protected set; }
+        public int EnticeeEnticerCooldownMaxMS { get; protected set; }
+        public int EnticeeEnticerCooldownMinMS { get; protected set; }
+        public int EnticeeGlobalEnticerCDMaxMS { get; protected set; }
+        public int EnticeeGlobalEnticerCDMinMS { get; protected set; }
+        public int MaxSubscriptions { get; protected set; }
+        public int MaxSubscriptionsPerActivation { get; protected set; }
+        public float Radius { get; protected set; }
+        public AIEntityAttributePrototype[] EnticeeAttributes { get; protected set; }
+        public PrototypeId EnticedBehavior { get; protected set; }
     }
 
     public class ProceduralProfileEnticedBehaviorPrototype : ProceduralAIProfilePrototype
     {
-        public FlankContextPrototype FlankToEnticer;
-        public MoveToContextPrototype MoveToEnticer;
-        public ulong DynamicBehavior;
-        public bool OrientToEnticerOrientation;
-        public ProceduralProfileEnticedBehaviorPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileEnticedBehaviorPrototype), proto); }
+        public FlankContextPrototype FlankToEnticer { get; protected set; }
+        public MoveToContextPrototype MoveToEnticer { get; protected set; }
+        public PrototypeId DynamicBehavior { get; protected set; }
+        public bool OrientToEnticerOrientation { get; protected set; }
     }
 
     public class ProceduralProfileSenseOnlyPrototype : ProceduralAIProfilePrototype
     {
-        public AIEntityAttributePrototype[] AttributeList;
-        public ulong AllianceOverride;
-        public ProceduralProfileSenseOnlyPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileSenseOnlyPrototype), proto); }
+        public AIEntityAttributePrototype[] AttributeList { get; protected set; }
+        public PrototypeId AllianceOverride { get; protected set; }
     }
 
     public class ProceduralProfileInteractEnticerOverridePrototype : ProceduralAIProfilePrototype
     {
-        public InteractContextPrototype Interact;
-        public ProceduralProfileInteractEnticerOverridePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileInteractEnticerOverridePrototype), proto); }
+        public InteractContextPrototype Interact { get; protected set; }
     }
 
     public class ProceduralProfileUsePowerEnticerOverridePrototype : ProceduralProfileWithTargetPrototype
     {
-        public UsePowerContextPrototype Power;
-        public new SelectEntityContextPrototype SelectTarget;
-        public ProceduralProfileUsePowerEnticerOverridePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileUsePowerEnticerOverridePrototype), proto); }
+        public UsePowerContextPrototype Power { get; protected set; }
+        public new SelectEntityContextPrototype SelectTarget { get; protected set; }
     }
 
     public class ProceduralProfileFearOverridePrototype : ProceduralProfileWithTargetPrototype
     {
-        public FleeContextPrototype FleeFromTarget;
-        public WanderContextPrototype WanderIfNoTarget;
-        public ProceduralProfileFearOverridePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileFearOverridePrototype), proto); }
+        public FleeContextPrototype FleeFromTarget { get; protected set; }
+        public WanderContextPrototype WanderIfNoTarget { get; protected set; }
     }
 
     public class ProceduralProfileLeashOverridePrototype : ProceduralAIProfilePrototype
     {
-        public ulong LeashReturnHeal;
-        public ulong LeashReturnImmunity;
-        public MoveToContextPrototype MoveToSpawn;
-        public TeleportContextPrototype TeleportToSpawn;
-        public ulong LeashReturnTeleport;
-        public ulong LeashReturnInvulnerability;
-        public ProceduralProfileLeashOverridePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileLeashOverridePrototype), proto); }
+        public PrototypeId LeashReturnHeal { get; protected set; }
+        public PrototypeId LeashReturnImmunity { get; protected set; }
+        public MoveToContextPrototype MoveToSpawn { get; protected set; }
+        public TeleportContextPrototype TeleportToSpawn { get; protected set; }
+        public PrototypeId LeashReturnTeleport { get; protected set; }
+        public PrototypeId LeashReturnInvulnerability { get; protected set; }
     }
 
     public class ProceduralProfileRunToExitAndDespawnOverridePrototype : ProceduralAIProfilePrototype
     {
-        public MoveToContextPrototype RunToExit;
-        public int NumberOfWandersBeforeDestroy;
-        public DelayContextPrototype DelayBeforeRunToExit;
-        public SelectEntityContextPrototype SelectPortalToExitFrom;
-        public DelayContextPrototype DelayBeforeDestroyOnMoveExitFail;
-        public bool VanishesIfMoveToExitFails;
-        public ProceduralProfileRunToExitAndDespawnOverridePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileRunToExitAndDespawnOverridePrototype), proto); }
+        public MoveToContextPrototype RunToExit { get; protected set; }
+        public int NumberOfWandersBeforeDestroy { get; protected set; }
+        public DelayContextPrototype DelayBeforeRunToExit { get; protected set; }
+        public SelectEntityContextPrototype SelectPortalToExitFrom { get; protected set; }
+        public DelayContextPrototype DelayBeforeDestroyOnMoveExitFail { get; protected set; }
+        public bool VanishesIfMoveToExitFails { get; protected set; }
     }
 
     public class ProceduralProfileRunToTargetAndDespawnOverridePrototype : ProceduralProfileWithTargetPrototype
     {
-        public ulong Invulnerability;
-        public int NumberOfWandersBeforeDestroy;
-        public MoveToContextPrototype RunToTarget;
-        public WanderContextPrototype WanderIfMoveFails;
-        public ProceduralProfileRunToTargetAndDespawnOverridePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileRunToTargetAndDespawnOverridePrototype), proto); }
+        public PrototypeId Invulnerability { get; protected set; }
+        public int NumberOfWandersBeforeDestroy { get; protected set; }
+        public MoveToContextPrototype RunToTarget { get; protected set; }
+        public WanderContextPrototype WanderIfMoveFails { get; protected set; }
     }
 
     public class ProceduralProfileDefaultActiveOverridePrototype : ProceduralProfileWithTargetPrototype
     {
-        public DelayContextPrototype DelayAfterWander;
-        public WanderContextPrototype Wander;
-        public WanderContextPrototype WanderInPlace;
-        public ProceduralProfileDefaultActiveOverridePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileDefaultActiveOverridePrototype), proto); }
+        public DelayContextPrototype DelayAfterWander { get; protected set; }
+        public WanderContextPrototype Wander { get; protected set; }
+        public WanderContextPrototype WanderInPlace { get; protected set; }
     }
 
     public class ProceduralProfileFleeOverridePrototype : ProceduralProfileWithTargetPrototype
     {
-        public FleeContextPrototype FleeFromTarget;
-        public ProceduralProfileFleeOverridePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileFleeOverridePrototype), proto); }
+        public FleeContextPrototype FleeFromTarget { get; protected set; }
     }
 
     public class ProceduralProfileOrbPrototype : ProceduralProfileWithTargetPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public int InitialMoveToDelayMS;
-        public StateChangePrototype InvalidTargetState;
-        public float OrbRadius;
-        public ulong EffectPower;
-        public bool AcceptsAggroRangeBonus;
-        public int ShrinkageDelayMS;
-        public int ShrinkageDurationMS;
-        public float ShrinkageMinScale;
-        public bool DestroyOrbOnUnSimOrTargetLoss;
-        public ProceduralProfileOrbPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileOrbPrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public int InitialMoveToDelayMS { get; protected set; }
+        public StateChangePrototype InvalidTargetState { get; protected set; }
+        public float OrbRadius { get; protected set; }
+        public PrototypeId EffectPower { get; protected set; }
+        public bool AcceptsAggroRangeBonus { get; protected set; }
+        public int ShrinkageDelayMS { get; protected set; }
+        public int ShrinkageDurationMS { get; protected set; }
+        public float ShrinkageMinScale { get; protected set; }
+        public bool DestroyOrbOnUnSimOrTargetLoss { get; protected set; }
     }
 
     public class ProceduralProfileStationaryTurretPrototype : ProceduralProfileWithAttackPrototype
     {
-        public ProceduralProfileStationaryTurretPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileStationaryTurretPrototype), proto); }
     }
 
     public class ProceduralProfileRotatingTurretPrototype : ProceduralAIProfilePrototype
     {
-        public UsePowerContextPrototype Power;
-        public RotateContextPrototype Rotate;
-        public ProceduralProfileRotatingTurretPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileRotatingTurretPrototype), proto); }
+        public UsePowerContextPrototype Power { get; protected set; }
+        public RotateContextPrototype Rotate { get; protected set; }
     }
 
     public class ProceduralProfileRotatingTurretWithTargetPrototype : ProceduralProfileWithAttackPrototype
     {
-        public RotateContextPrototype Rotate;
-        public ProceduralProfileRotatingTurretWithTargetPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileRotatingTurretWithTargetPrototype), proto); }
+        public RotateContextPrototype Rotate { get; protected set; }
     }
 
     public class ProceduralProfileBasicMeleePrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ProceduralUsePowerContextPrototype PrimaryPower;
-        public ProceduralProfileBasicMeleePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileBasicMeleePrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype PrimaryPower { get; protected set; }
     }
 
     public class ProceduralProfileBasicMelee2PowerPrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ProceduralUsePowerContextPrototype Power1;
-        public ProceduralUsePowerContextPrototype Power2;
-        public ProceduralProfileBasicMelee2PowerPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileBasicMelee2PowerPrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype Power1 { get; protected set; }
+        public ProceduralUsePowerContextPrototype Power2 { get; protected set; }
     }
 
     public class ProceduralProfileBasicRangePrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ProceduralProfileBasicRangePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileBasicRangePrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
     }
 
     public class ProceduralProfileAlternateRange2Prototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public ProceduralFlankContextPrototype FlankTarget;
-        public ProceduralUsePowerContextPrototype Power1;
-        public ProceduralUsePowerContextPrototype Power2;
-        public ProceduralUsePowerContextPrototype PowerSwap;
-        public ProceduralProfileAlternateRange2Prototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileAlternateRange2Prototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype Power1 { get; protected set; }
+        public ProceduralUsePowerContextPrototype Power2 { get; protected set; }
+        public ProceduralUsePowerContextPrototype PowerSwap { get; protected set; }
     }
 
     public class ProceduralProfileMultishotRangePrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ProceduralUsePowerContextPrototype MultishotPower;
-        public int NumShots;
-        public bool RetargetPerShot;
-        public ProceduralProfileMultishotRangePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileMultishotRangePrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype MultishotPower { get; protected set; }
+        public int NumShots { get; protected set; }
+        public bool RetargetPerShot { get; protected set; }
     }
 
     public class ProceduralProfileMultishotFlankerPrototype : ProceduralProfileWithAttackPrototype
     {
-        public ProceduralFlankContextPrototype FlankTarget;
-        public MoveToContextPrototype MoveToTarget;
-        public ProceduralUsePowerContextPrototype MultishotPower;
-        public int NumShots;
-        public bool RetargetPerShot;
-        public ProceduralProfileMultishotFlankerPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileMultishotFlankerPrototype), proto); }
+        public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype MultishotPower { get; protected set; }
+        public int NumShots { get; protected set; }
+        public bool RetargetPerShot { get; protected set; }
     }
 
     public class ProceduralProfileMultishotHiderPrototype : ProceduralProfileWithAttackPrototype
     {
-        public ProceduralUsePowerContextPrototype HidePower;
-        public ProceduralUsePowerContextPrototype MultishotPower;
-        public int NumShots;
-        public bool RetargetPerShot;
-        public ProceduralProfileMultishotHiderPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileMultishotHiderPrototype), proto); }
+        public ProceduralUsePowerContextPrototype HidePower { get; protected set; }
+        public ProceduralUsePowerContextPrototype MultishotPower { get; protected set; }
+        public int NumShots { get; protected set; }
+        public bool RetargetPerShot { get; protected set; }
     }
 
     public class ProceduralProfileMeleeSpeedByDistancePrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ProceduralUsePowerContextPrototype PrimaryPower;
-        public UsePowerContextPrototype ExtraSpeedPower;
-        public UsePowerContextPrototype SpeedRemovalPower;
-        public float DistanceFromTargetForSpeedBonus;
-        public ProceduralProfileMeleeSpeedByDistancePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileMeleeSpeedByDistancePrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype PrimaryPower { get; protected set; }
+        public UsePowerContextPrototype ExtraSpeedPower { get; protected set; }
+        public UsePowerContextPrototype SpeedRemovalPower { get; protected set; }
+        public float DistanceFromTargetForSpeedBonus { get; protected set; }
     }
 
     public class ProceduralProfileRangeFlankerPrototype : ProceduralProfileWithAttackPrototype
     {
-        public ProceduralFlankContextPrototype FlankTarget;
-        public MoveToContextPrototype MoveToTarget;
-        public ProceduralUsePowerContextPrototype PrimaryPower;
-        public ProceduralProfileRangeFlankerPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileRangeFlankerPrototype), proto); }
+        public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype PrimaryPower { get; protected set; }
     }
 
     public class ProceduralProfileSkirmisherPrototype : ProceduralProfileWithAttackPrototype
     {
-        public WanderContextPrototype SkirmishMovement;
-        public MoveToContextPrototype MoveToTarget;
-        public ProceduralUsePowerContextPrototype PrimaryPower;
-        public float MoveToSpeedBonus;
-        public ProceduralProfileSkirmisherPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileSkirmisherPrototype), proto); }
+        public WanderContextPrototype SkirmishMovement { get; protected set; }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype PrimaryPower { get; protected set; }
+        public float MoveToSpeedBonus { get; protected set; }
     }
 
     public class ProceduralProfileRangedWithMeleePriority2PowerPrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ProceduralUsePowerContextPrototype MeleePower;
-        public ProceduralUsePowerContextPrototype RangedPower;
-        public float MaxDistToMoveIntoMelee;
-        public MoveToContextPrototype MoveIntoMeleeRange;
-        public ProceduralProfileRangedWithMeleePriority2PowerPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileRangedWithMeleePriority2PowerPrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype MeleePower { get; protected set; }
+        public ProceduralUsePowerContextPrototype RangedPower { get; protected set; }
+        public float MaxDistToMoveIntoMelee { get; protected set; }
+        public MoveToContextPrototype MoveIntoMeleeRange { get; protected set; }
     }
 
     public class ProfMeleePwrSpecialAtHealthPctPrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public float SpecialAtHealthChunkPct;
-        public UsePowerContextPrototype SpecialPowerAtHealthChunkPct;
-        public ProfMeleePwrSpecialAtHealthPctPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProfMeleePwrSpecialAtHealthPctPrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public float SpecialAtHealthChunkPct { get; protected set; }
+        public UsePowerContextPrototype SpecialPowerAtHealthChunkPct { get; protected set; }
     }
 
     public class ProceduralProfileShockerPrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public MoveToContextPrototype MoveIntoMeleeRange;
-        public ProceduralUsePowerContextPrototype MeleePower;
-        public ProceduralUsePowerContextPrototype SpecialPower;
-        public ulong SpecialSummonPower;
-        public float MaxDistToMoveIntoMelee;
-        public int SpecialPowerNumSummons;
-        public float SpecialPowerMaxRadius;
-        public float SpecialPowerMinRadius;
-        public ProceduralProfileShockerPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileShockerPrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public MoveToContextPrototype MoveIntoMeleeRange { get; protected set; }
+        public ProceduralUsePowerContextPrototype MeleePower { get; protected set; }
+        public ProceduralUsePowerContextPrototype SpecialPower { get; protected set; }
+        public PrototypeId SpecialSummonPower { get; protected set; }
+        public float MaxDistToMoveIntoMelee { get; protected set; }
+        public int SpecialPowerNumSummons { get; protected set; }
+        public float SpecialPowerMaxRadius { get; protected set; }
+        public float SpecialPowerMinRadius { get; protected set; }
     }
 
     public class ProceduralProfileLadyDeathstrikePrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ProceduralUsePowerContextPrototype HealingPower;
-        public ProceduralUsePowerContextPrototype SpecialPower;
-        public SelectEntityContextPrototype SpecialPowerSelectTarget;
-        public int SpecialPowerChangeTgtIntervalMS;
-        public ProceduralProfileLadyDeathstrikePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileLadyDeathstrikePrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype HealingPower { get; protected set; }
+        public ProceduralUsePowerContextPrototype SpecialPower { get; protected set; }
+        public SelectEntityContextPrototype SpecialPowerSelectTarget { get; protected set; }
+        public int SpecialPowerChangeTgtIntervalMS { get; protected set; }
     }
 
     public class ProceduralProfileFastballSpecialWolverinePrototype : ProceduralProfileWithTargetPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public WanderContextPrototype MoveToNoTarget;
-        public UsePowerContextPrototype Power;
-        public int PowerChangeTargetIntervalMS;
-        public ProceduralProfileFastballSpecialWolverinePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileFastballSpecialWolverinePrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public WanderContextPrototype MoveToNoTarget { get; protected set; }
+        public UsePowerContextPrototype Power { get; protected set; }
+        public int PowerChangeTargetIntervalMS { get; protected set; }
     }
 
     public class ProceduralProfileSeekingMissilePrototype : ProceduralProfileWithTargetPrototype
     {
-        public SelectEntityContextPrototype SecondaryTargetSelection;
-        public int SeekDelayMS;
-        public float SeekDelaySpeed;
-        public ProceduralProfileSeekingMissilePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileSeekingMissilePrototype), proto); }
+        public SelectEntityContextPrototype SecondaryTargetSelection { get; protected set; }
+        public int SeekDelayMS { get; protected set; }
+        public float SeekDelaySpeed { get; protected set; }
     }
 
     public class ProceduralProfileSeekingMissileUniqueTargetPrototype : ProceduralProfileWithTargetPrototype
     {
-        public ProceduralProfileSeekingMissileUniqueTargetPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileSeekingMissileUniqueTargetPrototype), proto); }
     }
 
     public class ProceduralProfileNoMoveDefaultSensoryPrototype : ProceduralProfileWithAttackPrototype
     {
-        public ProceduralProfileNoMoveDefaultSensoryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileNoMoveDefaultSensoryPrototype), proto); }
     }
 
     public class ProceduralProfileNoMoveSimplifiedSensoryPrototype : ProceduralProfileWithAttackPrototype
     {
-        public ProceduralProfileNoMoveSimplifiedSensoryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileNoMoveSimplifiedSensoryPrototype), proto); }
     }
 
     public class ProceduralProfileNoMoveSimplifiedAllySensoryPrototype : ProceduralProfileWithAttackPrototype
     {
-        public ProceduralProfileNoMoveSimplifiedAllySensoryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileNoMoveSimplifiedAllySensoryPrototype), proto); }
     }
 
     public class ProfKillSelfAfterOnePowerNoMovePrototype : ProceduralProfileWithAttackPrototype
     {
-        public ProfKillSelfAfterOnePowerNoMovePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProfKillSelfAfterOnePowerNoMovePrototype), proto); }
     }
 
     public class ProceduralProfileNoMoveNoSensePrototype : ProceduralProfileWithAttackPrototype
     {
-        public ProceduralProfileNoMoveNoSensePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileNoMoveNoSensePrototype), proto); }
     }
 
     public class ProceduralProfileMoveToUniqueTargetNoPowerPrototype : ProceduralProfileWithTargetPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public ProceduralProfileMoveToUniqueTargetNoPowerPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileMoveToUniqueTargetNoPowerPrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
     }
 
     public class ProceduralProfileWanderNoPowerPrototype : ProceduralAIProfilePrototype
     {
-        public WanderContextPrototype WanderMovement;
-        public ProceduralProfileWanderNoPowerPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileWanderNoPowerPrototype), proto); }
+        public WanderContextPrototype WanderMovement { get; protected set; }
     }
 
     public class ProceduralProfileBasicWanderPrototype : ProceduralProfileWithAttackPrototype
     {
-        public WanderContextPrototype WanderMovement;
-        public ProceduralProfileBasicWanderPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileBasicWanderPrototype), proto); }
+        public WanderContextPrototype WanderMovement { get; protected set; }
     }
 
     public class ProceduralProfilePvPMeleePrototype : ProceduralProfileWithAttackPrototype
     {
-        public float AggroRadius;
-        public float AggroDropRadius;
-        public float AggroDropByLOSChance;
-        public long AttentionSpanMS;
-        public ulong PrimaryPower;
-        public int PathGroup;
-        public PathMethod PathMethod;
-        public float PathThreshold;
-        public ProceduralProfilePvPMeleePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfilePvPMeleePrototype), proto); }
+        public float AggroRadius { get; protected set; }
+        public float AggroDropRadius { get; protected set; }
+        public float AggroDropByLOSChance { get; protected set; }
+        public long AttentionSpanMS { get; protected set; }
+        public PrototypeId PrimaryPower { get; protected set; }
+        public int PathGroup { get; protected set; }
+        public PathMethod PathMethod { get; protected set; }
+        public float PathThreshold { get; protected set; }
     }
 
     public class ProceduralProfilePvPTowerPrototype : ProceduralProfileWithAttackPrototype
     {
-        public SelectEntityContextPrototype SelectTarget2;
-        public SelectEntityContextPrototype SelectTarget3;
-        public SelectEntityContextPrototype SelectTarget4;
-        public ProceduralProfilePvPTowerPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfilePvPTowerPrototype), proto); }
+        public SelectEntityContextPrototype SelectTarget2 { get; protected set; }
+        public SelectEntityContextPrototype SelectTarget3 { get; protected set; }
+        public SelectEntityContextPrototype SelectTarget4 { get; protected set; }
     }
 
     public class ProceduralProfileMeleeDropWeaponPrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ProceduralUsePowerContextPrototype PowerMeleeWithWeapon;
-        public ProceduralUsePowerContextPrototype PowerMeleeNoWeapon;
-        public ProceduralUsePowerContextPrototype PowerDropWeapon;
-        public ProceduralUsePowerContextPrototype PowerPickupWeapon;
-        public SelectEntityContextPrototype SelectWeaponAsTarget;
-        public int DropPickupTimeMax;
-        public int DropPickupTimeMin;
-        public ProceduralProfileMeleeDropWeaponPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileMeleeDropWeaponPrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype PowerMeleeWithWeapon { get; protected set; }
+        public ProceduralUsePowerContextPrototype PowerMeleeNoWeapon { get; protected set; }
+        public ProceduralUsePowerContextPrototype PowerDropWeapon { get; protected set; }
+        public ProceduralUsePowerContextPrototype PowerPickupWeapon { get; protected set; }
+        public SelectEntityContextPrototype SelectWeaponAsTarget { get; protected set; }
+        public int DropPickupTimeMax { get; protected set; }
+        public int DropPickupTimeMin { get; protected set; }
     }
 
     public class ProceduralProfileMeleeAllyDeathFleePrototype : ProceduralProfileWithAttackPrototype
     {
-        public FleeContextPrototype FleeFromTargetOnAllyDeath;
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ProceduralProfileMeleeAllyDeathFleePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileMeleeAllyDeathFleePrototype), proto); }
+        public FleeContextPrototype FleeFromTargetOnAllyDeath { get; protected set; }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
     }
 
     public class ProceduralProfileRangedFlankerAllyDeathFleePrototype : ProceduralProfileWithAttackPrototype
     {
-        public FleeContextPrototype FleeFromTargetOnAllyDeath;
-        public MoveToContextPrototype MoveToTarget;
-        public ProceduralFlankContextPrototype FlankTarget;
-        public ProceduralProfileRangedFlankerAllyDeathFleePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileRangedFlankerAllyDeathFleePrototype), proto); }
+        public FleeContextPrototype FleeFromTargetOnAllyDeath { get; protected set; }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
     }
 
     public class ProceduralProfileMagnetoPrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ProceduralFlankContextPrototype FlankTarget;
-        public ProceduralUsePowerContextPrototype ChasePower;
-        public ProceduralProfileMagnetoPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileMagnetoPrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype ChasePower { get; protected set; }
     }
 
     public class ProcProfMrSinisterPrototype : ProceduralProfileWithAttackPrototype
     {
-        public float CloneCylHealthPctThreshWave1;
-        public float CloneCylHealthPctThreshWave2;
-        public float CloneCylHealthPctThreshWave3;
-        public UsePowerContextPrototype CloneCylSummonFXPower;
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public TriggerSpawnersContextPrototype TriggerCylinderSpawnerAction;
-        public ProcProfMrSinisterPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProcProfMrSinisterPrototype), proto); }
+        public float CloneCylHealthPctThreshWave1 { get; protected set; }
+        public float CloneCylHealthPctThreshWave2 { get; protected set; }
+        public float CloneCylHealthPctThreshWave3 { get; protected set; }
+        public UsePowerContextPrototype CloneCylSummonFXPower { get; protected set; }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public TriggerSpawnersContextPrototype TriggerCylinderSpawnerAction { get; protected set; }
     }
 
     public class ProcProfMrSinisterCloneCylinderPrototype : ProceduralProfileWithAttackPrototype
     {
-        public UsePowerContextPrototype CylinderOpenPower;
-        public DespawnContextPrototype DespawnAction;
-        public int PreOpenDelayMS;
-        public int PostOpenDelayMS;
-        public ProcProfMrSinisterCloneCylinderPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProcProfMrSinisterCloneCylinderPrototype), proto); }
+        public UsePowerContextPrototype CylinderOpenPower { get; protected set; }
+        public DespawnContextPrototype DespawnAction { get; protected set; }
+        public int PreOpenDelayMS { get; protected set; }
+        public int PostOpenDelayMS { get; protected set; }
     }
 
     public class ProceduralProfileBlobPrototype : ProceduralProfileBasicRangePrototype
     {
-        public ProceduralUsePowerContextPrototype SummonToadPower;
-        public ulong ToadPrototype;
-        public ProceduralProfileBlobPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileBlobPrototype), proto); }
+        public ProceduralUsePowerContextPrototype SummonToadPower { get; protected set; }
+        public PrototypeId ToadPrototype { get; protected set; }
     }
 
     public class ProceduralProfileRangedHotspotDropperPrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ProceduralUsePowerContextPrototype RangedPower;
-        public ProceduralUsePowerContextPrototype HotspotPower;
-        public WanderContextPrototype HotspotDroppingMovement;
-        public ProceduralProfileRangedHotspotDropperPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileRangedHotspotDropperPrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype RangedPower { get; protected set; }
+        public ProceduralUsePowerContextPrototype HotspotPower { get; protected set; }
+        public WanderContextPrototype HotspotDroppingMovement { get; protected set; }
     }
 
     public class ProceduralProfileTeamUpPrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ProceduralFlankContextPrototype FlankTarget;
-        public bool IsRanged;
-        public MoveToContextPrototype MoveToMaster;
-        public TeleportContextPrototype TeleportToMasterIfTooFarAway;
-        public int MaxDistToMasterBeforeTeleport;
-        public ProceduralUsePowerContextPrototype[] TeamUpPowerProgressionPowers;
-        public ProceduralProfileTeamUpPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileTeamUpPrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
+        public bool IsRanged { get; protected set; }
+        public MoveToContextPrototype MoveToMaster { get; protected set; }
+        public TeleportContextPrototype TeleportToMasterIfTooFarAway { get; protected set; }
+        public int MaxDistToMasterBeforeTeleport { get; protected set; }
+        public ProceduralUsePowerContextPrototype[] TeamUpPowerProgressionPowers { get; protected set; }
     }
 
     public class ProceduralProfilePetPrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype PetFollow;
-        public TeleportContextPrototype TeleportToMasterIfTooFarAway;
-        public int MaxDistToMasterBeforeTeleport;
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ProceduralFlankContextPrototype FlankTarget;
-        public bool IsRanged;
-        public ProceduralProfilePetPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfilePetPrototype), proto); }
+        public MoveToContextPrototype PetFollow { get; protected set; }
+        public TeleportContextPrototype TeleportToMasterIfTooFarAway { get; protected set; }
+        public int MaxDistToMasterBeforeTeleport { get; protected set; }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
+        public bool IsRanged { get; protected set; }
     }
 
     public class ProceduralProfilePetFidgetPrototype : ProceduralProfilePetPrototype
     {
-        public ProceduralUsePowerContextPrototype Fidget;
-        public ProceduralProfilePetFidgetPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfilePetFidgetPrototype), proto); }
+        public ProceduralUsePowerContextPrototype Fidget { get; protected set; }
     }
 
     public class ProceduralProfileSquirrelGirlSquirrelPrototype : ProceduralProfilePetPrototype
     {
-        public ProceduralFlankContextPrototype FlankMaster;
-        public float DeadzoneAroundFlankTarget;
-        public ProceduralProfileSquirrelGirlSquirrelPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileSquirrelGirlSquirrelPrototype), proto); }
+        public ProceduralFlankContextPrototype FlankMaster { get; protected set; }
+        public float DeadzoneAroundFlankTarget { get; protected set; }
     }
 
     public class ProceduralProfileRollingGrenadesPrototype : ProceduralAIProfilePrototype
     {
-        public int MaxSpeedDegreeUpdateIntervalMS;
-        public int MinSpeedDegreeUpdateIntervalMS;
-        public int MovementSpeedVariance;
-        public int RandomDegreeFromForward;
-        public ProceduralProfileRollingGrenadesPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileRollingGrenadesPrototype), proto); }
+        public int MaxSpeedDegreeUpdateIntervalMS { get; protected set; }
+        public int MinSpeedDegreeUpdateIntervalMS { get; protected set; }
+        public int MovementSpeedVariance { get; protected set; }
+        public int RandomDegreeFromForward { get; protected set; }
     }
 
     public class ProceduralProfileSquirrelTriplePrototype : ProceduralAIProfilePrototype
     {
-        public int JumpDistanceMax;
-        public int JumpDistanceMin;
-        public DelayContextPrototype PauseSettings;
-        public int RandomDirChangeDegrees;
-        public ProceduralProfileSquirrelTriplePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileSquirrelTriplePrototype), proto); }
+        public int JumpDistanceMax { get; protected set; }
+        public int JumpDistanceMin { get; protected set; }
+        public DelayContextPrototype PauseSettings { get; protected set; }
+        public int RandomDirChangeDegrees { get; protected set; }
     }
 
     public class ProceduralProfileFrozenOrbPrototype : ProceduralAIProfilePrototype
     {
-        public int ShardBurstsPerSecond;
-        public int ShardsPerBurst;
-        public int ShardRotationSpeed;
-        public ulong ShardPower;
-        public ProceduralProfileFrozenOrbPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileFrozenOrbPrototype), proto); }
+        public int ShardBurstsPerSecond { get; protected set; }
+        public int ShardsPerBurst { get; protected set; }
+        public int ShardRotationSpeed { get; protected set; }
+        public PrototypeId ShardPower { get; protected set; }
     }
 
     public class ProceduralProfileDrDoomPhase1Prototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ulong DeathStun;
-        public ProceduralUsePowerContextPrototype SummonTurretPowerAnimOnly;
-        public UsePowerContextPrototype SummonDoombotBlockades;
-        public UsePowerContextPrototype SummonDoombotInfernos;
-        public UsePowerContextPrototype SummonDoombotFlyers;
-        public ProceduralUsePowerContextPrototype SummonDoombotAnimOnly;
-        public ulong SummonDoombotBlockadesCurve;
-        public ulong SummonDoombotInfernosCurve;
-        public ulong SummonDoombotFlyersCurve;
-        public int SummonDoombotWaveIntervalMS;
-        public ProceduralUsePowerContextPrototype SummonOrbSpawners;
-        public TriggerSpawnersContextPrototype SpawnTurrets;
-        public TriggerSpawnersContextPrototype SpawnDrDoomPhase2;
-        public TriggerSpawnersContextPrototype DestroyTurretsOnDeath;
-        public ProceduralProfileDrDoomPhase1Prototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileDrDoomPhase1Prototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public PrototypeId DeathStun { get; protected set; }
+        public ProceduralUsePowerContextPrototype SummonTurretPowerAnimOnly { get; protected set; }
+        public UsePowerContextPrototype SummonDoombotBlockades { get; protected set; }
+        public UsePowerContextPrototype SummonDoombotInfernos { get; protected set; }
+        public UsePowerContextPrototype SummonDoombotFlyers { get; protected set; }
+        public ProceduralUsePowerContextPrototype SummonDoombotAnimOnly { get; protected set; }
+        public CurveId SummonDoombotBlockadesCurve { get; protected set; }
+        public CurveId SummonDoombotInfernosCurve { get; protected set; }
+        public CurveId SummonDoombotFlyersCurve { get; protected set; }
+        public int SummonDoombotWaveIntervalMS { get; protected set; }
+        public ProceduralUsePowerContextPrototype SummonOrbSpawners { get; protected set; }
+        public TriggerSpawnersContextPrototype SpawnTurrets { get; protected set; }
+        public TriggerSpawnersContextPrototype SpawnDrDoomPhase2 { get; protected set; }
+        public TriggerSpawnersContextPrototype DestroyTurretsOnDeath { get; protected set; }
     }
 
     public class ProceduralProfileDrDoomPhase2Prototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ulong DeathStun;
-        public ulong StarryExpanseAnimOnly;
-        public TriggerSpawnersContextPrototype SpawnDrDoomPhase3;
-        public TriggerSpawnersContextPrototype SpawnStarryExpanseAreas;
-        public ProceduralProfileDrDoomPhase2Prototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileDrDoomPhase2Prototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public PrototypeId DeathStun { get; protected set; }
+        public PrototypeId StarryExpanseAnimOnly { get; protected set; }
+        public TriggerSpawnersContextPrototype SpawnDrDoomPhase3 { get; protected set; }
+        public TriggerSpawnersContextPrototype SpawnStarryExpanseAreas { get; protected set; }
     }
 
     public class ProceduralProfileDrDoomPhase3Prototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public RotateContextPrototype RapidFireRotate;
-        public ProceduralUsePowerContextPrototype RapidFirePower;
-        public ulong StarryExpanseAnimOnly;
-        public ProceduralUsePowerContextPrototype CosmicSummonsAnimOnly;
-        public UsePowerContextPrototype CosmicSummonsPower;
-        public ulong[] CosmicSummonEntities;
-        public ulong CosmicSummonsNumEntities;
-        public TriggerSpawnersContextPrototype SpawnStarryExpanseAreas;
-        public ProceduralProfileDrDoomPhase3Prototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileDrDoomPhase3Prototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public RotateContextPrototype RapidFireRotate { get; protected set; }
+        public ProceduralUsePowerContextPrototype RapidFirePower { get; protected set; }
+        public PrototypeId StarryExpanseAnimOnly { get; protected set; }
+        public ProceduralUsePowerContextPrototype CosmicSummonsAnimOnly { get; protected set; }
+        public UsePowerContextPrototype CosmicSummonsPower { get; protected set; }
+        public PrototypeId[] CosmicSummonEntities { get; protected set; }
+        public CurveId CosmicSummonsNumEntities { get; protected set; }
+        public TriggerSpawnersContextPrototype SpawnStarryExpanseAreas { get; protected set; }
     }
 
     public class ProceduralProfileDrDoomPhase1OrbSpawnerPrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveTo;
-        public ProceduralFlankContextPrototype Flank;
-        public ProceduralProfileDrDoomPhase1OrbSpawnerPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileDrDoomPhase1OrbSpawnerPrototype), proto); }
+        public MoveToContextPrototype MoveTo { get; protected set; }
+        public ProceduralFlankContextPrototype Flank { get; protected set; }
     }
 
     public class ProceduralProfileMODOKPrototype : ProceduralProfileWithAttackPrototype
     {
-        public ProceduralUsePowerContextPrototype TeleportToEntityPower;
-        public SelectEntityContextPrototype SelectTeleportTarget;
-        public ProceduralUsePowerContextPrototype[] SummonProceduralPowers;
-        public ProceduralProfileMODOKPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileMODOKPrototype), proto); }
+        public ProceduralUsePowerContextPrototype TeleportToEntityPower { get; protected set; }
+        public SelectEntityContextPrototype SelectTeleportTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype[] SummonProceduralPowers { get; protected set; }
     }
 
     public class ProceduralProfileSauronPrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public ProceduralUsePowerContextPrototype MovementPower;
-        public ProceduralUsePowerContextPrototype LowHealthPower;
-        public float LowHealthPowerThresholdPct;
-        public ProceduralProfileSauronPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileSauronPrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype MovementPower { get; protected set; }
+        public ProceduralUsePowerContextPrototype LowHealthPower { get; protected set; }
+        public float LowHealthPowerThresholdPct { get; protected set; }
     }
 
     public class ProceduralProfileMandarinPrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public ProceduralFlankContextPrototype FlankTarget;
-        public SelectEntityContextPrototype SequencePowerSelectTarget;
-        public ProceduralUsePowerContextPrototype[] SequencePowers;
-        public ProceduralProfileMandarinPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileMandarinPrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
+        public SelectEntityContextPrototype SequencePowerSelectTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype[] SequencePowers { get; protected set; }
     }
 
     public class ProceduralProfileSabretoothPrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ProceduralUsePowerContextPrototype MovementPower;
-        public SelectEntityContextPrototype MovementPowerSelectTarget;
-        public ProceduralUsePowerContextPrototype LowHealthPower;
-        public float LowHealthPowerThresholdPct;
-        public ProceduralProfileSabretoothPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileSabretoothPrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype MovementPower { get; protected set; }
+        public SelectEntityContextPrototype MovementPowerSelectTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype LowHealthPower { get; protected set; }
+        public float LowHealthPowerThresholdPct { get; protected set; }
     }
 
     public class ProceduralProfileMeleePowerOnHitPrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ProceduralUsePowerContextPrototype PowerOnHit;
-        public ProceduralProfileMeleePowerOnHitPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileMeleePowerOnHitPrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype PowerOnHit { get; protected set; }
     }
 
     public class ProceduralProfileGrimReaperPrototype : ProfMeleePwrSpecialAtHealthPctPrototype
     {
-        public ProceduralUsePowerContextPrototype TripleShotPower;
-        public ProceduralUsePowerContextPrototype SpecialPower;
-        public SelectEntityContextPrototype SpecialSelectTarget;
-        public int SpecialPowerChangeTgtIntervalMS;
-        public ProceduralProfileGrimReaperPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileGrimReaperPrototype), proto); }
+        public ProceduralUsePowerContextPrototype TripleShotPower { get; protected set; }
+        public ProceduralUsePowerContextPrototype SpecialPower { get; protected set; }
+        public SelectEntityContextPrototype SpecialSelectTarget { get; protected set; }
+        public int SpecialPowerChangeTgtIntervalMS { get; protected set; }
     }
 
     public class ProceduralProfileMoleManPrototype : ProceduralProfileBasicRangePrototype
     {
-        public TriggerSpawnersContextPrototype[] GigantoSpawners;
-        public ProceduralUsePowerContextPrototype MoloidInvasionPower;
-        public TriggerSpawnersContextPrototype MoloidInvasionSpawner;
-        public ProceduralUsePowerContextPrototype SummonGigantoAnimPower;
-        public ProceduralProfileMoleManPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileMoleManPrototype), proto); }
+        public TriggerSpawnersContextPrototype[] GigantoSpawners { get; protected set; }
+        public ProceduralUsePowerContextPrototype MoloidInvasionPower { get; protected set; }
+        public TriggerSpawnersContextPrototype MoloidInvasionSpawner { get; protected set; }
+        public ProceduralUsePowerContextPrototype SummonGigantoAnimPower { get; protected set; }
     }
 
     public class ProceduralProfileVenomPrototype : ProceduralProfileWithAttackPrototype
     {
-        public ProceduralFlankContextPrototype FlankTarget;
-        public MoveToContextPrototype MoveToTarget;
-        public UsePowerContextPrototype VenomMad;
-        public float VenomMadThreshold1;
-        public float VenomMadThreshold2;
-        public ProceduralProfileVenomPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileVenomPrototype), proto); }
+        public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public UsePowerContextPrototype VenomMad { get; protected set; }
+        public float VenomMadThreshold1 { get; protected set; }
+        public float VenomMadThreshold2 { get; protected set; }
     }
 
     public class ProceduralProfileVanityPetPrototype : ProceduralProfileWithTargetPrototype
     {
-        public MoveToContextPrototype PetFollow;
-        public TeleportContextPrototype TeleportToMasterIfTooFarAway;
-        public int MinTimerWhileNotMovingFidgetMS;
-        public int MaxTimerWhileNotMovingFidgetMS;
-        public float MaxDistToMasterBeforeTeleport;
-        public ProceduralProfileVanityPetPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileVanityPetPrototype), proto); }
+        public MoveToContextPrototype PetFollow { get; protected set; }
+        public TeleportContextPrototype TeleportToMasterIfTooFarAway { get; protected set; }
+        public int MinTimerWhileNotMovingFidgetMS { get; protected set; }
+        public int MaxTimerWhileNotMovingFidgetMS { get; protected set; }
+        public float MaxDistToMasterBeforeTeleport { get; protected set; }
     }
 
     public class ProceduralProfileDoopPrototype : ProceduralProfileWithAttackPrototype
     {
-        public ProceduralFleeContextPrototype Flee;
-        public ProceduralUsePowerContextPrototype DisappearPower;
-        public int LifeTimeMinMS;
-        public int LifeTimeMaxMS;
-        public ProceduralProfileDoopPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileDoopPrototype), proto); }
+        public ProceduralFleeContextPrototype Flee { get; protected set; }
+        public ProceduralUsePowerContextPrototype DisappearPower { get; protected set; }
+        public int LifeTimeMinMS { get; protected set; }
+        public int LifeTimeMaxMS { get; protected set; }
     }
 
     public class ProceduralProfileGorgonPrototype : ProceduralProfileWithAttackPrototype
     {
-        public RotateContextPrototype RotateInStoneGaze;
-        public ProceduralUsePowerContextPrototype StoneGaze;
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ProceduralProfileGorgonPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileGorgonPrototype), proto); }
+        public RotateContextPrototype RotateInStoneGaze { get; protected set; }
+        public ProceduralUsePowerContextPrototype StoneGaze { get; protected set; }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
     }
 
     public class ProceduralProfileBotAIPrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public SelectEntityContextPrototype SelectTargetItem;
-        public WanderContextPrototype WanderMovement;
-        public ProceduralUsePowerContextPrototype[] SlottedAbilities;
-        public ProceduralProfileBotAIPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileBotAIPrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public SelectEntityContextPrototype SelectTargetItem { get; protected set; }
+        public WanderContextPrototype WanderMovement { get; protected set; }
+        public ProceduralUsePowerContextPrototype[] SlottedAbilities { get; protected set; }
     }
 
     public class ProceduralProfileBullseyePrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public ProceduralFlankContextPrototype FlankTarget;
-        public ProceduralUsePowerContextPrototype MarkForDeath;
-        public ProceduralProfileBullseyePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileBullseyePrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype MarkForDeath { get; protected set; }
     }
 
     public class ProceduralProfileRhinoPrototype : ProceduralProfileBasicMeleePrototype
     {
-        public ProceduralProfileRhinoPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileRhinoPrototype), proto); }
     }
 
     public class ProceduralProfileBlackCatPrototype : ProceduralProfileBasicMeleePrototype
     {
-        public ProceduralUsePowerContextPrototype TumblePower;
-        public ProceduralUsePowerContextPrototype TumbleComboPower;
-        public SelectEntityContextPrototype SelectEntityForTumbleCombo;
-        public ProceduralProfileBlackCatPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileBlackCatPrototype), proto); }
+        public ProceduralUsePowerContextPrototype TumblePower { get; protected set; }
+        public ProceduralUsePowerContextPrototype TumbleComboPower { get; protected set; }
+        public SelectEntityContextPrototype SelectEntityForTumbleCombo { get; protected set; }
     }
 
     public class ProceduralProfileControlledMobOverridePrototype : ProceduralProfileWithTargetPrototype
     {
-        public MoveToContextPrototype ControlFollow;
-        public TeleportContextPrototype TeleportToMasterIfTooFarAway;
-        public float MaxDistToMasterBeforeTeleport;
-        public int MaxDistToMasterBeforeFollow;
-        public ProceduralProfileControlledMobOverridePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileControlledMobOverridePrototype), proto); }
+        public MoveToContextPrototype ControlFollow { get; protected set; }
+        public TeleportContextPrototype TeleportToMasterIfTooFarAway { get; protected set; }
+        public float MaxDistToMasterBeforeTeleport { get; protected set; }
+        public int MaxDistToMasterBeforeFollow { get; protected set; }
     }
 
     public class ProceduralProfileLivingLaserPrototype : ProceduralProfileBasicRangePrototype
     {
-        public ProceduralUsePowerContextPrototype SweepingBeamPowerClock;
-        public ProceduralUsePowerContextPrototype SweepingBeamPowerCounterClock;
-        public RotateContextPrototype SweepingBeamClock;
-        public RotateContextPrototype SweepingBeamCounterClock;
-        public ProceduralProfileLivingLaserPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileLivingLaserPrototype), proto); }
+        public ProceduralUsePowerContextPrototype SweepingBeamPowerClock { get; protected set; }
+        public ProceduralUsePowerContextPrototype SweepingBeamPowerCounterClock { get; protected set; }
+        public RotateContextPrototype SweepingBeamClock { get; protected set; }
+        public RotateContextPrototype SweepingBeamCounterClock { get; protected set; }
     }
 
     public class ProceduralProfileMeleeFlockerPrototype : ProceduralProfileWithAttackPrototype
     {
-        public FlockContextPrototype FlockContext;
-        public ulong FleeOnAllyDeathOverride;
-        public ProceduralProfileMeleeFlockerPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileMeleeFlockerPrototype), proto); }
+        public FlockContextPrototype FlockContext { get; protected set; }
+        public PrototypeId FleeOnAllyDeathOverride { get; protected set; }
     }
 
     public class ProceduralProfileLizardBossPrototype : ProceduralProfileBasicMeleePrototype
     {
-        public ProceduralUsePowerContextPrototype LizardSwarmPower;
-        public ProceduralProfileLizardBossPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileLizardBossPrototype), proto); }
+        public ProceduralUsePowerContextPrototype LizardSwarmPower { get; protected set; }
     }
 
     public class ProceduralProfilePetDirectedPrototype : ProceduralProfilePetPrototype
     {
-        public ProceduralUsePowerContextPrototype[] DirectedPowers;
-        public ProceduralProfilePetDirectedPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfilePetDirectedPrototype), proto); }
+        public ProceduralUsePowerContextPrototype[] DirectedPowers { get; protected set; }
     }
 
     public class ProceduralProfileLokiPhase1Prototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public ProceduralFlankContextPrototype FlankTarget;
-        public ProceduralProfileLokiPhase1Prototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileLokiPhase1Prototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
     }
 
     public class ProceduralProfileLokiPhase2Prototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ProceduralUsePowerContextPrototype InverseRings;
-        public ulong InverseRingsTargetedVFXOnly;
-        public ulong LokiBossSafeZoneKeyword;
-        public ulong InverseRingsVFXRemoval;
-        public ProceduralProfileLokiPhase2Prototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileLokiPhase2Prototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype InverseRings { get; protected set; }
+        public PrototypeId InverseRingsTargetedVFXOnly { get; protected set; }
+        public PrototypeId LokiBossSafeZoneKeyword { get; protected set; }
+        public PrototypeId InverseRingsVFXRemoval { get; protected set; }
     }
 
     public class ProceduralProfileDrStrangeProjectionPrototype : ProceduralProfileWithAttackPrototype
     {
-        public ProceduralUsePowerContextPrototype[] ProjectionPowers;
-        public ProceduralFlankContextPrototype FlankMaster;
-        public float DeadzoneAroundFlankTarget;
-        public int FlankToMasterDelayMS;
-        public TeleportContextPrototype TeleportToMasterIfTooFarAway;
-        public int MaxDistToMasterBeforeTeleport;
-        public ProceduralProfileDrStrangeProjectionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileDrStrangeProjectionPrototype), proto); }
+        public ProceduralUsePowerContextPrototype[] ProjectionPowers { get; protected set; }
+        public ProceduralFlankContextPrototype FlankMaster { get; protected set; }
+        public float DeadzoneAroundFlankTarget { get; protected set; }
+        public int FlankToMasterDelayMS { get; protected set; }
+        public TeleportContextPrototype TeleportToMasterIfTooFarAway { get; protected set; }
+        public int MaxDistToMasterBeforeTeleport { get; protected set; }
     }
 
     public class ProceduralProfileEyeOfAgamottoPrototype : ProceduralProfileStationaryTurretPrototype
     {
-        public RotateContextPrototype IdleRotation;
-        public ProceduralProfileEyeOfAgamottoPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileEyeOfAgamottoPrototype), proto); }
+        public RotateContextPrototype IdleRotation { get; protected set; }
     }
 
     public class MistressOfMagmaTeleportDestPrototype : Prototype
     {
-        public SelectEntityContextPrototype DestinationSelector;
-        public ulong ImmunityBoost;
-        public MistressOfMagmaTeleportDestPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(MistressOfMagmaTeleportDestPrototype), proto); }
+        public SelectEntityContextPrototype DestinationSelector { get; protected set; }
+        public PrototypeId ImmunityBoost { get; protected set; }
     }
 
     public class ProceduralProfileSpikedBallPrototype : ProceduralProfileWithTargetPrototype
     {
-        public float MoveToSummonerDistance;
-        public float IdleDistanceFromSummoner;
-        public RotateContextPrototype Rotate;
-        public int SeekDelayMS;
-        public float Acceleration;
-        public MoveToContextPrototype MoveToTarget;
-        public WanderContextPrototype Wander;
-        public TeleportContextPrototype TeleportToMasterIfTooFarAway;
-        public int MaxDistToMasterBeforeTeleport;
-        public OrbitContextPrototype OrbitTarget;
-        public ProceduralProfileSpikedBallPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileSpikedBallPrototype), proto); }
+        public float MoveToSummonerDistance { get; protected set; }
+        public float IdleDistanceFromSummoner { get; protected set; }
+        public RotateContextPrototype Rotate { get; protected set; }
+        public int SeekDelayMS { get; protected set; }
+        public float Acceleration { get; protected set; }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public WanderContextPrototype Wander { get; protected set; }
+        public TeleportContextPrototype TeleportToMasterIfTooFarAway { get; protected set; }
+        public int MaxDistToMasterBeforeTeleport { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
     }
 
     public class ProceduralProfileWithEnragePrototype : ProceduralProfileWithAttackPrototype
     {
-        public int EnrageTimerInMinutes;
-        public ProceduralUsePowerContextPrototype EnragePower;
-        public float EnrageTimerAvatarSearchRadius;
-        public ProceduralUsePowerContextPrototype[] PostEnragePowers;
-        public ProceduralProfileWithEnragePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileWithEnragePrototype), proto); }
+        public int EnrageTimerInMinutes { get; protected set; }
+        public ProceduralUsePowerContextPrototype EnragePower { get; protected set; }
+        public float EnrageTimerAvatarSearchRadius { get; protected set; }
+        public ProceduralUsePowerContextPrototype[] PostEnragePowers { get; protected set; }
     }
 
     public class ProceduralProfileSyncAttackPrototype : ProceduralProfileBasicMeleePrototype
     {
-        public ProceduralSyncAttackContextPrototype[] SyncAttacks;
-        public ProceduralProfileSyncAttackPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileSyncAttackPrototype), proto); }
+        public ProceduralSyncAttackContextPrototype[] SyncAttacks { get; protected set; }
     }
 
     public class ProceduralProfileBrimstonePrototype : ProceduralProfileWithEnragePrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public MoveToContextPrototype MoveIntoMeleeRange;
-        public ProceduralUsePowerContextPrototype MeleePower;
-        public ulong HellfireProtoRef;
-        public ProceduralProfileBrimstonePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileBrimstonePrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public MoveToContextPrototype MoveIntoMeleeRange { get; protected set; }
+        public ProceduralUsePowerContextPrototype MeleePower { get; protected set; }
+        public PrototypeId HellfireProtoRef { get; protected set; }
     }
 
     public class ProceduralProfileSlagPrototype : ProceduralProfileWithEnragePrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ProceduralUsePowerContextPrototype PrimaryPower;
-        public ProceduralProfileSlagPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileSlagPrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype PrimaryPower { get; protected set; }
     }
 
     public class ProceduralProfileMonolithPrototype : ProceduralProfileWithEnragePrototype
     {
-        public ulong ObeliskKeyword;
-        public ulong[] ObeliskDamageMonolithPowers;
-        public ulong DisableShield;
-        public ProceduralProfileMonolithPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileMonolithPrototype), proto); }
+        public PrototypeId ObeliskKeyword { get; protected set; }
+        public PrototypeId[] ObeliskDamageMonolithPowers { get; protected set; }
+        public PrototypeId DisableShield { get; protected set; }
     }
 
     public class ProceduralProfileHellfirePrototype : ProceduralProfileWithEnragePrototype
     {
-        public ProceduralFlankContextPrototype FlankTarget;
-        public MoveToContextPrototype MoveToTarget;
-        public ProceduralUsePowerContextPrototype PrimaryPower;
-        public ulong BrimstoneProtoRef;
-        public ProceduralUsePowerContextPrototype SpecialPower;
-        public ulong SpecialSummonPower;
-        public int SpecialPowerNumSummons;
-        public float SpecialPowerMaxRadius;
-        public float SpecialPowerMinRadius;
-        public ProceduralProfileHellfirePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileHellfirePrototype), proto); }
+        public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype PrimaryPower { get; protected set; }
+        public PrototypeId BrimstoneProtoRef { get; protected set; }
+        public ProceduralUsePowerContextPrototype SpecialPower { get; protected set; }
+        public PrototypeId SpecialSummonPower { get; protected set; }
+        public int SpecialPowerNumSummons { get; protected set; }
+        public float SpecialPowerMaxRadius { get; protected set; }
+        public float SpecialPowerMinRadius { get; protected set; }
     }
 
     public class ProceduralProfileMistressOfMagmaPrototype : ProceduralProfileWithEnragePrototype
     {
-        public ProceduralFlankContextPrototype FlankTarget;
-        public MoveToContextPrototype MoveToTarget;
-        public ProceduralUsePowerContextPrototype BombDancePower;
-        public ProceduralProfileMistressOfMagmaPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileMistressOfMagmaPrototype), proto); }
+        public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype BombDancePower { get; protected set; }
     }
 
     public class ProceduralProfileSurturPrototype : ProceduralProfileWithEnragePrototype
     {
-        public ulong FirePillarPower;
-        public int FirePillarMinCooldownMS;
-        public int FirePillarMaxCooldownMS;
-        public int FirePillarPowerMaxTargets;
-        public ulong PowerUnlockBrimstone;
-        public ulong PowerUnlockHellfire;
-        public ulong PowerUnlockMistress;
-        public ulong PowerUnlockMonolith;
-        public ulong PowerUnlockSlag;
-        public ulong MiniBossBrimstone;
-        public ulong MiniBossHellfire;
-        public ulong MiniBossMistress;
-        public ulong MiniBossMonolith;
-        public ulong MiniBossSlag;
-        public ProceduralProfileSurturPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileSurturPrototype), proto); }
+        public PrototypeId FirePillarPower { get; protected set; }
+        public int FirePillarMinCooldownMS { get; protected set; }
+        public int FirePillarMaxCooldownMS { get; protected set; }
+        public int FirePillarPowerMaxTargets { get; protected set; }
+        public PrototypeId PowerUnlockBrimstone { get; protected set; }
+        public PrototypeId PowerUnlockHellfire { get; protected set; }
+        public PrototypeId PowerUnlockMistress { get; protected set; }
+        public PrototypeId PowerUnlockMonolith { get; protected set; }
+        public PrototypeId PowerUnlockSlag { get; protected set; }
+        public PrototypeId MiniBossBrimstone { get; protected set; }
+        public PrototypeId MiniBossHellfire { get; protected set; }
+        public PrototypeId MiniBossMistress { get; protected set; }
+        public PrototypeId MiniBossMonolith { get; protected set; }
+        public PrototypeId MiniBossSlag { get; protected set; }
     }
 
     public class ProceduralProfileSurturPortalPrototype : ProceduralProfileNoMoveNoSensePrototype
     {
-        public ProceduralProfileSurturPortalPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileSurturPortalPrototype), proto); }
     }
 
     public class ProceduralProfileObeliskHealerPrototype : ProceduralProfileBasicMeleePrototype
     {
-        public ulong[] ObeliskTargets;
-        public ProceduralProfileObeliskHealerPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileObeliskHealerPrototype), proto); }
+        public PrototypeId[] ObeliskTargets { get; protected set; }
     }
 
     public class ProceduralProfileObeliskPrototype : ProceduralProfileNoMoveDefaultSensoryPrototype
     {
-        public ulong DeadEntityForDetonateIslandPower;
-        public ulong DetonateIslandPower;
-        public ulong FullyHealedPower;
-        public ProceduralProfileObeliskPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileObeliskPrototype), proto); }
+        public PrototypeId DeadEntityForDetonateIslandPower { get; protected set; }
+        public PrototypeId DetonateIslandPower { get; protected set; }
+        public PrototypeId FullyHealedPower { get; protected set; }
     }
 
     public class ProceduralProfileFireGiantChaserPrototype : ProceduralProfileBasicMeleePrototype
     {
-        public ProceduralUsePowerContextPrototype MarkTargetPower;
-        public ulong MarkTargetVFXRemoval;
-        public ProceduralProfileFireGiantChaserPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileFireGiantChaserPrototype), proto); }
+        public ProceduralUsePowerContextPrototype MarkTargetPower { get; protected set; }
+        public PrototypeId MarkTargetVFXRemoval { get; protected set; }
     }
 
     public class ProceduralProfileMissionAllyPrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ProceduralFlankContextPrototype FlankTarget;
-        public MoveToContextPrototype MoveToAvatarAlly;
-        public TeleportContextPrototype TeleportToAvatarAllyIfTooFarAway;
-        public int MaxDistToAvatarAllyBeforeTele;
-        public bool IsRanged;
-        public float AvatarAllySearchRadius;
-        public ProceduralProfileMissionAllyPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileMissionAllyPrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
+        public MoveToContextPrototype MoveToAvatarAlly { get; protected set; }
+        public TeleportContextPrototype TeleportToAvatarAllyIfTooFarAway { get; protected set; }
+        public int MaxDistToAvatarAllyBeforeTele { get; protected set; }
+        public bool IsRanged { get; protected set; }
+        public float AvatarAllySearchRadius { get; protected set; }
     }
 
     public class ProceduralProfileLOSRangedPrototype : ProceduralProfileBasicRangePrototype
     {
-        public ProceduralUsePowerContextPrototype LOSChannelPower;
-        public ProceduralProfileLOSRangedPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileLOSRangedPrototype), proto); }
+        public ProceduralUsePowerContextPrototype LOSChannelPower { get; protected set; }
     }
 
     public class ProceduralProfileRedSkullOneShotPrototype : ProceduralProfileWithAttackPrototype
     {
-        public ulong[] HulkBustersToActivate;
-        public ProceduralUsePowerContextPrototype ActivateHulkBusterAnimOnly;
-        public float HulkBusterHealthThreshold1;
-        public float HulkBusterHealthThreshold2;
-        public float HulkBusterHealthThreshold3;
-        public float HulkBusterHealthThreshold4;
-        public ulong WeaponsCrate;
-        public ProceduralUsePowerContextPrototype[] WeaponsCratesAnimOnlyPowers;
-        public MoveToContextPrototype MoveToWeaponsCrate;
-        public ulong WeaponCrate1UnlockPower;
-        public ulong WeaponCrate2UnlockPower;
-        public ulong WeaponCrate3UnlockPower;
-        public ulong WeaponCrate4UnlockPower;
-        public MoveToContextPrototype MoveToTarget;
-        public ProceduralFlankContextPrototype FlankTarget;
-        public ProceduralProfileRedSkullOneShotPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileRedSkullOneShotPrototype), proto); }
+        public PrototypeId[] HulkBustersToActivate { get; protected set; }
+        public ProceduralUsePowerContextPrototype ActivateHulkBusterAnimOnly { get; protected set; }
+        public float HulkBusterHealthThreshold1 { get; protected set; }
+        public float HulkBusterHealthThreshold2 { get; protected set; }
+        public float HulkBusterHealthThreshold3 { get; protected set; }
+        public float HulkBusterHealthThreshold4 { get; protected set; }
+        public PrototypeId WeaponsCrate { get; protected set; }
+        public ProceduralUsePowerContextPrototype[] WeaponsCratesAnimOnlyPowers { get; protected set; }
+        public MoveToContextPrototype MoveToWeaponsCrate { get; protected set; }
+        public PrototypeId WeaponCrate1UnlockPower { get; protected set; }
+        public PrototypeId WeaponCrate2UnlockPower { get; protected set; }
+        public PrototypeId WeaponCrate3UnlockPower { get; protected set; }
+        public PrototypeId WeaponCrate4UnlockPower { get; protected set; }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
     }
 
     public class ProceduralProfileHulkBusterOSPrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ulong RedSkullAxis;
-        public ProceduralUsePowerContextPrototype ShieldRedSkull;
-        public ProceduralUsePowerContextPrototype DeactivatedAnimOnly;
-        public ProceduralUsePowerContextPrototype ActivatingAnimOnly;
-        public ProceduralProfileHulkBusterOSPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileHulkBusterOSPrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public PrototypeId RedSkullAxis { get; protected set; }
+        public ProceduralUsePowerContextPrototype ShieldRedSkull { get; protected set; }
+        public ProceduralUsePowerContextPrototype DeactivatedAnimOnly { get; protected set; }
+        public ProceduralUsePowerContextPrototype ActivatingAnimOnly { get; protected set; }
     }
 
     public class ProceduralProfileSymbioteDrainPrototype : ProceduralProfileWithAttackPrototype
     {
-        public ProceduralUsePowerContextPrototype SymbiotePower1;
-        public ProceduralUsePowerContextPrototype SymbiotePower2;
-        public ProceduralUsePowerContextPrototype SymbiotePower3;
-        public ProceduralProfileSymbioteDrainPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileSymbioteDrainPrototype), proto); }
+        public ProceduralUsePowerContextPrototype SymbiotePower1 { get; protected set; }
+        public ProceduralUsePowerContextPrototype SymbiotePower2 { get; protected set; }
+        public ProceduralUsePowerContextPrototype SymbiotePower3 { get; protected set; }
     }
 
     public class ProceduralProfileOnslaughtPrototype : ProceduralProfileWithEnragePrototype
     {
-        public ulong PlatformMarkerLeft;
-        public ulong PlatformMarkerCenter;
-        public ulong PlatformMarkerRight;
-        public ProceduralUsePowerContextPrototype PsionicBlastLeft;
-        public ProceduralUsePowerContextPrototype PsionicBlastCenter;
-        public ProceduralUsePowerContextPrototype PsionicBlastRight;
-        public ProceduralUsePowerContextPrototype SpikeDanceVFXOnly;
-        public ProceduralUsePowerContextPrototype PrisonBeamPowerCenter;
-        public ProceduralUsePowerContextPrototype PrisonPowerCenter;
-        public ProceduralUsePowerContextPrototype SpikeDanceSingleVFXOnly;
-        public ulong CallSentinelPower;
-        public ulong CallSentinelPowerVFXOnly;
-        public float SummonPowerThreshold1;
-        public float SummonPowerThreshold2;
-        public ProceduralUsePowerContextPrototype PrisonBeamPowerLeft;
-        public ProceduralUsePowerContextPrototype PrisonBeamPowerRight;
-        public ProceduralUsePowerContextPrototype PrisonPowerLeft;
-        public ProceduralUsePowerContextPrototype PrisonPowerRight;
-        public ulong PrisonKeyword;
-        public ulong CenterPlatformKeyword;
-        public ulong RightPlatformKeyword;
-        public ulong LeftPlatformKeyword;
-        public ProceduralProfileOnslaughtPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileOnslaughtPrototype), proto); }
+        public PrototypeId PlatformMarkerLeft { get; protected set; }
+        public PrototypeId PlatformMarkerCenter { get; protected set; }
+        public PrototypeId PlatformMarkerRight { get; protected set; }
+        public ProceduralUsePowerContextPrototype PsionicBlastLeft { get; protected set; }
+        public ProceduralUsePowerContextPrototype PsionicBlastCenter { get; protected set; }
+        public ProceduralUsePowerContextPrototype PsionicBlastRight { get; protected set; }
+        public ProceduralUsePowerContextPrototype SpikeDanceVFXOnly { get; protected set; }
+        public ProceduralUsePowerContextPrototype PrisonBeamPowerCenter { get; protected set; }
+        public ProceduralUsePowerContextPrototype PrisonPowerCenter { get; protected set; }
+        public ProceduralUsePowerContextPrototype SpikeDanceSingleVFXOnly { get; protected set; }
+        public PrototypeId CallSentinelPower { get; protected set; }
+        public PrototypeId CallSentinelPowerVFXOnly { get; protected set; }
+        public float SummonPowerThreshold1 { get; protected set; }
+        public float SummonPowerThreshold2 { get; protected set; }
+        public ProceduralUsePowerContextPrototype PrisonBeamPowerLeft { get; protected set; }
+        public ProceduralUsePowerContextPrototype PrisonBeamPowerRight { get; protected set; }
+        public ProceduralUsePowerContextPrototype PrisonPowerLeft { get; protected set; }
+        public ProceduralUsePowerContextPrototype PrisonPowerRight { get; protected set; }
+        public PrototypeId PrisonKeyword { get; protected set; }
+        public PrototypeId CenterPlatformKeyword { get; protected set; }
+        public PrototypeId RightPlatformKeyword { get; protected set; }
+        public PrototypeId LeftPlatformKeyword { get; protected set; }
     }
 
     public class ProcProfileSpikeDanceControllerPrototype : ProceduralAIProfilePrototype
     {
-        public ulong Onslaught;
-        public ulong SpikeDanceMob;
-        public int MaxSpikeDanceActivations;
-        public float SpikeDanceMobSearchRadius;
-        public ProcProfileSpikeDanceControllerPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProcProfileSpikeDanceControllerPrototype), proto); }
+        public PrototypeId Onslaught { get; protected set; }
+        public PrototypeId SpikeDanceMob { get; protected set; }
+        public int MaxSpikeDanceActivations { get; protected set; }
+        public float SpikeDanceMobSearchRadius { get; protected set; }
     }
 
     public class ProceduralProfileSpikeDanceMobPrototype : ProceduralProfileWithAttackPrototype
     {
-        public ProceduralUsePowerContextPrototype SpikeDanceMissile;
-        public ProceduralProfileSpikeDanceMobPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileSpikeDanceMobPrototype), proto); }
+        public ProceduralUsePowerContextPrototype SpikeDanceMissile { get; protected set; }
     }
 
     public class ProceduralProfileNullifierPrototype : ProceduralProfileNoMoveNoSensePrototype
     {
-        public ulong ShieldEngineerKeyword;
-        public ProceduralUsePowerContextPrototype BeamPower;
-        public ulong NullifierAntiShield;
-        public ProceduralProfileNullifierPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileNullifierPrototype), proto); }
+        public PrototypeId ShieldEngineerKeyword { get; protected set; }
+        public ProceduralUsePowerContextPrototype BeamPower { get; protected set; }
+        public PrototypeId NullifierAntiShield { get; protected set; }
     }
 
     public class ProceduralProfileStrangeCauldronPrototype : ProceduralProfileNoMoveNoSensePrototype
     {
-        public ulong KaeciliusPrototype;
-        public ProceduralProfileStrangeCauldronPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileStrangeCauldronPrototype), proto); }
+        public PrototypeId KaeciliusPrototype { get; protected set; }
     }
 
     public class ProceduralProfileShieldEngineerPrototype : ProceduralProfileMissionAllyPrototype
     {
-        public AgentPrototype PsychicNullifierTargets;
-        public ProceduralUsePowerContextPrototype ChargeNullifierPower;
-        public float NullifierSearchRadius;
-        public ulong NullifierAntiShield;
-        public ProceduralProfileShieldEngineerPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileShieldEngineerPrototype), proto); }
+        public PrototypeId[] PsychicNullifierTargets { get; protected set; }   // VectorPrototypeRefPtr AgentPrototype
+        public ProceduralUsePowerContextPrototype ChargeNullifierPower { get; protected set; }
+        public float NullifierSearchRadius { get; protected set; }
+        public PrototypeId NullifierAntiShield { get; protected set; }
     }
 
     public class ProcProfileNullifierAntiShieldPrototype : ProceduralProfileWithEnragePrototype
     {
-        public AgentPrototype Nullifiers;
-        public ulong ShieldDamagePower;
-        public ulong ShieldEngineerSpawner;
-        public float SpawnerSearchRadius;
-        public ProcProfileNullifierAntiShieldPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProcProfileNullifierAntiShieldPrototype), proto); }
+        public PrototypeId[] Nullifiers { get; protected set; }    // VectorPrototypeRefPtr AgentPrototype
+        public PrototypeId ShieldDamagePower { get; protected set; }
+        public PrototypeId ShieldEngineerSpawner { get; protected set; }
+        public float SpawnerSearchRadius { get; protected set; }
     }
 
     public class ProceduralProfileMadameHydraPrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public ProceduralFlankContextPrototype FlankTarget;
-        public ulong SummonHydraPower;
-        public ulong InvulnerablePower;
-        public ProceduralUsePowerContextPrototype TeleportPower;
-        public int SummonHydraMinCooldownMS;
-        public int SummonHydraMaxCooldownMS;
-        public ProceduralProfileMadameHydraPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileMadameHydraPrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
+        public PrototypeId SummonHydraPower { get; protected set; }
+        public PrototypeId InvulnerablePower { get; protected set; }
+        public ProceduralUsePowerContextPrototype TeleportPower { get; protected set; }
+        public int SummonHydraMinCooldownMS { get; protected set; }
+        public int SummonHydraMaxCooldownMS { get; protected set; }
     }
 
     public class ProceduralProfileStarktechSentinelPrototype : ProceduralProfileWithEnragePrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ProceduralUsePowerContextPrototype SummonSentinels;
-        public float SummonPowerThreshold1;
-        public float SummonPowerThreshold2;
-        public ProceduralProfileStarktechSentinelPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileStarktechSentinelPrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype SummonSentinels { get; protected set; }
+        public float SummonPowerThreshold1 { get; protected set; }
+        public float SummonPowerThreshold2 { get; protected set; }
     }
 
     public class ProceduralProfileKingpinPrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ProceduralUsePowerContextPrototype SummonElektra;
-        public ProceduralUsePowerContextPrototype SummonBullseye;
-        public float SummonElektraThreshold;
-        public float SummonBullseyeThreshold;
-        public ProceduralProfileKingpinPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileKingpinPrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype SummonElektra { get; protected set; }
+        public ProceduralUsePowerContextPrototype SummonBullseye { get; protected set; }
+        public float SummonElektraThreshold { get; protected set; }
+        public float SummonBullseyeThreshold { get; protected set; }
     }
 
     public class ProceduralProfilePowerRestrictedPrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ProceduralFlankContextPrototype FlankTarget;
-        public bool IsRanged;
-        public ProceduralUsePowerContextPrototype RestrictedModeStartPower;
-        public ProceduralUsePowerContextPrototype RestrictedModeEndPower;
-        public ProceduralUsePowerContextPrototype[] RestrictedModeProceduralPowers;
-        public int RestrictedModeMinCooldownMS;
-        public int RestrictedModeMaxCooldownMS;
-        public int RestrictedModeTimerMS;
-        public bool NoMoveInRestrictedMode;
-        public ProceduralProfilePowerRestrictedPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfilePowerRestrictedPrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public ProceduralFlankContextPrototype FlankTarget { get; protected set; }
+        public bool IsRanged { get; protected set; }
+        public ProceduralUsePowerContextPrototype RestrictedModeStartPower { get; protected set; }
+        public ProceduralUsePowerContextPrototype RestrictedModeEndPower { get; protected set; }
+        public ProceduralUsePowerContextPrototype[] RestrictedModeProceduralPowers { get; protected set; }
+        public int RestrictedModeMinCooldownMS { get; protected set; }
+        public int RestrictedModeMaxCooldownMS { get; protected set; }
+        public int RestrictedModeTimerMS { get; protected set; }
+        public bool NoMoveInRestrictedMode { get; protected set; }
     }
 
     public class ProceduralProfileUltronEMPPrototype : ProceduralProfileNoMoveNoSensePrototype
     {
-        public ProceduralUsePowerContextPrototype EMPPower;
-        public ProceduralProfileUltronEMPPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileUltronEMPPrototype), proto); }
+        public ProceduralUsePowerContextPrototype EMPPower { get; protected set; }
     }
 
     public class ProcProfileQuicksilverTeamUpPrototype : ProceduralProfileTeamUpPrototype
     {
-        public ProceduralUsePowerContextPrototype SpecialMovementPower;
-        public ProcProfileQuicksilverTeamUpPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProcProfileQuicksilverTeamUpPrototype), proto); }
+        public ProceduralUsePowerContextPrototype SpecialMovementPower { get; protected set; }
     }
 
     public class ProceduralProfileSkrullNickFuryPrototype : ProceduralProfileRangeFlankerPrototype
     {
-        public ProceduralUsePowerContextPrototype OpenRocketCratePower;
-        public ProceduralUsePowerContextPrototype OpenMinigunCratePower;
-        public ProceduralUsePowerContextPrototype UseRocketPower;
-        public ProceduralUsePowerContextPrototype UseMinigunPower;
-        public MoveToContextPrototype MoveToCrate;
-        public ProceduralUsePowerContextPrototype CommandTurretPower;
-        public int CratePowerUseCount;
-        public ProceduralUsePowerContextPrototype DiscardWeaponPower;
-        public ulong CrateUsedState;
-        public ProceduralProfileSkrullNickFuryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileSkrullNickFuryPrototype), proto); }
+        public ProceduralUsePowerContextPrototype OpenRocketCratePower { get; protected set; }
+        public ProceduralUsePowerContextPrototype OpenMinigunCratePower { get; protected set; }
+        public ProceduralUsePowerContextPrototype UseRocketPower { get; protected set; }
+        public ProceduralUsePowerContextPrototype UseMinigunPower { get; protected set; }
+        public MoveToContextPrototype MoveToCrate { get; protected set; }
+        public ProceduralUsePowerContextPrototype CommandTurretPower { get; protected set; }
+        public int CratePowerUseCount { get; protected set; }
+        public ProceduralUsePowerContextPrototype DiscardWeaponPower { get; protected set; }
+        public PrototypeId CrateUsedState { get; protected set; }
     }
 
     public class ProceduralProfileNickFuryTurretPrototype : ProceduralProfileRotatingTurretWithTargetPrototype
     {
-        public ProceduralUsePowerContextPrototype SpecialCommandPower;
-        public ulong SkrullNickFuryRef;
-        public ProceduralProfileNickFuryTurretPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileNickFuryTurretPrototype), proto); }
+        public ProceduralUsePowerContextPrototype SpecialCommandPower { get; protected set; }
+        public PrototypeId SkrullNickFuryRef { get; protected set; }
     }
 
     public class ProceduralProfileKaeciliusPrototype : ProceduralProfileBasicRangePrototype
     {
-        public ProceduralPowerWithSpecificTargetsPrototype[] HotspotSpawners;
-        public ProceduralThresholdPowerContextPrototype FalseDeathPower;
-        public ProceduralUsePowerContextPrototype HealFinalFormPower;
-        public ProceduralUsePowerContextPrototype DeathPreventerPower;
-        public ulong Cauldron;
-        public ProceduralProfileKaeciliusPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileKaeciliusPrototype), proto); }
+        public ProceduralPowerWithSpecificTargetsPrototype[] HotspotSpawners { get; protected set; }
+        public ProceduralThresholdPowerContextPrototype FalseDeathPower { get; protected set; }
+        public ProceduralUsePowerContextPrototype HealFinalFormPower { get; protected set; }
+        public ProceduralUsePowerContextPrototype DeathPreventerPower { get; protected set; }
+        public PrototypeId Cauldron { get; protected set; }
     }
 
     public class ProceduralProfileMeleeRevengePrototype : ProceduralProfileBasicMeleePrototype
     {
-        public ProceduralUsePowerContextPrototype RevengePower;
-        public ulong RevengeSupport;
-        public ProceduralProfileMeleeRevengePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileMeleeRevengePrototype), proto); }
+        public ProceduralUsePowerContextPrototype RevengePower { get; protected set; }
+        public PrototypeId RevengeSupport { get; protected set; }
     }
 
     public class ProceduralProfileRangedRevengePrototype : ProceduralProfileBasicRangePrototype
     {
-        public ProceduralUsePowerContextPrototype RevengePower;
-        public ulong RevengeSupport;
-        public ProceduralProfileRangedRevengePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileRangedRevengePrototype), proto); }
+        public ProceduralUsePowerContextPrototype RevengePower { get; protected set; }
+        public PrototypeId RevengeSupport { get; protected set; }
     }
 
     public class ProceduralProfileTaserTrapPrototype : ProceduralProfileWithTargetPrototype
     {
-        public ulong TaserHotspot;
-        public ProceduralProfileTaserTrapPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileTaserTrapPrototype), proto); }
+        public PrototypeId TaserHotspot { get; protected set; }
     }
 
     public class ProceduralProfileVulturePrototype : ProceduralProfileWithAttackPrototype
     {
-        public MoveToContextPrototype MoveToTarget;
-        public OrbitContextPrototype OrbitTarget;
-        public ProceduralUsePowerContextPrototype LungePower;
-        public int MaxLungeActivations;
-        public ProceduralProfileVulturePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ProceduralProfileVulturePrototype), proto); }
+        public MoveToContextPrototype MoveToTarget { get; protected set; }
+        public OrbitContextPrototype OrbitTarget { get; protected set; }
+        public ProceduralUsePowerContextPrototype LungePower { get; protected set; }
+        public int MaxLungeActivations { get; protected set; }
     }
 }

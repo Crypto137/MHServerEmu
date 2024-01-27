@@ -2,31 +2,29 @@
 {
     public class ChapterPrototype : Prototype
     {
-        public ulong ChapterName;
-        public int ChapterNumber;
-        public ulong ChapterTooltip;
-        public bool IsDevOnly;
-        public ulong HubWaypoint;
-        public bool ShowInShippingUI;
-        public ulong Description;
-        public bool ResetsOnStoryWarp;
-        public bool ShowInUI;
-        public bool StartLocked;
-        public ulong ChapterEndMission;
-        public ulong MapDescription;
-        public ulong MapImage;
-        public int RecommendedLevelMax;
-        public int RecommendedLevelMin;
-        public ulong MapImageConsole;
-        public ulong LocationImageConsole;
-        public ulong ConsoleDescription;
-        public ChapterPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ChapterPrototype), proto); }
+        public LocaleStringId ChapterName { get; protected set; }
+        public int ChapterNumber { get; protected set; }
+        public LocaleStringId ChapterTooltip { get; protected set; }
+        public bool IsDevOnly { get; protected set; }
+        public PrototypeId HubWaypoint { get; protected set; }
+        public bool ShowInShippingUI { get; protected set; }
+        public LocaleStringId Description { get; protected set; }
+        public bool ResetsOnStoryWarp { get; protected set; }
+        public bool ShowInUI { get; protected set; }
+        public bool StartLocked { get; protected set; }
+        public PrototypeId ChapterEndMission { get; protected set; }
+        public LocaleStringId MapDescription { get; protected set; }
+        public AssetId MapImage { get; protected set; }
+        public int RecommendedLevelMax { get; protected set; }
+        public int RecommendedLevelMin { get; protected set; }
+        public AssetId MapImageConsole { get; protected set; }
+        public AssetId LocationImageConsole { get; protected set; }
+        public LocaleStringId ConsoleDescription { get; protected set; }
     }
 
     public class StoryWarpPrototype : Prototype
     {
-        public ulong Chapter;
-        public ulong Waypoint;
-        public StoryWarpPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(StoryWarpPrototype), proto); }
+        public PrototypeId Chapter { get; protected set; }
+        public PrototypeId Waypoint { get; protected set; }
     }
 }

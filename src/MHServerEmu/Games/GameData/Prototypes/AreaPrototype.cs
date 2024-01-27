@@ -1,46 +1,10 @@
-﻿using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Games.GameData.Calligraphy;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class AreaPrototype : Prototype
-    {
-        public GeneratorPrototype Generator;
-        public ulong Population;
-        public ulong AreaName;
-        public ulong PropDensity;
-        public ulong[] PropSets;
-        public StyleEntryPrototype[] Styles;
-        public ulong ClientMap;
-        public ulong[] Music;
-        public bool FullyGenerateCells;
-        public AreaMinimapReveal MinimapRevealMode;
-        public ulong AmbientSfx;
-        public ulong MinimapName;
-        public int MinimapRevealGroupId;
-        public ulong RespawnOverride;
-        public ulong PlayerCameraSettings;
-        public FootstepTraceBehaviorAsset FootstepTraceOverride;
-        public RegionMusicBehaviorAsset MusicBehavior;
-        public ulong[] Keywords;
-        public int LevelOffset;
-        public RespawnCellOverridePrototype[] RespawnCellOverrides;
-        public ulong PlayerCameraSettingsOrbis;
-        public AreaPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AreaPrototype), proto); }
-    }
+    #region Enums
 
-    public class AreaTransition
-    {
-        public Vector3 Position;
-        public Vector3 Rotation;
-        public AreaTransitionPrototype Prototype;
-    }
-
-    public class AreaTransitionPrototype : Prototype
-    {
-        public ulong Type;
-        public AreaTransitionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AreaTransitionPrototype), proto); }
-    };
-
+    [AssetEnum((int)Standard)]
     public enum AreaMinimapReveal
     {
         Standard,
@@ -49,26 +13,53 @@ namespace MHServerEmu.Games.GameData.Prototypes
         PlayerAreaGroup,
     }
 
+    #endregion
+
+    public class AreaPrototype : Prototype
+    {
+        public GeneratorPrototype Generator { get; protected set; }
+        public PrototypeId Population { get; protected set; }
+        public LocaleStringId AreaName { get; protected set; }
+        public PrototypeId PropDensity { get; protected set; }
+        public AssetId[] PropSets { get; protected set; }
+        public StyleEntryPrototype[] Styles { get; protected set; }
+        public AssetId ClientMap { get; protected set; }
+        public AssetId[] Music { get; protected set; }
+        public bool FullyGenerateCells { get; protected set; }
+        public AreaMinimapReveal MinimapRevealMode { get; protected set; }
+        public AssetId AmbientSfx { get; protected set; }
+        public LocaleStringId MinimapName { get; protected set; }
+        public int MinimapRevealGroupId { get; protected set; }
+        public PrototypeId RespawnOverride { get; protected set; }
+        public PrototypeId PlayerCameraSettings { get; protected set; }
+        public FootstepTraceBehaviorAsset FootstepTraceOverride { get; protected set; }
+        public RegionMusicBehaviorAsset MusicBehavior { get; protected set; }
+        public PrototypeId[] Keywords { get; protected set; }
+        public int LevelOffset { get; protected set; }
+        public RespawnCellOverridePrototype[] RespawnCellOverrides { get; protected set; }
+        public PrototypeId PlayerCameraSettingsOrbis { get; protected set; }
+    }
+
+    public class AreaTransitionPrototype : Prototype
+    {
+        public AssetId Type { get; protected set; }
+    }
+
     public class RespawnCellOverridePrototype : Prototype
     {
-        public ulong[] Cells;
-        public ulong RespawnOverride;
-
-        public RespawnCellOverridePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RespawnCellOverridePrototype), proto); }
+        public AssetId[] Cells { get; protected set; }
+        public PrototypeId RespawnOverride { get; protected set; }
     }
 
     public class StyleEntryPrototype : Prototype
     {
-        public ulong Population;
-        public ulong[] PropSets;
-        public int Weight;
-
-        public StyleEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(StyleEntryPrototype), proto); }
+        public PrototypeId Population { get; protected set; }
+        public AssetId[] PropSets { get; protected set; }
+        public int Weight { get; protected set; }
     }
 
     public class AreaListPrototype : Prototype
     {
-        public ulong[] Areas;
-        public AreaListPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AreaListPrototype), proto); }
+        public PrototypeId[] Areas { get; protected set; }
     }
 }

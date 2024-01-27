@@ -1,17 +1,33 @@
 ﻿using MHServerEmu.Common;
-using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Generators;
+using MHServerEmu.Games.GameData.Calligraphy;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
+    #region Enums
+
+    [AssetEnum((int)NoRestriction)]
+    [Flags]
+    public enum RegionDirection
+    {
+        NoRestriction = 0,
+        North = 1,
+        East = 2,
+        South = 4,
+        West = 8,
+        NorthSouth = 5,
+        EastWest = 10,
+    }
+
+    #endregion
+
     public class SequenceRegionGeneratorPrototype : RegionGeneratorPrototype
     {
-        public AreaSequenceInfoPrototype[] AreaSequence;
-        public ulong RegionPOIPicker;
-        public int EndlessLevelsPerTheme;
-        public EndlessThemePrototype[] EndlessThemes;
-        public SubGenerationPrototype[] SubAreaSequences;
-        public SequenceRegionGeneratorPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(SequenceRegionGeneratorPrototype), proto); }
+        public AreaSequenceInfoPrototype[] AreaSequence { get; protected set; }
+        public PrototypeId RegionPOIPicker { get; protected set; }
+        public int EndlessLevelsPerTheme { get; protected set; }
+        public EndlessThemePrototype[] EndlessThemes { get; protected set; }
+        public SubGenerationPrototype[] SubAreaSequences { get; protected set; }
 
         public EndlessThemeEntryPrototype GetEndlessGeneration(int randomSeed, int endlessLevel, int endlessLevelsTotal)
         {
@@ -32,32 +48,28 @@ namespace MHServerEmu.Games.GameData.Prototypes
             else
                 return EndlessTheme.Normal;
         }
-
     }
 
     public class SubGenerationPrototype : Prototype
     {
-        public AreaSequenceInfoPrototype[] AreaSequence;
-        public float MinRootSeparation;
-        public int Tries;
-        public SubGenerationPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(SubGenerationPrototype), proto); }
+        public AreaSequenceInfoPrototype[] AreaSequence { get; protected set; }
+        public float MinRootSeparation { get; protected set; }
+        public int Tries { get; protected set; }
     }
 
     public class EndlessThemePrototype : Prototype
     {
-        public EndlessThemeEntryPrototype Boss;
-        public EndlessThemeEntryPrototype Normal;
-        public EndlessThemeEntryPrototype TreasureRoom;
-        public EndlessThemePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EndlessThemePrototype), proto); }
+        public EndlessThemeEntryPrototype Boss { get; protected set; }
+        public EndlessThemeEntryPrototype Normal { get; protected set; }
+        public EndlessThemeEntryPrototype TreasureRoom { get; protected set; }
     }
 
     public class EndlessThemeEntryPrototype : Prototype
     {
-        public AreaSequenceInfoPrototype[] AreaSequence;
-        public EndlessStateEntryPrototype[] Challenges;
-        public EndlessThemeEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EndlessThemeEntryPrototype), proto); }
+        public AreaSequenceInfoPrototype[] AreaSequence { get; protected set; }
+        public EndlessStateEntryPrototype[] Challenges { get; protected set; }
 
-        public EndlessStateEntryPrototype GetState(int randomSeed, int endlessLevel, MetaStateChallengeTier missionTier)
+        public EndlessStateEntryPrototype GetState(int randomSeed, int endlessLevel, MetaStateChallengeTierEnum missionTier)
         {
             if (Challenges == null) return null;
 
@@ -68,7 +80,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 if (state == null) continue;
 
-                if (missionTier != MetaStateChallengeTier.None && missionTier != state.Tier) continue;
+                if (missionTier != MetaStateChallengeTierEnum.None && missionTier != state.Tier) continue;
 
                 MetaStatePrototype metaState = GameDatabase.GetPrototype<MetaStatePrototype>(state.MetaState);
                 if (metaState != null && !metaState.CanApplyState())
@@ -85,58 +97,34 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return null;
         }
 
-
     }
 
     public class EndlessStateEntryPrototype : Prototype
     {
-        public ulong MetaState;
-        public ulong RegionPOIPicker;
-        public MetaStateChallengeTier Tier;
-        public EndlessStateEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EndlessStateEntryPrototype), proto); }
+        public PrototypeId MetaState { get; protected set; }
+        public PrototypeId RegionPOIPicker { get; protected set; }
+        public MetaStateChallengeTierEnum Tier { get; protected set; }
     }
 
-    public enum MetaStateChallengeTier
-    {
-        None,
-        Tier1,
-        Tier2,
-        Tier3,
-        Tier4,
-        Tier5,
-    }
     public class AreaSequenceInfoPrototype : Prototype
     {
-        public WeightedAreaPrototype[] AreaChoices;
-        public AreaSequenceInfoPrototype[] ConnectedTo;
-        public short ConnectedToPicks;
-        public bool ConnectAllShared;
-        public short SharedEdgeMinimum;
-        public short Weight;
-        public AreaSequenceInfoPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AreaSequenceInfoPrototype), proto); }
+        public WeightedAreaPrototype[] AreaChoices { get; protected set; }
+        public AreaSequenceInfoPrototype[] ConnectedTo { get; protected set; }
+        public short ConnectedToPicks { get; protected set; }
+        public bool ConnectAllShared { get; protected set; }
+        public short SharedEdgeMinimum { get; protected set; }
+        public short Weight { get; protected set; }
     }
 
     public class WeightedAreaPrototype : Prototype
     {
-        public ulong Area;
-        public int Weight;
-        public RegionDirection ConnectOn;
-        public ulong RespawnOverride;
-        public bool AlignedToPrevious;
-        public WeightedAreaPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(WeightedAreaPrototype), proto); }
+        public PrototypeId Area { get; protected set; }
+        public int Weight { get; protected set; }
+        public RegionDirection ConnectOn { get; protected set; }
+        public PrototypeId RespawnOverride { get; protected set; }
+        public bool AlignedToPrevious { get; protected set; }
 
         public override string ToString() => $"{GameDatabase.GetFormattedPrototypeName(Area)} weight = {Weight}";
     }
 
-    [Flags]
-    public enum RegionDirection
-    {
-        NoRestriction = 0,
-        North = 1,
-        East = 2,
-        South = 4,
-        West = 8,
-        NorthSouth = 5,
-        EastWest = 10,
-    }
 }

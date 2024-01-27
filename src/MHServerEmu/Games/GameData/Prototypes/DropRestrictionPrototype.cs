@@ -1,20 +1,11 @@
-﻿using MHServerEmu.Games.Loot;
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class DropRestrictionPrototype : Prototype
-    {
-        public DropRestrictionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(DropRestrictionPrototype), proto); }
-    }
+    #region Enums
 
-    public class ConditionalRestrictionPrototype : DropRestrictionPrototype
-    {
-        public DropRestrictionPrototype[] Apply;
-        public LootContext[] ApplyFor;
-        public DropRestrictionPrototype[] Else;
-        public ConditionalRestrictionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ConditionalRestrictionPrototype), proto); }
-    }
-
+    [AssetEnum((int)None)]
     [Flags]
     public enum LootContext
     {
@@ -29,97 +20,96 @@ namespace MHServerEmu.Games.GameData.Prototypes
         MissionReward = 128,
         MysteryChest = 256,
     }
+
+    #endregion
+
+    public class DropRestrictionPrototype : Prototype
+    {
+    }
+
+    public class ConditionalRestrictionPrototype : DropRestrictionPrototype
+    {
+        public DropRestrictionPrototype[] Apply { get; protected set; }
+        public LootContext[] ApplyFor { get; protected set; }
+        public DropRestrictionPrototype[] Else { get; protected set; }
+    }
+
     public class ContextRestrictionPrototype : DropRestrictionPrototype
     {
-        public LootContext[] UsableFor;
-        public ContextRestrictionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ContextRestrictionPrototype), proto); }
+        public LootContext[] UsableFor { get; protected set; }
     }
 
     public class ItemTypeRestrictionPrototype : DropRestrictionPrototype
     {
-        public ulong[] AllowedTypes;
-        public ItemTypeRestrictionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ItemTypeRestrictionPrototype), proto); }
+        public PrototypeId[] AllowedTypes { get; protected set; }
     }
 
     public class ItemParentRestrictionPrototype : DropRestrictionPrototype
     {
-        public ulong[] AllowedParents;
-        public ItemParentRestrictionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ItemParentRestrictionPrototype), proto); }
+        public PrototypeId[] AllowedParents { get; protected set; }
     }
 
     public class HasAffixInPositionRestrictionPrototype : DropRestrictionPrototype
     {
-        public AffixPosition Position;
-        public HasAffixInPositionRestrictionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(HasAffixInPositionRestrictionPrototype), proto); }
+        public AffixPosition Position { get; protected set; }
     }
 
     public class HasVisualAffixRestrictionPrototype : DropRestrictionPrototype
     {
-        public bool MustHaveNoVisualAffixes;
-        public bool MustHaveVisualAffix;
-        public HasVisualAffixRestrictionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(HasVisualAffixRestrictionPrototype), proto); }
+        public bool MustHaveNoVisualAffixes { get; protected set; }
+        public bool MustHaveVisualAffix { get; protected set; }
     }
 
     public class LevelRestrictionPrototype : DropRestrictionPrototype
     {
-        public int LevelMin;
-        public int LevelRange;
-        public LevelRestrictionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(LevelRestrictionPrototype), proto); }
+        public int LevelMin { get; protected set; }
+        public int LevelRange { get; protected set; }
     }
 
     public class OutputLevelPrototype : DropRestrictionPrototype
     {
-        public int Value;
-        public bool UseAsFilter;
-        public OutputLevelPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(OutputLevelPrototype), proto); }
+        public int Value { get; protected set; }
+        public bool UseAsFilter { get; protected set; }
     }
 
     public class OutputRankPrototype : DropRestrictionPrototype
     {
-        public int Value;
-        public bool UseAsFilter;
-        public OutputRankPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(OutputRankPrototype), proto); }
+        public int Value { get; protected set; }
+        public bool UseAsFilter { get; protected set; }
     }
 
     public class OutputRarityPrototype : DropRestrictionPrototype
     {
-        public ulong Value;
-        public bool UseAsFilter;
-        public OutputRarityPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(OutputRarityPrototype), proto); }
+        public PrototypeId Value { get; protected set; }
+        public bool UseAsFilter { get; protected set; }
     }
 
     public class RarityRestrictionPrototype : DropRestrictionPrototype
     {
-        public ulong[] AllowedRarities;
-        public RarityRestrictionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RarityRestrictionPrototype), proto); }
+        public PrototypeId[] AllowedRarities { get; protected set; }
     }
 
     public class RankRestrictionPrototype : DropRestrictionPrototype
     {
-        public int AllowedRanks;
-        public RankRestrictionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RankRestrictionPrototype), proto); }
+        public int AllowedRanks { get; protected set; }
     }
 
     public class RestrictionListPrototype : DropRestrictionPrototype
     {
-        public DropRestrictionPrototype[] Children;
-        public RestrictionListPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RestrictionListPrototype), proto); }
+        public DropRestrictionPrototype[] Children { get; protected set; }
     }
 
     public class SlotRestrictionPrototype : DropRestrictionPrototype
     {
-        public EquipmentInvUISlot[] AllowedSlots;
-        public SlotRestrictionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(SlotRestrictionPrototype), proto); }
+        public EquipmentInvUISlot[] AllowedSlots { get; protected set; }
     }
 
     public class UsableByRestrictionPrototype : DropRestrictionPrototype
     {
-        public ulong[] Avatars;
-        public UsableByRestrictionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(UsableByRestrictionPrototype), proto); }
+        public PrototypeId[] Avatars { get; protected set; }
     }
 
     public class DistanceRestrictionPrototype : DropRestrictionPrototype
     {
-        public DistanceRestrictionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(DistanceRestrictionPrototype), proto); }
     }
 }

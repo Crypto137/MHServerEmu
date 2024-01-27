@@ -1,51 +1,51 @@
-﻿using MHServerEmu.Common.Extensions;
-using MHServerEmu.Games.GameData.Calligraphy;
-using MHServerEmu.Games.Properties;
+﻿using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class PropertyPrototype // : Prototype
+    public class PropertyPrototype : Prototype
     {
+        /* NOTE: Old misguided experiments below
         private const byte MaxParamCount = 4;
 
-        private static readonly Dictionary<CalligraphyValueType, PropertyParamType> ParamTypeDict = new()   // Params can hold only three of the Calligraphy value types
+        private static readonly Dictionary<CalligraphyBaseType, PropertyParamType> ParamTypeDict = new()   // Params can hold only three of the Calligraphy value types
         {
-            { CalligraphyValueType.L, PropertyParamType.Integer },
-            { CalligraphyValueType.A, PropertyParamType.Asset },
-            { CalligraphyValueType.P, PropertyParamType.Prototype }
+            { CalligraphyBaseType.Long, PropertyParamType.Integer },
+            { CalligraphyBaseType.Asset, PropertyParamType.Asset },
+            { CalligraphyBaseType.Prototype, PropertyParamType.Prototype }
         };
 
-        public CalligraphyValueType ValueType { get; }
+        public CalligraphyBaseType ValueType { get; }
         public object DefaultValue { get; }
         public int ParamCount { get; } = 0;
         public PropertyParam[] Params { get; } = new PropertyParam[MaxParamCount];
 
-        public PropertyPrototype(Prototype prototype)
+        public PropertyPrototype(PrototypeId prototypeId)
         {
-            Blueprint blueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(prototype);
+            Prototype prototype = GameDatabase.GetPrototype<Prototype>(prototypeId);
+            Blueprint blueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(prototypeId);
             Array.Fill(Params, new());
 
-            foreach (PrototypeEntryElement element in prototype.Entries[0].Elements)
+            foreach (PrototypeSimpleField field in prototype.FieldGroups[0].SimpleFields)
             {
-                BlueprintMember blueprintMember = blueprint.GetMember(element.Id);
+                BlueprintMember blueprintMember = blueprint.GetMember(field.Id);
 
                 switch (blueprintMember.FieldName)
                 {
                     case "Value":
-                        ValueType = element.Type;
-                        DefaultValue = element.Value;
+                        ValueType = field.Type;
+                        DefaultValue = field.Value;
                         break;
                     case "Param0":
-                        SetParamType(0, ParamTypeDict[element.Type], blueprintMember.Subtype, element.Value);
+                        SetParamType(0, ParamTypeDict[field.Type], blueprintMember.Subtype, field.Value);
                         break;
                     case "Param1":
-                        SetParamType(1, ParamTypeDict[element.Type], blueprintMember.Subtype, element.Value);
+                        SetParamType(1, ParamTypeDict[field.Type], blueprintMember.Subtype, field.Value);
                         break;
                     case "Param2":
-                        SetParamType(2, ParamTypeDict[element.Type], blueprintMember.Subtype, element.Value);
+                        SetParamType(2, ParamTypeDict[field.Type], blueprintMember.Subtype, field.Value);
                         break;
                     case "Param3":
-                        SetParamType(3, ParamTypeDict[element.Type], blueprintMember.Subtype, element.Value);
+                        SetParamType(3, ParamTypeDict[field.Type], blueprintMember.Subtype, field.Value);
                         break;
                 }
             }
@@ -93,42 +93,39 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Params[index].DefaultValue = defaultValue;
 
             if (type == PropertyParamType.Asset)
-                Params[index].ValueMax = GameDatabase.GetAssetType(subtype).GetMaxEnumValue();
+                Params[index].ValueMax = GameDatabase.GetAssetType((AssetTypeId)subtype).MaxEnumValue;
             else if (type == PropertyParamType.Prototype)
                 Params[index].ValueMax = 0; //Params[index].ValueMax = GameDatabase.LegacyPrototypeRefManager.MaxEnumValue;
         }
 
-    }
-
-    public class PropertyParam
-    {
-        public PropertyParamType Type { get; set; } = PropertyParamType.Invalid;
-        public object DefaultValue { get; set; } = 0;
-        public int ValueMax { get; set; } = 0;
-        public int Offset { get; set; } = 0;
-        public int Size { get; set; } = 0;
+        public class PropertyParam
+        {
+            public PropertyParamType Type { get; set; } = PropertyParamType.Invalid;
+            public object DefaultValue { get; set; } = 0;
+            public int ValueMax { get; set; } = 0;
+            public int Offset { get; set; } = 0;
+            public int Size { get; set; } = 0;
+        }
+        */
     }
 
     public class PropertyEntryPrototype : Prototype
     {
-        public PropertyEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(PropertyEntryPrototype), proto); }
     }
 
     public class PropertyPickInRangeEntryPrototype : PropertyEntryPrototype
     {
-        public ulong Prop;
-        public EvalPrototype ValueMax;
-        public EvalPrototype ValueMin;
-        public bool RollAsInteger;
-        public ulong TooltipOverrideText;
-        public PropertyPickInRangeEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(PropertyPickInRangeEntryPrototype), proto); }
+        public PropertyId Prop { get; protected set; }
+        public EvalPrototype ValueMax { get; protected set; }
+        public EvalPrototype ValueMin { get; protected set; }
+        public bool RollAsInteger { get; protected set; }
+        public LocaleStringId TooltipOverrideText { get; protected set; }
     }
 
     public class PropertySetEntryPrototype : PropertyEntryPrototype
     {
-        public ulong Prop;
-        public ulong TooltipOverrideText;
-        public EvalPrototype Value;
-        public PropertySetEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(PropertySetEntryPrototype), proto); }
+        public PropertyId Prop { get; protected set; }
+        public LocaleStringId TooltipOverrideText { get; protected set; }
+        public EvalPrototype Value { get; protected set; }
     }
 }

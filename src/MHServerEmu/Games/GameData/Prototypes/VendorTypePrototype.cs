@@ -2,45 +2,41 @@
 {
     public class VendorXPBarTooltipPrototype : Prototype
     {
-        public ulong NextRankTooltip;
-        public ulong ThisRankTooltip;
-        public VendorXPBarTooltipPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(VendorXPBarTooltipPrototype), proto); }
+        public LocaleStringId NextRankTooltip { get; protected set; }
+        public LocaleStringId ThisRankTooltip { get; protected set; }
     }
 
     public class VendorInventoryEntryPrototype : Prototype
     {
-        public ulong LootTable;
-        public int UseStartingAtVendorLevel;
-        public VendorXPBarTooltipPrototype VendorXPBarTooltip;
-        public ulong PlayerInventory;
-        public VendorInventoryEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(VendorInventoryEntryPrototype), proto); }
+        public PrototypeId LootTable { get; protected set; }
+        public int UseStartingAtVendorLevel { get; protected set; }
+        public VendorXPBarTooltipPrototype VendorXPBarTooltip { get; protected set; }
+        public PrototypeId PlayerInventory { get; protected set; }
     }
 
     public class VendorTypePrototype : Prototype
     {
-        public VendorInventoryEntryPrototype[] Inventories;
-        public float VendorEnergyPctPerRefresh;
-        public float VendorEnergyFullRechargeTimeMins;
-        public ulong VendorXPTooltip;
-        public ulong VendorRefreshTooltip;
-        public ulong VendorDonateTooltip;
-        public bool AllowActionDonate;
-        public bool AllowActionRefresh;
-        public bool IsCrafter;
-        public ulong TypeName;
-        public ulong VendorIconTooltip;
-        public HUDEntityOverheadIcon InteractIndicator;
-        public ulong VendorDonateTooltipMax;
-        public ulong GlobalEvent;
-        public bool AllowActionSell;
-        public ulong VendorFlavorText;
-        public bool IsRaidVendor;
-        public ulong VendorLevelingCurve;
-        public ulong ReputationDisplayInfo;
-        public ulong[] CraftingRecipeCategories;
-        public bool IsEnchanter;
-        public ulong VendorRankTooltip;
-        public VendorTypePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(VendorTypePrototype), proto); }
+        public VendorInventoryEntryPrototype[] Inventories { get; protected set; }
+        public float VendorEnergyPctPerRefresh { get; protected set; }
+        public float VendorEnergyFullRechargeTimeMins { get; protected set; }
+        public LocaleStringId VendorXPTooltip { get; protected set; }
+        public LocaleStringId VendorRefreshTooltip { get; protected set; }
+        public LocaleStringId VendorDonateTooltip { get; protected set; }
+        public bool AllowActionDonate { get; protected set; }
+        public bool AllowActionRefresh { get; protected set; }
+        public bool IsCrafter { get; protected set; }
+        public LocaleStringId TypeName { get; protected set; }
+        public LocaleStringId VendorIconTooltip { get; protected set; }
+        public HUDEntityOverheadIcon InteractIndicator { get; protected set; }
+        public LocaleStringId VendorDonateTooltipMax { get; protected set; }
+        public PrototypeId GlobalEvent { get; protected set; }
+        public bool AllowActionSell { get; protected set; }
+        public LocaleStringId VendorFlavorText { get; protected set; }
+        public bool IsRaidVendor { get; protected set; }
+        public CurveId VendorLevelingCurve { get; protected set; }
+        public PrototypeId ReputationDisplayInfo { get; protected set; }
+        public PrototypeId[] CraftingRecipeCategories { get; protected set; }
+        public bool IsEnchanter { get; protected set; }
+        public LocaleStringId VendorRankTooltip { get; protected set; }
     }
-
 }

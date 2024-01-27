@@ -1,17 +1,10 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
-{
-    public class GameEventPrototype : Prototype
-    {
-        public GameEventPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(GameEventPrototype), proto); }
-    }
+﻿using MHServerEmu.Games.GameData.Calligraphy;
 
-    public class EntityGameEventPrototype : GameEventPrototype
-    {
-        public EntityFilterPrototype EntityFilter;
-        public EntityGameEventEnum Event;
-        public bool UniqueEntities;
-        public EntityGameEventPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityGameEventPrototype), proto); }
-    }
+namespace MHServerEmu.Games.GameData.Prototypes
+{
+    #region Enums
+
+    [AssetEnum((int)Invalid)]
     public enum EntityGameEventEnum
     {
         Invalid = 0,
@@ -21,11 +14,23 @@
         EntityExitedWorld = 4,
         PlayerInteract = 5,
     }
-    public class EntityGameEventEvalPrototype : Prototype
+
+    #endregion
+
+    public class GameEventPrototype : Prototype
     {
-        public EntityGameEventPrototype Event;
-        public EvalPrototype Eval;
-        public EntityGameEventEvalPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityGameEventEvalPrototype), proto); }
     }
 
+    public class EntityGameEventPrototype : GameEventPrototype
+    {
+        public EntityFilterPrototype EntityFilter { get; protected set; }
+        public EntityGameEventEnum Event { get; protected set; }
+        public bool UniqueEntities { get; protected set; }
+    }
+
+    public class EntityGameEventEvalPrototype : Prototype
+    {
+        public EntityGameEventPrototype Event { get; protected set; }
+        public EvalPrototype Eval { get; protected set; }
+    }
 }

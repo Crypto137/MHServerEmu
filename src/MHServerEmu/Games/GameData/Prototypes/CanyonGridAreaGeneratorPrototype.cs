@@ -1,34 +1,37 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class CanyonGridAreaGeneratorPrototype : GeneratorPrototype
-    {
-        public CanyonCellChoiceListPrototype Cells;
-        public short Length;
-        public RegionDirection ConnectOnBridgeOnlyDirection;
+    #region Enums
 
-        public CanyonGridAreaGeneratorPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(CanyonGridAreaGeneratorPrototype), proto); }
-    }
-
-    public class CanyonCellChoiceListPrototype : Prototype
-    {
-        public CellChoicePrototype[] BridgeChoices;
-        public CellChoicePrototype[] NormalChoices;
-        public CellChoicePrototype[] LeftOrBottomChoices;
-        public CellChoicePrototype[] RightOrTopChoices;
-        public AreaOrientation Orientation;
-        public CanyonCellChoiceListPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(CanyonCellChoiceListPrototype), proto); }
-    }
-
+    [AssetEnum((int)Horizontal)]
     public enum AreaOrientation
     {
         Horizontal,
         Vertical,
     }
 
+    #endregion
+
+    public class CanyonGridAreaGeneratorPrototype : GeneratorPrototype
+    {
+        public CanyonCellChoiceListPrototype Cells { get; protected set; }
+        public short Length { get; protected set; }
+        public RegionDirection ConnectOnBridgeOnlyDirection { get; protected set; }
+    }
+
+    public class CanyonCellChoiceListPrototype : Prototype
+    {
+        public CellChoicePrototype[] BridgeChoices { get; protected set; }
+        public CellChoicePrototype[] NormalChoices { get; protected set; }
+        public CellChoicePrototype[] LeftOrBottomChoices { get; protected set; }
+        public CellChoicePrototype[] RightOrTopChoices { get; protected set; }
+        public AreaOrientation Orientation { get; protected set; }
+    }
+
     public class CellChoicePrototype : Prototype
     {
-        public ulong Cell;
-        public int Weight;
-        public CellChoicePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(CellChoicePrototype), proto); }
+        public AssetId Cell { get; protected set; }
+        public int Weight { get; protected set; }
     }
 }

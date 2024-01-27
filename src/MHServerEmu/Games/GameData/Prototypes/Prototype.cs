@@ -1,376 +1,103 @@
-﻿using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Logging;
-using MHServerEmu.Games.GameData.Calligraphy;
-using System.Reflection;
+﻿using MHServerEmu.Common.Logging;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class PrototypeFile
+    public readonly struct PrototypeDataHeader
     {
-        public CalligraphyHeader Header { get; }
-        public Prototype Prototype { get; }
+        // CalligraphyReader::ReadPrototypeHeader
 
-        public PrototypeFile(byte[] data)
+        [Flags]
+        private enum PrototypeDataDesc : byte
         {
-            using (MemoryStream stream = new(data))
-            using (BinaryReader reader = new(stream))
-            {
-                Header = reader.ReadCalligraphyHeader();
-                Prototype = new(reader);
-            }
+            None            = 0,
+            ReferenceExists = 1 << 0,
+            DataExists      = 1 << 1,
+            PolymorphicData = 1 << 2
+        }
+
+        public bool ReferenceExists { get; }
+        public bool DataExists { get; }
+        public bool PolymorphicData { get; }
+        public PrototypeId ReferenceType { get; }     // Parent prototype id, invalid (0) for .defaults
+
+        public PrototypeDataHeader(BinaryReader reader)
+        {
+            var flags = (PrototypeDataDesc)reader.ReadByte();
+            ReferenceExists = flags.HasFlag(PrototypeDataDesc.ReferenceExists);
+            DataExists = flags.HasFlag(PrototypeDataDesc.DataExists);
+            PolymorphicData = flags.HasFlag(PrototypeDataDesc.PolymorphicData);
+
+            ReferenceType = ReferenceExists ? (PrototypeId)reader.ReadUInt64() : 0;
         }
     }
 
     public class Prototype
     {
-        public static readonly Logger Logger = LogManager.CreateLogger();
-        private ulong _dataRef;
+        protected static readonly Logger Logger = LogManager.CreateLogger();
 
-        public byte Flags { get; }
-        public ulong ParentId { get; private set; }  // 0 for .defaults
-        public PrototypeEntry[] Entries { get; }
+        // Child prototypes need to have separate mixin lists from their parents so that when we modify a child we don't change its parent.
+        // To ensure this each prototype keeps track of mixins that belong to it in this field. This is accurate to how the client does this.
+        // The client uses a sorted vector here, but we use a HashSet to ensure that the same field data doesn't get added twice for some reason.
+        private HashSet<object> _ownedDynamicFields;
 
-        public virtual void PostProcess() { }
+        public PrototypeId DataRef { get; set; }
+        public PrototypeId ParentDataRef { get; set; }
+        public PrototypeDataRefRecord DataRefRecord { get; set; }
 
-        public Prototype() { } // for Resource Prototype
+        public Prototype() { }
 
-        public ulong GetDataRef() 
+        /// <summary>
+        /// Returns <see langword="false"/> if this is a prototype in development.
+        /// </summary>
+        public virtual bool ApprovedForUse()
         {
-            return _dataRef; 
+            return true;
         }
 
-        public void SetDataRef(ulong prototypeId)
+        // These dynamic field management methods are part of the PrototypeClassManager in the client, but it doesn't really make sense so we moved them here.
+        // They work only with reference types, but we use them only for list mixins, so it's fine.
+
+        /// <summary>
+        /// Assigns this prototype as the owner of field data of type <typeparamref name="T"/>. Field data must be a reference type.
+        /// </summary>
+        public void SetDynamicFieldOwner<T>(T fieldData) where T: class
         {
-            _dataRef = prototypeId;
+            // Create the owned field collection if we don't have one
+            if (_ownedDynamicFields == null)
+                _ownedDynamicFields = new();
+
+            _ownedDynamicFields.Add(fieldData);
         }
 
-        public Prototype(Prototype proto) { }
-
-        private object ConvertValue(object Value, Type fieldType, CalligraphyValueType valueType)
+        /// <summary>
+        /// Removes this prototype as the owner of field data of type <typeparamref name="T"/>. Field data must be a reference type.
+        /// </summary>
+        public bool RemoveDynamicFieldOwner<T>(T fieldData) where T: class
         {
-            object convertedValue = null;
+            // Check if we have any dynamic fields at all
+            if (_ownedDynamicFields == null)
+                Logger.WarnReturn(false, $"Failed to remove {GameDatabase.GetPrototypeName(DataRef)} as the owner of dynamic field data: this prototype has no owned fields");
 
-            if (Value == null) 
-                return Convert.ChangeType(null, fieldType);
-            
-            switch (valueType)
-            {
-                case CalligraphyValueType.B: // bool
-                case CalligraphyValueType.D: // float
-                case CalligraphyValueType.L: // int short
-                    convertedValue = Convert.ChangeType(Value, fieldType);
-                    break;
+            if (_ownedDynamicFields.Remove(fieldData) == false)
+                Logger.WarnReturn(false, $"Failed to remove {GameDatabase.GetPrototypeName(DataRef)} as the owner of dynamic field data: field data not found");
 
-                case CalligraphyValueType.R: // PrototypeRef 
-                    Prototype proto = (Prototype)Value;
-                    if (proto.ParentId != 0)
-                    {
-                        string className = GameDatabase.DataDirectory.GetPrototypeBlueprint(proto).RuntimeBinding;
-                        // Logger.Info($"Init Prototype {className}");
-                        if (className == "PropertyPrototype")
-                        {
-                            /*   Blueprint blueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(proto);
-                               Prototype defaultData = GameDatabase.DataDirectory.GetBlueprintDefaultPrototype(blueprint);
-                               convertedValue = new PropertyPrototype(defaultData);*/
-                            return null;
-                        }
-                        Type protoType = Type.GetType("MHServerEmu.Games.GameData.Prototypes." + className);
-                        if (protoType == null)
-                        {
-                            Logger.Warn($"PrototypeClass {className} not exist");
-                            return null;
-                        }
-                        convertedValue = Activator.CreateInstance(protoType, new object[] { proto });
-                    }
-                    else 
-                        convertedValue = null;
-                    break;
-
-                case CalligraphyValueType.P: // PrototypeId
-                case CalligraphyValueType.S: // StringId
-                case CalligraphyValueType.C: // CurveId
-                    convertedValue = Value; // ulong
-                    break;
-
-                case CalligraphyValueType.A: // AssetName String                    
-
-                    if (fieldType.IsEnum)
-                    {
-                        ulong assetId = (ulong)Value;
-                        string assetName = GameDatabase.GetAssetName(assetId);
-                        if (Enum.IsDefined(fieldType, assetName))
-                        {
-                            convertedValue = Enum.Parse(fieldType, assetName);
-                        }
-                    }
-                    else convertedValue = (ulong)Value;
-
-                    break;
-                
-                default:
-                    convertedValue = Convert.ChangeType(Value, fieldType);
-                    break;
-            }
-            return convertedValue;
+            return true;
         }
 
-        private void SetValue(object Value, FieldInfo fieldInfo, CalligraphyValueType valueType)
+        /// <summary>
+        /// Checks if this prototype is the owner of field data of type <typeparamref name="T"/>. Field data must be a reference type.
+        /// </summary>
+        public bool IsDynamicFieldOwnedBy<T>(T fieldData) where T: class
         {
-          //  Logger.Info($"Try Convert {valueType} type for {fieldInfo.Name}");
-            object convertedValue = ConvertValue(Value, fieldInfo.FieldType, valueType);            
-            fieldInfo.SetValue(this, convertedValue);
+            // Make sure this prototype has any dynamic fields assigned to it at all
+            if (_ownedDynamicFields == null)
+                return false;
+
+            return _ownedDynamicFields.Contains(fieldData);
         }
 
-        private void SetValues(object[] Values, FieldInfo fieldInfo, CalligraphyValueType valueType)
+        public virtual void PostProcess()
         {
-          //  Logger.Info($"Try Convert {valueType} type for {fieldInfo.Name}");
-            Type elementType = fieldInfo.FieldType.GetElementType(); 
-            if (elementType != null)
-            {
-                Array array = Array.CreateInstance(elementType, Values.Length); 
-
-                for (int i = 0; i < Values.Length; i++)
-                {
-                    object convertedValue = ConvertValue(Values[i], elementType, valueType);
-                    array.SetValue(convertedValue, i);
-                }
-
-                fieldInfo.SetValue(this, array); 
-            }
-        }
-
-        private void FillFieldsFromData(Prototype data, Blueprint blueprint, Type protoType)
-        {
-          //  Logger.Info($"FillFields for {blueprint.RuntimeBinding}");
-            foreach (var member in blueprint.Members)
-            {
-                var fieldName = member.FieldName;
-                var fieldType = protoType.GetField(fieldName);
-                bool nextMember = true;
-                if (fieldType != null)
-                {
-                    if (data.Entries != null)
-                    {
-                        foreach (var entry in data.Entries)
-                        {
-                            if (entry.Id == blueprint.DefaultPrototypeId)
-                            {
-                                if (fieldType.FieldType.IsArray)
-                                {
-                                    foreach (var element in entry.ListElements)
-                                    {
-                                        if (element.Id == member.FieldId)
-                                        {
-                                            SetValues(element.Values, fieldType, element.Type);
-                                            nextMember = false;
-                                            break;
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    foreach (var element in entry.Elements)
-                                    {
-                                        if (element.Id == member.FieldId)
-                                        {
-                                            SetValue(element.Value, fieldType, element.Type);
-                                            nextMember = false;
-                                            break;
-                                        }
-                                    }
-                                }
-                                if (nextMember == false) break;
-                            }
-                        }
-                    }
-                }
-
-            }
-        }
-
-        public void LoadDefault(Type protoType, Blueprint blueprint) // TODO make Dictonary with defaults
-        {
-            // ulong defProto = blueprint.DefaultPrototypeId;
-           // Logger.Info($"Default{GameDatabase.GetPrototypeName(defProto)}");
-            Prototype defaultData = GameDatabase.DataDirectory.GetBlueprintDefaultPrototype(blueprint);
-            //Type protoType = Type.GetType("MHServerEmu.Games.Generators.Prototypes." + blueprint.RuntimeBinding); 
-            FillFieldsFromData(defaultData, blueprint, protoType);
-        }
-
-        public void FillPrototype(Type protoType, Prototype proto)
-        {
-            // copy data from old proto
-            _dataRef = proto._dataRef; 
-            ParentId = proto.ParentId;
-
-            Blueprint blueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(proto);
-
-            LoadDefault(protoType, blueprint);
-
-            ulong parent = proto.ParentId;
-            List<Prototype> parents = new();
-            while (parent != blueprint.DefaultPrototypeId)
-            {
-                if (parent == 0) break;
-                //Logger.Info($"{GameDatabase.GetPrototypeName(parent)}");
-                Prototype parentProto = parent.GetPrototype();
-                parents.Add(parentProto);
-                parent = parentProto.ParentId;                
-            }
-
-            if (parents.Count > 0)
-            {
-                parents.Reverse();
-                foreach (Prototype parentProto in parents)
-                    FillFieldsFromData(parentProto, blueprint, protoType);
-            }
-
-            foreach (var parentRef in blueprint.Parents)
-            {
-                Prototype parentProto = parentRef.Id.GetPrototype();
-                Blueprint parentBlueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(parentProto);
-                FillFieldsFromData(proto, parentBlueprint, protoType);
-            }
-
-            FillFieldsFromData(proto, blueprint, protoType);
-            PostProcess();
-        }
-
-        public Prototype(BinaryReader reader)
-        {
-            Flags = reader.ReadByte();
-
-            if ((Flags & 0x01) > 0)      // flag0 == contains parent id
-            {
-                ParentId = reader.ReadUInt64();
-
-                if ((Flags & 0x02) > 0)  // flag1 == contains data
-                {
-                    Entries = new PrototypeEntry[reader.ReadUInt16()];
-                    for (int i = 0; i < Entries.Length; i++)
-                        Entries[i] = new(reader);
-                }
-            }
-
-            // flag2 == ??
-        }
-
-        public PrototypeEntry GetEntry(ulong blueprintId)
-        {
-            if (Entries == null) return null;
-            return Entries.FirstOrDefault(entry => entry.Id == blueprintId);
-        }
-        public PrototypeEntry GetEntry(BlueprintId blueprintId) => GetEntry((ulong)blueprintId);
-    }
-
-    public class PrototypeEntry
-    {
-        public ulong Id { get; }
-        public byte ByteField { get; }
-        public PrototypeEntryElement[] Elements { get; }
-        public PrototypeEntryListElement[] ListElements { get; }
-
-        public PrototypeEntry(BinaryReader reader)
-        {
-            Id = reader.ReadUInt64();
-            ByteField = reader.ReadByte();
-
-            Elements = new PrototypeEntryElement[reader.ReadUInt16()];
-            for (int i = 0; i < Elements.Length; i++)
-                Elements[i] = new(reader);
-
-            ListElements = new PrototypeEntryListElement[reader.ReadUInt16()];
-            for (int i = 0; i < ListElements.Length; i++)
-                ListElements[i] = new(reader);
-        }
-
-        public PrototypeEntryElement GetField(ulong fieldId)
-        {
-            if (Elements == null) return null;
-            return Elements.FirstOrDefault(field => field.Id == fieldId);
-        }
-        public PrototypeEntryElement GetField(FieldId fieldId) => GetField((ulong)fieldId);
-
-        public ulong GetFieldDef(FieldId fieldId)
-        {
-            PrototypeEntryElement field = GetField((ulong)fieldId);
-            if (field == null) return 0;
-            return (ulong)field.Value;
-        }
-
-        public PrototypeEntryListElement GetListField(ulong fieldId)
-        {
-            if (ListElements == null) return null;
-            return ListElements.FirstOrDefault(field => field.Id == fieldId);
-        }
-
-        public PrototypeEntryListElement GetListField(FieldId fieldId) => GetListField((ulong)fieldId);
-    }
-
-    public class PrototypeEntryElement
-    {
-        public ulong Id { get; }
-        public CalligraphyValueType Type { get; }
-        public object Value { get; }
-        public PrototypeEntryElement(BinaryReader reader)
-        {
-            Id = reader.ReadUInt64();
-            Type = (CalligraphyValueType)reader.ReadByte();
-
-            switch (Type)
-            {
-                case CalligraphyValueType.B:
-                    Value = Convert.ToBoolean(reader.ReadUInt64());
-                    break;
-                case CalligraphyValueType.D:
-                    Value = reader.ReadDouble();
-                    break;
-                case CalligraphyValueType.L:
-                    Value = reader.ReadInt64();
-                    break;
-                case CalligraphyValueType.R:
-                    Value = new Prototype(reader);
-                    break;
-                default:
-                    Value = reader.ReadUInt64();
-                    break;
-            }
-        }
-    }
-
-    public class PrototypeEntryListElement
-    {
-        public ulong Id { get; }
-        public CalligraphyValueType Type { get; }
-        public object[] Values { get; }
-
-        public PrototypeEntryListElement(BinaryReader reader)
-        {
-            Id = reader.ReadUInt64();
-            Type = (CalligraphyValueType)reader.ReadByte();
-
-            Values = new object[reader.ReadUInt16()];
-            for (int i = 0; i < Values.Length; i++)
-            {
-                switch (Type)
-                {
-                    case CalligraphyValueType.B:
-                        Values[i] = Convert.ToBoolean(reader.ReadUInt64());
-                        break;
-                    case CalligraphyValueType.D:
-                        Values[i] = reader.ReadDouble();
-                        break;
-                    case CalligraphyValueType.L:
-                        Values[i] = reader.ReadInt64();
-                        break;
-                    case CalligraphyValueType.R:
-                        Values[i] = new Prototype(reader);
-                        break;
-                    default:
-                        Values[i] = reader.ReadUInt64();
-                        break;
-                }
-            }
         }
     }
 }

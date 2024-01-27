@@ -1,53 +1,37 @@
-﻿using System.Text.Json.Serialization;
-using MHServerEmu.Common.Extensions;
+﻿using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.Games.GameData.Prototypes.Markers
 {
     public class EntityMarkerPrototype : MarkerPrototype
     {
-        [JsonPropertyOrder(2)]
-        public ulong EntityGuid { get; }
-        [JsonPropertyOrder(3)]
+        public PrototypeGuid EntityGuid { get; }
         public string LastKnownEntityName { get; }
-        [JsonPropertyOrder(4)]
-        public ulong Modifier1Guid { get; }
-        //    [JsonPropertyOrder(5)]
+        public PrototypeGuid Modifier1Guid { get; }
         //    public string Modifier1Text { get; } // has eFlagDontCook set
-        [JsonPropertyOrder(6)]
-        public ulong Modifier2Guid { get; }
-        //    [JsonPropertyOrder(7)]
+        public PrototypeGuid Modifier2Guid { get; }
         //    public string Modifier2Text { get; } // has eFlagDontCook set
-        [JsonPropertyOrder(8)]
-        public ulong Modifier3Guid { get; }
-        //    [JsonPropertyOrder(9)]
+        public PrototypeGuid Modifier3Guid { get; }
         //    public string Modifier3Text { get; } // has eFlagDontCook set
-        [JsonPropertyOrder(10)]
         public uint EncounterSpawnPhase { get; }
-        [JsonPropertyOrder(11)]
         public byte OverrideSnapToFloor { get; }
-        [JsonPropertyOrder(12)]
         public byte OverrideSnapToFloorValue { get; }
-        [JsonPropertyOrder(13)]
-        public ulong FilterGuid { get; }
-        [JsonPropertyOrder(14)]
+        public PrototypeGuid FilterGuid { get; }
         public string LastKnownFilterName { get; }
 
         public EntityMarkerPrototype(BinaryReader reader)
         {
-            ProtoNameHash = ResourcePrototypeHash.EntityMarkerPrototype;
-
-            EntityGuid = reader.ReadUInt64();
+            EntityGuid = (PrototypeGuid)reader.ReadUInt64();
             LastKnownEntityName = reader.ReadFixedString32();
-            Modifier1Guid = reader.ReadUInt64();
-            // if (Modifier1Guid != 0) Modifier1Text = reader.ReadFixedString32();
-            Modifier2Guid = reader.ReadUInt64();
-            //  if (Modifier2Guid != 0) Modifier2Text = reader.ReadFixedString32();
-            Modifier3Guid = reader.ReadUInt64();
-            //  if (Modifier3Guid != 0) Modifier3Text = reader.ReadFixedString32();
+            Modifier1Guid = (PrototypeGuid)reader.ReadUInt64();
+            // eFlagDontCook Modifier1Text = reader.ReadFixedString32();
+            Modifier2Guid = (PrototypeGuid)reader.ReadUInt64();
+            // eFlagDontCook Modifier2Text = reader.ReadFixedString32();
+            Modifier3Guid = (PrototypeGuid)reader.ReadUInt64();
+            // eFlagDontCook Modifier3Text = reader.ReadFixedString32();
             EncounterSpawnPhase = reader.ReadUInt32();
             OverrideSnapToFloor = reader.ReadByte();
             OverrideSnapToFloorValue = reader.ReadByte();
-            FilterGuid = reader.ReadUInt64();
+            FilterGuid = (PrototypeGuid)reader.ReadUInt64();
             LastKnownFilterName = reader.ReadFixedString32();
 
             Position = reader.ReadVector3();
@@ -56,7 +40,7 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
 
         public T GetMarkedPrototype<T>() where T : Prototype
         {
-            ulong dataRef = GameDatabase.GetDataRefByPrototypeGuid(EntityGuid);
+            PrototypeId dataRef = GameDatabase.GetDataRefByPrototypeGuid(EntityGuid);
             if (dataRef == 0)
             {
                 Logger.Warn($"Unable to get a data ref from MarkerEntityPrototype. Prototype: {ToString()}.");

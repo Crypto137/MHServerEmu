@@ -1,59 +1,45 @@
 ﻿using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
-using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
+using MHServerEmu.Games.GameData.Resources;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class CellPrototype : Prototype
+    public class CellPrototype : Prototype, IBinaryResource
     {
-        public CalligraphyHeader Header { get; }
-        public uint Version { get; }
-        public uint ClassId { get; }
-        public Aabb BoundingBox { get; }
-        public Cell.Type Type { get; }
-        public Cell.Walls Walls { get; }
-        public Cell.Filler FillerEdges { get; }
-        public Cell.Type RoadConnections { get; }
-        public string ClientMap { get; }
-        public MarkerSetPrototype InitializeSet { get; }
-        public MarkerSetPrototype MarkerSet { get; }
-        public NaviPatchSourcePrototype NaviPatchSource { get; }
-        public bool IsOffsetInMapFile { get; }
-        public HeightMapPrototype HeightMap { get; }
-        public ulong[] HotspotPrototypes { get; }
+        public Aabb BoundingBox { get; protected set; }
+        public Cell.Type Type { get; protected set; }
+        public Cell.Walls Walls { get; protected set; }
+        public Cell.Filler FillerEdges { get; protected set; }
+        public Cell.Type RoadConnections { get; protected set; }
+        public string ClientMap { get; protected set; }
+        public MarkerSetPrototype InitializeSet { get; protected set; }
+        public MarkerSetPrototype MarkerSet { get; protected set; }
+        public NaviPatchSourcePrototype NaviPatchSource { get; protected set; }
+        public bool IsOffsetInMapFile { get; protected set; }
+        public HeightMapPrototype HeightMap { get; protected set; }
+        public PrototypeGuid[] HotspotPrototypes { get; protected set; }
 
-        public ulong DataRef { get => GetDataRef(); }
-
-        public CellPrototype(byte[] data)
+        public void Deserialize(BinaryReader reader)
         {
-            using (MemoryStream stream = new(data))
-            using (BinaryReader reader = new(stream))
-            { 
-                Header = reader.ReadCalligraphyHeader();
-                Version = reader.ReadUInt32();
-                ClassId = reader.ReadUInt32();
-                Vector3 max = reader.ReadVector3();
-                Vector3 min = reader.ReadVector3();
-                BoundingBox = new(min, max);
-                Type = (Cell.Type)reader.ReadUInt32();
-                Walls = (Cell.Walls)reader.ReadUInt32();
-                FillerEdges = (Cell.Filler)reader.ReadUInt32();
-                RoadConnections = (Cell.Type)reader.ReadUInt32();
-                ClientMap = reader.ReadFixedString32();
+            Vector3 max = reader.ReadVector3();
+            Vector3 min = reader.ReadVector3();
+            BoundingBox = new(min, max);
+            Type = (Cell.Type)reader.ReadUInt32();
+            Walls = (Cell.Walls)reader.ReadUInt32();
+            FillerEdges = (Cell.Filler)reader.ReadUInt32();
+            RoadConnections = (Cell.Type)reader.ReadUInt32();
+            ClientMap = reader.ReadFixedString32();
+            InitializeSet = new(reader);
+            MarkerSet = new(reader);
+            NaviPatchSource = new(reader);
+            IsOffsetInMapFile = reader.ReadByte()>0;
+            HeightMap = new(reader);
 
-                InitializeSet = new(reader);
-                MarkerSet = new(reader);
-
-                NaviPatchSource = new(reader);
-                IsOffsetInMapFile = reader.ReadByte()>0;
-                HeightMap = new(reader);
-
-                HotspotPrototypes = new ulong[reader.ReadUInt32()];
-                for (int i = 0; i < HotspotPrototypes.Length; i++)
-                    HotspotPrototypes[i] = reader.ReadUInt64();
-            }
+            HotspotPrototypes = new PrototypeGuid[reader.ReadUInt32()];
+            for (int i = 0; i < HotspotPrototypes.Length; i++)
+                HotspotPrototypes[i] = (PrototypeGuid)reader.ReadUInt64();
         }
     }
 

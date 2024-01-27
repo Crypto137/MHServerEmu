@@ -1,116 +1,82 @@
-﻿using MHServerEmu.Common;
-using MHServerEmu.Games.Common;
-using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Regions;
+﻿using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class GeneratorPrototype : Prototype
     {
-        public GeneratorPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(GeneratorPrototype), proto); }
     }
 
     public class DistrictAreaGeneratorPrototype : GeneratorPrototype
     {
-        public ulong District;
-        public DistrictAreaGeneratorPrototype(Prototype proto) : base(proto)
-        {
-            FillPrototype(typeof(DistrictAreaGeneratorPrototype), proto);
-        }
+        public AssetId District { get; protected set; }
     }
 
     public class AreaGenerationInterfacePrototype : GeneratorPrototype
     {
-        public AreaGenerationInterfacePrototype(Prototype proto) : base(proto)
-        {
-            FillPrototype(typeof(AreaGenerationInterfacePrototype), proto);
-        }
     }
 
     public class SingleCellAreaGeneratorPrototype : GeneratorPrototype
     {
-        public ulong Cell;
-        public int BorderWidth;
-        public CellSetEntryPrototype[] BorderCellSets;
-
-        public SingleCellAreaGeneratorPrototype(Prototype proto) : base(proto)
-        {
-            FillPrototype(typeof(SingleCellAreaGeneratorPrototype), proto);
-        }
+        public AssetId Cell { get; protected set; }
+        public int BorderWidth { get; protected set; }
+        public CellSetEntryPrototype[] BorderCellSets { get; protected set; }
     }
 
     public class CellSetEntryPrototype : Prototype
     {
-        public ulong CellSet;
-        public int Weight;
-        public bool Unique;
-        public IgnoreOfTypeEntryPrototype[] IgnoreOfType;
-
-        public CellSetEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(CellSetEntryPrototype), proto); }
+        public AssetId CellSet { get; protected set; }
+        public int Weight { get; protected set; }
+        public bool Unique { get; protected set; }
+        public IgnoreOfTypeEntryPrototype[] IgnoreOfType { get; protected set; }
     }
 
     public class IgnoreOfTypeEntryPrototype : Prototype
     {
-        public Cell.WallGroup Ignore;
-
-        public IgnoreOfTypeEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(IgnoreOfTypeEntryPrototype), proto); }
+        public Cell.WallGroup Ignore { get; protected set; }
     }
 
     public class RequiredPOIAreaEntryPrototype : Prototype
     {
-        public ulong Area;
-        public int Picks;
-
-        public RequiredPOIAreaEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RequiredPOIAreaEntryPrototype), proto); }
+        public PrototypeId Area { get; protected set; }
+        public int Picks { get; protected set; }
     }
 
     public class RequiredPOIGroupPrototype : Prototype
     {
-        public RequiredPOIAreaEntryPrototype[] Areas;
-        public RequiredCellBasePrototype[] RequiredCells;
-
-        public RequiredPOIGroupPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RequiredPOIGroupPrototype), proto); }
+        public RequiredPOIAreaEntryPrototype[] Areas { get; protected set; }
+        public RequiredCellBasePrototype[] RequiredCells { get; protected set; }
     }
 
     #region CellGridBehaviorPrototype
 
     public class CellGridBehaviorPrototype : Prototype
     {
-        public ulong BehaviorId;
-
-        public CellGridBehaviorPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(CellGridBehaviorPrototype), proto); }
+        public AssetId BehaviorId { get; protected set; }
     }
+
     public class BlacklistCellPrototype : Prototype
     {
-        public int X;
-        public int Y;
-
-        public BlacklistCellPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(BlacklistCellPrototype), proto); }
+        public int X { get; protected set; }
+        public int Y { get; protected set; }
     }
 
     public class CellGridBlacklistBehaviorPrototype : CellGridBehaviorPrototype
     {
-        public BlacklistCellPrototype[] Blacklist;
-
-        public CellGridBlacklistBehaviorPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(CellGridBlacklistBehaviorPrototype), proto); }
+        public BlacklistCellPrototype[] Blacklist { get; protected set; }
     }
 
     public class CellGridBorderBehaviorPrototype : CellGridBehaviorPrototype
     {
-        public bool DoBorder;
-        public int BorderWidth;
-
-        public CellGridBorderBehaviorPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(CellGridBorderBehaviorPrototype), proto); }
+        public bool DoBorder { get; protected set; }
+        public int BorderWidth { get; protected set; }
     }
 
     public class CellGridRampBehaviorPrototype : CellGridBehaviorPrototype
     {
-        public ulong EdgeStart;
-        public ulong EdgeEnd;
-        public float Increment;
-
-        public CellGridRampBehaviorPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(CellGridRampBehaviorPrototype), proto); }
-    };
+        public AssetId EdgeStart { get; protected set; }
+        public AssetId EdgeEnd { get; protected set; }
+        public float Increment { get; protected set; }
+    }
 
     #endregion
 

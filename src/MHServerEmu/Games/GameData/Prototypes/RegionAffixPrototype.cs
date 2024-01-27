@@ -1,26 +1,40 @@
-﻿using MHServerEmu.Games.Regions;
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
+    #region Enums
+
+    [AssetEnum((int)None)]
+    public enum MetaStateChallengeTierEnum
+    {
+        None = 0,
+        Tier1 = 1,
+        Tier2 = 2,
+        Tier3 = 3,
+        Tier4 = 4,
+        Tier5 = 5,
+    }
+
+    #endregion
 
     public class RegionAffixPrototype : Prototype
     {
-        public ulong Name;
-        public ulong EnemyBoost;
-        public int Difficulty;
-        public ulong AvatarPower;
-        public ulong MetaState;
-        public MetaStateChallengeTier ChallengeTier;
-        public int AdditionalLevels;
-        public ulong Category;
-        public ulong[] RestrictsAffixes;
-        public int UISortOrder;
-        public ulong[] KeywordsBlacklist;
-        public ulong[] KeywordsWhitelist;
-        public EnemyBoostEntryPrototype[] EnemyBoostsFiltered;
-        public ulong[] AffixRarityRestrictions;
-        public EvalPrototype Eval;
-        public RegionAffixPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RegionAffixPrototype), proto); }
+        public LocaleStringId Name { get; protected set; }
+        public PrototypeId EnemyBoost { get; protected set; }
+        public int Difficulty { get; protected set; }
+        public PrototypeId AvatarPower { get; protected set; }
+        public PrototypeId MetaState { get; protected set; }
+        public MetaStateChallengeTierEnum ChallengeTier { get; protected set; }
+        public int AdditionalLevels { get; protected set; }
+        public PrototypeId Category { get; protected set; }
+        public PrototypeId[] RestrictsAffixes { get; protected set; }
+        public int UISortOrder { get; protected set; }
+        public PrototypeId[] KeywordsBlacklist { get; protected set; }
+        public PrototypeId[] KeywordsWhitelist { get; protected set; }
+        public EnemyBoostEntryPrototype[] EnemyBoostsFiltered { get; protected set; }
+        public PrototypeId[] AffixRarityRestrictions { get; protected set; }
+        public EvalPrototype Eval { get; protected set; }
 
         internal bool CanApplyToRegion(Region region)
         {
@@ -30,27 +44,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class RegionAffixTableTierEntryPrototype : Prototype
     {
-        public ulong LootTable;
-        public int Tier;
-        public ulong Name;
-        public RegionAffixTableTierEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RegionAffixTableTierEntryPrototype), proto); }
+        public PrototypeId LootTable { get; protected set; }
+        public int Tier { get; protected set; }
+        public LocaleStringId Name { get; protected set; }
     }
 
     public class RegionAffixWeightedEntryPrototype : Prototype
     {
-        public ulong Affix;
-        public int Weight;
-        public RegionAffixWeightedEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RegionAffixWeightedEntryPrototype), proto); }
+        public PrototypeId Affix { get; protected set; }
+        public int Weight { get; protected set; }
     }
 
     public class RegionAffixTablePrototype : Prototype
     {
-        public EvalPrototype EvalTier;
-        public EvalPrototype EvalXPBonus;
-        public RegionAffixWeightedEntryPrototype[] RegionAffixes;
-        public RegionAffixTableTierEntryPrototype[] Tiers;
-        public ulong LootSource;
-        public RegionAffixTablePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RegionAffixTablePrototype), proto); }
+        public EvalPrototype EvalTier { get; protected set; }
+        public EvalPrototype EvalXPBonus { get; protected set; }
+        public RegionAffixWeightedEntryPrototype[] RegionAffixes { get; protected set; }
+        public RegionAffixTableTierEntryPrototype[] Tiers { get; protected set; }
+        public AssetId LootSource { get; protected set; }
 
         internal RegionAffixTableTierEntryPrototype GetByTier(int affixTier)
         {
@@ -60,16 +71,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class RegionAffixCategoryPrototype : Prototype
     {
-        public int MaxPicks;
-        public int MinPicks;
-        public RegionAffixCategoryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RegionAffixCategoryPrototype), proto); }
+        public int MaxPicks { get; protected set; }
+        public int MinPicks { get; protected set; }
     }
 
     public class EnemyBoostEntryPrototype : Prototype
     {
-        public ulong EnemyBoost;
-        public ulong[] RanksAllowed;
-        public ulong[] RanksPrevented;
-        public EnemyBoostEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EnemyBoostEntryPrototype), proto); }
+        public PrototypeId EnemyBoost { get; protected set; }
+        public PrototypeId[] RanksAllowed { get; protected set; }
+        public PrototypeId[] RanksPrevented { get; protected set; }
     }
 }

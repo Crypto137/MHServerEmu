@@ -1,482 +1,31 @@
 ﻿using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.GameData.Resources;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class UIPrototype : Prototype
+    #region Enums
+
+    public enum PanelScaleMode
     {
-        public uint Header { get; }
-        public uint Version { get; }
-        public uint ClassId { get; }
-        public UIPanelPrototype[] UIPanels { get; }
-
-        public UIPrototype(byte[] data)
-        {
-            using (MemoryStream stream = new(data))
-            using (BinaryReader reader = new(stream))
-            {
-                Header = reader.ReadUInt32();
-                Version = reader.ReadUInt32();
-                ClassId = reader.ReadUInt32();
-
-                UIPanels = new UIPanelPrototype[reader.ReadUInt32()];
-                for (int i = 0; i < UIPanels.Length; i++)
-                    UIPanels[i] = ReadUIPanelPrototype(reader);
-            }
-        }
-
-        private UIPanelPrototype ReadUIPanelPrototype(BinaryReader reader)
-        {
-            UIPanelPrototype panelPrototype;
-            ResourcePrototypeHash hash = (ResourcePrototypeHash)reader.ReadUInt32();
-
-            switch (hash)
-            {
-                case ResourcePrototypeHash.StretchedPanelPrototype:
-                    panelPrototype = new StretchedPanelPrototype(reader);
-                    break;
-                case ResourcePrototypeHash.AnchoredPanelPrototype:
-                    panelPrototype = new AnchoredPanelPrototype(reader);
-                    break;
-                case ResourcePrototypeHash.None:
-                    panelPrototype = null;
-                    break;
-                default:
-                    throw new($"Unknown ResourcePrototypeHash {(uint)hash}");   // Throw an exception if there's a hash for a type we didn't expect
-            }
-
-            return panelPrototype;
-        }
-    }
-    public enum PanelScaleMode {
-	    None,
-	    XStretch,
-	    YOnly,
-	    XOnly,
-	    Both,
-	    ScreenSize,
+        None,
+        XStretch,
+        YOnly,
+        XOnly,
+        Both,
+        ScreenSize
     }
 
-    public class UIPanelPrototype : Prototype
-    {
-        public ResourcePrototypeHash ProtoNameHash { get; protected set; }
-        public string PanelName { get; protected set; }
-        public string TargetName { get; protected set; }
-        public PanelScaleMode ScaleMode { get; protected set; }
-        public UIPanelPrototype Children { get; protected set; } // Array[] ?
-        public string WidgetClass { get; protected set; }
-        public string SwfName { get; protected set; }
-        public bool OpenOnStart { get; protected set; }
-        public bool VisibilityToggleable { get; protected set; }
-        public bool CanClickThrough { get; protected set; }
-        public bool StaticPosition { get; protected set; }
-        public bool EntityInteractPanel { get; protected set; }
-        public bool UseNewPlacementSystem { get; protected set; }
-        public bool KeepLoaded { get; protected set; }
-
-        protected void ReadParentPanelFields(BinaryReader reader)
-        {
-            PanelName = reader.ReadFixedString32();
-            TargetName = reader.ReadFixedString32();
-            ScaleMode = (PanelScaleMode)reader.ReadUInt32();
-            Children = ReadUIPanelPrototype(reader);
-            WidgetClass = reader.ReadFixedString32();
-            SwfName = reader.ReadFixedString32();
-            OpenOnStart = reader.ReadByte() > 0;
-            VisibilityToggleable = reader.ReadByte() > 0;
-            CanClickThrough = reader.ReadByte() > 0;
-            StaticPosition = reader.ReadByte() > 0;
-            EntityInteractPanel = reader.ReadByte() > 0;
-            UseNewPlacementSystem = reader.ReadByte() > 0;
-            KeepLoaded = reader.ReadByte() > 0;
-        }
-
-        protected UIPanelPrototype ReadUIPanelPrototype(BinaryReader reader)
-        {
-            UIPanelPrototype panelPrototype;
-            ResourcePrototypeHash hash = (ResourcePrototypeHash)reader.ReadUInt32();
-
-            switch (hash)
-            {
-                case ResourcePrototypeHash.StretchedPanelPrototype:
-                    panelPrototype = new StretchedPanelPrototype(reader);
-                    break;
-                case ResourcePrototypeHash.AnchoredPanelPrototype:
-                    panelPrototype = new AnchoredPanelPrototype(reader);
-                    break;
-                case ResourcePrototypeHash.None:
-                    panelPrototype = null;
-                    break;
-                default:
-                    throw new($"Unknown ResourcePrototypeHash {(uint)hash}");   // Throw an exception if there's a hash for a type we didn't expect
-            }
-
-            return panelPrototype;
-        }
-    }
-
-    public class StretchedPanelPrototype : UIPanelPrototype
-    {
-        public Vector2 TopLeftPin { get; }
-        public string TL_X_TargetName { get; }
-        public string TL_Y_TargetName { get; }
-        public Vector2 BottomRightPin { get; }
-        public string BR_X_TargetName { get; }
-        public string BR_Y_TargetName { get; }
-
-        public StretchedPanelPrototype(BinaryReader reader)
-        {
-            ProtoNameHash = ResourcePrototypeHash.StretchedPanelPrototype;
-
-            TopLeftPin = reader.ReadVector2();
-            TL_X_TargetName = reader.ReadFixedString32();
-            TL_Y_TargetName = reader.ReadFixedString32();
-            BottomRightPin = reader.ReadVector2();
-            BR_X_TargetName = reader.ReadFixedString32();
-            BR_Y_TargetName = reader.ReadFixedString32();
-
-            ReadParentPanelFields(reader);
-        }
-    }
-
-    public class AnchoredPanelPrototype : UIPanelPrototype
-    {
-        public Vector2 SourceAttachmentPin { get; }
-        public Vector2 TargetAttachmentPin { get; }
-        public Vector2 VirtualPixelOffset { get; }
-        public string PreferredLane { get; }
-        public Vector2 OuterEdgePin { get; }
-        public Vector2 NewSourceAttachmentPin { get; }
-
-        public AnchoredPanelPrototype(BinaryReader reader)
-        {
-            ProtoNameHash = ResourcePrototypeHash.AnchoredPanelPrototype;
-
-            SourceAttachmentPin = reader.ReadVector2();
-            TargetAttachmentPin = reader.ReadVector2();
-            VirtualPixelOffset = reader.ReadVector2();
-            PreferredLane = reader.ReadFixedString32();
-            OuterEdgePin = reader.ReadVector2();
-            NewSourceAttachmentPin = reader.ReadVector2();
-
-            ReadParentPanelFields(reader);
-        }
-    }
-
-    public class UILocalizedInfoPrototype : Prototype
-    {
-        public ulong DisplayText;
-        public ulong TooltipText;
-        public ulong TooltipStyle;
-        public ulong TooltipFont;
-        public UILocalizedInfoPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(UILocalizedInfoPrototype), proto); }
-    }
-
-    public class UILocalizedStatInfoPrototype : UILocalizedInfoPrototype
-    {
-        public ulong Stat;
-        public int StatValue;
-        public ulong LevelUnlockTooltipStyle;
-        public TooltipSectionPrototype[] TooltipSectionList;
-        public UILocalizedStatInfoPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(UILocalizedStatInfoPrototype), proto); }
-    }
-
-    public class UICraftingTabLabelPrototype : UILocalizedInfoPrototype
-    {
-        public int SortOrder;
-        public UICraftingTabLabelPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(UICraftingTabLabelPrototype), proto); }
-    }
-
-    public class InventoryUIDataPrototype : Prototype
-    {
-        public ulong EmptySlotTooltip;
-        public ulong SlotBackgroundIcon;
-        public ulong InventoryItemDisplayName;
-        public bool HintSlots;
-        public ulong SlotBackgroundIconHiRes;
-        public InventoryUIDataPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(InventoryUIDataPrototype), proto); }
-    }
-
-    public class OfferingInventoryUIDataPrototype : Prototype
-    {
-        public ulong NotificationIcon;
-        public ulong NotificationTooltip;
-        public ulong OfferingDescription;
-        public ulong OfferingTitle;
-        public OfferingInventoryUIDataPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(OfferingInventoryUIDataPrototype), proto); }
-    }
-
-    public class TipEntryPrototype : Prototype
-    {
-        public ulong Entry;
-        public int Weight;
-        public bool SkipIfOnPC;
-        public bool SkipIfOnPS4;
-        public bool SkipIfOnXBox;
-        public TipEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(TipEntryPrototype), proto); }
-    }
-
-    public class TipEntryCollectionPrototype : Prototype
-    {
-        public TipEntryPrototype[] TipEntries;
-        public TipEntryCollectionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(TipEntryCollectionPrototype), proto); }
-    }
-
-    public class GenericTipEntryCollectionPrototype : TipEntryCollectionPrototype
-    {
-        public GenericTipEntryCollectionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(GenericTipEntryCollectionPrototype), proto); }
-    }
-
-    public class RegionTipEntryCollectionPrototype : TipEntryCollectionPrototype
-    {
-        public ulong[] RegionBindings;
-        public RegionTipEntryCollectionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RegionTipEntryCollectionPrototype), proto); }
-    }
-
-    public class AvatarTipEntryCollectionPrototype : TipEntryCollectionPrototype
-    {
-        public ulong[] AvatarBindings;
-        public AvatarTipEntryCollectionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AvatarTipEntryCollectionPrototype), proto); }
-    }
-
-    public class WeightedTipCategoryPrototype : Prototype
-    {
-        public TipTypeEnum TipType;
-        public int Weight;
-        public WeightedTipCategoryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(WeightedTipCategoryPrototype), proto); }
-    }
-
-    public class TransitionUIPrototype : Prototype
-    {
-        public WeightedTipCategoryPrototype[] TipCategories;
-        public TransitionUIType TransitionType;
-        public int Weight;
-        public TransitionUIPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(TransitionUIPrototype), proto); }
-    }
-
-    public class AvatarSynergyUIDataPrototype : Prototype
-    {
-        public ulong DisplayName;
-        public ulong IconPath;
-        public ulong SynergyActiveValue;
-        public ulong SynergyInactiveValue;
-        public ulong TooltipTextForList;
-        public ulong IconPathHiRes;
-        public AvatarSynergyUIDataPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AvatarSynergyUIDataPrototype), proto); }
-    }
-
-    public class MetaGameDataPrototype : Prototype
-    {
-        public ulong Descriptor;
-        public bool DisplayMissionName;
-        public int SortPriority;
-        public ulong IconHeader;
-        public int Justification;
-        public ulong WidgetMovieClipOverride;
-        public ulong IconHeaderHiRes;
-        public MetaGameDataPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(MetaGameDataPrototype), proto); }
-    }
-
-    public class UIWidgetGenericFractionPrototype : MetaGameDataPrototype
-    {
-        public ulong IconComplete;
-        public ulong IconIncomplete;
-        public int IconSpacing;
-        public ulong IconCompleteHiRes;
-        public ulong IconIncompleteHiRes;
-        public UIWidgetGenericFractionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(UIWidgetGenericFractionPrototype), proto); }
-    }
-
-    public class UIWidgetEntityIconsEntryPrototype : Prototype
-    {
-        public EntityFilterPrototype Filter;
-        public int Count;
-        public UIWidgetEntityState TreatUnknownAs;
-        public ulong Icon;
-        public ulong Descriptor;
-        public ulong IconDead;
-        public int IconSpacing;
-        public ulong IconHiRes;
-        public ulong IconDeadHiRes;
-        public UIWidgetEntityIconsEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(UIWidgetEntityIconsEntryPrototype), proto); }
-    }
+    [AssetEnum((int)Unknown)]
     public enum UIWidgetEntityState
     {
         Unknown = 0,
         Alive = 1,
         Dead = 2,
     }
-    public class UIWidgetEnrageEntryPrototype : UIWidgetEntityIconsEntryPrototype
-    {
-        public UIWidgetEnrageEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(UIWidgetEnrageEntryPrototype), proto); }
-    }
 
-    public class WidgetPropertyEntryPrototype : Prototype
-    {
-        public ulong Color;
-        public ulong Descriptor;
-        public ulong Icon;
-        public EvalPrototype PropertyEval;
-        public ulong IconHiRes;
-        public WidgetPropertyEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(WidgetPropertyEntryPrototype), proto); }
-    }
-
-    public class UIWidgetEntityPropertyEntryPrototype : UIWidgetEntityIconsEntryPrototype
-    {
-        public WidgetPropertyEntryPrototype[] PropertyEntryTable;
-        public EvalPrototype PropertyEval;
-        public UIWidgetEntityPropertyEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(UIWidgetEntityPropertyEntryPrototype), proto); }
-    }
-
-    public class HealthPercentIconPrototype : Prototype
-    {
-        public ulong Color;
-        public int HealthPercent;
-        public ulong Icon;
-        public ulong Descriptor;
-        public ulong IconHiRes;
-        public HealthPercentIconPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(HealthPercentIconPrototype), proto); }
-    }
-
-    public class UIWidgetHealthPercentEntryPrototype : UIWidgetEntityIconsEntryPrototype
-    {
-        public bool ColorBasedOnHealth;
-        public HealthPercentIconPrototype[] HealthDisplayTable;
-        public UIWidgetHealthPercentEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(UIWidgetHealthPercentEntryPrototype), proto); }
-    }
-
-    public class UIWidgetEntityIconsPrototype : MetaGameDataPrototype
-    {
-        public UIWidgetEntityIconsEntryPrototype[] Entities;
-        public UIWidgetEntityIconsPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(UIWidgetEntityIconsPrototype), proto); }
-    }
-
-    public class UIWidgetMissionTextPrototype : MetaGameDataPrototype
-    {
-        public UIWidgetMissionTextPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(UIWidgetMissionTextPrototype), proto); }
-    }
-
-    public class UIWidgetButtonPrototype : MetaGameDataPrototype
-    {
-        public UIWidgetButtonPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(UIWidgetButtonPrototype), proto); }
-    }
-
-    public class UIWidgetReadyCheckPrototype : MetaGameDataPrototype
-    {
-        public UIWidgetReadyCheckPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(UIWidgetReadyCheckPrototype), proto); }
-    }
-
-    public class UIWidgetPanelPrototype : Prototype
-    {
-        public ulong[] Widgets;
-        public UIWidgetPanelPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(UIWidgetPanelPrototype), proto); }
-    }
-
-    public class UIWidgetTopPanelPrototype : UIWidgetPanelPrototype
-    {
-        public UIWidgetTopPanelPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(UIWidgetTopPanelPrototype), proto); }
-    }
-
-    public class LogoffPanelEntryPrototype : Prototype
-    {
-        public ulong Description;
-        public ulong GameModeType;
-        public ulong Header;
-        public ulong Image;
-        public int Priority;
-        public ulong Title;
-        public LogoffPanelEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(LogoffPanelEntryPrototype), proto); }
-    }
-
-    public class StoreCategoryPrototype : Prototype
-    {
-        public ulong Icon;
-        public ulong Identifier;
-        public ulong Label;
-        public StoreCategoryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(StoreCategoryPrototype), proto); }
-    }
-
-    public class ReputationLevelDisplayInfoPrototype : Prototype
-    {
-        public ulong DisplayName;
-        public ulong IconPath;
-        public int ReputationLevel;
-        public ReputationLevelDisplayInfoPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ReputationLevelDisplayInfoPrototype), proto); }
-    }
-
-    public class ReputationDisplayInfoPrototype : Prototype
-    {
-        public ulong DisplayName;
-        public ReputationLevelDisplayInfoPrototype ReputationLevels;
-        public ReputationDisplayInfoPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ReputationDisplayInfoPrototype), proto); }
-    }
-
-    public class UISystemLockPrototype : Prototype
-    {
-        public ulong GameNotification;
-        public ulong UISystem;
-        public int UnlockLevel;
-        public bool IsNewPlayerExperienceLocked;
-        public UISystemLockPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(UISystemLockPrototype), proto); }
-    }
-
-    public class IconPackagePrototype : Prototype
-    {
-        public ulong Package;
-        public bool AlwaysLoaded;
-        public bool EnableStreaming;
-        public bool HighPriorityStreaming;
-        public bool RemoveUnreferencedContent;
-        public IconPackagePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(IconPackagePrototype), proto); }
-    }
-
-    public class RadialMenuEntryPrototype : Prototype
-    {
-        public ulong ImageNormal;
-        public ulong ImageSelected;
-        public ulong LocalizedName;
-        public ulong Panel;
-        public RadialMenuEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RadialMenuEntryPrototype), proto); }
-    }
-
-    public class InputBindingPrototype : Prototype
-    {
-        public ulong DisplayText;
-        public ulong BindingName;
-        public ulong TutorialImage;
-        public ulong TutorialImageOverlayText;
-        public ulong ControlScheme;
-        public InputBindingPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(InputBindingPrototype), proto); }
-    }
-
-    public class PanelLoaderTabPrototype : Prototype
-    {
-        public ulong Context;
-        public ulong DisplayName;
-        public ulong Panel;
-        public bool ShowAvatarInfo;
-        public ulong SubTabs;
-        public ulong Icon;
-        public bool ShowLocalPlayerName;
-        public PanelLoaderTabPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(PanelLoaderTabPrototype), proto); }
-    }
-
-    public class PanelLoaderTabListPrototype : Prototype
-    {
-        public ulong[] Tabs;
-        public bool IsSubTabList;
-        public PanelLoaderTabListPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(PanelLoaderTabListPrototype), proto); }
-    }
-
-    public class ConsoleRadialMenuEntryPrototype : Prototype
-    {
-        public ulong DisplayName;
-        public ulong ImageNormal;
-        public ulong ImageSelected;
-        public ulong TabList;
-        public ConsoleRadialMenuEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ConsoleRadialMenuEntryPrototype), proto); }
-    }
-
+    [AssetEnum]
     public enum ButtonStyle
     {
         Default,
@@ -486,36 +35,23 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Terciary,
     }
 
-    public class DialogPrototype : Prototype
-    {
-        public ulong Text;
-        public ulong Button1;
-        public ulong Button2;
-        public ButtonStyle Button1Style;
-        public ButtonStyle Button2Style;
-        public DialogPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(DialogPrototype), proto); }
-    }
-
+    [AssetEnum]
     public enum TransitionUIType
     {
         Environment,
         HeroOwned,
     }
 
+    [AssetEnum]
     public enum TipTypeEnum
     {
         GenericGameplay,
         SpecificGameplay,
     }
 
-    public class MissionTrackerFilterPrototype : Prototype
-    {
-        public MissionTrackerFilterTypeEnum FilterType;
-        public ulong Label;
-        public bool DisplayByDefault;
-        public int DisplayOrder;
-        public MissionTrackerFilterPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(MissionTrackerFilterPrototype), proto); }
-    }
+    // There are two MissionTrackerFilterType (asset and symbolic), the symbolic one is the one that fits our data files,
+    // and it seems to be UI-related
+    //[AssetEnum((int)None)]
     public enum MissionTrackerFilterTypeEnum
     {
         None = -1,
@@ -525,42 +61,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Daily = 3,
         Challenge = 4,
     }
-    public class LocalizedTextAndImagePrototype : Prototype
+
+    [AssetEnum((int)StoryMissions)]
+    public enum UIMissionTrackerFilterTypeEnum
     {
-        public ulong Image;
-        public ulong Text;
-        public LocalizedTextAndImagePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(LocalizedTextAndImagePrototype), proto); }
+        AccountMissions = 0,
+        Achievements = 1,
+        GlobalEventMissions = 2,
+        InfluenceMissions = 3,
+        LegendaryQuests = 4,
+        LoreMissions = 5,
+        RegionEventMissions = 6,
+        SharedQuests = 7,
+        StoryMissions = 8,
     }
 
-    public class TextStylePrototype : Prototype
-    {
-        public bool Bold;
-        public ulong Color;
-        public ulong Tag;
-        public bool Underline;
-        public int FontSize;
-        public ulong Alignment;
-        public bool Hidden;
-        public int FontSizeConsole;
-        public TextStylePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(TextStylePrototype), proto); }
-    }
-
-    public class UINotificationPrototype : Prototype
-    {
-        public UINotificationPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(UINotificationPrototype), proto); }
-    }
-
-
-    public class BannerMessagePrototype : UINotificationPrototype
-    {
-        public ulong BannerText;
-        public int TimeToLiveMS;
-        public BannerMessageStyle MessageStyle;
-        public bool DoNotQueue;
-        public ulong TextStyle;
-        public bool ShowImmediately;
-        public BannerMessagePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(BannerMessagePrototype), proto); }
-    }
+    [AssetEnum]
     public enum BannerMessageStyle
     {
         Standard = 0,
@@ -570,30 +86,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         TimeBonusSilver = 4,
         TimeBonusGold = 5,
     }
-    public class GameNotificationPrototype : UINotificationPrototype
-    {
-        public ulong BannerText;
-        public GameNotificationType GameNotificationType;
-        public ulong IconPath;
-        public ulong TooltipText;
-        public bool PlayAudio;
-        public BannerMessageType BannerType;
-        public bool FlashContinuously;
-        public bool StackNotifications;
-        public bool ShowTimer;
-        public bool ShowScore;
-        public ulong TooltipStyle;
-        public ulong TooltipFont;
-        public ulong DisplayText;
-        public int MinimizeTimeDelayMS;
-        public int DurationMS;
-        public bool ShowAnimatedCircle;
-        public bool Unique;
-        public ulong[] OnCreateRemoveNotifications;
-        public bool RemoveOnRegionChange;
-        public bool ShowOnSystemLock;
-        public GameNotificationPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(GameNotificationPrototype), proto); }
-    }
+
+    [AssetEnum]
     public enum BannerMessageType
     {
         Default = 0,
@@ -624,35 +118,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         WaypointError = 27,
     }
 
-    public class StoryNotificationPrototype : UINotificationPrototype
-    {
-        public ulong DisplayText;
-        public int TimeToLiveMS;
-        public ulong SpeakingEntity;
-        public ulong VOTrigger;
-        public StoryNotificationPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(StoryNotificationPrototype), proto); }
-    }
-
-    public class VOStoryNotificationPrototype : Prototype
-    {
-        public VOEventType VOEventType;
-        public StoryNotificationPrototype StoryNotification;
-        public VOStoryNotificationPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(VOStoryNotificationPrototype), proto); }
-    }
+    [AssetEnum]
     public enum VOEventType
     {
         Spawned = 1,
         Aggro = 2,
     }
-    public class ConsoleHUDNotificationPrototype : Prototype
-    {
-        public ulong DisplayName;
-        public int DurationMS;
-        public ConsoleHUDNotificationType NotificationType;
-        public ulong OpensPanel;
-        public ulong PanelContext;
-        public ConsoleHUDNotificationPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ConsoleHUDNotificationPrototype), proto); }
-    }
+
+    [AssetEnum]
     public enum ConsoleHUDNotificationType
     {
         NewPower = 1,
@@ -669,80 +142,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         OmegaWeekAvailable = 12,
         GlobalEventAvailable = 13,
     }
-    public class HUDTutorialPrototype : UINotificationPrototype
-    {
-        public ulong Description;
-        public int DisplayDurationMS;
-        public ulong Image;
-        public ulong ImageOverlayText;
-        public ulong Title;
-        public ulong[] HighlightAvatars;
-        public ulong[] HighlightPowers;
-        public bool AllowMovement;
-        public bool AllowPowerUsage;
-        public bool AllowTakingDamage;
-        public bool CanDismiss;
-        public bool HighlightFirstEmptyPowerSlot;
-        public bool HighlightUpgradeablePowers;
-        public bool HighlightUnusedPowers;
-        public bool HighlightUnequippedItem;
-        public bool CloseOnRegionLeave;
-        public ulong ImageFromCommand;
-        public ulong DescriptionGamepad;
-        public ulong DescriptionNoBindings;
-        public ulong ImageFromCommandGamepad;
-        public ulong[] HighlightTeamUps;
-        public bool SkipIfOnConsole;
-        public bool SkipIfOnPC;
-        public bool SkipIfUsingGamepad;
-        public bool SkipIfUsingKeyboardMouse;
-        public float ScreenPositionConsoleX;
-        public float ScreenPositionConsoleY;
-        public float ScreenPositionX;
-        public float ScreenPositionY;
-        public int FlashDelayMS;
-        public bool ShowOncePerAccount;
-        public HUDTutorialPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(HUDTutorialPrototype), proto); }
-    }
 
-    public class SessionImagePrototype : Prototype
-    {
-        public ulong SessionImageAsset;
-        public SessionImagePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(SessionImagePrototype), proto); }
-    }
-
-    public class CurrencyDisplayPrototype : Prototype
-    {
-        public ulong DisplayName;
-        public ulong DisplayColor;
-        public ulong IconPath;
-        public ulong PropertyValueToDisplay;
-        public ulong TooltipText;
-        public bool UseGsBalance;
-        public ulong CurrencyToDisplay;
-        public ulong IconPathHiRes;
-        public sbyte CategoryIndex;
-        public ulong CategoryName;
-        public bool HideIfOnConsole;
-        public bool HideIfOnPC;
-        public CurrencyDisplayPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(CurrencyDisplayPrototype), proto); }
-    }
-
-    public class FullscreenMoviePrototype : Prototype
-    {
-        public ulong MovieName;
-        public bool Skippable;
-        public MovieType MovieType;
-        public bool ExitGameAfterPlay;
-        public ulong MovieTitle;
-        public ulong Banter;
-        public ulong YouTubeVideoID;
-        public bool YouTubeControlsEnabled;
-        public ulong StreamingMovieNameHQ;
-        public ulong StreamingMovieNameLQ;
-        public ulong StreamingMovieNameMQ;
-        public FullscreenMoviePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(FullscreenMoviePrototype), proto); }
-    }
+    [AssetEnum]
     public enum MovieType
     {
         None = 0,
@@ -751,16 +152,565 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Cinematic = 3,
     }
 
+    #endregion
+
+    #region Resource UI prototypes
+
+    public class UIPrototype : Prototype, IBinaryResource
+    {
+        public UIPanelPrototype[] UIPanels { get; private set; }
+
+        public void Deserialize(BinaryReader reader)
+        {
+            UIPanels = new UIPanelPrototype[reader.ReadUInt32()];
+            for (int i = 0; i < UIPanels.Length; i++)
+                UIPanels[i] = UIPanelPrototype.ReadFromBinaryReader(reader);
+        }
+    }
+
+    public class UIPanelPrototype : Prototype
+    {
+        public string PanelName { get; private set; }
+        public string TargetName { get; private set; }
+        public PanelScaleMode ScaleMode { get; private set; }
+        public UIPanelPrototype Children { get; private set; }
+        public string WidgetClass { get; private set; }
+        public string SwfName { get; private set; }
+        public byte OpenOnStart { get; private set; }
+        public byte VisibilityToggleable { get; private set; }
+        public byte CanClickThrough { get; private set; }
+        public byte StaticPosition { get; private set; }
+        public byte EntityInteractPanel { get; private set; }
+        public byte UseNewPlacementSystem { get; private set; }
+        public byte KeepLoaded { get; private set; }
+
+        public static UIPanelPrototype ReadFromBinaryReader(BinaryReader reader)
+        {
+            var hash = (ResourcePrototypeHash)reader.ReadUInt32();
+
+            switch (hash)
+            {
+                case ResourcePrototypeHash.StretchedPanelPrototype:
+                    return new StretchedPanelPrototype(reader);
+                case ResourcePrototypeHash.AnchoredPanelPrototype:
+                    return new AnchoredPanelPrototype(reader);
+                case ResourcePrototypeHash.None:
+                    return null;
+                default:    // Throw an exception if there's a hash for a type we didn't expect
+                    throw new NotImplementedException($"Unknown ResourcePrototypeHash {(uint)hash}.");
+            }
+        }
+
+        protected void ReadCommonPanelFields(BinaryReader reader)
+        {
+            PanelName = reader.ReadFixedString32();
+            TargetName = reader.ReadFixedString32();
+            ScaleMode = (PanelScaleMode)reader.ReadUInt32();
+            Children = ReadFromBinaryReader(reader);
+            WidgetClass = reader.ReadFixedString32();
+            SwfName = reader.ReadFixedString32();
+            OpenOnStart = reader.ReadByte();
+            VisibilityToggleable = reader.ReadByte();
+            CanClickThrough = reader.ReadByte();
+            StaticPosition = reader.ReadByte();
+            EntityInteractPanel = reader.ReadByte();
+            UseNewPlacementSystem = reader.ReadByte();
+            KeepLoaded = reader.ReadByte();
+        }
+    }
+
+    public class StretchedPanelPrototype : UIPanelPrototype
+    {
+        public Vector2 TopLeftPin { get; }
+        public string TL_X_TargetName { get; }
+        public string TL_Y_TargetName { get; }
+        public Vector2 BottomRightPin { get; }
+        public string BR_X_TargetName { get; }
+        public string BR_Y_TargetName { get; }
+
+        public StretchedPanelPrototype(BinaryReader reader)
+        {
+            TopLeftPin = reader.ReadVector2();
+            TL_X_TargetName = reader.ReadFixedString32();
+            TL_Y_TargetName = reader.ReadFixedString32();
+            BottomRightPin = reader.ReadVector2();
+            BR_X_TargetName = reader.ReadFixedString32();
+            BR_Y_TargetName = reader.ReadFixedString32();
+
+            ReadCommonPanelFields(reader);
+        }
+    }
+
+    public class AnchoredPanelPrototype : UIPanelPrototype
+    {
+        public Vector2 SourceAttachmentPin { get; }
+        public Vector2 TargetAttachmentPin { get; }
+        public Vector2 VirtualPixelOffset { get; }
+        public string PreferredLane { get; }
+        public Vector2 OuterEdgePin { get; }
+        public Vector2 NewSourceAttachmentPin { get; }
+
+        public AnchoredPanelPrototype(BinaryReader reader)
+        {
+            SourceAttachmentPin = reader.ReadVector2();
+            TargetAttachmentPin = reader.ReadVector2();
+            VirtualPixelOffset = reader.ReadVector2();
+            PreferredLane = reader.ReadFixedString32();
+            OuterEdgePin = reader.ReadVector2();
+            NewSourceAttachmentPin = reader.ReadVector2();
+
+            ReadCommonPanelFields(reader);
+        }
+    }
+
+    #endregion
+
+    public class UILocalizedInfoPrototype : Prototype
+    {
+        public LocaleStringId DisplayText { get; protected set; }
+        public LocaleStringId TooltipText { get; protected set; }
+        public PrototypeId TooltipStyle { get; protected set; }
+        public AssetId TooltipFont { get; protected set; }
+    }
+
+    public class UILocalizedStatInfoPrototype : UILocalizedInfoPrototype
+    {
+        public PrototypeId Stat { get; protected set; }
+        public int StatValue { get; protected set; }
+        public PrototypeId LevelUnlockTooltipStyle { get; protected set; }
+        public TooltipSectionPrototype[] TooltipSectionList { get; protected set; }
+    }
+
+    public class UICraftingTabLabelPrototype : UILocalizedInfoPrototype
+    {
+        public int SortOrder { get; protected set; }
+    }
+
+    public class InventoryUIDataPrototype : Prototype
+    {
+        public PrototypeId EmptySlotTooltip { get; protected set; }
+        public AssetId SlotBackgroundIcon { get; protected set; }
+        public LocaleStringId InventoryItemDisplayName { get; protected set; }
+        public bool HintSlots { get; protected set; }
+        public AssetId SlotBackgroundIconHiRes { get; protected set; }
+    }
+
+    public class OfferingInventoryUIDataPrototype : Prototype
+    {
+        public AssetId NotificationIcon { get; protected set; }
+        public LocaleStringId NotificationTooltip { get; protected set; }
+        public LocaleStringId OfferingDescription { get; protected set; }
+        public LocaleStringId OfferingTitle { get; protected set; }
+    }
+
+    public class TipEntryPrototype : Prototype
+    {
+        public LocaleStringId Entry { get; protected set; }
+        public int Weight { get; protected set; }
+        public bool SkipIfOnPC { get; protected set; }
+        public bool SkipIfOnPS4 { get; protected set; }
+        public bool SkipIfOnXBox { get; protected set; }
+    }
+
+    public class TipEntryCollectionPrototype : Prototype
+    {
+        public TipEntryPrototype[] TipEntries { get; protected set; }
+    }
+
+    public class GenericTipEntryCollectionPrototype : TipEntryCollectionPrototype
+    {
+    }
+
+    public class RegionTipEntryCollectionPrototype : TipEntryCollectionPrototype
+    {
+        public PrototypeId[] RegionBindings { get; protected set; }
+    }
+
+    public class AvatarTipEntryCollectionPrototype : TipEntryCollectionPrototype
+    {
+        public PrototypeId[] AvatarBindings { get; protected set; }
+    }
+
+    public class WeightedTipCategoryPrototype : Prototype
+    {
+        public TipTypeEnum TipType { get; protected set; }
+        public int Weight { get; protected set; }
+    }
+
+    public class TransitionUIPrototype : Prototype
+    {
+        public WeightedTipCategoryPrototype[] TipCategories { get; protected set; }
+        public TransitionUIType TransitionType { get; protected set; }
+        public int Weight { get; protected set; }
+    }
+
+    public class AvatarSynergyUIDataPrototype : Prototype
+    {
+        public LocaleStringId DisplayName { get; protected set; }
+        public AssetId IconPath { get; protected set; }
+        public PrototypeId SynergyActiveValue { get; protected set; }
+        public PrototypeId SynergyInactiveValue { get; protected set; }
+        public LocaleStringId TooltipTextForList { get; protected set; }
+        public AssetId IconPathHiRes { get; protected set; }
+    }
+
+    public class MetaGameDataPrototype : Prototype
+    {
+        public LocaleStringId Descriptor { get; protected set; }
+        public bool DisplayMissionName { get; protected set; }
+        public int SortPriority { get; protected set; }
+        public AssetId IconHeader { get; protected set; }
+        public int Justification { get; protected set; }
+        public AssetId WidgetMovieClipOverride { get; protected set; }
+        public AssetId IconHeaderHiRes { get; protected set; }
+    }
+
+    public class UIWidgetGenericFractionPrototype : MetaGameDataPrototype
+    {
+        public AssetId IconComplete { get; protected set; }
+        public AssetId IconIncomplete { get; protected set; }
+        public int IconSpacing { get; protected set; }
+        public AssetId IconCompleteHiRes { get; protected set; }
+        public AssetId IconIncompleteHiRes { get; protected set; }
+    }
+
+    public class UIWidgetEntityIconsEntryPrototype : Prototype
+    {
+        public EntityFilterPrototype Filter { get; protected set; }
+        public int Count { get; protected set; }
+        public UIWidgetEntityState TreatUnknownAs { get; protected set; }
+        public AssetId Icon { get; protected set; }
+        public PrototypeId Descriptor { get; protected set; }
+        public AssetId IconDead { get; protected set; }
+        public int IconSpacing { get; protected set; }
+        public AssetId IconHiRes { get; protected set; }
+        public AssetId IconDeadHiRes { get; protected set; }
+    }
+
+    public class UIWidgetEnrageEntryPrototype : UIWidgetEntityIconsEntryPrototype
+    {
+    }
+
+    public class WidgetPropertyEntryPrototype : Prototype
+    {
+        public AssetId Color { get; protected set; }
+        public LocaleStringId Descriptor { get; protected set; }
+        public AssetId Icon { get; protected set; }
+        public EvalPrototype PropertyEval { get; protected set; }
+        public AssetId IconHiRes { get; protected set; }
+    }
+
+    public class UIWidgetEntityPropertyEntryPrototype : UIWidgetEntityIconsEntryPrototype
+    {
+        public WidgetPropertyEntryPrototype[] PropertyEntryTable { get; protected set; }
+        public EvalPrototype PropertyEval { get; protected set; }
+    }
+
+    public class HealthPercentIconPrototype : Prototype
+    {
+        public AssetId Color { get; protected set; }
+        public int HealthPercent { get; protected set; }
+        public AssetId Icon { get; protected set; }
+        public PrototypeId Descriptor { get; protected set; }
+        public AssetId IconHiRes { get; protected set; }
+    }
+
+    public class UIWidgetHealthPercentEntryPrototype : UIWidgetEntityIconsEntryPrototype
+    {
+        public bool ColorBasedOnHealth { get; protected set; }
+        public HealthPercentIconPrototype[] HealthDisplayTable { get; protected set; }
+    }
+
+    public class UIWidgetEntityIconsPrototype : MetaGameDataPrototype
+    {
+        public UIWidgetEntityIconsEntryPrototype[] Entities { get; protected set; }
+    }
+
+    public class UIWidgetMissionTextPrototype : MetaGameDataPrototype
+    {
+    }
+
+    public class UIWidgetButtonPrototype : MetaGameDataPrototype
+    {
+    }
+
+    public class UIWidgetReadyCheckPrototype : MetaGameDataPrototype
+    {
+    }
+
+    public class UIWidgetPanelPrototype : Prototype
+    {
+        public PrototypeId[] Widgets { get; protected set; }
+    }
+
+    public class UIWidgetTopPanelPrototype : UIWidgetPanelPrototype
+    {
+    }
+
+    public class LogoffPanelEntryPrototype : Prototype
+    {
+        public LocaleStringId Description { get; protected set; }
+        public PrototypeId GameModeType { get; protected set; }
+        public LocaleStringId Header { get; protected set; }
+        public AssetId Image { get; protected set; }
+        public int Priority { get; protected set; }
+        public LocaleStringId Title { get; protected set; }
+    }
+
+    public class StoreCategoryPrototype : Prototype
+    {
+        public AssetId Icon { get; protected set; }
+        public AssetId Identifier { get; protected set; }
+        public PrototypeId Label { get; protected set; }
+    }
+
+    public class ReputationLevelDisplayInfoPrototype : Prototype
+    {
+        public LocaleStringId DisplayName { get; protected set; }
+        public AssetId IconPath { get; protected set; }
+        public int ReputationLevel { get; protected set; }
+    }
+
+    public class ReputationDisplayInfoPrototype : Prototype
+    {
+        public LocaleStringId DisplayName { get; protected set; }
+        public PrototypeId[] ReputationLevels { get; protected set; }     // VectorPrototypeRefPtr ReputationLevelDisplayInfoPrototype
+    }
+
+    public class UISystemLockPrototype : Prototype
+    {
+        public PrototypeId GameNotification { get; protected set; }
+        public AssetId UISystem { get; protected set; }
+        public int UnlockLevel { get; protected set; }
+        public bool IsNewPlayerExperienceLocked { get; protected set; }
+    }
+
+    public class IconPackagePrototype : Prototype
+    {
+        public AssetId Package { get; protected set; }
+        public bool AlwaysLoaded { get; protected set; }
+        public bool EnableStreaming { get; protected set; }
+        public bool HighPriorityStreaming { get; protected set; }
+        public bool RemoveUnreferencedContent { get; protected set; }
+    }
+
+    public class RadialMenuEntryPrototype : Prototype
+    {
+        public AssetId ImageNormal { get; protected set; }
+        public AssetId ImageSelected { get; protected set; }
+        public PrototypeId LocalizedName { get; protected set; }
+        public AssetId Panel { get; protected set; }
+    }
+
+    public class InputBindingPrototype : Prototype
+    {
+        public PrototypeId DisplayText { get; protected set; }
+        public LocaleStringId BindingName { get; protected set; }
+        public AssetId TutorialImage { get; protected set; }
+        public LocaleStringId TutorialImageOverlayText { get; protected set; }
+        public AssetId ControlScheme { get; protected set; }
+    }
+
+    public class PanelLoaderTabPrototype : Prototype
+    {
+        public LocaleStringId Context { get; protected set; }
+        public PrototypeId DisplayName { get; protected set; }
+        public AssetId Panel { get; protected set; }
+        public bool ShowAvatarInfo { get; protected set; }
+        public PrototypeId SubTabs { get; protected set; }
+        public AssetId Icon { get; protected set; }
+        public bool ShowLocalPlayerName { get; protected set; }
+    }
+
+    public class PanelLoaderTabListPrototype : Prototype
+    {
+        public PrototypeId[] Tabs { get; protected set; }
+        public bool IsSubTabList { get; protected set; }
+    }
+
+    public class ConsoleRadialMenuEntryPrototype : Prototype
+    {
+        public PrototypeId DisplayName { get; protected set; }
+        public AssetId ImageNormal { get; protected set; }
+        public AssetId ImageSelected { get; protected set; }
+        public PrototypeId TabList { get; protected set; }
+    }
+
+    public class DialogPrototype : Prototype
+    {
+        public LocaleStringId Text { get; protected set; }
+        public LocaleStringId Button1 { get; protected set; }
+        public LocaleStringId Button2 { get; protected set; }
+        public ButtonStyle Button1Style { get; protected set; }
+        public ButtonStyle Button2Style { get; protected set; }
+    }
+
+    public class MissionTrackerFilterPrototype : Prototype
+    {
+        public UIMissionTrackerFilterTypeEnum FilterType { get; protected set; }
+        public LocaleStringId Label { get; protected set; }
+        public bool DisplayByDefault { get; protected set; }
+        public int DisplayOrder { get; protected set; }
+    }
+
+    public class LocalizedTextAndImagePrototype : Prototype
+    {
+        public AssetId Image { get; protected set; }
+        public LocaleStringId Text { get; protected set; }
+    }
+
+    public class TextStylePrototype : Prototype
+    {
+        public bool Bold { get; protected set; }
+        public AssetId Color { get; protected set; }
+        public LocaleStringId Tag { get; protected set; }
+        public bool Underline { get; protected set; }
+        public int FontSize { get; protected set; }
+        public AssetId Alignment { get; protected set; }
+        public bool Hidden { get; protected set; }
+        public int FontSizeConsole { get; protected set; }
+    }
+
+    public class UINotificationPrototype : Prototype
+    {
+    }
+
+    public class BannerMessagePrototype : UINotificationPrototype
+    {
+        public LocaleStringId BannerText { get; protected set; }
+        public int TimeToLiveMS { get; protected set; }
+        public BannerMessageStyle MessageStyle { get; protected set; }
+        public bool DoNotQueue { get; protected set; }
+        public PrototypeId TextStyle { get; protected set; }
+        public bool ShowImmediately { get; protected set; }
+    }
+
+    public class GameNotificationPrototype : UINotificationPrototype
+    {
+        public LocaleStringId BannerText { get; protected set; }
+        public GameNotificationType GameNotificationType { get; protected set; }
+        public AssetId IconPath { get; protected set; }
+        public LocaleStringId TooltipText { get; protected set; }
+        public bool PlayAudio { get; protected set; }
+        public BannerMessageType BannerType { get; protected set; }
+        public bool FlashContinuously { get; protected set; }
+        public bool StackNotifications { get; protected set; }
+        public bool ShowTimer { get; protected set; }
+        public bool ShowScore { get; protected set; }
+        public PrototypeId TooltipStyle { get; protected set; }
+        public AssetId TooltipFont { get; protected set; }
+        public LocaleStringId DisplayText { get; protected set; }
+        public int MinimizeTimeDelayMS { get; protected set; }
+        public int DurationMS { get; protected set; }
+        public bool ShowAnimatedCircle { get; protected set; }
+        public bool Unique { get; protected set; }
+        public PrototypeId[] OnCreateRemoveNotifications { get; protected set; }
+        public bool RemoveOnRegionChange { get; protected set; }
+        public bool ShowOnSystemLock { get; protected set; }
+    }
+
+    public class StoryNotificationPrototype : UINotificationPrototype
+    {
+        public LocaleStringId DisplayText { get; protected set; }
+        public int TimeToLiveMS { get; protected set; }
+        public PrototypeId SpeakingEntity { get; protected set; }
+        public AssetId VOTrigger { get; protected set; }
+    }
+
+    public class VOStoryNotificationPrototype : Prototype
+    {
+        public VOEventType VOEventType { get; protected set; }
+        public StoryNotificationPrototype StoryNotification { get; protected set; }
+    }
+
+    public class ConsoleHUDNotificationPrototype : Prototype
+    {
+        public PrototypeId DisplayName { get; protected set; }
+        public int DurationMS { get; protected set; }
+        public ConsoleHUDNotificationType NotificationType { get; protected set; }
+        public AssetId OpensPanel { get; protected set; }
+        public LocaleStringId PanelContext { get; protected set; }
+    }
+
+    public class HUDTutorialPrototype : UINotificationPrototype
+    {
+        public LocaleStringId Description { get; protected set; }
+        public int DisplayDurationMS { get; protected set; }
+        public AssetId Image { get; protected set; }
+        public LocaleStringId ImageOverlayText { get; protected set; }
+        public LocaleStringId Title { get; protected set; }
+        public PrototypeId[] HighlightAvatars { get; protected set; }
+        public PrototypeId[] HighlightPowers { get; protected set; }
+        public bool AllowMovement { get; protected set; }
+        public bool AllowPowerUsage { get; protected set; }
+        public bool AllowTakingDamage { get; protected set; }
+        public bool CanDismiss { get; protected set; }
+        public bool HighlightFirstEmptyPowerSlot { get; protected set; }
+        public bool HighlightUpgradeablePowers { get; protected set; }
+        public bool HighlightUnusedPowers { get; protected set; }
+        public bool HighlightUnequippedItem { get; protected set; }
+        public bool CloseOnRegionLeave { get; protected set; }
+        public LocaleStringId ImageFromCommand { get; protected set; }
+        public LocaleStringId DescriptionGamepad { get; protected set; }
+        public LocaleStringId DescriptionNoBindings { get; protected set; }
+        public LocaleStringId ImageFromCommandGamepad { get; protected set; }
+        public PrototypeId[] HighlightTeamUps { get; protected set; }
+        public bool SkipIfOnConsole { get; protected set; }
+        public bool SkipIfOnPC { get; protected set; }
+        public bool SkipIfUsingGamepad { get; protected set; }
+        public bool SkipIfUsingKeyboardMouse { get; protected set; }
+        public float ScreenPositionConsoleX { get; protected set; }
+        public float ScreenPositionConsoleY { get; protected set; }
+        public float ScreenPositionX { get; protected set; }
+        public float ScreenPositionY { get; protected set; }
+        public int FlashDelayMS { get; protected set; }
+        public bool ShowOncePerAccount { get; protected set; }
+    }
+
+    public class SessionImagePrototype : Prototype
+    {
+        public AssetId SessionImageAsset { get; protected set; }
+    }
+
+    public class CurrencyDisplayPrototype : Prototype
+    {
+        public LocaleStringId DisplayName { get; protected set; }
+        public AssetId DisplayColor { get; protected set; }
+        public AssetId IconPath { get; protected set; }
+        public PrototypeId PropertyValueToDisplay { get; protected set; }
+        public LocaleStringId TooltipText { get; protected set; }
+        public bool UseGsBalance { get; protected set; }
+        public PrototypeId CurrencyToDisplay { get; protected set; }
+        public AssetId IconPathHiRes { get; protected set; }
+        public sbyte CategoryIndex { get; protected set; }
+        public LocaleStringId CategoryName { get; protected set; }
+        public bool HideIfOnConsole { get; protected set; }
+        public bool HideIfOnPC { get; protected set; }
+    }
+
+    public class FullscreenMoviePrototype : Prototype
+    {
+        public AssetId MovieName { get; protected set; }
+        public bool Skippable { get; protected set; }
+        public MovieType MovieType { get; protected set; }
+        public bool ExitGameAfterPlay { get; protected set; }
+        public LocaleStringId MovieTitle { get; protected set; }
+        public AssetId Banter { get; protected set; }
+        public LocaleStringId YouTubeVideoID { get; protected set; }
+        public bool YouTubeControlsEnabled { get; protected set; }
+        public LocaleStringId StreamingMovieNameHQ { get; protected set; }
+        public LocaleStringId StreamingMovieNameLQ { get; protected set; }
+        public LocaleStringId StreamingMovieNameMQ { get; protected set; }
+    }
+
     public class LoadingScreenPrototype : Prototype
     {
-        public ulong LoadingScreenAsset;
-        public ulong Title;
-        public LoadingScreenPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(LoadingScreenPrototype), proto); }
+        public AssetId LoadingScreenAsset { get; protected set; }
+        public LocaleStringId Title { get; protected set; }
     }
+
     public class UICinematicsListPrototype : Prototype
     {
-        public ulong[] CinematicsListToPopulate;
-        public UICinematicsListPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(UICinematicsListPrototype), proto); }
+        public PrototypeId[] CinematicsListToPopulate { get; protected set; }
     }
 }
-

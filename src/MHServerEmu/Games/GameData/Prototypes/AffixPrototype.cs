@@ -1,20 +1,10 @@
-﻿
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class AffixPrototype : Prototype
-    {
-        public AffixPosition Position;
-        public ulong Properties;
-        public ulong DisplayNameText;
-        public int Weight;
-        public ulong[] TypeFilters;
-        public PropertyPickInRangeEntryPrototype[] PropertyEntries;
-        public ulong[] Keywords;
-        public DropRestrictionPrototype[] DropRestrictions;
-        public DuplicateHandlingBehavior DuplicateHandlingBehavior;
-        public AffixPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AffixPrototype), proto); }
-    }
+    #region Enums
 
+    [AssetEnum((int)Fail)]
     public enum DuplicateHandlingBehavior
     {
         Fail,
@@ -23,157 +13,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Append,
     }
 
-    public class AffixPowerModifierPrototype : AffixPrototype
-    {
-        public bool IsForSinglePowerOnly;
-        public EvalPrototype PowerBoostMax;
-        public EvalPrototype PowerGrantRankMax;
-        public ulong PowerKeywordFilter;
-        public EvalPrototype PowerUnlockLevelMax;
-        public EvalPrototype PowerUnlockLevelMin;
-        public EvalPrototype PowerBoostMin;
-        public EvalPrototype PowerGrantRankMin;
-        public ulong PowerProgTableTabRef;
-        public AffixPowerModifierPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AffixPowerModifierPrototype), proto); }
-    }
-
-    public class AffixRegionModifierPrototype : AffixPrototype
-    {
-        public ulong AffixTable;
-        public AffixRegionModifierPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AffixRegionModifierPrototype), proto); }
-    }
-
-    public class AffixRegionRestrictedPrototype : AffixPrototype
-    {
-        public ulong RequiredRegion;
-        public ulong[] RequiredRegionKeywords;
-        public AffixRegionRestrictedPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AffixRegionRestrictedPrototype), proto); }
-    }
-
-    public class AffixTeamUpPrototype : AffixPrototype
-    {
-        public bool IsAppliedToOwnerAvatar;
-        public AffixTeamUpPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AffixTeamUpPrototype), proto); }
-    }
-
-    public class AffixRunewordPrototype : AffixPrototype
-    {
-        public ulong Runeword;
-        public AffixRunewordPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AffixRunewordPrototype), proto); }
-    }
-
-    public class RunewordDefinitionEntryPrototype : Prototype
-    {
-        public ulong Rune;
-        public RunewordDefinitionEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RunewordDefinitionEntryPrototype), proto); }
-    }
-
-    public class RunewordDefinitionPrototype : Prototype
-    {
-        public RunewordDefinitionEntryPrototype[] Runes;
-        public RunewordDefinitionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RunewordDefinitionPrototype), proto); }
-    }
-
-    public class AffixEntryPrototype : Prototype
-    {
-        public ulong Affix;
-        public ulong Power;
-        public ulong Avatar;
-        public AffixEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AffixEntryPrototype), proto); }
-    }
-
-    public class LeveledAffixEntryPrototype : AffixEntryPrototype
-    {
-        public int LevelRequired;
-        public ulong LockedDescriptionText;
-        public LeveledAffixEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(LeveledAffixEntryPrototype), proto); }
-    }
-
-    public class AffixDisplaySlotPrototype : Prototype
-    {
-        public ulong[] AffixKeywords;
-        public ulong DisplayText;
-        public AffixDisplaySlotPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AffixDisplaySlotPrototype), proto); }
-    }
-
-    public class ModPrototype : Prototype
-    {
-        public ulong TooltipTitle;
-        public ulong UIIcon;
-        public ulong TooltipDescription;
-        public ulong Properties;
-        public ulong[] PassivePowers;
-        public ulong Type;
-        public int RanksMax;
-        public ulong RankCostCurve;
-        public ulong TooltipTemplateCurrentRank;
-        public EvalPrototype[] EvalOnCreate;
-        public ulong TooltipTemplateNextRank;
-        public PropertySetEntryPrototype[] PropertiesForTooltips;
-        public ulong UIIconHiRes;
-        public ModPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ModPrototype), proto); }
-    }
-
-    public class ModTypePrototype : Prototype
-    {
-        public ulong AggregateProperty;
-        public ulong TempProperty;
-        public ulong BaseProperty;
-        public ulong CurrencyIndexProperty;
-        public ulong CurrencyCurve;
-        public bool UseCurrencyIndexAsValue;
-        public ModTypePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ModTypePrototype), proto); }
-    }
-
-    public class ModGlobalsPrototype : Prototype
-    {
-        public ulong RankModType;
-        public ulong SkillModType;
-        public ulong EnemyBoostModType;
-        public ulong PvPUpgradeModType;
-        public ulong TalentModType;
-        public ulong OmegaBonusModType;
-        public ulong OmegaHowToTooltipTemplate;
-        public ulong InfinityHowToTooltipTemplate;
-        public ModGlobalsPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ModGlobalsPrototype), proto); }
-    }
-
-    public class SkillPrototype : ModPrototype
-    {
-        public ulong DamageBonusByRank;
-        public SkillPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(SkillPrototype), proto); }
-    }
-
-    public class TalentSetPrototype : ModPrototype
-    {
-        public ulong UITitle;
-        public ulong[] Talents;
-        public TalentSetPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(TalentSetPrototype), proto); }
-    }
-
-    public class TalentPrototype : ModPrototype
-    {
-        public TalentPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(TalentPrototype), proto); }
-    }
-
-    public class OmegaBonusPrototype : ModPrototype
-    {
-        public ulong[] Prerequisites;
-        public int UIHexIndex;
-        public OmegaBonusPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(OmegaBonusPrototype), proto); }
-    }
-
-    public class OmegaBonusSetPrototype : ModPrototype
-    {
-        public ulong UITitle;
-        public OmegaBonusPrototype OmegaBonuses;
-        public OmegaPageType UIPageType;
-        public bool Unlocked;
-        public ulong UIColor;
-        public ulong UIBackgroundImage;
-        public OmegaBonusSetPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(OmegaBonusSetPrototype), proto); }
-    }
-
+    [AssetEnum]
     public enum OmegaPageType
     {
         Psionics = 12,
@@ -192,26 +32,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Xenobiology = 6,
     }
 
-    public class InfinityGemBonusPrototype : ModPrototype
-    {
-        public ulong[] Prerequisites;
-        public InfinityGemBonusPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(InfinityGemBonusPrototype), proto); }
-    }
-
-    public class InfinityGemSetPrototype : ModPrototype
-    {
-        public ulong UITitle;
-        public InfinityGemBonusPrototype Bonuses;
-        public InfinityGem Gem;
-        public bool Unlocked;
-        public ulong UIColor;
-        public ulong UIBackgroundImage;
-        public ulong UIDescription;
-        public new ulong UIIcon;
-        public ulong UIIconRadialNormal;
-        public ulong UIIconRadialSelected;
-        public InfinityGemSetPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(InfinityGemSetPrototype), proto); }
-    }
+    [AssetEnum((int)None)]
     public enum InfinityGem
     {
         Soul = 3,
@@ -223,6 +44,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         None = 7,
     }
 
+    [AssetEnum((int)Popcorn)]
     public enum Rank
     {
         Popcorn,
@@ -235,17 +57,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         TeamUp,
     }
 
-    public class RankPrototype : ModPrototype
-    {
-        public Rank Rank;
-        public HealthBarType HealthBarType;
-        public LootRollModifierPrototype[] LootModifiers;
-        public LootDropEventType LootTableParam;
-        public OverheadInfoDisplayType OverheadInfoDisplayType;
-        public ulong[] Keywords;
-        public int BonusItemFindPoints;
-        public RankPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RankPrototype), proto); }
-    }
+    [AssetEnum((int)None)]
     public enum LootDropEventType
     {
         None = 0,
@@ -259,6 +71,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         OnHit = 8,
         OnDamagedForPctHealth = 9,
     }
+
+    [AssetEnum((int)Default)]
     public enum HealthBarType
     {
         Default = 0,
@@ -268,51 +82,226 @@ namespace MHServerEmu.Games.GameData.Prototypes
         None = 4,
     }
 
+    [AssetEnum((int)Default)]
     public enum OverheadInfoDisplayType
     {
         Default = 0,
         Always = 1,
         Never = 2,
     }
+
+    #endregion
+
+    public class AffixPrototype : Prototype
+    {
+        public AffixPosition Position { get; protected set; }
+        public PrototypePropertyCollection Properties { get; protected set; }
+        public LocaleStringId DisplayNameText { get; protected set; }
+        public int Weight { get; protected set; }
+        public PrototypeId[] TypeFilters { get; protected set; }
+        public PropertyPickInRangeEntryPrototype[] PropertyEntries { get; protected set; }
+        public AssetId[] Keywords { get; protected set; }
+        public DropRestrictionPrototype[] DropRestrictions { get; protected set; }
+        public DuplicateHandlingBehavior DuplicateHandlingBehavior { get; protected set; }
+    }
+
+    public class AffixPowerModifierPrototype : AffixPrototype
+    {
+        public bool IsForSinglePowerOnly { get; protected set; }
+        public EvalPrototype PowerBoostMax { get; protected set; }
+        public EvalPrototype PowerGrantRankMax { get; protected set; }
+        public PrototypeId PowerKeywordFilter { get; protected set; }
+        public EvalPrototype PowerUnlockLevelMax { get; protected set; }
+        public EvalPrototype PowerUnlockLevelMin { get; protected set; }
+        public EvalPrototype PowerBoostMin { get; protected set; }
+        public EvalPrototype PowerGrantRankMin { get; protected set; }
+        public PrototypeId PowerProgTableTabRef { get; protected set; }
+    }
+
+    public class AffixRegionModifierPrototype : AffixPrototype
+    {
+        public PrototypeId AffixTable { get; protected set; }
+    }
+
+    public class AffixRegionRestrictedPrototype : AffixPrototype
+    {
+        public PrototypeId RequiredRegion { get; protected set; }
+        public PrototypeId[] RequiredRegionKeywords { get; protected set; }
+    }
+
+    public class AffixTeamUpPrototype : AffixPrototype
+    {
+        public bool IsAppliedToOwnerAvatar { get; protected set; }
+    }
+
+    public class AffixRunewordPrototype : AffixPrototype
+    {
+        public PrototypeId Runeword { get; protected set; }
+    }
+
+    public class RunewordDefinitionEntryPrototype : Prototype
+    {
+        public PrototypeId Rune { get; protected set; }
+    }
+
+    public class RunewordDefinitionPrototype : Prototype
+    {
+        public RunewordDefinitionEntryPrototype[] Runes { get; protected set; }
+    }
+
+    public class AffixEntryPrototype : Prototype
+    {
+        public PrototypeId Affix { get; protected set; }
+        public PrototypeId Power { get; protected set; }
+        public PrototypeId Avatar { get; protected set; }
+    }
+
+    public class LeveledAffixEntryPrototype : AffixEntryPrototype
+    {
+        public int LevelRequired { get; protected set; }
+        public LocaleStringId LockedDescriptionText { get; protected set; }
+    }
+
+    public class AffixDisplaySlotPrototype : Prototype
+    {
+        public AssetId[] AffixKeywords { get; protected set; }
+        public LocaleStringId DisplayText { get; protected set; }
+    }
+
+    public class ModPrototype : Prototype
+    {
+        public LocaleStringId TooltipTitle { get; protected set; }
+        public AssetId UIIcon { get; protected set; }
+        public LocaleStringId TooltipDescription { get; protected set; }
+        public PrototypePropertyCollection Properties { get; protected set; }     // Property list, should this be a property collection?
+        public PrototypeId[] PassivePowers { get; protected set; }
+        public PrototypeId Type { get; protected set; }
+        public int RanksMax { get; protected set; }
+        public CurveId RankCostCurve { get; protected set; }
+        public PrototypeId TooltipTemplateCurrentRank { get; protected set; }
+        public EvalPrototype[] EvalOnCreate { get; protected set; }
+        public PrototypeId TooltipTemplateNextRank { get; protected set; }
+        public PropertySetEntryPrototype[] PropertiesForTooltips { get; protected set; }
+        public AssetId UIIconHiRes { get; protected set; }
+    }
+
+    public class ModTypePrototype : Prototype
+    {
+        public PrototypeId AggregateProperty { get; protected set; }
+        public PrototypeId TempProperty { get; protected set; }
+        public PrototypeId BaseProperty { get; protected set; }
+        public PrototypeId CurrencyIndexProperty { get; protected set; }
+        public CurveId CurrencyCurve { get; protected set; }
+        public bool UseCurrencyIndexAsValue { get; protected set; }
+    }
+
+    public class ModGlobalsPrototype : Prototype
+    {
+        public PrototypeId RankModType { get; protected set; }
+        public PrototypeId SkillModType { get; protected set; }
+        public PrototypeId EnemyBoostModType { get; protected set; }
+        public PrototypeId PvPUpgradeModType { get; protected set; }
+        public PrototypeId TalentModType { get; protected set; }
+        public PrototypeId OmegaBonusModType { get; protected set; }
+        public PrototypeId OmegaHowToTooltipTemplate { get; protected set; }
+        public PrototypeId InfinityHowToTooltipTemplate { get; protected set; }
+    }
+
+    public class SkillPrototype : ModPrototype
+    {
+        public CurveId DamageBonusByRank { get; protected set; }
+    }
+
+    public class TalentSetPrototype : ModPrototype
+    {
+        public LocaleStringId UITitle { get; protected set; }
+        public PrototypeId[] Talents { get; protected set; }
+    }
+
+    public class TalentPrototype : ModPrototype
+    {
+    }
+
+    public class OmegaBonusPrototype : ModPrototype
+    {
+        public PrototypeId[] Prerequisites { get; protected set; }
+        public int UIHexIndex { get; protected set; }
+    }
+
+    public class OmegaBonusSetPrototype : ModPrototype
+    {
+        public LocaleStringId UITitle { get; protected set; }
+        public PrototypeId[] OmegaBonuses { get; protected set; }
+        public OmegaPageType UIPageType { get; protected set; }
+        public bool Unlocked { get; protected set; }
+        public AssetId UIColor { get; protected set; }
+        public AssetId UIBackgroundImage { get; protected set; }
+    }
+
+    public class InfinityGemBonusPrototype : ModPrototype
+    {
+        public PrototypeId[] Prerequisites { get; protected set; }
+    }
+
+    public class InfinityGemSetPrototype : ModPrototype
+    {
+        public LocaleStringId UITitle { get; protected set; }
+        public PrototypeId[] Bonuses { get; protected set; }    // VectorPrototypeRefPtr InfinityGemBonusPrototype
+        public InfinityGem Gem { get; protected set; }
+        public bool Unlocked { get; protected set; }
+        public AssetId UIColor { get; protected set; }
+        public AssetId UIBackgroundImage { get; protected set; }
+        public LocaleStringId UIDescription { get; protected set; }
+        public new AssetId UIIcon { get; protected set; }
+        public AssetId UIIconRadialNormal { get; protected set; }
+        public AssetId UIIconRadialSelected { get; protected set; }
+    }
+
+    public class RankPrototype : ModPrototype
+    {
+        public Rank Rank { get; protected set; }
+        public HealthBarType HealthBarType { get; protected set; }
+        public LootRollModifierPrototype[] LootModifiers { get; protected set; }
+        public LootDropEventType LootTableParam { get; protected set; }
+        public OverheadInfoDisplayType OverheadInfoDisplayType { get; protected set; }
+        public PrototypeId[] Keywords { get; protected set; }
+        public int BonusItemFindPoints { get; protected set; }
+    }
+
     public class EnemyBoostSetPrototype : Prototype
     {
-        public ulong[] Modifiers;
-        public EnemyBoostSetPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EnemyBoostSetPrototype), proto); }
+        public PrototypeId[] Modifiers { get; protected set; }
     }
 
     public class EnemyBoostPrototype : ModPrototype
     {
-        public ulong ActivePower;
-        public bool ShowVisualFX;
-        public bool DisableForControlledAgents;
-        public bool CountsAsAffixSlot;
-        public EnemyBoostPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EnemyBoostPrototype), proto); }
+        public PrototypeId ActivePower { get; protected set; }
+        public bool ShowVisualFX { get; protected set; }
+        public bool DisableForControlledAgents { get; protected set; }
+        public bool CountsAsAffixSlot { get; protected set; }
     }
 
     public class AffixTableEntryPrototype : Prototype
     {
-        public ulong AffixTable;
-        public int ChancePct;
-        public AffixTableEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(AffixTableEntryPrototype), proto); }
+        public PrototypeId AffixTable { get; protected set; }
+        public int ChancePct { get; protected set; }
     }
 
     public class RankAffixEntryPrototype : Prototype
     {
-        public AffixTableEntryPrototype[] Affixes;
-        public ulong Rank;
-        public int Weight;
-        public RankAffixEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RankAffixEntryPrototype), proto); }
+        public AffixTableEntryPrototype[] Affixes { get; protected set; }
+        public PrototypeId Rank { get; protected set; }
+        public int Weight { get; protected set; }
     }
 
     public class RarityPrototype : Prototype
     {
-        public ulong DowngradeTo;
-        public ulong TextStyle;
-        public ulong Weight;
-        public ulong DisplayNameText;
-        public int BroadcastToPartyLevelMax;
-        public AffixEntryPrototype[] AffixesBuiltIn;
-        public int ItemLevelBonus;
-        public RarityPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(RarityPrototype), proto); }
+        public PrototypeId DowngradeTo { get; protected set; }
+        public PrototypeId TextStyle { get; protected set; }
+        public CurveId Weight { get; protected set; }
+        public LocaleStringId DisplayNameText { get; protected set; }
+        public int BroadcastToPartyLevelMax { get; protected set; }
+        public AffixEntryPrototype[] AffixesBuiltIn { get; protected set; }
+        public int ItemLevelBonus { get; protected set; }
     }
 }

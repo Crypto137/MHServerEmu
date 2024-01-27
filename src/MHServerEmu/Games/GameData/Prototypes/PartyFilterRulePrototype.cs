@@ -2,49 +2,42 @@
 {
     public class PartyFilterRulePrototype : Prototype
     {
-        public PartyFilterRulePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(PartyFilterRulePrototype), proto); }
     }
 
     public class PartyFilterRuleHasKeywordPrototype : PartyFilterRulePrototype
     {
-        public ulong Keyword;
-        public PartyFilterRuleHasKeywordPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(PartyFilterRuleHasKeywordPrototype), proto); }
+        public PrototypeId Keyword { get; protected set; }
     }
 
     public class PartyFilterRuleHasPrototypePrototype : PartyFilterRulePrototype
     {
-        public ulong Avatar;
-        public PartyFilterRuleHasPrototypePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(PartyFilterRuleHasPrototypePrototype), proto); }
+        public PrototypeId Avatar { get; protected set; }
     }
 
     public class PartyFilterRuleMemberOfTeamPrototype : PartyFilterRulePrototype
     {
-        public ulong Superteam;
-        public PartyFilterRuleMemberOfTeamPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(PartyFilterRuleMemberOfTeamPrototype), proto); }
+        public PrototypeId Superteam { get; protected set; }
     }
 
     public class PartyFilterRuleWearingCostumePrototype : PartyFilterRulePrototype
     {
-        public ulong Costume;
-        public PartyFilterRuleWearingCostumePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(PartyFilterRuleWearingCostumePrototype), proto); }
+        public PrototypeId Costume { get; protected set; }
     }
 
     public class PartyFilterPrototype : Prototype
     {
-        public bool AllowOutsiders;
-        public bool AllUniqueAvatars;
-        public DesignWorkflowState DesignState;
-        public int NumberRequired;
-        public PartyFilterRulePrototype[] Rules;
-        public PartyFilterPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(PartyFilterPrototype), proto); }
+        public bool AllowOutsiders { get; protected set; }
+        public bool AllUniqueAvatars { get; protected set; }
+        public DesignWorkflowState DesignState { get; protected set; }
+        public int NumberRequired { get; protected set; }
+        public PartyFilterRulePrototype[] Rules { get; protected set; }
     }
 
     public class PublicEventPrototype : Prototype
     {
-        public bool DefaultEnabled;
-        public ulong Name;
-        public ulong[] Teams;
-        public ulong PanelName;
-        public PublicEventPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(PublicEventPrototype), proto); }
+        public bool DefaultEnabled { get; protected set; }
+        public LocaleStringId Name { get; protected set; }
+        public PrototypeId[] Teams { get; protected set; }
+        public AssetId PanelName { get; protected set; }
     }
 }

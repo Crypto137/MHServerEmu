@@ -1,16 +1,11 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class HUDEntitySettingsPrototype : Prototype
-    {
-        public HUDEntityFloorEffect FloorEffect;
-        public HUDEntityOverheadIcon OverheadIcon;
-        public ulong MapIcon;
-        public ulong EdgeIcon;
+    #region Enums
 
-        public HUDEntitySettingsPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(HUDEntitySettingsPrototype), proto); }
-    }
-
-    public enum HUDEntityFloorEffect
+    [AssetEnum((int)None)]
+    public enum HUDEntityFloorEffect    // What is this? Appears only in UIMapInfoPrototype, and that doesn't have any fields defined
     {
         None = 0,
         Generic = 1,
@@ -18,7 +13,8 @@
         Rescue = 3,
     }
 
-    public enum HUDEntityOverheadIcon
+    [AssetEnum((int)None)]
+    public enum HUDEntityOverheadIcon   // UI/Types/InteractIndicatorType.type
     {
         None = 0,
         DiscoveryBestower = 1,
@@ -38,36 +34,7 @@
         StoryWarp = 15,
     }
 
-    public class UIMapInfoIconBehaviorPrototype : Prototype
-    {
-        public ulong IconPath;
-        public ulong IconPathHiRes;
-        public UIMapInfoIconBehaviorPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(UIMapInfoIconBehaviorPrototype), proto); }
-    }
-
-    public class UIMapInfoIconAppearancePrototype : Prototype
-    {
-        public ulong IconOnScreen;
-        public ulong IconOffScreen;
-        public UIMapInfoIconAppearancePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(UIMapInfoIconAppearancePrototype), proto); }
-    }
-
-    public class ObjectiveInfoPrototype : Prototype
-    {
-        public ulong EdgeColor;
-        public bool EdgeEnabled;
-        public bool EdgeOnlyInArea;
-        public int EdgeRange;
-        public bool FloorRingAnimation;
-        public bool MapEnabled;
-        public int MapRange;
-        public bool ShowToSummonerOnly;
-        public bool TrackAfterDiscovery;
-        public ObjectiveVisibility Visibility;
-
-        public ObjectiveInfoPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(ObjectiveInfoPrototype), proto); }
-    }
-
+    [AssetEnum]
     public enum ObjectiveVisibility
     {
         VisibleOnlyByMission,
@@ -76,17 +43,7 @@
         VisibleToParty,
     }
 
-    public class EntityFilterSettingsPrototype : Prototype
-    {
-        public EntityFilterPrototype EntityFilter;
-        public ScriptRoleKey ScriptRoleKey;
-        public TranslationPrototype[] NameList;
-        public HUDEntitySettingsPrototype HUDEntitySettingOverride;
-
-        public EntityFilterSettingsPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(EntityFilterSettingsPrototype), proto); }
-
-    }
-
+    [AssetEnum]
     public enum ScriptRoleKey
     {
         Invalid,
@@ -104,19 +61,53 @@
         HostileCombatant04,
     }
 
-    public class FormationTypePrototype : Prototype
+    #endregion
+
+    public class HUDEntitySettingsPrototype : Prototype
     {
-        public FormationFacing Facing;
-        public float Spacing;
-        public FormationTypePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(FormationTypePrototype), proto); }
+        public HUDEntityFloorEffect FloorEffect { get; protected set; }
+        public HUDEntityOverheadIcon OverheadIcon { get; protected set; }
+        public AssetId MapIcon { get; protected set; }
+        public AssetId EdgeIcon { get; protected set; }
     }
 
-    public enum FormationFacing
+    public class UIMapInfoIconBehaviorPrototype : Prototype
     {
-        None = 0,
-        FaceParent = 0,
-        FaceParentInverse = 1,
-        FaceOrigin = 2,
-        FaceOriginInverse = 3,
+        public AssetId IconPath { get; protected set; }
+        public AssetId IconPathHiRes { get; protected set; }
+    }
+
+    public class UIMapInfoIconAppearancePrototype : Prototype
+    {
+        public PrototypeId IconOnScreen { get; protected set; }
+        public PrototypeId IconOffScreen { get; protected set; }
+    }
+
+    public class ObjectiveInfoPrototype : Prototype
+    {
+        public AssetId EdgeColor { get; protected set; }
+        public bool EdgeEnabled { get; protected set; }
+        public bool EdgeOnlyInArea { get; protected set; }
+        public int EdgeRange { get; protected set; }
+        public bool FloorRingAnimation { get; protected set; }
+        public bool MapEnabled { get; protected set; }
+        public int MapRange { get; protected set; }
+        public bool ShowToSummonerOnly { get; protected set; }
+        public bool TrackAfterDiscovery { get; protected set; }
+        public ObjectiveVisibility Visibility { get; protected set; }
+    }
+
+    public class EntityFilterSettingsPrototype : Prototype
+    {
+        public EntityFilterPrototype EntityFilter { get; protected set; }
+        public ScriptRoleKeyEnum ScriptRoleKey { get; protected set; }
+        public TranslationPrototype[] NameList { get; protected set; }
+        public HUDEntitySettingsPrototype HUDEntitySettingOverride { get; protected set; }
+    }
+
+    public class FormationTypePrototype : Prototype
+    {
+        public FormationFacing Facing { get; protected set; }
+        public float Spacing { get; protected set; }
     }
 }

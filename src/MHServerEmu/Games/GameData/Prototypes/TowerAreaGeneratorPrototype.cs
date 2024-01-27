@@ -3,31 +3,28 @@
 
     public class TowerAreaGeneratorPrototype : GeneratorPrototype
     {
-        public int CellSize;
-        public int CellSpacing;
-        public new TowerAreaEntryPrototype[] Entries;
-        public TowerAreaGeneratorPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(TowerAreaGeneratorPrototype), proto); }
+        public int CellSize { get; protected set; }
+        public int CellSpacing { get; protected set; }
+        public TowerAreaEntryPrototype[] Entries { get; protected set; }
+
     }
 
     #region TowerAreaEntryPrototype
     public class TowerAreaEntryPrototype : Prototype
     {
-        public TowerAreaEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(TowerAreaEntryPrototype), proto); }
     }
 
     public class TowerAreaRandomSeqCellsEntryPrototype : TowerAreaEntryPrototype
     {
-        public int CellMax;
-        public int CellMin;
-        public CellSetEntryPrototype[] CellSets;
-        public TowerAreaRandomSeqCellsEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(TowerAreaRandomSeqCellsEntryPrototype), proto); }
+        public int CellMax { get; protected set; }
+        public int CellMin { get; protected set; }
+        public CellSetEntryPrototype[] CellSets { get; protected set; }
     }
 
     public class TowerAreaStaticCellEntryPrototype : TowerAreaEntryPrototype
     {
-        public ulong Cell;
-        public ulong Name;
-        public TowerAreaStaticCellEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(TowerAreaStaticCellEntryPrototype), proto); }
+        public AssetId Cell { get; protected set; }
+        public LocaleStringId Name { get; protected set; }
     }
     #endregion
 }

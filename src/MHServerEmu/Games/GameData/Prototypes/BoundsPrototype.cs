@@ -1,19 +1,10 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
-{
-    public class BoundsPrototype : Prototype
-    {
-        public BoundsCollisionType CollisionType;
-        public bool BlocksSpawns;
-        public bool ComplexPickingOnly;
-        public bool IgnoreCollisionWithAllies;
-        public bool BlocksLanding;
-        public bool BlocksLineOfSight;
-        public BoundsMovementPowerBlockType BlocksMovementPowers;
-        public bool IgnoreBlockingWithAvatars;
-        public bool BlockOnlyMyself;
-        public BoundsPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(BoundsPrototype), proto); }
-    }
+﻿using MHServerEmu.Games.GameData.Calligraphy;
 
+namespace MHServerEmu.Games.GameData.Prototypes
+{
+    #region Enums
+
+    [AssetEnum((int)None)]
     public enum BoundsCollisionType
     {
         None,
@@ -21,6 +12,7 @@
         Blocking,
     }
 
+    [AssetEnum((int)None)]
     public enum BoundsMovementPowerBlockType
     {
         None,
@@ -28,41 +20,52 @@
         All,
     }
 
+    #endregion
+
+    public class BoundsPrototype : Prototype
+    {
+        public BoundsCollisionType CollisionType { get; protected set; }
+        public bool BlocksSpawns { get; protected set; }
+        public bool ComplexPickingOnly { get; protected set; }
+        public bool IgnoreCollisionWithAllies { get; protected set; }
+        public bool BlocksLanding { get; protected set; }
+        public bool BlocksLineOfSight { get; protected set; }
+        public BoundsMovementPowerBlockType BlocksMovementPowers { get; protected set; }
+        public bool IgnoreBlockingWithAvatars { get; protected set; }
+        public bool BlockOnlyMyself { get; protected set; }
+    }
+
     public class CapsuleBoundsPrototype : BoundsPrototype
     {
-        public float Radius;
-        public float HeightFromCenter;
-        public CapsuleBoundsPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(CapsuleBoundsPrototype), proto); }
+        public float Radius { get; protected set; }
+        public float HeightFromCenter { get; protected set; }
     }
 
     public class SphereBoundsPrototype : BoundsPrototype
     {
-        public float Radius;
-        public SphereBoundsPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(SphereBoundsPrototype), proto); }
+        public float Radius { get; protected set; }
     }
 
     public class TriangleBoundsPrototype : BoundsPrototype
     {
-        public float AngleDegrees;
-        public float HeightFromCenter;
-        public float Length;
-        public TriangleBoundsPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(TriangleBoundsPrototype), proto); }
+        public float AngleDegrees { get; protected set; }
+        public float Length { get; protected set; }
+        public float HeightFromCenter { get; protected set; }
     }
+
     public class WedgeBoundsPrototype : BoundsPrototype
     {
-        public float AngleDegrees;
-        public float BaseWidth;
-        public float Length;
-        public float HeightFromCenter;
-        public WedgeBoundsPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(WedgeBoundsPrototype), proto); }
+        public float AngleDegrees { get; protected set; }
+        public float BaseWidth { get; protected set; }
+        public float Length { get; protected set; }
+        public float HeightFromCenter { get; protected set; }
     }
 
     public class BoxBoundsPrototype : BoundsPrototype
     {
-        public float Width;
-        public float Length;
-        public float Height;
-        public bool AxisAligned;
-        public BoxBoundsPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(BoxBoundsPrototype), proto); }
+        public float Width { get; protected set; }
+        public float Length { get; protected set; }
+        public float Height { get; protected set; }
+        public bool AxisAligned { get; protected set; }
     }
 }

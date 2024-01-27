@@ -1,32 +1,21 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class LeaderboardPrototype : Prototype
-    {
-        public ulong Category;
-        public int DepthOfStandings;
-        public ulong DescriptionBrief;
-        public DesignWorkflowState DesignState;
-        public LeaderboardDurationType Duration;
-        public int MaxArchivedInstances;
-        public ulong Name;
-        public bool Public;
-        public LeaderboardResetFrequency ResetFrequency;
-        public LeaderboardRewardEntryPrototype[] Rewards;
-        public LeaderboardScoringRulePrototype[] ScoringRules;
-        public LeaderboardType Type;
-        public ulong DescriptionExtended;
-        public LeaderboardRankingRule RankingRule;
-        public LeaderboardScoreDisplayFormat ScoreDisplayFormat;
-        public MetaLeaderboardEntryPrototype[] MetaLeaderboardEntries;
-        public LeaderboardPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(LeaderboardPrototype), proto); }
-    }
+    #region Enums
+
+    [AssetEnum((int)Invalid)]
     public enum LeaderboardScoreDisplayFormat
     {
+        Invalid = -1,
         Integer = 0,
         Time = 1,
     }
+
+    [AssetEnum((int)Invalid)]
     public enum LeaderboardDurationType
     {
+        Invalid = -1,
         Indefinite = 0,
         _10minutes = 1,
         _15minutes = 2,
@@ -42,8 +31,10 @@
         Month = 12,
     }
 
+    [AssetEnum((int)Invalid)]
     public enum LeaderboardResetFrequency
     {
+        Invalid = -1,
         NeverReset = 0,
         Every10minutes = 1,
         Every15minutes = 2,
@@ -58,39 +49,29 @@
         Weekly = 11,
         Monthly = 12,
     }
+
+    [AssetEnum((int)Invalid)]
     public enum LeaderboardType
     {
+        Invalid = -1,
         Player = 0,
         Avatar = 1,
         Guild = 2,
         MetaLeaderboard = 3,
     }
+
+    [AssetEnum((int)Invalid)]
     public enum LeaderboardRankingRule
     {
+        Invalid = -1,
         Ascending = 0,
         Descending = 1,
     }
 
-    public class LeaderboardCategoryPrototype : Prototype
-    {
-        public ulong Name;
-        public LeaderboardCategoryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(LeaderboardCategoryPrototype), proto); }
-    }
-
-    public class LeaderboardRewardEntryPrototype : Prototype
-    {
-        public ulong RewardItem;
-        public LeaderboardRewardEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(LeaderboardRewardEntryPrototype), proto); }
-    }
-
-    public class LeaderboardRewardEntryPercentilePrototype : LeaderboardRewardEntryPrototype
-    {
-        public LeaderboardPercentile PercentileBucket;
-        public LeaderboardRewardEntryPercentilePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(LeaderboardRewardEntryPercentilePrototype), proto); }
-    }
-
+    [AssetEnum((int)Invalid)]
     public enum LeaderboardPercentile
     {
+        Invalid = -1,
         Within10Percent = 0,
         Within20Percent = 1,
         Within30Percent = 2,
@@ -103,43 +84,72 @@
         Over90Percent = 9,
     }
 
+    #endregion
+
+    public class LeaderboardPrototype : Prototype
+    {
+        public PrototypeId Category { get; protected set; }
+        public int DepthOfStandings { get; protected set; }
+        public LocaleStringId DescriptionBrief { get; protected set; }
+        public DesignWorkflowState DesignState { get; protected set; }
+        public LeaderboardDurationType Duration { get; protected set; }
+        public int MaxArchivedInstances { get; protected set; }
+        public LocaleStringId Name { get; protected set; }
+        public bool Public { get; protected set; }
+        public LeaderboardResetFrequency ResetFrequency { get; protected set; }
+        public LeaderboardRewardEntryPrototype[] Rewards { get; protected set; }
+        public LeaderboardScoringRulePrototype[] ScoringRules { get; protected set; }
+        public LeaderboardType Type { get; protected set; }
+        public LocaleStringId DescriptionExtended { get; protected set; }
+        public LeaderboardRankingRule RankingRule { get; protected set; }
+        public LeaderboardScoreDisplayFormat ScoreDisplayFormat { get; protected set; }
+        public MetaLeaderboardEntryPrototype[] MetaLeaderboardEntries { get; protected set; }
+    }
+
+    public class LeaderboardCategoryPrototype : Prototype
+    {
+        public LocaleStringId Name { get; protected set; }
+    }
+
+    public class LeaderboardRewardEntryPrototype : Prototype
+    {
+        public PrototypeId RewardItem { get; protected set; }
+    }
+
+    public class LeaderboardRewardEntryPercentilePrototype : LeaderboardRewardEntryPrototype
+    {
+        public LeaderboardPercentile PercentileBucket { get; protected set; }
+    }
+
     public class LeaderboardRewardEntryPositionPrototype : LeaderboardRewardEntryPrototype
     {
-        public long Position;
-        public LeaderboardRewardEntryPositionPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(LeaderboardRewardEntryPositionPrototype), proto); }
+        public long Position { get; protected set; }
     }
 
     public class LeaderboardRewardEntryScorePrototype : LeaderboardRewardEntryPrototype
     {
-        public int Score;
-        public LeaderboardRewardEntryScorePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(LeaderboardRewardEntryScorePrototype), proto); }
+        public int Score { get; protected set; }
     }
 
     public class LeaderboardScoringRulePrototype : Prototype
     {
-        public ScoringEventPrototype Event;
-        public long GUID;
-        public LeaderboardScoringRulePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(LeaderboardScoringRulePrototype), proto); }
+        public ScoringEventPrototype Event { get; protected set; }
+        public long GUID { get; protected set; }
     }
 
     public class LeaderboardScoringRuleCurvePrototype : LeaderboardScoringRulePrototype
     {
-        public ulong ValueCurve;
-        public LeaderboardScoringRuleCurvePrototype(Prototype proto) : base(proto) { FillPrototype(typeof(LeaderboardScoringRuleCurvePrototype), proto); }
+        public CurveId ValueCurve { get; protected set; }
     }
 
     public class LeaderboardScoringRuleIntPrototype : LeaderboardScoringRulePrototype
     {
-        public int ValueInt;
-        public LeaderboardScoringRuleIntPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(LeaderboardScoringRuleIntPrototype), proto); }
+        public int ValueInt { get; protected set; }
     }
 
     public class MetaLeaderboardEntryPrototype : Prototype
     {
-        public ulong Leaderboard;
-        public LeaderboardRewardEntryPrototype[] Rewards;
-        public MetaLeaderboardEntryPrototype(Prototype proto) : base(proto) { FillPrototype(typeof(MetaLeaderboardEntryPrototype), proto); }
+        public PrototypeId Leaderboard { get; protected set; }
+        public LeaderboardRewardEntryPrototype[] Rewards { get; protected set; }
     }
-
-
 }
