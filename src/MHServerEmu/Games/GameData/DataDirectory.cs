@@ -307,6 +307,8 @@ namespace MHServerEmu.Games.GameData
 
         public T GetPrototype<T>(PrototypeId id) where T: Prototype
         {
+            // NOTE: the original client implementation appears to be thread-safe, while ours is not
+
             var record = GetPrototypeDataRefRecord(id);
             if (record == null) return default;
 
@@ -330,12 +332,13 @@ namespace MHServerEmu.Games.GameData
                 }
                 else throw new NotImplementedException($"Prototype deserialization for data origin {record.DataOrigin} is not supported.");
 
-                // Deserialize
+                // Deserialize and postprocess
                 using (MemoryStream ms = LoadPakDataFile(filePath, pakFileId))
                 {
                     Prototype prototype = DeserializePrototypeFromStream(ms, record);
                     record.Prototype = prototype;
                     prototype.DataRefRecord = record;
+                    prototype.PostProcess();
                 }
             }
 
@@ -562,7 +565,7 @@ namespace MHServerEmu.Games.GameData
         /// </summary>
         private Prototype DeserializePrototypeFromStream(Stream stream, PrototypeDataRefRecord record)
         {
-            // Get the appropriate serializer (TODO: CalligraphySerializer).
+            // Get the appropriate serializer
             // Note: the client uses a separate getSerializer() method here to achieve the same result.
             GameDataSerializer serializer = record.DataOrigin == DataOrigin.Calligraphy ? CalligraphySerializer : BinaryResourceSerializer;
 

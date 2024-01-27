@@ -44,14 +44,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId ParentDataRef { get; set; }
         public PrototypeDataRefRecord DataRefRecord { get; set; }
 
-        public Prototype() { }
-
         /// <summary>
         /// Returns <see langword="false"/> if this is a prototype in development.
         /// </summary>
         public virtual bool ApprovedForUse()
         {
             return true;
+        }
+
+        /// <summary>
+        /// Post-processes data contained in this <see cref="Prototype"/>.
+        /// </summary>
+        public virtual void PostProcess()
+        {
+            GameDatabase.PrototypeClassManager.PostProcessContainedPrototypes(this);
+            // Prototypes override this to post-process data
         }
 
         // These dynamic field management methods are part of the PrototypeClassManager in the client, but it doesn't really make sense so we moved them here.
