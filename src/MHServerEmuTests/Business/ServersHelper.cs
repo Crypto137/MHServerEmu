@@ -114,14 +114,16 @@ namespace MHServerEmuTests.Business
 
         private static bool StartAuthServer()
         {
-            if (AuthServer != null)
-                return false;
+            //  TODO fix new Auth
+            /*   if (AuthServer != null)
+                   return false;
 
-            AuthServer = new(FrontendServer.PlayerManagerService);
-            AuthServerThread = new(AuthServer.Run) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
-            AuthServerThread.Start();
+               AuthServer = new(FrontendServer.PlayerManagerService);
+               AuthServerThread = new(AuthServer.Run) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
+               AuthServerThread.Start();
 
-            return true;
+               return true;*/
+            return false;
         }
     }
 }
