@@ -227,49 +227,6 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return true;
         }
 
-        /// <summary>
-        /// Copies field values from a prototype with the specified data ref.
-        /// </summary>
-        private static bool CopyPrototypeDataRefFields(Prototype destPrototype, PrototypeId sourceDataRef)
-        {
-            // Check to make sure our reference is valid
-            if (sourceDataRef == PrototypeId.Invalid)
-                return Logger.WarnReturn(false, "Failed to copy prototype data ref fields: invalid source ref");
-
-            // Get source prototype and copy fields from it
-            Prototype sourcePrototype = GameDatabase.GetPrototype<Prototype>(sourceDataRef);
-            return CopyPrototypeFields(destPrototype, sourcePrototype);
-        }
-
-        /// <summary>
-        /// Copies field values from one prototype to another.
-        /// </summary>
-        private static bool CopyPrototypeFields(Prototype destPrototype, Prototype sourcePrototype)
-        {
-            // Get type information for both prototypes and make sure they are the same
-            Type destType = destPrototype.GetType();
-            Type sourceType = sourcePrototype.GetType();
-
-            if (sourceType != destType)
-                return Logger.WarnReturn(false, $"Failed to copy prototype fields: source type ({sourceType.Name}) does not match destination type ({destType.Name})");
-
-            foreach (var property in destType.GetProperties())
-            {
-                if (property.DeclaringType == typeof(Prototype)) continue;      // Skip base prototype properties
-
-                //Logger.Debug(property.Name);
-
-                // Set value if property is a value type
-                if (property.PropertyType.IsValueType)
-                    property.SetValue(destPrototype, property.GetValue(sourcePrototype));
-
-                // todo: reference type copy, deep copy
-                //Logger.Trace($"Reference type field copying not implemented, skipping...");
-            }
-
-            return true;
-        }
-
         #region List Mixin Management
 
         /// <summary>
@@ -389,7 +346,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         }
 
         /// <summary>
-        /// Creates a new prototype of the specified type and fills it with data from the specified source (either a default prototype or a prototype instance).
+        /// Creates a new <see cref="Prototype"/> of the specified <see cref="Type"/> and fills it with data from the specified source (either a default prototype or a prototype instance).
         /// </summary>
         private static Prototype AllocateDynamicPrototype(Type classType, PrototypeId defaults, Prototype instanceToCopy)
         {
