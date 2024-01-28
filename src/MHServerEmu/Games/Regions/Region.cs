@@ -610,12 +610,18 @@ namespace MHServerEmu.Games.Regions
         {
             startArea = null;
             if (target.Entity == 0) return false;
+            // fix for AvengerTower
+            if (StartArea.PrototypeId == AreaPrototypeId.AvengersTowerHubArea)
+            {
+                startArea = StartArea;
+                return true; 
+            }
             // fast search
             if (target.Area != 0)
             {
                 foreach (Area area in AreaList)
                 {
-                    if (target.Area == area.AreaPrototype.DataRef)
+                    if (target.Area == (PrototypeId)area.PrototypeId)
                     {
                         startArea = area;
                         return true;

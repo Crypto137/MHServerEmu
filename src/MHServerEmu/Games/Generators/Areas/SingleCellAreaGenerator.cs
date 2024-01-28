@@ -15,13 +15,8 @@ namespace MHServerEmu.Games.Generators.Areas
 
         public override bool Generate(GRandom random, RegionGenerator regionGenerator, List<PrototypeId> areas)
         {
-            if (Area.AreaPrototype.Generator is not SingleCellAreaGeneratorPrototype proto) return false;
-
-            AssetId cellAssetRef = proto.Cell;
-            if (cellAssetRef == 0) return false;
-
-            PrototypeId cellRef = GameDatabase.GetDataRefByAsset(cellAssetRef);
-            if (cellRef == 0) return false;
+            PrototypeId cellRef = GetCellPrototypeDataRef();
+            if (cellRef == 0) return false;            
 
             CellSettings cellSettings = new ()
             {
@@ -83,6 +78,9 @@ namespace MHServerEmu.Games.Generators.Areas
 
             PrototypeId cellRef = GameDatabase.GetDataRefByAsset(cellAssetRef);
             if (cellRef == 0) return 0;
+
+            // Fix for AvengersTowerHubArea
+            if (Area.PrototypeId == AreaPrototypeId.AvengersTowerHubArea) return (PrototypeId)9602664968964741817;
 
             return cellRef;
         }
