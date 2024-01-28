@@ -2,6 +2,7 @@
 using MHServerEmu.Games.Common;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Generators;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -13,6 +14,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId Cell { get; protected set; }
         public AssetId[] Alts { get; protected set; }
 
+        [DoNotCopy]
         public Point2 Offset { get => new(X, Y); }
 
         public PrototypeId PickCell(GRandom random, List<PrototypeId> list)
