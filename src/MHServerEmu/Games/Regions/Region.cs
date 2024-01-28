@@ -480,7 +480,7 @@ namespace MHServerEmu.Games.Regions
                 minDistance = Math.Min(distance, minDistance);
             }
 
-            if (minDistance != float.MaxValue)
+            if (minDistance == float.MaxValue)
                 Logger.Error("GetDistanceToClosestAreaBounds");
             return minDistance;
         }
