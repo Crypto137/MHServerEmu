@@ -1,4 +1,4 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy;
+﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.GameData.Prototypes

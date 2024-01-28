@@ -344,8 +344,8 @@ namespace MHServerEmu.Games.GameData
 
             // Make sure the requested type is valid for this prototype
             var typedPrototype = record.Prototype as T;
-              if (typedPrototype == null)
-                  Logger.Warn($"Failed to cast {record.ClassType.Name} to {typeof(T).Name}, file name {GameDatabase.GetPrototypeName(prototypeId)}");
+            if (typedPrototype == null)
+                Logger.Warn($"Failed to cast {record.ClassType.Name} to {typeof(T).Name}, file name {GameDatabase.GetPrototypeName(prototypeId)}");
 
             return typedPrototype;
         }

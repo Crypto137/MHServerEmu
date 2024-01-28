@@ -2,6 +2,7 @@
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.GameData.Prototypes;

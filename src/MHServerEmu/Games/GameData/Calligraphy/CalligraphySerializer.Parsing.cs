@@ -1,80 +1,50 @@
 ﻿using System.Globalization;
 using System.Reflection;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Calligraphy
 {
     public partial class CalligraphySerializer
     {
-        private static readonly Dictionary<Type, Func<FieldParserParams, bool>> ParserDict = new()
-        {
-            { typeof(bool),             ParseBool },
-            { typeof(sbyte),            ParseInt8 },
-            { typeof(short),            ParseInt16 },
-            { typeof(int),              ParseInt32 },
-            { typeof(long),             ParseInt64 },
-            { typeof(float),            ParseFloat32 },
-            { typeof(double),           ParseFloat64 },
-            { typeof(Enum),             ParseEnum },
-            { typeof(AssetId),          ParseDataRef },
-            { typeof(AssetTypeId),      ParseDataRef },
-            { typeof(CurveId),          ParseDataRef },
-            { typeof(PrototypeId),      ParseDataRef },
-            { typeof(LocaleStringId),   ParseDataRef },
-            { typeof(Prototype),        ParsePrototypePtr },
-            { typeof(PropertyId),       ParsePropertyId },
-            { typeof(bool[]),           ParseListBool },
-            { typeof(sbyte[]),          ParseListInt8 },
-            { typeof(short[]),          ParseListInt16 },
-            { typeof(int[]),            ParseListInt32 },
-            { typeof(long[]),           ParseListInt64 },
-            { typeof(float[]),          ParseListFloat32 },
-            { typeof(double[]),         ParseListFloat64 },
-            { typeof(Enum[]),           ParseListEnum },
-            { typeof(AssetId[]),        ParseListDataRef },
-            { typeof(AssetTypeId[]),    ParseListDataRef },
-            { typeof(CurveId[]),        ParseListDataRef },
-            { typeof(PrototypeId[]),    ParseListDataRef },
-            { typeof(LocaleStringId[]), ParseListDataRef },
-            { typeof(Prototype[]),      ParseListPrototypePtr },
-            { typeof(PrototypePropertyCollection), ParsePropertyList }      // should this be a property collection or some other type? used only in ModPrototype
-        };
-
         /// <summary>
-        /// Returns a parser for the specified prototype field type.
+        /// Returns a parser for the specified <see cref="PrototypeFieldType"/> enum value.
         /// </summary>
-        private static Func<FieldParserParams, bool> GetParser(Type prototypeFieldType)
+        private static Func<FieldParserParams, bool> GetParser(PrototypeFieldType prototypeFieldType)
         {
-            // Adjust type for enums and prototype pointers
-            if (prototypeFieldType.IsPrimitive == false)
+            switch (prototypeFieldType)
             {
-                if (prototypeFieldType.IsArray == false)
-                {
-                    // Check the type itself if it's a simple field
-                    if (prototypeFieldType.IsSubclassOf(typeof(Prototype)))
-                        prototypeFieldType = typeof(Prototype);
-                    else if (prototypeFieldType.IsDefined(typeof(AssetEnumAttribute)))
-                        prototypeFieldType = typeof(Enum);
-                }
-                else
-                {
-                    // Check element type instead if it's a list field
-                    var elementType = prototypeFieldType.GetElementType();
+                case PrototypeFieldType.Bool:                   return ParseBool;
+                case PrototypeFieldType.Int8:                   return ParseInt8;
+                case PrototypeFieldType.Int16:                  return ParseInt16;
+                case PrototypeFieldType.Int32:                  return ParseInt32;
+                case PrototypeFieldType.Int64:                  return ParseInt64;
+                case PrototypeFieldType.Float32:                return ParseFloat32;
+                case PrototypeFieldType.Float64:                return ParseFloat64;
+                case PrototypeFieldType.Enum:                   return ParseEnum;
+                case PrototypeFieldType.AssetRef:
+                case PrototypeFieldType.AssetTypeRef:
+                case PrototypeFieldType.CurveRef:
+                case PrototypeFieldType.PrototypeDataRef:
+                case PrototypeFieldType.LocaleStringId:         return ParseDataRef;
+                case PrototypeFieldType.PrototypePtr:           return ParsePrototypePtr;
+                case PrototypeFieldType.PropertyId:             return ParsePropertyId;
+                case PrototypeFieldType.ListBool:               return ParseListBool;
+                case PrototypeFieldType.ListInt8:               return ParseListInt8;
+                case PrototypeFieldType.ListInt16:              return ParseListInt16;
+                case PrototypeFieldType.ListInt32:              return ParseListInt32;
+                case PrototypeFieldType.ListInt64:              return ParseListInt64;
+                case PrototypeFieldType.ListFloat32:            return ParseListFloat32;
+                case PrototypeFieldType.ListFloat64:            return ParseListFloat64;
+                case PrototypeFieldType.ListEnum:               return ParseListEnum;
+                case PrototypeFieldType.ListAssetRef:
+                case PrototypeFieldType.ListAssetTypeRef:
+                case PrototypeFieldType.ListPrototypeDataRef:   return ParseListDataRef;
+                case PrototypeFieldType.ListPrototypePtr:       return ParseListPrototypePtr;
+                case PrototypeFieldType.PropertyCollection:     return ParsePropertyList;
 
-                    if (elementType.IsSubclassOf(typeof(Prototype)))
-                        prototypeFieldType = typeof(Prototype[]);
-                    else if (elementType.IsDefined(typeof(AssetEnumAttribute)))
-                        prototypeFieldType = typeof(Enum[]);
-                }
+                default: return Logger.WarnReturn<Func<FieldParserParams,bool>>(null, $"Failed to get parser for unsupported prototype field type {prototypeFieldType}");
             }
-
-            // Try to get a defined parser from our dict
-            if (ParserDict.TryGetValue(prototypeFieldType, out var parser))
-                return parser;
-
-            Logger.Warn($"Failed to get parser for unsupported prototype field type {prototypeFieldType.Name}");
-            return null;
         }
 
         /// <summary>

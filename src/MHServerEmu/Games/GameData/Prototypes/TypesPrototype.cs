@@ -7,8 +7,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int X { get; protected set; }
         public int Y { get; protected set; }
 
-
-
         public Vector2 ToIPoint2()
         {
             return new(X, Y);

@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -17,6 +18,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         StartForSlot = 0,
         EndForSlot = 1,
+        // Not found in client
+        InactiveForSlot = 2,
     }
 
     [AssetEnum((int)GenericError)]

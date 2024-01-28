@@ -1,4 +1,4 @@
-﻿namespace MHServerEmu.Games.GameData.Calligraphy
+﻿namespace MHServerEmu.Games.GameData.Calligraphy.Attributes
 {
     /// <summary>
     /// Indicates that an enum has a corresponding Calligraphy asset type.

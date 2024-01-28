@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.GameData.Calligraphy
@@ -172,7 +173,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 }
 
                 // Parse
-                var parser = GetParser(fieldInfo.PropertyType);
+                var parser = GetParser(classManager.GetPrototypeFieldTypeEnumValue(fieldInfo));
                 FieldParserParams @params = new(reader, fieldInfo, fieldOwnerPrototype, fieldOwnerBlueprint, prototypeName, blueprintMemberInfo);
                 
                 if (parser(@params) == false)
