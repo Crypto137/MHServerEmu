@@ -31,7 +31,8 @@ namespace MHServerEmu.Games.Generators.Areas
 
             while (!success && (--tries > 0))
             {
-                success = EstablishExternalConnections() 
+                success = InitializeContainer()
+                    && EstablishExternalConnections() 
                     && GenerateRandomInstanceLinks(random)
                     && CreateRequiredCells(random, regionGenerator, areas)
                     && GenerateRoads(random, proto.Roads);
