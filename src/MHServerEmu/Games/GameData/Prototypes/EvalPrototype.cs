@@ -1,4 +1,4 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy;
+﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -68,6 +68,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         ItemLink = 28,
         CouponAwards = 29,
         UnifiedStash = 30,
+        // Not found in client
+        AvatarRing = 31
     }
 
     #endregion

@@ -1,4 +1,4 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy;
+﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -44,6 +44,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         LeaderboardRewarded = 18,
         CouponReceived = 19,
         PublicEvent = 20,
+        // Not found in client
+        SynergyPoints = 21
     }
 
     [AssetEnum((int)Interval)]

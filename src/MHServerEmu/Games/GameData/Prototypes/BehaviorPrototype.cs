@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -63,6 +64,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         AllEntitiesInRegionOfAgent = 2,
         PotentialAlliesOfAgent = 3,
         PotentialEnemiesOfAgent = 4,
+        // Not found in client
+        ItemsAroundAgent = 5, 
     }
 
     [AssetEnum((int)None)]

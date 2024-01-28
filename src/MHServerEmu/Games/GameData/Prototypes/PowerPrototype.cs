@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -181,6 +182,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         _240 = 9,
         _300 = 10,
         _360 = 11,
+        // Not found in client
+        _20 = 12
     }
 
     [AssetEnum((int)Alive)]
