@@ -65,7 +65,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         PotentialAlliesOfAgent = 3,
         PotentialEnemiesOfAgent = 4,
         // Not found in client
-        ItemsAroundAgent = 5, 
+        ItemsAroundAgent = 0, 
     }
 
     [AssetEnum((int)None)]

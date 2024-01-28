@@ -69,7 +69,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         CouponAwards = 29,
         UnifiedStash = 30,
         // Not found in client
-        AvatarRing = 31
+        AvatarRing = 0
     }
 
     #endregion

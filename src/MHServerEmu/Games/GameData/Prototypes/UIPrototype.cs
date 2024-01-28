@@ -117,7 +117,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         InfinityPointsAwarded = 26,
         WaypointError = 27,
         // Not found in client
-        MatchQueue = 28 
+        MatchQueue = 0
     }
 
     [AssetEnum]
