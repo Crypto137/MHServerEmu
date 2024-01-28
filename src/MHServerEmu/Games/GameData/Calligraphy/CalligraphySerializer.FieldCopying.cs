@@ -34,18 +34,58 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             {
                 if (fieldInfo.DeclaringType == typeof(Prototype)) continue;      // Skip base prototype properties
 
-                if (IsMixin(fieldInfo.PropertyType))
-                    CopyMixin(destPrototype, sourcePrototype, fieldInfo);
-                else if (fieldInfo.PropertyType.IsValueType || fieldInfo.PropertyType.IsSubclassOf(typeof(Prototype)))
-                    AssignPointedAtValues(destPrototype, sourcePrototype, fieldInfo);
-                else if (fieldInfo.PropertyType.IsArray)
-                    ShallowCopyCollection(destPrototype, sourcePrototype, fieldInfo);
-                else if (fieldInfo.PropertyType == typeof(List<PrototypeMixinListItem>))
-                    CopyMixinCollection();
-                else if (fieldInfo.PropertyType == typeof(PrototypePropertyCollection))
-                    CopyPrototypePropertyCollection();
-                else
-                    Logger.Warn($"Trying to copy unknown ref type {fieldInfo.PropertyType}");
+                switch (GameDatabase.PrototypeClassManager.GetPrototypeFieldTypeEnumValue(fieldInfo))
+                {
+                    case PrototypeFieldType.Bool:
+                    case PrototypeFieldType.Int8:
+                    case PrototypeFieldType.Int16:
+                    case PrototypeFieldType.Int32:
+                    case PrototypeFieldType.Int64:
+                    case PrototypeFieldType.Float32:
+                    case PrototypeFieldType.Float64:
+                    case PrototypeFieldType.Enum:
+                    case PrototypeFieldType.AssetRef:
+                    case PrototypeFieldType.AssetTypeRef:
+                    case PrototypeFieldType.CurveRef:
+                    case PrototypeFieldType.PrototypeDataRef:
+                    case PrototypeFieldType.LocaleStringId:
+                    case PrototypeFieldType.PrototypePtr:
+                    case PrototypeFieldType.PropertyId:
+                        AssignPointedAtValues(destPrototype, sourcePrototype, fieldInfo);
+                        break;
+
+                    case PrototypeFieldType.ListBool:
+                    case PrototypeFieldType.ListInt8:
+                    case PrototypeFieldType.ListInt16:
+                    case PrototypeFieldType.ListInt32:
+                    case PrototypeFieldType.ListInt64:
+                    case PrototypeFieldType.ListFloat32:
+                    case PrototypeFieldType.ListFloat64:
+                    case PrototypeFieldType.ListEnum:
+                    case PrototypeFieldType.ListAssetRef:
+                    case PrototypeFieldType.ListAssetTypeRef:
+                    case PrototypeFieldType.ListPrototypeDataRef:
+                    case PrototypeFieldType.ListPrototypePtr:
+                        ShallowCopyCollection(destPrototype, sourcePrototype, fieldInfo);
+                        break;
+
+                    case PrototypeFieldType.Mixin:
+                        CopyMixin(destPrototype, sourcePrototype, fieldInfo);
+                        break;
+
+                    case PrototypeFieldType.ListMixin:
+                        CopyMixinCollection();
+                        break;
+
+                    case PrototypeFieldType.PropertyList:
+                    case PrototypeFieldType.PropertyCollection:
+                        CopyPrototypePropertyCollection();
+                        break;
+
+                    default:
+                        Logger.Warn($"Trying to copy unknown ref type {fieldInfo.PropertyType.Name}");
+                        break;
+                }
             }
 
             return true;

@@ -4,6 +4,7 @@
 
     public enum PrototypeFieldType
     {
+        Invalid = -1,
         Int8 = 0,
         Int16 = 1,
         Int32 = 2,
@@ -14,11 +15,13 @@
         Enum = 11,
         UnkType12 = 12,                 // Same as 33 and 52
         FunctionPtr = 13,
+        PrototypeDataRef = 14,
         AssetRef = 15,
         AssetTypeRef = 16,
         CurveRef = 17,
-        UnkType27 = 27,                 // Same as Int64
+        LocaleStringId = 27,            // Same as Int64
         UnkType28 = 28,                 // Same as Int64
+        Mixin = 30,
         Prototype = 31,
         PrototypePtr = 32,
         UnkType33 = 33,                 // Same as 12 and 52

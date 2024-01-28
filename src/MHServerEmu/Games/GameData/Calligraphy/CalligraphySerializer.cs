@@ -172,7 +172,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 }
 
                 // Parse
-                var parser = GetParser(fieldInfo.PropertyType);
+                var parser = GetParser(classManager.GetPrototypeFieldTypeEnumValue(fieldInfo));
                 FieldParserParams @params = new(reader, fieldInfo, fieldOwnerPrototype, fieldOwnerBlueprint, prototypeName, blueprintMemberInfo);
                 
                 if (parser(@params) == false)
