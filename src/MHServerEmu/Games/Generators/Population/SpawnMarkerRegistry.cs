@@ -73,7 +73,7 @@ namespace MHServerEmu.Games.Generators.Population
                 {
                     Logger.Trace("Trying to insert Marker out of bounds in Spatial Partition! " +
                                       $"MARKER={GameDatabase.GetFormattedPrototypeName(managedObject.MarkerRef)} " +
-                                      $"REGION={_region} CELL={managedObject.Cell} MARKERPOS={managedObject.MarkerPos}");
+                                      $"Area={managedObject.Cell.Area} CELL={managedObject.Cell} MARKERPOS={managedObject.MarkerPos}");
                     continue;
                 }
                 _reservationOctree.Insert(managedObject);
@@ -171,25 +171,19 @@ namespace MHServerEmu.Games.Generators.Population
 
         public void RemoveCell(Cell cell)
         {
-            List<SpawnReservation> reservations = new ();
+            List<SpawnReservation> reservations = new();
             GetReservationsInCell(cell.Id, reservations);
 
             foreach (SpawnReservation reservation in reservations)
             {
-                reservations.Remove(reservation);
-                if (_reservationOctree != null)
-                {
-                    SpawnReservation managedObject = reservation;
-                    if (managedObject != null && managedObject.SpatialPartitionLocation.IsValid())
-                        _reservationOctree.Remove(managedObject);
-                }
-                if ((reservation != null && reservation.Cell == cell) 
-                    || RemoveFromMasterVector(reservation)
-                    || RemoveFromRegionLookup(reservation)
-                    || RemoveFromAreaLookup(reservation)
-                    || RemoveFromCellLookup(reservation)
-                    // || reservation.use_count() == 1 // std::shared_ptr use_count
-                    ) return;
+                if (reservation == null || reservation.Cell != cell) continue;
+                if (_reservationOctree != null && reservation.SpatialPartitionLocation.IsValid()) _reservationOctree.Remove(reservation);                
+                bool success = true;
+                success &= RemoveFromMasterVector(reservation);
+                success &= RemoveFromRegionLookup(reservation);
+                success &= RemoveFromAreaLookup(reservation);
+                success &= RemoveFromCellLookup(reservation);
+                if (success == false) Logger.Warn($"RemoveCell failed {cell}");
             }
         }
 
