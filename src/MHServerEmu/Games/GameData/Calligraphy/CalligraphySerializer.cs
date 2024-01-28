@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.GameData.Calligraphy

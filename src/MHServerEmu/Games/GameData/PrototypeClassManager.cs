@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 
@@ -214,43 +215,49 @@ namespace MHServerEmu.Games.GameData
             // Retrieve an already matched enum value if we have one for this property
             if (_prototypeFieldTypeDict.TryGetValue(fieldInfo, out var prototypeFieldTypeEnumValue) == false)
             {
-                var propertyFieldType = fieldInfo.PropertyType;
+                if (fieldInfo.IsDefined(typeof(DoNotCopyAttribute)))
+                {
+                    _prototypeFieldTypeDict.Add(fieldInfo, PrototypeFieldType.Invalid);
+                    return PrototypeFieldType.Invalid;
+                }
+
+                var fieldType = fieldInfo.PropertyType;
 
                 // Adjust non-primitive types
-                if (propertyFieldType.IsPrimitive == false)
+                if (fieldType.IsPrimitive == false)
                 {
-                    if (propertyFieldType.IsArray == false)
+                    if (fieldType.IsArray == false)
                     {
                         // Check if this is a mixin or a list mixin
-                        if (PrototypeIsMixin(propertyFieldType))
+                        if (PrototypeIsMixin(fieldType))
                             return PrototypeFieldType.Mixin;
-                        else if (propertyFieldType == typeof(List<PrototypeMixinListItem>))
+                        else if (fieldType == typeof(List<PrototypeMixinListItem>))
                             return PrototypeFieldType.ListMixin;
 
                         // Check the type itself if it's a simple field
-                        if (propertyFieldType.IsSubclassOf(typeof(Prototype)))
-                            propertyFieldType = typeof(Prototype);
-                        else if (propertyFieldType.IsEnum && propertyFieldType.IsDefined(typeof(AssetEnumAttribute)))
-                            propertyFieldType = typeof(Enum);
+                        if (fieldType.IsSubclassOf(typeof(Prototype)))
+                            fieldType = typeof(Prototype);
+                        else if (fieldType.IsEnum && fieldType.IsDefined(typeof(AssetEnumAttribute)))
+                            fieldType = typeof(Enum);
                     }
                     else
                     {
                         // Check element type instead if it's a collection
-                        var elementType = propertyFieldType.GetElementType();
+                        var elementType = fieldType.GetElementType();
 
                         if (elementType.IsSubclassOf(typeof(Prototype)))
-                            propertyFieldType = typeof(Prototype[]);
+                            fieldType = typeof(Prototype[]);
                         else if (elementType.IsEnum && elementType.IsDefined(typeof(AssetEnumAttribute)))
-                            propertyFieldType = typeof(Enum[]);
+                            fieldType = typeof(Enum[]);
                     }
                 }
 
-                // Try to match C# to a prototype field type enum value using a lookup dict
-                if (TypeToPrototypeFieldTypeEnumDict.TryGetValue(propertyFieldType, out prototypeFieldTypeEnumValue) == false)
+                // Try to match a C# type to a prototype field type enum value using a lookup dict
+                if (TypeToPrototypeFieldTypeEnumDict.TryGetValue(fieldType, out prototypeFieldTypeEnumValue) == false)
                     prototypeFieldTypeEnumValue = PrototypeFieldType.Invalid;
 
-                // There is any issue with using PropertyInfo as a key: PropertyInfo for inherited properties are different on each
-                // level of inheritance, which causes this code to be called more often than necessary. TODO: use something else as key.
+                // There is an issue with using PropertyInfo as a key: PropertyInfos for inherited properties are different on each
+                // level of inheritance, which causes this code to be called more often than necessary.
                 _prototypeFieldTypeDict.Add(fieldInfo, prototypeFieldTypeEnumValue);
             }
 

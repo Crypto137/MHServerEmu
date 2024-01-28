@@ -33,7 +33,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             foreach (var fieldInfo in destType.GetProperties())
             {
                 if (fieldInfo.DeclaringType == typeof(Prototype)) continue;      // Skip base prototype properties
-
+                
                 switch (GameDatabase.PrototypeClassManager.GetPrototypeFieldTypeEnumValue(fieldInfo))
                 {
                     case PrototypeFieldType.Bool:
@@ -82,9 +82,8 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                         CopyPrototypePropertyCollection();
                         break;
 
-                    default:
-                        Logger.Warn($"Trying to copy unknown ref type {fieldInfo.PropertyType.Name}");
-                        break;
+                    case PrototypeFieldType.Invalid: break;
+                    default: return Logger.WarnReturn(false, $"Trying to copy unsupported prototype field type {fieldInfo.PropertyType.Name}");
                 }
             }
 
