@@ -531,15 +531,15 @@ namespace MHServerEmu.Games.Generators.Areas
         public override bool DestroyableCell(int x, int y)
         {
             GenCell cell = GetCell(x, y);
-            if (cell == null || cell.CellRef == 0) return false;
+            if (cell == null || cell.CellRef != PrototypeId.Invalid) return false;
 
             for (int i = 0; i < _offsets.GetLength(0); i++)
             {
                 int offsetX = _offsets[i, 0];
                 int offsetY = _offsets[i, 1];
 
-                cell = GetCell(x + offsetX, y + offsetY, false);
-                if (cell != null && !cell.CheckWallMask(_wallMasks[i], CellSetRegistry))
+                GenCell checkCell = GetCell(x + offsetX, y + offsetY, false);
+                if (checkCell != null && !checkCell.CheckWallMask(_wallMasks[i], CellSetRegistry))
                     return false;
             }
 
@@ -548,17 +548,14 @@ namespace MHServerEmu.Games.Generators.Areas
 
         public override bool DestroyCell(int x, int y)
         {
-            GenCell cell = GetCell(x, y);
-            if (cell == null || cell.CellRef == 0) return false;
-
             for (int i = 0; i < _offsets.GetLength(0); i++)
             {
                 int offsetX = _offsets[i, 0];
                 int offsetY = _offsets[i, 1];
 
-                cell = GetCell(x + offsetX, y + offsetY, false);
-                if (cell != null)
-                   cell.MaskRequiredWalls(_wallMasks[i]);
+                GenCell checkCell = GetCell(x + offsetX, y + offsetY, false);
+                if (checkCell != null)
+                    checkCell.MaskRequiredWalls(_wallMasks[i]);
             }
 
             return base.DestroyCell(x, y);
@@ -603,7 +600,7 @@ namespace MHServerEmu.Games.Generators.Areas
             if (!VerifyCoord(x, y)) return false;
 
             GenCell reserveCell = GetCell(x, y);
-            if (reserveCell == null || reserveCell.CellRef != 0)
+            if (reserveCell == null || reserveCell.CellRef != PrototypeId.Invalid)
                 return false;
 
             CellPrototype cellProto = GameDatabase.GetPrototype<CellPrototype>(cellRef);
