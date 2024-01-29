@@ -912,10 +912,12 @@ namespace MHServerEmu.Games.Generators.Areas
             {
                 for (int y = 0; y < CellContainer.Height; ++y)
                 {
-                    RoadInfo roadInfo = roadGrid[CellContainer.GetIndex(x, y)];
-                    roadInfo.Type = Cell.Type.None;
-                    roadInfo.RoadType = Cell.Type.None;
-                    roadInfo.InCell = false;
+                    RoadInfo roadInfo = new()
+                    {
+                        Type = Cell.Type.None,
+                        RoadType = Cell.Type.None,
+                        InCell = false
+                    };
 
                     GenCell cell = CellContainer.GetCell(x, y);
                     if (cell != null)
@@ -938,6 +940,8 @@ namespace MHServerEmu.Games.Generators.Areas
                             }
                         }
                     }
+
+                    roadGrid[CellContainer.GetIndex(x, y)] = roadInfo;
                 }
             }
 
