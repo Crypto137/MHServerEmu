@@ -48,7 +48,7 @@ namespace MHServerEmu.Games.GameData
             { typeof(AssetTypeId[]),                PrototypeFieldType.ListAssetTypeRef },
             { typeof(PrototypeId[]),                PrototypeFieldType.ListPrototypeDataRef },
             { typeof(Prototype[]),                  PrototypeFieldType.ListPrototypePtr },
-            { typeof(List<PrototypeMixinListItem>), PrototypeFieldType.ListMixin },
+            { typeof(PrototypeMixinList),           PrototypeFieldType.ListMixin },
             { typeof(PrototypePropertyCollection),  PrototypeFieldType.PropertyCollection }   // FIXME: Separate PropertyCollection from PropertyList somehow?
         };
 
@@ -191,7 +191,7 @@ namespace MHServerEmu.Games.GameData
                     else if (mixinAttribute == typeof(ListMixinAttribute))
                     {
                         // For list mixins we look for a list that is compatible with our requested field type
-                        if (property.PropertyType != typeof(List<PrototypeMixinListItem>)) continue;
+                        if (property.PropertyType != typeof(PrototypeMixinList)) continue;
 
                         var attribute = property.GetCustomAttribute<ListMixinAttribute>();
                         if (attribute.FieldType == fieldClassType)
@@ -256,7 +256,7 @@ namespace MHServerEmu.Games.GameData
                         break;
 
                     case PrototypeFieldType.ListMixin:
-                        var mixinList = (List<PrototypeMixinListItem>)property.GetValue(prototype);
+                        var mixinList = (PrototypeMixinList)property.GetValue(prototype);
                         if (mixinList == null) continue;
                         foreach (var mixin in mixinList)
                             mixin.Prototype.PostProcess();
@@ -285,7 +285,7 @@ namespace MHServerEmu.Games.GameData
                     // Speed hack: instead of calling IsDefined() we just check if the type is one of mixin prototype types
                     if (fieldType == typeof(LocomotorPrototype) || fieldType == typeof(PopulationInfoPrototype) || fieldType == typeof(ProductPrototype))
                         return PrototypeFieldType.Mixin;
-                    else if (fieldType == typeof(List<PrototypeMixinListItem>))
+                    else if (fieldType == typeof(PrototypeMixinList))
                         return PrototypeFieldType.ListMixin;
 
                     // Check for prototypes and asset enums

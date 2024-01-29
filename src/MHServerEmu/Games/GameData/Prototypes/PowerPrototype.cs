@@ -238,7 +238,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float AnimationContactTimePercent { get; protected set; }
         public int AnimationTimeMS { get; protected set; }
         [ListMixin(typeof(ConditionPrototype))]
-        public List<PrototypeMixinListItem> AppliesConditions { get; protected set; }
+        public PrototypeMixinList AppliesConditions { get; protected set; }
         public bool CancelConditionsOnEnd { get; protected set; }
         public bool CancelledOnDamage { get; protected set; }
         public bool CancelledOnMove { get; protected set; }
@@ -247,7 +247,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype ChannelLoopTimeMS { get; protected set; }
         public int ChargingTimeMS { get; protected set; }
         [ListMixin(typeof(ConditionEffectPrototype))]
-        public List<PrototypeMixinListItem> ConditionEffects { get; protected set; }
+        public PrototypeMixinList ConditionEffects { get; protected set; }
         public EvalPrototype CooldownTimeMS { get; protected set; }
         public DesignWorkflowState DesignState { get; protected set; }
         public LocaleStringId DisplayName { get; protected set; }
