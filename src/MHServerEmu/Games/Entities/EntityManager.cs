@@ -261,23 +261,7 @@ namespace MHServerEmu.Games.Entities
         public static float GetEntityFloor(PrototypeId prototypeId)
         {
             var entity = GameDatabase.GetPrototype<WorldEntityPrototype>(prototypeId);
-            if (entity.ParentDataRef == (PrototypeId)HardcodedBlueprintId.NPCTemplateHub)
-                return 46f; // AgentUntargetableInvulnerable.WorldEntity.Bounds.CapsuleBounds.HeightFromCenter
-
-            if (entity.Bounds == null)
-                return GetEntityFloor(entity.ParentDataRef);
-
-            var bounds = entity.Bounds;
-            float height = 0f;
-            if (bounds.ParentDataRef == (PrototypeId)HardcodedBlueprintId.BoxBounds || bounds.ParentDataRef == (PrototypeId)HardcodedBlueprintId.ObjectSmall)
-                height = ((BoxBoundsPrototype)bounds).Height;
-            else if (bounds.ParentDataRef == (PrototypeId)HardcodedBlueprintId.SphereBounds)
-                height = ((SphereBoundsPrototype)bounds).Radius;
-            else if (bounds.ParentDataRef == (PrototypeId)HardcodedBlueprintId.CapsuleBounds)
-                height = ((CapsuleBoundsPrototype)bounds).HeightFromCenter * 2f;
-            else Logger.Warn($"ReferenceType = {bounds.ParentDataRef}");
-
-            return height / 2;
+            return entity.Bounds.GetBoundHalfHeight();
         }
 
         public static bool GetSnapToFloorOnSpawn(PrototypeId prototypeId)
