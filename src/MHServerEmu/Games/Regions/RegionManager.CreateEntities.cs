@@ -17,7 +17,7 @@ namespace MHServerEmu.Games.Regions
             Vector3 areaOrigin = new();
             Vector3 entityPosition;
             PrototypeId[] connectionNodes;
-            ConnectionNodeDict targets;
+            ConnectionNodeList targets;
 
             ulong numEntities = _entityManager.PeekNextEntityId();
 

@@ -662,6 +662,7 @@ namespace MHServerEmu.Games.Regions
             targetRot = new();
             area = StartArea;
             PrototypeId areaRef = 0;
+            PrototypeId cellRef = 0;
             RegionConnectionTargetPrototype targetDest = null;
             Prototype targetProto = GameDatabase.GetPrototype<Prototype>(targetRef);
 
@@ -671,6 +672,7 @@ namespace MHServerEmu.Games.Regions
                 {
                     targetRef = targetDestination.Entity;
                     targetDest = targetDestination;
+                    cellRef = GameDatabase.GetDataRefByAsset(targetDestination.Cell);
                 }
                 else return false;
             }
@@ -678,12 +680,13 @@ namespace MHServerEmu.Games.Regions
             {
                 targetRef = targetDestination.Entity;
                 targetDest = targetDestination;
+                cellRef = GameDatabase.GetDataRefByAsset(targetDestination.Cell);
             }
             if (FindAreaByTarget(out Area foundArea, targetDest))
             {
                 areaRef = foundArea.GetPrototypeDataRef();
             }
-            WorldEntity targetEntity = Game.EntityManager.GetTransitionInRegion(targetRef, this, areaRef);            
+            WorldEntity targetEntity = Game.EntityManager.GetTransitionInRegion(targetRef, this, areaRef, cellRef);            
             Transition target = targetEntity as Transition;
             if (targetEntity == null) return false;
 

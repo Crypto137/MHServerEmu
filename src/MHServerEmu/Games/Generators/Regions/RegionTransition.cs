@@ -5,15 +5,12 @@ using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Generators.Regions
 {
-    public class ConnectionNodeDict : Dictionary<PrototypeId, Dictionary<PrototypeGuid, PrototypeId>>
-    {
-
-    }
-
-    public struct TargetObject
+    public class ConnectionNodeList : List<TargetObject> {}
+    public class TargetObject
     {
         public PrototypeGuid Entity { get; set; }
         public PrototypeId Area { get; set; }
+        public PrototypeId Cell { get; set; }
         public PrototypeId TargetId { get; set; }
     }
 
@@ -23,10 +20,9 @@ namespace MHServerEmu.Games.Generators.Regions
         public RegionTransition() { }
 
 
-        public static ConnectionNodeDict BuildConnectionEdges(PrototypeId region)
+        public static ConnectionNodeList BuildConnectionEdges(PrototypeId region)
         {
-            var items = new ConnectionNodeDict();
-            var nodes = new List<TargetObject>();
+            var nodes = new ConnectionNodeList();
 
             var iterateProtos = GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(RegionConnectionNodePrototype), PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly);
             foreach (var itrProtoId in iterateProtos)
@@ -41,20 +37,22 @@ namespace MHServerEmu.Games.Generators.Regions
                     {
                         if (region == origin.Region)
                         {
-                            Logger.Debug($"[{GameDatabase.GetFormattedPrototypeName(origin.Area)}] {GameDatabase.GetFormattedPrototypeName(origin.Entity)} [{GameDatabase.GetFormattedPrototypeName(target.Area)}]");
+                          //  Logger.Debug($"[{GameDatabase.GetFormattedPrototypeName(origin.Area)}] {GameDatabase.GetFormattedPrototypeName(origin.Entity)} [{GameDatabase.GetFormattedPrototypeName(target.Area)}]");
                             nodes.Add(new TargetObject
                             {
                                 Area = origin.Area,
+                                Cell = GameDatabase.GetDataRefByAsset(origin.Cell),
                                 Entity = GameDatabase.GetPrototypeGuid(origin.Entity),
                                 TargetId = proto.Target
                             });
                         }
                         if (proto.Type == RegionTransitionDirectionality.BiDirectional && region == target.Region)
                         {
-                            Logger.Debug($"[{GameDatabase.GetFormattedPrototypeName(target.Area)}] {GameDatabase.GetFormattedPrototypeName(target.Entity)} [{GameDatabase.GetFormattedPrototypeName(origin.Area)}] ");
+                           // Logger.Debug($"[{GameDatabase.GetFormattedPrototypeName(target.Area)}] {GameDatabase.GetFormattedPrototypeName(target.Entity)} [{GameDatabase.GetFormattedPrototypeName(origin.Area)}] ");
                             nodes.Add(new TargetObject
                             {                                
                                 Area = target.Area,
+                                Cell = GameDatabase.GetDataRefByAsset(target.Cell),
                                 Entity = GameDatabase.GetPrototypeGuid(target.Entity),
                                 TargetId = proto.Origin
                             });
@@ -63,20 +61,8 @@ namespace MHServerEmu.Games.Generators.Regions
                     }
                 }
             }
-            //foreach (var node in nodes) Logger.Warn($"{node.area}, {node.entity}, {node.targetId}"); 
 
-            var groupedNodes = nodes.GroupBy(node => node.Area);
-            foreach (var group in groupedNodes)
-            {
-                var groupItems = new Dictionary<PrototypeGuid, PrototypeId>();
-
-                foreach (var node in group)
-                    groupItems[node.Entity] = node.TargetId;
-
-                items[group.Key] = groupItems;
-            }
-
-            return items;
+            return nodes;
         }
 
         public static bool GetRequiredTransitionData(PrototypeId regionRef, PrototypeId areaRef, ref List<RegionTransitionSpec> specList)

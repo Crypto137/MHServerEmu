@@ -160,7 +160,7 @@ namespace MHServerEmu.Games.Entities
             var regionConnectionTarget = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetPrototype);
 
             var cellAssetId = regionConnectionTarget.Cell;
-            var cellPrototypeId = cellAssetId != AssetId.Invalid ? GameDatabase.GetPrototypeRefByName(GameDatabase.GetAssetName(cellAssetId)) : PrototypeId.Invalid;
+            var cellPrototypeId = cellAssetId != AssetId.Invalid ? GameDatabase.GetDataRefByAsset(cellAssetId) : PrototypeId.Invalid;
 
             var targetRegion = regionConnectionTarget.Region;
             // Logger.Debug($"SpawnDirectTeleport {targetRegion}");
@@ -297,7 +297,7 @@ namespace MHServerEmu.Games.Entities
                     yield return entity;
         }
 
-        public Transition GetTransitionInRegion(PrototypeId targetRef, Region region, PrototypeId areaRef)
+        public Transition GetTransitionInRegion(PrototypeId targetRef, Region region, PrototypeId areaRef, PrototypeId cellRef)
         {
             ulong regionId = region.Id;
             foreach (var entity in _entityDict.Values)
@@ -305,6 +305,7 @@ namespace MHServerEmu.Games.Entities
                 {
                     if (entity is not Transition transition) continue;
                     if (areaRef != 0 && areaRef != (PrototypeId)transition.Location.Area.PrototypeId) continue;
+                    if (cellRef != 0 && cellRef != transition.Location.Cell.PrototypeId) continue;
                     if (transition.BaseData.PrototypeId == targetRef) return transition;
                     if (transition.TransitionPrototype.Waypoint == targetRef) return transition;
                 }
@@ -372,30 +373,40 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public void AddTeleports(Cell cell, Area entryArea, ConnectionNodeDict targets)
+        public void AddTeleports(Cell cell, Area entryArea, ConnectionNodeList targets)
         {
             PrototypeId area = (PrototypeId)entryArea.PrototypeId;
+
+            TargetObject GetTargetNode(PrototypeId area, PrototypeId cell, PrototypeGuid entity)
+            {
+                foreach (var targetNode in targets)
+                {
+                    if (targetNode.Area == area && targetNode.Entity == entity)
+                    {
+                        if (targetNode.Cell == 0) return targetNode;
+                        else if (targetNode.Cell == cell) return targetNode;
+                    }
+                }
+                return null;
+            }
 
             foreach (var marker in cell.CellProto.InitializeSet.Markers)
             {
                 if (marker is EntityMarkerPrototype portal)
                 {  
                     PrototypeId protoId = GameDatabase.GetDataRefByPrototypeGuid(portal.EntityGuid);
-                    if (targets.ContainsKey(area))
-                        if (targets[area].ContainsKey(portal.EntityGuid))
-                        {
-                            //Logger.Warn($"EntityGuid = {door.EntityGuid}");
-                            Vector3 position = cell.CalcMarkerPosition(portal.Position);                            
-                           // float dz = 60f;
-                           // if (portal.EntityGuid == (PrototypeGuid)14397992695795297083) dz = 0f;
-                            position.Z += GetEntityFloor(protoId);
+                    TargetObject node = GetTargetNode(area, cell.PrototypeId, portal.EntityGuid);
+                    if (node != null)
+                    {
+                        Vector3 position = cell.CalcMarkerPosition(portal.Position);
+                        position.Z += GetEntityFloor(protoId);
 
-                            SpawnDirectTeleport( cell, protoId, position, portal.Rotation, false, targets[area][portal.EntityGuid], portal.OverrideSnapToFloor > 0);
-                        }
+                        SpawnDirectTeleport( cell, protoId, position, portal.Rotation, false, node.TargetId, portal.OverrideSnapToFloor > 0);
+                    }
                     
                     if (portal.LastKnownEntityName.Contains("Waypoints/"))
                     {
-                        Logger.Debug($"TP {portal.LastKnownEntityName} [{protoId}]");
+                       // Logger.Debug($"[TP] {portal.LastKnownEntityName} [{protoId}]");
                         Vector3 position = cell.CalcMarkerPosition(portal.Position);
                         SpawnWaypoint(cell, protoId, position, portal.Rotation, false, portal.OverrideSnapToFloor > 0);
                     }
@@ -403,7 +414,7 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public void GenerateEntities(Region region, ConnectionNodeDict targets, bool addMarkers, bool addProp)
+        public void GenerateEntities(Region region, ConnectionNodeList targets, bool addMarkers, bool addProp)
         {
             foreach (Area entryArea in region.AreaList)
             {                
