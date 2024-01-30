@@ -685,6 +685,7 @@ namespace MHServerEmu.Games.Regions
             if (FindAreaByTarget(out Area foundArea, targetDest))
             {
                 areaRef = foundArea.GetPrototypeDataRef();
+                if (areaRef == (PrototypeId)AreaPrototypeId.AvengersTowerHubArea) cellRef = 0;
             }
             WorldEntity targetEntity = Game.EntityManager.GetTransitionInRegion(targetRef, this, areaRef, cellRef);            
             Transition target = targetEntity as Transition;
