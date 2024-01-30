@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy;
+﻿using MHServerEmu.Games.Common;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -390,6 +391,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId ShowConfirmationDialogOverride { get; protected set; }
         public PrototypeId ShowConfirmationDialogTemplate { get; protected set; }
         public PrototypeId ShowConfirmationDialogEnemy { get; protected set; }
+
+        public void CalcSpawnOffset(Vector3 targetRot, ref Vector3 targetPos)
+        {
+            float offset = SpawnOffset;
+            targetPos.X += offset * MathF.Cos(targetRot.X);
+            targetPos.Y += offset * MathF.Sin(targetRot.X);
+        }
     }
 
     public class EntityAppearancePrototype : Prototype

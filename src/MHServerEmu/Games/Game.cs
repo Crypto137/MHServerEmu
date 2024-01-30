@@ -11,6 +11,7 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
@@ -309,21 +310,20 @@ namespace MHServerEmu.Games
                         var currentRegion = (PrototypeId)client.Session.Account.Player.Region;
                         if (currentRegion != teleport.Destinations[0].Region)
                         {
-                            Logger.Trace($"Destination region {teleport.Destinations[0].Region}");
-                            client.CurrentGame.MovePlayerToRegion(client, (RegionPrototypeId)teleport.Destinations[0].Region);
+                            Logger.Trace($"Destination region {GameDatabase.GetFormattedPrototypeName(teleport.Destinations[0].Region)} [{GameDatabase.GetFormattedPrototypeName(teleport.Destinations[0].Entity)}]");
+                            client.CurrentGame.MovePlayerToRegion(client, (RegionPrototypeId)teleport.Destinations[0].Region, teleport.Destinations[0].Target);
 
                             return;
                         }
                     }
-
-                    Entity target = EntityManager.FindEntityByDestination(teleport.Destinations[0], teleport.RegionId);
-                    if (target == null) return;
+   
+                    if (EntityManager.FindEntityByDestination(teleport.Destinations[0], teleport.RegionId) is not Transition target) return;
+                    var teleportEntity = target.TransitionPrototype;
+                    if (teleportEntity == null) return;
+                    Vector3 targetPos = new(target.BaseData.Position);
                     Vector3 targetRot = target.BaseData.Orientation;
-                    float offset = 150f;
-                    Vector3 targetPos = new(
-                        target.BaseData.Position.X + offset * (float)Math.Cos(targetRot.X),
-                        target.BaseData.Position.Y + offset * (float)Math.Sin(targetRot.X),
-                        target.BaseData.Position.Z);
+
+                    teleportEntity.CalcSpawnOffset(targetRot, ref targetPos);
 
                     Logger.Trace($"Teleporting to {targetPos}");
 

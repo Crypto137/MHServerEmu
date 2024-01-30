@@ -247,6 +247,11 @@ namespace MHServerEmu.Games.Regions
             return RegionBounds.IntersectsXY(position);
         }
 
+        public Vector3 CalcMarkerPosition(Vector3 markerPos)
+        {
+            return RegionBounds.Center + markerPos - CellProto.BoundingBox.Center;
+        }
+
         public void PostGenerate()
         {
             VisitPropSpawns(new InstanceMarkerSetPropSpawnVisitor(this));
@@ -302,8 +307,7 @@ namespace MHServerEmu.Games.Regions
             if (marker is EntityMarkerPrototype entityMarker)
             {
                 // TODO Check Entity Prototype, Add transform to Marker position
-                Vector3 areaOrigin = Area.Origin;
-                Game.EntityManager.AddEntityMarker(CellProto, entityMarker, areaOrigin, GetRegion(), (PrototypeId)Area.PrototypeId, (int)Area.Id, (int)Id);
+                Game.EntityManager.AddEntityMarker(this, entityMarker);
             }
         }
 

@@ -1,11 +1,83 @@
-﻿using MHServerEmu.Games.GameData;
+﻿using MHServerEmu.Common.Logging;
+using MHServerEmu.Games.Common;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Generators.Regions
 {
+    public class ConnectionNodeDict : Dictionary<PrototypeId, Dictionary<PrototypeGuid, PrototypeId>>
+    {
+
+    }
+
+    public struct TargetObject
+    {
+        public PrototypeGuid Entity { get; set; }
+        public PrototypeId Area { get; set; }
+        public PrototypeId TargetId { get; set; }
+    }
+
     public class RegionTransition
     {
+        public static readonly Logger Logger = LogManager.CreateLogger();
         public RegionTransition() { }
+
+
+        public static ConnectionNodeDict BuildConnectionEdges(PrototypeId region)
+        {
+            var items = new ConnectionNodeDict();
+            var nodes = new List<TargetObject>();
+
+            var iterateProtos = GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(RegionConnectionNodePrototype), PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly);
+            foreach (var itrProtoId in iterateProtos)
+            {
+                RegionConnectionNodePrototype proto = GameDatabase.GetPrototype<RegionConnectionNodePrototype>(itrProtoId);
+                if (proto != null)
+                {
+                    var target = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(proto.Target);
+                    var origin = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(proto.Origin);
+
+                    if (origin != null && target != null)
+                    {
+                        if (region == origin.Region)
+                        {
+                            Logger.Debug($"[{GameDatabase.GetFormattedPrototypeName(origin.Area)}] {GameDatabase.GetFormattedPrototypeName(origin.Entity)} [{GameDatabase.GetFormattedPrototypeName(target.Area)}]");
+                            nodes.Add(new TargetObject
+                            {
+                                Area = origin.Area,
+                                Entity = GameDatabase.GetPrototypeGuid(origin.Entity),
+                                TargetId = proto.Target
+                            });
+                        }
+                        if (proto.Type == RegionTransitionDirectionality.BiDirectional && region == target.Region)
+                        {
+                            Logger.Debug($"[{GameDatabase.GetFormattedPrototypeName(target.Area)}] {GameDatabase.GetFormattedPrototypeName(target.Entity)} [{GameDatabase.GetFormattedPrototypeName(origin.Area)}] ");
+                            nodes.Add(new TargetObject
+                            {                                
+                                Area = target.Area,
+                                Entity = GameDatabase.GetPrototypeGuid(target.Entity),
+                                TargetId = proto.Origin
+                            });
+                        }
+
+                    }
+                }
+            }
+            //foreach (var node in nodes) Logger.Warn($"{node.area}, {node.entity}, {node.targetId}"); 
+
+            var groupedNodes = nodes.GroupBy(node => node.Area);
+            foreach (var group in groupedNodes)
+            {
+                var groupItems = new Dictionary<PrototypeGuid, PrototypeId>();
+
+                foreach (var node in group)
+                    groupItems[node.Entity] = node.TargetId;
+
+                items[group.Key] = groupItems;
+            }
+
+            return items;
+        }
 
         public static bool GetRequiredTransitionData(PrototypeId regionRef, PrototypeId areaRef, ref List<RegionTransitionSpec> specList)
         {
@@ -31,6 +103,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
                             if (!specList.Contains(spec) && spec.Cell != 0)
                             {
+                               // Logger.Debug($"[{GameDatabase.GetFormattedPrototypeName(origin.Area)}] {GameDatabase.GetFormattedPrototypeName(origin.Entity)}");
                                 specList.Add(spec);
                                 found = true;
                             }
@@ -43,6 +116,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
                             if (!specList.Contains(spec) && spec.Cell != 0)
                             {
+                               // Logger.Debug($"[{GameDatabase.GetFormattedPrototypeName(target.Area)}] {GameDatabase.GetFormattedPrototypeName(target.Entity)}");
                                 specList.Add(spec);
                                 found = true;
                             }

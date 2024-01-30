@@ -583,7 +583,9 @@ namespace MHServerEmu.Games.Regions
 
         public Cell GetCellAtPosition(Vector3 position)
         {
-            foreach (var cell in Cells)
+           // foreach (var cell in Cells)
+           foreach (var area in AreaList)
+              foreach (var cell in area.CellList)
                 if (cell.IntersectsXY(position)) return cell;
             return null;
         }
@@ -654,40 +656,39 @@ namespace MHServerEmu.Games.Regions
             return false;
         }
 
-        public bool FindWaypointMarker(PrototypeId waypointDataRef, out Vector3 waypointPosition, out Vector3 waypointOrientation)
+        public bool FindTeleportTarget(PrototypeId targetRef, out Vector3 targetPos, out Vector3 targetRot, out Area area)
         {
-            waypointPosition = Bound.Center; // default
-            waypointOrientation = new();
+            targetPos = Bound.Center; // default
+            targetRot = new();
+            area = StartArea;
+            PrototypeId areaRef = 0;
+            Prototype targetProto = GameDatabase.GetPrototype<Prototype>(targetRef);
 
-            if (RegionTransition.GetDestination(waypointDataRef, out RegionConnectionTargetPrototype target) == false) return false;
-
-            if (target == null || target.Entity == 0) return false;
-
-            if (FindAreaByTarget(out Area area, target))
+            if (targetProto is WaypointPrototype)
             {
-                foreach (Cell cell in area.CellList)
+                if (RegionTransition.GetDestination(targetRef, out RegionConnectionTargetPrototype targetDestination))
                 {
-                    // if (target.Cell != 0 && target.Cell != cell.CellProto.GetDataRef()) continue;
-                    if (cell.CellProto != null && cell.CellProto.InitializeSet.Markers.IsNullOrEmpty() == false)
-                    {
-                        foreach (var marker in cell.CellProto.InitializeSet.Markers)
-                        {
-                            if (marker is EntityMarkerPrototype entityMarker)
-                            {
-                                PrototypeId dataRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
-                                if (dataRef == target.Entity)
-                                {
-                                    waypointPosition = cell.RegionBounds.Center + entityMarker.Position - cell.CellProto.BoundingBox.Center;
-                                    waypointOrientation = entityMarker.Rotation;
-                                    return true;
-                                }
-                            }
-                        }
-                    }
+                    targetRef = targetDestination.Entity;
+                    areaRef = targetDestination.Area;
                 }
+                else return false;
+            }
+            else if (targetProto is RegionConnectionTargetPrototype targetDestination)
+            {
+                targetRef = targetDestination.Entity;
+                areaRef = targetDestination.Area;
             }
 
-            return false;
+            WorldEntity targetEntity = Game.EntityManager.GetTransitionInRegion(targetRef, this, areaRef);            
+            Transition target = targetEntity as Transition;
+            if (targetEntity == null) return false;
+
+            var teleportEntity = target.TransitionPrototype;
+            targetPos = new(targetEntity.Location.GetPosition());
+            targetRot = new(targetEntity.Location.GetOrientation());
+            if (teleportEntity.SpawnOffset > 0 ) teleportEntity.CalcSpawnOffset(targetRot, ref targetPos);
+            area = targetEntity.Location.Area;
+            return true;
         }
 
         public void LoadMessagesForArea(Area area, List<GameMessage> messageList, bool isStartArea)
@@ -795,9 +796,11 @@ namespace MHServerEmu.Games.Regions
             // Get starArea to load by Waypoint
             if (StartArea != null)
             {
-                if (RegionTransition.GetDestination(waypointDataRef, out RegionConnectionTargetPrototype target)
-                        && FindAreaByTarget(out Area startArea, target))
-                    LoadMessagesForConnectedAreas(startArea, messageList);
+                if (FindTeleportTarget(waypointDataRef, out Vector3 pos, out Vector3 Rot, out Area targetArea))
+                {
+                   // Cell cell = GetCellAtPosition(pos); // Check Quadtree!!!
+                    LoadMessagesForConnectedAreas(targetArea, messageList);
+                }
                 else
                     LoadMessagesForConnectedAreas(StartArea, messageList);
             }

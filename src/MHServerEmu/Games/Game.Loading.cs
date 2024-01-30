@@ -39,7 +39,7 @@ namespace MHServerEmu.Games
 
             // Create a waypoint entity            
             // TODO: Add account.Player.Waypoint as Entity
-            messageList.Add(new(EntityManager.Waypoint.ToNetMessageEntityCreate()));
+           // messageList.Add(new(EntityManager.Waypoint.ToNetMessageEntityCreate()));
 
             return messageList.ToArray();
         }
@@ -50,15 +50,14 @@ namespace MHServerEmu.Games
 
             Region region = RegionManager.GetRegion(account.Player.Region);
 
-           ;
             // TODO get pos from Entity Manager
             Common.Vector3 entrancePosition = new();
             Common.Vector3 entranceOrientation = new();
 
-            if (region.FindWaypointMarker(account.Player.Waypoint, out Common.Vector3 waypointPosition, out Common.Vector3 waypointOrientation))
+            if (region.FindTeleportTarget(account.Player.Waypoint, out Common.Vector3 targetPosition, out Common.Vector3 targetOrientation, out Area area))
             { // TODO Fix Player Pos, Rot
-                entrancePosition = new(waypointPosition);
-                entranceOrientation = new(waypointOrientation);
+                entrancePosition = new(targetPosition);
+                entranceOrientation = new(targetOrientation);
                 entrancePosition.Z += 42; // TODO project to floor
             } 
 
@@ -73,10 +72,10 @@ namespace MHServerEmu.Games
             ));
 
             // Put waypoint entity in the game world
-            EnterGameWorldArchive waypointEnterGameWorldArchiveData = new(12, waypointPosition, waypointOrientation.Yaw);
+           /* EnterGameWorldArchive waypointEnterGameWorldArchiveData = new(12, targetPosition, targetOrientation.Yaw);
             messageList.Add(new(NetMessageEntityEnterGameWorld.CreateBuilder()
                 .SetArchiveData(waypointEnterGameWorldArchiveData.Serialize())
-                .Build()));
+                .Build()));*/
 
             // Load power collection
             messageList.AddRange(PowerLoader.LoadAvatarPowerCollection(account.Player.Avatar.ToEntityId()).ToList());

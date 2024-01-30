@@ -17,13 +17,11 @@ namespace MHServerEmu.Games.Entities
         public Condition[] ConditionCollection { get; set; }
         public PowerCollectionRecord[] PowerCollection { get; set; }
         public int UnkEvent { get; set; }
-
-
-        private RegionLocation _location = new(); // TODO init;
-        public Cell Cell { get => _location.Cell; }
+        public RegionLocation Location { get; private set; } = new(); // TODO init;
+        public Cell Cell { get => Location.Cell; }
         public EntityRegionSpatialPartitionLocation SpatialPartitionLocation { get; }
         public Aabb RegionBounds { get; set; }
-        public Region Region { get; set; }
+        public Region Region { get => Location.Region; }
 
         public WorldEntity(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { SpatialPartitionLocation = new(this); }
 
@@ -145,10 +143,7 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
-        internal bool IsInWorld()
-        {
-            throw new NotImplementedException();
-        }
+        public bool IsInWorld() => Location.IsValid();
 
         internal void ExitWorld()
         {
@@ -158,6 +153,14 @@ namespace MHServerEmu.Games.Entities
         internal void EmergencyRegionCleanup(Region region)
         {
             throw new NotImplementedException();
+        }
+
+        public void EnterWorld(Cell cell, Vector3 position, Vector3 orientation)
+        {
+            Location.Region = cell.GetRegion();
+            Location.Cell = cell; // Set directly
+            Location.SetPosition(position);
+            Location.SetOrientation(orientation);
         }
     }
 }

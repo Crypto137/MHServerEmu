@@ -34,8 +34,13 @@ namespace MHServerEmu.Games.Entities
             UnkEvent = 0;
 
             TransitionName = "";
-            Destinations = new Destination[1];
-            Destinations[0] = destination;
+            if (destination == null) 
+                Destinations = Array.Empty<Destination>();
+            else
+            {
+                Destinations = new Destination[1];
+                Destinations[0] = destination;
+            }
         }
 
         public Transition(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }

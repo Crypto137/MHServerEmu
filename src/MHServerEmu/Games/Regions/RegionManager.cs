@@ -201,14 +201,14 @@ namespace MHServerEmu.Games.Regions
         {
             if (IsRegionAvailable(prototype))
             {
-                prototype = (RegionPrototypeId)15546930156792977757;
+               // prototype = (RegionPrototypeId)7814783688219433201;
                 if (_regionDict.TryGetValue(prototype, out Region region) == false)
                 {
                     // Generate the region and create entities for it if needed
                      region = TestRegion(prototype);//GenerateRegion(prototype);
                     // region = EmptyRegion(prototype);
-                    // ulong entities = CreateEntities(region);
-                    // Logger.Debug($"Entities generated = {entities}");
+                     ulong entities = CreateEntities(region);
+                     Logger.Debug($"Entities generated = {entities}");
                     _regionDict.Add(prototype, region);
                 }
 

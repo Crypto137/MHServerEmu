@@ -11,7 +11,7 @@ namespace MHServerEmu.Games.Entities
 
         private Region _region;
         public Region Region { get => _region; set { _region = value; Cell = null; } }
-        public Cell Cell { get; private set; }
+        public Cell Cell { get; set; }
         public Area Area { get => Cell.Area; }
         public ulong RegionId { get => Region.Id; }
         public uint AreaId { get => Area.Id; }
@@ -43,12 +43,13 @@ namespace MHServerEmu.Games.Entities
 
         private Vector3 _orientation;
         public Vector3 GetOrientation() => IsValid() ? _orientation : new();
+
         public void SetOrientation(Vector3 orientation)
         {
             if (Vector3.IsFinite(orientation)) _orientation = orientation;
         }
 
-        public static float ProjectToFloor(CellPrototype cell, Vector3 areaOrigin, Vector3 position)
+        public static float ProjectToFloor(CellPrototype cell, Vector3 position)
         {
             Vector3 cellPos = position - cell.BoundingBox.Min;
             cellPos.X /= cell.BoundingBox.Width;
@@ -57,8 +58,7 @@ namespace MHServerEmu.Games.Entities
             int mapY = (int)cell.HeightMap.HeightMapSize.Y;
             int x = Math.Clamp((int)(cellPos.X * mapX), 0, mapX - 1);
             int y = Math.Clamp((int)(cellPos.Y * mapY), 0, mapY - 1);
-            short height = cell.HeightMap.HeightMapData[y * mapX + x];
-            return height + areaOrigin.Z;
+            return cell.HeightMap.HeightMapData[y * mapX + x];
         }
 
         public override string ToString()

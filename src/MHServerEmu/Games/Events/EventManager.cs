@@ -355,6 +355,12 @@ namespace MHServerEmu.Games.Events
                     messageList.Add(new(client, new(property.ToNetMessageSetProperty(avatarRepId))));
 
                     // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
+                    var propertyCollection = throwPrototype.Properties;
+                    while (propertyCollection == null)
+                    {
+                        throwPrototype = GameDatabase.GetPrototype<WorldEntityPrototype>(throwPrototype.ParentDataRef);
+                        propertyCollection = throwPrototype.Properties;
+                    }
                     client.ThrowingCancelPower = throwPrototype.Properties.GetPropertyContainer((BlueprintId)HardcodedBlueprintId.ThrowableRestorePowerProp).Value;
                     messageList.Add(new(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
