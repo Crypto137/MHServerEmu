@@ -662,6 +662,7 @@ namespace MHServerEmu.Games.Regions
             targetRot = new();
             area = StartArea;
             PrototypeId areaRef = 0;
+            RegionConnectionTargetPrototype targetDest = null;
             Prototype targetProto = GameDatabase.GetPrototype<Prototype>(targetRef);
 
             if (targetProto is WaypointPrototype)
@@ -669,16 +670,19 @@ namespace MHServerEmu.Games.Regions
                 if (RegionTransition.GetDestination(targetRef, out RegionConnectionTargetPrototype targetDestination))
                 {
                     targetRef = targetDestination.Entity;
-                    areaRef = targetDestination.Area;
+                    targetDest = targetDestination;
                 }
                 else return false;
             }
             else if (targetProto is RegionConnectionTargetPrototype targetDestination)
             {
                 targetRef = targetDestination.Entity;
-                areaRef = targetDestination.Area;
+                targetDest = targetDestination;
             }
-
+            if (FindAreaByTarget(out Area foundArea, targetDest))
+            {
+                areaRef = foundArea.GetPrototypeDataRef();
+            }
             WorldEntity targetEntity = Game.EntityManager.GetTransitionInRegion(targetRef, this, areaRef);            
             Transition target = targetEntity as Transition;
             if (targetEntity == null) return false;
