@@ -699,7 +699,7 @@ namespace MHServerEmu.Games.Regions
             return true;
         }
 
-        public void LoadMessagesForArea(Area area, List<GameMessage> messageList, bool isStartArea)
+        public void LoadMessagesForArea(Area area, List<GameMessage> messageList, HashSet<uint> cells, bool isStartArea)
         {
             messageList.Add(new((byte)GameServerToClientMessage.NetMessageAddArea, NetMessageAddArea.CreateBuilder()
                 .SetAreaId(area.Id)
@@ -710,6 +710,7 @@ namespace MHServerEmu.Games.Regions
 
             foreach (Cell cell in area.CellList)
             {
+                cells.Add(cell.Id);
                 var builder = NetMessageCellCreate.CreateBuilder()
                     .SetAreaId(area.Id)
                     .SetCellId(cell.Id)
@@ -727,7 +728,7 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        public void LoadMessagesForConnectedAreas(Area startArea, List<GameMessage> messageList)
+        public void LoadMessagesForConnectedAreas(Area startArea, List<GameMessage> messageList, HashSet<uint> cells)
         {
             HashSet<Area> visitedAreas = new ();
             Queue<Area> queue = new ();
@@ -738,11 +739,11 @@ namespace MHServerEmu.Games.Regions
             while (queue.Count > 0)
             {
                 Area currentArea = queue.Dequeue();
-                LoadMessagesForArea(currentArea, messageList, currentArea == startArea);
+                LoadMessagesForArea(currentArea, messageList, cells, currentArea == startArea);
                 foreach (uint subAreaId in currentArea.SubAreas)
                 {
                     Area area = GetAreaById(subAreaId);
-                    if (area != null) LoadMessagesForArea(area, messageList, false);
+                    if (area != null) LoadMessagesForArea(area, messageList, cells, false);
                 }
 
                 foreach (var connection in currentArea.AreaConnections)
@@ -761,7 +762,7 @@ namespace MHServerEmu.Games.Regions
                     
         }
 
-        public GameMessage[] GetLoadingMessages(ulong serverGameId, PrototypeId waypointDataRef)
+        public GameMessage[] GetLoadingMessages(ulong serverGameId, PrototypeId waypointDataRef, HashSet<uint> cells)
         {
             List<GameMessage> messageList = new();
 
@@ -800,6 +801,7 @@ namespace MHServerEmu.Games.Regions
 
             // TODO: prefetch other regions
 
+            cells.Clear();
             CellsInRegion = 0;
             // Get starArea to load by Waypoint
             if (StartArea != null)
@@ -807,10 +809,10 @@ namespace MHServerEmu.Games.Regions
                 if (FindTeleportTarget(waypointDataRef, out Vector3 pos, out Vector3 Rot, out Area targetArea))
                 {
                    // Cell cell = GetCellAtPosition(pos); // Check Quadtree!!!
-                    LoadMessagesForConnectedAreas(targetArea, messageList);
+                    LoadMessagesForConnectedAreas(targetArea, messageList, cells);
                 }
                 else
-                    LoadMessagesForConnectedAreas(StartArea, messageList);
+                    LoadMessagesForConnectedAreas(StartArea, messageList, cells);
             }
 
             messageList.Add(new(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build()));

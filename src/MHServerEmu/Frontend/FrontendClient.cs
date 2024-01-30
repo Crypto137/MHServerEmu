@@ -33,6 +33,8 @@ namespace MHServerEmu.Frontend
         public ulong ThrowingPower { get; set; }
         public ulong ThrowingCancelPower { get; set; }
         public Entity ThrowingObject { get; set; }
+        public HashSet<ulong> LoadedEntities { get; set; } = new();
+        public HashSet<uint> LoadedCells { get; set; } = new();
 
         public FrontendClient(TcpClientConnection connection)
         {

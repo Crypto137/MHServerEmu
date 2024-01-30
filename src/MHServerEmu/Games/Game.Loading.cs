@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Common.Config;
+using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
@@ -15,8 +16,9 @@ namespace MHServerEmu.Games
 {
     public partial class Game
     {
-        private GameMessage[] GetBeginLoadingMessages(DBAccount account)
+        private GameMessage[] GetBeginLoadingMessages(FrontendClient client)
         {
+            DBAccount account = client.Session.Account;
             List<GameMessage> messageList = new();
 
             // Add server info messages
@@ -35,7 +37,7 @@ namespace MHServerEmu.Games
             messageList.Add(new(NetMessageReadyAndLoadedOnGameServer.DefaultInstance));
 
             // Load region data
-            messageList.AddRange(RegionManager.GetRegion(account.Player.Region).GetLoadingMessages(Id, account.Player.Waypoint));
+            messageList.AddRange(RegionManager.GetRegion(account.Player.Region).GetLoadingMessages(Id, account.Player.Waypoint, client.LoadedCells));
 
             // Create a waypoint entity            
             // TODO: Add account.Player.Waypoint as Entity
@@ -44,8 +46,9 @@ namespace MHServerEmu.Games
             return messageList.ToArray();
         }
 
-        private GameMessage[] GetFinishLoadingMessages(DBAccount account)
+        private GameMessage[] GetFinishLoadingMessages(FrontendClient client)
         {
+            DBAccount account = client.Session.Account;
             List<GameMessage> messageList = new();
 
             Region region = RegionManager.GetRegion(account.Player.Region);
@@ -66,7 +69,7 @@ namespace MHServerEmu.Games
                 .SetArchiveData(avatarEnterGameWorldArchive.Serialize())
                 .Build()));
 
-            WorldEntity[] regionEntities = EntityManager.GetWorldEntitiesForRegion(region.Id);
+            WorldEntity[] regionEntities = EntityManager.GetWorldEntitiesForRegion(region.Id, client);
             messageList.AddRange(regionEntities.Select(
                 entity => new GameMessage(entity.ToNetMessageEntityCreate())
             ));

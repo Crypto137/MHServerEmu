@@ -123,7 +123,7 @@ namespace MHServerEmu.Games
             lock (_gameLock)
             {
                 client.GameId = Id;
-                EnqueueResponses(client, GetBeginLoadingMessages(client.Session.Account));
+                EnqueueResponses(client, GetBeginLoadingMessages(client));
             }
         }
 
@@ -134,7 +134,7 @@ namespace MHServerEmu.Games
                 EnqueueResponses(client, GetExitGameMessages());
                 client.Session.Account.Player.Region = region;
                 client.Session.Account.Player.Waypoint = waypointDataRef;
-                EnqueueResponses(client, GetBeginLoadingMessages(client.Session.Account));
+                EnqueueResponses(client, GetBeginLoadingMessages(client));
                 client.LoadedCellCount = 0;
                 client.IsLoading = true;
             }
@@ -254,7 +254,7 @@ namespace MHServerEmu.Games
 
         public void FinishLoading(FrontendClient client)
         {
-            EnqueueResponses(client, GetFinishLoadingMessages(client.Session.Account));
+            EnqueueResponses(client, GetFinishLoadingMessages(client));
             client.IsLoading = false;
         }
 

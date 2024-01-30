@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
@@ -252,10 +253,17 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
-        public WorldEntity[] GetWorldEntitiesForRegion(ulong regionId)
+        public WorldEntity[] GetWorldEntitiesForRegion(ulong regionId, FrontendClient client)
         {
-            IEnumerable<Entity> entities = _entityDict.Values.Where(entity => entity.RegionId == regionId).ToArray();
-            return entities.Select(entity => (WorldEntity)entity).ToArray();
+            client.LoadedEntities.Clear();
+            return _entityDict.Values
+                .Where(entity => entity.RegionId == regionId && entity is WorldEntity worldEntity && client.LoadedCells.Contains(worldEntity.Location.Cell.Id))
+                .Select(entity =>
+                {
+                    client.LoadedEntities.Add(entity.BaseData.EntityId);
+                    return (WorldEntity)entity;
+                })
+                .ToArray();
         }
 
         public Player GetDefaultPlayerEntity()
