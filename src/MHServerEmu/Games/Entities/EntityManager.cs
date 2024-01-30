@@ -10,6 +10,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
+using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -34,16 +35,9 @@ namespace MHServerEmu.Games.Entities
         private ulong GetNextEntityId() { return _nextEntityId++; }
         public ulong PeekNextEntityId() { return _nextEntityId; }
 
-        public Transition Waypoint { get; }
-
         public EntityManager(Game game)
         {
             _game = game;
-
-            // Initialize a waypoint entity from hardcoded data
-            ByteString waypointBaseData = "200C839F01200020".ToByteString();
-            ByteString waypointArchiveData = "20F4C10206000000CD80018880FCFF99BF968110CCC00202CC800302CD40D58280DE868098044DA1A1A4FE0399C00183B8030000000000".ToByteString();
-            Waypoint = new(new(waypointBaseData), waypointArchiveData);
 
             // minihack: force default player and avatar entity message initialization on construction
             // so that there isn't a lag when a player logs in for the first time after the server starts
@@ -51,31 +45,46 @@ namespace MHServerEmu.Games.Entities
             bool avatarMessagesIsEmpty = AvatarMessages == null;
         }
 
-        public WorldEntity CreateWorldEntity(ulong regionId, PrototypeId prototypeId, Vector3 position, Vector3 orientation,
-            int health, int mapAreaId, int healthMaxOther, int mapCellId, PrototypeId contextAreaRef, bool requiresEnterGameWorld, bool OverrideSnapToFloor = false)
+        public WorldEntity CreateWorldEntity(Cell cell, PrototypeId prototypeId, Vector3 position, Vector3 orientation,
+            int health, bool requiresEnterGameWorld, bool OverrideSnapToFloor = false)
         {
+            if (cell == null) return default;
+
             EntityBaseData baseData = (requiresEnterGameWorld == false)
                 ? new EntityBaseData(GetNextEntityId(), prototypeId, position, orientation, OverrideSnapToFloor)
                 : new EntityBaseData(GetNextEntityId(), prototypeId, null, null);
 
+            ulong regionId = cell.GetRegion().Id;
+            int healthMaxOther = health;
+            int mapAreaId = (int)cell.Area.Id;
+            int mapCellId = (int)cell.Id;
+            PrototypeId contextAreaRef = (PrototypeId)cell.Area.PrototypeId;
+
             WorldEntity worldEntity = new(baseData, _game.CurrentRepId, position, health, mapAreaId, healthMaxOther, regionId, mapCellId, contextAreaRef);
             worldEntity.RegionId = regionId;
+            worldEntity.EnterWorld(cell, position, orientation);
             _entityDict.Add(baseData.EntityId, worldEntity);
             return worldEntity;
         }
 
-        public WorldEntity CreateWorldEntityEnemy(ulong regionId, PrototypeId prototypeId, Vector3 position, Vector3 orientation,
-            int health, int mapAreaId, int healthMaxOther, int mapCellId, PrototypeId contextAreaRef, bool requiresEnterGameWorld,
-            int CombatLevel, int CharacterLevel)
+        public WorldEntity CreateWorldEntityEnemy(Cell cell, PrototypeId prototypeId, Vector3 position, Vector3 orientation,
+            int health, bool requiresEnterGameWorld, int CharacterLevel)
         {
             EntityBaseData baseData = (requiresEnterGameWorld == false)
                 ? new EntityBaseData(GetNextEntityId(), prototypeId, position, orientation)
                 : new EntityBaseData(GetNextEntityId(), prototypeId, null, null);
 
+            ulong regionId = cell.GetRegion().Id;
+            int healthMaxOther = health;
+            int mapAreaId = (int)cell.Area.Id;
+            int mapCellId = (int)cell.Id;
+            PrototypeId contextAreaRef = (PrototypeId)cell.Area.PrototypeId;
+
             WorldEntity worldEntity = new(baseData, _game.CurrentRepId, position, health, mapAreaId, healthMaxOther, regionId, mapCellId, contextAreaRef);
             worldEntity.RegionId = regionId;
             _entityDict.Add(baseData.EntityId, worldEntity);
-
+            worldEntity.EnterWorld(cell, position, orientation);
+            int CombatLevel = CharacterLevel;
             worldEntity.PropertyCollection.List.Add(new(PropertyEnum.CharacterLevel, CharacterLevel));
             worldEntity.PropertyCollection.List.Add(new(PropertyEnum.CombatLevel, CombatLevel)); // zero effect
 
@@ -118,10 +127,32 @@ namespace MHServerEmu.Games.Entities
             return item;
         }
 
-        public Transition SpawnDirectTeleport(PrototypeId regionPrototype, PrototypeId prototypeId, Vector3 position, Vector3 orientation,
-            int mapAreaId, ulong regionId, int mapCellId, PrototypeId contextAreaRef, bool requiresEnterGameWorld,
-            PrototypeId targetPrototype, bool OverrideSnapToFloor)
+        public Transition SpawnWaypoint(Cell cell, PrototypeId prototypeId, Vector3 position, Vector3 orientation,
+            bool requiresEnterGameWorld, bool OverrideSnapToFloor)
         {
+            if (cell == null) return default;
+            ulong regionId = cell.GetRegion().Id;
+            int mapAreaId = (int)cell.Area.Id;
+            int mapCellId = (int)cell.Id;
+            PrototypeId contextAreaRef = (PrototypeId)cell.Area.PrototypeId;
+
+            EntityBaseData baseData = (requiresEnterGameWorld == false)
+                ? new EntityBaseData(GetNextEntityId(), prototypeId, position, orientation, OverrideSnapToFloor)
+                : new EntityBaseData(GetNextEntityId(), prototypeId, null, null);
+
+            Transition transition = new(baseData, _game.CurrentRepId, regionId, mapAreaId, mapCellId, contextAreaRef, position, null);
+            transition.RegionId = regionId;
+            transition.EnterWorld(cell, position, orientation);
+            _entityDict.Add(baseData.EntityId, transition);
+
+            return transition;
+        }
+
+        public Transition SpawnDirectTeleport(Cell cell, PrototypeId prototypeId, Vector3 position, Vector3 orientation,
+            bool requiresEnterGameWorld, PrototypeId targetPrototype, bool OverrideSnapToFloor)
+        {            
+            if (cell == null) return default;
+
             EntityBaseData baseData = (requiresEnterGameWorld == false)
                 ? new EntityBaseData(GetNextEntityId(), prototypeId, position, orientation, OverrideSnapToFloor)
                 : new EntityBaseData(GetNextEntityId(), prototypeId, null, null);
@@ -137,6 +168,9 @@ namespace MHServerEmu.Games.Entities
                 var parentTarget = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetPrototype);
                 if (parentTarget != null) targetRegion = parentTarget.Region;
             }
+
+            Region region = cell.GetRegion();
+            PrototypeId regionPrototype = (PrototypeId)region.PrototypeId;
 
             if (RegionManager.IsRegionAvailable((RegionPrototypeId)targetRegion) == false) // TODO: change region test
                 targetRegion = regionPrototype;
@@ -156,9 +190,15 @@ namespace MHServerEmu.Games.Entities
                 Target = targetPrototype,
                 Position = new()
             };
+            
+            ulong regionId = region.Id;
+            int mapAreaId = (int)cell.Area.Id;
+            int mapCellId = (int)cell.Id;
+            PrototypeId contextAreaRef = (PrototypeId)cell.Area.PrototypeId;
 
             Transition transition = new(baseData, _game.CurrentRepId, regionId, mapAreaId, mapCellId, contextAreaRef, position, destination);
             transition.RegionId = regionId;
+            transition.EnterWorld(cell, position, orientation);
             _entityDict.Add(baseData.EntityId, transition);
 
             return transition;
@@ -256,7 +296,24 @@ namespace MHServerEmu.Games.Entities
                 if (entity is WorldEntity worldEntity && worldEntity.Region == region)
                     yield return entity;
         }
+
+        public Transition GetTransitionInRegion(PrototypeId targetRef, Region region, PrototypeId areaRef)
+        {
+            ulong regionId = region.Id;
+            foreach (var entity in _entityDict.Values)
+                if (entity.RegionId == regionId)
+                {
+                    if (entity is not Transition transition) continue;
+                    if (areaRef != 0 && areaRef != (PrototypeId)transition.Location.Area.PrototypeId) continue;
+                    if (transition.BaseData.PrototypeId == targetRef) return transition;
+                    if (transition.TransitionPrototype.Waypoint == targetRef) return transition;
+                }
+            return default;
+        }
+
         // TODO: CreateEntity -> finalizeEntity -> worldEntity.EnterWorld -> _location.SetRegion( region )
+
+        #region OldSpawnSystem
 
         public static float GetEntityFloor(PrototypeId prototypeId)
         {
@@ -271,10 +328,12 @@ namespace MHServerEmu.Games.Entities
             var entity = GameDatabase.GetPrototype<WorldEntityPrototype>(prototypeId);
             return entity.SnapToFloorOnSpawn;
         }
-
-        public void AddEntityMarker(CellPrototype cell, EntityMarkerPrototype entityMarker, Vector3 areaOrigin, Region region, PrototypeId area, int areaid, int cellId)
+ 
+        public void AddEntityMarker(Cell cell, EntityMarkerPrototype entityMarker)
         {
-            Vector3 entityPosition = entityMarker.Position + areaOrigin;
+            CellPrototype cellProto = cell.CellProto;
+
+            Vector3 entityPosition = cell.CalcMarkerPosition(entityMarker.Position);
 
             PrototypeId proto = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
             bool entitySnapToFloor = GetSnapToFloorOnSpawn(proto);
@@ -283,17 +342,80 @@ namespace MHServerEmu.Games.Entities
 
             if (snapToFloor)
             {
-                float projectHeight = RegionLocation.ProjectToFloor(cell, areaOrigin, entityMarker.Position);
+                float projectHeight = cell.RegionBounds.Center.Z + RegionLocation.ProjectToFloor(cellProto, entityMarker.Position);
                 if (entityPosition.Z > projectHeight)
                     entityPosition.Z = projectHeight;
             }
 
             entityPosition.Z += GetEntityFloor(proto);
-
-            CreateWorldEntity(
-                region.Id, proto,
-                entityPosition, entityMarker.Rotation,
-                608, areaid, 608, cellId, area, false, snapToFloor != entitySnapToFloor);
+            CreateWorldEntity(cell, proto, entityPosition, entityMarker.Rotation, 608, false, snapToFloor != entitySnapToFloor);
         }
+
+
+
+        public void MarkersAdd(Cell cell, bool addProp = false)
+        {            
+            foreach (var markerProto in cell.CellProto.MarkerSet.Markers)
+            {
+                if (markerProto is EntityMarkerPrototype entityMarker)
+                {
+                    string marker = entityMarker.LastKnownEntityName;
+
+                    if (marker.Contains("GambitMTXStore")) continue; // Invisible
+                    if (marker.Contains("CosmicEventVendor")) continue; // Invisible
+
+                    if (marker.Contains("Entity/Characters/") || (addProp && marker.Contains("Entity/Props/")))
+                    {
+                        AddEntityMarker(cell, entityMarker);
+                    }
+                }
+            }
+        }
+
+        public void AddTeleports(Cell cell, Area entryArea, ConnectionNodeDict targets)
+        {
+            PrototypeId area = (PrototypeId)entryArea.PrototypeId;
+
+            foreach (var marker in cell.CellProto.InitializeSet.Markers)
+            {
+                if (marker is EntityMarkerPrototype portal)
+                {  
+                    PrototypeId protoId = GameDatabase.GetDataRefByPrototypeGuid(portal.EntityGuid);
+                    if (targets.ContainsKey(area))
+                        if (targets[area].ContainsKey(portal.EntityGuid))
+                        {
+                            //Logger.Warn($"EntityGuid = {door.EntityGuid}");
+                            Vector3 position = cell.CalcMarkerPosition(portal.Position);                            
+                           // float dz = 60f;
+                           // if (portal.EntityGuid == (PrototypeGuid)14397992695795297083) dz = 0f;
+                            position.Z += GetEntityFloor(protoId);
+
+                            SpawnDirectTeleport( cell, protoId, position, portal.Rotation, false, targets[area][portal.EntityGuid], portal.OverrideSnapToFloor > 0);
+                        }
+                    
+                    if (portal.LastKnownEntityName.Contains("Waypoints/"))
+                    {
+                        Logger.Debug($"TP {portal.LastKnownEntityName} [{protoId}]");
+                        Vector3 position = cell.CalcMarkerPosition(portal.Position);
+                        SpawnWaypoint(cell, protoId, position, portal.Rotation, false, portal.OverrideSnapToFloor > 0);
+                    }
+                }
+            }
+        }
+
+        public void GenerateEntities(Region region, ConnectionNodeDict targets, bool addMarkers, bool addProp)
+        {
+            foreach (Area entryArea in region.AreaList)
+            {                
+                foreach (var cell in entryArea.CellList)
+                {
+                    if (addMarkers)
+                        MarkersAdd(cell, addProp);
+                        AddTeleports(cell, entryArea, targets);
+                }
+            }
+        }
+
+        #endregion
     }
 }
