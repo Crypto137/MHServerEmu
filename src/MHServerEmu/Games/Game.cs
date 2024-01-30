@@ -394,7 +394,7 @@ namespace MHServerEmu.Games
             //client.Session.Account.CurrentAvatar.Costume = 0;  // reset costume on avatar switch
             client.Session.Account.Player.Avatar = (AvatarPrototypeId)switchAvatar.AvatarPrototypeId;
             ChatHelper.SendMetagameMessage(client, $"Changing avatar to {client.Session.Account.Player.Avatar}.");
-            MovePlayerToRegion(client, client.Session.Account.Player.Region);
+            MovePlayerToRegion(client, client.Session.Account.Player.Region, client.Session.Account.Player.Waypoint);
 
             /* Old experimental code
             // WIP - Hardcoded Black Cat -> Thor -> requires triggering an avatar swap back to Black Cat to move Thor again  
