@@ -1,17 +1,21 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.Common.Logging;
+using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {
     public class Transition : WorldEntity
     {
+        public static readonly Logger Logger = LogManager.CreateLogger();
         public string TransitionName { get; set; }
         public Destination[] Destinations { get; set; }
 
@@ -89,6 +93,12 @@ namespace MHServerEmu.Games.Entities
         {
             // TODO: Elevators for Tower
             return;
+        }
+
+        public void TeleportClient(FrontendClient client)
+        {
+            Logger.Trace($"Destination region {GameDatabase.GetFormattedPrototypeName(Destinations[0].Region)} [{GameDatabase.GetFormattedPrototypeName(Destinations[0].Entity)}]");
+            client.CurrentGame.MovePlayerToRegion(client, (RegionPrototypeId)Destinations[0].Region, Destinations[0].Target);
         }
     }
 

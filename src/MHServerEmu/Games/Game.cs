@@ -310,18 +310,23 @@ namespace MHServerEmu.Games
                         var currentRegion = (PrototypeId)client.Session.Account.Player.Region;
                         if (currentRegion != teleport.Destinations[0].Region)
                         {
-                            Logger.Trace($"Destination region {GameDatabase.GetFormattedPrototypeName(teleport.Destinations[0].Region)} [{GameDatabase.GetFormattedPrototypeName(teleport.Destinations[0].Entity)}]");
-                            client.CurrentGame.MovePlayerToRegion(client, (RegionPrototypeId)teleport.Destinations[0].Region, teleport.Destinations[0].Target);
-
+                            teleport.TeleportClient(client);
                             return;
                         }
                     }
-   
+
                     if (EntityManager.FindEntityByDestination(teleport.Destinations[0], teleport.RegionId) is not Transition target) return;
+                    
+                    if (client.LoadedCells.Contains(target.Location.Cell.Id) == false )
+                    {
+                        teleport.TeleportClient(client);
+                        return;
+                    }
+
                     var teleportEntity = target.TransitionPrototype;
                     if (teleportEntity == null) return;
-                    Vector3 targetPos = new(target.BaseData.Position);
-                    Vector3 targetRot = target.BaseData.Orientation;
+                    Vector3 targetPos = new(target.Location.GetPosition());
+                    Vector3 targetRot = target.Location.GetOrientation();
 
                     teleportEntity.CalcSpawnOffset(targetRot, ref targetPos);
 
