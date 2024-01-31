@@ -317,10 +317,17 @@ namespace MHServerEmu.Games.Generators
 
         public IEnumerable<T> IterateElementsInVolume(Aabb volume)
         {
-           return new ElementIterator(this, volume);
+            var iterator = new ElementIterator(this, volume);
+
+            while (iterator.End() == false)
+            {
+                var element = iterator.Current;
+                iterator.MoveNext();
+                yield return element;
+            }
         }
 
-        public class ElementIterator : IEnumerator<T>, IEnumerable<T>
+        public class ElementIterator : IEnumerator<T>
         {
             private Quadtree<T> _tree;
             private Aabb _volume;
@@ -356,6 +363,8 @@ namespace MHServerEmu.Games.Generators
                 _tree.IncrementIteratorCount();
                 Reset();
             }
+
+            public bool End() => _currentElement == null;
 
             public void Reset() // init
             {
@@ -475,7 +484,9 @@ namespace MHServerEmu.Games.Generators
             {
                 if (node.Contains)
                 {
-                    var element = node.Node.Elements.First.Value;
+                    QuadtreeLocation<T> element = null;
+                    if (node.Node.Elements.Count > 0)
+                        element = node.Node.Elements.First.Value;
                     if (element != null) return element;
                 }
                 else
@@ -487,7 +498,6 @@ namespace MHServerEmu.Games.Generators
             }
 
             public IEnumerator<T> GetEnumerator() => this;
-            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         }
 
         private void DecrementIteratorCount()
