@@ -279,7 +279,8 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             PrototypeMixinListItem uniqueListElement = null;
             foreach (var element in list)
             {
-                if (element.Prototype.GetType() == elementClassType && element.BlueprintId == elementBlueprint.Id && element.BlueprintCopyNum == blueprintCopyNum)
+                // Type check goes last because it's the most expensive one
+                if (element.BlueprintId == elementBlueprint.Id && element.BlueprintCopyNum == blueprintCopyNum && element.Prototype.GetType() == elementClassType)
                 {
                     uniqueListElement = element;
                     break;
