@@ -9,6 +9,8 @@ using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.Generators.Areas;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Generators.Regions;
+using Gazillion;
+using MHServerEmu.Networking;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -470,6 +472,16 @@ namespace MHServerEmu.Games.Regions
         public Vector3 AreaToRegion(Vector3 positionInArea)
         {
             return positionInArea + Origin;
+        }
+
+        public GameMessage MessageAddArea(bool isStartArea)
+        {
+            return new((byte)GameServerToClientMessage.NetMessageAddArea, NetMessageAddArea.CreateBuilder()
+                .SetAreaId(Id)
+                .SetAreaPrototypeId((ulong)PrototypeId)
+                .SetAreaOrigin(Origin.ToNetStructPoint3())
+                .SetIsStartArea(isStartArea)
+                .Build().ToByteArray());
         }
     }
 

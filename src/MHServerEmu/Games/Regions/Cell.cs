@@ -8,6 +8,8 @@ using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Generators;
+using Gazillion;
+using MHServerEmu.Networking;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -309,6 +311,22 @@ namespace MHServerEmu.Games.Regions
                 // TODO Check Entity Prototype, Add transform to Marker position
                 Game.EntityManager.AddEntityMarker(this, entityMarker);
             }
+        }
+
+        public GameMessage MessageCellCreate()
+        {
+            var builder = NetMessageCellCreate.CreateBuilder()
+                .SetAreaId(Area.Id)
+                .SetCellId(Id)
+                .SetCellPrototypeId((ulong)PrototypeId)
+                .SetPositionInArea(AreaPosition.ToNetStructPoint3())
+                .SetCellRandomSeed(Area.RandomSeed)
+                .SetBufferwidth(0)
+                .SetOverrideLocationName(0);
+
+            foreach (ReservedSpawn reservedSpawn in EncounterList)
+                builder.AddEncounters(reservedSpawn.ToNetStruct());
+            return new(builder.Build());
         }
 
         #region Enums

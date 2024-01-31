@@ -76,7 +76,7 @@ namespace MHServerEmu.Games.Generators.Areas
                         Vector3 position = origin + direction;
                         if (area.IntersectsXY(position))
                         {
-                            Cell otherCell = area.GetCellAtPosition(position); // TODO: Check this function!!!
+                            Cell otherCell = area.GetCellAtPosition(position); 
                             if (otherCell != null) area.CreateCellConnection(cell, otherCell);
                         }
                     }

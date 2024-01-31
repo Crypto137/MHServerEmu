@@ -53,12 +53,11 @@ namespace MHServerEmu.Games
 
             Region region = RegionManager.GetRegion(account.Player.Region);
 
-            // TODO get pos from Entity Manager
             Common.Vector3 entrancePosition = new();
             Common.Vector3 entranceOrientation = new();
 
-            if (region.FindTeleportTarget(account.Player.Waypoint, out Common.Vector3 targetPosition, out Common.Vector3 targetOrientation, out Area area))
-            { // TODO Fix Player Pos, Rot
+            if (region.FindTeleportTarget(account.Player.Waypoint, out Common.Vector3 targetPosition, out Common.Vector3 targetOrientation))
+            { 
                 entrancePosition = new(targetPosition);
                 entranceOrientation = new(targetOrientation);
                 entrancePosition.Z += 42; // TODO project to floor
@@ -75,10 +74,6 @@ namespace MHServerEmu.Games
             ));
 
             // Put waypoint entity in the game world
-           /* EnterGameWorldArchive waypointEnterGameWorldArchiveData = new(12, targetPosition, targetOrientation.Yaw);
-            messageList.Add(new(NetMessageEntityEnterGameWorld.CreateBuilder()
-                .SetArchiveData(waypointEnterGameWorldArchiveData.Serialize())
-                .Build()));*/
 
             // Load power collection
             messageList.AddRange(PowerLoader.LoadAvatarPowerCollection(account.Player.Avatar.ToEntityId()).ToList());
