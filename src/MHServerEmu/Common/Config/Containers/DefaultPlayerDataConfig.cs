@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Common.Config.Containers
@@ -7,6 +8,7 @@ namespace MHServerEmu.Common.Config.Containers
     {
         public string PlayerName { get; private set; }
         public string StartingRegion { get; private set; }
+        public string StartingWaypoint { get; private set; }
         public string StartingAvatar { get; private set; }
 
         [ConfigIgnore]
@@ -18,6 +20,15 @@ namespace MHServerEmu.Common.Config.Containers
                     return @enum;
 
                 return RegionPrototypeId.NPEAvengersTowerHUBRegion;
+            }
+        }
+
+        [ConfigIgnore]
+        public PrototypeId StartingWaypointValue
+        {
+            get
+            {      
+                return (PrototypeId)ulong.Parse(StartingWaypoint);
             }
         }
 

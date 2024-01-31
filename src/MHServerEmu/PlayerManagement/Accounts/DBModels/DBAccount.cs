@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Common;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.PlayerManagement.Accounts;
 
@@ -37,7 +38,7 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
             InitializeData();
         }
 
-        public DBAccount(string playerName, RegionPrototypeId region, AvatarPrototypeId avatar)
+        public DBAccount(string playerName, RegionPrototypeId region, PrototypeId waypoint, AvatarPrototypeId avatar)
         {
             // Default account for using with BypassAuth
             Id = 0;
@@ -48,6 +49,7 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
             InitializeData();
 
             Player.Region = region;
+            Player.Waypoint = waypoint;
             Player.Avatar = avatar;
         }
 
