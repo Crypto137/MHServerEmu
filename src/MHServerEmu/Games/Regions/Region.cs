@@ -789,14 +789,14 @@ namespace MHServerEmu.Games.Regions
             {
                 if (FindTeleportTarget(waypointDataRef, out Vector3 pos, out Vector3 Rot))
                 {
-                    Cell cell = GetCellAtPosition(pos); 
-                    LoadMessagesForConnectedAreas(cell.Area, messageList, cells);
-                   //AreaOfInterest.LoadMessagesForAOI(this, pos, messageList, cells); // not work while
+                  //  Cell cell = GetCellAtPosition(pos); 
+                  //  LoadMessagesForConnectedAreas(cell.Area, messageList, cells);
+                   AreaOfInterest.LoadMessagesForAOI(this, pos, messageList, cells); // not work while
                 }
                 else
                 {
                    LoadMessagesForConnectedAreas(StartArea, messageList, cells);
-                   //AreaOfInterest.LoadMessagesForAOI(this, StartArea.Origin, messageList, cells); // not work while
+                   AreaOfInterest.LoadMessagesForAOI(this, StartArea.Origin, messageList, cells); // not work while
                 }
             }
             CellsInRegion = cells.Count;
@@ -813,6 +813,12 @@ namespace MHServerEmu.Games.Regions
             return messageList.ToArray();
         }
 
+        public Cell GetCellbyId(uint cellId)
+        {
+            foreach (var cell in Cells)
+                if (cell.Id == cellId) return cell;
+            return default;
+        }
     }
 
     public class DividedStartLocation

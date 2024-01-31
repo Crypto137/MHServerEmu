@@ -272,9 +272,9 @@ namespace MHServerEmu.Games.Entities
             return _entityDict.Values
                 .Where(entity => entity.RegionId == region.Id 
                 && entity is WorldEntity worldEntity
-                && client.LoadedEntities.Contains(worldEntity.Location.Cell.Id) == false
                 && worldEntity.Location.Cell.Id == cellid
-                && client.LoadedCells.Contains(worldEntity.Location.Cell.Id) == false)
+                && client.LoadedEntities.Contains(worldEntity.Location.Cell.Id) == false
+               )
                 .Select(entity =>
                 {
                     client.LoadedEntities.Add(entity.BaseData.EntityId);

@@ -74,10 +74,23 @@ namespace MHServerEmu.Games.Regions
 
             // Add new
 
-            foreach (var areaId in sortedAreas)
+
+            HashSet<uint> usedAreas = new();
+
+            foreach (var cellId in cells)
             {
-                Area area = region.GetAreaById(areaId);
-                messageList.Add(area.MessageAddArea(false));
+                Cell cell = region.GetCellbyId(cellId);
+                if (cell == null) continue;
+                usedAreas.Add(cell.Area.Id);
+            }
+
+            foreach (var areaId in sortedAreas)            
+            {   
+                if (usedAreas.Contains(areaId) == false)
+                {
+                    Area area = region.GetAreaById(areaId);
+                    messageList.Add(area.MessageAddArea(false));
+                }
 
                 var sortedCells = cellsByArea[areaId].OrderBy(cell => cell.Id);
 
