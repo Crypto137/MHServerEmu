@@ -133,11 +133,5 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         {
             // NYI
         }
-
-        private static bool IsMixin(Type type)
-        {
-            return type == typeof(LocomotorPrototype) || type == typeof(PopulationInfoPrototype) || type == typeof(ProductPrototype);
-        }
-
     }
 }

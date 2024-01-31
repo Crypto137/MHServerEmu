@@ -31,8 +31,6 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
                 // Begin deserialization
                 DoDeserialize(prototype, prototypeHeader, dataRef, prototypeName, reader);
-
-                //Logger.Debug("Done!");
             }
         }
 
@@ -132,7 +130,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                     // We use MixinAttribute and ListMixinAttribute to differentiate them from RHStructs.
 
                     // First we look for a non-list mixin field
-                    var mixinFieldInfo = classManager.GetMixinFieldInfo(classType, mixinType, typeof(MixinAttribute));
+                    var mixinFieldInfo = classManager.GetMixinFieldInfo(classType, mixinType, PrototypeFieldType.Mixin);
                     if (mixinFieldInfo != null)
                     {
                         // Set owner prototype to the existing mixin instance or create a new instance if there isn't one
@@ -145,12 +143,11 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
                         // Get the field info from our mixin
                         fieldInfo = classManager.GetFieldInfo(mixinType, blueprintMemberInfo, false);
-                        //Logger.Debug($"Found field info for mixin {mixinType.Name}, field name {blueprintMemberInfo.Member.FieldName}");
                     }
                     else
                     {
                         // Look for a list mixin
-                        mixinFieldInfo = classManager.GetMixinFieldInfo(classType, mixinType, typeof(ListMixinAttribute));
+                        mixinFieldInfo = classManager.GetMixinFieldInfo(classType, mixinType, PrototypeFieldType.ListMixin);
                         if (mixinFieldInfo != null)
                         {
                             PrototypeMixinList list = AcquireOwnedMixinList(prototype, mixinFieldInfo, false);
@@ -162,7 +159,6 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
                             fieldOwnerPrototype = element;
                             fieldInfo = classManager.GetFieldInfo(mixinType, blueprintMemberInfo, false);
-                            //Logger.Debug($"Found field info for list mixin {mixinType.Name}, field name {blueprintMemberInfo.Member.FieldName}");
                         }
                         else
                         {

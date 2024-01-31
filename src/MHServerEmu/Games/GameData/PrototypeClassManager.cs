@@ -157,11 +157,9 @@ namespace MHServerEmu.Games.GameData
         /// </summary>
         public System.Reflection.PropertyInfo GetFieldInfo(Type prototypeClassType, BlueprintMemberInfo blueprintMemberInfo, bool getPropertyCollection)
         {
+            // Return the C# property info the blueprint member is bound to if we are not looking for a property collection
             if (getPropertyCollection == false)
-            {
-                // Return the C# property info the blueprint member is bound to if we are not looking for a property collection
                 return blueprintMemberInfo.Member.RuntimeClassFieldInfo;
-            }
 
             // TODO: look for a property collection field for this prototype
             return null;
@@ -170,11 +168,11 @@ namespace MHServerEmu.Games.GameData
         /// <summary>
         /// Returns a <see cref="System.Reflection.PropertyInfo"/> for a mixin field in a Calligraphy prototype.
         /// </summary>
-        public System.Reflection.PropertyInfo GetMixinFieldInfo(Type ownerClassType, Type fieldClassType, Type mixinAttribute)
+        public System.Reflection.PropertyInfo GetMixinFieldInfo(Type ownerClassType, Type fieldClassType, PrototypeFieldType fieldType)
         {
-            // Make sure we have a valid attribute type
-            if ((mixinAttribute == typeof(MixinAttribute) || mixinAttribute == typeof(ListMixinAttribute)) == false)
-                throw new ArgumentException($"{mixinAttribute.Name} is not a mixin attribute.");
+            // Make sure we have a valid field type enum value
+            if ((fieldType == PrototypeFieldType.Mixin || fieldType == PrototypeFieldType.ListMixin) == false)
+                throw new ArgumentException($"{fieldType} is not a mixin field type.");
 
             // Search the entire class hierarchy for a mixin of the matching type
             while (ownerClassType != typeof(Prototype))
@@ -182,17 +180,20 @@ namespace MHServerEmu.Games.GameData
                 // We do what PrototypeFieldSet::GetMixinFieldInfo() does right here using reflection
                 foreach (var property in ownerClassType.GetProperties())
                 {
-                    if (mixinAttribute == typeof(MixinAttribute))
+                    if (fieldType == PrototypeFieldType.Mixin)
                     {
                         // For simple mixins we just return the property if it matches our field type and has the correct attribute
                         if (property.PropertyType != fieldClassType) continue;
-                        if (property.IsDefined(mixinAttribute)) return property;
+                        if (property.IsDefined(typeof(MixinAttribute))) return property;
                     }
-                    else if (mixinAttribute == typeof(ListMixinAttribute))
+                    else if (fieldType == PrototypeFieldType.ListMixin)
                     {
                         // For list mixins we look for a list that is compatible with our requested field type
                         if (property.PropertyType != typeof(PrototypeMixinList)) continue;
 
+                        // NOTE: While we check if the field type defined in the attribute matches our field class type argument exactly,
+                        // the client checks if the argument type is derived from the type defined in the field info.
+                        // This doesn't seem to cause any issues in 1.52, but may need to be changed if we run into issues with other versions.
                         var attribute = property.GetCustomAttribute<ListMixinAttribute>();
                         if (attribute.FieldType == fieldClassType)
                             return property;
