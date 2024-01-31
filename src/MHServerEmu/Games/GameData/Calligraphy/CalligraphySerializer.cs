@@ -153,7 +153,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                         mixinFieldInfo = classManager.GetMixinFieldInfo(classType, mixinType, typeof(ListMixinAttribute));
                         if (mixinFieldInfo != null)
                         {
-                            List<PrototypeMixinListItem> list = AcquireOwnedMixinList(prototype, mixinFieldInfo, false);
+                            PrototypeMixinList list = AcquireOwnedMixinList(prototype, mixinFieldInfo, false);
 
                             // Get a matching list element
                             Prototype element = AcquireOwnedUniqueMixinListElement(prototype, list, mixinType, fieldOwnerBlueprint, blueprintCopyNum);
@@ -233,17 +233,17 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// <summary>
         /// Creates if needed and returns a list mixin from the specified field of the provided <see cref="Prototype"/> instance that belongs to it.
         /// </summary>
-        public static List<PrototypeMixinListItem> AcquireOwnedMixinList(Prototype prototype, System.Reflection.PropertyInfo mixinFieldInfo, bool copyItemsFromParent)
+        public static PrototypeMixinList AcquireOwnedMixinList(Prototype prototype, System.Reflection.PropertyInfo mixinFieldInfo, bool copyItemsFromParent)
         {
             // Make sure the field info we have is for a list mixin
             if (mixinFieldInfo.IsDefined(typeof(ListMixinAttribute)) == false)
-                Logger.WarnReturn<List<PrototypeMixinListItem>>(null, $"Tried to acquire owned mixin list for a field that is not a list mixin");
+                Logger.WarnReturn<PrototypeMixinList>(null, $"Tried to acquire owned mixin list for a field that is not a list mixin");
 
             // Create a new list if there isn't one or it belongs to another prototype
-            var list = (List<PrototypeMixinListItem>)mixinFieldInfo.GetValue(prototype);
+            var list = (PrototypeMixinList)mixinFieldInfo.GetValue(prototype);
             if (list == null || prototype.IsDynamicFieldOwnedBy(list) == false)
             {
-                List<PrototypeMixinListItem> newList = new();
+                PrototypeMixinList newList = new();
 
                 // Fill the new list
                 if (list != null)
@@ -274,7 +274,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// <summary>
         /// Creates if needed and returns an element from a list mixin.
         /// </summary>
-        private static Prototype AcquireOwnedUniqueMixinListElement(Prototype owner, List<PrototypeMixinListItem> list, Type elementClassType,
+        private static Prototype AcquireOwnedUniqueMixinListElement(Prototype owner, PrototypeMixinList list, Type elementClassType,
             Blueprint elementBlueprint, byte blueprintCopyNum)
         {
             // Look for a unique list element
@@ -328,7 +328,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// <summary>
         /// Creates a copy of an element from a parent list mixin and assigns it to the child.
         /// </summary>
-        private static Prototype AddMixinListItemCopy(Prototype owner, List<PrototypeMixinListItem> list, PrototypeMixinListItem item)
+        private static Prototype AddMixinListItemCopy(Prototype owner, PrototypeMixinList list, PrototypeMixinListItem item)
         {
             // Copy the prototype from the provided list item
             Prototype element = AllocateDynamicPrototype(item.Prototype.GetType(), PrototypeId.Invalid, item.Prototype);
@@ -369,16 +369,5 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         }
 
         #endregion
-    }
-
-    /// <summary>
-    /// Contains an item and its blueprint information for a list of mixin prototypes.
-    /// </summary>
-    public class PrototypeMixinListItem
-    {
-        // TODO: Maybe move this somewhere else?
-        public Prototype Prototype { get; set; }
-        public BlueprintId BlueprintId { get; set; }
-        public byte BlueprintCopyNum { get; set; }
     }
 }

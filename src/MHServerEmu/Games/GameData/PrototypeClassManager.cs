@@ -48,7 +48,7 @@ namespace MHServerEmu.Games.GameData
             { typeof(AssetTypeId[]),                PrototypeFieldType.ListAssetTypeRef },
             { typeof(PrototypeId[]),                PrototypeFieldType.ListPrototypeDataRef },
             { typeof(Prototype[]),                  PrototypeFieldType.ListPrototypePtr },
-            { typeof(List<PrototypeMixinListItem>), PrototypeFieldType.ListMixin },
+            { typeof(PrototypeMixinList),           PrototypeFieldType.ListMixin },
             { typeof(PrototypePropertyCollection),  PrototypeFieldType.PropertyCollection }   // FIXME: Separate PropertyCollection from PropertyList somehow?
         };
 
@@ -191,7 +191,7 @@ namespace MHServerEmu.Games.GameData
                     else if (mixinAttribute == typeof(ListMixinAttribute))
                     {
                         // For list mixins we look for a list that is compatible with our requested field type
-                        if (property.PropertyType != typeof(List<PrototypeMixinListItem>)) continue;
+                        if (property.PropertyType != typeof(PrototypeMixinList)) continue;
 
                         var attribute = property.GetCustomAttribute<ListMixinAttribute>();
                         if (attribute.FieldType == fieldClassType)
@@ -212,58 +212,25 @@ namespace MHServerEmu.Games.GameData
         /// </summary>
         public PrototypeFieldType GetPrototypeFieldTypeEnumValue(System.Reflection.PropertyInfo fieldInfo)
         {
+            // In the client PrototypeFieldType values for all fields are defined in the code. In our implementation
+            // we use a combination of C# property types and attributes to determine approximate values.
+            // This relies on reflection, which is slow, so we cache the results in a dictionary.
+
             // Retrieve an already matched enum value if we have one for this property
             if (_prototypeFieldTypeDict.TryGetValue(fieldInfo, out var prototypeFieldTypeEnumValue) == false)
             {
-                if (fieldInfo.IsDefined(typeof(DoNotCopyAttribute)))
-                {
-                    _prototypeFieldTypeDict.Add(fieldInfo, PrototypeFieldType.Invalid);
-                    return PrototypeFieldType.Invalid;
-                }
-
-                var fieldType = fieldInfo.PropertyType;
-
-                // Adjust non-primitive types
-                if (fieldType.IsPrimitive == false)
-                {
-                    if (fieldType.IsArray == false)
-                    {
-                        // Check if this is a mixin or a list mixin
-                        if (PrototypeIsMixin(fieldType))
-                            return PrototypeFieldType.Mixin;
-                        else if (fieldType == typeof(List<PrototypeMixinListItem>))
-                            return PrototypeFieldType.ListMixin;
-
-                        // Check the type itself if it's a simple field
-                        if (fieldType.IsSubclassOf(typeof(Prototype)))
-                            fieldType = typeof(Prototype);
-                        else if (fieldType.IsEnum && fieldType.IsDefined(typeof(AssetEnumAttribute)))
-                            fieldType = typeof(Enum);
-                    }
-                    else
-                    {
-                        // Check element type instead if it's a collection
-                        var elementType = fieldType.GetElementType();
-
-                        if (elementType.IsSubclassOf(typeof(Prototype)))
-                            fieldType = typeof(Prototype[]);
-                        else if (elementType.IsEnum && elementType.IsDefined(typeof(AssetEnumAttribute)))
-                            fieldType = typeof(Enum[]);
-                    }
-                }
-
-                // Try to match a C# type to a prototype field type enum value using a lookup dict
-                if (TypeToPrototypeFieldTypeEnumDict.TryGetValue(fieldType, out prototypeFieldTypeEnumValue) == false)
-                    prototypeFieldTypeEnumValue = PrototypeFieldType.Invalid;
-
                 // There is an issue with using PropertyInfo as a key: PropertyInfos for inherited properties are different on each
-                // level of inheritance, which causes this code to be called more often than necessary.
+                // level of inheritance (because they contain ReflectedType), which causes this code to be called more often than necessary.
+                prototypeFieldTypeEnumValue = DeterminePrototypeFieldType(fieldInfo);
                 _prototypeFieldTypeDict.Add(fieldInfo, prototypeFieldTypeEnumValue);
             }
 
             return prototypeFieldTypeEnumValue;
         }
 
+        /// <summary>
+        /// Calls PostProcess() on all prototypes embedded in the provided one.
+        /// </summary>
         public void PostProcessContainedPrototypes(Prototype prototype)
         {
             foreach (var property in prototype.GetType().GetProperties())
@@ -289,7 +256,7 @@ namespace MHServerEmu.Games.GameData
                         break;
 
                     case PrototypeFieldType.ListMixin:
-                        var mixinList = (List<PrototypeMixinListItem>)property.GetValue(prototype);
+                        var mixinList = (PrototypeMixinList)property.GetValue(prototype);
                         if (mixinList == null) continue;
                         foreach (var mixin in mixinList)
                             mixin.Prototype.PostProcess();
@@ -298,10 +265,55 @@ namespace MHServerEmu.Games.GameData
             }
         }
 
-        private bool PrototypeIsMixin(Type type)
+        /// <summary>
+        /// Determines a matching <see cref="PrototypeFieldType"/> enum value for a <see cref="System.Reflection.PropertyInfo"/>.
+        /// </summary>
+        private PrototypeFieldType DeterminePrototypeFieldType(System.Reflection.PropertyInfo fieldInfo)
         {
-            // Speed hack: instead of calling IsDefined() we just check if the type is one of mixin prototype types
-            return type == typeof(LocomotorPrototype) || type == typeof(PopulationInfoPrototype) || type == typeof(ProductPrototype);
+            // Skip if the field is marked to be ignored
+            if (fieldInfo.IsDefined(typeof(DoNotCopyAttribute)))
+                return PrototypeFieldType.Invalid;
+
+            var fieldType = fieldInfo.PropertyType;
+
+            // Manually determine some of non-primitive types
+            if (fieldType.IsPrimitive == false)
+            {
+                if (fieldType.IsArray == false)
+                {
+                    // Check if this is a mixin or a list mixin
+                    // Speed hack: instead of calling IsDefined() we just check if the type is one of mixin prototype types
+                    if (fieldType == typeof(LocomotorPrototype) || fieldType == typeof(PopulationInfoPrototype) || fieldType == typeof(ProductPrototype))
+                        return PrototypeFieldType.Mixin;
+                    else if (fieldType == typeof(PrototypeMixinList))
+                        return PrototypeFieldType.ListMixin;
+
+                    // Check for prototypes and asset enums
+                    // In resource prototypes we consider embedded prototypes as PrototypeFieldType.PrototypePtr (same as Calligraphy),
+                    // even though technically they should be just PrototypeFieldType.Prototype. Distinguishing them doesn't seem
+                    // to serve any purpose within our implementation of this system as of right now.
+                    if (fieldType.IsSubclassOf(typeof(Prototype)))
+                        return PrototypeFieldType.PrototypePtr;
+                    else if (fieldType.IsEnum && fieldType.IsDefined(typeof(AssetEnumAttribute)))
+                        return PrototypeFieldType.Enum;
+                }
+                else
+                {
+                    // Check element type instead if it's a collection
+                    var elementType = fieldType.GetElementType();
+
+                    if (elementType.IsSubclassOf(typeof(Prototype)))
+                        return PrototypeFieldType.ListPrototypePtr;
+                    else if (elementType.IsEnum && elementType.IsDefined(typeof(AssetEnumAttribute)))
+                        return PrototypeFieldType.ListEnum;
+                }
+            }
+
+            // Try to match a C# type to a prototype field type enum value using a lookup dict
+            if (TypeToPrototypeFieldTypeEnumDict.TryGetValue(fieldType, out var prototypeFieldTypeEnumValue) == false)
+                return PrototypeFieldType.Invalid;
+
+            return prototypeFieldTypeEnumValue;
         }
     }
 }
