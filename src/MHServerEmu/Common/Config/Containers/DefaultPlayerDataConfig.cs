@@ -28,7 +28,7 @@ namespace MHServerEmu.Common.Config.Containers
         {
             get
             {      
-                return (PrototypeId)ulong.Parse(StartingWaypoint);
+                return (StartingWaypoint != null) ? (PrototypeId)ulong.Parse(StartingWaypoint) : (PrototypeId)10137590415717831231;
             }
         }
 

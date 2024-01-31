@@ -70,10 +70,11 @@ namespace MHServerEmu.Games.Regions
                 cellsByArea[cell.Area.Id].Add(cell);
             }
 
+            if (cellsByArea.Count == 0) return messageList;
+
             var sortedAreas = cellsByArea.Keys.OrderBy(id => id);
 
             // Add new
-
 
             HashSet<uint> usedAreas = new();
 
