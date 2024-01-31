@@ -232,7 +232,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         public static PrototypeMixinList AcquireOwnedMixinList(Prototype prototype, System.Reflection.PropertyInfo mixinFieldInfo, bool copyItemsFromParent)
         {
             // Make sure the field info we have is for a list mixin
-            if (mixinFieldInfo.IsDefined(typeof(ListMixinAttribute)) == false)
+            if (mixinFieldInfo.PropertyType != typeof(PrototypeMixinList))
                 Logger.WarnReturn<PrototypeMixinList>(null, $"Tried to acquire owned mixin list for a field that is not a list mixin");
 
             // Create a new list if there isn't one or it belongs to another prototype
@@ -259,6 +259,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 }
 
                 // Assign the new list to the field and take ownership of it
+                mixinFieldInfo.SetValue(prototype, newList);
                 prototype.SetDynamicFieldOwner(newList);
 
                 list = newList;
