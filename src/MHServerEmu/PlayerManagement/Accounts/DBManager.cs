@@ -92,8 +92,8 @@ namespace MHServerEmu.PlayerManagement.Accounts
                         connection.Execute(@"INSERT INTO Account (Id, Email, PlayerName, PasswordHash, Salt, UserLevel, IsBanned, IsArchived, IsPasswordExpired)
                             VALUES (@Id, @Email, @PlayerName, @PasswordHash, @Salt, @UserLevel, @IsBanned, @IsArchived, @IsPasswordExpired)", account, transaction);
 
-                        connection.Execute(@"INSERT INTO Player (AccountId, RawRegion, RawAvatar)
-                            VALUES (@AccountId, @RawRegion, @RawAvatar)", account.Player, transaction);
+                        connection.Execute(@"INSERT INTO Player (AccountId, RawRegion, RawAvatar, RawWaypoint)
+                            VALUES (@AccountId, @RawRegion, @RawAvatar, @RawWaypoint)", account.Player, transaction);
 
                         connection.Execute(@"INSERT INTO Avatar (AccountId, RawPrototype, RawCostume)
                             VALUES (@AccountId, @RawPrototype, @RawCostume)", account.Avatars, transaction);
@@ -150,7 +150,7 @@ namespace MHServerEmu.PlayerManagement.Accounts
                 {
                     try
                     {
-                        connection.Execute(@"UPDATE Player SET RawRegion=@RawRegion, RawAvatar=@RawAvatar WHERE AccountId=@AccountId", account.Player, transaction);
+                        connection.Execute(@"UPDATE Player SET RawRegion=@RawRegion, RawAvatar=@RawAvatar, RawWaypoint=@RawWaypoint WHERE AccountId=@AccountId", account.Player, transaction);
                         connection.Execute(@"UPDATE Avatar SET RawCostume=@RawCostume WHERE AccountId=@AccountId AND RawPrototype=@RawPrototype", account.Avatars, transaction);
 
                         transaction.Commit();

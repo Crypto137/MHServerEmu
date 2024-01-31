@@ -23,7 +23,7 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
         public AvatarPrototypeId Avatar { get; set; }
         public long RawAvatar { get => (long)Avatar; private set => Avatar = (AvatarPrototypeId)value; }
         public PrototypeId Waypoint { get; set; }
-
+        public long RawWaypoint { get => (long)Waypoint; private set => Waypoint = (PrototypeId)value; }
         public DBPlayer(ulong accountId)
         {
             AccountId = accountId;
