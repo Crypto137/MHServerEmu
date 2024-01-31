@@ -313,14 +313,11 @@ namespace MHServerEmu.Games
                     if (teleport.Destinations.Length == 0) return;
                     Logger.Trace($"Destination entity {teleport.Destinations[0].Entity}");
 
-                    if (teleport.Destinations[0].Type == 2)
+                    var currentRegion = (PrototypeId)client.Session.Account.Player.Region;
+                    if (currentRegion != teleport.Destinations[0].Region)
                     {
-                        var currentRegion = (PrototypeId)client.Session.Account.Player.Region;
-                        if (currentRegion != teleport.Destinations[0].Region)
-                        {
-                            teleport.TeleportClient(client);
-                            return;
-                        }
+                        teleport.TeleportClient(client);
+                        return;
                     }
 
                     if (EntityManager.FindEntityByDestination(teleport.Destinations[0], teleport.RegionId) is not Transition target) return;

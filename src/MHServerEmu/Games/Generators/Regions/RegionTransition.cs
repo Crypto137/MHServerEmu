@@ -24,6 +24,14 @@ namespace MHServerEmu.Games.Generators.Regions
         {
             var nodes = new ConnectionNodeList();
 
+            HashSet<PrototypeId> regions = new (){region};
+            RegionPrototype regionProto = GameDatabase.GetPrototype<RegionPrototype>(region);
+            /* while (regionProto.ParentDataRef != (PrototypeId)1677652504589371837)
+            {
+                regions.Add(regionProto.ParentDataRef);
+                regionProto = GameDatabase.GetPrototype<RegionPrototype>(regionProto.ParentDataRef);
+            }      */      
+
             var iterateProtos = GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(RegionConnectionNodePrototype), PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly);
             foreach (var itrProtoId in iterateProtos)
             {
@@ -35,9 +43,9 @@ namespace MHServerEmu.Games.Generators.Regions
 
                     if (origin != null && target != null)
                     {
-                        if (region == origin.Region)
+                        if (regions.Contains(origin.Region))
                         {
-                          //  Logger.Debug($"[{GameDatabase.GetFormattedPrototypeName(origin.Area)}] {GameDatabase.GetFormattedPrototypeName(origin.Entity)} [{GameDatabase.GetFormattedPrototypeName(target.Area)}]");
+                            //Logger.Debug($"[{GameDatabase.GetFormattedPrototypeName(origin.Area)}] {GameDatabase.GetFormattedPrototypeName(origin.Entity)} [{GameDatabase.GetFormattedPrototypeName(target.Area)}]");
                             nodes.Add(new TargetObject
                             {
                                 Area = origin.Area,
@@ -46,9 +54,9 @@ namespace MHServerEmu.Games.Generators.Regions
                                 TargetId = proto.Target
                             });
                         }
-                        if (proto.Type == RegionTransitionDirectionality.BiDirectional && region == target.Region)
+                        if (proto.Type == RegionTransitionDirectionality.BiDirectional && regions.Contains(target.Region))
                         {
-                           // Logger.Debug($"[{GameDatabase.GetFormattedPrototypeName(target.Area)}] {GameDatabase.GetFormattedPrototypeName(target.Entity)} [{GameDatabase.GetFormattedPrototypeName(origin.Area)}] ");
+                            ///Logger.Debug($"[{GameDatabase.GetFormattedPrototypeName(target.Area)}] {GameDatabase.GetFormattedPrototypeName(target.Entity)} [{GameDatabase.GetFormattedPrototypeName(origin.Area)}] ");
                             nodes.Add(new TargetObject
                             {                                
                                 Area = target.Area,
@@ -114,11 +122,9 @@ namespace MHServerEmu.Games.Generators.Regions
             return found;
         }
 
-        public static bool GetDestination(PrototypeId waypointDataRef, out RegionConnectionTargetPrototype target)
+        public static bool GetDestination(WaypointPrototype waypointProto, out RegionConnectionTargetPrototype target)
         {            
             target = null;
-            if (waypointDataRef == 0) return false;
-            WaypointPrototype waypointProto = GameDatabase.GetPrototype<WaypointPrototype>(waypointDataRef);
             if (waypointProto == null || waypointProto.Destination == 0) return false;
             target = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(waypointProto.Destination);
             return (target != null);

@@ -104,7 +104,7 @@ namespace MHServerEmu.Games.Entities
 
     public class Destination
     {
-        public int Type { get; set; }
+        public RegionTransitionType Type { get; set; }
         public PrototypeId Region { get; set; }
         public PrototypeId Area { get; set; }
         public PrototypeId Cell { get; set; }
@@ -121,7 +121,7 @@ namespace MHServerEmu.Games.Entities
         public Destination() { }
         public Destination(CodedInputStream stream)
         {
-            Type = stream.ReadRawInt32();
+            Type = (RegionTransitionType)stream.ReadRawInt32();
 
             Region = stream.ReadPrototypeEnum<Prototype>();
             Area = stream.ReadPrototypeEnum<Prototype>();
@@ -145,7 +145,7 @@ namespace MHServerEmu.Games.Entities
             UnkId2 = stream.ReadRawVarint64();
         }
 
-        public Destination(int type, PrototypeId region, PrototypeId area, PrototypeId cell, PrototypeId entity, PrototypeId target, 
+        public Destination(RegionTransitionType type, PrototypeId region, PrototypeId area, PrototypeId cell, PrototypeId entity, PrototypeId target, 
             int unk2, string name, LocaleStringId nameId, ulong regionId, 
             Vector3 position, ulong unkId1, ulong unkId2)
         {
@@ -166,7 +166,7 @@ namespace MHServerEmu.Games.Entities
 
         public void Encode(CodedOutputStream stream)
         {
-            stream.WriteRawInt32(Type);
+            stream.WriteRawInt32((int)Type);
 
             stream.WritePrototypeEnum<Prototype>(Region);
             stream.WritePrototypeEnum<Prototype>(Area);

@@ -606,9 +606,10 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        private bool FindAreaByTarget(out Area startArea, RegionConnectionTargetPrototype target)
+        private bool FindAreaByTarget(out Area startArea, out PrototypeId cellRef, RegionConnectionTargetPrototype target)
         {
             startArea = null;
+            cellRef = 0;
             if (target.Entity == 0) return false;
             // fix for AvengerTower
             if (StartArea.PrototypeId == AreaPrototypeId.AvengersTowerHubArea)
@@ -643,6 +644,7 @@ namespace MHServerEmu.Games.Regions
                                 if (dataRef == target.Entity)
                                 {
                                     startArea = area;
+                                    cellRef = cell.PrototypeId;
                                     return true;
                                 }
                             }
@@ -663,9 +665,9 @@ namespace MHServerEmu.Games.Regions
             RegionConnectionTargetPrototype targetDest = null;
             Prototype targetProto = GameDatabase.GetPrototype<Prototype>(targetRef);
 
-            if (targetProto is WaypointPrototype)
+            if (targetProto is WaypointPrototype waypointProto)
             {
-                if (RegionTransition.GetDestination(targetRef, out RegionConnectionTargetPrototype targetDestination))
+                if (RegionTransition.GetDestination(waypointProto, out RegionConnectionTargetPrototype targetDestination))
                 {
                     targetRef = targetDestination.Entity;
                     targetDest = targetDestination;
@@ -680,10 +682,11 @@ namespace MHServerEmu.Games.Regions
                 cellRef = GameDatabase.GetDataRefByAsset(targetDestination.Cell);
             }
 
-            if (FindAreaByTarget(out Area foundArea, targetDest))
+            if (FindAreaByTarget(out Area foundArea, out PrototypeId foundCell, targetDest))
             {
                 areaRef = foundArea.GetPrototypeDataRef();
                 if (areaRef == (PrototypeId)AreaPrototypeId.AvengersTowerHubArea) cellRef = 0;
+                if (foundCell != 0) cellRef = foundCell;
             }
 
             WorldEntity targetEntity = Game.EntityManager.GetTransitionInRegion(targetRef, this, areaRef, cellRef);            

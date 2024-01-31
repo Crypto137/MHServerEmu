@@ -1,6 +1,4 @@
 ﻿using Gazillion;
-using Google.ProtocolBuffers;
-using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
@@ -128,7 +126,7 @@ namespace MHServerEmu.Games.Entities
             return item;
         }
 
-        public Transition SpawnWaypoint(Cell cell, PrototypeId prototypeId, Vector3 position, Vector3 orientation,
+        public Transition SpawnTransitionMarket(Cell cell, TransitionPrototype transitionProto, Vector3 position, Vector3 orientation,
             bool requiresEnterGameWorld, bool OverrideSnapToFloor)
         {
             if (cell == null) return default;
@@ -138,8 +136,8 @@ namespace MHServerEmu.Games.Entities
             PrototypeId contextAreaRef = (PrototypeId)cell.Area.PrototypeId;
 
             EntityBaseData baseData = (requiresEnterGameWorld == false)
-                ? new EntityBaseData(GetNextEntityId(), prototypeId, position, orientation, OverrideSnapToFloor)
-                : new EntityBaseData(GetNextEntityId(), prototypeId, null, null);
+                ? new EntityBaseData(GetNextEntityId(), transitionProto.DataRef, position, orientation, OverrideSnapToFloor)
+                : new EntityBaseData(GetNextEntityId(), transitionProto.DataRef, null, null);
 
             Transition transition = new(baseData, _game.CurrentRepId, regionId, mapAreaId, mapCellId, contextAreaRef, position, null);
             transition.RegionId = regionId;
@@ -149,16 +147,16 @@ namespace MHServerEmu.Games.Entities
             return transition;
         }
 
-        public Transition SpawnDirectTeleport(Cell cell, PrototypeId prototypeId, Vector3 position, Vector3 orientation,
-            bool requiresEnterGameWorld, PrototypeId targetPrototype, bool OverrideSnapToFloor)
+        public Transition SpawnTargetTeleport(Cell cell, TransitionPrototype transitionProto, Vector3 position, Vector3 orientation,
+            bool requiresEnterGameWorld, PrototypeId targetRef, bool OverrideSnapToFloor)
         {            
             if (cell == null) return default;
 
             EntityBaseData baseData = (requiresEnterGameWorld == false)
-                ? new EntityBaseData(GetNextEntityId(), prototypeId, position, orientation, OverrideSnapToFloor)
-                : new EntityBaseData(GetNextEntityId(), prototypeId, null, null);
+                ? new EntityBaseData(GetNextEntityId(), transitionProto.DataRef, position, orientation, OverrideSnapToFloor)
+                : new EntityBaseData(GetNextEntityId(), transitionProto.DataRef, null, null);
 
-            var regionConnectionTarget = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetPrototype);
+            var regionConnectionTarget = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetRef);
 
             var cellAssetId = regionConnectionTarget.Cell;
             var cellPrototypeId = cellAssetId != AssetId.Invalid ? GameDatabase.GetDataRefByAsset(cellAssetId) : PrototypeId.Invalid;
@@ -166,7 +164,7 @@ namespace MHServerEmu.Games.Entities
             var targetRegion = regionConnectionTarget.Region;
             // Logger.Debug($"SpawnDirectTeleport {targetRegion}");
             if (targetRegion == 0) { // get Parent value
-                var parentTarget = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetPrototype);
+                var parentTarget = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetRef);
                 if (parentTarget != null) targetRegion = parentTarget.Region;
             }
 
@@ -176,8 +174,9 @@ namespace MHServerEmu.Games.Entities
             if (RegionManager.IsRegionAvailable((RegionPrototypeId)targetRegion) == false) // TODO: change region test
                 targetRegion = regionPrototype;
 
-            int type = 1; // default teleport
-            if (targetRegion != regionPrototype) type = 2; // region teleport
+            var type = transitionProto.Type; // default teleport
+        //    if (targetRegion != regionPrototype)
+          //      type = RegionTransitionType.Marker; // region teleport
 
             Destination destination = new()
             {
@@ -188,10 +187,10 @@ namespace MHServerEmu.Games.Entities
                 Entity = regionConnectionTarget.Entity,
                 Name = "",
                 NameId = regionConnectionTarget.Name,
-                Target = targetPrototype,
+                Target = targetRef,
                 Position = new()
             };
-            
+            if (transitionProto.DataRef == (PrototypeId)3648140311059045422) destination = null; // Fix for old AvengersTower
             ulong regionId = region.Id;
             int mapAreaId = (int)cell.Area.Id;
             int mapCellId = (int)cell.Id;
@@ -420,21 +419,27 @@ namespace MHServerEmu.Games.Entities
                 if (marker is EntityMarkerPrototype portal)
                 {  
                     PrototypeId protoId = GameDatabase.GetDataRefByPrototypeGuid(portal.EntityGuid);
-                    TargetObject node = GetTargetNode(area, cell.PrototypeId, portal.EntityGuid);
-                    if (node != null)
+                    Prototype entity = GameDatabase.GetPrototype<Prototype>(protoId);
+                    if (entity is TransitionPrototype transition)
                     {
                         Vector3 position = cell.CalcMarkerPosition(portal.Position);
                         position.Z += GetEntityFloor(protoId);
+                        Logger.Debug($"[{transition.Type}] {portal.LastKnownEntityName} [{protoId}]");
+                        if (transition.Waypoint != 0)
+                        {
+                            var waypointProto = GameDatabase.GetPrototype<WaypointPrototype>(transition.Waypoint);
+                            SpawnTargetTeleport(cell, transition, position, portal.Rotation, false, waypointProto.Destination, portal.OverrideSnapToFloor > 0);
+                        }
+                        else
+                        {
+                            TargetObject node = GetTargetNode(area, cell.PrototypeId, portal.EntityGuid);
+                            if (node != null)
+                                SpawnTargetTeleport(cell, transition, position, portal.Rotation, false, node.TargetId, portal.OverrideSnapToFloor > 0);
+                            else
+                                SpawnTransitionMarket(cell, transition, position, portal.Rotation, false, portal.OverrideSnapToFloor > 0);   
+                        }      
+                    }
 
-                        SpawnDirectTeleport( cell, protoId, position, portal.Rotation, false, node.TargetId, portal.OverrideSnapToFloor > 0);
-                    }
-                    
-                    if (portal.LastKnownEntityName.Contains("Waypoints/"))
-                    {
-                       // Logger.Debug($"[TP] {portal.LastKnownEntityName} [{protoId}]");
-                        Vector3 position = cell.CalcMarkerPosition(portal.Position);
-                        SpawnWaypoint(cell, protoId, position, portal.Rotation, false, portal.OverrideSnapToFloor > 0);
-                    }
                 }
             }
         }
