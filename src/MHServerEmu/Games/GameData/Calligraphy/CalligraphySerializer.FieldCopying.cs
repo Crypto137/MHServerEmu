@@ -19,10 +19,13 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         }
 
         /// <summary>
-        /// Copies field values from one <see cref="Prototype"/> to another.
+        /// Copies all appropriate field values from one <see cref="Prototype"/> instance to another.
         /// </summary>
         private static bool CopyPrototypeFields(Prototype destPrototype, Prototype sourcePrototype)
         {
+            // In some cases (e.g. PopulationInfoPrototype mixin) destination and/or source may be null
+            if (destPrototype == null || sourcePrototype == null) return false;
+
             // Get type information for both prototypes and make sure they are the same
             Type destType = destPrototype.GetType();
             Type sourceType = sourcePrototype.GetType();
@@ -74,27 +77,33 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                         break;
 
                     case PrototypeFieldType.ListMixin:
-                        CopyMixinCollection();
+                        CopyMixinCollection(destPrototype, sourcePrototype, fieldInfo);
                         break;
 
                     case PrototypeFieldType.PropertyList:
                     case PrototypeFieldType.PropertyCollection:
-                        CopyPrototypePropertyCollection();
+                        CopyPrototypePropertyCollection(destPrototype, sourcePrototype, fieldInfo);
                         break;
 
-                    case PrototypeFieldType.Invalid: break;
-                    default: return Logger.WarnReturn(false, $"Trying to copy unsupported prototype field type {fieldInfo.PropertyType.Name}");
+                    case PrototypeFieldType.Invalid: return false;
+                    default: return Logger.WarnReturn(false, $"Trying to copy unhandled prototype field type {fieldInfo.PropertyType.Name}");
                 }
             }
 
             return true;
         }
 
+        /// <summary>
+        /// Copies a field value from one <see cref="Prototype"/> instance to another.
+        /// </summary>
         private static void AssignPointedAtValues(Prototype destPrototype, Prototype sourcePrototype, System.Reflection.PropertyInfo fieldInfo)
         {
             fieldInfo.SetValue(destPrototype, fieldInfo.GetValue(sourcePrototype));
         }
 
+        /// <summary>
+        /// Creates a shallow copy of a collection field from a source <see cref="Prototype"/> 
+        /// </summary>
         private static void ShallowCopyCollection(Prototype destPrototype, Prototype sourcePrototype, System.Reflection.PropertyInfo fieldInfo)
         {
             var sourceData = (Array)fieldInfo.GetValue(sourcePrototype);
@@ -108,14 +117,11 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
         private static void CopyMixin(Prototype destPrototype, Prototype sourcePrototype, System.Reflection.PropertyInfo fieldInfo)
         {
-            // Population info is always null
-            if (fieldInfo.PropertyType == typeof(PopulationInfoPrototype)) return;
-
             var destMixin = (Prototype)fieldInfo.GetValue(destPrototype);
             var sourceMixin = (Prototype)fieldInfo.GetValue(sourcePrototype);
 
-            // Create the mixin instance on the destination prototype if it doesn't exist
-            if (destMixin == null)
+            // Create the mixin instance on the destination prototype if it doesn't exist and there is something to copy
+            if (sourceMixin != null && destMixin == null)
             {
                 destMixin = (Prototype)Activator.CreateInstance(fieldInfo.PropertyType);
                 fieldInfo.SetValue(destPrototype, destMixin);
@@ -124,12 +130,12 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             CopyPrototypeFields(destMixin, sourceMixin);
         }
 
-        private static void CopyMixinCollection()
+        private static void CopyMixinCollection(Prototype destPrototype, Prototype sourcePrototype, System.Reflection.PropertyInfo fieldInfo)
         {
             // NYI
         }
 
-        private static void CopyPrototypePropertyCollection()
+        private static void CopyPrototypePropertyCollection(Prototype destPrototype, Prototype sourcePrototype, System.Reflection.PropertyInfo fieldInfo)
         {
             // NYI
         }
