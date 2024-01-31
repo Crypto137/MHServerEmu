@@ -322,7 +322,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         }
 
         /// <summary>
-        /// Creates a shallow copy of a collection field from a source <see cref="Prototype"/> 
+        /// Shallow copies a collection field from a source <see cref="Prototype"/>.
         /// </summary>
         private static void ShallowCopyCollection(Prototype destPrototype, Prototype sourcePrototype, System.Reflection.PropertyInfo fieldInfo)
         {
@@ -335,6 +335,9 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             fieldInfo.SetValue(destPrototype, destData);
         }
 
+        /// <summary>
+        /// Copies a mixin field from a source <see cref="Prototype"/>.
+        /// </summary>
         private static void CopyMixin(Prototype destPrototype, Prototype sourcePrototype, System.Reflection.PropertyInfo fieldInfo)
         {
             var sourceMixin = (Prototype)fieldInfo.GetValue(sourcePrototype);
@@ -347,6 +350,9 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             CopyPrototypeFields(destMixin, sourceMixin);
         }
 
+        /// <summary>
+        /// Copies a <see cref="PrototypeMixinList"/> from a source <see cref="Prototype"/>.
+        /// </summary>
         private static void CopyMixinCollection(Prototype destPrototype, Prototype sourcePrototype, System.Reflection.PropertyInfo fieldInfo)
         {
             var sourceList = (PrototypeMixinList)fieldInfo.GetValue(sourcePrototype);
@@ -375,9 +381,18 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             }
         }
 
+        /// <summary>
+        /// Copies a <see cref="PrototypePropertyCollection"/> from a source <see cref="Prototype"/>.
+        /// </summary>
         private static void CopyPrototypePropertyCollection(Prototype destPrototype, Prototype sourcePrototype, System.Reflection.PropertyInfo fieldInfo)
         {
-            // NYI
+            var sourcePropertyCollection = (PrototypePropertyCollection)fieldInfo.GetValue(sourcePrototype);
+            if (sourcePropertyCollection == null) return;
+
+            // Create a copy of the source property collection and take ownership of it
+            var destPropertyCollection = sourcePropertyCollection.ShallowCopy();
+            fieldInfo.SetValue(destPrototype, destPropertyCollection);
+            destPrototype.SetDynamicFieldOwner(destPropertyCollection);
         }
 
         #endregion
@@ -385,7 +400,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         #region List Mixin Management
 
         /// <summary>
-        /// Creates if needed and returns a list mixin from the specified field of the provided <see cref="Prototype"/> instance that belongs to it.
+        /// Creates if needed and returns a <see cref="PrototypeMixinList"/> from the specified field of the provided <see cref="Prototype"/> instance that belongs to it.
         /// </summary>
         public static PrototypeMixinList AcquireOwnedMixinList(Prototype prototype, System.Reflection.PropertyInfo mixinFieldInfo, bool copyItemsFromParent)
         {
@@ -427,7 +442,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         }
 
         /// <summary>
-        /// Creates if needed and returns an element from a list mixin.
+        /// Creates if needed and returns a <see cref="Prototype"/> element from a <see cref="PrototypeMixinList"/>.
         /// </summary>
         private static Prototype AcquireOwnedUniqueMixinListElement(Prototype owner, PrototypeMixinList list, Type elementClassType,
             Blueprint elementBlueprint, byte blueprintCopyNum)
@@ -482,7 +497,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         }
 
         /// <summary>
-        /// Creates a copy of an element from a parent list mixin and assigns it to the child.
+        /// Creates a copy of a <see cref="Prototype"/> element from a parent <see cref="PrototypeMixinList"/> and assigns it to the child.
         /// </summary>
         private static Prototype AddMixinListItemCopy(Prototype owner, PrototypeMixinList list, PrototypeMixinListItem item)
         {
