@@ -111,8 +111,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// </summary>
         private static bool ParseDataRef(FieldParserParams @params)
         {
-            // Data refs can be StringId, AssetTypeId, CurveId, PrototypeId, LocaleStringId or ulong.
-            // Eventually we will assign appropriate data ref types to all ulong fields.
+            // Data refs can be StringId, AssetTypeId, CurveId, PrototypeId, or LocaleStringId.
             // C# enums are not picky when assigning values with reflection, so we can reuse the same code for all of them.
             var value = @params.Reader.ReadUInt64();
             @params.FieldInfo.SetValue(@params.OwnerPrototype, value);

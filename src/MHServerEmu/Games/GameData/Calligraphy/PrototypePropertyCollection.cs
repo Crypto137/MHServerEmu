@@ -24,11 +24,31 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             fieldInfo.SetValue(container, value);
         }
 
+        public void AddPropertyContainer(BlueprintId blueprintId, byte blueprintCopyNum, TempPrototypePropertyContainer container)
+        {
+            _propertyContainer.Add((blueprintId, blueprintCopyNum), container);
+        }
+
         public TempPrototypePropertyContainer GetPropertyContainer(BlueprintId blueprintId, byte blueprintCopyNum = 0)
         {
             if (_propertyContainer.TryGetValue((blueprintId, blueprintCopyNum), out var container) == false)
                 Logger.WarnReturn<TempPrototypePropertyContainer>(null, $"Failed to get property container for blueprint {GameDatabase.GetBlueprintName(blueprintId)}");
             return container;
+        }
+
+        // ShallowCopy() is part of the real API that PrototypePropertyCollection is supposed to have
+        // It is used for prototype field copying
+        public PrototypePropertyCollection ShallowCopy()
+        {
+            PrototypePropertyCollection newCollection = new();
+
+            foreach (var kvp in _propertyContainer)
+            {
+                var newContainer = kvp.Value.Clone();
+                newCollection.AddPropertyContainer(kvp.Key.Item1, kvp.Key.Item2, newContainer);
+            }
+
+            return newCollection;
         }
     }
 
@@ -40,5 +60,18 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         public ulong Param1 { get; protected set; }
         public ulong Param2 { get; protected set; }
         public ulong Param3 { get; protected set; }
+
+        public TempPrototypePropertyContainer Clone()
+        {
+            return new()
+            {
+                Value = Value,
+                CurveIndex = CurveIndex,
+                Param0 = Param0,
+                Param1 = Param1,
+                Param2 = Param2,
+                Param3 = Param3
+            };
+        }
     }
 }
