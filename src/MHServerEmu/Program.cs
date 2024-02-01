@@ -122,12 +122,12 @@ namespace MHServerEmu
 
             // Attach console log target
             if (ConfigManager.Logging.EnableConsole)
-                LogManager.AttachLogTarget(new ConsoleTarget(ConfigManager.Logging.ConsoleIncludeTimestamps,
+                LogManager.AttachTarget(new ConsoleTarget(ConfigManager.Logging.ConsoleIncludeTimestamps,
                     ConfigManager.Logging.ConsoleMinLevel, ConfigManager.Logging.ConsoleMaxLevel));
 
             // Attach file log target
             if (ConfigManager.Logging.EnableFile)
-                LogManager.AttachLogTarget(new FileTarget(ConfigManager.Logging.FileIncludeTimestamps,
+                LogManager.AttachTarget(new FileTarget(ConfigManager.Logging.FileIncludeTimestamps,
                     ConfigManager.Logging.FileMinLevel, ConfigManager.Logging.FileMaxLevel,
                     $"MHServerEmu_{StartupTime:yyyy-dd-MM_HH.mm.ss}.log", false));
 

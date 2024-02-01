@@ -4,31 +4,40 @@ using System.Collections.Concurrent;
 namespace MHServerEmu.Common.Logging
 {
     /// <summary>
-    /// Manages <see cref="LogMessage"/> instances.
+    /// Routes <see cref="LogMessage"/> instances to <see cref="LogTarget">LogTargets</see>.
     /// </summary>
-    public static class LogRouter
+    internal static class LogRouter
     {
-        private static readonly ConcurrentQueue<LogMessage> MessageQueue = new();
+        // NOTE: This is internal is case we ever move logging to a library
 
+        private static readonly ConcurrentQueue<LogMessage> MessageQueue;
+
+        /// <summary>
+        /// Initializes <see cref="LogRouter"/>.
+        /// </summary>
         static LogRouter()
         {
+            // Initialize async logging if synchronous mode is not enabled
             if (ConfigManager.Logging.SynchronousMode == false)
+            {
+                MessageQueue = new();
                 Task.Run(async () => await RouteMessagesAsync());
+            }
         }
 
         /// <summary>
         /// Creates a new <see cref="LogMessage"/> instance from the provided arguments and processes it.
         /// </summary>
-        public static void AddMessage(Logger.Level level, string logger, string message)
+        internal static void AddMessage(LoggingLevel level, string logger, string message)
         {
-            if (LogManager.Enabled == false || LogManager.TargetList.Count == 0) return;
+            if (LogManager.Enabled == false) return;
 
             LogMessage logMessage = new(level, logger, message);
 
-            if (ConfigManager.Logging.SynchronousMode == false)
+            if (MessageQueue != null)
                 MessageQueue.Enqueue(logMessage);   // Add the message to the queue to be processed asynchronously
             else
-                RouteMessage(logMessage);           // Process the message right away if synchronous mode is enabled (note: this is slow and should be used only for testing)
+                RouteMessage(logMessage);           // Process the message right away if async output is disabled (note: this is slow and should be used only for testing)
         }
 
         /// <summary>
@@ -36,10 +45,8 @@ namespace MHServerEmu.Common.Logging
         /// </summary>
         private static void RouteMessage(LogMessage message)
         {
-            var targets = LogManager.TargetList.Where(target => (message.Level >= target.MinimumLevel) && (message.Level <= target.MaximumLevel));
-
-            foreach (LogTarget target in targets)
-                target.LogMessage(message);
+            foreach (LogTarget target in LogManager.IterateTargets(message.Level))
+                target.ProcessLogMessage(message);
         }
 
         /// <summary>
