@@ -405,11 +405,16 @@ namespace MHServerEmu.Games.Entities
             {
                 foreach (var targetNode in targets)
                 {
-                    if (targetNode.Area == area && targetNode.Entity == entity)
-                    {
-                        if (targetNode.Cell == 0) return targetNode;
-                        else if (targetNode.Cell == cell) return targetNode;
-                    }
+                    if (targetNode.Entity == entity) {
+                        if (targetNode.Area == 0 && targetNode.Cell == cell)
+                        {
+                            return targetNode;
+                        }
+                        else if (targetNode.Area == area)
+                        {
+                            if (targetNode.Cell == 0 || targetNode.Cell == cell) return targetNode;
+                        }
+                    }                
                 }
                 return null;
             }
@@ -420,23 +425,25 @@ namespace MHServerEmu.Games.Entities
                 {  
                     PrototypeId protoId = GameDatabase.GetDataRefByPrototypeGuid(portal.EntityGuid);
                     Prototype entity = GameDatabase.GetPrototype<Prototype>(protoId);
+                    bool snap = portal.OverrideSnapToFloor > 0;
                     if (entity is TransitionPrototype transition)
                     {
                         Vector3 position = cell.CalcMarkerPosition(portal.Position);
                         position.Z += GetEntityFloor(protoId);
+
                         Logger.Debug($"[{transition.Type}] {portal.LastKnownEntityName} [{protoId}]");
                         if (transition.Waypoint != 0)
                         {
                             var waypointProto = GameDatabase.GetPrototype<WaypointPrototype>(transition.Waypoint);
-                            SpawnTargetTeleport(cell, transition, position, portal.Rotation, false, waypointProto.Destination, portal.OverrideSnapToFloor > 0);
+                            SpawnTargetTeleport(cell, transition, position, portal.Rotation, false, waypointProto.Destination, snap);
                         }
                         else
                         {
                             TargetObject node = GetTargetNode(area, cell.PrototypeId, portal.EntityGuid);
                             if (node != null)
-                                SpawnTargetTeleport(cell, transition, position, portal.Rotation, false, node.TargetId, portal.OverrideSnapToFloor > 0);
+                                SpawnTargetTeleport(cell, transition, position, portal.Rotation, false, node.TargetId, snap);
                             else
-                                SpawnTransitionMarket(cell, transition, position, portal.Rotation, false, portal.OverrideSnapToFloor > 0);   
+                                SpawnTransitionMarket(cell, transition, position, portal.Rotation, false, snap);   
                         }      
                     }
 

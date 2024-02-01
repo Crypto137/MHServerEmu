@@ -23,21 +23,6 @@ namespace MHServerEmu.Games.Regions
 
             switch (region.PrototypeId)
             {
-
-                case RegionPrototypeId.CH0410FiskTowerRegion:
-                    connectionNodes = new PrototypeId[]
-                    {
-                         (PrototypeId)3426134486181749300 , // FiskTowerEntryNode
-                         (PrototypeId)10936066410997621140 , // FiskElevatorANode
-                         (PrototypeId)9708032418080301461 , // FiskElevatorBNode
-                         (PrototypeId)4558214450896052630 , // FiskElevatorCNode
-                         (PrototypeId)11836314134885245335 , // FiskElevatorDNode
-                         (PrototypeId)2141693716469129624 , // FiskElevatorENode
-                    };
-                    targets = RegionTransition.BuildConnectionEdges((PrototypeId)region.PrototypeId);
-                    _entityManager.GenerateEntities(region, targets, true, true);
-                    break;
-
                 case RegionPrototypeId.HYDRAIslandPartDeuxRegionL60:
                     connectionNodes = new PrototypeId[] {
                         (PrototypeId)14896483168893745334, // Hydra1ShotPreBossToBossNode

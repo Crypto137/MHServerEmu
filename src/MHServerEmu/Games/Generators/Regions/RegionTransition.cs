@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Common.Logging;
+﻿using MHServerEmu.Common.Extensions;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -24,13 +25,17 @@ namespace MHServerEmu.Games.Generators.Regions
         {
             var nodes = new ConnectionNodeList();
 
-            HashSet<PrototypeId> regions = new (){region};
-            RegionPrototype regionProto = GameDatabase.GetPrototype<RegionPrototype>(region);
-            /* while (regionProto.ParentDataRef != (PrototypeId)1677652504589371837)
+            void AddTargetNode(RegionConnectionTargetPrototype target, RegionConnectionTargetPrototype origin)
             {
-                regions.Add(regionProto.ParentDataRef);
-                regionProto = GameDatabase.GetPrototype<RegionPrototype>(regionProto.ParentDataRef);
-            }      */      
+                Logger.Debug($"[{GameDatabase.GetFormattedPrototypeName(origin.Area)}] {GameDatabase.GetFormattedPrototypeName(origin.Entity)} [{GameDatabase.GetFormattedPrototypeName(target.Area)}]");
+                nodes.Add(new TargetObject
+                {
+                    Area = origin.Area,
+                    Cell = GameDatabase.GetDataRefByAsset(origin.Cell),
+                    Entity = GameDatabase.GetPrototypeGuid(origin.Entity),
+                    TargetId = target.DataRef
+                });
+            }
 
             var iterateProtos = GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(RegionConnectionNodePrototype), PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly);
             foreach (var itrProtoId in iterateProtos)
@@ -43,29 +48,34 @@ namespace MHServerEmu.Games.Generators.Regions
 
                     if (origin != null && target != null)
                     {
-                        if (regions.Contains(origin.Region))
+                        bool found = false;
+                        if (region == origin.Region)
                         {
-                            //Logger.Debug($"[{GameDatabase.GetFormattedPrototypeName(origin.Area)}] {GameDatabase.GetFormattedPrototypeName(origin.Entity)} [{GameDatabase.GetFormattedPrototypeName(target.Area)}]");
-                            nodes.Add(new TargetObject
-                            {
-                                Area = origin.Area,
-                                Cell = GameDatabase.GetDataRefByAsset(origin.Cell),
-                                Entity = GameDatabase.GetPrototypeGuid(origin.Entity),
-                                TargetId = proto.Target
-                            });
-                        }
-                        if (proto.Type == RegionTransitionDirectionality.BiDirectional && regions.Contains(target.Region))
-                        {
-                            ///Logger.Debug($"[{GameDatabase.GetFormattedPrototypeName(target.Area)}] {GameDatabase.GetFormattedPrototypeName(target.Entity)} [{GameDatabase.GetFormattedPrototypeName(origin.Area)}] ");
-                            nodes.Add(new TargetObject
-                            {                                
-                                Area = target.Area,
-                                Cell = GameDatabase.GetDataRefByAsset(target.Cell),
-                                Entity = GameDatabase.GetPrototypeGuid(target.Entity),
-                                TargetId = proto.Origin
-                            });
+                            AddTargetNode(target, origin);
+                            found = true;
                         }
 
+                        if (proto.Type == RegionTransitionDirectionality.BiDirectional && region == target.Region)
+                        {
+                            AddTargetNode(origin, target);
+                            found = true;
+                        }
+
+                        if (found == false)
+                        {
+                            if (origin.Region != 0)
+                            {
+                                var originRegion = GameDatabase.GetPrototype<RegionPrototype>(origin.Region);
+                                if (originRegion.AltRegions.IsNullOrEmpty() == false && originRegion.AltRegions.Contains(region))
+                                    AddTargetNode(target, origin);
+                            }
+                            if (target.Region != 0)
+                            {
+                                var targetRegion = GameDatabase.GetPrototype<RegionPrototype>(target.Region);
+                                if (targetRegion.AltRegions.IsNullOrEmpty() == false && targetRegion.AltRegions.Contains(region))
+                                    AddTargetNode(origin, target);
+                            }
+                        }
                     }
                 }
             }
