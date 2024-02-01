@@ -48,6 +48,7 @@ namespace MHServerEmu.Games.Regions
         public static List<GameMessage> UpdateAOI(FrontendClient client, Vector3 position)
         {
             List<GameMessage> messageList = new ();
+            List<WorldEntity> regionEntities = new();
 
             Aabb volume = CalcAOIVolume(position);
             List<Cell> cellsInAOI = new();
@@ -98,11 +99,8 @@ namespace MHServerEmu.Games.Regions
                 foreach (var cell in sortedCells)
                 {
                     messageList.Add(cell.MessageCellCreate());
-                    cells.Add(cell.Id);
-                    WorldEntity[] regionEntities = client.CurrentGame.EntityManager.GetNewEntitiesForCell(region, cell.Id, client);
-                    messageList.AddRange(regionEntities.Select(
-                        entity => new GameMessage(entity.ToNetMessageEntityCreate())
-                    ));
+                    cells.Add(cell.Id); 
+                    regionEntities.AddRange(client.CurrentGame.EntityManager.GetNewEntitiesForCell(region, cell.Id, client));
                 }
             }
 
@@ -119,7 +117,10 @@ namespace MHServerEmu.Games.Regions
                 messageList.Add(new(NetMessageUpdateMiniMap.CreateBuilder()
                     .SetArchiveData(miniMap.Serialize())
                     .Build()));
-
+                
+                messageList.AddRange(regionEntities.Select(
+                    entity => new GameMessage(entity.ToNetMessageEntityCreate())
+                ));
                 //client.LoadedCellCount = client.LoadedCells.Count;
             }
             // TODO delete old
@@ -129,7 +130,7 @@ namespace MHServerEmu.Games.Regions
 
         public static Aabb CalcAOIVolume(Vector3 pos)
         {
-            return new(pos, 5000.0f, 5000.0f, 2034.0f);
+            return new(pos, 4000.0f, 4000.0f, 2034.0f);
         }
 
 

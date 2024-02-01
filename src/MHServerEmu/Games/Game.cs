@@ -247,7 +247,7 @@ namespace MHServerEmu.Games
             Vector3 oldPosition = client.LastPosition;
             client.LastPosition = avatarState.Position;
 
-            // AOI Not work...
+            // AOI
             if (client.IsLoading == false && oldPosition != null && Vector3.DistanceSquared2D(oldPosition, avatarState.Position) > 100) // TODO update only when move
             {
                 var messageList = AreaOfInterest.UpdateAOI(client, avatarState.Position);

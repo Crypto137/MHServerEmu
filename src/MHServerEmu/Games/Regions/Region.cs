@@ -794,12 +794,12 @@ namespace MHServerEmu.Games.Regions
                 {
                   //  Cell cell = GetCellAtPosition(pos); 
                   //  LoadMessagesForConnectedAreas(cell.Area, messageList, cells);
-                   AreaOfInterest.LoadMessagesForAOI(this, pos, messageList, cells); // not work while
+                   AreaOfInterest.LoadMessagesForAOI(this, pos, messageList, cells);
                 }
                 else
                 {
-                   LoadMessagesForConnectedAreas(StartArea, messageList, cells);
-                   AreaOfInterest.LoadMessagesForAOI(this, StartArea.Origin, messageList, cells); // not work while
+                  // LoadMessagesForConnectedAreas(StartArea, messageList, cells);
+                  AreaOfInterest.LoadMessagesForAOI(this, StartArea.Origin, messageList, cells);
                 }
             }
             CellsInRegion = cells.Count;
