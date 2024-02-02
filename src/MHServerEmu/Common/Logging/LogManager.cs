@@ -2,21 +2,21 @@
 
 namespace MHServerEmu.Common.Logging
 {
+    /// <summary>
+    /// Manages <see cref="Logger"/> and <see cref="LogTarget"/> instances.
+    /// </summary>
     public static class LogManager
     {
+        private static readonly Dictionary<string, Logger> _loggerDict = new();
+        private static readonly HashSet<LogTarget> _targets = new();
+
         public static bool Enabled { get; set; }
 
-        public static readonly List<LogTarget> TargetList = new();
-        internal static readonly Dictionary<string, Logger> LoggerDict = new();
-
-        public static void AttachLogTarget(LogTarget target) => TargetList.Add(target);
-
         /// <summary>
-        /// Creates a new logger named based on the caller's name from StackFrame.
+        /// Creates or returns existing <see cref="Logger"/> instance with the same name as the caller's <see cref="Type"/>.
         /// </summary>
         public static Logger CreateLogger()
         {
-            // Try to get caller name from the StackFrame
             StackFrame stackFrame = new(1, false);
             string callerName = stackFrame.GetMethod().DeclaringType.Name;
             return callerName == null
@@ -25,14 +25,33 @@ namespace MHServerEmu.Common.Logging
         }
 
         /// <summary>
-        /// Creates a new logger with the specified name.
+        /// Creates or returns existing <see cref="Logger"/> instance with the specified name.
         /// </summary>
         public static Logger CreateLogger(string name)
         {
-            // Create a new logger if there isn't one for this name already and return the requested logger
-            // Use TryGetValue and discard the output because it's faster than ContainsKey
-            if (LoggerDict.TryGetValue(name, out _) == false) LoggerDict.Add(name, new(name));
-            return LoggerDict[name];
+            if (_loggerDict.TryGetValue(name, out var logger) == false)
+            {
+                logger = new(name);
+                _loggerDict.Add(name, logger);
+            }
+
+            return logger;
+        }
+
+        /// <summary>
+        /// Attaches a new <see cref="LogTarget"/> to route <see cref="LogMessage"/> instances to. Returns <see langword="true"/> if successful.
+        /// </summary>
+        public static bool AttachTarget(LogTarget target)
+        {
+            return _targets.Add(target);
+        }
+
+        /// <summary>
+        /// Iterates through all attached <see cref="LogTarget"/> instances that accept the specified <see cref="LoggingLevel"/>.
+        /// </summary>
+        internal static IEnumerable<LogTarget> IterateTargets(LoggingLevel level)
+        {
+            return _targets.Where(target => (level >= target.MinimumLevel) && (level <= target.MaximumLevel));
         }
     }
 }

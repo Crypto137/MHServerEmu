@@ -1,24 +1,24 @@
 ﻿namespace MHServerEmu.Common.Logging
 {
+    public enum LoggingLevel
+    {
+        Trace,
+        Debug,
+        Info,
+        Warn,
+        Error,
+        Fatal
+    }
+
     /// <summary>
     /// Provides logging capabilities.
     /// </summary>
     public class Logger
     {
-        public enum Level
-        {
-            Trace,
-            Debug,
-            Info,
-            Warn,
-            Error,
-            Fatal
-        }
-
         private readonly string _name;
 
         /// <summary>
-        /// Constructs a new instance of <see cref="Logger"/> with the specified name.
+        /// Constructs a new <see cref="Logger"/> instance with the specified name.
         /// </summary>
         public Logger(string name)
         {
@@ -28,119 +28,119 @@
         #region Normal Logging
 
         /// <summary>
-        /// Logs a trace message.
+        /// Logs a <see cref="LoggingLevel.Trace"/> message.
         /// </summary>
-        public void Trace(string message) => Log(Level.Trace, message);
+        public void Trace(string message) => Log(LoggingLevel.Trace, message);
 
         /// <summary>
-        /// Logs a debug message.
+        /// Logs a <see cref="LoggingLevel.Debug"/> message.
         /// </summary>
-        public void Debug(string message) => Log(Level.Debug, message);
+        public void Debug(string message) => Log(LoggingLevel.Debug, message);
 
         /// <summary>
-        /// Logs an info message.
+        /// Logs a <see cref="LoggingLevel.Info"/> message.
         /// </summary>
-        public void Info(string message) => Log(Level.Info, message);
+        public void Info(string message) => Log(LoggingLevel.Info, message);
 
         /// <summary>
-        /// Logs a warn message.
+        /// Logs a <see cref="LoggingLevel.Warn"/> message.
         /// </summary>
-        public void Warn(string message) => Log(Level.Warn, message);
+        public void Warn(string message) => Log(LoggingLevel.Warn, message);
 
         /// <summary>
-        /// Logs an error message.
+        /// Logs a <see cref="LoggingLevel.Error"/> message.
         /// </summary>
-        public void Error(string message) => Log(Level.Error, message);
+        public void Error(string message) => Log(LoggingLevel.Error, message);
 
         /// <summary>
-        /// Logs a fatal message.
+        /// Logs a <see cref="LoggingLevel.Fatal"/> message.
         /// </summary>
-        public void Fatal(string message) => Log(Level.Fatal, message);
+        public void Fatal(string message) => Log(LoggingLevel.Fatal, message);
 
         #endregion
 
         #region Exception Logging
 
         /// <summary>
-        /// Logs an <see cref="Exception"/> as a trace message.
+        /// Logs an <see cref="Exception"/> as a <see cref="LoggingLevel.Trace"/> message.
         /// </summary>
-        public void TraceException(Exception exception, string message) => LogException(Level.Trace, message, exception);
+        public void TraceException(Exception exception, string message) => LogException(LoggingLevel.Trace, message, exception);
 
         /// <summary>
-        /// Logs an <see cref="Exception"/> as a debug message.
+        /// Logs an <see cref="Exception"/> as a <see cref="LoggingLevel.Debug"/> message.
         /// </summary>
-        public void DebugException(Exception exception, string message) => LogException(Level.Debug, message, exception);
+        public void DebugException(Exception exception, string message) => LogException(LoggingLevel.Debug, message, exception);
 
         /// <summary>
-        /// Logs an <see cref="Exception"/> as an info message.
+        /// Logs an <see cref="Exception"/> as a <see cref="LoggingLevel.Info"/> message.
         /// </summary>
-        public void InfoException(Exception exception, string message) => LogException(Level.Info, message, exception);
+        public void InfoException(Exception exception, string message) => LogException(LoggingLevel.Info, message, exception);
 
         /// <summary>
-        /// Logs an <see cref="Exception"/> as a warn message.
+        /// Logs an <see cref="Exception"/> as a <see cref="LoggingLevel.Warn"/> message.
         /// </summary>
-        public void WarnException(Exception exception, string message) => LogException(Level.Warn, message, exception);
+        public void WarnException(Exception exception, string message) => LogException(LoggingLevel.Warn, message, exception);
 
         /// <summary>
-        /// Logs an <see cref="Exception"/> as an error message.
+        /// Logs an <see cref="Exception"/> as a <see cref="LoggingLevel.Error"/> message.
         /// </summary>
-        public void ErrorException(Exception exception, string message) => LogException(Level.Error, message, exception);
+        public void ErrorException(Exception exception, string message) => LogException(LoggingLevel.Error, message, exception);
 
         /// <summary>
-        /// Logs an <see cref="Exception"/> as a fatal message.
+        /// Logs an <see cref="Exception"/> as a <see cref="LoggingLevel.Fatal"/> message.
         /// </summary>
-        public void FatalException(Exception exception, string message) => LogException(Level.Fatal, message, exception);
+        public void FatalException(Exception exception, string message) => LogException(LoggingLevel.Fatal, message, exception);
 
         #endregion
 
         #region Return Logging (for single line early returns)
 
         /// <summary>
-        /// Logs a trace message and returns <typeparamref name="T"/>.
+        /// Logs a <see cref="LoggingLevel.Trace"/> message and returns <typeparamref name="T"/>.
         /// </summary>
-        public T TraceReturn<T>(T returnValue, string message) => LogReturn(Level.Trace, message, returnValue);
+        public T TraceReturn<T>(T returnValue, string message) => LogReturn(LoggingLevel.Trace, message, returnValue);
 
         /// <summary>
-        /// Logs a debug message and returns <typeparamref name="T"/>.
+        /// Logs a <see cref="LoggingLevel.Debug"/> message and returns <typeparamref name="T"/>.
         /// </summary>
-        public T DebugReturn<T>(T returnValue, string message) => LogReturn(Level.Debug, message, returnValue);
+        public T DebugReturn<T>(T returnValue, string message) => LogReturn(LoggingLevel.Debug, message, returnValue);
 
         /// <summary>
-        /// Logs an info message and returns <typeparamref name="T"/>.
+        /// Logs a <see cref="LoggingLevel.Info"/> message and returns <typeparamref name="T"/>.
         /// </summary>
-        public T InfoReturn<T>(T returnValue, string message) => LogReturn(Level.Info, message, returnValue);
+        public T InfoReturn<T>(T returnValue, string message) => LogReturn(LoggingLevel.Info, message, returnValue);
 
         /// <summary>
-        /// Logs a warn message and returns <typeparamref name="T"/>.
+        /// Logs a <see cref="LoggingLevel.Warn"/> message and returns <typeparamref name="T"/>.
         /// </summary>
-        public T WarnReturn<T>(T returnValue, string message) => LogReturn(Level.Warn, message, returnValue);
+        public T WarnReturn<T>(T returnValue, string message) => LogReturn(LoggingLevel.Warn, message, returnValue);
 
         /// <summary>
-        /// Logs an error message and returns <typeparamref name="T"/>.
+        /// Logs a <see cref="LoggingLevel.Error"/> message and returns <typeparamref name="T"/>.
         /// </summary>
-        public T ErrorReturn<T>(T returnValue, string message) => LogReturn(Level.Error, message, returnValue);
+        public T ErrorReturn<T>(T returnValue, string message) => LogReturn(LoggingLevel.Error, message, returnValue);
 
         /// <summary>
-        /// Logs a fatal message and returns <typeparamref name="T"/>.
+        /// Logs a <see cref="LoggingLevel.Fatal"/> message and returns <typeparamref name="T"/>.
         /// </summary>
-        public T FatalReturn<T>(T returnValue, string message) => LogReturn(Level.Fatal, message, returnValue);
+        public T FatalReturn<T>(T returnValue, string message) => LogReturn(LoggingLevel.Fatal, message, returnValue);
 
         #endregion
 
         /// <summary>
-        /// Logs a message on the specified level.
+        /// Logs a message on the specified <see cref="LoggingLevel"/>.
         /// </summary>
-        private void Log(Level level, string message) => LogRouter.AddMessage(level, _name, message);
+        private void Log(LoggingLevel level, string message) => LogRouter.AddMessage(level, _name, message);
 
         /// <summary>
         /// Logs an exception on the specified level.
         /// </summary>
-        private void LogException(Level level, string message, Exception exception) => Log(level, $"{message} - [Exception] {exception}");
+        private void LogException(LoggingLevel level, string message, Exception exception) => Log(level, $"{message} - [Exception] {exception}");
 
         /// <summary>
-        /// Logs a message on the specified level and returns <typeparamref name="T"/>.
+        /// Logs a message on the specified <see cref="LoggingLevel"/> and returns <typeparamref name="T"/>.
         /// </summary>
-        private T LogReturn<T>(Level level, string message, T returnValue)
+        private T LogReturn<T>(LoggingLevel level, string message, T returnValue)
         {
             Log(level, message);
             return returnValue;
