@@ -3,6 +3,8 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Generators.Regions;
+using System;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -95,7 +97,7 @@ namespace MHServerEmu.Games.Regions
             RegionSettings initSettings = settings; // clone?
             initSettings.InstanceAddress = instanceAddress;
 
-            if (!region.Initialize(initSettings))
+            if (region.Initialize(initSettings) == false)
             {
                 _allRegions.Remove(instanceAddress);
                 region.Shutdown();
@@ -123,11 +125,11 @@ namespace MHServerEmu.Games.Regions
             return region;
         }
 
-        public Region TestRegion(RegionPrototypeId prototype) 
-        {
+        public Region GenerateRegion(RegionPrototypeId prototype) 
+        {            
             RegionSettings settings = new()
             {
-                Seed = 1038711701, //Game.GetRandom().Next(),
+                Seed = Game.Random.Next(),
                 DifficultyTierRef = (PrototypeId)DifficultyTier.Normal,
                 InstanceAddress = IdGenerator.Generate(IdType.Region),
                 Level = 10,
@@ -136,7 +138,20 @@ namespace MHServerEmu.Games.Regions
                 Affixes = new List<PrototypeId>(),
                 RegionDataRef = (PrototypeId)prototype
             };
-            return CreateRegion(settings);
+            //settings.Seed = 1038711701;
+            //GRandom random = new(settings.Seed);//Game.Random.Next()
+            int tries = 10;
+            Region region = null;
+            while (region == null && (--tries > 0))
+            {
+                if (tries < 9) settings.Seed = Game.Random.Next(); // random.Next(); 
+                region = CreateRegion(settings);
+            }
+
+            if (region == null)
+                Logger.Error($"GenerateRegion failed after {10 - tries} attempts | regionId: {prototype} | Last Seed: {settings.Seed}");
+
+            return region;
         }
 
         // NEW
@@ -156,8 +171,9 @@ namespace MHServerEmu.Games.Regions
             if (_regionDict.TryGetValue(prototype, out Region region) == false)
             {
                 // Generate the region and create entities for it if needed
-                region = TestRegion(prototype);//GenerateRegion(prototype);
+                region = GenerateRegion(prototype);//GenerateRegion(prototype);                
                 // region = EmptyRegion(prototype);
+                region.ArchiveData = GetArchiveData(prototype);
                 ulong entities = CreateEntities(region);
                 Logger.Debug($"Entities generated = {entities}");
                 _regionDict.Add(prototype, region);
