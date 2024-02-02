@@ -389,10 +389,7 @@ namespace MHServerEmu.Games
             RegionPrototypeId destinationRegion = (RegionPrototypeId)useWaypoint.RegionProtoId;
             PrototypeId waypointDataRef = (PrototypeId)useWaypoint.WaypointDataRef;
 
-            if (RegionManager.IsRegionAvailable(destinationRegion))
-                MovePlayerToRegion(client, destinationRegion, waypointDataRef);
-            else
-                Logger.Warn($"Region {destinationRegion} is not available");
+            MovePlayerToRegion(client, destinationRegion, waypointDataRef);
         }
 
         private void OnSwitchAvatar(FrontendClient client, NetMessageSwitchAvatar switchAvatar)

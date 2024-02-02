@@ -80,11 +80,6 @@ namespace MHServerEmu.Frontend
             {
                 Session = session;
 
-                if (RegionManager.IsRegionAvailable(Session.Account.Player.Region) == false)
-                {
-                    Logger.Warn($"No data is available for {Session.Account.Player.Region}, falling back to NPEAvengersTowerHUBRegion");
-                    Session.Account.Player.Region = RegionPrototypeId.NPEAvengersTowerHUBRegion;
-                }
             }
             else
             {
