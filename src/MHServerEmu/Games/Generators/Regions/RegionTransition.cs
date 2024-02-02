@@ -1,8 +1,10 @@
 ﻿using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Generators.Regions
 {
@@ -20,6 +22,36 @@ namespace MHServerEmu.Games.Generators.Regions
         public static readonly Logger Logger = LogManager.CreateLogger();
         public RegionTransition() { }
 
+        public static bool FindStartPosition(Region region, PrototypeId targetRef, out Vector3 targetPos, out Vector3 targetRot)
+        {
+            targetPos = region.StartArea.RegionBounds.Center; // default
+            targetRot = Vector3.Zero;
+            RegionConnectionTargetPrototype targetDest = null;
+            Prototype targetProto = GameDatabase.GetPrototype<Prototype>(targetRef);           
+
+            if (targetProto is WaypointPrototype waypointProto)
+            {
+                if (GetDestination(waypointProto, out RegionConnectionTargetPrototype targetDestination))
+                {
+                    targetRef = targetDestination.Entity;
+                    targetDest = targetDestination;
+                }
+                else return false;
+            }
+            else if (targetProto is RegionConnectionTargetPrototype targetDestination)
+            {
+                targetRef = targetDestination.Entity;
+                targetDest = targetDestination;
+            }
+
+            if (targetDest != null && region.FindTargetPosition(targetPos, targetRot, targetDest))
+            {
+                var teleportEntity = GameDatabase.GetPrototype<TransitionPrototype>(targetRef);
+                if (teleportEntity != null && teleportEntity.SpawnOffset > 0) teleportEntity.CalcSpawnOffset(targetRot, targetPos);
+                return true;
+            }
+            return false;
+        }
 
         public static ConnectionNodeList BuildConnectionEdges(PrototypeId region)
         {
@@ -36,6 +68,8 @@ namespace MHServerEmu.Games.Generators.Regions
                     TargetId = target.DataRef
                 });
             }
+
+            RegionPrototype regionProto = GameDatabase.GetPrototype<RegionPrototype>(region);
 
             var iterateProtos = GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(RegionConnectionNodePrototype), PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly);
             foreach (var itrProtoId in iterateProtos)
@@ -66,13 +100,13 @@ namespace MHServerEmu.Games.Generators.Regions
                             if (origin.Region != 0)
                             {
                                 var originRegion = GameDatabase.GetPrototype<RegionPrototype>(origin.Region);
-                                if (originRegion.AltRegions.IsNullOrEmpty() == false && originRegion.AltRegions.Contains(region))
+                                if (RegionPrototype.Equivalent(originRegion, regionProto))
                                     AddTargetNode(target, origin);
                             }
                             if (target.Region != 0)
                             {
                                 var targetRegion = GameDatabase.GetPrototype<RegionPrototype>(target.Region);
-                                if (targetRegion.AltRegions.IsNullOrEmpty() == false && targetRegion.AltRegions.Contains(region))
+                                if (RegionPrototype.Equivalent(targetRegion, regionProto))
                                     AddTargetNode(origin, target);
                             }
                         }

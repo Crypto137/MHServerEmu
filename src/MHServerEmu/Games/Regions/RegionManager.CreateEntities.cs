@@ -12,11 +12,8 @@ namespace MHServerEmu.Games.Regions
     {
         public ulong CreateEntities(Region region)
         {
-            PrototypeId area;
-            CellPrototype entry;            
-            Vector3 areaOrigin = new();
+            CellPrototype entry; 
             Vector3 entityPosition;
-            PrototypeId[] connectionNodes;
             ConnectionNodeList targets;
 
             ulong numEntities = _entityManager.PeekNextEntityId();
@@ -24,11 +21,7 @@ namespace MHServerEmu.Games.Regions
             switch (region.PrototypeId)
             {
                 case RegionPrototypeId.HYDRAIslandPartDeuxRegionL60:
-                    connectionNodes = new PrototypeId[] {
-                        (PrototypeId)14896483168893745334, // Hydra1ShotPreBossToBossNode
-                        (PrototypeId)3860711599720838991, // Hydra1ShotSubToCliffNode
-                        (PrototypeId)10028772098410821475, // Hydra1ShotSnowToBaseNode
-                    }; 
+
                     targets = RegionTransition.BuildConnectionEdges((PrototypeId)region.PrototypeId);
                     _entityManager.GenerateEntities(region, targets, true, true);
 
@@ -74,7 +67,7 @@ namespace MHServerEmu.Games.Regions
                                 case (PrototypeGuid)17602051469318245682:// EncounterOpenMissionSmallV10
                                 case (PrototypeGuid)292473193813839029: // EncounterOpenMissionLargeV1
                                     _entityManager.CreateWorldEntityEnemy(cell, GameDatabase.GetPrototypeRefByName("Entity/Props/Throwables/ThrowablePoliceCar.prototype"),
-                                        npc.Position, npc.Rotation, 100, false, 1);
+                                        cell.CalcMarkerPosition(npc.Position), npc.Rotation, 100, false, 1);
                                     break;
                             }
                         }
@@ -82,23 +75,18 @@ namespace MHServerEmu.Games.Regions
                     break;
 
                 case RegionPrototypeId.DrStrangeTimesSquareRegionL60:
-                    connectionNodes = new PrototypeId[]
-                    {
-                         (PrototypeId)17939117456967478777 , // DrStrangeTimesSquareRestToStreetNode
-                         (PrototypeId)6773295991889538761 , // DrStrangeTimesSquareRooftopToHotelNode
-                    };
+
                     targets = RegionTransition.BuildConnectionEdges((PrototypeId)region.PrototypeId);
                     _entityManager.GenerateEntities(region, targets, true, true);
 
                     // Temporary Fix for ON teleport
-                    _entityManager.GetEntityByPrototypeIdFromRegion((PrototypeId)3817919318712522311, region.Id).BaseData.PrototypeId = (PrototypeId)3361079670852883724; //OpenTransitionMedSoftOFF1
-                    _entityManager.GetEntityByPrototypeIdFromRegion((PrototypeId)11621620264142837342, region.Id).BaseData.PrototypeId = (PrototypeId)16378653613730632945; //OpenTransitionSmlSoftOFF2
+                   // _entityManager.GetEntityByPrototypeIdFromRegion((PrototypeId)3817919318712522311, region.Id).BaseData.PrototypeId = (PrototypeId)3361079670852883724; //OpenTransitionMedSoftOFF1
+                   // _entityManager.GetEntityByPrototypeIdFromRegion((PrototypeId)11621620264142837342, region.Id).BaseData.PrototypeId = (PrototypeId)16378653613730632945; //OpenTransitionSmlSoftOFF2
                     
                     break;
 
                 case RegionPrototypeId.CosmicDoopSectorSpaceRegion:
 
-                    area = GameDatabase.GetPrototypeRefByName("Regions/EndGame/Special/CosmicDoopSectorSpace/CosmicDoopSectorSpaceAreaA.prototype");
                     PrototypeId[] doop = new PrototypeId[]
                     {
                         (PrototypeId)8886032254367441193, // CosmicDoopRangedMinion
@@ -146,14 +134,13 @@ namespace MHServerEmu.Games.Regions
                     for (int j = 0; j < region.AreaList[0].CellList.Count; j++)
                     {
                         cell = areaDoop.CellList[j];
-                        areaOrigin = cell.AreaPosition;
 
                         int num = 0;
                         foreach (var marker in cell.CellProto.MarkerSet.Markers)
                         {
                             if (marker is EntityMarkerPrototype npc)
                             {
-                                Vector3 pos = new(npc.Position.X + areaOrigin.X, npc.Position.Y + areaOrigin.Y, npc.Position.Z + areaOrigin.Z);
+                                Vector3 pos = cell.CalcMarkerPosition(npc.Position);
                                 switch (npc.EntityGuid)
                                 {
                                     case (PrototypeGuid)2888059748704716317: // EncounterSmall
@@ -179,7 +166,6 @@ namespace MHServerEmu.Games.Regions
 
                 case RegionPrototypeId.TrainingRoomSHIELDRegion:
 
-                    area = (PrototypeId)AreaPrototypeId.TrainingRoomSHIELDArea;
                     cell = region.StartArea.CellList.First();
                     entry = cell.CellProto;
                     targets = RegionTransition.BuildConnectionEdges((PrototypeId)region.PrototypeId);
@@ -221,8 +207,6 @@ namespace MHServerEmu.Games.Regions
                     break;
 
                 case RegionPrototypeId.NPEAvengersTowerHUBRegion:
-
-                    area = (PrototypeId)AreaPrototypeId.NPEAvengersTowerHubArea;
                     cell = region.StartArea.CellList.First();
                     targets = RegionTransition.BuildConnectionEdges((PrototypeId)region.PrototypeId);
                     _entityManager.GenerateEntities(region, targets, true, true);
@@ -231,8 +215,8 @@ namespace MHServerEmu.Games.Regions
                     EncounterResourcePrototype populationMarker = GameDatabase.GetPrototype<EncounterResourcePrototype>(populationMarkerId);
                     {
                         EntityMarkerPrototype npc = (EntityMarkerPrototype)populationMarker.MarkerSet.Markers[0]; // BenUrich
-                        areaOrigin = new(-464f, 0f, 192f);
-                        entityPosition = npc.Position + areaOrigin;
+                        Vector3 areaOrigin = new(-464f, 0f, 192f);
+                        entityPosition = cell.CalcMarkerPosition(npc.Position) + areaOrigin;
                         _entityManager.CreateWorldEntity(cell, GameDatabase.GetDataRefByPrototypeGuid(npc.EntityGuid),
                                 entityPosition, npc.Rotation, 608, false);
 

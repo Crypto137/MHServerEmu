@@ -11,6 +11,7 @@ using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Generators.Regions;
 using Gazillion;
 using MHServerEmu.Networking;
+using MHServerEmu.Games.GameData.Prototypes.Markers;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -482,6 +483,19 @@ namespace MHServerEmu.Games.Regions
                 .SetAreaOrigin(Origin.ToNetStructPoint3())
                 .SetIsStartArea(isStartArea)
                 .Build().ToByteArray());
+        }
+
+        public bool FindTargetPosition(Vector3 markerPos, Vector3 markerRot, RegionConnectionTargetPrototype target)
+        {
+            var cellRef = GameDatabase.GetDataRefByAsset(target.Cell);
+
+            foreach (Cell cell in CellList)
+            {
+                if (cellRef != 0 && cellRef != cell.PrototypeId) continue; // TODO check
+                if (cell.FindTargetPosition(markerPos, markerRot, target)) return true;
+            }
+
+            return false;
         }
     }
 

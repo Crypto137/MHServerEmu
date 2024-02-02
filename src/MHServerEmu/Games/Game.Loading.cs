@@ -37,7 +37,7 @@ namespace MHServerEmu.Games
             messageList.Add(new(NetMessageReadyAndLoadedOnGameServer.DefaultInstance));
 
             // Load region data
-            messageList.AddRange(RegionManager.GetRegion(account.Player.Region).GetLoadingMessages(Id, account.Player.Waypoint, client.LoadedCells));
+            messageList.AddRange(RegionManager.GetRegion(account.Player.Region).GetLoadingMessages(Id, account.Player.Waypoint, client));
 
             // Create a waypoint entity            
             // TODO: Add account.Player.Waypoint as Entity
@@ -53,15 +53,9 @@ namespace MHServerEmu.Games
 
             Region region = RegionManager.GetRegion(account.Player.Region);
 
-            Common.Vector3 entrancePosition = new();
-            Common.Vector3 entranceOrientation = new();
-
-            if (region.FindTeleportTarget(account.Player.Waypoint, out Common.Vector3 targetPosition, out Common.Vector3 targetOrientation))
-            { 
-                entrancePosition = new(targetPosition);
-                entranceOrientation = new(targetOrientation);
-                entrancePosition.Z += 42; // TODO project to floor
-            } 
+            Common.Vector3 entrancePosition = new(client.StartPositon);
+            Common.Vector3 entranceOrientation = new(client.StartOrientation);
+            entrancePosition.Z += 42; // TODO project to floor
 
             EnterGameWorldArchive avatarEnterGameWorldArchive = new((ulong)account.Player.Avatar.ToEntityId(), entrancePosition, entranceOrientation.Yaw, 350f);
             messageList.Add(new(NetMessageEntityEnterGameWorld.CreateBuilder()

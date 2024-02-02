@@ -14,6 +14,7 @@ using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Networking;
+using MHServerEmu.Frontend;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -606,99 +607,37 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        private bool FindAreaByTarget(out Area startArea, out PrototypeId cellRef, RegionConnectionTargetPrototype target)
+        public bool FindTargetPosition(Vector3 markerPos, Vector3 markerRot, RegionConnectionTargetPrototype target)
         {
-            startArea = null;
-            cellRef = 0;
-            if (target.Entity == 0) return false;
+            Area targetArea;
+
             // fix for AvengerTower
             if (StartArea.PrototypeId == AreaPrototypeId.AvengersTowerHubArea)
             {
-                startArea = StartArea;
-                return true; 
+                markerPos.Set(1589.0f, -2.0f, 180.0f);
+                markerRot.Set(3.1415f, 0.0f, 0.0f);
+                return true;
             }
+
+            var areaRef = target.Area;
+
             // fast search
-            if (target.Area != 0)
+            if (areaRef != 0)
             {
-                foreach (Area area in AreaList)
-                {
-                    if (target.Area == (PrototypeId)area.PrototypeId)
-                    {
-                        startArea = area;
-                        return true;
-                    }
-                }
+                targetArea = GetArea(areaRef);
+                if (targetArea != null) 
+                    return targetArea.FindTargetPosition(markerPos, markerRot, target);
             }
+
             // slow search
             foreach (Area area in AreaList)
             {
-                foreach (Cell cell in area.CellList)
-                {
-                    if (cell.CellProto != null && cell.CellProto.InitializeSet.Markers.IsNullOrEmpty() == false)
-                    {
-                        foreach (var marker in cell.CellProto.InitializeSet.Markers)
-                        {
-                            if (marker is EntityMarkerPrototype entityMarker)
-                            {
-                                PrototypeId dataRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
-                                if (dataRef == target.Entity)
-                                {
-                                    startArea = area;
-                                    cellRef = cell.PrototypeId;
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                }
+                targetArea = area;
+                if (targetArea.FindTargetPosition(markerPos, markerRot, target))
+                    return true;
             }
 
             return false;
-        }
-
-        public bool FindTeleportTarget(PrototypeId targetRef, out Vector3 targetPos, out Vector3 targetRot)
-        {
-            targetPos = Bound.Center; // default
-            targetRot = new();
-            PrototypeId areaRef = 0;
-            PrototypeId cellRef = 0;
-            RegionConnectionTargetPrototype targetDest = null;
-            Prototype targetProto = GameDatabase.GetPrototype<Prototype>(targetRef);
-
-            if (targetProto is WaypointPrototype waypointProto)
-            {
-                if (RegionTransition.GetDestination(waypointProto, out RegionConnectionTargetPrototype targetDestination))
-                {
-                    targetRef = targetDestination.Entity;
-                    targetDest = targetDestination;
-                    cellRef = GameDatabase.GetDataRefByAsset(targetDestination.Cell);
-                }
-                else return false;
-            }
-            else if (targetProto is RegionConnectionTargetPrototype targetDestination)
-            {
-                targetRef = targetDestination.Entity;
-                targetDest = targetDestination;
-                cellRef = GameDatabase.GetDataRefByAsset(targetDestination.Cell);
-            }
-
-            if (FindAreaByTarget(out Area foundArea, out PrototypeId foundCell, targetDest))
-            {
-                areaRef = foundArea.GetPrototypeDataRef();
-                if (areaRef == (PrototypeId)AreaPrototypeId.AvengersTowerHubArea) cellRef = 0;
-                if (foundCell != 0) cellRef = foundCell;
-            }
-
-            WorldEntity targetEntity = Game.EntityManager.GetTransitionInRegion(targetRef, this, areaRef, cellRef);            
-            Transition target = targetEntity as Transition;
-            if (targetEntity == null) return false;
-
-            var teleportEntity = target.TransitionPrototype;
-            targetPos = new(targetEntity.Location.GetPosition());
-            targetRot = new(targetEntity.Location.GetOrientation());
-            if (teleportEntity.SpawnOffset > 0 ) teleportEntity.CalcSpawnOffset(targetRot, ref targetPos);
-
-            return true;
         }
 
         public void LoadMessagesForArea(Area area, List<GameMessage> messageList, HashSet<uint> cells, bool isStartArea)
@@ -747,8 +686,9 @@ namespace MHServerEmu.Games.Regions
                     
         }
 
-        public GameMessage[] GetLoadingMessages(ulong serverGameId, PrototypeId waypointDataRef, HashSet<uint> cells)
+        public GameMessage[] GetLoadingMessages(ulong serverGameId, PrototypeId targetRef, FrontendClient client)
         {
+            HashSet<uint> cells = client.LoadedCells;
             List<GameMessage> messageList = new();
 
             // Before changing to the actual destination region the game seems to first change into a transitional region
@@ -790,17 +730,19 @@ namespace MHServerEmu.Games.Regions
             // Get starArea to load by Waypoint
             if (StartArea != null)
             {
-                if (FindTeleportTarget(waypointDataRef, out Vector3 pos, out Vector3 Rot))
+                if (RegionTransition.FindStartPosition(this, targetRef, out Vector3 position, out Vector3 orientation))
                 {
-                  //  Cell cell = GetCellAtPosition(pos); 
-                  //  LoadMessagesForConnectedAreas(cell.Area, messageList, cells);
-                   AreaOfInterest.LoadMessagesForAOI(this, pos, messageList, cells);
+                    client.StartPositon = position;
+                    client.StartOrientation = orientation;
                 }
                 else
                 {
-                  // LoadMessagesForConnectedAreas(StartArea, messageList, cells);
-                  AreaOfInterest.LoadMessagesForAOI(this, StartArea.Origin, messageList, cells);
+                    client.StartPositon = StartArea.Origin;
+                    client.StartOrientation = Vector3.Zero;
                 }
+                //  Cell cell = GetCellAtPosition(pos);
+                //  LoadMessagesForConnectedAreas(cell.Area, messageList, cells);
+                AreaOfInterest.LoadMessagesForAOI(this, client.StartPositon, messageList, cells);
             }
             CellsInRegion = cells.Count;
             messageList.Add(new(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build()));

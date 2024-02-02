@@ -35,6 +35,8 @@ namespace MHServerEmu.Frontend
         public Entity ThrowingObject { get; set; }
         public HashSet<ulong> LoadedEntities { get; set; } = new();
         public HashSet<uint> LoadedCells { get; set; } = new();
+        public Vector3 StartPositon { get; internal set; }
+        public Vector3 StartOrientation { get; internal set; }
 
         public FrontendClient(TcpClientConnection connection)
         {

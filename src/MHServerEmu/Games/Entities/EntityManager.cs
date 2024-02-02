@@ -161,27 +161,19 @@ namespace MHServerEmu.Games.Entities
             var cellAssetId = regionConnectionTarget.Cell;
             var cellPrototypeId = cellAssetId != AssetId.Invalid ? GameDatabase.GetDataRefByAsset(cellAssetId) : PrototypeId.Invalid;
 
-            var targetRegion = regionConnectionTarget.Region;
+            var targetRegionRef = regionConnectionTarget.Region;
             // Logger.Debug($"SpawnDirectTeleport {targetRegion}");
-            if (targetRegion == 0) { // get Parent value
+            if (targetRegionRef == 0) { // get Parent value
                 var parentTarget = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetRef);
-                if (parentTarget != null) targetRegion = parentTarget.Region;
+                if (parentTarget != null) targetRegionRef = parentTarget.Region;
             }
 
             Region region = cell.GetRegion();
-            PrototypeId regionPrototype = (PrototypeId)region.PrototypeId;
-
-            if (RegionManager.IsRegionAvailable((RegionPrototypeId)targetRegion) == false) // TODO: change region test
-                targetRegion = regionPrototype;
-
-            var type = transitionProto.Type; // default teleport
-        //    if (targetRegion != regionPrototype)
-          //      type = RegionTransitionType.Marker; // region teleport
 
             Destination destination = new()
             {
-                Type = type,
-                Region = targetRegion,
+                Type = transitionProto.Type,
+                Region = targetRegionRef,
                 Area = regionConnectionTarget.Area,
                 Cell = cellPrototypeId,
                 Entity = regionConnectionTarget.Entity,
@@ -190,7 +182,7 @@ namespace MHServerEmu.Games.Entities
                 Target = targetRef,
                 Position = new()
             };
-            if (transitionProto.DataRef == (PrototypeId)3648140311059045422) destination = null; // Fix for old AvengersTower
+
             ulong regionId = region.Id;
             int mapAreaId = (int)cell.Area.Id;
             int mapCellId = (int)cell.Id;
@@ -236,6 +228,23 @@ namespace MHServerEmu.Games.Entities
                 }                
             }
             return null;
+        }
+        public Transition GetTransitionInRegion(Destination destination, ulong regionId)
+        {
+            PrototypeId areaRef = destination.Area;
+            PrototypeId cellRef = destination.Cell;
+            PrototypeId entityRef = destination.Entity;
+            foreach (var entity in _entityDict.Values)
+                if (entity.RegionId == regionId)
+                {
+                    if (entity is not Transition transition) continue;
+                    if (areaRef != 0 && areaRef != (PrototypeId)transition.Location.Area.PrototypeId) continue;
+                    if (cellRef != 0 && cellRef != transition.Location.Cell.PrototypeId) continue;
+                    if (transition.BaseData.PrototypeId == entityRef)
+                        return transition;
+                }
+
+            return default;
         }
 
         public bool TryGetEntityById(ulong entityId, out Entity entity) => _entityDict.TryGetValue(entityId, out entity);
@@ -319,21 +328,6 @@ namespace MHServerEmu.Games.Entities
             foreach (var entity in _entityDict.Values)
                 if (entity is WorldEntity worldEntity && worldEntity.Region == region)
                     yield return entity;
-        }
-
-        public Transition GetTransitionInRegion(PrototypeId targetRef, Region region, PrototypeId areaRef, PrototypeId cellRef)
-        {
-            ulong regionId = region.Id;
-            foreach (var entity in _entityDict.Values)
-                if (entity.RegionId == regionId)
-                {
-                    if (entity is not Transition transition) continue;
-                    if (areaRef != 0 && areaRef != (PrototypeId)transition.Location.Area.PrototypeId) continue;
-                    if (cellRef != 0 && cellRef != transition.Location.Cell.PrototypeId) continue;
-                    if (transition.BaseData.PrototypeId == targetRef) return transition;
-                    if (transition.TransitionPrototype.Waypoint == targetRef) return transition;
-                }
-            return default;
         }
 
         // TODO: CreateEntity -> finalizeEntity -> worldEntity.EnterWorld -> _location.SetRegion( region )

@@ -127,7 +127,7 @@ namespace MHServerEmu.Games
             }
         }
 
-        public void MovePlayerToRegion(FrontendClient client, RegionPrototypeId region, PrototypeId waypointDataRef = 0)
+        public void MovePlayerToRegion(FrontendClient client, RegionPrototypeId region, PrototypeId waypointDataRef)
         {
             lock (_gameLock)
             {
@@ -310,7 +310,7 @@ namespace MHServerEmu.Games
                 if (interactableObject is Transition)
                 {
                     Transition teleport = interactableObject as Transition;
-                    if (teleport.Destinations.Length == 0) return;
+                    if (teleport.Destinations.Length == 0 || teleport.Destinations[0].Type == RegionTransitionType.Waypoint) return;
                     Logger.Trace($"Destination entity {teleport.Destinations[0].Entity}");
 
                     var currentRegion = (PrototypeId)client.Session.Account.Player.Region;
@@ -320,7 +320,7 @@ namespace MHServerEmu.Games
                         return;
                     }
 
-                    if (EntityManager.FindEntityByDestination(teleport.Destinations[0], teleport.RegionId) is not Transition target) return;
+                    if (EntityManager.GetTransitionInRegion(teleport.Destinations[0], teleport.RegionId) is not Transition target) return;
                     
                     if (client.LoadedCells.Contains(target.Location.Cell.Id) == false )
                     {
@@ -333,7 +333,7 @@ namespace MHServerEmu.Games
                     Vector3 targetPos = new(target.Location.GetPosition());
                     Vector3 targetRot = target.Location.GetOrientation();
 
-                    teleportEntity.CalcSpawnOffset(targetRot, ref targetPos);
+                    teleportEntity.CalcSpawnOffset(targetRot, targetPos);
 
                     Logger.Trace($"Teleporting to {targetPos}");
 

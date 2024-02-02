@@ -329,6 +329,28 @@ namespace MHServerEmu.Games.Regions
             return new(builder.Build());
         }
 
+        public bool FindTargetPosition(Vector3 markerPos, Vector3 markerRot, RegionConnectionTargetPrototype target)
+        {
+            if (CellProto != null && CellProto.InitializeSet.Markers.IsNullOrEmpty() == false)
+            {
+                foreach (var marker in CellProto.InitializeSet.Markers)
+                {
+                    if (marker is EntityMarkerPrototype entityMarker)
+                    {
+                        PrototypeId dataRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
+                        if (dataRef == target.Entity)
+                        {
+                            markerPos.Set(CalcMarkerPosition(marker.Position));
+                            markerRot.Set(entityMarker.Rotation);
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
         #region Enums
 
         [AssetEnum((int)None)]      // DRAG/RegionGenerators/Edges.type
