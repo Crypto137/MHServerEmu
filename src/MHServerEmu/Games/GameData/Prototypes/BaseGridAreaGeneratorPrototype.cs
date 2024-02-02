@@ -153,6 +153,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId Cell { get; protected set; }
         public int Num { get; protected set; }
         public bool Destination { get; protected set; }
+        public override string ToString()
+        {
+            return GameDatabase.GetFormattedPrototypeName(GameDatabase.GetDataRefByAsset(Cell));
+        }
     }
 
     public class RandomInstanceRegionPrototype : RequiredCellBasePrototype
@@ -172,6 +176,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class RequiredSuperCellEntryPrototype : RequiredCellBasePrototype
     {
         public PrototypeId SuperCell { get; protected set; }
+
+        public override string ToString()
+        {
+            return GameDatabase.GetFormattedPrototypeName(SuperCell);
+        }
     }
 
     #endregion

@@ -146,7 +146,7 @@
             return returnValue;
         }
 
-        public static string ToString(IEnumerable<object> collection)
+        public static string ObjectCollectionToString(IEnumerable<object> collection)
         {
             string output = "{";
             foreach (var item in collection)

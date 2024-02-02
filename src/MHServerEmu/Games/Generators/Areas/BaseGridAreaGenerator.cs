@@ -266,7 +266,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 AddCellsToPicker(cellPicker, proto.NonRequiredSuperCells);
                 if (!SpawnNonRequiredCellList(random, picker, cellPicker, proto.NonRequiredSuperCellsMin, proto.NonRequiredSuperCellsMax))
                 {
-                    Logger.Warn($"Failed to place the minimum number of Non-Required SuperCells. CELLS={Logger.ToString(proto.NonRequiredSuperCells)} AREA={Area}");
+                    Logger.Warn($"Failed to place the minimum number of Non-Required SuperCells. CELLS={Logger.ObjectCollectionToString(proto.NonRequiredSuperCells)} AREA={Area}");
                     failed = true;
                 }
             }
@@ -280,7 +280,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
                     if (cellRef == 0)
                     {
-                        Logger.Warn($"Reservable Cell {GameDatabase.GetAssetName(spec.Cell)} Does not Exist in Area {Area}");
+                        Logger.Warn($"Reservable Cell {GameDatabase.GetFormattedPrototypeName(GameDatabase.GetDataRefByAsset(spec.Cell))} Does not Exist in Area {Area}");
                         continue;
                     }
 
@@ -294,7 +294,7 @@ namespace MHServerEmu.Games.Generators.Areas
                     else
                     {
                         failed = true;
-                        Logger.Warn($"Failed to place Required Transition Cell. CELL={cellRef} AREA={Area}");
+                        Logger.Warn($"Failed to place Required Transition Cell. CELL={GameDatabase.GetFormattedPrototypeName(cellRef)} AREA={Area}");
                     }
                 }
             }
@@ -328,7 +328,7 @@ namespace MHServerEmu.Games.Generators.Areas
                             else
                             {
                                 failed = true;
-                                Logger.Warn($"Failed to place Random Instance Cell. CELL={cellRef}");
+                                Logger.Warn($"Failed to place Random Instance Cell. CELL={GameDatabase.GetFormattedPrototypeName(cellRef)}");
                             }
                         }
                     }
@@ -370,7 +370,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 if (!SpawnNonRequiredCellList(random, picker, cellPicker, proto.NonRequiredNormalCellsMin, proto.NonRequiredNormalCellsMax))
                 {
                     failed = true;
-                    Logger.Warn($"Failed to place the minimum number of Non-Required Normal Cells.");
+                    Logger.Warn($"Failed to place the minimum number of Non-Required Normal Cells. CELLS={Logger.ObjectCollectionToString(proto.NonRequiredNormalCells)}");
                 }
             }
             return !failed;
