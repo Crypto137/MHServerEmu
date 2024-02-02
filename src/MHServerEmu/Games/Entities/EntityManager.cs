@@ -161,14 +161,11 @@ namespace MHServerEmu.Games.Entities
             var cellAssetId = regionConnectionTarget.Cell;
             var cellPrototypeId = cellAssetId != AssetId.Invalid ? GameDatabase.GetDataRefByAsset(cellAssetId) : PrototypeId.Invalid;
 
-            var targetRegionRef = regionConnectionTarget.Region;
-            // Logger.Debug($"SpawnDirectTeleport {targetRegion}");
-            if (targetRegionRef == 0) { // get Parent value
-                var parentTarget = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetRef);
-                if (parentTarget != null) targetRegionRef = parentTarget.Region;
-            }
+            var targetRegionRef = regionConnectionTarget.Region;        
 
             Region region = cell.GetRegion();
+            var targetRegion = GameDatabase.GetPrototype<RegionPrototype>(targetRegionRef);
+            if (RegionPrototype.Equivalent(targetRegion, region.RegionPrototype)) targetRegionRef = (PrototypeId)region.PrototypeId;
 
             Destination destination = new()
             {

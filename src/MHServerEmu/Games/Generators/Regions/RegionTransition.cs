@@ -103,7 +103,7 @@ namespace MHServerEmu.Games.Generators.Regions
                                 if (RegionPrototype.Equivalent(originRegion, regionProto))
                                     AddTargetNode(target, origin);
                             }
-                            if (target.Region != 0)
+                            if (proto.Type == RegionTransitionDirectionality.BiDirectional && target.Region != 0)
                             {
                                 var targetRegion = GameDatabase.GetPrototype<RegionPrototype>(target.Region);
                                 if (RegionPrototype.Equivalent(targetRegion, regionProto))
