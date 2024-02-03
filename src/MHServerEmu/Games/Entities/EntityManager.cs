@@ -367,6 +367,7 @@ namespace MHServerEmu.Games.Entities
                 foreach (var targetNode in targets)
                 {
                     if (targetNode.Entity == entity) {
+
                         if (targetNode.Area == 0 && targetNode.Cell == cell)
                         {
                             return targetNode;
@@ -374,6 +375,10 @@ namespace MHServerEmu.Games.Entities
                         else if (targetNode.Area == area)
                         {
                             if (targetNode.Cell == 0 || targetNode.Cell == cell) return targetNode;
+                        }
+                        else if (targetNode.Area == 0 && targetNode.Cell == 0) // Fix Sinister Lab
+                        {
+                            return targetNode;
                         }
                     }                
                 }

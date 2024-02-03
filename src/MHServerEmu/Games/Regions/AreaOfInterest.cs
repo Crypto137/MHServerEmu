@@ -150,9 +150,7 @@ namespace MHServerEmu.Games.Regions
 
             List<WorldEntity> cellEntities = new();
 
-            var entityManager = _game.EntityManager;
-
-            foreach (var entity in entityManager.GetEntities(cell))
+            foreach (var entity in cell.Entities)
             {
                 var worldEntity = entity as WorldEntity;
                 if (LoadedEntities.Contains(worldEntity.Location.Cell.Id) == false)
@@ -174,9 +172,7 @@ namespace MHServerEmu.Games.Regions
             List<GameMessage> messageList = new();
             List<WorldEntity> regionEntities = new();
 
-            var entityManager = _game.EntityManager;
-
-            foreach (var entity in entityManager.GetEntities(region))
+            foreach (var entity in region.Entities)
             {
                 var worldEntity = entity as WorldEntity;
                 if (LoadedCells.Contains(worldEntity.Location.Cell.Id))

@@ -623,7 +623,7 @@ namespace MHServerEmu.Games.Regions
 
             bool found = false;
 
-            // fast search
+            // Has areaRef
             if (areaRef != 0)
             {
                 targetArea = GetArea(areaRef);
@@ -631,7 +631,7 @@ namespace MHServerEmu.Games.Regions
                     found = targetArea.FindTargetPosition(markerPos, markerRot, target);
             }
 
-            // slow search
+            // Has the wrong areaRef
             if (found == false)
                 foreach (Area area in AreaList)
                 {
@@ -640,7 +640,7 @@ namespace MHServerEmu.Games.Regions
                         return true;
                 }
 
-            // super slow search
+            // Has the wrong cellRef // Fix for Upper Eastside
             if (found == false)
                 foreach (Cell cell in Cells)
                 {
