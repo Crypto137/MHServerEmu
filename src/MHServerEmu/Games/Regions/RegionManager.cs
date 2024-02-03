@@ -3,8 +3,6 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Generators.Regions;
-using System;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -117,11 +115,13 @@ namespace MHServerEmu.Games.Regions
              Array.Empty<byte>(),
              new(),
              new(),
-             new(10, DifficultyTier.Normal));
-            region.EntrancePosition = new();
-            region.EntranceOrientation = new();
-            region.WaypointPosition = new();
-            region.WaypointOrientation = new();
+             new(10, DifficultyTier.Normal))
+            {
+                EntrancePosition = new(),
+                EntranceOrientation = new(),
+                WaypointPosition = new(),
+                WaypointOrientation = new()
+            };
             return region;
         }
 
@@ -171,10 +171,10 @@ namespace MHServerEmu.Games.Regions
             if (_regionDict.TryGetValue(prototype, out Region region) == false)
             {
                 // Generate the region and create entities for it if needed
-                region = GenerateRegion(prototype);//GenerateRegion(prototype);                
+                region = GenerateRegion(prototype);           
                 // region = EmptyRegion(prototype);
                 region.ArchiveData = GetArchiveData(prototype);
-                ulong entities = CreateEntities(region);
+                ulong entities = CreateEntities(region, true);
                 Logger.Debug($"Entities generated = {entities}");
                 _regionDict.Add(prototype, region);
             }
