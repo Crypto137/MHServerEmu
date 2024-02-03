@@ -250,7 +250,7 @@ namespace MHServerEmu.Games
             // AOI
             if (client.IsLoading == false && oldPosition != null && Vector3.DistanceSquared2D(oldPosition, avatarState.Position) > 100) // TODO update only when move
             {
-                var messageList = AreaOfInterest.UpdateAOI(client, avatarState.Position);
+                var messageList = client.AOI.UpdateAOI(client.Region, avatarState.Position);
                 if (messageList.Count > 0) EnqueueResponses(client, messageList);
             }
 
@@ -277,6 +277,10 @@ namespace MHServerEmu.Games
                 else
                     // set timer 5 seconds for wait client answer
                     EventManager.AddEvent(client, EventEnum.FinishCellLoading, 5000, client.Region.CellsInRegion);
+            } else
+            { // AOI
+                var messageList = client.AOI.EntitiesForCellId(cellLoaded.CellId);
+                if (messageList.Count > 0) EnqueueResponses(client, messageList);
             }
         }
 
@@ -322,7 +326,7 @@ namespace MHServerEmu.Games
 
                     if (EntityManager.GetTransitionInRegion(teleport.Destinations[0], teleport.RegionId) is not Transition target) return;
                     
-                    if (client.LoadedCells.Contains(target.Location.Cell.Id) == false )
+                    if (client.AOI.LoadedCells.Contains(target.Location.Cell.Id) == false )
                     {
                         teleport.TeleportClient(client);
                         return;

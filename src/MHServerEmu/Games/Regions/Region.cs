@@ -699,7 +699,6 @@ namespace MHServerEmu.Games.Regions
 
         public GameMessage[] GetLoadingMessages(ulong serverGameId, PrototypeId targetRef, FrontendClient client)
         {
-            HashSet<uint> cells = client.LoadedCells;
             List<GameMessage> messageList = new();
 
             // Before changing to the actual destination region the game seems to first change into a transitional region
@@ -736,8 +735,7 @@ namespace MHServerEmu.Games.Regions
             messageList.Add(new(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId((ulong)PrototypeId).Build()));
 
             // TODO: prefetch other regions
-
-            cells.Clear();
+            CellsInRegion = 0;
             // Get starArea to load by Waypoint
             if (StartArea != null)
             {
@@ -753,9 +751,9 @@ namespace MHServerEmu.Games.Regions
                 }
                 //  Cell cell = GetCellAtPosition(pos);
                 //  LoadMessagesForConnectedAreas(cell.Area, messageList, cells);
-                AreaOfInterest.LoadMessagesForAOI(this, client.StartPositon, messageList, cells);
+                CellsInRegion = client.AOI.LoadCellMessages(this, client.StartPositon, messageList);
             }
-            CellsInRegion = cells.Count;
+            
             messageList.Add(new(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build()));
 
             // Mini map

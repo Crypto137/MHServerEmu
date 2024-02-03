@@ -229,7 +229,7 @@ namespace MHServerEmu.Games.Regions
                 {
                     if (entity is Transition teleport)
                     { 
-                        if (teleport.Destinations.Any() && teleport.Destinations[0].Type == RegionTransitionType.Transition)
+                        if (teleport.Destinations.Length > 0 && teleport.Destinations[0].Type == RegionTransitionType.Transition)
                         {
                             var teleportProto = teleport.TransitionPrototype;
                             if (teleportProto.VisibleByDefault == false) // To fix
