@@ -3,11 +3,23 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
+using static Dapper.SqlMapper;
 
 namespace MHServerEmu.Games.Regions
 {
+    public enum GenerationMode
+    {
+        None,
+        Server,
+        Client
+    }
+
     public partial class RegionManager
     {
+        public static int SeedNumberFromCommand;
+        public static ulong RegionPrototypeIdFromCommand;
+        public static GenerationMode GenerationModeFromCommand;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         // TODO: Determine if a region is a hub from its prototype
@@ -111,7 +123,7 @@ namespace MHServerEmu.Games.Regions
         public Region EmptyRegion(RegionPrototypeId prototype)
         {
             Region region = new(prototype,
-             1038711701,
+             SeedNumberFromCommand != 0 ? SeedNumberFromCommand : 1038711701,
              Array.Empty<byte>(),
              new(),
              new(),
@@ -123,11 +135,11 @@ namespace MHServerEmu.Games.Regions
             return region;
         }
 
-        public Region TestRegion(RegionPrototypeId prototype) 
+        public Region TestRegion(RegionPrototypeId prototype)
         {
             RegionSettings settings = new()
             {
-                Seed = 1038711701, //Game.GetRandom().Next(),
+                Seed = SeedNumberFromCommand != 0 ? SeedNumberFromCommand : 1038711701, //Game.GetRandom().Next(),
                 DifficultyTierRef = (PrototypeId)DifficultyTier.Normal,
                 InstanceAddress = IdGenerator.Generate(IdType.Region),
                 Level = 10,
@@ -152,12 +164,17 @@ namespace MHServerEmu.Games.Regions
         public Region GetRegion(RegionPrototypeId prototype)
         {
 
-           //  prototype = (RegionPrototypeId)3816293063869929975;
+            if (RegionPrototypeIdFromCommand != 0u)
+                prototype = (RegionPrototypeId)RegionPrototypeIdFromCommand;
+
             if (_regionDict.TryGetValue(prototype, out Region region) == false)
             {
                 // Generate the region and create entities for it if needed
-                region = TestRegion(prototype);//GenerateRegion(prototype);
-                // region = EmptyRegion(prototype);
+                if (GenerationModeFromCommand == GenerationMode.Client)
+                    region = EmptyRegion(prototype);
+                else
+                    region = TestRegion(prototype);//GenerateRegion(prototype);
+
                 ulong entities = CreateEntities(region);
                 Logger.Debug($"Entities generated = {entities}");
                 _regionDict.Add(prototype, region);
@@ -170,7 +187,7 @@ namespace MHServerEmu.Games.Regions
 
         private static byte[] GetArchiveData(RegionPrototypeId prototype)
         {
-            byte[] archiveData = Array.Empty<byte>();  
+            byte[] archiveData = Array.Empty<byte>();
 
             switch (prototype)
             {
