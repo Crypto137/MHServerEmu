@@ -1,26 +1,38 @@
 ﻿namespace MHServerEmu.Common.Logging.Targets
 {
+    /// <summary>
+    /// Outputs <see cref="LogMessage"/> instances to the <see cref="Console"/>.
+    /// </summary>
     public class ConsoleTarget : LogTarget
     {
-        public ConsoleTarget(bool includeTimestamps, Logger.Level minimumLevel, Logger.Level maximumLevel) : base(includeTimestamps, minimumLevel, maximumLevel) { }
+        /// <summary>
+        /// Constructs a new <see cref="ConsoleTarget"/> instance with the specified parameters.
+        /// </summary>
+        public ConsoleTarget(bool includeTimestamps, LoggingLevel minimumLevel, LoggingLevel maximumLevel) : base(includeTimestamps, minimumLevel, maximumLevel) { }
 
-        public override void LogMessage(LogMessage message)
+        /// <summary>
+        /// Outputs a <see cref="LogMessage"/> instance to the <see cref="Console"/>.
+        /// </summary>
+        public override void ProcessLogMessage(LogMessage message)
         {
             SetForegroundColor(message.Level);
             Console.WriteLine(message.ToString(IncludeTimestamps));
             Console.ResetColor();
         }
 
-        private static void SetForegroundColor(Logger.Level level)
+        /// <summary>
+        /// Sets <see cref="Console.ForegroundColor"/> to the appropriate value for the specified <see cref="LoggingLevel"/>.
+        /// </summary>
+        private static void SetForegroundColor(LoggingLevel level)
         {
             switch (level)
             {
-                case Logger.Level.Trace:    Console.ForegroundColor = ConsoleColor.DarkGray;    break;
-                case Logger.Level.Debug:    Console.ForegroundColor = ConsoleColor.Cyan;        break;
-                case Logger.Level.Info:     Console.ForegroundColor = ConsoleColor.White;       break;
-                case Logger.Level.Warn:     Console.ForegroundColor = ConsoleColor.Yellow;      break;
-                case Logger.Level.Error:    Console.ForegroundColor = ConsoleColor.Magenta;     break;
-                case Logger.Level.Fatal:    Console.ForegroundColor = ConsoleColor.Red;         break;
+                case LoggingLevel.Trace:    Console.ForegroundColor = ConsoleColor.DarkGray;    break;
+                case LoggingLevel.Debug:    Console.ForegroundColor = ConsoleColor.Cyan;        break;
+                case LoggingLevel.Info:     Console.ForegroundColor = ConsoleColor.White;       break;
+                case LoggingLevel.Warn:     Console.ForegroundColor = ConsoleColor.Yellow;      break;
+                case LoggingLevel.Error:    Console.ForegroundColor = ConsoleColor.Magenta;     break;
+                case LoggingLevel.Fatal:    Console.ForegroundColor = ConsoleColor.Red;         break;
             }
         }
     }

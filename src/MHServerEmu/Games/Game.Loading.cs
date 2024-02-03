@@ -62,10 +62,7 @@ namespace MHServerEmu.Games
                 .SetArchiveData(avatarEnterGameWorldArchive.Serialize())
                 .Build()));
 
-            WorldEntity[] regionEntities = EntityManager.GetWorldEntitiesForRegion(region.Id, client);
-            messageList.AddRange(regionEntities.Select(
-                entity => new GameMessage(entity.ToNetMessageEntityCreate())
-            ));
+            messageList.AddRange(client.AOI.EntitiesForRegion(region));
 
             // Put waypoint entity in the game world
 

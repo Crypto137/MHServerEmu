@@ -295,6 +295,7 @@ namespace MHServerEmu.Games.Generators.Areas
                     {
                         failed = true;
                         Logger.Warn($"Failed to place Required Transition Cell. CELL={GameDatabase.GetFormattedPrototypeName(cellRef)} AREA={Area}");
+                        break;
                     }
                 }
             }

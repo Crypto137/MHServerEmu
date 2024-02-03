@@ -40,7 +40,7 @@ namespace MHServerEmu.Games.Regions
         public RegionPrototypeId PrototypeId { get; private set; }
         public ulong Id { get; private set; }
         public int RandomSeed { get; private set; }
-        public byte[] ArchiveData { get; private set; }
+        public byte[] ArchiveData { get; set; }
         public Vector3 Min { get; private set; }
         public Vector3 Max { get; private set; }
         public CreateRegionParams CreateParams { get; private set; }
@@ -212,7 +212,7 @@ namespace MHServerEmu.Games.Regions
 
             if (settings.GenerateAreas)
             {
-                if (!GenerateAreas())
+                if (GenerateAreas() == false)
                 {
                     Logger.Error($"Failed to generate areas for\n  region: {this}\n    seed: {RandomSeed}");
                     return false;
@@ -382,7 +382,7 @@ namespace MHServerEmu.Games.Regions
 
         public bool GenerateHelper(RegionGenerator regionGenerator, GenerateFlag flag)
         {
-            bool success = true;
+            bool success = AreaList.Count > 0;
             foreach (Area area in IterateAreas())
             {
                 if (area == null)
@@ -621,23 +621,34 @@ namespace MHServerEmu.Games.Regions
 
             var areaRef = target.Area;
 
+            bool found = false;
+
             // fast search
             if (areaRef != 0)
             {
                 targetArea = GetArea(areaRef);
                 if (targetArea != null) 
-                    return targetArea.FindTargetPosition(markerPos, markerRot, target);
+                    found = targetArea.FindTargetPosition(markerPos, markerRot, target);
             }
 
             // slow search
-            foreach (Area area in AreaList)
-            {
-                targetArea = area;
-                if (targetArea.FindTargetPosition(markerPos, markerRot, target))
-                    return true;
-            }
+            if (found == false)
+                foreach (Area area in AreaList)
+                {
+                    targetArea = area;
+                    if (targetArea.FindTargetPosition(markerPos, markerRot, target))
+                        return true;
+                }
 
-            return false;
+            // super slow search
+            if (found == false)
+                foreach (Cell cell in Cells)
+                {
+                    if (cell.FindTargetPosition(markerPos, markerRot, target))
+                        return true;
+                }
+
+            return found;
         }
 
         public void LoadMessagesForArea(Area area, List<GameMessage> messageList, HashSet<uint> cells, bool isStartArea)
@@ -688,7 +699,6 @@ namespace MHServerEmu.Games.Regions
 
         public GameMessage[] GetLoadingMessages(ulong serverGameId, PrototypeId targetRef, FrontendClient client)
         {
-            HashSet<uint> cells = client.LoadedCells;
             List<GameMessage> messageList = new();
 
             // Before changing to the actual destination region the game seems to first change into a transitional region
@@ -725,8 +735,7 @@ namespace MHServerEmu.Games.Regions
             messageList.Add(new(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId((ulong)PrototypeId).Build()));
 
             // TODO: prefetch other regions
-
-            cells.Clear();
+            CellsInRegion = 0;
             // Get starArea to load by Waypoint
             if (StartArea != null)
             {
@@ -742,9 +751,9 @@ namespace MHServerEmu.Games.Regions
                 }
                 //  Cell cell = GetCellAtPosition(pos);
                 //  LoadMessagesForConnectedAreas(cell.Area, messageList, cells);
-                AreaOfInterest.LoadMessagesForAOI(this, client.StartPositon, messageList, cells);
+                CellsInRegion = client.AOI.LoadCellMessages(this, client.StartPositon, messageList);
             }
-            CellsInRegion = cells.Count;
+            
             messageList.Add(new(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build()));
 
             // Mini map

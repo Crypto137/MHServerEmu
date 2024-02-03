@@ -10,7 +10,7 @@ namespace MHServerEmu.Games.Regions
 {
     public partial class RegionManager
     {
-        public ulong CreateEntities(Region region)
+        public ulong CreateEntities(Region region, bool hackTeleport)
         {
             CellPrototype entry; 
             Vector3 entityPosition;
@@ -24,10 +24,6 @@ namespace MHServerEmu.Games.Regions
 
                     targets = RegionTransition.BuildConnectionEdges((PrototypeId)region.PrototypeId);
                     _entityManager.GenerateEntities(region, targets, true, true);
-
-                    // Temporary Fix for ON teleport
-                    //_entityManager.GetEntityByPrototypeIdFromRegion((PrototypeId)9635289451621323629, region.Id).BaseData.PrototypeId = (PrototypeId)18247075406046695986; //BunkerDoorLargeOFF
-                    //_entityManager.GetEntityByPrototypeIdFromRegion((PrototypeId)15325647619817083651, region.Id).BaseData.PrototypeId = (PrototypeId)16804963870366568904; //MandarinPortalOFF
 
                     /* TODO: OSRSkullJWooDecryptionController
                     
@@ -72,17 +68,6 @@ namespace MHServerEmu.Games.Regions
                             }
                         }
                     }
-                    break;
-
-                case RegionPrototypeId.DrStrangeTimesSquareRegionL60:
-
-                    targets = RegionTransition.BuildConnectionEdges((PrototypeId)region.PrototypeId);
-                    _entityManager.GenerateEntities(region, targets, true, true);
-
-                    // Temporary Fix for ON teleport
-                   // _entityManager.GetEntityByPrototypeIdFromRegion((PrototypeId)3817919318712522311, region.Id).BaseData.PrototypeId = (PrototypeId)3361079670852883724; //OpenTransitionMedSoftOFF1
-                   // _entityManager.GetEntityByPrototypeIdFromRegion((PrototypeId)11621620264142837342, region.Id).BaseData.PrototypeId = (PrototypeId)16378653613730632945; //OpenTransitionSmlSoftOFF2
-                    
                     break;
 
                 case RegionPrototypeId.CosmicDoopSectorSpaceRegion:
@@ -237,7 +222,33 @@ namespace MHServerEmu.Games.Regions
                     break;
 
             }
+
+            // Hack mode for Off Teleports
+            if (hackTeleport)
+                foreach( var entity in _entityManager.GetEntities(region))
+                {
+                    if (entity is Transition teleport)
+                    { 
+                        if (teleport.Destinations.Length > 0 && teleport.Destinations[0].Type == RegionTransitionType.Transition)
+                        {
+                            var teleportProto = teleport.TransitionPrototype;
+                            if (teleportProto.VisibleByDefault == false) // To fix
+                            {
+                                PrototypeId visibleParent = GetVisibleParentRef(teleportProto.ParentDataRef);
+                                entity.BaseData.PrototypeId = visibleParent;
+                            }
+                        }
+                    }
+                }
+
             return _entityManager.PeekNextEntityId() - numEntities;
+        }
+
+        private PrototypeId GetVisibleParentRef(PrototypeId invisibleId)
+        {
+            WorldEntityPrototype invisibleProto = GameDatabase.GetPrototype<WorldEntityPrototype>(invisibleId);
+            if (invisibleProto.VisibleByDefault == false) return GetVisibleParentRef(invisibleProto.ParentDataRef);
+            return invisibleId;
         }
     }
 }

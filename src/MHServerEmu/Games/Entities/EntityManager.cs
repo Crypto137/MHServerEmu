@@ -258,36 +258,6 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
-        public WorldEntity[] GetWorldEntitiesForRegion(ulong regionId, FrontendClient client)
-        {
-            client.LoadedEntities.Clear();
-            return _entityDict.Values
-                .Where(entity => entity.RegionId == regionId && entity is WorldEntity worldEntity && client.LoadedCells.Contains(worldEntity.Location.Cell.Id))
-                .Select(entity =>
-                {
-                    client.LoadedEntities.Add(entity.BaseData.EntityId);
-                    return (WorldEntity)entity;
-                })
-                .ToArray();
-        }
-
-        public WorldEntity[] GetNewEntitiesForCell(Region region, ulong cellid, FrontendClient client)
-        {
-            // TODO search by QuadTree
-            return _entityDict.Values
-                .Where(entity => entity.RegionId == region.Id 
-                && entity is WorldEntity worldEntity
-                && worldEntity.Location.Cell.Id == cellid
-                && client.LoadedEntities.Contains(worldEntity.Location.Cell.Id) == false
-               )
-                .Select(entity =>
-                {
-                    client.LoadedEntities.Add(entity.BaseData.EntityId);
-                    return (WorldEntity)entity;
-                })
-                .ToArray();
-        }
-
         public Player GetDefaultPlayerEntity()
         {
             EntityBaseData baseData = new(PlayerMessage.BaseData);

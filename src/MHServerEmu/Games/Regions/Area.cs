@@ -497,6 +497,11 @@ namespace MHServerEmu.Games.Regions
 
             return false;
         }
+
+        public bool IsDynamicArea()
+        {
+            return GameDatabase.GetGlobalsPrototype().DynamicArea == GetPrototypeDataRef();
+        }
     }
 
     public enum ConnectPosition

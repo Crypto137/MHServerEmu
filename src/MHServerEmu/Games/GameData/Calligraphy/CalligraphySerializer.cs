@@ -186,39 +186,66 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// Deserializes a property mixin field group of a Calligraphy prototype.
         /// </summary>
         private static bool DeserializePropertyMixin(Prototype prototype, Blueprint blueprint, Blueprint groupBlueprint, byte blueprintCopyNum,
-            PrototypeId prototypeDataRef, string prototypeName, Type classType, BinaryReader reader)
+            PrototypeId prototypeDataRef, string prototypeFilePath, Type classType, BinaryReader reader)
         {
-            // TODO: do actual deserialization in DeserializeFieldGroupIntoProperty()
+            PrototypePropertyCollection collection = null;
+
+            // Property mixins are used both for initializing property infos and filling prototype property collections  
+            // If this isn't a default prototype, it means the field group needs to be deserialized into a property collection
+            if (prototypeDataRef != groupBlueprint.DefaultPrototypeId)
+            {
+                // Look for a property collection to deserialize into
+                // TODO: check mixins for collections
+
+                // PropertyId fields are currently also being sent here, so they are not going to have a Properties field
+                // Also the only PropertyList field (from ModPrototype) is currently being considered just a regular property collection
+                var collectionFieldInfo = classType.GetProperty("Properties");
+                if (collectionFieldInfo != null)
+                {
+                    collection = (PrototypePropertyCollection)collectionFieldInfo.GetValue(prototype);
+
+                    // Initialize a new collection in this field if there isn't one already
+                    if (collection == null)
+                    {
+                        collection = new();
+                        collectionFieldInfo.SetValue(prototype, collection);
+                    }
+                }
+            }
+
+            // This handles both cases (initialization and filling property collections)
+            DeserializeFieldGroupIntoProperty(collection, groupBlueprint, blueprintCopyNum, prototypeFilePath, reader, "Property Fields");
+
+            // Property field groups do not have any list fields, so numListFields should always be 0
+            short numListFields = reader.ReadInt16();
+            if (numListFields != 0) Logger.Warn($"Property field group numListFields != 0");
+            return true;
+        }
+
+        private static bool DeserializeFieldGroupIntoProperty(PrototypePropertyCollection collection, Blueprint groupBlueprint, byte blueprintCopyNum,
+            string prototypeFilePath, BinaryReader reader, string groupTag)
+        {
+            // TODO: deserializeFieldGroupIntoPropertyBuilder
             short numSimpleFields = reader.ReadInt16();
             for (int i = 0; i < numSimpleFields; i++)
             {
                 var fieldId = (StringId)reader.ReadUInt64();
                 var type = (CalligraphyBaseType)reader.ReadByte();
 
-                // Property mixins don't have any RHStructs, so we can always read the value as uint64
+                // Property mixin field groups don't have any RHStructs, so we can always read the value as uint64
                 // (also no types or localized string refs)
                 var value = reader.ReadUInt64();
 
                 // hack: write data to a temporary PrototypePropertyCollection implementation
-                if (classType == typeof(PropertyPrototype)) continue;
-                var propertyCollectionFieldInfo = classType.GetProperty("Properties");
-                var propertyCollection = (PrototypePropertyCollection)propertyCollectionFieldInfo.GetValue(prototype);
-
-                if (propertyCollection == null)
+                if (collection != null)
                 {
-                    propertyCollection = new();
-                    propertyCollectionFieldInfo.SetValue(prototype, propertyCollection);
+                    if (groupBlueprint.TryGetBlueprintMemberInfo(fieldId, out var blueprintMemberInfo) == false)
+                        return Logger.ErrorReturn(false, $"Failed to find member id {fieldId} in blueprint {GameDatabase.GetBlueprintName(groupBlueprint.Id)}");
+
+                    collection.AddPropertyFieldValue(groupBlueprint.Id, blueprintCopyNum, blueprintMemberInfo.Member.FieldName, value);
                 }
-
-                // Get blueprint member info for this field
-                if (blueprint.TryGetBlueprintMemberInfo(fieldId, out var blueprintMemberInfo) == false)
-                    return Logger.ErrorReturn(false, $"Failed to find member id {fieldId} in blueprint {GameDatabase.GetBlueprintName(blueprint.Id)}");
-
-                propertyCollection.AddPropertyFieldValue(groupBlueprint.Id, blueprintCopyNum, blueprintMemberInfo.Member.FieldName, value);
             }
 
-            // Property field groups do not have any list fields, so numListFields should always be 0
-            short numListFields = reader.ReadInt16();
             return true;
         }
 

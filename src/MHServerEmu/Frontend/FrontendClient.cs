@@ -33,14 +33,15 @@ namespace MHServerEmu.Frontend
         public ulong ThrowingPower { get; set; }
         public ulong ThrowingCancelPower { get; set; }
         public Entity ThrowingObject { get; set; }
-        public HashSet<ulong> LoadedEntities { get; set; } = new();
-        public HashSet<uint> LoadedCells { get; set; } = new();
+
+        public AreaOfInterest AOI { get; private set; }
         public Vector3 StartPositon { get; internal set; }
         public Vector3 StartOrientation { get; internal set; }
 
         public FrontendClient(TcpClientConnection connection)
         {
             Connection = connection;
+            AOI = new(this);
         }
 
         public void Parse(byte[] data)

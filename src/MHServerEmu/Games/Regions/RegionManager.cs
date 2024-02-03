@@ -107,7 +107,7 @@ namespace MHServerEmu.Games.Regions
             RegionSettings initSettings = settings; // clone?
             initSettings.InstanceAddress = instanceAddress;
 
-            if (!region.Initialize(initSettings))
+            if (region.Initialize(initSettings) == false)
             {
                 _allRegions.Remove(instanceAddress);
                 region.Shutdown();
@@ -127,19 +127,21 @@ namespace MHServerEmu.Games.Regions
              Array.Empty<byte>(),
              new(),
              new(),
-             new(10, DifficultyTier.Normal));
-            region.EntrancePosition = new();
-            region.EntranceOrientation = new();
-            region.WaypointPosition = new();
-            region.WaypointOrientation = new();
+             new(10, DifficultyTier.Normal))
+            {
+                EntrancePosition = new(),
+                EntranceOrientation = new(),
+                WaypointPosition = new(),
+                WaypointOrientation = new()
+            };
             return region;
         }
 
-        public Region TestRegion(RegionPrototypeId prototype)
+        public Region GenerateRegion(RegionPrototypeId prototype)
         {
             RegionSettings settings = new()
             {
-                Seed = SeedNumberFromCommand != 0 ? SeedNumberFromCommand : 1038711701, //Game.GetRandom().Next(),
+                Seed = SeedNumberFromCommand != 0 ? SeedNumberFromCommand : Game.GetRandom().Next(),
                 DifficultyTierRef = (PrototypeId)DifficultyTier.Normal,
                 InstanceAddress = IdGenerator.Generate(IdType.Region),
                 Level = 10,
@@ -148,7 +150,20 @@ namespace MHServerEmu.Games.Regions
                 Affixes = new List<PrototypeId>(),
                 RegionDataRef = (PrototypeId)prototype
             };
-            return CreateRegion(settings);
+            //settings.Seed = 1038711701;
+            //GRandom random = new(settings.Seed);//Game.Random.Next()
+            int tries = 10;
+            Region region = null;
+            while (region == null && (--tries > 0))
+            {
+                if (tries < 9) settings.Seed = Game.Random.Next(); // random.Next(); 
+                region = CreateRegion(settings);
+            }
+
+            if (region == null)
+                Logger.Error($"GenerateRegion failed after {10 - tries} attempts | regionId: {prototype} | Last Seed: {settings.Seed}");
+
+            return region;
         }
 
         // NEW
@@ -173,9 +188,12 @@ namespace MHServerEmu.Games.Regions
                 if (GenerationModeFromCommand == GenerationMode.Client)
                     region = EmptyRegion(prototype);
                 else
-                    region = TestRegion(prototype);//GenerateRegion(prototype);
+                {
+                    region = GenerateRegion(prototype);//GenerateRegion(prototype);
+                    region.ArchiveData = GetArchiveData(prototype);
+                }
 
-                ulong entities = CreateEntities(region);
+                ulong entities = CreateEntities(region, true);
                 Logger.Debug($"Entities generated = {entities}");
                 _regionDict.Add(prototype, region);
             }
