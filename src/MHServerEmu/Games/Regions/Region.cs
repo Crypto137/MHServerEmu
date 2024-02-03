@@ -91,6 +91,7 @@ namespace MHServerEmu.Games.Regions
         public IEnumerable<Cell> Cells { get => IterateCellsInVolume(Bound); }
         public IEnumerable<Entity> Entities { get => Game.EntityManager.GetEntities(this); }
         public List<ulong> MetaGames { get; private set; } = new();
+        public ConnectionNodeList Targets { get; private set; }
 
         public Region(RegionPrototypeId prototype, int randomSeed, byte[] archiveData, Vector3 min, Vector3 max, CreateRegionParams createParams) // Old
         {
@@ -209,6 +210,8 @@ namespace MHServerEmu.Games.Regions
              if (HasProperty(PropertyEnum.DifficultyTier) && settings.DifficultyTierRef != 0)
                  SetProperty<PrototypeDataRef>(settings.DifficultyTierRef, PropertyEnum.DifficultyTier);
             */
+
+            Targets = RegionTransition.BuildConnectionEdges(settings.RegionDataRef); // For Teleport system
 
             if (settings.GenerateAreas)
             {
@@ -512,19 +515,17 @@ namespace MHServerEmu.Games.Regions
         public void Shutdown()
         {
             // SetStatus(2, true);
-            /* TODO: When the entities will work
+            
             int tries = 100;
             bool found;
-            do
-            {
+           // do
+          //  {
                 found = false;
                 foreach (var entity in Entities)
                 {
-                    var worldEntity = entity as WorldEntity;
-                    if (worldEntity != null)
+                    if (entity is WorldEntity worldEntity)
                     {
-                        var owner = worldEntity.GetRootOwner() as Player;
-                        if (owner == null)
+                        /*if (worldEntity.GetRootOwner() is not Player owner)
                         {
                             if (!worldEntity.TestStatus(1))
                             {
@@ -532,7 +533,7 @@ namespace MHServerEmu.Games.Regions
                                 found = true;
                             }
                         }
-                        else
+                        else*/
                         {
                             if (worldEntity.IsInWorld())
                             {
@@ -542,8 +543,9 @@ namespace MHServerEmu.Games.Regions
                         }
                     }
                 }
-            } while (found && (tries-- > 0)); 
+            // } while (found && (tries-- > 0)); // TODO: For what 100 tries?
 
+            /*
             if (Game != null && MissionManager != null)
                 MissionManager.Shutdown(this);
 
@@ -739,7 +741,17 @@ namespace MHServerEmu.Games.Regions
             // Get starArea to load by Waypoint
             if (StartArea != null)
             {
-                if (RegionTransition.FindStartPosition(this, targetRef, out Vector3 position, out Vector3 orientation))
+                if (client.EntityToTeleport != null) // TODO change teleport without reload Region
+                {
+                    Vector3 position = new(client.EntityToTeleport.Location.GetPosition());
+                    Vector3 orientation = new(client.EntityToTeleport.Location.GetOrientation());
+                    if (client.EntityToTeleport.EntityPrototype is TransitionPrototype teleportEntity
+                        && teleportEntity.SpawnOffset > 0) teleportEntity.CalcSpawnOffset(orientation, position);
+                    client.StartPositon = position;
+                    client.StartOrientation = orientation;
+                    client.EntityToTeleport = null;
+                }
+                else if (RegionTransition.FindStartPosition(this, targetRef, out Vector3 position, out Vector3 orientation))
                 {
                     client.StartPositon = position;
                     client.StartOrientation = orientation;

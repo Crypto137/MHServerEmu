@@ -138,7 +138,7 @@ namespace MHServerEmu.Games.Regions
                 Affixes = new List<PrototypeId>(),
                 RegionDataRef = (PrototypeId)prototype
             };
-            //settings.Seed = 1038711701;
+            // settings.Seed = 1038711701;
             //GRandom random = new(settings.Seed);//Game.Random.Next()
             int tries = 10;
             Region region = null;
@@ -171,10 +171,12 @@ namespace MHServerEmu.Games.Regions
             if (_regionDict.TryGetValue(prototype, out Region region) == false)
             {
                 // Generate the region and create entities for it if needed
+                ulong numEntities = _entityManager.PeekNextEntityId();
                 region = GenerateRegion(prototype);           
                 // region = EmptyRegion(prototype);
                 region.ArchiveData = GetArchiveData(prototype);
-                ulong entities = CreateEntities(region, true);
+                HardcodedEntities(region, true);
+                ulong entities = _entityManager.PeekNextEntityId() - numEntities;
                 Logger.Debug($"Entities generated = {entities}");
                 _regionDict.Add(prototype, region);
             }

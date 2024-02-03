@@ -223,6 +223,9 @@ namespace MHServerEmu.Games.Regions
         private bool GeneratePopulation()
         {
             // TODO Write generation Entities here
+            foreach (var cell in CellList)
+                cell.SpawnMarkers();
+
             return true;
         }
 

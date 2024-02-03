@@ -196,7 +196,16 @@ namespace MHServerEmu.Games.Regions
         public bool PostInitialize()
         {
             // TODO: can add Markers here
+            var entityManager = Game.EntityManager;
+            entityManager.AddTeleports(this, Area, GetRegion().Targets);
+
             return true;
+        }
+
+        public void SpawnMarkers() 
+        {
+            var entityManager = Game.EntityManager;
+            entityManager.MarkersAdd(this, true);            
         }
 
         public static Type BuildTypeFromWalls(Walls walls)

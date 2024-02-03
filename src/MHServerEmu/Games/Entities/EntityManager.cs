@@ -174,10 +174,8 @@ namespace MHServerEmu.Games.Entities
                 Area = regionConnectionTarget.Area,
                 Cell = cellPrototypeId,
                 Entity = regionConnectionTarget.Entity,
-                Name = "",
                 NameId = regionConnectionTarget.Name,
-                Target = targetRef,
-                Position = new()
+                Target = targetRef
             };
 
             ulong regionId = region.Id;
@@ -337,8 +335,6 @@ namespace MHServerEmu.Games.Entities
             CreateWorldEntity(cell, proto, entityPosition, entityMarker.Rotation, 608, false, snapToFloor != entitySnapToFloor);
         }
 
-
-
         public void MarkersAdd(Cell cell, bool addProp = false)
         {            
             foreach (var markerProto in cell.CellProto.MarkerSet.Markers)
@@ -362,29 +358,6 @@ namespace MHServerEmu.Games.Entities
         {
             PrototypeId area = (PrototypeId)entryArea.PrototypeId;
 
-            TargetObject GetTargetNode(PrototypeId area, PrototypeId cell, PrototypeGuid entity)
-            {
-                foreach (var targetNode in targets)
-                {
-                    if (targetNode.Entity == entity) {
-
-                        if (targetNode.Area == 0 && targetNode.Cell == cell)
-                        {
-                            return targetNode;
-                        }
-                        else if (targetNode.Area == area)
-                        {
-                            if (targetNode.Cell == 0 || targetNode.Cell == cell) return targetNode;
-                        }
-                        else if (targetNode.Area == 0 && targetNode.Cell == 0) // Fix Sinister Lab
-                        {
-                            return targetNode;
-                        }
-                    }                
-                }
-                return null;
-            }
-
             foreach (var marker in cell.CellProto.InitializeSet.Markers)
             {
                 if (marker is EntityMarkerPrototype portal)
@@ -405,7 +378,7 @@ namespace MHServerEmu.Games.Entities
                         }
                         else
                         {
-                            TargetObject node = GetTargetNode(area, cell.PrototypeId, portal.EntityGuid);
+                            TargetObject node = RegionTransition.GetTargetNode(targets, area, cell.PrototypeId, portal.EntityGuid);
                             if (node != null)
                                 SpawnTargetTeleport(cell, transition, position, portal.Rotation, false, node.TargetId, snap);
                             else

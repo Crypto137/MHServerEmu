@@ -23,6 +23,7 @@ namespace MHServerEmu.Games.Entities
         public Aabb RegionBounds { get; set; }
         public Region Region { get => Location.Region; }
 
+        public Game Game { get; private set; }
         public WorldEntity(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { SpatialPartitionLocation = new(this); }
 
         public WorldEntity(EntityBaseData baseData) : base(baseData) { SpatialPartitionLocation = new(this); }
@@ -143,11 +144,23 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
+        public void EnterWorld(Cell cell, Vector3 position, Vector3 orientation)
+        {            
+            Game = cell.Game; // TODO: Init Game to constructor
+
+            Location.Region = cell.GetRegion();
+            Location.Cell = cell; // Set directly
+            Location.SetPosition(position);
+            Location.SetOrientation(orientation);
+        }
+
         public bool IsInWorld() => Location.IsValid();
 
-        internal void ExitWorld()
+        public void ExitWorld()
         {
-            throw new NotImplementedException();
+            // TODO send packets for delete entities from world
+            var entityManager = Game.EntityManager;
+            entityManager.DestroyEntity(BaseData.EntityId);
         }
 
         internal void EmergencyRegionCleanup(Region region)
@@ -155,12 +168,6 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
-        public void EnterWorld(Cell cell, Vector3 position, Vector3 orientation)
-        {
-            Location.Region = cell.GetRegion();
-            Location.Cell = cell; // Set directly
-            Location.SetPosition(position);
-            Location.SetOrientation(orientation);
-        }
+
     }
 }

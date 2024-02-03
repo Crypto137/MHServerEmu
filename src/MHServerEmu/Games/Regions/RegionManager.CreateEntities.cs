@@ -4,26 +4,19 @@ using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Generators.Regions;
 
 namespace MHServerEmu.Games.Regions
 {
     public partial class RegionManager
     {
-        public ulong CreateEntities(Region region, bool hackTeleport)
+        public void HardcodedEntities(Region region, bool hackTeleport)
         {
             CellPrototype entry; 
-            Vector3 entityPosition;
-            ConnectionNodeList targets;
-
-            ulong numEntities = _entityManager.PeekNextEntityId();
+            Vector3 entityPosition;            
 
             switch (region.PrototypeId)
             {
                 case RegionPrototypeId.HYDRAIslandPartDeuxRegionL60:
-
-                    targets = RegionTransition.BuildConnectionEdges((PrototypeId)region.PrototypeId);
-                    _entityManager.GenerateEntities(region, targets, true, true);
 
                     /* TODO: OSRSkullJWooDecryptionController
                     
@@ -52,7 +45,6 @@ namespace MHServerEmu.Games.Regions
 
                     Cell cell = region.StartArea.CellList.First();
                     entry = cell.CellProto;
-                    _entityManager.MarkersAdd(cell);
                     
                     foreach (var marker in entry.MarkerSet.Markers)
                     {
@@ -153,8 +145,6 @@ namespace MHServerEmu.Games.Regions
 
                     cell = region.StartArea.CellList.First();
                     entry = cell.CellProto;
-                    targets = RegionTransition.BuildConnectionEdges((PrototypeId)region.PrototypeId);
-                    _entityManager.GenerateEntities(region, targets, true, true);
 
                     foreach (var marker in entry.MarkerSet.Markers)
                     {
@@ -193,8 +183,6 @@ namespace MHServerEmu.Games.Regions
 
                 case RegionPrototypeId.NPEAvengersTowerHUBRegion:
                     cell = region.StartArea.CellList.First();
-                    targets = RegionTransition.BuildConnectionEdges((PrototypeId)region.PrototypeId);
-                    _entityManager.GenerateEntities(region, targets, true, true);
 
                     PrototypeId populationMarkerId = GameDatabase.GetPrototypeRefByName("Resource/Encounters/Discoveries/Social_BenUrich_JessicaJones.encounter");
                     EncounterResourcePrototype populationMarker = GameDatabase.GetPrototype<EncounterResourcePrototype>(populationMarkerId);
@@ -214,12 +202,7 @@ namespace MHServerEmu.Games.Regions
                     _entityManager.CreateWorldEntity(cell, GameDatabase.GetPrototypeRefByName("Entity/Characters/Vendors/Prototypes/Endgame/TeamSHIELDRepBuffer.prototype"),
                         new(736f, -352f, 177f), new(-2.15625f, 0f, 0f), 608, false);
 
-                    break;
-
-                default:
-                    targets = RegionTransition.BuildConnectionEdges((PrototypeId)region.PrototypeId);
-                    _entityManager.GenerateEntities(region, targets, true, true);
-                    break;
+                    break;                
 
             }
 
@@ -241,7 +224,6 @@ namespace MHServerEmu.Games.Regions
                     }
                 }
 
-            return _entityManager.PeekNextEntityId() - numEntities;
         }
 
         private PrototypeId GetVisibleParentRef(PrototypeId invisibleId)
