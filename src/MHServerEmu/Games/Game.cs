@@ -140,6 +140,23 @@ namespace MHServerEmu.Games
             }
         }
 
+        public void MovePlayerToEntity(FrontendClient client, ulong entityId)
+        {   
+            // TODO change Reload without exit of region
+            lock (_gameLock)
+            {
+                var entityManager = client.CurrentGame.EntityManager;
+                var targetEntity = entityManager.GetEntityById(entityId);
+                if (targetEntity is not WorldEntity worldEntity) return;
+                EnqueueResponses(client, GetExitGameMessages());
+                client.Session.Account.Player.Region = worldEntity.Region.PrototypeId;
+                client.EntityToTeleport = worldEntity;
+                EnqueueResponses(client, GetBeginLoadingMessages(client));
+                client.LoadedCellCount = 0;
+                client.IsLoading = true;
+            }
+        }
+
         #region Message Queue
 
         private void EnqueueResponse(FrontendClient client, GameMessage message)
@@ -316,6 +333,13 @@ namespace MHServerEmu.Games
                     Transition teleport = interactableObject as Transition;
                     if (teleport.Destinations.Length == 0 || teleport.Destinations[0].Type == RegionTransitionType.Waypoint) return;
                     Logger.Trace($"Destination entity {teleport.Destinations[0].Entity}");
+
+                    if (teleport.Destinations[0].Type == RegionTransitionType.TowerUp ||
+                        teleport.Destinations[0].Type == RegionTransitionType.TowerDown)
+                    {
+                        teleport.TeleportToEntity(client, teleport.Destinations[0].EntityId);
+                        return;
+                    }
 
                     var currentRegion = (PrototypeId)client.Session.Account.Player.Region;
                     if (currentRegion != teleport.Destinations[0].Region)
