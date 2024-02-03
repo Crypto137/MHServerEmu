@@ -325,6 +325,7 @@ namespace MHServerEmu.Games.Generators
                 iterator.MoveNext();
                 yield return element;
             }
+           // iterator.Dispose();
         }
 
         public class ElementIterator : IEnumerator<T>
@@ -360,7 +361,7 @@ namespace MHServerEmu.Games.Generators
                 _volume = volume;
                 _currentNode = new();
                 _currentElement = default;
-                _tree.IncrementIteratorCount();
+              //  _tree.IncrementIteratorCount();
                 Reset();
             }
 
@@ -382,7 +383,7 @@ namespace MHServerEmu.Games.Generators
 
             public void Dispose()
             {
-                if (_tree != null) _tree.DecrementIteratorCount();
+              //  if (_tree != null) _tree.DecrementIteratorCount();
                 _stack.Clear();
             }
 
