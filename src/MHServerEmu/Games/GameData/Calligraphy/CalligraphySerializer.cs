@@ -182,6 +182,8 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return true;
         }
 
+        #region Properties
+
         /// <summary>
         /// Deserializes a property mixin field group of a Calligraphy prototype.
         /// </summary>
@@ -200,16 +202,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 // The only PropertyList field (the one from ModPrototype) is currently being sent here and considered just a regular property collection
                 var collectionFieldInfo = classType.GetProperty("Properties");
                 if (collectionFieldInfo != null)
-                {
-                    collection = (PrototypePropertyCollection)collectionFieldInfo.GetValue(prototype);
-
-                    // Initialize a new collection in this field if there isn't one already
-                    if (collection == null)
-                    {
-                        collection = new();
-                        collectionFieldInfo.SetValue(prototype, collection);
-                    }
-                }
+                    collection = GetPropertyCollectionField(prototype, collectionFieldInfo);
             }
 
             // This handles both cases (initialization and filling property collections)
@@ -247,6 +240,44 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
             return true;
         }
+
+        /// <summary>
+        /// Returns the <see cref="PrototypePropertyCollection"/> belonging to the provided <see cref="Prototype"/> if it has one.
+        /// Returns <see langword="null"/> if the prototype has no <see cref="PrototypePropertyCollection"/> fields.
+        /// </summary>
+        public static PrototypePropertyCollection GetPropertyCollectionField(Prototype prototype)
+        {
+            // NOTE: This method is public because it is also used by PowerPrototype during post-processing.
+            // Maybe we should move this to PrototypeClassManager where it makes more sense to be.
+
+            // In all of our data there is never more than one PrototypePropertyCollection field,
+            // and it's always called Properties, so we will make use of that to avoid iterating through
+            // all fields.
+            var fieldInfo = prototype.GetType().GetProperty("Properties", typeof(PrototypePropertyCollection));
+            if (fieldInfo != null) return GetPropertyCollectionField(prototype, fieldInfo);
+            return null;
+        }
+
+        /// <summary>
+        /// Returns the <see cref="PrototypePropertyCollection"/> belonging to the provided <see cref="Prototype"/>.
+        /// </summary>
+        private static PrototypePropertyCollection GetPropertyCollectionField(Prototype prototype, System.Reflection.PropertyInfo fieldInfo)
+        {
+            var collection = (PrototypePropertyCollection)fieldInfo.GetValue(prototype);
+
+            // Initialize a new collection in this field if there isn't one already or it doesn't belong to it
+            if (collection == null || prototype.IsDynamicFieldOwnedBy(collection) == false)
+            {
+                // Copy parent collection if there is one, otherwise start with a blank one
+                collection = collection == null ? new() : collection.ShallowCopy();
+                fieldInfo.SetValue(prototype, collection);
+                prototype.SetDynamicFieldOwner(collection);
+            }
+
+            return collection;
+        }
+
+        #endregion
 
         #region Field Copying
 
