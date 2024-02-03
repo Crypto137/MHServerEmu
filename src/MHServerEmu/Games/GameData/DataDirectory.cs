@@ -84,7 +84,7 @@ namespace MHServerEmu.Games.GameData
             var directories = new (string, Action<BinaryReader>, Action)[]
             {
                 // Directory file path                  // Entry read method            // Callback
-                ("Calligraphy/Curve.directory",         ReadCurveDirectoryEntry,        () => Logger.Info($"Loaded {CurveDirectory.RecordCount} curve entries")),
+                ("Calligraphy/Curve.directory",         ReadCurveDirectoryEntry,        () => Logger.Info($"Loaded {CurveDirectory.RecordCount} curves")),
                 ("Calligraphy/Type.directory",          ReadTypeDirectoryEntry,         () => Logger.Info($"Loaded {AssetDirectory.AssetCount} asset entries of {AssetDirectory.AssetTypeCount} types")),
                 ("Calligraphy/Blueprint.directory",     ReadBlueprintDirectoryEntry,    () => Logger.Info($"Loaded {_blueprintRecordDict.Count} blueprints")),
                 ("Calligraphy/Prototype.directory",     ReadPrototypeDirectoryEntry,    () => Logger.Info($"Loaded {_prototypeRecordDict.Count} Calligraphy prototype entries")),
@@ -538,7 +538,8 @@ namespace MHServerEmu.Games.GameData
             GameDatabase.CurveRefManager.AddDataRef(curveId, filePath);
             var record = CurveDirectory.CreateCurveRecord(curveId, flags);
 
-            // Curves are loaded on demand when GetCurve() is called
+            // Load this curve
+            CurveDirectory.GetCurve(curveId);
         }
 
         private void ReadBlueprintDirectoryEntry(BinaryReader reader)
