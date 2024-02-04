@@ -30,6 +30,7 @@ namespace MHServerEmu.Games.Regions
         public int LoadCellMessages(Region region, Vector3 position, List<GameMessage> messageList)
         {
             LoadedCells.Clear();
+            CalcMaxCellSize(region);
             Aabb volume = CalcAOIVolume(position);
             List<Cell> cellsInAOI = new ();
 
@@ -38,13 +39,16 @@ namespace MHServerEmu.Games.Regions
             Cell startCell = region.GetCellAtPosition(position);
             if (startCell == null) return 0;
 
-            uint startArea = startCell.Area.Id;
+            Area startArea = startCell.Area;
             foreach (var cell in region.IterateCellsInVolume(volume))
             {
-                if (cellsByArea.ContainsKey(cell.Area.Id) == false)
-                    cellsByArea[cell.Area.Id] = new ();
+                if (cell.Area.IsDynamicArea() || cell.Area == startArea || startArea.AreaConnections.Any(connection => connection.ConnectedArea == cell.Area))
+                {
+                    if (cellsByArea.ContainsKey(cell.Area.Id) == false)
+                        cellsByArea[cell.Area.Id] = new();
 
-                cellsByArea[cell.Area.Id].Add(cell);
+                    cellsByArea[cell.Area.Id].Add(cell);
+                }
             }
 
             var sortedAreas = cellsByArea.Keys.OrderBy(id => id);
@@ -52,7 +56,7 @@ namespace MHServerEmu.Games.Regions
             foreach (var areaId in sortedAreas)
             {
                 Area area = region.GetAreaById(areaId);
-                messageList.Add(area.MessageAddArea(areaId == startArea));
+                messageList.Add(area.MessageAddArea(areaId == startArea.Id));
 
                 var sortedCells = cellsByArea[areaId].OrderBy(cell => cell.Id);
 
@@ -63,6 +67,16 @@ namespace MHServerEmu.Games.Regions
                 }
             }
             return LoadedCells.Count;
+        }
+
+        private void CalcMaxCellSize(Region region)
+        {
+            float maxCellSize = 2034.0f;
+            foreach(var cell in region.Cells) 
+            {
+                maxCellSize = MathF.Max(cell.RegionBounds.Width, maxCellSize);
+            }
+            _areaSize = maxCellSize * 2.0f;
         }
 
         public List<GameMessage> UpdateAOI(Region region, Vector3 position)
@@ -78,14 +92,17 @@ namespace MHServerEmu.Games.Regions
             Cell startCell = region.GetCellAtPosition(position);
             if (startCell == null) return messageList;
 
-            uint startArea = startCell.Area.Id;
+            Area startArea = startCell.Area;
             foreach (var cell in region.IterateCellsInVolume(volume))
             {
                 if (cells.Contains(cell.Id)) continue;
-                if (cellsByArea.ContainsKey(cell.Area.Id) == false)
-                    cellsByArea[cell.Area.Id] = new();
+                if (cell.Area.IsDynamicArea() || cell.Area == startArea || startArea.AreaConnections.Any(connection => connection.ConnectedArea == cell.Area))
+                {
+                    if (cellsByArea.ContainsKey(cell.Area.Id) == false)
+                        cellsByArea[cell.Area.Id] = new();
 
-                cellsByArea[cell.Area.Id].Add(cell);
+                    cellsByArea[cell.Area.Id].Add(cell);
+                }
             }
 
             if (cellsByArea.Count == 0) return messageList;
