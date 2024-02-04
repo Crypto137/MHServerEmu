@@ -14,7 +14,7 @@ namespace MHServerEmu.Common.Commands
 {
     internal class MapGenerationCommand
     {
-        TextWriter _originalOutput;
+        TextWriter _originalOutput = null;
 
         string RegionName() => ((RegionPrototypeId)RegionManager.RegionPrototypeIdFromCommand).ToString();
 
@@ -22,7 +22,12 @@ namespace MHServerEmu.Common.Commands
 
         public string Execute(string[] @params)
         {
-            _originalOutput = Console.Out;
+            if (_originalOutput == null)
+                _originalOutput = Console.Out;
+            Console.SetOut(TextWriter.Null);
+
+            RegionManager.ClearRegionDict();
+
             if (@params.Length < 1)
                 return CommandResult("Parameters missing \n => Usage: generation map [RegionPrototypeId]");
             if (@params.Length > 2)
@@ -36,9 +41,7 @@ namespace MHServerEmu.Common.Commands
                 if (!int.TryParse(@params[1], out RegionManager.SeedNumberFromCommand))
                     return CommandResult("Seed is not a seed");
             }
-
-            Console.SetOut(TextWriter.Null);
-            if (RegionManager.SeedNumberFromCommand == 0)
+            else
             {
                 GameManager gameManager = new();
                 RegionManager.SeedNumberFromCommand = gameManager.GetAvailableGame().Random.Next();
@@ -61,8 +64,9 @@ namespace MHServerEmu.Common.Commands
             {
                 Log("Wait for Marvel Heroes auth screen and log in with your credentials");
                 Console.SetOut(stringWriter);
-                WaitingForUser();
-                WaitForXSeconds(5);
+                WaitGeneration();
+
+                WaitForXSeconds(10);
                 string outputContent = stringWriter.ToString();
                 WriteFile($"{RegionName()}-S-{RegionManager.SeedNumberFromCommand}.txt", outputContent);
                 Console.SetOut(TextWriter.Null);
@@ -70,12 +74,19 @@ namespace MHServerEmu.Common.Commands
             Log("Server Logs generated");
         }
 
+        private void WaitGeneration()
+        {
+            RegionManager.GenerationAsked = false;
+            while (!RegionManager.GenerationAsked) 
+                Thread.Sleep(1000);
+        }
+
         void ClientProcess()
         {
             Log("--- CLIENT LOGS ---");
             RegionManager.GenerationModeFromCommand = GenerationMode.Client;
-            
-            LaunchClient();
+
+            LaunchClient(true);
             string filePath = ConfigManager.CommandConfig.MarvelHeroesOmegaLogClientPath;
 
             if (File.Exists(filePath))
@@ -91,12 +102,8 @@ namespace MHServerEmu.Common.Commands
                 Log($"Client Log File {filePath} not found.", true);
             }
 
-            Log("With CheatEngine, go to MarvelHeroesOmega.exe+15F9692 and set the value 00 to 01");
-            WaitingForUser();
-
             Log("Wait for Marvel Heroes auth screen and log in with your credentials");
-            
-            WaitingForUser();
+            WaitGeneration();
 
             WaitForXSeconds(10);
             KillRunningClient();
@@ -144,6 +151,8 @@ namespace MHServerEmu.Common.Commands
         bool IsClientRunning()
         {
             Process[] processes = Process.GetProcesses().Where(k => k.ProcessName.Contains("MarvelHeroesOmega")).ToArray();
+            if(processes == null)
+                return false;
             return processes.Count(k => k.MainModule.FileName.Contains("MarvelHeroesOmega.exe")) > 0;
         }
 
@@ -165,11 +174,12 @@ namespace MHServerEmu.Common.Commands
         void KillRunningClient()
         {
             Process[] processes = Process.GetProcesses().Where(k => k.ProcessName.Contains("MarvelHeroesOmega")).ToArray();
-            foreach (Process process in processes.Where(k => k.MainModule.FileName.Contains("MarvelHeroesOmega.exe")))
+            foreach (Process process in processes.Where(k => k.MainModule.FileName.Contains("MarvelHeroesOmega.exe") 
+            || k.MainModule.FileName.Contains("MarvelHeroesOmegaRegionGenerationOn.exe")))
                 process.Kill();
         }
 
-        void LaunchClient()
+        void LaunchClient(bool patchedVersion = false)
         {
             if (IsClientRunning())
             {
@@ -178,7 +188,8 @@ namespace MHServerEmu.Common.Commands
             }
 
             string moveCommand = $"cd \"{ConfigManager.CommandConfig.MarvelHeroesOmegax86ExeFolderPath}\"";
-            string launchGameCommand = "MarvelHeroesOmega.exe -robocopy -nobitraider -nosteam -log LoggingLevel=EXTRA_VERBOSE LoggingChannels=-ALL,+GAME,+GENERATION";
+            string exeName = patchedVersion ? "MarvelHeroesOmegaRegionGenerationOn" : "MarvelHeroesOmega";
+            string launchGameCommand = $"{exeName}.exe -robocopy -nobitraider -nosteam -log LoggingLevel=EXTRA_VERBOSE LoggingChannels=-ALL,+GAME,+GENERATION";
 
             Process process = new Process();
             process.StartInfo.FileName = "cmd.exe";

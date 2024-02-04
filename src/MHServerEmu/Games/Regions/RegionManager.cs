@@ -19,6 +19,7 @@ namespace MHServerEmu.Games.Regions
         public static int SeedNumberFromCommand;
         public static ulong RegionPrototypeIdFromCommand;
         public static GenerationMode GenerationModeFromCommand;
+        public static bool GenerationAsked;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -36,7 +37,9 @@ namespace MHServerEmu.Games.Regions
         };
 
         private readonly EntityManager _entityManager;
-        private readonly Dictionary<RegionPrototypeId, Region> _regionDict = new();
+        private static readonly Dictionary<RegionPrototypeId, Region> _regionDict = new();
+
+        public static void ClearRegionDict() => _regionDict?.Clear();
 
         //----------
         private uint _cellId;
@@ -178,7 +181,7 @@ namespace MHServerEmu.Games.Regions
         // OLD
         public Region GetRegion(RegionPrototypeId prototype)
         {
-
+            GenerationAsked = true;
             if (RegionPrototypeIdFromCommand != 0u)
                 prototype = (RegionPrototypeId)RegionPrototypeIdFromCommand;
 
