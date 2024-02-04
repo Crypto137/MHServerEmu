@@ -30,16 +30,16 @@ namespace MHServerEmu.Games.Regions
         public int LoadCellMessages(Region region, Vector3 position, List<GameMessage> messageList)
         {
             LoadedCells.Clear();
-            CalcMaxCellSize(region);
+            Cell startCell = region.GetCellAtPosition(position);
+            if (startCell == null) return 0;
+            Area startArea = startCell.Area;
+
+            CalcMaxCellSize(startArea);
             Aabb volume = CalcAOIVolume(position);
             List<Cell> cellsInAOI = new ();
 
             Dictionary<uint, List<Cell>> cellsByArea = new ();
-
-            Cell startCell = region.GetCellAtPosition(position);
-            if (startCell == null) return 0;
-
-            Area startArea = startCell.Area;
+  
             foreach (var cell in region.IterateCellsInVolume(volume))
             {
                 if (cell.Area.IsDynamicArea() || cell.Area == startArea || startArea.AreaConnections.Any(connection => connection.ConnectedArea == cell.Area))
@@ -69,10 +69,10 @@ namespace MHServerEmu.Games.Regions
             return LoadedCells.Count;
         }
 
-        private void CalcMaxCellSize(Region region)
+        private void CalcMaxCellSize(Area area)
         {
             float maxCellSize = 2034.0f;
-            foreach(var cell in region.Cells) 
+            foreach(var cell in area.CellList) 
             {
                 maxCellSize = MathF.Max(cell.RegionBounds.Width, maxCellSize);
             }
