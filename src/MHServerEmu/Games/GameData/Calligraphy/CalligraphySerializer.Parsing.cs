@@ -161,12 +161,50 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         }
 
         /// <summary>
-        /// Parses a property id and assigns it to a prototype field.
+        /// Parses a PropertyId and assigns it to a prototype field.
         /// </summary>
         private static bool ParsePropertyId(FieldParserParams @params)
         {
-            // todo: proper property id deserialization and assignment
-            DeserializePrototypePtr(@params, false, out var prototype);
+            var reader = @params.Reader;
+            PrototypeDataHeader header = new(reader);
+
+            if (header.DataExists)
+            {
+                short numFieldGroups = reader.ReadInt16();
+                for (int i = 0; i < numFieldGroups; i++)
+                {
+                    var groupBlueprintId = (BlueprintId)reader.ReadUInt64();
+                    byte blueprintCopyNum = reader.ReadByte();
+
+                    // Get the field group blueprint and make sure it's a property one
+                    var groupBlueprint = GameDatabase.GetBlueprint(groupBlueprintId);
+                    if (groupBlueprint.IsProperty() == false)
+                        Logger.WarnReturn(false, "Failed to parse PropertyId field: the specified group blueprint is not a property");
+
+                    // TODO: deserializeFieldGroupIntoPropertyId
+                    // For now skip by reading and throwing away this data
+                    short numSimpleFields = reader.ReadInt16();
+                    for (int j = 0; j < numSimpleFields; j++)
+                    {
+                        var fieldId = (StringId)reader.ReadUInt64();
+                        var type = (CalligraphyBaseType)reader.ReadByte();
+                        var value = reader.ReadUInt64();
+                    }
+
+                    // Same as in DeserializePropertyMixin, there should be no list fields
+                    short numListFields = reader.ReadInt16();
+                    if (numListFields != 0) Logger.Warn($"Property field group numListFields != 0");
+                }
+            }
+            else if (header.ReferenceExists)
+            {
+                // TODO: Get parent PropertyId from reference
+            }
+            else
+            {
+                //Logger.Trace($"Empty PropertyId field, file name {@params.FileName}");
+            }
+
             return true;
         }
         

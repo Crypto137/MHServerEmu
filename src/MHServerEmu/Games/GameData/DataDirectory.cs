@@ -28,6 +28,9 @@ namespace MHServerEmu.Games.GameData
         private static readonly CalligraphySerializer CalligraphySerializer = new();
         private static readonly BinaryResourceSerializer BinaryResourceSerializer = new();
 
+        // Lock for GetPrototype() thread safety
+        private readonly object _prototypeLock = new();
+
         // Lookup dictionaries
         private readonly Dictionary<BlueprintId, LoadedBlueprintRecord> _blueprintRecordDict = new();
         private readonly Dictionary<BlueprintGuid, BlueprintId> _blueprintGuidToDataRefDict = new();
@@ -81,7 +84,7 @@ namespace MHServerEmu.Games.GameData
             var directories = new (string, Action<BinaryReader>, Action)[]
             {
                 // Directory file path                  // Entry read method            // Callback
-                ("Calligraphy/Curve.directory",         ReadCurveDirectoryEntry,        () => Logger.Info($"Loaded {CurveDirectory.RecordCount} curve entries")),
+                ("Calligraphy/Curve.directory",         ReadCurveDirectoryEntry,        () => Logger.Info($"Loaded {CurveDirectory.RecordCount} curves")),
                 ("Calligraphy/Type.directory",          ReadTypeDirectoryEntry,         () => Logger.Info($"Loaded {AssetDirectory.AssetCount} asset entries of {AssetDirectory.AssetTypeCount} types")),
                 ("Calligraphy/Blueprint.directory",     ReadBlueprintDirectoryEntry,    () => Logger.Info($"Loaded {_blueprintRecordDict.Count} blueprints")),
                 ("Calligraphy/Prototype.directory",     ReadPrototypeDirectoryEntry,    () => Logger.Info($"Loaded {_prototypeRecordDict.Count} Calligraphy prototype entries")),
@@ -307,47 +310,49 @@ namespace MHServerEmu.Games.GameData
 
         public T GetPrototype<T>(PrototypeId prototypeId) where T: Prototype
         {
-            // NOTE: the original client implementation appears to be thread-safe, while ours is not
-
             var record = GetPrototypeDataRefRecord(prototypeId);
             if (record == null) return default;
 
-            // Load the prototype if not loaded yet
-            if (record.Prototype == null)
+            // Lock this for thread safety (e.g. if multiple different game threads attempt to load prototypes)
+            lock (_prototypeLock)
             {
-                // Get prototype file path and pak file id
-                // Note: the client uses a separate getPrototypeRelativePath() method here to get the file path.
-                string filePath;
-                PakFileId pakFileId;
+                // Load the prototype if not loaded yet
+                if (record.Prototype == null)
+                {
+                    // Get prototype file path and pak file id
+                    // Note: the client uses a separate getPrototypeRelativePath() method here to get the file path.
+                    string filePath;
+                    PakFileId pakFileId;
 
-                if (record.DataOrigin == DataOrigin.Calligraphy)
-                {
-                    filePath = $"Calligraphy/{GameDatabase.GetPrototypeName(record.PrototypeId)}";
-                    pakFileId = PakFileId.Calligraphy;
-                }
-                else if (record.DataOrigin == DataOrigin.Resource)
-                {
-                    filePath = GameDatabase.GetPrototypeName(record.PrototypeId);
-                    pakFileId = PakFileId.Default;
-                }
-                else throw new NotImplementedException($"Prototype deserialization for data origin {record.DataOrigin} is not supported.");
+                    if (record.DataOrigin == DataOrigin.Calligraphy)
+                    {
+                        filePath = $"Calligraphy/{GameDatabase.GetPrototypeName(record.PrototypeId)}";
+                        pakFileId = PakFileId.Calligraphy;
+                    }
+                    else if (record.DataOrigin == DataOrigin.Resource)
+                    {
+                        filePath = GameDatabase.GetPrototypeName(record.PrototypeId);
+                        pakFileId = PakFileId.Default;
+                    }
+                    else throw new NotImplementedException($"Prototype deserialization for data origin {record.DataOrigin} is not supported.");
 
-                // Deserialize and postprocess
-                using (MemoryStream ms = LoadPakDataFile(filePath, pakFileId))
-                {
-                    Prototype prototype = DeserializePrototypeFromStream(ms, record);
-                    record.Prototype = prototype;
-                    prototype.DataRefRecord = record;
-                    prototype.PostProcess();
+                    // Deserialize and postprocess
+                    using (MemoryStream ms = LoadPakDataFile(filePath, pakFileId))
+                    {
+                        Prototype prototype = DeserializePrototypeFromStream(ms, record);
+                        record.Prototype = prototype;
+                        prototype.DataRefRecord = record;
+                        prototype.PostProcess();
+                    }
                 }
+
+                // Make sure the requested type is valid for this prototype
+                var typedPrototype = record.Prototype as T;
+                if (typedPrototype == null)
+                    Logger.Warn($"Failed to cast {record.ClassType.Name} to {typeof(T).Name}, file name {GameDatabase.GetPrototypeName(prototypeId)}");
+
+                return typedPrototype;
             }
-
-            // Make sure the requested type is valid for this prototype
-            var typedPrototype = record.Prototype as T;
-            if (typedPrototype == null)
-                Logger.Warn($"Failed to cast {record.ClassType.Name} to {typeof(T).Name}, file name {GameDatabase.GetPrototypeName(prototypeId)}");
-
-            return typedPrototype;
         }
 
         public Type GetPrototypeClassType(PrototypeId prototypeId)
@@ -533,7 +538,8 @@ namespace MHServerEmu.Games.GameData
             GameDatabase.CurveRefManager.AddDataRef(curveId, filePath);
             var record = CurveDirectory.CreateCurveRecord(curveId, flags);
 
-            // Curves are loaded on demand when GetCurve() is called
+            // Load this curve
+            CurveDirectory.GetCurve(curveId);
         }
 
         private void ReadBlueprintDirectoryEntry(BinaryReader reader)
