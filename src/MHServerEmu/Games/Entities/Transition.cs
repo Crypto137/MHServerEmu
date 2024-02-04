@@ -118,6 +118,13 @@ namespace MHServerEmu.Games.Entities
             Logger.Trace($"Destination EntityId [{entityId}] [{GameDatabase.GetFormattedPrototypeName(Destinations[0].Entity)}]");
             client.CurrentGame.MovePlayerToEntity(client, Destinations[0].EntityId);
         }
+
+        public void TeleportToLastTown(FrontendClient client)
+        {
+            // TODO back to last saved hub
+            Logger.Trace($"Destination LastTown");
+            client.CurrentGame.MovePlayerToRegion(client, RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)10137590415717831231);
+        }
     }
 
     public class Destination

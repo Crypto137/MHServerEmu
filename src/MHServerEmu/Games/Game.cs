@@ -331,6 +331,11 @@ namespace MHServerEmu.Games
                 if (interactableObject is Transition)
                 {
                     Transition teleport = interactableObject as Transition;
+                    if (teleport.TransitionPrototype.Type == RegionTransitionType.ReturnToLastTown)
+                    {
+                        teleport.TeleportToLastTown(client);
+                        return;
+                    }
                     if (teleport.Destinations.Length == 0 || teleport.Destinations[0].Type == RegionTransitionType.Waypoint) return;
                     Logger.Trace($"Destination entity {teleport.Destinations[0].Entity}");
 
