@@ -163,6 +163,14 @@ namespace MHServerEmu.Games.Regions
             return null;
         }
 
+        public static Region GetRegion(Game game, ulong id)
+        {
+            if (game == null) return null;
+            RegionManager regionManager = game.RegionManager;
+            if (regionManager == null) return null;
+            return regionManager.GetRegion(id);
+        }
+
         // OLD
         public Region GetRegion(RegionPrototypeId prototype)
         {

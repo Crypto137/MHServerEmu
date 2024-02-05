@@ -7,7 +7,6 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.Generators.Navi;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Generators;
@@ -34,7 +33,7 @@ namespace MHServerEmu.Games.Regions
         public ulong MatchNumber;
     }
 
-    public class Region
+    public class Region : IMissionManagerOwner
     {
         // Old
         public RegionPrototypeId PrototypeId { get; private set; }
@@ -119,6 +118,10 @@ namespace MHServerEmu.Games.Regions
         {
             // "Region_Initialize" ProfileTimer
             if (Game == null) return false;
+
+            MissionManager = new MissionManager(Game, this);
+            // CreateUIDataProvider(Game);
+
             Settings = settings;
             //Bind(this, 0xEF);
 
@@ -183,7 +186,7 @@ namespace MHServerEmu.Games.Regions
             ProgressionGraph = new();
             ObjectiveGraph = new(Game, this);
 
-            if (MissionManager != null && !MissionManager.InitializeForRegion(this)) return false;
+            if (MissionManager != null && MissionManager.InitializeForRegion(this) == false) return false;
 
             /* if (Settings.Affixes.Any)
              {
@@ -516,11 +519,11 @@ namespace MHServerEmu.Games.Regions
         {
             // SetStatus(2, true);
             
-            int tries = 100;
+           /* int tries = 100;
             bool found;
-           // do
-          //  {
-                found = false;
+            do
+            {
+                found = false;*/
                 foreach (var entity in Entities)
                 {
                     if (entity is WorldEntity worldEntity)
@@ -538,7 +541,7 @@ namespace MHServerEmu.Games.Regions
                             if (worldEntity.IsInWorld())
                             {
                                 worldEntity.ExitWorld();
-                                found = true;
+                                // found = true;
                             }
                         }
                     }

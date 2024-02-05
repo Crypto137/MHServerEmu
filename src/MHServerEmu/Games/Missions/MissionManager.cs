@@ -11,27 +11,36 @@ namespace MHServerEmu.Games.Missions
 {
     public class MissionManager
     {
-        public Player Player { get; private set; }
-        private ulong _regionId;
-
         public PrototypeId PrototypeId { get; set; }
-        public Mission[] Missions { get; set; }
-        public LegendaryMissionBlacklist[] LegendaryMissionBlacklists { get; set; }
+        public List<Mission> Missions { get; set; } = new();
+        public List<LegendaryMissionBlacklist> LegendaryMissionBlacklists { get; set; } = new();
+
+
+        public Player Player { get; private set; }       
+        public Game Game { get; private set; }
+        public IMissionManagerOwner Owner { get; set; }
+
+        private ulong _regionId; 
+        private HashSet<ulong> _missionInterestEntities = new();
 
         public MissionManager(CodedInputStream stream, BoolDecoder boolDecoder)
         {
             PrototypeId = stream.ReadPrototypeEnum<Prototype>();
 
-            Missions = new Mission[stream.ReadRawVarint64()];
-            for (int i = 0; i < Missions.Length; i++)
-                Missions[i] = new(stream, boolDecoder);
+            Missions.Clear();
+            int mlength = (int)stream.ReadRawVarint64();
+            
+            for (int i = 0; i < mlength; i++)
+                Missions.Add(new(stream, boolDecoder));
 
-            LegendaryMissionBlacklists = new LegendaryMissionBlacklist[stream.ReadRawInt32()];
-            for (int i = 0; i < LegendaryMissionBlacklists.Length; i++)
-                LegendaryMissionBlacklists[i] = new(stream);
+            LegendaryMissionBlacklists.Clear();
+            mlength = stream.ReadRawInt32();
+
+            for (int i = 0; i < mlength; i++)
+                LegendaryMissionBlacklists.Add(new(stream));
         }
 
-        public MissionManager(PrototypeId prototypeId, Mission[] missions, LegendaryMissionBlacklist[] legendaryMissionBlacklists)
+        public MissionManager(PrototypeId prototypeId, List<Mission> missions, List<LegendaryMissionBlacklist> legendaryMissionBlacklists)
         {
             PrototypeId = prototypeId;
             Missions = missions;
@@ -48,10 +57,10 @@ namespace MHServerEmu.Games.Missions
         {
             stream.WritePrototypeEnum<Prototype>(PrototypeId);
 
-            stream.WriteRawVarint64((ulong)Missions.Length);
+            stream.WriteRawVarint64((ulong)Missions.Count);
             foreach (Mission mission in Missions) mission.Encode(stream, boolEncoder);
 
-            stream.WriteRawInt32(LegendaryMissionBlacklists.Length);
+            stream.WriteRawInt32(LegendaryMissionBlacklists.Count);
             foreach (LegendaryMissionBlacklist blacklist in LegendaryMissionBlacklists) blacklist.Encode(stream);
         }
 
@@ -59,9 +68,35 @@ namespace MHServerEmu.Games.Missions
         {
             StringBuilder sb = new();
             sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypeName(PrototypeId)}");
-            for (int i = 0; i < Missions.Length; i++) sb.AppendLine($"Mission{i}: {Missions[i]}");
-            for (int i = 0; i < LegendaryMissionBlacklists.Length; i++) sb.AppendLine($"LegendaryMissionBlacklist{i}: {LegendaryMissionBlacklists[i]}");
+            for (int i = 0; i < Missions.Count; i++) sb.AppendLine($"Mission{i}: {Missions[i]}");
+            for (int i = 0; i < LegendaryMissionBlacklists.Count; i++) sb.AppendLine($"LegendaryMissionBlacklist{i}: {LegendaryMissionBlacklists[i]}");
             return sb.ToString();
+        }
+
+        public MissionManager(Game game, IMissionManagerOwner owner)
+        {
+            Game = game;
+            Owner = owner;
+        }
+
+        public bool InitializeForPlayer(Player player, Region region)
+        {
+            if (player == null) return false;
+
+            Player = player;
+            SetRegion(region);
+
+            return true;
+        }
+
+        public bool IsPlayerMissionManager()
+        {
+            return (Owner != null) && Owner is Player;
+        }
+
+        public bool IsRegionMissionManager()
+        {
+            return (Owner != null) && Owner is Region;
         }
 
         public bool InitializeForRegion(Region region)
@@ -77,6 +112,12 @@ namespace MHServerEmu.Games.Missions
         private void SetRegion(Region region)
         {
             _regionId = region != null ? region.Id : 0;
+        }
+
+        public Region GetRegion()
+        {
+            if (_regionId == 0 || Game == null) return null;
+            return RegionManager.GetRegion(Game, _regionId);
         }
 
         internal void Shutdown(Region region)
