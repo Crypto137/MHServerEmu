@@ -561,6 +561,16 @@ namespace MHServerEmu.Games.GameData
         }
 
         /// <summary>
+        /// Returns <see langword="true"/> if the <see cref="Prototype"/> that the specified <see cref="PrototypeId"/> refers to is <see cref="PrototypeRecordFlags.Abstract"/>.
+        /// </summary>
+        public bool PrototypeIsAbstract(PrototypeId prototypeId)
+        {
+            var record = GetPrototypeDataRefRecord(prototypeId);
+            if (record == null) return false;
+            return record.Flags.HasFlag(PrototypeRecordFlags.Abstract);
+        }
+
+        /// <summary>
         /// Checks if the specified <see cref="PrototypeId"/> refers to a <see cref="Prototype"/> that is approved for use
         /// (i.e. it's not a prototype for something in development). Note: this forces the prototype to load.
         /// </summary>
