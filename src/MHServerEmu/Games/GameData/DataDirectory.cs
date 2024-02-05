@@ -431,6 +431,17 @@ namespace MHServerEmu.Games.GameData
         }
 
         /// <summary>
+        /// Returns the <see cref="PrototypeId"/> of the provided enum value for the <see cref="Blueprint"/> that the specified <see cref="BlueprintId"/> refers to.
+        /// </summary>
+        public PrototypeId GetPrototypeFromEnumValue(int enumValue, BlueprintId blueprintId)
+        {
+            if (_blueprintRecordDict.TryGetValue(blueprintId, out var record) == false)
+                return Logger.WarnReturn(PrototypeId.Invalid, $"Failed to get prototype id from enum value for blueprint id {blueprintId}: blueprint record does not exist");
+
+            return record.Blueprint.GetPrototypeFromEnumValue(enumValue);
+        }
+
+        /// <summary>
         /// Returns the enum value of the provided <see cref="PrototypeId"/> for type <typeparamref name="T"/>.
         /// </summary>
         public int GetPrototypeEnumValue<T>(PrototypeId prototypeId) where T: Prototype
@@ -441,6 +452,17 @@ namespace MHServerEmu.Games.GameData
                 return Logger.WarnReturn(0, $"Failed to get enum value for prototype {GameDatabase.GetPrototypeName(prototypeId)} as {nameof(T)}");
 
             return enumValue;
+        }
+
+        /// <summary>
+        /// Returns the enum value of the provided <see cref="PrototypeId"/> for the <see cref="Blueprint"/> that the specified <see cref="BlueprintId"/> refers to.
+        /// </summary>
+        public int GetPrototypeEnumValue(PrototypeId prototypeId, BlueprintId blueprintId)
+        {
+            if (_blueprintRecordDict.TryGetValue(blueprintId, out var record) == false)
+                return Logger.WarnReturn(0, $"Failed to get enum value from prototype id for blueprint id {blueprintId}: blueprint record does not exist");
+
+            return record.Blueprint.GetPrototypeEnumValue(prototypeId);
         }
 
         /// <summary>
