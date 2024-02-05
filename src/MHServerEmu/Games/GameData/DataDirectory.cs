@@ -450,6 +450,65 @@ namespace MHServerEmu.Games.GameData
             return propertyIdList;
         }
 
+        /// <summary>
+        /// Checks if the specified <see cref="PrototypeId"/> refers to a child <see cref="Prototype"/> that is related to a parent prototype.
+        /// If the parent is a default prototype, checks the <see cref="Blueprint"/> hierarchy. Otherwise, checks prototype data hierarchy.
+        /// If checking against the data hierarchy, loads all prototypes it goes through.
+        /// </summary>
+        public bool PrototypeIsAPrototype(PrototypeId childId, PrototypeId parentId)
+        {
+            // If we are checking against a parent default prototype, search the blueprint hierarchy
+            if (PrototypeIsADefaultPrototype(parentId))
+            {
+                BlueprintId parentBlueprintId = GetPrototypeBlueprintDataRef(parentId);
+                return PrototypeIsChildOfBlueprint(childId, parentBlueprintId);
+            }
+
+            // If we are checking against a derived prototype, search the prototype data hierarchy
+            PrototypeId currentId = childId;
+            while (currentId != PrototypeId.Invalid)
+            {
+                if (currentId == parentId)
+                    return true;
+
+                var record = GetPrototypeDataRefRecord(currentId);
+                if (record == null) return false;
+
+                // Load the prototype if it's not loaded yet
+                if (record.Prototype == null)
+                    GetPrototype<Prototype>(currentId);
+
+                currentId = record.Prototype.ParentDataRef;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Checks if the specified <see cref="PrototypeId"/> refers to a default <see cref="Prototype"/> for its <see cref="Blueprint"/>.
+        /// </summary>
+        public bool PrototypeIsADefaultPrototype(PrototypeId prototypeId)
+        {
+            var record = GetPrototypeDataRefRecord(prototypeId);
+            if (record == null || record.DataOrigin != DataOrigin.Calligraphy) return false;
+
+            return record.Blueprint.DefaultPrototypeId == prototypeId;
+        }
+
+        /// <summary>
+        /// Checks if the specified <see cref="PrototypeId"/> refers to a <see cref="Prototype"/> that is related to a <see cref="Blueprint"/> parent.
+        /// </summary>
+        public bool PrototypeIsChildOfBlueprint(PrototypeId prototypeId, BlueprintId parent)
+        {
+            var record = GetPrototypeDataRefRecord(prototypeId);
+            if (record == null || record.DataOrigin != DataOrigin.Calligraphy) return false;
+
+            return record.Blueprint.IsA(parent);
+        }
+
+        /// <summary>
+        /// Retrieves <see cref="DataOrigin"/> enum value for the specified <see cref="PrototypeId"/>.
+        /// </summary>
         public DataOrigin GetDataOrigin(PrototypeId prototypeId)
         {
             if (_prototypeRecordDict.TryGetValue(prototypeId, out PrototypeDataRefRecord record) == false)
@@ -458,6 +517,9 @@ namespace MHServerEmu.Games.GameData
             return record.DataOrigin;
         }
 
+        /// <summary>
+        /// Retrieves a <see cref="PrototypeDataRefRecord"/> for the specified <see cref="PrototypeId"/>. Returns <see langword="null"/> if no record is found.
+        /// </summary>
         private PrototypeDataRefRecord GetPrototypeDataRefRecord(PrototypeId prototypeId)
         {
             if (prototypeId == PrototypeId.Invalid) return null;
@@ -490,6 +552,9 @@ namespace MHServerEmu.Games.GameData
             return prototype.ApprovedForUse();
         }
 
+        /// <summary>
+        /// Returns <see cref="Type"/> of a resource <see cref="Prototype"/> based on its file name.
+        /// </summary>
         private Type GetResourceClassTypeByFileName(string fileName)
         {
             // Replacement for Gazillion's GetResourceClassIdByFilename
