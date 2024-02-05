@@ -12,8 +12,8 @@ namespace MHServerEmu.Games.Missions
     public class MissionManager
     {
         public PrototypeId PrototypeId { get; set; }
-        public List<Mission> Missions { get; set; } = new();
-        public List<LegendaryMissionBlacklist> LegendaryMissionBlacklists { get; set; } = new();
+        public Dictionary<PrototypeId, Mission> Missions { get; set; } = new();
+        public SortedDictionary<PrototypeGuid, LegendaryMissionBlacklist> LegendaryMissionBlacklists { get; set; } = new();
 
 
         public Player Player { get; private set; }       
@@ -29,28 +29,32 @@ namespace MHServerEmu.Games.Missions
 
             Missions.Clear();
             int mlength = (int)stream.ReadRawVarint64();
-            
+
             for (int i = 0; i < mlength; i++)
-                Missions.Add(new(stream, boolDecoder));
+            {
+                PrototypeGuid missionGuid = (PrototypeGuid)stream.ReadRawVarint64();
+                var missionRef = GameDatabase.GetDataRefByPrototypeGuid(missionGuid);
+                // Mission mission = CreateMission(missionRef);
+                // mission.Decode(stream, boolDecoder) TODO
+                Mission mission = new(stream, boolDecoder);
+                InsertMission(mission);
+            }
 
             LegendaryMissionBlacklists.Clear();
             mlength = stream.ReadRawInt32();
 
             for (int i = 0; i < mlength; i++)
-                LegendaryMissionBlacklists.Add(new(stream));
-        }
-
-        public MissionManager(PrototypeId prototypeId, List<Mission> missions, List<LegendaryMissionBlacklist> legendaryMissionBlacklists)
-        {
-            PrototypeId = prototypeId;
-            Missions = missions;
-            LegendaryMissionBlacklists = legendaryMissionBlacklists;
+            {                
+                PrototypeGuid category = (PrototypeGuid)stream.ReadRawVarint64();
+                LegendaryMissionBlacklist legendaryMission = new(stream);
+                LegendaryMissionBlacklists.Add(category, legendaryMission);
+            }
         }
 
         public void EncodeBools(BoolEncoder boolEncoder)
         {
-            foreach (Mission mission in Missions)
-                boolEncoder.EncodeBool(mission.Suspended);
+            foreach (var mission in Missions)
+                boolEncoder.EncodeBool(mission.Value.Suspended);
         }
 
         public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
@@ -58,18 +62,28 @@ namespace MHServerEmu.Games.Missions
             stream.WritePrototypeEnum<Prototype>(PrototypeId);
 
             stream.WriteRawVarint64((ulong)Missions.Count);
-            foreach (Mission mission in Missions) mission.Encode(stream, boolEncoder);
+            foreach (var pair in Missions)
+            {
+                PrototypeGuid missionGuid = GameDatabase.GetPrototypeGuid(pair.Key);
+                stream.WriteRawVarint64((ulong)missionGuid);
+                pair.Value.Encode(stream, boolEncoder);
+            }
 
             stream.WriteRawInt32(LegendaryMissionBlacklists.Count);
-            foreach (LegendaryMissionBlacklist blacklist in LegendaryMissionBlacklists) blacklist.Encode(stream);
+            foreach (var pair in LegendaryMissionBlacklists)
+            {
+                PrototypeGuid category = pair.Key;
+                stream.WriteRawVarint64((ulong)category); 
+                pair.Value.Encode(stream);
+            }
         }
 
         public override string ToString()
         {
             StringBuilder sb = new();
             sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypeName(PrototypeId)}");
-            for (int i = 0; i < Missions.Count; i++) sb.AppendLine($"Mission{i}: {Missions[i]}");
-            for (int i = 0; i < LegendaryMissionBlacklists.Count; i++) sb.AppendLine($"LegendaryMissionBlacklist{i}: {LegendaryMissionBlacklists[i]}");
+            foreach (var pair in Missions) sb.AppendLine($"Mission[{pair.Key}]: {pair.Value}");
+            foreach (var pair in LegendaryMissionBlacklists) sb.AppendLine($"LegendaryMissionBlacklist[{pair.Key}]: {pair.Value}");
             return sb.ToString();
         }
 
@@ -118,6 +132,18 @@ namespace MHServerEmu.Games.Missions
         {
             if (_regionId == 0 || Game == null) return null;
             return RegionManager.GetRegion(Game, _regionId);
+        }
+
+        public Mission CreateMission(PrototypeId missionRef)
+        {
+            return new(this, missionRef);
+        }
+
+        public Mission InsertMission(Mission mission)
+        {
+            if (mission == null) return null;
+            Missions.Add(mission.PrototypeId, mission); 
+            return mission;
         }
 
         internal void Shutdown(Region region)
