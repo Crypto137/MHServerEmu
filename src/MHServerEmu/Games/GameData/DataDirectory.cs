@@ -18,7 +18,7 @@ namespace MHServerEmu.Games.GameData
     }
 
     /// <summary>
-    /// A singleton that manages all loaded game data.
+    /// A singleton that manages all static game data.
     /// </summary>
     public class DataDirectory
     {
@@ -57,6 +57,9 @@ namespace MHServerEmu.Games.GameData
 
         #region Initialization
 
+        /// <summary>
+        /// Initializes <see cref="DataDirectory"/>.
+        /// </summary>
         public void Initialize()
         {
             var stopwatch = Stopwatch.StartNew();
@@ -73,11 +76,17 @@ namespace MHServerEmu.Games.GameData
             Logger.Info($"Initialized in {stopwatch.ElapsedMilliseconds} ms");
         }
 
+        /// <summary>
+        /// Returns a <see cref="MemoryStream"/> for a file stored in a <see cref="PakFile"/>.
+        /// </summary>
         private MemoryStream LoadPakDataFile(string filePath, PakFileId pakId)
         {
             return PakFileSystem.Instance.LoadFromPak(filePath, pakId);
         }
 
+        /// <summary>
+        /// Initializes Calligraphy.
+        /// </summary>
         private void LoadCalligraphyDataFramework()
         {
             // Define directories
@@ -122,6 +131,9 @@ namespace MHServerEmu.Games.GameData
                 record.Blueprint.OnAllDirectoriesLoaded();
         }
 
+        /// <summary>
+        /// Loads a <see cref="Blueprint"/> and creates a <see cref="LoadedBlueprintRecord"/> for it.
+        /// </summary>
         private void LoadBlueprint(BlueprintId id, BlueprintGuid guid, BlueprintRecordFlags flags)
         {
             // Add guid lookup
@@ -137,6 +149,9 @@ namespace MHServerEmu.Games.GameData
             }
         }
 
+        /// <summary>
+        /// Creates a <see cref="PrototypeDataRefRecord"/> for a Calligraphy <see cref="Prototype"/> without loading it.
+        /// </summary>
         private void AddCalligraphyPrototype(PrototypeId prototypeId, PrototypeGuid prototypeGuid, BlueprintId blueprintId, PrototypeRecordFlags flags, string filePath)
         {
             // Create a dataRef
@@ -166,6 +181,9 @@ namespace MHServerEmu.Games.GameData
             // Load the prototype on demand
         }
 
+        /// <summary>
+        /// Creates <see cref="PrototypeDataRefRecord">PrototypeDataRefRecords</see> for all resource <see cref="Prototype">Prototypes</see> without loading them.
+        /// </summary>
         private void CreatePrototypeDataRefsForDirectory()
         {
             int numResources = 0;
@@ -179,6 +197,9 @@ namespace MHServerEmu.Games.GameData
             Logger.Info($"Loaded {numResources} resource prototype entries");
         }
 
+        /// <summary>
+        /// Creates a <see cref="PrototypeDataRefRecord"/> for a resource <see cref="Prototype"/> without loading it.
+        /// </summary>
         private void AddResource(string filePath)
         {
             // Get class type
@@ -205,7 +226,7 @@ namespace MHServerEmu.Games.GameData
         }
 
         /// <summary>
-        /// Generates prototype lookups for classes and blueprints.
+        /// Generates lookups for all prototype <see cref="Type">Types</see> and <see cref="Blueprint">Blueprints</see>.
         /// </summary>
         private void InitializeHierarchyCache()
         {
@@ -254,6 +275,9 @@ namespace MHServerEmu.Games.GameData
             Logger.Info($"Initialized hierarchy cache in {stopwatch.ElapsedMilliseconds} ms");
         }
 
+        /// <summary>
+        /// Checks if <see cref="DataDirectory"/> has been succesfully initialized.
+        /// </summary>
         public bool Verify()
         {
             return AssetDirectory.AssetCount > 0
@@ -407,6 +431,17 @@ namespace MHServerEmu.Games.GameData
         }
 
         /// <summary>
+        /// Returns the <see cref="PrototypeId"/> of the provided enum value for the <see cref="Blueprint"/> that the specified <see cref="BlueprintId"/> refers to.
+        /// </summary>
+        public PrototypeId GetPrototypeFromEnumValue(int enumValue, BlueprintId blueprintId)
+        {
+            if (_blueprintRecordDict.TryGetValue(blueprintId, out var record) == false)
+                return Logger.WarnReturn(PrototypeId.Invalid, $"Failed to get prototype id from enum value for blueprint id {blueprintId}: blueprint record does not exist");
+
+            return record.Blueprint.GetPrototypeFromEnumValue(enumValue);
+        }
+
+        /// <summary>
         /// Returns the enum value of the provided <see cref="PrototypeId"/> for type <typeparamref name="T"/>.
         /// </summary>
         public int GetPrototypeEnumValue<T>(PrototypeId prototypeId) where T: Prototype
@@ -417,6 +452,17 @@ namespace MHServerEmu.Games.GameData
                 return Logger.WarnReturn(0, $"Failed to get enum value for prototype {GameDatabase.GetPrototypeName(prototypeId)} as {nameof(T)}");
 
             return enumValue;
+        }
+
+        /// <summary>
+        /// Returns the enum value of the provided <see cref="PrototypeId"/> for the <see cref="Blueprint"/> that the specified <see cref="BlueprintId"/> refers to.
+        /// </summary>
+        public int GetPrototypeEnumValue(PrototypeId prototypeId, BlueprintId blueprintId)
+        {
+            if (_blueprintRecordDict.TryGetValue(blueprintId, out var record) == false)
+                return Logger.WarnReturn(0, $"Failed to get enum value from prototype id for blueprint id {blueprintId}: blueprint record does not exist");
+
+            return record.Blueprint.GetPrototypeEnumValue(prototypeId);
         }
 
         /// <summary>
