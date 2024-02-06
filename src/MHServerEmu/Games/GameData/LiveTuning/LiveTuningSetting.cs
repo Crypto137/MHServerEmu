@@ -1,10 +1,13 @@
 ﻿using System.Text.Json.Serialization;
 using Gazillion;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.GameData.LiveTuning
 {
     public class LiveTuningSetting
     {
+        private object _typedEnum;
+
         public PrototypeGuid TuningVarProtoId { get; set; }
         public int TuningVarEnum { get; set; }
         public float TuningVarValue { get; set; }
@@ -55,7 +58,36 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
         public override string ToString()
         {
-            return $"Proto: {GameDatabase.GetPrototypeNameByGuid(TuningVarProtoId)} Enum: {TuningVarEnum} Value: {TuningVarValue}";
+            if (_typedEnum == null) DetermineEnumType();
+            if (_typedEnum is GlobalTuningVar) return $"GLOBAL {_typedEnum} = {TuningVarValue}";
+            return $"{GameDatabase.GetPrototypeNameByGuid(TuningVarProtoId)}: {_typedEnum} = {TuningVarValue}";
+        }
+
+        private void DetermineEnumType()
+        {
+            if (TuningVarProtoId == PrototypeGuid.Invalid)
+            {
+                _typedEnum = Enum.ToObject(typeof(GlobalTuningVar), TuningVarEnum);
+                return;
+            }
+
+            var prototype = GameDatabase.GetPrototype<Prototype>(GameDatabase.GetDataRefByPrototypeGuid(TuningVarProtoId));
+            Type enumType = prototype switch
+            {
+                AreaPrototype               => typeof(AreaTuningVar),
+                AvatarPrototype             => typeof(AvatarEntityTuningVar),
+                WorldEntityPrototype        => typeof(WorldEntityTuningVar),
+                PopulationObjectPrototype   => typeof(PopObjTuningVar),
+                PowerPrototype              => typeof(PowerTuningVar),
+                RegionPrototype             => typeof(RegionTuningVar),
+                LootTablePrototype          => typeof(LootTableTuningVar),
+                MissionPrototype            => typeof(MissionTuningVar),
+                ConditionPrototype          => typeof(ConditionTuningVar),
+                PublicEventPrototype        => typeof(PublicEventTuningVar),
+                MetricsFrequencyPrototype   => typeof(MetricsFrequencyTuningVar),
+                _ => throw new NotSupportedException($"No matching tuning var enum type for prototype {GameDatabase.GetPrototypeNameByGuid(TuningVarProtoId)}."),
+            };
+            _typedEnum = Enum.ToObject(enumType, TuningVarEnum);
         }
     }
 }

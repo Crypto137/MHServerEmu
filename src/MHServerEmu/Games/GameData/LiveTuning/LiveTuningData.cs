@@ -26,6 +26,8 @@ namespace MHServerEmu.Games.GameData.LiveTuning
         public LiveTuningData(string jsonPath)
         {
             _settingList = FileHelper.DeserializeJson<List<LiveTuningSetting>>(jsonPath);
+            foreach (var setting in _settingList)
+                Logger.Trace(setting.ToString());
         }
         
         /// <summary>
