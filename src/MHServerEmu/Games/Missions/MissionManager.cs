@@ -150,5 +150,22 @@ namespace MHServerEmu.Games.Missions
         {
             throw new NotImplementedException();
         }
+
+        public bool GenerateMissionPopulation()
+        {
+            Region region = GetRegion();
+            // search all Missions with encounter
+            foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(MissionPrototype), PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+            {
+                MissionPrototype missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
+                if (missionProto == null) continue;
+                if (missionProto.HasPopulationInRegion(region) == false) continue;
+                // TODO check mission
+                // IsMissionValidAndApprovedForUse
+                region.SpawnPopulation.MissionRegisty(missionProto);
+            }
+
+            return true;
+        }
     }
 }

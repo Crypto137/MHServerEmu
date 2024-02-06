@@ -91,6 +91,7 @@ namespace MHServerEmu.Games.Regions
         public IEnumerable<Entity> Entities { get => Game.EntityManager.GetEntities(this); }
         public List<ulong> MetaGames { get; private set; } = new();
         public ConnectionNodeList Targets { get; private set; }
+        public SpawnPopulationRegistry SpawnPopulation { get; private set; }
 
         public Region(RegionPrototypeId prototype, int randomSeed, byte[] archiveData, Vector3 min, Vector3 max, CreateRegionParams createParams) // Old
         {
@@ -121,6 +122,7 @@ namespace MHServerEmu.Games.Regions
 
             MissionManager = new MissionManager(Game, this);
             // CreateUIDataProvider(Game);
+            SpawnPopulation = new(Game, this);
 
             Settings = settings;
             //Bind(this, 0xEF);
@@ -380,10 +382,15 @@ namespace MHServerEmu.Games.Regions
             // GenerateNaviMesh()
                         && GenerateHelper(regionGenerator, GenerateFlag.PathCollection);
             // BuildObjectiveGraph()
-            // GenerateMissionPopulation()
-            success &= GenerateHelper(regionGenerator, GenerateFlag.Population)
-                    && GenerateHelper(regionGenerator, GenerateFlag.PostGenerate);
+            if (success) success &= GenerateMissionPopulation()
+                        && GenerateHelper(regionGenerator, GenerateFlag.Population)
+                        && GenerateHelper(regionGenerator, GenerateFlag.PostGenerate);
             return success;
+        }
+
+        public bool GenerateMissionPopulation()
+        {            
+            return MissionManager.GenerateMissionPopulation();
         }
 
         public bool GenerateHelper(RegionGenerator regionGenerator, GenerateFlag flag)
