@@ -1,12 +1,43 @@
-﻿using MHServerEmu.Games.GameData.Prototypes;
+﻿using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.GameData
 {
+    /// <summary>
+    /// Provides shortcuts for access to game data.
+    /// </summary>
     public static class GameDataExtensions
     {
-        public static Prototype GetPrototype(this PrototypeId prototypeId)
+        /// <summary>
+        /// Returns the <see cref="AssetType"/> that this <see cref="PrototypeId"/> refers to.
+        /// </summary>
+        public static AssetType GetAssetType(this AssetTypeId assetTypeId)
         {
-            return GameDatabase.DataDirectory.GetPrototype<Prototype>(prototypeId);
+            return GameDatabase.GetAssetType(assetTypeId);
+        }
+
+        /// <summary>
+        /// Returns the <see cref="Curve"/> that this <see cref="CurveId"/> refers to.
+        /// </summary>
+        public static Curve GetCurve(this CurveId curveId)
+        {
+            return GameDatabase.GetCurve(curveId);
+        }
+
+        /// <summary>
+        /// Returns the <see cref="Blueprint"/> that this <see cref="BlueprintId"/> refers to.
+        /// </summary>
+        public static Blueprint GetBlueprint<T>(this BlueprintId blueprintId)
+        {
+            return GameDatabase.GetBlueprint(blueprintId);
+        }
+
+        /// <summary>
+        /// Returns the <typeparamref name="T"/> that this <see cref="PrototypeId"/> refers to.
+        /// </summary>
+        public static T GetPrototype<T>(this PrototypeId prototypeId) where T: Prototype
+        {
+            return GameDatabase.GetPrototype<T>(prototypeId);
         }
     }
 }
