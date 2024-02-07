@@ -292,18 +292,47 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         }
 
         /// <summary>
-        /// Parses a property collection and assigns it to a prototype field.
+        /// Parses a <see cref="PrototypePropertyCollection"/> from a serialized collection of embedded prototypes and assigns it to a prototype field.
         /// </summary>
-        /// <param name="params"></param>
-        /// <returns></returns>
         private static bool ParsePropertyList(FieldParserParams @params)
         {
-            // todo: proper property list deserialization and assignment
+            // PropertyList seems to be used only in ModPrototype
+            var propertyCollection = GetPropertyCollectionField(@params.OwnerPrototype);
+            if (propertyCollection == null)
+                Logger.WarnReturn(false, $"Failed to get a property collection to deserialize a property list into, file name {@params.FileName}");
+
             var reader = @params.Reader;
 
-            short numValues = reader.ReadInt16();
-            for (int i = 0; i < numValues; i++)
-                DeserializePrototypePtr(@params, true, out var prototype);
+            short numItems = reader.ReadInt16();
+            for (int i = 0; i < numItems; i++)
+            {
+                PrototypeDataHeader header = new(reader);
+                if (header.DataExists == false) continue;
+
+                short numFieldGroups = reader.ReadInt16();
+                for (int j = 0; j < numFieldGroups; j++)
+                {
+                    var groupBlueprintId = (BlueprintId)reader.ReadUInt64();
+                    byte blueprintCopyNum = reader.ReadByte();
+
+                    // Get the field group blueprint and make sure it's a property one
+                    var groupBlueprint = GameDatabase.GetBlueprint(groupBlueprintId);
+                    if (groupBlueprint.IsProperty() == false)
+                        Logger.WarnReturn(false, "Failed to parse PropertyList field: the specified group blueprint is not a property");
+
+                    // TODO: deserializeFieldGroupIntoProperty()
+                    short numSimpleFields = reader.ReadInt16();
+                    for (int k = 0; k < numSimpleFields; k++)
+                    {
+                        var fieldId = (StringId)reader.ReadUInt64();
+                        var type = (CalligraphyBaseType)reader.ReadByte();
+                        var value = reader.ReadUInt64();
+                    }
+
+                    short numListFields = reader.ReadInt16();
+                    if (numListFields != 0) Logger.Warn($"PropertyList field group numListFields != 0");
+                }
+            }
 
             return true;
         }

@@ -198,8 +198,6 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             {
                 // Look for a property collection to deserialize into
                 // TODO: check mixins for collections
-
-                // The only PropertyList field (the one from ModPrototype) is currently being sent here and considered just a regular property collection
                 var collectionFieldInfo = classType.GetProperty("Properties");
                 if (collectionFieldInfo != null)
                     collection = GetPropertyCollectionField(prototype, collectionFieldInfo);
