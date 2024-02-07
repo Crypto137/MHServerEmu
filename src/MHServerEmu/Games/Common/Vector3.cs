@@ -147,6 +147,7 @@ namespace MHServerEmu.Games.Common
         }
 
         public static float DistanceSquared2D(Vector3 a, Vector3 b) => LengthSqr(new (b.X - a.X, b.Y - a.Y, 0.0f));
+        public static float DistanceSquared(Vector3 a, Vector3 b) => LengthSqr(b - a);
 
         public static Vector3 Normalize2D(Vector3 v)
         {
@@ -171,9 +172,15 @@ namespace MHServerEmu.Games.Common
 
         public static float ToRadians(float v) => v * 0.017453292f;
 
-        public static float Distance2D(Vector3 v1, Vector3 v2)
+        public static float Distance2D(Vector3 v1, Vector3 v2) => Distance(Flatten(v1, 2), Flatten(v2, 2));
+        private static float Distance(Vector3 v1, Vector3 v2) => SquareRoot(DistanceSquared(v1, v2));
+        private static float SquareRoot(float f) => f > 0.0f ? MathF.Sqrt(f) : 0.0f;
+
+        private static Vector3 Flatten(Vector3 v, int index)
         {
-            throw new NotImplementedException();
+            return new(index == 0 ? 0.0f : v.X,
+                       index == 1 ? 0.0f : v.Y,
+                       index == 2 ? 0.0f : v.Z);
         }
 
         // static vectors
