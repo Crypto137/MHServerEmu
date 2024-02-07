@@ -322,7 +322,7 @@ namespace MHServerEmu.Games.Entities
             PrototypeId proto = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
             bool entitySnapToFloor = GetSnapToFloorOnSpawn(proto);
 
-            bool snapToFloor = (entityMarker.OverrideSnapToFloor == 1) ? (entityMarker.OverrideSnapToFloorValue == 1) : entitySnapToFloor;
+            bool snapToFloor = entityMarker.OverrideSnapToFloor ? entityMarker.OverrideSnapToFloorValue : entitySnapToFloor;
 
             if (snapToFloor)
             {
@@ -364,7 +364,7 @@ namespace MHServerEmu.Games.Entities
                 {  
                     PrototypeId protoId = GameDatabase.GetDataRefByPrototypeGuid(portal.EntityGuid);
                     Prototype entity = GameDatabase.GetPrototype<Prototype>(protoId);
-                    bool snap = portal.OverrideSnapToFloor > 0;
+                    bool snap = portal.OverrideSnapToFloor;
                     if (entity is TransitionPrototype transition)
                     {
                         Vector3 position = cell.CalcMarkerPosition(portal.Position);

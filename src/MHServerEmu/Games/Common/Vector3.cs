@@ -171,6 +171,11 @@ namespace MHServerEmu.Games.Common
 
         public static float ToRadians(float v) => v * 0.017453292f;
 
+        public static float Distance2D(Vector3 v1, Vector3 v2)
+        {
+            throw new NotImplementedException();
+        }
+
         // static vectors
 
         public static Vector3 Zero { get => new(0.0f, 0.0f, 0.0f); }
