@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+﻿using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -35,6 +36,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool BlockOnlyMyself { get; protected set; }
 
         public virtual float GetBoundHalfHeight() => 0.0f;
+
+        public virtual GeometryType GetGeometryType()
+        {
+            return GeometryType.None;
+        }
     }
 
     public class CapsuleBoundsPrototype : BoundsPrototype

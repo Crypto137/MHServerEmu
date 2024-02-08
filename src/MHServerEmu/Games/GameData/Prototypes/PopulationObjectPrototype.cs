@@ -40,9 +40,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         ClusterEntity cluster = group.CreateClusterEntity(riderEntityProto.Entity);
                         if (cluster == null) return;
                         cluster.Flags |= flags;
-                        cluster.Flags |= ClusterObjectFlag.HasFormationObject;
+                        cluster.Flags |= ClusterObjectFlag.SkipFormation;
                     }
             }
+        }
+
+        public FormationTypePrototype GetFormation()
+        {
+            if (Formation != null)
+                return Formation;
+            else
+                return GameDatabase.GetPrototype<FormationTypePrototype>(FormationTemplate);
         }
     }
 
@@ -140,6 +148,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 if (picker.Pick(out var obj))  // in 1.52 obj = null
                 {
+                    // TODO check obj as PopulationGroupPrototype
                     PopulationEntityPrototype choiceEntity = obj as PopulationEntityPrototype;
                     if (choiceEntity != null) continue;
                     ClusterEntity clusterEntity = group.CreateClusterEntity(choiceEntity.Entity);
@@ -194,7 +203,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             MarkerSetPrototype markerSet = encounterResourceProto.MarkerSet;
             if (markerSet == null) return;
                     
-            group.Flags |= ClusterObjectFlag.HasFormationObject;
+            group.Flags |= ClusterObjectFlag.SkipFormation;
             // group.Properties.SetProperty<PrototypeId>(encounterResourceRef, PropertyEnum.EncounterResource);
 
             foreach (var marker in markerSet.Markers)
@@ -224,7 +233,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         clusterEntity.SetParentRelativeOrientation(markerP.Rotation);
                         clusterEntity.SnapToFloor = SpawnSpec.SnapToFloorConvert(markerP.OverrideSnapToFloor, markerP.OverrideSnapToFloorValue);
                         clusterEntity.EncounterSpawnPhase = markerP.EncounterSpawnPhase;
-                        clusterEntity.Flags |= ClusterObjectFlag.HasFormationObject;
+                        clusterEntity.Flags |= ClusterObjectFlag.SkipFormation;
                     }
                 }
                 if (proto is BlackOutZonePrototype)

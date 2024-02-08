@@ -163,6 +163,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] FriendlyTo { get; protected set; }
         public PrototypeId WhileConfused { get; protected set; }
         public PrototypeId WhileControlled { get; protected set; }
+
+        public static bool IsHostileToPlayerAlliance(AlliancePrototype allianceProto)
+        {
+            if (allianceProto == null
+                || GameDatabase.GetGlobalsPrototype() == null 
+                || GameDatabase.GetGlobalsPrototype().PlayerAlliance == PrototypeId.Invalid)
+                return false;
+
+            AlliancePrototype playerAlliance = GameDatabase.GetGlobalsPrototype().GetPlayerAlliancePrototype();
+            return playerAlliance.IsHostileTo(allianceProto);
+        }
+
+        public bool IsHostileTo(AlliancePrototype allianceProto)
+        {
+            if (allianceProto == null) return false;
+            // TODO GameDataTables.GetAllianceTable().IsHostileTo(this, allianceProto);
+            return true;
+        }
     }
 
     public class BotDefinitionEntryPrototype : Prototype
