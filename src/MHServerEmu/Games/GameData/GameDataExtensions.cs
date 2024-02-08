@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.GameData
         /// <summary>
         /// Returns the <see cref="Blueprint"/> that this <see cref="BlueprintId"/> refers to.
         /// </summary>
-        public static Blueprint GetBlueprint<T>(this BlueprintId blueprintId)
+        public static Blueprint GetBlueprint(this BlueprintId blueprintId)
         {
             return GameDatabase.GetBlueprint(blueprintId);
         }
