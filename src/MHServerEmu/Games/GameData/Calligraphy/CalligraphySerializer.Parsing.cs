@@ -146,7 +146,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 return Logger.WarnReturn(false, $"Polymorphic prototype data encountered but not expected");
             
             // If this prototype has no data of its own, but it references a parent, we interpret it as its parent
-            if (header.DataExists == false)
+            if (header.InstanceDataExists == false)
             {
                 prototype = GameDatabase.GetPrototype<Prototype>(header.ReferenceType);
                 return true;
@@ -168,7 +168,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             var reader = @params.Reader;
             PrototypeDataHeader header = new(reader);
 
-            if (header.DataExists)
+            if (header.InstanceDataExists)
             {
                 short numFieldGroups = reader.ReadInt16();
                 for (int i = 0; i < numFieldGroups; i++)
@@ -307,7 +307,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             for (int i = 0; i < numItems; i++)
             {
                 PrototypeDataHeader header = new(reader);
-                if (header.DataExists == false) continue;
+                if (header.InstanceDataExists == false) continue;
 
                 short numFieldGroups = reader.ReadInt16();
                 for (int j = 0; j < numFieldGroups; j++)

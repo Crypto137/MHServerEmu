@@ -59,7 +59,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             }
 
             // Deserialize this prototype's data if there is any
-            if (header.DataExists == false) return;
+            if (header.InstanceDataExists == false) return;
 
             short numFieldGroups = reader.ReadInt16();
             for (int i = 0; i < numFieldGroups; i++)
