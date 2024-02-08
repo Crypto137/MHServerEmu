@@ -1,4 +1,6 @@
-﻿using MHServerEmu.Common.Logging;
+﻿using System.Reflection;
+using MHServerEmu.Common.Logging;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.GameData.Calligraphy
@@ -190,17 +192,44 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         private static bool DeserializePropertyMixin(Prototype prototype, Blueprint blueprint, Blueprint groupBlueprint, byte blueprintCopyNum,
             PrototypeId prototypeDataRef, string prototypeFilePath, Type classType, BinaryReader reader)
         {
+            // This whole mixin system is a huge mess.
             PrototypePropertyCollection collection = null;
 
             // Property mixins are used both for initializing property infos and filling prototype property collections  
             // If this isn't a default prototype, it means the field group needs to be deserialized into a property collection
             if (prototypeDataRef != groupBlueprint.DefaultPrototypeId)
             {
-                // Look for a property collection to deserialize into
-                // TODO: check mixins for collections
-                var collectionFieldInfo = classType.GetProperty("Properties");
+                Type propertyHolderClassType = classType;
+                Prototype propertyHolderPrototype = prototype;
+
+                // Check if this property belongs in one of mixin properyt collections.
+                // This is basically an edge case for PowerPrototype, since it's the only example of mixins having their own property collections.
+                // We save a little bit of time by skipping this for non-power prototypes. Remove this check if something breaks in other versions of the game.
+                if (prototype is PowerPrototype)
+                {
+                    // Iterate through all fields and check if if there are any mixin fields.
+                    // NOTE: the client uses a nested loop here and iterates through all parents until it founds a mixin or reaches the top of the hierarchy.
+                    // Since C# reflection already contains all inherited properties we can do it in a single foreach loop.
+                    bool foundMixin = false;
+                    foreach (var fieldInfo in classType.GetProperties())
+                    {
+                        PrototypeFieldType fieldType = GameDatabase.PrototypeClassManager.GetPrototypeFieldTypeEnumValue(fieldInfo);
+
+                        // If this is a mixin check if it has property collections we need to deserialize into
+                        // We pass propertyHolderClassType and propertyHolderPrototype as refs so that CheckPropertyMixin can modify them
+                        if (fieldType == PrototypeFieldType.Mixin || fieldType == PrototypeFieldType.ListMixin)
+                            foundMixin = CheckPropertyMixin(fieldInfo, fieldType, blueprint, groupBlueprint, blueprintCopyNum, prototype,
+                                ref propertyHolderClassType, ref propertyHolderPrototype);
+
+                        if (foundMixin) break;
+                    }
+                }
+                
+                // Get property collection to deserialize into from the property holder
+                // TODO: move this to PrototypeFieldManager.GetFieldInfo()
+                var collectionFieldInfo = propertyHolderClassType.GetProperty("Properties");
                 if (collectionFieldInfo != null)
-                    collection = GetPropertyCollectionField(prototype, collectionFieldInfo);
+                    collection = GetPropertyCollectionField(propertyHolderPrototype, collectionFieldInfo);
             }
 
             // This handles both cases (initialization and filling property collections)
@@ -273,6 +302,25 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             }
 
             return collection;
+        }
+
+        /// <summary>
+        /// Checks if a mixin field should hold the specified property in its collection.
+        /// </summary>
+        private static bool CheckPropertyMixin(System.Reflection.PropertyInfo mixinFieldInfo, PrototypeFieldType fieldType, Blueprint prototypeBlueprint,
+            Blueprint propertyBlueprint, byte blueprintCopyNum, Prototype parentPrototype, ref Type propertyHolderClassType, ref Prototype propertyHolderPrototype)
+        {
+            Type bindingType = fieldType == PrototypeFieldType.ListMixin
+                ? mixinFieldInfo.GetCustomAttribute<ListMixinAttribute>().FieldType
+                : mixinFieldInfo.PropertyType;
+
+            Blueprint mixinBlueprint = prototypeBlueprint.FindRuntimeBindingInBlueprintHierarchy(bindingType, propertyBlueprint);
+            if (mixinBlueprint == null) return false;
+
+            propertyHolderClassType = mixinBlueprint.RuntimeBindingClassType;
+            propertyHolderPrototype = AcquireMixinElement(parentPrototype, propertyHolderClassType, prototypeBlueprint,
+                mixinBlueprint, blueprintCopyNum, mixinFieldInfo, fieldType);
+            return true;
         }
 
         #endregion
@@ -452,7 +500,35 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
         #endregion
 
-        #region List Mixin Management
+        #region Mixin Management
+
+        /// <summary>
+        /// Acquires either the mixin itself or an element from a list mixin.
+        /// </summary>
+        private static Prototype AcquireMixinElement(Prototype ownerPrototype, Type elementClassType, Blueprint ownerBlueprint, Blueprint mixinBlueprint,
+            byte blueprintCopyNum, System.Reflection.PropertyInfo mixinFieldInfo, PrototypeFieldType fieldType)
+        {
+            if (fieldType == PrototypeFieldType.Mixin)
+            {
+                // Allocate a simple mixin if needed and return it
+                var element = (Prototype)mixinFieldInfo.GetValue(ownerPrototype);
+                if (element == null)
+                {
+                    element = (Prototype)Activator.CreateInstance(mixinFieldInfo.PropertyType);
+                    mixinFieldInfo.SetValue(ownerPrototype, element);
+                }
+
+                return element;
+            }
+            else if (fieldType == PrototypeFieldType.ListMixin)
+            {
+                PrototypeMixinList list = AcquireOwnedMixinList(ownerPrototype, mixinFieldInfo, false);
+                if (list == null) Logger.WarnReturn<Prototype>(null, "Failed to acquire mixin element: failed to acquire mixin list");
+                return AcquireOwnedUniqueMixinListElement(ownerPrototype, list, elementClassType, mixinBlueprint, blueprintCopyNum);
+            }
+
+            return Logger.WarnReturn<Prototype>(null, $"Failed to acquire mixin element: {fieldType} is not a mixin");
+        }
 
         /// <summary>
         /// Creates if needed and returns a <see cref="PrototypeMixinList"/> from the specified field of the provided <see cref="Prototype"/> instance that belongs to it.

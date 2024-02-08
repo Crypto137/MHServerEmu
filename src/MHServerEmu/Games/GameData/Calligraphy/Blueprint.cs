@@ -228,6 +228,15 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         }
 
         /// <summary>
+        /// Checks if this blueprint belongs to the specified blueprint in the hierarchy.
+        /// </summary>
+        public bool IsA(Blueprint parent)
+        {
+            if (parent == null) Logger.WarnReturn(false, "IsA() failed: parent is null");
+            return IsA(parent.Id);
+        }
+
+        /// <summary>
         /// Checks if this blueprint is a child of the provided blueprint in the prototype class hierarchy. Blueprints are also considered children of themselves.
         /// </summary>
         public bool IsRuntimeChildOf(Blueprint parent)
@@ -237,6 +246,23 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
             // Check runtime bindings
             return GameDatabase.PrototypeClassManager.PrototypeClassIsA(RuntimeBindingClassType, parent.RuntimeBindingClassType);
+        }
+
+        /// <summary>
+        /// Searches the blueprint hierarchy for a related blueprint that is bound to the specified class type.
+        /// </summary>
+        public Blueprint FindRuntimeBindingInBlueprintHierarchy(Type classType, Blueprint parentBlueprint)
+        {
+            if (RuntimeBindingClassType == classType && IsA(parentBlueprint)) return this;
+
+            foreach (var parentRef in Parents)
+            {
+                Blueprint parent = GameDatabase.GetBlueprint(parentRef.BlueprintId);
+                Blueprint result = parent.FindRuntimeBindingInBlueprintHierarchy(classType, parentBlueprint);
+                if (result != null) return result;
+            }
+
+            return null;
         }
     }
 
