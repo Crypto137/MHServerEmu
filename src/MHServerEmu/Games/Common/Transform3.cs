@@ -72,5 +72,13 @@ namespace MHServerEmu.Games.Common
             );
         }
 
+        public static Point3 operator *(Transform3 t, Point3 p)
+        {
+            return new Point3(
+                (t.Col0.X * p.X) + (t.Col1.X * p.Y) + (t.Col2.X * p.Z) + t.Col3.X,
+                (t.Col0.Y * p.X) + (t.Col1.Y * p.Y) + (t.Col2.Y * p.Z) + t.Col3.Y,
+                (t.Col0.Z * p.X) + (t.Col1.Z * p.Y) + (t.Col2.Z * p.Z) + t.Col3.Z
+            );
+        }
     }
 }

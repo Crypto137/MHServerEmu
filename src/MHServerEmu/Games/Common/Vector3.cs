@@ -54,6 +54,13 @@ namespace MHServerEmu.Games.Common
             Z = vector.Z;
         }
 
+        public Vector3(Point3 point)
+        {
+            X = point.X;
+            Y = point.Y;
+            Z = point.Z;
+        }
+
         public Vector3(float x, float y, float z)
         {
             _x = x;
@@ -181,6 +188,15 @@ namespace MHServerEmu.Games.Common
             return new(index == 0 ? 0.0f : v.X,
                        index == 1 ? 0.0f : v.Y,
                        index == 2 ? 0.0f : v.Z);
+        }
+
+        public static Vector3 AbsPerElem(Vector3 vec)
+        {
+            return new Vector3(
+                MathF.Abs(vec.X),
+                MathF.Abs(vec.Y),
+                MathF.Abs(vec.Z)
+            );
         }
 
         // static vectors

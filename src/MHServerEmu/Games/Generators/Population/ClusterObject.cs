@@ -57,7 +57,7 @@ namespace MHServerEmu.Games.Generators.Population
         public Transform3 Transform { get; private set; }
         public Vector3 Position { get; private set; }
         public Vector3 Orientation { get; private set; }
-        public float Radius { get; set; }
+        public float Radius { get; set ; }
         public float Height { get; set; }
         public PathFlags PathFlags { get; set; }
 
@@ -263,6 +263,7 @@ namespace MHServerEmu.Games.Generators.Population
         public ClusterEntity(Region region, GRandom random, PrototypeId selectorRef, ClusterGroup parent) 
             : base(region, random, parent)
         {
+            Bounds = new();
             SnapToFloor = null;
             EncounterSpawnPhase = 0;
 
