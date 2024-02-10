@@ -37,7 +37,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// <summary>
         /// Deserializes data for a Calligraphy prototype.
         /// </summary>
-        private static void DoDeserialize(Prototype prototype, PrototypeDataHeader header, PrototypeId prototypeDataRef, string prototypeName, BinaryReader reader)
+        private static bool DoDeserialize(Prototype prototype, PrototypeDataHeader header, PrototypeId prototypeDataRef, string prototypeName, BinaryReader reader)
         {
             DataDirectory dataDirectory = GameDatabase.DataDirectory;
 
@@ -48,7 +48,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             Blueprint blueprint = dataDirectory.GetPrototypeBlueprint(prototypeDataRef != PrototypeId.Invalid ? prototypeDataRef : header.ReferenceType);
 
             // Make sure there is data to deserialize
-            if (header.ReferenceExists == false) return;
+            if (header.ReferenceExists == false) return Logger.WarnReturn(false, $"Missing reference in {prototypeName}");
 
             // Get class type (we get it from the blueprint's binding instead of calling GetRuntimeClassId())
             Type classType = blueprint.RuntimeBindingClassType;
@@ -61,7 +61,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             }
 
             // Deserialize this prototype's data if there is any
-            if (header.InstanceDataExists == false) return;
+            if (header.InstanceDataExists == false) return true;
 
             short numFieldGroups = reader.ReadInt16();
             for (int i = 0; i < numFieldGroups; i++)
@@ -73,17 +73,22 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
                 if (groupBlueprint.IsProperty())
                 {
-                    DeserializePropertyMixin(prototype, blueprint, groupBlueprint, blueprintCopyNum, prototypeDataRef, prototypeName, classType, reader);
+                    if (DeserializePropertyMixin(prototype, blueprint, groupBlueprint, blueprintCopyNum, prototypeDataRef, prototypeName, classType, reader) == false)
+                        return Logger.WarnReturn(false, $"Failed to deserialize property mixin in {prototypeName}");
                 }
                 else
                 {
                     // Simple fields
-                    DeserializeFieldGroup(prototype, blueprint, blueprintCopyNum, prototypeName, classType, reader, "Simple Fields");
+                    if (DeserializeFieldGroup(prototype, blueprint, blueprintCopyNum, prototypeName, classType, reader, "Simple Fields") == false)
+                        return Logger.WarnReturn(false, $"Failed to deserialize simple field group in {prototypeName}");
 
                     // List fields
-                    DeserializeFieldGroup(prototype, blueprint, blueprintCopyNum, prototypeName, classType, reader, "List Fields");
+                    if (DeserializeFieldGroup(prototype, blueprint, blueprintCopyNum, prototypeName, classType, reader, "List Fields") == false)
+                        return Logger.WarnReturn(false, $"Failed to deserialize list field group in {prototypeName}");
                 }
             }
+
+            return true;
         }
 
         /// <summary>
@@ -238,7 +243,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
             // Property field groups do not have any list fields, so numListFields should always be 0
             short numListFields = reader.ReadInt16();
-            if (numListFields != 0) Logger.Warn($"Property field group numListFields != 0");
+            if (numListFields != 0) Logger.WarnReturn(false, $"Property field group numListFields != 0");
             return true;
         }
 
