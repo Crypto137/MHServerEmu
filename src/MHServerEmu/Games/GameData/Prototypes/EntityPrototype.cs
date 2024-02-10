@@ -254,6 +254,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             return GameDatabase.GetPrototype<AlliancePrototype>(Alliance);
         }
+
+        public RankPrototype GetRankPrototype()
+        {
+            return GameDatabase.GetPrototype<RankPrototype>(Rank);
+        }
     }
 
     public class StateChangePrototype : Prototype

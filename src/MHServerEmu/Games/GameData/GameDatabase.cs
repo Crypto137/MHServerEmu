@@ -334,5 +334,10 @@ namespace MHServerEmu.Games.GameData
         {
             return DataDirectory.GetPrototype<DifficultyGlobalsPrototype>(GetGlobalsPrototype().DifficultyGlobals);
         }
+
+        public static PopulationGlobalsPrototype GetPopulationGlobalsPrototype()
+        {
+            return DataDirectory.GetPrototype<PopulationGlobalsPrototype>(GetGlobalsPrototype().PopulationGlobals);
+        }
     }
 }

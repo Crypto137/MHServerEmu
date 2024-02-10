@@ -97,6 +97,9 @@ namespace MHServerEmu.Games.Generators.Population
         public virtual bool IsFormationObject() => false;
         public virtual bool Initialize() =>false;
 
+        public virtual void UpgradeToRank(RankPrototype upgradeRank, int num) { }
+        public virtual void AssignAffixes(RankPrototype rankProto, List<PrototypeId> affixes){ }
+
     }
 
     public class ClusterGroup : ClusterObject
@@ -433,6 +436,215 @@ namespace MHServerEmu.Games.Generators.Population
 
         private void InitializeRankAndMods()
         {
+            // TODO affixes system
+        /*      
+            PopulationGlobalsPrototype popGlobals = GameDatabase.GetPopulationGlobalsPrototype();
+            if (popGlobals == null) return;
+
+            TuningTable difficulty = Region.Difficulty;
+            if (difficulty == null) return;
+
+            TuningPrototype tuningProto = difficulty.GetPrototype();
+            if (tuningProto == null) return;
+
+            GRandom random = Region.Game.Random; // GetCurrent
+
+            HashSet<PrototypeId> overrides = GetMobAffixesFromProperties();
+            RankPrototype popcornRank = popGlobals.GetRankByEnum(Rank.Popcorn);
+            Region.ApplyRegionAffixesEnemyBoosts(popcornRank.DataRef, overrides);
+
+            if (overrides.Count == 0 && HasModifiableEntities() == false) return;
+
+            HashSet<PrototypeId> exemptOverrides = new();
+            ShiftExemptFromOverrides(overrides, exemptOverrides);
+
+            List<RankPrototype> ranks = new();
+            GetRanks(ranks);
+
+            RankPrototype rollRank = difficulty.RollRank(ranks, overrides);
+
+            int numUpgrade = -1;
+            if (rollRank.Rank == Rank.MiniBoss) numUpgrade = 1;
+
+            UpgradeToRank(rollRank, numUpgrade);
+
+            ranks.Clear();
+            GetRanks(ranks);
+
+            HashSet<PrototypeId> affixesSet = new();
+            foreach (RankPrototype rankProto in ranks)
+            {
+                RankAffixEntryPrototype rankEntryProto = tuningProto.GetDifficultyRankEntry(Region.GetDifficultyTierRef(), rankProto);
+
+                overrides = GetMobAffixesFromProperties();
+                Region.ApplyRegionAffixesEnemyBoosts(rankProto.DataRef, overrides);
+                ShiftExemptFromOverrides(overrides, exemptOverrides);
+                affixesSet.UnionWith(overrides);
+
+                int maxAffixes = (rankEntryProto != null) ? rankEntryProto.GetMaxAffixes() : 0;
+                List<PrototypeId> slots = new (maxAffixes);
+
+                if (overrides.Count > 0 && rankEntryProto != null)
+                {
+                    for (int slot = maxAffixes - 1; slot >= 0; slot--)
+                    {
+                        AffixTableEntryPrototype affixProto = rankEntryProto.GetAffixSlot(slot);
+                        if (affixProto == null) continue;
+
+                        if (slots[slot] == PrototypeId.Invalid)
+                        {
+                            foreach (PrototypeId overrideRef in overrides)
+                            {
+                                if (affixProto.AffixTable == PrototypeId.Invalid || affixProto.GetAffixTablePrototype().Contains(overrideRef))
+                                {
+                                    slots[slot] = overrideRef;
+                                    overrides.Remove(overrideRef);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (overrides.Count > 0)
+                {
+                    for (int slot = maxAffixes - 1; slot >= 0; slot--)
+                    {
+                        if (slots[slot] == PrototypeId.Invalid)
+                        {
+                            if (overrides.Count > 0)
+                            {
+                                PrototypeId overrideRef = overrides.First();
+                                slots[slot] = overrideRef;
+                                overrides.Remove(overrideRef);
+                            }
+                        }
+                    }
+                }
+
+                if (overrides.Count > 0)
+                {
+                    slots.AddRange(overrides);
+                    overrides.Clear();
+                }
+
+                if (rankEntryProto != null)
+                {
+                    HashSet<PrototypeId> currentAffixes = new ();
+                    HashSet<PrototypeId> excludeAffixes = new ();
+                    currentAffixes.UnionWith(affixesSet);
+
+                    for (int slot = 0; slot < slots.Count; ++slot)
+                    {
+                        if (slots[slot] != PrototypeId.Invalid)
+                        {
+                            currentAffixes.Remove(slots[slot]);
+                            excludeAffixes.Add(slots[slot]);
+                        }
+                    }
+
+                    for (int slot = 0; slot < slots.Count; ++slot)
+                    {
+                        if (slots[slot] == PrototypeId.Invalid)
+                        {
+                            AffixTableEntryPrototype affixProto = rankEntryProto.GetAffixSlot(slot);
+                            if (affixProto == null) continue;
+
+                            PrototypeId affixRef = affixProto.RollAffix(random, currentAffixes, excludeAffixes);
+                            if (affixRef != PrototypeId.Invalid)
+                            {
+                                slots[slot] = affixRef;
+                                affixesSet.Add(affixRef);
+                                currentAffixes.Remove(affixRef);
+                                excludeAffixes.Add(affixRef);
+                            }
+                        }
+                    }
+                }
+
+                if (exemptOverrides.Count > 0)
+                {
+                    for (int slot = 0; slot < slots.Count; ++slot)
+                    {
+                        if (slots[slot] == PrototypeId.Invalid)
+                        {
+                            if (exemptOverrides.Count > 0)
+                            {
+                                PrototypeId overrideR = exemptOverrides.First();
+                                slots[slot] = overrideR;
+                                exemptOverrides.Remove(overrideR);
+                            }
+                        }
+                    }
+                }
+
+                if (exemptOverrides.Count > 0)
+                    slots.AddRange(exemptOverrides);
+
+                exemptOverrides.Clear();
+
+                AssignAffixes(rankProto, slots);
+            }
+
+            foreach (var obj in Objects)
+            {   
+                if (obj is ClusterEntity entity)
+                {
+                    bool twinBoost = false;
+                    foreach (var modRef in entity.Modifiers)
+                    {
+                        if (modRef == popGlobals.TwinEnemyBoost)
+                        {
+                            twinBoost = true;
+                            break;
+                        }
+                    }
+
+                    if (twinBoost)
+                    {
+                        if (entity.EntityProto.Rank != PrototypeId.Invalid && entity.EntityProto.GetRankPrototype().IsRankBoss())
+                        {
+                            ClusterEntity newEntity = CreateClusterEntity(entity.EntityRef);
+                            if (newEntity != null)
+                            {
+                                newEntity.RankProto = popGlobals.TwinEnemyRank; // Prototype <T> operator = (PrototypeId)
+                                newEntity.Modifiers = entity.Modifiers;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        */
+        }
+
+        public override void UpgradeToRank(RankPrototype upgradeRank, int num) 
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void AssignAffixes(RankPrototype rankProto, List<PrototypeId> affixes)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void GetRanks(List<RankPrototype> ranks)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void ShiftExemptFromOverrides(HashSet<PrototypeId> overrides, HashSet<PrototypeId> exemptOverrides)
+        {
+            throw new NotImplementedException();
+        }
+
+        private bool HasModifiableEntities()
+        {
+            throw new NotImplementedException();
+        }
+
+        private HashSet<PrototypeId> GetMobAffixesFromProperties()
+        {
             throw new NotImplementedException();
         }
 
@@ -479,12 +691,14 @@ namespace MHServerEmu.Games.Generators.Population
         public bool? SnapToFloor { get; set; }
         public uint EncounterSpawnPhase { get; set; }
         public Bounds Bounds { get; set; }
-        public PrototypeId Rank { get; private set; }
+        public RankPrototype RankProto { get; set; }
+        public HashSet<PrototypeId> Modifiers { get; set; }
 
         public ClusterEntity(Region region, GRandom random, PrototypeId selectorRef, ClusterGroup parent) 
             : base(region, random, parent)
         {
-            Bounds = new();
+            Modifiers = new();
+            Bounds = new();            
             SnapToFloor = null;
             EncounterSpawnPhase = 0;
 
@@ -525,12 +739,12 @@ namespace MHServerEmu.Games.Generators.Population
 
             PathFlags = Locomotor.GetPathFlags(EntityProto.NaviMethod);
 
-            Rank = EntityProto.Rank;
+            RankProto = GameDatabase.GetPrototype<RankPrototype>(EntityProto.Rank);
             /*
             if (Parent != null)
             {
                 PrototypeId rankRef = Parent.Properties.GetProperty<PrototypeId>(PropertyEnum.Rank);
-                Rank = RankPrototype.DoOverride(Rank, rankRef);
+                RankProto = RankPrototype.DoOverride(RankProto, rankRef);
             }*/
 
             if ((EntityProto.ModifierSetEnable 
@@ -558,5 +772,14 @@ namespace MHServerEmu.Games.Generators.Population
             Flags &= ~ClusterObjectFlag.HasProjectToFloor;
         }
 
+        public override void UpgradeToRank(RankPrototype upgradeRank, int num)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void AssignAffixes(RankPrototype rankProto, List<PrototypeId> affixes)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

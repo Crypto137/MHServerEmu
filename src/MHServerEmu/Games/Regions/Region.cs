@@ -796,6 +796,16 @@ namespace MHServerEmu.Games.Regions
                 if (cell.Id == cellId) return cell;
             return default;
         }
+
+        internal void ApplyRegionAffixesEnemyBoosts(PrototypeId rankRef, HashSet<PrototypeId> overrides)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal PrototypeId GetDifficultyTierRef()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class DividedStartLocation

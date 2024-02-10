@@ -755,6 +755,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int SpawnMapHeatPerSecondScalar { get; protected set; }
         public PrototypeId TwinEnemyRank { get; protected set; }
         public RankDefaultEntryPrototype[] RankDefaults { get; protected set; }
+
+        internal RankPrototype GetRankByEnum(Rank rank)
+        {
+            throw new NotImplementedException();
+        }
+
     }
 
     public class ClusterConfigurationGlobalsPrototype : Prototype
