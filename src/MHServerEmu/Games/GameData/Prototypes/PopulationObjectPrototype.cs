@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.Generators.Population;
@@ -362,6 +363,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class ArcFormationTypePrototype : FormationTypePrototype
     {
         public int ArcDegrees { get; protected set; }
+
+        [DoNotCopy]
+        public float ArcRadians { get; protected set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+            ArcRadians = Vector3.ToRadians(ArcDegrees);
+        }
     }
 
     public class FormationSlotPrototype : FormationTypePrototype

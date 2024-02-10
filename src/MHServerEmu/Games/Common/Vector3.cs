@@ -116,6 +116,7 @@ namespace MHServerEmu.Games.Common
 
         public static Vector3 operator +(Vector3 a, Vector3 b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
         public static Vector3 operator -(Vector3 a, Vector3 b) => new(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+        public static Vector3 operator -(Vector3 a) => new(-a.X , -a.Y , -a.Z);
         public static Vector3 operator *(Vector3 v, float f) => new(v.X * f, v.Y * f, v.Z * f);
         public static Vector3 operator /(Vector3 v, float f) => new(v.X / f, v.Y / f, v.Z / f);
         public static bool operator ==(Vector3 a, Vector3 b) => ReferenceEquals(null, a) ? ReferenceEquals(null, b) : a.Equals(b);
@@ -199,11 +200,42 @@ namespace MHServerEmu.Games.Common
             );
         }
 
+        public static Vector3 FromDeltaVector2D(Vector3 delta)
+        {
+            return new(MathF.Atan2(delta.Y, delta.X), 0.0f, 0.0f);
+        }
+
+        public static Vector3 AxisAngleRotate(Vector3 pos, Vector3 axis, float angle)
+        {
+            if (Segment.EpsilonTest(LengthSquared(axis), 1.0f) == false) return pos;
+            float cosA = MathF.Cos(angle);
+            return pos * cosA + Cross(axis, pos) * MathF.Sin(angle) + axis * Dot(axis, pos) * (1.0f - cosA);
+        }
+
+        public static Vector3 Cross(Vector3 v1, Vector3 v2)
+        {
+            return new Vector3(
+                (v1.Y * v2.Z) - (v1.Z * v2.Y),
+                (v1.Z * v2.X) - (v1.X * v2.Z),
+                (v1.X * v2.Y) - (v1.Y * v2.X)
+            );
+        }
+
+        private static float LengthSquared(Vector3 v) => LengthSqr(v);
+
+
         // static vectors
 
         public static Vector3 Zero { get => new(0.0f, 0.0f, 0.0f); }
         public static Vector3 XAxis { get => new(1.0f, 0.0f, 0.0f); }
         public static Vector3 YAxis { get => new(0.0f, 1.0f, 0.0f); }
         public static Vector3 ZAxis { get => new(0.0f, 0.0f, 1.0f); }
+        public static Vector3 Forward { get => XAxis; }
+        public static Vector3 Right { get => YAxis; }
+        public static Vector3 Up { get => ZAxis; }
+        public static Vector3 Back { get => new(-1.0f, 0.0f, 0.0f); }
+        public static Vector3 Left { get => new(0.0f, -1.0f, 0.0f); }
+        public static Vector3 Down { get => new(0.0f, 0.0f, -1.0f); }
+
     }
 }
