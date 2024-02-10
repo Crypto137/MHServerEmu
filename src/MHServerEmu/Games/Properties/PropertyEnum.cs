@@ -1034,6 +1034,8 @@
         InterpolateRotatioSpeed,
         Charmed,
         SendOrbToPowerUser,
-        ConditionPowerCount
+        ConditionPowerCount,
+        // Invalid is defined as the highest possible enum value (which is 2047 because it's an unsigned 11-bit integer)
+        Invalid = 2047
     }
 }

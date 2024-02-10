@@ -62,6 +62,7 @@ namespace MHServerEmu.Games.GameData
 
             // Initialize PropertyInfoTable
             PropertyInfoTable = new();
+            PropertyInfoTable.Initialize();
 
             // initializeKeywordPrototypes
 

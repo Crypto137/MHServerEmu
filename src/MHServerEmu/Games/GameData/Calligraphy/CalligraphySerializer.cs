@@ -2,6 +2,7 @@
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Calligraphy
 {
@@ -250,6 +251,16 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         private static bool DeserializeFieldGroupIntoProperty(PrototypePropertyCollection collection, Blueprint groupBlueprint, byte blueprintCopyNum,
             string prototypeFilePath, BinaryReader reader, string groupTag)
         {
+            if (groupBlueprint.IsProperty() == false) return false;
+
+            PropertyInfoTable propertyInfoTable = GameDatabase.PropertyInfoTable;
+
+            PrototypeId propertyDataRef = groupBlueprint.PropertyDataRef;
+            PropertyEnum propertyEnum = propertyInfoTable.GetPropertyEnumFromPrototype(propertyDataRef);
+            bool isInitializing = collection == null;
+
+            PropertyBuilder propertyBuilder = new(propertyEnum, propertyInfoTable, isInitializing);
+
             // TODO: deserializeFieldGroupIntoPropertyBuilder
             short numSimpleFields = reader.ReadInt16();
             for (int i = 0; i < numSimpleFields; i++)
@@ -270,6 +281,14 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                     collection.AddPropertyFieldValue(groupBlueprint.Id, blueprintCopyNum, blueprintMemberInfo.Member.FieldName, value);
                 }
             }
+
+            if (isInitializing)
+            {
+                propertyBuilder.SetPropertyInfo();
+                return true;
+            }
+
+            // TODO: Add deserialized property to the property collection here
 
             return true;
         }
