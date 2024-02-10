@@ -155,14 +155,17 @@ namespace MHServerEmu.Games.GameData
         /// <summary>
         /// Returns a <see cref="System.Reflection.PropertyInfo"/> for a field in a Calligraphy prototype.
         /// </summary>
-        public System.Reflection.PropertyInfo GetFieldInfo(Type prototypeClassType, BlueprintMemberInfo blueprintMemberInfo, bool getPropertyCollection)
+        public System.Reflection.PropertyInfo GetFieldInfo(Type prototypeClassType, BlueprintMemberInfo? blueprintMemberInfo, bool getPropertyCollection)
         {
             // Return the C# property info the blueprint member is bound to if we are not looking for a property collection
             if (getPropertyCollection == false)
-                return blueprintMemberInfo.Member.RuntimeClassFieldInfo;
+                return blueprintMemberInfo?.Member.RuntimeClassFieldInfo;
 
-            // TODO: look for a property collection field for this prototype
-            return null;
+            // Look for a property collection field for this prototype
+            // Same as in CalligraphySerializer.GetPropertyCollection(), we make use of the fact that
+            // all property collection fields in our data are called "Properties".
+            // The client here iterates all fields to find the one that is the property collection.
+            return prototypeClassType.GetProperty("Properties");
         }
 
         /// <summary>

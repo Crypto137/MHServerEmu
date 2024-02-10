@@ -195,14 +195,14 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             // This whole mixin system is a huge mess.
             PrototypePropertyCollection collection = null;
 
-            // Property mixins are used both for initializing property infos and filling prototype property collections  
-            // If this isn't a default prototype, it means the field group needs to be deserialized into a property collection
+            // Property mixins are used both for initializing property infos and filling prototype property collections.
+            // If this isn't a default prototype, it means the field group needs to be deserialized into a property collection.
             if (prototypeDataRef != groupBlueprint.DefaultPrototypeId)
             {
                 Type propertyHolderClassType = classType;
                 Prototype propertyHolderPrototype = prototype;
 
-                // Check if this property belongs in one of mixin properyt collections.
+                // Check if this property belongs in one of mixin property collections.
                 // This is basically an edge case for PowerPrototype, since it's the only example of mixins having their own property collections.
                 // We save a little bit of time by skipping this for non-power prototypes. Remove this check if something breaks in other versions of the game.
                 if (prototype is PowerPrototype)
@@ -226,10 +226,11 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 }
                 
                 // Get property collection to deserialize into from the property holder
-                // TODO: move this to PrototypeFieldManager.GetFieldInfo()
-                var collectionFieldInfo = propertyHolderClassType.GetProperty("Properties");
-                if (collectionFieldInfo != null)
-                    collection = GetPropertyCollectionField(propertyHolderPrototype, collectionFieldInfo);
+                // Note: going through the PrototypeClassManager to get property collection field info doesn't make a whole lot of sense
+                // in the context of our implementation, but that's how it's done in the client, so it's going to be this way (at least for now).
+                var collectionFieldInfo = GameDatabase.PrototypeClassManager.GetFieldInfo(propertyHolderClassType, null, true);
+                if (collectionFieldInfo == null) Logger.WarnReturn(false, "Failed to get property collection field info for property mixin");
+                collection = GetPropertyCollectionField(propertyHolderPrototype, collectionFieldInfo);
             }
 
             // This handles both cases (initialization and filling property collections)
