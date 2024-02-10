@@ -11,7 +11,7 @@ namespace MHServerEmu.Games.GameData
         /// <summary>
         /// Returns the <see cref="AssetType"/> that this <see cref="PrototypeId"/> refers to.
         /// </summary>
-        public static AssetType GetAssetType(this AssetTypeId assetTypeId)
+        public static AssetType AsAssetType(this AssetTypeId assetTypeId)
         {
             return GameDatabase.GetAssetType(assetTypeId);
         }
@@ -19,7 +19,7 @@ namespace MHServerEmu.Games.GameData
         /// <summary>
         /// Returns the <see cref="Curve"/> that this <see cref="CurveId"/> refers to.
         /// </summary>
-        public static Curve GetCurve(this CurveId curveId)
+        public static Curve AsCurve(this CurveId curveId)
         {
             return GameDatabase.GetCurve(curveId);
         }
@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.GameData
         /// <summary>
         /// Returns the <see cref="Blueprint"/> that this <see cref="BlueprintId"/> refers to.
         /// </summary>
-        public static Blueprint GetBlueprint(this BlueprintId blueprintId)
+        public static Blueprint AsBlueprint(this BlueprintId blueprintId)
         {
             return GameDatabase.GetBlueprint(blueprintId);
         }
@@ -35,7 +35,7 @@ namespace MHServerEmu.Games.GameData
         /// <summary>
         /// Returns the <typeparamref name="T"/> that this <see cref="PrototypeId"/> refers to.
         /// </summary>
-        public static T GetPrototype<T>(this PrototypeId prototypeId) where T: Prototype
+        public static T As<T>(this PrototypeId prototypeId) where T: Prototype
         {
             return GameDatabase.GetPrototype<T>(prototypeId);
         }
