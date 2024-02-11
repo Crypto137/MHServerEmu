@@ -19,6 +19,13 @@ namespace MHServerEmu.Games.Common
             } 
         }
 
+        public Vector3 Orientation { get => new(GetYawFromTransform3(this), 0.0f, 0.0f); }
+
+        public static float GetYawFromTransform3(Transform3 transform)
+        {
+            return MathF.Atan2(transform.Col0.Y, transform.Col2.X);
+        }
+
         public Transform3(Transform3 transform)
         {
             Col0 = transform.Col0;
@@ -44,6 +51,7 @@ namespace MHServerEmu.Games.Common
                 new Vector3(0.0f)
             );
         }
+
 
         public static Transform3 BuildTransform(Vector3 translation, Vector3 rotation)
         {
@@ -71,6 +79,26 @@ namespace MHServerEmu.Games.Common
                 new Vector3(0.0f)
             );
         }
+
+        public static Transform3 operator *(Transform3 left, Transform3 right)
+        {
+            return new Transform3(
+                left * right.Col0,
+                left * right.Col1,
+                left * right.Col2,
+                new Vector3(left * new Point3(right.Col3))
+            );
+        }
+
+        public static Vector3 operator *(Transform3 t, Vector3 v)
+        {
+            return new Vector3(
+                (t.Col0.X * v.X) + (t.Col1.X * v.Y) + (t.Col2.X * v.Z),
+                (t.Col0.Y * v.X) + (t.Col1.Y * v.Y) + (t.Col2.Y * v.Z),
+                (t.Col0.Z * v.X) + (t.Col1.Z * v.Y) + (t.Col2.Z * v.Z)
+            );
+        }
+
 
         public static Point3 operator *(Transform3 t, Point3 p)
         {

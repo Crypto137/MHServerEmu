@@ -13,5 +13,12 @@ namespace MHServerEmu.Games.Common
             Y = y;
             Z = z;
         }
+
+        public Point3(Vector3 v)
+        {
+            X = v.X;
+            Y = v.Y;
+            Z = v.Z;
+        }
     }
 }

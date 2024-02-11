@@ -12,8 +12,8 @@ namespace MHServerEmu.Games.Regions
         public void HardcodedEntities(Region region, bool hackTeleport)
         {
             CellPrototype entry; 
-            Vector3 entityPosition;            
-
+           // Vector3 entityPosition;            
+            
             switch (region.PrototypeId)
             {
                 case RegionPrototypeId.HYDRAIslandPartDeuxRegionL60:
@@ -61,9 +61,9 @@ namespace MHServerEmu.Games.Regions
                         }
                     }
                     break;
-
+                /*
                 case RegionPrototypeId.CosmicDoopSectorSpaceRegion:
-
+                    
                     PrototypeId[] doop = new PrototypeId[]
                     {
                         (PrototypeId)8886032254367441193, // CosmicDoopRangedMinion
@@ -202,7 +202,7 @@ namespace MHServerEmu.Games.Regions
                     _entityManager.CreateWorldEntity(cell, GameDatabase.GetPrototypeRefByName("Entity/Characters/Vendors/Prototypes/Endgame/TeamSHIELDRepBuffer.prototype"),
                         new(736f, -352f, 177f), new(-2.15625f, 0f, 0f), 608, false);
 
-                    break;                
+                    break;     */           
 
             }
 

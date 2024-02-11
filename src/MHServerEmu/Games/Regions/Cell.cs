@@ -205,7 +205,28 @@ namespace MHServerEmu.Games.Regions
         public void SpawnMarkers() 
         {
             var entityManager = Game.EntityManager;
-            entityManager.MarkersAdd(this, true);            
+            var population = GetRegion().SpawnPopulation.PopulationMarkers;
+            // entityManager.MarkersAdd(this, true);
+            foreach (var markerProto in CellProto.MarkerSet.Markers)
+            {
+                if (markerProto is EntityMarkerPrototype entityMarker)
+                {
+                    string marker = entityMarker.LastKnownEntityName;
+
+                    if (marker.Contains("GambitMTXStore")) continue; // Invisible
+                    if (marker.Contains("CosmicEventVendor")) continue; // Invisible
+
+                    if (marker.Contains("Entity/Characters/") || (marker.Contains("Entity/Props/")))
+                    {
+                        entityManager.AddEntityMarker(this, entityMarker);
+                    }
+                    // Spawn Markers with encounters
+                    SpawnMarkerPrototype spawnMarker = entityMarker.GetMarkedPrototype<SpawnMarkerPrototype>();
+                    if (spawnMarker != null && spawnMarker.Type != MarkerType.Prop)
+                        foreach (var spawn in population) 
+                            if (spawn.MarkerRef == spawnMarker.DataRef) spawn.Spawn(this);
+                }
+            }
         }
 
         public static Type BuildTypeFromWalls(Walls walls)

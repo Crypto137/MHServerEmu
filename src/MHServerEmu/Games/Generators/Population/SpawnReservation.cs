@@ -8,30 +8,44 @@ namespace MHServerEmu.Games.Generators.Population
     public class SpawnReservationMap : Dictionary<PrototypeId, SpawnReservationList> { };
     public class SpawnReservationList : List<SpawnReservation> { };
 
+    public enum MarkerState
+    {
+        Free,
+        Reserved
+    }
+
     public class SpawnReservation
     {
-        private SpawnMarkerRegistry registry;
-        private MarkerType type;
-        private int id;
+        private SpawnMarkerRegistry _registry;
+        private MarkerType _type;        
+        private int _id;
         public Cell Cell { get; private set; }
+        public MarkerState State { get; set; }
         public Vector3 MarkerPos { get; private set; }
         public Vector3 MarkerRot { get; private set; }
         public PrototypeId MarkerRef { get; private set; }
         public Sphere RegionSphere { get; private set; }
         public Aabb RegionBounds { get; private set; }
+
         public SpawnReservationSpatialPartitionLocation SpatialPartitionLocation { get; }
 
         public SpawnReservation(SpawnMarkerRegistry registry, PrototypeId markerRef, MarkerType type, Vector3 position, Vector3 rotation, Cell cell, int id)
         {
-            this.registry = registry;
+            _registry = registry;
             MarkerRef = markerRef;
-            this.type = type;
+            _type = type;
+            State = MarkerState.Free;
             MarkerPos = position;
             MarkerRot = rotation;
             Cell = cell;
-            this.id = id;
+            _id = id;
             SpatialPartitionLocation = new(this);
             CalculateRegionInfo();
+        }
+
+        public Vector3 GetRegionPosition()
+        {
+            return RegionBounds.Center;
         }
 
         public void CalculateRegionInfo()

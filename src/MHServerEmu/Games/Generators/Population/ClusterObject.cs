@@ -92,11 +92,26 @@ namespace MHServerEmu.Games.Generators.Population
             SetLocationDirty();
         }
 
+        public Vector3 GetAbsolutePosition()
+        {
+            return GetAbsoluteTransform().Translation;
+        }
+
+        public Vector3 GetAbsoluteOrientation()
+        {
+            return GetAbsoluteTransform().Orientation;
+        }
+
+        public Transform3 GetAbsoluteTransform()
+        {
+            return Parent != null ? Parent.GetAbsoluteTransform() * Transform : Transform ;
+        }
+
         public virtual void UpdateBounds(ClusterObject clusterObject) { }
         public virtual void SetLocationDirty() { }
         public virtual bool IsFormationObject() => false;
-        public virtual bool Initialize() =>false;
-
+        public virtual bool Initialize() => false;
+        public virtual void Spawn() { }
         public virtual void UpgradeToRank(RankPrototype upgradeRank, int num) { }
         public virtual void AssignAffixes(RankPrototype rankProto, List<PrototypeId> affixes){ }
 
@@ -681,6 +696,11 @@ namespace MHServerEmu.Games.Generators.Population
 
             Parent?.UpdateBounds(this);
         }
+
+        public override void Spawn()
+        {
+            foreach (var obj in Objects) obj.Spawn();            
+        }
     }
 
     public class ClusterEntity : ClusterObject
@@ -702,8 +722,8 @@ namespace MHServerEmu.Games.Generators.Population
             SnapToFloor = null;
             EncounterSpawnPhase = 0;
 
-            EntitySelectorPrototype entitySelector = GameDatabase.GetPrototype<EntitySelectorPrototype>(selectorRef);
-            if (entitySelector != null)
+            Prototype entity = GameDatabase.GetPrototype<Prototype>(selectorRef);
+            if (entity is EntitySelectorPrototype entitySelector)
             {
                 EntitySelectorRef = selectorRef;
                 PrototypeId entityRef = entitySelector.SelectEntity(random, region);
@@ -716,6 +736,7 @@ namespace MHServerEmu.Games.Generators.Population
             }
 
             EntityProto = GameDatabase.GetPrototype<WorldEntityPrototype>(EntityRef);
+            Logger.Debug($"Add ClusterEntity [{GameDatabase.GetFormattedPrototypeName(EntityRef)}]");
         }
 
         public override bool Initialize()
@@ -755,6 +776,19 @@ namespace MHServerEmu.Games.Generators.Population
             }
 
             return true;
+        }
+
+        public override void Spawn()
+        {
+            EntityManager entityManager = Region.Game.EntityManager;
+            // TODO check Navi, collission 
+            // PropertyCollection, events
+            Cell cell = Region.GetCellAtPosition(Position);
+            if (cell == null) return;
+            var tr = GetAbsoluteTransform();
+            var pos = tr.Translation;
+            var rot = tr.Orientation;
+            entityManager.CreateWorldEntity(cell, EntityRef, pos, rot, 100, false, SnapToFloor == false);
         }
 
         public override bool IsFormationObject()

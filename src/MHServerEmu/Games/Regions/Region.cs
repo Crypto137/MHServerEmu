@@ -390,8 +390,7 @@ namespace MHServerEmu.Games.Regions
 
         public bool GenerateMissionPopulation()
         {
-            // return MissionManager.GenerateMissionPopulation();
-            return true;
+            return MissionManager.GenerateMissionPopulation();            
         }
 
         public bool GenerateHelper(RegionGenerator regionGenerator, GenerateFlag flag)
