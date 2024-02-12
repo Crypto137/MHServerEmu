@@ -223,6 +223,13 @@ namespace MHServerEmu.Games.Common
 
         private static float LengthSquared(Vector3 v) => LengthSqr(v);
 
+        public void RoundToNearestInteger()
+        {
+            _x = MathF.Round(_x);
+            _y = MathF.Round(_y);
+            _z = MathF.Round(_z);
+        }
+
 
         // static vectors
 
