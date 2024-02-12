@@ -1036,6 +1036,6 @@
         SendOrbToPowerUser,
         ConditionPowerCount,
         // Invalid is defined as the highest possible enum value (which is 2047 because it's an unsigned 11-bit integer)
-        Invalid = 2047
+        Invalid = (int)PropertyConsts.EnumMax
     }
 }

@@ -43,17 +43,17 @@ namespace MHServerEmu.Games.Properties
 
         public void Encode(CodedOutputStream stream)
         {
-            stream.WriteRawVarint64(Id.RawId.ReverseBytes());
+            stream.WriteRawVarint64(Id.Raw.ReverseBytes());
             stream.WriteRawVarint64(Value.RawValue);
         }
 
-        public NetStructProperty ToNetStruct() => NetStructProperty.CreateBuilder().SetId(Id.RawId).SetValue(Value.RawValue).Build();
+        public NetStructProperty ToNetStruct() => NetStructProperty.CreateBuilder().SetId(Id.Raw).SetValue(Value.RawValue).Build();
 
         public NetMessageSetProperty ToNetMessageSetProperty(ulong replicationId)
         {
             return NetMessageSetProperty.CreateBuilder()
                 .SetReplicationId(replicationId)
-                .SetPropertyId(Id.RawId.ReverseBits())    // In NetMessageSetProperty all bits are reversed rather than bytes
+                .SetPropertyId(Id.Raw.ReverseBits())    // In NetMessageSetProperty all bits are reversed rather than bytes
                 .SetValueBits(Value.RawValue)
                 .Build();
         }
@@ -62,15 +62,16 @@ namespace MHServerEmu.Games.Properties
         {
             return NetMessageRemoveProperty.CreateBuilder()
                 .SetReplicationId(replicationId)
-                .SetPropertyId(Id.RawId.ReverseBits())
+                .SetPropertyId(Id.Raw.ReverseBits())
                 .Build();
         }
 
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"Id: 0x{Id.RawId:X}");
+            sb.AppendLine($"Id: {Id}");
             sb.AppendLine($"Enum: {Id.Enum}");
+            sb.AppendLine($"HasParams: {Id.HasParams()}");
             sb.AppendLine($"Value: {Value}");
             sb.AppendLine($"PropertyDataType: {PropertyInfo.DataType}");
             return sb.ToString();
