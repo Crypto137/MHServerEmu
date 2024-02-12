@@ -783,12 +783,23 @@ namespace MHServerEmu.Games.Generators.Population
             EntityManager entityManager = Region.Game.EntityManager;
             // TODO check Navi, collission 
             // PropertyCollection, events
-            Cell cell = Region.GetCellAtPosition(Position);
-            if (cell == null) return;
             var tr = GetAbsoluteTransform();
             var pos = tr.Translation;
-            var rot = tr.Orientation;
-            entityManager.CreateWorldEntity(cell, EntityRef, pos, rot, 100, false, SnapToFloor == false);
+            Cell cell = Region.GetCellAtPosition(pos);
+            var entity = GameDatabase.GetPrototype<WorldEntityPrototype>(EntityRef);
+
+            SnapToFloor ??= entity.SnapToFloorOnSpawn;
+            bool overrideSnap = SnapToFloor != entity.SnapToFloorOnSpawn;
+            if (SnapToFloor == false) 
+            {
+                float projectHeight = cell.RegionBounds.Center.Z + RegionLocation.ProjectToFloor(cell.CellProto, pos);
+                if (pos.Z > projectHeight && Segment.EpsilonTest(pos.Z, projectHeight, 500)) // Fix for Door Lower Asgard
+                    pos.Z = projectHeight;
+                overrideSnap = false; // Fix for District
+            }    
+            pos.Z += entity.Bounds.GetBoundHalfHeight();
+            var rot = tr.Orientation; 
+            entityManager.CreateWorldEntity(cell, EntityRef, pos, rot, 100, false, overrideSnap);
         }
 
         public override bool IsFormationObject()
