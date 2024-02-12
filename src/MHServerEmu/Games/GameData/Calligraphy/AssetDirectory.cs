@@ -86,6 +86,25 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         }
 
         /// <summary>
+        /// Returns the enum value of the specified <see cref="AssetId"/>.
+        /// </summary>
+        public int GetEnumValue(AssetId assetId)
+        {
+            if (_assetIdToEnumValueDict.TryGetValue(assetId, out int enumValue) == false)
+            {
+                // Enumerate the asset type if there is no quick enum lookup for this assetId
+                AssetType assetType = GetAssetTypeByAssetId(assetId);
+                assetType.Enumerate();
+
+                // If there is still no lookup something must have gone wrong
+                if (_assetIdToEnumValueDict.TryGetValue(assetId, out enumValue) == false)
+                    Logger.WarnReturn(0, $"Failed to get enum value for asset id {assetId}");
+            }
+
+            return enumValue;
+        }
+
+        /// <summary>
         /// Adds new assetId => assetTypeId and assetGuid => assetId lookups.
         /// </summary>
         public void AddAssetLookup(AssetTypeId assetTypeId, AssetId assetId, AssetGuid assetGuid)
