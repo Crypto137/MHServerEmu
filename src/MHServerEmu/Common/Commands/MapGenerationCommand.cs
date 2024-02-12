@@ -33,8 +33,20 @@ namespace MHServerEmu.Common.Commands
             if (@params.Length > 2)
                 return CommandResult("Too many Paramaters \n => Usage: generation map [RegionPrototypeId] (optional:SeedNumber)");
 
-            if (!ulong.TryParse(@params[0], out RegionManager.RegionPrototypeIdFromCommand))
-                return CommandResult("TegionPrototypeId is not an ulong");
+            List<ulong> regions = new List<ulong>();
+
+            if (@params[0] == "all")
+            {
+                foreach (RegionPrototypeId regionPrototypeId in Enum.GetValues(typeof(RegionPrototypeId)))
+                    regions.Add((ulong)regionPrototypeId);
+            }
+            else
+            {
+                if (!ulong.TryParse(@params[0], out RegionManager.RegionPrototypeIdFromCommand))
+                    return CommandResult("TegionPrototypeId is not an ulong");
+
+                regions.Add(RegionManager.RegionPrototypeIdFromCommand);
+            }
 
             if (@params.Length == 2)
             {
@@ -48,8 +60,15 @@ namespace MHServerEmu.Common.Commands
                 Log($"Seed generated : {RegionManager.SeedNumberFromCommand}");
             }
 
-            ServerProcess();
-            ClientProcess();
+            foreach (ulong regionPrototypeId in regions)
+            {
+                RegionManager.RegionPrototypeIdFromCommand = regionPrototypeId;
+
+                ServerProcess();
+                ClientProcess();
+
+                Log($"Logs of region {RegionName()} done");
+            }
 
             return CommandResult("Process completed");
         }
@@ -68,7 +87,27 @@ namespace MHServerEmu.Common.Commands
 
                 WaitForXSeconds(10);
                 string outputContent = stringWriter.ToString();
-                WriteFile($"{RegionName()}-S-{RegionManager.SeedNumberFromCommand}.txt", outputContent);
+
+                List<string> clearText = new();
+                bool beginFound = false;
+
+                foreach (string line in outputContent.Split("\r"))
+                {
+                    if (!beginFound)
+                    {
+                        if (line.Contains("[PlayerManagerService] Logging in"))
+                            beginFound = true;
+                        else
+                            continue;
+                    }
+
+                    if (beginFound && line.Contains("[Debug] [EntityManager] [Marker]"))
+                        break;
+
+                    clearText.Add(line);
+                }
+
+                WriteFile($"{RegionName()}-{RegionManager.SeedNumberFromCommand}[S].txt", clearText);
                 Console.SetOut(TextWriter.Null);
             }
             Log("Server Logs generated");
@@ -77,7 +116,7 @@ namespace MHServerEmu.Common.Commands
         private void WaitGeneration()
         {
             RegionManager.GenerationAsked = false;
-            while (!RegionManager.GenerationAsked) 
+            while (!RegionManager.GenerationAsked)
                 Thread.Sleep(1000);
         }
 
@@ -115,13 +154,13 @@ namespace MHServerEmu.Common.Commands
             Thread.Sleep(seconds * 1000);
         }
 
-        void WriteFile(string fileName, string content)
+        void WriteFile(string fileName, List<string> content)
         {
             string logFolder = Path.Combine(Directory.GetCurrentDirectory(), "Logs generated");
             if (!Directory.Exists(logFolder))
                 Directory.CreateDirectory(logFolder);
 
-            File.WriteAllText(Path.Combine(logFolder, fileName), content);
+            File.WriteAllText(Path.Combine(logFolder, fileName), string.Join('\r', content));
         }
 
         void Log(string message, bool isError = false)
@@ -151,7 +190,7 @@ namespace MHServerEmu.Common.Commands
         bool IsClientRunning()
         {
             Process[] processes = Process.GetProcesses().Where(k => k.ProcessName.Contains("MarvelHeroesOmega")).ToArray();
-            if(processes == null)
+            if (processes == null)
                 return false;
             return processes.Count(k => k.MainModule.FileName.Contains("MarvelHeroesOmega.exe")) > 0;
         }
@@ -174,7 +213,7 @@ namespace MHServerEmu.Common.Commands
         void KillRunningClient()
         {
             Process[] processes = Process.GetProcesses().Where(k => k.ProcessName.Contains("MarvelHeroesOmega")).ToArray();
-            foreach (Process process in processes.Where(k => k.MainModule.FileName.Contains("MarvelHeroesOmega.exe") 
+            foreach (Process process in processes.Where(k => k.MainModule.FileName.Contains("MarvelHeroesOmega.exe")
             || k.MainModule.FileName.Contains("MarvelHeroesOmegaRegionGenerationOn.exe")))
                 process.Kill();
         }
@@ -205,8 +244,26 @@ namespace MHServerEmu.Common.Commands
             string filePath = e.FullPath;
             try
             {
-                string content = File.ReadAllText(filePath);
-                WriteFile($"{RegionName()}-C-{RegionManager.SeedNumberFromCommand}.txt", content);
+                //List<string> clearText = new();
+                //bool beginFound = false;
+
+                //foreach (string line in )
+                //{
+                //    if (!beginFound)
+                //    {
+                //        if (line.Contains("CLIENT: RegionChange to Unknown"))
+                //            beginFound = true;
+                //        else
+                //            continue;
+                //    }
+
+                //    if (beginFound && line.Contains("########### Finished loading"))
+                //        break;
+
+                //    clearText.Add(line);
+                //}
+
+                WriteFile($"{RegionName()}-{RegionManager.SeedNumberFromCommand}[C].txt", File.ReadAllLines(filePath).ToList());
             }
             catch (IOException ex) { }
         }
