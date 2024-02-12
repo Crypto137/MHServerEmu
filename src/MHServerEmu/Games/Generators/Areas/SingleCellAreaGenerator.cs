@@ -36,7 +36,6 @@ namespace MHServerEmu.Games.Generators.Areas
             if (cellProto == null) return false;
 
             Vector3 origin = Area.Origin;
-            Vector3 offset = Vector3.Zero;
 
             if (cellProto.MarkerSet.Markers.IsNullOrEmpty() == false)
             {      
@@ -44,7 +43,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 {
                     if (marker is not CellConnectorMarkerPrototype cellConnector) continue;
 
-                    Vector3 connection = origin + offset + cellConnector.Position;
+                    Vector3 connection = origin + cellConnector.Position;
 
                     if (segment.Start.X == segment.End.X)
                     {

@@ -222,9 +222,9 @@ namespace MHServerEmu.Games.Regions
 
         private bool GeneratePopulation()
         {
-            // TODO Write generation Entities here
-            foreach (var cell in CellList)
-                cell.SpawnMarkers();
+            if (Region.Settings.GenerateEntities)
+                foreach (var cell in CellList)
+                    cell.SpawnMarkers();
 
             return true;
         }
@@ -434,8 +434,9 @@ namespace MHServerEmu.Games.Regions
 
         private void RemoveAllCells()
         {
-            for (int i = CellList.Count - 1; i >= 0; i--)
-                RemoveCell(CellList[i].Id);
+            var cellIds = CellList.Select(cell => cell.Id).ToList();
+            foreach (var cellId in cellIds)
+                RemoveCell(cellId);
         }
 
         private void RemoveCell(uint id)

@@ -111,7 +111,7 @@ namespace MHServerEmu.Games.Regions
         public Region EmptyRegion(RegionPrototypeId prototype)
         {
             Region region = new(prototype,
-             1038711701,
+             1776322703,
              Array.Empty<byte>(),
              new(),
              new(),
@@ -135,11 +135,12 @@ namespace MHServerEmu.Games.Regions
                 Level = 10,
                 Bound = Aabb.Zero,
                 GenerateAreas = true,
+                GenerateEntities = true,
                 Affixes = new List<PrototypeId>(),
                 RegionDataRef = (PrototypeId)prototype
             };
-            // settings.Seed = 1038711701;
-            //GRandom random = new(settings.Seed);//Game.Random.Next()
+            // settings.Seed = 1776322703;
+            // GRandom random = new(settings.Seed);//Game.Random.Next()
             int tries = 10;
             Region region = null;
             while (region == null && (--tries > 0))
@@ -175,7 +176,7 @@ namespace MHServerEmu.Games.Regions
         public Region GetRegion(RegionPrototypeId prototype)
         {
 
-           //  prototype = (RegionPrototypeId)3816293063869929975;
+            //  prototype = (RegionPrototypeId)7735172603194383419;
             if (_regionDict.TryGetValue(prototype, out Region region) == false)
             {
                 // Generate the region and create entities for it if needed

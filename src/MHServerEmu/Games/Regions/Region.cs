@@ -31,6 +31,8 @@ namespace MHServerEmu.Games.Regions
         public bool DebugLevel;
         public PrototypeId RegionDataRef;
         public ulong MatchNumber;
+
+        public bool GenerateEntities;
     }
 
     public class Region : IMissionManagerOwner
