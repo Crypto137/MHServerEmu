@@ -77,6 +77,20 @@ namespace MHServerEmu.Games.GameData
                 loadAllWatch.Stop();
                 Logger.Info($"Loaded all prototypes in {loadAllWatch.ElapsedMilliseconds} ms");
             }
+            else if (ConfigManager.GameData.LoadMissionPrototypes)
+            {
+                var loadMissionsWatch = Stopwatch.StartNew();
+
+                int missionCount = 0;
+                foreach (PrototypeId prototypeId in DataDirectory.IteratePrototypesInHierarchy(typeof(MissionPrototype)))
+                {
+                    DataDirectory.GetPrototype<MissionPrototype>(prototypeId);
+                    missionCount++;
+                }
+
+                loadMissionsWatch.Stop();
+                Logger.Info($"Loaded {missionCount} mission prototypes in {loadMissionsWatch.ElapsedMilliseconds} ms");
+            }
 
             // InteractionManager::Initialize 
 
@@ -319,6 +333,11 @@ namespace MHServerEmu.Games.GameData
         public static DifficultyGlobalsPrototype GetDifficultyGlobalsPrototype()
         {
             return DataDirectory.GetPrototype<DifficultyGlobalsPrototype>(GetGlobalsPrototype().DifficultyGlobals);
+        }
+
+        public static PopulationGlobalsPrototype GetPopulationGlobalsPrototype()
+        {
+            return DataDirectory.GetPrototype<PopulationGlobalsPrototype>(GetGlobalsPrototype().PopulationGlobals);
         }
     }
 }

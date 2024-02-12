@@ -9,6 +9,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
+using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
@@ -174,10 +175,8 @@ namespace MHServerEmu.Games.Entities
                 Area = regionConnectionTarget.Area,
                 Cell = cellPrototypeId,
                 Entity = regionConnectionTarget.Entity,
-                Name = "",
                 NameId = regionConnectionTarget.Name,
-                Target = targetRef,
-                Position = new()
+                Target = targetRef
             };
 
             ulong regionId = region.Id;
@@ -300,20 +299,6 @@ namespace MHServerEmu.Games.Entities
         // TODO: CreateEntity -> finalizeEntity -> worldEntity.EnterWorld -> _location.SetRegion( region )
 
         #region OldSpawnSystem
-
-        public static float GetEntityFloor(PrototypeId prototypeId)
-        {
-            var entity = GameDatabase.GetPrototype<WorldEntityPrototype>(prototypeId);
-            return entity.Bounds.GetBoundHalfHeight();
-        }
-
-        public static bool GetSnapToFloorOnSpawn(PrototypeId prototypeId)
-        {
-            if (prototypeId == (PrototypeId)HardcodedBlueprintId.ThrowableProp) return true;
-            if (prototypeId == (PrototypeId)HardcodedBlueprintId.DestructibleProp) return true;
-            var entity = GameDatabase.GetPrototype<WorldEntityPrototype>(prototypeId);
-            return entity.SnapToFloorOnSpawn;
-        }
  
         public void AddEntityMarker(Cell cell, EntityMarkerPrototype entityMarker)
         {
@@ -321,64 +306,26 @@ namespace MHServerEmu.Games.Entities
 
             Vector3 entityPosition = cell.CalcMarkerPosition(entityMarker.Position);
 
-            PrototypeId proto = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
-            bool entitySnapToFloor = GetSnapToFloorOnSpawn(proto);
+            PrototypeId protoRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
+            var entity = GameDatabase.GetPrototype<WorldEntityPrototype>(protoRef);
 
-            bool snapToFloor = (entityMarker.OverrideSnapToFloor == 1) ? (entityMarker.OverrideSnapToFloorValue == 1) : entitySnapToFloor;
-
-            if (snapToFloor)
+            bool? snapToFloor = SpawnSpec.SnapToFloorConvert(entityMarker.OverrideSnapToFloor, entityMarker.OverrideSnapToFloorValue);
+            snapToFloor ??= entity.SnapToFloorOnSpawn;       
+            bool overrideSnap = snapToFloor != entity.SnapToFloorOnSpawn;
+            if (snapToFloor == true) // Fix Boxes in Axis Raid
             {
                 float projectHeight = cell.RegionBounds.Center.Z + RegionLocation.ProjectToFloor(cellProto, entityMarker.Position);
-                if (entityPosition.Z > projectHeight)
+                if (entityPosition.Z > projectHeight) 
                     entityPosition.Z = projectHeight;
             }
-
-            entityPosition.Z += GetEntityFloor(proto);
-            CreateWorldEntity(cell, proto, entityPosition, entityMarker.Rotation, 608, false, snapToFloor != entitySnapToFloor);
-        }
-
-
-
-        public void MarkersAdd(Cell cell, bool addProp = false)
-        {            
-            foreach (var markerProto in cell.CellProto.MarkerSet.Markers)
-            {
-                if (markerProto is EntityMarkerPrototype entityMarker)
-                {
-                    string marker = entityMarker.LastKnownEntityName;
-
-                    if (marker.Contains("GambitMTXStore")) continue; // Invisible
-                    if (marker.Contains("CosmicEventVendor")) continue; // Invisible
-
-                    if (marker.Contains("Entity/Characters/") || (addProp && marker.Contains("Entity/Props/")))
-                    {
-                        AddEntityMarker(cell, entityMarker);
-                    }
-                }
-            }
+            entityPosition.Z += entity.Bounds.GetBoundHalfHeight(); 
+                  
+            CreateWorldEntity(cell, protoRef, entityPosition, entityMarker.Rotation, 608, false, overrideSnap);
         }
 
         public void AddTeleports(Cell cell, Area entryArea, ConnectionNodeList targets)
         {
             PrototypeId area = (PrototypeId)entryArea.PrototypeId;
-
-            TargetObject GetTargetNode(PrototypeId area, PrototypeId cell, PrototypeGuid entity)
-            {
-                foreach (var targetNode in targets)
-                {
-                    if (targetNode.Entity == entity) {
-                        if (targetNode.Area == 0 && targetNode.Cell == cell)
-                        {
-                            return targetNode;
-                        }
-                        else if (targetNode.Area == area)
-                        {
-                            if (targetNode.Cell == 0 || targetNode.Cell == cell) return targetNode;
-                        }
-                    }                
-                }
-                return null;
-            }
 
             foreach (var marker in cell.CellProto.InitializeSet.Markers)
             {
@@ -386,11 +333,11 @@ namespace MHServerEmu.Games.Entities
                 {  
                     PrototypeId protoId = GameDatabase.GetDataRefByPrototypeGuid(portal.EntityGuid);
                     Prototype entity = GameDatabase.GetPrototype<Prototype>(protoId);
-                    bool snap = portal.OverrideSnapToFloor > 0;
+                    bool snap = portal.OverrideSnapToFloor;
                     if (entity is TransitionPrototype transition)
                     {
                         Vector3 position = cell.CalcMarkerPosition(portal.Position);
-                        position.Z += GetEntityFloor(protoId);
+                        position.Z += transition.Bounds.GetBoundHalfHeight();
 
                         Logger.Debug($"[{transition.Type}] {portal.LastKnownEntityName} [{protoId}]");
                         if (transition.Waypoint != 0)
@@ -400,7 +347,7 @@ namespace MHServerEmu.Games.Entities
                         }
                         else
                         {
-                            TargetObject node = GetTargetNode(area, cell.PrototypeId, portal.EntityGuid);
+                            TargetObject node = RegionTransition.GetTargetNode(targets, area, cell.PrototypeId, portal.EntityGuid);
                             if (node != null)
                                 SpawnTargetTeleport(cell, transition, position, portal.Rotation, false, node.TargetId, snap);
                             else
@@ -408,19 +355,6 @@ namespace MHServerEmu.Games.Entities
                         }      
                     }
 
-                }
-            }
-        }
-
-        public void GenerateEntities(Region region, ConnectionNodeList targets, bool addMarkers, bool addProp)
-        {
-            foreach (Area entryArea in region.AreaList)
-            {                
-                foreach (var cell in entryArea.CellList)
-                {
-                    if (addMarkers)
-                        MarkersAdd(cell, addProp);
-                        AddTeleports(cell, entryArea, targets);
                 }
             }
         }

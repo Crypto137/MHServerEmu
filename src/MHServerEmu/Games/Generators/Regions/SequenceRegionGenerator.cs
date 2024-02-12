@@ -276,7 +276,7 @@ namespace MHServerEmu.Games.Generators.Regions
                                 graph.AddLink(entry.Previous.Area, entry.Area);
                         }
 
-                        if (entry.SequenceInfo.ConnectedTo.Any())
+                        if (entry.SequenceInfo.ConnectedTo.IsNullOrEmpty() == false)
                         {
                             int picks = entry.SequenceInfo.ConnectedToPicks != 0 ? entry.SequenceInfo.ConnectedToPicks : 1;
 
@@ -463,6 +463,7 @@ namespace MHServerEmu.Games.Generators.Regions
                         {
                             Aabb localBounds = area.LocalBounds;
                             Vector3 translation = connectionPair.A - connectionPair.B;
+                            translation.RoundToNearestInteger(); // Fix for 0.001
                             Aabb testBounds = localBounds.Translate(translation);
 
                             bool testCollision = false;

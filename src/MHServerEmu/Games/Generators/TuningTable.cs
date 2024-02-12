@@ -14,6 +14,8 @@ namespace MHServerEmu.Games.Regions
         private int _difficultyIndexMin;
         private int _difficultyIndexMax;
 
+        public TuningPrototype GetPrototype() => _tuningProto;
+
         public TuningTable(Region region)
         {
             _region = region;
@@ -40,5 +42,9 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
+        internal RankPrototype RollRank(List<RankPrototype> ranks, HashSet<PrototypeId> overrides)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

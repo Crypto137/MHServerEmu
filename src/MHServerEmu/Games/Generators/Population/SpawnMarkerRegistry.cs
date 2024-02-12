@@ -1,9 +1,13 @@
-﻿using MHServerEmu.Common.Logging;
+﻿using MHServerEmu.Common;
+using MHServerEmu.Common.Extensions;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.Regions;
+using System;
+using static ICSharpCode.SharpZipLib.Zip.ExtendedUnixData;
 
 namespace MHServerEmu.Games.Generators.Population
 {
@@ -103,11 +107,12 @@ namespace MHServerEmu.Games.Generators.Population
 
                         if (!cell.RegionBounds.IntersectsXY(regionPos))
                         {
-                            Logger.Trace($"[DESIGN]Trying to add marker outside of cell bounds. " +
+                            Logger.Warn($"[DESIGN]Trying to add marker outside of cell bounds. " +
                                 $"CELL={GameDatabase.GetFormattedPrototypeName(cell.PrototypeId)}, BOUNDS={cell.RegionBounds}, " +
                                 $"MARKER={GameDatabase.GetFormattedPrototypeName(markerRef)}, REGIONPOS={regionPos}, CELLPOS={marker.Position}");
                             continue;
                         }
+                        //Logger.Debug($"Marker [{GameDatabase.GetFormattedPrototypeName(markerRef)}] {regionPos.ToStringFloat()}");
                         AddSpawnTypeLocation(markerRef, marker.Position, marker.Rotation, cell, ++id);
                     }
                 }
@@ -276,44 +281,59 @@ namespace MHServerEmu.Games.Generators.Population
             return false;
         }
 
+        public SpawnReservation ReserveFreeReservation(PrototypeId markerRef, GRandom random, Cell spawnCell, PrototypeId[] spawnAreas, AssetId[] spawnCells)
+        {
+            Picker<SpawnReservation> picker = new(random);
+
+            var spawnCellRef = spawnCell.PrototypeId;
+            var spawnCellId = spawnCell.Id;
+            var spawnAreaRef = spawnCell.Area.GetPrototypeDataRef();
+
+            // picker add
+            if (spawnCells.IsNullOrEmpty() == false)
+            {
+                foreach (var cellAsset in spawnCells)
+                {
+                    if (spawnCellRef != GameDatabase.GetDataRefByAsset(cellAsset)) continue;
+                    if (_cellLookup.TryGetValue(spawnCellId, out var spawnMap) == false || spawnMap == null) continue;
+                    if (spawnMap.TryGetValue(markerRef, out var list) == false || list == null) continue;
+                    foreach (var testReservation in list)
+                    {
+                        if (testReservation.State != MarkerState.Free) continue;
+                        if (spawnAreas.IsNullOrEmpty() == false && spawnAreas.Contains(spawnAreaRef) == false) continue;
+                        picker.Add(testReservation);
+                    }
+                }
+            } 
+            else if (spawnAreas.IsNullOrEmpty() == false)
+            {
+                foreach (var areaRef in spawnAreas)
+                {
+                    if (areaRef != spawnAreaRef) continue;
+                    if (_areaLookup.TryGetValue(spawnAreaRef, out var spawnMap) == false || spawnMap == null) continue;
+                    if (spawnMap.TryGetValue(markerRef, out var list) == false || list == null) continue;
+                    foreach (var testReservation in list)
+                    {
+                        if (testReservation.State != MarkerState.Free) continue;
+                        picker.Add(testReservation);
+                    }
+                }                
+            }
+
+            if (picker.Empty() == false && picker.Pick(out SpawnReservation reservation))
+            {
+                reservation.State = MarkerState.Reserved;
+                return reservation;
+            }
+            return null;
+        }
     }
 
-    public class SpawnReservationMap : Dictionary<PrototypeId, SpawnReservationList> { };
-    public class SpawnReservationList : List<SpawnReservation> { };
-
-    public class SpawnReservation
+    public class SpawnSpec
     {
-        private SpawnMarkerRegistry registry;
-        private MarkerType type;
-        private int id;
-        public Cell Cell { get; private set; }
-        public Vector3 MarkerPos { get; private set; }
-        public Vector3 MarkerRot { get; private set; }
-        public PrototypeId MarkerRef { get; private set; }
-        public Sphere RegionSphere { get; private set; }
-        public Aabb RegionBounds { get; private set; }
-        public SpawnReservationSpatialPartitionLocation SpatialPartitionLocation { get; }
-
-        public SpawnReservation(SpawnMarkerRegistry registry, PrototypeId markerRef, MarkerType type, Vector3 position, Vector3 rotation, Cell cell, int id)
+        public static bool? SnapToFloorConvert(bool overrideSnapToFloor, bool overrideSnapToFloorValue)
         {
-            this.registry = registry;
-            MarkerRef = markerRef;
-            this.type = type;
-            MarkerPos = position;
-            MarkerRot = rotation;
-            Cell = cell;
-            this.id = id;
-            SpatialPartitionLocation = new(this);
-            CalculateRegionInfo();
+            return overrideSnapToFloor ? overrideSnapToFloorValue : null;
         }
-
-        public void CalculateRegionInfo()
-        {
-            Vector3 cellLocalPos = MarkerPos - Cell.CellProto.BoundingBox.Center;
-            Vector3 regionPos = Cell.RegionBounds.Center + cellLocalPos;
-            RegionSphere = new Sphere(regionPos, 64.0f);
-            RegionBounds = RegionSphere.ToAabb();
-        }
-
     }
 }

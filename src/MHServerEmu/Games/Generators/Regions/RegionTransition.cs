@@ -53,6 +53,18 @@ namespace MHServerEmu.Games.Generators.Regions
             return false;
         }
 
+        public static TargetObject GetTargetNode(ConnectionNodeList targets, PrototypeId area, PrototypeId cell, PrototypeGuid entity)
+        {
+            foreach (var targetNode in targets)
+            {
+                if (targetNode.Entity == entity 
+                    && (targetNode.Area == PrototypeId.Invalid || targetNode.Area == area)
+                    && (targetNode.Cell == PrototypeId.Invalid || targetNode.Cell == cell)) 
+                    return targetNode;
+            }
+            return null;
+        }
+
         public static ConnectionNodeList BuildConnectionEdges(PrototypeId region)
         {
             var nodes = new ConnectionNodeList();
@@ -82,34 +94,18 @@ namespace MHServerEmu.Games.Generators.Regions
 
                     if (origin != null && target != null)
                     {
-                        bool found = false;
-                        if (region == origin.Region)
-                        {
-                            AddTargetNode(target, origin);
-                            found = true;
-                        }
-
-                        if (proto.Type == RegionTransitionDirectionality.BiDirectional && region == target.Region)
-                        {
-                            AddTargetNode(origin, target);
-                            found = true;
-                        }
-
-                        if (found == false)
-                        {
-                            if (origin.Region != 0)
-                            {
-                                var originRegion = GameDatabase.GetPrototype<RegionPrototype>(origin.Region);
-                                if (RegionPrototype.Equivalent(originRegion, regionProto))
-                                    AddTargetNode(target, origin);
+                        var originRegion = GameDatabase.GetPrototype<RegionPrototype>(origin.Region);
+                        if (RegionPrototype.Equivalent(originRegion, regionProto))
+                            { 
+                                AddTargetNode(target, origin);
                             }
-                            if (proto.Type == RegionTransitionDirectionality.BiDirectional && target.Region != 0)
+
+                        var targetRegion = GameDatabase.GetPrototype<RegionPrototype>(target.Region);
+                        if (proto.Type == RegionTransitionDirectionality.BiDirectional 
+                            && RegionPrototype.Equivalent(targetRegion, regionProto))       
                             {
-                                var targetRegion = GameDatabase.GetPrototype<RegionPrototype>(target.Region);
-                                if (RegionPrototype.Equivalent(targetRegion, regionProto))
-                                    AddTargetNode(origin, target);
+                                AddTargetNode(origin, target);
                             }
-                        }
                     }
                 }
             }

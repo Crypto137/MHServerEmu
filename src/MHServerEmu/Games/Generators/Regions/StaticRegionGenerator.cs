@@ -42,7 +42,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
             if (staticAreas.Length > 1)
             {
-                if (regionGeneratorProto.Connections != null)
+                if (regionGeneratorProto.Connections.IsNullOrEmpty() == false)
                 {
                     List<AreaConnectionPrototype> workingConnectionList = new (regionGeneratorProto.Connections);
 

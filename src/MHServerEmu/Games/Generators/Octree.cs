@@ -317,13 +317,14 @@ namespace MHServerEmu.Games.Generators
 
         public IEnumerable<T> IterateElementsInVolume(Aabb volume)
         {
-            var iterator = new ElementIterator(this, volume);
-
-            while (iterator.End() == false)
+            using (var iterator = new ElementIterator(this, volume))
             {
-                var element = iterator.Current;
-                iterator.MoveNext();
-                yield return element;
+                while (iterator.End() == false)
+                {
+                    var element = iterator.Current;
+                    iterator.MoveNext();
+                    yield return element;
+                }
             }
         }
 

@@ -69,7 +69,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public SuperCellEntryPrototype[] Entries { get; protected set; }
 
-        public Point2 Max;
+        [DoNotCopy]
+        public Point2 Max { get; private set; }
 
         public override void PostProcess()
         {
@@ -77,7 +78,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             Max = new(-1, -1);
 
-            if (Entries != null)
+            if (Entries.IsNullOrEmpty() == false)
             {
                 foreach (SuperCellEntryPrototype superCellEntry in Entries)
                 {
@@ -92,7 +93,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public bool ContainsCell(PrototypeId cellRef)
         {
-            if (Entries != null)
+            if (Entries.IsNullOrEmpty() == false)
             {
                 foreach (var entryProto in Entries)
                 {

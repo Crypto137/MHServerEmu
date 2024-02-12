@@ -7,7 +7,6 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.Generators.Navi;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Generators;
@@ -32,9 +31,11 @@ namespace MHServerEmu.Games.Regions
         public bool DebugLevel;
         public PrototypeId RegionDataRef;
         public ulong MatchNumber;
+
+        public bool GenerateEntities;
     }
 
-    public class Region
+    public class Region : IMissionManagerOwner
     {
         // Old
         public RegionPrototypeId PrototypeId { get; private set; }
@@ -91,6 +92,8 @@ namespace MHServerEmu.Games.Regions
         public IEnumerable<Cell> Cells { get => IterateCellsInVolume(Bound); }
         public IEnumerable<Entity> Entities { get => Game.EntityManager.GetEntities(this); }
         public List<ulong> MetaGames { get; private set; } = new();
+        public ConnectionNodeList Targets { get; private set; }
+        public SpawnPopulationRegistry SpawnPopulation { get; private set; }
 
         public Region(RegionPrototypeId prototype, int randomSeed, byte[] archiveData, Vector3 min, Vector3 max, CreateRegionParams createParams) // Old
         {
@@ -118,6 +121,11 @@ namespace MHServerEmu.Games.Regions
         {
             // "Region_Initialize" ProfileTimer
             if (Game == null) return false;
+
+            MissionManager = new MissionManager(Game, this);
+            // CreateUIDataProvider(Game);
+            SpawnPopulation = new(Game, this);
+
             Settings = settings;
             //Bind(this, 0xEF);
 
@@ -182,7 +190,7 @@ namespace MHServerEmu.Games.Regions
             ProgressionGraph = new();
             ObjectiveGraph = new(Game, this);
 
-            if (MissionManager != null && !MissionManager.InitializeForRegion(this)) return false;
+            if (MissionManager != null && MissionManager.InitializeForRegion(this) == false) return false;
 
             /* if (Settings.Affixes.Any)
              {
@@ -209,6 +217,8 @@ namespace MHServerEmu.Games.Regions
              if (HasProperty(PropertyEnum.DifficultyTier) && settings.DifficultyTierRef != 0)
                  SetProperty<PrototypeDataRef>(settings.DifficultyTierRef, PropertyEnum.DifficultyTier);
             */
+
+            Targets = RegionTransition.BuildConnectionEdges(settings.RegionDataRef); // For Teleport system
 
             if (settings.GenerateAreas)
             {
@@ -374,10 +384,15 @@ namespace MHServerEmu.Games.Regions
             // GenerateNaviMesh()
                         && GenerateHelper(regionGenerator, GenerateFlag.PathCollection);
             // BuildObjectiveGraph()
-            // GenerateMissionPopulation()
-            success &= GenerateHelper(regionGenerator, GenerateFlag.Population)
-                    && GenerateHelper(regionGenerator, GenerateFlag.PostGenerate);
+            if (success) success &= GenerateMissionPopulation()
+                        && GenerateHelper(regionGenerator, GenerateFlag.Population)
+                        && GenerateHelper(regionGenerator, GenerateFlag.PostGenerate);
             return success;
+        }
+
+        public bool GenerateMissionPopulation()
+        {
+            return MissionManager.GenerateMissionPopulation();            
         }
 
         public bool GenerateHelper(RegionGenerator regionGenerator, GenerateFlag flag)
@@ -512,19 +527,17 @@ namespace MHServerEmu.Games.Regions
         public void Shutdown()
         {
             // SetStatus(2, true);
-            /* TODO: When the entities will work
-            int tries = 100;
+            
+           /* int tries = 100;
             bool found;
             do
             {
-                found = false;
+                found = false;*/
                 foreach (var entity in Entities)
                 {
-                    var worldEntity = entity as WorldEntity;
-                    if (worldEntity != null)
+                    if (entity is WorldEntity worldEntity)
                     {
-                        var owner = worldEntity.GetRootOwner() as Player;
-                        if (owner == null)
+                        /*if (worldEntity.GetRootOwner() is not Player owner)
                         {
                             if (!worldEntity.TestStatus(1))
                             {
@@ -532,18 +545,19 @@ namespace MHServerEmu.Games.Regions
                                 found = true;
                             }
                         }
-                        else
+                        else*/
                         {
                             if (worldEntity.IsInWorld())
                             {
                                 worldEntity.ExitWorld();
-                                found = true;
+                                // found = true;
                             }
                         }
                     }
                 }
-            } while (found && (tries-- > 0)); 
+            // } while (found && (tries-- > 0)); // TODO: For what 100 tries?
 
+            /*
             if (Game != null && MissionManager != null)
                 MissionManager.Shutdown(this);
 
@@ -623,7 +637,7 @@ namespace MHServerEmu.Games.Regions
 
             bool found = false;
 
-            // fast search
+            // Has areaRef
             if (areaRef != 0)
             {
                 targetArea = GetArea(areaRef);
@@ -631,7 +645,7 @@ namespace MHServerEmu.Games.Regions
                     found = targetArea.FindTargetPosition(markerPos, markerRot, target);
             }
 
-            // slow search
+            // Has the wrong areaRef
             if (found == false)
                 foreach (Area area in AreaList)
                 {
@@ -640,7 +654,7 @@ namespace MHServerEmu.Games.Regions
                         return true;
                 }
 
-            // super slow search
+            // Has the wrong cellRef // Fix for Upper Eastside
             if (found == false)
                 foreach (Cell cell in Cells)
                 {
@@ -739,7 +753,17 @@ namespace MHServerEmu.Games.Regions
             // Get starArea to load by Waypoint
             if (StartArea != null)
             {
-                if (RegionTransition.FindStartPosition(this, targetRef, out Vector3 position, out Vector3 orientation))
+                if (client.EntityToTeleport != null) // TODO change teleport without reload Region
+                {
+                    Vector3 position = new(client.EntityToTeleport.Location.GetPosition());
+                    Vector3 orientation = new(client.EntityToTeleport.Location.GetOrientation());
+                    if (client.EntityToTeleport.EntityPrototype is TransitionPrototype teleportEntity
+                        && teleportEntity.SpawnOffset > 0) teleportEntity.CalcSpawnOffset(orientation, position);
+                    client.StartPositon = position;
+                    client.StartOrientation = orientation;
+                    client.EntityToTeleport = null;
+                }
+                else if (RegionTransition.FindStartPosition(this, targetRef, out Vector3 position, out Vector3 orientation))
                 {
                     client.StartPositon = position;
                     client.StartOrientation = orientation;
@@ -772,6 +796,16 @@ namespace MHServerEmu.Games.Regions
             foreach (var cell in Cells)
                 if (cell.Id == cellId) return cell;
             return default;
+        }
+
+        internal void ApplyRegionAffixesEnemyBoosts(PrototypeId rankRef, HashSet<PrototypeId> overrides)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal PrototypeId GetDifficultyTierRef()
+        {
+            throw new NotImplementedException();
         }
     }
 

@@ -18,7 +18,7 @@ namespace MHServerEmu.Games.GameData
     }
 
     /// <summary>
-    /// A singleton that manages all loaded game data.
+    /// A singleton that manages all static game data.
     /// </summary>
     public class DataDirectory
     {
@@ -27,6 +27,9 @@ namespace MHServerEmu.Games.GameData
         // Prototype serializers
         private static readonly CalligraphySerializer CalligraphySerializer = new();
         private static readonly BinaryResourceSerializer BinaryResourceSerializer = new();
+
+        // Lock for GetPrototype() thread safety
+        private readonly object _prototypeLock = new();
 
         // Lookup dictionaries
         private readonly Dictionary<BlueprintId, LoadedBlueprintRecord> _blueprintRecordDict = new();
@@ -54,6 +57,9 @@ namespace MHServerEmu.Games.GameData
 
         #region Initialization
 
+        /// <summary>
+        /// Initializes <see cref="DataDirectory"/>.
+        /// </summary>
         public void Initialize()
         {
             var stopwatch = Stopwatch.StartNew();
@@ -70,18 +76,24 @@ namespace MHServerEmu.Games.GameData
             Logger.Info($"Initialized in {stopwatch.ElapsedMilliseconds} ms");
         }
 
+        /// <summary>
+        /// Returns a <see cref="MemoryStream"/> for a file stored in a <see cref="PakFile"/>.
+        /// </summary>
         private MemoryStream LoadPakDataFile(string filePath, PakFileId pakId)
         {
             return PakFileSystem.Instance.LoadFromPak(filePath, pakId);
         }
 
+        /// <summary>
+        /// Initializes Calligraphy.
+        /// </summary>
         private void LoadCalligraphyDataFramework()
         {
             // Define directories
             var directories = new (string, Action<BinaryReader>, Action)[]
             {
                 // Directory file path                  // Entry read method            // Callback
-                ("Calligraphy/Curve.directory",         ReadCurveDirectoryEntry,        () => Logger.Info($"Loaded {CurveDirectory.RecordCount} curve entries")),
+                ("Calligraphy/Curve.directory",         ReadCurveDirectoryEntry,        () => Logger.Info($"Loaded {CurveDirectory.RecordCount} curves")),
                 ("Calligraphy/Type.directory",          ReadTypeDirectoryEntry,         () => Logger.Info($"Loaded {AssetDirectory.AssetCount} asset entries of {AssetDirectory.AssetTypeCount} types")),
                 ("Calligraphy/Blueprint.directory",     ReadBlueprintDirectoryEntry,    () => Logger.Info($"Loaded {_blueprintRecordDict.Count} blueprints")),
                 ("Calligraphy/Prototype.directory",     ReadPrototypeDirectoryEntry,    () => Logger.Info($"Loaded {_prototypeRecordDict.Count} Calligraphy prototype entries")),
@@ -119,6 +131,9 @@ namespace MHServerEmu.Games.GameData
                 record.Blueprint.OnAllDirectoriesLoaded();
         }
 
+        /// <summary>
+        /// Loads a <see cref="Blueprint"/> and creates a <see cref="LoadedBlueprintRecord"/> for it.
+        /// </summary>
         private void LoadBlueprint(BlueprintId id, BlueprintGuid guid, BlueprintRecordFlags flags)
         {
             // Add guid lookup
@@ -134,6 +149,9 @@ namespace MHServerEmu.Games.GameData
             }
         }
 
+        /// <summary>
+        /// Creates a <see cref="PrototypeDataRefRecord"/> for a Calligraphy <see cref="Prototype"/> without loading it.
+        /// </summary>
         private void AddCalligraphyPrototype(PrototypeId prototypeId, PrototypeGuid prototypeGuid, BlueprintId blueprintId, PrototypeRecordFlags flags, string filePath)
         {
             // Create a dataRef
@@ -163,6 +181,9 @@ namespace MHServerEmu.Games.GameData
             // Load the prototype on demand
         }
 
+        /// <summary>
+        /// Creates <see cref="PrototypeDataRefRecord">PrototypeDataRefRecords</see> for all resource <see cref="Prototype">Prototypes</see> without loading them.
+        /// </summary>
         private void CreatePrototypeDataRefsForDirectory()
         {
             int numResources = 0;
@@ -176,6 +197,9 @@ namespace MHServerEmu.Games.GameData
             Logger.Info($"Loaded {numResources} resource prototype entries");
         }
 
+        /// <summary>
+        /// Creates a <see cref="PrototypeDataRefRecord"/> for a resource <see cref="Prototype"/> without loading it.
+        /// </summary>
         private void AddResource(string filePath)
         {
             // Get class type
@@ -202,7 +226,7 @@ namespace MHServerEmu.Games.GameData
         }
 
         /// <summary>
-        /// Generates prototype lookups for classes and blueprints.
+        /// Generates lookups for all prototype <see cref="Type">Types</see> and <see cref="Blueprint">Blueprints</see>.
         /// </summary>
         private void InitializeHierarchyCache()
         {
@@ -251,6 +275,9 @@ namespace MHServerEmu.Games.GameData
             Logger.Info($"Initialized hierarchy cache in {stopwatch.ElapsedMilliseconds} ms");
         }
 
+        /// <summary>
+        /// Checks if <see cref="DataDirectory"/> has been succesfully initialized.
+        /// </summary>
         public bool Verify()
         {
             return AssetDirectory.AssetCount > 0
@@ -264,6 +291,9 @@ namespace MHServerEmu.Games.GameData
 
         #region Data Access
 
+        /// <summary>
+        /// Returns the <see cref="PrototypeId"/> of the <see cref="Prototype"/> that the specified <see cref="PrototypeGuid"/> refers to.
+        /// </summary>
         public PrototypeId GetPrototypeDataRefByGuid(PrototypeGuid guid)
         {
             if (_prototypeGuidToDataRefDict.TryGetValue(guid, out var id) == false)
@@ -272,6 +302,9 @@ namespace MHServerEmu.Games.GameData
             return id;
         }
 
+        /// <summary>
+        /// Returns the <see cref="PrototypeGuid"/> of the <see cref="Prototype"/> that the specified <see cref="PrototypeId"/> refers to.
+        /// </summary>
         public PrototypeGuid GetPrototypeGuid(PrototypeId id)
         {
             if (_prototypeRecordDict.TryGetValue(id, out PrototypeDataRefRecord record) == false)
@@ -280,6 +313,9 @@ namespace MHServerEmu.Games.GameData
             return record.PrototypeGuid;
         }
 
+        /// <summary>
+        /// Returns the <see cref="Blueprint"/> that the specified <see cref="BlueprintId"/> refers to.
+        /// </summary>
         public Blueprint GetBlueprint(BlueprintId id)
         {
             if (_blueprintRecordDict.TryGetValue(id, out var record) == false)
@@ -288,6 +324,9 @@ namespace MHServerEmu.Games.GameData
             return record.Blueprint;
         }
 
+        /// <summary>
+        /// Returns the <see cref="BlueprintId"/> of the <see cref="Prototype"/> that the specified <see cref="PrototypeId"/> refers to.
+        /// </summary>
         public BlueprintId GetPrototypeBlueprintDataRef(PrototypeId prototypeId)
         {
             if (prototypeId == PrototypeId.Invalid) return BlueprintId.Invalid;
@@ -298,6 +337,9 @@ namespace MHServerEmu.Games.GameData
             return record.BlueprintId;
         }
 
+        /// <summary>
+        /// Returns the <see cref="Blueprint"/> of the <see cref="Prototype"/> that the specified <see cref="PrototypeId"/> refers to.
+        /// </summary>
         public Blueprint GetPrototypeBlueprint(PrototypeId prototypeId)
         {
             BlueprintId blueprintId = GetPrototypeBlueprintDataRef(prototypeId);
@@ -305,51 +347,59 @@ namespace MHServerEmu.Games.GameData
             return GetBlueprint(blueprintId);
         }
 
+        /// <summary>
+        /// Loads if needed and returns the <see cref="Prototype"/> that the specified <see cref="PrototypeId"/> refers to.
+        /// </summary>
         public T GetPrototype<T>(PrototypeId prototypeId) where T: Prototype
         {
-            // NOTE: the original client implementation appears to be thread-safe, while ours is not
-
             var record = GetPrototypeDataRefRecord(prototypeId);
             if (record == null) return default;
 
-            // Load the prototype if not loaded yet
-            if (record.Prototype == null)
+            // Lock this for thread safety (e.g. if multiple different game threads attempt to load prototypes)
+            lock (_prototypeLock)
             {
-                // Get prototype file path and pak file id
-                // Note: the client uses a separate getPrototypeRelativePath() method here to get the file path.
-                string filePath;
-                PakFileId pakFileId;
+                // Load the prototype if not loaded yet
+                if (record.Prototype == null)
+                {
+                    // Get prototype file path and pak file id
+                    // Note: the client uses a separate getPrototypeRelativePath() method here to get the file path.
+                    string filePath;
+                    PakFileId pakFileId;
 
-                if (record.DataOrigin == DataOrigin.Calligraphy)
-                {
-                    filePath = $"Calligraphy/{GameDatabase.GetPrototypeName(record.PrototypeId)}";
-                    pakFileId = PakFileId.Calligraphy;
-                }
-                else if (record.DataOrigin == DataOrigin.Resource)
-                {
-                    filePath = GameDatabase.GetPrototypeName(record.PrototypeId);
-                    pakFileId = PakFileId.Default;
-                }
-                else throw new NotImplementedException($"Prototype deserialization for data origin {record.DataOrigin} is not supported.");
+                    if (record.DataOrigin == DataOrigin.Calligraphy)
+                    {
+                        filePath = $"Calligraphy/{GameDatabase.GetPrototypeName(record.PrototypeId)}";
+                        pakFileId = PakFileId.Calligraphy;
+                    }
+                    else if (record.DataOrigin == DataOrigin.Resource)
+                    {
+                        filePath = GameDatabase.GetPrototypeName(record.PrototypeId);
+                        pakFileId = PakFileId.Default;
+                    }
+                    else throw new NotImplementedException($"Prototype deserialization for data origin {record.DataOrigin} is not supported.");
 
-                // Deserialize and postprocess
-                using (MemoryStream ms = LoadPakDataFile(filePath, pakFileId))
-                {
-                    Prototype prototype = DeserializePrototypeFromStream(ms, record);
-                    record.Prototype = prototype;
-                    prototype.DataRefRecord = record;
-                    prototype.PostProcess();
+                    // Deserialize and postprocess
+                    using (MemoryStream ms = LoadPakDataFile(filePath, pakFileId))
+                    {
+                        Prototype prototype = DeserializePrototypeFromStream(ms, record);
+                        record.Prototype = prototype;
+                        prototype.DataRefRecord = record;
+                        prototype.PostProcess();
+                    }
                 }
+
+                // Make sure the requested type is valid for this prototype
+                var typedPrototype = record.Prototype as T;
+                if (typedPrototype == null)
+                    Logger.Warn($"Failed to cast {record.ClassType.Name} to {typeof(T).Name}, file name {GameDatabase.GetPrototypeName(prototypeId)}");
+
+                return typedPrototype;
             }
-
-            // Make sure the requested type is valid for this prototype
-            var typedPrototype = record.Prototype as T;
-            if (typedPrototype == null)
-                Logger.Warn($"Failed to cast {record.ClassType.Name} to {typeof(T).Name}, file name {GameDatabase.GetPrototypeName(prototypeId)}");
-
-            return typedPrototype;
         }
 
+        /// <summary>
+        /// Returns the <see cref="Type"/> of the <see cref="Prototype"/> that the specified <see cref="PrototypeId"/> refers to.
+        /// </summary>
         public Type GetPrototypeClassType(PrototypeId prototypeId)
         {
             if (_prototypeRecordDict.TryGetValue(prototypeId, out var record) == false)
@@ -358,6 +408,9 @@ namespace MHServerEmu.Games.GameData
             return record.ClassType;
         }
 
+        /// <summary>
+        /// Returns the <see cref="PrototypeId"/> of the default <see cref="Prototype"/> paired with the <see cref="Blueprint"/> that the provided <see cref="BlueprintId"/> refers to.
+        /// </summary>
         public PrototypeId GetBlueprintDefaultPrototype(BlueprintId blueprintId)
         {
             var blueprint = GetBlueprint(blueprintId);
@@ -365,6 +418,9 @@ namespace MHServerEmu.Games.GameData
             return blueprint.DefaultPrototypeId;
         }
 
+        /// <summary>
+        /// Returns the <see cref="PrototypeId"/> of the provided enum value for type <typeparamref name="T"/>.
+        /// </summary>
         public PrototypeId GetPrototypeFromEnumValue<T>(int enumValue) where T: Prototype
         {
             PrototypeId[] enumLookup = _prototypeClassLookupDict[typeof(T)].EnumValueToPrototypeLookup;
@@ -374,6 +430,20 @@ namespace MHServerEmu.Games.GameData
             return enumLookup[enumValue];
         }
 
+        /// <summary>
+        /// Returns the <see cref="PrototypeId"/> of the provided enum value for the <see cref="Blueprint"/> that the specified <see cref="BlueprintId"/> refers to.
+        /// </summary>
+        public PrototypeId GetPrototypeFromEnumValue(int enumValue, BlueprintId blueprintId)
+        {
+            if (_blueprintRecordDict.TryGetValue(blueprintId, out var record) == false)
+                return Logger.WarnReturn(PrototypeId.Invalid, $"Failed to get prototype id from enum value for blueprint id {blueprintId}: blueprint record does not exist");
+
+            return record.Blueprint.GetPrototypeFromEnumValue(enumValue);
+        }
+
+        /// <summary>
+        /// Returns the enum value of the provided <see cref="PrototypeId"/> for type <typeparamref name="T"/>.
+        /// </summary>
         public int GetPrototypeEnumValue<T>(PrototypeId prototypeId) where T: Prototype
         {
             Dictionary<PrototypeId, int> dict = _prototypeClassLookupDict[typeof(T)].PrototypeToEnumValueDict;
@@ -382,6 +452,17 @@ namespace MHServerEmu.Games.GameData
                 return Logger.WarnReturn(0, $"Failed to get enum value for prototype {GameDatabase.GetPrototypeName(prototypeId)} as {nameof(T)}");
 
             return enumValue;
+        }
+
+        /// <summary>
+        /// Returns the enum value of the provided <see cref="PrototypeId"/> for the <see cref="Blueprint"/> that the specified <see cref="BlueprintId"/> refers to.
+        /// </summary>
+        public int GetPrototypeEnumValue(PrototypeId prototypeId, BlueprintId blueprintId)
+        {
+            if (_blueprintRecordDict.TryGetValue(blueprintId, out var record) == false)
+                return Logger.WarnReturn(0, $"Failed to get enum value from prototype id for blueprint id {blueprintId}: blueprint record does not exist");
+
+            return record.Blueprint.GetPrototypeEnumValue(prototypeId);
         }
 
         /// <summary>
@@ -445,6 +526,65 @@ namespace MHServerEmu.Games.GameData
             return propertyIdList;
         }
 
+        /// <summary>
+        /// Checks if the specified <see cref="PrototypeId"/> refers to a child <see cref="Prototype"/> that is related to a parent prototype.
+        /// If the parent is a default prototype, checks the <see cref="Blueprint"/> hierarchy. Otherwise, checks prototype data hierarchy.
+        /// If checking against the data hierarchy, loads all prototypes it goes through.
+        /// </summary>
+        public bool PrototypeIsAPrototype(PrototypeId childId, PrototypeId parentId)
+        {
+            // If we are checking against a parent default prototype, search the blueprint hierarchy
+            if (PrototypeIsADefaultPrototype(parentId))
+            {
+                BlueprintId parentBlueprintId = GetPrototypeBlueprintDataRef(parentId);
+                return PrototypeIsChildOfBlueprint(childId, parentBlueprintId);
+            }
+
+            // If we are checking against a derived prototype, search the prototype data hierarchy
+            PrototypeId currentId = childId;
+            while (currentId != PrototypeId.Invalid)
+            {
+                if (currentId == parentId)
+                    return true;
+
+                var record = GetPrototypeDataRefRecord(currentId);
+                if (record == null) return false;
+
+                // Load the prototype if it's not loaded yet
+                if (record.Prototype == null)
+                    GetPrototype<Prototype>(currentId);
+
+                currentId = record.Prototype.ParentDataRef;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Checks if the specified <see cref="PrototypeId"/> refers to a default <see cref="Prototype"/> for its <see cref="Blueprint"/>.
+        /// </summary>
+        public bool PrototypeIsADefaultPrototype(PrototypeId prototypeId)
+        {
+            var record = GetPrototypeDataRefRecord(prototypeId);
+            if (record == null || record.DataOrigin != DataOrigin.Calligraphy) return false;
+
+            return record.Blueprint.DefaultPrototypeId == prototypeId;
+        }
+
+        /// <summary>
+        /// Checks if the specified <see cref="PrototypeId"/> refers to a <see cref="Prototype"/> that is related to a <see cref="Blueprint"/> parent.
+        /// </summary>
+        public bool PrototypeIsChildOfBlueprint(PrototypeId prototypeId, BlueprintId parent)
+        {
+            var record = GetPrototypeDataRefRecord(prototypeId);
+            if (record == null || record.DataOrigin != DataOrigin.Calligraphy) return false;
+
+            return record.Blueprint.IsA(parent);
+        }
+
+        /// <summary>
+        /// Retrieves the <see cref="DataOrigin"/> for the <see cref="Prototype"/> that the specified <see cref="PrototypeId"/> refers to.
+        /// </summary>
         public DataOrigin GetDataOrigin(PrototypeId prototypeId)
         {
             if (_prototypeRecordDict.TryGetValue(prototypeId, out PrototypeDataRefRecord record) == false)
@@ -453,6 +593,9 @@ namespace MHServerEmu.Games.GameData
             return record.DataOrigin;
         }
 
+        /// <summary>
+        /// Retrieves a <see cref="PrototypeDataRefRecord"/> for the specified <see cref="PrototypeId"/>. Returns <see langword="null"/> if no record is found.
+        /// </summary>
         private PrototypeDataRefRecord GetPrototypeDataRefRecord(PrototypeId prototypeId)
         {
             if (prototypeId == PrototypeId.Invalid) return null;
@@ -464,7 +607,18 @@ namespace MHServerEmu.Games.GameData
         }
 
         /// <summary>
-        /// Checks if the specified prototype is approved for use (i.e. it's not a prototype for something in development). Note: this forces the prototype to load.
+        /// Returns <see langword="true"/> if the <see cref="Prototype"/> that the specified <see cref="PrototypeId"/> refers to is <see cref="PrototypeRecordFlags.Abstract"/>.
+        /// </summary>
+        public bool PrototypeIsAbstract(PrototypeId prototypeId)
+        {
+            var record = GetPrototypeDataRefRecord(prototypeId);
+            if (record == null) return false;
+            return record.Flags.HasFlag(PrototypeRecordFlags.Abstract);
+        }
+
+        /// <summary>
+        /// Checks if the specified <see cref="PrototypeId"/> refers to a <see cref="Prototype"/> that is approved for use
+        /// (i.e. it's not a prototype for something in development). Note: this forces the prototype to load.
         /// </summary>
         public bool PrototypeIsApproved(PrototypeId prototypeId, Prototype prototype = null)
         {
@@ -474,7 +628,8 @@ namespace MHServerEmu.Games.GameData
         }
 
         /// <summary>
-        /// Checks if the specified prototype is approved for use (i.e. it's not a prototype for something in development). Note: this forces the prototype to load.
+        /// Checks if the provided <see cref="PrototypeDataRefRecord"/> contains a <see cref="Prototype"/> that is approved for use
+        /// (i.e. it's not a prototype for something in development). Note: this forces the prototype to load.
         /// </summary>
         public bool PrototypeIsApproved(PrototypeDataRefRecord record, Prototype prototype = null)
         {
@@ -485,6 +640,9 @@ namespace MHServerEmu.Games.GameData
             return prototype.ApprovedForUse();
         }
 
+        /// <summary>
+        /// Returns the <see cref="Type"/> of a resource <see cref="Prototype"/> based on its file name.
+        /// </summary>
         private Type GetResourceClassTypeByFileName(string fileName)
         {
             // Replacement for Gazillion's GetResourceClassIdByFilename
@@ -503,12 +661,18 @@ namespace MHServerEmu.Games.GameData
             }
         }
 
+        /// <summary>
+        /// Returns <see langword="true"/> if the specified <see cref="Type"/> of <see cref="Prototype"/> is editor-only.
+        /// </summary>
         private bool IsEditorOnlyByClassType(Type type) => type == typeof(NaviFragmentPrototype);   // Only NaviFragmentPrototype is editor only
 
         #endregion
 
         #region Deserialization
 
+        /// <summary>
+        /// Helper method for deserializing <see cref="Calligraphy.AssetDirectory"/> entries.
+        /// </summary>
         private void ReadTypeDirectoryEntry(BinaryReader reader)
         {
             var dataId = (AssetTypeId)reader.ReadUInt64();
@@ -523,6 +687,9 @@ namespace MHServerEmu.Games.GameData
                 record.AssetType = new(ms, AssetDirectory, dataId, assetTypeGuid);
         }
 
+        /// <summary>
+        /// Helper method for deserializing <see cref="Calligraphy.CurveDirectory"/> entries.
+        /// </summary>
         private void ReadCurveDirectoryEntry(BinaryReader reader)
         {
             var curveId = (CurveId)reader.ReadUInt64();
@@ -533,9 +700,13 @@ namespace MHServerEmu.Games.GameData
             GameDatabase.CurveRefManager.AddDataRef(curveId, filePath);
             var record = CurveDirectory.CreateCurveRecord(curveId, flags);
 
-            // Curves are loaded on demand when GetCurve() is called
+            // Load this curve
+            CurveDirectory.GetCurve(curveId);
         }
 
+        /// <summary>
+        /// Helper method for deserializing <see cref="Blueprint"/> directory entries.
+        /// </summary>
         private void ReadBlueprintDirectoryEntry(BinaryReader reader)
         {
             var dataId = (BlueprintId)reader.ReadUInt64();
@@ -547,6 +718,9 @@ namespace MHServerEmu.Games.GameData
             LoadBlueprint(dataId, guid, flags);
         }
 
+        /// <summary>
+        /// Helper method for deserializing <see cref="Prototype"/> directory entries.
+        /// </summary>
         private void ReadPrototypeDirectoryEntry(BinaryReader reader)
         {
             var prototypeId = (PrototypeId)reader.ReadUInt64();
@@ -558,6 +732,9 @@ namespace MHServerEmu.Games.GameData
             AddCalligraphyPrototype(prototypeId, prototypeGuid, blueprintId, flags, filePath);
         }
 
+        /// <summary>
+        /// Helper method for deserializing replacement directory entries.
+        /// </summary>
         private void ReadReplacementDirectoryEntry(BinaryReader reader)
         {
             ulong oldGuid = reader.ReadUInt64();
@@ -568,7 +745,7 @@ namespace MHServerEmu.Games.GameData
         }
 
         /// <summary>
-        /// Deserializes a prototype from a stream using the appropriate serializer.
+        /// Deserializes a <see cref="Prototype"/> from a <see cref="Stream"/> using the appropriate <see cref="GameDataSerializer"/>.
         /// </summary>
         private Prototype DeserializePrototypeFromStream(Stream stream, PrototypeDataRefRecord record)
         {
@@ -587,6 +764,9 @@ namespace MHServerEmu.Games.GameData
 
         #endregion
 
+        /// <summary>
+        /// Contains a record of a loaded <see cref="Calligraphy.Blueprint"/> managed by the <see cref="DataDirectory"/>.
+        /// </summary>
         struct LoadedBlueprintRecord
         {
             public Blueprint Blueprint { get; set; }
@@ -627,6 +807,9 @@ namespace MHServerEmu.Games.GameData
         }
     }
 
+    /// <summary>
+    /// Contains a record of a <see cref="Prototypes.Prototype"/> managed by the <see cref="DataDirectory"/>.
+    /// </summary>
     public class PrototypeDataRefRecord
     {
         public PrototypeId PrototypeId { get; set; }

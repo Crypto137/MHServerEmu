@@ -256,6 +256,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId ConsumableItemBlueprint { get; protected set; }
         public int AvatarCoopInactiveTimeMS { get; protected set; }
         public int AvatarCoopInactiveOnDeadBufferMS { get; protected set; }
+
+        public AlliancePrototype GetPlayerAlliancePrototype()
+        {
+            return GameDatabase.GetPrototype<AlliancePrototype>(PlayerAlliance);
+        }
     }
 
     public class LoginRewardPrototype : Prototype
@@ -750,6 +755,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int SpawnMapHeatPerSecondScalar { get; protected set; }
         public PrototypeId TwinEnemyRank { get; protected set; }
         public RankDefaultEntryPrototype[] RankDefaults { get; protected set; }
+
+        internal RankPrototype GetRankByEnum(Rank rank)
+        {
+            throw new NotImplementedException();
+        }
+
     }
 
     public class ClusterConfigurationGlobalsPrototype : Prototype

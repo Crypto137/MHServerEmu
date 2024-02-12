@@ -246,5 +246,6 @@ namespace MHServerEmu.Games
                 new(NetMessageRegionChange.CreateBuilder().SetRegionId(0).SetServerGameId(0).SetClearingAllInterest(true).Build())
             };
         }
+
     }
 }

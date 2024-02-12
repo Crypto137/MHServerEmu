@@ -1,6 +1,9 @@
-﻿using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Common;
+using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -246,6 +249,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId MarvelModelRenderClass { get; protected set; }
         public DesignWorkflowState DesignStatePS4 { get; protected set; }
         public DesignWorkflowState DesignStateXboxOne { get; protected set; }
+
+        public AlliancePrototype GetAlliancePrototype()
+        {
+            return GameDatabase.GetPrototype<AlliancePrototype>(Alliance);
+        }
+
+        public RankPrototype GetRankPrototype()
+        {
+            return GameDatabase.GetPrototype<RankPrototype>(Rank);
+        }
     }
 
     public class StateChangePrototype : Prototype
@@ -346,6 +359,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float DefaultProximityRangeHostile { get; protected set; }
         public EvalPrototype EvalSpawnProperties { get; protected set; }
         public bool SelectUniqueEntities { get; protected set; }
+
+        public PrototypeId SelectEntity(GRandom random, Region region)
+        {
+            if (Entities.IsNullOrEmpty() == false)
+            {
+                // SelectUniqueEntities region ???
+
+                int index = random.Next(0, Entities.Length);
+                return Entities[index];
+            }
+
+            return PrototypeId.Invalid;
+        }
     }
 
     public class EntityActionTimelineScriptActionPrototype : EntitySelectorActionBasePrototype

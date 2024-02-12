@@ -150,11 +150,12 @@ namespace MHServerEmu.Games.Regions
                 Level = 10,
                 Bound = Aabb.Zero,
                 GenerateAreas = true,
+                GenerateEntities = true,
                 Affixes = new List<PrototypeId>(),
                 RegionDataRef = (PrototypeId)prototype
             };
-            //settings.Seed = 1038711701;
-            //GRandom random = new(settings.Seed);//Game.Random.Next()
+            // settings.Seed = 1776322703;
+            // GRandom random = new(settings.Seed);//Game.Random.Next()
             int tries = 10;
             Region region = null;
             while (region == null && (--tries > 0))
@@ -178,6 +179,14 @@ namespace MHServerEmu.Games.Regions
             return null;
         }
 
+        public static Region GetRegion(Game game, ulong id)
+        {
+            if (game == null) return null;
+            RegionManager regionManager = game.RegionManager;
+            if (regionManager == null) return null;
+            return regionManager.GetRegion(id);
+        }
+
         // OLD
         public Region GetRegion(RegionPrototypeId prototype)
         {
@@ -185,18 +194,22 @@ namespace MHServerEmu.Games.Regions
             if (RegionPrototypeIdFromCommand != 0u)
                 prototype = (RegionPrototypeId)RegionPrototypeIdFromCommand;
 
+
+            //  prototype = (RegionPrototypeId)7735172603194383419;
             if (_regionDict.TryGetValue(prototype, out Region region) == false)
             {
                 // Generate the region and create entities for it if needed
-                if (GenerationModeFromCommand == GenerationMode.Client)
-                    region = EmptyRegion(prototype);
-                else
+                ulong numEntities = _entityManager.PeekNextEntityId();
+              if (GenerationModeFromCommand == GenerationMode.Client)
+                  region = EmptyRegion(prototype);
+              else
                 {
-                    region = GenerateRegion(prototype);//GenerateRegion(prototype);
+                    region = GenerateRegion(prototype);
                     region.ArchiveData = GetArchiveData(prototype);
                 }
-
-                ulong entities = CreateEntities(region, true);
+              
+                HardcodedEntities(region, true);
+                ulong entities = _entityManager.PeekNextEntityId() - numEntities;
                 Logger.Debug($"Entities generated = {entities}");
                 _regionDict.Add(prototype, region);
             }
