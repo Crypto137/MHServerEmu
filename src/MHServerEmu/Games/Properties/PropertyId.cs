@@ -11,6 +11,14 @@
         // TODO: the client constructs property ids in Property::ToPropertyId
 
         /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with <see cref="PropertyEnum.Invalid"/> as its value.
+        /// </summary>
+        public PropertyId()
+        {
+            Raw = (ulong)PropertyEnum.Invalid << PropertyConsts.ParamBitCount;
+        }
+
+        /// <summary>
         /// Constructs a <see cref="PropertyId"/> with no params.
         /// </summary>
         public PropertyId(PropertyEnum propertyEnum)
