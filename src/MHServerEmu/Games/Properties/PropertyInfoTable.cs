@@ -148,6 +148,8 @@ namespace MHServerEmu.Games.Properties
                     // todo: do something special for curve properties
                 }
             }
+
+            propertyInfo.IsFullyLoaded = true;
         }
     }
 }
