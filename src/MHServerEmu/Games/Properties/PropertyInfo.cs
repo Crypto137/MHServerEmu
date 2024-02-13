@@ -55,6 +55,19 @@ namespace MHServerEmu.Games.Properties
             }
         }
 
+        public int[] DecodeParameters(PropertyId propertyId)
+        {
+            if (_paramCount == 0) return new int[PropertyConsts.MaxParamCount];
+
+            ulong encodedParams = propertyId.Raw & PropertyConsts.ParamMask;
+            int[] decodedParams = new int[PropertyConsts.MaxParamCount];
+
+            for (int i = 0; i < _paramCount; i++)
+                decodedParams[i] = (int)((encodedParams >> _paramOffsets[i]) & ((1ul << _paramBitCounts[i]) - 1));
+
+            return decodedParams;
+        }
+
         public int GetParamBitCount(int paramIndex)
         {
             if (paramIndex >= PropertyConsts.MaxParamCount)
