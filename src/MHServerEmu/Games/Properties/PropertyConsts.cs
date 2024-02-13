@@ -49,4 +49,22 @@ namespace MHServerEmu.Games.Properties
         Asset = 1,
         Prototype = 2
     }
+
+    /// <summary>
+    /// Contains constants used for encoding properties.
+    /// </summary>
+    public static class PropertyConsts
+    {
+        public const int MaxParamCount = 4;
+
+        // 11 bits for enum, the rest are params defined by PropertyInfo
+        public const int EnumBitCount = 11;
+        public const int ParamBitCount = 53;
+
+        public const ulong EnumMax = (1ul << EnumBitCount) - 1;
+        public const ulong ParamMax = (1ul << ParamBitCount) - 1;
+
+        public const ulong EnumMask = EnumMax << ParamBitCount;
+        public const ulong ParamMask = ParamMax;
+    }
 }
