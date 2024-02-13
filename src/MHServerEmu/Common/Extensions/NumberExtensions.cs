@@ -1,39 +1,42 @@
-﻿namespace MHServerEmu.Common.Extensions
+﻿using MHServerEmu.Common.Helpers;
+
+namespace MHServerEmu.Common.Extensions
 {
+    /// <summary>
+    /// Extends numeric types.
+    /// </summary>
     public static class NumberExtensions
     {
         /// <summary>
-        /// Determines the index of the highest bit set in a ulong value.
+        /// Checks if an <see cref="int"/> is within the specified range.
         /// </summary>
-        /// <param name="value">Value to check.</param>
-        /// <returns>Index of the highest bit set.</returns>
-        public static int HighestBitSet(this ulong value)
-        {
-            int bit = 0;
-            while ((value >>= 1) > 0)
-                bit++;
-            return bit;
-        }
-
-        /// <summary>
-        /// Casts an int to ulong and determines its highest bit set.
-        /// </summary>
-        /// <param name="value">Value to check.</param>
-        /// <returns>Index of the highest bit set.</returns>
-        public static int HighestBitSet(this int value) => ((ulong)value).HighestBitSet();
-
-        /// <summary>
-        /// Checks if an integer is within the specified range.
-        /// </summary>
-        /// <param name="value">Value to check.</param>
-        /// <param name="min">Minimum acceptable value.</param>
-        /// <param name="max">Maximum acceptable value.</param>
-        /// <returns>Is within range.</returns>
         public static bool IsWithin(this int value, int min, int max)
         {
             if (value < min) return false;
             if (value > max) return false;
             return true;
         }
+
+        /// <summary>
+        /// Determines the index of the highest bit set in a <see cref="ulong"/> value.
+        /// </summary>
+        public static int HighestBitSet(this ulong value) => MathHelper.HighestBitSet(value);
+
+        /// <summary>
+        /// Determines the index of the highest bit set in a <see cref="uint"/> value.
+        /// </summary>
+        public static int HighestBitSet(this uint value) => MathHelper.HighestBitSet(value);
+
+        // NOTE: We need to keep the bit count in mind and cast long -> ulong and int -> uint to avoid distortions
+
+        /// <summary>
+        /// Determines the index of the highest bit set in a <see cref="long"/> value.
+        /// </summary>
+        public static int HighestBitSet(this long value) => MathHelper.HighestBitSet((ulong)value);
+
+        /// <summary>
+        /// Determines the index of the highest bit set in an <see cref="int"/> value.
+        /// </summary>
+        public static int HighestBitSet(this int value) => MathHelper.HighestBitSet((uint)value);
     }
 }
