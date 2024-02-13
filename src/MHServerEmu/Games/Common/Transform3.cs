@@ -23,7 +23,7 @@ namespace MHServerEmu.Games.Common
 
         public static float GetYawFromTransform3(Transform3 transform)
         {
-            return MathF.Atan2(transform.Col0.Y, transform.Col2.X);
+            return MathF.Atan2(transform.Col0.Y, transform.Col0.X);
         }
 
         public Transform3(Transform3 transform)
