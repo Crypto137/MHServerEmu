@@ -17,5 +17,10 @@
                         new (Center.X + Radius, Center.Y + Radius, Center.Z + Radius));
         }
 
+        public bool Intersects(Vector3 v) { 
+            return Vector3.LengthSqr(Center - v) <= RadiusSquared;
+        }
+
+        public float RadiusSquared { get => Radius * Radius; }
     }
 }

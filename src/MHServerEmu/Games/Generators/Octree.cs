@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Regions;
 using System.Collections;
@@ -8,20 +9,110 @@ namespace MHServerEmu.Games.Generators
 {
     public class EntityRegionSpatialPartition
     {
-        private WorldEntityRegionSpatialPartition _quadtree1;
-        private WorldEntityRegionSpatialPartition _quadtree2;
+        private WorldEntityRegionSpatialPartition _staticSpatialPartition;
+        private WorldEntityRegionSpatialPartition _activeSpatialPartition;
+        private HashSet<Avatar> _avatars;
+        private Dictionary<ulong, WorldEntityRegionSpatialPartition> _players;
+        private Aabb _bounds;
+        private float _minRadius;
+        public int AvatarIteratorCount { get; protected set; }
+        public int TotalElements { get; protected set; }
 
         public EntityRegionSpatialPartition(Aabb bound, float minRadius = 64.0f )
         {
-            _quadtree1 = new(bound, minRadius);
-            _quadtree2 = new(bound, minRadius);
+            _bounds = new(bound);
+            _minRadius = minRadius;
+            _staticSpatialPartition = new(bound, minRadius);
+            _activeSpatialPartition = new(bound, minRadius);
+            _players = new();
+            _avatars = new();            
+            AvatarIteratorCount = 0;
+            TotalElements = 0;            
+        }        
+
+        public bool Update(WorldEntity element)
+        {
+            var loc = element.SpatialPartitionLocation;
+            if (loc.IsValid() == false)
+            {
+                return Insert(element);
+            }
+            else
+            {
+                var node = loc.Node;
+                if (node != null)
+                {
+                    var tree = node.Tree;
+                    if (tree != null)
+                        return tree.Update(element);
+                }
+                return false;
+            }
+        }
+
+        public bool Remove(WorldEntity element)
+        {
+            var loc = element.SpatialPartitionLocation;
+            if (loc.IsValid() == false) return false;
+            TotalElements--;
+
+            if (element is Avatar avatar)
+                if (AvatarIteratorCount == 0) _avatars.Remove(avatar);
+
+            var node = loc.Node;
+            if (node != null)
+            {
+                var tree = node.Tree;
+                if (tree != null) return tree.Remove(element);
+            }
+            return false;
+        }
+
+        public bool Insert(WorldEntity element)
+        {
+            bool result;
+            ulong restrictedToPlayerGuid = 0; // TODO element.GetProperty<ulong>(PropertyEnum.RestrictedToPlayerGuid);
+            if (restrictedToPlayerGuid == 0)
+            {
+                if (element.IsNeverAffectedByPowers() 
+                    || (element.IsHotspot() && !element.IsCollidableHotspot() && !element.IsReflectingHotspot()))
+                    result = _staticSpatialPartition.Insert(element);
+                else
+                    result = _activeSpatialPartition.Insert(element);
+
+                if (element is Avatar avatar)
+                {
+                   // Debug.Assert(_avatarIteratorCount == 0);
+                    if (_avatars.Contains(avatar) == false)
+                        _avatars.Add(avatar);
+                }
+            }
+            else
+            {
+                var spatialPartition = _players.GetValueOrDefault(restrictedToPlayerGuid);
+                if (spatialPartition == null)
+                {
+                    spatialPartition = new (_bounds, _minRadius);
+                    _players[restrictedToPlayerGuid] = spatialPartition;
+                }
+                result = spatialPartition.Insert(element);
+            }
+            TotalElements++;
+            return result;
+        }
+
+
+        public static bool DoesSphereContainAvatar(Sphere sphere, Avatar avatar)
+        {
+            if (avatar != null && sphere.Intersects(avatar.Location.GetPosition())) return true;
+            return false;
         }
     }
 
     // Node
     public class Node<T>
     {
-        public Quadtree<T> _tree;
+        public Quadtree<T> Tree;
         public Node<T> Parent;
         public Node<T>[] Children = new Node<T>[4];
         public Aabb2 LooseBounds;
@@ -30,7 +121,7 @@ namespace MHServerEmu.Games.Generators
 
         public Node(Quadtree<T> tree, Node<T> parent, Aabb2 bounds)
         {
-            _tree = tree;
+            Tree = tree;
             Parent = parent;
             LooseBounds = bounds;
             AtTargetLevelCount = 0;
@@ -149,6 +240,35 @@ namespace MHServerEmu.Games.Generators
         {
             _bounds = bound;
             _minLoose = MathF.Max(minRadius * _loose, bound.Radius2D() * _loose / 16777216);
+            _elementsCount = 0;
+            _nodesCount = 0;
+        }
+
+        public bool Update(T element)
+        {
+            if (element == null || _outstandingIteratorCount > 0) return false;
+
+            var location = GetLocation(element);
+            var node = location.Node;
+            if (node == null) return Insert(element);
+
+            var elementBounds = GetElementBounds(element);
+            if (node.LooseBounds.FullyContainsXY(elementBounds)) return false;
+            if (node.RemoveElement(location) == false) return false;
+            _elementsCount--;
+
+            var parent = node.Parent;
+            RewindNode(node, parent);
+            while (parent != null)
+            {
+                if (parent.LooseBounds.FullyContainsXY(elementBounds))
+                    return Insert(parent, element, elementBounds, elementBounds.Center, elementBounds.Radius2D());
+
+                node = parent;
+                parent = node.Parent;
+            }
+
+            return false;
         }
 
         public bool Insert(T element)
@@ -507,6 +627,7 @@ namespace MHServerEmu.Games.Generators
         }
 
         private void IncrementIteratorCount() => _outstandingIteratorCount++;
+
     }
 
     // Quadtree<SpawnReservation,SpawnReservationSpatialPartitionElementOps<SpawnReservation>,24>
