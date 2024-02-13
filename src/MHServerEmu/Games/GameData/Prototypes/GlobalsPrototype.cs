@@ -256,11 +256,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId ConsumableItemBlueprint { get; protected set; }
         public int AvatarCoopInactiveTimeMS { get; protected set; }
         public int AvatarCoopInactiveOnDeadBufferMS { get; protected set; }
-
-        public AlliancePrototype GetPlayerAlliancePrototype()
-        {
-            return GameDatabase.GetPrototype<AlliancePrototype>(PlayerAlliance);
-        }
+        [DoNotCopy]
+        public AlliancePrototype PlayerAlliancePrototype { get => PlayerAlliance.As<AlliancePrototype>(); }
     }
 
     public class LoginRewardPrototype : Prototype

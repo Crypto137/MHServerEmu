@@ -16,7 +16,7 @@ namespace MHServerEmu.Games.Entities
         public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
         public ReplicatedPropertyCollection PropertyCollection { get; set; }
 
-        public EntityPrototype EntityPrototype { get { return GameDatabase.GetPrototype<EntityPrototype>(BaseData.PrototypeId); } }
+        public EntityPrototype EntityPrototype { get => GameDatabase.GetPrototype<EntityPrototype>(BaseData.PrototypeId); }
 
         public Entity(EntityBaseData baseData, ByteString archiveData)
         {

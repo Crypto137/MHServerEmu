@@ -298,11 +298,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId AffixTable { get; protected set; }
         public int ChancePct { get; protected set; }
-
-        public EnemyBoostSetPrototype GetAffixTablePrototype()
-        {
-            return GameDatabase.GetPrototype<EnemyBoostSetPrototype>(AffixTable);
-        }
+        [DoNotCopy]
+        public EnemyBoostSetPrototype AffixTablePrototype { get => AffixTable.As<EnemyBoostSetPrototype>(); }
 
         internal PrototypeId RollAffix(GRandom random, HashSet<PrototypeId> affixes, HashSet<PrototypeId> exclude)
         {

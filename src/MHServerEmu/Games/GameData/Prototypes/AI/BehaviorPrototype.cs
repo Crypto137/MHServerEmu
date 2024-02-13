@@ -171,7 +171,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 || GameDatabase.GetGlobalsPrototype().PlayerAlliance == PrototypeId.Invalid)
                 return false;
 
-            AlliancePrototype playerAlliance = GameDatabase.GetGlobalsPrototype().GetPlayerAlliancePrototype();
+            AlliancePrototype playerAlliance = GameDatabase.GetGlobalsPrototype().PlayerAlliancePrototype;
             return playerAlliance.IsHostileTo(allianceProto);
         }
 
