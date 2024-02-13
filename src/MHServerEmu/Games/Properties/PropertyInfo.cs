@@ -57,8 +57,12 @@ namespace MHServerEmu.Games.Properties
 
         public int GetParamBitCount(int paramIndex)
         {
-            if (paramIndex >= PropertyConsts.MaxParamCount) return Logger.WarnReturn(0, $"GetParamBitCount(): param index {paramIndex} out of range");
-            if (_paramTypes[paramIndex] == PropertyParamType.Invalid) return Logger.WarnReturn(0, $"GetParamBitCount(): invalid param type");
+            if (paramIndex >= PropertyConsts.MaxParamCount)
+                return Logger.ErrorReturn(0, $"GetParamBitCount(): param index {paramIndex} out of range");
+
+            if (_paramTypes[paramIndex] == PropertyParamType.Invalid)
+                return Logger.WarnReturn(0, "GetParamBitCount(): param is not set");
+
             return _paramMaxValues[paramIndex].HighestBitSet() + 1;
         }
 
@@ -68,19 +72,50 @@ namespace MHServerEmu.Games.Properties
             return BlueprintId.Invalid;
         }
 
-        public void SetParamTypeInteger(int paramIndex, int maxValue)
+        public bool SetParamTypeInteger(int paramIndex, int maxValue)
         {
+            if (paramIndex >= PropertyConsts.MaxParamCount)
+                return Logger.ErrorReturn(false, $"SetParamTypeInteger(): param index {paramIndex} out of range");
 
+            if (_paramTypes[paramIndex] != PropertyParamType.Invalid)
+                return Logger.WarnReturn(false, "SetParamTypeInteger(): param is already set");
+
+            _paramTypes[paramIndex] = PropertyParamType.Integer;
+            _paramMaxValues[paramIndex] = maxValue;
+            return true;
         }
 
-        public void SetParamTypeAsset(int paramIndex, AssetTypeId assetTypeId)
+        public bool SetParamTypeAsset(int paramIndex, AssetTypeId assetTypeId)
         {
+            if (paramIndex >= PropertyConsts.MaxParamCount)
+                return Logger.ErrorReturn(false, $"SetParamTypeAsset(): param index {paramIndex} out of range");
 
+            if (_paramTypes[paramIndex] != PropertyParamType.Invalid)
+                return Logger.WarnReturn(false, "SetParamTypeAsset(): param is already set");
+
+            var assetType = GameDatabase.GetAssetType(assetTypeId);
+
+            if (assetType == null)
+                return Logger.ErrorReturn(false, $"SetParamTypeAsset(): failed to get asset type for id {assetTypeId}");
+
+            _paramTypes[paramIndex] = PropertyParamType.Asset;
+            _paramMaxValues[paramIndex] = assetType.MaxEnumValue;
+            _paramAssetTypes[paramIndex] = assetTypeId;
+            return true;
         }
 
-        public void SetParamTypePrototype(int paramIndex, BlueprintId blueprintId)
+        public bool SetParamTypePrototype(int paramIndex, BlueprintId blueprintId)
         {
+            if (paramIndex >= PropertyConsts.MaxParamCount)
+                return Logger.ErrorReturn(false, $"SetParamTypePrototype(): param index {paramIndex} out of range");
 
+            if (_paramTypes[paramIndex] != PropertyParamType.Invalid)
+                return Logger.WarnReturn(false, "SetParamTypePrototype(): param is already set");
+
+            _paramTypes[paramIndex] = PropertyParamType.Prototype;
+            _paramMaxValues[paramIndex] = GameDatabase.DataDirectory.GetPrototypeMaxEnumValue(blueprintId);
+            _paramPrototypeBlueprints[paramIndex] = blueprintId;
+            return true;
         }
 
         /// <summary>
