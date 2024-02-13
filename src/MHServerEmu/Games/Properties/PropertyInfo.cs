@@ -125,15 +125,21 @@ namespace MHServerEmu.Games.Properties
         {
             // NOTE: these checks mirror the client, we might not actually need all of them
             if (_updatedInfo) Logger.ErrorReturn(false, "Failed to SetPropertyInfo(): already set");
-            if (paramCount >= PropertyConsts.MaxParamCount) Logger.ErrorReturn(false, $"Failed to SetPropertyInfo(): invalid param count {paramCount}");
+            if (paramCount > PropertyConsts.MaxParamCount) Logger.ErrorReturn(false, $"Failed to SetPropertyInfo(): invalid param count {paramCount}");
 
             // Checks to make sure all param types have been set up prior to this
             for (int i = 0; i < PropertyConsts.MaxParamCount; i++)
             {
                 if (i < paramCount)
-                    if (_paramTypes[i] == PropertyParamType.Invalid) return Logger.ErrorReturn(false, $"Failed to SetPropertyInfo(): param types have not been set up");
+                {
+                    if (_paramTypes[i] == PropertyParamType.Invalid)
+                        return Logger.ErrorReturn(false, $"Failed to SetPropertyInfo(): param types have not been set up");
+                }
                 else
-                    if (_paramTypes[i] != PropertyParamType.Invalid) return Logger.ErrorReturn(false, $"Failed to SetPropertyInfo(): param count does not match set up params");
+                {
+                    if (_paramTypes[i] != PropertyParamType.Invalid)
+                        return Logger.ErrorReturn(false, $"Failed to SetPropertyInfo(): param count does not match set up params");
+                }
             }
 
             // Set default values

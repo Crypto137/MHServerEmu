@@ -248,8 +248,11 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return true;
         }
 
+        /// <summary>
+        /// Deserializes a property field group.
+        /// </summary>
         private static bool DeserializeFieldGroupIntoProperty(PrototypePropertyCollection collection, Blueprint groupBlueprint, byte blueprintCopyNum,
-            string prototypeFilePath, BinaryReader reader, string groupTag)
+            string prototypeName, BinaryReader reader, string groupTag)
         {
             if (groupBlueprint.IsProperty() == false) return false;
 
@@ -259,28 +262,34 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             PropertyEnum propertyEnum = propertyInfoTable.GetPropertyEnumFromPrototype(propertyDataRef);
             bool isInitializing = collection == null;
 
-            PropertyBuilder propertyBuilder = new(propertyEnum, propertyInfoTable, isInitializing);
-
-            // TODO: deserializeFieldGroupIntoPropertyBuilder
-            short numSimpleFields = reader.ReadInt16();
-            for (int i = 0; i < numSimpleFields; i++)
+            // HACK: write data to a temporary PrototypePropertyCollection implementation
+            if (isInitializing == false)
             {
-                var fieldId = (StringId)reader.ReadUInt64();
-                var type = (CalligraphyBaseType)reader.ReadByte();
-
-                // Property mixin field groups don't have any RHStructs, so we can always read the value as uint64
-                // (also no types or localized string refs)
-                var value = reader.ReadUInt64();
-
-                // hack: write data to a temporary PrototypePropertyCollection implementation
-                if (collection != null)
+                short numSimpleFields = reader.ReadInt16();
+                for (int i = 0; i < numSimpleFields; i++)
                 {
-                    if (groupBlueprint.TryGetBlueprintMemberInfo(fieldId, out var blueprintMemberInfo) == false)
-                        return Logger.ErrorReturn(false, $"Failed to find member id {fieldId} in blueprint {GameDatabase.GetBlueprintName(groupBlueprint.Id)}");
+                    var fieldId = (StringId)reader.ReadUInt64();
+                    var type = (CalligraphyBaseType)reader.ReadByte();
 
-                    collection.AddPropertyFieldValue(groupBlueprint.Id, blueprintCopyNum, blueprintMemberInfo.Member.FieldName, value);
+                    // Property mixin field groups don't have any RHStructs, so we can always read the value as uint64
+                    // (also no types or localized string refs)
+                    var value = reader.ReadUInt64();
+
+                    if (collection != null)
+                    {
+                        if (groupBlueprint.TryGetBlueprintMemberInfo(fieldId, out var blueprintMemberInfo) == false)
+                            return Logger.ErrorReturn(false, $"Failed to find member id {fieldId} in blueprint {GameDatabase.GetBlueprintName(groupBlueprint.Id)}");
+
+                        collection.AddPropertyFieldValue(groupBlueprint.Id, blueprintCopyNum, blueprintMemberInfo.Member.FieldName, value);
+                    }
                 }
+
+                return true;
             }
+
+            PropertyBuilder propertyBuilder = new(propertyEnum, propertyInfoTable, isInitializing);
+            if (DeserializeFieldGroupIntoPropertyBuilder(propertyBuilder, groupBlueprint, prototypeName, reader, isInitializing, groupTag) == false)
+                return Logger.ErrorReturn(false, $"Failed to deserialize field group into property builder");
 
             if (isInitializing)
             {
@@ -289,6 +298,120 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             }
 
             // TODO: Add deserialized property to the property collection here
+
+            return true;
+        }
+
+        /// <summary>
+        /// Deserializes a property field group into a <see cref="PropertyBuilder"/> instance.
+        /// </summary>
+        private static bool DeserializeFieldGroupIntoPropertyBuilder(PropertyBuilder builder, Blueprint blueprint, string prototypeName, BinaryReader reader, bool isInitializing, string groupTag)
+        {
+            PrototypeId propertyDataRef = blueprint.PropertyDataRef;
+            PropertyEnum propertyEnum = GameDatabase.PropertyInfoTable.GetPropertyEnumFromPrototype(propertyDataRef);
+
+            if (propertyEnum == PropertyEnum.Invalid)
+                return Logger.ErrorReturn(false, $"Failed to get property enum value, file name {prototypeName}");
+
+            short numFields = reader.ReadInt16();
+
+            if (numFields <= 0)
+                return Logger.ErrorReturn(false, $"<= 0 fields in a property field group, file name {prototypeName}");
+
+            for (int i = 0; i < numFields; i++)
+            {
+                var fieldId = (StringId)reader.ReadUInt64();
+                var type = (CalligraphyBaseType)reader.ReadByte();
+
+                if (fieldId == StringId.Invalid)
+                    return Logger.ErrorReturn(false, $"Invalid field id in a property field group, file name {prototypeName}");
+
+                if (blueprint.TryGetBlueprintMemberInfo(fieldId, out var blueprintMemberInfo) == false)
+                    return Logger.ErrorReturn(false, $"Failed to get blueprint member info for field id {fieldId}, file name {prototypeName}");
+
+                // Fields with the same name can have different field ids in different property prototypes
+                // (most likely due to how they are hashed), so we have no choice but to work with strings here.
+                string fieldName = blueprintMemberInfo.Member.FieldName;
+
+                if (string.Equals(fieldName, "Value", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (DeserializePropertyValue(blueprint, prototypeName, reader, blueprintMemberInfo, out ulong value) == false)
+                        return Logger.ErrorReturn(false, $"Failed to deserialize property value field, file name {prototypeName}");
+
+                    if (builder.SetValue(value) == false)
+                        return Logger.ErrorReturn(false, $"Failed to set property value field, file name {prototypeName}");
+                }
+                else if (string.Equals(fieldName, "CurveIndex", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (DeserializePropertyValue(blueprint, prototypeName, reader, blueprintMemberInfo, out ulong curveIndex) == false)
+                        return Logger.ErrorReturn(false, $"Failed to deserialize property curve index field, file name {prototypeName}");
+
+                    if (builder.SetCurveIndex((PrototypeId)curveIndex) == false)
+                        return Logger.ErrorReturn(false, $"Failed to set property curve index field, file name {prototypeName}");
+                }
+                else if (fieldName.StartsWith("Param", StringComparison.OrdinalIgnoreCase))
+                {
+                    int paramIndex;
+                    if (fieldName.Length < 6)
+                    {
+                        Logger.Trace($"Param field name '{fieldName}' does not contain param index, defaulting to 0, file name {prototypeName}");
+                        paramIndex = 0;
+                    }
+                    else
+                    {
+                        paramIndex = int.Parse(fieldName[5].ToString());
+                    }
+
+                    if (paramIndex >= PropertyConsts.MaxParamCount)
+                        return Logger.ErrorReturn(false, $"Property param index {paramIndex} out of range");
+
+                    if (DeserializePropertyParam(blueprintMemberInfo, prototypeName, reader, paramIndex, builder) == false)
+                        return Logger.ErrorReturn(false, $"Failed to deserialize property param field, file name {prototypeName}");
+                }
+                else
+                {
+                    return Logger.WarnReturn(false, $"Unexpected field name '{fieldName}' in a property field group, file name {prototypeName}");
+                }
+            }
+
+            return true;
+        }
+
+        private static bool DeserializePropertyValue(Blueprint blueprint, string prototypeName, BinaryReader reader, BlueprintMemberInfo blueprintMemberInfo, out ulong value)
+        {
+            // TODO: Property::ToValue
+            value = reader.ReadUInt64();
+            return true;
+        }
+
+        private static bool DeserializePropertyParam(BlueprintMemberInfo blueprintMemberInfo, string prototypeName, BinaryReader reader, int paramIndex, PropertyBuilder builder)
+        {
+            if (blueprintMemberInfo.Member.StructureType == CalligraphyStructureType.List)
+                return Logger.ErrorReturn(false, $"Unhandled structure type for property param");
+
+            switch (blueprintMemberInfo.Member.BaseType)
+            {
+                case CalligraphyBaseType.Long:
+                    long integerParam = reader.ReadInt64();
+                    if (builder.SetIntegerParam(paramIndex, integerParam) == false)
+                        return Logger.ErrorReturn(false, $"Failed to set property integer param, file name {prototypeName}");
+                    break;
+
+                case CalligraphyBaseType.Asset:
+                    var assetRef = (AssetId)reader.ReadUInt64();
+                    if (builder.SetAssetParam(paramIndex, assetRef) == false)
+                        return Logger.ErrorReturn(false, $"Failed to set property asset param, file name {prototypeName}");
+                    break;
+
+                case CalligraphyBaseType.Prototype:
+                    var field = (PrototypeId)reader.ReadUInt64();
+                    if (builder.SetPrototypeParam(paramIndex, field) == false)
+                        return Logger.ErrorReturn(false, $"Failed to set property prototype param, file name {prototypeName}");
+                    break;
+
+                default:
+                    return Logger.ErrorReturn(false, "Unhandled base type for property param");
+            }
 
             return true;
         }

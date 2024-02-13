@@ -3,6 +3,9 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Calligraphy
 {
+    /// <summary>
+    /// Reconstructs properties from serialized prototypes.
+    /// </summary>
     public class PropertyBuilder
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -87,7 +90,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 }
             }
 
-            //info.SetPropertyInfo(PropertyValue, ParamCount, ParamValues);
+            info.SetPropertyInfo(PropertyValue, ParamCount, ParamValues);
             info.DefaultCurveIndex = CurveIndex;
             return true;
         }
@@ -108,6 +111,17 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             CurveIndex = new(curvePropertyEnum);
             IsCurveIndexSet = true;
             return true;
+        }
+
+        public bool SetIntegerParam(int paramIndex, long field)
+        {
+            if (_isInitializing)
+            {
+                _paramInfos[paramIndex].Type = PropertyParamType.Integer;
+                // Integer params have no subtypes
+            }
+
+            return SetParam(paramIndex, (int)field);
         }
 
         public bool SetAssetParam(int paramIndex, AssetId field)
@@ -152,17 +166,6 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
             int prototypeEnum = GameDatabase.DataDirectory.GetPrototypeEnumValue(field, blueprintRef);
             return SetParam(paramIndex, prototypeEnum);
-        }
-
-        public bool SetIntegerParam(int paramIndex, long field)
-        {
-            if (_isInitializing)
-            {
-                _paramInfos[paramIndex].Type = PropertyParamType.Integer;
-                // Integer params have no subtypes
-            }
-
-            return SetParam(paramIndex, (int)field);
         }
 
         private bool SetParam(int paramIndex, int paramValue)
