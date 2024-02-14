@@ -68,21 +68,112 @@ namespace MHServerEmu.Games.Properties
             return decodedParams;
         }
 
+        // There's a bunch of (client-accurate) copypasted code here for encoding that allows us to avoid allocating param arrays in some cases.
+        // Feel free to make this more DRY if there is a smarter way of doing this without losing performance.
+
+        public PropertyId EncodeParameters(PropertyEnum propertyEnum, int[] @params)
+        {
+            switch (_paramCount)
+            {
+                case 0: return EncodeParameters(propertyEnum, @params[0]);
+                case 1: return EncodeParameters(propertyEnum, @params[0], @params[1]);
+                case 2: return EncodeParameters(propertyEnum, @params[0], @params[1], @params[2]);
+                case 3: return EncodeParameters(propertyEnum, @params[0], @params[1], @params[2], @params[3]);
+                default: return Logger.WarnReturn(new PropertyId(propertyEnum), $"Failed to encode params: invalid param count {_paramCount}");
+            }
+        }
+
+        public PropertyId EncodeParameters(PropertyEnum propertyEnum, int param0)
+        {
+            if (param0 > _paramMaxValues[0]) throw new OverflowException($"Property param 0 overflow.");
+
+            var id = new PropertyId(propertyEnum);
+            id.Raw |= (ulong)param0 << _paramOffsets[0];
+
+            return id;
+        }
+
+        public PropertyId EncodeParameters(PropertyEnum propertyEnum, int param0, int param1)
+        {
+            if (param0 > _paramMaxValues[0]) throw new OverflowException($"Property param 0 overflow.");
+            if (param1 > _paramMaxValues[1]) throw new OverflowException($"Property param 1 overflow.");
+
+            var id = new PropertyId(propertyEnum);
+            id.Raw |= (ulong)param0 << _paramOffsets[0];
+            id.Raw |= (ulong)param1 << _paramOffsets[1];
+
+            return id;
+        }
+
+        public PropertyId EncodeParameters(PropertyEnum propertyEnum, int param0, int param1, int param2)
+        {
+            if (param0 > _paramMaxValues[0]) throw new OverflowException($"Property param 0 overflow.");
+            if (param1 > _paramMaxValues[1]) throw new OverflowException($"Property param 1 overflow.");
+            if (param2 > _paramMaxValues[2]) throw new OverflowException($"Property param 2 overflow.");
+
+            var id = new PropertyId(propertyEnum);
+            id.Raw |= (ulong)param0 << _paramOffsets[0];
+            id.Raw |= (ulong)param1 << _paramOffsets[1];
+            id.Raw |= (ulong)param2 << _paramOffsets[2];
+
+            return id;
+        }
+
+        public PropertyId EncodeParameters(PropertyEnum propertyEnum, int param0, int param1, int param2, int param3)
+        {
+            if (param0 > _paramMaxValues[0]) throw new OverflowException($"Property param 0 overflow.");
+            if (param1 > _paramMaxValues[1]) throw new OverflowException($"Property param 1 overflow.");
+            if (param2 > _paramMaxValues[2]) throw new OverflowException($"Property param 2 overflow.");
+            if (param3 > _paramMaxValues[3]) throw new OverflowException($"Property param 3 overflow.");
+
+            var id = new PropertyId(propertyEnum);
+            id.Raw |= (ulong)param0 << _paramOffsets[0];
+            id.Raw |= (ulong)param1 << _paramOffsets[1];
+            id.Raw |= (ulong)param2 << _paramOffsets[2];
+            id.Raw |= (ulong)param3 << _paramOffsets[3];
+
+            return id;
+        }
+
+        public PropertyParamType GetParamType(int paramIndex)
+        {
+            if (paramIndex >= PropertyConsts.MaxParamCount)
+                return Logger.WarnReturn(PropertyParamType.Invalid, $"GetParamType(): param index {paramIndex} out of range");
+
+            return _paramTypes[paramIndex];
+        }
+
+        public AssetTypeId GetParamAssetType(int paramIndex)
+        {
+            if (paramIndex >= PropertyConsts.MaxParamCount)
+                return Logger.WarnReturn(AssetTypeId.Invalid, $"GetParamAssetType(): param index {paramIndex} out of range");
+
+            if (_paramTypes[paramIndex] != PropertyParamType.Asset)
+                return Logger.WarnReturn(AssetTypeId.Invalid, $"GetParamAssetType(): param index {paramIndex} is not an asset param");
+
+            return _paramAssetTypes[paramIndex];
+        }
+
+        public BlueprintId GetParamPrototypeBlueprint(int paramIndex)
+        {
+            if (paramIndex >= PropertyConsts.MaxParamCount)
+                return Logger.WarnReturn(BlueprintId.Invalid, $"GetParamPrototypeBlueprint(): param index {paramIndex} out of range");
+
+            if (_paramTypes[paramIndex] != PropertyParamType.Prototype)
+                return Logger.WarnReturn(BlueprintId.Invalid, $"GetParamPrototypeBlueprint(): param index {paramIndex} is not a prototype param");
+
+            return _paramPrototypeBlueprints[paramIndex];
+        }
+
         public int GetParamBitCount(int paramIndex)
         {
             if (paramIndex >= PropertyConsts.MaxParamCount)
-                return Logger.ErrorReturn(0, $"GetParamBitCount(): param index {paramIndex} out of range");
+                return Logger.WarnReturn(0, $"GetParamBitCount(): param index {paramIndex} out of range");
 
             if (_paramTypes[paramIndex] == PropertyParamType.Invalid)
                 return Logger.WarnReturn(0, "GetParamBitCount(): param is not set");
 
             return _paramMaxValues[paramIndex].HighestBitSet() + 1;
-        }
-
-        public BlueprintId GetParamPrototypeBlueprint(int paramIndex)
-        {
-            // NYI
-            return BlueprintId.Invalid;
         }
 
         public bool SetParamTypeInteger(int paramIndex, int maxValue)

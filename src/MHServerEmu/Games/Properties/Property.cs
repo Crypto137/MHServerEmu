@@ -71,14 +71,16 @@ namespace MHServerEmu.Games.Properties
             StringBuilder sb = new();
             sb.AppendLine($"Id: {Id}");
             sb.AppendLine($"Enum: {Id.Enum}");
-            sb.AppendLine($"HasParams: {Id.HasParams()}");
 
-            sb.Append($"Params: [");
-            int[] @params = PropertyInfo.DecodeParameters(Id);
-            for (int i = 0; i < @params.Length; i++)
-                sb.Append($"{@params[i]} ");
-            sb.Length--;
-            sb.AppendLine("]");     
+            if (Id.HasParams())
+            {
+                sb.Append($"Params: ");
+                int[] @params = Id.GetParams();
+                for (int i = 0; i < @params.Length; i++)
+                    sb.Append($"{@params[i]} ");
+                sb.Length--;
+                sb.AppendLine();
+            }
 
             sb.AppendLine($"Value: {Value}");
             sb.AppendLine($"PropertyDataType: {PropertyInfo.DataType}");
