@@ -23,5 +23,11 @@ namespace MHServerEmu.Games.Properties
             PropertyName = $"{PropertyInfoName}Prop";
             PropertyInfoPrototypeRef = propertyInfoPrototypeRef;
         }
+
+        public BlueprintId GetParamPrototypeBlueprint(int paramIndex)
+        {
+            // NYI
+            return BlueprintId.Invalid;
+        }
     }
 }

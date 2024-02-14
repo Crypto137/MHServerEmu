@@ -221,7 +221,7 @@ namespace MHServerEmu.Games.Common
             );
         }
 
-        private static float LengthSquared(Vector3 v) => LengthSqr(v);
+        public static float LengthSquared(Vector3 v) => LengthSqr(v);
 
         public void RoundToNearestInteger()
         {

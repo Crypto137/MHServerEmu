@@ -92,7 +92,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// <summary>
         /// Enumerates this asset type taking symbolic enum binding into account.
         /// </summary>
-        private void Enumerate()
+        public void Enumerate()
         {
             // Iterate through all assets of this type
             for (int i = 0; i < _assets.Length; i++)

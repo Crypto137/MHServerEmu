@@ -1,30 +1,101 @@
 ﻿namespace MHServerEmu.Games.Properties
 {
+    /// <summary>
+    /// Identifies a <see cref="Property"/>.
+    /// </summary>
     public struct PropertyId
     {
-        // 11 bits for enum, the rest are params defined by PropertyInfo
-        public const int EnumBitCount = 11;
-        public const int ParamBitCount = 53;
+        public ulong Raw { get; private set; }
+        public PropertyEnum Enum { get => (PropertyEnum)(Raw >> PropertyConsts.ParamBitCount); }
 
-        public ulong RawId { get; private set; }
-        public PropertyEnum Enum { get => (PropertyEnum)(RawId >> ParamBitCount); }
+        // TODO: the client constructs property ids in Property::ToPropertyId
+
+        /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with <see cref="PropertyEnum.Invalid"/> as its value.
+        /// </summary>
+        public PropertyId()
+        {
+            Raw = (ulong)PropertyEnum.Invalid << PropertyConsts.ParamBitCount;
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with no params.
+        /// </summary>
+        public PropertyId(PropertyEnum propertyEnum)
+        {
+            Raw = (ulong)propertyEnum << PropertyConsts.ParamBitCount;
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with the provided params
+        /// </summary>
+        public PropertyId(PropertyEnum propertyEnum, int param0)
+        {
+            Raw = (ulong)propertyEnum << PropertyConsts.ParamBitCount;
+            // todo: param encoding
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with the provided params
+        /// </summary>
+        public PropertyId(PropertyEnum propertyEnum, int param0, int param1)
+        {
+            Raw = (ulong)propertyEnum << PropertyConsts.ParamBitCount;
+            // todo: param encoding
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with the provided params
+        /// </summary>
+        public PropertyId(PropertyEnum propertyEnum, int param0, int param1, int param2)
+        {
+            Raw = (ulong)propertyEnum << PropertyConsts.ParamBitCount;
+            // todo: param encoding
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with the provided params
+        /// </summary>
+        public PropertyId(PropertyEnum propertyEnum, int param0, int param1, int param2, int param3)
+        {
+            Raw = (ulong)propertyEnum << PropertyConsts.ParamBitCount;
+            // todo: param encoding
+        }
 
         /// <summary>
         /// Constructs a <see cref="PropertyId"/> from a raw value.
         /// </summary>
-        public PropertyId(ulong rawId)
+        public PropertyId(ulong raw)
         {
-            RawId = rawId;
+            Raw = raw;
+        }
+
+        public override string ToString() => $"0x{Raw:X}";
+
+        /// <summary>
+        /// Returns <see langword="true"/> if this <see cref="PropertyId"/> has any param values encoded.
+        /// </summary>
+        public bool HasParams()
+        {
+            return (Raw & PropertyConsts.ParamMask) != 0;
         }
 
         /// <summary>
-        /// Constructs a <see cref="PropertyId"/> from a <see cref="PropertyEnum"/>.
+        /// Returns the value of an encoded param.
         /// </summary>
-        public PropertyId(PropertyEnum propertyEnum)
+        public int GetParam(int index)
         {
-            RawId = (ulong)propertyEnum << ParamBitCount;
+            return 0;
+            //return GetParams()[index];
         }
 
-        public override string ToString() => RawId.ToString();
+        /// <summary>
+        /// Decodes and returns encoded param values.
+        /// </summary>
+        public int[] GetParams()
+        {
+            // PropertyInfo::decodeParameters()
+            return null;
+        }
     }
 }

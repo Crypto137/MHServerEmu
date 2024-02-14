@@ -23,7 +23,7 @@ namespace MHServerEmu.Games.Entities
 
     public class BoundData
     {
-        private float[] _data = new float[6];
+        private readonly float[] _data = new float[6];
         public float OBBHalfWidth { get => _data[0]; set => _data[0] = value; }
         public float OBBHalfLength { get => _data[1]; set => _data[1] = value; }
         public float OBBHalfHeight { get => _data[2]; set => _data[2] = value; }

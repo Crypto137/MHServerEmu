@@ -11,6 +11,7 @@ namespace MHServerEmu.Games.Properties
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Dictionary<PropertyEnum, PropertyInfo> _propertyInfoDict = new();
+        private readonly Dictionary<PrototypeId, PropertyEnum> _prototypeIdToPropertyEnumDict = new();
 
         public static readonly (string, Type)[] AssetEnumBindings = new(string, Type)[]     // s_PropertyParamEnumLookups
         {
@@ -32,7 +33,7 @@ namespace MHServerEmu.Games.Properties
             ("Ranks",                           typeof(Rank))
         };
 
-        public PropertyInfoTable()
+        public void Initialize()
         {
             var stopwatch = Stopwatch.StartNew();
 
@@ -55,11 +56,15 @@ namespace MHServerEmu.Games.Properties
                 // See PropertyEnum.cs for more details.
                 var propertyEnum = Enum.Parse<PropertyEnum>(propertyName);
 
+                // Add data ref -> property enum lookup
+                _prototypeIdToPropertyEnumDict.Add(propertyInfoPrototypeRef, propertyEnum);
+
+                // Create property info instance
                 PropertyInfo propertyInfo = new(propertyEnum, propertyName, propertyInfoPrototypeRef);
                 _propertyInfoDict.Add(propertyEnum, propertyInfo);
             }
 
-            // Match property infos with mixing prototypes where possible
+            // Match property infos with mixin prototypes where possible
             foreach (var blueprint in GameDatabase.DataDirectory.IterateBlueprints())
             {
                 // Skip irrelevant blueprints
@@ -108,7 +113,18 @@ namespace MHServerEmu.Games.Properties
 
         public PropertyInfo LookupPropertyInfo(PropertyEnum property)
         {
+            if (property == PropertyEnum.Invalid)
+                Logger.WarnReturn<PropertyInfo>(null, "Attempted to lookup property info for invalid enum");
+
             return _propertyInfoDict[property];
+        }
+
+        public PropertyEnum GetPropertyEnumFromPrototype(PrototypeId propertyDataRef)
+        {
+            if (_prototypeIdToPropertyEnumDict.TryGetValue(propertyDataRef, out var propertyEnum) == false)
+                return PropertyEnum.Invalid;
+
+            return propertyEnum;
         }
 
         public bool Verify() => _propertyInfoDict.Count > 0;

@@ -755,12 +755,12 @@ namespace MHServerEmu.Games.Generators.Population
                 Logger.Warn($"Zounds! Entity {EntityProto} has no Bounds!");
             }
 
-            if (AlliancePrototype.IsHostileToPlayerAlliance(EntityProto.GetAlliancePrototype()))
+            if (AlliancePrototype.IsHostileToPlayerAlliance(EntityProto.AlliancePrototype))
                 Flags |= ClusterObjectFlag.Hostile;
 
             PathFlags = Locomotor.GetPathFlags(EntityProto.NaviMethod);
 
-            RankProto = GameDatabase.GetPrototype<RankPrototype>(EntityProto.Rank);
+            RankProto = EntityProto.RankPrototype;
             /*
             if (Parent != null)
             {
