@@ -509,6 +509,19 @@ namespace MHServerEmu.Games.Regions
                 return Enumerable.Empty<Cell>(); //new CellSpatialPartition.ElementIterator();
         }
 
+        public IEnumerable<WorldEntity> IterateEntitiesInRegion(EntityRegionSPContext context)
+        {
+            return IterateEntitiesInVolume(Bound, context);
+        }
+
+        public IEnumerable<WorldEntity> IterateEntitiesInVolume(Aabb bound, EntityRegionSPContext context)
+        {
+            if (EntitySpatialPartition != null)
+                return EntitySpatialPartition.IterateElementsInVolume(bound, context);
+            else
+                return Enumerable.Empty<WorldEntity>();
+        }
+
         public PrototypeId GetPrototypeDataRef()
         {
             return (PrototypeId)PrototypeId;
