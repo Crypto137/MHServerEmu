@@ -38,6 +38,33 @@ namespace MHServerEmu.Common.Commands
         }
     }
 
+    [CommandGroup("Bovineheim", "Travel to Bovineheim.", AccountUserLevel.User)]
+    public class BovineCommand : CommandGroup
+    {
+        [DefaultCommand(AccountUserLevel.User)]
+        public string Bovineheim(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            client.CurrentGame.MovePlayerToRegion(client, (RegionPrototypeId)17913362697985334451, (PrototypeId)12083387244127461092);
+
+            return "Travel to Bovineheim";
+        }
+    }
+
+    [CommandGroup("Cow", "Travel to Classified Bovine Sector.", AccountUserLevel.User)]
+    public class CowCommand : CommandGroup
+    {
+        [DefaultCommand(AccountUserLevel.User)]
+        public string Cow(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            client.CurrentGame.MovePlayerToRegion(client, (RegionPrototypeId)12735255224807267622, (PrototypeId)2342633323497265984);
+
+            return "Travel to Classified Bovine Sector.";
+        }
+    }
     [CommandGroup("position", "Shows current position.", AccountUserLevel.User)]
     public class PositionCommand : CommandGroup
     {
