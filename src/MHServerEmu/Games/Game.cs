@@ -261,11 +261,11 @@ namespace MHServerEmu.Games
         private void OnUpdateAvatarState(FrontendClient client, NetMessageUpdateAvatarState updateAvatarState)
         {
             UpdateAvatarStateArchive avatarState = new(updateAvatarState.ArchiveData);
-            Vector3 oldPosition = client.LastPosition;
+            //Vector3 oldPosition = client.LastPosition;
             client.LastPosition = avatarState.Position;
 
             // AOI
-            if (client.IsLoading == false && oldPosition != null && Vector3.DistanceSquared2D(oldPosition, avatarState.Position) > 100) // TODO update only when move
+            if (client.IsLoading == false && client.AOI.ShouldUpdate(avatarState.Position) ) 
             {
                 var messageList = client.AOI.UpdateAOI(client.Region, avatarState.Position);
                 if (messageList.Count > 0) EnqueueResponses(client, messageList);

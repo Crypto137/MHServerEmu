@@ -1,7 +1,10 @@
 ﻿using Gazillion;
+using MHServerEmu.Common.Extensions;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.Games.Regions
@@ -12,36 +15,38 @@ namespace MHServerEmu.Games.Regions
         private Game _game { get => _client.CurrentGame; }
         public HashSet<ulong> LoadedEntities { get; set; }
         public HashSet<uint> LoadedCells { get; set; }
+        private Vector3 _lastUpdateCenter;
+        private const float DefaultCellWidth = 2304.0f;        
+        private const float UpdateDistance = 200.0f;
+        private const float ViewOffset = 400.0f;
+        private const float ExpandDistance = 800.0f;
+        private const float DefaultDistance = 800.0f;
+        private const float MaxZ = 100000.0f;
 
-        private float _areaSize = 4000.0f;
+        private Aabb _playerView;
 
         public AreaOfInterest(FrontendClient client) 
         {
             _client = client;
             LoadedEntities = new();
             LoadedCells = new();
+            _lastUpdateCenter = new();
         }
 
-        public Aabb CalcAOIVolume(Vector3 pos)
+        public Aabb CalcAOIVolume(Vector3 playerPosition)
         {
-            return new(pos, _areaSize, _areaSize, 2034.0f);
+            Aabb volume = _playerView.Translate(playerPosition);
+            return volume.Expand(ExpandDistance);
         }
 
-        public int LoadCellMessages(Region region, Vector3 position, List<GameMessage> messageList)
+        private Dictionary<uint, List<Cell>> GetNewCells(Region region,Vector3 position, Area startArea)
         {
-            LoadedCells.Clear();
-            Cell startCell = region.GetCellAtPosition(position);
-            if (startCell == null) return 0;
-            Area startArea = startCell.Area;
-
-            CalcMaxCellSize(startArea);
+            Dictionary<uint, List<Cell>> cellsByArea = new();
             Aabb volume = CalcAOIVolume(position);
-            List<Cell> cellsInAOI = new ();
 
-            Dictionary<uint, List<Cell>> cellsByArea = new ();
-  
             foreach (var cell in region.IterateCellsInVolume(volume))
             {
+                if (LoadedCells.Contains(cell.Id)) continue;
                 if (cell.Area.IsDynamicArea() || cell.Area == startArea || startArea.AreaConnections.Any(connection => connection.ConnectedArea == cell.Area))
                 {
                     if (cellsByArea.ContainsKey(cell.Area.Id) == false)
@@ -50,9 +55,31 @@ namespace MHServerEmu.Games.Regions
                     cellsByArea[cell.Area.Id].Add(cell);
                 }
             }
+            return cellsByArea;
+        }
 
+        public void CalcPlayerVolume(float cellWidth)
+        {
+            float distance = DefaultDistance;
+            if (cellWidth != DefaultCellWidth) distance = cellWidth / 1.5f;
+            Vector3 offset = new(ViewOffset, ViewOffset, 0.0f);
+            _playerView = new Aabb(
+                new(-distance, -distance, -MaxZ),
+                new(distance, distance, MaxZ))
+                .Translate(offset);
+        }
+
+        public int LoadCellMessages(Region region, Vector3 position, List<GameMessage> messageList)
+        {
+            LoadedCells.Clear();
+            Cell startCell = region.GetCellAtPosition(position);
+            if (startCell == null) return 0;
+            Area startArea = startCell.Area;
+            CalcPlayerVolume(startCell.RegionBounds.Width);
+            
+            List<Cell> cellsInAOI = new ();
+            var cellsByArea = GetNewCells(region, position, startArea);
             var sortedAreas = cellsByArea.Keys.OrderBy(id => id);
-
             foreach (var areaId in sortedAreas)
             {
                 Area area = region.GetAreaById(areaId);
@@ -66,17 +93,8 @@ namespace MHServerEmu.Games.Regions
                     LoadedCells.Add(cell.Id);
                 }
             }
+            _lastUpdateCenter.Set(position);
             return LoadedCells.Count;
-        }
-
-        private void CalcMaxCellSize(Area area)
-        {
-            float maxCellSize = 2034.0f;
-            foreach(var cell in area.CellList) 
-            {
-                maxCellSize = MathF.Max(cell.RegionBounds.Width, maxCellSize);
-            }
-            _areaSize = maxCellSize * 2.0f;
         }
 
         public List<GameMessage> UpdateAOI(Region region, Vector3 position)
@@ -85,28 +103,14 @@ namespace MHServerEmu.Games.Regions
 
             Aabb volume = CalcAOIVolume(position);
             List<Cell> cellsInAOI = new();
-            HashSet<uint> cells = LoadedCells;
-            
-            Dictionary<uint, List<Cell>> cellsByArea = new();
+            HashSet<uint> cells = LoadedCells;       
 
             Cell startCell = region.GetCellAtPosition(position);
             if (startCell == null) return messageList;
 
             Area startArea = startCell.Area;
-            foreach (var cell in region.IterateCellsInVolume(volume))
-            {
-                if (cells.Contains(cell.Id)) continue;
-                if (cell.Area.IsDynamicArea() || cell.Area == startArea || startArea.AreaConnections.Any(connection => connection.ConnectedArea == cell.Area))
-                {
-                    if (cellsByArea.ContainsKey(cell.Area.Id) == false)
-                        cellsByArea[cell.Area.Id] = new();
-
-                    cellsByArea[cell.Area.Id].Add(cell);
-                }
-            }
-
+            var cellsByArea = GetNewCells(region, position, startArea);
             if (cellsByArea.Count == 0) return messageList;
-
             var sortedAreas = cellsByArea.Keys.OrderBy(id => id);
 
             // Add new
@@ -155,6 +159,7 @@ namespace MHServerEmu.Games.Regions
             }
             // TODO delete old
 
+            _lastUpdateCenter.Set(position);
             return messageList;
         }
 
@@ -204,6 +209,11 @@ namespace MHServerEmu.Games.Regions
             ));
 
             return messageList;
+        }
+
+        public bool ShouldUpdate(Vector3 position)
+        {
+            return Vector3.DistanceSquared2D(_lastUpdateCenter, position) > UpdateDistance;
         }
     }
 }
