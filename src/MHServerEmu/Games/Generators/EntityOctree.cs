@@ -151,7 +151,7 @@ namespace MHServerEmu.Games.Generators
                     _partitions.Remove(partition);
                     if (partition == null) return true;
                     var iterator = new WorldEntityRegionSpatialPartition.ElementIterator(partition, Iterator.Volume);
-                    Iterator.Dispose();
+                    Iterator.Clear();
                     Iterator = iterator;
 
                 }
@@ -161,7 +161,8 @@ namespace MHServerEmu.Games.Generators
             public void Reserve(int size) => _partitions.Capacity = size;
             public IEnumerator<WorldEntity> GetEnumerator() => this;
             public void Reset() => Iterator.Reset();
-            public void Dispose() => Iterator?.Dispose();
+            public void Dispose() { }
+            public void Clear() => Iterator.Clear();
             public bool End() => Iterator.End();
         }
 
@@ -190,7 +191,7 @@ namespace MHServerEmu.Games.Generators
             if (context.Flags.HasFlag(EntityRegionSPContextFlags.StaticPartition))
                 iterator.Push(_staticSpatialPartition);
 
-            using (iterator)
+            try
             {
                 while (iterator.End() == false)
                 {
@@ -198,6 +199,10 @@ namespace MHServerEmu.Games.Generators
                     iterator.MoveNext();
                     yield return element;
                 }
+            }
+            finally
+            {
+                iterator.Clear();
             }
         }
     }
