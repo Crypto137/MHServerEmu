@@ -320,11 +320,13 @@ namespace MHServerEmu.Games.Generators
                 return true;
             }
             return false;
-        }    
+        }
 
         public IEnumerable<T> IterateElementsInVolume(Aabb volume)
         {
-            using (var iterator = new ElementIterator(this, volume))
+            var iterator = new ElementIterator(this, volume);
+
+            try
             {
                 while (iterator.End() == false)
                 {
@@ -332,6 +334,10 @@ namespace MHServerEmu.Games.Generators
                     iterator.MoveNext();
                     yield return element;
                 }
+            }
+            finally
+            {
+                iterator.Clear();
             }
         }
 
@@ -398,7 +404,9 @@ namespace MHServerEmu.Games.Generators
                 if (_currentElement == null) NextNode();
             }
 
-            public void Dispose()
+            public void Dispose() { }
+
+            public void Clear()
             {
                 if (Tree != null) Tree.DecrementIteratorCount();
                 _stack.Clear();
