@@ -46,7 +46,7 @@ namespace MHServerEmu.Games
 
         public ulong CurrentRepId { get => ++_currentRepId; }
         // We use a dictionary property instead of AccessMessageHandlerHash(), which is essentially just a getter
-        public Dictionary<ulong, ArchiveMessageHandler> MessageHandlerDict { get; } = new();
+        public Dictionary<ulong, IArchiveMessageHandler> MessageHandlerDict { get; } = new();
 
         public Game(ulong id)
         {

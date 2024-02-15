@@ -1,41 +1,40 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
+using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Properties
 {
-    public class ReplicatedPropertyCollection : ArchiveMessageHandler
+    public class ReplicatedPropertyCollection : PropertyCollection, IArchiveMessageHandler
     {
-        // C# doesn't support multiple inheritance, so we'll have to have an instance of PropertyCollection to wrap around
-        private readonly PropertyCollection _propertyCollection;
+        public ulong ReplicationId { get; set; }
 
-        public List<Property> List { get => _propertyCollection.PropertyList; }
-
-        public ReplicatedPropertyCollection(CodedInputStream stream) : base(stream)
+        public ReplicatedPropertyCollection(CodedInputStream stream)
         {
-            _propertyCollection = new(stream);
+            ReplicationId = stream.ReadRawVarint64();
+
+            uint propertyCount = stream.ReadRawUInt32();
+            for (int i = 0; i < propertyCount; i++)
+                List.Add(new(stream));
         }
 
-        public ReplicatedPropertyCollection(ulong replicationId, List<Property> propertyList = null) : base(replicationId)
+        public ReplicatedPropertyCollection(ulong replicationId, List<Property> propertyList = null) : base(propertyList)
         {
-            _propertyCollection = new(propertyList);
+            ReplicationId = replicationId;
         }
 
         public override void Encode(CodedOutputStream stream)
         {
+            stream.WriteRawVarint64(ReplicationId);
             base.Encode(stream);
-            _propertyCollection.Encode(stream);
         }
 
-        public Property GetPropertyByEnum(PropertyEnum propertyEnum)
+        public override string ToString()
         {
-            return _propertyCollection.GetPropertyByEnum(propertyEnum);
-        }
-
-        protected override void BuildString(StringBuilder sb)
-        {
-            base.BuildString(sb);
-            sb.AppendLine(_propertyCollection.ToString());
+            StringBuilder sb = new();
+            sb.AppendLine($"{nameof(ReplicationId)}: {ReplicationId}");
+            sb.Append(base.ToString());
+            return sb.ToString();
         }
     }
 }
