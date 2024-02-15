@@ -5,6 +5,7 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Generators;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.Games.Regions
@@ -15,6 +16,9 @@ namespace MHServerEmu.Games.Regions
         private Game _game { get => _client.CurrentGame; }
         public HashSet<ulong> LoadedEntities { get; set; }
         public HashSet<uint> LoadedCells { get; set; }
+        public int CellsInRegion { get; set; }
+        public int LoadedCellCount { get; set; } = 0;
+
         private Vector3 _lastUpdateCenter;
         private const float DefaultCellWidth = 2304.0f;        
         private const float UpdateDistance = 200.0f;
@@ -102,47 +106,69 @@ namespace MHServerEmu.Games.Regions
             List<GameMessage> messageList = new ();
 
             Aabb volume = CalcAOIVolume(position);
-            List<Cell> cellsInAOI = new();
-            HashSet<uint> cells = LoadedCells;       
+            List<Cell> cellsInAOI = new();      
 
             Cell startCell = region.GetCellAtPosition(position);
             if (startCell == null) return messageList;
 
             Area startArea = startCell.Area;
             var cellsByArea = GetNewCells(region, position, startArea);
-            if (cellsByArea.Count == 0) return messageList;
-            var sortedAreas = cellsByArea.Keys.OrderBy(id => id);
 
-            // Add new
-
-            HashSet<uint> usedAreas = new();
-
-            foreach (var cellId in cells)
+            if (cellsByArea.Count != 0)
             {
-                Cell cell = region.GetCellbyId(cellId);
-                if (cell == null) continue;
-                usedAreas.Add(cell.Area.Id);
-            }
+                var sortedAreas = cellsByArea.Keys.OrderBy(id => id);
 
-            foreach (var areaId in sortedAreas)            
-            {   
-                if (usedAreas.Contains(areaId) == false)
+                // Add new
+
+                HashSet<uint> usedAreas = new();
+
+                foreach (var cellId in LoadedCells)
                 {
-                    Area area = region.GetAreaById(areaId);
-                    messageList.Add(area.MessageAddArea(false));
+                    Cell cell = region.GetCellbyId(cellId);
+                    if (cell == null) continue;
+                    usedAreas.Add(cell.Area.Id);
                 }
 
-                var sortedCells = cellsByArea[areaId].OrderBy(cell => cell.Id);
-
-                foreach (var cell in sortedCells)
+               // int newCells = 0;
+                foreach (var areaId in sortedAreas)
                 {
-                    messageList.Add(cell.MessageCellCreate());
-                    cells.Add(cell.Id); 
+                    if (usedAreas.Contains(areaId) == false)
+                    {
+                        Area area = region.GetAreaById(areaId);
+                        messageList.Add(area.MessageAddArea(false));
+                    }
+
+                    var sortedCells = cellsByArea[areaId].OrderBy(cell => cell.Id);
+
+                    foreach (var cell in sortedCells)
+                    {
+                        messageList.Add(cell.MessageCellCreate());
+                        LoadedCells.Add(cell.Id); 
+                        //newCells++;
+                    }
+                }
+
+                CellsInRegion = LoadedCells.Count;// + newCells;
+            } else return messageList;
+
+            // Update Entity
+           /* List<WorldEntity> cellEntities = new();
+            EntityRegionSPContext context = new() { Flags = EntityRegionSPContextFlags.ActivePartition };
+            Aabb entityBound = volume.Expand(-200.0f);
+            foreach (var worldEntity in region.IterateEntitiesInVolume(entityBound, context))
+            {
+                if (LoadedCells.Contains(worldEntity.Location.Cell.Id) == true 
+                    && LoadedEntities.Contains(worldEntity.BaseData.EntityId) == false)
+                {
+                    LoadedEntities.Add(worldEntity.BaseData.EntityId);
+                    cellEntities.Add(worldEntity);
                 }
             }
+            // TODO Delete Entity
 
-            region.CellsInRegion = LoadedCells.Count;
-
+            if (cellEntities.Count > 0)
+                messageList.AddRange(cellEntities.Select(entity => new GameMessage(entity.ToNetMessageEntityCreate())));
+            */
             if (messageList.Count > 0)
             {
                 messageList.Add(new(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build()));
@@ -155,14 +181,14 @@ namespace MHServerEmu.Games.Regions
                     .SetArchiveData(miniMap.Serialize())
                     .Build()));
                 
-                //client.LoadedCellCount = client.LoadedCells.Count;
+                //LoadedCellCount = client.LoadedCells.Count;
             }
             // TODO delete old
 
             _lastUpdateCenter.Set(position);
             return messageList;
         }
-
+        
         public List<GameMessage> EntitiesForCellId(uint cellId)
         { 
             List<GameMessage> messageList = new();
@@ -175,7 +201,7 @@ namespace MHServerEmu.Games.Regions
             foreach (var entity in cell.Entities)
             {
                 var worldEntity = entity as WorldEntity;
-                if (LoadedEntities.Contains(worldEntity.Location.Cell.Id) == false)
+                if (LoadedEntities.Contains(worldEntity.BaseData.EntityId) == false)
                 {
                     LoadedEntities.Add(entity.BaseData.EntityId);
                     cellEntities.Add(worldEntity);
@@ -215,5 +241,6 @@ namespace MHServerEmu.Games.Regions
         {
             return Vector3.DistanceSquared2D(_lastUpdateCenter, position) > UpdateDistance;
         }
+
     }
 }

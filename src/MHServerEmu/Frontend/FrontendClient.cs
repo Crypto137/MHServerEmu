@@ -25,8 +25,7 @@ namespace MHServerEmu.Frontend
         public Region Region { get => CurrentGame.RegionManager.GetRegion(Session.Account.Player.Region); }
 
         // Temporarily store state here instead of Game
-        public bool IsLoading { get; set; } = false;
-        public int LoadedCellCount { get; set; } = 0;
+        public bool IsLoading { get; set; } = false;        
         public Vector3 LastPosition { get; set; }
         public ulong MagikUltimateEntityId { get; set; }
         public bool IsThrowing { get; set; } = false;

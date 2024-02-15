@@ -8,6 +8,7 @@ using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -21,9 +22,12 @@ namespace MHServerEmu.Games.Entities
         public Cell Cell { get => Location.Cell; }
         public EntityRegionSpatialPartitionLocation SpatialPartitionLocation { get; }
         public Aabb RegionBounds { get; set; }
+        public Bounds Bounds { get; set; } = new();
         public Region Region { get => Location.Region; }
-
+        public WorldEntityPrototype WorldEntityPrototype { get => EntityPrototype as WorldEntityPrototype; }
         public Game Game { get; private set; }
+        public RegionLocation LastLocation { get; private set; }
+
         public WorldEntity(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { SpatialPartitionLocation = new(this); }
 
         public WorldEntity(EntityBaseData baseData) : base(baseData) { SpatialPartitionLocation = new(this); }
@@ -152,6 +156,19 @@ namespace MHServerEmu.Games.Entities
             Location.Cell = cell; // Set directly
             Location.SetPosition(position);
             Location.SetOrientation(orientation);
+            // TODO ChangeRegionPosition
+          /*  Bounds.InitializeFromPrototype(WorldEntityPrototype.Bounds);
+            Bounds.Center = position;
+            UpdateRegionBounds(); // Add to Quadtree*/
+        }
+
+        public bool ShouldUseSpatialPartitioning() => Bounds.Geometry != GeometryType.None;
+
+        public void UpdateRegionBounds()
+        {
+            RegionBounds = Bounds.ToAabb();
+            if (ShouldUseSpatialPartitioning())
+                Region.UpdateEntityInSpatialPartition(this);
         }
 
         public bool IsInWorld() => Location.IsValid();
@@ -160,7 +177,15 @@ namespace MHServerEmu.Games.Entities
         {
             // TODO send packets for delete entities from world
             var entityManager = Game.EntityManager;
+          //  ClearWorldLocation();
             entityManager.DestroyEntity(BaseData.EntityId);
+        }
+
+        public void ClearWorldLocation()
+        {
+            if(Location.IsValid()) LastLocation = Location;
+            if (Region != null && SpatialPartitionLocation.IsValid()) Region.RemoveEntityFromSpatialPartition(this);
+            Location = null;
         }
 
         internal void EmergencyRegionCleanup(Region region)

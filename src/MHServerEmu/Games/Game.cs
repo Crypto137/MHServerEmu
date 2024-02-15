@@ -135,7 +135,7 @@ namespace MHServerEmu.Games
                 client.Session.Account.Player.Region = region;
                 client.Session.Account.Player.Waypoint = waypointDataRef;
                 EnqueueResponses(client, GetBeginLoadingMessages(client));
-                client.LoadedCellCount = 0;
+                client.AOI.LoadedCellCount = 0;
                 client.IsLoading = true;
             }
         }
@@ -152,7 +152,7 @@ namespace MHServerEmu.Games
                 client.Session.Account.Player.Region = worldEntity.Region.PrototypeId;
                 client.EntityToTeleport = worldEntity;
                 EnqueueResponses(client, GetBeginLoadingMessages(client));
-                client.LoadedCellCount = 0;
+                client.AOI.LoadedCellCount = 0;
                 client.IsLoading = true;
             }
         }
@@ -266,9 +266,13 @@ namespace MHServerEmu.Games
 
             // AOI
             if (client.IsLoading == false && client.AOI.ShouldUpdate(avatarState.Position) ) 
-            {
+            {                
                 var messageList = client.AOI.UpdateAOI(client.Region, avatarState.Position);
-                if (messageList.Count > 0) EnqueueResponses(client, messageList);
+                if (messageList.Count > 0)
+                {
+                    Logger.Trace($"AOI cells msg [{messageList.Count}]");
+                    EnqueueResponses(client, messageList);
+                }
             }
 
             /* Logger spam
@@ -285,19 +289,24 @@ namespace MHServerEmu.Games
 
         private void OnCellLoaded(FrontendClient client, NetMessageCellLoaded cellLoaded)
         {
-            client.LoadedCellCount++;
-            Logger.Info($"Received CellLoaded message cell[{cellLoaded.CellId}] loaded [{client.LoadedCellCount}/{client.Region.CellsInRegion}]");
+            client.AOI.LoadedCellCount++;
+            Logger.Info($"Received CellLoaded message cell[{cellLoaded.CellId}] loaded [{client.AOI.LoadedCellCount}/{client.AOI.CellsInRegion}]");
             if (client.IsLoading) {
                 EventManager.KillEvent(client, EventEnum.FinishCellLoading);
-                if (client.LoadedCellCount == client.Region.CellsInRegion)
+                if (client.AOI.LoadedCellCount == client.AOI.CellsInRegion)
                     FinishLoading(client);
                 else
                     // set timer 5 seconds for wait client answer
-                    EventManager.AddEvent(client, EventEnum.FinishCellLoading, 5000, client.Region.CellsInRegion);
+                    EventManager.AddEvent(client, EventEnum.FinishCellLoading, 5000, client.AOI.CellsInRegion);
             } else
             { // AOI
-                var messageList = client.AOI.EntitiesForCellId(cellLoaded.CellId);
-                if (messageList.Count > 0) EnqueueResponses(client, messageList);
+               //client.AOI.LoadedCells.Add(cellLoaded.CellId);
+               var messageList = client.AOI.EntitiesForCellId(cellLoaded.CellId);
+                if (messageList.Count > 0)
+                {
+                    Logger.Trace($"AOI entities [{messageList.Count}]");
+                    EnqueueResponses(client, messageList);
+                }
             }
         }
 

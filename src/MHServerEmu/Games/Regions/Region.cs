@@ -51,9 +51,7 @@ namespace MHServerEmu.Games.Regions
         public Vector3 EntrancePosition { get; set; }
         public Vector3 EntranceOrientation { get; set; }
         public Vector3 WaypointPosition { get; set; }
-        public Vector3 WaypointOrientation { get; set; }
-
-        public int CellsInRegion { get; set; }
+        public Vector3 WaypointOrientation { get; set; }       
 
         // New
 
@@ -509,6 +507,10 @@ namespace MHServerEmu.Games.Regions
                 return Enumerable.Empty<Cell>(); //new CellSpatialPartition.ElementIterator();
         }
 
+        public bool InsertEntityInSpatialPartition(WorldEntity entity) => EntitySpatialPartition.Insert(entity);
+        public bool UpdateEntityInSpatialPartition(WorldEntity entity) => EntitySpatialPartition.Update(entity);
+        public bool RemoveEntityFromSpatialPartition(WorldEntity entity) => EntitySpatialPartition.Remove(entity);
+
         public IEnumerable<WorldEntity> IterateEntitiesInRegion(EntityRegionSPContext context)
         {
             return IterateEntitiesInVolume(Bound, context);
@@ -677,7 +679,7 @@ namespace MHServerEmu.Games.Regions
 
             return found;
         }
-
+        /*
         public void LoadMessagesForArea(Area area, List<GameMessage> messageList, HashSet<uint> cells, bool isStartArea)
         {
             messageList.Add(area.MessageAddArea(isStartArea));
@@ -722,7 +724,7 @@ namespace MHServerEmu.Games.Regions
                 }
             }
                     
-        }
+        }*/
 
         public GameMessage[] GetLoadingMessages(ulong serverGameId, PrototypeId targetRef, FrontendClient client)
         {
@@ -762,7 +764,7 @@ namespace MHServerEmu.Games.Regions
             messageList.Add(new(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId((ulong)PrototypeId).Build()));
 
             // TODO: prefetch other regions
-            CellsInRegion = 0;
+            client.AOI.CellsInRegion = 0;
             // Get starArea to load by Waypoint
             if (StartArea != null)
             {
@@ -788,7 +790,7 @@ namespace MHServerEmu.Games.Regions
                 }
                 //  Cell cell = GetCellAtPosition(pos);
                 //  LoadMessagesForConnectedAreas(cell.Area, messageList, cells);
-                CellsInRegion = client.AOI.LoadCellMessages(this, client.StartPositon, messageList);
+                client.AOI.CellsInRegion = client.AOI.LoadCellMessages(this, client.StartPositon, messageList);
             }
             
             messageList.Add(new(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build()));
