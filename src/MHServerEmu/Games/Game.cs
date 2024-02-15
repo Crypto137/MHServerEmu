@@ -267,10 +267,11 @@ namespace MHServerEmu.Games
             // AOI
             if (client.IsLoading == false && client.AOI.ShouldUpdate(avatarState.Position) ) 
             {                
-                var messageList = client.AOI.UpdateAOI(client.Region, avatarState.Position);
+                var messageList = client.AOI.UpdateCells(client.Region, avatarState.Position);
+                messageList.AddRange(client.AOI.UpdateEntity(client.Region, avatarState.Position));
                 if (messageList.Count > 0)
                 {
-                    Logger.Trace($"AOI cells msg [{messageList.Count}]");
+                    Logger.Trace($"AOI msg [{messageList.Count}]");
                     EnqueueResponses(client, messageList);
                 }
             }
@@ -300,13 +301,14 @@ namespace MHServerEmu.Games
                     EventManager.AddEvent(client, EventEnum.FinishCellLoading, 5000, client.AOI.CellsInRegion);
             } else
             { // AOI
-               //client.AOI.LoadedCells.Add(cellLoaded.CellId);
-               var messageList = client.AOI.EntitiesForCellId(cellLoaded.CellId);
+                client.AOI.OnCellLoaded(cellLoaded.CellId);
+               
+              /* var messageList = client.AOI.EntitiesForCellId(cellLoaded.CellId);
                 if (messageList.Count > 0)
                 {
                     Logger.Trace($"AOI entities [{messageList.Count}]");
                     EnqueueResponses(client, messageList);
-                }
+                }*/
             }
         }
 
@@ -364,7 +366,7 @@ namespace MHServerEmu.Games
 
                     if (EntityManager.GetTransitionInRegion(teleport.Destinations[0], teleport.RegionId) is not Transition target) return;
                     
-                    if (client.AOI.LoadedCells.Contains(target.Location.Cell.Id) == false )
+                    if (client.AOI.CheckTargeCell(target))
                     {
                         teleport.TeleportClient(client);
                         return;

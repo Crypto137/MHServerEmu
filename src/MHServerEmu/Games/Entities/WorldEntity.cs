@@ -157,9 +157,9 @@ namespace MHServerEmu.Games.Entities
             Location.SetPosition(position);
             Location.SetOrientation(orientation);
             // TODO ChangeRegionPosition
-          /*  Bounds.InitializeFromPrototype(WorldEntityPrototype.Bounds);
+            Bounds.InitializeFromPrototype(WorldEntityPrototype.Bounds);
             Bounds.Center = position;
-            UpdateRegionBounds(); // Add to Quadtree*/
+            UpdateRegionBounds(); // Add to Quadtree
         }
 
         public bool ShouldUseSpatialPartitioning() => Bounds.Geometry != GeometryType.None;
@@ -177,7 +177,7 @@ namespace MHServerEmu.Games.Entities
         {
             // TODO send packets for delete entities from world
             var entityManager = Game.EntityManager;
-          //  ClearWorldLocation();
+            ClearWorldLocation();
             entityManager.DestroyEntity(BaseData.EntityId);
         }
 
