@@ -3,7 +3,7 @@
 namespace MHServerEmu.Games.Properties
 {
     /// <summary>
-    /// Identifies a <see cref="Property"/>.
+    /// Identifies a <see cref="PropertyValue"/>.
     /// </summary>
     public struct PropertyId
     {
@@ -78,6 +78,16 @@ namespace MHServerEmu.Games.Properties
         {
             Raw = raw;
         }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is not PropertyId) return false;
+            return Raw == ((PropertyId)obj).Raw;
+        }
+
+        public static bool operator ==(PropertyId left, PropertyId right) => left.Equals(right);
+        public static bool operator !=(PropertyId left, PropertyId right) => left.Equals(right) == false;
+        public override int GetHashCode() => Raw.GetHashCode();
 
         public override string ToString() => $"0x{Raw:X}";
 
