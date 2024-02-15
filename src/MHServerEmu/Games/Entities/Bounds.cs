@@ -326,5 +326,57 @@ namespace MHServerEmu.Games.Entities
             _orientation = orientation + _orientation_offset;
             if (Geometry == GeometryType.AABB) UpdateAABBGeometry();
         }
+
+        public Aabb ToAabb()
+        {            
+            switch (Geometry)
+            {
+                case GeometryType.OBB:
+                    Matrix3 mat = Matrix3.AbsPerElem(Matrix3.GetMatrix3(_orientation));
+                    Vector3 oobVector = mat * new Vector3(_params.OBBHalfWidth, _params.OBBHalfLength, _params.OBBHalfHeight);
+                    return new(Center - oobVector, Center + oobVector);
+
+                case GeometryType.AABB:
+                    Vector3 aabbVector = new(_params.AABBOrientedWidth, _params.AABBOrientedLength, _params.AABBOrientedHeight);
+                    return new(Center - aabbVector, Center + aabbVector);
+
+                case GeometryType.Capsule:
+                    Vector3 min = new(Center.X - _params.CapsuleRadius, Center.Y - _params.CapsuleRadius, Center.Z - _params.CapsuleHalfHeight);
+                    Vector3 max = new(Center.X + _params.CapsuleRadius, Center.Y + _params.CapsuleRadius, Center.Z + _params.CapsuleHalfHeight);
+                    return new(min, max);
+
+                case GeometryType.Sphere:
+                    min = new(Center.X - _params.SphereRadius, Center.Y - _params.SphereRadius, Center.Z - _params.SphereRadius);
+                    max = new(Center.X + _params.SphereRadius, Center.Y + _params.SphereRadius, Center.Z + _params.SphereRadius);
+                    return new(min, max);
+
+                case GeometryType.Triangle:
+                    var triangle = ToTriangle2D();
+                    min = new(Math.Min(Math.Min(triangle[0][0], triangle[1][0]), triangle[2][0]),
+                              Math.Min(Math.Min(triangle[0][1], triangle[1][1]), triangle[2][1]),
+                              Center[2] - GetHalfHeight());
+                    max = new(Math.Max(Math.Max(triangle[0][0], triangle[1][0]), triangle[2][0]),
+                              Math.Max(Math.Max(triangle[0][1], triangle[1][1]), triangle[2][1]),
+                              Center[2] + GetHalfHeight());
+                    return new(min, max);
+
+                case GeometryType.Wedge:
+                    var wedgeVertices = GetWedgeVertices();
+                    min = new(
+                        Math.Min(Math.Min(Math.Min(wedgeVertices[0].X, wedgeVertices[1].X), wedgeVertices[2].X), wedgeVertices[3].X),
+                        Math.Min(Math.Min(Math.Min(wedgeVertices[0].Y, wedgeVertices[1].Y), wedgeVertices[2].Y), wedgeVertices[3].Y),
+                        Center[2] - GetHalfHeight());
+
+                    max = new(
+                        Math.Max(Math.Max(Math.Max(wedgeVertices[0].X, wedgeVertices[1].X), wedgeVertices[2].X), wedgeVertices[3].X),
+                        Math.Max(Math.Max(Math.Max(wedgeVertices[0].Y, wedgeVertices[1].Y), wedgeVertices[2].Y), wedgeVertices[3].Y),
+                        Center[2] + GetHalfHeight());
+
+                    return new(min, max);
+
+                default:
+                    return Aabb.Zero;
+            }            
+        }
     }
 }
