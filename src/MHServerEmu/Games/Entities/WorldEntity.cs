@@ -27,6 +27,7 @@ namespace MHServerEmu.Games.Entities
         public WorldEntityPrototype WorldEntityPrototype { get => EntityPrototype as WorldEntityPrototype; }
         public Game Game { get; private set; }
         public RegionLocation LastLocation { get; private set; }
+        public bool TrackAfterDiscovery { get; private set; }
 
         public WorldEntity(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { SpatialPartitionLocation = new(this); }
 
@@ -151,6 +152,7 @@ namespace MHServerEmu.Games.Entities
         public void EnterWorld(Cell cell, Vector3 position, Vector3 orientation)
         {            
             Game = cell.Game; // TODO: Init Game to constructor
+            TrackAfterDiscovery = WorldEntityPrototype.ObjectiveInfo.TrackAfterDiscovery;
 
             Location.Region = cell.GetRegion();
             Location.Cell = cell; // Set directly

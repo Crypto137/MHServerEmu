@@ -679,52 +679,6 @@ namespace MHServerEmu.Games.Regions
 
             return found;
         }
-        /*
-        public void LoadMessagesForArea(Area area, List<GameMessage> messageList, HashSet<uint> cells, bool isStartArea)
-        {
-            messageList.Add(area.MessageAddArea(isStartArea));
-
-            foreach (Cell cell in area.CellList)
-            {
-                cells.Add(cell.Id);
-                messageList.Add(cell.MessageCellCreate());
-                CellsInRegion++;
-            }
-        }
-
-        public void LoadMessagesForConnectedAreas(Area startArea, List<GameMessage> messageList, HashSet<uint> cells)
-        {
-            HashSet<Area> visitedAreas = new ();
-            Queue<Area> queue = new ();
-
-            visitedAreas.Add(startArea);
-            queue.Enqueue(startArea);
-
-            while (queue.Count > 0)
-            {
-                Area currentArea = queue.Dequeue();
-                LoadMessagesForArea(currentArea, messageList, cells, currentArea == startArea);
-                foreach (uint subAreaId in currentArea.SubAreas)
-                {
-                    Area area = GetAreaById(subAreaId);
-                    if (area != null) LoadMessagesForArea(area, messageList, cells, false);
-                }
-
-                foreach (var connection in currentArea.AreaConnections)
-                {
-                    if (connection.ConnectedArea != null)
-                    {
-                        Area connectedArea = connection.ConnectedArea;
-                        if (!visitedAreas.Contains(connectedArea))
-                        {
-                            visitedAreas.Add(connectedArea);
-                            queue.Enqueue(connectedArea);
-                        }
-                    }                
-                }
-            }
-                    
-        }*/
 
         public GameMessage[] GetLoadingMessages(ulong serverGameId, PrototypeId targetRef, FrontendClient client)
         {
@@ -764,7 +718,7 @@ namespace MHServerEmu.Games.Regions
             messageList.Add(new(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId((ulong)PrototypeId).Build()));
 
             // TODO: prefetch other regions
-            client.AOI.CellsInRegion = 0;
+            
             // Get starArea to load by Waypoint
             if (StartArea != null)
             {
@@ -788,20 +742,11 @@ namespace MHServerEmu.Games.Regions
                     client.StartPositon = StartArea.Origin;
                     client.StartOrientation = Vector3.Zero;
                 }
-                //  Cell cell = GetCellAtPosition(pos);
-                //  LoadMessagesForConnectedAreas(cell.Area, messageList, cells);
-                client.AOI.CellsInRegion = client.AOI.LoadCellMessages(this, client.StartPositon, messageList);
+
+                client.AOI.ResetAOI(this, client.StartPositon);
+                messageList.AddRange(client.AOI.UpdateCells(this, client.StartPositon));
             }
-            
-            messageList.Add(new(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build()));
 
-            // Mini map
-            MiniMapArchive miniMap = new(RegionManager.RegionIsHub(PrototypeId)); // Reveal map by default for hubs
-            if (miniMap.IsRevealAll == false) miniMap.Map = Array.Empty<byte>();
-
-            messageList.Add(new(NetMessageUpdateMiniMap.CreateBuilder()
-                .SetArchiveData(miniMap.Serialize())
-                .Build()));
 
             return messageList.ToArray();
         }

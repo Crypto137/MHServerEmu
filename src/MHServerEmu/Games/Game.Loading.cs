@@ -61,10 +61,8 @@ namespace MHServerEmu.Games
             messageList.Add(new(NetMessageEntityEnterGameWorld.CreateBuilder()
                 .SetArchiveData(avatarEnterGameWorldArchive.Serialize())
                 .Build()));
-
-            messageList.AddRange(client.AOI.EntitiesForRegion(region));
-
-            // Put waypoint entity in the game world
+            
+            messageList.AddRange(client.AOI.UpdateEntity(region, entrancePosition));
 
             // Load power collection
             messageList.AddRange(PowerLoader.LoadAvatarPowerCollection(account.Player.Avatar.ToEntityId()).ToList());

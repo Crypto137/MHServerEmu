@@ -271,7 +271,7 @@ namespace MHServerEmu.Games
                 messageList.AddRange(client.AOI.UpdateEntity(client.Region, avatarState.Position));
                 if (messageList.Count > 0)
                 {
-                    Logger.Trace($"AOI msg [{messageList.Count}]");
+                    Logger.Trace($"AOI[{messageList.Count}][{client.AOI.LoadedEntities.Count}]");
                     EnqueueResponses(client, messageList);
                 }
             }
@@ -289,26 +289,20 @@ namespace MHServerEmu.Games
         }
 
         private void OnCellLoaded(FrontendClient client, NetMessageCellLoaded cellLoaded)
-        {
-            client.AOI.LoadedCellCount++;
+        {            
+            client.AOI.OnCellLoaded(cellLoaded.CellId);
             Logger.Info($"Received CellLoaded message cell[{cellLoaded.CellId}] loaded [{client.AOI.LoadedCellCount}/{client.AOI.CellsInRegion}]");
+            
             if (client.IsLoading) {
                 EventManager.KillEvent(client, EventEnum.FinishCellLoading);
                 if (client.AOI.LoadedCellCount == client.AOI.CellsInRegion)
                     FinishLoading(client);
                 else
+                {
                     // set timer 5 seconds for wait client answer
                     EventManager.AddEvent(client, EventEnum.FinishCellLoading, 5000, client.AOI.CellsInRegion);
-            } else
-            { // AOI
-                client.AOI.OnCellLoaded(cellLoaded.CellId);
-               
-              /* var messageList = client.AOI.EntitiesForCellId(cellLoaded.CellId);
-                if (messageList.Count > 0)
-                {
-                    Logger.Trace($"AOI entities [{messageList.Count}]");
-                    EnqueueResponses(client, messageList);
-                }*/
+                    client.AOI.ForseCellLoad();
+                }
             }
         }
 
