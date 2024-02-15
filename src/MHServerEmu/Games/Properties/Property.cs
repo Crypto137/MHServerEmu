@@ -26,6 +26,13 @@ namespace MHServerEmu.Games.Properties
             CreateValueContainer(rawValue);
         }
 
+        public Property(PropertyId id)
+        {
+            Id = id;
+            PropertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(Id.Enum);
+            CreateValueContainer(0);
+        }
+
         public Property(PropertyEnum propertyEnum, object value)
         {
             Id = new(propertyEnum);

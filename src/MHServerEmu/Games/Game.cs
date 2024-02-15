@@ -321,10 +321,8 @@ namespace MHServerEmu.Games
 
                     Logger.Trace($"Teleporting to {targetPos}");
 
-                    Property property = target.PropertyCollection.GetPropertyByEnum(PropertyEnum.MapCellId);
-                    uint cellid = (uint)(long)property.Value.Get();
-                    property = target.PropertyCollection.GetPropertyByEnum(PropertyEnum.MapAreaId);
-                    uint areaid = (uint)(long)property.Value.Get();
+                    uint cellid = (uint)(long)target.PropertyCollection[PropertyEnum.MapCellId];
+                    uint areaid = (uint)(long)target.PropertyCollection[PropertyEnum.MapAreaId];
                     Logger.Trace($"Teleporting to areaid {areaid} cellid {cellid}");
 
                     EnqueueResponse(client, new(NetMessageEntityPosition.CreateBuilder()

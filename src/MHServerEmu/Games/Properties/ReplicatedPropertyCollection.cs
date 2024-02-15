@@ -15,7 +15,7 @@ namespace MHServerEmu.Games.Properties
 
             uint propertyCount = stream.ReadRawUInt32();
             for (int i = 0; i < propertyCount; i++)
-                List.Add(new(stream));
+                _propertyList.Add(new(stream));
         }
 
         public ReplicatedPropertyCollection(ulong replicationId, List<Property> propertyList = null) : base(propertyList)

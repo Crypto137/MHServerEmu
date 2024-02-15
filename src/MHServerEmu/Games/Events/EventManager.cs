@@ -107,13 +107,10 @@ namespace MHServerEmu.Games.Events
                             true );
 
                         // TODO: applyItemSpecProperties 
-                        bowlingBall.PropertyCollection.List.AddRange(
-                            new Property[] {
-                            new(PropertyEnum.InventoryStackSizeMax, 1000), // Item.StackSettings
-                            new(PropertyEnum.ItemIsTradable, false), // DefaultSettings.IsTradable
-                            new(PropertyEnum.ItemBindsToAccountOnPickup, true), // DefaultSettings.BindsToAccountOnPickup
-                            new(PropertyEnum.ItemBindsToCharacterOnEquip, true) // // DefaultSettings.BindsToCharacterOnEquip
-                            });
+                        bowlingBall.PropertyCollection[PropertyEnum.InventoryStackSizeMax] = 1000;          // Item.StackSettings
+                        bowlingBall.PropertyCollection[PropertyEnum.ItemIsTradable] = false;                // DefaultSettings.IsTradable
+                        bowlingBall.PropertyCollection[PropertyEnum.ItemBindsToCharacterOnEquip] = true;    // DefaultSettings.BindsToAccountOnPickup
+                        bowlingBall.PropertyCollection[PropertyEnum.ItemBindsToAccountOnPickup] = true;     // DefaultSettings.BindsToCharacterOnEquip 
 
                         messageList.Add(new(client, new(bowlingBall.ToNetMessageEntityCreate())));
 
