@@ -186,7 +186,9 @@ namespace MHServerEmu.Common.Commands
                     if (ConfigManager.PlayerManager.BypassAuth == false) client.Session.Account.CurrentAvatar.Costume = (ulong)prototypeId;
 
                     // Send NetMessageSetProperty message
-                    client.SendMessage(1, new(property.ToNetMessageSetProperty(replicationId)));
+                    client.SendMessage(1, new(
+                        Property.ToNetMessageSetProperty(replicationId, new(PropertyEnum.CostumeCurrent), prototypeId)
+                        ));
                     return $"Changing costume to {GameDatabase.GetPrototypeName(prototypeId)}";
                 }
                 else
@@ -209,16 +211,7 @@ namespace MHServerEmu.Common.Commands
         {
             if (client == null) return "You can only invoke this command from the game.";
             if (ConfigManager.GameOptions.InfinitySystemEnabled) return "Set InfinitySystemEnabled to false in Config.ini to enable the Omega system.";
-
-            GameMessage[] messages = new GameMessage[]
-            {
-                new(new Property(PropertyEnum.OmegaPoints, 7500).ToNetMessageSetProperty(9078332)),
-                //new(NetMessageOmegaPointGain.CreateBuilder().SetNumPointsGained(7500).SetAvatarId((ulong)client.Session.Account.Player.Avatar.ToEntityId()).Build()),
-                //new(new Property(PropertyEnum.OmegaPointsSpent, 5000).ToNetMessageSetProperty((ulong)client.Session.Account.Player.Avatar.ToEntityId()))
-            };
-
-            client.SendMessages(1, messages);
-
+            client.SendMessage(1, new(Property.ToNetMessageSetProperty(9078332, new(PropertyEnum.OmegaPoints), 7500)));
             return "Setting Omega points to 7500.";
         }
     }

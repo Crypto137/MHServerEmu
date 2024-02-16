@@ -118,7 +118,9 @@ namespace MHServerEmu.Billing
                     client.Session.Account.CurrentAvatar.Costume = (ulong)entry.GuidItems[0].ItemPrototypeRuntimeIdForClient;
 
                     // Send NetMessageSetProperty message
-                    client.SendMessage(MuxChannel, new(property.ToNetMessageSetProperty(replicationId)));
+                    client.SendMessage(MuxChannel, new(
+                        Property.ToNetMessageSetProperty(replicationId, new(PropertyEnum.CostumeCurrent), entry.GuidItems[0].ItemPrototypeRuntimeIdForClient)
+                        ));
                 }
             }
 

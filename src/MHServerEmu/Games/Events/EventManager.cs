@@ -337,8 +337,9 @@ namespace MHServerEmu.Games.Events
                     // TODO: avatarRepId = Player.EntityManager.GetEntity(avatarEntityId).RepId
                     ulong avatarRepId = (ulong)client.Session.Account.Player.Avatar.ToPropertyCollectionReplicationId();
 
-                    Property property = new(PropertyEnum.ThrowableOriginatorEntity, idTarget);
-                    messageList.Add(new(client, new(property.ToNetMessageSetProperty(avatarRepId))));
+                    messageList.Add(new(client, new(
+                        Property.ToNetMessageSetProperty(avatarRepId, new(PropertyEnum.ThrowableOriginatorEntity), idTarget)
+                        )));
                     Logger.Warn($"{GameDatabase.GetPrototypeName(client.ThrowingObject.BaseData.PrototypeId)}");
                     // ThrowObject.Prototype.WorldEntity.UnrealClass
 
@@ -348,8 +349,9 @@ namespace MHServerEmu.Games.Events
                     //if (throwPrototype.Header.ReferenceType != (PrototypeId)HardcodedBlueprintId.ThrowableProp)
                     //    if (throwPrototype.Header.ReferenceType != (PrototypeId)HardcodedBlueprintId.ThrowableSmartProp)
                     //        throwPrototype = throwPrototype.Header.ReferenceType.GetPrototype();
-                    property = new(PropertyEnum.ThrowableOriginatorAssetRef, (ulong)throwPrototype.UnrealClass);
-                    messageList.Add(new(client, new(property.ToNetMessageSetProperty(avatarRepId))));
+                    messageList.Add(new(client, new(
+                        Property.ToNetMessageSetProperty(avatarRepId, new(PropertyEnum.ThrowableOriginatorAssetRef), (ulong)throwPrototype.UnrealClass)
+                        )));
 
                     // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
                     client.ThrowingCancelPower = throwPrototype.Properties.GetPropertyContainer((BlueprintId)HardcodedBlueprintId.ThrowableRestorePowerProp).Value;
@@ -388,10 +390,12 @@ namespace MHServerEmu.Games.Events
                     avatarRepId = (ulong)client.Session.Account.Player.Avatar.ToPropertyCollectionReplicationId();
                     // TODO: avatarRepId = Player.EntityManager.GetEntity(AvatarEntityId).RepId
 
-                    property = new(PropertyEnum.ThrowableOriginatorEntity, 0ul);
-                    messageList.Add(new(client, new(property.ToNetMessageRemoveProperty(avatarRepId))));
-                    property = new(PropertyEnum.ThrowableOriginatorAssetRef, 0ul);
-                    messageList.Add(new(client, new(property.ToNetMessageRemoveProperty(avatarRepId))));
+                    messageList.Add(new(client, new(
+                        Property.ToNetMessageRemoveProperty(avatarRepId, new(PropertyEnum.ThrowableOriginatorEntity))
+                        )));
+                    messageList.Add(new(client, new(
+                        Property.ToNetMessageRemoveProperty(avatarRepId, new(PropertyEnum.ThrowableOriginatorAssetRef))
+                        )));
 
                     // ThrowObject.Prototype.ThrowablePowerProp.Value
                     messageList.Add(new(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
@@ -487,8 +491,9 @@ namespace MHServerEmu.Games.Events
                         .SetItemVariation(1)
                         .Build())));
 
-                    property = new(PropertyEnum.AttachedToEntityId, avatarEntityId);
-                    messageList.Add(new(client, new(property.ToNetMessageSetProperty(arenaEntity.PropertyCollection.ReplicationId))));
+                    messageList.Add(new(client, new(
+                        Property.ToNetMessageSetProperty(arenaEntity.PropertyCollection.ReplicationId, new(PropertyEnum.AttachedToEntityId), avatarEntityId)
+                        )));
 
                     break;
 
