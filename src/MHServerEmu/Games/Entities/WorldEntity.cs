@@ -150,16 +150,18 @@ namespace MHServerEmu.Games.Entities
         }
 
         public void EnterWorld(Cell cell, Vector3 position, Vector3 orientation)
-        {            
+        {
+            var proto = WorldEntityPrototype;
             Game = cell.Game; // TODO: Init Game to constructor
-            TrackAfterDiscovery = WorldEntityPrototype.ObjectiveInfo.TrackAfterDiscovery;
+            TrackAfterDiscovery = proto.ObjectiveInfo.TrackAfterDiscovery;
+            if (proto is HotspotPrototype) Flags |= EntityFlags.IsHotspot;
 
             Location.Region = cell.GetRegion();
             Location.Cell = cell; // Set directly
             Location.SetPosition(position);
             Location.SetOrientation(orientation);
             // TODO ChangeRegionPosition
-            Bounds.InitializeFromPrototype(WorldEntityPrototype.Bounds);
+            Bounds.InitializeFromPrototype(proto.Bounds);
             Bounds.Center = position;
             UpdateRegionBounds(); // Add to Quadtree
         }
