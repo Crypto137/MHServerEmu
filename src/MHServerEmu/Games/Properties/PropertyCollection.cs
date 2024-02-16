@@ -43,7 +43,13 @@ namespace MHServerEmu.Games.Properties
             return GetProperty(propertyId) != null;
         }
 
-        #region Value Accessors
+        #region Value Indexers
+
+        public object this[PropertyId propertyId]
+        {
+            get => GetProperty(propertyId).Value.Get();
+            set => SetProperty(value, propertyId);
+        }
 
         public object this[PropertyEnum propertyEnum]
         {

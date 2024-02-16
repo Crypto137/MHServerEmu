@@ -176,16 +176,13 @@ namespace MHServerEmu.Common.Commands
 
                 if (prototypeId == 0 || prototypePath.Contains("Entity/Items/Costumes/Prototypes/"))
                 {
-                    // Create a new CostumeCurrent property for the purchased costume
-                    Property property = new(PropertyEnum.CostumeCurrent, prototypeId);
-
                     // Get replication id for the client avatar
                     ulong replicationId = (ulong)client.Session.Account.Player.Avatar.ToPropertyCollectionReplicationId();
 
                     // Update account data if needed
                     if (ConfigManager.PlayerManager.BypassAuth == false) client.Session.Account.CurrentAvatar.Costume = (ulong)prototypeId;
 
-                    // Send NetMessageSetProperty message
+                    // Send NetMessageSetProperty message with a CostumeCurrent property for the purchased costume
                     client.SendMessage(1, new(
                         Property.ToNetMessageSetProperty(replicationId, new(PropertyEnum.CostumeCurrent), prototypeId)
                         ));

@@ -27,14 +27,6 @@ namespace MHServerEmu.Games.Properties
             if (value != null) Value.Set(value);
         }
 
-        public Property(PropertyEnum propertyEnum, object value = null)
-        {
-            Id = new(propertyEnum);
-            PropertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(Id.Enum);
-            CreateValueContainer(0);
-            if (value != null) Value.Set(value);
-        }
-
         public void Encode(CodedOutputStream stream)
         {
             stream.WriteRawVarint64(Id.Raw.ReverseBytes());

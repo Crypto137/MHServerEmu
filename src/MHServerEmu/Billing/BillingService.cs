@@ -108,16 +108,13 @@ namespace MHServerEmu.Billing
                 string prototypePath = GameDatabase.GetPrototypeName(entry.GuidItems[0].ItemPrototypeRuntimeIdForClient);
                 if (prototypePath.Contains("Entity/Items/Costumes/Prototypes/"))
                 {
-                    // Create a new CostumeCurrent property for the purchased costume
-                    Property property = new(PropertyEnum.CostumeCurrent, entry.GuidItems[0].ItemPrototypeRuntimeIdForClient);
-
                     // Get replication id for the client avatar
                     ulong replicationId = (ulong)client.Session.Account.Player.Avatar.ToPropertyCollectionReplicationId();
 
                     // Update account data
                     client.Session.Account.CurrentAvatar.Costume = (ulong)entry.GuidItems[0].ItemPrototypeRuntimeIdForClient;
 
-                    // Send NetMessageSetProperty message
+                    // Send NetMessageSetProperty message with a CostumeCurrent property for the purchased costume
                     client.SendMessage(MuxChannel, new(
                         Property.ToNetMessageSetProperty(replicationId, new(PropertyEnum.CostumeCurrent), entry.GuidItems[0].ItemPrototypeRuntimeIdForClient)
                         ));
