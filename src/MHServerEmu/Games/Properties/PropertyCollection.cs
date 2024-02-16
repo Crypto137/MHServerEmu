@@ -25,7 +25,11 @@ namespace MHServerEmu.Games.Properties
         public void SetProperty(object value, PropertyId propertyId)
         {
             Property prop = GetProperty(propertyId);
-            if (prop == null) prop = new(propertyId);
+            if (prop == null)
+            {
+                prop = new(propertyId);
+                _propertyList.Add(prop);
+            }
             prop.Value.Set(value);
         }
 
