@@ -523,20 +523,6 @@ namespace MHServerEmu.Games.GameData
             return AssetDirectory.IterateAssetTypes();
         }
 
-        public List<ulong> GetPowerPropertyIdList(string filter)
-        {
-            // TO BE REMOVED: temp bruteforcing of power property ids
-
-            PrototypeId[] powerTable = _prototypeClassLookupDict[typeof(PowerPrototype)].EnumValueToPrototypeLookup;
-            List<ulong> propertyIdList = new();
-
-            for (int i = 1; i < powerTable.Length; i++)
-                if (GameDatabase.GetPrototypeName(powerTable[i]).Contains(filter))
-                    propertyIdList.Add(DataHelper.ReconstructPowerPropertyIdFromHash((ulong)i));
-
-            return propertyIdList;
-        }
-
         /// <summary>
         /// Checks if the specified <see cref="PrototypeId"/> refers to a child <see cref="Prototype"/> that is related to a parent prototype.
         /// If the parent is a default prototype, checks the <see cref="Blueprint"/> hierarchy. Otherwise, checks prototype data hierarchy.

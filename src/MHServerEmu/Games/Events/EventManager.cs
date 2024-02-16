@@ -249,7 +249,7 @@ namespace MHServerEmu.Games.Events
                     powerId = (PrototypeId)queuedEvent.Data;
                     switch (powerId)
                     {
-                        case (PrototypeId)PowerPrototypes.GhostRider.GhostRiderRide:
+                        case (PrototypeId)PowerPrototypes.Travel.GhostRiderRide:
                             Logger.Trace($"EventStart GhostRiderRide");
                             // Player.Avatar.EvalOnCreate.AssignProp.ProcProp.Param1 
                             conditionArchive = new(avatarEntityId, 666, conditionSerializationFlags, powerId, 0);   // TODO: generate and save Condition.Id                        
@@ -270,14 +270,14 @@ namespace MHServerEmu.Games.Events
 
                             break;
 
-                        case (PrototypeId)PowerPrototypes.Wolverine.WolverineRide:
-                        case (PrototypeId)PowerPrototypes.Deadpool.DeadpoolRide:
-                        case (PrototypeId)PowerPrototypes.NickFury.NickFuryRide:
-                        case (PrototypeId)PowerPrototypes.Cyclops.CyclopsRide:
-                        case (PrototypeId)PowerPrototypes.BlackWidow.BlackWidowRide:
-                        case (PrototypeId)PowerPrototypes.Blade.BladeRide:
-                        case (PrototypeId)PowerPrototypes.AntMan.AntmanFlight:
-                        case (PrototypeId)PowerPrototypes.Thing.ThingFlight:
+                        case (PrototypeId)PowerPrototypes.Travel.WolverineRide:
+                        case (PrototypeId)PowerPrototypes.Travel.DeadpoolRide:
+                        case (PrototypeId)PowerPrototypes.Travel.NickFuryRide:
+                        case (PrototypeId)PowerPrototypes.Travel.CyclopsRide:
+                        case (PrototypeId)PowerPrototypes.Travel.BlackWidowRide:
+                        case (PrototypeId)PowerPrototypes.Travel.BladeRide:
+                        case (PrototypeId)PowerPrototypes.Travel.AntmanFlight:
+                        case (PrototypeId)PowerPrototypes.Travel.ThingFlight:
                             Logger.Trace($"EventStart Ride");
                             conditionArchive = new(avatarEntityId, 667, conditionSerializationFlags, powerId, 0);
                             messageList.Add(new(client, new(NetMessageAddCondition.CreateBuilder()
@@ -293,7 +293,7 @@ namespace MHServerEmu.Games.Events
                     powerId = (PrototypeId)queuedEvent.Data;
                     switch (powerId)
                     {
-                        case (PrototypeId)PowerPrototypes.GhostRider.GhostRiderRide:
+                        case (PrototypeId)PowerPrototypes.Travel.GhostRiderRide:
                             Logger.Trace($"EventEnd GhostRiderRide");
 
                             messageList.Add(new(client, new(NetMessageDeleteCondition.CreateBuilder()
@@ -308,14 +308,14 @@ namespace MHServerEmu.Games.Events
 
                             break;
 
-                        case (PrototypeId)PowerPrototypes.Wolverine.WolverineRide:
-                        case (PrototypeId)PowerPrototypes.Deadpool.DeadpoolRide:
-                        case (PrototypeId)PowerPrototypes.NickFury.NickFuryRide:
-                        case (PrototypeId)PowerPrototypes.Cyclops.CyclopsRide:
-                        case (PrototypeId)PowerPrototypes.BlackWidow.BlackWidowRide:
-                        case (PrototypeId)PowerPrototypes.Blade.BladeRide:
-                        case (PrototypeId)PowerPrototypes.AntMan.AntmanFlight:
-                        case (PrototypeId)PowerPrototypes.Thing.ThingFlight:
+                        case (PrototypeId)PowerPrototypes.Travel.WolverineRide:
+                        case (PrototypeId)PowerPrototypes.Travel.DeadpoolRide:
+                        case (PrototypeId)PowerPrototypes.Travel.NickFuryRide:
+                        case (PrototypeId)PowerPrototypes.Travel.CyclopsRide:
+                        case (PrototypeId)PowerPrototypes.Travel.BlackWidowRide:
+                        case (PrototypeId)PowerPrototypes.Travel.BladeRide:
+                        case (PrototypeId)PowerPrototypes.Travel.AntmanFlight:
+                        case (PrototypeId)PowerPrototypes.Travel.ThingFlight:
                             Logger.Trace($"EventEnd Ride");
                             messageList.Add(new(client, new(NetMessageDeleteCondition.CreateBuilder()
                                 .SetIdEntity(avatarEntityId)
