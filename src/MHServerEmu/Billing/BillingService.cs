@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Gazillion;
+﻿using Gazillion;
 using MHServerEmu.Billing.Catalogs;
 using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Helpers;
@@ -7,8 +6,10 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Networking;
+using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.Billing
 {
@@ -102,24 +103,39 @@ namespace MHServerEmu.Billing
             Logger.Trace(buyItemFromCatalog.ToString());
 
             // HACK: change costume when a player "buys" a costume
+            DBAvatar currentAvatar = client.Session.Account.CurrentAvatar;
+
             CatalogEntry entry = _catalog.GetEntry(buyItemFromCatalog.SkuId);
-            if (entry != null && entry.GuidItems.Length > 0)
+            if (entry == null && entry.GuidItems.Length == 0) return;
+
+            var costumePrototype = entry.GuidItems[0].ItemPrototypeRuntimeIdForClient.As<CostumePrototype>();
+            if (costumePrototype == null || costumePrototype.UsableBy != (PrototypeId)currentAvatar.Prototype)
             {
-                string prototypePath = GameDatabase.GetPrototypeName(entry.GuidItems[0].ItemPrototypeRuntimeIdForClient);
-                if (prototypePath.Contains("Entity/Items/Costumes/Prototypes/"))
-                {
-                    // Get replication id for the client avatar
-                    ulong replicationId = (ulong)client.Session.Account.Player.Avatar.ToPropertyCollectionReplicationId();
-
-                    // Update account data
-                    client.Session.Account.CurrentAvatar.Costume = (ulong)entry.GuidItems[0].ItemPrototypeRuntimeIdForClient;
-
-                    // Send NetMessageSetProperty message with a CostumeCurrent property for the purchased costume
-                    client.SendMessage(MuxChannel, new(
-                        Property.ToNetMessageSetProperty(replicationId, new(PropertyEnum.CostumeCurrent), entry.GuidItems[0].ItemPrototypeRuntimeIdForClient)
-                        ));
-                }
+                client.SendMessage(MuxChannel, new(NetMessageBuyItemFromCatalogResponse.CreateBuilder()
+                    .SetDidSucceed(false)
+                    .SetCurrentCurrencyBalance(ConfigManager.Billing.CurrencyBalance)
+                    .SetErrorcode(BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN)
+                    .SetSkuId(buyItemFromCatalog.SkuId)
+                    .Build()));
+                return;
             }
+
+            // Get replication id for the client avatar
+            ulong replicationId = (ulong)currentAvatar.Prototype.ToPropertyCollectionReplicationId();
+
+            currentAvatar.Costume = (ulong)costumePrototype.DataRef;
+
+            // Send NetMessageSetProperty message with a CostumeCurrent property for the purchased costume
+            client.SendMessage(MuxChannel, new(
+                Property.ToNetMessageSetProperty(replicationId, new(PropertyEnum.CostumeCurrent), entry.GuidItems[0].ItemPrototypeRuntimeIdForClient)
+                ));
+
+            // Update library
+            int enumValue = GameDatabase.DataDirectory.GetPrototypeEnumValue(
+                (PrototypeId)currentAvatar.Prototype, (BlueprintId)719040976634384588);  // Avatar.blueprint
+
+            client.SendMessage(MuxChannel, new(
+                Property.ToNetMessageSetProperty(9078332, new(PropertyEnum.AvatarLibraryCostume, 0, enumValue), costumePrototype.DataRef)));
 
             client.SendMessage(MuxChannel, new(NetMessageBuyItemFromCatalogResponse.CreateBuilder()
                 .SetDidSucceed(true)
