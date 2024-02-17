@@ -47,11 +47,15 @@ namespace MHServerEmu.Games.Properties
 
         #region Value Indexers
 
+        // Add more indexers for specific param type combinations as needed
+
         public PropertyValue this[PropertyId propertyId]
         {
             get => GetProperty(propertyId);
             set => SetProperty(value, propertyId);
         }
+
+        // 0 params
 
         public PropertyValue this[PropertyEnum propertyEnum]
         {
@@ -59,11 +63,33 @@ namespace MHServerEmu.Games.Properties
             set => SetProperty(value, new(propertyEnum));
         }
 
+        // 1 param
+
         public PropertyValue this[PropertyEnum propertyEnum, PropertyParam param0]
         {
             get => GetProperty(new(propertyEnum, param0));
             set => SetProperty(value, new(propertyEnum, param0));
         }
+
+        public PropertyValue this[PropertyEnum propertyEnum, int param0]
+        {
+            get => GetProperty(new(propertyEnum, (PropertyParam)param0));
+            set => SetProperty(value, new(propertyEnum, (PropertyParam)param0));
+        }
+
+        public PropertyValue this[PropertyEnum propertyEnum, AssetId param0]
+        {
+            get => GetProperty(new(propertyEnum, Property.ToParam(param0)));
+            set => SetProperty(value, new(propertyEnum, Property.ToParam(param0)));
+        }
+
+        public PropertyValue this[PropertyEnum propertyEnum, PrototypeId param0]
+        {
+            get => GetProperty(new(propertyEnum, Property.ToParam(propertyEnum, 0, param0)));
+            set => SetProperty(value, new(propertyEnum, Property.ToParam(propertyEnum, 0, param0)));
+        }
+
+        // 2 params
 
         public PropertyValue this[PropertyEnum propertyEnum, PropertyParam param0, PropertyParam param1]
         {
@@ -71,11 +97,21 @@ namespace MHServerEmu.Games.Properties
             set => SetProperty(value, new(propertyEnum, param0, param1));
         }
 
+        public PropertyValue this[PropertyEnum propertyEnum, int param0, PrototypeId param1]
+        {
+            get => GetProperty(new(propertyEnum, (PropertyParam)param0, Property.ToParam(propertyEnum, 1, param1)));
+            set => SetProperty(value, new(propertyEnum, (PropertyParam)param0, Property.ToParam(propertyEnum, 1, param1)));
+        }
+
+        // 3 params
+
         public PropertyValue this[PropertyEnum propertyEnum, PropertyParam param0, PropertyParam param1, PropertyParam param2]
         {
             get => GetProperty(new(propertyEnum, param0, param1, param2));
             set => SetProperty(value, new(propertyEnum, param0, param1, param2));
         }
+
+        // 4 params
 
         public PropertyValue this[PropertyEnum propertyEnum, PropertyParam param0, PropertyParam param1, PropertyParam param2, PropertyParam param3]
         {
