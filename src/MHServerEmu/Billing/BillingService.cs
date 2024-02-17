@@ -130,8 +130,7 @@ namespace MHServerEmu.Billing
                 ));
 
             // Update library
-            int enumValue = GameDatabase.DataDirectory.GetPrototypeEnumValue(
-                (PrototypeId)currentAvatar.Prototype, (BlueprintId)719040976634384588);  // Avatar.blueprint
+            int enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, (PrototypeId)currentAvatar.Prototype);
 
             client.SendMessage(MuxChannel, new(
                 Property.ToNetMessageSetProperty(9078332, new(PropertyEnum.AvatarLibraryCostume, 0, enumValue), costumePrototype.DataRef)));

@@ -3,6 +3,7 @@ using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Calligraphy;
 
 namespace MHServerEmu.Games.Properties
 {
@@ -75,6 +76,33 @@ namespace MHServerEmu.Games.Properties
                 .SetPropertyId(Id.Raw.ReverseBits())    // In NetMessageSetProperty all bits are reversed rather than bytes
                 .SetValueBits(Value.RawValue)
                 .Build();
+        }
+
+        public static void FromParam(PropertyEnum propertyEnum, int paramIndex, int paramValue, out AssetId assetId)
+        {
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+            AssetTypeId assetTypeId = info.GetParamAssetType(paramIndex);
+            AssetType assetType = GameDatabase.GetAssetType(assetTypeId);
+            assetId = assetType.GetAssetRefFromEnum(paramValue);
+        }
+
+        public static void FromParam(PropertyEnum propertyEnum, int paramIndex, int paramValue, out PrototypeId prototypeId)
+        {
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+            BlueprintId paramBlueprint = info.GetParamPrototypeBlueprint(paramIndex);
+            prototypeId = GameDatabase.DataDirectory.GetPrototypeFromEnumValue(paramValue, paramBlueprint);
+        }
+
+        public static int ToParam(AssetId paramValue)
+        {
+            return GameDatabase.DataDirectory.AssetDirectory.GetEnumValue(paramValue);
+        }
+
+        public static int ToParam(PropertyEnum propertyEnum, int paramIndex, PrototypeId paramValue)
+        {
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+            BlueprintId paramBlueprint = info.GetParamPrototypeBlueprint(paramIndex);
+            return GameDatabase.DataDirectory.GetPrototypeEnumValue(paramValue, paramBlueprint);
         }
 
         private void CreateValueContainer(ulong rawValue)
