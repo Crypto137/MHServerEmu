@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.Generators
             return generator;
         }
 
-        public static Generator LinkGenerator(GeneratorPrototype generatorPrototype, Area area)
+        public static Generator LinkGenerator(bool log, GeneratorPrototype generatorPrototype, Area area)
         {
             Generator generator;
 
@@ -45,6 +45,8 @@ namespace MHServerEmu.Games.Generators
             else
                 return null;
 
+            generator.Log = log;
+            generator.LogDebug = log;
             generator.Initialize(area);
             return generator;
         }

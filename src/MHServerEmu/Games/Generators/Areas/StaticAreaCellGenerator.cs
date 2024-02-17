@@ -25,7 +25,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 PrototypeId cellRef = GameDatabase.GetPrototypeRefByName(resourceMarker.Resource);
                 if (cellRef == 0)
                 {
-                    Logger.Warn($"Unable to link Resource {resourceMarker.Resource} to a corresponding .cell file");
+                    if (Log) Logger.Warn($"Unable to link Resource {resourceMarker.Resource} to a corresponding .cell file");
                     continue;
                 }
 
@@ -96,7 +96,7 @@ namespace MHServerEmu.Games.Generators.Areas
             Area area = Area;
             if (area == null)
             {
-                Logger.Warn("Unable to get SArea");
+                if (Log) Logger.Warn("Unable to get SArea");
                 return null;
             }
 
@@ -105,14 +105,14 @@ namespace MHServerEmu.Games.Generators.Areas
             AssetId districtAssetRef = proto.District;
             if (districtAssetRef == 0)
             {
-                Logger.Warn("StaticAreaCellGenerator called with no layout specified.");
+                if (Log) Logger.Warn("StaticAreaCellGenerator called with no layout specified.");
                 return null;
             }
 
             PrototypeId districtRef = GameDatabase.GetDataRefByAsset(districtAssetRef);
             DistrictPrototype protoDistrict = GameDatabase.GetPrototype<DistrictPrototype>(districtRef);
             if (protoDistrict == null)
-                Logger.Warn($"District Prototype is not available. Likely a missing file. Looking for Asset: {GameDatabase.GetAssetName(districtAssetRef)}");
+                if (Log) Logger.Warn($"District Prototype is not available. Likely a missing file. Looking for Asset: {GameDatabase.GetAssetName(districtAssetRef)}");
 
             area.DistrictDataRef = districtRef;
             return protoDistrict;
@@ -128,13 +128,13 @@ namespace MHServerEmu.Games.Generators.Areas
             DistrictPrototype protoDistrict = GetDistrictPrototype();
             if (protoDistrict == null)
             {
-                Logger.Warn($"StaticArea's District is Invalid");
+                if (Log) Logger.Warn($"StaticArea's District is Invalid");
                 return false;
             }
 
             if (protoDistrict.CellMarkerSet.Markers.IsNullOrEmpty())
             {
-                Logger.Warn($"StaticArea's District contains no cells");
+                if (Log) Logger.Warn($"StaticArea's District contains no cells");
                 return false;
             }
 

@@ -55,7 +55,7 @@ namespace MHServerEmu.Games.Regions
             if (cell != null && _allCells.ContainsKey(cell.Id) == false)
             {
                 _allCells[cell.Id] = cell;
-                Logger.Trace($"Adding cell {cell} in region {cell.GetRegion()} area id={cell.Area.Id}");
+                if (cell.Area.Log) Logger.Trace($"Adding cell {cell} in region {cell.GetRegion()} area id={cell.Area.Id}");
                 return true;
             }
             return false;
@@ -70,7 +70,7 @@ namespace MHServerEmu.Games.Regions
         public bool RemoveCell(Cell cell)
         {
             if (cell == null) return false;
-            Logger.Trace($"Removing cell {cell} from region {cell.GetRegion()}");
+            if (cell.Area.Log) Logger.Trace($"Removing cell {cell} from region {cell.GetRegion()}");
 
             if (_allCells.ContainsKey(cell.Id))
             {
@@ -118,7 +118,7 @@ namespace MHServerEmu.Games.Regions
         }
 
         public Region GenerateRegion(RegionPrototypeId prototype) 
-        {            
+        {
             RegionSettings settings = new()
             {
                 Seed = Game.Random.Next(),
@@ -128,6 +128,7 @@ namespace MHServerEmu.Games.Regions
                 Bound = Aabb.Zero,
                 GenerateAreas = true,
                 GenerateEntities = true,
+                GenerateLog = false,
                 Affixes = new List<PrototypeId>(),
                 RegionDataRef = (PrototypeId)prototype
             };

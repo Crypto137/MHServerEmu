@@ -12,6 +12,9 @@ namespace MHServerEmu.Games.Generators.Areas
     public class Generator {
 
         public static readonly Logger Logger = LogManager.CreateLogger();
+        public bool LogDebug;
+        public bool Log;
+
         public Area Area { get; set; }
         public Region Region { get; set; }
         public bool PreGenerated { get; set; }

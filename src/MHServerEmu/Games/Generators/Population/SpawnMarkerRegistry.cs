@@ -6,8 +6,6 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.Regions;
-using System;
-using static ICSharpCode.SharpZipLib.Zip.ExtendedUnixData;
 
 namespace MHServerEmu.Games.Generators.Population
 {

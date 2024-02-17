@@ -33,6 +33,7 @@ namespace MHServerEmu.Games.Regions
         public ulong MatchNumber;
 
         public bool GenerateEntities;
+        public bool GenerateLog;
     }
 
     public class Region : IMissionManagerOwner
@@ -208,7 +209,7 @@ namespace MHServerEmu.Games.Regions
 
             if (settings.GenerateAreas)
             {
-                if (GenerateAreas() == false)
+                if (GenerateAreas(settings.GenerateLog) == false)
                 {
                     Logger.Error($"Failed to generate areas for\n  region: {this}\n    seed: {RandomSeed}");
                     return false;
@@ -351,11 +352,11 @@ namespace MHServerEmu.Games.Regions
             return null;
         }
 
-        public bool GenerateAreas()
+        public bool GenerateAreas(bool log)
         {
             RegionGenerator regionGenerator = DRAGSystem.LinkRegionGenerator(RegionPrototype.RegionGenerator);
 
-            regionGenerator.GenerateRegion(RandomSeed, this);
+            regionGenerator.GenerateRegion(log, RandomSeed, this);
 
             StartArea = regionGenerator.StartArea;
             SetBound(CalculateBound());
@@ -420,7 +421,7 @@ namespace MHServerEmu.Games.Regions
                 return null;
             }
             Areas[area.Id] = area;
-            Logger.Debug($"Adding area {area.GetPrototypeName()}, id={area.Id}, areapos = {area.Origin.ToStringFloat()}, seed = {RandomSeed}");
+            if (settings.RegionSettings.GenerateLog) Logger.Debug($"Adding area {area.GetPrototypeName()}, id={area.Id}, areapos = {area.Origin.ToStringFloat()}, seed = {RandomSeed}");
             return area;
         }
 
@@ -453,9 +454,7 @@ namespace MHServerEmu.Games.Regions
         private void DeallocateArea(Area area)
         {
             if (area == null) return;
-
-            Logger.Trace($"{Game} - Deallocating area id {area.Id}, {area}");
-
+            if (Settings.GenerateLog) Logger.Trace($"{Game} - Deallocating area id {area.Id}, {area}");
             area.Shutdown();
         }
 

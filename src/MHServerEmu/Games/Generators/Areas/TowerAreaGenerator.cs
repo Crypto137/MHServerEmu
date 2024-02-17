@@ -60,7 +60,7 @@ namespace MHServerEmu.Games.Generators.Areas
                     }
                     else
                     {
-                        Logger.Error("PreGenerate entry unknown");
+                        if (Log) Logger.Error("PreGenerate entry unknown");
                     }
                 }
                 GridSize = (int)Math.Sqrt(totalCells) + 1;

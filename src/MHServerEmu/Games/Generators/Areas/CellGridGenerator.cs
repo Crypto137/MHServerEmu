@@ -52,7 +52,7 @@ namespace MHServerEmu.Games.Generators.Areas
                     if (behaviorProto is CellGridBlacklistBehaviorPrototype behavior)
                     {
                         if (!CellGridBlacklistBehavior(behavior))
-                            Logger.Error("DetermineAndRunBehavior CellGridBlacklistBehavior");
+                            if (Log) Logger.Error("DetermineAndRunBehavior CellGridBlacklistBehavior");
                     }
                 }
             }
@@ -63,7 +63,7 @@ namespace MHServerEmu.Games.Generators.Areas
                     if (behaviorProto is CellGridRampBehaviorPrototype behavior)
                     {
                         if (!CellGridRampBehavior(behavior))
-                            Logger.Error("DetermineAndRunBehavior CellGridRampBehavior");
+                            if (Log) Logger.Error("DetermineAndRunBehavior CellGridRampBehavior");
                     }
                 }
             }
@@ -156,7 +156,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
             if (!success)
             {
-                Logger.Trace($"GridAreaGenerator failed after {10 - tries} attempts\nregion: {Region}\narea: {Area}");
+                if (Log) Logger.Trace($"GridAreaGenerator failed after {10 - tries} attempts\nregion: {Region}\narea: {Area}");
                 return false;
             }
 
@@ -236,7 +236,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
                             if (cellRef == 0)
                             {
-                                Logger.Trace($"Generator for Area {Area} tried to pick cell of type {cellType}, none were available. Region: {Region}");
+                                if (Log) Logger.Trace($"Generator for Area {Area} tried to pick cell of type {cellType}, none were available. Region: {Region}");
                                 return false;
                             }
 
@@ -314,7 +314,7 @@ namespace MHServerEmu.Games.Generators.Areas
             if (borderBehaviorProto == null || gridAreaGeneratorProto.CellSets.IsNullOrEmpty()) return true;
 
             CellSetRegistry registry = new ();
-            registry.Initialize(true);
+            registry.Initialize(true, area.Log);
             foreach (var cellSetEntry in gridAreaGeneratorProto.CellSets)
             {
                 if (cellSetEntry == null) continue;
