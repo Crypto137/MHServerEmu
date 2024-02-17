@@ -25,7 +25,11 @@ namespace MHServerEmu.Games.Properties
         public void SetProperty(object value, PropertyId propertyId)
         {
             Property prop = GetProperty(propertyId);
-            if (prop == null) prop = new(propertyId);
+            if (prop == null)
+            {
+                prop = new(propertyId);
+                _propertyList.Add(prop);
+            }
             prop.Value.Set(value);
         }
 
@@ -39,7 +43,13 @@ namespace MHServerEmu.Games.Properties
             return GetProperty(propertyId) != null;
         }
 
-        #region Value Accessors
+        #region Value Indexers
+
+        public object this[PropertyId propertyId]
+        {
+            get => GetProperty(propertyId).Value.Get();
+            set => SetProperty(value, propertyId);
+        }
 
         public object this[PropertyEnum propertyEnum]
         {

@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using Gazillion;
+﻿using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Entities;
@@ -48,50 +47,6 @@ namespace MHServerEmu.Common.Helpers
                     }
                 }
             }
-        }
-
-        public static ulong GetPropertyIdHash(ulong propertyId)
-        {
-            BitArray bitArray = new(BitConverter.GetBytes(propertyId >> 12));
-
-            bool[] buffer = new bool[14];
-            for (int i = 0; i < buffer.Length; i++)
-            {
-                buffer[i] = bitArray[i];
-            }
-
-            for (int i = 0; i < buffer.Length; i++)
-            {
-                bitArray[i] = buffer[buffer.Length - 1 - i];
-            }
-
-            byte[] hashBytes = new byte[8];
-            bitArray.CopyTo(hashBytes, 0);
-
-            return BitConverter.ToUInt64(hashBytes);
-        }
-
-        public static ulong ReconstructPowerPropertyIdFromHash(ulong hash)
-        {
-            BitArray bitArray = new(BitConverter.GetBytes(hash));
-
-            bool[] buffer = new bool[14];
-            for (int i = 0; i < buffer.Length; i++)
-            {
-                buffer[i] = bitArray[i];
-            }
-
-            for (int i = 0; i < buffer.Length; i++)
-            {
-                bitArray[i] = buffer[buffer.Length - 1 - i];
-            }
-
-            byte[] propertyIdBytes = new byte[8];
-            bitArray.CopyTo(propertyIdBytes, 0);
-
-            ulong propertyId = (BitConverter.ToUInt64(propertyIdBytes) << 12) + 0x3ba;
-
-            return propertyId;
         }
     }
 }

@@ -24,14 +24,14 @@ namespace MHServerEmu.Games.Entities
             Vector3 mapPosition, Destination destination) : base(baseData)
         {
             ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0 | AoiNetworkPolicyValues.AoiChannel5;
-            PropertyCollection = new(replicationId, new()
-            {
-                new(PropertyEnum.MapPosition, mapPosition),
-                new(PropertyEnum.MapAreaId, mapAreaId),
-                new(PropertyEnum.MapRegionId, mapRegionId),
-                new(PropertyEnum.MapCellId, mapCellId),
-                new(PropertyEnum.ContextAreaRef, contextAreaRef)
-            });
+
+            PropertyCollection = new(replicationId);
+            PropertyCollection[PropertyEnum.MapPosition] = mapPosition;
+            PropertyCollection[PropertyEnum.MapAreaId] = mapAreaId;
+            PropertyCollection[PropertyEnum.MapRegionId] = mapRegionId;
+            PropertyCollection[PropertyEnum.MapCellId] = mapCellId;
+            PropertyCollection[PropertyEnum.ContextAreaRef] = contextAreaRef;
+
             TrackingContextMap = Array.Empty<EntityTrackingContextMap>();
             ConditionCollection = Array.Empty<Condition>();
             PowerCollection = Array.Empty<PowerCollectionRecord>();

@@ -12,6 +12,8 @@ using MHServerEmu.Games.MetaGame;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Common.Extensions;
+using System.Text;
 
 namespace MHServerEmu.Networking
 {
@@ -271,7 +273,22 @@ namespace MHServerEmu.Networking
                                 break;
 
                             case NetMessageSetProperty setProperty:
-                                writer.WriteLine($"ReplicationId: {setProperty.ReplicationId}\n{new Property(setProperty)}");
+                                PropertyId propertyId = new(setProperty.PropertyId.ReverseBits());
+                                int[] @params = propertyId.GetParams();
+
+                                StringBuilder sb = new();
+                                sb.AppendLine($"ReplicationId: {setProperty.ReplicationId}");
+                                sb.Append($"PropertyId: {propertyId.Enum}");
+
+                                if (propertyId.HasParams)
+                                {
+                                    for (int i = 0; i < @params.Length; i++)
+                                        sb.Append($" {@params[i]}");
+                                }
+                                sb.AppendLine();
+
+                                sb.AppendLine($"Value: 0x{setProperty.ValueBits:X}");
+                                writer.Write(sb.ToString());
                                 break;
 
                             case NetMessageUpdateMiniMap updateMiniMap:

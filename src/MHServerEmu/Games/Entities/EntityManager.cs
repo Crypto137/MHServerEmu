@@ -217,8 +217,7 @@ namespace MHServerEmu.Games.Entities
                 if (entity.Value.BaseData.PrototypeId == destination.Entity && entity.Value.RegionId == regionId)
                 {
                     if (destination.Area == 0) return entity.Value;
-                    Property property = entity.Value.PropertyCollection.GetProperty(new(PropertyEnum.ContextAreaRef));
-                    var area = (PrototypeId)property.Value.Get();
+                    var area = (PrototypeId)entity.Value.PropertyCollection[PropertyEnum.ContextAreaRef];
                     if (area == destination.Area)
                         return entity.Value;
                 }                

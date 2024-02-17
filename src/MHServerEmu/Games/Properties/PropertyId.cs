@@ -8,7 +8,13 @@ namespace MHServerEmu.Games.Properties
     public struct PropertyId
     {
         public ulong Raw { get; set; }
+
         public PropertyEnum Enum { get => (PropertyEnum)(Raw >> PropertyConsts.ParamBitCount); }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if this <see cref="PropertyId"/> has any param values encoded.
+        /// </summary>
+        public bool HasParams { get => (Raw & PropertyConsts.ParamMask) != 0; }
 
         /// <summary>
         /// Constructs a <see cref="PropertyId"/> with <see cref="PropertyEnum.Invalid"/> as its value.
@@ -90,14 +96,6 @@ namespace MHServerEmu.Games.Properties
         public override int GetHashCode() => Raw.GetHashCode();
 
         public override string ToString() => $"0x{Raw:X}";
-
-        /// <summary>
-        /// Returns <see langword="true"/> if this <see cref="PropertyId"/> has any param values encoded.
-        /// </summary>
-        public bool HasParams()
-        {
-            return (Raw & PropertyConsts.ParamMask) != 0;
-        }
 
         /// <summary>
         /// Returns the value of an encoded param.
