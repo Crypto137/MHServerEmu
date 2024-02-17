@@ -38,22 +38,14 @@ namespace MHServerEmu.Games.Regions
     public class Region : IMissionManagerOwner
     {
         // Old
-        public RegionPrototypeId PrototypeId { get; private set; }
-        public ulong Id { get; private set; }
-        public int RandomSeed { get; private set; }
+        public RegionPrototypeId PrototypeId { get; private set; }   
         public byte[] ArchiveData { get; set; }
-        public Vector3 Min { get; private set; }
-        public Vector3 Max { get; private set; }
-        public CreateRegionParams CreateParams { get; private set; }
-
-        public List<Area> AreaList { get; } = new();
-
-        public Vector3 EntrancePosition { get; set; }
-        public Vector3 EntranceOrientation { get; set; }
-        public Vector3 WaypointPosition { get; set; }
-        public Vector3 WaypointOrientation { get; set; }       
+        public CreateRegionParams CreateParams { get; private set; }        
 
         // New
+        public ulong Id { get; private set; } // InstanceAddress
+        public int RandomSeed { get; private set; }
+        public Dictionary<uint, Area> Areas { get; } = new();  
 
         public static readonly Logger Logger = LogManager.CreateLogger();
         public Aabb Bound { get; set; }
@@ -66,7 +58,7 @@ namespace MHServerEmu.Games.Regions
         {
             get
             {
-                if (_startArea == null && AreaList.Any()) _startArea = IterateAreas().First();
+                if (_startArea == null && Areas.Any()) _startArea = IterateAreas().First();
                 return _startArea;
             }
             set
@@ -93,19 +85,15 @@ namespace MHServerEmu.Games.Regions
         public ConnectionNodeList Targets { get; private set; }
         public SpawnPopulationRegistry SpawnPopulation { get; private set; }
 
-        public Region(RegionPrototypeId prototype, int randomSeed, byte[] archiveData, Vector3 min, Vector3 max, CreateRegionParams createParams) // Old
+        public Region(RegionPrototypeId prototype, int randomSeed, byte[] archiveData, CreateRegionParams createParams) // Old
         {
             Id = IdGenerator.Generate(IdType.Region);
 
             PrototypeId = prototype;
             RandomSeed = randomSeed;
             ArchiveData = archiveData;
-            Min = min;
-            Max = max;
             CreateParams = createParams;
         }
-
-        public void AddArea(Area area) => AreaList.Add(area); // Old
 
         public Region(Game game)
         {
@@ -274,9 +262,7 @@ namespace MHServerEmu.Games.Regions
 
             */
 
-            Min ??= Vector3.Zero;
-            Max ??= Vector3.Zero;
-            Bound ??= new Aabb(Min, Max);
+            Bound ??= new Aabb(Vector3.Zero, Vector3.Zero);
 
             ArchiveData = new byte[] { }; // TODO: Gen ArchiveData
 
@@ -325,8 +311,6 @@ namespace MHServerEmu.Games.Regions
             if (boundingBox.Volume <= 0 || (boundingBox.Min == Bound.Min && boundingBox.Max == Bound.Max)) return;
 
             Bound = boundingBox;
-            Min = Bound.Min; // OLD property
-            Max = Bound.Max; // OLD property
 
             // NaviMesh.Initialize(Bound, 1000.0f, this);
             InitializeSpacialPartition(Bound);
@@ -340,8 +324,8 @@ namespace MHServerEmu.Games.Regions
             CellSpatialPartition = new(bound);
 
             foreach (var area in IterateAreas())
-                foreach (var cell in area.CellList)
-                    PartitionCell(cell, PartitionContext.Insert);
+                foreach (var cellItr in area.Cells)
+                    PartitionCell(cellItr.Value, PartitionContext.Insert);
 
             SpawnMarkerRegistry.InitializeSpacialPartition(bound);
 
@@ -395,14 +379,14 @@ namespace MHServerEmu.Games.Regions
 
         public bool GenerateHelper(RegionGenerator regionGenerator, GenerateFlag flag)
         {
-            bool success = AreaList.Count > 0;
+            bool success = Areas.Count > 0;
             foreach (Area area in IterateAreas())
             {
                 if (area == null)
                     success = false;
                 else
                 {
-                    List<PrototypeId> areas = new() { area.GetPrototypeDataRef() };
+                    List<PrototypeId> areas = new() { area.PrototypeDataRef };
                     success &= area.Generate(regionGenerator, areas, flag);
                     if (!area.TestStatus(GenerateFlag.Background)) Logger.Error($"{area} Not generated");
                 }
@@ -435,7 +419,7 @@ namespace MHServerEmu.Games.Regions
                 DeallocateArea(area);
                 return null;
             }
-            AreaList.Add(area); // AreaMap[area.Id]
+            Areas[area.Id] = area;
             Logger.Debug($"Adding area {area.GetPrototypeName()}, id={area.Id}, areapos = {area.Origin.ToStringFloat()}, seed = {RandomSeed}");
             return area;
         }
@@ -453,18 +437,16 @@ namespace MHServerEmu.Games.Regions
 
         public Area GetAreaById(uint id)
         {
-            foreach (Area area in AreaList)
-                if (area.Id == id) return area;
+            if (Areas.TryGetValue(id, out Area area)) return area;
             return null;
         }
 
         public void DestroyArea(uint id)
         {
-            Area areaToRemove = GetAreaById(id);
-            if (areaToRemove != null)
+            if (Areas.TryGetValue(id, out Area areaToRemove))
             {
                 DeallocateArea(areaToRemove);
-                AreaList.Remove(areaToRemove);
+                Areas.Remove(id);
             }
         }
 
@@ -479,8 +461,8 @@ namespace MHServerEmu.Games.Regions
 
         public Area GetArea(PrototypeId prototypeId)
         {
-            foreach (var area in AreaList)
-                if ((PrototypeId)area.PrototypeId == prototypeId) return area;
+            foreach (var area in Areas)
+                if (area.Value.PrototypeDataRef == prototypeId) return area.Value;
 
             return null;
         }
@@ -524,19 +506,16 @@ namespace MHServerEmu.Games.Regions
                 return Enumerable.Empty<WorldEntity>();
         }
 
-        public PrototypeId GetPrototypeDataRef()
-        {
-            return (PrototypeId)PrototypeId;
-        }
+        public PrototypeId PrototypeDataRef => RegionPrototype.DataRef;
 
         public override string ToString()
         {
-            return $"{GameDatabase.GetPrototypeName(GetPrototypeDataRef())}, ID=0x{Id:X} ({Id}), DIFF={GameDatabase.GetFormattedPrototypeName(Settings.DifficultyTierRef)}, SEED={RandomSeed}, GAMEID={Game}";
+            return $"{GameDatabase.GetPrototypeName(PrototypeDataRef)}, ID=0x{Id:X} ({Id}), DIFF={GameDatabase.GetFormattedPrototypeName(Settings.DifficultyTierRef)}, SEED={RandomSeed}, GAMEID={Game}";
         }
 
         private string GetPrototypeName()
         {
-            return GameDatabase.GetPrototypeName(GetPrototypeDataRef());
+            return GameDatabase.GetPrototypeName(PrototypeDataRef);
         }
 
         public void Shutdown()
@@ -585,10 +564,10 @@ namespace MHServerEmu.Games.Regions
                 MetaGames.Remove(metaGameId);
             }*/
 
-            while (AreaList.Any())
+            while (Areas.Any())
             {
-                var area = AreaList.First();
-                DestroyArea(area.Id);
+                var areaId = Areas.First().Key;
+                DestroyArea(areaId);
             }
 
             ClearDividedStartLocations();
@@ -628,9 +607,10 @@ namespace MHServerEmu.Games.Regions
 
         public IEnumerable<Area> IterateAreas(Aabb bound = null)
         {
-            for (int i = 0; i < AreaList.Count; i++)
+            List<Area> areasList = Areas.Values.ToList();
+            foreach (Area area in areasList)
             {
-                Area area = AreaList[i];
+                //Area area = enumerator.Current.Value;
                 if (bound == null || area.RegionBounds.Intersects(bound))
                     yield return area;
             }
@@ -662,7 +642,7 @@ namespace MHServerEmu.Games.Regions
 
             // Has the wrong areaRef
             if (found == false)
-                foreach (Area area in AreaList)
+                foreach (Area area in IterateAreas())
                 {
                     targetArea = area;
                     if (targetArea.FindTargetPosition(markerPos, markerRot, target))
@@ -701,8 +681,8 @@ namespace MHServerEmu.Games.Regions
                 .SetClearingAllInterest(false)
                 .SetRegionPrototypeId((ulong)PrototypeId)
                 .SetRegionRandomSeed(RandomSeed)
-                .SetRegionMin(Min.ToNetStructPoint3())
-                .SetRegionMax(Max.ToNetStructPoint3())
+                .SetRegionMin(Bound.Min.ToNetStructPoint3())
+                .SetRegionMax(Bound.Max.ToNetStructPoint3())
                 .SetCreateRegionParams(CreateParams.ToNetStruct());
 
             // can add EntitiesToDestroy here

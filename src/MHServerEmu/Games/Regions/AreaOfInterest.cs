@@ -145,7 +145,7 @@ namespace MHServerEmu.Games.Regions
             {
                 if (usedAreas.Contains(areaId) == false)
                 {
-                    Area area = region.GetAreaById(areaId);
+                    Area area = region.Areas[areaId];
                     messageList.Add(area.MessageAddArea(false));
                 }
 

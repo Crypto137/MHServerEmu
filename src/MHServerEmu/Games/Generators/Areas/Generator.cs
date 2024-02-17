@@ -128,7 +128,7 @@ namespace MHServerEmu.Games.Generators.Areas
                         generatorInterface.PlaceCell(cellRef, new());
                         area.AddSubArea(dynamicArea);
 
-                        List<PrototypeId> areas = new() { area.GetPrototypeDataRef() };
+                        List<PrototypeId> areas = new() { area.PrototypeDataRef };
                         dynamicArea.Generate(null, areas, GenerateFlag.Background);
                         return true;
                     }
