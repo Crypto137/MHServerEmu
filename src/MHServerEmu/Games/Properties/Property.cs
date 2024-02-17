@@ -108,7 +108,6 @@ namespace MHServerEmu.Games.Properties
             return (PropertyParam)GameDatabase.DataDirectory.GetPrototypeEnumValue(paramValue, paramBlueprint);
         }
 
-        public static PropertyValue ToValue(PropertyValue value) => value;
         public static PropertyValue ToValue(bool value) => new(value);
         public static PropertyValue ToValue(float value) => new(value);
         public static PropertyValue ToValue(int value) => new(value);
@@ -120,7 +119,6 @@ namespace MHServerEmu.Games.Properties
         public static PropertyValue ToValue(AssetId value) => new(value);
         public static PropertyValue ToValue(Vector3 value) => new(value);
 
-        public static void FromValue(PropertyValue value, out PropertyValue convertedValue) => convertedValue = value;
         public static void FromValue(PropertyValue value, out bool convertedValue) => convertedValue = value.GetBool();
         public static void FromValue(PropertyValue value, out float convertedValue) => convertedValue = value.GetFloat();
         public static void FromValue(PropertyValue value, out int convertedValue) => convertedValue = value.GetInt();

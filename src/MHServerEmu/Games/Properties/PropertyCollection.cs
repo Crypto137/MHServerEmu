@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
@@ -24,10 +25,17 @@ namespace MHServerEmu.Games.Properties
             return value;
         }
 
-        public void SetProperty(PropertyValue value, PropertyId propertyId)
-        {
-            _propertyList[propertyId] = value;
-        }
+        public void SetProperty(PropertyValue value, PropertyId propertyId) => SetPropertyValue(propertyId, value);
+        public void SetProperty(bool value, PropertyId propertyId) => SetPropertyValue(propertyId, Property.ToValue(value));
+        public void SetProperty(float value, PropertyId propertyId) => SetPropertyValue(propertyId, Property.ToValue(value));
+        public void SetProperty(int value, PropertyId propertyId) => SetPropertyValue(propertyId, Property.ToValue(value));
+        public void SetProperty(long value, PropertyId propertyId) => SetPropertyValue(propertyId, Property.ToValue(value));
+        public void SetProperty(uint value, PropertyId propertyId) => SetPropertyValue(propertyId, Property.ToValue(value));
+        public void SetProperty(ulong value, PropertyId propertyId) => SetPropertyValue(propertyId, Property.ToValue(value));
+        public void SetProperty(PrototypeId value, PropertyId propertyId) => SetPropertyValue(propertyId, Property.ToValue(value));
+        public void SetProperty(CurveId value, PropertyId propertyId) => SetPropertyValue(propertyId, Property.ToValue(value));
+        public void SetProperty(AssetId value, PropertyId propertyId) => SetPropertyValue(propertyId, Property.ToValue(value));
+        public void SetProperty(Vector3 value, PropertyId propertyId) => SetPropertyValue(propertyId, Property.ToValue(value));
 
         public bool HasProperty(PropertyEnum propertyEnum)
         {
@@ -175,6 +183,12 @@ namespace MHServerEmu.Games.Properties
                 count++;
             }
             return sb.ToString();
+        }
+
+        protected bool SetPropertyValue(PropertyId propertyId, PropertyValue propertyValue)
+        {
+            _propertyList[propertyId] = propertyValue;
+            return true;
         }
 
         protected bool SerializePropertyForPacking(KeyValuePair<PropertyId, PropertyValue> kvp, CodedOutputStream stream)
