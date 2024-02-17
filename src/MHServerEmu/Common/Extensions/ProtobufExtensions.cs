@@ -44,7 +44,7 @@ namespace MHServerEmu.Common.Extensions
 
         public static float ReadRawFloat(this CodedInputStream stream)
         {
-            return BitConverter.ToSingle(BitConverter.GetBytes(stream.ReadRawVarint32()));
+            return BitConverter.UInt32BitsToSingle(stream.ReadRawVarint32());
         }
 
         public static float ReadRawZigZagFloat(this CodedInputStream stream, int precision)
@@ -88,7 +88,7 @@ namespace MHServerEmu.Common.Extensions
 
         public static void WriteRawFloat(this CodedOutputStream stream, float value)
         {
-            stream.WriteRawVarint32(BitConverter.ToUInt32(BitConverter.GetBytes(value)));
+            stream.WriteRawVarint32(BitConverter.SingleToUInt32Bits(value));
         }
 
         public static void WriteRawZigZagFloat(this CodedOutputStream stream, float value, int precision)

@@ -147,7 +147,7 @@
         public float GetFloat()
         {
             uint value = (Get() & 0x7fffff) | 0x3f800000;
-            return BitConverter.ToSingle(BitConverter.GetBytes(value), 0) - 1.0f;
+            return BitConverter.UInt32BitsToSingle(value) - 1.0f;
         }
 
         public float Get(float max)
@@ -163,7 +163,7 @@
         public double GetDouble()
         {
             ulong value = (Get64() & 0xfffffffffffff) | 0x3ff0000000000000;
-            return BitConverter.ToDouble(BitConverter.GetBytes(value), 0) - 1.0;
+            return BitConverter.UInt64BitsToDouble(value) - 1.0;
         }
 
         public double Get(double max)
