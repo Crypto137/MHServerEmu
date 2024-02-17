@@ -130,7 +130,7 @@ namespace MHServerEmu.Billing
                 ));
 
             // Update library
-            int enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, (PrototypeId)currentAvatar.Prototype);
+            PropertyParam enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, (PrototypeId)currentAvatar.Prototype);
 
             client.SendMessage(MuxChannel, new(
                 Property.ToNetMessageSetProperty(9078332, new(PropertyEnum.AvatarLibraryCostume, 0, enumValue), Property.ToValue(costumePrototype.DataRef))));

@@ -118,7 +118,7 @@ namespace MHServerEmu.Games
             // Adjust properties
             foreach (var accountAvatar in account.Avatars)
             {
-                int enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, (PrototypeId)accountAvatar.Prototype);
+                PropertyParam enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, (PrototypeId)accountAvatar.Prototype);
 
                 // Set library costumes according to account data
                 player.Properties[PropertyEnum.AvatarLibraryCostume, 0, enumValue] = Property.ToValue((PrototypeId)accountAvatar.Costume);

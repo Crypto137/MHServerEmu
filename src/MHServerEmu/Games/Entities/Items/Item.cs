@@ -16,7 +16,11 @@ namespace MHServerEmu.Games.Entities.Items
         public Item(EntityBaseData baseData, ulong replicationId, PrototypeId rank, int itemLevel, PrototypeId itemRarity, float itemVariation, ItemSpec itemSpec) : base(baseData)
         {
             Properties = new(replicationId);
-            Properties[PropertyEnum.Requirement, 229] = Property.ToValue(itemLevel * 1.0f);
+
+            // Property/Info/CharacterLevel.defaults
+            PropertyParam requirementParam = Property.ToParam(PropertyEnum.Requirement, 0, (PrototypeId)4312898931213406054);
+
+            Properties[PropertyEnum.Requirement, requirementParam] = Property.ToValue(itemLevel * 1.0f);
             Properties[PropertyEnum.ItemRarity] = Property.ToValue(itemRarity);
             Properties[PropertyEnum.ItemVariation] = Property.ToValue(itemVariation);
             

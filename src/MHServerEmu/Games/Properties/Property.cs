@@ -60,6 +60,11 @@ namespace MHServerEmu.Games.Properties
     #endregion
 
     /// <summary>
+    /// Typed <see cref="int"/> that is used as a property param value.
+    /// </summary>
+    public enum PropertyParam { }   // For typed params
+
+    /// <summary>
     /// Helper <see langword="static"/> class for working with data contained in <see cref="PropertyCollection"/>.
     /// </summary>
     public static class Property
@@ -91,16 +96,16 @@ namespace MHServerEmu.Games.Properties
             prototypeId = GameDatabase.DataDirectory.GetPrototypeFromEnumValue(paramValue, paramBlueprint);
         }
 
-        public static int ToParam(AssetId paramValue)
+        public static PropertyParam ToParam(AssetId paramValue)
         {
-            return GameDatabase.DataDirectory.AssetDirectory.GetEnumValue(paramValue);
+            return (PropertyParam)GameDatabase.DataDirectory.AssetDirectory.GetEnumValue(paramValue);
         }
 
-        public static int ToParam(PropertyEnum propertyEnum, int paramIndex, PrototypeId paramValue)
+        public static PropertyParam ToParam(PropertyEnum propertyEnum, int paramIndex, PrototypeId paramValue)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
             BlueprintId paramBlueprint = info.GetParamPrototypeBlueprint(paramIndex);
-            return GameDatabase.DataDirectory.GetPrototypeEnumValue(paramValue, paramBlueprint);
+            return (PropertyParam)GameDatabase.DataDirectory.GetPrototypeEnumValue(paramValue, paramBlueprint);
         }
 
         public static PropertyValue ToValue(PropertyValue value) => value;

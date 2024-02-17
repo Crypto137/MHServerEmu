@@ -35,7 +35,7 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Constructs a <see cref="PropertyId"/> with the provided params
         /// </summary>
-        public PropertyId(PropertyEnum propertyEnum, int[] @params)
+        public PropertyId(PropertyEnum propertyEnum, PropertyParam[] @params)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
             Raw = info.EncodeParameters(propertyEnum, @params).Raw;
@@ -44,7 +44,7 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Constructs a <see cref="PropertyId"/> with the provided params
         /// </summary>
-        public PropertyId(PropertyEnum propertyEnum, int param0)
+        public PropertyId(PropertyEnum propertyEnum, PropertyParam param0)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
             Raw = info.EncodeParameters(propertyEnum, param0).Raw;
@@ -53,7 +53,7 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Constructs a <see cref="PropertyId"/> with the provided params
         /// </summary>
-        public PropertyId(PropertyEnum propertyEnum, int param0, int param1)
+        public PropertyId(PropertyEnum propertyEnum, PropertyParam param0, PropertyParam param1)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
             Raw = info.EncodeParameters(propertyEnum, param0, param1).Raw;
@@ -62,7 +62,7 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Constructs a <see cref="PropertyId"/> with the provided params
         /// </summary>
-        public PropertyId(PropertyEnum propertyEnum, int param0, int param1, int param2)
+        public PropertyId(PropertyEnum propertyEnum, PropertyParam param0, PropertyParam param1, PropertyParam param2)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
             Raw = info.EncodeParameters(propertyEnum, param0, param1, param2).Raw;
@@ -71,7 +71,7 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Constructs a <see cref="PropertyId"/> with the provided params
         /// </summary>
-        public PropertyId(PropertyEnum propertyEnum, int param0, int param1, int param2, int param3)
+        public PropertyId(PropertyEnum propertyEnum, PropertyParam param0, PropertyParam param1, PropertyParam param2, PropertyParam param3)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
             Raw = info.EncodeParameters(propertyEnum, param0, param1, param2, param3).Raw;
@@ -106,7 +106,7 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Returns the value of an encoded param.
         /// </summary>
-        public int GetParam(int index)
+        public PropertyParam GetParam(int index)
         {
             return GetParams()[index];
         }
@@ -114,7 +114,7 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Decodes and returns encoded param values.
         /// </summary>
-        public int[] GetParams()
+        public PropertyParam[] GetParams()
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(Enum);
             return info.DecodeParameters(this);

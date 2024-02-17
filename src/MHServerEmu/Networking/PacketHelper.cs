@@ -274,7 +274,7 @@ namespace MHServerEmu.Networking
 
                             case NetMessageSetProperty setProperty:
                                 PropertyId propertyId = new(setProperty.PropertyId.ReverseBits());
-                                int[] @params = propertyId.GetParams();
+                                PropertyParam[] @params = propertyId.GetParams();
 
                                 StringBuilder sb = new();
                                 sb.AppendLine($"ReplicationId: {setProperty.ReplicationId}");

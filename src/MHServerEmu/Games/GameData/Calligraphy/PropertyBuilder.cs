@@ -16,7 +16,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
         private ParamInfo[] _paramInfos = new ParamInfo[Property.MaxParamCount];
 
-        public int[] ParamValues { get; private set; } = new int[Property.MaxParamCount];
+        public PropertyParam[] ParamValues { get; private set; } = new PropertyParam[Property.MaxParamCount];
         public int ParamCount { get; private set; }
 
         public ulong PropertyValue { get; private set; }
@@ -86,7 +86,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 for (int i = 0; i < ParamCount; i++)
                 {
                     if (_paramInfos[i].Type != PropertyParamType.Integer) continue;
-                    info.SetParamTypeInteger(i, intParamMaxValue);
+                    info.SetParamTypeInteger(i, (PropertyParam)intParamMaxValue);
                 }
             }
 
@@ -121,7 +121,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 // Integer params have no subtypes
             }
 
-            return SetParam(paramIndex, (int)field);
+            return SetParam(paramIndex, (PropertyParam)(int)field);
         }
 
         public bool SetAssetParam(int paramIndex, AssetId field)
@@ -142,7 +142,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 _paramInfos[paramIndex].SubtypeDataRef = (ulong)assetTypeId;
             }
 
-            int assetEnum = assetDirectory.GetEnumValue(field);
+            var assetEnum = (PropertyParam)assetDirectory.GetEnumValue(field);
             return SetParam(paramIndex, assetEnum);
         }
 
@@ -164,11 +164,11 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 blueprintRef = GameDatabase.PropertyInfoTable.LookupPropertyInfo(_propertyEnum).GetParamPrototypeBlueprint(paramIndex);
             }
 
-            int prototypeEnum = GameDatabase.DataDirectory.GetPrototypeEnumValue(field, blueprintRef);
+            var prototypeEnum = (PropertyParam)GameDatabase.DataDirectory.GetPrototypeEnumValue(field, blueprintRef);
             return SetParam(paramIndex, prototypeEnum);
         }
 
-        private bool SetParam(int paramIndex, int paramValue)
+        private bool SetParam(int paramIndex, PropertyParam paramValue)
         {
             if (paramIndex >= Property.MaxParamCount)
                 throw new ArgumentException($"paramIndex is out of range (max: {Property.MaxParamCount}).");

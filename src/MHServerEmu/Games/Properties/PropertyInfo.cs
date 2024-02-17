@@ -14,11 +14,11 @@ namespace MHServerEmu.Games.Properties
         private readonly BlueprintId[] _paramPrototypeBlueprints = new BlueprintId[Property.MaxParamCount];
         private readonly int[] _paramBitCounts = new int[Property.MaxParamCount];
         private readonly int[] _paramOffsets = new int[Property.MaxParamCount];
-        private readonly int[] _paramMaxValues = new int[Property.MaxParamCount];
+        private readonly PropertyParam[] _paramMaxValues = new PropertyParam[Property.MaxParamCount];
 
         private ulong _defaultValue;
         private int _paramCount;
-        private int[] _paramDefaultValues;
+        private PropertyParam[] _paramDefaultValues;
 
         private bool _updatedInfo = false;
 
@@ -55,15 +55,15 @@ namespace MHServerEmu.Games.Properties
             }
         }
 
-        public int[] DecodeParameters(PropertyId propertyId)
+        public PropertyParam[] DecodeParameters(PropertyId propertyId)
         {
-            if (_paramCount == 0) return new int[Property.MaxParamCount];
+            if (_paramCount == 0) return new PropertyParam[Property.MaxParamCount];
 
             ulong encodedParams = propertyId.Raw & Property.ParamMask;
-            int[] decodedParams = new int[Property.MaxParamCount];
+            PropertyParam[] decodedParams = new PropertyParam[Property.MaxParamCount];
 
             for (int i = 0; i < _paramCount; i++)
-                decodedParams[i] = (int)((encodedParams >> _paramOffsets[i]) & ((1ul << _paramBitCounts[i]) - 1));
+                decodedParams[i] = (PropertyParam)(int)((encodedParams >> _paramOffsets[i]) & ((1ul << _paramBitCounts[i]) - 1));
 
             return decodedParams;
         }
@@ -71,7 +71,7 @@ namespace MHServerEmu.Games.Properties
         // There's a bunch of (client-accurate) copypasted code here for encoding that allows us to avoid allocating param arrays in some cases.
         // Feel free to make this more DRY if there is a smarter way of doing this without losing performance.
 
-        public PropertyId EncodeParameters(PropertyEnum propertyEnum, int[] @params)
+        public PropertyId EncodeParameters(PropertyEnum propertyEnum, PropertyParam[] @params)
         {
             switch (_paramCount)
             {
@@ -83,7 +83,7 @@ namespace MHServerEmu.Games.Properties
             }
         }
 
-        public PropertyId EncodeParameters(PropertyEnum propertyEnum, int param0)
+        public PropertyId EncodeParameters(PropertyEnum propertyEnum, PropertyParam param0)
         {
             if (param0 > _paramMaxValues[0]) throw new OverflowException($"Property param 0 overflow.");
 
@@ -93,7 +93,7 @@ namespace MHServerEmu.Games.Properties
             return id;
         }
 
-        public PropertyId EncodeParameters(PropertyEnum propertyEnum, int param0, int param1)
+        public PropertyId EncodeParameters(PropertyEnum propertyEnum, PropertyParam param0, PropertyParam param1)
         {
             if (param0 > _paramMaxValues[0]) throw new OverflowException($"Property param 0 overflow.");
             if (param1 > _paramMaxValues[1]) throw new OverflowException($"Property param 1 overflow.");
@@ -105,7 +105,7 @@ namespace MHServerEmu.Games.Properties
             return id;
         }
 
-        public PropertyId EncodeParameters(PropertyEnum propertyEnum, int param0, int param1, int param2)
+        public PropertyId EncodeParameters(PropertyEnum propertyEnum, PropertyParam param0, PropertyParam param1, PropertyParam param2)
         {
             if (param0 > _paramMaxValues[0]) throw new OverflowException($"Property param 0 overflow.");
             if (param1 > _paramMaxValues[1]) throw new OverflowException($"Property param 1 overflow.");
@@ -119,7 +119,7 @@ namespace MHServerEmu.Games.Properties
             return id;
         }
 
-        public PropertyId EncodeParameters(PropertyEnum propertyEnum, int param0, int param1, int param2, int param3)
+        public PropertyId EncodeParameters(PropertyEnum propertyEnum, PropertyParam param0, PropertyParam param1, PropertyParam param2, PropertyParam param3)
         {
             if (param0 > _paramMaxValues[0]) throw new OverflowException($"Property param 0 overflow.");
             if (param1 > _paramMaxValues[1]) throw new OverflowException($"Property param 1 overflow.");
@@ -173,10 +173,10 @@ namespace MHServerEmu.Games.Properties
             if (_paramTypes[paramIndex] == PropertyParamType.Invalid)
                 return Logger.WarnReturn(0, "GetParamBitCount(): param is not set");
 
-            return _paramMaxValues[paramIndex].HighestBitSet() + 1;
+            return ((int)_paramMaxValues[paramIndex]).HighestBitSet() + 1;
         }
 
-        public bool SetParamTypeInteger(int paramIndex, int maxValue)
+        public bool SetParamTypeInteger(int paramIndex, PropertyParam maxValue)
         {
             if (paramIndex >= Property.MaxParamCount)
                 return Logger.ErrorReturn(false, $"SetParamTypeInteger(): param index {paramIndex} out of range");
@@ -203,7 +203,7 @@ namespace MHServerEmu.Games.Properties
                 return Logger.ErrorReturn(false, $"SetParamTypeAsset(): failed to get asset type for id {assetTypeId}");
 
             _paramTypes[paramIndex] = PropertyParamType.Asset;
-            _paramMaxValues[paramIndex] = assetType.MaxEnumValue;
+            _paramMaxValues[paramIndex] = (PropertyParam)assetType.MaxEnumValue;
             _paramAssetTypes[paramIndex] = assetTypeId;
             return true;
         }
@@ -217,7 +217,7 @@ namespace MHServerEmu.Games.Properties
                 return Logger.WarnReturn(false, "SetParamTypePrototype(): param is already set");
 
             _paramTypes[paramIndex] = PropertyParamType.Prototype;
-            _paramMaxValues[paramIndex] = GameDatabase.DataDirectory.GetPrototypeMaxEnumValue(blueprintId);
+            _paramMaxValues[paramIndex] = (PropertyParam)GameDatabase.DataDirectory.GetPrototypeMaxEnumValue(blueprintId);
             _paramPrototypeBlueprints[paramIndex] = blueprintId;
             return true;
         }
@@ -225,7 +225,7 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Validates params and calculates their bit offsets.
         /// </summary>
-        public bool SetPropertyInfo(ulong defaultValue, int paramCount, int[] paramDefaultValues)
+        public bool SetPropertyInfo(ulong defaultValue, int paramCount, PropertyParam[] paramDefaultValues)
         {
             // NOTE: these checks mirror the client, we might not actually need all of them
             if (_updatedInfo) Logger.ErrorReturn(false, "Failed to SetPropertyInfo(): already set");
@@ -255,7 +255,7 @@ namespace MHServerEmu.Games.Properties
             int offset = Property.ParamBitCount;
             for (int i = 0; i < _paramCount; i++)
             {
-                _paramBitCounts[i] = _paramMaxValues[i].HighestBitSet() + 1;
+                _paramBitCounts[i] = ((int)_paramMaxValues[i]).HighestBitSet() + 1;
                 
                 offset -= _paramBitCounts[i];
                 if (offset < 0) return Logger.ErrorReturn(false, "Param bit overflow!");    // Make sure there are enough bits for all params

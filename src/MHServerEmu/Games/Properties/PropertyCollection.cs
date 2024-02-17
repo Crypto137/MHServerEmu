@@ -59,25 +59,25 @@ namespace MHServerEmu.Games.Properties
             set => SetProperty(value, new(propertyEnum));
         }
 
-        public PropertyValue this[PropertyEnum propertyEnum, int param0]
+        public PropertyValue this[PropertyEnum propertyEnum, PropertyParam param0]
         {
             get => GetProperty(new(propertyEnum, param0));
             set => SetProperty(value, new(propertyEnum, param0));
         }
 
-        public PropertyValue this[PropertyEnum propertyEnum, int param0, int param1]
+        public PropertyValue this[PropertyEnum propertyEnum, PropertyParam param0, PropertyParam param1]
         {
             get => GetProperty(new(propertyEnum, param0, param1));
             set => SetProperty(value, new(propertyEnum, param0, param1));
         }
 
-        public PropertyValue this[PropertyEnum propertyEnum, int param0, int param1, int param2]
+        public PropertyValue this[PropertyEnum propertyEnum, PropertyParam param0, PropertyParam param1, PropertyParam param2]
         {
             get => GetProperty(new(propertyEnum, param0, param1, param2));
             set => SetProperty(value, new(propertyEnum, param0, param1, param2));
         }
 
-        public PropertyValue this[PropertyEnum propertyEnum, int param0, int param1, int param2, int param3]
+        public PropertyValue this[PropertyEnum propertyEnum, PropertyParam param0, PropertyParam param1, PropertyParam param2, PropertyParam param3]
         {
             get => GetProperty(new(propertyEnum, param0, param1, param2, param3));
             set => SetProperty(value, new(propertyEnum, param0, param1, param2, param3));
@@ -129,7 +129,7 @@ namespace MHServerEmu.Games.Properties
                 if (kvp.Key.HasParams)
                 {
                     sb.Append($"Params:");
-                    int[] @params = id.GetParams();
+                    PropertyParam[] @params = id.GetParams();
                     for (int i = 0; i < @params.Length; i++)
                         sb.Append($" {@params[i]}");
                     sb.AppendLine();
