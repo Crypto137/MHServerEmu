@@ -91,7 +91,7 @@ namespace MHServerEmu.Games.Powers
             // Set PowerRankCurrentBest for all powers in the collection to make them usable
             foreach (PrototypeId protoId in powersToUnlockList)
             {
-                int enumValue = GameDatabase.DataDirectory.GetPrototypeEnumValue(protoId, (BlueprintId)6670986634407775621);    // Power.blueprint
+                int enumValue = Property.ToParam(PropertyEnum.PowerRankBase, 0, protoId);
                 PropertyId propertyId = new(PropertyEnum.PowerRankCurrentBest, enumValue);
                 messageList.Add(new(NetMessageSetProperty.CreateBuilder()
                     .SetReplicationId(replicationId)

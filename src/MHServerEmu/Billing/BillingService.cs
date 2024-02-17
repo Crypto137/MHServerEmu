@@ -106,17 +106,16 @@ namespace MHServerEmu.Billing
             DBAvatar currentAvatar = client.Session.Account.CurrentAvatar;
 
             CatalogEntry entry = _catalog.GetEntry(buyItemFromCatalog.SkuId);
-            if (entry == null && entry.GuidItems.Length == 0) return;
+            if (entry == null || entry.GuidItems.Length == 0)
+            {
+                SendBuyItemResponse(client, false, BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN, buyItemFromCatalog.SkuId);
+                return;
+            }
 
             var costumePrototype = entry.GuidItems[0].ItemPrototypeRuntimeIdForClient.As<CostumePrototype>();
             if (costumePrototype == null || costumePrototype.UsableBy != (PrototypeId)currentAvatar.Prototype)
             {
-                client.SendMessage(MuxChannel, new(NetMessageBuyItemFromCatalogResponse.CreateBuilder()
-                    .SetDidSucceed(false)
-                    .SetCurrentCurrencyBalance(ConfigManager.Billing.CurrencyBalance)
-                    .SetErrorcode(BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN)
-                    .SetSkuId(buyItemFromCatalog.SkuId)
-                    .Build()));
+                SendBuyItemResponse(client, false, BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN, buyItemFromCatalog.SkuId);
                 return;
             }
 
@@ -131,17 +130,21 @@ namespace MHServerEmu.Billing
                 ));
 
             // Update library
-            int enumValue = GameDatabase.DataDirectory.GetPrototypeEnumValue(
-                (PrototypeId)currentAvatar.Prototype, (BlueprintId)719040976634384588);  // Avatar.blueprint
+            int enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, (PrototypeId)currentAvatar.Prototype);
 
             client.SendMessage(MuxChannel, new(
                 Property.ToNetMessageSetProperty(9078332, new(PropertyEnum.AvatarLibraryCostume, 0, enumValue), costumePrototype.DataRef)));
 
+            SendBuyItemResponse(client, true, BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS, buyItemFromCatalog.SkuId);
+        }
+
+        private void SendBuyItemResponse(FrontendClient client, bool didSucceed, BuyItemResultErrorCodes errorCode, long skuId)
+        {
             client.SendMessage(MuxChannel, new(NetMessageBuyItemFromCatalogResponse.CreateBuilder()
-                .SetDidSucceed(true)
+                .SetDidSucceed(didSucceed)
                 .SetCurrentCurrencyBalance(ConfigManager.Billing.CurrencyBalance)
-                .SetErrorcode(BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS)
-                .SetSkuId(buyItemFromCatalog.SkuId)
+                .SetErrorcode(errorCode)
+                .SetSkuId(skuId)
                 .Build()));
         }
     }

@@ -128,7 +128,7 @@ namespace MHServerEmu.Games
                     case PropertyEnum.AvatarLibraryLevel:       // Set all avatar levels to 60
                         player.PropertyCollection[property.Id] = 60;
                         break;
-                    //case PropertyEnum.AvatarLibraryCostume:     // Reset the costume to default
+                    //case PropertyEnum.AvatarLibraryCostume:   // Reset the costume to default
                     case PropertyEnum.AvatarLibraryTeamUp:      // Clean up team ups
                         player.PropertyCollection[property.Id] = 0ul;
                         break;
@@ -138,7 +138,7 @@ namespace MHServerEmu.Games
             // Set library costumes according to account data
             foreach (var accountAvatar in account.Avatars)
             {
-                int enumValue = GameDatabase.DataDirectory.GetPrototypeEnumValue((PrototypeId)accountAvatar.Prototype, (BlueprintId)719040976634384588);  // Avatar.blueprint
+                int enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, (PrototypeId)accountAvatar.Prototype);
                 player.PropertyCollection[PropertyEnum.AvatarLibraryCostume, 0, enumValue] = (PrototypeId)accountAvatar.Costume;
             }
            
