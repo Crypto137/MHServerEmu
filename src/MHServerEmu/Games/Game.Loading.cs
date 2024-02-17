@@ -121,19 +121,19 @@ namespace MHServerEmu.Games
                 int enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, (PrototypeId)accountAvatar.Prototype);
 
                 // Set library costumes according to account data
-                player.PropertyCollection[PropertyEnum.AvatarLibraryCostume, 0, enumValue] = Property.ToValue((PrototypeId)accountAvatar.Costume);
+                player.Properties[PropertyEnum.AvatarLibraryCostume, 0, enumValue] = Property.ToValue((PrototypeId)accountAvatar.Costume);
 
                 // Set avatar levels to 60
                 // Note: setting this to above level 60 sets the prestige level as well
-                player.PropertyCollection[PropertyEnum.AvatarLibraryLevel, 0, enumValue] = Property.ToValue(60);
+                player.Properties[PropertyEnum.AvatarLibraryLevel, 0, enumValue] = Property.ToValue(60);
 
                 // Clean up team ups
-                player.PropertyCollection[PropertyEnum.AvatarLibraryTeamUp, 0, enumValue] = Property.ToValue(PrototypeId.Invalid);
+                player.Properties[PropertyEnum.AvatarLibraryTeamUp, 0, enumValue] = Property.ToValue(PrototypeId.Invalid);
 
                 // Unlock start avatars
-                Property.FromValue(player.PropertyCollection[PropertyEnum.AvatarUnlock, enumValue], out int avatarUnlock);
+                Property.FromValue(player.Properties[PropertyEnum.AvatarUnlock, enumValue], out int avatarUnlock);
                 if ((AvatarUnlockType)avatarUnlock == AvatarUnlockType.Starter)
-                    player.PropertyCollection[PropertyEnum.AvatarUnlock, enumValue] = Property.ToValue((int)AvatarUnlockType.Type3);
+                    player.Properties[PropertyEnum.AvatarUnlock, enumValue] = Property.ToValue((int)AvatarUnlockType.Type3);
             }
            
             CommunityMember friend = player.Community.CommunityMemberList[0];
@@ -193,9 +193,9 @@ namespace MHServerEmu.Games
 
                     avatar.PlayerName.Value = account.PlayerName;
 
-                    avatar.PropertyCollection[PropertyEnum.CostumeCurrent] = Property.ToValue((PrototypeId)account.CurrentAvatar.Costume);
-                    avatar.PropertyCollection[PropertyEnum.CharacterLevel] = Property.ToValue(60);
-                    avatar.PropertyCollection[PropertyEnum.CombatLevel] = Property.ToValue(60);
+                    avatar.Properties[PropertyEnum.CostumeCurrent] = Property.ToValue((PrototypeId)account.CurrentAvatar.Costume);
+                    avatar.Properties[PropertyEnum.CharacterLevel] = Property.ToValue(60);
+                    avatar.Properties[PropertyEnum.CombatLevel] = Property.ToValue(60);
                 }
 
                 messageList.Add(new(avatar.ToNetMessageEntityCreate()));

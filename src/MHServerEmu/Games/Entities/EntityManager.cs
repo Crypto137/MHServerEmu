@@ -75,8 +75,8 @@ namespace MHServerEmu.Games.Entities
             worldEntity.RegionId = regionId;
             _entityDict.Add(baseData.EntityId, worldEntity);
 
-            worldEntity.PropertyCollection[PropertyEnum.CharacterLevel] = Property.ToValue(CharacterLevel);
-            worldEntity.PropertyCollection[PropertyEnum.CombatLevel] = Property.ToValue(CombatLevel);         // zero effect
+            worldEntity.Properties[PropertyEnum.CharacterLevel] = Property.ToValue(CharacterLevel);
+            worldEntity.Properties[PropertyEnum.CombatLevel] = Property.ToValue(CombatLevel);         // zero effect
 
             return worldEntity;
         }
@@ -188,7 +188,7 @@ namespace MHServerEmu.Games.Entities
                 if (entity.Value.BaseData.PrototypeId == destination.Entity && entity.Value.RegionId == regionId)
                 {
                     if (destination.Area == 0) return entity.Value;
-                    Property.FromValue(entity.Value.PropertyCollection[PropertyEnum.ContextAreaRef], out PrototypeId area);
+                    Property.FromValue(entity.Value.Properties[PropertyEnum.ContextAreaRef], out PrototypeId area);
                     if (area == destination.Area)
                         return entity.Value;
                 }                
@@ -197,12 +197,12 @@ namespace MHServerEmu.Games.Entities
         }
 
         public bool TryGetEntityById(ulong entityId, out Entity entity) => _entityDict.TryGetValue(entityId, out entity);
-        public ulong GetPropertyCollectionReplicationId(ulong entityId) => _entityDict[entityId].PropertyCollection.ReplicationId;
+        public ulong GetPropertyCollectionReplicationId(ulong entityId) => _entityDict[entityId].Properties.ReplicationId;
         public bool TryGetPropertyCollectionReplicationId(ulong entityId, out ulong replicationId)
         {
             if (_entityDict.TryGetValue(entityId, out Entity entity))
             {
-                replicationId = entity.PropertyCollection.ReplicationId;
+                replicationId = entity.Properties.ReplicationId;
                 return true;
             }
 

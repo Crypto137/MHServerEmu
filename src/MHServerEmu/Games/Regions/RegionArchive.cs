@@ -11,7 +11,7 @@ namespace MHServerEmu.Games.Powers
     public class RegionArchive
     {
         public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
-        public ReplicatedPropertyCollection PropertyCollection { get; set; }
+        public ReplicatedPropertyCollection Properties { get; set; }
         public MissionManager MissionManager { get; set; }
         public UIDataProvider UIDataProvider { get; set; }
         public ObjectiveGraph ObjectiveGraph { get; set; }
@@ -22,7 +22,7 @@ namespace MHServerEmu.Games.Powers
             BoolDecoder boolDecoder = new();
 
             ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
-            PropertyCollection = new(stream);
+            Properties = new(stream);
             MissionManager = new(stream, boolDecoder);
             UIDataProvider = new(stream, boolDecoder);
             ObjectiveGraph = new(stream);
@@ -44,7 +44,7 @@ namespace MHServerEmu.Games.Powers
 
                 // Encode
                 cos.WriteRawVarint32((uint)ReplicationPolicy);
-                PropertyCollection.Encode(cos);
+                Properties.Encode(cos);
                 MissionManager.Encode(cos, boolEncoder);
                 UIDataProvider.Encode(cos, boolEncoder);
                 ObjectiveGraph.Encode(cos);
@@ -59,7 +59,7 @@ namespace MHServerEmu.Games.Powers
             StringBuilder sb = new();
 
             sb.AppendLine($"ReplicationPolicy: {ReplicationPolicy}");
-            sb.AppendLine($"PropertyCollection: {PropertyCollection}");
+            sb.AppendLine($"PropertyCollection: {Properties}");
             sb.AppendLine($"MissionManager: {MissionManager}");
             sb.AppendLine($"UIDataProvider: {UIDataProvider}");
             sb.AppendLine($"ObjectiveGraph: {ObjectiveGraph}");

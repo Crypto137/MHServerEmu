@@ -12,7 +12,7 @@ namespace MHServerEmu.Games.Entities
         public ulong RegionId { get; set; } = 0;
 
         public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
-        public ReplicatedPropertyCollection PropertyCollection { get; set; }
+        public ReplicatedPropertyCollection Properties { get; set; }
 
         public Entity(EntityBaseData baseData, ByteString archiveData)
         {
@@ -28,19 +28,19 @@ namespace MHServerEmu.Games.Entities
         {
             BaseData = baseData;
             ReplicationPolicy = replicationPolicy;
-            PropertyCollection = propertyCollection;
+            Properties = propertyCollection;
         }
 
         protected virtual void Decode(CodedInputStream stream)
         {
             ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
-            PropertyCollection = new(stream);
+            Properties = new(stream);
         }
 
         public virtual void Encode(CodedOutputStream stream)
         {
             stream.WriteRawVarint32((uint)ReplicationPolicy);
-            PropertyCollection.Encode(stream);
+            Properties.Encode(stream);
         }
 
         public ByteString Serialize()
@@ -65,7 +65,7 @@ namespace MHServerEmu.Games.Entities
         protected virtual void BuildString(StringBuilder sb)
         {
             sb.AppendLine($"ReplicationPolicy: {ReplicationPolicy}");
-            sb.AppendLine($"PropertyCollection: {PropertyCollection}");
+            sb.AppendLine($"Properties: {Properties}");
         }
 
         public override string ToString()

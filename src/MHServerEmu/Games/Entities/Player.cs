@@ -17,7 +17,7 @@ namespace MHServerEmu.Games.Entities
     public class Player : Entity
     {
         public MissionManager MissionManager { get; set; }
-        public ReplicatedPropertyCollection AvatarPropertyCollection { get; set; }
+        public ReplicatedPropertyCollection AvatarProperties { get; set; }
         public ulong ShardId { get; set; }
         public ReplicatedVariable<string> Name { get; set; }
         public ulong ConsoleAccountId1 { get; set; }
@@ -42,7 +42,7 @@ namespace MHServerEmu.Games.Entities
         public Player(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
         // note: this is ugly
-        public Player(EntityBaseData baseData, AoiNetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection propertyCollection,
+        public Player(EntityBaseData baseData, AoiNetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection properties,
             MissionManager missionManager, ReplicatedPropertyCollection avatarProperties,
             ulong shardId, ReplicatedVariable<string> playerName, ReplicatedVariable<string> unkName,
             ulong matchQueueStatus, bool emailVerified, ulong accountCreationTimestamp, ReplicatedVariable<ulong> partyId,
@@ -50,10 +50,10 @@ namespace MHServerEmu.Games.Entities
             GameplayOptions gameplayOptions, AchievementState[] achievementStates, StashTabOption[] stashTabOptions) : base(baseData)
         {
             ReplicationPolicy = replicationPolicy;
-            PropertyCollection = propertyCollection;
+            Properties = properties;
 
             MissionManager = missionManager;
-            AvatarPropertyCollection = avatarProperties;
+            AvatarProperties = avatarProperties;
             ShardId = shardId;
             Name = playerName;
             ConsoleAccountId1 = 0;
@@ -79,7 +79,7 @@ namespace MHServerEmu.Games.Entities
             BoolDecoder boolDecoder = new();
 
             MissionManager = new(stream, boolDecoder);
-            AvatarPropertyCollection = new(stream);
+            AvatarProperties = new(stream);
 
             ShardId = stream.ReadRawVarint64();
             Name = new(stream);
@@ -140,7 +140,7 @@ namespace MHServerEmu.Games.Entities
 
             // Encode
             MissionManager.Encode(stream, boolEncoder);
-            AvatarPropertyCollection.Encode(stream);
+            AvatarProperties.Encode(stream);
 
             stream.WriteRawVarint64(ShardId);
             Name.Encode(stream);
@@ -183,7 +183,7 @@ namespace MHServerEmu.Games.Entities
             base.BuildString(sb);
 
             sb.AppendLine($"MissionManager: {MissionManager}");
-            sb.AppendLine($"AvatarPropertyCollection: {AvatarPropertyCollection}");
+            sb.AppendLine($"AvatarProperties: {AvatarProperties}");
             sb.AppendLine($"ShardId: {ShardId}");
             sb.AppendLine($"Name: {Name}");
             sb.AppendLine($"ConsoleAccountId1: 0x{ConsoleAccountId1:X}");

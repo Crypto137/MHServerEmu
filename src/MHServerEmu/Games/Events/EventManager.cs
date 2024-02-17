@@ -107,10 +107,10 @@ namespace MHServerEmu.Games.Events
                             true );
 
                         // TODO: applyItemSpecProperties 
-                        bowlingBall.PropertyCollection[PropertyEnum.InventoryStackSizeMax] = Property.ToValue(1000);          // Item.StackSettings
-                        bowlingBall.PropertyCollection[PropertyEnum.ItemIsTradable] = Property.ToValue(false);                // DefaultSettings.IsTradable
-                        bowlingBall.PropertyCollection[PropertyEnum.ItemBindsToCharacterOnEquip] = Property.ToValue(true);    // DefaultSettings.BindsToAccountOnPickup
-                        bowlingBall.PropertyCollection[PropertyEnum.ItemBindsToAccountOnPickup] = Property.ToValue(true);     // DefaultSettings.BindsToCharacterOnEquip 
+                        bowlingBall.Properties[PropertyEnum.InventoryStackSizeMax] = Property.ToValue(1000);          // Item.StackSettings
+                        bowlingBall.Properties[PropertyEnum.ItemIsTradable] = Property.ToValue(false);                // DefaultSettings.IsTradable
+                        bowlingBall.Properties[PropertyEnum.ItemBindsToCharacterOnEquip] = Property.ToValue(true);    // DefaultSettings.BindsToAccountOnPickup
+                        bowlingBall.Properties[PropertyEnum.ItemBindsToAccountOnPickup] = Property.ToValue(true);     // DefaultSettings.BindsToCharacterOnEquip 
 
                         messageList.Add(new(client, new(bowlingBall.ToNetMessageEntityCreate())));
 
@@ -492,7 +492,7 @@ namespace MHServerEmu.Games.Events
                         .Build())));
 
                     messageList.Add(new(client, new(
-                        Property.ToNetMessageSetProperty(arenaEntity.PropertyCollection.ReplicationId, new(PropertyEnum.AttachedToEntityId), Property.ToValue(avatarEntityId))
+                        Property.ToNetMessageSetProperty(arenaEntity.Properties.ReplicationId, new(PropertyEnum.AttachedToEntityId), Property.ToValue(avatarEntityId))
                         )));
 
                     break;
