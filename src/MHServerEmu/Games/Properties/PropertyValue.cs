@@ -78,25 +78,25 @@ namespace MHServerEmu.Games.Properties
             RawLong = (long)(x | y | z);
         }
 
-        public bool GetBool() => RawLong != 0;
+        public bool ToBool() => RawLong != 0;
 
-        public float GetFloat() => RawFloat;
+        public float ToFloat() => RawFloat;
 
-        public int GetInt() => (int)RawLong;
+        public int ToInt() => (int)RawLong;
 
-        public long GetLong() => RawLong;
+        public long ToLong() => RawLong;
 
-        public uint GetUInt() => (uint)(int)RawLong;
+        public uint ToUInt() => (uint)(int)RawLong;
 
-        public ulong GetULong() => (ulong)RawLong;
+        public ulong ToULong() => (ulong)RawLong;
 
-        public PrototypeId GetPrototypeId() => (PrototypeId)RawLong;
+        public PrototypeId ToPrototypeId() => (PrototypeId)RawLong;
 
-        public CurveId GetCurveId() => (CurveId)RawLong;
+        public CurveId ToCurveId() => (CurveId)RawLong;
 
-        public AssetId GetAssetId() => (AssetId)RawLong;
+        public AssetId ToAssetId() => (AssetId)RawLong;
 
-        public Vector3 GetVector3()
+        public Vector3 ToVector3()
         {
             ulong raw = (ulong)RawLong;
 
@@ -119,11 +119,11 @@ namespace MHServerEmu.Games.Properties
         {
             switch (type)
             {
-                case PropertyDataType.Boolean:      return GetBool().ToString();
-                case PropertyDataType.Real:         return GetFloat().ToString();
-                case PropertyDataType.Integer:      return GetInt().ToString();
-                case PropertyDataType.Prototype:    return GameDatabase.GetPrototypeName(GetPrototypeId());
-                case PropertyDataType.Int21Vector3: return GetVector3().ToString();
+                case PropertyDataType.Boolean:      return ToBool().ToString();
+                case PropertyDataType.Real:         return ToFloat().ToString();
+                case PropertyDataType.Integer:      return ToInt().ToString();
+                case PropertyDataType.Prototype:    return GameDatabase.GetPrototypeName(ToPrototypeId());
+                case PropertyDataType.Int21Vector3: return ToVector3().ToString();
                 default:                            return $"0x{RawLong:X}";
             }
         }

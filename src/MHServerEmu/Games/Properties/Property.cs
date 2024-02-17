@@ -119,16 +119,16 @@ namespace MHServerEmu.Games.Properties
         public static PropertyValue ToValue(AssetId value) => new(value);
         public static PropertyValue ToValue(Vector3 value) => new(value);
 
-        public static void FromValue(PropertyValue value, out bool convertedValue) => convertedValue = value.GetBool();
-        public static void FromValue(PropertyValue value, out float convertedValue) => convertedValue = value.GetFloat();
-        public static void FromValue(PropertyValue value, out int convertedValue) => convertedValue = value.GetInt();
-        public static void FromValue(PropertyValue value, out long convertedValue) => convertedValue = value.GetLong();
-        public static void FromValue(PropertyValue value, out uint convertedValue) => convertedValue = value.GetUInt();
-        public static void FromValue(PropertyValue value, out ulong convertedValue) => convertedValue = value.GetULong();
-        public static void FromValue(PropertyValue value, out PrototypeId convertedValue) => convertedValue = value.GetPrototypeId();
-        public static void FromValue(PropertyValue value, out CurveId convertedValue) => convertedValue = value.GetCurveId();
-        public static void FromValue(PropertyValue value, out AssetId convertedValue) => convertedValue = value.GetAssetId();
-        public static void FromValue(PropertyValue value, out Vector3 convertedValue) => convertedValue = value.GetVector3();
+        public static void FromValue(PropertyValue value, out bool convertedValue) => convertedValue = value.ToBool();
+        public static void FromValue(PropertyValue value, out float convertedValue) => convertedValue = value.ToFloat();
+        public static void FromValue(PropertyValue value, out int convertedValue) => convertedValue = value.ToInt();
+        public static void FromValue(PropertyValue value, out long convertedValue) => convertedValue = value.ToLong();
+        public static void FromValue(PropertyValue value, out uint convertedValue) => convertedValue = value.ToUInt();
+        public static void FromValue(PropertyValue value, out ulong convertedValue) => convertedValue = value.ToULong();
+        public static void FromValue(PropertyValue value, out PrototypeId convertedValue) => convertedValue = value.ToPrototypeId();
+        public static void FromValue(PropertyValue value, out CurveId convertedValue) => convertedValue = value.ToCurveId();
+        public static void FromValue(PropertyValue value, out AssetId convertedValue) => convertedValue = value.ToAssetId();
+        public static void FromValue(PropertyValue value, out Vector3 convertedValue) => convertedValue = value.ToVector3();
 
         public static NetMessageSetProperty ToNetMessageSetProperty(ulong replicationId, PropertyId propertyId, PropertyValue value)
         {
