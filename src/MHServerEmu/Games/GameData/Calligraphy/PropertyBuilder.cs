@@ -14,9 +14,9 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         private PropertyInfoTable _propertyInfoTable;
         private bool _isInitializing;
 
-        private ParamInfo[] _paramInfos = new ParamInfo[PropertyConsts.MaxParamCount];
+        private ParamInfo[] _paramInfos = new ParamInfo[Property.MaxParamCount];
 
-        public int[] ParamValues { get; private set; } = new int[PropertyConsts.MaxParamCount];
+        public int[] ParamValues { get; private set; } = new int[Property.MaxParamCount];
         public int ParamCount { get; private set; }
 
         public ulong PropertyValue { get; private set; }
@@ -78,7 +78,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             // Split the remaining bit budget between integer params (if any)
             if (numIntegerParams > 0)
             {
-                int intBudget = PropertyConsts.ParamBitCount - usedBitCount;
+                int intBudget = Property.ParamBitCount - usedBitCount;
                 int bitCount = intBudget / numIntegerParams;
                 bitCount = Math.Min(bitCount, 31);
                 int intParamMaxValue = (1 << bitCount) - 1;
@@ -170,8 +170,8 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
         private bool SetParam(int paramIndex, int paramValue)
         {
-            if (paramIndex >= PropertyConsts.MaxParamCount)
-                throw new ArgumentException($"paramIndex is out of range (max: {PropertyConsts.MaxParamCount}).");
+            if (paramIndex >= Property.MaxParamCount)
+                throw new ArgumentException($"paramIndex is out of range (max: {Property.MaxParamCount}).");
 
             ParamValues[paramIndex] = paramValue;
             ParamCount = Math.Max(ParamCount, paramIndex + 1);

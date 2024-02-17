@@ -5,23 +5,23 @@ namespace MHServerEmu.Games.Properties
     /// <summary>
     /// Identifies a <see cref="PropertyValue"/>.
     /// </summary>
-    public struct PropertyId
+    public struct PropertyId : IComparable
     {
         public ulong Raw { get; set; }
 
-        public PropertyEnum Enum { get => (PropertyEnum)(Raw >> PropertyConsts.ParamBitCount); }
+        public PropertyEnum Enum { get => (PropertyEnum)(Raw >> Property.ParamBitCount); }
 
         /// <summary>
         /// Returns <see langword="true"/> if this <see cref="PropertyId"/> has any param values encoded.
         /// </summary>
-        public bool HasParams { get => (Raw & PropertyConsts.ParamMask) != 0; }
+        public bool HasParams { get => (Raw & Property.ParamMask) != 0; }
 
         /// <summary>
         /// Constructs a <see cref="PropertyId"/> with <see cref="PropertyEnum.Invalid"/> as its value.
         /// </summary>
         public PropertyId()
         {
-            Raw = (ulong)PropertyEnum.Invalid << PropertyConsts.ParamBitCount;
+            Raw = (ulong)PropertyEnum.Invalid << Property.ParamBitCount;
         }
 
         /// <summary>
@@ -29,7 +29,7 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public PropertyId(PropertyEnum propertyEnum)
         {
-            Raw = (ulong)propertyEnum << PropertyConsts.ParamBitCount;
+            Raw = (ulong)propertyEnum << Property.ParamBitCount;
         }
 
         /// <summary>
@@ -83,6 +83,12 @@ namespace MHServerEmu.Games.Properties
         public PropertyId(ulong raw)
         {
             Raw = raw;
+        }
+
+        public int CompareTo(object obj)
+        {
+            if (obj is not PropertyId propertyId) throw new ArgumentException("Object is not a PropertyId.");
+            return Raw.CompareTo(propertyId.Raw);
         }
 
         public override bool Equals(object obj)

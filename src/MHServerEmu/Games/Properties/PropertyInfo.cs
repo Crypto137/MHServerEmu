@@ -9,12 +9,12 @@ namespace MHServerEmu.Games.Properties
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly PropertyParamType[] _paramTypes = new PropertyParamType[PropertyConsts.MaxParamCount];
-        private readonly AssetTypeId[] _paramAssetTypes = new AssetTypeId[PropertyConsts.MaxParamCount];
-        private readonly BlueprintId[] _paramPrototypeBlueprints = new BlueprintId[PropertyConsts.MaxParamCount];
-        private readonly int[] _paramBitCounts = new int[PropertyConsts.MaxParamCount];
-        private readonly int[] _paramOffsets = new int[PropertyConsts.MaxParamCount];
-        private readonly int[] _paramMaxValues = new int[PropertyConsts.MaxParamCount];
+        private readonly PropertyParamType[] _paramTypes = new PropertyParamType[Property.MaxParamCount];
+        private readonly AssetTypeId[] _paramAssetTypes = new AssetTypeId[Property.MaxParamCount];
+        private readonly BlueprintId[] _paramPrototypeBlueprints = new BlueprintId[Property.MaxParamCount];
+        private readonly int[] _paramBitCounts = new int[Property.MaxParamCount];
+        private readonly int[] _paramOffsets = new int[Property.MaxParamCount];
+        private readonly int[] _paramMaxValues = new int[Property.MaxParamCount];
 
         private ulong _defaultValue;
         private int _paramCount;
@@ -45,7 +45,7 @@ namespace MHServerEmu.Games.Properties
             PropertyInfoPrototypeRef = propertyInfoPrototypeRef;
 
             // Initialize param arrays
-            for (int i = 0; i < PropertyConsts.MaxParamCount; i++)
+            for (int i = 0; i < Property.MaxParamCount; i++)
             {
                 _paramTypes[i] = PropertyParamType.Invalid;
                 _paramAssetTypes[i] = AssetTypeId.Invalid;
@@ -57,10 +57,10 @@ namespace MHServerEmu.Games.Properties
 
         public int[] DecodeParameters(PropertyId propertyId)
         {
-            if (_paramCount == 0) return new int[PropertyConsts.MaxParamCount];
+            if (_paramCount == 0) return new int[Property.MaxParamCount];
 
-            ulong encodedParams = propertyId.Raw & PropertyConsts.ParamMask;
-            int[] decodedParams = new int[PropertyConsts.MaxParamCount];
+            ulong encodedParams = propertyId.Raw & Property.ParamMask;
+            int[] decodedParams = new int[Property.MaxParamCount];
 
             for (int i = 0; i < _paramCount; i++)
                 decodedParams[i] = (int)((encodedParams >> _paramOffsets[i]) & ((1ul << _paramBitCounts[i]) - 1));
@@ -137,7 +137,7 @@ namespace MHServerEmu.Games.Properties
 
         public PropertyParamType GetParamType(int paramIndex)
         {
-            if (paramIndex >= PropertyConsts.MaxParamCount)
+            if (paramIndex >= Property.MaxParamCount)
                 return Logger.WarnReturn(PropertyParamType.Invalid, $"GetParamType(): param index {paramIndex} out of range");
 
             return _paramTypes[paramIndex];
@@ -145,7 +145,7 @@ namespace MHServerEmu.Games.Properties
 
         public AssetTypeId GetParamAssetType(int paramIndex)
         {
-            if (paramIndex >= PropertyConsts.MaxParamCount)
+            if (paramIndex >= Property.MaxParamCount)
                 return Logger.WarnReturn(AssetTypeId.Invalid, $"GetParamAssetType(): param index {paramIndex} out of range");
 
             if (_paramTypes[paramIndex] != PropertyParamType.Asset)
@@ -156,7 +156,7 @@ namespace MHServerEmu.Games.Properties
 
         public BlueprintId GetParamPrototypeBlueprint(int paramIndex)
         {
-            if (paramIndex >= PropertyConsts.MaxParamCount)
+            if (paramIndex >= Property.MaxParamCount)
                 return Logger.WarnReturn(BlueprintId.Invalid, $"GetParamPrototypeBlueprint(): param index {paramIndex} out of range");
 
             if (_paramTypes[paramIndex] != PropertyParamType.Prototype)
@@ -167,7 +167,7 @@ namespace MHServerEmu.Games.Properties
 
         public int GetParamBitCount(int paramIndex)
         {
-            if (paramIndex >= PropertyConsts.MaxParamCount)
+            if (paramIndex >= Property.MaxParamCount)
                 return Logger.WarnReturn(0, $"GetParamBitCount(): param index {paramIndex} out of range");
 
             if (_paramTypes[paramIndex] == PropertyParamType.Invalid)
@@ -178,7 +178,7 @@ namespace MHServerEmu.Games.Properties
 
         public bool SetParamTypeInteger(int paramIndex, int maxValue)
         {
-            if (paramIndex >= PropertyConsts.MaxParamCount)
+            if (paramIndex >= Property.MaxParamCount)
                 return Logger.ErrorReturn(false, $"SetParamTypeInteger(): param index {paramIndex} out of range");
 
             if (_paramTypes[paramIndex] != PropertyParamType.Invalid)
@@ -191,7 +191,7 @@ namespace MHServerEmu.Games.Properties
 
         public bool SetParamTypeAsset(int paramIndex, AssetTypeId assetTypeId)
         {
-            if (paramIndex >= PropertyConsts.MaxParamCount)
+            if (paramIndex >= Property.MaxParamCount)
                 return Logger.ErrorReturn(false, $"SetParamTypeAsset(): param index {paramIndex} out of range");
 
             if (_paramTypes[paramIndex] != PropertyParamType.Invalid)
@@ -210,7 +210,7 @@ namespace MHServerEmu.Games.Properties
 
         public bool SetParamTypePrototype(int paramIndex, BlueprintId blueprintId)
         {
-            if (paramIndex >= PropertyConsts.MaxParamCount)
+            if (paramIndex >= Property.MaxParamCount)
                 return Logger.ErrorReturn(false, $"SetParamTypePrototype(): param index {paramIndex} out of range");
 
             if (_paramTypes[paramIndex] != PropertyParamType.Invalid)
@@ -229,10 +229,10 @@ namespace MHServerEmu.Games.Properties
         {
             // NOTE: these checks mirror the client, we might not actually need all of them
             if (_updatedInfo) Logger.ErrorReturn(false, "Failed to SetPropertyInfo(): already set");
-            if (paramCount > PropertyConsts.MaxParamCount) Logger.ErrorReturn(false, $"Failed to SetPropertyInfo(): invalid param count {paramCount}");
+            if (paramCount > Property.MaxParamCount) Logger.ErrorReturn(false, $"Failed to SetPropertyInfo(): invalid param count {paramCount}");
 
             // Checks to make sure all param types have been set up prior to this
-            for (int i = 0; i < PropertyConsts.MaxParamCount; i++)
+            for (int i = 0; i < Property.MaxParamCount; i++)
             {
                 if (i < paramCount)
                 {
@@ -252,7 +252,7 @@ namespace MHServerEmu.Games.Properties
             _paramDefaultValues = paramDefaultValues;
 
             // Calculate bit offsets for params
-            int offset = PropertyConsts.ParamBitCount;
+            int offset = Property.ParamBitCount;
             for (int i = 0; i < _paramCount; i++)
             {
                 _paramBitCounts[i] = _paramMaxValues[i].HighestBitSet() + 1;
