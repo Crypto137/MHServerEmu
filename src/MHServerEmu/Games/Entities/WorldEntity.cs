@@ -8,6 +8,7 @@ using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -21,9 +22,13 @@ namespace MHServerEmu.Games.Entities
         public Cell Cell { get => Location.Cell; }
         public EntityRegionSpatialPartitionLocation SpatialPartitionLocation { get; }
         public Aabb RegionBounds { get; set; }
+        public Bounds Bounds { get; set; } = new();
         public Region Region { get => Location.Region; }
-
+        public WorldEntityPrototype WorldEntityPrototype { get => EntityPrototype as WorldEntityPrototype; }
         public Game Game { get; private set; }
+        public RegionLocation LastLocation { get; private set; }
+        public bool TrackAfterDiscovery { get; private set; }
+
         public WorldEntity(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { SpatialPartitionLocation = new(this); }
 
         public WorldEntity(EntityBaseData baseData) : base(baseData) { SpatialPartitionLocation = new(this); }
@@ -44,16 +49,14 @@ namespace MHServerEmu.Games.Entities
         {
             ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel5;
 
-            PropertyCollection = new(replicationId, new()
-            {
-                new(PropertyEnum.MapPosition, mapPosition),
-                new(PropertyEnum.Health, health),
-                new(PropertyEnum.MapAreaId, mapAreaId),
-                new(PropertyEnum.HealthMaxOther, healthMaxOther),
-                new(PropertyEnum.MapRegionId, mapRegionId),
-                new(PropertyEnum.MapCellId, mapCellId),
-                new(PropertyEnum.ContextAreaRef, contextAreaRef)
-            });
+            PropertyCollection = new(replicationId);
+            PropertyCollection[PropertyEnum.MapPosition] = mapPosition;
+            PropertyCollection[PropertyEnum.Health] = health;
+            PropertyCollection[PropertyEnum.MapAreaId] = mapAreaId;
+            PropertyCollection[PropertyEnum.HealthMaxOther] = healthMaxOther;
+            PropertyCollection[PropertyEnum.MapRegionId] = mapRegionId;
+            PropertyCollection[PropertyEnum.MapCellId] = mapCellId;
+            PropertyCollection[PropertyEnum.ContextAreaRef] = contextAreaRef;
 
             TrackingContextMap = Array.Empty<EntityTrackingContextMap>();
             ConditionCollection = Array.Empty<Condition>();
@@ -145,13 +148,29 @@ namespace MHServerEmu.Games.Entities
         }
 
         public void EnterWorld(Cell cell, Vector3 position, Vector3 orientation)
-        {            
+        {
+            var proto = WorldEntityPrototype;
             Game = cell.Game; // TODO: Init Game to constructor
+            TrackAfterDiscovery = proto.ObjectiveInfo.TrackAfterDiscovery;
+            if (proto is HotspotPrototype) Flags |= EntityFlags.IsHotspot;
 
             Location.Region = cell.GetRegion();
             Location.Cell = cell; // Set directly
             Location.SetPosition(position);
             Location.SetOrientation(orientation);
+            // TODO ChangeRegionPosition
+            Bounds.InitializeFromPrototype(proto.Bounds);
+            Bounds.Center = position;
+            UpdateRegionBounds(); // Add to Quadtree
+        }
+
+        public bool ShouldUseSpatialPartitioning() => Bounds.Geometry != GeometryType.None;
+
+        public void UpdateRegionBounds()
+        {
+            RegionBounds = Bounds.ToAabb();
+            if (ShouldUseSpatialPartitioning())
+                Region.UpdateEntityInSpatialPartition(this);
         }
 
         public bool IsInWorld() => Location.IsValid();
@@ -160,7 +179,15 @@ namespace MHServerEmu.Games.Entities
         {
             // TODO send packets for delete entities from world
             var entityManager = Game.EntityManager;
+            ClearWorldLocation();
             entityManager.DestroyEntity(BaseData.EntityId);
+        }
+
+        public void ClearWorldLocation()
+        {
+            if(Location.IsValid()) LastLocation = Location;
+            if (Region != null && SpatialPartitionLocation.IsValid()) Region.RemoveEntityFromSpatialPartition(this);
+            Location = null;
         }
 
         internal void EmergencyRegionCleanup(Region region)

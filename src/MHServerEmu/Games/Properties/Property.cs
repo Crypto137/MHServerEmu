@@ -19,26 +19,12 @@ namespace MHServerEmu.Games.Properties
             CreateValueContainer(stream.ReadRawVarint64());
         }
 
-        public Property(ulong rawId, ulong rawValue = 0)
+        public Property(PropertyId id, object value = null)
         {
-            Id = new(rawId);
-            PropertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(Id.Enum);
-            CreateValueContainer(rawValue);
-        }
-
-        public Property(PropertyEnum propertyEnum, object value)
-        {
-            Id = new(propertyEnum);
+            Id = id;
             PropertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(Id.Enum);
             CreateValueContainer(0);
-            Value.Set(value);
-        }
-
-        public Property(NetMessageSetProperty setPropertyMessage)
-        {
-            Id = new(setPropertyMessage.PropertyId.ReverseBits());
-            PropertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(Id.Enum);
-            CreateValueContainer(setPropertyMessage.ValueBits);
+            if (value != null) Value.Set(value);
         }
 
         public void Encode(CodedOutputStream stream)
@@ -47,34 +33,48 @@ namespace MHServerEmu.Games.Properties
             stream.WriteRawVarint64(Value.RawValue);
         }
 
-        public NetStructProperty ToNetStruct() => NetStructProperty.CreateBuilder().SetId(Id.Raw).SetValue(Value.RawValue).Build();
+        public override string ToString()
+        {
+            StringBuilder sb = new();
+            sb.AppendLine($"Id: {Id}");
+            sb.AppendLine($"Enum: {Id.Enum}");
 
-        public NetMessageSetProperty ToNetMessageSetProperty(ulong replicationId)
+            if (Id.HasParams)
+            {
+                sb.Append($"Params: ");
+                int[] @params = Id.GetParams();
+                for (int i = 0; i < @params.Length; i++)
+                    sb.Append($"{@params[i]} ");
+                sb.Length--;
+                sb.AppendLine();
+            }
+
+            sb.AppendLine($"Value: {Value}");
+            sb.AppendLine($"PropertyDataType: {PropertyInfo.DataType}");
+            return sb.ToString();
+        }
+
+        public static NetMessageSetProperty ToNetMessageSetProperty(ulong replicationId, PropertyId propertyId, object value)
+        {
+            Property prop = new(propertyId, value);
+            return prop.ToNetMessageSetProperty(replicationId);
+        }
+
+        public static NetMessageRemoveProperty ToNetMessageRemoveProperty(ulong replicationId, PropertyId propertyId)
+        {
+            return NetMessageRemoveProperty.CreateBuilder()
+                .SetReplicationId(replicationId)
+                .SetPropertyId(propertyId.Raw.ReverseBits())
+                .Build();
+        }
+
+        private NetMessageSetProperty ToNetMessageSetProperty(ulong replicationId)
         {
             return NetMessageSetProperty.CreateBuilder()
                 .SetReplicationId(replicationId)
                 .SetPropertyId(Id.Raw.ReverseBits())    // In NetMessageSetProperty all bits are reversed rather than bytes
                 .SetValueBits(Value.RawValue)
                 .Build();
-        }
-
-        public NetMessageRemoveProperty ToNetMessageRemoveProperty(ulong replicationId)
-        {
-            return NetMessageRemoveProperty.CreateBuilder()
-                .SetReplicationId(replicationId)
-                .SetPropertyId(Id.Raw.ReverseBits())
-                .Build();
-        }
-
-        public override string ToString()
-        {
-            StringBuilder sb = new();
-            sb.AppendLine($"Id: {Id}");
-            sb.AppendLine($"Enum: {Id.Enum}");
-            sb.AppendLine($"HasParams: {Id.HasParams()}");
-            sb.AppendLine($"Value: {Value}");
-            sb.AppendLine($"PropertyDataType: {PropertyInfo.DataType}");
-            return sb.ToString();
         }
 
         private void CreateValueContainer(ulong rawValue)

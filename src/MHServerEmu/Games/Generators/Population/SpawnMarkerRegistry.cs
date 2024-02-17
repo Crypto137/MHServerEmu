@@ -145,7 +145,7 @@ namespace MHServerEmu.Games.Generators.Population
             }
             regionList.Add(spot);
 
-            PrototypeId areaRef = cell.Area.GetPrototypeDataRef();
+            PrototypeId areaRef = cell.Area.PrototypeDataRef;
             if (!_areaLookup.TryGetValue(areaRef, out var areaMap))
             {
                 areaMap = new ();
@@ -237,7 +237,7 @@ namespace MHServerEmu.Games.Generators.Population
             var area = reservation.Cell.Area;
             if (area == null) return false;
 
-            var areaRef = area.GetPrototypeDataRef();
+            var areaRef = area.PrototypeDataRef;
             if (areaRef == 0) return false;
 
             var markerRef = reservation.MarkerRef;
@@ -287,7 +287,7 @@ namespace MHServerEmu.Games.Generators.Population
 
             var spawnCellRef = spawnCell.PrototypeId;
             var spawnCellId = spawnCell.Id;
-            var spawnAreaRef = spawnCell.Area.GetPrototypeDataRef();
+            var spawnAreaRef = spawnCell.Area.PrototypeDataRef;
 
             // picker add
             if (spawnCells.IsNullOrEmpty() == false)

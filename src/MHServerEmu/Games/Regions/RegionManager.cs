@@ -128,15 +128,7 @@ namespace MHServerEmu.Games.Regions
             Region region = new(prototype,
              SeedNumberFromCommand != 0 ? SeedNumberFromCommand : 1038711701,
              Array.Empty<byte>(),
-             new(),
-             new(),
-             new(10, DifficultyTier.Normal))
-            {
-                EntrancePosition = new(),
-                EntranceOrientation = new(),
-                WaypointPosition = new(),
-                WaypointOrientation = new()
-            };
+             new(10, DifficultyTier.Normal));
             return region;
         }
 

@@ -6,39 +6,102 @@ namespace MHServerEmu.Games.Properties
 {
     public class PropertyCollection
     {
-        // TODO: Remove direct access to PropertyList once we no longer need it and interact with it through methods
-        public List<Property> PropertyList { get; } = new();
+        // TODO: PropertyList data structure or something to replace it
+        protected List<Property> _propertyList = new();
 
-        public PropertyCollection(CodedInputStream stream)
-        {
-            uint propertyCount = stream.ReadRawUInt32();
-            for (int i = 0; i < propertyCount; i++)
-                PropertyList.Add(new(stream));
-        }
+        public PropertyCollection() { }
 
         public PropertyCollection(List<Property> propertyList = null)
         {
             if (propertyList != null)
-                PropertyList.AddRange(propertyList);
+                _propertyList.AddRange(propertyList);
         }
 
-        public Property GetPropertyByEnum(PropertyEnum propertyEnum)
+        public Property GetProperty(PropertyId propertyId)
         {
-            return PropertyList.Find(property => property.Id.Enum == propertyEnum);
+            return _propertyList.Find(property => property.Id == propertyId);
         }
 
-        public void Encode(CodedOutputStream stream)
+        public void SetProperty(object value, PropertyId propertyId)
         {
-            stream.WriteRawUInt32((uint)PropertyList.Count);
-            foreach (Property property in PropertyList)
+            Property prop = GetProperty(propertyId);
+            if (prop == null)
+            {
+                prop = new(propertyId);
+                _propertyList.Add(prop);
+            }
+            prop.Value.Set(value);
+        }
+
+        public bool HasProperty(PropertyEnum propertyEnum)
+        {
+            return _propertyList.Find(property => property.Id.Enum == propertyEnum) != null;
+        }
+
+        public bool HasProperty(PropertyId propertyId)
+        {
+            return GetProperty(propertyId) != null;
+        }
+
+        #region Value Indexers
+
+        public object this[PropertyId propertyId]
+        {
+            get => GetProperty(propertyId).Value.Get();
+            set => SetProperty(value, propertyId);
+        }
+
+        public object this[PropertyEnum propertyEnum]
+        {
+            get => GetProperty(new(propertyEnum)).Value.Get();
+            set => SetProperty(value, new(propertyEnum));
+        }
+
+        public object this[PropertyEnum propertyEnum, int param0]
+        {
+            get => GetProperty(new(propertyEnum, param0)).Value.Get();
+            set => SetProperty(value, new(propertyEnum, param0));
+        }
+
+        public object this[PropertyEnum propertyEnum, int param0, int param1]
+        {
+            get => GetProperty(new(propertyEnum, param0, param1)).Value.Get();
+            set => SetProperty(value, new(propertyEnum, param0, param1));
+        }
+
+        public object this[PropertyEnum propertyEnum, int param0, int param1, int param2]
+        {
+            get => GetProperty(new(propertyEnum, param0, param1, param2)).Value.Get();
+            set => SetProperty(value, new(propertyEnum, param0, param1, param2));
+        }
+
+        public object this[PropertyEnum propertyEnum, int param0, int param1, int param2, int param3]
+        {
+            get => GetProperty(new(propertyEnum, param0, param1, param2, param3)).Value.Get();
+            set => SetProperty(value, new(propertyEnum, param0, param1, param2, param3));
+        }
+
+        #endregion
+
+        public IEnumerable<Property> IterateProperties()
+        {
+            // temp method
+            foreach (Property prop in _propertyList)
+                yield return prop;
+        }
+
+        public virtual void Encode(CodedOutputStream stream)
+        {
+            stream.WriteRawUInt32((uint)_propertyList.Count);
+            foreach (Property property in _propertyList)
                 property.Encode(stream);
         }
 
         public override string ToString()
         {
             StringBuilder sb = new();
-            for (int i = 0; i < PropertyList.Count; i++)
-                sb.AppendLine($"Property{i}: {PropertyList[i]}");
+            for (int i = 0; i < _propertyList.Count; i++)
+                sb.AppendLine($"Property{i}: {_propertyList[i]}");
             return sb.ToString();
         }
     }

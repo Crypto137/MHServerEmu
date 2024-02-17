@@ -1,10 +1,22 @@
-﻿namespace MHServerEmu.Games.Entities.Avatars
+﻿using MHServerEmu.Games.GameData;
+
+namespace MHServerEmu.Games.Entities.Avatars
 {
     public static class AvatarPrototypeEnumExtensions
     {
         public static HardcodedAvatarEntityId ToEntityId(this AvatarPrototypeId prototype)
         {
             return Enum.Parse<HardcodedAvatarEntityId>(Enum.GetName(prototype));
+        }
+
+        public static PrototypeId ToAvatarPrototypeId(this HardcodedAvatarEntityId avatarEntityId)
+        {
+            return (PrototypeId)Enum.Parse<AvatarPrototypeId>(Enum.GetName(avatarEntityId));
+        }
+
+        public static HardcodedAvatarPropertyCollectionReplicationId ToPropertyCollectionReplicationId(this HardcodedAvatarEntityId avatarEntityId)
+        {
+            return Enum.Parse<HardcodedAvatarPropertyCollectionReplicationId>(Enum.GetName(avatarEntityId));
         }
 
         public static HardcodedAvatarPropertyCollectionReplicationId ToPropertyCollectionReplicationId(this AvatarPrototypeId prototype)

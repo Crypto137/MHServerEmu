@@ -116,7 +116,7 @@ namespace MHServerEmu.Games.Generators.Regions
             if (proto != null && proto.Areas.IsNullOrEmpty() == false)
             {
                 foreach (var entry in proto.Areas)
-                    if (entry != null && entry.Area == area.GetPrototypeDataRef()) return entry.Picks;
+                    if (entry != null && entry.Area == area.PrototypeDataRef) return entry.Picks;
             }
 
             return 0;

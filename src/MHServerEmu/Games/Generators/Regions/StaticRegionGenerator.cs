@@ -55,7 +55,7 @@ namespace MHServerEmu.Games.Generators.Regions
                     List<PrototypeId> nextConnections = new();
                     List<PrototypeId> prevConnections = new()
                     {
-                        StartArea.GetPrototypeDataRef()
+                        StartArea.PrototypeDataRef
                     };
                     ConnectNextAreas(random, workingConnectionList, prevConnections, nextConnections, graph);
                 }

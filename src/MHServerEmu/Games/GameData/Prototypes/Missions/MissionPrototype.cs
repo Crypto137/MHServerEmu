@@ -380,7 +380,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (PopulationSpawns.IsNullOrEmpty() == false)
             {
-                PrototypeId regionRef = region.GetPrototypeDataRef();
+                PrototypeId regionRef = region.PrototypeDataRef;
 
                 if (PopulationRegions.Any())
                     return PopulationRegions.Contains(regionRef);

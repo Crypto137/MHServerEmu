@@ -73,19 +73,19 @@ namespace MHServerEmu.Games.Powers
             uint delta = 65; // TODO: Sync server-client
             switch (powerId)
             {   // Power.AnimationContactTimePercent
-                case (PrototypeId)PowerPrototypes.GhostRider.GhostRiderRide:
-                case (PrototypeId)PowerPrototypes.Wolverine.WolverineRide:
-                case (PrototypeId)PowerPrototypes.Deadpool.DeadpoolRide:
-                case (PrototypeId)PowerPrototypes.NickFury.NickFuryRide:
-                case (PrototypeId)PowerPrototypes.Cyclops.CyclopsRide:
-                case (PrototypeId)PowerPrototypes.BlackWidow.BlackWidowRide:
-                case (PrototypeId)PowerPrototypes.Blade.BladeRide:
+                case (PrototypeId)PowerPrototypes.Travel.GhostRiderRide:
+                case (PrototypeId)PowerPrototypes.Travel.WolverineRide:
+                case (PrototypeId)PowerPrototypes.Travel.DeadpoolRide:
+                case (PrototypeId)PowerPrototypes.Travel.NickFuryRide:
+                case (PrototypeId)PowerPrototypes.Travel.CyclopsRide:
+                case (PrototypeId)PowerPrototypes.Travel.BlackWidowRide:
+                case (PrototypeId)PowerPrototypes.Travel.BladeRide:
                     _eventManager.AddEvent(client, EventEnum.StartTravel, 100 - delta, powerId);
                     break;
-                case (PrototypeId)PowerPrototypes.AntMan.AntmanFlight:
+                case (PrototypeId)PowerPrototypes.Travel.AntmanFlight:
                     _eventManager.AddEvent(client, EventEnum.StartTravel, 210 - delta, powerId);
                     break;
-                case (PrototypeId)PowerPrototypes.Thing.ThingFlight:
+                case (PrototypeId)PowerPrototypes.Travel.ThingFlight:
                     _eventManager.AddEvent(client, EventEnum.StartTravel, 235 - delta, powerId);
                     break;
             }

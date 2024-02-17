@@ -41,7 +41,7 @@ namespace MHServerEmu.Games.Regions
 
                 case RegionPrototypeId.HoloSimARegion1to60:
 
-                    Cell cell = region.StartArea.CellList.First();
+                    Cell cell = region.StartArea.Cells.First().Value;
                     entry = cell.CellProto;
                     
                     foreach (var marker in entry.MarkerSet.Markers)

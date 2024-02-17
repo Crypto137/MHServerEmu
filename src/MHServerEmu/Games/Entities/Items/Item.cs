@@ -15,15 +15,11 @@ namespace MHServerEmu.Games.Entities.Items
 
         public Item(EntityBaseData baseData, ulong replicationId, PrototypeId rank, int itemLevel, PrototypeId itemRarity, float itemVariation, ItemSpec itemSpec) : base(baseData)
         {
-            Property requirement = new(PropertyEnum.Requirement, itemLevel * 1.0f);
-            requirement.Id = new(0x66A3940000000000);
-            PropertyCollection = new(replicationId, new()
-            {
-                new(PropertyEnum.Rank, rank),
-                new(PropertyEnum.ItemRarity, itemRarity),
-                new(PropertyEnum.ItemVariation, itemVariation),
-                requirement
-            });
+            PropertyCollection = new(replicationId);
+            PropertyCollection[PropertyEnum.Requirement, 229] = itemLevel * 1.0f;
+            PropertyCollection[PropertyEnum.ItemRarity] = itemRarity;
+            PropertyCollection[PropertyEnum.ItemVariation] = itemVariation;
+            
             TrackingContextMap = Array.Empty<EntityTrackingContextMap>();
             ConditionCollection = Array.Empty<Condition>();
             PowerCollection = Array.Empty<PowerCollectionRecord>();

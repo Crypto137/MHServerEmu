@@ -65,14 +65,14 @@ namespace MHServerEmu.Games.Generators.Areas
                 RegionConnectionTargetPrototype target = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(regionProto.StartTarget);
                 if (target != null &&
                     RegionPrototype.Equivalent(GameDatabase.GetPrototype<RegionPrototype>(target.Region), regionProto) &&
-                    target.Area == area.GetPrototypeDataRef() && target.Cell != 0)
+                    target.Area == area.PrototypeDataRef && target.Cell != 0)
                 {
                     RegionTransitionSpec spec = new(target.Cell, target.Entity, true);
                     _requiredTransitions.Add(spec);
                 }
             }
 
-            RegionTransition.GetRequiredTransitionData(region.GetPrototypeDataRef(), area.GetPrototypeDataRef(), ref _requiredTransitions);
+            RegionTransition.GetRequiredTransitionData(region.PrototypeDataRef, area.PrototypeDataRef, ref _requiredTransitions);
 
             return InitializeCellRegistry() && InitializeContainer();
         }

@@ -466,6 +466,17 @@ namespace MHServerEmu.Games.GameData
         }
 
         /// <summary>
+        /// Returns the maximum possible enum value for a <see cref="Prototype"/> belonging to the <see cref="Blueprint"/> that the specified <see cref="BlueprintId"/> refers to.
+        /// </summary>
+        public int GetPrototypeMaxEnumValue(BlueprintId blueprintId)
+        {
+            if (_blueprintRecordDict.TryGetValue(blueprintId, out var record) == false)
+                Logger.WarnReturn(0, $"Failed to get record for blueprint id {blueprintId}");
+
+            return record.Blueprint.PrototypeMaxEnumValue;
+        }
+
+        /// <summary>
         /// Returns an iterator for all prototype records.
         /// </summary>
         public PrototypeIterator IterateAllPrototypes(PrototypeIterateFlags flags = PrototypeIterateFlags.None)
@@ -510,20 +521,6 @@ namespace MHServerEmu.Games.GameData
         public IEnumerable<AssetType> IterateAssetTypes()
         {
             return AssetDirectory.IterateAssetTypes();
-        }
-
-        public List<ulong> GetPowerPropertyIdList(string filter)
-        {
-            // TO BE REMOVED: temp bruteforcing of power property ids
-
-            PrototypeId[] powerTable = _prototypeClassLookupDict[typeof(PowerPrototype)].EnumValueToPrototypeLookup;
-            List<ulong> propertyIdList = new();
-
-            for (int i = 1; i < powerTable.Length; i++)
-                if (GameDatabase.GetPrototypeName(powerTable[i]).Contains(filter))
-                    propertyIdList.Add(DataHelper.ReconstructPowerPropertyIdFromHash((ulong)i));
-
-            return propertyIdList;
         }
 
         /// <summary>

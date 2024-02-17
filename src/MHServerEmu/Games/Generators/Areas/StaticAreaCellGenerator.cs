@@ -63,7 +63,7 @@ namespace MHServerEmu.Games.Generators.Areas
             }
 
             Area area = Area;
-            foreach (var cell in area.CellList)
+            foreach (var cell in area.CellIterator())
             {
                 if (cell != null)
                 {

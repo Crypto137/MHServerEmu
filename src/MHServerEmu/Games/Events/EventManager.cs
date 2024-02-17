@@ -107,13 +107,10 @@ namespace MHServerEmu.Games.Events
                             true );
 
                         // TODO: applyItemSpecProperties 
-                        bowlingBall.PropertyCollection.List.AddRange(
-                            new Property[] {
-                            new(PropertyEnum.InventoryStackSizeMax, 1000), // Item.StackSettings
-                            new(PropertyEnum.ItemIsTradable, false), // DefaultSettings.IsTradable
-                            new(PropertyEnum.ItemBindsToAccountOnPickup, true), // DefaultSettings.BindsToAccountOnPickup
-                            new(PropertyEnum.ItemBindsToCharacterOnEquip, true) // // DefaultSettings.BindsToCharacterOnEquip
-                            });
+                        bowlingBall.PropertyCollection[PropertyEnum.InventoryStackSizeMax] = 1000;          // Item.StackSettings
+                        bowlingBall.PropertyCollection[PropertyEnum.ItemIsTradable] = false;                // DefaultSettings.IsTradable
+                        bowlingBall.PropertyCollection[PropertyEnum.ItemBindsToCharacterOnEquip] = true;    // DefaultSettings.BindsToAccountOnPickup
+                        bowlingBall.PropertyCollection[PropertyEnum.ItemBindsToAccountOnPickup] = true;     // DefaultSettings.BindsToCharacterOnEquip 
 
                         messageList.Add(new(client, new(bowlingBall.ToNetMessageEntityCreate())));
 
@@ -196,7 +193,7 @@ namespace MHServerEmu.Games.Events
 
                 case EventEnum.FinishCellLoading:
                     Logger.Warn($"Forсed loading");
-                    client.LoadedCellCount = (int)queuedEvent.Data;
+                    client.AOI.LoadedCellCount = (int)queuedEvent.Data;
                     client.CurrentGame.FinishLoading(client);
                     break;
 
@@ -252,7 +249,7 @@ namespace MHServerEmu.Games.Events
                     powerId = (PrototypeId)queuedEvent.Data;
                     switch (powerId)
                     {
-                        case (PrototypeId)PowerPrototypes.GhostRider.GhostRiderRide:
+                        case (PrototypeId)PowerPrototypes.Travel.GhostRiderRide:
                             Logger.Trace($"EventStart GhostRiderRide");
                             // Player.Avatar.EvalOnCreate.AssignProp.ProcProp.Param1 
                             conditionArchive = new(avatarEntityId, 666, conditionSerializationFlags, powerId, 0);   // TODO: generate and save Condition.Id                        
@@ -273,14 +270,14 @@ namespace MHServerEmu.Games.Events
 
                             break;
 
-                        case (PrototypeId)PowerPrototypes.Wolverine.WolverineRide:
-                        case (PrototypeId)PowerPrototypes.Deadpool.DeadpoolRide:
-                        case (PrototypeId)PowerPrototypes.NickFury.NickFuryRide:
-                        case (PrototypeId)PowerPrototypes.Cyclops.CyclopsRide:
-                        case (PrototypeId)PowerPrototypes.BlackWidow.BlackWidowRide:
-                        case (PrototypeId)PowerPrototypes.Blade.BladeRide:
-                        case (PrototypeId)PowerPrototypes.AntMan.AntmanFlight:
-                        case (PrototypeId)PowerPrototypes.Thing.ThingFlight:
+                        case (PrototypeId)PowerPrototypes.Travel.WolverineRide:
+                        case (PrototypeId)PowerPrototypes.Travel.DeadpoolRide:
+                        case (PrototypeId)PowerPrototypes.Travel.NickFuryRide:
+                        case (PrototypeId)PowerPrototypes.Travel.CyclopsRide:
+                        case (PrototypeId)PowerPrototypes.Travel.BlackWidowRide:
+                        case (PrototypeId)PowerPrototypes.Travel.BladeRide:
+                        case (PrototypeId)PowerPrototypes.Travel.AntmanFlight:
+                        case (PrototypeId)PowerPrototypes.Travel.ThingFlight:
                             Logger.Trace($"EventStart Ride");
                             conditionArchive = new(avatarEntityId, 667, conditionSerializationFlags, powerId, 0);
                             messageList.Add(new(client, new(NetMessageAddCondition.CreateBuilder()
@@ -296,7 +293,7 @@ namespace MHServerEmu.Games.Events
                     powerId = (PrototypeId)queuedEvent.Data;
                     switch (powerId)
                     {
-                        case (PrototypeId)PowerPrototypes.GhostRider.GhostRiderRide:
+                        case (PrototypeId)PowerPrototypes.Travel.GhostRiderRide:
                             Logger.Trace($"EventEnd GhostRiderRide");
 
                             messageList.Add(new(client, new(NetMessageDeleteCondition.CreateBuilder()
@@ -311,14 +308,14 @@ namespace MHServerEmu.Games.Events
 
                             break;
 
-                        case (PrototypeId)PowerPrototypes.Wolverine.WolverineRide:
-                        case (PrototypeId)PowerPrototypes.Deadpool.DeadpoolRide:
-                        case (PrototypeId)PowerPrototypes.NickFury.NickFuryRide:
-                        case (PrototypeId)PowerPrototypes.Cyclops.CyclopsRide:
-                        case (PrototypeId)PowerPrototypes.BlackWidow.BlackWidowRide:
-                        case (PrototypeId)PowerPrototypes.Blade.BladeRide:
-                        case (PrototypeId)PowerPrototypes.AntMan.AntmanFlight:
-                        case (PrototypeId)PowerPrototypes.Thing.ThingFlight:
+                        case (PrototypeId)PowerPrototypes.Travel.WolverineRide:
+                        case (PrototypeId)PowerPrototypes.Travel.DeadpoolRide:
+                        case (PrototypeId)PowerPrototypes.Travel.NickFuryRide:
+                        case (PrototypeId)PowerPrototypes.Travel.CyclopsRide:
+                        case (PrototypeId)PowerPrototypes.Travel.BlackWidowRide:
+                        case (PrototypeId)PowerPrototypes.Travel.BladeRide:
+                        case (PrototypeId)PowerPrototypes.Travel.AntmanFlight:
+                        case (PrototypeId)PowerPrototypes.Travel.ThingFlight:
                             Logger.Trace($"EventEnd Ride");
                             messageList.Add(new(client, new(NetMessageDeleteCondition.CreateBuilder()
                                 .SetIdEntity(avatarEntityId)
@@ -340,8 +337,9 @@ namespace MHServerEmu.Games.Events
                     // TODO: avatarRepId = Player.EntityManager.GetEntity(avatarEntityId).RepId
                     ulong avatarRepId = (ulong)client.Session.Account.Player.Avatar.ToPropertyCollectionReplicationId();
 
-                    Property property = new(PropertyEnum.ThrowableOriginatorEntity, idTarget);
-                    messageList.Add(new(client, new(property.ToNetMessageSetProperty(avatarRepId))));
+                    messageList.Add(new(client, new(
+                        Property.ToNetMessageSetProperty(avatarRepId, new(PropertyEnum.ThrowableOriginatorEntity), idTarget)
+                        )));
                     Logger.Warn($"{GameDatabase.GetPrototypeName(client.ThrowingObject.BaseData.PrototypeId)}");
                     // ThrowObject.Prototype.WorldEntity.UnrealClass
 
@@ -351,8 +349,9 @@ namespace MHServerEmu.Games.Events
                     //if (throwPrototype.Header.ReferenceType != (PrototypeId)HardcodedBlueprintId.ThrowableProp)
                     //    if (throwPrototype.Header.ReferenceType != (PrototypeId)HardcodedBlueprintId.ThrowableSmartProp)
                     //        throwPrototype = throwPrototype.Header.ReferenceType.GetPrototype();
-                    property = new(PropertyEnum.ThrowableOriginatorAssetRef, (ulong)throwPrototype.UnrealClass);
-                    messageList.Add(new(client, new(property.ToNetMessageSetProperty(avatarRepId))));
+                    messageList.Add(new(client, new(
+                        Property.ToNetMessageSetProperty(avatarRepId, new(PropertyEnum.ThrowableOriginatorAssetRef), (ulong)throwPrototype.UnrealClass)
+                        )));
 
                     // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
                     var propertyCollection = throwPrototype.Properties;
@@ -397,10 +396,12 @@ namespace MHServerEmu.Games.Events
                     avatarRepId = (ulong)client.Session.Account.Player.Avatar.ToPropertyCollectionReplicationId();
                     // TODO: avatarRepId = Player.EntityManager.GetEntity(AvatarEntityId).RepId
 
-                    property = new(PropertyEnum.ThrowableOriginatorEntity, 0ul);
-                    messageList.Add(new(client, new(property.ToNetMessageRemoveProperty(avatarRepId))));
-                    property = new(PropertyEnum.ThrowableOriginatorAssetRef, 0ul);
-                    messageList.Add(new(client, new(property.ToNetMessageRemoveProperty(avatarRepId))));
+                    messageList.Add(new(client, new(
+                        Property.ToNetMessageRemoveProperty(avatarRepId, new(PropertyEnum.ThrowableOriginatorEntity))
+                        )));
+                    messageList.Add(new(client, new(
+                        Property.ToNetMessageRemoveProperty(avatarRepId, new(PropertyEnum.ThrowableOriginatorAssetRef))
+                        )));
 
                     // ThrowObject.Prototype.ThrowablePowerProp.Value
                     messageList.Add(new(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
@@ -496,8 +497,9 @@ namespace MHServerEmu.Games.Events
                         .SetItemVariation(1)
                         .Build())));
 
-                    property = new(PropertyEnum.AttachedToEntityId, avatarEntityId);
-                    messageList.Add(new(client, new(property.ToNetMessageSetProperty(arenaEntity.PropertyCollection.ReplicationId))));
+                    messageList.Add(new(client, new(
+                        Property.ToNetMessageSetProperty(arenaEntity.PropertyCollection.ReplicationId, new(PropertyEnum.AttachedToEntityId), avatarEntityId)
+                        )));
 
                     break;
 

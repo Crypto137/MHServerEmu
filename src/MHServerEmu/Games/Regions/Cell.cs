@@ -3,7 +3,6 @@ using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
-using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Population;
@@ -27,15 +26,12 @@ namespace MHServerEmu.Games.Regions
     public class Cell
     {
         //  Old
-        public uint Id { get; }
-        public PrototypeId PrototypeId { get; private set; }
-        public Vector3 AreaPosition { get; private set; }
+        public PrototypeId PrototypeId { get; private set; }        
         public List<ReservedSpawn> EncounterList { get; } = new();
 
         // New
-
-        public CellPrototype CellProto { get; private set; }
-        public Vector3 AreaOffset { get; private set; }
+        public uint Id { get; }      
+        public CellPrototype CellProto { get; private set; }        
         public CellSettings Settings { get; private set; }
         public Type _type { get; private set; }
         public int Seed { get; private set; }
@@ -52,17 +48,12 @@ namespace MHServerEmu.Games.Regions
         public float PlayableArea { get => (PlayableNavArea != -1.0) ? PlayableNavArea : 0.0f; }
         public float SpawnableArea { get => (SpawnableNavArea != -1.0) ? SpawnableNavArea : 0.0f; }
         public CellRegionSpatialPartitionLocation SpatialPartitionLocation { get; }
+        public Vector3 AreaOffset { get; private set; }
+        public Vector3 AreaPosition { get; private set; }
         public Vector3 AreaOrientation { get; private set; }
         public Transform3 AreaTransform { get; private set; }
         public Transform3 RegionTransform { get; private set; }
 
-
-        public Cell(uint id, PrototypeId prototypeId, Vector3 positionInArea) // Old
-        {
-            Id = id;
-            PrototypeId = prototypeId;
-            AreaPosition = positionInArea;
-        }
 
         public void AddEncounter(ulong asset, uint id, bool useMarkerOrientation) => EncounterList.Add(new(asset, id, useMarkerOrientation)); // Old
         public void AddEncounter(ReservedSpawn reservedSpawn) => EncounterList.Add(reservedSpawn); // Old

@@ -47,7 +47,7 @@ namespace MHServerEmu.Games
 
         public ulong CurrentRepId { get => ++_currentRepId; }
         // We use a dictionary property instead of AccessMessageHandlerHash(), which is essentially just a getter
-        public Dictionary<ulong, ArchiveMessageHandler> MessageHandlerDict { get; } = new();
+        public Dictionary<ulong, IArchiveMessageHandler> MessageHandlerDict { get; } = new();
         
         public override string ToString() => $"serverGameId=0x{Id:X}";
 
@@ -135,7 +135,7 @@ namespace MHServerEmu.Games
                 client.Session.Account.Player.Region = region;
                 client.Session.Account.Player.Waypoint = waypointDataRef;
                 EnqueueResponses(client, GetBeginLoadingMessages(client));
-                client.LoadedCellCount = 0;
+                client.AOI.LoadedCellCount = 0;
                 client.IsLoading = true;
             }
         }
@@ -152,7 +152,7 @@ namespace MHServerEmu.Games
                 client.Session.Account.Player.Region = worldEntity.Region.PrototypeId;
                 client.EntityToTeleport = worldEntity;
                 EnqueueResponses(client, GetBeginLoadingMessages(client));
-                client.LoadedCellCount = 0;
+                client.AOI.LoadedCellCount = 0;
                 client.IsLoading = true;
             }
         }
@@ -261,14 +261,19 @@ namespace MHServerEmu.Games
         private void OnUpdateAvatarState(FrontendClient client, NetMessageUpdateAvatarState updateAvatarState)
         {
             UpdateAvatarStateArchive avatarState = new(updateAvatarState.ArchiveData);
-            Vector3 oldPosition = client.LastPosition;
+            //Vector3 oldPosition = client.LastPosition;
             client.LastPosition = avatarState.Position;
 
             // AOI
-            if (client.IsLoading == false && oldPosition != null && Vector3.DistanceSquared2D(oldPosition, avatarState.Position) > 100) // TODO update only when move
-            {
-                var messageList = client.AOI.UpdateAOI(client.Region, avatarState.Position);
-                if (messageList.Count > 0) EnqueueResponses(client, messageList);
+            if (client.IsLoading == false && client.AOI.ShouldUpdate(avatarState.Position) ) 
+            {                
+                var messageList = client.AOI.UpdateCells(client.Region, avatarState.Position);
+                messageList.AddRange(client.AOI.UpdateEntity(client.Region, avatarState.Position));
+                if (messageList.Count > 0)
+                {
+                    Logger.Trace($"AOI[{messageList.Count}][{client.AOI.LoadedEntities.Count}]");
+                    EnqueueResponses(client, messageList);
+                }
             }
 
             /* Logger spam
@@ -284,20 +289,20 @@ namespace MHServerEmu.Games
         }
 
         private void OnCellLoaded(FrontendClient client, NetMessageCellLoaded cellLoaded)
-        {
-            client.LoadedCellCount++;
-            Logger.Info($"Received CellLoaded message cell[{cellLoaded.CellId}] loaded [{client.LoadedCellCount}/{client.Region.CellsInRegion}]");
+        {            
+            client.AOI.OnCellLoaded(cellLoaded.CellId);
+            Logger.Info($"Received CellLoaded message cell[{cellLoaded.CellId}] loaded [{client.AOI.LoadedCellCount}/{client.AOI.CellsInRegion}]");
+            
             if (client.IsLoading) {
                 EventManager.KillEvent(client, EventEnum.FinishCellLoading);
-                if (client.LoadedCellCount == client.Region.CellsInRegion)
+                if (client.AOI.LoadedCellCount == client.AOI.CellsInRegion)
                     FinishLoading(client);
                 else
+                {
                     // set timer 5 seconds for wait client answer
-                    EventManager.AddEvent(client, EventEnum.FinishCellLoading, 5000, client.Region.CellsInRegion);
-            } else
-            { // AOI
-                var messageList = client.AOI.EntitiesForCellId(cellLoaded.CellId);
-                if (messageList.Count > 0) EnqueueResponses(client, messageList);
+                    EventManager.AddEvent(client, EventEnum.FinishCellLoading, 5000, client.AOI.CellsInRegion);
+                    client.AOI.ForseCellLoad();
+                }
             }
         }
 
@@ -355,7 +360,7 @@ namespace MHServerEmu.Games
 
                     if (EntityManager.GetTransitionInRegion(teleport.Destinations[0], teleport.RegionId) is not Transition target) return;
                     
-                    if (client.AOI.LoadedCells.Contains(target.Location.Cell.Id) == false )
+                    if (client.AOI.CheckTargeCell(target))
                     {
                         teleport.TeleportClient(client);
                         return;
@@ -370,10 +375,8 @@ namespace MHServerEmu.Games
 
                     Logger.Trace($"Teleporting to {targetPos}");
 
-                    Property property = target.PropertyCollection.GetPropertyByEnum(PropertyEnum.MapCellId);
-                    uint cellid = (uint)(long)property.Value.Get();
-                    property = target.PropertyCollection.GetPropertyByEnum(PropertyEnum.MapAreaId);
-                    uint areaid = (uint)(long)property.Value.Get();
+                    uint cellid = (uint)(long)target.PropertyCollection[PropertyEnum.MapCellId];
+                    uint areaid = (uint)(long)target.PropertyCollection[PropertyEnum.MapAreaId];
                     Logger.Trace($"Teleporting to areaid {areaid} cellid {cellid}");
 
                     EnqueueResponse(client, new(NetMessageEntityPosition.CreateBuilder()

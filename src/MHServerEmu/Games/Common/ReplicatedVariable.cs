@@ -5,30 +5,35 @@ using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Common
 {
-    public class ReplicatedVariable<T> : ArchiveMessageHandler
+    public class ReplicatedVariable<T> : IArchiveMessageHandler
     {
+        public ulong ReplicationId { get; set; }
         public T Value { get; set; }
 
-        public ReplicatedVariable(CodedInputStream stream) : base(stream)
+        public ReplicatedVariable(CodedInputStream stream)
         {
+            ReplicationId = stream.ReadRawVarint64();
             Value = (T)DecodeValue(stream);
         }
 
-        public ReplicatedVariable(ulong replicationId, T value) : base(replicationId)
+        public ReplicatedVariable(ulong replicationId, T value)
         {
+            ReplicationId = replicationId;
             Value = value;
         }
 
-        public override void Encode(CodedOutputStream stream)
+        public virtual void Encode(CodedOutputStream stream)
         {
-            base.Encode(stream);
+            stream.WriteRawVarint64(ReplicationId);
             EncodeValue(stream);
         }
 
-        protected override void BuildString(StringBuilder sb)
+        public override string ToString()
         {
-            base.BuildString(sb);
-            sb.AppendLine($"Value: {Value}");
+            StringBuilder sb = new();
+            sb.AppendLine($"{nameof(ReplicationId)}: {ReplicationId}");
+            sb.AppendLine($"{nameof(Value)}: {Value}");
+            return sb.ToString();
         }
 
         private object DecodeValue(CodedInputStream stream)

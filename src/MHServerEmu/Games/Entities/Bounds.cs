@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData.Prototypes;
+using System.Runtime.InteropServices;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -21,28 +22,53 @@ namespace MHServerEmu.Games.Entities
         ComplexPickingOnly = 1,
     }
 
-    public class BoundData
+    [StructLayout(LayoutKind.Explicit)]
+    public struct BoundData
     {
-        private readonly float[] _data = new float[6];
-        public float OBBHalfWidth { get => _data[0]; set => _data[0] = value; }
-        public float OBBHalfLength { get => _data[1]; set => _data[1] = value; }
-        public float OBBHalfHeight { get => _data[2]; set => _data[2] = value; }
-        public float AABBHalfWidth { get => _data[0]; set => _data[0] = value; }
-        public float AABBHalfLength { get => _data[1]; set => _data[1] = value; }
-        public float AABBHalfHeight { get => _data[2]; set => _data[2] = value; }
-        public float AABBOrientedWidth { get => _data[3]; set => _data[3] = value; }
-        public float AABBOrientedLength { get => _data[4]; set => _data[4] = value; }
-        public float AABBOrientedHeight { get => _data[5]; set => _data[5] = value; }
-        public float CapsuleRadius { get => _data[0]; set => _data[0] = value; }
-        public float CapsuleHalfHeight { get => _data[1]; set => _data[1] = value; }
-        public float SphereRadius { get => _data[0]; set => _data[0] = value; }
-        public float TriangleBase { get => _data[0]; set => _data[0] = value; }
-        public float TriangleHalfHeight { get => _data[1]; set => _data[1] = value; }
-        public float TriangleLength { get => _data[2]; set => _data[2] = value; }
-        public float WedgeBaseWidth { get => _data[0]; set => _data[0] = value; }
-        public float WedgeBase { get => _data[1]; set => _data[1] = value; }
-        public float WedgeHalfHeight { get => _data[2]; set => _data[2] = value; }
-        public float WedgeLength { get => _data[3]; set => _data[3] = value; }
+        [FieldOffset(0)]
+        public float OBBHalfWidth = 0f;
+        [FieldOffset(4)]
+        public float OBBHalfLength = 0f;
+        [FieldOffset(8)]
+        public float OBBHalfHeight = 0f;
+
+        [FieldOffset(0)]
+        public float AABBHalfWidth = 0f;
+        [FieldOffset(4)]
+        public float AABBHalfLength = 0f;
+        [FieldOffset(8)]
+        public float AABBHalfHeight = 0f;
+
+        [FieldOffset(12)]
+        public float AABBOrientedWidth = 0f;
+        [FieldOffset(16)]
+        public float AABBOrientedLength = 0f;
+        [FieldOffset(20)]
+        public float AABBOrientedHeight = 0f;
+
+        [FieldOffset(0)]
+        public float CapsuleRadius = 0f;
+        [FieldOffset(4)]
+        public float CapsuleHalfHeight = 0f;
+
+        [FieldOffset(0)]
+        public float SphereRadius = 0f;
+        [FieldOffset(0)]
+        public float TriangleBase = 0f;
+        [FieldOffset(4)]
+        public float TriangleHalfHeight = 0f;
+        [FieldOffset(8)]
+        public float TriangleLength = 0f;
+
+        [FieldOffset(0)]
+        public float WedgeBaseWidth = 0f;
+        [FieldOffset(4)]
+        public float WedgeBase = 0f;
+        [FieldOffset(8)]
+        public float WedgeHalfHeight = 0f;
+        [FieldOffset(12)]
+        public float WedgeLength = 0f;
+        public BoundData() { }
     }
 
     public class Bounds
@@ -325,6 +351,58 @@ namespace MHServerEmu.Games.Entities
         {
             _orientation = orientation + _orientation_offset;
             if (Geometry == GeometryType.AABB) UpdateAABBGeometry();
+        }
+
+        public Aabb ToAabb()
+        {            
+            switch (Geometry)
+            {
+                case GeometryType.OBB:
+                    Matrix3 mat = Matrix3.AbsPerElem(Matrix3.GetMatrix3(_orientation));
+                    Vector3 oobVector = mat * new Vector3(_params.OBBHalfWidth, _params.OBBHalfLength, _params.OBBHalfHeight);
+                    return new(Center - oobVector, Center + oobVector);
+
+                case GeometryType.AABB:
+                    Vector3 aabbVector = new(_params.AABBOrientedWidth, _params.AABBOrientedLength, _params.AABBOrientedHeight);
+                    return new(Center - aabbVector, Center + aabbVector);
+
+                case GeometryType.Capsule:
+                    Vector3 min = new(Center.X - _params.CapsuleRadius, Center.Y - _params.CapsuleRadius, Center.Z - _params.CapsuleHalfHeight);
+                    Vector3 max = new(Center.X + _params.CapsuleRadius, Center.Y + _params.CapsuleRadius, Center.Z + _params.CapsuleHalfHeight);
+                    return new(min, max);
+
+                case GeometryType.Sphere:
+                    min = new(Center.X - _params.SphereRadius, Center.Y - _params.SphereRadius, Center.Z - _params.SphereRadius);
+                    max = new(Center.X + _params.SphereRadius, Center.Y + _params.SphereRadius, Center.Z + _params.SphereRadius);
+                    return new(min, max);
+
+                case GeometryType.Triangle:
+                    var triangle = ToTriangle2D();
+                    min = new(Math.Min(Math.Min(triangle[0][0], triangle[1][0]), triangle[2][0]),
+                              Math.Min(Math.Min(triangle[0][1], triangle[1][1]), triangle[2][1]),
+                              Center[2] - GetHalfHeight());
+                    max = new(Math.Max(Math.Max(triangle[0][0], triangle[1][0]), triangle[2][0]),
+                              Math.Max(Math.Max(triangle[0][1], triangle[1][1]), triangle[2][1]),
+                              Center[2] + GetHalfHeight());
+                    return new(min, max);
+
+                case GeometryType.Wedge:
+                    var wedgeVertices = GetWedgeVertices();
+                    min = new(
+                        Math.Min(Math.Min(Math.Min(wedgeVertices[0].X, wedgeVertices[1].X), wedgeVertices[2].X), wedgeVertices[3].X),
+                        Math.Min(Math.Min(Math.Min(wedgeVertices[0].Y, wedgeVertices[1].Y), wedgeVertices[2].Y), wedgeVertices[3].Y),
+                        Center[2] - GetHalfHeight());
+
+                    max = new(
+                        Math.Max(Math.Max(Math.Max(wedgeVertices[0].X, wedgeVertices[1].X), wedgeVertices[2].X), wedgeVertices[3].X),
+                        Math.Max(Math.Max(Math.Max(wedgeVertices[0].Y, wedgeVertices[1].Y), wedgeVertices[2].Y), wedgeVertices[3].Y),
+                        Center[2] + GetHalfHeight());
+
+                    return new(min, max);
+
+                default:
+                    return Aabb.Zero;
+            }            
         }
     }
 }
