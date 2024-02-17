@@ -1,14 +1,14 @@
-﻿namespace MHServerEmu.Games.Properties
+﻿using MHServerEmu.Games.GameData;
+
+namespace MHServerEmu.Games.Properties
 {
     /// <summary>
-    /// Identifies a <see cref="Property"/>.
+    /// Identifies a <see cref="PropertyValue"/>.
     /// </summary>
     public struct PropertyId
     {
-        public ulong Raw { get; private set; }
+        public ulong Raw { get; set; }
         public PropertyEnum Enum { get => (PropertyEnum)(Raw >> PropertyConsts.ParamBitCount); }
-
-        // TODO: the client constructs property ids in Property::ToPropertyId
 
         /// <summary>
         /// Constructs a <see cref="PropertyId"/> with <see cref="PropertyEnum.Invalid"/> as its value.
@@ -29,10 +29,19 @@
         /// <summary>
         /// Constructs a <see cref="PropertyId"/> with the provided params
         /// </summary>
+        public PropertyId(PropertyEnum propertyEnum, int[] @params)
+        {
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+            Raw = info.EncodeParameters(propertyEnum, @params).Raw;
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with the provided params
+        /// </summary>
         public PropertyId(PropertyEnum propertyEnum, int param0)
         {
-            Raw = (ulong)propertyEnum << PropertyConsts.ParamBitCount;
-            // todo: param encoding
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+            Raw = info.EncodeParameters(propertyEnum, param0).Raw;
         }
 
         /// <summary>
@@ -40,8 +49,8 @@
         /// </summary>
         public PropertyId(PropertyEnum propertyEnum, int param0, int param1)
         {
-            Raw = (ulong)propertyEnum << PropertyConsts.ParamBitCount;
-            // todo: param encoding
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+            Raw = info.EncodeParameters(propertyEnum, param0, param1).Raw;
         }
 
         /// <summary>
@@ -49,8 +58,8 @@
         /// </summary>
         public PropertyId(PropertyEnum propertyEnum, int param0, int param1, int param2)
         {
-            Raw = (ulong)propertyEnum << PropertyConsts.ParamBitCount;
-            // todo: param encoding
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+            Raw = info.EncodeParameters(propertyEnum, param0, param1, param2).Raw;
         }
 
         /// <summary>
@@ -58,8 +67,8 @@
         /// </summary>
         public PropertyId(PropertyEnum propertyEnum, int param0, int param1, int param2, int param3)
         {
-            Raw = (ulong)propertyEnum << PropertyConsts.ParamBitCount;
-            // todo: param encoding
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+            Raw = info.EncodeParameters(propertyEnum, param0, param1, param2, param3).Raw;
         }
 
         /// <summary>
@@ -69,6 +78,16 @@
         {
             Raw = raw;
         }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is not PropertyId) return false;
+            return Raw == ((PropertyId)obj).Raw;
+        }
+
+        public static bool operator ==(PropertyId left, PropertyId right) => left.Equals(right);
+        public static bool operator !=(PropertyId left, PropertyId right) => left.Equals(right) == false;
+        public override int GetHashCode() => Raw.GetHashCode();
 
         public override string ToString() => $"0x{Raw:X}";
 
@@ -85,8 +104,7 @@
         /// </summary>
         public int GetParam(int index)
         {
-            return 0;
-            //return GetParams()[index];
+            return GetParams()[index];
         }
 
         /// <summary>
@@ -94,8 +112,8 @@
         /// </summary>
         public int[] GetParams()
         {
-            // PropertyInfo::decodeParameters()
-            return null;
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(Enum);
+            return info.DecodeParameters(this);
         }
     }
 }

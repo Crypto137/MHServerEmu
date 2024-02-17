@@ -466,6 +466,17 @@ namespace MHServerEmu.Games.GameData
         }
 
         /// <summary>
+        /// Returns the maximum possible enum value for a <see cref="Prototype"/> belonging to the <see cref="Blueprint"/> that the specified <see cref="BlueprintId"/> refers to.
+        /// </summary>
+        public int GetPrototypeMaxEnumValue(BlueprintId blueprintId)
+        {
+            if (_blueprintRecordDict.TryGetValue(blueprintId, out var record) == false)
+                Logger.WarnReturn(0, $"Failed to get record for blueprint id {blueprintId}");
+
+            return record.Blueprint.PrototypeMaxEnumValue;
+        }
+
+        /// <summary>
         /// Returns an iterator for all prototype records.
         /// </summary>
         public PrototypeIterator IterateAllPrototypes(PrototypeIterateFlags flags = PrototypeIterateFlags.None)

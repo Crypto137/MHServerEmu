@@ -47,7 +47,7 @@ namespace MHServerEmu.Games
 
         public ulong CurrentRepId { get => ++_currentRepId; }
         // We use a dictionary property instead of AccessMessageHandlerHash(), which is essentially just a getter
-        public Dictionary<ulong, ArchiveMessageHandler> MessageHandlerDict { get; } = new();
+        public Dictionary<ulong, IArchiveMessageHandler> MessageHandlerDict { get; } = new();
         
         public override string ToString() => $"serverGameId=0x{Id:X}";
 
@@ -375,10 +375,8 @@ namespace MHServerEmu.Games
 
                     Logger.Trace($"Teleporting to {targetPos}");
 
-                    Property property = target.PropertyCollection.GetPropertyByEnum(PropertyEnum.MapCellId);
-                    uint cellid = (uint)(long)property.Value.Get();
-                    property = target.PropertyCollection.GetPropertyByEnum(PropertyEnum.MapAreaId);
-                    uint areaid = (uint)(long)property.Value.Get();
+                    uint cellid = (uint)(long)target.PropertyCollection[PropertyEnum.MapCellId];
+                    uint areaid = (uint)(long)target.PropertyCollection[PropertyEnum.MapAreaId];
                     Logger.Trace($"Teleporting to areaid {areaid} cellid {cellid}");
 
                     EnqueueResponse(client, new(NetMessageEntityPosition.CreateBuilder()

@@ -3,6 +3,9 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Calligraphy
 {
+    /// <summary>
+    /// Reconstructs properties from serialized prototypes.
+    /// </summary>
     public class PropertyBuilder
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -44,11 +47,52 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             }
         }
 
-        public void SetPropertyInfo()
+        public bool SetPropertyInfo()
         {
-            if (_isInitializing == false) return;
+            if (_isInitializing == false) return false;
             PropertyInfo info = _propertyInfoTable.LookupPropertyInfo(_propertyEnum);
-            // do property info initialization here
+            if (info.IsFullyLoaded) return Logger.WarnReturn(false, "PropertyInfo is already loaded");
+
+            int numIntegerParams = 0;
+            int usedBitCount = 0;
+
+            // Iterate through params and allocate bit budget to asset and prototype params first
+            for (int i = 0; i < ParamCount; i++)
+            {
+                switch (_paramInfos[i].Type)
+                {
+                    case PropertyParamType.Integer:
+                        numIntegerParams++;
+                        break;
+                    case PropertyParamType.Asset:
+                        info.SetParamTypeAsset(i, (AssetTypeId)_paramInfos[i].SubtypeDataRef);
+                        usedBitCount += info.GetParamBitCount(i);
+                        break;
+                    case PropertyParamType.Prototype:
+                        info.SetParamTypePrototype(i, (BlueprintId)_paramInfos[i].SubtypeDataRef);
+                        usedBitCount += info.GetParamBitCount(i);
+                        break;
+                }
+            }
+
+            // Split the remaining bit budget between integer params (if any)
+            if (numIntegerParams > 0)
+            {
+                int intBudget = PropertyConsts.ParamBitCount - usedBitCount;
+                int bitCount = intBudget / numIntegerParams;
+                bitCount = Math.Min(bitCount, 31);
+                int intParamMaxValue = (1 << bitCount) - 1;
+
+                for (int i = 0; i < ParamCount; i++)
+                {
+                    if (_paramInfos[i].Type != PropertyParamType.Integer) continue;
+                    info.SetParamTypeInteger(i, intParamMaxValue);
+                }
+            }
+
+            info.SetPropertyInfo(PropertyValue, ParamCount, ParamValues);
+            info.DefaultCurveIndex = CurveIndex;
+            return true;
         }
 
         public bool SetValue(ulong value)
@@ -67,6 +111,17 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             CurveIndex = new(curvePropertyEnum);
             IsCurveIndexSet = true;
             return true;
+        }
+
+        public bool SetIntegerParam(int paramIndex, long field)
+        {
+            if (_isInitializing)
+            {
+                _paramInfos[paramIndex].Type = PropertyParamType.Integer;
+                // Integer params have no subtypes
+            }
+
+            return SetParam(paramIndex, (int)field);
         }
 
         public bool SetAssetParam(int paramIndex, AssetId field)
@@ -113,17 +168,6 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return SetParam(paramIndex, prototypeEnum);
         }
 
-        public bool SetIntegerParam(int paramIndex, long field)
-        {
-            if (_isInitializing)
-            {
-                _paramInfos[paramIndex].Type = PropertyParamType.Integer;
-                // Integer params have no subtypes
-            }
-
-            return SetParam(paramIndex, (int)field);
-        }
-
         private bool SetParam(int paramIndex, int paramValue)
         {
             if (paramIndex >= PropertyConsts.MaxParamCount)
@@ -131,7 +175,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
             ParamValues[paramIndex] = paramValue;
             ParamCount = Math.Max(ParamCount, paramIndex + 1);
-
+            ParamsSetMask |= (byte)(1 << paramIndex);
 
             return true;
         }

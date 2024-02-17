@@ -114,7 +114,7 @@ namespace MHServerEmu.Games
 
             // edit player data here
 
-            foreach (Property property in player.PropertyCollection.List)
+            foreach (Property property in player.PropertyCollection.IterateProperties())
             {
                 switch (property.Id.Enum)
                 {
@@ -197,7 +197,7 @@ namespace MHServerEmu.Games
                     bool hasCharacterLevel = false;
                     bool hasCombatLevel = false;
 
-                    foreach (Property property in avatar.PropertyCollection.List)
+                    foreach (Property property in avatar.PropertyCollection.IterateProperties())
                     {
                         switch (property.Id.Enum)
                         {
@@ -225,9 +225,12 @@ namespace MHServerEmu.Games
                     }
 
                     // Create properties if not found
-                    if (hasCostumeCurrent == false) avatar.PropertyCollection.List.Add(new(PropertyEnum.CostumeCurrent, account.CurrentAvatar.Costume));
-                    if (hasCharacterLevel == false) avatar.PropertyCollection.List.Add(new(PropertyEnum.CharacterLevel, 60));
-                    if (hasCombatLevel == false) avatar.PropertyCollection.List.Add(new(PropertyEnum.CombatLevel, 60));
+                    if (hasCostumeCurrent == false)
+                        avatar.PropertyCollection[PropertyEnum.CostumeCurrent] = account.CurrentAvatar.Costume;
+                    if (hasCharacterLevel == false)
+                        avatar.PropertyCollection[PropertyEnum.CharacterLevel] = 60;
+                    if (hasCombatLevel == false)
+                        avatar.PropertyCollection[PropertyEnum.CombatLevel] = 60;
                 }
 
                 messageList.Add(new(avatar.ToNetMessageEntityCreate()));

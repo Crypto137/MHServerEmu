@@ -85,8 +85,8 @@ namespace MHServerEmu.Games.Entities
             _entityDict.Add(baseData.EntityId, worldEntity);
             worldEntity.EnterWorld(cell, position, orientation);
             int CombatLevel = CharacterLevel;
-            worldEntity.PropertyCollection.List.Add(new(PropertyEnum.CharacterLevel, CharacterLevel));
-            worldEntity.PropertyCollection.List.Add(new(PropertyEnum.CombatLevel, CombatLevel)); // zero effect
+            worldEntity.PropertyCollection[PropertyEnum.CharacterLevel] = CharacterLevel;
+            worldEntity.PropertyCollection[PropertyEnum.CombatLevel] = CombatLevel;         // zero effect
 
             return worldEntity;
         }
@@ -217,7 +217,7 @@ namespace MHServerEmu.Games.Entities
                 if (entity.Value.BaseData.PrototypeId == destination.Entity && entity.Value.RegionId == regionId)
                 {
                     if (destination.Area == 0) return entity.Value;
-                    Property property = entity.Value.PropertyCollection.GetPropertyByEnum(PropertyEnum.ContextAreaRef);
+                    Property property = entity.Value.PropertyCollection.GetProperty(new(PropertyEnum.ContextAreaRef));
                     var area = (PrototypeId)property.Value.Get();
                     if (area == destination.Area)
                         return entity.Value;

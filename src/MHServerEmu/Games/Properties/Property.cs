@@ -26,6 +26,13 @@ namespace MHServerEmu.Games.Properties
             CreateValueContainer(rawValue);
         }
 
+        public Property(PropertyId id)
+        {
+            Id = id;
+            PropertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(Id.Enum);
+            CreateValueContainer(0);
+        }
+
         public Property(PropertyEnum propertyEnum, object value)
         {
             Id = new(propertyEnum);
@@ -71,7 +78,17 @@ namespace MHServerEmu.Games.Properties
             StringBuilder sb = new();
             sb.AppendLine($"Id: {Id}");
             sb.AppendLine($"Enum: {Id.Enum}");
-            sb.AppendLine($"HasParams: {Id.HasParams()}");
+
+            if (Id.HasParams())
+            {
+                sb.Append($"Params: ");
+                int[] @params = Id.GetParams();
+                for (int i = 0; i < @params.Length; i++)
+                    sb.Append($"{@params[i]} ");
+                sb.Length--;
+                sb.AppendLine();
+            }
+
             sb.AppendLine($"Value: {Value}");
             sb.AppendLine($"PropertyDataType: {PropertyInfo.DataType}");
             return sb.ToString();
