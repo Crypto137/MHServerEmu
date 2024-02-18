@@ -1,7 +1,7 @@
 ﻿
 namespace MHServerEmu.Games.Common
 {
-    public class Aabb2
+    public class Aabb2 : IBounds
     {
         public Vector2 Min { get; set; }
         public Vector2 Max { get; set; }
@@ -67,6 +67,38 @@ namespace MHServerEmu.Games.Common
         }
 
         public Aabb2 Translate(Vector2 newPosition) => new(Min + newPosition, Max + newPosition);
+
+        public ContainmentType Contains(Aabb2 bounds)
+        {
+            if (bounds.Min.X > Max.X || bounds.Max.X < Min.X ||
+               bounds.Min.Y > Max.Y || bounds.Max.Y < Min.Y)
+            {
+                return ContainmentType.Disjoint;
+            }
+            else if (bounds.Min.X >= Min.X && bounds.Max.X <= Max.X &&
+                     bounds.Min.Y >= Min.Y && bounds.Max.Y <= Max.Y)
+            {
+                return ContainmentType.Contains;
+            }
+            return ContainmentType.Intersects;
+        }
+
+        public bool Intersects(Aabb bounds)
+        {
+            if (Max.X < bounds.Min.X || Min.X > bounds.Max.X ||
+                Max.Y < bounds.Min.Y || Min.Y > bounds.Max.Y )
+                return false;
+            return true;
+        }
+
+        public bool Intersects(Aabb2 bounds)
+        {
+            if (Max.X < bounds.Min.X || Min.X > bounds.Max.X ||
+                Max.Y < bounds.Min.Y || Min.Y > bounds.Max.Y)
+                return false;
+            return true;
+        }
+
         public Vector2 Center { get => new((Min.X + Max.X) * 0.5f, (Min.Y + Max.Y) * 0.5f); }
         public float Width { get => Max.X - Min.X; }
         public float Length { get => Max.Y - Min.Y; }

@@ -113,13 +113,10 @@ namespace MHServerEmu.Games.Regions
                 new Vector3(_visibilityBounds.Max.X, _visibilityBounds.Max.Y, MaxZ));
         }
 
-        public Aabb CalcEnittyVolume(Vector3 playerPosition)
+        public Aabb2 CalcEnittyVolume(Vector3 playerPosition)
         {
             CalcEntitiesToConsiderBounds(playerPosition);
-
-            return new Aabb(
-                new Vector3(_entitiesToConsiderBounds.Min.X, _entitiesToConsiderBounds.Min.Y, -MaxZ),
-                new Vector3(_entitiesToConsiderBounds.Max.X, _entitiesToConsiderBounds.Max.Y, MaxZ));
+            return _entitiesToConsiderBounds;
         }
 
         private Dictionary<uint, List<Cell>> GetNewCells(Vector3 position, Area startArea)
@@ -243,7 +240,7 @@ namespace MHServerEmu.Games.Regions
         {
             Region region = Region;
             List<GameMessage> messageList = new();
-            Aabb volume = CalcEnittyVolume(position);
+            Aabb2 volume = CalcEnittyVolume(position);
             List<WorldEntity> cellEntities = new();
             _currentFrame++;
             // Update Entity

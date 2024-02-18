@@ -119,14 +119,14 @@ namespace MHServerEmu.Games.Generators
             return false;
         }
 
-        public class ElementIterator : IEnumerator<WorldEntity>
+        public class ElementIterator<B> : IEnumerator<WorldEntity> where B : IBounds
         {
             private List<WorldEntityRegionSpatialPartition> _partitions;
-            public WorldEntityRegionSpatialPartition.ElementIterator Iterator { get; private set; }
+            public WorldEntityRegionSpatialPartition.ElementIterator<B> Iterator { get; private set; }
             public WorldEntity Current => Iterator.Current;
             object IEnumerator.Current => Current;
 
-            public ElementIterator(Aabb bound)
+            public ElementIterator(B bound)
             {
                 _partitions = new();
                 Iterator = new(bound);
@@ -150,7 +150,7 @@ namespace MHServerEmu.Games.Generators
                     var partition = _partitions.LastOrDefault();
                     _partitions.Remove(partition);
                     if (partition == null) return true;
-                    var iterator = new WorldEntityRegionSpatialPartition.ElementIterator(partition, Iterator.Volume);
+                    var iterator = new WorldEntityRegionSpatialPartition.ElementIterator<B>(partition, Iterator.Volume);
                     Iterator.Clear();
                     Iterator = iterator;
 
@@ -166,9 +166,9 @@ namespace MHServerEmu.Games.Generators
             public bool End() => Iterator.End();
         }
 
-        public IEnumerable<WorldEntity> IterateElementsInVolume(Aabb bound, EntityRegionSPContext context)
+        public IEnumerable<WorldEntity> IterateElementsInVolume<B>(B bound, EntityRegionSPContext context) where B : IBounds
         {
-            var iterator = new ElementIterator(bound);
+            var iterator = new ElementIterator<B>(bound);
             if (context.Flags.HasFlag(EntityRegionSPContextFlags.ActivePartition))
                 iterator.Iterator.Initialize(_activeSpatialPartition);
 

@@ -498,7 +498,7 @@ namespace MHServerEmu.Games.Regions
             return IterateEntitiesInVolume(Bound, context);
         }
 
-        public IEnumerable<WorldEntity> IterateEntitiesInVolume(Aabb bound, EntityRegionSPContext context)
+        public IEnumerable<WorldEntity> IterateEntitiesInVolume<B>(B bound, EntityRegionSPContext context) where B : IBounds
         {
             if (EntitySpatialPartition != null)
                 return EntitySpatialPartition.IterateElementsInVolume(bound, context);

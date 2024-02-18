@@ -322,9 +322,9 @@ namespace MHServerEmu.Games.Generators
             return false;
         }
 
-        public IEnumerable<T> IterateElementsInVolume(Aabb volume)
+        public IEnumerable<T> IterateElementsInVolume<B>(B volume) where B : IBounds
         {
-            var iterator = new ElementIterator(this, volume);
+            var iterator = new ElementIterator<B>(this, volume);
 
             try
             {
@@ -341,10 +341,10 @@ namespace MHServerEmu.Games.Generators
             }
         }
 
-        public class ElementIterator : IEnumerator<T>
+        public class ElementIterator<B> : IEnumerator<T> where B : IBounds
         {
             public Quadtree<T> Tree { get; private set; }
-            public Aabb Volume { get; private set; }
+            public B Volume { get; private set; }
             private CandidateNode _currentNode;
             private QuadtreeLocation<T> _currentElement;
             private Stack<CandidateNode> _stack = new();
@@ -361,7 +361,7 @@ namespace MHServerEmu.Games.Generators
                 }
             }
 
-            public ElementIterator(Aabb volume)
+            public ElementIterator(B volume)
             {
                 Tree = null;
                 _currentNode = new();
@@ -369,7 +369,7 @@ namespace MHServerEmu.Games.Generators
                 Volume = volume;
             }
 
-            public ElementIterator(Quadtree<T> tree, Aabb volume)
+            public ElementIterator(Quadtree<T> tree, B volume)
             {
                 Tree = tree;
                 Volume = volume;

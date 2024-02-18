@@ -1,6 +1,6 @@
 ﻿namespace MHServerEmu.Games.Common
 {
-    public class Aabb
+    public class Aabb : IBounds
     {
         public Vector3 Min { get; set; }
         public Vector3 Max { get; set; }
