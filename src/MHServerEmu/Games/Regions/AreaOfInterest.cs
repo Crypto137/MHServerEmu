@@ -41,7 +41,7 @@ namespace MHServerEmu.Games.Regions
         private const float UpdateDistance = 200.0f;
         private const float ViewOffset = 400.0f;
         private const float ViewExpansionDistance = 800.0f;
-        private const float DefaultDistance = 800.0f;
+        private const float EntityExpansionDistance = 600.0f;
         private const float MaxZ = 100000.0f;
 
         private Aabb2 _playerView;
@@ -50,7 +50,7 @@ namespace MHServerEmu.Games.Regions
 
         public Aabb2 CalcEntitiesToConsiderBounds(Vector3 playerPosition)
         {
-            _entitiesToConsiderBounds = _playerView.Translate(playerPosition);
+            _entitiesToConsiderBounds = _playerView.Translate(playerPosition).Expand(EntityExpansionDistance);
             return _entitiesToConsiderBounds;
         }
 
@@ -79,8 +79,7 @@ namespace MHServerEmu.Games.Regions
 
         private void AdaptPlayerViewWithCameraSettings(CameraSettingPrototype cameraSettingPrototype)
         {
-            if (cameraSettingPrototype == null)
-                return;
+            if (cameraSettingPrototype == null) return;
 
             CameraSettingCollectionPrototype cameraSettingCollectionPrototype = GameDatabase.GetPrototype<CameraSettingCollectionPrototype>(cameraSettingPrototype.DataRef);
             if (cameraSettingCollectionPrototype == null)
@@ -91,11 +90,10 @@ namespace MHServerEmu.Games.Regions
             }
 
             CameraSettingPrototype cameraSetting = cameraSettingCollectionPrototype?.CameraSettings?.FirstOrDefault();
-            if (cameraSetting == null)
-                return;
+            if (cameraSetting == null) return;
 
             Vector3 NormalizedDirection = Vector3.Normalize2D(new(cameraSetting.DirectionX, cameraSetting.DirectionY, cameraSetting.DirectionZ));
-            float angleOffset = MathHelper.WrapAngleRadians(Vector3.FromDeltaVector2D(NormalizedDirection).X + MathHelper.Pi - (MathHelper.Pi / 4f));
+            float angleOffset = MathHelper.WrapAngleRadians(Vector3.FromDeltaVector2D(NormalizedDirection).Yaw + MathHelper.Pi - (MathHelper.Pi / 4f));
             Transform3 rotation = Transform3.RotationZYX(new(0f, 0f, angleOffset));
 
             _playerView = new Aabb2();
@@ -106,10 +104,8 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        public Aabb CalcAOIVolumes(Vector3 playerPosition)
-        {
-            InitPlayerView(null);
-            CalcEntitiesToConsiderBounds(playerPosition);
+        public Aabb CalcCellVolume(Vector3 playerPosition)
+        {            
             CalcVisibilityBounds(playerPosition);
 
             return new Aabb(
@@ -117,11 +113,20 @@ namespace MHServerEmu.Games.Regions
                 new Vector3(_visibilityBounds.Max.X, _visibilityBounds.Max.Y, MaxZ));
         }
 
+        public Aabb CalcEnittyVolume(Vector3 playerPosition)
+        {
+            CalcEntitiesToConsiderBounds(playerPosition);
+
+            return new Aabb(
+                new Vector3(_entitiesToConsiderBounds.Min.X, _entitiesToConsiderBounds.Min.Y, -MaxZ),
+                new Vector3(_entitiesToConsiderBounds.Max.X, _entitiesToConsiderBounds.Max.Y, MaxZ));
+        }
+
         private Dictionary<uint, List<Cell>> GetNewCells(Vector3 position, Area startArea)
 
         {
             Dictionary<uint, List<Cell>> cellsByArea = new();
-            Aabb volume = CalcAOIVolumes(position);
+            Aabb volume = CalcCellVolume(position);
 
             foreach (var cell in Region.IterateCellsInVolume(volume))
             {
@@ -130,7 +135,7 @@ namespace MHServerEmu.Games.Regions
                     status.Frame = _currentFrame;
                     continue;
                 }
-                if (cell.Area.IsDynamicArea() || cell.Area == startArea || startArea.AreaConnections.Any(connection => connection.ConnectedArea == cell.Area))
+               // if (cell.Area.IsDynamicArea() || cell.Area == startArea || startArea.AreaConnections.Any(connection => connection.ConnectedArea == cell.Area))
                 {
                     if (cellsByArea.ContainsKey(cell.Area.Id) == false)
                         cellsByArea[cell.Area.Id] = new();
@@ -142,20 +147,19 @@ namespace MHServerEmu.Games.Regions
         }
 
         public void ResetAOI(Region region, Vector3 position)
-        {
+        {   
             LoadedCells.Clear();
             LoadedEntities.Clear();
             _currentFrame = 0;
             CellsInRegion = 0;
-            Region = region;
+            Region = region;          
 
             Cell startCell = region.GetCellAtPosition(position);
             if (startCell == null) return;
+            InitPlayerView(startCell.Area.AreaPrototype.PlayerCameraSettings.As<CameraSettingPrototype>());
             /* if (RegionManager.RegionIsHub(region.PrototypeId))
                  _playerView = new(startCell.Area.RegionBounds); // Fix for HUB
              else*/
-
-            CalcAOIVolumes(position);
         }
 
         public static bool GetEntityInterest(WorldEntity worldEntity)
@@ -169,7 +173,7 @@ namespace MHServerEmu.Games.Regions
         {
             List<GameMessage> messageList = new ();
             Region region = Region;
-            Aabb volume = CalcAOIVolumes(position);
+            Aabb volume = CalcCellVolume(position);
 
             _currentFrame++;
             List<Cell> cellsInAOI = new();
@@ -239,11 +243,11 @@ namespace MHServerEmu.Games.Regions
         {
             Region region = Region;
             List<GameMessage> messageList = new();
-            Aabb volume = CalcAOIVolumes(position);
+            Aabb volume = CalcEnittyVolume(position);
             List<WorldEntity> cellEntities = new();
             _currentFrame++;
             // Update Entity
-            EntityRegionSPContext context = new() { Flags = EntityRegionSPContextFlags.ActivePartition };
+            EntityRegionSPContext context = new() { Flags = EntityRegionSPContextFlags.ActivePartition | EntityRegionSPContextFlags.StaticPartition};
             foreach (var worldEntity in region.IterateEntitiesInVolume(volume, context))
             {
                 if (LoadedCells.TryGetValue(worldEntity.Location.Cell.Id, out var status))
