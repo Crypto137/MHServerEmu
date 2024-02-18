@@ -736,7 +736,7 @@ namespace MHServerEmu.Games.Generators.Population
             }
 
             EntityProto = GameDatabase.GetPrototype<WorldEntityPrototype>(EntityRef);
-            Logger.Debug($"Add ClusterEntity [{GameDatabase.GetFormattedPrototypeName(EntityRef)}]");
+            // Logger.Debug($"Add ClusterEntity [{GameDatabase.GetFormattedPrototypeName(EntityRef)}]");
         }
 
         public override bool Initialize()

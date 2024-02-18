@@ -71,7 +71,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
             void AddTargetNode(RegionConnectionTargetPrototype target, RegionConnectionTargetPrototype origin)
             {
-                Logger.Debug($"[{GameDatabase.GetFormattedPrototypeName(origin.Area)}] {GameDatabase.GetFormattedPrototypeName(origin.Entity)} [{GameDatabase.GetFormattedPrototypeName(target.Area)}]");
+                //Logger.Debug($"[{GameDatabase.GetFormattedPrototypeName(origin.Area)}] {GameDatabase.GetFormattedPrototypeName(origin.Entity)} [{GameDatabase.GetFormattedPrototypeName(target.Area)}]");
                 nodes.Add(new TargetObject
                 {
                     Area = origin.Area,

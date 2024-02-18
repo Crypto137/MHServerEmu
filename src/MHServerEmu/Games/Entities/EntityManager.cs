@@ -338,7 +338,7 @@ namespace MHServerEmu.Games.Entities
                         Vector3 position = cell.CalcMarkerPosition(portal.Position);
                         position.Z += transition.Bounds.GetBoundHalfHeight();
 
-                        Logger.Debug($"[{transition.Type}] {portal.LastKnownEntityName} [{protoId}]");
+                        //Logger.Debug($"[{transition.Type}] {portal.LastKnownEntityName} [{protoId}]");
                         if (transition.Waypoint != 0)
                         {
                             var waypointProto = GameDatabase.GetPrototype<WaypointPrototype>(transition.Waypoint);
