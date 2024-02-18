@@ -68,7 +68,7 @@ namespace MHServerEmu.Games.Entities
         }
 
         public WorldEntity CreateWorldEntityEnemy(Cell cell, PrototypeId prototypeId, Vector3 position, Vector3 orientation,
-            int health, bool requiresEnterGameWorld, int CharacterLevel)
+            int health, bool requiresEnterGameWorld, int characterLevel)
         {
             EntityBaseData baseData = (requiresEnterGameWorld == false)
                 ? new EntityBaseData(GetNextEntityId(), prototypeId, position, orientation)
@@ -84,9 +84,9 @@ namespace MHServerEmu.Games.Entities
             worldEntity.RegionId = regionId;
             _entityDict.Add(baseData.EntityId, worldEntity);
             worldEntity.EnterWorld(cell, position, orientation);
-            int CombatLevel = CharacterLevel;
-            worldEntity.PropertyCollection[PropertyEnum.CharacterLevel] = CharacterLevel;
-            worldEntity.PropertyCollection[PropertyEnum.CombatLevel] = CombatLevel;         // zero effect
+            int combatLevel = characterLevel;
+            worldEntity.Properties[PropertyEnum.CharacterLevel] = characterLevel;
+            worldEntity.Properties[PropertyEnum.CombatLevel] = combatLevel;         // zero effect
 
             return worldEntity;
         }
@@ -217,7 +217,7 @@ namespace MHServerEmu.Games.Entities
                 if (entity.Value.BaseData.PrototypeId == destination.Entity && entity.Value.RegionId == regionId)
                 {
                     if (destination.Area == 0) return entity.Value;
-                    var area = (PrototypeId)entity.Value.PropertyCollection[PropertyEnum.ContextAreaRef];
+                    PrototypeId area = entity.Value.Properties[PropertyEnum.ContextAreaRef];
                     if (area == destination.Area)
                         return entity.Value;
                 }                
@@ -243,12 +243,12 @@ namespace MHServerEmu.Games.Entities
         }
 
         public bool TryGetEntityById(ulong entityId, out Entity entity) => _entityDict.TryGetValue(entityId, out entity);
-        public ulong GetPropertyCollectionReplicationId(ulong entityId) => _entityDict[entityId].PropertyCollection.ReplicationId;
+        public ulong GetPropertyCollectionReplicationId(ulong entityId) => _entityDict[entityId].Properties.ReplicationId;
         public bool TryGetPropertyCollectionReplicationId(ulong entityId, out ulong replicationId)
         {
             if (_entityDict.TryGetValue(entityId, out Entity entity))
             {
-                replicationId = entity.PropertyCollection.ReplicationId;
+                replicationId = entity.Properties.ReplicationId;
                 return true;
             }
 

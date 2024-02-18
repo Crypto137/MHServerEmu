@@ -40,7 +40,7 @@ namespace MHServerEmu.Games.Powers
         public long PauseTime { get; set; }
         public long Duration { get; set; }  // 7200000 == 2 hours
         public int UpdateInterval { get; set; }
-        public ReplicatedPropertyCollection PropertyCollection { get; set; }
+        public ReplicatedPropertyCollection Properties { get; set; }
         public UInt32Flags CancelOnFlags { get; set; }
 
         public Condition(CodedInputStream stream)
@@ -78,7 +78,7 @@ namespace MHServerEmu.Games.Powers
             if (SerializationFlags.HasFlag(ConditionSerializationFlags.HasUpdateInterval))
                 UpdateInterval = stream.ReadRawInt32();
 
-            PropertyCollection = new(stream);
+            Properties = new(stream);
 
             if (SerializationFlags.HasFlag(ConditionSerializationFlags.HasCancelOnFlags))
                 CancelOnFlags = (UInt32Flags)stream.ReadRawVarint32();
@@ -121,7 +121,7 @@ namespace MHServerEmu.Games.Powers
             if (SerializationFlags.HasFlag(ConditionSerializationFlags.HasUpdateInterval))
                 stream.WriteRawInt32(UpdateInterval);
 
-            PropertyCollection.Encode(stream);
+            Properties.Encode(stream);
 
             if (SerializationFlags.HasFlag(ConditionSerializationFlags.HasCancelOnFlags))
                 stream.WriteRawVarint32((uint)CancelOnFlags);
@@ -142,7 +142,7 @@ namespace MHServerEmu.Games.Powers
             sb.AppendLine($"StartTime: {StartTime}");
             sb.AppendLine($"PauseTime: {PauseTime}");
             sb.AppendLine($"Duration: {Duration}");
-            sb.AppendLine($"PropertyCollection: {PropertyCollection}");
+            sb.AppendLine($"Properties: {Properties}");
             sb.AppendLine($"CancelOnFlags: {CancelOnFlags}");
 
             return sb.ToString();

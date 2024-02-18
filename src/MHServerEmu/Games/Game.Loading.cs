@@ -120,34 +120,28 @@ namespace MHServerEmu.Games
             // Player entity
             Player player = EntityManager.GetDefaultPlayerEntity();
 
-            // edit player data here
+            // Edit player data here
 
-            foreach (Property property in player.PropertyCollection.IterateProperties())
-            {
-                switch (property.Id.Enum)
-                {
-                    // Unlock starter avatars
-                    case PropertyEnum.AvatarUnlock:
-                        if ((AvatarUnlockType)player.PropertyCollection[property.Id] == AvatarUnlockType.Starter)
-                            player.PropertyCollection[property.Id] = (int)AvatarUnlockType.Type3;
-                        break;
-
-                    // Configure avatar library
-                    case PropertyEnum.AvatarLibraryLevel:       // Set all avatar levels to 60
-                        player.PropertyCollection[property.Id] = 60;
-                        break;
-                    //case PropertyEnum.AvatarLibraryCostume:   // Reset the costume to default
-                    case PropertyEnum.AvatarLibraryTeamUp:      // Clean up team ups
-                        player.PropertyCollection[property.Id] = 0ul;
-                        break;
-                }
-            }
-
-            // Set library costumes according to account data
+            // Adjust properties
             foreach (var accountAvatar in account.Avatars)
             {
-                int enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, (PrototypeId)accountAvatar.Prototype);
-                player.PropertyCollection[PropertyEnum.AvatarLibraryCostume, 0, enumValue] = (PrototypeId)accountAvatar.Costume;
+                PropertyParam enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, (PrototypeId)accountAvatar.Prototype);
+                var avatarPrototype = (PrototypeId)accountAvatar.Prototype;
+
+                // Set library costumes according to account data
+                player.Properties[PropertyEnum.AvatarLibraryCostume, 0, avatarPrototype] = (PrototypeId)accountAvatar.Costume;
+
+                // Set avatar levels to 60
+                // Note: setting this to above level 60 sets the prestige level as well
+                player.Properties[PropertyEnum.AvatarLibraryLevel, 0, avatarPrototype] = 60;
+
+                // Clean up team ups
+                player.Properties[PropertyEnum.AvatarLibraryTeamUp, 0, avatarPrototype] = PrototypeId.Invalid;
+
+                // Unlock start avatars
+                var avatarUnlock = (AvatarUnlockType)(int)player.Properties[PropertyEnum.AvatarUnlock, enumValue];
+                if (avatarUnlock == AvatarUnlockType.Starter)
+                    player.Properties[PropertyEnum.AvatarUnlock, avatarPrototype] = (int)AvatarUnlockType.Type3;
             }
            
             CommunityMember friend = player.Community.CommunityMemberList[0];
@@ -207,9 +201,9 @@ namespace MHServerEmu.Games
 
                     avatar.PlayerName.Value = account.PlayerName;
 
-                    avatar.PropertyCollection[PropertyEnum.CostumeCurrent] = account.CurrentAvatar.Costume;
-                    avatar.PropertyCollection[PropertyEnum.CharacterLevel] = 60;
-                    avatar.PropertyCollection[PropertyEnum.CombatLevel] = 60;
+                    avatar.Properties[PropertyEnum.CostumeCurrent] = (PrototypeId)account.CurrentAvatar.Costume;
+                    avatar.Properties[PropertyEnum.CharacterLevel] = 60;
+                    avatar.Properties[PropertyEnum.CombatLevel] = 60;
                 }
 
                 messageList.Add(new(avatar.ToNetMessageEntityCreate()));
