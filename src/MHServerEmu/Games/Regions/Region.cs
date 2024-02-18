@@ -33,6 +33,7 @@ namespace MHServerEmu.Games.Regions
         public ulong MatchNumber;
 
         public bool GenerateEntities;
+        public bool GenerateLog;
     }
 
     public class Region : IMissionManagerOwner
@@ -40,9 +41,10 @@ namespace MHServerEmu.Games.Regions
         // Old
         public RegionPrototypeId PrototypeId { get; private set; }   
         public byte[] ArchiveData { get; set; }
-        public CreateRegionParams CreateParams { get; private set; }        
+        public CreateRegionParams CreateParams { get; private set; }
 
         // New
+        public readonly object Lock = new();
         public ulong Id { get; private set; } // InstanceAddress
         public int RandomSeed { get; private set; }
         public Dictionary<uint, Area> Areas { get; } = new();  
@@ -208,7 +210,7 @@ namespace MHServerEmu.Games.Regions
 
             if (settings.GenerateAreas)
             {
-                if (GenerateAreas() == false)
+                if (GenerateAreas(settings.GenerateLog) == false)
                 {
                     Logger.Error($"Failed to generate areas for\n  region: {this}\n    seed: {RandomSeed}");
                     return false;
@@ -351,11 +353,11 @@ namespace MHServerEmu.Games.Regions
             return null;
         }
 
-        public bool GenerateAreas()
+        public bool GenerateAreas(bool log)
         {
             RegionGenerator regionGenerator = DRAGSystem.LinkRegionGenerator(RegionPrototype.RegionGenerator);
 
-            regionGenerator.GenerateRegion(RandomSeed, this);
+            regionGenerator.GenerateRegion(log, RandomSeed, this);
 
             StartArea = regionGenerator.StartArea;
             SetBound(CalculateBound());
@@ -420,7 +422,7 @@ namespace MHServerEmu.Games.Regions
                 return null;
             }
             Areas[area.Id] = area;
-            Logger.Debug($"Adding area {area.GetPrototypeName()}, id={area.Id}, areapos = {area.Origin.ToStringFloat()}, seed = {RandomSeed}");
+            if (settings.RegionSettings.GenerateLog) Logger.Debug($"Adding area {area.GetPrototypeName()}, id={area.Id}, areapos = {area.Origin.ToStringFloat()}, seed = {RandomSeed}");
             return area;
         }
 
@@ -453,9 +455,7 @@ namespace MHServerEmu.Games.Regions
         private void DeallocateArea(Area area)
         {
             if (area == null) return;
-
-            Logger.Trace($"{Game} - Deallocating area id {area.Id}, {area}");
-
+            if (Settings.GenerateLog) Logger.Trace($"{Game} - Deallocating area id {area.Id}, {area}");
             area.Shutdown();
         }
 
@@ -507,6 +507,9 @@ namespace MHServerEmu.Games.Regions
         }
 
         public PrototypeId PrototypeDataRef => RegionPrototype.DataRef;
+
+        public DateTime CreatedTime { get; set; }
+        public DateTime VisitedTime { get; private set; }
 
         public override string ToString()
         {
@@ -664,17 +667,6 @@ namespace MHServerEmu.Games.Regions
         {
             List<GameMessage> messageList = new();
 
-            // Before changing to the actual destination region the game seems to first change into a transitional region
-            messageList.Add(new(NetMessageRegionChange.CreateBuilder()
-                .SetRegionId(0)
-                .SetServerGameId(0)
-                .SetClearingAllInterest(false)
-                .Build()));
-
-            messageList.Add(new(NetMessageQueueLoadingScreen.CreateBuilder()
-                .SetRegionPrototypeId((ulong)PrototypeId)
-                .Build()));
-
             var regionChangeBuilder = NetMessageRegionChange.CreateBuilder()
                 .SetRegionId(Id)
                 .SetServerGameId(serverGameId)
@@ -724,7 +716,7 @@ namespace MHServerEmu.Games.Regions
                 }
 
                 client.AOI.ResetAOI(this, client.StartPositon);
-                messageList.AddRange(client.AOI.UpdateCells(this, client.StartPositon));
+                messageList.AddRange(client.AOI.UpdateCells(client.StartPositon));
             }
 
 
@@ -746,6 +738,14 @@ namespace MHServerEmu.Games.Regions
         internal PrototypeId GetDifficultyTierRef()
         {
             throw new NotImplementedException();
+        }
+
+        public void Visited()
+        {
+            lock (Lock)
+            {
+                VisitedTime = DateTime.Now;
+            }
         }
     }
 

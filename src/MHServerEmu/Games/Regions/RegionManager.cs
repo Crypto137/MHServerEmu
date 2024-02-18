@@ -1,9 +1,12 @@
 ﻿using MHServerEmu.Common;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using static Dapper.SqlMapper;
+using MHServerEmu.Networking;
+
 
 namespace MHServerEmu.Games.Regions
 {
@@ -48,7 +51,7 @@ namespace MHServerEmu.Games.Regions
         private readonly Dictionary<ulong, Region> _allRegions = new();
         private readonly Dictionary<ulong, Region> _matches = new();
         public Game Game { get; private set; }
-
+        private readonly object _managerLock = new();
         public RegionManager(EntityManager entityManager)
         {
             _entityManager = entityManager;
@@ -70,7 +73,7 @@ namespace MHServerEmu.Games.Regions
             if (cell != null && _allCells.ContainsKey(cell.Id) == false)
             {
                 _allCells[cell.Id] = cell;
-                Logger.Trace($"Adding cell {cell} in region {cell.GetRegion()} area id={cell.Area.Id}");
+                if (cell.Area.Log) Logger.Trace($"Adding cell {cell} in region {cell.GetRegion()} area id={cell.Area.Id}");
                 return true;
             }
             return false;
@@ -85,7 +88,7 @@ namespace MHServerEmu.Games.Regions
         public bool RemoveCell(Cell cell)
         {
             if (cell == null) return false;
-            Logger.Trace($"Removing cell {cell} from region {cell.GetRegion()}");
+            if (cell.Area.Log) Logger.Trace($"Removing cell {cell} from region {cell.GetRegion()}");
 
             if (_allCells.ContainsKey(cell.Id))
             {
@@ -132,7 +135,7 @@ namespace MHServerEmu.Games.Regions
             return region;
         }
 
-        public Region GenerateRegion(RegionPrototypeId prototype)
+        public Region GenerateRegion(RegionPrototypeId prototype) 
         {
             RegionSettings settings = new()
             {
@@ -143,6 +146,7 @@ namespace MHServerEmu.Games.Regions
                 Bound = Aabb.Zero,
                 GenerateAreas = true,
                 GenerateEntities = true,
+                GenerateLog = false,
                 Affixes = new List<PrototypeId>(),
                 RegionDataRef = (PrototypeId)prototype
             };
@@ -166,8 +170,11 @@ namespace MHServerEmu.Games.Regions
         public Region GetRegion(ulong id)
         {
             if (id == 0) return null;
-            if (_allRegions.TryGetValue(id, out Region region))
-                return region;
+            lock (_managerLock)
+            {
+                if (_allRegions.TryGetValue(id, out Region region))
+                    return region;
+            }
             return null;
         }
 
@@ -182,31 +189,108 @@ namespace MHServerEmu.Games.Regions
         // OLD
         public Region GetRegion(RegionPrototypeId prototype)
         {
-            GenerationAsked = true;
-            if (RegionPrototypeIdFromCommand != 0u)
-                prototype = (RegionPrototypeId)RegionPrototypeIdFromCommand;
-
-
             //  prototype = (RegionPrototypeId)7735172603194383419;
-            if (_regionDict.TryGetValue(prototype, out Region region) == false)
+            lock (_managerLock)
             {
-                // Generate the region and create entities for it if needed
-                ulong numEntities = _entityManager.PeekNextEntityId();
-              if (GenerationModeFromCommand == GenerationMode.Client)
-                  region = EmptyRegion(prototype);
-              else
+                if (_regionDict.TryGetValue(prototype, out Region region) == false)
                 {
+                    // Generate the region and create entities for it if needed
+                    ulong numEntities = _entityManager.PeekNextEntityId();
                     region = GenerateRegion(prototype);
+                    // region = EmptyRegion(prototype);
                     region.ArchiveData = GetArchiveData(prototype);
+                    HardcodedEntities(region, true);
+                    ulong entities = _entityManager.PeekNextEntityId() - numEntities;
+                    Logger.Debug($"Entities generated = {entities}");
+                    region.CreatedTime = DateTime.Now;
+
+                    _regionDict.Add(prototype, region);
+
                 }
-              
-                HardcodedEntities(region, true);
-                ulong entities = _entityManager.PeekNextEntityId() - numEntities;
-                Logger.Debug($"Entities generated = {entities}");
-                _regionDict.Add(prototype, region);
+
+                return region;
+            }
+        }
+
+        public GameMessage[] GetRegionMessages(FrontendClient client, RegionPrototypeId regionPrototype)
+        {
+            // Load region data
+            Region region = GetRegion(regionPrototype);
+            return region.GetLoadingMessages(client.GameId, client.Session.Account.Player.Waypoint, client);            
+        }
+
+        private const int CleanUpTime = 60 * 1000 * 5; // 5 minutes
+        private const int UnactiveTime = 25; // 25 minutes
+        private const int UnVisitedTime = 5; // 5 minutes
+
+        public async Task CleanUpRegionsAsync()
+        {            
+            while (true)
+            {
+                CleanUpRegions();
+                await Task.Delay(CleanUpTime); 
+            }
+        }
+
+        private void CleanUpRegions()
+        {
+            lock (_managerLock)
+            {
+                if (_allRegions.Count == 0) return;
+            }            
+            var currentTime = DateTime.Now;
+            Logger.Debug($"CleanUp");
+
+            // Get PlayerRegions
+            var players = ServerManager.Instance.PlayerManagerService.IteratePlayers();
+            HashSet<RegionPrototypeId> playerRegions = new();
+            foreach (var player in players)
+            {
+                var regionRef = player.Session.Account.Player.Region; // TODO use RegionID
+                playerRegions.Add(regionRef); 
             }
 
-            return region;
+            // Check all regions 
+            List<Region> toShutdown = new();
+            lock (_managerLock)
+            {
+                foreach (Region region in _allRegions.Values)
+                {
+                    DateTime visitedTime;
+                    lock (region.Lock)
+                    {
+                        visitedTime = region.VisitedTime;
+                    }
+                    TimeSpan timeDifference = currentTime - visitedTime;
+
+                    if (playerRegions.Contains(region.PrototypeId)) // TODO RegionId
+                    {
+                        if (timeDifference.TotalMinutes > UnactiveTime)
+                            toShutdown.Add(region);
+                    }
+                    else
+                    {
+                        // TODO check all active local teleport to this Region
+                        if (timeDifference.TotalMinutes > UnVisitedTime)
+                            toShutdown.Add(region);
+                    }
+                }
+            }
+
+            // ShoutDown all unactived regions
+            foreach (Region region in toShutdown)
+            {
+                lock (_managerLock)
+                {
+                    _allRegions.Remove(region.Id);
+                    _regionDict.Remove(region.PrototypeId);
+                }
+                TimeSpan lifetime = DateTime.Now - region.CreatedTime;
+                string formattedLifetime = string.Format("{0:%m} min {0:%s} sec", lifetime);
+                Logger.Warn($"Shutdown region = {region}, Lifetime = {formattedLifetime}");
+                region.Shutdown();                
+            }
+
         }
 
         public static bool RegionIsHub(RegionPrototypeId prototype) => HubRegions.Contains(prototype);

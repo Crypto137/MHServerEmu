@@ -82,6 +82,20 @@ namespace MHServerEmu.PlayerManagement
             if (ConfigManager.PlayerManager.BypassAuth == false) DBManager.UpdateAccountData(client.Session.Account);
         }
 
+        /// <summary>
+        /// Iterates connected clients.
+        /// </summary>
+        /// <remarks>WARNING: IF YOU ITERATE PLAYERS, MAKE SURE TO GO ALL THE WAY THROUGH OR THE CLIENT LIST IS GOING TO STAY LOCKED AND NO ONE WILL BE ABLE TO CONNECT.</remarks>
+        /// <remarks>TODO: remove this.</remarks>
+        public IEnumerable<FrontendClient> IteratePlayers()
+        {
+            lock (_playerLock)
+            {
+                foreach (FrontendClient client in _playerList)
+                    yield return client;
+            }
+        }
+
         public void BroadcastMessage(GameMessage message)
         {
             lock (_playerLock)

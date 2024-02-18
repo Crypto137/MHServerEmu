@@ -10,7 +10,7 @@ namespace MHServerEmu.Games.Generators.Regions
 {
     public class SequenceRegionGenerator : RegionGenerator
     {
-        public override void GenerateRegion(int randomSeed, Region region)
+        public override void GenerateRegion(bool log, int randomSeed, Region region)
         {
             StartArea = null;
             SequenceRegionGeneratorPrototype regionGeneratorProto = (SequenceRegionGeneratorPrototype)GeneratorPrototype;
@@ -20,7 +20,7 @@ namespace MHServerEmu.Games.Generators.Regions
             
             if (regionGeneratorProto.AreaSequence.IsNullOrEmpty() == false)
             {
-                sequenceStack.Initialize(region, this, regionGeneratorProto.AreaSequence);
+                sequenceStack.Initialize(log, region, this, regionGeneratorProto.AreaSequence);
             } 
             else if (regionGeneratorProto.EndlessThemes.IsNullOrEmpty() == false) 
             {
@@ -41,7 +41,7 @@ namespace MHServerEmu.Games.Generators.Regions
                     POIPickerCollection.RegisterPOIGroup(endlessState.RegionPOIPicker);
                 }
 
-                sequenceStack.Initialize(region, this, endlessTheme.AreaSequence);
+                sequenceStack.Initialize(log, region, this, endlessTheme.AreaSequence);
                 random = new(randomSeed + setting.EndlessLevel);
             }
 
@@ -54,7 +54,7 @@ namespace MHServerEmu.Games.Generators.Regions
                 {   
                     if (subArea != null && subArea.AreaSequence.IsNullOrEmpty() == false)
                     {
-                        GenAtPositionFunctor functor = new(this, region, random, subArea.AreaSequence, subArea.MinRootSeparation, subArea.Tries);
+                        GenAtPositionFunctor functor = new(log, this, region, random, subArea.AreaSequence, subArea.MinRootSeparation, subArea.Tries);
                         PositionFunctor.IterateGridPositionsInConcentricSquares(functor, subArea.MinRootSeparation);
                         if (functor.Success == false)
                         {
@@ -140,8 +140,9 @@ namespace MHServerEmu.Games.Generators.Regions
         private AreaSequenceInfoPrototype[] _areaSequence;
 
         public bool Success;
+        private bool _log;
 
-        public GenAtPositionFunctor(SequenceRegionGenerator generator, Region region, GRandom random, AreaSequenceInfoPrototype[] areaSequence, float separation, int tries)
+        public GenAtPositionFunctor(bool log, SequenceRegionGenerator generator, Region region, GRandom random, AreaSequenceInfoPrototype[] areaSequence, float separation, int tries)
         {
             _generator = generator;
             _region = region;
@@ -150,6 +151,7 @@ namespace MHServerEmu.Games.Generators.Regions
             _separation = separation;
             _tries = tries;
             Success = false;
+            _log = log;
         }
 
         public override bool Process(ref Vector3 position)
@@ -158,7 +160,7 @@ namespace MHServerEmu.Games.Generators.Regions
                 return true;
 
             SequenceStack sequenceStack = new ();
-            sequenceStack.Initialize(_region, _generator, _areaSequence);
+            sequenceStack.Initialize(_log, _region, _generator, _areaSequence);
             Success = sequenceStack.ProcessSequence(_random, null, null, position);
 
             return (--_tries > 0) && !Success;
@@ -171,6 +173,7 @@ namespace MHServerEmu.Games.Generators.Regions
     public class SequenceStack
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+        private bool Log;
 
         private SequenceStackEntry _root;
         private List<SequenceStackEntry> _entries;
@@ -184,9 +187,10 @@ namespace MHServerEmu.Games.Generators.Regions
             SelectedAreaInfos = new();
         }
 
-        public void Initialize(Region region, SequenceRegionGenerator generator, AreaSequenceInfoPrototype[] areaInfos)
+        public void Initialize(bool log, Region region, SequenceRegionGenerator generator, AreaSequenceInfoPrototype[] areaInfos)
         {
             Region = region;
+            Log = log;
             RootAreaInfos = areaInfos;
             Generator = generator;
             SequenceStackEntry entry = AddEntry(null);
@@ -262,7 +266,7 @@ namespace MHServerEmu.Games.Generators.Regions
                         if (!PickAreaPlacement(random, entry, false, origin))
                         {
                             entry.GetAreaSequence(new());
-                            Logger.Error("Area couldn't place next to previous.");
+                            if (Log) Logger.Error("Area couldn't place next to previous.");
                             break;
                         }
 
@@ -297,7 +301,7 @@ namespace MHServerEmu.Games.Generators.Regions
                                 success &= area.Generate(Generator, areas, GenerateFlag.Background);
                                 if (success == false)
                                 {
-                                    Logger.Error("Area failed to generate.");
+                                   if (Log) Logger.Error("Area failed to generate.");
                                 }
                             }
                             else
@@ -410,7 +414,7 @@ namespace MHServerEmu.Games.Generators.Regions
                 Area testPreviousArea = Region.GetArea(weightedArea.Area);
                 if (testPreviousArea != null)
                 {
-                    Logger.Error("Duplicate Area found during generation");
+                    if (Log) Logger.Error("Duplicate Area found during generation");
                     return false;
                 }
             }
@@ -453,7 +457,7 @@ namespace MHServerEmu.Games.Generators.Regions
                             if (report && picker == null)
                             {
                                 entry.GetAreaSequence(new());
-                                Logger.Error("Area couldn't build any shared edges with previous area.");
+                                if (Log) Logger.Error("Area couldn't build any shared edges with previous area.");
                             }
                         }
 
@@ -479,7 +483,7 @@ namespace MHServerEmu.Games.Generators.Regions
                                     if (report)
                                     {                              
                                         entry.GetAreaSequence(new());
-                                        Logger.Error("Area collided with AREA");
+                                        if (Log) Logger.Error("Area collided with AREA");
                                     }
 
                                     break;
@@ -497,7 +501,7 @@ namespace MHServerEmu.Games.Generators.Regions
                                     if (report)
                                     {
                                         entry.GetAreaSequence(new());
-                                        Logger.Error("Area's SharedEdgeMinimum prevented placement.");
+                                        if (Log) Logger.Error("Area's SharedEdgeMinimum prevented placement.");
                                     }
 
                                     continue;
@@ -559,7 +563,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
                 if (!skip && Region.GetArea(areaChoice.Area) != null)
                 {
-                    Logger.Error("Duplicate Area found during generation");
+                    if (Log) Logger.Error("Duplicate Area found during generation");
                     skip = true;
                 }
 

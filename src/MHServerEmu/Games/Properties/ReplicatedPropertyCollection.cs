@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Properties
@@ -12,13 +11,10 @@ namespace MHServerEmu.Games.Properties
         public ReplicatedPropertyCollection(CodedInputStream stream)
         {
             ReplicationId = stream.ReadRawVarint64();
-
-            uint propertyCount = stream.ReadRawUInt32();
-            for (int i = 0; i < propertyCount; i++)
-                _propertyList.Add(new(stream));
+            Decode(stream);
         }
 
-        public ReplicatedPropertyCollection(ulong replicationId, List<Property> propertyList = null) : base(propertyList)
+        public ReplicatedPropertyCollection(ulong replicationId = 0)
         {
             ReplicationId = replicationId;
         }

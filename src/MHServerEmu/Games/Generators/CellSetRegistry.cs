@@ -34,6 +34,7 @@ namespace MHServerEmu.Games.Generators
     public class CellSetRegistry
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
+        public bool Log;
         public Aabb CellBounds { get; private set; }
         public bool IsInitialized { get; private set; }
 
@@ -56,9 +57,10 @@ namespace MHServerEmu.Games.Generators
             }
         }
 
-        public void Initialize(bool supressMissingCellErrors)
+        public void Initialize(bool supressMissingCellErrors, bool log)
         {
             _supressMissingCellErrors = supressMissingCellErrors;
+            Log = log;
             IsInitialized = true;
         }
 
@@ -78,7 +80,7 @@ namespace MHServerEmu.Games.Generators
                     }
                 }
                 else
-                    Logger.Warn($"Warning: Generator tried to prevent choosing a type {cellType} cell that was similar to it's neighbors but failed doing so due to a lack of alternatives, consider making more variations of that type.");
+                    if (Log) Logger.Warn($"Warning: Generator tried to prevent choosing a type {cellType} cell that was similar to it's neighbors but failed doing so due to a lack of alternatives, consider making more variations of that type.");
             }
             return 0;
         }
@@ -99,7 +101,7 @@ namespace MHServerEmu.Games.Generators
                     }
                 }
                 else
-                    Logger.Warn("Warning: Generator tried to prevent choosing a type UnknownWallType cell that was similar to its neighbors but failed doing so due to a lack of alternatives, consider making more variations of that type.");
+                    if (Log) Logger.Warn("Warning: Generator tried to prevent choosing a type UnknownWallType cell that was similar to its neighbors but failed doing so due to a lack of alternatives, consider making more variations of that type.");
             }
             return 0;
         }
@@ -181,7 +183,7 @@ namespace MHServerEmu.Games.Generators
 
             if (!Segment.EpsilonTest(bounds.Length, bounds.Width))
             {
-                Logger.Error($"Data:(.cell file) Grid Generation requires square cells.\n\tCell: {cellProto.ClientMap}\n\tLength:{bounds.Length}\n\tWidth:{bounds.Width}");
+                if (Log) Logger.Error($"Data:(.cell file) Grid Generation requires square cells.\n\tCell: {cellProto.ClientMap}\n\tLength:{bounds.Length}\n\tWidth:{bounds.Width}");
                 return;
             }
 
@@ -270,7 +272,7 @@ namespace MHServerEmu.Games.Generators
                 return true;
             }
             else
-                Logger.Error($"CellSet contains more than one edge connection type {type}:\n  {position}\n  {_connectionsType[type]}\n  Adding: {GameDatabase.GetPrototypeName(cellRef)}");
+                if (Log) Logger.Error($"CellSet contains more than one edge connection type {type}:\n  {position}\n  {_connectionsType[type]}\n  Adding: {GameDatabase.GetPrototypeName(cellRef)}");
 
             return false;
         }
@@ -281,7 +283,7 @@ namespace MHServerEmu.Games.Generators
             if (cellSet == 0) return false;
 
             string cellSetPath = GameDatabase.GetAssetName(cellSet);
-            Logger.Trace($"CellSetRegistry::LoadCellSet({cellSetPath})");
+            if (Log) Logger.Trace($"CellSetRegistry::LoadCellSet({cellSetPath})");
             cellSetPath = "Resource/Cells/" + cellSetPath;
 
             int numCells = 0;
@@ -339,7 +341,7 @@ namespace MHServerEmu.Games.Generators
                 Cell.Type type = (Cell.Type)i;
                 if (!HasCellOfType(type) && !_supressMissingCellErrors)
                 {
-                    Logger.Trace($"CellSetRegistry Missing {type}");
+                    if (Log) Logger.Trace($"CellSetRegistry Missing {type}");
                 }
             }
             return true;

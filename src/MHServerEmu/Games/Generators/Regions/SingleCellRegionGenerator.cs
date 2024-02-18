@@ -7,7 +7,7 @@ namespace MHServerEmu.Games.Generators.Regions
 {
     public class SingleCellRegionGenerator : RegionGenerator
     {
-        public override void GenerateRegion(int randomSeed, Region region)
+        public override void GenerateRegion(bool log, int randomSeed, Region region)
         {
             SingleCellRegionGeneratorPrototype proto = (SingleCellRegionGeneratorPrototype)GeneratorPrototype;
 

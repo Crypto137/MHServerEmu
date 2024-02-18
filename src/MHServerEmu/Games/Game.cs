@@ -65,6 +65,8 @@ namespace MHServerEmu.Games
             RegionManager.Initialize(this);
 
             Random = new();
+            // Task for cleanUp not used Regions
+            Task.Run(async () => await RegionManager.CleanUpRegionsAsync());
             _powerMessageHandler = new(EventManager);
 
             // Start main game loop
@@ -263,12 +265,12 @@ namespace MHServerEmu.Games
             UpdateAvatarStateArchive avatarState = new(updateAvatarState.ArchiveData);
             //Vector3 oldPosition = client.LastPosition;
             client.LastPosition = avatarState.Position;
-
+            client.AOI.Region.Visited();
             // AOI
             if (client.IsLoading == false && client.AOI.ShouldUpdate(avatarState.Position) ) 
             {                
-                var messageList = client.AOI.UpdateCells(client.Region, avatarState.Position);
-                messageList.AddRange(client.AOI.UpdateEntity(client.Region, avatarState.Position));
+                var messageList = client.AOI.UpdateCells(avatarState.Position);
+                messageList.AddRange(client.AOI.UpdateEntity(avatarState.Position));
                 if (messageList.Count > 0)
                 {
                     Logger.Trace($"AOI[{messageList.Count}][{client.AOI.LoadedEntities.Count}]");
@@ -375,8 +377,8 @@ namespace MHServerEmu.Games
 
                     Logger.Trace($"Teleporting to {targetPos}");
 
-                    uint cellid = (uint)(long)target.PropertyCollection[PropertyEnum.MapCellId];
-                    uint areaid = (uint)(long)target.PropertyCollection[PropertyEnum.MapAreaId];
+                    uint cellid = target.Properties[PropertyEnum.MapCellId];
+                    uint areaid = target.Properties[PropertyEnum.MapAreaId];
                     Logger.Trace($"Teleporting to areaid {areaid} cellid {cellid}");
 
                     EnqueueResponse(client, new(NetMessageEntityPosition.CreateBuilder()

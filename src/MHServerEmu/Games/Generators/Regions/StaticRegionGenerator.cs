@@ -11,8 +11,10 @@ namespace MHServerEmu.Games.Generators.Regions
     public class StaticRegionGenerator : RegionGenerator
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        public override void GenerateRegion(int randomSeed, Region region)
+        private bool Log;
+        public override void GenerateRegion(bool log, int randomSeed, Region region)
         {
+            Log = log;
             StartArea = null;
             GRandom random = new(randomSeed);
             StaticRegionGeneratorPrototype regionGeneratorProto = (StaticRegionGeneratorPrototype)GeneratorPrototype;
@@ -48,7 +50,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
                     if (workingConnectionList.Count == 0)
                     {
-                        Logger.Error("Calligraphy Error: More than one area in region but there are no connections specified.");
+                        if (Log) Logger.Error("Calligraphy Error: More than one area in region but there are no connections specified.");
                         return;
                     }
 
@@ -144,7 +146,7 @@ namespace MHServerEmu.Games.Generators.Regions
             }
 
             if (failout == 0)
-                Logger.Error("We overstayed our welcome trying to connect areas.");
+                if (Log) Logger.Error("We overstayed our welcome trying to connect areas.");
 
             return;
         }

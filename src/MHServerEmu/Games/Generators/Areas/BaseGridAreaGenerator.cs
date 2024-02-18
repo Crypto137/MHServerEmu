@@ -29,7 +29,7 @@ namespace MHServerEmu.Games.Generators.Areas
             if (!Segment.EpsilonTest(cellBounds.Width, cellBounds.Length)) return null;
             if (!Segment.EpsilonTest(cellBounds.Width, proto.CellSize))
             {
-                Console.WriteLine($"Cell Size Differs between Cellset and Area. Area: {Area}");
+                if (Log) Logger.Warn($"Cell Size Differs between Cellset and Area. Area: {Area}");
                 return null;
             }
 
@@ -81,24 +81,24 @@ namespace MHServerEmu.Games.Generators.Areas
         {
             if (!GetPrototype(out var proto)) return false;
 
-            CellSetRegistry.Initialize(proto.SupressMissingCellErrors);
+            CellSetRegistry.Initialize(proto.SupressMissingCellErrors, Log);
 
             var cellSets = proto.CellSets;
             if (cellSets == null)
             {
-                Logger.Warn("CellGridGenerator with no CellSets specified.");
+                if (Log) Logger.Warn("CellGridGenerator with no CellSets specified.");
                 return false;
             }
 
             if (proto.CellSize <= 0)
             {
-                Logger.Warn("CellGridGenerator called with zero CellSize.");
+                if (Log) Logger.Warn("CellGridGenerator called with zero CellSize.");
                 return false;
             }
 
             if (proto.CellsX <= 0 || proto.CellsY <= 0)
             {
-                Logger.Warn("CellGridGenerator called with zero cells (0 Cell Area).");
+                if (Log) Logger.Warn("CellGridGenerator called with zero cells (0 Cell Area).");
                 return false;
             }
 
@@ -110,7 +110,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
             if (!CellSetRegistry.IsComplete())
             {
-                Logger.Warn("CellSetRegistry is not complete.");
+                if (Log) Logger.Warn("CellSetRegistry is not complete.");
             }
 
             return true;
@@ -122,7 +122,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
             if (!CellContainer.Initialize(proto.CellsX, proto.CellsY, CellSetRegistry, proto.DeadEndMax))
             {
-                Console.WriteLine("Failed to initialize cell container.");
+                if (Log) Logger.Warn("Failed to initialize cell container.");
                 return false;
             }
 
@@ -242,7 +242,7 @@ namespace MHServerEmu.Games.Generators.Areas
         public bool CreateRequiredCells(GRandom random, RegionGenerator regionGenerator, List<PrototypeId> areas)
         {
             if (CellContainer == null) return false;
-            Logger.Debug($"[{MethodBase.GetCurrentMethod().Name}] => {random}");
+            if (LogDebug) Logger.Debug($"[{MethodBase.GetCurrentMethod().Name}] => {random}");
             Picker<Point2> picker = new(random);
             if (!GetPrototype(out var proto)) return false;
 
@@ -254,7 +254,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 {
                     if (!SpawnRequiredCellBase(random, picker, requiredCellBase))
                     {
-                        Logger.Warn($"Failed to place Required Cell. CELL={requiredCellBase} AREA={Area}");
+                        if (Log) Logger.Warn($"Failed to place Required Cell. CELL={requiredCellBase} AREA={Area}");
                         failed = true;
                     }
                 }
@@ -266,7 +266,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 AddCellsToPicker(cellPicker, proto.NonRequiredSuperCells);
                 if (!SpawnNonRequiredCellList(random, picker, cellPicker, proto.NonRequiredSuperCellsMin, proto.NonRequiredSuperCellsMax))
                 {
-                    Logger.Warn($"Failed to place the minimum number of Non-Required SuperCells. CELLS={Logger.ObjectCollectionToString(proto.NonRequiredSuperCells)} AREA={Area}");
+                    if (Log) Logger.Warn($"Failed to place the minimum number of Non-Required SuperCells. CELLS={Logger.ObjectCollectionToString(proto.NonRequiredSuperCells)} AREA={Area}");
                     failed = true;
                 }
             }
@@ -280,7 +280,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
                     if (cellRef == 0)
                     {
-                        Logger.Warn($"Reservable Cell {GameDatabase.GetFormattedPrototypeName(GameDatabase.GetDataRefByAsset(spec.Cell))} Does not Exist in Area {Area}");
+                        if (Log) Logger.Warn($"Reservable Cell {GameDatabase.GetFormattedPrototypeName(GameDatabase.GetDataRefByAsset(spec.Cell))} Does not Exist in Area {Area}");
                         continue;
                     }
 
@@ -294,7 +294,7 @@ namespace MHServerEmu.Games.Generators.Areas
                     else
                     {
                         failed = true;
-                        Logger.Warn($"Failed to place Required Transition Cell. CELL={GameDatabase.GetFormattedPrototypeName(cellRef)} AREA={Area}");
+                        if (Log) Logger.Warn($"Failed to place Required Transition Cell. CELL={GameDatabase.GetFormattedPrototypeName(cellRef)} AREA={Area}");
                         break;
                     }
                 }
@@ -329,7 +329,7 @@ namespace MHServerEmu.Games.Generators.Areas
                             else
                             {
                                 failed = true;
-                                Logger.Warn($"Failed to place Random Instance Cell. CELL={GameDatabase.GetFormattedPrototypeName(cellRef)}");
+                                if (Log) Logger.Warn($"Failed to place Random Instance Cell. CELL={GameDatabase.GetFormattedPrototypeName(cellRef)}");
                             }
                         }
                     }
@@ -343,7 +343,7 @@ namespace MHServerEmu.Games.Generators.Areas
                     if (!SpawnRequiredCellBase(random, picker, requiredCellBase))
                     {
                         failed = true;
-                        Logger.Warn($"Failed to place 'RequiredCells'. CELLS={requiredCellBase}");
+                        if (Log) Logger.Warn($"Failed to place 'RequiredCells'. CELLS={requiredCellBase}");
                     }
                 }
             }
@@ -358,7 +358,7 @@ namespace MHServerEmu.Games.Generators.Areas
                         if (!SpawnRequiredCellBase(random, picker, (RequiredCellBasePrototype)requiredCellBase))
                         {
                             failed = true;
-                            Logger.Warn($"Failed to place RequiredPOI. CELLS={requiredCellBase}");
+                            if (Log) Logger.Warn($"Failed to place RequiredPOI. CELLS={requiredCellBase}");
                         }
                     }
                 }
@@ -371,7 +371,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 if (!SpawnNonRequiredCellList(random, picker, cellPicker, proto.NonRequiredNormalCellsMin, proto.NonRequiredNormalCellsMax))
                 {
                     failed = true;
-                    Logger.Warn($"Failed to place the minimum number of Non-Required Normal Cells. CELLS={Logger.ObjectCollectionToString(proto.NonRequiredNormalCells)}");
+                    if (Log) Logger.Warn($"Failed to place the minimum number of Non-Required Normal Cells. CELLS={Logger.ObjectCollectionToString(proto.NonRequiredNormalCells)}");
                 }
             }
             return !failed;
@@ -449,14 +449,14 @@ namespace MHServerEmu.Games.Generators.Areas
                 AssetId cellAssetRef = requiredCell.Cell;
                 if (cellAssetRef == 0)
                 {
-                    Logger.Trace($"{Region}\n  Generator contains a RequiredCell entry that has an empty cell field.");
+                    if (Log) Logger.Trace($"{Region}\n  Generator contains a RequiredCell entry that has an empty cell field.");
                     return false;
                 }
 
                 PrototypeId cellRef = GameDatabase.GetDataRefByAsset(cellAssetRef);
                 if (cellRef == 0)
                 {
-                    Logger.Trace($"{Region}\n  Generator contains a RequiredCell Asset, {GameDatabase.GetAssetName(cellAssetRef)}, that does not match the corresponding filename");
+                    if (Log) Logger.Trace($"{Region}\n  Generator contains a RequiredCell Asset, {GameDatabase.GetAssetName(cellAssetRef)}, that does not match the corresponding filename");
                     return false;
                 }
 
@@ -545,7 +545,7 @@ namespace MHServerEmu.Games.Generators.Areas
         public bool GenerateRandomInstanceLinks(GRandom random)
         {
             if (Area == null) return false;
-            Logger.Debug($"[{MethodBase.GetCurrentMethod().Name}] => {random}");
+            if (LogDebug) Logger.Debug($"[{MethodBase.GetCurrentMethod().Name}] => {random}");
             List<RandomInstanceRegionPrototype> randomInstances = Area.RandomInstances;
             randomInstances.Clear();
 
@@ -579,7 +579,7 @@ namespace MHServerEmu.Games.Generators.Areas
         public void ProcessDeleteExtraneousCells(GRandom random, int chance)
         {
             if (CellContainer == null) return;
-            Logger.Debug($"[{MethodBase.GetCurrentMethod().Name}] => {random}");
+            if (LogDebug) Logger.Debug($"[{MethodBase.GetCurrentMethod().Name}] => {random}");
             // number of cells to be deleted
             int cells = chance * CellContainer.NumCells / 100;
             GetPrototype(out BaseGridAreaGeneratorPrototype proto);
@@ -822,7 +822,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 }
                 else
                 {
-                    Logger.Trace("No cells were flagged with connections.");
+                    if (Log) Logger.Trace("No cells were flagged with connections.");
                 }
             }
             return true;
@@ -871,7 +871,7 @@ namespace MHServerEmu.Games.Generators.Areas
         public bool GenerateRoads(GRandom random, RoadGeneratorPrototype roadGeneratorProto)
         {
             if (CellContainer == null || roadGeneratorProto == null || roadGeneratorProto.Cells == null) return true;
-            Logger.Debug($"[{MethodBase.GetCurrentMethod().Name}] => {random}");
+            if (LogDebug) Logger.Debug($"[{MethodBase.GetCurrentMethod().Name}] => {random}");
             List<Point2> roadPoints = new();
 
             for (int x = 0; x < CellContainer.Width; ++x)
@@ -902,7 +902,7 @@ namespace MHServerEmu.Games.Generators.Areas
             int count = roadPoints.Count;
             if (count < 2)
             {
-                Logger.Trace($"RoadGenerator specified in Area, but only {count} Road Point found. AREA={Area}");
+                if (Log) Logger.Trace($"RoadGenerator specified in Area, but only {count} Road Point found. AREA={Area}");
                 return true;
             }
 
@@ -1031,14 +1031,14 @@ namespace MHServerEmu.Games.Generators.Areas
             RoadInfo infoA = buildGrid[CellContainer.GetIndex(pointA.X, pointA.Y)];
             if (!VerifyCellToDirAndCheckType(buildGrid, pointA.X, pointA.Y, infoA.RoadType, Cell.Type.NESW))
             {
-                Logger.Trace($"RoadGenerator specified in Area, but A road connection is blocked. AREA={Area}");
+                if (Log) Logger.Trace($"RoadGenerator specified in Area, but A road connection is blocked. AREA={Area}");
                 return false;
             }
 
             RoadInfo infoB = buildGrid[CellContainer.GetIndex(pointB.X, pointB.Y)];
             if (!VerifyCellToDirAndCheckType(buildGrid, pointB.X, pointB.Y, infoB.RoadType, Cell.Type.NESW))
             {
-                Logger.Trace($"RoadGenerator specified in Area, but B road connection is blocked. AREA={Area}");
+                if (Log) Logger.Trace($"RoadGenerator specified in Area, but B road connection is blocked. AREA={Area}");
                 return false;
             }
 

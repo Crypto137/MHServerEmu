@@ -42,6 +42,8 @@ namespace MHServerEmu.Games.Regions
         public Vector3 Origin { get; set; }
 
         private static readonly Logger Logger = LogManager.CreateLogger();
+        public bool Log;
+        private bool LogDebug;
         public Aabb RegionBounds { get; set; }
         public Aabb LocalBounds { get; set; }
         public int RandomSeed { get; set; }
@@ -91,13 +93,14 @@ namespace MHServerEmu.Games.Regions
             RegionBounds = new Aabb(Origin, Origin);
 
             RandomSeed = Region.RandomSeed;
-
+            Log = settings.RegionSettings.GenerateLog;
+            LogDebug = Log;
             if (settings.RegionSettings.GenerateAreas)
             {
-                Generator = DRAGSystem.LinkGenerator(AreaPrototype.Generator, this);
+                Generator = DRAGSystem.LinkGenerator(Log, AreaPrototype.Generator, this);
                 if (Generator == null)
                 {
-                    Logger.Error("Area failed to link to a required generator.");
+                    if (Log) Logger.Error("Area failed to link to a required generator.");
                     return false;
                 }
 
@@ -379,7 +382,7 @@ namespace MHServerEmu.Games.Regions
 
         public static void CreateConnection(Area areaA, Area areaB, Vector3 position, ConnectPosition connectPosition)
         {
-            Logger.Debug($"connect {position.ToStringFloat()} {areaA.Id} <> {areaB.Id}");
+            if (areaA.LogDebug) Logger.Debug($"connect {position.ToStringFloat()} {areaA.Id} <> {areaB.Id}");
             areaA.AddConnection(position, areaB, connectPosition);
             areaB.AddConnection(position, areaA, connectPosition);
         }

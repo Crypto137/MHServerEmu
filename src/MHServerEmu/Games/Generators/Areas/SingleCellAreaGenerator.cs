@@ -126,7 +126,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 if (cellP == null) return false;
 
                 CellSetRegistry registry = new ();
-                registry.Initialize(true);
+                registry.Initialize(true, area.Log);
                 foreach (var cellSetEntry in singleCellGeneratorProto.BorderCellSets)
                 {
                     if (cellSetEntry == null) continue;

@@ -362,7 +362,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                         paramIndex = int.Parse(fieldName[5].ToString());
                     }
 
-                    if (paramIndex >= PropertyConsts.MaxParamCount)
+                    if (paramIndex >= Property.MaxParamCount)
                         return Logger.ErrorReturn(false, $"Property param index {paramIndex} out of range");
 
                     if (DeserializePropertyParam(blueprintMemberInfo, prototypeName, reader, paramIndex, builder) == false)

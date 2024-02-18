@@ -25,7 +25,7 @@ namespace MHServerEmu.Games.Generators.Regions
                 POIPickerCollection = new(generatorPrototype);
         }
 
-        public virtual void GenerateRegion(int randomSeed, Region region) { }
+        public virtual void GenerateRegion(bool log, int randomSeed, Region region) { }
 
         public void AddAreaToMap(PrototypeId areaProtoId, Area area)
         {

@@ -40,14 +40,14 @@ namespace MHServerEmu.Games.Generators.Areas
 
             if (!success)
             {
-                Logger.Warn($"WideGridAreaGenerator failed after {10 - tries} attempts | region: {Region} | area: {Area}");
+                if (Log) Logger.Warn($"WideGridAreaGenerator failed after {10 - tries} attempts | region: {Region} | area: {Area}");
                 return false;
             }
 
             if (proto.ProceduralSuperCells)
             {
                 if (!CreateProceduralSuperCells(random))
-                    Logger.Error("CreateProceduralSuperCells false");
+                    if (Log) Logger.Error("CreateProceduralSuperCells false");
             }
 
             ProcessDeleteExtraneousCells(random, (int)proto.RoomKillChancePct);
@@ -61,7 +61,7 @@ namespace MHServerEmu.Games.Generators.Areas
         bool CreateProceduralSuperCells(GRandom random)
         {
             if (CellContainer is not WideGenCellGridContainer container) return false;
-            Logger.Debug($"[{MethodBase.GetCurrentMethod().Name}] => {random}");
+            if (LogDebug) Logger.Debug($"[{MethodBase.GetCurrentMethod().Name}] => {random}");
             List<PatternHit> hits = new();
             Walls[] patternWide = {
                 (Walls) WallGroup.WideNES, (Walls) WallGroup.WideNES,
@@ -261,7 +261,7 @@ namespace MHServerEmu.Games.Generators.Areas
             int randomSeed = Area.RandomSeed;
 
             if (!BuildCellDeterminationMap(out CellDeterminationMap cellMap)) return false;
-            Logger.Debug($"[{MethodBase.GetCurrentMethod().Name}] => {random}");
+            if (LogDebug) Logger.Debug($"[{MethodBase.GetCurrentMethod().Name}] => {random}");
             foreach (var item in cellMap)
             {
                 List<Point2> coordsOfType = item.Value;
@@ -307,7 +307,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
                             if (cellRef == 0)
                             {
-                                Logger.Trace($"Generator for Area {Area} tried to pick cell of type {wallType}, none were available. Region: {Region}");
+                                if (Log) Logger.Trace($"Generator for Area {Area} tried to pick cell of type {wallType}, none were available. Region: {Region}");
                                 return false;
                             }
 
@@ -385,7 +385,7 @@ namespace MHServerEmu.Games.Generators.Areas
             if (gridAreaGeneratorProto != null && gridAreaGeneratorProto.BorderBehavior != null && gridAreaGeneratorProto.CellSets.IsNullOrEmpty() == false)
             {
                 CellSetRegistry registry = new ();
-                registry.Initialize(true);
+                registry.Initialize(true, area.Log);
                 foreach (CellSetEntryPrototype cellSetEntry in gridAreaGeneratorProto.CellSets)
                 {
                     if (cellSetEntry == null) continue;
