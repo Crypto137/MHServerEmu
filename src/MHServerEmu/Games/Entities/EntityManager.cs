@@ -127,7 +127,7 @@ namespace MHServerEmu.Games.Entities
             return item;
         }
 
-        public Transition SpawnTransitionMarket(Cell cell, TransitionPrototype transitionProto, Vector3 position, Vector3 orientation,
+        public Transition SpawnTransitionMarker(Cell cell, TransitionPrototype transitionProto, Vector3 position, Vector3 orientation,
             bool requiresEnterGameWorld, bool OverrideSnapToFloor)
         {
             if (cell == null) return default;
@@ -350,7 +350,7 @@ namespace MHServerEmu.Games.Entities
                             if (node != null)
                                 SpawnTargetTeleport(cell, transition, position, portal.Rotation, false, node.TargetId, snap);
                             else
-                                SpawnTransitionMarket(cell, transition, position, portal.Rotation, false, snap);   
+                                SpawnTransitionMarker(cell, transition, position, portal.Rotation, false, snap);   
                         }      
                     }
 
