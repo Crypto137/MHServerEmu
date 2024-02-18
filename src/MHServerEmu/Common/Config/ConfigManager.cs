@@ -11,7 +11,6 @@ namespace MHServerEmu.Common.Config
         public static bool IsInitialized { get; private set; }
 
         // Add new containers here as needed
-        public static CommandConfig CommandConfig { get; private set; }
         public static LoggingConfig Logging { get; private set; }
         public static FrontendConfig Frontend { get; private set; }
         public static AuthConfig Auth { get; private set; }
