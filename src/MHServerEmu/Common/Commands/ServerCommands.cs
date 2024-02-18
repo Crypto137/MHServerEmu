@@ -116,15 +116,4 @@ namespace MHServerEmu.Common.Commands
             return string.Empty;
         }
     }
-
-    [CommandGroup("generation", "Commands for generation tests", AccountUserLevel.Admin)]
-    public class GenerationCommands : CommandGroup
-    {
-        [Command("map", "Usage: generation map [RegionPrototypeId] [SeedNumber] [Client/Server]", AccountUserLevel.Admin)]
-        public string Map(string[] @params, FrontendClient client)
-        {
-            MapGenerationCommand mapGenerationCommand = new();
-            return mapGenerationCommand.Execute(@params);
-        }
-    }
 }

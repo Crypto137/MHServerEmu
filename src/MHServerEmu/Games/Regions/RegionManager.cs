@@ -19,9 +19,6 @@ namespace MHServerEmu.Games.Regions
 
     public partial class RegionManager
     {
-        public static int SeedNumberFromCommand;
-        public static ulong RegionPrototypeIdFromCommand;
-        public static GenerationMode GenerationModeFromCommand;
         public static bool GenerationAsked;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -128,8 +125,7 @@ namespace MHServerEmu.Games.Regions
 
         public Region EmptyRegion(RegionPrototypeId prototype)
         {
-            Region region = new(prototype,
-             SeedNumberFromCommand != 0 ? SeedNumberFromCommand : 1038711701,
+            Region region = new(prototype, 1038711701,
              Array.Empty<byte>(),
              new(10, DifficultyTier.Normal));
             return region;
@@ -139,7 +135,7 @@ namespace MHServerEmu.Games.Regions
         {
             RegionSettings settings = new()
             {
-                Seed = SeedNumberFromCommand != 0 ? SeedNumberFromCommand : Game.Random.Next(),
+                Seed = Game.Random.Next(),
                 DifficultyTierRef = (PrototypeId)DifficultyTier.Normal,
                 InstanceAddress = IdGenerator.Generate(IdType.Region),
                 Level = 10,
