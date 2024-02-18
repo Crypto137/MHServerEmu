@@ -5,7 +5,6 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.Networking;
 using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.Common.Commands
@@ -65,6 +64,7 @@ namespace MHServerEmu.Common.Commands
             return "Travel to Classified Bovine Sector.";
         }
     }
+
     [CommandGroup("position", "Shows current position.", AccountUserLevel.User)]
     public class PositionCommand : CommandGroup
     {

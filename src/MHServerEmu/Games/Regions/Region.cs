@@ -422,7 +422,7 @@ namespace MHServerEmu.Games.Regions
                 return null;
             }
             Areas[area.Id] = area;
-            if (settings.RegionSettings.GenerateLog) Logger.Debug($"Adding area {area.GetPrototypeName()}, id={area.Id}, areapos = {area.Origin.ToStringFloat()}, seed = {RandomSeed}");
+            if (settings.RegionSettings.GenerateLog) Logger.Debug($"Adding area {area.PrototypeName}, id={area.Id}, areapos = {area.Origin.ToStringFloat()}, seed = {RandomSeed}");
             return area;
         }
 

@@ -254,6 +254,8 @@ namespace MHServerEmu.Games.Regions
             return $"{GameDatabase.GetPrototypeName(PrototypeId)}, cellid={Id}, cellpos={RegionBounds.Center.ToStringFloat()}, game={Game}";
         }
 
+        public string PrototypeName => $"{GameDatabase.GetFormattedPrototypeName(PrototypeId)}";
+
         public void Shutdown()
         {
             Region region = GetRegion();

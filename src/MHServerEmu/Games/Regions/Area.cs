@@ -408,13 +408,10 @@ namespace MHServerEmu.Games.Regions
 
         public override string ToString()
         {
-            return $"{GetPrototypeName()}, areaid={Id}, aabb={RegionBounds.ToStringFloat()}, game={Game}";
+            return $"{PrototypeName}, areaid={Id}, aabb={RegionBounds.ToStringFloat()}, game={Game}";
         }
 
-        public string GetPrototypeName()
-        {
-            return GameDatabase.GetFormattedPrototypeName(PrototypeDataRef);
-        }
+        public string PrototypeName => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef);
 
         public void Shutdown()
         {
