@@ -200,6 +200,9 @@ namespace MHServerEmu.Games.Common
             );
         }
 
+        /// <summary>
+        /// Return a Vector3 where x is Yaw, y is Pitch and z is Roll
+        /// </summary>
         public static Vector3 FromDeltaVector2D(Vector3 delta)
         {
             return new(MathF.Atan2(delta.Y, delta.X), 0.0f, 0.0f);

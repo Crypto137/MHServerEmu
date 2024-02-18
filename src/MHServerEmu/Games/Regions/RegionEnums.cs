@@ -39,51 +39,84 @@ namespace MHServerEmu.Games.Regions
 
         // Chapter 1
         CH0101HellsKitchenRegion = 10115017851235015611,    // Hell's Kitchen South, Hell's Kitchen North
+        CH0102PowerPlantRegion = 3515564814947916554,
+        CH0103NYPDRegion = 9428632312349464698,
         CH0104SubwayRegion = 9191439093559269723,           // AbandonedSubway
         CH0105NightclubRegion = 1835346266496899713,        // Nightclub District
+        CH0106KPWarehouseRegion = 11347858582155828080,
 
         // Chapter 2
         CH0201ShippingYardRegion = 6121022758926621561,     // Shipping Yard
+        CH0202HoodSightingContainerRegion = 11668761448997789490,
+        CH0203RhinoBargeRegion = 10386701194519845514,
         CH0204Q36AIMLabRegion = 2777924139474164138,        // Hidden A.I.M. Laboratory
         CH0205ConstructionRegion = 5976827590009297814,     // Crab Trap Restaurant
+        CH0206TaskmasterVHSTapeConstructionRegion = 3431042234570515153,
         CH0207TaskmasterRegion = 8702251210467252908,       // Taskmaster Institute
         CH0208CanneryRegion = 14132435072208214366,         // Cannery Row
         CH0209HoodsHideoutRegion = 3240864148892687230,     // Cargo Barge
 
         // Chapter 3
         CH0301MadripoorRegion = 15546930156792977757,       // Buccaneer Beach, Bamboo Forest, Lowtown
+        CH0302HydraOutpostRegion = 1829085176078803532,
+        CH0303WatermillRegion = 3500476209685602963,
+        CH0304PoisonGladeRegion = 18359979659955348623,
         CH0305ReconPostRegion = 13777669704527323332,       // S.H.I.E.L.D. Recon Post
+        CH0306PrincessBarRegion = 17486730436248543811,
         CH0307HandTowerRegion = 3712504169451561124,        // Hand Tower
 
         // Chapter 4
         CH0401LowerEastRegion = 11922318117493283053,       // Lower East Side
         CH0402UpperEastRegion = 7814783688219433201,        // Upper East Side
+        CH0403MGHStorageRegion = 3315074099029612874,
+        CH0404MGHFactoryRegion = 16983916443208784206,
         CH0405WaxMuseumRegion = 18416219930763860231,       // Wax Museum
+        CH0406SubwayRegion = 17364482227990173623,
+        CH0407NYPDRooftopRegion = 15623473767309973985,
         CH0408MaggiaRestaurantRegion = 4986534524151667661, // Maggia Restaurant
+        CH0409MoloidRegion = 9207898269786445731,
         CH0410FiskTowerRegion = 4829776495467370741,        // Fisk Tower
 
         // Chapter 5
         CH0501MutantTownRegion = 13322003842876840585,      // Wretched Slum, Ruined Projects, Morlock Underground
         CH0502MutantWarehouseRegion = 4439163727824297109,  // Invaded Warehouse
+        CH0503SupervillainRecCenterRegion = 5817790306607898371,
         CH0504PurifierChurchRegion = 14943602849314446350,  // Old Trainyard
 
         // Chapter 6
         CH0601FortStrykerRegion = 16979229927281662823,     // Hunting Grounds, Training Camp, Outer Compound
+        CH0602DeepCavernRegion = 17481886704038320822,
+        CH0603CircusSideshowRegion = 1457545689465560201,
+        CH0604AIMWeaponsLabRegion = 11677399496238373886,
         CH0605StrykerBunkerRegion = 14933304278036388919,   // Command Bunker
+        CH0606MagnetoBunkerRegion = 3352424872722570255,
 
         // Chapter 7
         CH0701SavagelandRegion = 3816293063869929975,       // Dinosaur Jungle, S.H.I.E.L.D. Science Outpost, Mutate Marsh
+        CH0702SauronCavesRegion = 5328248675005700748,
+        CH0703BroodCavesRegion = 16291762617282992651,
+        CH0705SabretoothShowdownRegion = 2422398536026824089,
+        CH0706MutateCavesRegion = 11143195439539100296,     // Evolution Facility
         CH0707SinisterLabRegion = 15860259876442020487,     // Sinister Lab
 
         // Chapter 8
         CH0801AIMWeaponFacilityRegion = 7735172603194383419,// A.I.M. Weapon Facility
         CH0802HYDRAIslandRegion = 10124302533162047929,     // Hydra Island
+        CH0803MandarinBossRegion = 2774018200640040,
         CH0804LatveriaPCZRegion = 5943200060062505421,      // Doomstadt Outer Village, Doomstadt Inner Village
+        CH0805LatveriaPCZObjectiveARegion = 17551246229059673578,
+        CH0806LatveriaPCZObjectiveBRegion = 17140936127691824620,
+        CH0807LatveriaPCZObjectiveCRegion = 16703534592391519726,
         CH0808DoomCastleRegion = 11854040468777277783,      // Castle Doom
+        CH0809DrDoomBossRegion = 136636993954912617,
 
         // Chapter 9
         CH0901NorwayPCZRegion = 5941813295004653614,        // Fjords of Norway, Ancient Ruin Site
+        CH0902NorwayDarkForestRegion = 13806682145451612951,
+        CH0903AsgardiaInstanceRegion = 749796778830142164,
         CH0904SiegePCZRegion = 9690692412445890462,         // Lower Asgard
+        CH0905CanalRegion = 12361256372427953732,
+        CH0906LokiBossRegion = 9322383157057886124,
 
         // Chapter 10
         MadripoorInvasionRegion = 3163018830455251180,      // Lowtown Warzone
@@ -91,6 +124,7 @@ namespace MHServerEmu.Games.Regions
         NYCRooftopInvRegion = 17036392409364308252,         // Hell's Kitchen Rooftops
         XMansionInvRegion = 10782376165327314768,           // Xavier's School (Invaded)
         UpperMadripoorRegionL60 = 9854118440624922758,      // S.W.O.R.D. Landing Zone, S.W.O.R.D. Command Post, Hightown Patrol
+        HelicarrierInvasionRegion = 6825425747905684388,
 
         // Terminals
         OpDailyBugleRegionL11To60 = 6538624689610759291,        // Daily Bugle

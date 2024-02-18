@@ -4,12 +4,23 @@ using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
+using static Dapper.SqlMapper;
 using MHServerEmu.Networking;
+
 
 namespace MHServerEmu.Games.Regions
 {
+    public enum GenerationMode
+    {
+        None,
+        Server,
+        Client
+    }
+
     public partial class RegionManager
     {
+        public static bool GenerationAsked;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         // TODO: Determine if a region is a hub from its prototype
@@ -26,7 +37,9 @@ namespace MHServerEmu.Games.Regions
         };
 
         private readonly EntityManager _entityManager;
-        private readonly Dictionary<RegionPrototypeId, Region> _regionDict = new();
+        private static readonly Dictionary<RegionPrototypeId, Region> _regionDict = new();
+
+        public static void ClearRegionDict() => _regionDict?.Clear();
 
         //----------
         private uint _cellId;
@@ -112,8 +125,7 @@ namespace MHServerEmu.Games.Regions
 
         public Region EmptyRegion(RegionPrototypeId prototype)
         {
-            Region region = new(prototype,
-             1776322703,
+            Region region = new(prototype, 1038711701,
              Array.Empty<byte>(),
              new(10, DifficultyTier.Normal));
             return region;
@@ -281,7 +293,7 @@ namespace MHServerEmu.Games.Regions
 
         private static byte[] GetArchiveData(RegionPrototypeId prototype)
         {
-            byte[] archiveData = Array.Empty<byte>();  
+            byte[] archiveData = Array.Empty<byte>();
 
             switch (prototype)
             {
