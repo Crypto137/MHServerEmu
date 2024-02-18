@@ -36,13 +36,13 @@ namespace MHServerEmu.Games.Entities
             ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel5;
 
             Properties = new(replicationId);
-            Properties[PropertyEnum.MapPosition] = Property.ToValue(mapPosition);
-            Properties[PropertyEnum.Health] = Property.ToValue(health);
-            Properties[PropertyEnum.MapAreaId] = Property.ToValue(mapAreaId);
-            Properties[PropertyEnum.HealthMaxOther] = Property.ToValue(healthMaxOther);
-            Properties[PropertyEnum.MapRegionId] = Property.ToValue(mapRegionId);
-            Properties[PropertyEnum.MapCellId] = Property.ToValue(mapCellId);
-            Properties[PropertyEnum.ContextAreaRef] = Property.ToValue(contextAreaRef);
+            Properties[PropertyEnum.MapPosition] = new(mapPosition);
+            Properties[PropertyEnum.Health] = new(health);
+            Properties[PropertyEnum.MapAreaId] = new(mapAreaId);
+            Properties[PropertyEnum.HealthMaxOther] = new(healthMaxOther);
+            Properties[PropertyEnum.MapRegionId] = new(mapRegionId);
+            Properties[PropertyEnum.MapCellId] = new(mapCellId);
+            Properties[PropertyEnum.ContextAreaRef] = new(contextAreaRef);
 
             TrackingContextMap = Array.Empty<EntityTrackingContextMap>();
             ConditionCollection = Array.Empty<Condition>();

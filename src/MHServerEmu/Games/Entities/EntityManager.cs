@@ -75,8 +75,8 @@ namespace MHServerEmu.Games.Entities
             worldEntity.RegionId = regionId;
             _entityDict.Add(baseData.EntityId, worldEntity);
 
-            worldEntity.Properties[PropertyEnum.CharacterLevel] = Property.ToValue(CharacterLevel);
-            worldEntity.Properties[PropertyEnum.CombatLevel] = Property.ToValue(CombatLevel);         // zero effect
+            worldEntity.Properties[PropertyEnum.CharacterLevel] = new(CharacterLevel);
+            worldEntity.Properties[PropertyEnum.CombatLevel] = new(CombatLevel);         // zero effect
 
             return worldEntity;
         }
@@ -188,7 +188,7 @@ namespace MHServerEmu.Games.Entities
                 if (entity.Value.BaseData.PrototypeId == destination.Entity && entity.Value.RegionId == regionId)
                 {
                     if (destination.Area == 0) return entity.Value;
-                    Property.FromValue(entity.Value.Properties[PropertyEnum.ContextAreaRef], out PrototypeId area);
+                    PrototypeId area = entity.Value.Properties[PropertyEnum.ContextAreaRef].ToPrototypeId();
                     if (area == destination.Area)
                         return entity.Value;
                 }                

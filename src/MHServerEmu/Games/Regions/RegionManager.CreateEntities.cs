@@ -554,7 +554,7 @@ namespace MHServerEmu.Games.Regions
                                         WorldEntity boss = _entityManager.CreateWorldEntityEnemy(region.Id, doop[4],
                                             pos, npc.Rotation,
                                             608, areaid, 608, cellid, area, false, 60, 60);
-                                        boss.Properties[PropertyEnum.Health] = Property.ToValue(600);
+                                        boss.Properties[PropertyEnum.Health] = new(600);
 
                                         break;
                                 }
