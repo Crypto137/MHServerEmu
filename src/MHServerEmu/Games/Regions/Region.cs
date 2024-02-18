@@ -41,9 +41,10 @@ namespace MHServerEmu.Games.Regions
         // Old
         public RegionPrototypeId PrototypeId { get; private set; }   
         public byte[] ArchiveData { get; set; }
-        public CreateRegionParams CreateParams { get; private set; }        
+        public CreateRegionParams CreateParams { get; private set; }
 
         // New
+        public readonly object Lock = new();
         public ulong Id { get; private set; } // InstanceAddress
         public int RandomSeed { get; private set; }
         public Dictionary<uint, Area> Areas { get; } = new();  
@@ -507,6 +508,9 @@ namespace MHServerEmu.Games.Regions
 
         public PrototypeId PrototypeDataRef => RegionPrototype.DataRef;
 
+        public DateTime CreatedTime { get; set; }
+        public DateTime VisitedTime { get; private set; }
+
         public override string ToString()
         {
             return $"{GameDatabase.GetPrototypeName(PrototypeDataRef)}, ID=0x{Id:X} ({Id}), DIFF={GameDatabase.GetFormattedPrototypeName(Settings.DifficultyTierRef)}, SEED={RandomSeed}, GAMEID={Game}";
@@ -745,6 +749,14 @@ namespace MHServerEmu.Games.Regions
         internal PrototypeId GetDifficultyTierRef()
         {
             throw new NotImplementedException();
+        }
+
+        public void Visited()
+        {
+            lock (Lock)
+            {
+                VisitedTime = DateTime.Now;
+            }
         }
     }
 

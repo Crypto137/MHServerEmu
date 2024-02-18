@@ -33,7 +33,7 @@ namespace MHServerEmu.Games.Regions
         private readonly Dictionary<ulong, Region> _allRegions = new();
         private readonly Dictionary<ulong, Region> _matches = new();
         public Game Game { get; private set; }
-
+        private readonly object _managerLock = new();
         public RegionManager(EntityManager entityManager)
         {
             _entityManager = entityManager;
@@ -152,8 +152,11 @@ namespace MHServerEmu.Games.Regions
         public Region GetRegion(ulong id)
         {
             if (id == 0) return null;
-            if (_allRegions.TryGetValue(id, out Region region))
-                return region;
+            lock (_managerLock)
+            {
+                if (_allRegions.TryGetValue(id, out Region region))
+                    return region;
+            }
             return null;
         }
 
@@ -168,22 +171,101 @@ namespace MHServerEmu.Games.Regions
         // OLD
         public Region GetRegion(RegionPrototypeId prototype)
         {
-
             //  prototype = (RegionPrototypeId)7735172603194383419;
-            if (_regionDict.TryGetValue(prototype, out Region region) == false)
+            lock (_managerLock)
             {
-                // Generate the region and create entities for it if needed
-                ulong numEntities = _entityManager.PeekNextEntityId();
-                region = GenerateRegion(prototype);           
-                // region = EmptyRegion(prototype);
-                region.ArchiveData = GetArchiveData(prototype);
-                HardcodedEntities(region, true);
-                ulong entities = _entityManager.PeekNextEntityId() - numEntities;
-                Logger.Debug($"Entities generated = {entities}");
-                _regionDict.Add(prototype, region);
+                if (_regionDict.TryGetValue(prototype, out Region region) == false)
+                {
+                    // Generate the region and create entities for it if needed
+                    ulong numEntities = _entityManager.PeekNextEntityId();
+                    region = GenerateRegion(prototype);
+                    // region = EmptyRegion(prototype);
+                    region.ArchiveData = GetArchiveData(prototype);
+                    HardcodedEntities(region, true);
+                    ulong entities = _entityManager.PeekNextEntityId() - numEntities;
+                    Logger.Debug($"Entities generated = {entities}");
+                    region.CreatedTime = DateTime.Now;
+
+                    _regionDict.Add(prototype, region);
+
+                }
+
+                return region;
+            }
+        }
+
+        private const int CleanUpTime = 60 * 1000 * 5; // 5 minutes
+        private const int UnactiveTime = 25; // 25 minutes
+        private const int UnVisitedTime = 5; // 5 minutes
+
+        public async Task CleanUpRegionsAsync()
+        {            
+            while (true)
+            {
+                CleanUpRegions();
+                await Task.Delay(CleanUpTime); 
+            }
+        }
+
+        private void CleanUpRegions()
+        {
+            lock (_managerLock)
+            {
+                if (_allRegions.Count == 0) return;
+            }            
+            var currentTime = DateTime.Now;
+            Logger.Debug($"CleanUp");
+
+            // Get PlayerRegions
+            var players = ServerManager.Instance.PlayerManagerService.IteratePlayers();
+            HashSet<RegionPrototypeId> playerRegions = new();
+            foreach (var player in players)
+            {
+                var regionRef = player.Session.Account.Player.Region; // TODO use RegionID
+                playerRegions.Add(regionRef); 
             }
 
-            return region;
+            // Check all regions 
+            List<Region> toShutdown = new();
+            lock (_managerLock)
+            {
+                foreach (Region region in _allRegions.Values)
+                {
+                    DateTime visitedTime;
+                    lock (region.Lock)
+                    {
+                        visitedTime = region.VisitedTime;
+                    }
+                    TimeSpan timeDifference = currentTime - visitedTime;
+
+                    if (playerRegions.Contains(region.PrototypeId)) // TODO RegionId
+                    {
+                        if (timeDifference.TotalMinutes > UnactiveTime)
+                            toShutdown.Add(region);
+                    }
+                    else
+                    {
+                        // TODO check all active local teleport to this Region
+                        if (timeDifference.TotalMinutes > UnVisitedTime)
+                            toShutdown.Add(region);
+                    }
+                }
+            }
+
+            // ShoutDown all unactived regions
+            foreach (Region region in toShutdown)
+            {
+                lock (_managerLock)
+                {
+                    _allRegions.Remove(region.Id);
+                    _regionDict.Remove(region.PrototypeId);
+                }
+                TimeSpan lifetime = DateTime.Now - region.CreatedTime;
+                string formattedLifetime = string.Format("{0:%m} min {0:%s} sec", lifetime);
+                Logger.Warn($"Shutdown region = {region}, Lifetime = {formattedLifetime}");
+                region.Shutdown();                
+            }
+
         }
 
         public static bool RegionIsHub(RegionPrototypeId prototype) => HubRegions.Contains(prototype);

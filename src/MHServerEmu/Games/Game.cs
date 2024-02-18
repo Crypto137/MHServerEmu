@@ -65,6 +65,8 @@ namespace MHServerEmu.Games
             RegionManager.Initialize(this);
 
             Random = new();
+            // Task for cleanUp not used Regions
+            Task.Run(async () => await RegionManager.CleanUpRegionsAsync());
             _powerMessageHandler = new(EventManager);
 
             // Start main game loop
@@ -263,7 +265,7 @@ namespace MHServerEmu.Games
             UpdateAvatarStateArchive avatarState = new(updateAvatarState.ArchiveData);
             //Vector3 oldPosition = client.LastPosition;
             client.LastPosition = avatarState.Position;
-
+            client.Region.Visited();
             // AOI
             if (client.IsLoading == false && client.AOI.ShouldUpdate(avatarState.Position) ) 
             {                
