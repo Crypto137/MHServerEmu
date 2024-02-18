@@ -80,19 +80,29 @@ namespace MHServerEmu.Games.Properties
         public const ulong EnumMask = EnumMax << ParamBitCount;
         public const ulong ParamMask = ParamMax;
 
-        public static void FromParam(PropertyEnum propertyEnum, int paramIndex, int paramValue, out AssetId assetId)
+        public static void FromParam(PropertyEnum propertyEnum, int paramIndex, PropertyParam paramValue, out AssetId assetId)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
             AssetTypeId assetTypeId = info.GetParamAssetType(paramIndex);
             AssetType assetType = GameDatabase.GetAssetType(assetTypeId);
-            assetId = assetType.GetAssetRefFromEnum(paramValue);
+            assetId = assetType.GetAssetRefFromEnum((int)paramValue);
         }
 
-        public static void FromParam(PropertyEnum propertyEnum, int paramIndex, int paramValue, out PrototypeId prototypeId)
+        public static void FromParam(PropertyEnum propertyEnum, int paramIndex, PropertyParam paramValue, out PrototypeId prototypeId)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
             BlueprintId paramBlueprint = info.GetParamPrototypeBlueprint(paramIndex);
-            prototypeId = GameDatabase.DataDirectory.GetPrototypeFromEnumValue(paramValue, paramBlueprint);
+            prototypeId = GameDatabase.DataDirectory.GetPrototypeFromEnumValue((int)paramValue, paramBlueprint);
+        }
+
+        public static void FromParam(PropertyId propertyId, int paramIndex, PropertyParam paramValue, out AssetId assetId)
+        {
+            FromParam(propertyId.Enum, paramIndex, paramValue, out assetId);
+        }
+
+        public static void FromParam(PropertyId propertyId, int paramIndex, PropertyParam paramValue, out PrototypeId prototypeId)
+        {
+            FromParam(propertyId.Enum, paramIndex, paramValue, out prototypeId);
         }
 
         public static PropertyParam ToParam(AssetId paramValue)

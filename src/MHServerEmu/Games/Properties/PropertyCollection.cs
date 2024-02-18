@@ -17,6 +17,7 @@ namespace MHServerEmu.Games.Properties
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         // TODO: reimplement PropertyList data structure from the client?
+        // NOTE: Gazillion's PropertyList structure uses a different sorting order
         protected SortedDictionary<PropertyId, PropertyValue> _propertyList = new();
 
         public PropertyCollection() { }
@@ -187,28 +188,13 @@ namespace MHServerEmu.Games.Properties
         public override string ToString()
         {
             StringBuilder sb = new();
-            int count = 0;
             foreach (var kvp in this)
             {
                 PropertyId id = kvp.Key;
                 PropertyValue value = kvp.Value;
                 PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
 
-                sb.Append($"Property{count}: ");
-                sb.AppendLine($"Id: {id}");
-                sb.AppendLine($"Enum: {id.Enum}");
-
-                if (kvp.Key.HasParams)
-                {
-                    sb.Append($"Params:");
-                    PropertyParam[] @params = id.GetParams();
-                    for (int i = 0; i < @params.Length; i++)
-                        sb.Append($" {@params[i]}");
-                    sb.AppendLine();
-                }
-
-                sb.AppendLine($"Value: {value.Print(info.DataType)} ({info.DataType})");
-                count++;
+                sb.AppendLine($"{info.BuildPropertyName(id)}: {value.Print(info.DataType)}");
             }
             return sb.ToString();
         }

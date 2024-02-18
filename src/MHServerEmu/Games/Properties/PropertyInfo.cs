@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Common.Extensions;
+﻿using System.Text;
+using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -133,6 +134,40 @@ namespace MHServerEmu.Games.Properties
             id.Raw |= (ulong)param3 << _paramOffsets[3];
 
             return id;
+        }
+
+        public string BuildPropertyName(PropertyId id)
+        {
+            StringBuilder sb = new();
+            sb.Append(PropertyName);
+            var @params = id.GetParams();
+
+            for (int i = 0; i < _paramCount; i++)
+            {
+                switch (GetParamType(i))
+                {
+                    case PropertyParamType.Integer:
+                        sb.Append($"[{@params[i]}]");
+                        break;
+
+                    case PropertyParamType.Asset:
+                        Property.FromParam(id, i, @params[i], out AssetId assetId);
+                        string assetName = GameDatabase.GetAssetName(assetId);
+                        sb.Append(assetName == string.Empty ? $"[{assetId}]" : $"[{assetName}]");;
+
+                        break;
+
+                    case PropertyParamType.Prototype:
+                        Property.FromParam(id, i, @params[i], out PrototypeId protoId);
+                        string protoName = Path.GetFileNameWithoutExtension(GameDatabase.GetPrototypeName(protoId));
+                        sb.Append($"[{protoName}]");
+                        break;
+
+                    default: return Logger.WarnReturn(string.Empty, $"BuildPropertyName(): invalid param type");
+                }
+            }
+
+            return sb.ToString();
         }
 
         public PropertyParamType GetParamType(int paramIndex)

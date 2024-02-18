@@ -101,7 +101,7 @@ namespace MHServerEmu.Games.Properties
         public static bool operator !=(PropertyId left, PropertyId right) => left.Equals(right) == false;
         public override int GetHashCode() => Raw.GetHashCode();
 
-        public override string ToString() => $"0x{Raw:X}";
+        public override string ToString() => GameDatabase.PropertyInfoTable.LookupPropertyInfo(Enum).BuildPropertyName(this);
 
         /// <summary>
         /// Returns the value of an encoded param.

@@ -172,13 +172,13 @@ namespace MHServerEmu.Games.Properties
             switch (type)
             {
                 case PropertyDataType.Boolean:      return ToBool().ToString();
-                case PropertyDataType.Real:         return ToFloat().ToString();
+                case PropertyDataType.Real:         return $"{ToFloat()}f";
                 case PropertyDataType.Integer:      return ToLong().ToString();
-                case PropertyDataType.Prototype:    return GameDatabase.GetPrototypeName(ToPrototypeId());
+                case PropertyDataType.Prototype:    return $"{Path.GetFileNameWithoutExtension(GameDatabase.GetPrototypeName(ToPrototypeId()))} ({type})";
                 //case PropertyDataType.Curve:        return "Curve Property Value";
-                case PropertyDataType.Asset:        return GameDatabase.GetAssetName(ToAssetId());
+                case PropertyDataType.Asset:        return $"{GameDatabase.GetAssetName(ToAssetId())} ({type})";
                 case PropertyDataType.Int21Vector3: return ToVector3().ToString();
-                default:                            return $"0x{RawLong:X}";
+                default:                            return $"0x{RawLong:X} ({type})";
             }
         }
 
