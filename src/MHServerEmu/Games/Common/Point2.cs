@@ -11,6 +11,12 @@
             Y = y;
         }
 
+        public Point2(float x, float y)
+        {
+            X = (int)x;
+            Y = (int)y;
+        }
+
         public Point2(Point2 p)
         {
             X = p.X;

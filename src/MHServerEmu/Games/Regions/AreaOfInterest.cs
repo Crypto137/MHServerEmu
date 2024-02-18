@@ -1,7 +1,10 @@
 ﻿using Gazillion;
+using MHServerEmu.Common.Helpers;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators;
 using MHServerEmu.Networking;
 
@@ -32,16 +35,30 @@ namespace MHServerEmu.Games.Regions
         private ulong _currentFrame;
 
         private Vector3 _lastUpdateCenter;
-        private const float DefaultCellWidth = 2304.0f;        
+        private const float DefaultCellWidth = 2304.0f;
         private const float UpdateDistance = 200.0f;
         private const float ViewOffset = 400.0f;
-        private const float ExpandDistance = 800.0f;
+        private const float ViewExpansionDistance = 800.0f;
         private const float DefaultDistance = 800.0f;
         private const float MaxZ = 100000.0f;
 
-        private Aabb _playerView;
+        private Aabb2 _playerView;
+        private Aabb2 _entitiesToConsiderBounds;
+        private Aabb2 _visibilityBounds;
 
-        public AreaOfInterest(FrontendClient client) 
+        public Aabb2 CalcEntitiesToConsiderBounds(Vector3 playerPosition)
+        {
+            _entitiesToConsiderBounds = _playerView.Translate(playerPosition);
+            return _entitiesToConsiderBounds;
+        }
+
+        public Aabb2 CalcVisibilityBounds(Vector3 playerPosition)
+        {
+            _visibilityBounds = _playerView.Translate(playerPosition).Expand(ViewExpansionDistance);
+            return _visibilityBounds;
+        }
+
+        public AreaOfInterest(FrontendClient client)
         {
             _client = client;
             LoadedEntities = new();
@@ -51,16 +68,56 @@ namespace MHServerEmu.Games.Regions
             _currentFrame = 0;
         }
 
-        public Aabb CalcAOIVolume(Vector3 playerPosition)
+        public void InitPlayerView(CameraSettingPrototype cameraSettingPrototype)
         {
-            Aabb volume = _playerView.Translate(playerPosition);
-            return volume.Expand(ExpandDistance);
+            _playerView = new Aabb2(new Vector3(ViewOffset, ViewOffset, 0.0f), DefaultCellWidth * 1.5f);
+            AdaptPlayerViewWithCameraSettings(cameraSettingPrototype);
         }
 
-        private Dictionary<uint, List<Cell>> GetNewCells(Region region,Vector3 position, Area startArea)
+        private void AdaptPlayerViewWithCameraSettings(CameraSettingPrototype cameraSettingPrototype)
+        {
+            if (cameraSettingPrototype == null)
+                return;
+
+            CameraSettingCollectionPrototype cameraSettingCollectionPrototype = GameDatabase.GetPrototype<CameraSettingCollectionPrototype>(cameraSettingPrototype.DataRef);
+            if (cameraSettingCollectionPrototype == null)
+            {
+                GlobalsPrototype globalsPrototype = GameDatabase.GetGlobalsPrototype();
+                if (globalsPrototype == null) return;
+                cameraSettingCollectionPrototype = GameDatabase.GetPrototype<CameraSettingCollectionPrototype>(globalsPrototype.PlayerCameraSettings);
+            }
+
+            CameraSettingPrototype cameraSetting = cameraSettingCollectionPrototype?.CameraSettings?.FirstOrDefault();
+            if (cameraSetting == null)
+                return;
+
+            Vector3 NormalizedDirection = Vector3.Normalize2D(new(cameraSetting.DirectionX, cameraSetting.DirectionY, cameraSetting.DirectionZ));
+            float angleOffset = MathHelper.WrapAngleRadians(Vector3.FromDeltaVector2D(NormalizedDirection).X + MathHelper.Pi - (MathHelper.Pi / 4f));
+            Transform3 rotation = Transform3.RotationZYX(new(0f, 0f, angleOffset));
+
+            _playerView = new Aabb2();
+            foreach (Point2 point in _playerView.GetPoints())
+            {
+                Point3 p = rotation * new Point3(point.X, point.Y, 0f);
+                _playerView = _playerView.Expand(new Vector2(p.X, p.Y));
+            }
+        }
+
+        public Aabb CalcAOIVolumes(Vector3 playerPosition)
+        {
+            InitPlayerView(null);
+            CalcEntitiesToConsiderBounds(playerPosition);
+            CalcVisibilityBounds(playerPosition);
+
+            return new Aabb(
+                new Vector3(_visibilityBounds.Min.X, _visibilityBounds.Min.Y, -MaxZ),
+                new Vector3(_visibilityBounds.Max.X, _visibilityBounds.Max.Y, MaxZ));
+        }
+
+        private Dictionary<uint, List<Cell>> GetNewCells(Region region, Vector3 position, Area startArea)
         {
             Dictionary<uint, List<Cell>> cellsByArea = new();
-            Aabb volume = CalcAOIVolume(position);
+            Aabb volume = CalcAOIVolumes(position);
 
             foreach (var cell in region.IterateCellsInVolume(volume))
             {
@@ -80,17 +137,6 @@ namespace MHServerEmu.Games.Regions
             return cellsByArea;
         }
 
-        public void CalcPlayerVolume(float cellWidth)
-        {
-            float distance = DefaultDistance;
-            if (cellWidth != DefaultCellWidth) distance = cellWidth / 1.5f;
-            Vector3 offset = new(ViewOffset, ViewOffset, 0.0f);
-            _playerView = new Aabb(
-                new(-distance, -distance, -MaxZ),
-                new(distance, distance, MaxZ))
-                .Translate(offset);
-        }
-
         public void ResetAOI(Region region, Vector3 position)
         {
             LoadedCells.Clear();
@@ -99,11 +145,12 @@ namespace MHServerEmu.Games.Regions
             CellsInRegion = 0;
 
             Cell startCell = region.GetCellAtPosition(position);
-            if (startCell == null) return;            
-           /* if (RegionManager.RegionIsHub(region.PrototypeId))
-                _playerView = new(startCell.Area.RegionBounds); // Fix for HUB
-            else*/
-                CalcPlayerVolume(startCell.RegionBounds.Width);
+            if (startCell == null) return;
+            /* if (RegionManager.RegionIsHub(region.PrototypeId))
+                 _playerView = new(startCell.Area.RegionBounds); // Fix for HUB
+             else*/
+
+            CalcAOIVolumes(position);
         }
 
         public static bool GetEntityInterest(WorldEntity worldEntity)
@@ -115,11 +162,11 @@ namespace MHServerEmu.Games.Regions
 
         public List<GameMessage> UpdateCells(Region region, Vector3 position)
         {
-            List<GameMessage> messageList = new ();
+            List<GameMessage> messageList = new();
 
-            Aabb volume = CalcAOIVolume(position);
+            Aabb volume = CalcAOIVolumes(position);
             _currentFrame++;
-            List<Cell> cellsInAOI = new();            
+            List<Cell> cellsInAOI = new();
             Cell startCell = region.GetCellAtPosition(position);
             if (startCell == null) return messageList;
 
@@ -127,7 +174,7 @@ namespace MHServerEmu.Games.Regions
             var cellsByArea = GetNewCells(region, position, startArea);
 
             if (cellsByArea.Count == 0) return messageList;
-            
+
             var sortedAreas = cellsByArea.Keys.OrderBy(id => id);
 
             // Add new
@@ -154,12 +201,12 @@ namespace MHServerEmu.Games.Regions
                 foreach (var cell in sortedCells)
                 {
                     messageList.Add(cell.MessageCellCreate());
-                    LoadedCells.Add(cell.Id, new(_currentFrame, false, false));                     
+                    LoadedCells.Add(cell.Id, new(_currentFrame, false, false));
                 }
             }
 
             CellsInRegion = LoadedCells.Count;
-            
+
             if (messageList.Count > 0)
             {
                 messageList.Add(new(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build()));
@@ -171,7 +218,7 @@ namespace MHServerEmu.Games.Regions
                 messageList.Add(new(NetMessageUpdateMiniMap.CreateBuilder()
                     .SetArchiveData(miniMap.Serialize())
                     .Build()));
-                
+
                 //LoadedCellCount = client.LoadedCells.Count;
             }
             // TODO delete old
@@ -185,7 +232,7 @@ namespace MHServerEmu.Games.Regions
         public List<GameMessage> UpdateEntity(Region region, Vector3 position)
         {
             List<GameMessage> messageList = new();
-            Aabb volume = CalcAOIVolume(position);
+            Aabb volume = CalcAOIVolumes(position);
             List<WorldEntity> cellEntities = new();
             _currentFrame++;
             // Update Entity
@@ -200,7 +247,7 @@ namespace MHServerEmu.Games.Regions
                 else
                 {
                     bool interest = GetEntityInterest(worldEntity);
-                    LoadedEntities.Add(worldEntity.BaseData.EntityId, new(_currentFrame,true, interest));
+                    LoadedEntities.Add(worldEntity.BaseData.EntityId, new(_currentFrame, true, interest));
                     cellEntities.Add(worldEntity);
                 }
             }
@@ -211,7 +258,7 @@ namespace MHServerEmu.Games.Regions
             List<ulong> toDelete = new();
 
             // TODO Delete Entity
-            foreach(var entity in LoadedEntities) 
+            foreach (var entity in LoadedEntities)
             {
                 if (entity.Value.Frame < _currentFrame && entity.Value.InterestToPlayer == false)
                 {
@@ -219,7 +266,7 @@ namespace MHServerEmu.Games.Regions
                     toDelete.Add(entity.Key);
                 }
             }
-            foreach(var deleteId in toDelete) LoadedEntities.Remove(deleteId);
+            foreach (var deleteId in toDelete) LoadedEntities.Remove(deleteId);
 
             _lastUpdateCenter.Set(position);
             return messageList;
@@ -238,7 +285,7 @@ namespace MHServerEmu.Games.Regions
 
         public bool CheckTargeCell(Transition target)
         {
-            if (LoadedCells.TryGetValue(target.Location.Cell.Id, out var cell))         
+            if (LoadedCells.TryGetValue(target.Location.Cell.Id, out var cell))
                 return cell.Loaded == false;
             return true;
         }
