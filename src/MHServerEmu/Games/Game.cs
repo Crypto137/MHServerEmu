@@ -265,12 +265,12 @@ namespace MHServerEmu.Games
             UpdateAvatarStateArchive avatarState = new(updateAvatarState.ArchiveData);
             //Vector3 oldPosition = client.LastPosition;
             client.LastPosition = avatarState.Position;
-            client.Region.Visited();
+            client.AOI.Region.Visited();
             // AOI
             if (client.IsLoading == false && client.AOI.ShouldUpdate(avatarState.Position) ) 
             {                
-                var messageList = client.AOI.UpdateCells(client.Region, avatarState.Position);
-                messageList.AddRange(client.AOI.UpdateEntity(client.Region, avatarState.Position));
+                var messageList = client.AOI.UpdateCells(avatarState.Position);
+                messageList.AddRange(client.AOI.UpdateEntity(avatarState.Position));
                 if (messageList.Count > 0)
                 {
                     Logger.Trace($"AOI[{messageList.Count}][{client.AOI.LoadedEntities.Count}]");

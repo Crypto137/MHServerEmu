@@ -1,8 +1,10 @@
 ﻿using MHServerEmu.Common;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Networking;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -192,6 +194,13 @@ namespace MHServerEmu.Games.Regions
 
                 return region;
             }
+        }
+
+        public GameMessage[] GetRegionMessages(FrontendClient client, RegionPrototypeId regionPrototype)
+        {
+            // Load region data
+            Region region = GetRegion(regionPrototype);
+            return region.GetLoadingMessages(client.GameId, client.Session.Account.Player.Waypoint, client);            
         }
 
         private const int CleanUpTime = 60 * 1000 * 5; // 5 minutes

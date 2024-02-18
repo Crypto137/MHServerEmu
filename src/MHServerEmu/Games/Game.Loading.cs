@@ -3,6 +3,7 @@ using MHServerEmu.Common.Config;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Powers;
@@ -36,12 +37,19 @@ namespace MHServerEmu.Games
             messageList.AddRange(LoadPlayerEntityMessages(account));
             messageList.Add(new(NetMessageReadyAndLoadedOnGameServer.DefaultInstance));
 
-            // Load region data
-            messageList.AddRange(RegionManager.GetRegion(account.Player.Region).GetLoadingMessages(Id, account.Player.Waypoint, client));
+            // Before changing to the actual destination region the game seems to first change into a transitional region
+            messageList.Add(new(NetMessageRegionChange.CreateBuilder()
+                .SetRegionId(0)
+                .SetServerGameId(0)
+                .SetClearingAllInterest(false)
+                .Build()));
 
-            // Create a waypoint entity            
-            // TODO: Add account.Player.Waypoint as Entity
-           // messageList.Add(new(EntityManager.Waypoint.ToNetMessageEntityCreate()));
+            messageList.Add(new(NetMessageQueueLoadingScreen.CreateBuilder()
+                .SetRegionPrototypeId((ulong)account.Player.Region)
+                .Build()));
+
+            EventManager.AddEvent(client, EventEnum.GetRegion, 100, account.Player.Region);
+           // messageList.AddRange(RegionManager.GetRegionMessages(client, account.Player.Region));
 
             return messageList.ToArray();
         }
@@ -62,7 +70,7 @@ namespace MHServerEmu.Games
                 .SetArchiveData(avatarEnterGameWorldArchive.Serialize())
                 .Build()));
             
-            messageList.AddRange(client.AOI.UpdateEntity(region, entrancePosition));
+            messageList.AddRange(client.AOI.UpdateEntity(entrancePosition));
 
             // Load power collection
             messageList.AddRange(PowerLoader.LoadAvatarPowerCollection(account.Player.Avatar.ToEntityId()).ToList());

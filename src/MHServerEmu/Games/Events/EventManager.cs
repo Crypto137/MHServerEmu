@@ -12,6 +12,7 @@ using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Networking;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Events
 {
@@ -523,6 +524,15 @@ namespace MHServerEmu.Games.Events
                     messageList.Add(new(client, new(NetMessageEntityDestroy.CreateBuilder()
                         .SetIdEntity(arenaEntityId)
                         .Build())));
+
+                    break;
+
+                case EventEnum.GetRegion:
+                    Logger.Trace($"Event GetRegion");
+                    RegionPrototypeId regionPrototype = (RegionPrototypeId)queuedEvent.Data;
+                    var messages = _game.RegionManager.GetRegionMessages(client, regionPrototype);
+                    foreach (var message in messages)
+                        messageList.Add(new(client, message));
 
                     break;
             }

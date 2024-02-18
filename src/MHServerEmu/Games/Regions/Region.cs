@@ -667,17 +667,6 @@ namespace MHServerEmu.Games.Regions
         {
             List<GameMessage> messageList = new();
 
-            // Before changing to the actual destination region the game seems to first change into a transitional region
-            messageList.Add(new(NetMessageRegionChange.CreateBuilder()
-                .SetRegionId(0)
-                .SetServerGameId(0)
-                .SetClearingAllInterest(false)
-                .Build()));
-
-            messageList.Add(new(NetMessageQueueLoadingScreen.CreateBuilder()
-                .SetRegionPrototypeId((ulong)PrototypeId)
-                .Build()));
-
             var regionChangeBuilder = NetMessageRegionChange.CreateBuilder()
                 .SetRegionId(Id)
                 .SetServerGameId(serverGameId)
@@ -727,7 +716,7 @@ namespace MHServerEmu.Games.Regions
                 }
 
                 client.AOI.ResetAOI(this, client.StartPositon);
-                messageList.AddRange(client.AOI.UpdateCells(this, client.StartPositon));
+                messageList.AddRange(client.AOI.UpdateCells(client.StartPositon));
             }
 
 

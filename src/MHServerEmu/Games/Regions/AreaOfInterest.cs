@@ -27,6 +27,8 @@ namespace MHServerEmu.Games.Regions
         private Game _game { get => _client.CurrentGame; }
         public Dictionary<ulong, LoadStatus> LoadedEntities { get; set; }
         public Dictionary<uint, LoadStatus> LoadedCells { get; set; }
+
+        public Region Region { get; private set; }
         public int CellsInRegion { get; set; }
         public int LoadedCellCount { get; set; } = 0;
         private ulong _currentFrame;
@@ -57,12 +59,12 @@ namespace MHServerEmu.Games.Regions
             return volume.Expand(ExpandDistance);
         }
 
-        private Dictionary<uint, List<Cell>> GetNewCells(Region region,Vector3 position, Area startArea)
+        private Dictionary<uint, List<Cell>> GetNewCells(Vector3 position, Area startArea)
         {
             Dictionary<uint, List<Cell>> cellsByArea = new();
             Aabb volume = CalcAOIVolume(position);
 
-            foreach (var cell in region.IterateCellsInVolume(volume))
+            foreach (var cell in Region.IterateCellsInVolume(volume))
             {
                 if (LoadedCells.TryGetValue(cell.Id, out var status))
                 {
@@ -97,6 +99,7 @@ namespace MHServerEmu.Games.Regions
             LoadedEntities.Clear();
             _currentFrame = 0;
             CellsInRegion = 0;
+            Region = region;
 
             Cell startCell = region.GetCellAtPosition(position);
             if (startCell == null) return;            
@@ -113,10 +116,10 @@ namespace MHServerEmu.Games.Regions
             return false;
         }
 
-        public List<GameMessage> UpdateCells(Region region, Vector3 position)
+        public List<GameMessage> UpdateCells(Vector3 position)
         {
             List<GameMessage> messageList = new ();
-
+            Region region = Region;
             Aabb volume = CalcAOIVolume(position);
             _currentFrame++;
             List<Cell> cellsInAOI = new();            
@@ -124,7 +127,7 @@ namespace MHServerEmu.Games.Regions
             if (startCell == null) return messageList;
 
             Area startArea = startCell.Area;
-            var cellsByArea = GetNewCells(region, position, startArea);
+            var cellsByArea = GetNewCells(position, startArea);
 
             if (cellsByArea.Count == 0) return messageList;
             
@@ -182,8 +185,9 @@ namespace MHServerEmu.Games.Regions
             return messageList;
         }
 
-        public List<GameMessage> UpdateEntity(Region region, Vector3 position)
+        public List<GameMessage> UpdateEntity(Vector3 position)
         {
+            Region region = Region;
             List<GameMessage> messageList = new();
             Aabb volume = CalcAOIVolume(position);
             List<WorldEntity> cellEntities = new();
