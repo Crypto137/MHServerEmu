@@ -65,7 +65,7 @@ namespace MHServerEmu.Games.Entities
 
         public WorldEntity CreateWorldEntityEnemy(ulong regionId, PrototypeId prototypeId, Vector3 position, Vector3 orientation,
             int health, int mapAreaId, int healthMaxOther, int mapCellId, PrototypeId contextAreaRef, bool requiresEnterGameWorld,
-            int CombatLevel, int CharacterLevel)
+            int combatLevel, int characterLevel)
         {
             EntityBaseData baseData = (requiresEnterGameWorld == false)
                 ? new EntityBaseData(GetNextEntityId(), prototypeId, position, orientation)
@@ -75,8 +75,8 @@ namespace MHServerEmu.Games.Entities
             worldEntity.RegionId = regionId;
             _entityDict.Add(baseData.EntityId, worldEntity);
 
-            worldEntity.Properties[PropertyEnum.CharacterLevel] = new(CharacterLevel);
-            worldEntity.Properties[PropertyEnum.CombatLevel] = new(CombatLevel);         // zero effect
+            worldEntity.Properties[PropertyEnum.CharacterLevel] = characterLevel;
+            worldEntity.Properties[PropertyEnum.CombatLevel] = combatLevel;         // zero effect
 
             return worldEntity;
         }
@@ -188,7 +188,7 @@ namespace MHServerEmu.Games.Entities
                 if (entity.Value.BaseData.PrototypeId == destination.Entity && entity.Value.RegionId == regionId)
                 {
                     if (destination.Area == 0) return entity.Value;
-                    PrototypeId area = entity.Value.Properties[PropertyEnum.ContextAreaRef].ToPrototypeId();
+                    PrototypeId area = entity.Value.Properties[PropertyEnum.ContextAreaRef];
                     if (area == destination.Area)
                         return entity.Value;
                 }                

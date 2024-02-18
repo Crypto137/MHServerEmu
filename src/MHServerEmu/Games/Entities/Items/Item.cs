@@ -16,9 +16,9 @@ namespace MHServerEmu.Games.Entities.Items
         public Item(EntityBaseData baseData, ulong replicationId, PrototypeId rank, int itemLevel, PrototypeId itemRarity, float itemVariation, ItemSpec itemSpec) : base(baseData)
         {
             Properties = new(replicationId);
-            Properties[PropertyEnum.Requirement, (PrototypeId)4312898931213406054] = new(itemLevel * 1.0f);    // Property/Info/CharacterLevel.defaults
-            Properties[PropertyEnum.ItemRarity] = new(itemRarity);
-            Properties[PropertyEnum.ItemVariation] = new(itemVariation);
+            Properties[PropertyEnum.Requirement, (PrototypeId)4312898931213406054] = itemLevel * 1.0f;    // Property/Info/CharacterLevel.defaults
+            Properties[PropertyEnum.ItemRarity] = itemRarity;
+            Properties[PropertyEnum.ItemVariation] = itemVariation;
             
             TrackingContextMap = Array.Empty<EntityTrackingContextMap>();
             ConditionCollection = Array.Empty<Condition>();

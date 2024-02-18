@@ -184,7 +184,7 @@ namespace MHServerEmu.Common.Commands
 
                     // Send NetMessageSetProperty message with a CostumeCurrent property for the purchased costume
                     client.SendMessage(1, new(
-                        Property.ToNetMessageSetProperty(replicationId, new(PropertyEnum.CostumeCurrent), new(prototypeId))
+                        Property.ToNetMessageSetProperty(replicationId, new(PropertyEnum.CostumeCurrent), prototypeId)
                         ));
                     return $"Changing costume to {GameDatabase.GetPrototypeName(prototypeId)}";
                 }
@@ -208,7 +208,7 @@ namespace MHServerEmu.Common.Commands
         {
             if (client == null) return "You can only invoke this command from the game.";
             if (ConfigManager.GameOptions.InfinitySystemEnabled) return "Set InfinitySystemEnabled to false in Config.ini to enable the Omega system.";
-            client.SendMessage(1, new(Property.ToNetMessageSetProperty(9078332, new(PropertyEnum.OmegaPoints), new(7500))));
+            client.SendMessage(1, new(Property.ToNetMessageSetProperty(9078332, new(PropertyEnum.OmegaPoints), 7500)));
             return "Setting Omega points to 7500.";
         }
     }

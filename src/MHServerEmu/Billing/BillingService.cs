@@ -126,14 +126,14 @@ namespace MHServerEmu.Billing
 
             // Send NetMessageSetProperty message with a CostumeCurrent property for the purchased costume
             client.SendMessage(MuxChannel, new(
-                Property.ToNetMessageSetProperty(replicationId, new(PropertyEnum.CostumeCurrent), new(entry.GuidItems[0].ItemPrototypeRuntimeIdForClient))
+                Property.ToNetMessageSetProperty(replicationId, new(PropertyEnum.CostumeCurrent), entry.GuidItems[0].ItemPrototypeRuntimeIdForClient)
                 ));
 
             // Update library
             PropertyParam enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, (PrototypeId)currentAvatar.Prototype);
 
             client.SendMessage(MuxChannel, new(
-                Property.ToNetMessageSetProperty(9078332, new(PropertyEnum.AvatarLibraryCostume, 0, enumValue), new(costumePrototype.DataRef))));
+                Property.ToNetMessageSetProperty(9078332, new(PropertyEnum.AvatarLibraryCostume, 0, enumValue), costumePrototype.DataRef)));
 
             SendBuyItemResponse(client, true, BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS, buyItemFromCatalog.SkuId);
         }
