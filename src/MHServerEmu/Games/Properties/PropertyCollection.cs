@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections;
+using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
@@ -8,7 +9,10 @@ using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Properties
 {
-    public class PropertyCollection
+    /// <summary>
+    /// A collection of key/value pairs of <see cref="PropertyId"/> and <see cref="PropertyValue"/> sorted by key.
+    /// </summary>
+    public class PropertyCollection : IEnumerable<KeyValuePair<PropertyId, PropertyValue>>
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -39,7 +43,7 @@ namespace MHServerEmu.Games.Properties
 
         public bool HasProperty(PropertyEnum propertyEnum)
         {
-            foreach (var kvp in IterateProperties())
+            foreach (var kvp in this)
             {
                 if (kvp.Key.Enum == propertyEnum)
                     return true;
@@ -129,11 +133,13 @@ namespace MHServerEmu.Games.Properties
 
         #endregion
 
-        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IterateProperties()
-        {
-            foreach (var kvp in _propertyList)
-                yield return kvp;
-        }
+
+        #region IEnumerable Implementation
+
+        public IEnumerator<KeyValuePair<PropertyId, PropertyValue>> GetEnumerator() => _propertyList.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        #endregion
 
         // PropertyCollection::serializeWithDefault
 
@@ -152,7 +158,7 @@ namespace MHServerEmu.Games.Properties
         public virtual void Encode(CodedOutputStream stream)
         {
             stream.WriteRawUInt32((uint)_propertyList.Count);
-            foreach (var kvp in IterateProperties())
+            foreach (var kvp in this)
                 SerializePropertyForPacking(kvp, stream);
         }
 
@@ -160,7 +166,7 @@ namespace MHServerEmu.Games.Properties
         {
             StringBuilder sb = new();
             int count = 0;
-            foreach (var kvp in IterateProperties())
+            foreach (var kvp in this)
             {
                 PropertyId id = kvp.Key;
                 PropertyValue value = kvp.Value;
