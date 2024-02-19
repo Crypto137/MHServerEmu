@@ -17,7 +17,7 @@ namespace MHServerEmu.Games.Properties
         private readonly int[] _paramOffsets = new int[Property.MaxParamCount];
         private readonly PropertyParam[] _paramMaxValues = new PropertyParam[Property.MaxParamCount];
 
-        private ulong _defaultValue;
+        private PropertyValue _defaultValue;
         private int _paramCount;
         private PropertyParam[] _paramDefaultValues;
 
@@ -260,7 +260,7 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Validates params and calculates their bit offsets.
         /// </summary>
-        public bool SetPropertyInfo(ulong defaultValue, int paramCount, PropertyParam[] paramDefaultValues)
+        public bool SetPropertyInfo(PropertyValue defaultValue, int paramCount, PropertyParam[] paramDefaultValues)
         {
             // NOTE: these checks mirror the client, we might not actually need all of them
             if (_updatedInfo) Logger.ErrorReturn(false, "Failed to SetPropertyInfo(): already set");

@@ -335,7 +335,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
                 if (string.Equals(fieldName, "Value", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (DeserializePropertyValue(blueprint, prototypeName, reader, blueprintMemberInfo, out ulong value) == false)
+                    if (DeserializePropertyValue(blueprint, prototypeName, reader, blueprintMemberInfo, out PropertyValue value) == false)
                         return Logger.ErrorReturn(false, $"Failed to deserialize property value field, file name {prototypeName}");
 
                     if (builder.SetValue(value) == false)
@@ -343,7 +343,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 }
                 else if (string.Equals(fieldName, "CurveIndex", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (DeserializePropertyValue(blueprint, prototypeName, reader, blueprintMemberInfo, out ulong curveIndex) == false)
+                    if (DeserializePropertyValue(blueprint, prototypeName, reader, blueprintMemberInfo, out PropertyValue curveIndex) == false)
                         return Logger.ErrorReturn(false, $"Failed to deserialize property curve index field, file name {prototypeName}");
 
                     if (builder.SetCurveIndex((PrototypeId)curveIndex) == false)
@@ -377,10 +377,20 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return true;
         }
 
-        private static bool DeserializePropertyValue(Blueprint blueprint, string prototypeName, BinaryReader reader, BlueprintMemberInfo blueprintMemberInfo, out ulong value)
+        private static bool DeserializePropertyValue(Blueprint blueprint, string prototypeName, BinaryReader reader, BlueprintMemberInfo blueprintMemberInfo, out PropertyValue value)
         {
-            // TODO: Property::ToValue
-            value = reader.ReadUInt64();
+            switch (blueprintMemberInfo.Member.BaseType)
+            {
+                case CalligraphyBaseType.Asset:     value = (AssetId)reader.ReadUInt64(); break;
+                case CalligraphyBaseType.Boolean:   value = Convert.ToBoolean(reader.ReadUInt64()); break;
+                case CalligraphyBaseType.Curve:     value = (CurveId)reader.ReadUInt64(); break;
+                case CalligraphyBaseType.Double:    value = (float)reader.ReadDouble(); break;
+                case CalligraphyBaseType.Long:      value = reader.ReadInt64(); break;
+                case CalligraphyBaseType.Prototype: value = (PrototypeId)reader.ReadUInt64(); break;
+
+                default: value = new(); return Logger.WarnReturn(false, "Unhandled base type for property value");
+            }
+
             return true;
         }
 
