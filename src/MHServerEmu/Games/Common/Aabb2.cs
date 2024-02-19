@@ -44,6 +44,14 @@ namespace MHServerEmu.Games.Common
             return Expand(expandVector);
         }
 
+        public void Expand(Point2 p)
+        {
+            if (p.X < Min.X) Min.X = p.X;
+            else if (p.X > Max.X) Max.X = p.X;
+            if (p.Y < Min.Y) Min.Y = p.Y;
+            else if (p.Y > Max.Y) Max.Y = p.Y;
+        }
+
         public Aabb2 Expand(Vector2 expandSize) => new(Min - expandSize, Max + expandSize);
 
         public Aabb2 Translate(Vector3 newPosition)

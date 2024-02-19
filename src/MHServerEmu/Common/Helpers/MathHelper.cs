@@ -23,7 +23,11 @@
         /// </summary>
         public static float WrapAngleRadians(float angleInRadian)
         {
-            return Math.Abs(angleInRadian) % (2 * Pi);
+            const float Pi2 = 2 * Pi;
+            int wrap = (int)(angleInRadian / Pi2);
+            if (wrap > 0) return angleInRadian - wrap * Pi2;
+            if (angleInRadian < 0.0f) return angleInRadian - (wrap - 1) * Pi2;
+            return angleInRadian;
         }
     }
 }

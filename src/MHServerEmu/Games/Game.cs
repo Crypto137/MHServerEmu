@@ -197,6 +197,11 @@ namespace MHServerEmu.Games
                         OnCellLoaded(client, cellLoaded);
                     break;
 
+                case ClientToGameServerMessage.NetMessageChangeCameraSettings:
+                    if (message.TryDeserialize<NetMessageChangeCameraSettings>(out var cameraSettings))
+                        OnChangeCameraSettings(client, cameraSettings);
+                    break;
+
                 case ClientToGameServerMessage.NetMessageUseInteractableObject:
                     if (message.TryDeserialize<NetMessageUseInteractableObject>(out var useInteractableObject))
                         OnUseInteractableObject(client, useInteractableObject);
@@ -258,6 +263,11 @@ namespace MHServerEmu.Games
                     Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
                     break;
             }
+        }
+
+        private void OnChangeCameraSettings(FrontendClient client, NetMessageChangeCameraSettings cameraSettings)
+        {
+            client.AOI.InitPlayerView((PrototypeId)cameraSettings.CameraSettings);
         }
 
         private void OnUpdateAvatarState(FrontendClient client, NetMessageUpdateAvatarState updateAvatarState)

@@ -158,6 +158,7 @@ namespace MHServerEmu.PlayerManagement
                 // Game
                 case ClientToGameServerMessage.NetMessageUpdateAvatarState:
                 case ClientToGameServerMessage.NetMessageCellLoaded:
+                case ClientToGameServerMessage.NetMessageChangeCameraSettings:
                 case ClientToGameServerMessage.NetMessagePerformPreInteractPower:
                 case ClientToGameServerMessage.NetMessageTryActivatePower:
                 case ClientToGameServerMessage.NetMessagePowerRelease:

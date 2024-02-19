@@ -1,4 +1,5 @@
 ﻿using Gazillion;
+using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Helpers;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
@@ -41,7 +42,6 @@ namespace MHServerEmu.Games.Regions
         private const float UpdateDistance = 200.0f;
         private const float ViewOffset = 400.0f;
         private const float ViewExpansionDistance = 800.0f;
-        private const float EntityExpansionDistance = 600.0f;
         private const float MaxZ = 100000.0f;
 
         private Aabb2 _playerView;
@@ -50,7 +50,7 @@ namespace MHServerEmu.Games.Regions
 
         public Aabb2 CalcEntitiesToConsiderBounds(Vector3 playerPosition)
         {
-            _entitiesToConsiderBounds = _playerView.Translate(playerPosition).Expand(EntityExpansionDistance);
+            _entitiesToConsiderBounds = _playerView.Translate(playerPosition);
             return _entitiesToConsiderBounds;
         }
 
@@ -70,38 +70,33 @@ namespace MHServerEmu.Games.Regions
             _currentFrame = 0;
         }
 
-        public void InitPlayerView(CameraSettingPrototype cameraSettingPrototype)
+        public void InitPlayerView(PrototypeId cameraSettingPrototype)
         {
             _playerView = new Aabb2(new Vector3(ViewOffset, ViewOffset, 0.0f), DefaultCellWidth * 1.5f);
-            AdaptPlayerViewWithCameraSettings(cameraSettingPrototype);
-        }
 
+            if (cameraSettingPrototype == 0) return;
 
-        private void AdaptPlayerViewWithCameraSettings(CameraSettingPrototype cameraSettingPrototype)
-        {
-            if (cameraSettingPrototype == null) return;
-
-            CameraSettingCollectionPrototype cameraSettingCollectionPrototype = GameDatabase.GetPrototype<CameraSettingCollectionPrototype>(cameraSettingPrototype.DataRef);
+            CameraSettingCollectionPrototype cameraSettingCollectionPrototype = GameDatabase.GetPrototype<CameraSettingCollectionPrototype>(cameraSettingPrototype);
             if (cameraSettingCollectionPrototype == null)
             {
                 GlobalsPrototype globalsPrototype = GameDatabase.GetGlobalsPrototype();
                 if (globalsPrototype == null) return;
                 cameraSettingCollectionPrototype = GameDatabase.GetPrototype<CameraSettingCollectionPrototype>(globalsPrototype.PlayerCameraSettings);
             }
+            if (cameraSettingCollectionPrototype.CameraSettings.IsNullOrEmpty()) return;
+            CameraSettingPrototype cameraSetting = cameraSettingCollectionPrototype.CameraSettings.First();
+            var normalizedDirection = Vector3.Normalize2D(new(cameraSetting.DirectionX, cameraSetting.DirectionY, cameraSetting.DirectionZ));
+            float angle = MathHelper.WrapAngleRadians(Vector3.FromDeltaVector2D(normalizedDirection).Yaw + MathHelper.Pi - (MathHelper.Pi / 4f));
+            var rotation = Transform3.RotationZ(angle);
 
-            CameraSettingPrototype cameraSetting = cameraSettingCollectionPrototype?.CameraSettings?.FirstOrDefault();
-            if (cameraSetting == null) return;
-
-            Vector3 NormalizedDirection = Vector3.Normalize2D(new(cameraSetting.DirectionX, cameraSetting.DirectionY, cameraSetting.DirectionZ));
-            float angleOffset = MathHelper.WrapAngleRadians(Vector3.FromDeltaVector2D(NormalizedDirection).Yaw + MathHelper.Pi - (MathHelper.Pi / 4f));
-            Transform3 rotation = Transform3.RotationZYX(new(0f, 0f, angleOffset));
-
-            _playerView = new Aabb2();
-            foreach (Point2 point in _playerView.GetPoints())
+            var points = _playerView.GetPoints();
+            var cameraView = new Aabb2();
+            foreach (Point2 point in points)
             {
                 Point3 p = rotation * new Point3(point.X, point.Y, 0f);
-                _playerView = _playerView.Expand(new Vector2(p.X, p.Y));
+                cameraView.Expand(new Point2(p.X, p.Y));
             }
+            _playerView = cameraView;
         }
 
         public Aabb CalcCellVolume(Vector3 playerPosition)
@@ -115,8 +110,7 @@ namespace MHServerEmu.Games.Regions
 
         public Aabb2 CalcEnittyVolume(Vector3 playerPosition)
         {
-            CalcEntitiesToConsiderBounds(playerPosition);
-            return _entitiesToConsiderBounds;
+            return CalcEntitiesToConsiderBounds(playerPosition);
         }
 
         private Dictionary<uint, List<Cell>> GetNewCells(Vector3 position, Area startArea)
@@ -143,20 +137,14 @@ namespace MHServerEmu.Games.Regions
             return cellsByArea;
         }
 
-        public void ResetAOI(Region region, Vector3 position)
+        public void ResetAOI(Region region)
         {   
             LoadedCells.Clear();
             LoadedEntities.Clear();
             _currentFrame = 0;
             CellsInRegion = 0;
             Region = region;          
-
-            Cell startCell = region.GetCellAtPosition(position);
-            if (startCell == null) return;
-            InitPlayerView(startCell.Area.AreaPrototype.PlayerCameraSettings.As<CameraSettingPrototype>());
-            /* if (RegionManager.RegionIsHub(region.PrototypeId))
-                 _playerView = new(startCell.Area.RegionBounds); // Fix for HUB
-             else*/
+            InitPlayerView(0);
         }
 
         public static bool GetEntityInterest(WorldEntity worldEntity)

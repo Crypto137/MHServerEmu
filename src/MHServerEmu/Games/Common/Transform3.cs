@@ -80,6 +80,19 @@ namespace MHServerEmu.Games.Common
             );
         }
 
+        public static Transform3 RotationZ(float radians)
+        {
+            float s, c;
+            s = MathF.Sin(radians);
+            c = MathF.Cos(radians);
+            return new (
+                new Vector3(c, s, 0.0f),
+                new Vector3(-s, c, 0.0f),
+                Vector3.ZAxis,
+                Vector3.Zero
+            );
+        }
+
         public static Transform3 operator *(Transform3 left, Transform3 right)
         {
             return new Transform3(
