@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Common.Logging;
+﻿using MHServerEmu.Common.Helpers;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData.Prototypes;
 using System.Runtime.InteropServices;
@@ -184,7 +185,7 @@ namespace MHServerEmu.Games.Entities
         {
             Geometry = GeometryType.Wedge;
             _params.WedgeBaseWidth = baseWidth;
-            _params.WedgeBase = 2 * length * MathF.Tan(Vector3.ToRadians(angleDegrees * 0.5f));
+            _params.WedgeBase = 2 * length * MathF.Tan(MathHelper.ToRadians(angleDegrees * 0.5f));
             _params.WedgeHalfHeight = heightFromCenter;
             _params.WedgeLength = length;
             CollisionType = collisionType;
@@ -194,7 +195,7 @@ namespace MHServerEmu.Games.Entities
         private void InitializeIsocelesTriangle(float angleDegrees, float heightFromCenter, float length, BoundsCollisionType collisionType, BoundsFlags flags)
         {
             Geometry = GeometryType.Triangle;
-            _params.TriangleBase = 2 * length * MathF.Tan(Vector3.ToRadians(angleDegrees * 0.5f));
+            _params.TriangleBase = 2 * length * MathF.Tan(MathHelper.ToRadians(angleDegrees * 0.5f));
             _params.TriangleHalfHeight = heightFromCenter;
             _params.TriangleLength = length;
             CollisionType = collisionType;

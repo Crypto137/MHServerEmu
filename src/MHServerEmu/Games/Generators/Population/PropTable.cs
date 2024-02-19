@@ -6,6 +6,7 @@ using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.Common.Helpers;
 
 namespace MHServerEmu.Games.Generators.Population
 {
@@ -142,7 +143,7 @@ namespace MHServerEmu.Games.Generators.Population
                     randomOffset = Vector3.RandomUnitVector2D(random);
 
                 if (propGroup.RandomRotationDegrees > 0)
-                    randomRotation = Vector3.ToRadians((propGroup.RandomRotationDegrees * 2)) * (float)random.NextFloat() - Vector3.ToRadians(propGroup.RandomRotationDegrees);
+                    randomRotation = MathHelper.ToRadians((propGroup.RandomRotationDegrees * 2)) * (float)random.NextFloat() - MathHelper.ToRadians(propGroup.RandomRotationDegrees);
 
             }
         }

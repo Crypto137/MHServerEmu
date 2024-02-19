@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Common.Extensions;
+using MHServerEmu.Common.Helpers;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
@@ -370,7 +371,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            ArcRadians = Vector3.ToRadians(ArcDegrees);
+            ArcRadians = MathHelper.ToRadians(ArcDegrees);
         }
     }
 

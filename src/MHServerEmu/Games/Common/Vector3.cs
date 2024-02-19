@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.Common.Helpers;
 
 namespace MHServerEmu.Games.Common
 {
@@ -176,13 +177,10 @@ namespace MHServerEmu.Games.Common
             float x = MathF.Cos(r);
             float y = MathF.Sin(r);
             return new (x, y, 0.0f);
-        }
-
-        public static float ToRadians(float v) => v * 0.017453292f;
+        }       
 
         public static float Distance2D(Vector3 v1, Vector3 v2) => Distance(Flatten(v1, 2), Flatten(v2, 2));
-        private static float Distance(Vector3 v1, Vector3 v2) => SquareRoot(DistanceSquared(v1, v2));
-        private static float SquareRoot(float f) => f > 0.0f ? MathF.Sqrt(f) : 0.0f;
+        private static float Distance(Vector3 v1, Vector3 v2) => MathHelper.SquareRoot(DistanceSquared(v1, v2));
 
         private static Vector3 Flatten(Vector3 v, int index)
         {

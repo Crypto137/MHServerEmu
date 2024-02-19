@@ -38,9 +38,9 @@ namespace MHServerEmu.Games.Regions
         private ulong _currentFrame;
 
         private Vector3 _lastUpdateCenter;
-        private const float DefaultCellWidth = 2304.0f;
+        private const float DefaultViewWidth = 4000.0f;
         private const float UpdateDistance = 200.0f;
-        private const float ViewOffset = 400.0f;
+        private const float ViewOffset = 600.0f;
         private const float ViewExpansionDistance = 800.0f;
         private const float MaxZ = 100000.0f;
 
@@ -72,31 +72,24 @@ namespace MHServerEmu.Games.Regions
 
         public void InitPlayerView(PrototypeId cameraSettingPrototype)
         {
-            _playerView = new Aabb2(new Vector3(ViewOffset, ViewOffset, 0.0f), DefaultCellWidth * 1.5f);
+            _playerView = new Aabb2(new Vector3(ViewOffset, ViewOffset, 0.0f), DefaultViewWidth);
 
-            if (cameraSettingPrototype == 0) return;
-
-            CameraSettingCollectionPrototype cameraSettingCollectionPrototype = GameDatabase.GetPrototype<CameraSettingCollectionPrototype>(cameraSettingPrototype);
-            if (cameraSettingCollectionPrototype == null)
+            if (cameraSettingPrototype != 0)
             {
-                GlobalsPrototype globalsPrototype = GameDatabase.GetGlobalsPrototype();
-                if (globalsPrototype == null) return;
-                cameraSettingCollectionPrototype = GameDatabase.GetPrototype<CameraSettingCollectionPrototype>(globalsPrototype.PlayerCameraSettings);
-            }
-            if (cameraSettingCollectionPrototype.CameraSettings.IsNullOrEmpty()) return;
-            CameraSettingPrototype cameraSetting = cameraSettingCollectionPrototype.CameraSettings.First();
-            var normalizedDirection = Vector3.Normalize2D(new(cameraSetting.DirectionX, cameraSetting.DirectionY, cameraSetting.DirectionZ));
-            float angle = MathHelper.WrapAngleRadians(Vector3.FromDeltaVector2D(normalizedDirection).Yaw + MathHelper.Pi - (MathHelper.Pi / 4f));
-            var rotation = Transform3.RotationZ(angle);
+                CameraSettingCollectionPrototype cameraSettingCollectionPrototype = GameDatabase.GetPrototype<CameraSettingCollectionPrototype>(cameraSettingPrototype);
+                if (cameraSettingCollectionPrototype == null)
+                {
+                    GlobalsPrototype globalsPrototype = GameDatabase.GetGlobalsPrototype();
+                    if (globalsPrototype == null) return;
+                    cameraSettingCollectionPrototype = GameDatabase.GetPrototype<CameraSettingCollectionPrototype>(globalsPrototype.PlayerCameraSettings);
+                }
+                if (cameraSettingCollectionPrototype.CameraSettings.IsNullOrEmpty()) return;
+                CameraSettingPrototype cameraSetting = cameraSettingCollectionPrototype.CameraSettings.First();
 
-            var points = _playerView.GetPoints();
-            var cameraView = new Aabb2();
-            foreach (Point2 point in points)
-            {
-                Point3 p = rotation * new Point3(point.X, point.Y, 0f);
-                cameraView.Expand(new Point2(p.X, p.Y));
+                var normalizedDirection = Vector3.Normalize2D(new(cameraSetting.DirectionX, cameraSetting.DirectionY, cameraSetting.DirectionZ));
+                float angle = MathHelper.WrapAngleRadians(Vector3.FromDeltaVector2D(normalizedDirection).Yaw + MathF.PI - (MathF.PI / 4f));
+                _playerView = Transform3.RotationZ(angle) * _playerView;
             }
-            _playerView = cameraView;
         }
 
         public Aabb CalcCellVolume(Vector3 playerPosition)

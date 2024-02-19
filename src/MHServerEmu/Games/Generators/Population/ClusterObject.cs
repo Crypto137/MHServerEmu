@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Common;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.Common.Helpers;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
@@ -239,7 +240,7 @@ namespace MHServerEmu.Games.Generators.Population
 
                     Vector3 orientation = Vector3.Zero;
                     if (fixedProto.Facing == FormationFacing.None)
-                        orientation.Yaw = Vector3.ToRadians(formationSlotProto.Yaw);
+                        orientation.Yaw = MathHelper.ToRadians(formationSlotProto.Yaw);
                     else
                         orientation = DoFacing(fixedProto.Facing, pos);
 

@@ -1,6 +1,4 @@
 ﻿
-using System;
-
 namespace MHServerEmu.Games.Common
 {
     public class Transform3
@@ -112,6 +110,22 @@ namespace MHServerEmu.Games.Common
             );
         }
 
+        public static Aabb2 operator *(Transform3 t, Aabb2 b)
+        {
+            var points = b.GetPoints();
+            var box = new Aabb2();
+            foreach (Point2 point in points)
+                box.Expand(t * new Point2(point.X, point.Y));
+            return box;
+        }
+
+        public static Point2 operator *(Transform3 t, Point2 p)
+        {
+            return new Point2(
+                (t.Col0.X * p.X) + (t.Col1.X * p.Y) + t.Col3.X,
+                (t.Col0.Y * p.X) + (t.Col1.Y * p.Y) + t.Col3.Y
+            );
+        }
 
         public static Point3 operator *(Transform3 t, Point3 p)
         {
