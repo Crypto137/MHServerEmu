@@ -481,7 +481,7 @@ namespace MHServerEmu.Games.Regions
             return minDistance;
         }
 
-        public IEnumerable<Cell> IterateCellsInVolume(Aabb bound)
+        public IEnumerable<Cell> IterateCellsInVolume<B>(B bound) where B: IBounds
         {
             if (CellSpatialPartition != null)
                 return CellSpatialPartition.IterateElementsInVolume(bound);

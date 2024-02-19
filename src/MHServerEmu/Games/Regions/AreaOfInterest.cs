@@ -38,26 +38,26 @@ namespace MHServerEmu.Games.Regions
         private ulong _currentFrame;
 
         private Vector3 _lastUpdateCenter;
+
         private const float DefaultViewWidth = 4000.0f;
         private const float UpdateDistance = 200.0f;
         private const float ViewOffset = 600.0f;
-        private const float ViewExpansionDistance = 800.0f;
-        private const float MaxZ = 100000.0f;
+        private const float ViewExpansionDistance = 600.0f;
 
-        private Aabb2 _playerView;
-        private Aabb2 _entitiesToConsiderBounds;
-        private Aabb2 _visibilityBounds;
+        private Aabb2 _cameraView;
+        private Aabb2 _entitiesVolume;
+        private Aabb2 _visibilityVolume;
 
-        public Aabb2 CalcEntitiesToConsiderBounds(Vector3 playerPosition)
+        public Aabb2 CalcEntitiesVolume(Vector3 playerPosition)
         {
-            _entitiesToConsiderBounds = _playerView.Translate(playerPosition);
-            return _entitiesToConsiderBounds;
+            _entitiesVolume = _cameraView.Translate(playerPosition);
+            return _entitiesVolume;
         }
 
-        public Aabb2 CalcVisibilityBounds(Vector3 playerPosition)
+        public Aabb2 CalcVisibilityVolume(Vector3 playerPosition)
         {
-            _visibilityBounds = _playerView.Translate(playerPosition).Expand(ViewExpansionDistance);
-            return _visibilityBounds;
+            _visibilityVolume = _cameraView.Translate(playerPosition).Expand(ViewExpansionDistance);
+            return _visibilityVolume;
         }
 
         public AreaOfInterest(FrontendClient client)
@@ -72,7 +72,7 @@ namespace MHServerEmu.Games.Regions
 
         public void InitPlayerView(PrototypeId cameraSettingPrototype)
         {
-            _playerView = new Aabb2(new Vector3(ViewOffset, ViewOffset, 0.0f), DefaultViewWidth);
+            _cameraView = new Aabb2(new Vector3(ViewOffset, ViewOffset, 0.0f), DefaultViewWidth);
 
             if (cameraSettingPrototype != 0)
             {
@@ -88,29 +88,15 @@ namespace MHServerEmu.Games.Regions
 
                 var normalizedDirection = Vector3.Normalize2D(new(cameraSetting.DirectionX, cameraSetting.DirectionY, cameraSetting.DirectionZ));
                 float angle = MathHelper.WrapAngleRadians(Vector3.FromDeltaVector2D(normalizedDirection).Yaw + MathF.PI - (MathF.PI / 4f));
-                _playerView = Transform3.RotationZ(angle) * _playerView;
+                _cameraView = Transform3.RotationZ(angle) * _cameraView;
             }
-        }
-
-        public Aabb CalcCellVolume(Vector3 playerPosition)
-        {            
-            CalcVisibilityBounds(playerPosition);
-
-            return new Aabb(
-                new Vector3(_visibilityBounds.Min.X, _visibilityBounds.Min.Y, -MaxZ),
-                new Vector3(_visibilityBounds.Max.X, _visibilityBounds.Max.Y, MaxZ));
-        }
-
-        public Aabb2 CalcEnittyVolume(Vector3 playerPosition)
-        {
-            return CalcEntitiesToConsiderBounds(playerPosition);
         }
 
         private Dictionary<uint, List<Cell>> GetNewCells(Vector3 position, Area startArea)
 
         {
             Dictionary<uint, List<Cell>> cellsByArea = new();
-            Aabb volume = CalcCellVolume(position);
+            Aabb2 volume = CalcVisibilityVolume(position);
 
             foreach (var cell in Region.IterateCellsInVolume(volume))
             {
@@ -151,7 +137,6 @@ namespace MHServerEmu.Games.Regions
         {
             List<GameMessage> messageList = new ();
             Region region = Region;
-            Aabb volume = CalcCellVolume(position);
 
             _currentFrame++;
             List<Cell> cellsInAOI = new();
@@ -221,7 +206,7 @@ namespace MHServerEmu.Games.Regions
         {
             Region region = Region;
             List<GameMessage> messageList = new();
-            Aabb2 volume = CalcEnittyVolume(position);
+            Aabb2 volume = CalcEntitiesVolume(position);
             List<WorldEntity> cellEntities = new();
             _currentFrame++;
             // Update Entity
