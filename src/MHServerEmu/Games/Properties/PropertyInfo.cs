@@ -17,7 +17,6 @@ namespace MHServerEmu.Games.Properties
         private readonly int[] _paramOffsets = new int[Property.MaxParamCount];
         private readonly PropertyParam[] _paramMaxValues = new PropertyParam[Property.MaxParamCount];
 
-        private PropertyValue _defaultValue;
         private int _paramCount;
         private PropertyParam[] _paramDefaultValues;
 
@@ -30,13 +29,16 @@ namespace MHServerEmu.Games.Properties
 
         public string PropertyInfoName { get; }
         public PrototypeId PropertyInfoPrototypeRef { get; }
-        public PropertyInfoPrototype PropertyInfoPrototype { get; set; }
+        public PropertyInfoPrototype PropertyInfoPrototype { get; private set; }
 
         public BlueprintId PropertyMixinBlueprintRef { get; set; } = BlueprintId.Invalid;
 
+        public PropertyValue DefaultValue { get; private set; }
         public PropertyId DefaultCurveIndex { get; set; }
 
-        public PropertyDataType DataType { get => PropertyInfoPrototype.Type; }
+        public PropertyDataType DataType { get; private set; }
+        public bool TruncatePropertyValueToInt { get; private set; }
+        public bool IsCurveProperty { get => DataType == PropertyDataType.Curve; }
 
         public PropertyInfo(PropertyEnum @enum, string propertyInfoName, PrototypeId propertyInfoPrototypeRef)
         {
@@ -257,6 +259,22 @@ namespace MHServerEmu.Games.Properties
             return true;
         }
 
+        public bool SetPropertyInfoPrototype(PropertyInfoPrototype propertyInfoPrototype)
+        {
+            if (PropertyInfoPrototype != null) Logger.WarnReturn(false, "Failed to set PropertyInfoPrototype: already set");
+            PropertyInfoPrototype = propertyInfoPrototype;
+
+            // Set shortcuts for prototype data
+            DataType = PropertyInfoPrototype.Type;
+            TruncatePropertyValueToInt = PropertyInfoPrototype.TruncatePropertyValueToInt;
+            
+            // Curve properties get their default values from the info prototype rather than default mixins
+            if (DataType == PropertyDataType.Curve)
+                DefaultValue = (float)PropertyInfoPrototype.CurveDefault;
+
+            return true;
+        }
+
         /// <summary>
         /// Validates params and calculates their bit offsets.
         /// </summary>
@@ -282,7 +300,7 @@ namespace MHServerEmu.Games.Properties
             }
 
             // Set default values
-            _defaultValue = defaultValue;
+            DefaultValue = defaultValue;
             _paramCount = paramCount;
             _paramDefaultValues = paramDefaultValues;
 

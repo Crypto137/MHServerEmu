@@ -129,8 +129,10 @@ namespace MHServerEmu.Games.Properties
 
         public bool Verify() => _propertyInfoDict.Count > 0;
 
-        private void LoadPropertyInfo(PropertyInfo propertyInfo)
+        private bool LoadPropertyInfo(PropertyInfo propertyInfo)
         {
+            if (propertyInfo.IsFullyLoaded) return true;
+
             // Load mixin property prototype if there is one
             if (propertyInfo.PropertyMixinBlueprintRef != BlueprintId.Invalid)
             {
@@ -138,18 +140,15 @@ namespace MHServerEmu.Games.Properties
                 GameDatabase.GetPrototype<PropertyPrototype>(blueprint.DefaultPrototypeId);
             }
 
-            // Load property info prototype
+            // Load the property info prototype and assign it to the property info instance
             if (propertyInfo.PropertyInfoPrototypeRef != PrototypeId.Invalid)
             {
-                propertyInfo.PropertyInfoPrototype = GameDatabase.GetPrototype<PropertyInfoPrototype>(propertyInfo.PropertyInfoPrototypeRef);
-
-                if (propertyInfo.DataType == PropertyDataType.Curve)
-                {
-                    // todo: do something special for curve properties
-                }
+                var propertyInfoPrototype = GameDatabase.GetPrototype<PropertyInfoPrototype>(propertyInfo.PropertyInfoPrototypeRef);
+                propertyInfo.SetPropertyInfoPrototype(propertyInfoPrototype);
             }
 
             propertyInfo.IsFullyLoaded = true;
+            return true;    // propertyInfo.VerifyPropertyInfo()
         }
     }
 }
