@@ -53,6 +53,36 @@ namespace MHServerEmu.Games.Properties
         }
 
         /// <summary>
+        /// Removes a <see cref="PropertyValue"/> corresponding to the specified <see cref="PropertyId"/>.
+        /// </summary>
+        public bool RemoveProperty(PropertyId propertyId)
+        {
+            // TODO: IsCurveProperty
+            // TODO: updateAggregateValueFromBase()
+            return _propertyList.Remove(propertyId);
+        }
+
+        /// <summary>
+        /// Removes all <see cref="PropertyValue"/> values corresponding to the specified <see cref="PropertyEnum"/> (no matter what their params are).
+        /// </summary>
+        public bool RemovePropertyRange(PropertyEnum propertyEnum)
+        {
+            List<PropertyId> toRemoveList = new();
+            foreach (var kvp in this)
+            {
+                if (kvp.Key.Enum == propertyEnum)
+                    toRemoveList.Add(kvp.Key);
+            }
+
+            if (toRemoveList.Count == 0) return false;
+
+            foreach (var propertyId in toRemoveList)
+                RemoveProperty(propertyId);
+
+            return true;
+        }
+
+        /// <summary>
         /// Returns <see langword="true"/> if this <see cref="PropertyCollection"/> contains any properties with the specified <see cref="PropertyEnum"/>.
         /// </summary>
         public bool HasProperty(PropertyEnum propertyEnum)
