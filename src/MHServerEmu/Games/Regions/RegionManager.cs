@@ -192,6 +192,7 @@ namespace MHServerEmu.Games.Regions
                 {
                     // Generate the region and create entities for it if needed
                     ulong numEntities = _entityManager.PeekNextEntityId();
+                    Logger.Debug($"GenerateRegion {prototype}");
                     region = GenerateRegion(prototype);
                     // region = EmptyRegion(prototype);
                     region.ArchiveData = GetArchiveData(prototype);
@@ -208,15 +209,7 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        public GameMessage[] GetRegionMessages(FrontendClient client, RegionPrototypeId regionPrototype)
-        {
-            // Load region data
-            Region region = GetRegion(regionPrototype);
-            return region.GetLoadingMessages(client.GameId, client.Session.Account.Player.Waypoint, client);            
-        }
-
         private const int CleanUpTime = 60 * 1000 * 5; // 5 minutes
-        private const int UnactiveTime = 25; // 25 minutes
         private const int UnVisitedTime = 5; // 5 minutes
 
         public async Task CleanUpRegionsAsync()
@@ -261,8 +254,7 @@ namespace MHServerEmu.Games.Regions
 
                     if (playerRegions.Contains(region.PrototypeId)) // TODO RegionId
                     {
-                        if (timeDifference.TotalMinutes > UnactiveTime)
-                            toShutdown.Add(region);
+                        // TODO send force exit from region to Players
                     }
                     else
                     {

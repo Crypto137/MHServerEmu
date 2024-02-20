@@ -48,18 +48,23 @@ namespace MHServerEmu.Games
                 .SetRegionPrototypeId((ulong)account.Player.Region)
                 .Build()));
 
-            EventManager.AddEvent(client, EventEnum.GetRegion, 100, account.Player.Region);
-           // messageList.AddRange(RegionManager.GetRegionMessages(client, account.Player.Region));
-
+            // Task for Region Genarate
+            Task.Run(() => GetRegionAsync(client, account.Player.Region));
+            client.AOI.LoadedCellCount = 0;
+            client.IsLoading = true;
             return messageList.ToArray();
+        }
+
+        private void GetRegionAsync(FrontendClient client, RegionPrototypeId regionPrototypeId)
+        {
+            Region region = RegionManager.GetRegion(regionPrototypeId);
+            EventManager.AddEvent(client, EventEnum.GetRegion, 0, region);
         }
 
         private GameMessage[] GetFinishLoadingMessages(FrontendClient client)
         {
             DBAccount account = client.Session.Account;
             List<GameMessage> messageList = new();
-
-            Region region = RegionManager.GetRegion(account.Player.Region);
 
             Common.Vector3 entrancePosition = new(client.StartPositon);
             Common.Vector3 entranceOrientation = new(client.StartOrientation);

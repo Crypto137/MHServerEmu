@@ -10,6 +10,7 @@ namespace MHServerEmu.Common.Config.Containers
         public string StartingRegion { get; private set; }
         public string StartingWaypoint { get; private set; }
         public string StartingAvatar { get; private set; }
+        public int AOIVolume { get; private set; }
 
         [ConfigIgnore]
         public RegionPrototypeId StartingRegionEnum

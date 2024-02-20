@@ -479,7 +479,7 @@ namespace MHServerEmu.Games.Events
                         .Build())));
 
                     WorldEntity arenaEntity = _game.EntityManager.CreateWorldEntityEmpty(
-                        _game.RegionManager.GetRegion(client.Session.Account.Player.Region).Id,
+                        client.AOI.Region.Id,
                         (PrototypeId)PowerPrototypes.Magik.UltimateArea,
                         new(position.X, position.Y, position.Z), new());
 
@@ -529,8 +529,8 @@ namespace MHServerEmu.Games.Events
 
                 case EventEnum.GetRegion:
                     Logger.Trace($"Event GetRegion");
-                    RegionPrototypeId regionPrototype = (RegionPrototypeId)queuedEvent.Data;
-                    var messages = _game.RegionManager.GetRegionMessages(client, regionPrototype);
+                    Region region = (Region)queuedEvent.Data;
+                    var messages = region.GetLoadingMessages(client.GameId, client.Session.Account.Player.Waypoint, client);
                     foreach (var message in messages)
                         messageList.Add(new(client, message));
 

@@ -24,12 +24,15 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
         public long RawAvatar { get => (long)Avatar; private set => Avatar = (AvatarPrototypeId)value; }
         public PrototypeId Waypoint { get; set; }
         public long RawWaypoint { get => (long)Waypoint; private set => Waypoint = (PrototypeId)value; }
+        public int AOIVolume { get; set; }
+        public int RawAOIVolume { get => AOIVolume; private set => AOIVolume = value; }
         public DBPlayer(ulong accountId)
         {
             AccountId = accountId;
             Region = RegionPrototypeId.NPEAvengersTowerHUBRegion;
             Avatar = AvatarPrototypeId.CaptainAmerica;
             Waypoint = (PrototypeId)10137590415717831231; // Waypoints/HUBS/NPEAvengersTowerHub
+            AOIVolume = 3200;
         }
 
         public DBPlayer() { }

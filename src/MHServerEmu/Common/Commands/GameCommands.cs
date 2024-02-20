@@ -171,6 +171,25 @@ namespace MHServerEmu.Common.Commands
             }
         }
 
+        [Command("AOIVolume", "Changes player AOI volume size.\nUsage: player AOIVolume", AccountUserLevel.User)]
+        public string AOIVolume(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+            if (@params.Length == 0) return "Invalid arguments. Type 'help player region' to get help.";
+            //if (ConfigManager.PlayerManager.BypassAuth) return "Disable BypassAuth to use this command";
+
+            if (int.TryParse( @params[0], out int volume) && volume >= 1600 && volume <= 5000)
+            {
+                client.Session.Account.Player.AOIVolume = volume;
+                client.AOI.SetAOIVolume(volume);
+                return $"Changes player AOI volume size to {volume}.";
+            }
+            else
+            {
+                return $"Failed to change AOI volume size to {@params[0]}. Available range [1600..5000]";
+            }
+        }
+
         [Command("region", "Changes player starting region.\nUsage: player region", AccountUserLevel.User)]
         public string Region(string[] @params, FrontendClient client)
         {

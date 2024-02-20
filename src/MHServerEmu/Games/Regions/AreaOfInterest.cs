@@ -39,14 +39,15 @@ namespace MHServerEmu.Games.Regions
 
         private Vector3 _lastUpdateCenter;
 
-        private const float DefaultViewWidth = 4000.0f;
+        private float AOIVolume = 4000.0f;
         private const float UpdateDistance = 200.0f;
-        private const float ViewOffset = 600.0f;
+        private float ViewOffset = 600.0f;
         private const float ViewExpansionDistance = 600.0f;
 
         private Aabb2 _cameraView;
         private Aabb2 _entitiesVolume;
         private Aabb2 _visibilityVolume;
+        private PrototypeId _lastCameraSetting;
 
         public Aabb2 CalcEntitiesVolume(Vector3 playerPosition)
         {
@@ -72,7 +73,7 @@ namespace MHServerEmu.Games.Regions
 
         public void InitPlayerView(PrototypeId cameraSettingPrototype)
         {
-            _cameraView = new Aabb2(new Vector3(ViewOffset, ViewOffset, 0.0f), DefaultViewWidth);
+            _cameraView = new Aabb2(new Vector3(ViewOffset, ViewOffset, 0.0f), AOIVolume);
 
             if (cameraSettingPrototype != 0)
             {
@@ -84,6 +85,7 @@ namespace MHServerEmu.Games.Regions
                     cameraSettingCollectionPrototype = GameDatabase.GetPrototype<CameraSettingCollectionPrototype>(globalsPrototype.PlayerCameraSettings);
                 }
                 if (cameraSettingCollectionPrototype.CameraSettings.IsNullOrEmpty()) return;
+                _lastCameraSetting = cameraSettingPrototype;
                 CameraSettingPrototype cameraSetting = cameraSettingCollectionPrototype.CameraSettings.First();
 
                 var normalizedDirection = Vector3.Normalize2D(new(cameraSetting.DirectionX, cameraSetting.DirectionY, cameraSetting.DirectionZ));
@@ -122,8 +124,13 @@ namespace MHServerEmu.Games.Regions
             LoadedEntities.Clear();
             _currentFrame = 0;
             CellsInRegion = 0;
-            Region = region;          
-            InitPlayerView(0);
+            Region = region;
+            _lastCameraSetting = 0;
+
+            int volume = 0;
+            if (_client.Session != null)
+                volume = _client.Session.Account.Player.AOIVolume;
+            SetAOIVolume(volume >= 1600 && volume <= 5000 ? volume : 3200);            
         }
 
         public static bool GetEntityInterest(WorldEntity worldEntity)
@@ -268,6 +275,13 @@ namespace MHServerEmu.Games.Regions
         {
             foreach (var cell in LoadedCells)
                 cell.Value.Loaded = true;
+        }
+
+        public void SetAOIVolume(float volume)
+        {
+            AOIVolume = volume;
+            ViewOffset = AOIVolume / 8;
+            InitPlayerView(_lastCameraSetting);            
         }
     }
 }

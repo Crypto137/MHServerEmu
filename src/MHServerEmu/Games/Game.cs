@@ -137,8 +137,6 @@ namespace MHServerEmu.Games
                 client.Session.Account.Player.Region = region;
                 client.Session.Account.Player.Waypoint = waypointDataRef;
                 EnqueueResponses(client, GetBeginLoadingMessages(client));
-                client.AOI.LoadedCellCount = 0;
-                client.IsLoading = true;
             }
         }
 
@@ -154,8 +152,6 @@ namespace MHServerEmu.Games
                 client.Session.Account.Player.Region = worldEntity.Region.PrototypeId;
                 client.EntityToTeleport = worldEntity;
                 EnqueueResponses(client, GetBeginLoadingMessages(client));
-                client.AOI.LoadedCellCount = 0;
-                client.IsLoading = true;
             }
         }
 
