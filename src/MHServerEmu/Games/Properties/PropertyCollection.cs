@@ -104,6 +104,24 @@ namespace MHServerEmu.Games.Properties
             return _propertyList.TryGetValue(propertyId, out _);
         }
 
+        /// <summary>
+        /// Copies all data from another <see cref="PropertyCollection"/>.
+        /// </summary>
+        public void FlattenCopyFrom(PropertyCollection other, bool cleanCopy)
+        {
+            if (cleanCopy)
+            {
+                _propertyList.Clear();
+                // TODO: clear curves
+                // TODO: removeAllChildren()
+            }
+
+            foreach (var kvp in other)
+                this[kvp.Key] = kvp.Value;
+
+            // TODO: curves
+        }
+
         #region Value Indexers
 
         // Add more indexers for specific param type combinations as needed
