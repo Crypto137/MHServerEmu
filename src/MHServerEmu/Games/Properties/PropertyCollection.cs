@@ -20,6 +20,9 @@ namespace MHServerEmu.Games.Properties
         // NOTE: Gazillion's PropertyList structure uses a different sorting order
         protected SortedDictionary<PropertyId, PropertyValue> _propertyList = new();
 
+        // Curve properties are its own can of worms it seems
+        protected SortedDictionary<PropertyId, CurveProperty> _curveList = new();
+
         public PropertyCollection() { }
 
         /// <summary>
@@ -307,6 +310,15 @@ namespace MHServerEmu.Games.Properties
                 case PropertyDataType.Prototype:    return new(GameDatabase.DataDirectory.GetPrototypeFromEnumValue<Prototype>((int)bits));
                 default:                            return new((long)bits);
             }
+        }
+
+        protected struct CurveProperty
+        {
+            public PropertyId PropertyId { get; set; }
+            public PropertyId IndexPropertyId { get; set; }
+            public CurveId CurveId { get; set; }
+
+            // TODO: Serialize
         }
     }
 }
