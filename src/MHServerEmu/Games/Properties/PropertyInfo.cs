@@ -78,10 +78,10 @@ namespace MHServerEmu.Games.Properties
         {
             switch (_paramCount)
             {
-                case 0: return EncodeParameters(propertyEnum, @params[0]);
-                case 1: return EncodeParameters(propertyEnum, @params[0], @params[1]);
-                case 2: return EncodeParameters(propertyEnum, @params[0], @params[1], @params[2]);
-                case 3: return EncodeParameters(propertyEnum, @params[0], @params[1], @params[2], @params[3]);
+                case 1: return EncodeParameters(propertyEnum, @params[0]);
+                case 2: return EncodeParameters(propertyEnum, @params[0], @params[1]);
+                case 3: return EncodeParameters(propertyEnum, @params[0], @params[1], @params[2]);
+                case 4: return EncodeParameters(propertyEnum, @params[0], @params[1], @params[2], @params[3]);
                 default: return Logger.WarnReturn(new PropertyId(propertyEnum), $"Failed to encode params: invalid param count {_paramCount}");
             }
         }
