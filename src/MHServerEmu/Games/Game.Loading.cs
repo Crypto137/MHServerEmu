@@ -74,8 +74,9 @@ namespace MHServerEmu.Games
             messageList.Add(new(NetMessageEntityEnterGameWorld.CreateBuilder()
                 .SetArchiveData(avatarEnterGameWorldArchive.Serialize())
                 .Build()));
-            
-            messageList.AddRange(client.AOI.UpdateEntity(entrancePosition));
+
+            client.AOI.Update(entrancePosition);
+            messageList.AddRange(client.AOI.Messages);
 
             // Load power collection
             messageList.AddRange(PowerLoader.LoadAvatarPowerCollection(account.Player.Avatar.ToEntityId()).ToList());

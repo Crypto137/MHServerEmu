@@ -29,51 +29,54 @@ namespace MHServerEmu.Games.Regions
 
         private FrontendClient _client;
         private Game _game { get => _client.CurrentGame; }
-        public Dictionary<ulong, LoadStatus> LoadedEntities { get; set; }
-        public Dictionary<uint, LoadStatus> LoadedCells { get; set; }
+        private Dictionary<ulong, LoadStatus> _loadedEntities;
+        private Dictionary<uint, LoadStatus> _loadedCells;
+        private Dictionary<uint, LoadStatus> _loadedAreas;
 
         public Region Region { get; private set; }
         public int CellsInRegion { get; set; }
         public int LoadedCellCount { get; set; } = 0;
-        private ulong _currentFrame;
+        public List<GameMessage> Messages { get; private set; }
+        public int LoadedEntitiesCount { get => _loadedEntities.Count; }
 
+        private ulong _currentFrame;
         private Vector3 _lastUpdateCenter;
 
-        private float AOIVolume = 4000.0f;
+        private float _viewOffset = 600.0f;
+        private float _AOIVolume = 4000.0f;
+
         private const float UpdateDistance = 200.0f;
-        private float ViewOffset = 600.0f;
         private const float ViewExpansionDistance = 600.0f;
+        private const float InvisibleExpansionDistance = 1200.0f;
 
         private Aabb2 _cameraView;
         private Aabb2 _entitiesVolume;
-        private Aabb2 _visibilityVolume;
+        private Aabb2 _visibileVolume;
+        private Aabb2 _invisibileVolume;
         private PrototypeId _lastCameraSetting;
-
-        public Aabb2 CalcEntitiesVolume(Vector3 playerPosition)
-        {
-            _entitiesVolume = _cameraView.Translate(playerPosition);
-            return _entitiesVolume;
-        }
-
-        public Aabb2 CalcVisibilityVolume(Vector3 playerPosition)
-        {
-            _visibilityVolume = _cameraView.Translate(playerPosition).Expand(ViewExpansionDistance);
-            return _visibilityVolume;
-        }
 
         public AreaOfInterest(FrontendClient client)
         {
             _client = client;
-            LoadedEntities = new();
-            LoadedCells = new();
+            Messages = new();
+            _loadedEntities = new();
+            _loadedCells = new();
+            _loadedAreas = new();
             LoadedCellCount = 0;
             _lastUpdateCenter = new();
             _currentFrame = 0;
         }
 
+        private void CalcVolumes(Vector3 playerPosition)
+        {
+            _entitiesVolume = _cameraView.Translate(playerPosition);
+            _visibileVolume = _entitiesVolume.Expand(ViewExpansionDistance);
+            _invisibileVolume = _entitiesVolume.Expand(InvisibleExpansionDistance);
+        }
+
         public void InitPlayerView(PrototypeId cameraSettingPrototype)
         {
-            _cameraView = new Aabb2(new Vector3(ViewOffset, ViewOffset, 0.0f), AOIVolume);
+            _cameraView = new Aabb2(new Vector3(_viewOffset, _viewOffset, 0.0f), _AOIVolume);
 
             if (cameraSettingPrototype != 0)
             {
@@ -84,6 +87,7 @@ namespace MHServerEmu.Games.Regions
                     if (globalsPrototype == null) return;
                     cameraSettingCollectionPrototype = GameDatabase.GetPrototype<CameraSettingCollectionPrototype>(globalsPrototype.PlayerCameraSettings);
                 }
+
                 if (cameraSettingCollectionPrototype.CameraSettings.IsNullOrEmpty()) return;
                 _lastCameraSetting = cameraSettingPrototype;
                 CameraSettingPrototype cameraSetting = cameraSettingCollectionPrototype.CameraSettings.First();
@@ -94,34 +98,13 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        private Dictionary<uint, List<Cell>> GetNewCells(Vector3 position, Area startArea)
-
-        {
-            Dictionary<uint, List<Cell>> cellsByArea = new();
-            Aabb2 volume = CalcVisibilityVolume(position);
-
-            foreach (var cell in Region.IterateCellsInVolume(volume))
-            {
-                if (LoadedCells.TryGetValue(cell.Id, out var status))
-                {
-                    status.Frame = _currentFrame;
-                    continue;
-                }
-               // if (cell.Area.IsDynamicArea() || cell.Area == startArea || startArea.AreaConnections.Any(connection => connection.ConnectedArea == cell.Area))
-                {
-                    if (cellsByArea.ContainsKey(cell.Area.Id) == false)
-                        cellsByArea[cell.Area.Id] = new();
-
-                    cellsByArea[cell.Area.Id].Add(cell);
-                }
-            }
-            return cellsByArea;
-        }
-
-        public void ResetAOI(Region region)
+        public void Reset(Region region)
         {   
-            LoadedCells.Clear();
-            LoadedEntities.Clear();
+            Messages.Clear();
+            _loadedAreas.Clear();
+            _loadedCells.Clear();
+            _loadedEntities.Clear();
+            
             _currentFrame = 0;
             CellsInRegion = 0;
             Region = region;
@@ -130,7 +113,7 @@ namespace MHServerEmu.Games.Regions
             int volume = 0;
             if (_client.Session != null)
                 volume = _client.Session.Account.Player.AOIVolume;
-            SetAOIVolume(volume >= 1600 && volume <= 5000 ? volume : 3200);            
+            SetAOIVolume(volume >= 1600 && volume <= 5000 ? volume : 3200); 
         }
 
         public static bool GetEntityInterest(WorldEntity worldEntity)
@@ -140,117 +123,141 @@ namespace MHServerEmu.Games.Regions
             return false;
         }
 
-        public List<GameMessage> UpdateCells(Vector3 position)
+        private void UpdateAreas()
         {
-            List<GameMessage> messageList = new ();
             Region region = Region;
 
-            _currentFrame++;
-            List<Cell> cellsInAOI = new();
-            Cell startCell = region.GetCellAtPosition(position);
-            if (startCell == null) return messageList;
-
-            Area startArea = startCell.Area;
-            var cellsByArea = GetNewCells(position, startArea);
-
-            if (cellsByArea.Count == 0) return messageList;
-
-            var sortedAreas = cellsByArea.Keys.OrderBy(id => id);
-
-            // Add new
-
-            HashSet<uint> usedAreas = new();
-
-            foreach (var cellStatus in LoadedCells)
+            foreach(var area in region.IterateAreas())
             {
-                Cell cell = region.GetCellbyId(cellStatus.Key);
-                if (cell == null) continue;
-                usedAreas.Add(cell.Area.Id);
-            }
-
-            foreach (var areaId in sortedAreas)
-            {
-                if (usedAreas.Contains(areaId) == false)
+                if (_loadedAreas.ContainsKey(area.Id))
                 {
-                    Area area = region.Areas[areaId];
-                    messageList.Add(area.MessageAddArea(false));
+                    if (area.RegionBounds.Intersects(_invisibileVolume) == false)
+                        RemoveArea(area);
                 }
-
-                var sortedCells = cellsByArea[areaId].OrderBy(cell => cell.Id);
-
-                foreach (var cell in sortedCells)
+                else
                 {
-                    messageList.Add(cell.MessageCellCreate());
-                    LoadedCells.Add(cell.Id, new(_currentFrame, false, false));
+                    if (area.RegionBounds.Intersects(_visibileVolume))
+                        AddArea(area, false);
                 }
             }
-
-            CellsInRegion = LoadedCells.Count;
-
-            if (messageList.Count > 0)
-            {
-                messageList.Add(new(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build()));
-
-                // Mini map
-                MiniMapArchive miniMap = new(RegionManager.RegionIsHub(region.PrototypeId)); // Reveal map by default for hubs
-                if (miniMap.IsRevealAll == false) miniMap.Map = Array.Empty<byte>();
-
-                messageList.Add(new(NetMessageUpdateMiniMap.CreateBuilder()
-                    .SetArchiveData(miniMap.Serialize())
-                    .Build()));
-
-                //LoadedCellCount = client.LoadedCells.Count;
-            }
-            // TODO delete old
-
-            // If cell not use and have not entity with interest then can be remove
-
-            _lastUpdateCenter.Set(position);
-            return messageList;
         }
 
-        public List<GameMessage> UpdateEntity(Vector3 position)
+        private void AddArea(Area area, bool isStartArea)
+        {
+            _loadedAreas.Add(area.Id, new(_currentFrame, true, true));
+            Messages.Add(area.MessageAddArea(isStartArea));
+        }
+
+        private void RemoveArea(Area area)
+        {
+            Messages.Add(new(NetMessageRemoveArea.CreateBuilder()
+                .SetAreaId(area.Id)
+                .Build()));
+            _loadedAreas.Remove(area.Id);
+        }
+
+        private void AddCell(Cell cell)
+        {
+            Messages.Add(cell.MessageCellCreate());
+            _loadedCells.Add(cell.Id, new(_currentFrame, false, false));
+        }
+
+        private void RemoveCell(Cell cell)
+        {
+            var areaId = cell.Area.Id;
+            if (_loadedAreas.ContainsKey(areaId))
+            {
+                Messages.Add(new(NetMessageCellDestroy.CreateBuilder()
+                    .SetAreaId(areaId)
+                    .SetCellId(cell.Id)
+                    .Build()));
+            }   
+            _loadedCells.Remove(cell.Id);
+            LoadedCellCount--;
+        }
+
+        private bool UpdateCells()
+        {
+            Region region = Region;            
+
+            RegionManager manager = _game.RegionManager;
+            Stack<Cell> invisibleCells = new();
+            bool environmentUpdate = false;
+
+            // search invisible cells
+            foreach (var cellStatus in _loadedCells)
+            {
+                Cell cell = manager.GetCell(cellStatus.Key);
+                if (cell == null) continue;
+                if (cell.RegionBounds.Intersects(_invisibileVolume) == false)
+                   invisibleCells.Push(cell);
+            }
+
+            // Remove invisible cells
+            while (invisibleCells.Count != 0)
+            {
+                Cell cell = invisibleCells.Pop();
+                RemoveCell(cell);
+                // EnvironmentUpdate
+                environmentUpdate |= cell.Area.IsDynamicArea() == false;
+            }
+
+            // Add new cells
+            foreach (Cell cell in region.IterateCellsInVolume(_visibileVolume))
+            {
+                if (_loadedAreas.ContainsKey(cell.Area.Id) == false) continue;
+                if (_loadedCells.ContainsKey(cell.Id)) continue;
+                
+                if (cell.RegionBounds.Intersects(_visibileVolume))
+                {
+                    AddCell(cell);
+                    // EnvironmentUpdate
+                    environmentUpdate |= cell.Area.IsDynamicArea() == false;
+                }
+            }
+
+            CellsInRegion = _loadedCells.Count;
+            return environmentUpdate;
+        }
+
+        private void UpdateEntity()
         {
             Region region = Region;
-            List<GameMessage> messageList = new();
-            Aabb2 volume = CalcEntitiesVolume(position);
-            List<WorldEntity> cellEntities = new();
-            _currentFrame++;
+            List<WorldEntity> newEntities = new();
+
             // Update Entity
             EntityRegionSPContext context = new() { Flags = EntityRegionSPContextFlags.ActivePartition | EntityRegionSPContextFlags.StaticPartition};
-            foreach (var worldEntity in region.IterateEntitiesInVolume(volume, context))
+            foreach (var worldEntity in region.IterateEntitiesInVolume(_entitiesVolume, context))
             {
-                if (LoadedCells.TryGetValue(worldEntity.Location.Cell.Id, out var status))
+                if (_loadedCells.TryGetValue(worldEntity.Location.Cell.Id, out var status))
                     if (status.Loaded == false) continue;
 
-                if (LoadedEntities.TryGetValue(worldEntity.BaseData.EntityId, out var entityStatus))
+                if (_loadedEntities.TryGetValue(worldEntity.BaseData.EntityId, out var entityStatus))
                     entityStatus.Frame = _currentFrame;
                 else
                 {
                     bool interest = GetEntityInterest(worldEntity);
-                    LoadedEntities.Add(worldEntity.BaseData.EntityId, new(_currentFrame, true, interest));
-                    cellEntities.Add(worldEntity);
+                    _loadedEntities.Add(worldEntity.BaseData.EntityId, new(_currentFrame, true, interest));
+                    newEntities.Add(worldEntity);
                 }
             }
 
-            if (cellEntities.Count > 0)
-                messageList.AddRange(cellEntities.Select(entity => new GameMessage(entity.ToNetMessageEntityCreate())));
+            // Add new Entity
+            if (newEntities.Count > 0)
+                Messages.AddRange(newEntities.Select(entity => new GameMessage(entity.ToNetMessageEntityCreate()))); // TODO AddEntity            
 
+            // Delete Entity
             List<ulong> toDelete = new();
-
-            // TODO Delete Entity
-            foreach (var entity in LoadedEntities)
+            foreach (var entity in _loadedEntities)
             {
                 if (entity.Value.Frame < _currentFrame && entity.Value.InterestToPlayer == false)
                 {
-                    messageList.Add(new(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(entity.Key).Build()));
+                    Messages.Add(new(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(entity.Key).Build()));
                     toDelete.Add(entity.Key);
                 }
             }
-            foreach (var deleteId in toDelete) LoadedEntities.Remove(deleteId);
-
-            _lastUpdateCenter.Set(position);
-            return messageList;
+            foreach (var deleteId in toDelete) 
+                _loadedEntities.Remove(deleteId); // TODO RemoveEntity           
         }
 
         public bool ShouldUpdate(Vector3 position)
@@ -261,27 +268,64 @@ namespace MHServerEmu.Games.Regions
         public void OnCellLoaded(uint cellId)
         {
             LoadedCellCount++;
-            if (LoadedCells.TryGetValue(cellId, out var cell)) cell.Loaded = true;
+            if (_loadedCells.TryGetValue(cellId, out var cell)) cell.Loaded = true;
         }
 
         public bool CheckTargeCell(Transition target)
         {
-            if (LoadedCells.TryGetValue(target.Location.Cell.Id, out var cell))
+            if (_loadedCells.TryGetValue(target.Location.Cell.Id, out var cell))
                 return cell.Loaded == false;
             return true;
         }
 
         public void ForseCellLoad()
         {
-            foreach (var cell in LoadedCells)
+            foreach (var cell in _loadedCells)
                 cell.Value.Loaded = true;
         }
 
         public void SetAOIVolume(float volume)
         {
-            AOIVolume = volume;
-            ViewOffset = AOIVolume / 8;
+            _AOIVolume = volume;
+            _viewOffset = _AOIVolume / 8; // 3200 / 8 = 400
             InitPlayerView(_lastCameraSetting);            
         }
+
+        public bool Update(Vector3 newPosition, bool isStart = false)
+        {
+            Messages.Clear();
+            CalcVolumes(newPosition);
+            if (isStart)
+            {
+                Area startArea = Region.GetAreaAtPosition(newPosition);
+                AddArea(startArea, true);
+            }
+
+            _currentFrame++;
+            // update Entities
+            if (isStart == false) UpdateEntity();
+
+            // update Areas
+            UpdateAreas();
+
+            // update Cells
+            if (UpdateCells())
+            {
+                Messages.Add(new(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build()));
+
+                // Mini map
+                MiniMapArchive miniMap = new(RegionManager.RegionIsHub(Region.PrototypeId)); // Reveal map by default for hubs
+                if (miniMap.IsRevealAll == false) miniMap.Map = Array.Empty<byte>();
+
+                Messages.Add(new(NetMessageUpdateMiniMap.CreateBuilder()
+                    .SetArchiveData(miniMap.Serialize())
+                    .Build()));
+            }
+
+            bool update = Messages.Count > 0;
+            if (update) _lastUpdateCenter.Set(newPosition);
+            return update;
+        }
+
     }
 }

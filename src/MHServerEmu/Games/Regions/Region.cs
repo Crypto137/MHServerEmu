@@ -600,6 +600,16 @@ namespace MHServerEmu.Games.Regions
             return null;
         }
 
+        public Area GetAreaAtPosition(Vector3 position)
+        {
+            foreach (var itr in Areas)
+            {
+                Area area = itr.Value;
+                if (area.IntersectsXY(position)) return area;
+            }
+            return null;
+        }
+
         public bool CheckMarkerFilter(PrototypeId filterRef)
         {
             if (filterRef == 0) return true;
@@ -715,8 +725,9 @@ namespace MHServerEmu.Games.Regions
                     client.StartOrientation = Vector3.Zero;
                 }
 
-                client.AOI.ResetAOI(this);
-                messageList.AddRange(client.AOI.UpdateCells(client.StartPositon));
+                client.AOI.Reset(this);
+                client.AOI.Update(client.StartPositon, true);
+                messageList.AddRange(client.AOI.Messages);
             }
 
 
@@ -747,6 +758,8 @@ namespace MHServerEmu.Games.Regions
                 VisitedTime = DateTime.Now;
             }
         }
+
+
     }
 
     public class DividedStartLocation

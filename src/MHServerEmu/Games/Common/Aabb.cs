@@ -183,6 +183,14 @@
             return true;
         }
 
+        public bool Intersects(Aabb2 bounds)
+        {
+            if (Max.X < bounds.Min.X || Min.X > bounds.Max.X ||
+                Max.Y < bounds.Min.Y || Min.Y > bounds.Max.Y)
+                return false;
+            return true;
+        }
+
         public bool IsZero()
         {
             return Vector3.IsNearZero(Min) && Vector3.IsNearZero(Max);

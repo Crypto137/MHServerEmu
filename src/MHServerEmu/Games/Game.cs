@@ -274,13 +274,11 @@ namespace MHServerEmu.Games
             client.AOI.Region.Visited();
             // AOI
             if (client.IsLoading == false && client.AOI.ShouldUpdate(avatarState.Position) ) 
-            {                
-                var messageList = client.AOI.UpdateCells(avatarState.Position);
-                messageList.AddRange(client.AOI.UpdateEntity(avatarState.Position));
-                if (messageList.Count > 0)
+            {
+                if (client.AOI.Update(avatarState.Position))
                 {
-                    Logger.Trace($"AOI[{messageList.Count}][{client.AOI.LoadedEntities.Count}]");
-                    EnqueueResponses(client, messageList);
+                    Logger.Trace($"AOI[{client.AOI.Messages.Count}][{client.AOI.LoadedEntitiesCount}]");
+                    EnqueueResponses(client, client.AOI.Messages);
                 }
             }
 
