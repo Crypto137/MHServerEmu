@@ -25,6 +25,10 @@ namespace MHServerEmu.Games.Properties
 
         public PropertyCollection() { }
 
+        // NOTE: In the client GetProperty() and SetProperty() handle conversion to and from PropertyValue,
+        // but we take care of that with implicit casting defined in PropertyValue.cs, so these methods are
+        // largely redundant and are kept to avoid deviating from the client.
+
         /// <summary>
         /// Returns the <see cref="PropertyValue"/> corresponding to the specified <see cref="PropertyId"/>.
         /// Returns the <see cref="PropertyValue"/> equivalent of 0 if this <see cref="PropertyCollection"/> contains no such property.
@@ -36,10 +40,7 @@ namespace MHServerEmu.Games.Properties
         /// </remarks>
         public PropertyValue GetProperty(PropertyId propertyId)
         {
-            if (_propertyList.TryGetValue(propertyId, out var value) == false)
-                return Logger.WarnReturn(new PropertyValue(), $"Failed to get property value for id {propertyId}");
-
-            return value;
+            return GetPropertyValue(propertyId);
         }
 
         /// <summary>
@@ -248,6 +249,18 @@ namespace MHServerEmu.Games.Properties
                 sb.AppendLine($"{info.BuildPropertyName(id)}: {value.Print(info.DataType)}");
             }
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Sets the <see cref="PropertyValue"/> corresponding to the specified <see cref="PropertyId"/>.
+        /// Returns the <see cref="PropertyValue"/> equivalent of 0 if this <see cref="PropertyCollection"/> contains no such property.
+        /// </summary>
+        protected PropertyValue GetPropertyValue(PropertyId propertyId)
+        {
+            if (_propertyList.TryGetValue(propertyId, out var value) == false)
+                return Logger.WarnReturn(new PropertyValue(), $"Failed to get property value for id {propertyId}");
+
+            return value;
         }
 
         /// <summary>
