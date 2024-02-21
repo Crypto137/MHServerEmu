@@ -354,10 +354,10 @@ namespace MHServerEmu.Games.Events
                         )));
 
                     // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
-                    client.ThrowingCancelPower = throwPrototype.Properties.GetPropertyContainer((BlueprintId)HardcodedBlueprintId.ThrowableRestorePowerProp).Value;
+                    client.ThrowingCancelPower = throwPrototype.Properties[PropertyEnum.ThrowableRestorePower];
                     messageList.Add(new(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
-                        .SetPowerProtoId(client.ThrowingCancelPower)
+                        .SetPowerProtoId((ulong)client.ThrowingCancelPower)
                         .SetPowerRank(0)
                         .SetCharacterLevel(60) // TODO: Player.Avatar.GetProperty(PropertyEnum.CharacterLevel)
                         .SetCombatLevel(60) // TODO: Player.Avatar.GetProperty(PropertyEnum.CombatLevel)
@@ -366,10 +366,10 @@ namespace MHServerEmu.Games.Events
                         .Build())));
 
                     // ThrowObject.Prototype.ThrowablePowerProp.Value
-                    client.ThrowingPower = throwPrototype.Properties.GetPropertyContainer((BlueprintId)HardcodedBlueprintId.ThrowablePowerProp).Value;
+                    client.ThrowingPower = throwPrototype.Properties[PropertyEnum.ThrowablePower];
                     messageList.Add(new(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
-                        .SetPowerProtoId(client.ThrowingPower)
+                        .SetPowerProtoId((ulong)client.ThrowingPower)
                         .SetPowerRank(0)
                         .SetCharacterLevel(60)
                         .SetCombatLevel(60)
@@ -400,13 +400,13 @@ namespace MHServerEmu.Games.Events
                     // ThrowObject.Prototype.ThrowablePowerProp.Value
                     messageList.Add(new(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
-                        .SetPowerProtoId(client.ThrowingPower)
+                        .SetPowerProtoId((ulong)client.ThrowingPower)
                         .Build())));
 
                     // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
                     messageList.Add(new(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
-                        .SetPowerProtoId(client.ThrowingCancelPower)
+                        .SetPowerProtoId((ulong)client.ThrowingCancelPower)
                         .Build())));
 
                     Logger.Trace("Event EndThrowing");

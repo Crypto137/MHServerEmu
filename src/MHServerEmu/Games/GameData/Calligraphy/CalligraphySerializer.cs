@@ -251,7 +251,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// <summary>
         /// Deserializes a property field group.
         /// </summary>
-        private static bool DeserializeFieldGroupIntoProperty(PrototypePropertyCollection collection, Blueprint groupBlueprint, byte blueprintCopyNum,
+        private static bool DeserializeFieldGroupIntoProperty(PrototypePropertyCollection propertyCollection, Blueprint groupBlueprint, byte blueprintCopyNum,
             string prototypeName, BinaryReader reader, string groupTag)
         {
             if (groupBlueprint.IsProperty() == false) return false;
@@ -260,32 +260,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
             PrototypeId propertyDataRef = groupBlueprint.PropertyDataRef;
             PropertyEnum propertyEnum = propertyInfoTable.GetPropertyEnumFromPrototype(propertyDataRef);
-            bool isInitializing = collection == null;
-
-            // HACK: write data to a temporary PrototypePropertyCollection implementation
-            if (isInitializing == false)
-            {
-                short numSimpleFields = reader.ReadInt16();
-                for (int i = 0; i < numSimpleFields; i++)
-                {
-                    var fieldId = (StringId)reader.ReadUInt64();
-                    var type = (CalligraphyBaseType)reader.ReadByte();
-
-                    // Property mixin field groups don't have any RHStructs, so we can always read the value as uint64
-                    // (also no types or localized string refs)
-                    var value = reader.ReadUInt64();
-
-                    if (collection != null)
-                    {
-                        if (groupBlueprint.TryGetBlueprintMemberInfo(fieldId, out var blueprintMemberInfo) == false)
-                            return Logger.ErrorReturn(false, $"Failed to find member id {fieldId} in blueprint {GameDatabase.GetBlueprintName(groupBlueprint.Id)}");
-
-                        collection.AddPropertyFieldValue(groupBlueprint.Id, blueprintCopyNum, blueprintMemberInfo.Member.FieldName, value);
-                    }
-                }
-
-                return true;
-            }
+            bool isInitializing = propertyCollection == null;
 
             PropertyBuilder propertyBuilder = new(propertyEnum, propertyInfoTable, isInitializing);
             if (DeserializeFieldGroupIntoPropertyBuilder(propertyBuilder, groupBlueprint, prototypeName, reader, isInitializing, groupTag) == false)
@@ -297,7 +272,45 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 return true;
             }
 
-            // TODO: Add deserialized property to the property collection here
+            // We should get here only after we have already initialized all property infos
+            var info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+
+            // Build property id
+            PropertyId propertyId = propertyBuilder.GetPropertyId();
+
+            // Set or replace id / value pair
+            if (info.IsCurveProperty == false)
+            {
+                if (propertyBuilder.IsValueSet)
+                {
+                    // Add a new property to the collection if there is a value for it
+                    propertyCollection.SetPropertyFromMixin(propertyBuilder.PropertyValue, propertyId, blueprintCopyNum, propertyBuilder.ParamsSetMask);
+                }
+                else
+                {
+                    // If no value is defined in the field group it means we need to change the params of an existing value
+                    propertyCollection.ReplacePropertyIdFromMixin(propertyId, blueprintCopyNum, propertyBuilder.ParamsSetMask);
+                }
+            }
+            else
+            {
+                // TODO: curve properties
+                if (propertyBuilder.IsValueSet)
+                {
+                    
+                }
+                else
+                {
+                    if (propertyBuilder.IsCurveIndexSet)
+                    {
+
+                    }
+                    else
+                    {
+
+                    }
+                }
+            }
 
             return true;
         }

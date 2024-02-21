@@ -5,73 +5,120 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 {
     public class PrototypePropertyCollection : PropertyCollection
     {
-        // super hacky placeholder implementation to get things working for now
-        // nothing to see here
-
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Dictionary<(BlueprintId, byte), TempPrototypePropertyContainer> _propertyContainer = new();
+        private readonly Dictionary<ulong, PropertyId> _mixinPropertyLookup;
 
-        public void AddPropertyFieldValue(BlueprintId blueprintId, byte blueprintCopyNum, string fieldName, ulong value)
+        public PrototypePropertyCollection()
         {
-            if (_propertyContainer.TryGetValue((blueprintId, blueprintCopyNum), out var container) == false)
-            {
-                container = new();
-                _propertyContainer.Add((blueprintId, blueprintCopyNum), container);
-            }
-
-            var fieldInfo = typeof(TempPrototypePropertyContainer).GetProperty(fieldName);
-            fieldInfo.SetValue(container, value);
+            _mixinPropertyLookup = new();
         }
 
-        public void AddPropertyContainer(BlueprintId blueprintId, byte blueprintCopyNum, TempPrototypePropertyContainer container)
+        public PrototypePropertyCollection(Dictionary<ulong, PropertyId> mixinPropertyLookup)
         {
-            _propertyContainer.Add((blueprintId, blueprintCopyNum), container);
+            _mixinPropertyLookup = mixinPropertyLookup;
         }
 
-        public TempPrototypePropertyContainer GetPropertyContainer(BlueprintId blueprintId, byte blueprintCopyNum = 0)
-        {
-            if (_propertyContainer.TryGetValue((blueprintId, blueprintCopyNum), out var container) == false)
-                Logger.WarnReturn<TempPrototypePropertyContainer>(null, $"Failed to get property container for blueprint {GameDatabase.GetBlueprintName(blueprintId)}");
-            return container;
-        }
-
-        // ShallowCopy() is part of the real API that PrototypePropertyCollection is supposed to have
-        // It is used for prototype field copying
         public PrototypePropertyCollection ShallowCopy()
         {
-            PrototypePropertyCollection newCollection = new();
-
-            foreach (var kvp in _propertyContainer)
-            {
-                var newContainer = kvp.Value.Clone();
-                newCollection.AddPropertyContainer(kvp.Key.Item1, kvp.Key.Item2, newContainer);
-            }
-
+            PrototypePropertyCollection newCollection = new(_mixinPropertyLookup);
+            newCollection.FlattenCopyFrom(this, true);
             return newCollection;
         }
-    }
 
-    public class TempPrototypePropertyContainer
-    {
-        public ulong Value { get; protected set; }
-        public ulong CurveIndex { get; protected set; }
-        public ulong Param0 { get; protected set; }
-        public ulong Param1 { get; protected set; }
-        public ulong Param2 { get; protected set; }
-        public ulong Param3 { get; protected set; }
-
-        public TempPrototypePropertyContainer Clone()
+        public void SetPropertyFromMixin(PropertyValue value, PropertyId propertyId, byte blueprintCopyNum, byte paramsSetMask)
         {
-            return new()
+            PropertyValue? existingValueRef = null;
+
+            SetKeyToPropertyId(ref propertyId, blueprintCopyNum, paramsSetMask, ref existingValueRef);
+            SetPropertyValue(propertyId, value);
+        }
+
+        public void ReplacePropertyIdFromMixin(PropertyId newPropertyId, byte blueprintCopyNum, byte paramsSetMask)
+        {
+            PropertyValue? existingValueRef = null;
+            
+            // This doesn't work right now, maybe because we don't have property collection inheritance working yet
+            //if (SetKeyToPropertyId(ref newPropertyId, blueprintCopyNum, paramsSetMask, ref existingValueRef))
+            //    SetPropertyValue(newPropertyId, (PropertyValue)existingValueRef);     // Set property value only if there is something to replace
+        }
+
+        public void SetCurvePropertyFromMixin()
+        {
+            // TODO
+        }
+
+        public void ReplaceCurvePropertyIdFromMixin()
+        {
+            // TODO
+        }
+
+        private bool SetKeyToPropertyId(ref PropertyId propertyIdRef, byte blueprintCopyNum, byte paramsSetMask,
+            ref PropertyValue? existingValueRef, CurveProperty? curveProperty = null, PropertyId? newCurveIndexProperty = null)
+        {
+            bool valueIsReplaced = false;
+            ulong key = ((ulong)blueprintCopyNum << 32) | (ulong)propertyIdRef.Enum;
+
+            if (_mixinPropertyLookup.TryGetValue(key, out PropertyId existingPropertyId) == false)
             {
-                Value = Value,
-                CurveIndex = CurveIndex,
-                Param0 = Param0,
-                Param1 = Param1,
-                Param2 = Param2,
-                Param3 = Param3
-            };
+                _mixinPropertyLookup[key] = propertyIdRef;
+                return valueIsReplaced;
+            }
+
+            if (HasMatchingParams(propertyIdRef, existingPropertyId, 0xff) == false || newCurveIndexProperty != null)
+            {
+                valueIsReplaced = true;
+
+                // We need to cast null to one of the supported value types for this check because of all the implicit casting we are doing
+                if (existingValueRef != (bool?)null)
+                    existingValueRef = GetProperty(existingPropertyId);
+
+                if (curveProperty != null)
+                {
+                    // todo: curve properties
+                }
+
+                SetOverridenParams(ref propertyIdRef, existingPropertyId, paramsSetMask);
+                RemoveProperty(existingPropertyId);
+            }
+
+            _mixinPropertyLookup[key] = propertyIdRef;
+            return valueIsReplaced;
+        }
+
+        private bool HasMatchingParams(PropertyId left, PropertyId right, byte paramsSetMask)
+        {
+            if (paramsSetMask == 0xff) return left == right;
+
+            var leftParams = left.GetParams();
+            var rightParams = right.GetParams();
+
+            for (int i = 0; i < Property.MaxParamCount; i++)
+            {
+                if ((paramsSetMask & (1 << i)) != 0)
+                {
+                    if (leftParams[i] != rightParams[i])
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
+        private void SetOverridenParams(ref PropertyId destId, PropertyId sourceId, byte paramsSetMask)
+        {
+            if (paramsSetMask == 0xff) return;
+
+            PropertyParam[] destParams = destId.GetParams();
+            PropertyParam[] sourceParams = sourceId.GetParams();
+
+            for (int i = 0; i < Property.MaxParamCount; i++)
+            {
+                if ((paramsSetMask & (1 << i)) == 0)
+                    destParams[i] = sourceParams[i];
+            }
+
+            destId = new(destId.Enum, destParams);
         }
     }
 }

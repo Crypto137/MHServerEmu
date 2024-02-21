@@ -4,7 +4,7 @@ using MHServerEmu.Games.Properties;
 namespace MHServerEmu.Games.GameData.Calligraphy
 {
     /// <summary>
-    /// Reconstructs properties from serialized prototypes.
+    /// Reconstructs properties from serialized prototype field groups.
     /// </summary>
     public class PropertyBuilder
     {
