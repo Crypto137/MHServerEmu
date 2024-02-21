@@ -29,17 +29,14 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         {
             // Look for a record for the specified id
             if (_curveRecordDict.TryGetValue(id, out CurveRecord record) == false)
-            {
-                Logger.Warn($"Failed to get curve id {id}");
-                return null;
-            }
+                return Logger.WarnReturn<Curve>(null, $"Failed to get curve id {id}");
 
             // Load the curve if needed
             if (record.Curve == null)
             {
                 string filePath = $"Calligraphy/{GameDatabase.GetCurveName(id)}";
                 using (MemoryStream ms = PakFileSystem.Instance.LoadFromPak(filePath, PakFileId.Calligraphy))
-                    record.Curve = new(ms);
+                    record.Curve = new(ms, id);
             }
             
             return record.Curve;
