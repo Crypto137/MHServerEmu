@@ -7,7 +7,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Dictionary<ulong, PropertyId> _mixinPropertyLookup;
+        private readonly Dictionary<ulong, PropertyId> _mixinPropertyLookup;    // See SetKeyToPropertyId() for details on this
 
         public PrototypePropertyCollection()
         {
@@ -16,7 +16,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
         public PrototypePropertyCollection(Dictionary<ulong, PropertyId> mixinPropertyLookup)
         {
-            _mixinPropertyLookup = mixinPropertyLookup;
+            _mixinPropertyLookup = new(mixinPropertyLookup);    // Copy mixin lookups
         }
 
         public PrototypePropertyCollection ShallowCopy()
@@ -36,11 +36,10 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
         public void ReplacePropertyIdFromMixin(PropertyId newPropertyId, byte blueprintCopyNum, byte paramsSetMask)
         {
-            PropertyValue? existingValueRef = null;
+            PropertyValue? existingValueRef = new();
             
-            // This doesn't work right now, maybe because we don't have property collection inheritance working yet
-            //if (SetKeyToPropertyId(ref newPropertyId, blueprintCopyNum, paramsSetMask, ref existingValueRef))
-            //    SetPropertyValue(newPropertyId, (PropertyValue)existingValueRef);     // Set property value only if there is something to replace
+            if (SetKeyToPropertyId(ref newPropertyId, blueprintCopyNum, paramsSetMask, ref existingValueRef))
+                SetPropertyValue(newPropertyId, (PropertyValue)existingValueRef);     // Set property value only if there is something to replace
         }
 
         public void SetCurvePropertyFromMixin()
@@ -57,29 +56,31 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             ref PropertyValue? existingValueRef, CurveProperty? curveProperty = null, PropertyId? newCurveIndexProperty = null)
         {
             bool valueIsReplaced = false;
+
+            // Child prototypes may override params of properties of their parents, so PrototypePropertyCollection has to
+            // keep track of how contained property ids correspond to blueprints. For that purpose it uses a dictionary with
+            // composite values made from blueprint copy number and property enum as keys.
             ulong key = ((ulong)blueprintCopyNum << 32) | (ulong)propertyIdRef.Enum;
 
-            if (_mixinPropertyLookup.TryGetValue(key, out PropertyId existingPropertyId) == false)
+            // If the lookup dict already has this key it means we are modifying an existing property rather than adding a new one
+            if (_mixinPropertyLookup.TryGetValue(key, out PropertyId existingPropertyId))
             {
-                _mixinPropertyLookup[key] = propertyIdRef;
-                return valueIsReplaced;
-            }
-
-            if (HasMatchingParams(propertyIdRef, existingPropertyId, 0xff) == false || newCurveIndexProperty != null)
-            {
-                valueIsReplaced = true;
-
-                // We need to cast null to one of the supported value types for this check because of all the implicit casting we are doing
-                if (existingValueRef != (bool?)null)
-                    existingValueRef = GetProperty(existingPropertyId);
-
-                if (curveProperty != null)
+                if (HasMatchingParams(propertyIdRef, existingPropertyId, 0xff) == false || newCurveIndexProperty != null)
                 {
-                    // todo: curve properties
-                }
+                    valueIsReplaced = true;
 
-                SetOverridenParams(ref propertyIdRef, existingPropertyId, paramsSetMask);
-                RemoveProperty(existingPropertyId);
+                    // We need to cast null to one of the supported value types for this check because of all the implicit casting we are doing
+                    if (existingValueRef != (bool?)null)
+                        existingValueRef = GetPropertyValue(existingPropertyId);
+
+                    if (curveProperty != null)
+                    {
+                        // todo: curve properties
+                    }
+
+                    SetOverridenParams(ref propertyIdRef, existingPropertyId, paramsSetMask);
+                    RemoveProperty(existingPropertyId);
+                }
             }
 
             _mixinPropertyLookup[key] = propertyIdRef;
