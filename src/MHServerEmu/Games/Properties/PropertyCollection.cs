@@ -31,7 +31,7 @@ namespace MHServerEmu.Games.Properties
 
         /// <summary>
         /// Returns the <see cref="PropertyValue"/> corresponding to the specified <see cref="PropertyId"/>.
-        /// Returns the <see cref="PropertyValue"/> equivalent of 0 if this <see cref="PropertyCollection"/> contains no such property.
+        /// Falls back to the default value for the property if this <see cref="PropertyCollection"/> does not contain it.
         /// </summary>
         /// <remarks>
         /// <see cref="PropertyValue"/> can be implicitly converted to and from <see cref="bool"/>, <see cref="float"/>,
@@ -252,13 +252,17 @@ namespace MHServerEmu.Games.Properties
         }
 
         /// <summary>
-        /// Sets the <see cref="PropertyValue"/> corresponding to the specified <see cref="PropertyId"/>.
-        /// Returns the <see cref="PropertyValue"/> equivalent of 0 if this <see cref="PropertyCollection"/> contains no such property.
+        /// Returns the <see cref="PropertyValue"/> corresponding to the specified <see cref="PropertyId"/>.
+        /// Falls back to the default value for the property if this <see cref="PropertyCollection"/> does not contain it.
         /// </summary>
         protected PropertyValue GetPropertyValue(PropertyId propertyId)
         {
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyId.Enum);
+
+            // TODO: EvalPropertyValue()
+
             if (_propertyList.TryGetValue(propertyId, out var value) == false)
-                return Logger.WarnReturn(new PropertyValue(), $"Failed to get property value for id {propertyId}");
+                return Logger.TraceReturn(info.DefaultValue, $"Falling back to the default value for {propertyId}");
 
             return value;
         }
