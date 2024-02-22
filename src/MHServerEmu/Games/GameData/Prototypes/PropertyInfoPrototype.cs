@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Properties;
+﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -27,5 +28,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool SerializeConditionSrcToCondition { get; protected set; }
         public bool ReplicateToTrader { get; protected set; }
         public PrototypeId ValueDisplayFormat { get; protected set; }          // Localization/Translations/Translation.defaults
+
+        [DoNotCopy]
+        public bool ShouldClampValue { get => Min != 0f || Max != 0f; }
     }
 }

@@ -1,10 +1,12 @@
 ﻿using System.Collections;
 using System.Text;
 using Google.ProtocolBuffers;
+using MHServerEmu.Common;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Properties
@@ -18,9 +20,8 @@ namespace MHServerEmu.Games.Properties
 
         // TODO: reimplement PropertyList data structure from the client?
         // NOTE: Gazillion's PropertyList structure uses a different sorting order
-        protected SortedDictionary<PropertyId, PropertyValue> _propertyList = new();
-
-        // Curve properties are its own can of worms it seems
+        protected SortedDictionary<PropertyId, PropertyValue> _baseValueList = new();
+        protected SortedDictionary<PropertyId, PropertyValue> _aggregatedValueList = new();
         protected SortedDictionary<PropertyId, CurveProperty> _curveList = new();
 
         public PropertyCollection() { }
@@ -57,13 +58,35 @@ namespace MHServerEmu.Games.Properties
         }
 
         /// <summary>
+        /// Sets a <see cref="CurveProperty"/> that derives its value from the specified <see cref="CurveId"/> and index <see cref="PropertyId"/>.
+        /// </summary>
+        public void SetCurveProperty(PropertyId propertyId, CurveId curveId, PropertyId indexPropertyid, PropertyInfo info, UInt32Flags flags, bool updateValue)
+        {
+            CurveProperty curveProp = new(propertyId, indexPropertyid, curveId);
+            _curveList[propertyId] = curveProp;
+
+            if (updateValue)
+                UpdateCurvePropertyValue(curveProp, flags, info);
+        }
+
+        /// <summary>
         /// Removes a <see cref="PropertyValue"/> corresponding to the specified <see cref="PropertyId"/>.
         /// </summary>
         public bool RemoveProperty(PropertyId propertyId)
         {
-            // TODO: IsCurveProperty
-            // TODO: updateAggregateValueFromBase()
-            return _propertyList.Remove(propertyId);
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyId.Enum);
+
+            // Remove from curve property list if needed
+            if (info.IsCurveProperty) 
+                _curveList.Remove(propertyId);
+
+            // Remove from the base list
+            if (_baseValueList.Remove(propertyId) == false)
+                return false;
+
+            // Update aggregate value if successfully removed
+            UpdateAggregateValueFromBase(propertyId, info, UInt32Flags.None, false, new());
+            return true;
         }
 
         /// <summary>
@@ -105,7 +128,7 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public bool HasProperty(PropertyId propertyId)
         {
-            return _propertyList.TryGetValue(propertyId, out _);
+            return _baseValueList.TryGetValue(propertyId, out _);
         }
 
         /// <summary>
@@ -113,17 +136,34 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public void FlattenCopyFrom(PropertyCollection other, bool cleanCopy)
         {
+            // Clean up if needed
             if (cleanCopy)
             {
-                _propertyList.Clear();
-                // TODO: clear curves
-                // TODO: removeAllChildren()
+                _baseValueList.Clear();
+                _curveList.Clear();
+                RemoveAllChildren();
             }
 
+            // Transfer properties from the other collection
             foreach (var kvp in other)
                 this[kvp.Key] = kvp.Value;
 
-            // TODO: curves
+            // Transfer curve properties
+            foreach (var kvp in other.IterateCurveProperties())
+            {
+                PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
+                SetCurveProperty(kvp.Value.PropertyId, kvp.Value.CurveId, kvp.Value.IndexPropertyId, info, UInt32Flags.None, cleanCopy);
+            }
+
+            // Update curve property values if this is a combination of two different collections rather than a clean copy
+            if (cleanCopy == false)
+            {
+                foreach (var kvp in IterateCurveProperties())
+                {
+                    PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
+                    UpdateCurvePropertyValue(kvp.Value, UInt32Flags.None, info);
+                }
+            }
         }
 
         #region Value Indexers
@@ -205,7 +245,8 @@ namespace MHServerEmu.Games.Properties
 
         #region IEnumerable Implementation
 
-        public IEnumerator<KeyValuePair<PropertyId, PropertyValue>> GetEnumerator() => _propertyList.GetEnumerator();
+        // This should iterate over aggregated value list rather than base
+        public IEnumerator<KeyValuePair<PropertyId, PropertyValue>> GetEnumerator() => _baseValueList.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         #endregion
@@ -223,7 +264,7 @@ namespace MHServerEmu.Games.Properties
                 PropertyId id = new(stream.ReadRawVarint64().ReverseBytes());   // Id is reversed so that it can be efficiently encoded into varint when all params are 0
                 PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
                 PropertyValue value = ConvertBitsToValue(stream.ReadRawVarint64(), info.DataType);
-                _propertyList[id] = value;
+                _baseValueList[id] = value;
             }
         }
 
@@ -232,7 +273,7 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public virtual void Encode(CodedOutputStream stream)
         {
-            stream.WriteRawUInt32((uint)_propertyList.Count);
+            stream.WriteRawUInt32((uint)_baseValueList.Count);
             foreach (var kvp in this)
                 SerializePropertyForPacking(kvp, stream);
         }
@@ -261,7 +302,7 @@ namespace MHServerEmu.Games.Properties
 
             // TODO: EvalPropertyValue()
 
-            if (_propertyList.TryGetValue(propertyId, out var value) == false)
+            if (_baseValueList.TryGetValue(propertyId, out var value) == false)
                 return Logger.TraceReturn(info.DefaultValue, $"Falling back to the default value for {propertyId}");
 
             return value;
@@ -270,16 +311,37 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Sets the <see cref="PropertyValue"/> of a <see cref="PropertyId"/>.
         /// </summary>
-        protected bool SetPropertyValue(PropertyId propertyId, PropertyValue propertyValue)
+        protected bool SetPropertyValue(PropertyId propertyId, PropertyValue propertyValue, UInt32Flags flags = UInt32Flags.None)
         {
-            // TODO:
-            // PropertyInfo::IsPropertyValueTruncated()
-            // ClampPropertyValue()
-            // updateAggregateValueFromBase()
-            // track changes
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyId.Enum);
 
-            _propertyList[propertyId] = propertyValue;
-            return true;
+            if (info.TruncatePropertyValueToInt && info.DataType == PropertyDataType.Real)
+                propertyValue = MathF.Floor(propertyValue.RawFloat);
+
+            ClampPropertyValue(info.PropertyInfoPrototype, ref propertyValue);
+
+            bool hasChanged = false;
+
+            // Setting a property to its default value actually removes the value from the list,
+            // because the collection automatically falls back to the default value if nothing is stored.
+            if (propertyValue.RawLong == info.DefaultValue.RawLong)
+            {
+                hasChanged = _baseValueList.Remove(propertyId);
+                if (hasChanged)
+                    UpdateAggregateValueFromBase(propertyId, info, flags, false, new());
+            }
+            else
+            {
+                // Since we are not using a custom data structure for storing properties like the client,
+                // we need to do some probably inefficient hackery here to get the result we want.
+                hasChanged = _baseValueList.TryGetValue(propertyId, out var existingValue) == false || existingValue.RawLong != propertyValue.RawLong;
+                _baseValueList[propertyId] = propertyValue;
+
+                if (hasChanged)
+                    UpdateAggregateValueFromBase(propertyId, info, flags, true, propertyValue);
+            }
+
+            return hasChanged || flags.HasFlag(UInt32Flags.Flag2);  // Some kind of flag that forces property value update
         }
 
         /// <summary>
@@ -329,13 +391,91 @@ namespace MHServerEmu.Games.Properties
             }
         }
 
+        /// <summary>
+        /// Returns an <see cref="IEnumerable"/> of curve property key/value pairs contained in this <see cref="PropertyCollection"/>.
+        /// </summary>
+        protected IEnumerable<KeyValuePair<PropertyId, CurveProperty>> IterateCurveProperties()
+        {
+            foreach (var kvp in _curveList)
+                yield return kvp;
+        }
+
+        /// <summary>
+        /// Updates the <see cref="PropertyValue"/> of a <see cref="CurveProperty"/>.
+        /// </summary>
+        private bool UpdateCurvePropertyValue(CurveProperty curveProp, UInt32Flags flags, PropertyInfo info)
+        {
+            // Retrieve the curve we need
+            if (curveProp.CurveId == CurveId.Invalid) Logger.WarnReturn(false, $"UpdateCurvePropertyValue(): curveId is invalid");
+            Curve curve = GameDatabase.DataDirectory.CurveDirectory.GetCurve(curveProp.CurveId);
+
+            // Get property info if we didn't get it and make sure it's for a curve property
+            if (info == null) info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(curveProp.PropertyId.Enum);
+            if (info.IsCurveProperty == false) Logger.WarnReturn(false, $"UpdateCurvePropertyValue(): {curveProp.PropertyId} is not a curve property");
+
+            // Get curve value and round it if needed
+            int indexValue = GetPropertyValue(curveProp.IndexPropertyId);
+            float resultValue = curve.GetAt(indexValue);
+            if (info.TruncatePropertyValueToInt)
+                resultValue = MathF.Floor(resultValue);
+
+            // Set the value and aggregate it
+            _baseValueList[curveProp.PropertyId] = resultValue;
+            UpdateAggregateValueFromBase(curveProp.PropertyId, info, flags, true, resultValue);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Clamps a <see cref="PropertyValue"/> if needed.
+        /// </summary>
+        private void ClampPropertyValue(PropertyInfoPrototype propertyInfoPrototype, ref PropertyValue propertyValue)
+        {
+            switch (propertyInfoPrototype.Type)
+            {
+                case PropertyDataType.Boolean:
+                    if (propertyValue.RawLong != 0)
+                        propertyValue = 1;
+                    break;
+                case PropertyDataType.Real:
+                    if (propertyInfoPrototype.ShouldClampValue)
+                        propertyValue = (float)Math.Clamp(propertyValue.RawFloat, propertyInfoPrototype.Min, propertyInfoPrototype.Max);
+                    break;
+                case PropertyDataType.Integer:
+                    if (propertyInfoPrototype.ShouldClampValue)
+                        propertyValue = Math.Clamp(propertyValue.RawLong, (long)propertyInfoPrototype.Min, (long)propertyInfoPrototype.Max);
+                    break;
+            }
+        }
+
+        private void RemoveAllChildren()
+        {
+            // TODO
+        }
+
+        private void UpdateAggregateValueFromBase(PropertyId propertyId, PropertyInfo info, UInt32Flags flags, bool hasBaseValue, PropertyValue baseValue)
+        {
+            // TODO
+        }
+
+        /// <summary>
+        /// A property that derives its value from a <see cref="Curve"/>.
+        /// </summary>
         protected struct CurveProperty
         {
+            // A curve property derives its value from a curve using a value of another property as curve index.
+            // Example: HealthBaseProp = HealthCurve[CombatLevel].
+
             public PropertyId PropertyId { get; set; }
             public PropertyId IndexPropertyId { get; set; }
             public CurveId CurveId { get; set; }
 
-            // TODO: Serialize
+            public CurveProperty(PropertyId propertyId, PropertyId indexPropertyId, CurveId curveId)
+            {
+                PropertyId = propertyId;
+                IndexPropertyId = indexPropertyId;
+                CurveId = curveId;
+            }
         }
     }
 }
