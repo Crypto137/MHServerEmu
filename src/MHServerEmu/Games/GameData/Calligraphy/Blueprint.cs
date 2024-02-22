@@ -264,6 +264,8 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
             return null;
         }
+
+        public override string ToString() => GameDatabase.GetBlueprintName(Id);
     }
 
     /// <summary>

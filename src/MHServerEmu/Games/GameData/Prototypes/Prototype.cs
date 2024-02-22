@@ -100,5 +100,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return _ownedDynamicFields.Contains(fieldData);
         }
+
+        public override string ToString() => DataRef != PrototypeId.Invalid ? GameDatabase.GetPrototypeName(DataRef) : base.ToString();
     }
 }
