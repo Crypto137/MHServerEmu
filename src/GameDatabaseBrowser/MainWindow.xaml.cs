@@ -16,11 +16,11 @@ namespace GameDatabaseBrowser
     {
         PrototypeNode Root = new() { Name = "Prototypes" };
 
-        public PrototypeNode NodeSelected { get; set; }
-
         public MainWindow()
         {
             InitializeComponent();
+            txtDataRef.Text = "DataRef : ";
+            txtParentDataRef.Text = "ParentDataRef : ";
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -60,8 +60,9 @@ namespace GameDatabaseBrowser
 
                 Root.Childs.Add(new()
                 {
-                    Name = proto.ToString(),
-                    Properties = properties.Select(k => new Property() { Name = k.Name, Value = k.GetValue(proto)?.ToString() }).ToList()
+                    Name = GameDatabase.GetPrototypeName(prototypeId),
+                    Properties = properties
+                    .Select(k => new Property() { Name = k.Name, Value = k.GetValue(proto)?.ToString() }).ToList()
                 });
 
                 worker.ReportProgress((int)(++p * (100 / 93114f)));
@@ -77,13 +78,17 @@ namespace GameDatabaseBrowser
 
             treeView.Items.Add(Root);
 
-            treeView.SelectedItemChanged += (sender, e) =>
-            {
-                NodeSelected = (PrototypeNode)e.NewValue;
-                listView.ItemsSource = NodeSelected.Properties;
-            };
+            treeView.SelectedItemChanged += UpdatePropertiesSection;
 
             UpdateLayout();
+        }
+
+        private void UpdatePropertiesSection(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            PrototypeNode NodeSelected = (PrototypeNode)e.NewValue;
+            txtDataRef.Text = "DataRef : " + NodeSelected?.Properties?.First(k => k.Name == "DataRef")?.Value;
+            txtParentDataRef.Text = "Parent : " + NodeSelected?.Properties?.First(k => k.Name == "ParentDataRef")?.Value;
+            listView.ItemsSource = NodeSelected?.Properties?.Where(k => k.Name != "DataRef" && k.Name != "ParentDataRef" && k.Name != "DataRefRecord");
         }
     }
 }

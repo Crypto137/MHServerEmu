@@ -5,26 +5,38 @@
         Title="Game Database Browser"
         Height="720"
         Width="1280">
-    <Grid>
+    <Grid Background="Gainsboro" >
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="40*"/>
             <ColumnDefinition Width="60*"/>
         </Grid.ColumnDefinitions>
-        <TreeView Name="treeView" Grid.Column="0" VirtualizingStackPanel.IsVirtualizing="True">
+        <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Height="35">
+            <TextBox x:Name="txtSearch"  Width="700"  VerticalAlignment="Center" Margin="5,0,5,0"/>
+            <Button x:Name="btnSearch" Content="Recherche" Width="100" VerticalAlignment="Center" Margin="5,0,5,0"/>
+        </StackPanel>
+        <TreeView Name="treeView" Grid.Row="1" Grid.Column="0" VirtualizingStackPanel.IsVirtualizing="True" Margin="5">
             <TreeView.ItemTemplate>
                 <HierarchicalDataTemplate DataType="{x:Type models:PrototypeNode}" ItemsSource="{Binding Childs}">
                     <TextBlock Text="{Binding Name}" />
                 </HierarchicalDataTemplate>
             </TreeView.ItemTemplate>
         </TreeView>
-        <ProgressBar x:Name="progressBar" HorizontalAlignment="Stretch" Height="20" Margin="20"/>
-        <ListView Name="listView" Grid.Column="1" VirtualizingStackPanel.IsVirtualizing ="True">
-            <!--<ListView.ItemTemplate>-->
-            <!--<DataTemplate>-->
-            <!--<TextBlock Text="{Binding Property}" />-->
-            <!--<TextBlock Text="{Binding Value}" />-->
-            <!--</DataTemplate>-->
-            <!--</ListView.ItemTemplate>-->
-        </ListView>
+        <ProgressBar x:Name="progressBar" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Stretch" Height="20" Margin="20"/>
+        <Grid Grid.Row="1" Grid.Column="1" Margin="5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30" />
+                <RowDefinition Height="30" />
+                <RowDefinition Height="20" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <TextBox x:Name="txtDataRef" Grid.Row="0" Margin="1" VerticalAlignment="Center" IsReadOnly="True"/>
+            <TextBox x:Name="txtParentDataRef" Grid.Row="1" Margin="1" VerticalAlignment="Center" IsReadOnly="True"/>
+            <Separator Grid.Row="2" Height="5" Background="Black"/>
+            <ListView Name="listView" Grid.Row="3" VirtualizingStackPanel.IsVirtualizing ="True"/>
+        </Grid>
     </Grid>
 </Window>
