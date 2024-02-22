@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Common.Logging;
+﻿using MHServerEmu.Common;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Calligraphy
@@ -26,35 +27,89 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             return newCollection;
         }
 
+        // The ugliness going on here is an attempt to imitate passing struct pointers C++ style.
+        // TODO: Clean this mess up.
+
         public void SetPropertyFromMixin(PropertyValue value, PropertyId propertyId, byte blueprintCopyNum, byte paramsSetMask)
         {
             PropertyValue? existingValueRef = null;
+            CurveProperty? curveProperty = null;
+            PropertyId? curveIndex = null;
 
-            SetKeyToPropertyId(ref propertyId, blueprintCopyNum, paramsSetMask, ref existingValueRef);
+            SetKeyToPropertyId(ref propertyId, blueprintCopyNum, paramsSetMask, ref existingValueRef, ref curveProperty, ref curveIndex);
             SetPropertyValue(propertyId, value);
         }
 
         public void ReplacePropertyIdFromMixin(PropertyId newPropertyId, byte blueprintCopyNum, byte paramsSetMask)
         {
             PropertyValue? existingValueRef = new();
-            
-            if (SetKeyToPropertyId(ref newPropertyId, blueprintCopyNum, paramsSetMask, ref existingValueRef))
+            CurveProperty? curveProperty = null;
+            PropertyId? curveIndex = null;
+
+            if (SetKeyToPropertyId(ref newPropertyId, blueprintCopyNum, paramsSetMask, ref existingValueRef, ref curveProperty, ref curveIndex))
                 SetPropertyValue(newPropertyId, (PropertyValue)existingValueRef);     // Set property value only if there is something to replace
         }
 
-        public void SetCurvePropertyFromMixin()
+        public void SetCurvePropertyFromMixin(PropertyId propertyId, CurveId curveId, PropertyId indexProperty, PropertyInfo info, byte blueprintCopyNum)
         {
-            // TODO
+            PropertyValue? existingValueRef = null;
+            CurveProperty? nullableOldCurve = new();
+            PropertyId? nullableIndexProperty = indexProperty;
+
+            bool replaced = SetKeyToPropertyId(ref propertyId, blueprintCopyNum, 0xff, ref existingValueRef, ref nullableOldCurve, ref nullableIndexProperty);
+
+            var oldCurve = (CurveProperty)nullableOldCurve;
+            indexProperty = (PropertyId)nullableIndexProperty;
+
+            if (indexProperty == PropertyId.Invalid)
+            {
+                // If the prototype contained an invalid curve index, fall back to the old curve or default curve index from the property info
+                if (replaced)
+                {
+                    if (oldCurve.IndexPropertyId == PropertyId.Invalid)
+                    {
+                        Logger.Warn("Prototype property read error: trying to replace a curve property that has an invalid curve index");
+                        return;
+                    }
+
+                    indexProperty = oldCurve.IndexPropertyId;
+                }
+                else
+                {
+                    indexProperty = info.DefaultCurveIndex;
+                }
+            }
+
+            SetCurveProperty(propertyId, curveId, indexProperty, info, UInt32Flags.None, true);
         }
 
-        public void ReplaceCurvePropertyIdFromMixin()
+        public void ReplaceCurvePropertyIdFromMixin(PropertyId propertyId, PropertyId indexProperty, PropertyInfo info, byte blueprintCopyNum, byte paramsSetMask)
         {
-            // TODO
+            PropertyValue? existingValueRef = null;
+            CurveProperty? nullableOldCurve = new();
+            PropertyId? nullableIndexProperty = indexProperty;
+
+            if (SetKeyToPropertyId(ref propertyId, blueprintCopyNum, paramsSetMask, ref existingValueRef, ref nullableOldCurve, ref nullableIndexProperty))
+                SetCurveProperty(propertyId, ((CurveProperty)nullableOldCurve).CurveId, (PropertyId)nullableIndexProperty, info, UInt32Flags.None, true);
+        }
+
+        public void ReplaceCurvePropertyIdFromMixin(PropertyId propertyId, PropertyInfo info, byte blueprintCopyNum, byte paramsSetMask)
+        {
+            PropertyValue? existingValueRef = null;
+            CurveProperty? nullableOldCurve = new();
+            PropertyId? nullableIndexProperty = null;
+
+            if (SetKeyToPropertyId(ref propertyId, blueprintCopyNum, paramsSetMask, ref existingValueRef, ref nullableOldCurve, ref nullableIndexProperty))
+            {
+                CurveProperty oldCurve = (CurveProperty)nullableOldCurve;
+                SetCurveProperty(propertyId, oldCurve.CurveId, oldCurve.IndexPropertyId, info, UInt32Flags.None, true);
+            }
         }
 
         private bool SetKeyToPropertyId(ref PropertyId propertyIdRef, byte blueprintCopyNum, byte paramsSetMask,
-            ref PropertyValue? existingValueRef, CurveProperty? curveProperty = null, PropertyId? newCurveIndexProperty = null)
+            ref PropertyValue? existingValueRef, ref CurveProperty? curveProp, ref PropertyId? curveIndex)
         {
+            // TODO: Make an overload of this method for handling curve properties
             bool valueIsReplaced = false;
 
             // Child prototypes may override params of properties of their parents, so PrototypePropertyCollection has to
@@ -65,7 +120,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             // If the lookup dict already has this key it means we are modifying an existing property rather than adding a new one
             if (_mixinPropertyLookup.TryGetValue(key, out PropertyId existingPropertyId))
             {
-                if (HasMatchingParams(propertyIdRef, existingPropertyId, 0xff) == false || newCurveIndexProperty != null)
+                if (HasMatchingParams(propertyIdRef, existingPropertyId, 0xff) == false || curveIndex != null)
                 {
                     valueIsReplaced = true;
 
@@ -73,9 +128,22 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                     if (existingValueRef != (bool?)null)
                         existingValueRef = GetPropertyValue(existingPropertyId);
 
-                    if (curveProperty != null)
+                    if (curveProp != null)
                     {
-                        // todo: curve properties
+                        CurveProperty? nullableExistingCurveProp = GetCurveProperty(existingPropertyId);
+                        if (nullableExistingCurveProp != null)
+                        {
+                            var existingCurveProp = (CurveProperty)nullableExistingCurveProp;
+
+                            if (curveIndex != null && propertyIdRef == existingPropertyId && existingCurveProp.IndexPropertyId == curveIndex)
+                                return false;
+
+                            curveProp = existingCurveProp;
+                        }
+                        else
+                        {
+                            valueIsReplaced = false;
+                        }
                     }
 
                     SetOverridenParams(ref propertyIdRef, existingPropertyId, paramsSetMask);

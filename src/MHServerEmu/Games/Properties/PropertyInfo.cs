@@ -78,6 +78,7 @@ namespace MHServerEmu.Games.Properties
         {
             switch (_paramCount)
             {
+                case 0: return new(propertyEnum);
                 case 1: return EncodeParameters(propertyEnum, @params[0]);
                 case 2: return EncodeParameters(propertyEnum, @params[0], @params[1]);
                 case 3: return EncodeParameters(propertyEnum, @params[0], @params[1], @params[2]);

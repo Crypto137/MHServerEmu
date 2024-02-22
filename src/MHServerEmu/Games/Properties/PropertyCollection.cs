@@ -303,7 +303,7 @@ namespace MHServerEmu.Games.Properties
             // TODO: EvalPropertyValue()
 
             if (_baseValueList.TryGetValue(propertyId, out var value) == false)
-                return Logger.TraceReturn(info.DefaultValue, $"Falling back to the default value for {propertyId}");
+                return info.DefaultValue;
 
             return value;
         }
@@ -389,6 +389,17 @@ namespace MHServerEmu.Games.Properties
                 case PropertyDataType.Prototype:    return new(GameDatabase.DataDirectory.GetPrototypeFromEnumValue<Prototype>((int)bits));
                 default:                            return new((long)bits);
             }
+        }
+
+        /// <summary>
+        /// Retrieves the <see cref="CurveProperty"/> corresponding to a <see cref="PropertyId"/>. Returns <see langword="null"/> if not found.
+        /// </summary>
+        protected CurveProperty? GetCurveProperty(PropertyId propertyId)
+        {
+            if (_curveList.TryGetValue(propertyId, out CurveProperty curveProp) == false)
+                return null;
+
+            return curveProp;
         }
 
         /// <summary>

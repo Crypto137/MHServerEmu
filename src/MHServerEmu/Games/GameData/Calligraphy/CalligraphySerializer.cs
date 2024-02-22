@@ -278,36 +278,48 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             // Build property id
             PropertyId propertyId = propertyBuilder.GetPropertyId();
 
-            // Set or replace id / value pair
+            // Set a property or override the id of an existing one
             if (info.IsCurveProperty == false)
             {
                 if (propertyBuilder.IsValueSet)
                 {
-                    // Add a new property to the collection if there is a value for it
+                    // Set a property if we have a value
                     propertyCollection.SetPropertyFromMixin(propertyBuilder.PropertyValue, propertyId, blueprintCopyNum, propertyBuilder.ParamsSetMask);
                 }
                 else
                 {
-                    // If no value is defined in the field group it means we need to change the params of an existing value
+                    // If no value is defined in the field group it means we need to override the id (params) of an existing value
                     propertyCollection.ReplacePropertyIdFromMixin(propertyId, blueprintCopyNum, propertyBuilder.ParamsSetMask);
                 }
             }
             else
             {
-                // TODO: curve properties
+                // Set a curve property if we have a value
                 if (propertyBuilder.IsValueSet)
                 {
-                    
+                    // Get curve id and index property from the builder
+                    CurveId curveId = propertyBuilder.PropertyValue;
+                    if (curveId == CurveId.Invalid) Logger.WarnReturn(false, "DeserializeFieldGroupIntoProperty(): curveId is invalid");
+                    PropertyId indexProperty = propertyBuilder.CurveIndex;
+
+                    // Add a new curve property to the collection
+                    propertyCollection.SetCurvePropertyFromMixin(propertyId, curveId, indexProperty, info, blueprintCopyNum);
                 }
                 else
                 {
+                    // Override property id and / or curve index property of an existing property
                     if (propertyBuilder.IsCurveIndexSet)
                     {
-
+                        // Override both the property id and the index property
+                        PropertyId indexProperty = propertyBuilder.CurveIndex;
+                        if (indexProperty.Enum == PropertyEnum.Invalid)
+                            Logger.WarnReturn(false, "DeserializeFieldGroupIntoProperty(): Curve properties must have an index property");
+                        propertyCollection.ReplaceCurvePropertyIdFromMixin(propertyId, indexProperty, info, blueprintCopyNum, propertyBuilder.ParamsSetMask);
                     }
                     else
                     {
-
+                        // Override just the id of the property itself if no curve index is provided in the field group
+                        propertyCollection.ReplaceCurvePropertyIdFromMixin(propertyId, info, blueprintCopyNum, propertyBuilder.ParamsSetMask);
                     }
                 }
             }

@@ -7,6 +7,8 @@ namespace MHServerEmu.Games.Properties
     /// </summary>
     public struct PropertyId : IComparable
     {
+        public static readonly PropertyId Invalid = new();
+
         public ulong Raw { get; set; }
 
         public PropertyEnum Enum { get => (PropertyEnum)(Raw >> Property.ParamBitCount); }
