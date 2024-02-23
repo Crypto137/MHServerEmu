@@ -44,7 +44,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 case PrototypeFieldType.ListPrototypePtr:       return ParseListPrototypePtr;
                 case PrototypeFieldType.PropertyCollection:     return ParsePropertyList;
 
-                default: return Logger.WarnReturn<Func<FieldParserParams,bool>>(null, $"Failed to get parser for unsupported prototype field type {prototypeFieldType}");
+                default: return Logger.ErrorReturn<Func<FieldParserParams,bool>>(null, $"GetParser(): Unsupported prototype field type {prototypeFieldType}");
             }
         }
 
@@ -63,7 +63,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             // as possible. This doesn't seem to happen with other types.
             if (typeof(T) == typeof(int) && rawValue > int.MaxValue)
             {
-                Logger.Trace($"ParseValue overflow for Int32 field {@params.BlueprintMemberInfo.Member.FieldName}, raw value {rawValue}, file name {@params.FileName}");
+                Logger.Trace($"ParseValue(): Overflow for Int32 field {@params.BlueprintMemberInfo.Member.FieldName}, raw value {rawValue}, file name {@params.FileName}");
                 rawValue = int.MaxValue;
             }
 
@@ -90,7 +90,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             if (Enum.TryParse(@params.FieldInfo.PropertyType, assetName, true, out var value) == false)
             {
                 if (assetName != string.Empty)
-                    Logger.Trace(string.Format("Missing enum member {0} in {1}, field {2}, file name {3}",
+                    Logger.Trace(string.Format("ParseEnum(): Missing enum member {0} in {1}, field {2}, file name {3}",
                         assetName,
                         @params.FieldInfo.PropertyType.Name,
                         @params.BlueprintMemberInfo.Member.RuntimeClassFieldInfo.Name,
@@ -144,7 +144,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             PrototypeDataHeader header = new(reader);
             if (header.ReferenceExists == false) return true;   // Early return if this is an empty prototype
             if (header.PolymorphicData && (polymorphicSetAllowed == false))
-                return Logger.WarnReturn(false, $"Polymorphic prototype data encountered but not expected");
+                return Logger.ErrorReturn(false, $"DeserializePrototypePtr(): Polymorphic prototype data encountered but not expected");
             
             // If this prototype has no data of its own, but it references a parent, we interpret it as its parent
             if (header.InstanceDataExists == false)
