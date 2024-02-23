@@ -21,7 +21,7 @@ namespace MHServerEmu.Games.Events
         private static readonly Logger Logger = LogManager.CreateLogger();
         private readonly List<GameEvent> _eventList = new();
         private readonly Game _game;
-
+        private readonly object _eventLock = new();
         public EventManager(Game game)
         {
             _game = game;
@@ -35,15 +35,21 @@ namespace MHServerEmu.Games.Events
             foreach (GameEvent @event in _eventList)
                 messageList.AddRange(HandleEvent(@event));
 
-            if (_eventList.Count > 0)
-                _eventList.RemoveAll(@event => @event.IsRunning == false);
+            lock (_eventLock)
+            {
+                if (_eventList.Count > 0)
+                    _eventList.RemoveAll(@event => @event.IsRunning == false);
+            }
 
             return messageList;
         }
 
         public void AddEvent(FrontendClient client, EventEnum eventId, long timeMs, object data)
         {
-            _eventList.Add(new(client, eventId, timeMs, data));
+            lock (_eventLock)
+            {
+                _eventList.Add(new(client, eventId, timeMs, data));
+            }
         }
 
         public bool HasEvent(FrontendClient client, EventEnum eventId)
@@ -53,8 +59,11 @@ namespace MHServerEmu.Games.Events
         
         public void KillEvent(FrontendClient client, EventEnum eventId)
         {
-            if (_eventList.Count > 0)
-                _eventList.RemoveAll(@event => (@event.Client == client) && (@event.Event == eventId));
+            lock (_eventLock)
+            {
+                if (_eventList.Count > 0)
+                    _eventList.RemoveAll(@event => (@event.Client == client) && (@event.Event == eventId));
+            }
         }
 
         private List<QueuedGameMessage> HandleEvent(GameEvent queuedEvent)
