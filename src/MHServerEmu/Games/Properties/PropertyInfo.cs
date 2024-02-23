@@ -26,7 +26,7 @@ namespace MHServerEmu.Games.Properties
 
         public string PropertyInfoName { get; }
         public PrototypeId PropertyInfoPrototypeRef { get; }
-        public PropertyInfoPrototype PropertyInfoPrototype { get; private set; }
+        public PropertyInfoPrototype Prototype { get; private set; }
 
         public BlueprintId PropertyMixinBlueprintRef { get; set; } = BlueprintId.Invalid;
 
@@ -260,18 +260,18 @@ namespace MHServerEmu.Games.Properties
             return true;
         }
 
-        public bool SetPropertyInfoPrototype(PropertyInfoPrototype propertyInfoPrototype)
+        public bool SetPropertyInfoPrototype(PropertyInfoPrototype prototype)
         {
-            if (PropertyInfoPrototype != null) Logger.WarnReturn(false, "Failed to set PropertyInfoPrototype: already set");
-            PropertyInfoPrototype = propertyInfoPrototype;
+            if (Prototype != null) Logger.WarnReturn(false, "SetPropertyInfoPrototype(): already set");
+            Prototype = prototype;
 
             // Set shortcuts for prototype data
-            DataType = PropertyInfoPrototype.Type;
-            TruncatePropertyValueToInt = PropertyInfoPrototype.TruncatePropertyValueToInt;
+            DataType = Prototype.Type;
+            TruncatePropertyValueToInt = Prototype.TruncatePropertyValueToInt;
             
             // Curve properties get their default values from the info prototype rather than default mixins
             if (DataType == PropertyDataType.Curve)
-                DefaultValue = (float)PropertyInfoPrototype.CurveDefault;
+                DefaultValue = (float)Prototype.CurveDefault;
 
             return true;
         }
