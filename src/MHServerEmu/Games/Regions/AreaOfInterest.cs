@@ -314,7 +314,7 @@ namespace MHServerEmu.Games.Regions
                 Messages.Add(new(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build()));
 
                 // Mini map
-                MiniMapArchive miniMap = new(RegionManager.RegionIsHub(Region.PrototypeId)); // Reveal map by default for hubs
+                MiniMapArchive miniMap = new(Region.RegionPrototype.AlwaysRevealFullMap); // Reveal map by default for hubs
                 if (miniMap.IsRevealAll == false) miniMap.Map = Array.Empty<byte>();
 
                 Messages.Add(new(NetMessageUpdateMiniMap.CreateBuilder()

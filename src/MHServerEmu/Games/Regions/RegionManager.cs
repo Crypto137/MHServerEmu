@@ -1,40 +1,16 @@
 ﻿using MHServerEmu.Common;
 using MHServerEmu.Common.Logging;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
-using static Dapper.SqlMapper;
-using MHServerEmu.Networking;
-
 
 namespace MHServerEmu.Games.Regions
 {
-    public enum GenerationMode
-    {
-        None,
-        Server,
-        Client
-    }
-
-    public partial class RegionManager
+    public class RegionManager
     {
         public static bool GenerationAsked;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
-
-        // TODO: Determine if a region is a hub from its prototype
-        private static readonly RegionPrototypeId[] HubRegions = new RegionPrototypeId[]
-        {
-            RegionPrototypeId.AvengersTowerHUBRegion,
-            RegionPrototypeId.NPEAvengersTowerHUBRegion,
-            RegionPrototypeId.TrainingRoomSHIELDRegion,
-            RegionPrototypeId.XaviersMansionRegion,
-            RegionPrototypeId.HelicarrierRegion,
-            RegionPrototypeId.AsgardiaRegion,
-            RegionPrototypeId.GenoshaHUBRegion,
-            RegionPrototypeId.DangerRoomHubRegion
-        };
 
         private readonly EntityManager _entityManager;
         private static readonly Dictionary<RegionPrototypeId, Region> _regionDict = new();
@@ -196,7 +172,7 @@ namespace MHServerEmu.Games.Regions
                     region = GenerateRegion(prototype);
                     // region = EmptyRegion(prototype);
                     region.ArchiveData = GetArchiveData(prototype);
-                    HardcodedEntities(region, true);
+                    _entityManager.HardcodedEntities(region);
                     ulong entities = _entityManager.PeekNextEntityId() - numEntities;
                     Logger.Debug($"Entities generated = {entities}");
                     region.CreatedTime = DateTime.Now;
@@ -281,8 +257,7 @@ namespace MHServerEmu.Games.Regions
 
         }
 
-        public static bool RegionIsHub(RegionPrototypeId prototype) => HubRegions.Contains(prototype);
-
+        #region Hardcoded
         private static byte[] GetArchiveData(RegionPrototypeId prototype)
         {
             byte[] archiveData = Array.Empty<byte>();
@@ -493,7 +468,7 @@ namespace MHServerEmu.Games.Regions
 
             return archiveData;
         }
-
+        #endregion
     }
 }
 
