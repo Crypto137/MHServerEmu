@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Helpers;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
@@ -26,7 +27,7 @@ namespace MHServerEmu.Games.Regions
                 InterestToPlayer = interestToPlayer;
             }
         }
-
+        private static readonly Logger Logger = LogManager.CreateLogger();
         private FrontendClient _client;
         private Game _game { get => _client.CurrentGame; }
         private Dictionary<ulong, LoadStatus> _loadedEntities;
@@ -239,6 +240,7 @@ namespace MHServerEmu.Games.Regions
                     bool interest = GetEntityInterest(worldEntity);
                     _loadedEntities.Add(worldEntity.BaseData.EntityId, new(_currentFrame, true, interest));
                     newEntities.Add(worldEntity);
+                    Logger.Debug($"{GameDatabase.GetFormattedPrototypeName(worldEntity.BaseData.PrototypeId)} = {worldEntity.BaseData.PrototypeId},");
                 }
             }
 

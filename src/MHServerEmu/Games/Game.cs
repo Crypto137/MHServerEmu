@@ -277,7 +277,7 @@ namespace MHServerEmu.Games
             {
                 if (client.AOI.Update(avatarState.Position))
                 {
-                    Logger.Trace($"AOI[{client.AOI.Messages.Count}][{client.AOI.LoadedEntitiesCount}]");
+                    //Logger.Trace($"AOI[{client.AOI.Messages.Count}][{client.AOI.LoadedEntitiesCount}]");
                     EnqueueResponses(client, client.AOI.Messages);
                 }
             }

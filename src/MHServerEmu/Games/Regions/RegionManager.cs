@@ -168,7 +168,7 @@ namespace MHServerEmu.Games.Regions
                 {
                     // Generate the region and create entities for it if needed
                     ulong numEntities = _entityManager.PeekNextEntityId();
-                    Logger.Debug($"GenerateRegion {prototype}");
+                    Logger.Debug($"GenerateRegion {GameDatabase.GetFormattedPrototypeName((PrototypeId)prototype)}");
                     region = GenerateRegion(prototype);
                     // region = EmptyRegion(prototype);
                     region.ArchiveData = GetArchiveData(prototype);

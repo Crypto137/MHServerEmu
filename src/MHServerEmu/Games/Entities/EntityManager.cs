@@ -423,8 +423,8 @@ namespace MHServerEmu.Games.Entities
 
             }
 
-            // Hack mode for Off Teleports
-
+            // Hack mode for Off Teleports / Blocker
+            List<WorldEntity> blockers = new();
             EntityRegionSPContext context = new() { Flags = EntityRegionSPContextFlags.ActivePartition | EntityRegionSPContextFlags.StaticPartition };
             foreach (var entity in region.IterateEntitiesInVolume(region.Bound, context))
             {
@@ -435,16 +435,21 @@ namespace MHServerEmu.Games.Entities
                         var teleportProto = teleport.TransitionPrototype;
                         if (teleportProto.VisibleByDefault == false) // To fix
                         {
-                            Logger.Debug($"[{teleport.Location.GetPosition().ToStringFloat()}][InvT]{GameDatabase.GetFormattedPrototypeName(teleport.Destinations[0].Target)} = {teleport.Destinations[0].Target},");
+                            // Logger.Debug($"[{teleport.Location.GetPosition().ToStringFloat()}][InvT]{GameDatabase.GetFormattedPrototypeName(teleport.Destinations[0].Target)} = {teleport.Destinations[0].Target},");
                             if (LockedTargets.Contains((InvTarget)teleport.Destinations[0].Target) == false) continue;
                             PrototypeId visibleParent = GetVisibleParentRef(teleportProto.ParentDataRef);
                             entity.BaseData.PrototypeId = visibleParent;
                             continue;
                         }
-                        Logger.Debug($"[T]{GameDatabase.GetFormattedPrototypeName(teleport.Destinations[0].Target)} = {teleport.Destinations[0].Target},");
+                        // Logger.Debug($"[T]{GameDatabase.GetFormattedPrototypeName(teleport.Destinations[0].Target)} = {teleport.Destinations[0].Target},");
                     }
                 }
+                else if (Blockers.Contains((BlockerEntity)entity.BaseData.PrototypeId))
+                {
+                    blockers.Add(entity);              
+                }
             }
+            foreach (var entity in blockers) entity.ExitWorld();
 
         }
 
@@ -454,8 +459,6 @@ namespace MHServerEmu.Games.Entities
             InvTarget.CH0202HoodContainerInteriorTarget,
             InvTarget.CH0205TaskmasterTapeInteriorTarget,
             InvTarget.LokiBossPhaseTwoTarget,
-            InvTarget.AxisRaidNullifiersEntryTarget,
-            InvTarget.BossEntryTarget,
             InvTarget.NPEAvengersTowerHubEntry,
             InvTarget.XMansionBodySliderTarget,
             InvTarget.BroodCavesBossINT,
@@ -467,7 +470,42 @@ namespace MHServerEmu.Games.Entities
             InvTarget.HelicarrierEntryTarget,
             InvTarget.CanalEntryTarget1,
             InvTarget.AsgardHUBToSiegePCZTarget,
-
+            InvTarget.Ch10PagodaFloorBEntryTarget,
+            InvTarget.ToolshedHUBEntryTarget,
+            InvTarget.Ch10PagodaFloorCEntryTarget,
+            InvTarget.Ch10PagodaFloorDEntryTarget,
+            InvTarget.Ch10PagodaFloorEEntryTarget,
+            InvTarget.Ch10PagodaTopFloorEntryTarget,
+            InvTarget.NYCRooftopInvYardUpTarget,
+            // TR targets
+            InvTarget.TRShantyRooftopsTargetAccess,
+            // DailyG
+            InvTarget.DailyGTimesSquareHotelDestinationTarget,
+            InvTarget.DailyGTimesSquareStreetDestinationTarget,
+            InvTarget.DailyGHighTownInvasionHotelDestTarget,
+            InvTarget.DrStrangeTimesSquareHotelDestinationTarget,
+            InvTarget.DrStrangeTimesSquareStreetDestinationTarget,
+            // OneShot
+            InvTarget.ZooEmployeeTargetAccess,
+            InvTarget.TRSeaWorldTargetAccess,
+            InvTarget.TRZooAquariumTargetAccess,
+            InvTarget.HydeBossExitTarget,
+            InvTarget.ZooJungleInstanceEntryTarget,
+            InvTarget.Hydra1ShotBaseEntryTarget,
+            InvTarget.Hydra1ShotBossEntryTarget2,
+            InvTarget.WakandaP1InRegionEndTarget,
+            InvTarget.WakandaP1BossEndTarget,
+            // Challange
+            InvTarget.UltronBossTargetG,
+            InvTarget.AsgardPvPRewardTarget,
+            InvTarget.RampToCalderaArrivalTarget,            
+            InvTarget.SurturOneWayArrivalTarget,
+            InvTarget.SlagOuterExitTarget,
+            InvTarget.MonoEntryTarget,
+            InvTarget.MoMRightExitArrivalTarget,
+            InvTarget.MoMLeftExitArrivalTarget,
+            InvTarget.AxisRaidNullifiersEntryTarget,
+            InvTarget.BossEntryTarget,
         };
 
         private static readonly InvTarget[] UnLockedTargets = new InvTarget[]
@@ -489,7 +527,36 @@ namespace MHServerEmu.Games.Entities
             InvTarget.NorwayDarkForestTarget,
             InvTarget.AsgardiaInstanceEntryTarget,
             InvTarget.AsgardiaBridgeTarget,
+            InvTarget.Ch10PagodaFloorAEntryTarget,
+            InvTarget.SovereignHotelRoofEntryTarget,            
+            // Invisible Exit
+            InvTarget.HydeBossEntryTarget,
+            InvTarget.MoMCenterEntryTarget,
         };
+
+        private static readonly BlockerEntity[] Blockers = new BlockerEntity[]
+        {
+            BlockerEntity.GateBlockerRaftLivingLaser,
+            BlockerEntity.DestructibleSubwayGate,
+            BlockerEntity.TeleportBlockerEntity512x16UU,
+            BlockerEntity.DestructibleExitDoors,
+            BlockerEntity.SurturRaidGateBlockerEntityMONO,
+            BlockerEntity.SurturRaidGateBlockerEntityMOM,
+            BlockerEntity.SurturRaidGateBlockerEntitySLAG,
+            BlockerEntity.SurturRaidGateBlockerEntitySURT,
+        };
+
+        public enum BlockerEntity : ulong
+        {
+            GateBlockerRaftLivingLaser = 12353403066566515268,
+            DestructibleSubwayGate = 16568674850038421587,
+            TeleportBlockerEntity512x16UU = 388497672566609073,
+            DestructibleExitDoors = 15556708167322245112,
+            SurturRaidGateBlockerEntityMONO = 14264436868519894710,
+            SurturRaidGateBlockerEntityMOM = 7506253403374886470,
+            SurturRaidGateBlockerEntitySLAG = 2107982419118661284,
+            SurturRaidGateBlockerEntitySURT = 7080009510741745355,
+        }
 
         public enum InvTarget : ulong
         {
@@ -575,6 +642,54 @@ namespace MHServerEmu.Games.Entities
             // CH0906LokiBossRegion
             LokiBossPhaseTwoTarget = 15469485961670041196,
             AsgardHUBToLokiBossTarget = 6343094346979221211,
+            // MadripoorInvasionRegion
+            Ch10PagodaFloorAEntryTarget = 589822349659285856,
+            // HandDojoRegion
+            Ch10PagodaFloorBEntryTarget = 3555544683987675489,
+            ToolshedHUBEntryTarget = 17221238477572612404,
+            Ch10PagodaFloorCEntryTarget = 2774131390855457122,
+            Ch10PagodaFloorEEntryTarget = 6093066063172282724,
+            Ch10PagodaTopFloorEntryTarget = 12955753604043975250,
+            Ch10PagodaFloorDEntryTarget = 4874741483775273315,
+            // NYCRooftopInvRegion
+            NYCRooftopInvYardUpTarget = 4811369732915800844,
+            // UpperMadripoorRegionL60
+            SovereignHotelRoofEntryTarget = 14195072671160937196,
+            // TRShantyRooftopsRegion
+            TRShantyRooftopsTargetAccess = 15095574082967449674,
+            // DailyGTimesSquareRegionL60
+            DailyGTimesSquareHotelDestinationTarget = 7040225978500524304,
+            DailyGTimesSquareStreetDestinationTarget = 4857786726277785995,
+            // DailyGHighTownInvasionRegionL60
+            DailyGHighTownInvasionHotelDestTarget = 12087150614603311702,
+            // DrStrangeTimesSquareRegionL60
+            DrStrangeTimesSquareHotelDestinationTarget = 17730529484168572441,
+            DrStrangeTimesSquareStreetDestinationTarget = 5991922233338179220,
+            // BronxZooRegionL60
+            TRSeaWorldTargetAccess = 3132193544495836603,
+            HydeBossExitTarget = 8006010142029130269,
+            HydeBossEntryTarget = 10506910663675357845,
+            ZooJungleInstanceEntryTarget = 18422336131966250598,
+            TRZooAquariumTargetAccess = 3981908949025697563,
+            ZooEmployeeTargetAccess = 5081698796864680364,
+            // HYDRAIslandPartDeuxRegionL60
+            Hydra1ShotBaseEntryTarget = 4042445796194922837,
+            Hydra1ShotBossEntryTarget2 = 9308897719218876785,
+            // WakandaP1RegionL60
+            WakandaP1InRegionEndTarget = 1487192153901117002,
+            WakandaP1BossEndTarget = 10099148393087708326,
+            // UltronRaidRegionGreen
+            UltronBossTargetG = 7879625668095978348,
+            // PvPDefenderTier5Region
+            AsgardPvPRewardTarget = 3428180377327967290,
+            // SurturRaidRegionGreen
+            RampToCalderaArrivalTarget = 8879645719174783216,
+            MoMRightExitArrivalTarget = 12919759216768590914,
+            SurturOneWayArrivalTarget = 3891105581744136409,
+            SlagOuterExitTarget = 7068172508433490462,
+            MonoEntryTarget = 2747204676526481547,
+            MoMCenterEntryTarget = 1963663328097935916,
+            MoMLeftExitArrivalTarget = 8318676114763097039,
             // AxisRaidRegionGreen
             AxisRaidNullifiersEntryTarget = 8684857023547056096,
             BossEntryTarget = 6193630514385067431,
