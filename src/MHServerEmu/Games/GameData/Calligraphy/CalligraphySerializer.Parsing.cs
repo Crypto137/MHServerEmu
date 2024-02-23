@@ -2,6 +2,7 @@
 using System.Reflection;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Calligraphy
 {
@@ -176,33 +177,39 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                     var groupBlueprintId = (BlueprintId)reader.ReadUInt64();
                     byte blueprintCopyNum = reader.ReadByte();
 
-                    // Get the field group blueprint and make sure it's a property one
+                    // Get the field group blueprint and make sure it is bound to a property
                     var groupBlueprint = GameDatabase.GetBlueprint(groupBlueprintId);
                     if (groupBlueprint.IsProperty() == false)
-                        Logger.WarnReturn(false, "Failed to parse PropertyId field: the specified group blueprint is not a property");
+                        return Logger.ErrorReturn(false, "ParsePropertyId(): Group blueprint is not bound to a property");
 
-                    // TODO: deserializeFieldGroupIntoPropertyId
-                    // For now skip by reading and throwing away this data
-                    short numSimpleFields = reader.ReadInt16();
-                    for (int j = 0; j < numSimpleFields; j++)
-                    {
-                        var fieldId = (StringId)reader.ReadUInt64();
-                        var type = (CalligraphyBaseType)reader.ReadByte();
-                        var value = reader.ReadUInt64();
-                    }
+                    // Deserialize the property id and assign it to the field
+                    PropertyId propertyId = PropertyId.Invalid;
+                    DeserializeFieldGroupIntoPropertyId(ref propertyId, groupBlueprint, @params.FileName, reader, "Property List");
+                    @params.FieldInfo.SetValue(@params.OwnerPrototype, propertyId);
 
-                    // Same as in DeserializePropertyMixin, there should be no list fields
+                    // Same as in DeserializePropertyMixin(), there should be no list fields
                     short numListFields = reader.ReadInt16();
-                    if (numListFields != 0) Logger.Warn($"Property field group numListFields != 0");
+                    if (numListFields != 0)
+                        return Logger.ErrorReturn(false, $"ParsePropertyId(): Property field group numListFields != 0");
                 }
             }
             else if (header.ReferenceExists)
             {
-                // TODO: Get parent PropertyId from reference
-            }
-            else
-            {
-                //Logger.Trace($"Empty PropertyId field, file name {@params.FileName}");
+                // If there is no data but a reference to a parent exists, get default property id from parent blueprint
+                Blueprint parentBlueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(header.ReferenceType);
+
+                if (parentBlueprint.IsProperty() == false)
+                    return Logger.ErrorReturn(false, "ParsePropertyId(): Parent blueprint is not bound to a property");
+
+                PrototypeId propertyDataRef = parentBlueprint.PropertyPrototypeRef;
+                PropertyEnum propertyEnum = GameDatabase.PropertyInfoTable.GetPropertyEnumFromPrototype(propertyDataRef);
+
+                if (propertyEnum == PropertyEnum.Invalid)
+                    return Logger.ErrorReturn(false, "ParsePropertyId(): Parent property enum value is invalid");
+
+                Properties.PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+                PropertyId defaultId = new(propertyEnum, info.DefaultParamValues);
+                @params.FieldInfo.SetValue(@params.OwnerPrototype, defaultId);
             }
 
             return true;

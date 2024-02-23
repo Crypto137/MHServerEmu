@@ -28,7 +28,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         public BlueprintReference[] Parents { get; }
         public BlueprintReference[] ContributingBlueprints { get; }
 
-        public PrototypeId PropertyDataRef { get; private set; } = PrototypeId.Invalid;
+        public PrototypeId PropertyPrototypeRef { get; private set; } = PrototypeId.Invalid;
 
         public int PrototypeMaxEnumValue { get => _enumValueToPrototypeLookup.Length - 1; }
 
@@ -204,11 +204,11 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// </summary>
         public void SetPropertyPrototypeDataRef(PrototypeId propertyDataRef)
         {
-            if (PropertyDataRef != PrototypeId.Invalid)
+            if (PropertyPrototypeRef != PrototypeId.Invalid)
                 Logger.Warn(string.Format("Trying to bind blueprint {0} to property {1}, but this blueprint is already bound to {2}",
-                            GameDatabase.GetBlueprint(Id), GameDatabase.GetPrototypeName(propertyDataRef), GameDatabase.GetPrototypeName(PropertyDataRef)));
+                            GameDatabase.GetBlueprint(Id), GameDatabase.GetPrototypeName(propertyDataRef), GameDatabase.GetPrototypeName(PropertyPrototypeRef)));
 
-            PropertyDataRef = propertyDataRef;
+            PropertyPrototypeRef = propertyDataRef;
         }
 
         /// <summary>
@@ -216,7 +216,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// </summary>
         public bool IsProperty()
         {
-            return PropertyDataRef != PrototypeId.Invalid;
+            return PropertyPrototypeRef != PrototypeId.Invalid;
         }
 
         /// <summary>
