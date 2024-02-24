@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Extensions;
@@ -122,9 +121,9 @@ namespace MHServerEmu.Games.Properties
         /// <see cref="int"/>, <see cref="long"/>, <see cref="uint"/>, <see cref="ulong"/>, <see cref="PrototypeId"/>,
         /// <see cref="CurveId"/>, <see cref="AssetId"/>, and <see cref="Vector3"/>.
         /// </remarks>
-        public PropertyValue GetProperty(PropertyId propertyId)
+        public PropertyValue GetProperty(PropertyId id)
         {
-            return GetPropertyValue(propertyId);
+            return GetPropertyValue(id);
         }
 
         /// <summary>
@@ -135,9 +134,9 @@ namespace MHServerEmu.Games.Properties
         /// <see cref="int"/>, <see cref="long"/>, <see cref="uint"/>, <see cref="ulong"/>, <see cref="PrototypeId"/>,
         /// <see cref="CurveId"/>, <see cref="AssetId"/>, and <see cref="Vector3"/>.
         /// </remarks>
-        public void SetProperty(PropertyValue value, PropertyId propertyId)
+        public void SetProperty(PropertyValue value, PropertyId id)
         {
-            SetPropertyValue(propertyId, value);
+            SetPropertyValue(id, value);
         }
 
         /// <summary>
@@ -155,20 +154,20 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Removes the <see cref="PropertyValue"/> with the specified <see cref="PropertyId"/>.
         /// </summary>
-        public bool RemoveProperty(PropertyId propertyId)
+        public bool RemoveProperty(PropertyId id)
         {
-            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyId.Enum);
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
 
             // Remove from curve property list if needed
             if (info.IsCurveProperty) 
-                _curveList.Remove(propertyId);
+                _curveList.Remove(id);
 
             // Remove from the base list
-            if (_baseList.RemoveProperty(propertyId) == false)
+            if (_baseList.RemoveProperty(id) == false)
                 return false;
 
             // Update aggregate value if successfully removed
-            UpdateAggregateValueFromBase(propertyId, info, UInt32Flags.None, false, new());
+            UpdateAggregateValueFromBase(id, info, UInt32Flags.None, false, new());
             return true;
         }
 
@@ -220,9 +219,9 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Returns <see langword="true"/> if this <see cref="PropertyCollection"/> contains any properties with the specified <see cref="PropertyId"/>.
         /// </summary>
-        public bool HasProperty(PropertyId propertyId)
+        public bool HasProperty(PropertyId id)
         {
-            return _aggregateList.GetPropertyValue(propertyId, out _);
+            return _aggregateList.GetPropertyValue(id, out _);
         }
 
         /// <summary>
@@ -279,6 +278,9 @@ namespace MHServerEmu.Games.Properties
             }
         }
 
+        /// <summary>
+        /// Adds a child <see cref="PropertyCollection"/> and aggregates its values.
+        /// </summary>
         public bool AddChildCollection(PropertyCollection childCollection)
         {
             if (childCollection == null)
@@ -312,6 +314,9 @@ namespace MHServerEmu.Games.Properties
             return true;
         }
 
+        /// <summary>
+        /// Removes a child <see cref="PropertyCollection"/> and reaggregates values.
+        /// </summary>
         public bool RemoveChildCollection(PropertyCollection childCollection)
         {
             if (childCollection == null)
@@ -347,6 +352,9 @@ namespace MHServerEmu.Games.Properties
             return true;
         }
 
+        /// <summary>
+        /// Removes this <see cref="PropertyCollection"/> from a parent collection.
+        /// </summary>
         public bool RemoveFromParent(PropertyCollection parentCollection)
         {
             if (parentCollection == null)
@@ -355,8 +363,14 @@ namespace MHServerEmu.Games.Properties
             return parentCollection.RemoveChildCollection(this);
         }
 
+        /// <summary>
+        /// Checks if this <see cref="PropertyCollection"/> is a child of the provided collection.
+        /// </summary>
         public bool IsChildOf(PropertyCollection parentCollection) => _parentCollections.Contains(parentCollection);
 
+        /// <summary>
+        /// Checks if this <see cref="PropertyCollection"/> is a parent of the provided collection.
+        /// </summary>
         public bool HasChildCollection(PropertyCollection childCollection) => _childCollections.Contains(childCollection);
 
         public override string ToString() => _aggregateList.ToString();
@@ -397,48 +411,48 @@ namespace MHServerEmu.Games.Properties
         }
 
         /// <summary>
-        /// Returns the <see cref="PropertyValue"/> corresponding to the specified <see cref="PropertyId"/>.
+        /// Returns the <see cref="PropertyValue"/> with the specified <see cref="PropertyId"/>.
         /// Falls back to the default value for the property if this <see cref="PropertyCollection"/> does not contain it.
         /// </summary>
-        protected PropertyValue GetPropertyValue(PropertyId propertyId)
+        protected PropertyValue GetPropertyValue(PropertyId id)
         {
-            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyId.Enum);
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
 
             // TODO: EvalPropertyValue()
 
-            if (_aggregateList.GetPropertyValue(propertyId, out PropertyValue value) == false)
+            if (_aggregateList.GetPropertyValue(id, out PropertyValue value) == false)
                 return info.DefaultValue;
 
             return value;
         }
 
         /// <summary>
-        /// Sets the <see cref="PropertyValue"/> of a <see cref="PropertyId"/>.
+        /// Sets the <see cref="PropertyValue"/> for the <see cref="PropertyId"/>.
         /// </summary>
-        protected bool SetPropertyValue(PropertyId propertyId, PropertyValue propertyValue, UInt32Flags flags = UInt32Flags.None)
+        protected bool SetPropertyValue(PropertyId id, PropertyValue value, UInt32Flags flags = UInt32Flags.None)
         {
-            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyId.Enum);
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
 
             if (info.TruncatePropertyValueToInt && info.DataType == PropertyDataType.Real)
-                propertyValue = MathF.Floor(propertyValue.RawFloat);
+                value = MathF.Floor(value.RawFloat);
 
-            ClampPropertyValue(info.Prototype, ref propertyValue);
+            ClampPropertyValue(info.Prototype, ref value);
 
             bool hasChanged;
 
             // Setting a property to its default value actually removes the value from the list,
             // because the collection automatically falls back to the default value if nothing is stored.
-            if (propertyValue.RawLong == info.DefaultValue.RawLong)
+            if (value.RawLong == info.DefaultValue.RawLong)
             {
-                hasChanged = _baseList.RemoveProperty(propertyId);
+                hasChanged = _baseList.RemoveProperty(id);
                 if (hasChanged)
-                    UpdateAggregateValueFromBase(propertyId, info, flags, false, new());
+                    UpdateAggregateValueFromBase(id, info, flags, false, new());
             }
             else
             {
-                hasChanged = _baseList.SetPropertyValue(propertyId, propertyValue);
+                hasChanged = _baseList.SetPropertyValue(id, value);
                 if (hasChanged)
-                    UpdateAggregateValueFromBase(propertyId, info, flags, true, propertyValue);
+                    UpdateAggregateValueFromBase(id, info, flags, true, value);
             }
 
             return hasChanged || flags.HasFlag(UInt32Flags.Flag2);  // Some kind of flag that forces property value update
@@ -492,11 +506,11 @@ namespace MHServerEmu.Games.Properties
         }
 
         /// <summary>
-        /// Retrieves the <see cref="CurveProperty"/> corresponding to a <see cref="PropertyId"/>. Returns <see langword="null"/> if not found.
+        /// Retrieves the <see cref="CurveProperty"/> with the <see cref="PropertyId"/>. Returns <see langword="null"/> if not found.
         /// </summary>
-        protected CurveProperty? GetCurveProperty(PropertyId propertyId)
+        protected CurveProperty? GetCurveProperty(PropertyId id)
         {
-            if (_curveList.TryGetValue(propertyId, out CurveProperty curveProp) == false)
+            if (_curveList.TryGetValue(id, out CurveProperty curveProp) == false)
                 return null;
 
             return curveProp;
@@ -559,12 +573,18 @@ namespace MHServerEmu.Games.Properties
             }
         }
 
+        /// <summary>
+        /// Removes all children from this <see cref="PropertyCollection"/>.
+        /// </summary>
         private void RemoveAllChildren()
         {
             while (_childCollections.Count > 0)
                 RemoveChildCollection(_childCollections.First());
         }
 
+        /// <summary>
+        /// Removes all parents from this <see cref="PropertyCollection"/>.
+        /// </summary>
         private void RemoveFromAllParents()
         {
             // TODO: Call this during disposal if we implement IDisposable
@@ -572,6 +592,9 @@ namespace MHServerEmu.Games.Properties
                 RemoveChildCollection(this);
         }
 
+        /// <summary>
+        /// Reaggregates all properties contained in this <see cref="PropertyCollection"/>.
+        /// </summary>
         private void RebuildAggregateList()
         {
             // Clean up existring aggregated values
@@ -592,6 +615,9 @@ namespace MHServerEmu.Games.Properties
                 AggregateChildCollection(child);                
         }
 
+        /// <summary>
+        /// Aggregates all properties from a child <see cref="PropertyCollection"/>.
+        /// </summary>
         private void AggregateChildCollection(PropertyCollection childCollection)
         {
             // Cache property info lookups for copying multiple properties of the same type in a row
@@ -612,48 +638,63 @@ namespace MHServerEmu.Games.Properties
             }
         }
 
-        private bool AggregatePropertyFromChildCollectionAdd(PropertyId propertyId, PropertyInfo info, PropertyValue propertyValue)
+        /// <summary>
+        /// Aggregates the specified property from a child <see cref="PropertyCollection"/>.
+        /// </summary>
+        private bool AggregatePropertyFromChildCollectionAdd(PropertyId id, PropertyInfo info, PropertyValue propertyValue)
         {
-            bool valueHasChanged = false;
+            bool valueHasChanged;
 
-            if (GetAggregateValue(propertyId, out PropertyValue aggregateValue) == false)
+            if (GetAggregateValue(id, out PropertyValue aggregateValue) == false)
                 aggregateValue = info.DefaultValue;
 
             PropertyValue oldValue = aggregateValue;
 
             AggregatePropertyValue(info, propertyValue, ref aggregateValue);
-            valueHasChanged = _aggregateList.SetPropertyValue(propertyId, aggregateValue);
+            valueHasChanged = _aggregateList.SetPropertyValue(id, aggregateValue);
 
             if (valueHasChanged)
             {
                 // TODO: scope protection
 
                 foreach (PropertyCollection parent in _parentCollections)
-                    parent.UpdateAggregateValue(propertyId, info, UInt32Flags.None);
+                    parent.UpdateAggregateValue(id, info, UInt32Flags.None);
 
-                OnPropertyChange(propertyId, aggregateValue, oldValue, UInt32Flags.None);
+                OnPropertyChange(id, aggregateValue, oldValue, UInt32Flags.None);
             }
 
             return valueHasChanged;
         }
 
-        private bool GetBaseValue(PropertyId propertyId, out PropertyValue propertyValue)
+        /// <summary>
+        /// Returns the base value with the specified <see cref="PropertyId"/>.
+        /// </summary>
+        private bool GetBaseValue(PropertyId id, out PropertyValue value)
         {
-            return _baseList.GetPropertyValue(propertyId, out propertyValue);
+            return _baseList.GetPropertyValue(id, out value);
         }
 
-        private bool GetAggregateValue(PropertyId propertyId, out PropertyValue propertyValue)
+        /// <summary>
+        /// Returns the aggregate value with the specified <see cref="PropertyId"/>.
+        /// </summary>
+        private bool GetAggregateValue(PropertyId id, out PropertyValue value)
         {
-            return _aggregateList.GetPropertyValue(propertyId, out propertyValue);
+            return _aggregateList.GetPropertyValue(id, out value);
         }
 
-        private void UpdateAggregateValue(PropertyId propertyId, PropertyInfo info, UInt32Flags flags)
+        /// <summary>
+        /// Updates the aggregate value with the specified <see cref="PropertyId"/>.
+        /// </summary>
+        private void UpdateAggregateValue(PropertyId id, PropertyInfo info, UInt32Flags flags)
         {
-            bool hasBaseValue = GetBaseValue(propertyId, out PropertyValue baseValue);
-            UpdateAggregateValueFromBase(propertyId, info, flags, hasBaseValue, baseValue);
+            bool hasBaseValue = GetBaseValue(id, out PropertyValue baseValue);
+            UpdateAggregateValueFromBase(id, info, flags, hasBaseValue, baseValue);
         }
 
-        private void UpdateAggregateValueFromBase(PropertyId propertyId, PropertyInfo info, UInt32Flags flags, bool hasValue, PropertyValue baseValue)
+        /// <summary>
+        /// Updates the aggregate value with the specified <see cref="PropertyId"/>.
+        /// </summary>
+        private void UpdateAggregateValueFromBase(PropertyId id, PropertyInfo info, UInt32Flags flags, bool hasValue, PropertyValue baseValue)
         {
             PropertyValue aggregateValue = baseValue;
 
@@ -664,7 +705,7 @@ namespace MHServerEmu.Games.Properties
                 // Aggregate values from all children
                 foreach (PropertyCollection child in _childCollections)
                 {
-                    child.GetAggregateValue(propertyId, out PropertyValue childValue);
+                    child.GetAggregateValue(id, out PropertyValue childValue);
                     if (hasValue)
                     {
                         AggregatePropertyValue(info, childValue, ref aggregateValue);
@@ -679,26 +720,29 @@ namespace MHServerEmu.Games.Properties
 
             if (hasValue)
             {
-                _aggregateList.GetSetPropertyValue(propertyId, aggregateValue, out PropertyValue oldValue, out bool wasAdded, out bool hasChanged);
+                _aggregateList.GetSetPropertyValue(id, aggregateValue, out PropertyValue oldValue, out bool wasAdded, out bool hasChanged);
                 if (wasAdded || hasChanged || flags.HasFlag(UInt32Flags.Flag2))
                 {
                     if (wasAdded) oldValue = info.DefaultValue;
-                    OnPropertyChange(propertyId, aggregateValue, oldValue, flags);
+                    OnPropertyChange(id, aggregateValue, oldValue, flags);
                 }
             }
             else
             {
-                if (_aggregateList.RemoveProperty(propertyId, out PropertyValue oldValue))
-                    OnPropertyChange(propertyId, info.DefaultValue, oldValue, flags);
+                if (_aggregateList.RemoveProperty(id, out PropertyValue oldValue))
+                    OnPropertyChange(id, info.DefaultValue, oldValue, flags);
             }
 
             // Update parents
             // TODO: scope protection
             foreach (PropertyCollection parent in _parentCollections)
-                parent.UpdateAggregateValue(propertyId, info, flags);
+                parent.UpdateAggregateValue(id, info, flags);
         }
 
-        private bool AggregatePropertyValue(PropertyInfo info, PropertyValue input, ref PropertyValue output)
+        /// <summary>
+        /// Aggregates two values.
+        /// </summary>
+        private static bool AggregatePropertyValue(PropertyInfo info, PropertyValue input, ref PropertyValue output)
         {
             switch (info.DataType)
             {
