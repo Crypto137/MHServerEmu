@@ -19,7 +19,6 @@ namespace MHServerEmu.Games.Properties
         // TODO: Scope protection: IDisposable that sets flags?
         // TODO: Eval
         // TODO: PropertyChangeWatcher API: AttachWatcher(), RemoveWatcher(), RemoveAllWatchers()
-        // TODO: OnPropertyChange - implement as an event that entities can register to?
         // TODO: Consider implementing IDisposable
 
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -109,8 +108,6 @@ namespace MHServerEmu.Games.Properties
         }
 
         #endregion
-
-        public PropertyCollection() { }
 
         // NOTE: In the client GetProperty() and SetProperty() handle conversion to and from PropertyValue,
         // but we take care of that with implicit casting defined in PropertyValue.cs, so these methods are
@@ -228,11 +225,23 @@ namespace MHServerEmu.Games.Properties
             return _aggregateList.GetPropertyValue(propertyId, out _);
         }
 
-        public void OnPropertyChange(PropertyId propertyId, PropertyValue newValue, PropertyValue oldValue, UInt32Flags flags)
+        /// <summary>
+        /// Called when a property changes its value.
+        /// </summary>
+        public void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, UInt32Flags flags)
         {
-            // TODO: update curves
-            // TODO: update evals
-            // TODO: notify watchers
+            // TODO: Implement as an event that entities can register to?
+            
+            // Update curve properties that rely on this property as an index property
+            foreach (var kvp in IterateCurveProperties())
+            {
+                if (kvp.Value.IndexPropertyId == id)
+                    UpdateCurvePropertyValue(kvp.Value, flags, null);
+            }
+
+            // TODO: Update evals
+
+            // TODO: Notify watchers
         }
 
         /// <summary>
