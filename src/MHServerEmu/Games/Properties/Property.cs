@@ -1,6 +1,5 @@
 ﻿using Gazillion;
 using MHServerEmu.Common.Extensions;
-using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
@@ -81,19 +80,29 @@ namespace MHServerEmu.Games.Properties
         public const ulong EnumMask = EnumMax << ParamBitCount;
         public const ulong ParamMask = ParamMax;
 
-        public static void FromParam(PropertyEnum propertyEnum, int paramIndex, int paramValue, out AssetId assetId)
+        public static void FromParam(PropertyEnum propertyEnum, int paramIndex, PropertyParam paramValue, out AssetId assetId)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
             AssetTypeId assetTypeId = info.GetParamAssetType(paramIndex);
             AssetType assetType = GameDatabase.GetAssetType(assetTypeId);
-            assetId = assetType.GetAssetRefFromEnum(paramValue);
+            assetId = assetType.GetAssetRefFromEnum((int)paramValue);
         }
 
-        public static void FromParam(PropertyEnum propertyEnum, int paramIndex, int paramValue, out PrototypeId prototypeId)
+        public static void FromParam(PropertyEnum propertyEnum, int paramIndex, PropertyParam paramValue, out PrototypeId prototypeId)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
             BlueprintId paramBlueprint = info.GetParamPrototypeBlueprint(paramIndex);
-            prototypeId = GameDatabase.DataDirectory.GetPrototypeFromEnumValue(paramValue, paramBlueprint);
+            prototypeId = GameDatabase.DataDirectory.GetPrototypeFromEnumValue((int)paramValue, paramBlueprint);
+        }
+
+        public static void FromParam(PropertyId propertyId, int paramIndex, PropertyParam paramValue, out AssetId assetId)
+        {
+            FromParam(propertyId.Enum, paramIndex, paramValue, out assetId);
+        }
+
+        public static void FromParam(PropertyId propertyId, int paramIndex, PropertyParam paramValue, out PrototypeId prototypeId)
+        {
+            FromParam(propertyId.Enum, paramIndex, paramValue, out prototypeId);
         }
 
         public static PropertyParam ToParam(AssetId paramValue)
@@ -108,27 +117,7 @@ namespace MHServerEmu.Games.Properties
             return (PropertyParam)GameDatabase.DataDirectory.GetPrototypeEnumValue(paramValue, paramBlueprint);
         }
 
-        public static PropertyValue ToValue(bool value) => new(value);
-        public static PropertyValue ToValue(float value) => new(value);
-        public static PropertyValue ToValue(int value) => new(value);
-        public static PropertyValue ToValue(long value) => new(value);
-        public static PropertyValue ToValue(uint value) => new((int)value);
-        public static PropertyValue ToValue(ulong value) => new((long)value);
-        public static PropertyValue ToValue(PrototypeId value) => new(value);
-        public static PropertyValue ToValue(CurveId value) => new(value);
-        public static PropertyValue ToValue(AssetId value) => new(value);
-        public static PropertyValue ToValue(Vector3 value) => new(value);
-
-        public static void FromValue(PropertyValue value, out bool convertedValue) => convertedValue = value.ToBool();
-        public static void FromValue(PropertyValue value, out float convertedValue) => convertedValue = value.ToFloat();
-        public static void FromValue(PropertyValue value, out int convertedValue) => convertedValue = value.ToInt();
-        public static void FromValue(PropertyValue value, out long convertedValue) => convertedValue = value.ToLong();
-        public static void FromValue(PropertyValue value, out uint convertedValue) => convertedValue = value.ToUInt();
-        public static void FromValue(PropertyValue value, out ulong convertedValue) => convertedValue = value.ToULong();
-        public static void FromValue(PropertyValue value, out PrototypeId convertedValue) => convertedValue = value.ToPrototypeId();
-        public static void FromValue(PropertyValue value, out CurveId convertedValue) => convertedValue = value.ToCurveId();
-        public static void FromValue(PropertyValue value, out AssetId convertedValue) => convertedValue = value.ToAssetId();
-        public static void FromValue(PropertyValue value, out Vector3 convertedValue) => convertedValue = value.ToVector3();
+        // ToValue() and FromValue() methods from the client are replaced with implicit casting, see PropertyValue.cs for more details
 
         public static NetMessageSetProperty ToNetMessageSetProperty(ulong replicationId, PropertyId propertyId, PropertyValue value)
         {

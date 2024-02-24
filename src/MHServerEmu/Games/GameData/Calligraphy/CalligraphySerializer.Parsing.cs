@@ -2,6 +2,7 @@
 using System.Reflection;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Calligraphy
 {
@@ -43,7 +44,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 case PrototypeFieldType.ListPrototypePtr:       return ParseListPrototypePtr;
                 case PrototypeFieldType.PropertyCollection:     return ParsePropertyList;
 
-                default: return Logger.WarnReturn<Func<FieldParserParams,bool>>(null, $"Failed to get parser for unsupported prototype field type {prototypeFieldType}");
+                default: return Logger.ErrorReturn<Func<FieldParserParams,bool>>(null, $"GetParser(): Unsupported prototype field type {prototypeFieldType}");
             }
         }
 
@@ -62,7 +63,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             // as possible. This doesn't seem to happen with other types.
             if (typeof(T) == typeof(int) && rawValue > int.MaxValue)
             {
-                Logger.Trace($"ParseValue overflow for Int32 field {@params.BlueprintMemberInfo.Member.FieldName}, raw value {rawValue}, file name {@params.FileName}");
+                Logger.Trace($"ParseValue(): Overflow for Int32 field {@params.BlueprintMemberInfo.Member.FieldName}, raw value {rawValue}, file name {@params.FileName}");
                 rawValue = int.MaxValue;
             }
 
@@ -89,7 +90,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             if (Enum.TryParse(@params.FieldInfo.PropertyType, assetName, true, out var value) == false)
             {
                 if (assetName != string.Empty)
-                    Logger.Trace(string.Format("Missing enum member {0} in {1}, field {2}, file name {3}",
+                    Logger.Trace(string.Format("ParseEnum(): Missing enum member {0} in {1}, field {2}, file name {3}",
                         assetName,
                         @params.FieldInfo.PropertyType.Name,
                         @params.BlueprintMemberInfo.Member.RuntimeClassFieldInfo.Name,
@@ -143,7 +144,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             PrototypeDataHeader header = new(reader);
             if (header.ReferenceExists == false) return true;   // Early return if this is an empty prototype
             if (header.PolymorphicData && (polymorphicSetAllowed == false))
-                return Logger.WarnReturn(false, $"Polymorphic prototype data encountered but not expected");
+                return Logger.ErrorReturn(false, $"DeserializePrototypePtr(): Polymorphic prototype data encountered but not expected");
             
             // If this prototype has no data of its own, but it references a parent, we interpret it as its parent
             if (header.InstanceDataExists == false)
@@ -176,33 +177,39 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                     var groupBlueprintId = (BlueprintId)reader.ReadUInt64();
                     byte blueprintCopyNum = reader.ReadByte();
 
-                    // Get the field group blueprint and make sure it's a property one
+                    // Get the field group blueprint and make sure it is bound to a property
                     var groupBlueprint = GameDatabase.GetBlueprint(groupBlueprintId);
                     if (groupBlueprint.IsProperty() == false)
-                        Logger.WarnReturn(false, "Failed to parse PropertyId field: the specified group blueprint is not a property");
+                        return Logger.ErrorReturn(false, "ParsePropertyId(): Group blueprint is not bound to a property");
 
-                    // TODO: deserializeFieldGroupIntoPropertyId
-                    // For now skip by reading and throwing away this data
-                    short numSimpleFields = reader.ReadInt16();
-                    for (int j = 0; j < numSimpleFields; j++)
-                    {
-                        var fieldId = (StringId)reader.ReadUInt64();
-                        var type = (CalligraphyBaseType)reader.ReadByte();
-                        var value = reader.ReadUInt64();
-                    }
+                    // Deserialize the property id and assign it to the field
+                    PropertyId propertyId = PropertyId.Invalid;
+                    DeserializeFieldGroupIntoPropertyId(ref propertyId, groupBlueprint, @params.FileName, reader, "Property List");
+                    @params.FieldInfo.SetValue(@params.OwnerPrototype, propertyId);
 
-                    // Same as in DeserializePropertyMixin, there should be no list fields
+                    // Same as in DeserializePropertyMixin(), there should be no list fields
                     short numListFields = reader.ReadInt16();
-                    if (numListFields != 0) Logger.Warn($"Property field group numListFields != 0");
+                    if (numListFields != 0)
+                        return Logger.ErrorReturn(false, $"ParsePropertyId(): Property field group numListFields != 0");
                 }
             }
             else if (header.ReferenceExists)
             {
-                // TODO: Get parent PropertyId from reference
-            }
-            else
-            {
-                //Logger.Trace($"Empty PropertyId field, file name {@params.FileName}");
+                // If there is no data but a reference to a parent exists, get default property id from parent blueprint
+                Blueprint parentBlueprint = GameDatabase.DataDirectory.GetPrototypeBlueprint(header.ReferenceType);
+
+                if (parentBlueprint.IsProperty() == false)
+                    return Logger.ErrorReturn(false, "ParsePropertyId(): Parent blueprint is not bound to a property");
+
+                PrototypeId propertyDataRef = parentBlueprint.PropertyPrototypeRef;
+                PropertyEnum propertyEnum = GameDatabase.PropertyInfoTable.GetPropertyEnumFromPrototype(propertyDataRef);
+
+                if (propertyEnum == PropertyEnum.Invalid)
+                    return Logger.ErrorReturn(false, "ParsePropertyId(): Parent property enum value is invalid");
+
+                Properties.PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+                PropertyId defaultId = new(propertyEnum, info.DefaultParamValues);
+                @params.FieldInfo.SetValue(@params.OwnerPrototype, defaultId);
             }
 
             return true;
@@ -299,7 +306,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             // PropertyList seems to be used only in ModPrototype
             var propertyCollection = GetPropertyCollectionField(@params.OwnerPrototype);
             if (propertyCollection == null)
-                Logger.WarnReturn(false, $"Failed to get a property collection to deserialize a property list into, file name {@params.FileName}");
+                return Logger.ErrorReturn(false, $"ParsePropertyList(): Failed to get a property collection, file name {@params.FileName}");
 
             var reader = @params.Reader;
 
@@ -315,22 +322,16 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                     var groupBlueprintId = (BlueprintId)reader.ReadUInt64();
                     byte blueprintCopyNum = reader.ReadByte();
 
-                    // Get the field group blueprint and make sure it's a property one
+                    // Get the field group blueprint and make sure it is bound to a property
                     var groupBlueprint = GameDatabase.GetBlueprint(groupBlueprintId);
                     if (groupBlueprint.IsProperty() == false)
-                        Logger.WarnReturn(false, "Failed to parse PropertyList field: the specified group blueprint is not a property");
+                        return Logger.ErrorReturn(false, "ParsePropertyList(): Group blueprint is not bound to a property");
 
-                    // TODO: deserializeFieldGroupIntoProperty()
-                    short numSimpleFields = reader.ReadInt16();
-                    for (int k = 0; k < numSimpleFields; k++)
-                    {
-                        var fieldId = (StringId)reader.ReadUInt64();
-                        var type = (CalligraphyBaseType)reader.ReadByte();
-                        var value = reader.ReadUInt64();
-                    }
+                    DeserializeFieldGroupIntoProperty(propertyCollection, groupBlueprint, blueprintCopyNum, @params.FileName, reader, "PropertyList");
 
                     short numListFields = reader.ReadInt16();
-                    if (numListFields != 0) Logger.Warn($"PropertyList field group numListFields != 0");
+                    if (numListFields != 0)
+                        return Logger.ErrorReturn(false, $"ParsePropertyList(): Property field group numListFields != 0");
                 }
             }
 

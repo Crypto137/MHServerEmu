@@ -4,6 +4,7 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Games;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Networking;
 using MHServerEmu.Networking.Tcp;
@@ -29,8 +30,8 @@ namespace MHServerEmu.Frontend
         public Vector3 LastPosition { get; set; }
         public ulong MagikUltimateEntityId { get; set; }
         public bool IsThrowing { get; set; } = false;
-        public ulong ThrowingPower { get; set; }
-        public ulong ThrowingCancelPower { get; set; }
+        public PrototypeId ThrowingPower { get; set; }
+        public PrototypeId ThrowingCancelPower { get; set; }
         public Entity ThrowingObject { get; set; }
 
         public AreaOfInterest AOI { get; private set; }

@@ -7,6 +7,8 @@ namespace MHServerEmu.Games.Properties
     /// </summary>
     public struct PropertyId : IComparable
     {
+        public static readonly PropertyId Invalid = new();
+
         public ulong Raw { get; set; }
 
         public PropertyEnum Enum { get => (PropertyEnum)(Raw >> Property.ParamBitCount); }
@@ -101,7 +103,7 @@ namespace MHServerEmu.Games.Properties
         public static bool operator !=(PropertyId left, PropertyId right) => left.Equals(right) == false;
         public override int GetHashCode() => Raw.GetHashCode();
 
-        public override string ToString() => $"0x{Raw:X}";
+        public override string ToString() => GameDatabase.PropertyInfoTable.LookupPropertyInfo(Enum).BuildPropertyName(this);
 
         /// <summary>
         /// Returns the value of an encoded param.

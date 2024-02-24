@@ -4,7 +4,7 @@ using MHServerEmu.Games.Properties;
 namespace MHServerEmu.Games.GameData.Calligraphy
 {
     /// <summary>
-    /// Reconstructs properties from serialized prototypes.
+    /// Reconstructs properties from serialized prototype field groups.
     /// </summary>
     public class PropertyBuilder
     {
@@ -19,7 +19,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         public PropertyParam[] ParamValues { get; private set; } = new PropertyParam[Property.MaxParamCount];
         public int ParamCount { get; private set; }
 
-        public ulong PropertyValue { get; private set; }
+        public PropertyValue PropertyValue { get; private set; }
         public bool IsValueSet { get; private set; }
 
         public PropertyId CurveIndex { get; private set; } = new();
