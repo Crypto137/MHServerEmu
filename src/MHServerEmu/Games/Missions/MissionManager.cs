@@ -163,6 +163,7 @@ namespace MHServerEmu.Games.Missions
                 // TODO check mission
                 string name = GameDatabase.GetPrototypeName(missionRef).ToLower();
                 if (name.Contains("zzz")) continue; // Skip dev missions
+                if (name.Contains("seasonal/christmas")) continue; // Skip XMas missions
                 // IsMissionValidAndApprovedForUse
                 region.SpawnPopulation.MissionRegisty(missionProto);
             }
