@@ -202,11 +202,8 @@ namespace MHServerEmu.Games.Regions
             {
                 if (markerProto is EntityMarkerPrototype entityMarker)
                 {
-                    string marker = entityMarker.LastKnownEntityName;
 
-                    if (marker.Contains("GambitMTXStore")) continue; // Invisible
-                    if (marker.Contains("CosmicEventVendor")) continue; // Invisible
-
+                    // if (entityMarker.LastKnownEntityName.Contains("GambitMTXStore")) continue; // Invisible
                     PrototypeId dataRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
                     Prototype entity = GameDatabase.GetPrototype<Prototype>(dataRef);
 

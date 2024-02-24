@@ -10,6 +10,7 @@ namespace MHServerEmu.Games.Generators.Population
 {
     public class PopulationMarker
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
         public PrototypeId MarkerRef;
         public PrototypeId MissionRef;
         public GRandom Random;
@@ -28,7 +29,8 @@ namespace MHServerEmu.Games.Generators.Population
             SpawnMarkerRegistry registry = region.SpawnMarkerRegistry;
             SpawnReservation reservation = registry.ReserveFreeReservation(MarkerRef, Random, cell, SpawnAreas, SpawnCells);
             if (reservation != null)
-            {                
+            {               
+                //Logger.Warn($"{GameDatabase.GetFormattedPrototypeName(MissionRef)} {pos.ToStringFloat()}");
                 ClusterGroup clusterGroup = new(region, Random, Object, null, Properties, SpawnFlags);
                 clusterGroup.Initialize();
                 // set group position
@@ -79,7 +81,7 @@ namespace MHServerEmu.Games.Generators.Population
                         if (foundArea == false) continue;
 
                         // entry.Count; TODO count population
-
+                        //for (var i = 0; i < entry.Count; i++)
                         AddPopulationMarker(entry.Population.UsePopulationMarker, entry.Population, (int)entry.Count, entry.RestrictToAreas, entry.RestrictToCells, missionProto.DataRef);
                     }
                 }   

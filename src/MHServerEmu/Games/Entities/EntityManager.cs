@@ -448,6 +448,7 @@ namespace MHServerEmu.Games.Entities
                 {
                     blockers.Add(entity);              
                 }
+
             }
             foreach (var entity in blockers) entity.ExitWorld();
 
@@ -479,6 +480,12 @@ namespace MHServerEmu.Games.Entities
             InvTarget.NYCRooftopInvYardUpTarget,
             // TR targets
             InvTarget.TRShantyRooftopsTargetAccess,
+            InvTarget.CH05RecCenterExtTarget,   
+            InvTarget.ObjectiveAOutsideTarget,
+            InvTarget.ObjectiveBOutsideTarget,
+            InvTarget.ObjectiveCOutsideTarget,
+            InvTarget.TRCarParkTargetAccess,
+            InvTarget.TRGameCenterTargetAccess,
             // DailyG
             InvTarget.DailyGTimesSquareHotelDestinationTarget,
             InvTarget.DailyGTimesSquareStreetDestinationTarget,
@@ -518,6 +525,7 @@ namespace MHServerEmu.Games.Entities
             InvTarget.CH0208BrooklynCanneryStartTarget,
             InvTarget.CH0403MGHStorageFrontInteriorTarget,
             InvTarget.CH0404MGHGarageInteriorFrontTarget,
+            InvTarget.CH0404MGHFactoryInteriorFrontTarget,
             InvTarget.CH0404MGHFactoryBossInteriorTarget,
             InvTarget.CH0404MGHFactoryExteriorRearTarget,
             InvTarget.CH0410FiskElevatorAFloor2Target,
@@ -528,7 +536,10 @@ namespace MHServerEmu.Games.Entities
             InvTarget.AsgardiaInstanceEntryTarget,
             InvTarget.AsgardiaBridgeTarget,
             InvTarget.Ch10PagodaFloorAEntryTarget,
-            InvTarget.SovereignHotelRoofEntryTarget,            
+            InvTarget.SovereignHotelRoofEntryTarget,  
+            // TR
+            InvTarget.CH0205TaskmasterTapeExteriorTarget,
+            InvTarget.CH05MutantWarehouseExtEntry,
             // Invisible Exit
             InvTarget.HydeBossEntryTarget,
             InvTarget.MoMCenterEntryTarget,
@@ -544,6 +555,7 @@ namespace MHServerEmu.Games.Entities
             BlockerEntity.SurturRaidGateBlockerEntityMOM,
             BlockerEntity.SurturRaidGateBlockerEntitySLAG,
             BlockerEntity.SurturRaidGateBlockerEntitySURT,
+            BlockerEntity.BeastNorway,
         };
 
         public enum BlockerEntity : ulong
@@ -556,6 +568,7 @@ namespace MHServerEmu.Games.Entities
             SurturRaidGateBlockerEntityMOM = 7506253403374886470,
             SurturRaidGateBlockerEntitySLAG = 2107982419118661284,
             SurturRaidGateBlockerEntitySURT = 7080009510741745355,
+            BeastNorway = 1946034969610490335, // remove second 
         }
 
         public enum InvTarget : ulong
@@ -575,10 +588,12 @@ namespace MHServerEmu.Games.Entities
             WarehouseBossExteriorTarget = 10254792218958897947,
             // CH0201ShippingYardRegion
             CH0202HoodContainerInteriorTarget = 9608365637530952300,
-            CH0204AIMBaseEntryInteriorTarget = 4355410365228982789,
+            CH0204AIMBaseEntryInteriorTarget = 4355410365228982789,            
             // CH0205ConstructionRegion
             CH0205TaskmasterTapeInteriorTarget = 11803462739553362667,
             CH0207TaskmasterBaseEntryInteriorTarget = 10108529194301596944,
+            // CH0206TaskmasterVHSTapeConstructionRegion
+            CH0205TaskmasterTapeExteriorTarget = 17617241741145481969,
             // CH0207TaskmasterRegion
             CH0208BrooklynCanneryStartTarget = 17210189397093720615,
             // CH0209HoodsHideoutRegion
@@ -589,14 +604,21 @@ namespace MHServerEmu.Games.Entities
             // CH0403MGHStorageRegion
             CH0403MGHStorageRearExteriorTarget = 4325468468211556753,
             // CH0404MGHFactoryRegion
+            CH0404MGHFactoryInteriorFrontTarget = 11511146138818388494,
             CH0404MGHFactoryBossInteriorTarget = 12796241511874961820,
             CH0404MGHFactoryExteriorRearTarget = 11806303983103713685,
             // CH0402UpperEastRegion
             CH0408MobRearInteriorTarget = 11895422811237195421, // Exit from Bistro
+            // CH0408MaggiaRestaurantRegion
+            CH0408MobRearExteriorTarget = 17484766862257757859,
             // CH0410FiskTowerRegion
             CH0410FiskElevatorAFloor2Target = 12440915086139596806,
             // CH0501MutantTownRegion
             SewersEntryTarget = 14627094356933614733,
+            // CH0502MutantWarehouseRegion
+            CH05MutantWarehouseExtEntry = 241887477377605722,
+            // CH0503SupervillainRecCenterRegion
+            CH05RecCenterExtTarget = 10769034612749049342,
             // CH0504PurifierChurchRegion
             XMansionBodySliderTarget = 10156365377106549943,
             // XaviersMansionRegion
@@ -627,6 +649,12 @@ namespace MHServerEmu.Games.Entities
             ResearchCorridorEntryTarget = 6216551702482332010,
             // CH0801AIMWeaponFacilityRegion
             AIMWeapFacToMODOKTarget = 10175636343744765571,
+            // CH0805LatveriaPCZObjectiveARegion
+            ObjectiveAOutsideTarget = 18226452563201630105,
+            // CH0806LatveriaPCZObjectiveBRegion
+            ObjectiveBOutsideTarget = 11884989666270388122,
+            // CH0807LatveriaPCZObjectiveCRegion
+            ObjectiveCOutsideTarget = 2723149482678296475,
             // CH0901NorwayPCZRegion
             NorwayDarkForestTarget = 11767373299566321264,
             AsgardiaInstanceEntryTarget = 15288093230286381150,
@@ -657,6 +685,10 @@ namespace MHServerEmu.Games.Entities
             SovereignHotelRoofEntryTarget = 14195072671160937196,
             // TRShantyRooftopsRegion
             TRShantyRooftopsTargetAccess = 15095574082967449674,
+            // TRCarParkRegion
+            TRCarParkTargetAccess = 6385558882715249947,
+            // TRGameCenterRegion
+            TRGameCenterTargetAccess = 9921007488688860754,
             // DailyGTimesSquareRegionL60
             DailyGTimesSquareHotelDestinationTarget = 7040225978500524304,
             DailyGTimesSquareStreetDestinationTarget = 4857786726277785995,

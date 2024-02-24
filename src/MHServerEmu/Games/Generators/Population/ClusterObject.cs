@@ -143,8 +143,7 @@ namespace MHServerEmu.Games.Generators.Population
             Objects = new();
             SubObjectRadiusMax = 0.0f;
             SpawnFlags = flags;
-            BlackOutZone = new(PrototypeId.Invalid, Vector3.Zero);
-       
+            BlackOutZone = new(PrototypeId.Invalid, Vector3.Zero);           
             ObjectProto?.BuildCluster(this, ClusterObjectFlag.None);
         }
 
@@ -801,6 +800,7 @@ namespace MHServerEmu.Games.Generators.Population
             pos.Z += entity.Bounds.GetBoundHalfHeight();
             var rot = tr.Orientation; 
             entityManager.CreateWorldEntity(cell, EntityRef, pos, rot, 100, false, overrideSnap);
+            //Logger.Debug($"{GameDatabase.GetFormattedPrototypeName(EntityRef)} {pos.ToStringFloat()} [{Parent.Objects.Count}] {Parent.ObjectProto.GetFormation()}");
         }
 
         public override bool IsFormationObject()

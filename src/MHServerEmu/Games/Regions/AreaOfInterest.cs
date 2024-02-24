@@ -240,7 +240,7 @@ namespace MHServerEmu.Games.Regions
                     bool interest = GetEntityInterest(worldEntity);
                     _loadedEntities.Add(worldEntity.BaseData.EntityId, new(_currentFrame, true, interest));
                     newEntities.Add(worldEntity);
-                    Logger.Debug($"{GameDatabase.GetFormattedPrototypeName(worldEntity.BaseData.PrototypeId)} = {worldEntity.BaseData.PrototypeId},");
+                    // Logger.Debug($"{GameDatabase.GetFormattedPrototypeName(worldEntity.BaseData.PrototypeId)} = {worldEntity.BaseData.PrototypeId},");
                 }
             }
 
