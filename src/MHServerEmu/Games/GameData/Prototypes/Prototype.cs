@@ -42,11 +42,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId ParentDataRef { get; set; }
         public PrototypeDataRefRecord DataRefRecord { get; set; }
 
-        public override string ToString()
-        {
-            return GameDatabase.GetPrototypeName(DataRef);
-        }
-
         /// <summary>
         /// Returns <see langword="false"/> if this is a prototype in development.
         /// </summary>
