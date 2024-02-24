@@ -136,8 +136,8 @@ namespace MHServerEmu.Games.Generators.Population
 
             Properties = new();
             if (properties != null) {
-                Properties = properties;
-                // MissionRef = properties.GetProperty<PrototypeId>(PropertyEnum.MissionPrototype);
+                Properties.FlattenCopyFrom(properties, false);
+                MissionRef = properties[PropertyEnum.MissionPrototype];
             }
 
             Objects = new();
@@ -153,7 +153,7 @@ namespace MHServerEmu.Games.Generators.Population
 
             if (Objects.Count == 0)
             {
-                Logger.Warn($"[DESIGN] Cluster contains no valid entity objects. OBJECT={ObjectProto}");
+                Logger.Warn($"[DESIGN] Cluster contains no valid entity objects. OBJECT={GameDatabase.GetFormattedPrototypeName(MissionRef)}");
                 return false;
             }
 

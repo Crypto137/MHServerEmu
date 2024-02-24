@@ -9,6 +9,7 @@ using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Generators;
 using Gazillion;
 using MHServerEmu.Networking;
+using MHServerEmu.Common.Logging;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -201,10 +202,9 @@ namespace MHServerEmu.Games.Regions
             foreach (var markerProto in CellProto.MarkerSet.Markers)
             {
                 if (markerProto is EntityMarkerPrototype entityMarker)
-                {
-
-                    // if (entityMarker.LastKnownEntityName.Contains("GambitMTXStore")) continue; // Invisible
+                {                    
                     PrototypeId dataRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
+                    if (entityMarker.LastKnownEntityName.Contains("GambitMTXStore")) continue; // Invisible Domino NPC
                     Prototype entity = GameDatabase.GetPrototype<Prototype>(dataRef);
 
                     // Spawn Entity from Cell

@@ -94,18 +94,21 @@ namespace MHServerEmu.Games.Generators.Population
             //check marker exist population.UseMarkerOrientation;
             //Logger.Warn($"SpawnMarker[{count}] {GameDatabase.GetFormattedPrototypeName(populationMarkerRef)}");
             GRandom random = Game.Random;
+            var properties = new PropertyCollection();
+            properties[PropertyEnum.MissionPrototype] = missionRef;
             PopulationMarker populationMarker = new()
             {
                 MarkerRef = populationMarkerRef,
                 MissionRef = missionRef,
                 Random = random,
-                Properties = new PropertyCollection(),
+                Properties = properties,
                 SpawnFlags = SpawnFlags.None,
                 Object = population,
                 SpawnAreas = restrictToAreas,
                 SpawnCells = restrictToCells,
                 Count = count
             };
+            
             PopulationMarkers.Add(populationMarker);
         }
     }

@@ -175,7 +175,7 @@ namespace MHServerEmu.Common.Commands
         public string AOIVolume(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help player region' to get help.";
+            if (@params.Length == 0) return $"Current AOI volume = {client.Session.Account.Player.AOIVolume}";
             //if (ConfigManager.PlayerManager.BypassAuth) return "Disable BypassAuth to use this command";
 
             if (int.TryParse( @params[0], out int volume) && volume >= 1600 && volume <= 5000)

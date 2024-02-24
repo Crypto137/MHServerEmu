@@ -7,7 +7,6 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
@@ -22,6 +21,7 @@ namespace MHServerEmu.Games.Events
         private readonly List<GameEvent> _eventList = new();
         private readonly Game _game;
         private readonly object _eventLock = new();
+
         public EventManager(Game game)
         {
             _game = game;
@@ -31,12 +31,12 @@ namespace MHServerEmu.Games.Events
         {
             List<QueuedGameMessage> messageList = new();
 
-            // Handle Events
-            foreach (GameEvent @event in _eventList)
-                messageList.AddRange(HandleEvent(@event));
-
             lock (_eventLock)
             {
+                // Handle Events
+                foreach (GameEvent @event in _eventList)
+                    messageList.AddRange(HandleEvent(@event));
+
                 if (_eventList.Count > 0)
                     _eventList.RemoveAll(@event => @event.IsRunning == false);
             }
@@ -54,7 +54,10 @@ namespace MHServerEmu.Games.Events
 
         public bool HasEvent(FrontendClient client, EventEnum eventId)
         {
-            return _eventList.Exists(@event => @event.Client == client && @event.Event == eventId);
+            lock (_eventLock)
+            {
+                return _eventList.Exists(@event => @event.Client == client && @event.Event == eventId);
+            }
         }
         
         public void KillEvent(FrontendClient client, EventEnum eventId)
