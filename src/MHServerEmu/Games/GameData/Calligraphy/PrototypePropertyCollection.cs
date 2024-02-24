@@ -96,7 +96,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 }
             }
 
-            SetCurveProperty(propertyId, curveId, indexProperty, info, UInt32Flags.None, true);
+            SetCurveProperty(propertyId, curveId, indexProperty, info, SetPropertyFlags.None, true);
         }
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             CurveProperty oldCurve = new();
 
             if (SetKeyToPropertyId(ref propertyId, blueprintCopyNum, paramsSetMask, ref oldCurve, (PropertyId?)indexProperty))
-                SetCurveProperty(propertyId, oldCurve.CurveId, indexProperty, info, UInt32Flags.None, true);  
+                SetCurveProperty(propertyId, oldCurve.CurveId, indexProperty, info, SetPropertyFlags.None, true);  
         }
 
         /// <summary>
@@ -118,7 +118,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             CurveProperty oldCurve = new();
 
             if (SetKeyToPropertyId(ref propertyId, blueprintCopyNum, paramsSetMask, ref oldCurve, null))
-                SetCurveProperty(propertyId, oldCurve.CurveId, oldCurve.IndexPropertyId, info, UInt32Flags.None, true);
+                SetCurveProperty(propertyId, oldCurve.CurveId, oldCurve.IndexPropertyId, info, SetPropertyFlags.None, true);
         }
 
         /// <summary>

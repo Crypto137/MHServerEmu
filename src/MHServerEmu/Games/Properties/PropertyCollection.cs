@@ -142,7 +142,7 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Sets a <see cref="CurveProperty"/> that derives its value from the specified <see cref="CurveId"/> and index <see cref="PropertyId"/>.
         /// </summary>
-        public void SetCurveProperty(PropertyId propertyId, CurveId curveId, PropertyId indexPropertyid, PropertyInfo info, UInt32Flags flags, bool updateValue)
+        public void SetCurveProperty(PropertyId propertyId, CurveId curveId, PropertyId indexPropertyid, PropertyInfo info, SetPropertyFlags flags, bool updateValue)
         {
             CurveProperty curveProp = new(propertyId, indexPropertyid, curveId);
             _curveList[propertyId] = curveProp;
@@ -167,7 +167,7 @@ namespace MHServerEmu.Games.Properties
                 return false;
 
             // Update aggregate value if successfully removed
-            UpdateAggregateValueFromBase(id, info, UInt32Flags.None, false, new());
+            UpdateAggregateValueFromBase(id, info, SetPropertyFlags.None, false, new());
             return true;
         }
 
@@ -227,7 +227,7 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Called when a property changes its value.
         /// </summary>
-        public void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, UInt32Flags flags)
+        public void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
         {
             // TODO: Implement as an event that entities can register to?
             
@@ -258,13 +258,13 @@ namespace MHServerEmu.Games.Properties
 
             // Transfer properties from the other collection
             foreach (var kvp in other)
-                SetPropertyValue(kvp.Key, kvp.Value, UInt32Flags.None);
+                SetPropertyValue(kvp.Key, kvp.Value, SetPropertyFlags.None);
 
             // Transfer curve properties
             foreach (var kvp in other.IterateCurveProperties())
             {
                 PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
-                SetCurveProperty(kvp.Value.PropertyId, kvp.Value.CurveId, kvp.Value.IndexPropertyId, info, UInt32Flags.None, cleanCopy);
+                SetCurveProperty(kvp.Value.PropertyId, kvp.Value.CurveId, kvp.Value.IndexPropertyId, info, SetPropertyFlags.None, cleanCopy);
             }
 
             // Update curve property values if this is a combination of two different collections rather than a clean copy
@@ -273,7 +273,7 @@ namespace MHServerEmu.Games.Properties
                 foreach (var kvp in IterateCurveProperties())
                 {
                     PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
-                    UpdateCurvePropertyValue(kvp.Value, UInt32Flags.None, info);
+                    UpdateCurvePropertyValue(kvp.Value, SetPropertyFlags.None, info);
                 }
             }
         }
@@ -346,7 +346,7 @@ namespace MHServerEmu.Games.Properties
                     previousEnum = propertyEnum;
                 }
 
-                UpdateAggregateValue(propertyId, info, UInt32Flags.None);
+                UpdateAggregateValue(propertyId, info, SetPropertyFlags.None);
             }
 
             return true;
@@ -396,7 +396,7 @@ namespace MHServerEmu.Games.Properties
                 PropertyId id = new(stream.ReadRawVarint64().ReverseBytes());   // Id is reversed so that it can be efficiently encoded into varint when all params are 0
                 PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
                 PropertyValue value = ConvertBitsToValue(stream.ReadRawVarint64(), info.DataType);
-                SetPropertyValue(id, value, UInt32Flags.Flag0);
+                SetPropertyValue(id, value, SetPropertyFlags.Flag0);
             }
         }
 
@@ -429,7 +429,7 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Sets the <see cref="PropertyValue"/> for the <see cref="PropertyId"/>.
         /// </summary>
-        protected bool SetPropertyValue(PropertyId id, PropertyValue value, UInt32Flags flags = UInt32Flags.None)
+        protected bool SetPropertyValue(PropertyId id, PropertyValue value, SetPropertyFlags flags = SetPropertyFlags.None)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
 
@@ -455,7 +455,7 @@ namespace MHServerEmu.Games.Properties
                     UpdateAggregateValueFromBase(id, info, flags, true, value);
             }
 
-            return hasChanged || flags.HasFlag(UInt32Flags.Flag2);  // Some kind of flag that forces property value update
+            return hasChanged || flags.HasFlag(SetPropertyFlags.Flag2);  // Some kind of flag that forces property value update
         }
 
         /// <summary>
@@ -528,7 +528,7 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Updates the <see cref="PropertyValue"/> of the provided <see cref="CurveProperty"/>.
         /// </summary>
-        private bool UpdateCurvePropertyValue(CurveProperty curveProp, UInt32Flags flags, PropertyInfo info)
+        private bool UpdateCurvePropertyValue(CurveProperty curveProp, SetPropertyFlags flags, PropertyInfo info)
         {
             // Retrieve the curve we need
             if (curveProp.CurveId == CurveId.Invalid) Logger.WarnReturn(false, $"UpdateCurvePropertyValue(): curveId is invalid");
@@ -606,7 +606,7 @@ namespace MHServerEmu.Games.Properties
                 PropertyValue newValue = kvp.Value;
 
                 PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyId.Enum);
-                OnPropertyChange(propertyId, newValue, info.DefaultValue, UInt32Flags.None); 
+                OnPropertyChange(propertyId, newValue, info.DefaultValue, SetPropertyFlags.None); 
             }
 
             // TODO: Scope protection
@@ -658,9 +658,9 @@ namespace MHServerEmu.Games.Properties
                 // TODO: scope protection
 
                 foreach (PropertyCollection parent in _parentCollections)
-                    parent.UpdateAggregateValue(id, info, UInt32Flags.None);
+                    parent.UpdateAggregateValue(id, info, SetPropertyFlags.None);
 
-                OnPropertyChange(id, aggregateValue, oldValue, UInt32Flags.None);
+                OnPropertyChange(id, aggregateValue, oldValue, SetPropertyFlags.None);
             }
 
             return valueHasChanged;
@@ -685,7 +685,7 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Updates the aggregate value with the specified <see cref="PropertyId"/>.
         /// </summary>
-        private void UpdateAggregateValue(PropertyId id, PropertyInfo info, UInt32Flags flags)
+        private void UpdateAggregateValue(PropertyId id, PropertyInfo info, SetPropertyFlags flags)
         {
             bool hasBaseValue = GetBaseValue(id, out PropertyValue baseValue);
             UpdateAggregateValueFromBase(id, info, flags, hasBaseValue, baseValue);
@@ -694,7 +694,7 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Updates the aggregate value with the specified <see cref="PropertyId"/>.
         /// </summary>
-        private void UpdateAggregateValueFromBase(PropertyId id, PropertyInfo info, UInt32Flags flags, bool hasValue, PropertyValue baseValue)
+        private void UpdateAggregateValueFromBase(PropertyId id, PropertyInfo info, SetPropertyFlags flags, bool hasValue, PropertyValue baseValue)
         {
             PropertyValue aggregateValue = baseValue;
 
@@ -721,7 +721,7 @@ namespace MHServerEmu.Games.Properties
             if (hasValue)
             {
                 _aggregateList.GetSetPropertyValue(id, aggregateValue, out PropertyValue oldValue, out bool wasAdded, out bool hasChanged);
-                if (wasAdded || hasChanged || flags.HasFlag(UInt32Flags.Flag2))
+                if (wasAdded || hasChanged || flags.HasFlag(SetPropertyFlags.Flag2))
                 {
                     if (wasAdded) oldValue = info.DefaultValue;
                     OnPropertyChange(id, aggregateValue, oldValue, flags);
