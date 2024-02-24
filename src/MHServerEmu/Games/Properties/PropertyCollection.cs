@@ -279,6 +279,9 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Adds a child <see cref="PropertyCollection"/> and aggregates its values.
         /// </summary>
+        /// <remarks>
+        /// When you add a child collection make sure it's not a parent of parent of this collection, or things are going to break.
+        /// </remarks>
         public bool AddChildCollection(PropertyCollection childCollection)
         {
             // Check child collection
@@ -288,6 +291,7 @@ namespace MHServerEmu.Games.Properties
             if (childCollection == this)
                 return Logger.WarnReturn(false, "AddChildCollection(): Attempted to add itself as a child");
 
+            // To make this more safe we might want to add a recursive check of all ancestors here
             if (_parentCollections.Contains(childCollection))
                 return Logger.WarnReturn(false, "AddChildCollection(): Attempted to add a parent as a child");
 
