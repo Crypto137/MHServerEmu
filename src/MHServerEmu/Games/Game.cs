@@ -307,7 +307,7 @@ namespace MHServerEmu.Games
                 {
                     // set timer 5 seconds for wait client answer
                     EventManager.AddEvent(client, EventEnum.FinishCellLoading, 5000, client.AOI.CellsInRegion);
-                    client.AOI.ForseCellLoad();
+                    client.AOI.ForceCellLoad();
                 }
             }
         }

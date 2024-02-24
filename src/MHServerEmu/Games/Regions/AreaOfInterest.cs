@@ -280,7 +280,7 @@ namespace MHServerEmu.Games.Regions
             return true;
         }
 
-        public void ForseCellLoad()
+        public void ForceCellLoad()
         {
             foreach (var cell in _loadedCells)
                 cell.Value.Loaded = true;
