@@ -284,7 +284,6 @@ namespace MHServerEmu.Games.Regions
         {
             foreach (var cell in _loadedCells)
                 cell.Value.Loaded = true;
-            Update(_lastUpdateCenter);
         }
 
         public void SetAOIVolume(float volume)
