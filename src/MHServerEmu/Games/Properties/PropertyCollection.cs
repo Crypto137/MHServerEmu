@@ -1,7 +1,5 @@
 ﻿using System.Collections;
-using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
@@ -12,269 +10,25 @@ using MHServerEmu.Games.GameData.Prototypes;
 namespace MHServerEmu.Games.Properties
 {
     /// <summary>
-    /// A collection of key/value pairs of <see cref="PropertyId"/> and <see cref="PropertyValue"/> sorted by key.
+    /// An aggregatable collection of key/value pairs of <see cref="PropertyId"/> and <see cref="PropertyValue"/>.
     /// </summary>
     public class PropertyCollection : IEnumerable<KeyValuePair<PropertyId, PropertyValue>>
     {
-        // TODO: Scope protection: IDisposable that sets flags?
+        // TODO: Eval
         // TODO: PropertyChangeWatcher API: AttachWatcher(), RemoveWatcher(), RemoveAllWatchers()
-        // TODO: OnPropertyChange - implement as an event that entities can register to?
-        // TODO: Consider implementing IDisposable
+        // TODO: Consider implementing IDisposable for optimization
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        // TODO: reimplement PropertyList data structure from the client? Does it make sense?
-        // NOTE: Gazillion's PropertyList structure uses a different sorting order
-        private readonly SortedDictionary<PropertyId, PropertyValue> _baseList = new();
-        private readonly SortedDictionary<PropertyId, PropertyValue> _aggregateList = new();
-        private readonly SortedDictionary<PropertyId, CurveProperty> _curveList = new();
+        private readonly PropertyList _baseList = new();
+        private readonly PropertyList _aggregateList = new();
+        private readonly Dictionary<PropertyId, CurveProperty> _curveList = new();
 
         // Parent and child collections
         // NOTE: The client uses a tabletree structure to store those with PropertyCollection as key and an empty struct called EmptyDummyValue as value.
         // I'm not sure what the intention there was, but it makes zero sense for us to do it the same way.
         private readonly HashSet<PropertyCollection> _parentCollections = new();
         private readonly HashSet<PropertyCollection> _childCollections = new();
-
-        public PropertyCollection() { }
-
-        // NOTE: In the client GetProperty() and SetProperty() handle conversion to and from PropertyValue,
-        // but we take care of that with implicit casting defined in PropertyValue.cs, so these methods are
-        // largely redundant and are kept to avoid deviating from the client.
-
-        /// <summary>
-        /// Returns the <see cref="PropertyValue"/> corresponding to the specified <see cref="PropertyId"/>.
-        /// Falls back to the default value for the property if this <see cref="PropertyCollection"/> does not contain it.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="PropertyValue"/> can be implicitly converted to and from <see cref="bool"/>, <see cref="float"/>,
-        /// <see cref="int"/>, <see cref="long"/>, <see cref="uint"/>, <see cref="ulong"/>, <see cref="PrototypeId"/>,
-        /// <see cref="CurveId"/>, <see cref="AssetId"/>, and <see cref="Vector3"/>.
-        /// </remarks>
-        public PropertyValue GetProperty(PropertyId propertyId)
-        {
-            return GetPropertyValue(propertyId);
-        }
-
-        /// <summary>
-        /// Sets the <see cref="PropertyValue"/> corresponding to the specified <see cref="PropertyId"/>.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="PropertyValue"/> can be implicitly converted to and from <see cref="bool"/>, <see cref="float"/>,
-        /// <see cref="int"/>, <see cref="long"/>, <see cref="uint"/>, <see cref="ulong"/>, <see cref="PrototypeId"/>,
-        /// <see cref="CurveId"/>, <see cref="AssetId"/>, and <see cref="Vector3"/>.
-        /// </remarks>
-        public void SetProperty(PropertyValue value, PropertyId propertyId)
-        {
-            SetPropertyValue(propertyId, value);
-        }
-
-        /// <summary>
-        /// Sets a <see cref="CurveProperty"/> that derives its value from the specified <see cref="CurveId"/> and index <see cref="PropertyId"/>.
-        /// </summary>
-        public void SetCurveProperty(PropertyId propertyId, CurveId curveId, PropertyId indexPropertyid, PropertyInfo info, UInt32Flags flags, bool updateValue)
-        {
-            CurveProperty curveProp = new(propertyId, indexPropertyid, curveId);
-            _curveList[propertyId] = curveProp;
-
-            if (updateValue)
-                UpdateCurvePropertyValue(curveProp, flags, info);
-        }
-
-        /// <summary>
-        /// Removes a <see cref="PropertyValue"/> corresponding to the specified <see cref="PropertyId"/>.
-        /// </summary>
-        public bool RemoveProperty(PropertyId propertyId)
-        {
-            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyId.Enum);
-
-            // Remove from curve property list if needed
-            if (info.IsCurveProperty) 
-                _curveList.Remove(propertyId);
-
-            // Remove from the base list
-            if (_baseList.Remove(propertyId) == false)
-                return false;
-
-            // Update aggregate value if successfully removed
-            UpdateAggregateValueFromBase(propertyId, info, UInt32Flags.None, false, new());
-            return true;
-        }
-
-        /// <summary>
-        /// Removes all <see cref="PropertyValue"/> values corresponding to the specified <see cref="PropertyEnum"/> (no matter what their params are).
-        /// </summary>
-        public bool RemovePropertyRange(PropertyEnum propertyEnum)
-        {
-            List<PropertyId> toRemoveList = new();
-            foreach (var kvp in this)
-            {
-                if (kvp.Key.Enum == propertyEnum)
-                    toRemoveList.Add(kvp.Key);
-            }
-
-            if (toRemoveList.Count == 0) return false;
-
-            foreach (var propertyId in toRemoveList)
-                RemoveProperty(propertyId);
-
-            return true;
-        }
-
-        /// <summary>
-        /// Clears all data from this <see cref="PropertyCollection"/>.
-        /// </summary>
-        public void Clear()
-        {
-            _baseList.Clear();
-            _curveList.Clear();
-            RemoveAllChildren();
-            RebuildAggregateList();
-        }
-
-        /// <summary>
-        /// Returns <see langword="true"/> if this <see cref="PropertyCollection"/> contains any properties with the specified <see cref="PropertyEnum"/>.
-        /// </summary>
-        public bool HasProperty(PropertyEnum propertyEnum)
-        {
-            foreach (var kvp in this)
-            {
-                if (kvp.Key.Enum == propertyEnum)
-                    return true;
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Returns <see langword="true"/> if this <see cref="PropertyCollection"/> contains any properties with the specified <see cref="PropertyId"/>.
-        /// </summary>
-        public bool HasProperty(PropertyId propertyId)
-        {
-            return _baseList.TryGetValue(propertyId, out _);
-        }
-
-        public void OnPropertyChange(PropertyId propertyId, PropertyValue newValue, PropertyValue oldValue, UInt32Flags flags)
-        {
-            // TODO: update curves
-            // TODO: update evals
-            // TODO: notify watchers
-        }
-
-        /// <summary>
-        /// Copies all data from another <see cref="PropertyCollection"/>.
-        /// </summary>
-        public void FlattenCopyFrom(PropertyCollection other, bool cleanCopy)
-        {
-            // Clean up if needed
-            if (cleanCopy)
-            {
-                _baseList.Clear();
-                _curveList.Clear();
-                RemoveAllChildren();
-            }
-
-            // Transfer properties from the other collection
-            foreach (var kvp in other)
-                this[kvp.Key] = kvp.Value;
-
-            // Transfer curve properties
-            foreach (var kvp in other.IterateCurveProperties())
-            {
-                PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
-                SetCurveProperty(kvp.Value.PropertyId, kvp.Value.CurveId, kvp.Value.IndexPropertyId, info, UInt32Flags.None, cleanCopy);
-            }
-
-            // Update curve property values if this is a combination of two different collections rather than a clean copy
-            if (cleanCopy == false)
-            {
-                foreach (var kvp in IterateCurveProperties())
-                {
-                    PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
-                    UpdateCurvePropertyValue(kvp.Value, UInt32Flags.None, info);
-                }
-            }
-        }
-
-        public bool AddChildCollection(PropertyCollection childCollection)
-        {
-            if (childCollection == null)
-                return Logger.WarnReturn(false, "AddChildCollection(): childCollection is null");
-
-            if (childCollection == this)
-                return Logger.WarnReturn(false, "AddChildCollection(): Attempted to add itself as a child");
-
-            if (_parentCollections.Contains(childCollection))
-                return Logger.WarnReturn(false, "AddChildCollection(): Attempted to add a parent as a child");
-
-            // TODO: Scope protection checks
-
-            bool addedToChildCollection = _childCollections.Add(childCollection);
-            bool addedToParentCollection = childCollection._parentCollections.Add(this);
-
-            if (addedToChildCollection == false || addedToParentCollection == false)
-            {
-                _childCollections.Remove(childCollection);
-                childCollection._parentCollections.Remove(this);
-
-                if (addedToChildCollection == false)
-                    return Logger.WarnReturn(false, $"AddChildCollection(): Failed to add to parent's child collection");
-
-                if (addedToParentCollection == false)
-                    return Logger.WarnReturn(false, $"AddChildCollection(): Failed to add to child's parent collection");
-            }
-
-            AggregateChildCollection(childCollection);
-
-            return true;
-        }
-
-        public bool RemoveChildCollection(PropertyCollection childCollection)
-        {
-            if (childCollection == null)
-                return Logger.WarnReturn(false, "RemoveChildCollection(): childCollection is null");
-
-            // TODO: Protection checks
-
-            bool childErasedInParent = _childCollections.Remove(childCollection);
-            bool parentErasedInChild = childCollection._parentCollections.Remove(this);
-
-            if (childErasedInParent == false)
-                return Logger.WarnReturn(false, "RemoveChildCollection(): Failed to remove from parent's child collection");
-
-            if (parentErasedInChild == false)
-                return Logger.WarnReturn(false, "RemoveChildCollection(): Failed to remove from child's parent collection");
-
-            // Cache property info lookups for copying multiple properties of the same type in a row
-            PropertyEnum previousEnum = PropertyEnum.Invalid;
-            PropertyInfo info = null;
-
-            foreach (var kvp in childCollection)
-            {
-                PropertyId propertyId = kvp.Key;
-                PropertyEnum propertyEnum = propertyId.Enum;
-                if (propertyId.Enum != previousEnum)
-                {
-                    info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
-                    previousEnum = propertyEnum;
-                }
-
-                UpdateAggregateValue(propertyId, info, UInt32Flags.None);
-            }
-
-            return true;
-        }
-
-        public bool RemoveFromParent(PropertyCollection parentCollection)
-        {
-            if (parentCollection == null)
-                return Logger.WarnReturn(false, "RemoveFromParent(): parentCollection is null");
-
-            return parentCollection.RemoveChildCollection(this);
-        }
-
-        public bool IsChildOf(PropertyCollection parentCollection) => _parentCollections.Contains(parentCollection);
-
-        public bool HasChildCollection(PropertyCollection childCollection) => _childCollections.Contains(childCollection);
 
         #region Value Indexers
 
@@ -352,6 +106,290 @@ namespace MHServerEmu.Games.Properties
 
         #endregion
 
+        // NOTE: In the client GetProperty() and SetProperty() handle conversion to and from PropertyValue,
+        // but we take care of that with implicit casting defined in PropertyValue.cs, so these methods are
+        // largely redundant and are kept to avoid deviating from the client API.
+
+        /// <summary>
+        /// Returns the <see cref="PropertyValue"/> with the specified <see cref="PropertyId"/>.
+        /// Falls back to the default value for the property if this <see cref="PropertyCollection"/> does not contain it.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="PropertyValue"/> can be implicitly converted to and from <see cref="bool"/>, <see cref="float"/>,
+        /// <see cref="int"/>, <see cref="long"/>, <see cref="uint"/>, <see cref="ulong"/>, <see cref="PrototypeId"/>,
+        /// <see cref="CurveId"/>, <see cref="AssetId"/>, and <see cref="Vector3"/>.
+        /// </remarks>
+        public PropertyValue GetProperty(PropertyId id)
+        {
+            return GetPropertyValue(id);
+        }
+
+        /// <summary>
+        /// Sets the <see cref="PropertyValue"/> with the specified <see cref="PropertyId"/>.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="PropertyValue"/> can be implicitly converted to and from <see cref="bool"/>, <see cref="float"/>,
+        /// <see cref="int"/>, <see cref="long"/>, <see cref="uint"/>, <see cref="ulong"/>, <see cref="PrototypeId"/>,
+        /// <see cref="CurveId"/>, <see cref="AssetId"/>, and <see cref="Vector3"/>.
+        /// </remarks>
+        public void SetProperty(PropertyValue value, PropertyId id)
+        {
+            SetPropertyValue(id, value);
+        }
+
+        /// <summary>
+        /// Sets a <see cref="CurveProperty"/> that derives its value from the specified <see cref="CurveId"/> and index <see cref="PropertyId"/>.
+        /// </summary>
+        public void SetCurveProperty(PropertyId propertyId, CurveId curveId, PropertyId indexPropertyid, PropertyInfo info, SetPropertyFlags flags, bool updateValue)
+        {
+            CurveProperty curveProp = new(propertyId, indexPropertyid, curveId);
+            _curveList[propertyId] = curveProp;
+
+            if (updateValue)
+                UpdateCurvePropertyValue(curveProp, flags, info);
+        }
+
+        /// <summary>
+        /// Removes the <see cref="PropertyValue"/> with the specified <see cref="PropertyId"/>.
+        /// </summary>
+        public bool RemoveProperty(PropertyId id)
+        {
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
+
+            // Remove from curve property list if needed
+            if (info.IsCurveProperty) 
+                _curveList.Remove(id);
+
+            // Remove from the base list
+            if (_baseList.RemoveProperty(id) == false)
+                return false;
+
+            // Update aggregate value if successfully removed
+            UpdateAggregateValueFromBase(id, info, SetPropertyFlags.None, false, new());
+            return true;
+        }
+
+        /// <summary>
+        /// Removes all <see cref="PropertyValue"/> values with the specified <see cref="PropertyEnum"/> (no matter what their params are).
+        /// </summary>
+        public bool RemovePropertyRange(PropertyEnum propertyEnum)
+        {
+            List<PropertyId> toRemoveList = new();
+            foreach (var kvp in this)
+            {
+                if (kvp.Key.Enum == propertyEnum)
+                    toRemoveList.Add(kvp.Key);
+            }
+
+            if (toRemoveList.Count == 0) return false;
+
+            foreach (var propertyId in toRemoveList)
+                RemoveProperty(propertyId);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Clears all data from this <see cref="PropertyCollection"/>.
+        /// </summary>
+        public void Clear()
+        {
+            _baseList.Clear();
+            _curveList.Clear();
+            RemoveAllChildren();
+            RebuildAggregateList();
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if this <see cref="PropertyCollection"/> contains any properties with the specified <see cref="PropertyEnum"/>.
+        /// </summary>
+        public bool HasProperty(PropertyEnum propertyEnum)
+        {
+            foreach (var kvp in this)
+            {
+                if (kvp.Key.Enum == propertyEnum)
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if this <see cref="PropertyCollection"/> contains any properties with the specified <see cref="PropertyId"/>.
+        /// </summary>
+        public bool HasProperty(PropertyId id)
+        {
+            return _aggregateList.GetPropertyValue(id, out _);
+        }
+
+        /// <summary>
+        /// Called when a property changes its value.
+        /// </summary>
+        public void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
+        {
+            // TODO: Implement as an event that entities can register to?
+            
+            // Update curve properties that rely on this property as an index property
+            foreach (var kvp in IterateCurveProperties())
+            {
+                if (kvp.Value.IndexPropertyId == id)
+                    UpdateCurvePropertyValue(kvp.Value, flags, null);
+            }
+
+            // TODO: Update evals
+
+            // TODO: Notify watchers
+        }
+
+        /// <summary>
+        /// Copies all data from another <see cref="PropertyCollection"/>.
+        /// </summary>
+        public void FlattenCopyFrom(PropertyCollection other, bool cleanCopy)
+        {
+            // Clean up if needed
+            if (cleanCopy)
+            {
+                _baseList.Clear();
+                _curveList.Clear();
+                RemoveAllChildren();
+            }
+
+            // Transfer properties from the other collection
+            foreach (var kvp in other)
+                SetPropertyValue(kvp.Key, kvp.Value, SetPropertyFlags.None);
+
+            // Transfer curve properties
+            foreach (var kvp in other.IterateCurveProperties())
+            {
+                PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
+                SetCurveProperty(kvp.Value.PropertyId, kvp.Value.CurveId, kvp.Value.IndexPropertyId, info, SetPropertyFlags.None, cleanCopy);
+            }
+
+            // Update curve property values if this is a combination of two different collections rather than a clean copy
+            if (cleanCopy == false)
+            {
+                foreach (var kvp in IterateCurveProperties())
+                {
+                    PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
+                    UpdateCurvePropertyValue(kvp.Value, SetPropertyFlags.None, info);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Adds a child <see cref="PropertyCollection"/> and aggregates its values.
+        /// </summary>
+        /// <remarks>
+        /// When you add a child collection make sure it's not a parent of parent of this collection, or things are going to break.
+        /// </remarks>
+        public bool AddChildCollection(PropertyCollection childCollection)
+        {
+            // Check child collection
+            if (childCollection == null)
+                return Logger.WarnReturn(false, "AddChildCollection(): childCollection is null");
+
+            if (childCollection == this)
+                return Logger.WarnReturn(false, "AddChildCollection(): Attempted to add itself as a child");
+
+            // To make this more safe we might want to add a recursive check of all ancestors here
+            if (_parentCollections.Contains(childCollection))
+                return Logger.WarnReturn(false, "AddChildCollection(): Attempted to add a parent as a child");
+
+            // Check for protections
+            if (IsNotProtected(Protection.Child) == false)
+                return Logger.WarnReturn(false, "AddChildCollection(): Property collection protection check failed (parent's child collection)");
+
+            if (childCollection.IsNotProtected(Protection.Parent) == false)
+                return Logger.WarnReturn(false, "AddChildCollection(): Property collection protection check failed (child's parent collection)");
+
+            // Try to add the child collection
+            bool addedToChildCollection = _childCollections.Add(childCollection);
+            bool addedToParentCollection = childCollection._parentCollections.Add(this);
+
+            // Make sure nothing went wrong
+            if (addedToChildCollection == false || addedToParentCollection == false)
+            {
+                _childCollections.Remove(childCollection);
+                childCollection._parentCollections.Remove(this);
+
+                if (addedToChildCollection == false)
+                    return Logger.WarnReturn(false, $"AddChildCollection(): Failed to add to parent's child collection");
+
+                if (addedToParentCollection == false)
+                    return Logger.WarnReturn(false, $"AddChildCollection(): Failed to add to child's parent collection");
+            }
+
+            // Aggregate the new child collection
+            AggregateChildCollection(childCollection);
+            return true;
+        }
+
+        /// <summary>
+        /// Removes a child <see cref="PropertyCollection"/> and reaggregates values.
+        /// </summary>
+        public bool RemoveChildCollection(PropertyCollection childCollection)
+        {
+            if (childCollection == null)
+                return Logger.WarnReturn(false, "RemoveChildCollection(): childCollection is null");
+
+            // Check for protections, but continue anyway
+            if (IsNotProtected(Protection.Child) == false)
+                Logger.Warn("RemoveChildCollection(): Property collection protection check failed (parent's child collection)");
+
+            if (childCollection.IsNotProtected(Protection.Parent) == false)
+                Logger.Warn("RemoveChildCollection(): Property collection protection check failed (child's parent collection)");
+
+            // Remove parent / child references
+            bool childErasedInParent = _childCollections.Remove(childCollection);
+            bool parentErasedInChild = childCollection._parentCollections.Remove(this);
+
+            if (childErasedInParent == false)
+                return Logger.WarnReturn(false, "RemoveChildCollection(): Failed to remove from parent's child collection");
+
+            if (parentErasedInChild == false)
+                return Logger.WarnReturn(false, "RemoveChildCollection(): Failed to remove from child's parent collection");
+
+            // Cache property info lookups for copying multiple properties of the same type in a row
+            PropertyEnum previousEnum = PropertyEnum.Invalid;
+            PropertyInfo info = null;
+            foreach (var kvp in childCollection)
+            {
+                PropertyId propertyId = kvp.Key;
+                PropertyEnum propertyEnum = propertyId.Enum;
+                if (propertyEnum != previousEnum)
+                {
+                    info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+                    previousEnum = propertyEnum;
+                }
+
+                UpdateAggregateValue(propertyId, info, SetPropertyFlags.None);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Removes this <see cref="PropertyCollection"/> from a parent collection.
+        /// </summary>
+        public bool RemoveFromParent(PropertyCollection parentCollection)
+        {
+            if (parentCollection == null)
+                return Logger.WarnReturn(false, "RemoveFromParent(): parentCollection is null");
+
+            return parentCollection.RemoveChildCollection(this);
+        }
+
+        /// <summary>
+        /// Checks if this <see cref="PropertyCollection"/> is a child of the provided collection.
+        /// </summary>
+        public bool IsChildOf(PropertyCollection parentCollection) => _parentCollections.Contains(parentCollection);
+
+        /// <summary>
+        /// Checks if this <see cref="PropertyCollection"/> is a parent of the provided collection.
+        /// </summary>
+        public bool HasChildCollection(PropertyCollection childCollection) => _childCollections.Contains(childCollection);
+
+        public override string ToString() => _aggregateList.ToString();
 
         #region IEnumerable Implementation
 
@@ -374,7 +412,7 @@ namespace MHServerEmu.Games.Properties
                 PropertyId id = new(stream.ReadRawVarint64().ReverseBytes());   // Id is reversed so that it can be efficiently encoded into varint when all params are 0
                 PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
                 PropertyValue value = ConvertBitsToValue(stream.ReadRawVarint64(), info.DataType);
-                SetPropertyValue(id, value, UInt32Flags.Flag0);
+                SetPropertyValue(id, value, SetPropertyFlags.Flag0);
             }
         }
 
@@ -388,73 +426,58 @@ namespace MHServerEmu.Games.Properties
                 SerializePropertyForPacking(kvp, stream);
         }
 
-        public override string ToString()
-        {
-            StringBuilder sb = new();
-            foreach (var kvp in this)
-            {
-                PropertyId id = kvp.Key;
-                PropertyValue value = kvp.Value;
-                PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
-
-                sb.AppendLine($"{info.BuildPropertyName(id)}: {value.Print(info.DataType)}");
-            }
-            return sb.ToString();
-        }
-
         /// <summary>
-        /// Returns the <see cref="PropertyValue"/> corresponding to the specified <see cref="PropertyId"/>.
+        /// Returns the <see cref="PropertyValue"/> with the specified <see cref="PropertyId"/>.
         /// Falls back to the default value for the property if this <see cref="PropertyCollection"/> does not contain it.
         /// </summary>
-        protected PropertyValue GetPropertyValue(PropertyId propertyId)
+        protected PropertyValue GetPropertyValue(PropertyId id)
         {
-            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyId.Enum);
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
 
             // TODO: EvalPropertyValue()
 
-            if (_baseList.TryGetValue(propertyId, out var value) == false)
+            if (_aggregateList.GetPropertyValue(id, out PropertyValue value) == false)
                 return info.DefaultValue;
 
             return value;
         }
 
         /// <summary>
-        /// Sets the <see cref="PropertyValue"/> of a <see cref="PropertyId"/>.
+        /// Sets the <see cref="PropertyValue"/> for the <see cref="PropertyId"/>.
         /// </summary>
-        protected bool SetPropertyValue(PropertyId propertyId, PropertyValue propertyValue, UInt32Flags flags = UInt32Flags.None)
+        protected bool SetPropertyValue(PropertyId id, PropertyValue value, SetPropertyFlags flags = SetPropertyFlags.None)
         {
-            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyId.Enum);
+            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
 
             if (info.TruncatePropertyValueToInt && info.DataType == PropertyDataType.Real)
-                propertyValue = MathF.Floor(propertyValue.RawFloat);
+                value = MathF.Floor(value.RawFloat);
 
-            ClampPropertyValue(info.Prototype, ref propertyValue);
+            ClampPropertyValue(info.Prototype, ref value);
 
-            bool hasChanged = false;
+            bool hasChanged;
 
             // Setting a property to its default value actually removes the value from the list,
             // because the collection automatically falls back to the default value if nothing is stored.
-            if (propertyValue.RawLong == info.DefaultValue.RawLong)
+            if (value.RawLong == info.DefaultValue.RawLong)
             {
-                hasChanged = _baseList.Remove(propertyId);
+                hasChanged = _baseList.RemoveProperty(id);
                 if (hasChanged)
-                    UpdateAggregateValueFromBase(propertyId, info, flags, false, new());
+                    UpdateAggregateValueFromBase(id, info, flags, false, new());
             }
             else
             {
-                hasChanged = SetPropertyValue(_baseList, propertyId, propertyValue);    // PropertyList::SetPropertyValue()
-
+                hasChanged = _baseList.SetPropertyValue(id, value);
                 if (hasChanged)
-                    UpdateAggregateValueFromBase(propertyId, info, flags, true, propertyValue);
+                    UpdateAggregateValueFromBase(id, info, flags, true, value);
             }
 
-            return hasChanged || flags.HasFlag(UInt32Flags.Flag2);  // Some kind of flag that forces property value update
+            return hasChanged || flags.HasFlag(SetPropertyFlags.Flag2);  // Some kind of flag that forces property value update
         }
 
         /// <summary>
         /// Serializes a key/value pair of <see cref="PropertyId"/> and <see cref="PropertyValue"/> to a <see cref="CodedOutputStream"/>.
         /// </summary>
-        protected bool SerializePropertyForPacking(KeyValuePair<PropertyId, PropertyValue> kvp, CodedOutputStream stream)
+        protected static bool SerializePropertyForPacking(KeyValuePair<PropertyId, PropertyValue> kvp, CodedOutputStream stream)
         {
             // TODO: Serialize only properties that are different from the base collection for replication 
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
@@ -499,11 +522,11 @@ namespace MHServerEmu.Games.Properties
         }
 
         /// <summary>
-        /// Retrieves the <see cref="CurveProperty"/> corresponding to a <see cref="PropertyId"/>. Returns <see langword="null"/> if not found.
+        /// Retrieves the <see cref="CurveProperty"/> with the <see cref="PropertyId"/>. Returns <see langword="null"/> if not found.
         /// </summary>
-        protected CurveProperty? GetCurveProperty(PropertyId propertyId)
+        protected CurveProperty? GetCurveProperty(PropertyId id)
         {
-            if (_curveList.TryGetValue(propertyId, out CurveProperty curveProp) == false)
+            if (_curveList.TryGetValue(id, out CurveProperty curveProp) == false)
                 return null;
 
             return curveProp;
@@ -519,9 +542,9 @@ namespace MHServerEmu.Games.Properties
         }
 
         /// <summary>
-        /// Updates the <see cref="PropertyValue"/> of a <see cref="CurveProperty"/>.
+        /// Updates the <see cref="PropertyValue"/> of the provided <see cref="CurveProperty"/>.
         /// </summary>
-        private bool UpdateCurvePropertyValue(CurveProperty curveProp, UInt32Flags flags, PropertyInfo info)
+        private bool UpdateCurvePropertyValue(CurveProperty curveProp, SetPropertyFlags flags, PropertyInfo info)
         {
             // Retrieve the curve we need
             if (curveProp.CurveId == CurveId.Invalid) Logger.WarnReturn(false, $"UpdateCurvePropertyValue(): curveId is invalid");
@@ -547,7 +570,7 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Clamps a <see cref="PropertyValue"/> if needed.
         /// </summary>
-        private void ClampPropertyValue(PropertyInfoPrototype propertyInfoPrototype, ref PropertyValue propertyValue)
+        private static void ClampPropertyValue(PropertyInfoPrototype propertyInfoPrototype, ref PropertyValue propertyValue)
         {
             switch (propertyInfoPrototype.Type)
             {
@@ -566,12 +589,18 @@ namespace MHServerEmu.Games.Properties
             }
         }
 
+        /// <summary>
+        /// Removes all children from this <see cref="PropertyCollection"/>.
+        /// </summary>
         private void RemoveAllChildren()
         {
             while (_childCollections.Count > 0)
                 RemoveChildCollection(_childCollections.First());
         }
 
+        /// <summary>
+        /// Removes all parents from this <see cref="PropertyCollection"/>.
+        /// </summary>
         private void RemoveFromAllParents()
         {
             // TODO: Call this during disposal if we implement IDisposable
@@ -579,6 +608,9 @@ namespace MHServerEmu.Games.Properties
                 RemoveChildCollection(this);
         }
 
+        /// <summary>
+        /// Reaggregates all properties contained in this <see cref="PropertyCollection"/>.
+        /// </summary>
         private void RebuildAggregateList()
         {
             // Clean up existring aggregated values
@@ -590,15 +622,19 @@ namespace MHServerEmu.Games.Properties
                 PropertyValue newValue = kvp.Value;
 
                 PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyId.Enum);
-                OnPropertyChange(propertyId, newValue, info.DefaultValue, UInt32Flags.None); 
+                OnPropertyChange(propertyId, newValue, info.DefaultValue, SetPropertyFlags.None); 
             }
 
-            // TODO: Scope protection
-
+            // Aggregate all child collections, protect to prevent new child collections from being added during iteration
+            Protect(Protection.Child);
             foreach (PropertyCollection child in _childCollections)
-                AggregateChildCollection(child);                
+                AggregateChildCollection(child);
+            ReleaseProtection(Protection.Child);
         }
 
+        /// <summary>
+        /// Aggregates all properties from a child <see cref="PropertyCollection"/>.
+        /// </summary>
         private void AggregateChildCollection(PropertyCollection childCollection)
         {
             // Cache property info lookups for copying multiple properties of the same type in a row
@@ -619,59 +655,74 @@ namespace MHServerEmu.Games.Properties
             }
         }
 
-        private bool AggregatePropertyFromChildCollectionAdd(PropertyId propertyId, PropertyInfo info, PropertyValue propertyValue)
+        /// <summary>
+        /// Aggregates the specified property from a child <see cref="PropertyCollection"/>.
+        /// </summary>
+        private bool AggregatePropertyFromChildCollectionAdd(PropertyId id, PropertyInfo info, PropertyValue propertyValue)
         {
-            bool valueHasChanged = false;
+            bool valueHasChanged;
 
-            if (GetAggregateValue(propertyId, out PropertyValue aggregateValue) == false)
+            if (GetAggregateValue(id, out PropertyValue aggregateValue) == false)
                 aggregateValue = info.DefaultValue;
 
             PropertyValue oldValue = aggregateValue;
 
             AggregatePropertyValue(info, propertyValue, ref aggregateValue);
-            valueHasChanged = SetPropertyValue(_aggregateList, propertyId, aggregateValue);
+            valueHasChanged = _aggregateList.SetPropertyValue(id, aggregateValue);
 
             if (valueHasChanged)
             {
-                // TODO: scope protection
-
+                // Update parent aggregate values, protect to prevent new parent collections from being added during iteration
+                Protect(Protection.Parent);
                 foreach (PropertyCollection parent in _parentCollections)
-                    parent.UpdateAggregateValue(propertyId, info, UInt32Flags.None);
+                    parent.UpdateAggregateValue(id, info, SetPropertyFlags.None);
+                ReleaseProtection(Protection.Parent);
 
-                OnPropertyChange(propertyId, aggregateValue, oldValue, UInt32Flags.None);
+                OnPropertyChange(id, aggregateValue, oldValue, SetPropertyFlags.None);
             }
 
             return valueHasChanged;
         }
 
-        private bool GetBaseValue(PropertyId propertyId, out PropertyValue propertyValue)
+        /// <summary>
+        /// Returns the base value with the specified <see cref="PropertyId"/>.
+        /// </summary>
+        private bool GetBaseValue(PropertyId id, out PropertyValue value)
         {
-            return _baseList.TryGetValue(propertyId, out propertyValue);
+            return _baseList.GetPropertyValue(id, out value);
         }
 
-        private bool GetAggregateValue(PropertyId propertyId, out PropertyValue propertyValue)
+        /// <summary>
+        /// Returns the aggregate value with the specified <see cref="PropertyId"/>.
+        /// </summary>
+        private bool GetAggregateValue(PropertyId id, out PropertyValue value)
         {
-            return _aggregateList.TryGetValue(propertyId, out propertyValue);
+            return _aggregateList.GetPropertyValue(id, out value);
         }
 
-        private void UpdateAggregateValue(PropertyId propertyId, PropertyInfo info, UInt32Flags flags)
+        /// <summary>
+        /// Updates the aggregate value with the specified <see cref="PropertyId"/>.
+        /// </summary>
+        private void UpdateAggregateValue(PropertyId id, PropertyInfo info, SetPropertyFlags flags)
         {
-            bool hasBaseValue = GetBaseValue(propertyId, out PropertyValue baseValue);
-            UpdateAggregateValueFromBase(propertyId, info, flags, hasBaseValue, baseValue);
+            bool hasBaseValue = GetBaseValue(id, out PropertyValue baseValue);
+            UpdateAggregateValueFromBase(id, info, flags, hasBaseValue, baseValue);
         }
 
-        private void UpdateAggregateValueFromBase(PropertyId propertyId, PropertyInfo info, UInt32Flags flags, bool hasValue, PropertyValue baseValue)
+        /// <summary>
+        /// Updates the aggregate value with the specified <see cref="PropertyId"/>.
+        /// </summary>
+        private void UpdateAggregateValueFromBase(PropertyId id, PropertyInfo info, SetPropertyFlags flags, bool hasValue, PropertyValue baseValue)
         {
             PropertyValue aggregateValue = baseValue;
 
             if (info.Prototype.AggMethod != AggregationMethod.None)
             {
-                // TODO: scope protection
-
-                // Aggregate values from all children
+                // Aggregate values from all children, protect to prevent new child collections from being added during iteration
+                Protect(Protection.Child);
                 foreach (PropertyCollection child in _childCollections)
                 {
-                    child.GetAggregateValue(propertyId, out PropertyValue childValue);
+                    child.GetAggregateValue(id, out PropertyValue childValue);
                     if (hasValue)
                     {
                         AggregatePropertyValue(info, childValue, ref aggregateValue);
@@ -682,30 +733,35 @@ namespace MHServerEmu.Games.Properties
                         hasValue = true;
                     }
                 }
+                ReleaseProtection(Protection.Child);
             }
 
             if (hasValue)
             {
-                GetSetPropertyValue(_aggregateList, propertyId, aggregateValue, out PropertyValue oldValue, out bool wasAdded, out bool hasChanged);
-                if (wasAdded || hasChanged || flags.HasFlag(UInt32Flags.Flag2))
+                _aggregateList.GetSetPropertyValue(id, aggregateValue, out PropertyValue oldValue, out bool wasAdded, out bool hasChanged);
+                if (wasAdded || hasChanged || flags.HasFlag(SetPropertyFlags.Flag2))
                 {
                     if (wasAdded) oldValue = info.DefaultValue;
-                    OnPropertyChange(propertyId, aggregateValue, oldValue, flags);
+                    OnPropertyChange(id, aggregateValue, oldValue, flags);
                 }
             }
             else
             {
-                if (_aggregateList.Remove(propertyId, out PropertyValue oldValue))
-                    OnPropertyChange(propertyId, info.DefaultValue, oldValue, flags);
+                if (_aggregateList.RemoveProperty(id, out PropertyValue oldValue))
+                    OnPropertyChange(id, info.DefaultValue, oldValue, flags);
             }
 
-            // Update parents
-            // TODO: scope protection
+            // Update parents, protect to prevent new parents from being added during iteration
+            Protect(Protection.Parent);
             foreach (PropertyCollection parent in _parentCollections)
-                parent.UpdateAggregateValue(propertyId, info, flags);
+                parent.UpdateAggregateValue(id, info, flags);
+            ReleaseProtection(Protection.Parent);
         }
 
-        private bool AggregatePropertyValue(PropertyInfo info, PropertyValue input, ref PropertyValue output)
+        /// <summary>
+        /// Aggregates two values.
+        /// </summary>
+        private static bool AggregatePropertyValue(PropertyInfo info, PropertyValue input, ref PropertyValue output)
         {
             switch (info.DataType)
             {
@@ -807,27 +863,29 @@ namespace MHServerEmu.Games.Properties
             return true;
         }
 
-        #region PropertyList functionality
+        #region Protection Implementation
 
-        // Since we are not using a custom data structure for storing properties like the client,
-        // we need to do some probably inefficient hackery here to get the results we want.
+        // Protection flags to prevent parent / child collections from being added during iteration.
 
-        private static bool SetPropertyValue(SortedDictionary<PropertyId, PropertyValue> dict, PropertyId id, PropertyValue value)
+        // NOTE: What the client does is that it creates a struct that increments a flag variable in its constructor
+        // and decrements it in the destructor. So when you leave the scope the destructor gets called and it "releases"
+        // the protection. We could potentially implement something similar with IDisposable and using, but that would be
+        // pretty hacky, so we are just going to increment and decrement everything manually.
+
+        // NOTE: Do we even need this?
+
+        private enum Protection
         {
-            bool hasChanged = dict.TryGetValue(id, out PropertyValue existingValue) == false || value.RawLong != existingValue.RawLong;
-            dict[id] = value;
-            return hasChanged;
+            Parent,
+            Child,
+            NumProtections
         }
 
-        private static void GetSetPropertyValue(SortedDictionary<PropertyId, PropertyValue> dict, PropertyId propertyId, PropertyValue valueToAdd,
-            out PropertyValue oldValue, out bool wasAdded, out bool hasChanged)
-        {
-            wasAdded = dict.TryGetValue(propertyId, out oldValue) == false;
-            hasChanged = wasAdded || oldValue.RawLong != valueToAdd.RawLong;
-            
-            if (wasAdded || hasChanged)
-                dict[propertyId] = valueToAdd;
-        }
+        private readonly int[] _protections = new int[(int)Protection.NumProtections];
+
+        private void Protect(Protection protection) => _protections[(int)protection]++;
+        private void ReleaseProtection(Protection protection) => _protections[(int)protection]--;
+        private bool IsNotProtected(Protection protection) => _protections[(int)protection] == 0;
 
         #endregion
 
