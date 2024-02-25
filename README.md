@@ -12,19 +12,21 @@ We post development progress reports on our [blog](https://crypto137.github.io/M
 
 MHServerEmu is in early stages of development. Currently it features:
 
-- Complete network protocol implementation.
-
-- Account system with simple web API for registering new accounts.
+- Client-server network protocol implementation.
 
 - Basic multiplayer functionality: handling multiple clients, remote connections, chat.
 
-- Exploration of all hubs, as well as a number of public combat zones and private instances.
+- Implementation of the proprietary static game data management system used by the game.
 
-- In-game hero and costume selection.
+- Fully-featured implementation of DRAG (dynamic random area generator).
+
+- Spawning of entities, including NPCs, enemies, and interactable objects, across the entire game.
+
+- Hero and costume selection.
 
 - Rudimentary implementation of hero powers.
 
-- Early implementation of NPCs and interactable objects in some static regions.
+- Account system with simple web API for registering new accounts.
 
 ## Setup
 
