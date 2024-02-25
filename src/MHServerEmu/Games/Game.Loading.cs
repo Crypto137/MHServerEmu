@@ -210,6 +210,9 @@ namespace MHServerEmu.Games
                     avatar.Properties[PropertyEnum.CostumeCurrent] = (PrototypeId)account.CurrentAvatar.Costume;
                     avatar.Properties[PropertyEnum.CharacterLevel] = 60;
                     avatar.Properties[PropertyEnum.CombatLevel] = 60;
+
+                    avatar.AbilityKeyMappings = new AbilityKeyMapping[] { new(0) };
+                    avatar.AbilityKeyMappings[0].SlotDefaultAbilities(avatar);
                 }
 
                 messageList.Add(new(avatar.ToNetMessageEntityCreate()));

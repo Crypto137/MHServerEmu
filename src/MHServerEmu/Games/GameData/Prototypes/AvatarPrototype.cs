@@ -102,6 +102,23 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 }
             }
         }
+
+        /// <summary>
+        /// Returns the <see cref="AbilityAutoAssignmentSlotPrototype"/> for the specified power <see cref="PrototypeId"/> if there is one.
+        /// Otherwise, returns <see langword="null"/>.
+        /// </summary>
+        public AbilityAutoAssignmentSlotPrototype GetPowerInAbilityAutoAssignmentSlot(PrototypeId powerProtoId)
+        {
+            if (AbilityAutoAssignmentSlot == null) return null;
+
+            foreach (var abilityAutoAssignmentSlot in AbilityAutoAssignmentSlot)
+            {
+                if (abilityAutoAssignmentSlot.Ability == powerProtoId)
+                    return abilityAutoAssignmentSlot;
+            }
+
+            return null;
+        }
     }
 
     public class ItemAssignmentPrototype : Prototype
