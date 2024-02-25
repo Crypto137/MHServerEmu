@@ -1,6 +1,5 @@
 ﻿using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoders;
-using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 
 namespace MHServerEmu.PlayerManagement.Accounts.DBModels
@@ -40,6 +39,8 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
 
         private byte[] EncodeAbilityKeyMapping(AbilityKeyMapping abilityKeyMapping)
         {
+            if (abilityKeyMapping == null) return null;
+
             BoolEncoder boolEncoder = new();
             boolEncoder.EncodeBool(abilityKeyMapping.ShouldPersist);
             boolEncoder.Cook();
@@ -55,6 +56,7 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
 
         private AbilityKeyMapping DecodeAbilityKeyMapping(byte[] data)
         {
+            if (data == null) return null;
             CodedInputStream cis = CodedInputStream.CreateInstance(data);
             return new(cis, new());
         }

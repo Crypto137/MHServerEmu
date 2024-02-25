@@ -91,8 +91,8 @@ namespace MHServerEmu.PlayerManagement.Accounts
                         connection.Execute(@"INSERT INTO Player (AccountId, RawRegion, RawAvatar, RawWaypoint, AOIVolume)
                             VALUES (@AccountId, @RawRegion, @RawAvatar, @RawWaypoint, @AOIVolume)", account.Player, transaction);
 
-                        connection.Execute(@"INSERT INTO Avatar (AccountId, RawPrototype, RawCostume)
-                            VALUES (@AccountId, @RawPrototype, @RawCostume)", account.Avatars, transaction);
+                        connection.Execute(@"INSERT INTO Avatar (AccountId, RawPrototype, RawCostume, RawAbilityKeyMapping)
+                            VALUES (@AccountId, @RawPrototype, @RawCostume, @RawAbilityKeyMapping)", account.Avatars, transaction);
 
                         transaction.Commit();
                         return true;
@@ -143,7 +143,7 @@ namespace MHServerEmu.PlayerManagement.Accounts
                     try
                     {
                         connection.Execute(@"UPDATE Player SET RawRegion=@RawRegion, RawAvatar=@RawAvatar, RawWaypoint=@RawWaypoint, AOIVolume=@AOIVolume WHERE AccountId=@AccountId", account.Player, transaction);
-                        connection.Execute(@"UPDATE Avatar SET RawCostume=@RawCostume WHERE AccountId=@AccountId AND RawPrototype=@RawPrototype", account.Avatars, transaction);
+                        connection.Execute(@"UPDATE Avatar SET RawCostume=@RawCostume, RawAbilityKeyMapping=@RawAbilityKeyMapping WHERE AccountId=@AccountId AND RawPrototype=@RawPrototype", account.Avatars, transaction);
 
                         transaction.Commit();
                         return true;
