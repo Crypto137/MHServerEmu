@@ -6,6 +6,7 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -210,6 +211,9 @@ namespace MHServerEmu.Games
                     avatar.Properties[PropertyEnum.CostumeCurrent] = (PrototypeId)account.CurrentAvatar.Costume;
                     avatar.Properties[PropertyEnum.CharacterLevel] = 60;
                     avatar.Properties[PropertyEnum.CombatLevel] = 60;
+                    avatar.Properties[PropertyEnum.Endurance] = avatar.Properties[PropertyEnum.EnduranceMax];
+                    avatar.Properties[PropertyEnum.Endurance, (int)ManaType.Type2] = avatar.Properties[PropertyEnum.EnduranceMax, (int)ManaType.Type2];
+                    avatar.Properties[PropertyEnum.SecondaryResource] = avatar.Properties[PropertyEnum.SecondaryResourceMax];
 
                     if (account.CurrentAvatar.AbilityKeyMapping == null)
                     {
