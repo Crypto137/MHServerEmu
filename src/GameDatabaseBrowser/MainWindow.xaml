@@ -1,7 +1,7 @@
 ﻿<Window x:Class="GameDatabaseBrowser.MainWindow" Loaded="Window_Loaded"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
-        xmlns:models="clr-namespace:GameDatabaseBrowser.Models"
+        xmlns:models="clr-namespace:GameDatabaseBrowser.Models" xmlns:src="clr-namespace:GameDatabaseBrowser"
         Title="Game Database Browser"
         Height="720"
         Width="1280">
@@ -18,12 +18,34 @@
             <TextBox x:Name="txtSearch"  Width="700"  VerticalAlignment="Center" Margin="5,0,5,0"/>
             <Button x:Name="btnSearch" Content="Recherche" Width="100" VerticalAlignment="Center" Margin="5,0,5,0"/>
         </StackPanel>
-        <TreeView Name="treeView" Grid.Row="1" Grid.Column="0" VirtualizingStackPanel.IsVirtualizing="True" Margin="5">
+        <TreeView Name="treeView" Grid.Row="1" Grid.Column="0" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" Margin="5">
+            <TreeView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <src:MyVirtualizingStackPanel/>
+                </ItemsPanelTemplate>
+            </TreeView.ItemsPanel>
+            <TreeView.ItemContainerStyle>
+                <Style TargetType="TreeViewItem">
+                    <Setter Property="ItemsPanel">
+                        <Setter.Value>
+                            <ItemsPanelTemplate>
+                                <src:MyVirtualizingStackPanel/>
+                            </ItemsPanelTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </TreeView.ItemContainerStyle>
             <TreeView.ItemTemplate>
                 <HierarchicalDataTemplate DataType="{x:Type models:PrototypeNode}" ItemsSource="{Binding Childs}">
                     <TextBlock Text="{Binding Name}" />
                 </HierarchicalDataTemplate>
             </TreeView.ItemTemplate>
+            <TreeView.Resources>
+                <Style TargetType="TreeViewItem">
+                    <Setter Property="IsSelected" Value="{Binding Path=IsSelected, Mode=TwoWay}" />
+                    <Setter Property="IsExpanded" Value="{Binding Path=IsExpanded, Mode=TwoWay}" />
+                </Style>
+            </TreeView.Resources>
         </TreeView>
         <ProgressBar x:Name="progressBar" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Stretch" Height="20" Margin="20"/>
         <Grid Grid.Row="1" Grid.Column="1" Margin="5">

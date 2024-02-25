@@ -10,15 +10,16 @@ namespace GameDatabaseBrowser.Models
 {
     public class PrototypeNode
     {
-        public List<PrototypeNode> Childs { get; set; }
+        public bool IsSelected { get; set; }
+        public bool IsExpanded { get; set; }
+
+        public ObservableCollection<PrototypeNode> Childs { get; set; }
         public string Name { get; set; }
         public List<Property> Properties { get; set; }
 
         public PrototypeNode()
         {
-            Childs = new List<PrototypeNode>();
+            Childs = new ObservableCollection<PrototypeNode>();
         }
-
-
     }
 }
