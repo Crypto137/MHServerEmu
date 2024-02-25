@@ -17,6 +17,7 @@ namespace MHServerEmu.Games.Entities
         public ReplicatedPropertyCollection Properties { get; set; }
 
         protected EntityFlags Flags;
+        public DateTime DeadTime { get; private set; }
         public EntityPrototype EntityPrototype { get => GameDatabase.GetPrototype<EntityPrototype>(BaseData.PrototypeId); }
 
         public Entity(EntityBaseData baseData, ByteString archiveData)
@@ -123,7 +124,29 @@ namespace MHServerEmu.Games.Entities
         public bool HasEncounterResourcePrototype() => Flags.HasFlag(EntityFlags.EncounterResource);
         public bool IgnoreNavi() => Flags.HasFlag(EntityFlags.IgnoreNavi);        
         public bool IsInTutorialPowerLock() => Flags.HasFlag(EntityFlags.TutorialPowerLock);
-        
+
+        // Test Dead for reaspawn
+        public void ToDead()
+        {
+            Flags |= EntityFlags.IsDead;
+            DeadTime = DateTime.Now;
+        }
+
+        public bool IsAlive()
+        {
+            if (IsDead())
+            {
+                if (DateTime.Now.Subtract(DeadTime).TotalMinutes >= 1)
+                {
+                    Flags &= ~EntityFlags.IsDead;
+                    Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
+                    Properties[PropertyEnum.IsDead] = false;
+                    return true;
+                }
+                return false;
+            }
+            return true;
+        }
     }
 
     [Flags]

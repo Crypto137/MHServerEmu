@@ -429,6 +429,10 @@ namespace MHServerEmu.Games.Events
                         if (client.ThrowingObject != null)
                             messageList.Add(new(client, new(client.ThrowingObject.ToNetMessageEntityCreate())));
                         Logger.Trace("Event ThrownCancelPower");
+                    } 
+                    else
+                    {
+                        client.ThrowingObject.ToDead();
                     }
                     client.ThrowingObject = null;
                     client.IsThrowing = false;

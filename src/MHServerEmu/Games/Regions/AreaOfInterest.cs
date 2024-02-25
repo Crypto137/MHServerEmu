@@ -121,6 +121,7 @@ namespace MHServerEmu.Games.Regions
         {
             // TODO write all Player interests for entity
             if (worldEntity.TrackAfterDiscovery) return true;
+            if (worldEntity.IsAlive() == false) return true;
             return false;
         }
 
@@ -232,14 +233,18 @@ namespace MHServerEmu.Games.Regions
             {
                 if (_loadedCells.TryGetValue(worldEntity.Location.Cell.Id, out var status))
                     if (status.Loaded == false) continue;
-
+                
+                bool interest = GetEntityInterest(worldEntity);
                 if (_loadedEntities.TryGetValue(worldEntity.BaseData.EntityId, out var entityStatus))
-                    entityStatus.Frame = _currentFrame;
-                else
                 {
-                    bool interest = GetEntityInterest(worldEntity);
-                    _loadedEntities.Add(worldEntity.BaseData.EntityId, new(_currentFrame, true, interest));
-                    newEntities.Add(worldEntity);
+                    entityStatus.Frame = _currentFrame;
+                    entityStatus.InterestToPlayer = interest;
+                }
+                else
+                {                    
+                    _loadedEntities.Add(worldEntity.BaseData.EntityId, new(_currentFrame, true, interest));                   
+                    if (worldEntity.IsAlive()) 
+                        newEntities.Add(worldEntity);
                     // Logger.Debug($"{GameDatabase.GetFormattedPrototypeName(worldEntity.BaseData.PrototypeId)} = {worldEntity.BaseData.PrototypeId},");
                 }
             }

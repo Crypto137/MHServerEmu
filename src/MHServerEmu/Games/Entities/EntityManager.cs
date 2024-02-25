@@ -317,9 +317,41 @@ namespace MHServerEmu.Games.Entities
                     entityPosition.Z = projectHeight;
             }
             entityPosition.Z += entity.Bounds.GetBoundHalfHeight();
-
-            CreateWorldEntity(cell, protoRef, entityPosition, entityMarker.Rotation, 608, false, overrideSnap);
+            int health = GetRankHealth(entity);
+            CreateWorldEntity(cell, protoRef, entityPosition, entityMarker.Rotation, health, false, overrideSnap);
         }
+
+        public static int GetRankHealth(WorldEntityPrototype entity)
+        {
+            if (entity is PropPrototype)
+            {
+                return 200;
+            } 
+            else
+            {
+                switch ((RankPrototypeId)entity.Rank)
+                {
+                    case RankPrototypeId.Popcorn: return 600;
+                    case RankPrototypeId.Champion: return 800;
+                    case RankPrototypeId.Elite: return 1000;
+                    case RankPrototypeId.MiniBoss: return 1500;
+                    case RankPrototypeId.Boss: return 2000;
+                    default: return 1000;
+                }
+
+            }
+        }
+
+        public enum RankPrototypeId : ulong
+        {
+            Popcorn = 15168672998566398820,
+            Champion = 3048000484526787506,
+            Elite = 17308931952834644598,
+            EliteMinion = 7470660573381266688,
+            EliteNamed = 11012647903754259579,
+            MiniBoss = 18093345044982008775,
+            Boss = 9550003146522364442,
+        } 
 
         public void AddTeleports(Cell cell, Area entryArea, ConnectionNodeList targets)
         {
@@ -471,6 +503,7 @@ namespace MHServerEmu.Games.Entities
             InvTarget.HelicarrierEntryTarget,
             InvTarget.CanalEntryTarget1,
             InvTarget.AsgardHUBToSiegePCZTarget,
+            InvTarget.AsgardHUBToLokiBossTarget,
             InvTarget.Ch10PagodaFloorBEntryTarget,
             InvTarget.ToolshedHUBEntryTarget,
             InvTarget.Ch10PagodaFloorCEntryTarget,

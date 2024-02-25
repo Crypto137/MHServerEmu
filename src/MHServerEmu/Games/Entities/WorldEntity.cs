@@ -28,7 +28,6 @@ namespace MHServerEmu.Games.Entities
         public Game Game { get; private set; }
         public RegionLocation LastLocation { get; private set; }
         public bool TrackAfterDiscovery { get; private set; }
-
         public WorldEntity(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { SpatialPartitionLocation = new(this); }
 
         public WorldEntity(EntityBaseData baseData) : base(baseData) { SpatialPartitionLocation = new(this); }
@@ -194,7 +193,6 @@ namespace MHServerEmu.Games.Entities
         {
             throw new NotImplementedException();
         }
-
 
     }
 }

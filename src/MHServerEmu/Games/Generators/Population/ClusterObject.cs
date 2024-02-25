@@ -798,8 +798,9 @@ namespace MHServerEmu.Games.Generators.Population
                 overrideSnap = false; // Fix for District
             }    
             pos.Z += entity.Bounds.GetBoundHalfHeight();
-            var rot = tr.Orientation; 
-            entityManager.CreateWorldEntity(cell, EntityRef, pos, rot, 100, false, overrideSnap);
+            var rot = tr.Orientation;
+            int health = EntityManager.GetRankHealth(entity);
+            entityManager.CreateWorldEntity(cell, EntityRef, pos, rot, health, false, overrideSnap);
             //Logger.Debug($"{GameDatabase.GetFormattedPrototypeName(EntityRef)} {pos.ToStringFloat()} [{Parent.Objects.Count}] {Parent.ObjectProto.GetFormation()}");
         }
 
