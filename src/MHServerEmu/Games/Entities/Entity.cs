@@ -114,6 +114,23 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
+        #region Property Properties (lol)
+
+        public int CharacterLevel { get => Properties[PropertyEnum.CharacterLevel]; set => Properties[PropertyEnum.CharacterLevel] = value; }
+        public int CombatLevel { get => Properties[PropertyEnum.CombatLevel]; set => Properties[PropertyEnum.CombatLevel] = value; }
+
+        public ulong PowerUserOverrideId { get => HasPowerUserOverride ? Properties[PropertyEnum.PowerUserOverrideID] : 0; }
+        public PrototypeId ClusterPrototype { get => HasClusterPrototype ? Properties[PropertyEnum.ClusterPrototype] : PrototypeId.Invalid; }
+        public PrototypeId EncounterResourcePrototype { get => HasEncounterResourcePrototype ? Properties[PropertyEnum.EncounterResource] : PrototypeId.Invalid; }
+        public PrototypeId MissionPrototype { get => HasMissionPrototype ? Properties[PropertyEnum.MissionPrototype] : PrototypeId.Invalid; }
+
+        public PrototypeId State { get => Properties[PropertyEnum.EntityState]; }
+
+        public int CurrentStackSize { get => Properties[PropertyEnum.InventoryStackCount]; }
+        public int MaxStackSize { get => Properties[PropertyEnum.InventoryStackSizeMax]; }
+
+        #endregion
+
         public Entity(EntityBaseData baseData, ByteString archiveData)
         {
             BaseData = baseData;
