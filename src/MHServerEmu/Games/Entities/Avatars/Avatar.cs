@@ -3,8 +3,12 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Social;
+using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.Games.Entities.Avatars
 {
@@ -77,6 +81,37 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             stream.WriteRawVarint64((ulong)AbilityKeyMappings.Length);
             foreach (AbilityKeyMapping keyMap in AbilityKeyMappings) keyMap.Encode(stream, boolEncoder);
+        }
+
+        /// <summary>
+        /// Initializes this <see cref="Avatar"/> from data contained in the provided <see cref="DBAccount"/>.
+        /// </summary>
+        public void InitializeFromDBAccount(DBAccount account)
+        {
+            PlayerName.Value = account.PlayerName;
+
+            Properties[PropertyEnum.CostumeCurrent] = (PrototypeId)account.CurrentAvatar.Costume;
+            Properties[PropertyEnum.CharacterLevel] = 60;
+            Properties[PropertyEnum.CombatLevel] = 60;
+            Properties[PropertyEnum.AvatarPrestigeLevel] = 0;
+            Properties[PropertyEnum.AvatarVanityTitle] = PrototypeId.Invalid;
+            Properties[PropertyEnum.AvatarPowerUltimatePoints] = 19;
+            Properties[PropertyEnum.Endurance] = Properties[PropertyEnum.EnduranceMax];
+            Properties[PropertyEnum.Endurance, (int)ManaType.Type2] = Properties[PropertyEnum.EnduranceMax, (int)ManaType.Type2];
+            Properties[PropertyEnum.SecondaryResource] = Properties[PropertyEnum.SecondaryResourceMax];
+
+            // We need 10 synergies active to remove the in-game popup
+            Properties.RemovePropertyRange(PropertyEnum.AvatarSynergySelected);
+            for (int i = 0; i < 10; i++)
+                Properties[PropertyEnum.AvatarSynergySelected, (PrototypeId)account.Avatars[i].Prototype] = true;
+
+            if (account.CurrentAvatar.AbilityKeyMapping == null)
+            {
+                account.CurrentAvatar.AbilityKeyMapping = new(0);
+                account.CurrentAvatar.AbilityKeyMapping.SlotDefaultAbilities(this);
+            }
+
+            AbilityKeyMappings = new AbilityKeyMapping[] { account.CurrentAvatar.AbilityKeyMapping };
         }
 
         protected override void BuildString(StringBuilder sb)

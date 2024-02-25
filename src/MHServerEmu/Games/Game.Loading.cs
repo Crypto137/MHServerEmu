@@ -6,11 +6,8 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
-using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
-using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.Games.Social;
 using MHServerEmu.Networking;
 using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
@@ -126,52 +123,7 @@ namespace MHServerEmu.Games
 
             // Player entity
             Player player = EntityManager.GetDefaultPlayerEntity();
-
-            // Edit player data here
-
-            // Adjust properties
-            foreach (var accountAvatar in account.Avatars)
-            {
-                PropertyParam enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, (PrototypeId)accountAvatar.Prototype);
-                var avatarPrototype = (PrototypeId)accountAvatar.Prototype;
-
-                // Set library costumes according to account data
-                player.Properties[PropertyEnum.AvatarLibraryCostume, 0, avatarPrototype] = (PrototypeId)accountAvatar.Costume;
-
-                // Set avatar levels to 60
-                // Note: setting this to above level 60 sets the prestige level as well
-                player.Properties[PropertyEnum.AvatarLibraryLevel, 0, avatarPrototype] = 60;
-
-                // Clean up team ups
-                player.Properties[PropertyEnum.AvatarLibraryTeamUp, 0, avatarPrototype] = PrototypeId.Invalid;
-
-                // Unlock start avatars
-                var avatarUnlock = (AvatarUnlockType)(int)player.Properties[PropertyEnum.AvatarUnlock, enumValue];
-                if (avatarUnlock == AvatarUnlockType.Starter)
-                    player.Properties[PropertyEnum.AvatarUnlock, avatarPrototype] = (int)AvatarUnlockType.Type3;
-            }
-           
-            CommunityMember friend = player.Community.CommunityMemberList[0];
-            friend.MemberName = "DavidBrevik"; 
-            friend.Slots = new AvatarSlotInfo[] { new((PrototypeId)15769648016960461069, (PrototypeId)4881398219179434365, 60, 6) };
-            friend.OnlineStatus = CommunityMemberOnlineStatus.Online;
-            friend.RegionRef = (PrototypeId)10434222419069901867;
-            friend = player.Community.CommunityMemberList[1];
-            friend.OnlineStatus = CommunityMemberOnlineStatus.Online;
-            friend.MemberName = "TonyStark";
-            friend.Slots = new AvatarSlotInfo[] { new((PrototypeId)421791326977791218, (PrototypeId)7150542631074405762, 60, 5) };
-            friend.RegionRef = (PrototypeId)RegionPrototypeId.NPEAvengersTowerHUBRegion;
-
-            player.Community.CommunityMemberList.Add(new("Doomsaw", 1, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)17750839636937086083, (PrototypeId)14098108758769669917, 60, 6) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
-            player.Community.CommunityMemberList.Add(new("PizzaTime", 2, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)9378552423541970369, (PrototypeId)6454902525769881598, 60, 5) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
-            player.Community.CommunityMemberList.Add(new("RogueServerEnjoyer", 3, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)1660250039076459846, (PrototypeId)9447440487974639491, 60, 3) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
-            player.Community.CommunityMemberList.Add(new("WhiteQueenXOXO", 4, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)412966192105395660, (PrototypeId)12724924652099869123, 60, 4) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
-            player.Community.CommunityMemberList.Add(new("AlexBond", 5, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)9255468350667101753, (PrototypeId)16813567318560086134, 60, 2) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
-            player.Community.CommunityMemberList.Add(new("Crypto137", 6, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)421791326977791218, (PrototypeId)1195778722002966150, 60, 2) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
-            player.Community.CommunityMemberList.Add(new("yn01", 7, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)12534955053251630387, (PrototypeId)14506515434462517197, 60, 2) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
-            player.Community.CommunityMemberList.Add(new("Gazillion", 8, 0, 0, Array.Empty<AvatarSlotInfo>(), CommunityMemberOnlineStatus.Offline, "", new int[] { 0 }));
-            player.Community.CommunityMemberList.Add(new("FriendlyLawyer", 100, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)12394659164528645362, (PrototypeId)2844257346122946366, 99, 1) }, CommunityMemberOnlineStatus.Online, "", new int[] { 2 }));
-
+            player.InitializeFromDBAccount(account);
             messageList.Add(new(player.ToNetMessageEntityCreate()));
 
             // Avatars
@@ -203,26 +155,7 @@ namespace MHServerEmu.Games
                 }
 
                 if (avatar.BaseData.EntityId == (ulong)playerAvatarEntityId)
-                {
-                    // modify avatar data here
-
-                    avatar.PlayerName.Value = account.PlayerName;
-
-                    avatar.Properties[PropertyEnum.CostumeCurrent] = (PrototypeId)account.CurrentAvatar.Costume;
-                    avatar.Properties[PropertyEnum.CharacterLevel] = 60;
-                    avatar.Properties[PropertyEnum.CombatLevel] = 60;
-                    avatar.Properties[PropertyEnum.Endurance] = avatar.Properties[PropertyEnum.EnduranceMax];
-                    avatar.Properties[PropertyEnum.Endurance, (int)ManaType.Type2] = avatar.Properties[PropertyEnum.EnduranceMax, (int)ManaType.Type2];
-                    avatar.Properties[PropertyEnum.SecondaryResource] = avatar.Properties[PropertyEnum.SecondaryResourceMax];
-
-                    if (account.CurrentAvatar.AbilityKeyMapping == null)
-                    {
-                        account.CurrentAvatar.AbilityKeyMapping = new(0);
-                        account.CurrentAvatar.AbilityKeyMapping.SlotDefaultAbilities(avatar);
-                    }
-
-                    avatar.AbilityKeyMappings = new AbilityKeyMapping[] { account.CurrentAvatar.AbilityKeyMapping };
-                }
+                    avatar.InitializeFromDBAccount(account);
 
                 messageList.Add(new(avatar.ToNetMessageEntityCreate()));
             }
