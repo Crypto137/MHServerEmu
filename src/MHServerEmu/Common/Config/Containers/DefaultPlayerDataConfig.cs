@@ -25,11 +25,13 @@ namespace MHServerEmu.Common.Config.Containers
         }
 
         [ConfigIgnore]
-        public PrototypeId StartingWaypointValue
+        public PrototypeId StartingWaypointId
         {
             get
-            {      
-                return (StartingWaypoint != null) ? (PrototypeId)ulong.Parse(StartingWaypoint) : (PrototypeId)10137590415717831231;
+            {
+                PrototypeId waypointId = GameDatabase.GetPrototypeRefByName(StartingWaypoint);
+                if (waypointId == PrototypeId.Invalid) return (PrototypeId)10137590415717831231;  // Waypoints/HUBS/NPEAvengersTowerHub.prototype
+                return waypointId;
             }
         }
 
