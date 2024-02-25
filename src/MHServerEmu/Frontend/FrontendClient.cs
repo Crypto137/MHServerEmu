@@ -79,14 +79,9 @@ namespace MHServerEmu.Frontend
         public void AssignSession(ClientSession session)
         {
             if (Session == null)
-            {
                 Session = session;
-
-            }
             else
-            {
                 Logger.Warn($"Failed to assign sessionId {session.Id} to a client: sessionId {Session.Id} is already assigned to this client");
-            }
         }
 
         public void SendMuxDisconnect(ushort muxId)
@@ -106,21 +101,6 @@ namespace MHServerEmu.Frontend
             PacketOut packet = new(muxId, MuxCommand.Data);
             packet.AddMessages(messages);
             Connection.Send(packet);
-        }
-
-        public void SendPacketFromFile(string fileName)
-        {
-            string path = Path.Combine(FileHelper.DataDirectory, "Packets", fileName);
-
-            if (File.Exists(path))
-            {
-                Logger.Info($"Sending {fileName}");
-                Connection.Send(File.ReadAllBytes(path));
-            }
-            else
-            {
-                Logger.Warn($"{fileName} not found");
-            }
         }
     }
 }

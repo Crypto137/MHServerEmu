@@ -87,7 +87,7 @@ namespace MHServerEmu.Common.Extensions
 
             return BitConverter.ToUInt64(bytes);
         }
-        
+
         #endregion
 
         #region Misc

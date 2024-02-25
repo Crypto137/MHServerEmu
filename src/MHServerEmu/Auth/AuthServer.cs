@@ -99,16 +99,9 @@ namespace MHServerEmu.Auth
                         HandleMessage(request, response);
                         return;
                     }
-
-                    // For Unit Tests
-                    if (requestIsFromGameClient && request.Url.LocalPath == "/")
-                    {
-                        HandleMessage(request, response);
-                        return;
-                    }
                     
                     // Web API post requests
-                        if (requestIsFromGameClient == false && ConfigManager.Auth.EnableWebApi)
+                    if (requestIsFromGameClient == false && ConfigManager.Auth.EnableWebApi)
                     {
                         HandleWebApiRequest(request, response);
                         return;

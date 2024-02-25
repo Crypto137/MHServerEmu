@@ -44,21 +44,14 @@ namespace MHServerEmu.Common
                 aesAlgorithm.Key = key;
                 aesAlgorithm.GenerateIV();
                 iv = aesAlgorithm.IV;
-
                 ICryptoTransform encryptor = aesAlgorithm.CreateEncryptor();
 
-                byte[] encryptedData;
-
                 using (MemoryStream memoryStream = new())
+                using (CryptoStream cryptoStream = new(memoryStream, encryptor, CryptoStreamMode.Write))
                 {
-                    using (CryptoStream cryptoStream = new(memoryStream, encryptor, CryptoStreamMode.Write))
-                    {
-                        cryptoStream.Write(tokenToEncrypt, 0, tokenToEncrypt.Length);
-                    }
-                        encryptedData = memoryStream.ToArray();
+                    cryptoStream.Write(tokenToEncrypt, 0, tokenToEncrypt.Length);
+                    return memoryStream.ToArray();
                 }
-
-                return encryptedData;
             }
         }
 

@@ -4,6 +4,9 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.PlayerManagement.Accounts.DBModels
 {
+    /// <summary>
+    /// Represents a player entity stored in the account database.
+    /// </summary>
     public class DBPlayer
     {
         // We are currently using System.Data.SQLite + Dapper for storing our persistent data.
@@ -24,8 +27,9 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
         public long RawAvatar { get => (long)Avatar; private set => Avatar = (AvatarPrototypeId)value; }
         public PrototypeId Waypoint { get; set; }
         public long RawWaypoint { get => (long)Waypoint; private set => Waypoint = (PrototypeId)value; }
+        
         public int AOIVolume { get; set; }
-        public int RawAOIVolume { get => AOIVolume; private set => AOIVolume = value; }
+        
         public DBPlayer(ulong accountId)
         {
             AccountId = accountId;

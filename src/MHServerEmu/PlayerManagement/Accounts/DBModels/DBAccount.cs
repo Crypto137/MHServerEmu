@@ -5,6 +5,9 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.PlayerManagement.Accounts.DBModels
 {
+    /// <summary>
+    /// Represents an account stored in the account database.
+    /// </summary>
     public class DBAccount
     {
         public ulong Id { get; set; }

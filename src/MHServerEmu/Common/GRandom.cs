@@ -178,7 +178,6 @@
         {
             return (max < min ? max : GetDouble() * (max - min) + min);
         }
-
     }
 
     // More info on MWC random: https://en.wikipedia.org/wiki/Multiply-with-carry_pseudorandom_number_generator
