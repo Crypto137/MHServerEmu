@@ -1,7 +1,7 @@
 ﻿using MHServerEmu.Common;
 using MHServerEmu.Games.Generators;
-using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Common.Logging;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -67,6 +67,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EndlessThemeEntryPrototype : Prototype
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public AreaSequenceInfoPrototype[] AreaSequence { get; protected set; }
         public EndlessStateEntryPrototype[] Challenges { get; protected set; }
 

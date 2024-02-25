@@ -151,7 +151,7 @@ namespace MHServerEmu.Games.Entities
             var proto = WorldEntityPrototype;
             Game = cell.Game; // TODO: Init Game to constructor
             TrackAfterDiscovery = proto.ObjectiveInfo.TrackAfterDiscovery;
-            if (proto is HotspotPrototype) Flags |= EntityFlags.IsHotspot;
+            if (proto is HotspotPrototype) _flags |= EntityFlags.IsHotspot;
 
             Location.Region = cell.GetRegion();
             Location.Cell = cell; // Set directly

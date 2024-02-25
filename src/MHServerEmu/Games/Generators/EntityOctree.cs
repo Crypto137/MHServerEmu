@@ -86,8 +86,8 @@ namespace MHServerEmu.Games.Generators
             ulong restrictedToPlayerGuid = 0; // TODO element.GetProperty<ulong>(PropertyEnum.RestrictedToPlayerGuid);
             if (restrictedToPlayerGuid == 0)
             {
-                if (element.IsNeverAffectedByPowers()
-                    || (element.IsHotspot() && !element.IsCollidableHotspot() && !element.IsReflectingHotspot()))
+                if (element.IsNeverAffectedByPowers
+                    || (element.IsHotspot && element.IsCollidableHotspot == false && element.IsReflectingHotspot == false))
                     result = _staticSpatialPartition.Insert(element);
                 else
                     result = _activeSpatialPartition.Insert(element);

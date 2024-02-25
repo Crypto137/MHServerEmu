@@ -65,7 +65,7 @@ namespace MHServerEmu.Games
             RegionManager.Initialize(this);
 
             Random = new();
-            // Task for cleanUp not used Regions
+            // Run a task that cleans up unused regions periodically
             Task.Run(async () => await RegionManager.CleanUpRegionsAsync());
             _powerMessageHandler = new(EventManager);
 

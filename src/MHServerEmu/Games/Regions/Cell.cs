@@ -1,15 +1,14 @@
-﻿using MHServerEmu.Games.Common;
+﻿using Gazillion;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
-using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Generators.Population;
+using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.Generators;
-using Gazillion;
+using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Networking;
-using MHServerEmu.Common.Logging;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -54,7 +53,6 @@ namespace MHServerEmu.Games.Regions
         public Vector3 AreaOrientation { get; private set; }
         public Transform3 AreaTransform { get; private set; }
         public Transform3 RegionTransform { get; private set; }
-
 
         public void AddEncounter(ulong asset, uint id, bool useMarkerOrientation) => EncounterList.Add(new(asset, id, useMarkerOrientation)); // Old
         public void AddEncounter(ReservedSpawn reservedSpawn) => EncounterList.Add(reservedSpawn); // Old

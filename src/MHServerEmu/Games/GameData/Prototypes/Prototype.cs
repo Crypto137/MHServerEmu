@@ -31,7 +31,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class Prototype
     {
-        protected static readonly Logger Logger = LogManager.CreateLogger();
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
         // Child prototypes need to have separate mixin lists from their parents so that when we modify a child we don't change its parent.
         // To ensure this each prototype keeps track of mixins that belong to it in this field. This is accurate to how the client does this.

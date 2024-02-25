@@ -84,7 +84,7 @@ namespace MHServerEmu.Games.Regions
                 CameraSettingCollectionPrototype cameraSettingCollectionPrototype = GameDatabase.GetPrototype<CameraSettingCollectionPrototype>(cameraSettingPrototype);
                 if (cameraSettingCollectionPrototype == null)
                 {
-                    GlobalsPrototype globalsPrototype = GameDatabase.GetGlobalsPrototype();
+                    GlobalsPrototype globalsPrototype = GameDatabase.GlobalsPrototype;
                     if (globalsPrototype == null) return;
                     cameraSettingCollectionPrototype = GameDatabase.GetPrototype<CameraSettingCollectionPrototype>(globalsPrototype.PlayerCameraSettings);
                 }
@@ -321,7 +321,7 @@ namespace MHServerEmu.Games.Regions
                 Messages.Add(new(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build()));
 
                 // Mini map
-                MiniMapArchive miniMap = new(Region.RegionPrototype.AlwaysRevealFullMap); // Reveal map by default for hubs
+                MiniMapArchive miniMap = new(Region.RegionPrototype.AlwaysRevealFullMap);
                 if (miniMap.IsRevealAll == false) miniMap.Map = Array.Empty<byte>();
 
                 Messages.Add(new(NetMessageUpdateMiniMap.CreateBuilder()

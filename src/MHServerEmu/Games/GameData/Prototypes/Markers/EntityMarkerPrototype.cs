@@ -1,9 +1,12 @@
 ﻿using MHServerEmu.Common.Extensions;
+using MHServerEmu.Common.Logging;
 
 namespace MHServerEmu.Games.GameData.Prototypes.Markers
 {
     public class EntityMarkerPrototype : MarkerPrototype
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public PrototypeGuid EntityGuid { get; }
         public string LastKnownEntityName { get; }
         public PrototypeGuid Modifier1Guid { get; }

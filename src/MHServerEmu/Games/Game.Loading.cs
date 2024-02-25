@@ -48,7 +48,7 @@ namespace MHServerEmu.Games
                 .SetRegionPrototypeId((ulong)account.Player.Region)
                 .Build()));
 
-            // Task for Region Genarate
+            // Run region generation as a task
             Task.Run(() => GetRegionAsync(client, account.Player.Region));
             client.AOI.LoadedCellCount = 0;
             client.IsLoading = true;

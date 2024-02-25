@@ -44,8 +44,24 @@ namespace MHServerEmu.Games.GameData
         public static DataRefManager<BlueprintId> BlueprintRefManager { get; } = new(true);
         public static DataRefManager<PrototypeId> PrototypeRefManager { get; } = new(true);
 
-        // Global prototypes
-        public static Prototype GlobalsPrototype { get => GetPrototype<Prototype>(GetPrototypeRefByName("Globals/Globals.defaults")); }
+        // Globals prototypes
+        public static GlobalsPrototype GlobalsPrototype { get; private set; }
+        public static AdvancementGlobalsPrototype AdvancementGlobalsPrototype { get; private set; }
+        public static DebugGlobalsPrototype DebugGlobalsPrototype { get; private set; }
+        public static UIGlobalsPrototype UIGlobalsPrototype { get; private set; }
+        public static MissionGlobalsPrototype MissionGlobalsPrototype { get; private set; }
+        public static PopulationGlobalsPrototype PopulationGlobalsPrototype { get; private set; }
+        public static AIGlobalsPrototype AIGlobalsPrototype { get; private set; }
+        public static CombatGlobalsPrototype CombatGlobalsPrototype { get; private set; }
+        public static TransitionGlobalsPrototype TransitionGlobalsPrototype { get; private set; }
+        public static LootGlobalsPrototype LootGlobalsPrototype { get; private set; }
+        public static AudioGlobalsPrototype AudioGlobalsPrototype { get; private set; }
+        public static PowerVisualsGlobalsPrototype PowerVisualsGlobalsPrototype { get; private set; }
+        public static KeywordGlobalsPrototype KeywordGlobalsPrototype { get; private set; }
+        public static CurrencyGlobalsPrototype CurrencyGlobalsPrototype { get; private set; }
+        public static GamepadGlobalsPrototype GamepadGlobalsPrototype { get; private set; }
+        public static DifficultyGlobalsPrototype DifficultyGlobalsPrototype { get; private set; }
+        public static ConsoleGlobalsPrototype ConsoleGlobalsPrototype { get; private set; }
 
         static GameDatabase()
         {
@@ -64,6 +80,26 @@ namespace MHServerEmu.Games.GameData
             // Initialize PropertyInfoTable
             PropertyInfoTable = new();
             PropertyInfoTable.Initialize();
+
+            // Load globals prototypes
+            PrototypeId globalsPrototypeId = GetPrototypeRefByName("Globals/Globals.defaults");
+            GlobalsPrototype = GetPrototype<GlobalsPrototype>(globalsPrototypeId);
+            AdvancementGlobalsPrototype = GetPrototype<AdvancementGlobalsPrototype>(GlobalsPrototype.AdvancementGlobals);
+            DebugGlobalsPrototype = GetPrototype<DebugGlobalsPrototype>(GlobalsPrototype.DebugGlobals);
+            UIGlobalsPrototype = GetPrototype<UIGlobalsPrototype>(GlobalsPrototype.UIGlobals);
+            MissionGlobalsPrototype = GetPrototype<MissionGlobalsPrototype>(GlobalsPrototype.MissionGlobals);
+            PopulationGlobalsPrototype = GetPrototype<PopulationGlobalsPrototype>(GlobalsPrototype.PopulationGlobals);
+            AIGlobalsPrototype = GetPrototype<AIGlobalsPrototype>(GlobalsPrototype.AIGlobals);
+            CombatGlobalsPrototype = GetPrototype<CombatGlobalsPrototype>(GlobalsPrototype.CombatGlobals);
+            TransitionGlobalsPrototype = GetPrototype<TransitionGlobalsPrototype>(GlobalsPrototype.TransitionGlobals);
+            LootGlobalsPrototype = GetPrototype<LootGlobalsPrototype>(GlobalsPrototype.LootGlobals);
+            AudioGlobalsPrototype = GetPrototype<AudioGlobalsPrototype>(GlobalsPrototype.AudioGlobals);
+            PowerVisualsGlobalsPrototype = GetPrototype<PowerVisualsGlobalsPrototype>(GlobalsPrototype.PowerVisualsGlobals);
+            KeywordGlobalsPrototype = GetPrototype<KeywordGlobalsPrototype>(GlobalsPrototype.KeywordGlobals);
+            CurrencyGlobalsPrototype = GetPrototype<CurrencyGlobalsPrototype>(GlobalsPrototype.CurrencyGlobals);
+            GamepadGlobalsPrototype = GetPrototype<GamepadGlobalsPrototype>(GlobalsPrototype.GamepadGlobals);
+            DifficultyGlobalsPrototype = GetPrototype<DifficultyGlobalsPrototype>(GlobalsPrototype.DifficultyGlobals);
+            ConsoleGlobalsPrototype = GetPrototype<ConsoleGlobalsPrototype>(GlobalsPrototype.ConsoleGlobals);
 
             // initializeKeywordPrototypes
 
@@ -131,6 +167,7 @@ namespace MHServerEmu.Games.GameData
         public static string GetCurveName(CurveId curveId) => CurveRefManager.GetReferenceName(curveId);
         public static string GetBlueprintName(BlueprintId blueprintId) => BlueprintRefManager.GetReferenceName(blueprintId);
         public static string GetPrototypeName(PrototypeId prototypeId) => PrototypeRefManager.GetReferenceName(prototypeId);
+        public static string GetFormattedPrototypeName(PrototypeId protoId) => Path.GetFileNameWithoutExtension(GetPrototypeName(protoId));
 
         public static string GetPrototypeNameByGuid(PrototypeGuid guid)
         {
@@ -319,26 +356,6 @@ namespace MHServerEmu.Games.GameData
         {
             return DataDirectory.Verify()
                 && PropertyInfoTable.Verify();
-        }
-
-        public static GlobalsPrototype GetGlobalsPrototype()
-        {
-            return DataDirectory.GetPrototype<GlobalsPrototype>(_globalsProtoRef);
-        }
-
-        public static string GetFormattedPrototypeName(PrototypeId protoId)
-        {
-            return Path.GetFileNameWithoutExtension(GetPrototypeName(protoId));
-        }
-
-        public static DifficultyGlobalsPrototype GetDifficultyGlobalsPrototype()
-        {
-            return DataDirectory.GetPrototype<DifficultyGlobalsPrototype>(GetGlobalsPrototype().DifficultyGlobals);
-        }
-
-        public static PopulationGlobalsPrototype GetPopulationGlobalsPrototype()
-        {
-            return DataDirectory.GetPrototype<PopulationGlobalsPrototype>(GetGlobalsPrototype().PopulationGlobals);
         }
     }
 }

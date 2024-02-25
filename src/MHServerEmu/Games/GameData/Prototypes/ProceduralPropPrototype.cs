@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Common.Extensions;
+using MHServerEmu.Common.Helpers;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.GameData.Resources;
@@ -29,7 +30,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     if (propGroup != null && propGroup.NameId != null)
                     {
                         string str = propGroup.NameId.ToLower();
-                        _propGroupMap.Add(str.Hash(), propGroup);
+                        _propGroupMap.Add(HashHelper.Djb2(str), propGroup);   // str.Hash()
                     }
                 }
             }
@@ -38,7 +39,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ProceduralPropGroupPrototype GetPropGroupFromName(string nameId)
         {
             string name = nameId.ToLower();
-            if (_propGroupMap.TryGetValue(name.Hash(), out var value))
+            if (_propGroupMap.TryGetValue(HashHelper.Djb2(name), out var value))  // name.Hash()
             {
                 if (value is ProceduralPropGroupPrototype proto) return proto;
             }

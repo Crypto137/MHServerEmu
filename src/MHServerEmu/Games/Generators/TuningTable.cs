@@ -20,7 +20,7 @@ namespace MHServerEmu.Games.Regions
         {
             _region = region;
 
-            DifficultyGlobalsPrototype difficultyGlobals = GameDatabase.GetDifficultyGlobalsPrototype();
+            DifficultyGlobalsPrototype difficultyGlobals = GameDatabase.DifficultyGlobalsPrototype;
             if (difficultyGlobals == null) return;
 
             var difficultyIndexC = GameDatabase.GetCurve(difficultyGlobals.DifficultyIndexDamageDefaultPtoM);

@@ -140,12 +140,9 @@ namespace MHServerEmu.Games.Regions
             EntityTracker = new(this);
             //LowResMapResolution = GetLowResMapResolution();
 
-            GlobalsPrototype globals = GameDatabase.GetGlobalsPrototype();
+            GlobalsPrototype globals = GameDatabase.GlobalsPrototype;
             if (globals == null)
-            {
-                Logger.Error("Unable to get globals prototype for region initialize");
-                return false;
-            }
+                return Logger.ErrorReturn(false, "Unable to get globals prototype for region initialize");
 
             Difficulty = new(this);
 

@@ -167,11 +167,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public static bool IsHostileToPlayerAlliance(AlliancePrototype allianceProto)
         {
             if (allianceProto == null
-                || GameDatabase.GetGlobalsPrototype() == null 
-                || GameDatabase.GetGlobalsPrototype().PlayerAlliance == PrototypeId.Invalid)
+                || GameDatabase.GlobalsPrototype == null 
+                || GameDatabase.GlobalsPrototype.PlayerAlliance == PrototypeId.Invalid)
                 return false;
 
-            AlliancePrototype playerAlliance = GameDatabase.GetGlobalsPrototype().PlayerAlliancePrototype;
+            AlliancePrototype playerAlliance = GameDatabase.GlobalsPrototype.PlayerAlliancePrototype;
             return playerAlliance.IsHostileTo(allianceProto);
         }
 

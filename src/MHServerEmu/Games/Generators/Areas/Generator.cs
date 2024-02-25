@@ -117,7 +117,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
             if (inAreas)
             {
-                PrototypeId dynamicAreaRef = GameDatabase.GetGlobalsPrototype().DynamicArea;
+                PrototypeId dynamicAreaRef = GameDatabase.GlobalsPrototype.DynamicArea;
                 Area dynamicArea = region.CreateArea(dynamicAreaRef, position);
                 AreaGenerationInterface generatorInterface = dynamicArea.GetAreaGenerationInterface();
 

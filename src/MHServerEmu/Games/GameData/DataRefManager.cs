@@ -1,6 +1,4 @@
-﻿using System.Xml.Linq;
-
-namespace MHServerEmu.Games.GameData
+﻿namespace MHServerEmu.Games.GameData
 {
     // Note: in the client DataRef is a container class for ulong-based data ids.
     // We are currently using ulong enums as is. Every time something mentions
@@ -75,6 +73,5 @@ namespace MHServerEmu.Games.GameData
 
             return name;
         }
-
     }
 }

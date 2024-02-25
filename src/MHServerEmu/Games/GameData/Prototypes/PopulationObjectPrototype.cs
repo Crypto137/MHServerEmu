@@ -1,12 +1,10 @@
 ﻿using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Helpers;
-using MHServerEmu.Games.Common;
-using MHServerEmu.Games.Entities;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.Generators.Population;
-using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -192,6 +190,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PopulationEncounterPrototype : PopulationObjectPrototype
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public AssetId EncounterResource { get; protected set; }
 
         public override void BuildCluster(ClusterGroup group, ClusterObjectFlag flags)

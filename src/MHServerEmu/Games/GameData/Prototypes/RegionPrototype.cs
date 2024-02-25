@@ -184,7 +184,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (DifficultySettings != null) return DifficultySettings;
 
-            DifficultyGlobalsPrototype difficultyGlobals = GameDatabase.GetDifficultyGlobalsPrototype();
+            DifficultyGlobalsPrototype difficultyGlobals = GameDatabase.DifficultyGlobalsPrototype;
             if (difficultyGlobals == null) return null;
 
             if (Behavior == RegionBehaviorAsset.PublicCombatZone && difficultyGlobals.RegionSettingsDefaultPCZ != null)

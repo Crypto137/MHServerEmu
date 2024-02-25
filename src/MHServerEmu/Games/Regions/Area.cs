@@ -1,6 +1,7 @@
-﻿using MHServerEmu.Common.Logging;
+﻿using Gazillion;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -9,7 +10,6 @@ using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.Generators.Areas;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Generators.Regions;
-using Gazillion;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.Games.Regions
@@ -17,13 +17,22 @@ namespace MHServerEmu.Games.Regions
     [Flags]
     public enum GenerateFlag
     {
-        Background = 0x1,
-        Population = 0x2,
-        Navi = 0x4,
-        PathCollection = 0x8,
-        PostInitialize = 0x10,
-        PostGenerate = 0x20,
+        Background      = 1 << 0,
+        Population      = 1 << 1,
+        Navi            = 1 << 2,
+        PathCollection  = 1 << 3,
+        PostInitialize  = 1 << 4,
+        PostGenerate    = 1 << 5,
     }
+
+    public enum ConnectPosition
+    {
+        One,
+        Begin,
+        Inside,
+        End
+    }
+
     public class AreaSettings
     {
         public uint Id;
@@ -497,17 +506,9 @@ namespace MHServerEmu.Games.Regions
 
         public bool IsDynamicArea()
         {
-            return GameDatabase.GetGlobalsPrototype().DynamicArea == PrototypeDataRef;
+            return GameDatabase.GlobalsPrototype.DynamicArea == PrototypeDataRef;
         }
 
-    }
-
-    public enum ConnectPosition
-    {
-        One,
-        Begin,
-        Inside,
-        End
     }
 
     public class AreaConnectionPoint
