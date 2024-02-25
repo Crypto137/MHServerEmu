@@ -15,14 +15,24 @@ using System.Windows.Media;
 
 namespace GameDatabaseBrowser
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
+        /// <summary>
+        /// Model hierarchy for treeView
+        /// </summary>
         public ObservableCollection<PrototypeNode> Nodes { get; set; } = new();
+
+        /// <summary>
+        /// All prototypes loaded
+        /// </summary>
         private List<PrototypeDetails> _prototypeDetails = new();
+
         private const int PrototypeMaxNumber = 93114;
+
+        /// <summary>
+        /// Stack for history of prototypes' fullname selected
+        /// </summary>
+        private Stack<string> _fullNameHistory = new();
 
         public MainWindow()
         {
@@ -38,6 +48,14 @@ namespace GameDatabaseBrowser
             backgroundWorker.DoWork += LoadPrototypes;
             backgroundWorker.ProgressChanged += OnProgress;
             backgroundWorker.RunWorkerAsync();
+        }
+
+        private void OnBackButtonClicked(object sender, RoutedEventArgs e)
+        {
+            if (_fullNameHistory.Count < 2)
+                return;
+            _fullNameHistory.Pop();
+            SelectFromName(_fullNameHistory.Peek());
         }
 
         private void OnProgress(object sender, ProgressChangedEventArgs e)
@@ -167,6 +185,9 @@ namespace GameDatabaseBrowser
             }
         }
 
+        /// <summary>
+        /// Update the properties based on the current selection
+        /// </summary>
         private void UpdatePropertiesSection(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (e.NewValue is not PrototypeNode)
@@ -178,7 +199,11 @@ namespace GameDatabaseBrowser
                 return;
 
             if (ulong.TryParse(dataRef, out ulong prototypeId))
-                txtDataRef.Text = $"{GameDatabase.GetPrototypeName((PrototypeId)prototypeId)} ({prototypeId})";
+            {
+                string prototypeFullName = GameDatabase.GetPrototypeName((PrototypeId)prototypeId);
+                txtDataRef.Text = $"{prototypeFullName} ({prototypeId})";
+                _fullNameHistory.Push(prototypeFullName);
+            }
             else txtDataRef.Text = dataRef;
 
             string parentDataRef = NodeSelected?.PrototypeDetails?.Properties?.FirstOrDefault(k => k.Name == "ParentDataRef")?.Value;
