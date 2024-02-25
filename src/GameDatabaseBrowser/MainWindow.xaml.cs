@@ -21,18 +21,18 @@ namespace GameDatabaseBrowser
     public partial class MainWindow : Window
     {
         public ObservableCollection<PrototypeNode> Nodes { get; set; } = new();
+        private List<PrototypeDetails> _prototypeDetails = new();
+        private const int PrototypeMaxNumber = 93114;
 
         public MainWindow()
         {
             InitializeComponent();
-            Nodes.Add(new PrototypeNode() { Name = "Prototypes" });
-            txtDataRef.Text = "";
-            txtParentDataRef.Text = "";
+            Nodes.Add(new() { PrototypeDetails = new("Prototypes", new()) });
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            BackgroundWorker backgroundWorker = new BackgroundWorker();
+            BackgroundWorker backgroundWorker = new();
             backgroundWorker.RunWorkerCompleted += OnLoadingCompleted;
             backgroundWorker.WorkerReportsProgress = true;
             backgroundWorker.DoWork += LoadPrototypes;
@@ -46,58 +46,59 @@ namespace GameDatabaseBrowser
             UpdateLayout();
         }
 
+        /// <summary>
+        /// Create a list with all the prototypes and their properties
+        /// </summary>
+        private void InitPrototypesList(BackgroundWorker worker, out int counter)
+        {
+            counter = 0;
+            foreach (PrototypeId prototypeId in GameDatabase.DataDirectory.IterateAllPrototypes())
+            {
+                string fullName = GameDatabase.GetPrototypeName(prototypeId);
+                Prototype proto = GameDatabase.DataDirectory.GetPrototype<Prototype>(prototypeId);
+                PropertyInfo[] propertyInfo = proto.GetType().GetProperties();
+
+                List<Property> properties = propertyInfo.Select(k => new Property() { Name = k.Name, Value = k.GetValue(proto)?.ToString() }).ToList();
+                _prototypeDetails.Add(new(fullName, properties));
+                worker.ReportProgress((int)(++counter * 100 / ((float)PrototypeMaxNumber)));
+            }
+
+            _prototypeDetails = _prototypeDetails.OrderBy(k => k.FullName).ToList();
+        }
+
         private void LoadPrototypes(object sender, DoWorkEventArgs e)
         {
             BackgroundWorker worker = sender as BackgroundWorker;
             worker.ReportProgress(0);
 
             PakFileSystem.Instance.Initialize();
-
             bool isInitialized = GameDatabase.IsInitialized;
             DataDirectory dataDirectory = DataDirectory.Instance;
 
-            int p = 0; // Max 93114
+            InitPrototypesList(worker, out int counter);
 
-            foreach (PrototypeId prototypeId in GameDatabase.DataDirectory.IterateAllPrototypes())
-            {
-                AddPrototypeInHierarchy(prototypeId);
-
-                worker.ReportProgress((int)(++p * (100 / 93114f)));
-            }
+            foreach (PrototypeDetails prototype in _prototypeDetails)
+                AddPrototypeInHierarchy(prototype);
 
             worker.ReportProgress(100);
         }
 
-        private void AddPrototypeInHierarchy(PrototypeId prototypeId)
+        private void AddPrototypeInHierarchy(PrototypeDetails prototype)
         {
-            Prototype proto = GameDatabase.DataDirectory.GetPrototype<Prototype>(prototypeId);
-            Type type = proto.GetType();
-            PropertyInfo[] properties = type.GetProperties();
-
-            string name = GameDatabase.GetPrototypeName(prototypeId);
-            string[] tokens = name.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] tokens = prototype.FullName.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
             ObservableCollection<PrototypeNode> pointer = Nodes[0].Childs;
 
+            string currentFullName = tokens.First();
             for (int i = 0; i < tokens.Length - 1; i++)
             {
-                if (pointer.FirstOrDefault(k => k.Name == tokens[i]) == null)
-                {
-                    pointer.Add(new()
-                    {
-                        Name = tokens[i],
-                        Properties = new()
-                    });
-                }
+                if (pointer.FirstOrDefault(k => k.PrototypeDetails.Name == tokens[i]) == null)
+                    pointer.Add(new() { PrototypeDetails = new(currentFullName, new()) });
 
-                pointer = pointer.First(k => k.Name == tokens[i]).Childs;
+                pointer = pointer.First(k => k.PrototypeDetails.Name == tokens[i]).Childs;
+                currentFullName += $"/{tokens[i + 1]}";
             }
 
-            pointer.Add(new()
-            {
-                Name = tokens.Last(),
-                Properties = properties
-                    .Select(k => new Property() { Name = k.Name, Value = k.GetValue(proto)?.ToString() }).ToList()
-            });
+            pointer.Add(new() { PrototypeDetails = prototype });
         }
 
         private void OnLoadingCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -146,7 +147,7 @@ namespace GameDatabaseBrowser
 
             for (int i = 0; i < tokens.Length; i++)
             {
-                indexes[i] = pointer.Select((p, i) => new { Index = i, PrototypeNode = p }).FirstOrDefault(k => k.PrototypeNode.Name == tokens[i]).Index;
+                indexes[i] = pointer.Select((p, i) => new { Index = i, PrototypeNode = p }).FirstOrDefault(k => k.PrototypeNode.PrototypeDetails?.Name == tokens[i]).Index;
                 if (i < tokens.Length - 1)
                     pointer = pointer[indexes[i]].Childs;
             }
@@ -158,8 +159,8 @@ namespace GameDatabaseBrowser
         {
             foreach (var item in parentItem.Childs)
             {
-                item.IsSelected = (item.Name == childName);
-                item.IsExpanded = (item.Name == childName);
+                item.IsSelected = (item.PrototypeDetails.Name == childName);
+                item.IsExpanded = (item.PrototypeDetails.Name == childName);
 
                 if (item.Childs.Count != 0)
                     SelectChildNode(item, childName);
@@ -172,17 +173,21 @@ namespace GameDatabaseBrowser
                 return;
 
             PrototypeNode NodeSelected = (PrototypeNode)e.NewValue;
-            string val = NodeSelected?.Properties?.FirstOrDefault(k => k.Name == "DataRef")?.Value;
-            if (val == null)
+            string dataRef = NodeSelected?.PrototypeDetails?.Properties?.FirstOrDefault(k => k.Name == "DataRef")?.Value;
+            if (dataRef == null)
                 return;
 
-            PrototypeId prototypeId = (PrototypeId)ulong.Parse(val);
-            txtDataRef.Text = $"{GameDatabase.GetPrototypeName(prototypeId)} ({prototypeId})";
-            string parent = NodeSelected?.Properties?.FirstOrDefault(k => k.Name == "ParentDataRef")?.Value;
-            prototypeId = (PrototypeId)ulong.Parse(parent);
-            txtParentDataRef.Text = $"Parent : {GameDatabase.GetPrototypeName(prototypeId)} ({prototypeId})";
+            if (ulong.TryParse(dataRef, out ulong prototypeId))
+                txtDataRef.Text = $"{GameDatabase.GetPrototypeName((PrototypeId)prototypeId)} ({prototypeId})";
+            else txtDataRef.Text = dataRef;
 
-            listView.ItemsSource = NodeSelected?.Properties?.Where(k => k.Name != "DataRef" && k.Name != "ParentDataRef" && k.Name != "DataRefRecord").OrderBy(k => k.Name);
+            string parentDataRef = NodeSelected?.PrototypeDetails?.Properties?.FirstOrDefault(k => k.Name == "ParentDataRef")?.Value;
+
+            if (ulong.TryParse(parentDataRef, out prototypeId))
+                txtParentDataRef.Text = $"Parent : {GameDatabase.GetPrototypeName((PrototypeId)prototypeId)} ({prototypeId})";
+            else txtParentDataRef.Text = parentDataRef;
+
+            listView.ItemsSource = NodeSelected?.PrototypeDetails?.Properties?.Where(k => k.Name != "DataRef" && k.Name != "ParentDataRef" && k.Name != "DataRefRecord").OrderBy(k => k.Name);
         }
 
         private void ExpandOrCollapseTreeViewItem(ItemsControl container, bool needToExpand = false)

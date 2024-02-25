@@ -37,7 +37,7 @@
             </TreeView.ItemContainerStyle>
             <TreeView.ItemTemplate>
                 <HierarchicalDataTemplate DataType="{x:Type models:PrototypeNode}" ItemsSource="{Binding Childs}">
-                    <TextBlock Text="{Binding Name}" />
+                    <TextBlock Text="{Binding PrototypeDetails.Name}" />
                 </HierarchicalDataTemplate>
             </TreeView.ItemTemplate>
             <TreeView.Resources>

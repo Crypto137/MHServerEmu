@@ -13,9 +13,9 @@ namespace GameDatabaseBrowser.Models
         public bool IsSelected { get; set; }
         public bool IsExpanded { get; set; }
 
+        public PrototypeDetails PrototypeDetails { get; set; }
+
         public ObservableCollection<PrototypeNode> Childs { get; set; }
-        public string Name { get; set; }
-        public List<Property> Properties { get; set; }
 
         public PrototypeNode()
         {
