@@ -11,6 +11,7 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
@@ -47,6 +48,8 @@ namespace MHServerEmu.Games
         public ulong CurrentRepId { get => ++_currentRepId; }
         // We use a dictionary property instead of AccessMessageHandlerHash(), which is essentially just a getter
         public Dictionary<ulong, IArchiveMessageHandler> MessageHandlerDict { get; } = new();
+        
+        public override string ToString() => $"serverGameId=0x{Id:X}";
 
         public Game(ulong id)
         {
@@ -59,7 +62,11 @@ namespace MHServerEmu.Games
             EventManager = new(this);
             EntityManager = new(this);
             RegionManager = new(EntityManager);
+            RegionManager.Initialize(this);
 
+            Random = new();
+            // Run a task that cleans up unused regions periodically
+            Task.Run(async () => await RegionManager.CleanUpRegionsAsync());
             _powerMessageHandler = new(EventManager);
 
             // Start main game loop
@@ -118,19 +125,33 @@ namespace MHServerEmu.Games
             lock (_gameLock)
             {
                 client.GameId = Id;
-                EnqueueResponses(client, GetBeginLoadingMessages(client.Session.Account));
+                EnqueueResponses(client, GetBeginLoadingMessages(client));
             }
         }
 
-        public void MovePlayerToRegion(FrontendClient client, RegionPrototypeId region)
+        public void MovePlayerToRegion(FrontendClient client, RegionPrototypeId region, PrototypeId waypointDataRef)
         {
             lock (_gameLock)
             {
                 EnqueueResponses(client, GetExitGameMessages());
                 client.Session.Account.Player.Region = region;
-                EnqueueResponses(client, GetBeginLoadingMessages(client.Session.Account));
-                client.LoadedCellCount = 0;
-                client.IsLoading = true;
+                client.Session.Account.Player.Waypoint = waypointDataRef;
+                EnqueueResponses(client, GetBeginLoadingMessages(client));
+            }
+        }
+
+        public void MovePlayerToEntity(FrontendClient client, ulong entityId)
+        {   
+            // TODO change Reload without exit of region
+            lock (_gameLock)
+            {
+                var entityManager = client.CurrentGame.EntityManager;
+                var targetEntity = entityManager.GetEntityById(entityId);
+                if (targetEntity is not WorldEntity worldEntity) return;
+                EnqueueResponses(client, GetExitGameMessages());
+                client.Session.Account.Player.Region = worldEntity.Region.PrototypeId;
+                client.EntityToTeleport = worldEntity;
+                EnqueueResponses(client, GetBeginLoadingMessages(client));
             }
         }
 
@@ -144,7 +165,8 @@ namespace MHServerEmu.Games
 
         private void EnqueueResponses(FrontendClient client, IEnumerable<GameMessage> messages)
         {
-            if (_responseListDict.TryGetValue(client, out _) == false) _responseListDict.Add(client, new());
+            if (_responseListDict.TryGetValue(client, out _) == false) 
+                _responseListDict.Add(client, new());
             _responseListDict[client].AddRange(messages);                
         }
 
@@ -169,6 +191,11 @@ namespace MHServerEmu.Games
                 case ClientToGameServerMessage.NetMessageCellLoaded:
                     if (message.TryDeserialize<NetMessageCellLoaded>(out var cellLoaded))
                         OnCellLoaded(client, cellLoaded);
+                    break;
+
+                case ClientToGameServerMessage.NetMessageChangeCameraSettings:
+                    if (message.TryDeserialize<NetMessageChangeCameraSettings>(out var cameraSettings))
+                        OnChangeCameraSettings(client, cameraSettings);
                     break;
 
                 case ClientToGameServerMessage.NetMessageUseInteractableObject:
@@ -234,10 +261,26 @@ namespace MHServerEmu.Games
             }
         }
 
+        private void OnChangeCameraSettings(FrontendClient client, NetMessageChangeCameraSettings cameraSettings)
+        {
+            client.AOI.InitPlayerView((PrototypeId)cameraSettings.CameraSettings);
+        }
+
         private void OnUpdateAvatarState(FrontendClient client, NetMessageUpdateAvatarState updateAvatarState)
         {
             UpdateAvatarStateArchive avatarState = new(updateAvatarState.ArchiveData);
+            //Vector3 oldPosition = client.LastPosition;
             client.LastPosition = avatarState.Position;
+            client.AOI.Region.Visited();
+            // AOI
+            if (client.IsLoading == false && client.AOI.ShouldUpdate(avatarState.Position) ) 
+            {
+                if (client.AOI.Update(avatarState.Position))
+                {
+                    //Logger.Trace($"AOI[{client.AOI.Messages.Count}][{client.AOI.LoadedEntitiesCount}]");
+                    EnqueueResponses(client, client.AOI.Messages);
+                }
+            }
 
             /* Logger spam
             Logger.Trace(avatarState.ToString())
@@ -247,21 +290,25 @@ namespace MHServerEmu.Games
 
         public void FinishLoading(FrontendClient client)
         {
-            EnqueueResponses(client, GetFinishLoadingMessages(client.Session.Account));
+            EnqueueResponses(client, GetFinishLoadingMessages(client));
             client.IsLoading = false;
         }
 
         private void OnCellLoaded(FrontendClient client, NetMessageCellLoaded cellLoaded)
-        {
-            client.LoadedCellCount++;
-            Logger.Info($"Received CellLoaded message cell[{cellLoaded.CellId}] loaded [{client.LoadedCellCount}/{client.Region.CellsInRegion}]");
+        {            
+            client.AOI.OnCellLoaded(cellLoaded.CellId);
+            Logger.Info($"Received CellLoaded message cell[{cellLoaded.CellId}] loaded [{client.AOI.LoadedCellCount}/{client.AOI.CellsInRegion}]");
+            
             if (client.IsLoading) {
                 EventManager.KillEvent(client, EventEnum.FinishCellLoading);
-                if (client.LoadedCellCount == client.Region.CellsInRegion)
+                if (client.AOI.LoadedCellCount == client.AOI.CellsInRegion)
                     FinishLoading(client);
                 else
+                {
                     // set timer 5 seconds for wait client answer
-                    EventManager.AddEvent(client, EventEnum.FinishCellLoading, 5000, client.Region.CellsInRegion);
+                    EventManager.AddEvent(client, EventEnum.FinishCellLoading, 5000, client.AOI.CellsInRegion);
+                    client.AOI.ForceCellLoad();
+                }
             }
         }
 
@@ -295,29 +342,42 @@ namespace MHServerEmu.Games
                 if (interactableObject is Transition)
                 {
                     Transition teleport = interactableObject as Transition;
-                    if (teleport.Destinations.Length == 0) return;
+                    if (teleport.TransitionPrototype.Type == RegionTransitionType.ReturnToLastTown)
+                    {
+                        teleport.TeleportToLastTown(client);
+                        return;
+                    }
+                    if (teleport.Destinations.Length == 0 || teleport.Destinations[0].Type == RegionTransitionType.Waypoint) return;
                     Logger.Trace($"Destination entity {teleport.Destinations[0].Entity}");
 
-                    if (teleport.Destinations[0].Type == 2)
+                    if (teleport.Destinations[0].Type == RegionTransitionType.TowerUp ||
+                        teleport.Destinations[0].Type == RegionTransitionType.TowerDown)
                     {
-                        var currentRegion = (PrototypeId)client.Session.Account.Player.Region;
-                        if (currentRegion != teleport.Destinations[0].Region)
-                        {
-                            Logger.Trace($"Destination region {teleport.Destinations[0].Region}");
-                            client.CurrentGame.MovePlayerToRegion(client, (RegionPrototypeId)teleport.Destinations[0].Region);
-
-                            return;
-                        }
+                        teleport.TeleportToEntity(client, teleport.Destinations[0].EntityId);
+                        return;
                     }
 
-                    Entity target = EntityManager.FindEntityByDestination(teleport.Destinations[0], teleport.RegionId);
-                    if (target == null) return;
-                    Vector3 targetRot = target.BaseData.Orientation;
-                    float offset = 150f;
-                    Vector3 targetPos = new(
-                        target.BaseData.Position.X + offset * (float)Math.Cos(targetRot.X),
-                        target.BaseData.Position.Y + offset * (float)Math.Sin(targetRot.X),
-                        target.BaseData.Position.Z);
+                    var currentRegion = (PrototypeId)client.Session.Account.Player.Region;
+                    if (currentRegion != teleport.Destinations[0].Region)
+                    {
+                        teleport.TeleportClient(client);
+                        return;
+                    }
+
+                    if (EntityManager.GetTransitionInRegion(teleport.Destinations[0], teleport.RegionId) is not Transition target) return;
+                    
+                    if (client.AOI.CheckTargeCell(target))
+                    {
+                        teleport.TeleportClient(client);
+                        return;
+                    }
+
+                    var teleportEntity = target.TransitionPrototype;
+                    if (teleportEntity == null) return;
+                    Vector3 targetPos = new(target.Location.GetPosition());
+                    Vector3 targetRot = target.Location.GetOrientation();
+
+                    teleportEntity.CalcSpawnOffset(targetRot, targetPos);
 
                     Logger.Trace($"Teleporting to {targetPos}");
 
@@ -369,11 +429,9 @@ namespace MHServerEmu.Games
             Logger.Trace(useWaypoint.ToString());
 
             RegionPrototypeId destinationRegion = (RegionPrototypeId)useWaypoint.RegionProtoId;
+            PrototypeId waypointDataRef = (PrototypeId)useWaypoint.WaypointDataRef;
 
-            if (RegionManager.IsRegionAvailable(destinationRegion))
-                MovePlayerToRegion(client, destinationRegion);
-            else
-                Logger.Warn($"Region {destinationRegion} is not available");
+            MovePlayerToRegion(client, destinationRegion, waypointDataRef);
         }
 
         private void OnSwitchAvatar(FrontendClient client, NetMessageSwitchAvatar switchAvatar)
@@ -385,7 +443,7 @@ namespace MHServerEmu.Games
             //client.Session.Account.CurrentAvatar.Costume = 0;  // reset costume on avatar switch
             client.Session.Account.Player.Avatar = (AvatarPrototypeId)switchAvatar.AvatarPrototypeId;
             ChatHelper.SendMetagameMessage(client, $"Changing avatar to {client.Session.Account.Player.Avatar}.");
-            MovePlayerToRegion(client, client.Session.Account.Player.Region);
+            MovePlayerToRegion(client, client.Session.Account.Player.Region, client.Session.Account.Player.Waypoint);
 
             /* Old experimental code
             // WIP - Hardcoded Black Cat -> Thor -> requires triggering an avatar swap back to Black Cat to move Thor again  

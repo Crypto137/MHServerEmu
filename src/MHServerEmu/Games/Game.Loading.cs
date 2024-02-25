@@ -1,7 +1,9 @@
 ﻿using Gazillion;
 using MHServerEmu.Common.Config;
+using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Powers;
@@ -15,8 +17,9 @@ namespace MHServerEmu.Games
 {
     public partial class Game
     {
-        private GameMessage[] GetBeginLoadingMessages(DBAccount account)
+        private GameMessage[] GetBeginLoadingMessages(FrontendClient client)
         {
+            DBAccount account = client.Session.Account;
             List<GameMessage> messageList = new();
 
             // Add server info messages
@@ -34,36 +37,46 @@ namespace MHServerEmu.Games
             messageList.AddRange(LoadPlayerEntityMessages(account));
             messageList.Add(new(NetMessageReadyAndLoadedOnGameServer.DefaultInstance));
 
-            // Load region data
-            messageList.AddRange(RegionManager.GetRegion(account.Player.Region).GetLoadingMessages(Id));
+            // Before changing to the actual destination region the game seems to first change into a transitional region
+            messageList.Add(new(NetMessageRegionChange.CreateBuilder()
+                .SetRegionId(0)
+                .SetServerGameId(0)
+                .SetClearingAllInterest(false)
+                .Build()));
 
-            // Create a waypoint entity
-            messageList.Add(new(EntityManager.Waypoint.ToNetMessageEntityCreate()));
+            messageList.Add(new(NetMessageQueueLoadingScreen.CreateBuilder()
+                .SetRegionPrototypeId((ulong)account.Player.Region)
+                .Build()));
 
+            // Run region generation as a task
+            Task.Run(() => GetRegionAsync(client, account.Player.Region));
+            client.AOI.LoadedCellCount = 0;
+            client.IsLoading = true;
             return messageList.ToArray();
         }
 
-        private GameMessage[] GetFinishLoadingMessages(DBAccount account)
+        private void GetRegionAsync(FrontendClient client, RegionPrototypeId regionPrototypeId)
         {
+            Region region = RegionManager.GetRegion(regionPrototypeId);
+            EventManager.AddEvent(client, EventEnum.GetRegion, 0, region);
+        }
+
+        private GameMessage[] GetFinishLoadingMessages(FrontendClient client)
+        {
+            DBAccount account = client.Session.Account;
             List<GameMessage> messageList = new();
 
-            Region region = RegionManager.GetRegion(account.Player.Region);
+            Common.Vector3 entrancePosition = new(client.StartPositon);
+            Common.Vector3 entranceOrientation = new(client.StartOrientation);
+            entrancePosition.Z += 42; // TODO project to floor
 
-            EnterGameWorldArchive avatarEnterGameWorldArchive = new((ulong)account.Player.Avatar.ToEntityId(), region.EntrancePosition, region.EntranceOrientation.X, 350f);
+            EnterGameWorldArchive avatarEnterGameWorldArchive = new((ulong)account.Player.Avatar.ToEntityId(), entrancePosition, entranceOrientation.Yaw, 350f);
             messageList.Add(new(NetMessageEntityEnterGameWorld.CreateBuilder()
                 .SetArchiveData(avatarEnterGameWorldArchive.Serialize())
                 .Build()));
 
-            WorldEntity[] regionEntities = EntityManager.GetWorldEntitiesForRegion(region.Id);
-            messageList.AddRange(regionEntities.Select(
-                entity => new GameMessage(entity.ToNetMessageEntityCreate())
-            ));
-
-            // Put waypoint entity in the game world
-            EnterGameWorldArchive waypointEnterGameWorldArchiveData = new(12, region.WaypointPosition, region.WaypointOrientation.X);
-            messageList.Add(new(NetMessageEntityEnterGameWorld.CreateBuilder()
-                .SetArchiveData(waypointEnterGameWorldArchiveData.Serialize())
-                .Build()));
+            client.AOI.Update(entrancePosition);
+            messageList.AddRange(client.AOI.Messages);
 
             // Load power collection
             messageList.AddRange(PowerLoader.LoadAvatarPowerCollection(account.Player.Avatar.ToEntityId()).ToList());
@@ -213,5 +226,6 @@ namespace MHServerEmu.Games
                 new(NetMessageRegionChange.CreateBuilder().SetRegionId(0).SetServerGameId(0).SetClearingAllInterest(true).Build())
             };
         }
+
     }
 }

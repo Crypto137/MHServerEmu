@@ -9,7 +9,6 @@ namespace MHServerEmu.Games.Missions
 {
     public class Mission
     {
-        public PrototypeGuid PrototypeGuid { get; set; }
         public ulong State { get; set; }
         public ulong TimeExpireCurrentState { get; set; }
         public PrototypeId PrototypeId { get; set; }
@@ -18,9 +17,11 @@ namespace MHServerEmu.Games.Missions
         public ulong[] Participants { get; set; }
         public bool Suspended { get; set; }
 
+        public MissionManager MissionManager { get; }
+        public Game Game { get; }
+
         public Mission(CodedInputStream stream, BoolDecoder boolDecoder)
-        {
-            PrototypeGuid = (PrototypeGuid)stream.ReadRawVarint64();
+        {            
             State = stream.ReadRawVarint64();
             TimeExpireCurrentState = stream.ReadRawVarint64();
             PrototypeId = stream.ReadPrototypeEnum<Prototype>();
@@ -37,10 +38,9 @@ namespace MHServerEmu.Games.Missions
             Suspended = boolDecoder.ReadBool(stream);
         }
 
-        public Mission(PrototypeGuid prototypeGuid, ulong state, ulong timeExpireCurrentState, PrototypeId prototypeId,
+        public Mission(ulong state, ulong timeExpireCurrentState, PrototypeId prototypeId,
             Objective[] objectives, ulong[] participants, bool suspended)
         {
-            PrototypeGuid = prototypeGuid;
             State = state;
             TimeExpireCurrentState = timeExpireCurrentState;
             PrototypeId = prototypeId;
@@ -49,9 +49,17 @@ namespace MHServerEmu.Games.Missions
             Suspended = suspended;
         }
 
-        public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
+        public Mission(MissionManager missionManager, PrototypeId missionRef)
         {
-            stream.WriteRawVarint64((ulong)PrototypeGuid);
+            MissionManager = missionManager;
+            Game = MissionManager.Game;
+            PrototypeId = missionRef;
+
+            // TODO other fields
+        }
+
+        public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
+        {            
             stream.WriteRawVarint64(State);
             stream.WriteRawVarint64(TimeExpireCurrentState);
             stream.WritePrototypeEnum<Prototype>(PrototypeId);
@@ -69,7 +77,6 @@ namespace MHServerEmu.Games.Missions
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"PrototypeGuid: {GameDatabase.GetPrototypeNameByGuid(PrototypeGuid)}");
             sb.AppendLine($"State: 0x{State:X}");
             sb.AppendLine($"TimeExpireCurrentState: 0x{TimeExpireCurrentState:X}");
             sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypeName(PrototypeId)}");
@@ -79,5 +86,6 @@ namespace MHServerEmu.Games.Missions
             sb.AppendLine($"Suspended: {Suspended}");
             return sb.ToString();
         }
+
     }
 }

@@ -7,11 +7,11 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Networking;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Events
 {
@@ -20,6 +20,7 @@ namespace MHServerEmu.Games.Events
         private static readonly Logger Logger = LogManager.CreateLogger();
         private readonly List<GameEvent> _eventList = new();
         private readonly Game _game;
+        private readonly object _eventLock = new();
 
         public EventManager(Game game)
         {
@@ -30,30 +31,42 @@ namespace MHServerEmu.Games.Events
         {
             List<QueuedGameMessage> messageList = new();
 
-            // Handle Events
-            foreach (GameEvent @event in _eventList)
-                messageList.AddRange(HandleEvent(@event));
+            lock (_eventLock)
+            {
+                // Handle Events
+                foreach (GameEvent @event in _eventList)
+                    messageList.AddRange(HandleEvent(@event));
 
-            if (_eventList.Count > 0)
-                _eventList.RemoveAll(@event => @event.IsRunning == false);
+                if (_eventList.Count > 0)
+                    _eventList.RemoveAll(@event => @event.IsRunning == false);
+            }
 
             return messageList;
         }
 
         public void AddEvent(FrontendClient client, EventEnum eventId, long timeMs, object data)
         {
-            _eventList.Add(new(client, eventId, timeMs, data));
+            lock (_eventLock)
+            {
+                _eventList.Add(new(client, eventId, timeMs, data));
+            }
         }
 
         public bool HasEvent(FrontendClient client, EventEnum eventId)
         {
-            return _eventList.Exists(@event => @event.Client == client && @event.Event == eventId);
+            lock (_eventLock)
+            {
+                return _eventList.Exists(@event => @event.Client == client && @event.Event == eventId);
+            }
         }
         
         public void KillEvent(FrontendClient client, EventEnum eventId)
         {
-            if (_eventList.Count > 0)
-                _eventList.RemoveAll(@event => (@event.Client == client) && (@event.Event == eventId));
+            lock (_eventLock)
+            {
+                if (_eventList.Count > 0)
+                    _eventList.RemoveAll(@event => (@event.Client == client) && (@event.Event == eventId));
+            }
         }
 
         private List<QueuedGameMessage> HandleEvent(GameEvent queuedEvent)
@@ -193,7 +206,7 @@ namespace MHServerEmu.Games.Events
 
                 case EventEnum.FinishCellLoading:
                     Logger.Warn($"Forсed loading");
-                    client.LoadedCellCount = (int)queuedEvent.Data;
+                    client.AOI.LoadedCellCount = (int)queuedEvent.Data;
                     client.CurrentGame.FinishLoading(client);
                     break;
 
@@ -416,6 +429,10 @@ namespace MHServerEmu.Games.Events
                         if (client.ThrowingObject != null)
                             messageList.Add(new(client, new(client.ThrowingObject.ToNetMessageEntityCreate())));
                         Logger.Trace("Event ThrownCancelPower");
+                    } 
+                    else
+                    {
+                        client.ThrowingObject.ToDead();
                     }
                     client.ThrowingObject = null;
                     client.IsThrowing = false;
@@ -472,7 +489,7 @@ namespace MHServerEmu.Games.Events
                         .Build())));
 
                     WorldEntity arenaEntity = _game.EntityManager.CreateWorldEntityEmpty(
-                        _game.RegionManager.GetRegion(client.Session.Account.Player.Region).Id,
+                        client.AOI.Region.Id,
                         (PrototypeId)PowerPrototypes.Magik.UltimateArea,
                         new(position.X, position.Y, position.Z), new());
 
@@ -517,6 +534,15 @@ namespace MHServerEmu.Games.Events
                     messageList.Add(new(client, new(NetMessageEntityDestroy.CreateBuilder()
                         .SetIdEntity(arenaEntityId)
                         .Build())));
+
+                    break;
+
+                case EventEnum.GetRegion:
+                    Logger.Trace($"Event GetRegion");
+                    Region region = (Region)queuedEvent.Data;
+                    var messages = region.GetLoadingMessages(client.GameId, client.Session.Account.Player.Waypoint, client);
+                    foreach (var message in messages)
+                        messageList.Add(new(client, message));
 
                     break;
             }

@@ -7,6 +7,9 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Networking;
 using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 
 namespace MHServerEmu.Games.Powers
 {
@@ -143,10 +146,53 @@ namespace MHServerEmu.Games.Powers
 
             PowerResultArchive archive = new(tryActivatePower);
             if (archive.TargetEntityId > 0)
+            {                
                 messageList.Add(new(client, new(NetMessagePowerResult.CreateBuilder()
                     .SetArchiveData(archive.Serialize())
                     .Build())));
+                messageList.AddRange(TestHit(client, archive.TargetEntityId, (int)archive.DamagePhysical));
+            }
 
+            return messageList;
+        }
+
+        private List<QueuedGameMessage> TestHit(FrontendClient client, ulong entityId, int damage)
+        {
+            List<QueuedGameMessage> messageList = new();
+            if (damage > 0)
+            {
+                WorldEntity entity = (WorldEntity)client.CurrentGame.EntityManager.GetEntityById(entityId);
+                if (entity != null)
+                {
+                    var repId = entity.Properties.ReplicationId;
+                    int health = entity.Properties[PropertyEnum.Health];
+                    int newHealth = health - damage;
+                    if (newHealth <= 0)
+                    {
+                        entity.ToDead();
+                        newHealth = 0;
+                        entity.Properties[PropertyEnum.IsDead] = true;
+                        messageList.Add(new(client,
+                         new(Property.ToNetMessageSetProperty(repId, new(PropertyEnum.IsDead), true))
+                         ));
+                    }
+                    entity.Properties[PropertyEnum.Health] = newHealth;
+                    messageList.Add(new(client,
+                        new(Property.ToNetMessageSetProperty(repId, new(PropertyEnum.Health), newHealth))
+                        ));
+                    if (newHealth == 0)
+                    {
+                        messageList.Add(new(client,
+                        new(NetMessageEntityKill.CreateBuilder()
+                        .SetIdEntity(entityId)
+                        .SetIdKillerEntity((ulong)client.Session.Account.Player.Avatar.ToEntityId())
+                        .SetKillFlags(0).Build())));
+                        messageList.Add(new(client,
+                        new(Property.ToNetMessageSetProperty(repId, new(PropertyEnum.NoEntityCollide), true))
+                        ));
+                    }
+                }
+            }
             return messageList;
         }
 

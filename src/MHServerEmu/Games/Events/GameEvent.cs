@@ -17,7 +17,8 @@ namespace MHServerEmu.Games.Events
         FinishCellLoading,
         OnPreInteractPower,
         OnPreInteractPowerEnd,
-        UseInteractableObject
+        UseInteractableObject,
+        GetRegion
     }
 
     public class GameEvent

@@ -64,6 +64,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         AllEntitiesInRegionOfAgent = 2,
         PotentialAlliesOfAgent = 3,
         PotentialEnemiesOfAgent = 4,
+        // Not found in client
+        ItemsAroundAgent = 0, 
     }
 
     [AssetEnum((int)None)]
@@ -161,6 +163,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] FriendlyTo { get; protected set; }
         public PrototypeId WhileConfused { get; protected set; }
         public PrototypeId WhileControlled { get; protected set; }
+
+        public static bool IsHostileToPlayerAlliance(AlliancePrototype allianceProto)
+        {
+            if (allianceProto == null
+                || GameDatabase.GlobalsPrototype == null 
+                || GameDatabase.GlobalsPrototype.PlayerAlliance == PrototypeId.Invalid)
+                return false;
+
+            AlliancePrototype playerAlliance = GameDatabase.GlobalsPrototype.PlayerAlliancePrototype;
+            return playerAlliance.IsHostileTo(allianceProto);
+        }
+
+        public bool IsHostileTo(AlliancePrototype allianceProto)
+        {
+            if (allianceProto == null) return false;
+            // TODO GameDataTables.GetAllianceTable().IsHostileTo(this, allianceProto);
+            return true;
+        }
     }
 
     public class BotDefinitionEntryPrototype : Prototype

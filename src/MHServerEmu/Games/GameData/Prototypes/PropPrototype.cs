@@ -1,4 +1,6 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Common.Extensions;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class PropPrototype : WorldEntityPrototype
     {
@@ -15,6 +17,17 @@
     {
         public PropDensityEntryPrototype[] MarkerDensityOverrides { get; protected set; }
         public int DefaultDensity { get; protected set; }
+        public int GetPropDensity(PrototypeId marker)
+        {
+            if (marker == 0) return 0;
+            if (MarkerDensityOverrides.IsNullOrEmpty() == false)
+            {
+                foreach (var densityEntry in MarkerDensityOverrides)
+                    if (densityEntry != null && densityEntry.Marker == marker)
+                        return densityEntry.OverrideDensity;
+            }
+            return DefaultDensity;
+        }
     }
 
     public class SmartPropPrototype : AgentPrototype

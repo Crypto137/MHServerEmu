@@ -175,4 +175,5 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypePropertyCollection Properties { get; protected set; }
         public int ConditionNum { get; protected set; }
     }
+
 }

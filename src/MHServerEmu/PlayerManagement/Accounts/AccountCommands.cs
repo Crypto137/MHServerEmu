@@ -108,13 +108,13 @@ namespace MHServerEmu.PlayerManagement.Accounts
             if (client == null) return "You can only invoke this command from the game.";
 
             StringBuilder sb = new();
-            sb.Append($"Account Info:\n");
-            sb.Append($"Email: {client.Session.Account.Email}\n");
-            sb.Append($"PlayerName: {client.Session.Account.PlayerName}\n");
-            sb.Append($"UserLevel: {client.Session.Account.UserLevel}\n");
-            sb.Append($"IsBanned: {client.Session.Account.IsArchived}\n");
-            sb.Append($"IsArchived: {client.Session.Account.IsArchived}\n");
-            sb.Append($"IsPasswordExpired: {client.Session.Account.IsPasswordExpired}\n");
+            sb.AppendLine($"Account Info:");
+            sb.AppendLine($"Email: {client.Session.Account.Email}");
+            sb.AppendLine($"PlayerName: {client.Session.Account.PlayerName}");
+            sb.AppendLine($"UserLevel: {client.Session.Account.UserLevel}");
+            sb.AppendLine($"IsBanned: {client.Session.Account.IsArchived}");
+            sb.AppendLine($"IsArchived: {client.Session.Account.IsArchived}");
+            sb.Append($"IsPasswordExpired: {client.Session.Account.IsPasswordExpired}");
             return sb.ToString();
         }
     }

@@ -37,6 +37,12 @@ namespace MHServerEmu.Games.Common
         public NetStructIPoint2 ToNetStructIPoint2() => NetStructIPoint2.CreateBuilder()
             .SetX((uint)MathF.Max(0f, X)).SetY((uint)MathF.Max(0f, Y)).Build();     // Use MathF.Max when converting to NetStructIPoint2 to prevent underflow
 
+        public void Set(Vector2 v)
+        {
+            X = v.X;
+            Y = v.Y;
+        }
+
         public static Vector2 operator +(Vector2 a, Vector2 b) => new(a.X + b.X, a.Y + b.Y);
         public static Vector2 operator -(Vector2 a, Vector2 b) => new(a.X - b.X, a.Y - b.Y);
         public static bool operator ==(Vector2 a, Vector2 b) => ReferenceEquals(null, a) ? ReferenceEquals(null, b) : a.Equals(b);

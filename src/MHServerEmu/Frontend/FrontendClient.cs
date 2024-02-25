@@ -26,8 +26,7 @@ namespace MHServerEmu.Frontend
         public Region Region { get => CurrentGame.RegionManager.GetRegion(Session.Account.Player.Region); }
 
         // Temporarily store state here instead of Game
-        public bool IsLoading { get; set; } = false;
-        public int LoadedCellCount { get; set; } = 0;
+        public bool IsLoading { get; set; } = false;        
         public Vector3 LastPosition { get; set; }
         public ulong MagikUltimateEntityId { get; set; }
         public bool IsThrowing { get; set; } = false;
@@ -35,9 +34,15 @@ namespace MHServerEmu.Frontend
         public PrototypeId ThrowingCancelPower { get; set; }
         public Entity ThrowingObject { get; set; }
 
+        public AreaOfInterest AOI { get; private set; }
+        public Vector3 StartPositon { get; internal set; }
+        public Vector3 StartOrientation { get; internal set; }
+        public WorldEntity EntityToTeleport { get; internal set; }
+
         public FrontendClient(TcpClientConnection connection)
         {
             Connection = connection;
+            AOI = new(this);
         }
 
         public void Parse(byte[] data)
@@ -74,19 +79,9 @@ namespace MHServerEmu.Frontend
         public void AssignSession(ClientSession session)
         {
             if (Session == null)
-            {
                 Session = session;
-
-                if (RegionManager.IsRegionAvailable(Session.Account.Player.Region) == false)
-                {
-                    Logger.Warn($"No data is available for {Session.Account.Player.Region}, falling back to NPEAvengersTowerHUBRegion");
-                    Session.Account.Player.Region = RegionPrototypeId.NPEAvengersTowerHUBRegion;
-                }
-            }
             else
-            {
                 Logger.Warn($"Failed to assign sessionId {session.Id} to a client: sessionId {Session.Id} is already assigned to this client");
-            }
         }
 
         public void SendMuxDisconnect(ushort muxId)
@@ -106,21 +101,6 @@ namespace MHServerEmu.Frontend
             PacketOut packet = new(muxId, MuxCommand.Data);
             packet.AddMessages(messages);
             Connection.Send(packet);
-        }
-
-        public void SendPacketFromFile(string fileName)
-        {
-            string path = Path.Combine(FileHelper.DataDirectory, "Packets", fileName);
-
-            if (File.Exists(path))
-            {
-                Logger.Info($"Sending {fileName}");
-                Connection.Send(File.ReadAllBytes(path));
-            }
-            else
-            {
-                Logger.Warn($"{fileName} not found");
-            }
         }
     }
 }

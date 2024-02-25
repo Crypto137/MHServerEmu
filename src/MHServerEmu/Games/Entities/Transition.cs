@@ -1,19 +1,25 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.Common.Logging;
+using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {
     public class Transition : WorldEntity
     {
+        public static readonly Logger Logger = LogManager.CreateLogger();
         public string TransitionName { get; set; }
         public Destination[] Destinations { get; set; }
+
+        public TransitionPrototype TransitionPrototype { get { return EntityPrototype as TransitionPrototype; } }
         public Transition(EntityBaseData baseData, ulong replicationId, ulong mapRegionId, int mapAreaId, int mapCellId, PrototypeId contextAreaRef, 
             Vector3 mapPosition, Destination destination) : base(baseData)
         {
@@ -32,8 +38,13 @@ namespace MHServerEmu.Games.Entities
             UnkEvent = 0;
 
             TransitionName = "";
-            Destinations = new Destination[1];
-            Destinations[0] = destination;
+            if (destination == null) 
+                Destinations = Array.Empty<Destination>();
+            else
+            {
+                Destinations = new Destination[1];
+                Destinations[0] = destination;
+            }
         }
 
         public Transition(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
@@ -77,11 +88,48 @@ namespace MHServerEmu.Games.Entities
             sb.AppendLine($"TransitionName: {TransitionName}");
             for (int i = 0; i < Destinations.Length; i++) sb.AppendLine($"Destination{i}: {Destinations[i]}");
         }
+
+        public void ConfigureTowerGen(Transition transition)
+        {
+            Destination destination;
+            if (Destinations.IsNullOrEmpty())
+            {
+                Destinations = new Destination[1];
+                destination = new Destination();
+                Destinations[0] = destination;
+            }
+            else
+            {
+                destination = Destinations[0];
+            }
+            destination.EntityId = transition.BaseData.EntityId;
+            destination.Entity = transition.BaseData.PrototypeId;
+            destination.Type = TransitionPrototype.Type;
+        }
+
+        public void TeleportClient(FrontendClient client)
+        {
+            Logger.Trace($"Destination region {GameDatabase.GetFormattedPrototypeName(Destinations[0].Region)} [{GameDatabase.GetFormattedPrototypeName(Destinations[0].Entity)}]");
+            client.CurrentGame.MovePlayerToRegion(client, (RegionPrototypeId)Destinations[0].Region, Destinations[0].Target);
+        }
+
+        public void TeleportToEntity(FrontendClient client, ulong entityId)
+        {
+            Logger.Trace($"Destination EntityId [{entityId}] [{GameDatabase.GetFormattedPrototypeName(Destinations[0].Entity)}]");
+            client.CurrentGame.MovePlayerToEntity(client, Destinations[0].EntityId);
+        }
+
+        public void TeleportToLastTown(FrontendClient client)
+        {
+            // TODO back to last saved hub
+            Logger.Trace($"Destination LastTown");
+            client.CurrentGame.MovePlayerToRegion(client, RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)10137590415717831231);
+        }
     }
 
     public class Destination
     {
-        public int Type { get; set; }
+        public RegionTransitionType Type { get; set; }
         public PrototypeId Region { get; set; }
         public PrototypeId Area { get; set; }
         public PrototypeId Cell { get; set; }
@@ -92,13 +140,17 @@ namespace MHServerEmu.Games.Entities
         public LocaleStringId NameId { get; set; }
         public ulong RegionId { get; set; }
         public Vector3 Position { get; set; }
-        public ulong UnkId1 { get; set; }
+        public ulong EntityId { get; set; }
         public ulong UnkId2 { get; set; }
 
-        public Destination() { }
+        public Destination() { 
+            Position = Vector3.Zero;
+            Name = ""; 
+        }
+
         public Destination(CodedInputStream stream)
         {
-            Type = stream.ReadRawInt32();
+            Type = (RegionTransitionType)stream.ReadRawInt32();
 
             Region = stream.ReadPrototypeEnum<Prototype>();
             Area = stream.ReadPrototypeEnum<Prototype>();
@@ -118,13 +170,13 @@ namespace MHServerEmu.Games.Entities
             float z = stream.ReadRawFloat();
             Position = new Vector3(x, y, z);
 
-            UnkId1 = stream.ReadRawVarint64();
+            EntityId = stream.ReadRawVarint64();
             UnkId2 = stream.ReadRawVarint64();
         }
 
-        public Destination(int type, PrototypeId region, PrototypeId area, PrototypeId cell, PrototypeId entity, PrototypeId target, 
+        public Destination(RegionTransitionType type, PrototypeId region, PrototypeId area, PrototypeId cell, PrototypeId entity, PrototypeId target, 
             int unk2, string name, LocaleStringId nameId, ulong regionId, 
-            Vector3 position, ulong unkId1, ulong unkId2)
+            Vector3 position, ulong entityId, ulong unkId2)
         {
             Type = type;
             Region = region;
@@ -137,13 +189,13 @@ namespace MHServerEmu.Games.Entities
             NameId = nameId;
             RegionId = regionId;
             Position = position;
-            UnkId1 = unkId1;
+            EntityId = entityId;
             UnkId2 = unkId2;
         }
 
         public void Encode(CodedOutputStream stream)
         {
-            stream.WriteRawInt32(Type);
+            stream.WriteRawInt32((int)Type);
 
             stream.WritePrototypeEnum<Prototype>(Region);
             stream.WritePrototypeEnum<Prototype>(Area);
@@ -162,7 +214,7 @@ namespace MHServerEmu.Games.Entities
             stream.WriteRawFloat(Position.Y);
             stream.WriteRawFloat(Position.Z);
 
-            stream.WriteRawVarint64(UnkId1);
+            stream.WriteRawVarint64(EntityId);
             stream.WriteRawVarint64(UnkId2);
         }
         public override string ToString()
@@ -180,7 +232,7 @@ namespace MHServerEmu.Games.Entities
             sb.AppendLine($"NameId: {NameId}");
             sb.AppendLine($"RegionId: {RegionId}");
             sb.AppendLine($"Position: {Position}");
-            sb.AppendLine($"UnkId1: {UnkId1}");
+            sb.AppendLine($"UnkId1: {EntityId}");
             sb.AppendLine($"UnkId2: {UnkId2}");
 
             return sb.ToString();

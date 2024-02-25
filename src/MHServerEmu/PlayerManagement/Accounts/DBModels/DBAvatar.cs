@@ -2,6 +2,9 @@
 
 namespace MHServerEmu.PlayerManagement.Accounts.DBModels
 {
+    /// <summary>
+    /// Represents an avatar entity stored in the account database.
+    /// </summary>
     public class DBAvatar
     {
         // We are currently using System.Data.SQLite + Dapper for storing our persistent data.

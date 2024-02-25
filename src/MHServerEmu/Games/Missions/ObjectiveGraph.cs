@@ -19,7 +19,7 @@ namespace MHServerEmu.Games.Missions
                 Connections[i] = new(stream);
         }
 
-        public ObjectiveGraph() { }
+        public ObjectiveGraph(Game game, Regions.Region region) { }
 
         public void Encode(CodedOutputStream stream)
         {

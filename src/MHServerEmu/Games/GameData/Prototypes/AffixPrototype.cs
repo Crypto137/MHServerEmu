@@ -1,4 +1,6 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy;
+﻿using MHServerEmu.Common;
+using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -267,11 +269,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public OverheadInfoDisplayType OverheadInfoDisplayType { get; protected set; }
         public PrototypeId[] Keywords { get; protected set; }
         public int BonusItemFindPoints { get; protected set; }
+
+        public bool IsRankBoss()
+        {
+            return Rank == Rank.Boss || Rank == Rank.GroupBoss;
+        }
     }
 
     public class EnemyBoostSetPrototype : Prototype
     {
         public PrototypeId[] Modifiers { get; protected set; }
+
+        public bool Contains(PrototypeId affixRef)
+        {
+            return Modifiers.IsNullOrEmpty() == false ? Modifiers.Contains(affixRef) : false;
+        }
     }
 
     public class EnemyBoostPrototype : ModPrototype
@@ -286,6 +298,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId AffixTable { get; protected set; }
         public int ChancePct { get; protected set; }
+        [DoNotCopy]
+        public EnemyBoostSetPrototype AffixTablePrototype { get => AffixTable.As<EnemyBoostSetPrototype>(); }
+
+        internal PrototypeId RollAffix(GRandom random, HashSet<PrototypeId> affixes, HashSet<PrototypeId> exclude)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class RankAffixEntryPrototype : Prototype
@@ -293,6 +312,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AffixTableEntryPrototype[] Affixes { get; protected set; }
         public PrototypeId Rank { get; protected set; }
         public int Weight { get; protected set; }
+
+        public AffixTableEntryPrototype GetAffixSlot(int slot)
+        {
+            if (Affixes.IsNullOrEmpty() == false && slot >=0 && slot < Affixes.Length)
+                return Affixes[slot];
+            return null; // empty prototype
+        }
+
+        public int GetMaxAffixes()
+        {
+            return (Affixes.IsNullOrEmpty() == false ? Affixes.Length : 0);
+        }
     }
 
     public class RarityPrototype : Prototype

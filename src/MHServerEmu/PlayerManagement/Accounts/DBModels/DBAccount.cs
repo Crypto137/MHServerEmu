@@ -1,10 +1,13 @@
 ﻿using MHServerEmu.Common;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.PlayerManagement.Accounts.DBModels
 {
+    /// <summary>
+    /// Represents an account stored in the account database.
+    /// </summary>
     public class DBAccount
     {
         public ulong Id { get; set; }
@@ -37,7 +40,7 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
             InitializeData();
         }
 
-        public DBAccount(string playerName, RegionPrototypeId region, AvatarPrototypeId avatar)
+        public DBAccount(string playerName, RegionPrototypeId region, PrototypeId waypoint, AvatarPrototypeId avatar, int volume)
         {
             // Default account for using with BypassAuth
             Id = 0;
@@ -48,7 +51,9 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
             InitializeData();
 
             Player.Region = region;
+            Player.Waypoint = waypoint;
             Player.Avatar = avatar;
+            Player.AOIVolume = volume;
         }
 
         public DBAccount() { }

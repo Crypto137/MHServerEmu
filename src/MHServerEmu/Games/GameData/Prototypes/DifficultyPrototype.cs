@@ -86,6 +86,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public TuningDamageByRankPrototype[] TuningDamageByRank { get; protected set; }
         public TuningDamageByRankPrototype[] TuningDamageByRankDCL { get; protected set; }
         public RankAffixTableByDifficultyEntryPrototype[] RankAffixTableByDifficulty { get; protected set; }
+
+        internal RankAffixEntryPrototype GetDifficultyRankEntry(PrototypeId difficultyTierRef, RankPrototype rankProto)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class DifficultyModePrototype : Prototype

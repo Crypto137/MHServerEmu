@@ -1,4 +1,6 @@
 ﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -34,6 +36,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EnemyBoostEntryPrototype[] EnemyBoostsFiltered { get; protected set; }
         public PrototypeId[] AffixRarityRestrictions { get; protected set; }
         public EvalPrototype Eval { get; protected set; }
+
+        internal bool CanApplyToRegion(Region region)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class RegionAffixTableTierEntryPrototype : Prototype
@@ -56,6 +63,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public RegionAffixWeightedEntryPrototype[] RegionAffixes { get; protected set; }
         public RegionAffixTableTierEntryPrototype[] Tiers { get; protected set; }
         public AssetId LootSource { get; protected set; }
+
+        internal RegionAffixTableTierEntryPrototype GetByTier(int affixTier)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class RegionAffixCategoryPrototype : Prototype

@@ -44,6 +44,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         LeaderboardRewarded = 18,
         CouponReceived = 19,
         PublicEvent = 20,
+        // Not found in client
+        SynergyPoints = 0
     }
 
     [AssetEnum((int)Interval)]

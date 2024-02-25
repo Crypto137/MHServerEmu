@@ -14,7 +14,7 @@ using MHServerEmu.Games.Social;
 
 namespace MHServerEmu.Games.Entities
 {
-    public class Player : Entity
+    public class Player : Entity, IMissionManagerOwner
     {
         public MissionManager MissionManager { get; set; }
         public ReplicatedPropertyCollection AvatarProperties { get; set; }

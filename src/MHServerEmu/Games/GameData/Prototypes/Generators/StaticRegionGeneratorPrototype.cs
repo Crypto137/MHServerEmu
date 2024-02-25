@@ -1,9 +1,20 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.Regions;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class StaticRegionGeneratorPrototype : RegionGeneratorPrototype
     {
         public StaticAreaPrototype[] StaticAreas { get; protected set; }
         public AreaConnectionPrototype[] Connections { get; protected set; }
+
+        public override PrototypeId GetStartAreaRef(Region region)
+        {
+
+            if (StaticAreas != null && StaticAreas.Length > 0)
+                return StaticAreas[0].Area;
+
+            return 0;
+        }
     }
 
     public class AreaConnectionPrototype : Prototype

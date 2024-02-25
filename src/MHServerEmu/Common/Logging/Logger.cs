@@ -145,5 +145,15 @@
             Log(level, message);
             return returnValue;
         }
+
+        public static string ObjectCollectionToString(IEnumerable<object> collection)
+        {
+            string output = "{";
+            foreach (var item in collection)
+                output += $"{item} ";
+            output += "}";
+
+            return output;
+        }
     }
 }

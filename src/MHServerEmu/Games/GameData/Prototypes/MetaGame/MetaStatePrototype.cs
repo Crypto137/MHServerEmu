@@ -38,6 +38,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId UIWidget { get; protected set; }
         public DesignWorkflowState DesignStatePS4 { get; protected set; }
         public DesignWorkflowState DesignStateXboxOne { get; protected set; }
+
+        public virtual bool CanApplyState()
+        {
+            var designState = DesignState;
+            /*
+              if (GameDatabase.Settings.TargetingPS4Data)
+                  designState = DesignStatePS4;
+              else if (GameDatabase.Settings.TargetingXboxOneData)
+                  designState = DesignStateXboxOne;*/
+
+            return designState == DesignWorkflowState.Live;//GameDatabase.DesignStateOk(designState);
+        }
     }
 
     public class MetaStateMissionActivatePrototype : MetaStatePrototype
@@ -68,6 +80,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] OnMissionFailedApplyStates { get; protected set; }
         public int SequenceAdvanceDelayMS { get; protected set; }
         public PrototypeId OnSequenceCompleteSetMode { get; protected set; }
+
+        public override bool CanApplyState()
+        {
+            // TODO
+            return true;
+        }
     }
 
     public class WeightedPrototypeDataRefPrototype : Prototype

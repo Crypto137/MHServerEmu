@@ -83,7 +83,10 @@
         {
             return (Next(0, 100) < pct);
         }
-
+        public override string ToString()
+        {
+            return _rand.ToString();
+        }
     }
 
     public class Rand : RandMwc
@@ -202,6 +205,11 @@
         public ulong Get64()
         {
             return ((ulong)Get() << 32) | Get();
+        }
+
+        public override string ToString()
+        {
+            return $"0x{_seed:X16}";
         }
     }
 }

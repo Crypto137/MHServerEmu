@@ -2,7 +2,9 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Missions
@@ -10,53 +12,163 @@ namespace MHServerEmu.Games.Missions
     public class MissionManager
     {
         public PrototypeId PrototypeId { get; set; }
-        public Mission[] Missions { get; set; }
-        public LegendaryMissionBlacklist[] LegendaryMissionBlacklists { get; set; }
+        public Dictionary<PrototypeId, Mission> Missions { get; set; } = new();
+        public SortedDictionary<PrototypeGuid, LegendaryMissionBlacklist> LegendaryMissionBlacklists { get; set; } = new();
+
+
+        public Player Player { get; private set; }       
+        public Game Game { get; private set; }
+        public IMissionManagerOwner Owner { get; set; }
+
+        private ulong _regionId; 
+        private HashSet<ulong> _missionInterestEntities = new();
 
         public MissionManager(CodedInputStream stream, BoolDecoder boolDecoder)
         {
             PrototypeId = stream.ReadPrototypeEnum<Prototype>();
 
-            Missions = new Mission[stream.ReadRawVarint64()];
-            for (int i = 0; i < Missions.Length; i++)
-                Missions[i] = new(stream, boolDecoder);
+            Missions.Clear();
+            int mlength = (int)stream.ReadRawVarint64();
 
-            LegendaryMissionBlacklists = new LegendaryMissionBlacklist[stream.ReadRawInt32()];
-            for (int i = 0; i < LegendaryMissionBlacklists.Length; i++)
-                LegendaryMissionBlacklists[i] = new(stream);
-        }
+            for (int i = 0; i < mlength; i++)
+            {
+                PrototypeGuid missionGuid = (PrototypeGuid)stream.ReadRawVarint64();
+                var missionRef = GameDatabase.GetDataRefByPrototypeGuid(missionGuid);
+                // Mission mission = CreateMission(missionRef);
+                // mission.Decode(stream, boolDecoder) TODO
+                Mission mission = new(stream, boolDecoder);
+                InsertMission(mission);
+            }
 
-        public MissionManager(PrototypeId prototypeId, Mission[] missions, LegendaryMissionBlacklist[] legendaryMissionBlacklists)
-        {
-            PrototypeId = prototypeId;
-            Missions = missions;
-            LegendaryMissionBlacklists = legendaryMissionBlacklists;
+            LegendaryMissionBlacklists.Clear();
+            mlength = stream.ReadRawInt32();
+
+            for (int i = 0; i < mlength; i++)
+            {                
+                PrototypeGuid category = (PrototypeGuid)stream.ReadRawVarint64();
+                LegendaryMissionBlacklist legendaryMission = new(stream);
+                LegendaryMissionBlacklists.Add(category, legendaryMission);
+            }
         }
 
         public void EncodeBools(BoolEncoder boolEncoder)
         {
-            foreach (Mission mission in Missions)
-                boolEncoder.EncodeBool(mission.Suspended);
+            foreach (var mission in Missions)
+                boolEncoder.EncodeBool(mission.Value.Suspended);
         }
 
         public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
             stream.WritePrototypeEnum<Prototype>(PrototypeId);
 
-            stream.WriteRawVarint64((ulong)Missions.Length);
-            foreach (Mission mission in Missions) mission.Encode(stream, boolEncoder);
+            stream.WriteRawVarint64((ulong)Missions.Count);
+            foreach (var pair in Missions)
+            {
+                PrototypeGuid missionGuid = GameDatabase.GetPrototypeGuid(pair.Key);
+                stream.WriteRawVarint64((ulong)missionGuid);
+                pair.Value.Encode(stream, boolEncoder);
+            }
 
-            stream.WriteRawInt32(LegendaryMissionBlacklists.Length);
-            foreach (LegendaryMissionBlacklist blacklist in LegendaryMissionBlacklists) blacklist.Encode(stream);
+            stream.WriteRawInt32(LegendaryMissionBlacklists.Count);
+            foreach (var pair in LegendaryMissionBlacklists)
+            {
+                PrototypeGuid category = pair.Key;
+                stream.WriteRawVarint64((ulong)category); 
+                pair.Value.Encode(stream);
+            }
         }
 
         public override string ToString()
         {
             StringBuilder sb = new();
             sb.AppendLine($"PrototypeId: {GameDatabase.GetPrototypeName(PrototypeId)}");
-            for (int i = 0; i < Missions.Length; i++) sb.AppendLine($"Mission{i}: {Missions[i]}");
-            for (int i = 0; i < LegendaryMissionBlacklists.Length; i++) sb.AppendLine($"LegendaryMissionBlacklist{i}: {LegendaryMissionBlacklists[i]}");
+            foreach (var pair in Missions) sb.AppendLine($"Mission[{pair.Key}]: {pair.Value}");
+            foreach (var pair in LegendaryMissionBlacklists) sb.AppendLine($"LegendaryMissionBlacklist[{pair.Key}]: {pair.Value}");
             return sb.ToString();
+        }
+
+        public MissionManager(Game game, IMissionManagerOwner owner)
+        {
+            Game = game;
+            Owner = owner;
+        }
+
+        public bool InitializeForPlayer(Player player, Region region)
+        {
+            if (player == null) return false;
+
+            Player = player;
+            SetRegion(region);
+
+            return true;
+        }
+
+        public bool IsPlayerMissionManager()
+        {
+            return (Owner != null) && Owner is Player;
+        }
+
+        public bool IsRegionMissionManager()
+        {
+            return (Owner != null) && Owner is Region;
+        }
+
+        public bool InitializeForRegion(Region region)
+        {
+            if (region == null)  return false;
+
+            Player = null;
+            SetRegion(region);
+
+            return true;
+        }
+
+        private void SetRegion(Region region)
+        {
+            _regionId = region != null ? region.Id : 0;
+        }
+
+        public Region GetRegion()
+        {
+            if (_regionId == 0 || Game == null) return null;
+            return RegionManager.GetRegion(Game, _regionId);
+        }
+
+        public Mission CreateMission(PrototypeId missionRef)
+        {
+            return new(this, missionRef);
+        }
+
+        public Mission InsertMission(Mission mission)
+        {
+            if (mission == null) return null;
+            Missions.Add(mission.PrototypeId, mission); 
+            return mission;
+        }
+
+        internal void Shutdown(Region region)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool GenerateMissionPopulation()
+        {
+            Region region = GetRegion();
+            // search all Missions with encounter
+            foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(MissionPrototype), PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+            {
+                MissionPrototype missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
+                if (missionProto == null) continue;
+                if (missionProto.HasPopulationInRegion(region) == false) continue;
+                // TODO check mission
+                string name = GameDatabase.GetPrototypeName(missionRef).ToLower();
+                if (name.Contains("zzz")) continue; // Skip dev missions
+                if (name.Contains("seasonal/christmas")) continue; // Skip XMas missions
+                // IsMissionValidAndApprovedForUse
+                region.SpawnPopulation.MissionRegisty(missionProto);
+            }
+
+            return true;
         }
     }
 }

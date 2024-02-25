@@ -1,5 +1,9 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy;
+﻿using MHServerEmu.Common;
+using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.Common;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -245,6 +249,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId MarvelModelRenderClass { get; protected set; }
         public DesignWorkflowState DesignStatePS4 { get; protected set; }
         public DesignWorkflowState DesignStateXboxOne { get; protected set; }
+        [DoNotCopy]
+        public AlliancePrototype AlliancePrototype { get => Alliance.As<AlliancePrototype>(); }
+        [DoNotCopy]
+        public RankPrototype RankPrototype { get => Rank.As<RankPrototype>(); }
     }
 
     public class StateChangePrototype : Prototype
@@ -345,6 +353,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float DefaultProximityRangeHostile { get; protected set; }
         public EvalPrototype EvalSpawnProperties { get; protected set; }
         public bool SelectUniqueEntities { get; protected set; }
+
+        public PrototypeId SelectEntity(GRandom random, Region region)
+        {
+            if (Entities.IsNullOrEmpty() == false)
+            {
+                // SelectUniqueEntities region ???
+
+                int index = random.Next(0, Entities.Length);
+                return Entities[index];
+            }
+
+            return PrototypeId.Invalid;
+        }
     }
 
     public class EntityActionTimelineScriptActionPrototype : EntitySelectorActionBasePrototype
@@ -390,6 +411,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId ShowConfirmationDialogOverride { get; protected set; }
         public PrototypeId ShowConfirmationDialogTemplate { get; protected set; }
         public PrototypeId ShowConfirmationDialogEnemy { get; protected set; }
+
+        public void CalcSpawnOffset(Vector3 targetRot, Vector3 targetPos)
+        {
+            float offset = SpawnOffset;
+            targetPos.X += offset * MathF.Cos(targetRot.X);
+            targetPos.Y += offset * MathF.Sin(targetRot.X);
+        }
     }
 
     public class EntityAppearancePrototype : Prototype

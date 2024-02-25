@@ -80,16 +80,4 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     #endregion
 
-    public class SuperCellEntryPrototype : Prototype
-    {
-        public sbyte X { get; protected set; }
-        public sbyte Y { get; protected set; }
-        public AssetId Cell { get; protected set; }
-        public AssetId[] Alts { get; protected set; }
-    }
-
-    public class SuperCellPrototype : Prototype
-    {
-        public SuperCellEntryPrototype[] Entries { get; protected set; }
-    }
 }

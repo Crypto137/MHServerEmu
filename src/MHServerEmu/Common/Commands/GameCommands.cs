@@ -5,7 +5,6 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.Networking;
 using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.Common.Commands
@@ -18,7 +17,7 @@ namespace MHServerEmu.Common.Commands
         {
             if (client == null) return "You can only invoke this command from the game.";
 
-            client.CurrentGame.MovePlayerToRegion(client, RegionPrototypeId.AvengersTowerHUBRegion);
+            client.CurrentGame.MovePlayerToRegion(client, RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)15322252936284737788);
 
             return "Changing region to Avengers Tower (original)";
         }
@@ -32,9 +31,37 @@ namespace MHServerEmu.Common.Commands
         {
             if (client == null) return "You can only invoke this command from the game.";
 
-            client.CurrentGame.MovePlayerToRegion(client, RegionPrototypeId.CosmicDoopSectorSpaceRegion);
+            client.CurrentGame.MovePlayerToRegion(client, RegionPrototypeId.CosmicDoopSectorSpaceRegion, (PrototypeId)15872240608618488803);
 
             return "Travel to Cosmic Doop Sector";
+        }
+    }
+
+    [CommandGroup("Bovineheim", "Travel to Bovineheim.", AccountUserLevel.User)]
+    public class BovineCommand : CommandGroup
+    {
+        [DefaultCommand(AccountUserLevel.User)]
+        public string Bovineheim(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            client.CurrentGame.MovePlayerToRegion(client, (RegionPrototypeId)17913362697985334451, (PrototypeId)12083387244127461092);
+
+            return "Travel to Bovineheim";
+        }
+    }
+
+    [CommandGroup("Cow", "Travel to Classified Bovine Sector.", AccountUserLevel.User)]
+    public class CowCommand : CommandGroup
+    {
+        [DefaultCommand(AccountUserLevel.User)]
+        public string Cow(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            client.CurrentGame.MovePlayerToRegion(client, (RegionPrototypeId)12735255224807267622, (PrototypeId)2342633323497265984);
+
+            return "Travel to Classified Bovine Sector.";
         }
     }
 
@@ -141,6 +168,25 @@ namespace MHServerEmu.Common.Commands
             else
             {
                 return $"Failed to change player avatar to {@params[0]}";
+            }
+        }
+
+        [Command("AOIVolume", "Changes player AOI volume size.\nUsage: player AOIVolume", AccountUserLevel.User)]
+        public string AOIVolume(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+            if (@params.Length == 0) return $"Current AOI volume = {client.Session.Account.Player.AOIVolume}";
+            //if (ConfigManager.PlayerManager.BypassAuth) return "Disable BypassAuth to use this command";
+
+            if (int.TryParse( @params[0], out int volume) && volume >= 1600 && volume <= 5000)
+            {
+                client.Session.Account.Player.AOIVolume = volume;
+                client.AOI.SetAOIVolume(volume);
+                return $"Changes player AOI volume size to {volume}.";
+            }
+            else
+            {
+                return $"Failed to change AOI volume size to {@params[0]}. Available range [1600..5000]";
             }
         }
 
