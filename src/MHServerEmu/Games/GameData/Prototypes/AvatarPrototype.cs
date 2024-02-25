@@ -71,6 +71,37 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] LoadingScreensConsole { get; protected set; }
         public ItemAssignmentPrototype StartingCostumePS4 { get; protected set; }
         public ItemAssignmentPrototype StartingCostumeXboxOne { get; protected set; }
+
+        /// <summary>
+        /// Retrieves <see cref="PowerProgressionEntryPrototype"/> instances for powers that would be unlocked at the specified level or level range.
+        /// </summary>
+        public IEnumerable<PowerProgressionEntryPrototype> GetPowersUnlockedAtLevel(int level = -1, bool retrieveForLevelRange = false, int startingLevel = -1)
+        {
+            if (PowerProgressionTables == null) yield break;
+
+            foreach (PowerProgressionTablePrototype table in PowerProgressionTables)
+            {
+                if (table.PowerProgressionEntries == null) continue;
+
+                foreach (PowerProgressionEntryPrototype entry in table.PowerProgressionEntries)
+                {
+                    if (entry.PowerAssignment == null) continue;
+                    if (entry.PowerAssignment.Ability == PrototypeId.Invalid) continue;
+
+                    bool match = true;
+
+                    // If the specified level is set to -1 it means we need to include all levels.
+                    match &= level < 0 || entry.Level <= level;
+
+                    // retrieveForLevelRange means to retrieve all abilities that would be unlocked
+                    // if you got from startingLevel to level. Otherwise retrieve just the abilities
+                    // for the specified level.
+                    match &= retrieveForLevelRange && entry.Level > startingLevel || entry.Level == level;
+
+                    if (match) yield return entry;
+                }
+            }
+        }
     }
 
     public class ItemAssignmentPrototype : Prototype
