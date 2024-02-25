@@ -211,8 +211,13 @@ namespace MHServerEmu.Games
                     avatar.Properties[PropertyEnum.CharacterLevel] = 60;
                     avatar.Properties[PropertyEnum.CombatLevel] = 60;
 
-                    avatar.AbilityKeyMappings = new AbilityKeyMapping[] { new(0) };
-                    avatar.AbilityKeyMappings[0].SlotDefaultAbilities(avatar);
+                    if (account.CurrentAvatar.AbilityKeyMapping == null)
+                    {
+                        account.CurrentAvatar.AbilityKeyMapping = new(0);
+                        account.CurrentAvatar.AbilityKeyMapping.SlotDefaultAbilities(avatar);
+                    }
+
+                    avatar.AbilityKeyMappings = new AbilityKeyMapping[] { account.CurrentAvatar.AbilityKeyMapping };
                 }
 
                 messageList.Add(new(avatar.ToNetMessageEntityCreate()));

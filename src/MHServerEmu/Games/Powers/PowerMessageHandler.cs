@@ -52,6 +52,21 @@ namespace MHServerEmu.Games.Powers
                         return OnContinuousPowerUpdate(client, continuousPowerUpdate);
                     break;
 
+                case ClientToGameServerMessage.NetMessageAbilitySlotToAbilityBar:
+                    if (message.TryDeserialize<NetMessageAbilitySlotToAbilityBar>(out var slotToAbilityBar))
+                        return OnAbilitySlotToAbilityBar(client, slotToAbilityBar);
+                    break;
+
+                case ClientToGameServerMessage.NetMessageAbilityUnslotFromAbilityBar:
+                    if (message.TryDeserialize<NetMessageAbilityUnslotFromAbilityBar>(out var unslotFromAbilityBar))
+                        return OnAbilityUnslotFromAbilityBar(client, unslotFromAbilityBar);
+                    break;
+
+                case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:
+                    if (message.TryDeserialize<NetMessageAbilitySwapInAbilityBar>(out var swapInAbilityBar))
+                        return OnAbilitySwapInAbilityBar(client, swapInAbilityBar);
+                    break;
+
                 default:
                     Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
                     break;
@@ -228,6 +243,49 @@ namespace MHServerEmu.Games.Powers
             if (powerPrototypePath.Contains("TravelPower/"))
                 HandleTravelPower(client, powerPrototypeId);
             // Logger.Trace(continuousPowerUpdate.ToString());
+
+            return Array.Empty<QueuedGameMessage>();
+        }
+
+        // Ability bar management (TODO: Move this to avatar entity)
+
+        private IEnumerable<QueuedGameMessage> OnAbilitySlotToAbilityBar(FrontendClient client, NetMessageAbilitySlotToAbilityBar slotToAbilityBar)
+        {
+            var abilityKeyMapping = client.Session.Account.CurrentAvatar.AbilityKeyMapping;
+            PrototypeId prototypeRefId = (PrototypeId)slotToAbilityBar.PrototypeRefId;
+            AbilitySlot slotNumber = (AbilitySlot)slotToAbilityBar.SlotNumber;
+            Logger.Trace($"NetMessageAbilitySlotToAbilityBar: {GameDatabase.GetFormattedPrototypeName(prototypeRefId)} to {slotNumber}");
+
+            // Set
+            abilityKeyMapping.SetAbilityInAbilitySlot(prototypeRefId, slotNumber);
+            
+            return Array.Empty<QueuedGameMessage>();
+        }
+
+        private IEnumerable<QueuedGameMessage> OnAbilityUnslotFromAbilityBar(FrontendClient client, NetMessageAbilityUnslotFromAbilityBar unslotFromAbilityBar)
+        {
+            var abilityKeyMapping = client.Session.Account.CurrentAvatar.AbilityKeyMapping;
+            AbilitySlot slotNumber = (AbilitySlot)unslotFromAbilityBar.SlotNumber;
+            Logger.Trace($"NetMessageAbilityUnslotFromAbilityBar: from {slotNumber}");
+
+            // Remove by assigning invalid id
+            abilityKeyMapping.SetAbilityInAbilitySlot(PrototypeId.Invalid, slotNumber);
+
+            return Array.Empty<QueuedGameMessage>();
+        }
+
+        private IEnumerable<QueuedGameMessage> OnAbilitySwapInAbilityBar(FrontendClient client, NetMessageAbilitySwapInAbilityBar swapInAbilityBar)
+        {
+            var abilityKeyMapping = client.Session.Account.CurrentAvatar.AbilityKeyMapping;
+            AbilitySlot slotA = (AbilitySlot)swapInAbilityBar.SlotNumberA;
+            AbilitySlot slotB = (AbilitySlot)swapInAbilityBar.SlotNumberB;
+            Logger.Trace($"NetMessageAbilitySwapInAbilityBar: {slotA} and {slotB}");
+
+            // Swap
+            PrototypeId prototypeA = abilityKeyMapping.GetAbilityInAbilitySlot(slotA);
+            PrototypeId prototypeB = abilityKeyMapping.GetAbilityInAbilitySlot(slotB);
+            abilityKeyMapping.SetAbilityInAbilitySlot(prototypeB, slotA);
+            abilityKeyMapping.SetAbilityInAbilitySlot(prototypeA, slotB);
 
             return Array.Empty<QueuedGameMessage>();
         }

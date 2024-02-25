@@ -213,6 +213,9 @@ namespace MHServerEmu.Games
                 case ClientToGameServerMessage.NetMessageTryCancelPower:
                 case ClientToGameServerMessage.NetMessageTryCancelActivePower:
                 case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer:
+                case ClientToGameServerMessage.NetMessageAbilitySlotToAbilityBar:       // TODO: Move ability bar message handling to avatar entity
+                case ClientToGameServerMessage.NetMessageAbilityUnslotFromAbilityBar:
+                case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:
                     EnqueueResponses(_powerMessageHandler.HandleMessage(client, message)); break;
 
                 case ClientToGameServerMessage.NetMessageTryInventoryMove:

@@ -170,6 +170,9 @@ namespace MHServerEmu.PlayerManagement
                 case ClientToGameServerMessage.NetMessageUseInteractableObject:
                 case ClientToGameServerMessage.NetMessageUseWaypoint:
                 case ClientToGameServerMessage.NetMessageSwitchAvatar:
+                case ClientToGameServerMessage.NetMessageAbilitySlotToAbilityBar:
+                case ClientToGameServerMessage.NetMessageAbilityUnslotFromAbilityBar:
+                case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:
                 case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:
                 case ClientToGameServerMessage.NetMessageRequestInterestInInventory:
                 case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:
