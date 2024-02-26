@@ -76,7 +76,7 @@ namespace GameDatabaseBrowser
                 Prototype proto = GameDatabase.DataDirectory.GetPrototype<Prototype>(prototypeId);
                 PropertyInfo[] propertyInfo = proto.GetType().GetProperties();
 
-                List<Property> properties = propertyInfo.Select(k => new Property() { Name = k.Name, Value = k.GetValue(proto)?.ToString() }).ToList();
+                List<Property> properties = propertyInfo.Select(k => new Property() { Name = k.Name, Value = k.GetValue(proto)?.ToString(), TypeName = k.PropertyType.Name }).ToList();
                 _prototypeDetails.Add(new(fullName, properties));
                 worker.ReportProgress((int)(++counter * 100 / ((float)PrototypeMaxNumber)));
             }
@@ -178,7 +178,7 @@ namespace GameDatabaseBrowser
             foreach (var item in parentItem.Childs)
             {
                 item.IsSelected = (item.PrototypeDetails.Name == childName);
-                item.IsExpanded = (item.PrototypeDetails.Name == childName);
+                //item.IsExpanded = (item.PrototypeDetails.Name == childName);
 
                 if (item.Childs.Count != 0)
                     SelectChildNode(item, childName);
