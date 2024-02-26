@@ -8,7 +8,7 @@ This page provides definitions for terms used by the game internally.
 
 - **Area** - an arrangement of cells.
 
-- **Area of Interest (AOI)** - a section of the overall server-side simulation that needs to be replicated to a specific client.
+- **Area of Interest (AOI)** - a part of the overall server-side simulation that needs to be replicated to a specific client.
 
 - **Asset** - a value of an asset type.
 
@@ -20,7 +20,7 @@ This page provides definitions for terms used by the game internally.
 
 - **Billing** - a service that handles interaction with the in-game store.
 
-- **Blackout** - a boundary within the game world within which entities are prohibited from spawning.
+- **Blackout** - a boundary within the game world within which entities are prohibited from spawning under normal circumstances.
 
 - **Blueprint** - a template for prototypes made in Calligraphy.
 
@@ -39,6 +39,8 @@ This page provides definitions for terms used by the game internally.
 - **District** - a static arrangement of cells.
 
 - **Dynamic Random Area Generator (DRAG)** - a system that handles procedural generation of the game world.
+
+- **Encounter** - a static arrangement of entities to be spawned as part of the overall population.
 
 - **Entity** - a dynamic game object. Each entity contains a collection of properties.
 
@@ -60,9 +62,9 @@ This page provides definitions for terms used by the game internally.
 
 - **Hub** - a region in which combat is prohibited (also known as a town in other Diablo-like games).
 
-- **DataGuid** - a 64-bit value representing a static data file that does not change between versions of the game.
+- **Data GUID** - a 64-bit value representing a static data file that does not change between versions of the game.
 
-- **DataId** - a 64-bit hash representing a static data file derived from its file path. If a file is moved in another version of the game, its DataId is going to be different.
+- **Data Id** - a 64-bit hash representing a static data file derived from its file path. If a file is moved in another version of the game, its DataId is going to be different.
 
 - **Interest** - data replicated to the client.
 
@@ -76,12 +78,15 @@ This page provides definitions for terms used by the game internally.
 
 - **Locomotion** - a system that handles the movement of world entities in the game world.
 
+- **Marker** - a definition for spawning objects that includes position and rotation.
+
 - **MetaGame** - a system that handles special game modes, such as PvP or X-Defense.
-  Missile - an agent that represents a projectile.
+
+- **Missile** - an agent that represents a projectile.
 
 - **Mission** - a quest.
 
-- **Mixin** - a field group that belongs to one of the fields contained a prototype rather than the prototype itself.
+- **Mixin** - a field group that belongs to one of the fields contained in a prototype rather than the prototype itself.
 
 - **Mux** - a system used by the frontend server for routing messages to appropriate services.
 
@@ -101,9 +106,11 @@ This page provides definitions for terms used by the game internally.
 
 - **Private Instance (PI)** - a region that only the player and their party members can visit.
 
+- **Prop** - a world entity that represents a background object in the game world.
+
 - **Property** - an attribute of an entity, such as its level, health, etc.
 
-- **Property Collection** - a collection of properties that can be combined with another collection.
+- **Property Collection** - a collection of properties that can be aggregated with another collection.
 
 - **Protobuf** - [Protocol Buffers](https://protobuf.dev/), a data serialization technology developed by Google.
 
@@ -116,6 +123,8 @@ This page provides definitions for terms used by the game internally.
 - **Replication** - a process that handles synchronization of the game state between a game instance server and all clients connected ot it.
 
 - **RHStruct** - a prototype embedded as a field of another prototype.
+
+- **Super Cell** - a block of cells (such as 2x2) representing a single place.
 
 - **Transition** - a world entity that connects two places of the game world.
 
