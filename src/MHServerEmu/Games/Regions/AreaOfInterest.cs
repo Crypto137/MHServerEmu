@@ -334,5 +334,9 @@ namespace MHServerEmu.Games.Regions
             return update;
         }
 
+        public bool EntityLoaded(ulong entityId)
+        {
+            return _loadedEntities.ContainsKey(entityId);
+        }
     }
 }

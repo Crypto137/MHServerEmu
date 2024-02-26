@@ -2,6 +2,11 @@
 using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Generators;
+using MHServerEmu.Grouping;
 using MHServerEmu.Networking;
 using MHServerEmu.PlayerManagement;
 using MHServerEmu.PlayerManagement.Accounts;
@@ -105,7 +110,7 @@ namespace MHServerEmu.Common.Commands
         }
     }
 
-    [CommandGroup("debug", "Debug commands for development.", AccountUserLevel.Admin)]
+    [CommandGroup("debug", "Debug commands for development.", AccountUserLevel.User)]
     public class DebugCommands : CommandGroup
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -123,6 +128,13 @@ namespace MHServerEmu.Common.Commands
             return $"Current cell: {client.AOI.Region.GetCellAtPosition(client.LastPosition).PrototypeName}";
         }
 
+        [Command("seed", "Shows current seed.", AccountUserLevel.User)]
+        public string Seed(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+            return $"Current seed: {client.AOI.Region.RandomSeed}";
+        }
+
         [Command("area", "Shows current area.", AccountUserLevel.User)]
         public string Area(string[] @params, FrontendClient client)
         {
@@ -130,5 +142,51 @@ namespace MHServerEmu.Common.Commands
             return $"Current area: {client.AOI.Region.GetCellAtPosition(client.LastPosition).Area.PrototypeName}";
         }
 
+        [Command("near", "Usage: debug near [radius]. Default radius 100.", AccountUserLevel.User)]
+        public string Near(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            List<string> entities = new();
+            int radius = 100;
+            if (@params?.Length > 0 && int.TryParse(@params[0], out int customRadius)) radius = customRadius;
+            Sphere Near = new(client.LastPosition, radius);
+            EntityRegionSPContext context = new() { Flags = EntityRegionSPContextFlags.ActivePartition | EntityRegionSPContextFlags.StaticPartition };
+            foreach (var worldEntity in client.AOI.Region.IterateEntitiesInVolume(Near, context))
+            {
+                string name = GameDatabase.GetFormattedPrototypeName(worldEntity.BaseData.PrototypeId);
+                ulong entityId = worldEntity.BaseData.EntityId;
+                string status = string.Empty;
+                if (client.AOI.EntityLoaded(entityId) == false) status += "[H]";
+                if (worldEntity is Transition) status += "[T]";
+                if (worldEntity.WorldEntityPrototype.VisibleByDefault == false) status += "[Inv]";
+                entities.Add($"[{entityId}] {name} {status}");
+            }
+            if (entities.Count > 0)
+            {
+                entities.Insert(0, $"Found for R={radius}:");
+                ChatHelper.SendMetagameMessages(client, entities);
+                return string.Empty;
+            }
+            else
+                return "No entities found.";
+        }
+
+        [Command("entity", "Usage: debug entity [EntityId]", AccountUserLevel.User)]
+        public string entity(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+            if (@params == null || @params.Length == 0) return "Invalid arguments. Type 'help debug entity' to get help.";
+
+            if (ulong.TryParse(@params[0], out ulong entityId) == false)
+                return $"Failed to parse EntityId {@params[0]}";
+            var entity = client.CurrentGame.EntityManager.GetEntityById(entityId);
+            if (entity == null) return "No entity found.";
+            string properties = entity.Properties.ToString();
+            List<string> info = new(properties.Split("\r\n"));
+            info.Insert(0, $"Entity[{entityId}]: {GameDatabase.GetFormattedPrototypeName(entity.BaseData.PrototypeId)}");
+            ChatHelper.SendMetagameMessages(client, info);
+            return string.Empty;
+        }
     }
 }
