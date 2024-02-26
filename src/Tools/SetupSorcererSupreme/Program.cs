@@ -55,9 +55,8 @@ namespace SetupSorcererSupreme
             // Validate data files
             string clientCalligraphyPath = Path.Combine(clientDir, CalligraphyPath);
             string clientResourcePath = Path.Combine(clientDir, ResourcePath);
-            string clientConfigPath = Path.Combine(clientDir, ConfigPath);
 
-            if (File.Exists(clientCalligraphyPath) == false || File.Exists(clientResourcePath) == false || File.Exists(clientConfigPath) == false)
+            if (File.Exists(clientCalligraphyPath) == false || File.Exists(clientResourcePath) == false)
                 return (false, "Game data files are missing. Please reinstall the game.");
 
             // Create server data directory if needed
@@ -74,7 +73,7 @@ namespace SetupSorcererSupreme
                 File.Copy(clientCalligraphyPath, serverCalligraphyPath);
 
             if (File.Exists(serverResourcePath) == false)
-                File.Copy(serverResourcePath, serverCalligraphyPath);
+                File.Copy(clientResourcePath, serverResourcePath);
 
             // Create .bat file for launching the client
             using (StreamWriter writer = new(Path.Combine(serverDir, "StartClient.bat")))
