@@ -4,7 +4,7 @@ This page provides definitions for terms used by the game internally.
 
 - **Agent** - a world entity that can perform actions.
 
-- **Archive** - a proprietary data serialization format developed by Gazillion.
+- **Archive** - a proprietary data serialization format developed by Gazillion based on the underlying encoding used for protobufs.
 
 - **Area** - an arrangement of cells.
 
@@ -28,15 +28,23 @@ This page provides definitions for terms used by the game internally.
 
 - **Cell** - the basic building block of the game world.
 
+- **Circle** - a collection of players displayed in the social tab (friends, ignored, etc.).
+
+- **Community** - a collection of circles.
+
 - **Condition** - a buff or a debuff that can be applied to an entity.
 
 - **Curve** - a collection of numeric values.
+
+- **District** - a static arrangement of cells.
 
 - **Dynamic Random Area Generator (DRAG)** - a system that handles procedural generation of the game world.
 
 - **Entity** - a dynamic game object. Each entity contains a collection of properties.
 
 - **Eval** - a system evaluates formulas defined in static game data.
+
+- **Field Group** - a collection of field values belonging to a specific blueprint.
 
 - **Front End Server (FES)** - a server that acts as an intermediary between external connections and internal services.
 
@@ -46,9 +54,15 @@ This page provides definitions for terms used by the game internally.
 
 - **Grouping Manager** - a service that handles social and matchmaking features.
 
+- **Guild** - a supergroup.
+
 - **Hotspot** - a world entity that defines a boundary that triggers effects when entered by other world entities.
 
 - **Hub** - a region in which combat is prohibited (also known as a town in other Diablo-like games).
+
+- **DataGuid** - a 64-bit value representing a static data file that does not change between versions of the game.
+
+- **DataId** - a 64-bit hash representing a static data file derived from its file path. If a file is moved in another version of the game, its DataId is going to be different.
 
 - **Interest** - data replicated to the client.
 
@@ -67,7 +81,13 @@ This page provides definitions for terms used by the game internally.
 
 - **Mission** - a quest.
 
+- **Mixin** - a field group that belongs to one of the fields contained a prototype rather than the prototype itself.
+
+- **Mux** - a system used by the frontend server for routing messages to appropriate services.
+
 - **Navi** - a system that defines what sections of the game world are navigable.
+
+- **Pak** - a proprietary file storage format developed by Gazillion. Also known as GPAK.
 
 - **Persistence** - saving of the game state between sessions.
 
@@ -85,6 +105,8 @@ This page provides definitions for terms used by the game internally.
 
 - **Property Collection** - a collection of properties that can be combined with another collection.
 
+- **Protobuf** - [Protocol Buffers](https://protobuf.dev/), a data serialization technology developed by Google.
+
 - **Prototype** - an object representing a piece of static game data.
 
 - **Public Combat Zone (PCZ)** - a region shared by many players.
@@ -93,6 +115,12 @@ This page provides definitions for terms used by the game internally.
 
 - **Replication** - a process that handles synchronization of the game state between a game instance server and all clients connected ot it.
 
+- **RHStruct** - a prototype embedded as a field of another prototype.
+
 - **Transition** - a world entity that connects two places of the game world.
 
+- **Varint** - a variable-width unsigned integer that can take 1-10 bytes. This is the primary data type used for encoding in protobufs. See [here](https://protobuf.dev/programming-guides/encoding/) for more information.
+
 - **World Entity** - an entity that can physically exist in a game world.
+
+- **ZigZag** - a way of encoding signed values in unsigned integers used in protobufs. See [here](https://protobuf.dev/programming-guides/encoding/) for more information.
