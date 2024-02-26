@@ -10,7 +10,6 @@ namespace SetupSorcererSupreme
 
         static readonly string CalligraphyPath = Path.Combine("Data", "Game", "Calligraphy.sip");
         static readonly string ResourcePath = Path.Combine("Data", "Game", "mu_cdata.sip");
-        static readonly string ConfigPath = Path.Combine("Data", "Configs", "ClientConfig.xml");
 
         /// <summary>
         ///  The main entry point for the application.
@@ -59,8 +58,18 @@ namespace SetupSorcererSupreme
             if (File.Exists(clientCalligraphyPath) == false || File.Exists(clientResourcePath) == false)
                 return (false, "Game data files are missing. Please reinstall the game.");
 
-            // Create server data directory if needed
+            // Find server directory
             string serverDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            
+            if (File.Exists(Path.Combine(serverDir, "MHServerEmu.exe")) == false)
+            {
+                // Try looking in the MHServerEmu subdirectory if it's not in the same directory as the setup tool
+                serverDir = Path.Combine(serverDir, "MHServerEmu");
+                if (File.Exists(Path.Combine(serverDir, "MHServerEmu.exe")) == false)
+                    return (false, "Failed to find MHServerEmu.");
+            }
+
+            // Create server data directory if needed
             string serverDataDir = Path.Combine(serverDir, "Data", "Game");
             if (Directory.Exists(serverDataDir) == false)
                 Directory.CreateDirectory(serverDataDir);
