@@ -432,7 +432,7 @@ namespace MHServerEmu.Games.Events
                     } 
                     else
                     {
-                        client.ThrowingObject.ToDead();
+                        client.ThrowingObject?.ToDead();
                     }
                     client.ThrowingObject = null;
                     client.IsThrowing = false;
