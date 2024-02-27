@@ -18,18 +18,15 @@ namespace GameDatabaseBrowser.Models
             if(Value == "Invalid")
                 return $"{Name} : {Value} ({TypeName})";
 
-            switch (TypeName)
+            return TypeName switch
             {
-                case "PrototypeId":
-                    return $"{Name} : {GameDatabase.GetPrototypeName((PrototypeId)ulong.Parse(Value))} ({Value})";
-
-                case "Boolean":
-                    return $"{Name} : {Value}";
-
-                default:
-                    return $"{Name} : {Value} ({TypeName})";
-            }
-            
+                "AssetTypeId" => $"{Name} : {GameDatabase.GetAssetTypeName((AssetTypeId)ulong.Parse(Value))} ({Value})",
+                "CurveId" => $"{Name} : {GameDatabase.GetCurveName((CurveId)ulong.Parse(Value))} ({Value})",
+                "AssetId" => $"{Name} : {GameDatabase.GetAssetName((AssetId)ulong.Parse(Value))} ({Value})",
+                "PrototypeId" => $"{Name} : {GameDatabase.GetPrototypeName((PrototypeId)ulong.Parse(Value))} ({Value})",
+                "Boolean" or "Int32" or "Int64" or "Single" => $"{Name} : {Value}",
+                _ => $"{Name} : {Value} ({TypeName})",
+            };
         }
     }
 }
