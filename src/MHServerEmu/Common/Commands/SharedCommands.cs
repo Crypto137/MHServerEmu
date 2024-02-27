@@ -145,7 +145,7 @@ namespace MHServerEmu.Common.Commands
                 string status = string.Empty;
                 if (client.AOI.EntityLoaded(entityId) == false) status += "[H]";
                 if (worldEntity is Transition) status += "[T]";
-                if (worldEntity.WorldEntityPrototype.VisibleByDefault == false) status += "[Invis]";
+                if (worldEntity.WorldEntityPrototype.VisibleByDefault == false) status += "[Inv]";
                 entities.Add($"[{entityId}] {name} {status}");
             }
 
@@ -153,7 +153,7 @@ namespace MHServerEmu.Common.Commands
                 return "No entities found.";
 
             ChatHelper.SendMetagameMessage(client, $"Found for R={radius}:");
-            ChatHelper.SendMetagameMessages(client, entities);
+            ChatHelper.SendMetagameMessages(client, entities, false);
             return string.Empty;
         }
 
@@ -170,7 +170,7 @@ namespace MHServerEmu.Common.Commands
             if (entity == null) return "No entity found.";
 
             ChatHelper.SendMetagameMessage(client, $"Entity[{entityId}]: {GameDatabase.GetFormattedPrototypeName(entity.BaseData.PrototypeId)}");
-            ChatHelper.SendMetagameMessages(client, entity.Properties.ToString().Split('\n'));
+            ChatHelper.SendMetagameMessages(client, entity.Properties.ToString().Split('\n'), false);
             return string.Empty;
         }
     }

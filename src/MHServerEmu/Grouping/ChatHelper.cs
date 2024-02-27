@@ -16,34 +16,23 @@ namespace MHServerEmu.Grouping
             .SetPrestigeLevel(ConfigManager.GroupingManager.MotdPrestigeLevel)
             .Build();
 
-        public static void SendMetagameMessage(FrontendClient client, string text)
+        public static void SendMetagameMessage(FrontendClient client, string text, bool showSender = true)
         {
             client.SendMessage(MuxChannel, new(ChatNormalMessage.CreateBuilder()
                 .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
-                .SetFromPlayerName(ConfigManager.GroupingManager.MotdPlayerName)
+                .SetFromPlayerName(showSender ? ConfigManager.GroupingManager.MotdPlayerName : string.Empty)
                 .SetTheMessage(ChatMessage.CreateBuilder().SetBody(text))
                 .SetPrestigeLevel(ConfigManager.GroupingManager.MotdPrestigeLevel)
                 .Build()));
         }
 
-        public static void SendMetagameMessages(FrontendClient client, IEnumerable<string> texts)
+        public static void SendMetagameMessages(FrontendClient client, IEnumerable<string> texts, bool showSender = true)
         {
-            List<GameMessage> messageList = new();
-            bool headerIsSet = false;               // Flag to add player name to the header (first) message
-
             foreach (string text in texts)
             {
-                messageList.Add(new(ChatNormalMessage.CreateBuilder()
-                    .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
-                    .SetFromPlayerName(headerIsSet ? string.Empty : ConfigManager.GroupingManager.MotdPlayerName)
-                    .SetTheMessage(ChatMessage.CreateBuilder().SetBody(text))
-                    .SetPrestigeLevel(ConfigManager.GroupingManager.MotdPrestigeLevel)
-                    .Build()));
-
-                headerIsSet = true;
+                SendMetagameMessage(client, text, showSender);
+                showSender = false; // Remove sender from messages after the first one
             }
-
-            client.SendMessages(MuxChannel, messageList);
         }
 
         public static string GetRoomName(ChatRoomTypes type)
