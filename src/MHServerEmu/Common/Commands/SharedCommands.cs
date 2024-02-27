@@ -146,14 +146,39 @@ namespace MHServerEmu.Common.Commands
                 if (client.AOI.EntityLoaded(entityId) == false) status += "[H]";
                 if (worldEntity is Transition) status += "[T]";
                 if (worldEntity.WorldEntityPrototype.VisibleByDefault == false) status += "[Inv]";
-                entities.Add($"[{entityId}] {name} {status}");
+                entities.Add($"[E][{entityId}] {name} {status}");
+            }
+
+            foreach (var reservation in client.AOI.Region.SpawnMarkerRegistry.IterateReservationsInVolume(near))
+            {
+                string name = GameDatabase.GetFormattedPrototypeName(reservation.MarkerRef);
+                int markerId = reservation.GetPid();
+                string status = $"[{reservation.Type.ToString()[0]}][{reservation.State.ToString()[0]}]";
+                entities.Add($"[M][{markerId}] {name} {status}");
             }
 
             if (entities.Count == 0)
-                return "No entities found.";
+                return "No objects found.";
 
             ChatHelper.SendMetagameMessage(client, $"Found for R={radius}:");
             ChatHelper.SendMetagameMessages(client, entities, false);
+            return string.Empty;
+        }
+
+        [Command("marker", "Displays information about the specified marker.\nUsage: debug marker [MarkerId]", AccountUserLevel.User)]
+        public string marker(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+            if (@params == null || @params.Length == 0) return "Invalid arguments. Type 'help debug marker' to get help.";
+
+            if (int.TryParse(@params[0], out int markerId) == false)
+                return $"Failed to parse MarkerId {@params[0]}";
+
+            var reservation = client.AOI.Region.SpawnMarkerRegistry.GetReservationByPid(markerId);
+            if (reservation == null) return "No marker found.";
+
+            ChatHelper.SendMetagameMessage(client, $"Marker[{markerId}]: {GameDatabase.GetFormattedPrototypeName(reservation.MarkerRef)}");
+            ChatHelper.SendMetagameMessages(client, reservation.ToString().Split("\r\n", StringSplitOptions.RemoveEmptyEntries), false);
             return string.Empty;
         }
 
@@ -170,7 +195,7 @@ namespace MHServerEmu.Common.Commands
             if (entity == null) return "No entity found.";
 
             ChatHelper.SendMetagameMessage(client, $"Entity[{entityId}]: {GameDatabase.GetFormattedPrototypeName(entity.BaseData.PrototypeId)}");
-            ChatHelper.SendMetagameMessages(client, entity.Properties.ToString().Split('\n'), false);
+            ChatHelper.SendMetagameMessages(client, entity.Properties.ToString().Split("\r\n", StringSplitOptions.RemoveEmptyEntries), false);
             return string.Empty;
         }
     }

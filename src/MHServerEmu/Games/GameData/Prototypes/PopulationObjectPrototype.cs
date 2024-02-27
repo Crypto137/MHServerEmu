@@ -5,6 +5,7 @@ using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.Generators.Population;
+using System.Text;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -51,6 +52,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return Formation;
             else
                 return GameDatabase.GetPrototype<FormationTypePrototype>(FormationTemplate);
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new();
+            sb.AppendLine($"[{GetType().Name}]: {GameDatabase.GetFormattedPrototypeName(UsePopulationMarker)}");
+            sb.AppendLine($"Riders: {Riders.Length}");
+            return sb.ToString();
         }
     }
 
