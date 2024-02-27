@@ -1,6 +1,5 @@
 ﻿using Gazillion;
 using MHServerEmu.Common.Config;
-using MHServerEmu.Common.Logging;
 using MHServerEmu.Frontend;
 using MHServerEmu.Networking;
 using MHServerEmu.PlayerManagement;
@@ -103,32 +102,5 @@ namespace MHServerEmu.Common.Commands
 
             return string.Empty;
         }
-    }
-
-    [CommandGroup("debug", "Debug commands for development.", AccountUserLevel.Admin)]
-    public class DebugCommands : CommandGroup
-    {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
-        [Command("test", "Runs test code.", AccountUserLevel.Admin)]
-        public string Test(string[] @params, FrontendClient client)
-        {
-            return string.Empty;
-        }
-
-        [Command("cell", "Shows current cell.", AccountUserLevel.User)]
-        public string Cell(string[] @params, FrontendClient client)
-        {
-            if (client == null) return "You can only invoke this command from the game.";
-            return $"Current cell: {client.AOI.Region.GetCellAtPosition(client.LastPosition).PrototypeName}";
-        }
-
-        [Command("area", "Shows current area.", AccountUserLevel.User)]
-        public string Area(string[] @params, FrontendClient client)
-        {
-            if (client == null) return "You can only invoke this command from the game.";
-            return $"Current area: {client.AOI.Region.GetCellAtPosition(client.LastPosition).Area.PrototypeName}";
-        }
-
     }
 }
