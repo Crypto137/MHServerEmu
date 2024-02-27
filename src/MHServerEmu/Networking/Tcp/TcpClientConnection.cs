@@ -1,5 +1,7 @@
 ﻿using System.Net;
 using System.Net.Sockets;
+using MHServerEmu.Common.Config;
+using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.Networking.Tcp
 {
@@ -64,6 +66,12 @@ namespace MHServerEmu.Networking.Tcp
 
         #endregion
 
-        public override string ToString() => RemoteEndPoint?.ToString();
+        public override string ToString()
+        {
+            if (ConfigManager.PlayerManager.HideSensitiveInformation)
+                return RemoteEndPoint?.ToStringMasked();
+
+            return RemoteEndPoint?.ToString();
+        }
     }
 }

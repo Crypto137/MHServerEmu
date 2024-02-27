@@ -9,6 +9,7 @@
         public ulong QueueNumberOfPlayersInLine { get; private set; }
         public bool ShowNewsOnLogin { get; private set; }
         public string NewsUrl { get; private set; }
+        public bool HideSensitiveInformation { get; private set; }
 
         public PlayerManagerConfig(IniFile configFile) : base(configFile) { }
     }

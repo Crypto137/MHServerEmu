@@ -5,6 +5,7 @@ using Google.ProtocolBuffers;
 using Gazillion;
 using MHServerEmu.Auth.WebApi;
 using MHServerEmu.Common.Config;
+using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Networking;
 using MHServerEmu.PlayerManagement;
@@ -122,6 +123,11 @@ namespace MHServerEmu.Auth
         /// <param name="response">HTTP listener response.</param>
         private async void HandleMessage(HttpListenerRequest request, HttpListenerResponse response)
         {
+            // Mask end point name if needed
+            string endPointName = ConfigManager.PlayerManager.HideSensitiveInformation
+                ? request.RemoteEndPoint.ToStringMasked()
+                : request.RemoteEndPoint.ToString();
+
             // Parse message from POST
             GameMessage message = new(CodedInputStream.CreateInstance(request.InputStream));
 
@@ -143,13 +149,13 @@ namespace MHServerEmu.Auth
                     // Respond with an error if session creation didn't succeed
                     if (statusCode != AuthStatusCode.Success)
                     {
-                        Logger.Info($"Authentication for the game client on {request.RemoteEndPoint} failed ({statusCode})");
+                        Logger.Info($"Authentication for the game client on {endPointName} failed ({statusCode})");
                         response.StatusCode = (int)statusCode;
                         return;
                     }
 
                     // Send an AuthTicket if we were able to create a session
-                    Logger.Info($"Sending AuthTicket for sessionId {session.Id} to the game client on {request.RemoteEndPoint}");
+                    Logger.Info($"Sending AuthTicket for sessionId {session.Id} to the game client on {endPointName}");
 
                     // Create a new AuthTicket, write it to a buffer, and send the response
                     byte[] buffer = new GameMessage(AuthTicket.CreateBuilder()
@@ -198,6 +204,11 @@ namespace MHServerEmu.Auth
 
         private async void HandleWebApiRequest(HttpListenerRequest request, HttpListenerResponse response)
         {
+            // Mask end point name if needed
+            string endPointName = ConfigManager.PlayerManager.HideSensitiveInformation
+                ? request.RemoteEndPoint.ToStringMasked()
+                : request.RemoteEndPoint.ToString();
+
             byte[] buffer;
             NameValueCollection queryString = null;
 
@@ -209,7 +220,7 @@ namespace MHServerEmu.Auth
             switch (request.Url.LocalPath)
             {
                 default:
-                    Logger.Warn($"Received unknown web API request:\nRequest: {request.Url.LocalPath}\nRemoteEndPoint: {request.RemoteEndPoint}\nUserAgent: {request.UserAgent}");
+                    Logger.Warn($"Received unknown web API request:\nRequest: {request.Url.LocalPath}\nRemoteEndPoint: {endPointName}\nUserAgent: {request.UserAgent}");
                     return;
 
                 case "/AccountManagement/Create":

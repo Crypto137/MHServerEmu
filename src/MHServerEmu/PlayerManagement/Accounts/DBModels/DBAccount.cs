@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Common;
+using MHServerEmu.Common.Config;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
@@ -63,7 +64,16 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
             return Avatars.FirstOrDefault(avatar => avatar.Prototype == prototype);
         }
 
-        public override string ToString() => $"{PlayerName} ({Email})";
+        public override string ToString()
+        {
+            if (ConfigManager.PlayerManager.HideSensitiveInformation)
+            {
+                string maskedEmail = $"{Email[0]}****{Email.Substring(Email.IndexOf('@') - 1)}";
+                return $"{PlayerName} ({maskedEmail})";
+            }
+
+            return $"{PlayerName} ({Email})";
+        }
 
         private void InitializeData()
         {
