@@ -147,32 +147,33 @@ namespace MHServerEmu.Common.Commands
         {
             if (client == null) return "You can only invoke this command from the game.";
 
-            List<string> entities = new();
-            int radius = 100;
-            if (@params?.Length > 0 && int.TryParse(@params[0], out int customRadius)) radius = customRadius;
-            Sphere Near = new(client.LastPosition, radius);
+            if ((@params?.Length > 0 && int.TryParse(@params[0], out int radius)) == false)
+                radius = 100;   // Default to 100 if no radius is specified
+
+            Sphere near = new(client.LastPosition, radius);
             EntityRegionSPContext context = new() { Flags = EntityRegionSPContextFlags.ActivePartition | EntityRegionSPContextFlags.StaticPartition };
-            foreach (var worldEntity in client.AOI.Region.IterateEntitiesInVolume(Near, context))
+
+            List<string> entities = new();
+            foreach (var worldEntity in client.AOI.Region.IterateEntitiesInVolume(near, context))
             {
                 string name = GameDatabase.GetFormattedPrototypeName(worldEntity.BaseData.PrototypeId);
                 ulong entityId = worldEntity.BaseData.EntityId;
                 string status = string.Empty;
                 if (client.AOI.EntityLoaded(entityId) == false) status += "[H]";
                 if (worldEntity is Transition) status += "[T]";
-                if (worldEntity.WorldEntityPrototype.VisibleByDefault == false) status += "[Inv]";
+                if (worldEntity.WorldEntityPrototype.VisibleByDefault == false) status += "[Invis]";
                 entities.Add($"[{entityId}] {name} {status}");
             }
-            if (entities.Count > 0)
-            {
-                entities.Insert(0, $"Found for R={radius}:");
-                ChatHelper.SendMetagameMessages(client, entities);
-                return string.Empty;
-            }
-            else
+
+            if (entities.Count == 0)
                 return "No entities found.";
+
+            ChatHelper.SendMetagameMessage(client, $"Found for R={radius}:");
+            ChatHelper.SendMetagameMessages(client, entities);
+            return string.Empty;
         }
 
-        [Command("entity", "Usage: debug entity [EntityId]", AccountUserLevel.User)]
+        [Command("entity", "Displays information about the specified entity.\nUsage: debug entity [EntityId]", AccountUserLevel.User)]
         public string entity(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -180,12 +181,12 @@ namespace MHServerEmu.Common.Commands
 
             if (ulong.TryParse(@params[0], out ulong entityId) == false)
                 return $"Failed to parse EntityId {@params[0]}";
+
             var entity = client.CurrentGame.EntityManager.GetEntityById(entityId);
             if (entity == null) return "No entity found.";
-            string properties = entity.Properties.ToString();
-            List<string> info = new(properties.Split("\r\n"));
-            info.Insert(0, $"Entity[{entityId}]: {GameDatabase.GetFormattedPrototypeName(entity.BaseData.PrototypeId)}");
-            ChatHelper.SendMetagameMessages(client, info);
+
+            ChatHelper.SendMetagameMessage(client, $"Entity[{entityId}]: {GameDatabase.GetFormattedPrototypeName(entity.BaseData.PrototypeId)}");
+            ChatHelper.SendMetagameMessages(client, entity.Properties.ToString().Split('\n'));
             return string.Empty;
         }
     }
