@@ -42,10 +42,17 @@ To see an up to date list of all commands, type !commands in the server console 
 
 These commands can be invoked only from in-game.
 
-| Command                     | Description                                  | User Level |
-| --------------------------- | -------------------------------------------- | ---------- |
-| !tower                      | Changes region to Avengers Tower (original). | All        |
-| !doop                       | Changes region to Cosmic Doop Sector.        | All        |
-| !player avatar [avatar]     | Changes player avatar.                       | All        |
-| !player region [region]     | Changes player starting region.              | All        |
-| !player costume [costumeId] | Changes player costume.                      | All        |
+| Command                     | Description                                                  | User Level |
+| --------------------------- | ------------------------------------------------------------ | ---------- |
+| !tower                      | Changes region to Avengers Tower (original).                 | All        |
+| !doop                       | Changes region to Cosmic Doop Sector.                        | All        |
+| !cow                        | Changes region to Classified Bovine Sector.                  | All        |
+| !bovineheim                 | Changes region to Bovineheim.                                | All        |
+| !dance                      | Performs the dance emote.                                    | All        |
+| !position                   | Shows current position.                                      | All        |
+| !tp                         | Teleports the player.                                        | All        |
+| !player avatar [avatar]     | Changes player avatar.                                       | All        |
+| !player region [region]     | Changes player starting region.                              | All        |
+| !player costume [costumeId] | Changes player costume.                                      | All        |
+| !player AOIVolume [value]   | Changes area of interest volume size (entity draw distance). | All        |
+| !omega points               | Adds 7500 omega points.                                      | All        |
