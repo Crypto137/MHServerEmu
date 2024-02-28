@@ -2,6 +2,7 @@
 using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Achievements;
+using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -29,7 +30,6 @@ namespace MHServerEmu.Games.GameData
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private static readonly PrototypeId _globalsProtoRef;
         public static bool IsInitialized { get; }
 
         public static PrototypeClassManager PrototypeClassManager { get; }
@@ -62,6 +62,8 @@ namespace MHServerEmu.Games.GameData
         public static GamepadGlobalsPrototype GamepadGlobalsPrototype { get; private set; }
         public static DifficultyGlobalsPrototype DifficultyGlobalsPrototype { get; private set; }
         public static ConsoleGlobalsPrototype ConsoleGlobalsPrototype { get; private set; }
+        
+        public static InteractionManager InteractionManager { get; private set; }
 
         static GameDatabase()
         {
@@ -129,7 +131,11 @@ namespace MHServerEmu.Games.GameData
                 Logger.Info($"Loaded {missionCount} mission prototypes in {loadMissionsWatch.ElapsedMilliseconds} ms");
             }
 
-            // InteractionManager::Initialize 
+            var loadInteraction = Stopwatch.StartNew();
+            InteractionManager = new();
+            InteractionManager.Initialize();
+            loadInteraction.Stop();
+            Logger.Info($"Initialize InteractionManager in {loadInteraction.ElapsedMilliseconds} ms");
 
             // processInventoryMap
 
@@ -144,10 +150,6 @@ namespace MHServerEmu.Games.GameData
                 IsInitialized = false;
                 return;
             }
-
-            // Get Global Prototypes
-            _globalsProtoRef = GetPrototypeRefByName("Globals/Globals.defaults");
-
 
             // Finish game database initialization
             stopwatch.Stop();
