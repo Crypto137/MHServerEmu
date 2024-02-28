@@ -2,6 +2,7 @@
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
+using System.Text;
 
 namespace MHServerEmu.Games.Generators.Population
 {
@@ -17,8 +18,8 @@ namespace MHServerEmu.Games.Generators.Population
     public class SpawnReservation
     {
         private SpawnMarkerRegistry _registry;
-        private MarkerType _type;        
-        private int _id;
+        public MarkerType Type { get; private set; }
+        public int Id { get; private set; }
         public Cell Cell { get; private set; }
         public MarkerState State { get; set; }
         public Vector3 MarkerPos { get; private set; }
@@ -28,19 +29,35 @@ namespace MHServerEmu.Games.Generators.Population
         public Aabb RegionBounds { get; private set; }
 
         public SpawnReservationSpatialPartitionLocation SpatialPartitionLocation { get; }
+        public PopulationObjectPrototype Object { get; set; }
+        public PrototypeId MissionRef { get; set; }
 
         public SpawnReservation(SpawnMarkerRegistry registry, PrototypeId markerRef, MarkerType type, Vector3 position, Vector3 rotation, Cell cell, int id)
         {
             _registry = registry;
             MarkerRef = markerRef;
-            _type = type;
+            Type = type;
             State = MarkerState.Free;
             MarkerPos = position;
             MarkerRot = rotation;
             Cell = cell;
-            _id = id;
+            Id = id;
             SpatialPartitionLocation = new(this);
             CalculateRegionInfo();
+        }
+
+        public override string ToString()
+        {            
+            StringBuilder sb = new();
+            if (MissionRef != null)
+                sb.AppendLine($"MissionRef: {GameDatabase.GetFormattedPrototypeName(MissionRef)}");
+            sb.AppendLine($"Position: {MarkerPos.ToString()}");
+            sb.AppendLine($"CellId: {Cell.Id}");
+            sb.AppendLine($"Type: {Type}");
+            sb.AppendLine($"State: {State}");
+            if ( Object != null ) 
+                sb.AppendLine($"Object: {Object}");
+            return sb.ToString();
         }
 
         public Vector3 GetRegionPosition()
@@ -56,5 +73,9 @@ namespace MHServerEmu.Games.Generators.Population
             RegionBounds = RegionSphere.ToAabb();
         }
 
+        public int GetPid()
+        {
+            return (int)Cell.Id * 1000 + Id;
+        }
     }
 }

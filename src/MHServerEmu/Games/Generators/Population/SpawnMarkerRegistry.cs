@@ -2,6 +2,7 @@
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
@@ -58,6 +59,14 @@ namespace MHServerEmu.Games.Generators.Population
                 cell.Value.Clear();
             }
             _reservationOctree = null;
+        }
+
+        public IEnumerable<SpawnReservation> IterateReservationsInVolume<B>(B bound) where B : IBounds
+        {
+            if (_reservationOctree != null)
+                return _reservationOctree.IterateElementsInVolume(bound);
+            else
+                return Enumerable.Empty<SpawnReservation>();
         }
 
         public void InitializeSpacialPartition(Aabb bound)
@@ -323,6 +332,18 @@ namespace MHServerEmu.Games.Generators.Population
                 reservation.State = MarkerState.Reserved;
                 return reservation;
             }
+            return null;
+        }
+
+        public SpawnReservation GetReservationByPid(int pid)
+        {
+            int cellId = pid / 1000;
+            int markerId = pid % 1000; 
+            List<SpawnReservation> reservations = new();
+            GetReservationsInCell((uint)cellId, reservations);
+            foreach (var reservation in reservations)
+                if (reservation.Id == markerId) return reservation;
+
             return null;
         }
     }

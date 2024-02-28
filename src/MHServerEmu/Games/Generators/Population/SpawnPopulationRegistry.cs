@@ -30,6 +30,8 @@ namespace MHServerEmu.Games.Generators.Population
             SpawnReservation reservation = registry.ReserveFreeReservation(MarkerRef, Random, cell, SpawnAreas, SpawnCells);
             if (reservation != null)
             {               
+                reservation.Object = Object;
+                reservation.MissionRef = MissionRef;
                 //Logger.Warn($"{GameDatabase.GetFormattedPrototypeName(MissionRef)} {pos.ToStringFloat()}");
                 ClusterGroup clusterGroup = new(region, Random, Object, null, Properties, SpawnFlags);
                 clusterGroup.Initialize();
