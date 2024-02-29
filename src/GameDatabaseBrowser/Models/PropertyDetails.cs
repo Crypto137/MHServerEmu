@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace GameDatabaseBrowser.Models
 {
-    public class Property
+    public class PropertyDetails
     {
         public string TypeName { get; set; }
         public string Name { get; set; }

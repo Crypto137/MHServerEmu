@@ -59,7 +59,30 @@
             <TextBox x:Name="txtDataRef" Grid.Row="0" Margin="1" VerticalAlignment="Center" IsReadOnly="True"/>
             <TextBox x:Name="txtParentDataRef" Grid.Row="1" Margin="1" VerticalAlignment="Center" IsReadOnly="True"/>
             <Separator Grid.Row="2" Height="5" Background="Black"/>
-            <ListView Name="listView" Grid.Row="3" VirtualizingStackPanel.IsVirtualizing ="True"/>
+            <TreeView Name="propertytreeView" Grid.Row="3" Grid.Column="0" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" Margin="5">
+                <TreeView.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <src:MyVirtualizingStackPanel/>
+                    </ItemsPanelTemplate>
+                </TreeView.ItemsPanel>
+                <TreeView.ItemContainerStyle>
+                    <Style TargetType="TreeViewItem">
+                        <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
+                        <Setter Property="ItemsPanel">
+                            <Setter.Value>
+                                <ItemsPanelTemplate>
+                                    <src:MyVirtualizingStackPanel/>
+                                </ItemsPanelTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </TreeView.ItemContainerStyle>
+                <TreeView.ItemTemplate>
+                    <HierarchicalDataTemplate DataType="{x:Type models:PropertyNode}" ItemsSource="{Binding Childs}">
+                        <TextBlock Text="{Binding PropertyDetails}" />
+                    </HierarchicalDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
         </Grid>
     </Grid>
 </Window>

@@ -2,6 +2,7 @@
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -19,9 +20,10 @@ namespace GameDatabaseBrowser
     public partial class MainWindow : Window
     {
         /// <summary>
-        /// Model hierarchy for treeView
+        /// Prototype Model hierarchy for treeView
         /// </summary>
-        public ObservableCollection<PrototypeNode> Nodes { get; set; } = new();
+        public ObservableCollection<PrototypeNode> PrototypeNodes { get; set; } = new();
+        public ObservableCollection<PropertyNode> PropertyNodes { get; set; } = new();
 
         /// <summary>
         /// All prototypes loaded
@@ -35,13 +37,11 @@ namespace GameDatabaseBrowser
         /// </summary>
         private Stack<string> _fullNameHistory = new();
 
-        private string _currentSelected = "";
-
         public MainWindow()
         {
             InitializeComponent();
             treeView.SelectedItemChanged += UpdatePropertiesSection;
-            listView.MouseDoubleClick += OnPropertySelected;
+            propertytreeView.MouseDoubleClick += OnPropertySelected;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -67,7 +67,8 @@ namespace GameDatabaseBrowser
 
             InitPrototypesList(worker, out int counter);
 
-            Nodes.Add(new() { PrototypeDetails = new("Prototypes", new()) });
+            PrototypeNodes.Add(new() { PrototypeDetails = new("Prototypes", new()) });
+            PropertyNodes.Add(new() { PropertyDetails = new() { Name = "Properties" } });
             foreach (PrototypeDetails prototype in _prototypeDetails)
                 AddPrototypeInHierarchy(prototype);
 
@@ -86,7 +87,7 @@ namespace GameDatabaseBrowser
                 Prototype proto = GameDatabase.DataDirectory.GetPrototype<Prototype>(prototypeId);
                 PropertyInfo[] propertyInfo = proto.GetType().GetProperties();
 
-                List<Property> properties = propertyInfo.Select(k => new Property() { Name = k.Name, Value = k.GetValue(proto)?.ToString(), TypeName = k.PropertyType.Name }).ToList();
+                List<PropertyDetails> properties = propertyInfo.Select(k => new PropertyDetails() { Name = k.Name, Value = k.GetValue(proto)?.ToString(), TypeName = k.PropertyType.Name }).ToList();
                 _prototypeDetails.Add(new(fullName, properties));
                 worker.ReportProgress((int)(++counter * 100 / ((float)PrototypeMaxNumber)));
             }
@@ -111,7 +112,7 @@ namespace GameDatabaseBrowser
             progressBar.Value = 0;
             progressBar.Visibility = Visibility.Collapsed;
             if (treeView.Items.Count == 0)
-                treeView.Items.Add(Nodes);
+                treeView.Items.Add(PrototypeNodes);
             treeView.Items.Refresh();
             UpdateLayout();
         }
@@ -121,9 +122,8 @@ namespace GameDatabaseBrowser
         /// </summary>
         private void SelectFromName(string fullName)
         {
-            _currentSelected = fullName;
             RefreshPrototypeTree();
-            int[] indexes = GetElementLocationInHierarchy();
+            int[] indexes = GetElementLocationInHierarchy(fullName);
             TreeViewItem item = GetTreeViewItem(indexes);
             item.IsSelected = true;
         }
@@ -142,7 +142,7 @@ namespace GameDatabaseBrowser
         /// </summary>
         private void ConstructPrototypeTree()
         {
-            Nodes[0].Childs.Clear();
+            PrototypeNodes[0].Childs.Clear();
             foreach (PrototypeDetails prototype in _prototypeDetails)
                 AddPrototypeInHierarchy(prototype);
         }
@@ -150,7 +150,7 @@ namespace GameDatabaseBrowser
         private void AddPrototypeInHierarchy(PrototypeDetails prototype)
         {
             string[] tokens = prototype.FullName.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-            ObservableCollection<PrototypeNode> pointer = Nodes[0].Childs;
+            ObservableCollection<PrototypeNode> pointer = PrototypeNodes[0].Childs;
 
             string currentFullName = tokens.First();
             for (int i = 0; i < tokens.Length - 1; i++)
@@ -182,8 +182,9 @@ namespace GameDatabaseBrowser
         /// </summary>
         private void OnPropertySelected(object sender, MouseButtonEventArgs e)
         {
-            Property selected = ((FrameworkElement)e.OriginalSource).DataContext as Property;
-            ulong.TryParse(selected.Value, out var prototypeId);
+            PropertyNode selected = ((FrameworkElement)e.OriginalSource).DataContext as PropertyNode;
+
+            ulong.TryParse(selected.PropertyDetails.Value, out var prototypeId);
             if (prototypeId == 0)
                 return;
 
@@ -196,13 +197,13 @@ namespace GameDatabaseBrowser
         /// <summary>
         /// Return an array of index that indicate the path to access the treeViewItem selected
         /// </summary>
-        private int[] GetElementLocationInHierarchy()
+        private int[] GetElementLocationInHierarchy(string fullName)
         {
-            if (string.IsNullOrEmpty(_currentSelected))
+            if (string.IsNullOrEmpty(fullName))
                 return null;
 
-            string[] tokens = _currentSelected.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-            ObservableCollection<PrototypeNode> pointer = Nodes[0].Childs;
+            string[] tokens = fullName.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            ObservableCollection<PrototypeNode> pointer = PrototypeNodes[0].Childs;
             int[] indexes = new int[tokens.Length];
 
             for (int i = 0; i < tokens.Length; i++)
@@ -213,6 +214,28 @@ namespace GameDatabaseBrowser
             }
 
             return indexes;
+        }
+
+
+        /// <summary>
+        /// Recursively construction of the property tree
+        /// </summary>
+        private void ConstructPropertyNodeHierarchy(PropertyNode node, object property)
+        {
+            if (property == null)
+                return;
+            PropertyInfo[] propertyInfo = property.GetType().GetProperties().Where(k => k.Name != "DataRef" && k.Name != "ParentDataRef" && k.Name != "DataRefRecord").OrderBy(k => k.Name).ToArray();
+
+            foreach (PropertyInfo propInfo in propertyInfo)
+            {
+                node.Childs.Add(new() { PropertyDetails = new() { Name = propInfo.Name, Value = propInfo.GetValue(property)?.ToString(), TypeName = propInfo.PropertyType.Name } });
+                if (typeof(IEnumerable).IsAssignableFrom(propInfo.PropertyType))
+                {
+                    var subPropertyInfo = (IEnumerable)propInfo.GetValue(property);
+                    foreach (var subPropInfo in subPropertyInfo)
+                        ConstructPropertyNodeHierarchy(node.Childs.Last(), subPropInfo);
+                }
+            }
         }
 
         /// <summary>
@@ -242,7 +265,12 @@ namespace GameDatabaseBrowser
                 txtParentDataRef.Text = $"Parent : {GameDatabase.GetPrototypeName((PrototypeId)prototypeId)} ({prototypeId})";
             else txtParentDataRef.Text = parentDataRef;
 
-            listView.ItemsSource = NodeSelected?.PrototypeDetails?.Properties?.Where(k => k.Name != "DataRef" && k.Name != "ParentDataRef" && k.Name != "DataRefRecord").OrderBy(k => k.Name);
+            Prototype proto = GameDatabase.DataDirectory.GetPrototype<Prototype>((PrototypeId)prototypeId);
+            PropertyNodes[0].Childs.Clear();
+            ConstructPropertyNodeHierarchy(PropertyNodes[0], proto);
+
+            if (propertytreeView.Items.Count == 0)
+                propertytreeView.Items.Add(PropertyNodes);
         }
 
         /// <summary>

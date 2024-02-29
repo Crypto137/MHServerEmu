@@ -10,9 +10,9 @@ namespace GameDatabaseBrowser.Models
     {
         public string Name { get; private set; }
         public string FullName { get; private set; }
-        public List<Property> Properties { get; private set; }
+        public List<PropertyDetails> Properties { get; private set; }
 
-        public PrototypeDetails(string fullname, List<Property> properties)
+        public PrototypeDetails(string fullname, List<PropertyDetails> properties)
         {
             FullName = fullname;
             Name = fullname.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries).Last();
