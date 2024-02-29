@@ -11,9 +11,12 @@ namespace MHServerEmu
 {
     public class ServerManager : IGameService
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public const string GameVersion = "1.52.0.1700";
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
+        // Reference point for counting game time (1348306278045983 == Sep 22 2012 09:31:18 GMT+0000)
+        public static readonly DateTime GameTimeEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddTicks(1348306278045983 * 10L);
 
         public static ServerManager Instance { get; } = new();
 
@@ -153,14 +156,20 @@ namespace MHServerEmu
             return $"Server Status\nUptime: {DateTime.Now - StartupTime:hh\\:mm\\:ss}\nSessions: {PlayerManagerService.SessionCount}";
         }
 
-        public long GetDateTimeMicroseconds()
+        /// <summary>
+        /// Returns current calendar time in microseconds (epoch at Jan 01 1970 00:00:00 GMT+0000).
+        /// </summary>
+        public static long GetDateTimeMicroseconds()
         {
-            return DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond / 1000;
+            return DateTime.UtcNow.Ticks / 10;
         }
 
-        public long GetGameTimeMicroseconds()
+        /// <summary>
+        /// Returns current game time in microseconds (epoch at Sep 22 2012 09:31:18 GMT+0000).
+        /// </summary>
+        public static long GetGameTimeMicroseconds()
         {
-            return (DateTime.Now - StartupTime).Ticks / TimeSpan.TicksPerMillisecond / 1000;
+            return (DateTime.UtcNow - GameTimeEpoch).Ticks / 10;
         }
 
         #endregion
