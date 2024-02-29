@@ -32,6 +32,8 @@ namespace GameDatabaseBrowser
 
         private const int PrototypeMaxNumber = 93114;
 
+        private string _currentFilter = "";
+
         /// <summary>
         /// Stack for history of prototypes' fullname selected
         /// </summary>
@@ -143,7 +145,11 @@ namespace GameDatabaseBrowser
         private void ConstructPrototypeTree()
         {
             PrototypeNodes[0].Childs.Clear();
-            foreach (PrototypeDetails prototype in _prototypeDetails)
+            List<PrototypeDetails> prototypeToDisplay = _prototypeDetails;
+            if (!string.IsNullOrEmpty(_currentFilter))
+                prototypeToDisplay = _prototypeDetails.Where(k => k.FullName.Contains(_currentFilter)).ToList();
+
+            foreach (PrototypeDetails prototype in prototypeToDisplay)
                 AddPrototypeInHierarchy(prototype);
         }
 
@@ -176,6 +182,21 @@ namespace GameDatabaseBrowser
             SelectFromName(_fullNameHistory.Peek());
         }
 
+        private void OnSearchButtonClicked(object sender, RoutedEventArgs e)
+        {
+            ulong.TryParse(txtSearch.Text, out ulong prototypeId);
+            if (prototypeId != 0)
+            {
+                _currentFilter = GameDatabase.GetPrototypeName((PrototypeId)prototypeId);
+            }
+            else
+            {
+                _currentFilter = txtSearch.Text;
+            }
+
+            RefreshPrototypeTree();
+        }
+
         /// <summary>
         /// When double click on a property
         /// Allow to travel to a prototype when double clicking on a prototypeId
@@ -191,6 +212,8 @@ namespace GameDatabaseBrowser
             string name = GameDatabase.GetPrototypeName((PrototypeId)prototypeId);
             if (string.IsNullOrEmpty(name)) return;
 
+            _currentFilter = "";
+            txtSearch.Text = "";
             SelectFromName(name);
         }
 

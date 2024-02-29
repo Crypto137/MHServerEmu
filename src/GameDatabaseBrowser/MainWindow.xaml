@@ -17,7 +17,7 @@
         <Button x:Name="btnBack" Content="Back" Click="OnBackButtonClicked" HorizontalAlignment="Left" Margin="30,5" Width="80"/>
         <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Height="35">
             <TextBox x:Name="txtSearch"  Width="700"  VerticalAlignment="Center" Margin="5,0,5,0"/>
-            <Button x:Name="btnSearch" Content="Recherche" Width="100" VerticalAlignment="Center" Margin="5,0,5,0"/>
+            <Button x:Name="btnSearch" Content="Search" Click="OnSearchButtonClicked" Width="100" VerticalAlignment="Center" Margin="5,0,5,0"/>
         </StackPanel>
         <TreeView Name="treeView" Grid.Row="1" Grid.Column="0" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" Margin="5">
             <TreeView.ItemsPanel>
