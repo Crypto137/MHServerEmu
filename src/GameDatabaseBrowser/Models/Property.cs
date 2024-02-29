@@ -24,7 +24,7 @@ namespace GameDatabaseBrowser.Models
                 "CurveId" => $"{Name} : {GameDatabase.GetCurveName((CurveId)ulong.Parse(Value))} ({Value})",
                 "AssetId" => $"{Name} : {GameDatabase.GetAssetName((AssetId)ulong.Parse(Value))} ({Value})",
                 "PrototypeId" => $"{Name} : {GameDatabase.GetPrototypeName((PrototypeId)ulong.Parse(Value))} ({Value})",
-                "Boolean" or "Int32" or "Int64" or "Single" => $"{Name} : {Value}",
+                "Boolean" or "Int16" or "Int32" or "Int64" or "Single" => $"{Name} : {Value}",
                 _ => $"{Name} : {Value} ({TypeName})",
             };
         }

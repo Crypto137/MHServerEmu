@@ -27,6 +27,7 @@
             </TreeView.ItemsPanel>
             <TreeView.ItemContainerStyle>
                 <Style TargetType="TreeViewItem">
+                    <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
                     <Setter Property="ItemsPanel">
                         <Setter.Value>
                             <ItemsPanelTemplate>
@@ -34,6 +35,11 @@
                             </ItemsPanelTemplate>
                         </Setter.Value>
                     </Setter>
+                    <Style.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="FontWeight" Value="Bold" />
+                        </Trigger>
+                    </Style.Triggers>
                 </Style>
             </TreeView.ItemContainerStyle>
             <TreeView.ItemTemplate>
@@ -41,12 +47,6 @@
                     <TextBlock Text="{Binding PrototypeDetails.Name}" />
                 </HierarchicalDataTemplate>
             </TreeView.ItemTemplate>
-            <TreeView.Resources>
-                <Style TargetType="TreeViewItem">
-                    <Setter Property="IsSelected" Value="{Binding Path=IsSelected, Mode=TwoWay}" />
-                    <Setter Property="IsExpanded" Value="{Binding Path=IsExpanded, Mode=TwoWay}" />
-                </Style>
-            </TreeView.Resources>
         </TreeView>
         <ProgressBar x:Name="progressBar" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Stretch" Height="20" Margin="20"/>
         <Grid Grid.Row="1" Grid.Column="1" Margin="5">
