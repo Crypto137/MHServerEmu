@@ -42,9 +42,11 @@ This page provides definitions for terms used by the game internally.
 
 - **Encounter** - a static arrangement of entities to be spawned as part of the overall population.
 
+- **Endurance** - the primary resource used for powers (e.g. spirit).
+
 - **Entity** - a dynamic game object. Each entity contains a collection of properties.
 
-- **Eval** - a system evaluates formulas defined in static game data.
+- **Eval** - a system that evaluates formulas defined in static game data.
 
 - **Field Group** - a collection of field values belonging to a specific blueprint.
 
