@@ -115,6 +115,7 @@ namespace GameDatabaseBrowser
             progressBar.Visibility = Visibility.Collapsed;
             if (treeView.Items.Count == 0)
                 treeView.Items.Add(PrototypeNodes);
+            PrototypeNodes[0].IsExpanded = true;
             treeView.Items.Refresh();
             UpdateLayout();
         }
@@ -140,7 +141,7 @@ namespace GameDatabaseBrowser
         }
 
         /// <summary>
-        /// Construct the 
+        /// Construct the prototype hierarchy
         /// </summary>
         private void ConstructPrototypeTree()
         {
@@ -182,6 +183,9 @@ namespace GameDatabaseBrowser
             SelectFromName(_fullNameHistory.Peek());
         }
 
+        /// <summary>
+        /// Launch the search by PrototypeId or by keyword
+        /// </summary>
         private void OnSearchButtonClicked(object sender, RoutedEventArgs e)
         {
             ulong.TryParse(txtSearch.Text, out ulong prototypeId);
@@ -239,7 +243,6 @@ namespace GameDatabaseBrowser
             return indexes;
         }
 
-
         /// <summary>
         /// Recursively construction of the property tree
         /// </summary>
@@ -294,6 +297,7 @@ namespace GameDatabaseBrowser
             Prototype proto = GameDatabase.DataDirectory.GetPrototype<Prototype>((PrototypeId)prototypeId);
             PropertyNodes[0].Childs.Clear();
             ConstructPropertyNodeHierarchy(PropertyNodes[0], proto);
+            PropertyNodes[0].IsExpanded = true;
 
             if (propertytreeView.Items.Count == 0)
                 propertytreeView.Items.Add(PropertyNodes);
