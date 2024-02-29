@@ -14,6 +14,16 @@ namespace MHServerEmu.Games.UI.Widgets
         public ulong TimeEnd { get; set; }
         public bool TimePaused { get; set; }
 
+        public UIWidgetGenericFraction(PrototypeId widgetR, PrototypeId contextR, PrototypeId[] areas,
+            int currentCount, int totalCount, ulong timeStart, ulong timeEnd, bool timePaused) : base(widgetR, contextR, areas)
+        {
+            CurrentCount = currentCount;
+            TotalCount = totalCount;
+            TimeStart = timeStart;
+            TimeEnd = timeEnd;
+            TimePaused = timePaused;
+        }
+
         public UIWidgetGenericFraction(PrototypeId widgetR, PrototypeId contextR, PrototypeId[] areas, CodedInputStream stream, BoolDecoder boolDecoder) : base(widgetR, contextR, areas)
         {
             CurrentCount = stream.ReadRawInt32();

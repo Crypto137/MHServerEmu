@@ -28,7 +28,14 @@ namespace MHServerEmu.Games.Powers
             ObjectiveGraph = new(stream);
         }
 
-        public RegionArchive() { }
+        public RegionArchive(ulong replicationId)
+        {
+            ReplicationPolicy = AoiNetworkPolicyValues.DefaultPolicy;
+            Properties = new(replicationId);
+            MissionManager = new();
+            UIDataProvider = new(Array.Empty<UISyncData>());
+            ObjectiveGraph = new();
+        }
 
         public ByteString Serialize()
         {
