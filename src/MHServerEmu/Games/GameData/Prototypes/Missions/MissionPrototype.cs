@@ -144,6 +144,26 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EntityFilterPrototype TargetEntity { get; protected set; }
         public PrototypeId TargetArea { get; protected set; }
         public PrototypeId TargetRegion { get; protected set; }
+
+        public void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
+        {
+            if (TargetEntity != null)
+            {
+                TargetEntity.GetEntityDataRefs(refs);
+                TargetEntity.GetAreaDataRefs(refs);
+                TargetEntity.GetRegionDataRefs(refs);
+            }
+
+            if (TargetRegion != PrototypeId.Invalid)
+            {
+                refs.Add(TargetRegion);
+            }
+
+            if (TargetArea != PrototypeId.Invalid)
+            {
+                refs.Add(TargetArea);
+            }
+        }
     }
 
     public class MissionObjectivePrototype : Prototype
