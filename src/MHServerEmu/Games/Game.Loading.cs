@@ -1,4 +1,5 @@
 ﻿using Gazillion;
+using MHServerEmu.Common;
 using MHServerEmu.Common.Config;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
@@ -22,7 +23,7 @@ namespace MHServerEmu.Games
 
             // Add server info messages
             messageList.Add(new(NetMessageMarkFirstGameFrame.CreateBuilder()
-                .SetCurrentservergametime(161351682950)
+                .SetCurrentservergametime((ulong)Clock.GetGameTime().TotalMilliseconds)
                 .SetCurrentservergameid(1150669705055451881)
                 .SetGamestarttime(1)
                 .Build()));
@@ -104,7 +105,7 @@ namespace MHServerEmu.Games
                     .SetLeaderboardsEnabled(ConfigManager.GameOptions.LeaderboardsEnabled)
                     .SetNewPlayerExperienceEnabled(ConfigManager.GameOptions.NewPlayerExperienceEnabled)
                     .SetServerTimeOffsetUTC(-7)
-                    .SetUseServerTimeOffset(false)
+                    .SetUseServerTimeOffset(true)  // Although originally this was set to false, it needs to be true because auto offset doesn't work past 2019
                     .SetMissionTrackerV2Enabled(ConfigManager.GameOptions.MissionTrackerV2Enabled)
                     .SetGiftingAccountAgeInDaysRequired(ConfigManager.GameOptions.GiftingAccountAgeInDaysRequired)
                     .SetGiftingAvatarLevelRequired(ConfigManager.GameOptions.GiftingAvatarLevelRequired)

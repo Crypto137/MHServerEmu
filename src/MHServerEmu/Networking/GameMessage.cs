@@ -12,6 +12,8 @@ namespace MHServerEmu.Networking
 
         public byte Id { get; }
         public byte[] Payload { get; }
+        public TimeSpan GameTimeReceived { get; set; }
+        public TimeSpan DateTimeReceived { get; set; }
 
         /// <summary>
         /// Constructs a new <see cref="GameMessage"/> from raw data.
