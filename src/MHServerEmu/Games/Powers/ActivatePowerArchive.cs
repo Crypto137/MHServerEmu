@@ -76,7 +76,7 @@ namespace MHServerEmu.Games.Powers
 
         public ActivatePowerArchive(NetMessageTryActivatePower tryActivatePower, Vector3 userPosition)
         {
-            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0;
+            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannelProximity;
             Flags = ActivatePowerMessageFlags.None;
 
             IdUserEntity = tryActivatePower.IdUserEntity;

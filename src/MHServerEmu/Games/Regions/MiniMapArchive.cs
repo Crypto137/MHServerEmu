@@ -31,9 +31,7 @@ namespace MHServerEmu.Games.Regions
 
         public MiniMapArchive(bool isRevealAll)
         {
-            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0 | AoiNetworkPolicyValues.AoiChannel1 | AoiNetworkPolicyValues.AoiChannel2
-                | AoiNetworkPolicyValues.AoiChannel3 | AoiNetworkPolicyValues.AoiChannel5 | AoiNetworkPolicyValues.AoiChannelClientOnly
-                | AoiNetworkPolicyValues.AoiChannel7;
+            ReplicationPolicy = AoiNetworkPolicyValues.DefaultPolicy;
             IsRevealAll = isRevealAll;
         }
 

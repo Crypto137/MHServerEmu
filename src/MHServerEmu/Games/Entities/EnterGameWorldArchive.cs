@@ -70,7 +70,7 @@ namespace MHServerEmu.Games.Entities
 
         public EnterGameWorldArchive(ulong entityId, Vector3 position, float orientation)
         {
-            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0;
+            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannelProximity;
             EntityId = entityId;
             LocoFieldFlags = LocomotionMessageFlags.NoLocomotionState;
             ExtraFieldFlags = EnterGameWorldMessageFlags.None;
@@ -80,7 +80,7 @@ namespace MHServerEmu.Games.Entities
 
         public EnterGameWorldArchive(ulong entityId, Vector3 position, float orientation, float moveSpeed)
         {
-            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0;
+            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannelProximity;
             EntityId = entityId;
             LocoFieldFlags = LocomotionMessageFlags.UpdatePathNodes | LocomotionMessageFlags.HasMoveSpeed;
             ExtraFieldFlags = EnterGameWorldMessageFlags.HasAvatarWorldInstanceId;

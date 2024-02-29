@@ -112,7 +112,7 @@ namespace MHServerEmu.Games.Powers
         public PowerResultArchive(NetMessageTryActivatePower tryActivatePower)
         {
             // Damage test
-            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0;
+            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannelProximity;
             Flags = PowerResultMessageFlags.None;
             PowerPrototypeId = (PrototypeId)tryActivatePower.PowerPrototypeId;
             TargetEntityId = tryActivatePower.IdTargetEntity;
@@ -149,7 +149,7 @@ namespace MHServerEmu.Games.Powers
         public PowerResultArchive(NetMessageContinuousPowerUpdateToServer continuousPowerUpdate)
         {
             // damage test
-            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0;
+            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannelProximity;
             Flags = PowerResultMessageFlags.None;
             PowerPrototypeId = (PrototypeId)continuousPowerUpdate.PowerPrototypeId;
             TargetEntityId = continuousPowerUpdate.IdTargetEntity;

@@ -25,9 +25,7 @@ namespace MHServerEmu.Games.Powers
 
         public AddConditionArchive(ulong entityId, ulong id, ConditionSerializationFlags serializationFlags, PrototypeId prototypeId, int startTime)
         {
-            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0 | AoiNetworkPolicyValues.AoiChannel1 | AoiNetworkPolicyValues.AoiChannel2
-                | AoiNetworkPolicyValues.AoiChannel3 |  AoiNetworkPolicyValues.AoiChannel5 | AoiNetworkPolicyValues.AoiChannelClientOnly
-                | AoiNetworkPolicyValues.AoiChannel7;
+            ReplicationPolicy = AoiNetworkPolicyValues.DefaultPolicy;
             EntityId = entityId;
 
             Condition = new()

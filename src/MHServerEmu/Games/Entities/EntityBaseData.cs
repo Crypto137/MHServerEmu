@@ -68,7 +68,7 @@ namespace MHServerEmu.Games.Entities
 
             InterestPolicies = FieldFlags.HasFlag(EntityCreateMessageFlags.HasInterestPolicies)
                 ? (AoiNetworkPolicyValues)stream.ReadRawVarint32()
-                : AoiNetworkPolicyValues.AoiChannel0;    // This defaults to 0x1 if no policies are specified
+                : AoiNetworkPolicyValues.AoiChannelProximity;    // This defaults to 0x1 if no policies are specified
 
             if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasAvatarWorldInstanceId))
                 AvatarWorldInstanceId = stream.ReadRawVarint32();
@@ -118,7 +118,7 @@ namespace MHServerEmu.Games.Entities
 
         public EntityBaseData(ulong entityId, PrototypeId prototypeId, Vector3 position, Vector3 orientation, bool snap = false)
         {
-            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel5;
+            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannelDiscovery;
             EntityId = entityId;
             PrototypeId = prototypeId;
             LocomotionState = new(0f);

@@ -1,10 +1,14 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+﻿using MHServerEmu.Common.Logging;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class PropertyInfoPrototype : Prototype
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public long Version { get; protected set; }
         public AggregationMethod AggMethod { get; protected set; }             // A Property/AggregationMethod.type
         public double Min { get; protected set; }
@@ -30,6 +34,47 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId ValueDisplayFormat { get; protected set; }          // Localization/Translations/Translation.defaults
 
         [DoNotCopy]
+        public AoiNetworkPolicyValues RepNetwork { get; private set; } = AoiNetworkPolicyValues.AoiChannelNone;
+        [DoNotCopy]
         public bool ShouldClampValue { get => Min != 0f || Max != 0f; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            // Reconstruct AOI network policy
+            if (ReplicateToProximity)
+                RepNetwork |= AoiNetworkPolicyValues.AoiChannelProximity;
+
+            if (ReplicateToParty)
+                RepNetwork |= AoiNetworkPolicyValues.AoiChannelParty;
+
+            if (ReplicateToOwner)
+                RepNetwork |= AoiNetworkPolicyValues.AoiChannelOwner;
+
+            if (ReplicateToTrader)
+                RepNetwork |= AoiNetworkPolicyValues.AoiChannelTrader;
+
+            if (ReplicateToDiscovery)
+                RepNetwork |= AoiNetworkPolicyValues.AoiChannelDiscovery;
+
+            // Validation messages based on PropertyInfoPrototype::Validate()
+            if (ClientOnly)
+            {
+                if (RepNetwork != AoiNetworkPolicyValues.AoiChannelNone)
+                    Logger.Warn("PostProcess(): Client-only properties cannot have any network replication policies");
+
+                RepNetwork = AoiNetworkPolicyValues.AoiChannelClientOnly;
+            }
+
+            if (TruncatePropertyValueToInt)
+            {
+                if ((Type == PropertyDataType.Real || Type == PropertyDataType.Curve) == false)
+                {
+                    Logger.Warn("PostProcess(): TruncatePropertyValueToInt should only be set to True for Float or Curve properties");
+                    TruncatePropertyValueToInt = false;
+                }
+            }
+        }
     }
 }
