@@ -10,12 +10,12 @@ namespace MHServerEmu.Games.UI.Widgets
     {
         public int CurrentCount { get; set; }
         public int TotalCount { get; set; }
-        public ulong TimeStart { get; set; }
-        public ulong TimeEnd { get; set; }
+        public long TimeStart { get; set; }
+        public long TimeEnd { get; set; }
         public bool TimePaused { get; set; }
 
         public UIWidgetGenericFraction(PrototypeId widgetR, PrototypeId contextR, PrototypeId[] areas,
-            int currentCount, int totalCount, ulong timeStart, ulong timeEnd, bool timePaused) : base(widgetR, contextR, areas)
+            int currentCount, int totalCount, long timeStart, long timeEnd, bool timePaused) : base(widgetR, contextR, areas)
         {
             CurrentCount = currentCount;
             TotalCount = totalCount;
@@ -28,8 +28,8 @@ namespace MHServerEmu.Games.UI.Widgets
         {
             CurrentCount = stream.ReadRawInt32();
             TotalCount = stream.ReadRawInt32();
-            TimeStart = stream.ReadRawVarint64();
-            TimeEnd = stream.ReadRawVarint64();
+            TimeStart = stream.ReadRawInt64();
+            TimeEnd = stream.ReadRawInt64();
             TimePaused = boolDecoder.ReadBool(stream);
         }
 
@@ -39,8 +39,8 @@ namespace MHServerEmu.Games.UI.Widgets
 
             stream.WriteRawInt32(CurrentCount);
             stream.WriteRawInt32(TotalCount);
-            stream.WriteRawVarint64(TimeStart);
-            stream.WriteRawVarint64(TimeEnd);
+            stream.WriteRawInt64(TimeStart);
+            stream.WriteRawInt64(TimeEnd);
             boolEncoder.WriteBuffer(stream);   // TimePaused
         }
 
