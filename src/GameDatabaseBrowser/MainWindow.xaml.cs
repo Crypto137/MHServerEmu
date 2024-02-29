@@ -232,6 +232,9 @@ namespace GameDatabaseBrowser
                 if (typeof(IEnumerable).IsAssignableFrom(propInfo.PropertyType))
                 {
                     var subPropertyInfo = (IEnumerable)propInfo.GetValue(property);
+                    if (subPropertyInfo == null)
+                        continue;
+
                     foreach (var subPropInfo in subPropertyInfo)
                         ConstructPropertyNodeHierarchy(node.Childs.Last(), subPropInfo);
                 }
