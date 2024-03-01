@@ -182,6 +182,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         _240 = 9,
         _300 = 10,
         _360 = 11,
+        // Not found in client
+        _20 = 0
     }
 
     [AssetEnum((int)Alive)]

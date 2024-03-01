@@ -1,7 +1,12 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+﻿using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.Common;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
+    using KeywordsMask = BitList;
+
     #region Enums
 
     [AssetEnum]
@@ -280,6 +285,164 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LootTablePrototype[] CompleteNowRewards { get; protected set; }
         public DesignWorkflowState DesignStatePS4 { get; protected set; }
         public DesignWorkflowState DesignStateXboxOne { get; protected set; }
+
+        [DoNotCopy]
+        public PrototypeId FirstMarker { get; private set; }
+        [DoNotCopy]
+        public bool HasClientInterest { get; private set; } = true;
+        [DoNotCopy]
+        public bool HasItemDrops { get; private set; }
+        [DoNotCopy]
+        public bool HasMissionLogRewards { get; private set; }
+        [DoNotCopy]
+        public List<MissionConditionPrototype> HotspotConditionList { get; private set; }
+
+        private readonly SortedSet<PrototypeId> PopulationRegions = new();
+        private readonly SortedSet<PrototypeId> PopulationAreas = new();
+        private KeywordsMask _keywordsMask = new();
+        private KeywordsMask _regionRestrictionKeywordsMask = new();
+
+        bool HasKeyword(KeywordPrototype keywordProto)
+        {
+            return keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);
+        }
+
+        bool HasRegionRestrictionKeyword(KeywordPrototype keywordProto)
+        {
+            return keywordProto != null && KeywordPrototype.TestKeywordBit(_regionRestrictionKeywordsMask, keywordProto);
+        }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            _keywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
+            _regionRestrictionKeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(RegionRestrictionKeywords);
+            /*
+            EnumerateConditions();
+
+            HotspotConditionList = new List<MissionConditionPrototype>();
+            GetConditionsOfType(typeof(MissionConditionHotspotEnterPrototype), HotspotConditionList);
+            GetConditionsOfType(typeof(MissionConditionHotspotLeavePrototype), HotspotConditionList);
+
+            if (HotspotConditionList.Count == 0)
+                HotspotConditionList = null;
+
+            if (GameDatabase.DataDirectory.PrototypeIsAbstract(DataRef) == false)
+                FirstMarker = FindFirstMarker();
+            else
+                FirstMarker = PrototypeId.Invalid;
+
+            PopulateMissionActionReferencedPowers();
+            HasClientInterest = GetHasClientInterest();
+            HasItemDrops = GetHasItemDrops();
+            HasMissionLogRewards = GetHasMissionLogRewards();*/
+            
+            PopulatePopulationForZoneLookups(PopulationRegions, PopulationAreas);
+        }
+
+        private bool GetHasMissionLogRewards()
+        {
+            throw new NotImplementedException();
+        }
+
+        private bool GetHasItemDrops()
+        {
+            throw new NotImplementedException();
+        }
+
+        private bool GetHasClientInterest()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void PopulateMissionActionReferencedPowers()
+        {
+            throw new NotImplementedException();
+        }
+
+        private PrototypeId FindFirstMarker()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void GetConditionsOfType(Type type, List<MissionConditionPrototype> hotspotConditionList)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void EnumerateConditions()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool HasPopulationInRegion(Region region)
+        {
+            if (PopulationSpawns.IsNullOrEmpty() == false)
+            {
+                PrototypeId regionRef = region.PrototypeDataRef;
+
+                if (PopulationRegions.Any())
+                    return PopulationRegions.Contains(regionRef);
+
+                if (PopulationAreas.Any())
+                    foreach (var areaRef in PopulationAreas)
+                        if (region.GetArea(areaRef) != null) return true;
+            }
+            return false;
+        }
+
+        public bool PopulatePopulationForZoneLookups(SortedSet<PrototypeId> regions, SortedSet<PrototypeId> areas)
+        {
+            if (PopulationSpawns.IsNullOrEmpty() == false)
+            {
+                foreach (var entryProto in PopulationSpawns)
+                {
+                    if (entryProto == null) continue;                    
+                    if (entryProto.RestrictToRegions.IsNullOrEmpty() == false)
+                    {
+                        foreach (var restrictRef in entryProto.RestrictToRegions)
+                        {
+                            if (restrictRef == PrototypeId.Invalid) continue;                            
+                            regions.Add(restrictRef);
+
+                            if (entryProto.RestrictToRegionsIncludeChildren) 
+                            {
+                                foreach (var regionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(RegionPrototype), PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+                                {                                        
+                                    if (GameDatabase.DataDirectory.PrototypeIsAPrototype(regionRef, restrictRef))  
+                                        regions.Add(regionRef);
+                                }
+                            }
+                            
+                        }
+                    }
+
+                    if (entryProto.RestrictToAreas.IsNullOrEmpty() == false)
+                    {
+                        foreach (var areaRef in entryProto.RestrictToAreas)
+                            areas.Add(areaRef);
+                    }                    
+                }
+
+                if (regions.Count > 0)
+                {
+                    List<PrototypeId> regionList = new (regions);
+                    foreach (PrototypeId regionRef in regionList)
+                    {
+                        RegionPrototype regionProto = GameDatabase.GetPrototype<RegionPrototype>(regionRef);
+                        if (regionProto != null && regionProto.AltRegions.IsNullOrEmpty() == false)
+                        {
+                            foreach (var altRegionRef in regionProto.AltRegions)
+                                regions.Add(altRegionRef);
+                        }
+                    }
+                }
+            }
+
+            return regions.Count > 0;
+        }
+
     }
 
     public class OpenMissionPrototype : MissionPrototype

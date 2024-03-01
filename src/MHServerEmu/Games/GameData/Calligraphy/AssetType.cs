@@ -121,6 +121,8 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             _enumerated = true;
         }
 
+        public override string ToString() => GameDatabase.GetAssetTypeName(Id);
+
         /// <summary>
         /// Gets an <see cref="AssetValue"/> associated with the specified enum value.
         /// </summary>

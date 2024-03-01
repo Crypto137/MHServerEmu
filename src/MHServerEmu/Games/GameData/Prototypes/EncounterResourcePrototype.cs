@@ -15,6 +15,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             PopulationMarkerGuid = (PrototypeGuid)reader.ReadUInt64();
             ClientMap = reader.ReadFixedString32();
+
             MarkerSet = new(reader);
             NaviPatchSource = new(reader);
         }

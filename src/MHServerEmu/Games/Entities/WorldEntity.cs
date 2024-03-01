@@ -2,10 +2,13 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -15,10 +18,19 @@ namespace MHServerEmu.Games.Entities
         public Condition[] ConditionCollection { get; set; }
         public PowerCollectionRecord[] PowerCollection { get; set; }
         public int UnkEvent { get; set; }
+        public RegionLocation Location { get; private set; } = new(); // TODO init;
+        public Cell Cell { get => Location.Cell; }
+        public EntityRegionSpatialPartitionLocation SpatialPartitionLocation { get; }
+        public Aabb RegionBounds { get; set; }
+        public Bounds Bounds { get; set; } = new();
+        public Region Region { get => Location.Region; }
+        public WorldEntityPrototype WorldEntityPrototype { get => EntityPrototype as WorldEntityPrototype; }
+        public Game Game { get; private set; }
+        public RegionLocation LastLocation { get; private set; }
+        public bool TrackAfterDiscovery { get; private set; }
+        public WorldEntity(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { SpatialPartitionLocation = new(this); }
 
-        public WorldEntity(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
-
-        public WorldEntity(EntityBaseData baseData) : base(baseData) { }
+        public WorldEntity(EntityBaseData baseData) : base(baseData) { SpatialPartitionLocation = new(this); }
 
         public WorldEntity(EntityBaseData baseData, AoiNetworkPolicyValues replicationPolicy, ulong replicationId) : base(baseData)
         {
@@ -28,6 +40,7 @@ namespace MHServerEmu.Games.Entities
             ConditionCollection = Array.Empty<Condition>();
             PowerCollection = Array.Empty<PowerCollectionRecord>();
             UnkEvent = 0;
+            SpatialPartitionLocation = new(this);
         }
 
         public WorldEntity(EntityBaseData baseData, ulong replicationId, Vector3 mapPosition, int health, int mapAreaId,
@@ -48,6 +61,7 @@ namespace MHServerEmu.Games.Entities
             ConditionCollection = Array.Empty<Condition>();
             PowerCollection = Array.Empty<PowerCollectionRecord>();
             UnkEvent = 0;
+            SpatialPartitionLocation = new(this);
         }
 
         protected override void Decode(CodedInputStream stream)
@@ -116,5 +130,69 @@ namespace MHServerEmu.Games.Entities
 
             sb.AppendLine($"UnkEvent: {UnkEvent}");
         }
+
+        internal Entity GetRootOwner()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool TestStatus(int v)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Destroy()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void EnterWorld(Cell cell, Vector3 position, Vector3 orientation)
+        {
+            var proto = WorldEntityPrototype;
+            Game = cell.Game; // TODO: Init Game to constructor
+            TrackAfterDiscovery = proto.ObjectiveInfo.TrackAfterDiscovery;
+            if (proto is HotspotPrototype) _flags |= EntityFlags.IsHotspot;
+
+            Location.Region = cell.GetRegion();
+            Location.Cell = cell; // Set directly
+            Location.SetPosition(position);
+            Location.SetOrientation(orientation);
+            // TODO ChangeRegionPosition
+            Bounds.InitializeFromPrototype(proto.Bounds);
+            Bounds.Center = position;
+            UpdateRegionBounds(); // Add to Quadtree
+        }
+
+        public bool ShouldUseSpatialPartitioning() => Bounds.Geometry != GeometryType.None;
+
+        public void UpdateRegionBounds()
+        {
+            RegionBounds = Bounds.ToAabb();
+            if (ShouldUseSpatialPartitioning())
+                Region.UpdateEntityInSpatialPartition(this);
+        }
+
+        public bool IsInWorld() => Location.IsValid();
+
+        public void ExitWorld()
+        {
+            // TODO send packets for delete entities from world
+            var entityManager = Game.EntityManager;
+            ClearWorldLocation();
+            entityManager.DestroyEntity(BaseData.EntityId);
+        }
+
+        public void ClearWorldLocation()
+        {
+            if(Location.IsValid()) LastLocation = Location;
+            if (Region != null && SpatialPartitionLocation.IsValid()) Region.RemoveEntityFromSpatialPartition(this);
+            Location = null;
+        }
+
+        internal void EmergencyRegionCleanup(Region region)
+        {
+            throw new NotImplementedException();
+        }
+
     }
 }

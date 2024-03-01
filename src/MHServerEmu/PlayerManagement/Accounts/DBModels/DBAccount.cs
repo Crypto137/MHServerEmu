@@ -1,10 +1,14 @@
 ﻿using MHServerEmu.Common;
+using MHServerEmu.Common.Config;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.PlayerManagement.Accounts.DBModels
 {
+    /// <summary>
+    /// Represents an account stored in the account database.
+    /// </summary>
     public class DBAccount
     {
         public ulong Id { get; set; }
@@ -37,7 +41,7 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
             InitializeData();
         }
 
-        public DBAccount(string playerName, RegionPrototypeId region, AvatarPrototypeId avatar)
+        public DBAccount(string playerName, RegionPrototypeId region, PrototypeId waypoint, AvatarPrototypeId avatar, int volume)
         {
             // Default account for using with BypassAuth
             Id = 0;
@@ -48,7 +52,9 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
             InitializeData();
 
             Player.Region = region;
+            Player.Waypoint = waypoint;
             Player.Avatar = avatar;
+            Player.AOIVolume = volume;
         }
 
         public DBAccount() { }
@@ -58,7 +64,16 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
             return Avatars.FirstOrDefault(avatar => avatar.Prototype == prototype);
         }
 
-        public override string ToString() => $"{PlayerName} ({Email})";
+        public override string ToString()
+        {
+            if (ConfigManager.PlayerManager.HideSensitiveInformation)
+            {
+                string maskedEmail = $"{Email[0]}****{Email.Substring(Email.IndexOf('@') - 1)}";
+                return $"{PlayerName} ({maskedEmail})";
+            }
+
+            return $"{PlayerName} ({Email})";
+        }
 
         private void InitializeData()
         {

@@ -93,6 +93,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Default = 0,
         DiscoveryCompleted = 1,
         LevelUp = 2,
+        PowerPointsAwarded = 3,
         ItemError = 4,
         PartyInvite = 5,
         PartyError = 6,
@@ -108,7 +109,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         MissionFailed = 16,
         WaypointUnlocked = 17,
         PowerUnlocked = 18,
-        PowerPointsAwarded = 3,
         StatProgression = 19,
         AvatarSwitchError = 20,
         OmegaPointsAwarded = 21,
@@ -116,6 +116,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         LeaderboardRewarded = 23,
         InfinityPointsAwarded = 26,
         WaypointError = 27,
+        // Not found in client
+        MatchQueue = 0
     }
 
     [AssetEnum]

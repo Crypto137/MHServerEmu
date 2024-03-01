@@ -10,14 +10,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public Aabb BoundingBox { get; protected set; }
         public Cell.Type Type { get; protected set; }
-        public uint Walls { get; protected set; }
+        public Cell.Walls Walls { get; protected set; }
         public Cell.Filler FillerEdges { get; protected set; }
         public Cell.Type RoadConnections { get; protected set; }
         public string ClientMap { get; protected set; }
         public MarkerSetPrototype InitializeSet { get; protected set; }
         public MarkerSetPrototype MarkerSet { get; protected set; }
         public NaviPatchSourcePrototype NaviPatchSource { get; protected set; }
-        public byte IsOffsetInMapFile { get; protected set; }
+        public bool IsOffsetInMapFile { get; protected set; }
         public HeightMapPrototype HeightMap { get; protected set; }
         public PrototypeGuid[] HotspotPrototypes { get; protected set; }
 
@@ -27,14 +27,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Vector3 min = reader.ReadVector3();
             BoundingBox = new(min, max);
             Type = (Cell.Type)reader.ReadUInt32();
-            Walls = reader.ReadUInt32();
+            Walls = (Cell.Walls)reader.ReadUInt32();
             FillerEdges = (Cell.Filler)reader.ReadUInt32();
             RoadConnections = (Cell.Type)reader.ReadUInt32();
             ClientMap = reader.ReadFixedString32();
             InitializeSet = new(reader);
             MarkerSet = new(reader);
             NaviPatchSource = new(reader);
-            IsOffsetInMapFile = reader.ReadByte();
+            IsOffsetInMapFile = reader.ReadByte()>0;
             HeightMap = new(reader);
 
             HotspotPrototypes = new PrototypeGuid[reader.ReadUInt32()];

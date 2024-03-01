@@ -7,6 +7,9 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Networking;
 using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 
 namespace MHServerEmu.Games.Powers
 {
@@ -47,6 +50,21 @@ namespace MHServerEmu.Games.Powers
                 case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer:
                     if (message.TryDeserialize<NetMessageContinuousPowerUpdateToServer>(out var continuousPowerUpdate))
                         return OnContinuousPowerUpdate(client, continuousPowerUpdate);
+                    break;
+
+                case ClientToGameServerMessage.NetMessageAbilitySlotToAbilityBar:
+                    if (message.TryDeserialize<NetMessageAbilitySlotToAbilityBar>(out var slotToAbilityBar))
+                        return OnAbilitySlotToAbilityBar(client, slotToAbilityBar);
+                    break;
+
+                case ClientToGameServerMessage.NetMessageAbilityUnslotFromAbilityBar:
+                    if (message.TryDeserialize<NetMessageAbilityUnslotFromAbilityBar>(out var unslotFromAbilityBar))
+                        return OnAbilityUnslotFromAbilityBar(client, unslotFromAbilityBar);
+                    break;
+
+                case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:
+                    if (message.TryDeserialize<NetMessageAbilitySwapInAbilityBar>(out var swapInAbilityBar))
+                        return OnAbilitySwapInAbilityBar(client, swapInAbilityBar);
                     break;
 
                 default:
@@ -143,10 +161,53 @@ namespace MHServerEmu.Games.Powers
 
             PowerResultArchive archive = new(tryActivatePower);
             if (archive.TargetEntityId > 0)
+            {                
                 messageList.Add(new(client, new(NetMessagePowerResult.CreateBuilder()
                     .SetArchiveData(archive.Serialize())
                     .Build())));
+                messageList.AddRange(TestHit(client, archive.TargetEntityId, (int)archive.DamagePhysical));
+            }
 
+            return messageList;
+        }
+
+        private List<QueuedGameMessage> TestHit(FrontendClient client, ulong entityId, int damage)
+        {
+            List<QueuedGameMessage> messageList = new();
+            if (damage > 0)
+            {
+                WorldEntity entity = (WorldEntity)client.CurrentGame.EntityManager.GetEntityById(entityId);
+                if (entity != null)
+                {
+                    var repId = entity.Properties.ReplicationId;
+                    int health = entity.Properties[PropertyEnum.Health];
+                    int newHealth = health - damage;
+                    if (newHealth <= 0)
+                    {
+                        entity.ToDead();
+                        newHealth = 0;
+                        entity.Properties[PropertyEnum.IsDead] = true;
+                        messageList.Add(new(client,
+                         new(Property.ToNetMessageSetProperty(repId, new(PropertyEnum.IsDead), true))
+                         ));
+                    }
+                    entity.Properties[PropertyEnum.Health] = newHealth;
+                    messageList.Add(new(client,
+                        new(Property.ToNetMessageSetProperty(repId, new(PropertyEnum.Health), newHealth))
+                        ));
+                    if (newHealth == 0)
+                    {
+                        messageList.Add(new(client,
+                        new(NetMessageEntityKill.CreateBuilder()
+                        .SetIdEntity(entityId)
+                        .SetIdKillerEntity((ulong)client.Session.Account.Player.Avatar.ToEntityId())
+                        .SetKillFlags(0).Build())));
+                        messageList.Add(new(client,
+                        new(Property.ToNetMessageSetProperty(repId, new(PropertyEnum.NoEntityCollide), true))
+                        ));
+                    }
+                }
+            }
             return messageList;
         }
 
@@ -182,6 +243,49 @@ namespace MHServerEmu.Games.Powers
             if (powerPrototypePath.Contains("TravelPower/"))
                 HandleTravelPower(client, powerPrototypeId);
             // Logger.Trace(continuousPowerUpdate.ToString());
+
+            return Array.Empty<QueuedGameMessage>();
+        }
+
+        // Ability bar management (TODO: Move this to avatar entity)
+
+        private IEnumerable<QueuedGameMessage> OnAbilitySlotToAbilityBar(FrontendClient client, NetMessageAbilitySlotToAbilityBar slotToAbilityBar)
+        {
+            var abilityKeyMapping = client.Session.Account.CurrentAvatar.AbilityKeyMapping;
+            PrototypeId prototypeRefId = (PrototypeId)slotToAbilityBar.PrototypeRefId;
+            AbilitySlot slotNumber = (AbilitySlot)slotToAbilityBar.SlotNumber;
+            Logger.Trace($"NetMessageAbilitySlotToAbilityBar: {GameDatabase.GetFormattedPrototypeName(prototypeRefId)} to {slotNumber}");
+
+            // Set
+            abilityKeyMapping.SetAbilityInAbilitySlot(prototypeRefId, slotNumber);
+            
+            return Array.Empty<QueuedGameMessage>();
+        }
+
+        private IEnumerable<QueuedGameMessage> OnAbilityUnslotFromAbilityBar(FrontendClient client, NetMessageAbilityUnslotFromAbilityBar unslotFromAbilityBar)
+        {
+            var abilityKeyMapping = client.Session.Account.CurrentAvatar.AbilityKeyMapping;
+            AbilitySlot slotNumber = (AbilitySlot)unslotFromAbilityBar.SlotNumber;
+            Logger.Trace($"NetMessageAbilityUnslotFromAbilityBar: from {slotNumber}");
+
+            // Remove by assigning invalid id
+            abilityKeyMapping.SetAbilityInAbilitySlot(PrototypeId.Invalid, slotNumber);
+
+            return Array.Empty<QueuedGameMessage>();
+        }
+
+        private IEnumerable<QueuedGameMessage> OnAbilitySwapInAbilityBar(FrontendClient client, NetMessageAbilitySwapInAbilityBar swapInAbilityBar)
+        {
+            var abilityKeyMapping = client.Session.Account.CurrentAvatar.AbilityKeyMapping;
+            AbilitySlot slotA = (AbilitySlot)swapInAbilityBar.SlotNumberA;
+            AbilitySlot slotB = (AbilitySlot)swapInAbilityBar.SlotNumberB;
+            Logger.Trace($"NetMessageAbilitySwapInAbilityBar: {slotA} and {slotB}");
+
+            // Swap
+            PrototypeId prototypeA = abilityKeyMapping.GetAbilityInAbilitySlot(slotA);
+            PrototypeId prototypeB = abilityKeyMapping.GetAbilityInAbilitySlot(slotB);
+            abilityKeyMapping.SetAbilityInAbilitySlot(prototypeB, slotA);
+            abilityKeyMapping.SetAbilityInAbilitySlot(prototypeA, slotB);
 
             return Array.Empty<QueuedGameMessage>();
         }

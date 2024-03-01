@@ -1,4 +1,6 @@
 ﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -146,7 +148,53 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId PlayerCameraSettingsOrbis { get; protected set; }
         public PrototypeId[] LoadingScreensConsole { get; protected set; }
         public bool AllowLocalCoopMode { get; protected set; }
-    }
+
+        public static bool Equivalent(RegionPrototype regionA, RegionPrototype regionB)
+        {
+            if (regionA == null || regionB == null) return false;
+            if (regionA == regionB) return true;
+            return regionA.HasAltRegion(regionB.DataRef);
+        }
+
+        private bool HasAltRegion(PrototypeId dataRef)
+        {
+            if (AltRegions != null) return AltRegions.Contains(dataRef);
+            return false;
+        }
+
+        public PrototypeId GetDefaultArea(Region region)
+        {
+            PrototypeId defaultArea = 0;
+
+            if (StartTarget != 0)
+            {
+                RegionConnectionTargetPrototype target = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(StartTarget);
+                defaultArea = target.Area;
+            }
+
+            if (defaultArea == 0)
+            {
+                return RegionGenerator.GetStartAreaRef(region); // TODO check return
+            }
+
+            return defaultArea;
+        }
+
+        public RegionDifficultySettingsPrototype GetDifficultySettings()
+        {
+            if (DifficultySettings != null) return DifficultySettings;
+
+            DifficultyGlobalsPrototype difficultyGlobals = GameDatabase.DifficultyGlobalsPrototype;
+            if (difficultyGlobals == null) return null;
+
+            if (Behavior == RegionBehaviorAsset.PublicCombatZone && difficultyGlobals.RegionSettingsDefaultPCZ != null)
+                return difficultyGlobals.RegionSettingsDefaultPCZ;
+
+            return difficultyGlobals.RegionSettingsDefault;
+        }
+
+
+}
 
     public class RegionConnectionTargetPrototype : Prototype
     {

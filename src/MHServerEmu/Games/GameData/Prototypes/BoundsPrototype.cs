@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+﻿using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -33,17 +34,26 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public BoundsMovementPowerBlockType BlocksMovementPowers { get; protected set; }
         public bool IgnoreBlockingWithAvatars { get; protected set; }
         public bool BlockOnlyMyself { get; protected set; }
+
+        public virtual float GetBoundHalfHeight() => 0.0f;
+        public virtual GeometryType GetGeometryType() => GeometryType.None;
     }
 
     public class CapsuleBoundsPrototype : BoundsPrototype
     {
         public float Radius { get; protected set; }
         public float HeightFromCenter { get; protected set; }
+
+        public override float GetBoundHalfHeight() => HeightFromCenter;
+        public override GeometryType GetGeometryType() => GeometryType.Capsule;
     }
 
     public class SphereBoundsPrototype : BoundsPrototype
     {
         public float Radius { get; protected set; }
+
+        public override float GetBoundHalfHeight() => Radius;
+        public override GeometryType GetGeometryType() => GeometryType.Sphere;
     }
 
     public class TriangleBoundsPrototype : BoundsPrototype
@@ -51,6 +61,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float AngleDegrees { get; protected set; }
         public float Length { get; protected set; }
         public float HeightFromCenter { get; protected set; }
+
+        public override float GetBoundHalfHeight() => HeightFromCenter;
+        public override GeometryType GetGeometryType() => GeometryType.Triangle;
     }
 
     public class WedgeBoundsPrototype : BoundsPrototype
@@ -59,6 +72,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float BaseWidth { get; protected set; }
         public float Length { get; protected set; }
         public float HeightFromCenter { get; protected set; }
+
+        public override float GetBoundHalfHeight() => HeightFromCenter;
+        public override GeometryType GetGeometryType() => GeometryType.Wedge;
     }
 
     public class BoxBoundsPrototype : BoundsPrototype
@@ -67,5 +83,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float Length { get; protected set; }
         public float Height { get; protected set; }
         public bool AxisAligned { get; protected set; }
+
+        public override float GetBoundHalfHeight() => Height * 0.5f;
+        public override GeometryType GetGeometryType() => AxisAligned ? GeometryType.AABB : GeometryType.OBB;
     }
 }

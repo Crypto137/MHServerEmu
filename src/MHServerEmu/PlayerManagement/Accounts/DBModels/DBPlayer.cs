@@ -1,8 +1,12 @@
 ﻿using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.PlayerManagement.Accounts.DBModels
 {
+    /// <summary>
+    /// Represents a player entity stored in the account database.
+    /// </summary>
     public class DBPlayer
     {
         // We are currently using System.Data.SQLite + Dapper for storing our persistent data.
@@ -21,12 +25,18 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
 
         public AvatarPrototypeId Avatar { get; set; }
         public long RawAvatar { get => (long)Avatar; private set => Avatar = (AvatarPrototypeId)value; }
-
+        public PrototypeId Waypoint { get; set; }
+        public long RawWaypoint { get => (long)Waypoint; private set => Waypoint = (PrototypeId)value; }
+        
+        public int AOIVolume { get; set; }
+        
         public DBPlayer(ulong accountId)
         {
             AccountId = accountId;
             Region = RegionPrototypeId.NPEAvengersTowerHUBRegion;
             Avatar = AvatarPrototypeId.CaptainAmerica;
+            Waypoint = (PrototypeId)10137590415717831231; // Waypoints/HUBS/NPEAvengersTowerHub
+            AOIVolume = 3200;
         }
 
         public DBPlayer() { }

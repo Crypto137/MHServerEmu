@@ -1,20 +1,23 @@
 ﻿using MHServerEmu.Common.Extensions;
+using MHServerEmu.Common.Logging;
 
 namespace MHServerEmu.Games.GameData.Prototypes.Markers
 {
     public class EntityMarkerPrototype : MarkerPrototype
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public PrototypeGuid EntityGuid { get; }
         public string LastKnownEntityName { get; }
         public PrototypeGuid Modifier1Guid { get; }
-        public string Modifier1Text { get; }
+        //    public string Modifier1Text { get; } // has eFlagDontCook set
         public PrototypeGuid Modifier2Guid { get; }
-        public string Modifier2Text { get; }
+        //    public string Modifier2Text { get; } // has eFlagDontCook set
         public PrototypeGuid Modifier3Guid { get; }
-        public string Modifier3Text { get; }
+        //    public string Modifier3Text { get; } // has eFlagDontCook set
         public uint EncounterSpawnPhase { get; }
-        public byte OverrideSnapToFloor { get; }
-        public byte OverrideSnapToFloorValue { get; }
+        public bool OverrideSnapToFloor { get; }
+        public bool OverrideSnapToFloorValue { get; }
         public PrototypeGuid FilterGuid { get; }
         public string LastKnownFilterName { get; }
 
@@ -29,13 +32,24 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
             Modifier3Guid = (PrototypeGuid)reader.ReadUInt64();
             // eFlagDontCook Modifier3Text = reader.ReadFixedString32();
             EncounterSpawnPhase = reader.ReadUInt32();
-            OverrideSnapToFloor = reader.ReadByte();
-            OverrideSnapToFloorValue = reader.ReadByte();
+            OverrideSnapToFloor = reader.ReadByte() > 0;
+            OverrideSnapToFloorValue = reader.ReadByte() > 0;
             FilterGuid = (PrototypeGuid)reader.ReadUInt64();
             LastKnownFilterName = reader.ReadFixedString32();
 
             Position = reader.ReadVector3();
             Rotation = reader.ReadVector3();
+        }
+
+        public T GetMarkedPrototype<T>() where T : Prototype
+        {
+            PrototypeId dataRef = GameDatabase.GetDataRefByPrototypeGuid(EntityGuid);
+            if (dataRef == 0)
+            {
+                Logger.Warn($"Unable to get a data ref from MarkerEntityPrototype. Prototype: {ToString()}.");
+                return default;
+            }
+            return GameDatabase.GetPrototype<Prototype>(dataRef) as T;
         }
     }
 }

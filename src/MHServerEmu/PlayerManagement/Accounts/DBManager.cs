@@ -6,6 +6,9 @@ using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.PlayerManagement.Accounts
 {
+    /// <summary>
+    /// Provides access to the account database.
+    /// </summary>
     public static class DBManager
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -29,11 +32,8 @@ namespace MHServerEmu.PlayerManagement.Accounts
         #region Queries
 
         /// <summary>
-        /// Queries an account from the database by its email.
+        /// Queries a <see cref="DBAccount"/> from the database by its email.
         /// </summary>
-        /// <param name="email">Email to query.</param>
-        /// <param name="account">Account or null.</param>
-        /// <returns>IsSuccess</returns>
         public static bool TryQueryAccountByEmail(string email, out DBAccount account)
         {
             using (SQLiteConnection connection = new(ConnectionString))
@@ -57,8 +57,6 @@ namespace MHServerEmu.PlayerManagement.Accounts
         /// <summary>
         /// Queries if the specified player name is already taken.
         /// </summary>
-        /// <param name="playerName">Name to check.</param>
-        /// <returns>IsTaken</returns>
         public static bool QueryIsPlayerNameTaken(string playerName)
         {
             using (SQLiteConnection connection = new(ConnectionString))
@@ -74,10 +72,8 @@ namespace MHServerEmu.PlayerManagement.Accounts
         #region Executes
 
         /// <summary>
-        /// Inserts a new account with all of its data into the database.
+        /// Inserts a new <see cref="DBAccount"/> with all of its data into the database.
         /// </summary>
-        /// <param name="account">Account to insert.</param>
-        /// <returns>IsSuccess</returns>
         public static bool InsertAccount(DBAccount account)
         {
             using (SQLiteConnection connection = new(ConnectionString))
@@ -92,11 +88,11 @@ namespace MHServerEmu.PlayerManagement.Accounts
                         connection.Execute(@"INSERT INTO Account (Id, Email, PlayerName, PasswordHash, Salt, UserLevel, IsBanned, IsArchived, IsPasswordExpired)
                             VALUES (@Id, @Email, @PlayerName, @PasswordHash, @Salt, @UserLevel, @IsBanned, @IsArchived, @IsPasswordExpired)", account, transaction);
 
-                        connection.Execute(@"INSERT INTO Player (AccountId, RawRegion, RawAvatar)
-                            VALUES (@AccountId, @RawRegion, @RawAvatar)", account.Player, transaction);
+                        connection.Execute(@"INSERT INTO Player (AccountId, RawRegion, RawAvatar, RawWaypoint, AOIVolume)
+                            VALUES (@AccountId, @RawRegion, @RawAvatar, @RawWaypoint, @AOIVolume)", account.Player, transaction);
 
-                        connection.Execute(@"INSERT INTO Avatar (AccountId, RawPrototype, RawCostume)
-                            VALUES (@AccountId, @RawPrototype, @RawCostume)", account.Avatars, transaction);
+                        connection.Execute(@"INSERT INTO Avatar (AccountId, RawPrototype, RawCostume, RawAbilityKeyMapping)
+                            VALUES (@AccountId, @RawPrototype, @RawCostume, @RawAbilityKeyMapping)", account.Avatars, transaction);
 
                         transaction.Commit();
                         return true;
@@ -112,10 +108,8 @@ namespace MHServerEmu.PlayerManagement.Accounts
         }
 
         /// <summary>
-        /// Updates the Account table in the database with the provided account.
+        /// Updates the Account table in the database with the provided <see cref="DBAccount"/>.
         /// </summary>
-        /// <param name="account">Account to update.</param>
-        /// <returns>IsSuccess</returns>
         public static bool UpdateAccount(DBAccount account)
         {
             using (SQLiteConnection connection = new(ConnectionString))
@@ -135,10 +129,8 @@ namespace MHServerEmu.PlayerManagement.Accounts
         }
 
         /// <summary>
-        /// Updates the Player and Avatar tables in the database with the data from the provided account.
+        /// Updates the Player and Avatar tables in the database with the data from the provided <see cref="DBAccount"/>.
         /// </summary>
-        /// <param name="account"></param>
-        /// <returns>IsSuccess</returns>
         public static bool UpdateAccountData(DBAccount account)
         {
             using (SQLiteConnection connection = new(ConnectionString))
@@ -150,8 +142,8 @@ namespace MHServerEmu.PlayerManagement.Accounts
                 {
                     try
                     {
-                        connection.Execute(@"UPDATE Player SET RawRegion=@RawRegion, RawAvatar=@RawAvatar WHERE AccountId=@AccountId", account.Player, transaction);
-                        connection.Execute(@"UPDATE Avatar SET RawCostume=@RawCostume WHERE AccountId=@AccountId AND RawPrototype=@RawPrototype", account.Avatars, transaction);
+                        connection.Execute(@"UPDATE Player SET RawRegion=@RawRegion, RawAvatar=@RawAvatar, RawWaypoint=@RawWaypoint, AOIVolume=@AOIVolume WHERE AccountId=@AccountId", account.Player, transaction);
+                        connection.Execute(@"UPDATE Avatar SET RawCostume=@RawCostume, RawAbilityKeyMapping=@RawAbilityKeyMapping WHERE AccountId=@AccountId AND RawPrototype=@RawPrototype", account.Avatars, transaction);
 
                         transaction.Commit();
                         return true;
@@ -186,10 +178,8 @@ namespace MHServerEmu.PlayerManagement.Accounts
         #endregion
 
         /// <summary>
-        /// Loads account data for the specified account and maps relations.
+        /// Loads account data for the specified <see cref="DBAccount"/> and maps relations.
         /// </summary>
-        /// <param name="connection">Database connection for querying.</param>
-        /// <param name="account">Account to get data for.</param>
         private static void LoadAccountData(SQLiteConnection connection, DBAccount account)
         {
             var @params = new { AccountId = account.Id };

@@ -4,17 +4,20 @@ using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social;
+using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.Games.Entities
 {
-    public class Player : Entity
+    public class Player : Entity, IMissionManagerOwner
     {
         public MissionManager MissionManager { get; set; }
         public ReplicatedPropertyCollection AvatarProperties { get; set; }
@@ -176,6 +179,56 @@ namespace MHServerEmu.Games.Entities
 
             stream.WriteRawVarint64((ulong)StashTabOptions.Length);
             foreach (StashTabOption option in StashTabOptions) option.Encode(stream);
+        }
+
+        /// <summary>
+        /// Initializes this <see cref="Player"/> from data contained in the provided <see cref="DBAccount"/>.
+        /// </summary>
+        public void InitializeFromDBAccount(DBAccount account)
+        {
+            // Adjust properties
+            foreach (var accountAvatar in account.Avatars)
+            {
+                PropertyParam enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, (PrototypeId)accountAvatar.Prototype);
+                var avatarPrototype = (PrototypeId)accountAvatar.Prototype;
+
+                // Set library costumes according to account data
+                Properties[PropertyEnum.AvatarLibraryCostume, 0, avatarPrototype] = (PrototypeId)accountAvatar.Costume;
+
+                // Set avatar levels to 60
+                // Note: setting this to above level 60 sets the prestige level as well
+                Properties[PropertyEnum.AvatarLibraryLevel, 0, avatarPrototype] = 60;
+
+                // Clean up team ups
+                Properties[PropertyEnum.AvatarLibraryTeamUp, 0, avatarPrototype] = PrototypeId.Invalid;
+
+                // Unlock start avatars
+                var avatarUnlock = (AvatarUnlockType)(int)Properties[PropertyEnum.AvatarUnlock, enumValue];
+                if (avatarUnlock == AvatarUnlockType.Starter)
+                    Properties[PropertyEnum.AvatarUnlock, avatarPrototype] = (int)AvatarUnlockType.Type3;
+            }
+
+            // Hardcoded community tab easter eggs
+            CommunityMember friend = Community.CommunityMemberList[0];
+            friend.MemberName = "DavidBrevik";
+            friend.Slots = new AvatarSlotInfo[] { new((PrototypeId)15769648016960461069, (PrototypeId)4881398219179434365, 60, 6) };
+            friend.OnlineStatus = CommunityMemberOnlineStatus.Online;
+            friend.RegionRef = (PrototypeId)10434222419069901867;
+            friend = Community.CommunityMemberList[1];
+            friend.OnlineStatus = CommunityMemberOnlineStatus.Online;
+            friend.MemberName = "TonyStark";
+            friend.Slots = new AvatarSlotInfo[] { new((PrototypeId)421791326977791218, (PrototypeId)7150542631074405762, 60, 5) };
+            friend.RegionRef = (PrototypeId)RegionPrototypeId.NPEAvengersTowerHUBRegion;
+
+            Community.CommunityMemberList.Add(new("Doomsaw", 1, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)17750839636937086083, (PrototypeId)14098108758769669917, 60, 6) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
+            Community.CommunityMemberList.Add(new("PizzaTime", 2, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)9378552423541970369, (PrototypeId)6454902525769881598, 60, 5) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
+            Community.CommunityMemberList.Add(new("RogueServerEnjoyer", 3, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)1660250039076459846, (PrototypeId)9447440487974639491, 60, 3) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
+            Community.CommunityMemberList.Add(new("WhiteQueenXOXO", 4, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)412966192105395660, (PrototypeId)12724924652099869123, 60, 4) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
+            Community.CommunityMemberList.Add(new("AlexBond", 5, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)9255468350667101753, (PrototypeId)16813567318560086134, 60, 2) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
+            Community.CommunityMemberList.Add(new("Crypto137", 6, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)421791326977791218, (PrototypeId)1195778722002966150, 60, 2) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
+            Community.CommunityMemberList.Add(new("yn01", 7, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)12534955053251630387, (PrototypeId)14506515434462517197, 60, 2) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
+            Community.CommunityMemberList.Add(new("Gazillion", 8, 0, 0, Array.Empty<AvatarSlotInfo>(), CommunityMemberOnlineStatus.Offline, "", new int[] { 0 }));
+            Community.CommunityMemberList.Add(new("FriendlyLawyer", 100, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)12394659164528645362, (PrototypeId)2844257346122946366, 99, 1) }, CommunityMemberOnlineStatus.Online, "", new int[] { 2 }));
         }
 
         protected override void BuildString(StringBuilder sb)

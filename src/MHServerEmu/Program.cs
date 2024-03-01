@@ -106,9 +106,14 @@ namespace MHServerEmu
             Exception ex = e.ExceptionObject as Exception;
 
             if (e.IsTerminating)
+            {
                 Logger.FatalException(ex, "MHServerEmu terminating because of unhandled exception.");
+                ServerManager.Instance.Shutdown();
+            }
             else
+            {
                 Logger.ErrorException(ex, "Caught unhandled exception.");
+            }
 
             Console.ReadLine();
         }

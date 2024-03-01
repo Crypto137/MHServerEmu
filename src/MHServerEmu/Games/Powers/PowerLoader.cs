@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -24,14 +25,8 @@ namespace MHServerEmu.Games.Powers
             List<PrototypeId> powersToUnlockList = new();
 
             // Progression table powers
-            foreach (var progressionTable in avatarPrototype.PowerProgressionTables)
-            {
-                foreach (var entry in progressionTable.PowerProgressionEntries)
-                {
-                    //Logger.Debug(GameDatabase.GetPrototypeName(entry.PowerAssignment.Ability));
-                    powersToUnlockList.Add(entry.PowerAssignment.Ability);
-                }
-            }
+            foreach (var powerProgressionEntry in avatarPrototype.GetPowersUnlockedAtLevel(-1, true))
+                powersToUnlockList.Add(powerProgressionEntry.PowerAssignment.Ability);
 
             // Mapped powers (power replacements from talents)
             // AvatarPrototype -> TalentGroups -> Talents -> Talent -> ActionsTriggeredOnPowerEvent -> PowerEventContext -> MappedPower

@@ -33,11 +33,13 @@ Now you can actually start everything and get in-game.
 
 1. Start Apache by running ```Apache24\bin\httpd.exe```.
 
-2. Start MHServerEmu.
+2. Start MHServerEmu and wait for it to load.
 
-3. Launch the game.
+3. Open the following link in your web browser and create your account: [http://localhost:8080/AccountManagement/Create](http://localhost:8080/AccountManagement/Create). This link is going to work only when MHServerEmu is fully up and running.
 
-4. Log in with any email and password.
+4. Launch the game.
+
+5. Log in with the email / password combination you used for account creation.
 
 If everything works correctly, the server should display client connection information.
 

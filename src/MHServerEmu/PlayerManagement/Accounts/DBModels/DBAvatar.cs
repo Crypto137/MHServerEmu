@@ -1,7 +1,12 @@
-﻿using MHServerEmu.Games.Entities.Avatars;
+﻿using Google.ProtocolBuffers;
+using MHServerEmu.Common.Encoders;
+using MHServerEmu.Games.Entities.Avatars;
 
 namespace MHServerEmu.PlayerManagement.Accounts.DBModels
 {
+    /// <summary>
+    /// Represents an avatar entity stored in the account database.
+    /// </summary>
     public class DBAvatar
     {
         // We are currently using System.Data.SQLite + Dapper for storing our persistent data.
@@ -21,6 +26,9 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
         public ulong Costume { get; set; } = 0;
         public long RawCostume { get => (long)Costume; private set => Costume = (ulong)value; }
 
+        public AbilityKeyMapping AbilityKeyMapping { get; set; }
+        public byte[] RawAbilityKeyMapping { get => EncodeAbilityKeyMapping(AbilityKeyMapping); set => AbilityKeyMapping = DecodeAbilityKeyMapping(value); }
+
         public DBAvatar(ulong accountId, AvatarPrototypeId prototype)
         {
             AccountId = accountId;
@@ -28,5 +36,29 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
         }
 
         public DBAvatar() { }
+
+        private byte[] EncodeAbilityKeyMapping(AbilityKeyMapping abilityKeyMapping)
+        {
+            if (abilityKeyMapping == null) return null;
+
+            BoolEncoder boolEncoder = new();
+            boolEncoder.EncodeBool(abilityKeyMapping.ShouldPersist);
+            boolEncoder.Cook();
+
+            using (MemoryStream ms = new())
+            {
+                CodedOutputStream cos = CodedOutputStream.CreateInstance(ms);
+                abilityKeyMapping.Encode(cos, boolEncoder);
+                cos.Flush();
+                return ms.ToArray();
+            }
+        }
+
+        private AbilityKeyMapping DecodeAbilityKeyMapping(byte[] data)
+        {
+            if (data == null) return null;
+            CodedInputStream cis = CodedInputStream.CreateInstance(data);
+            return new(cis, new());
+        }
     }
 }
