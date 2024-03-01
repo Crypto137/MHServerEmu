@@ -1,7 +1,7 @@
 ﻿using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData.Calligraphy;
 
-namespace MHServerEmu.Games.GameData.Localization
+namespace MHServerEmu.Games.GameData.Locales
 {
     public class StringFile
     {
@@ -27,15 +27,12 @@ namespace MHServerEmu.Games.GameData.Localization
 
     public class StringMapEntry
     {
-        public LocaleStringId LocaleStringId { get; set; }
         public StringVariation[] Variants { get; set; }
         public ushort FlagsProduced { get; set; }
         public string String { get; set; }
 
         public StringMapEntry(BinaryReader reader)
         {
-            LocaleStringId = (LocaleStringId)reader.ReadUInt64();
-
             ushort variantNum = reader.ReadUInt16();
             Variants = variantNum > 0
                 ? new StringVariation[variantNum - 1]
