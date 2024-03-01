@@ -224,6 +224,8 @@ namespace GameDatabaseBrowser
                 return;
 
             PropertyNode selected = ((FrameworkElement)e.OriginalSource).DataContext as PropertyNode;
+            if (selected?.PropertyDetails?.Value == null)
+                return;
 
             ulong.TryParse(selected.PropertyDetails.Value, out var prototypeId);
             if (prototypeId == 0)
