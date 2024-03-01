@@ -1,7 +1,7 @@
 ﻿
 namespace MHServerEmu.Games.Dialog
 {
-    public class InteractionOption
+    public class InteractionOption : IComparable<InteractionOption>
     {
         public int Priority { get; protected set; }
         public InteractionMethod MethodEnum { get; protected set; }

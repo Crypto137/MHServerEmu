@@ -78,7 +78,7 @@ namespace MHServerEmu.Games.Dialog
                 Logger.Warn($"Interaction Manager: Empty contexts OPTION={option}");
                 return;
             }
-
+            //Logger.Debug($"{option.GetType().Name} {_bindInd++}");
             int optionCount = 0;
             foreach (PrototypeId contextRef in contexts)
             {

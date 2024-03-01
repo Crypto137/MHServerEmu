@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.GameData;
+﻿using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Dialog
@@ -127,36 +128,57 @@ namespace MHServerEmu.Games.Dialog
 
     public class EntityFilterWrapper
     {
-        public PrototypeId FilterContextMissionRef { get; internal set; }
+        private SortedSet<PrototypeId> _encounterRefs;
+        private SortedSet<PrototypeId> _regionRefs;
+        private SortedSet<PrototypeId> _clusterRefs;
+        private SortedSet<PrototypeId> _missionRefs;
+        private List<EntityFilterPrototype> _entityFilters;
+        public PrototypeId FilterContextMissionRef { get; set; }
 
-        internal void AddEncounterResource(AssetId encounterResource)
+        public EntityFilterWrapper()
         {
-            throw new NotImplementedException();
+            _entityFilters = new();
+            _regionRefs = new();
+            _encounterRefs = new();
+            _missionRefs = new();
+            _clusterRefs = new();
         }
 
-        internal void AddEntityFilter(EntityFilterPrototype entityFilter)
+        public void AddEncounterResource(AssetId encounterResource)
         {
-            throw new NotImplementedException();
+            if (encounterResource != AssetId.Invalid)
+            {
+                PrototypeId encounterRef = GameDatabase.GetDataRefByAsset(encounterResource);
+                if (encounterRef != PrototypeId.Invalid) _encounterRefs.Add(encounterRef);
+            }
         }
 
-        internal void AddRegionPtrs(PrototypeId[] activeInRegions)
+        public void AddEntityFilter(EntityFilterPrototype entityFilter)
         {
-            throw new NotImplementedException();
+            if (entityFilter != null) _entityFilters.Add(entityFilter);
         }
 
-        internal void AddSpawnedByClusterRefs(PrototypeId[] specificClusters)
+        public void AddRegionPtrs(PrototypeId[] activeInRegions)
         {
-            throw new NotImplementedException();
+            if (activeInRegions.HasValue()) 
+                foreach(var region in activeInRegions) _regionRefs.Add(region);
         }
 
-        internal void AddSpawnedByMissionRef(PrototypeId contextMissionRef)
+        public void AddSpawnedByClusterRefs(PrototypeId[] specificClusters)
         {
-            throw new NotImplementedException();
+            if (specificClusters.HasValue())
+                foreach (var cluster in specificClusters) _clusterRefs.Add(cluster);
         }
 
-        internal void AddSpawnedByMissionRefs(PrototypeId[] spawnedByMission)
+        public void AddSpawnedByMissionRef(PrototypeId contextMissionRef)
         {
-            throw new NotImplementedException();
+            if (contextMissionRef != PrototypeId.Invalid) _missionRefs.Add(contextMissionRef);
+        }
+
+        public void AddSpawnedByMissionRefs(PrototypeId[] spawnedByMission)
+        {
+            if(spawnedByMission.HasValue())
+                foreach (var mission in spawnedByMission) _missionRefs.Add(mission);
         }
     }
 }

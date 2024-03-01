@@ -59,8 +59,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public static int UnwrapEntitySelector(PrototypeId selectorRef, HashSet<PrototypeId> entities)
         {
             int count = 0;
-            var selectorProto = GameDatabase.GetPrototype<EntitySelectorPrototype>(selectorRef);
-            if (selectorProto != null && selectorProto.Entities.HasValue())
+            var proto = GameDatabase.GetPrototype<Prototype>(selectorRef);
+            if (proto is EntitySelectorPrototype selectorProto && selectorProto.Entities.HasValue())
                 foreach (PrototypeId entity in selectorProto.Entities)
                 {
                     entities.Add(entity);
