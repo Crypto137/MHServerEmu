@@ -16,6 +16,8 @@ This page provides definitions for terms used by the game internally.
 
 - **Avatar** - an agent that can be controlled by players.
 
+- **Badge** - a flag that grants a player elevated privileges of some kind.
+
 - **Behavior** - a system that handles the AI of enemies and NPCs.
 
 - **Billing** - a service that handles interaction with the in-game store.
