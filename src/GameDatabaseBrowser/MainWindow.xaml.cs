@@ -34,6 +34,8 @@ namespace GameDatabaseBrowser
 
         private string _currentFilter = "";
 
+        private bool isReady = false;
+
         /// <summary>
         /// Stack for history of prototypes' fullname selected
         /// </summary>
@@ -118,6 +120,7 @@ namespace GameDatabaseBrowser
             PrototypeNodes[0].IsExpanded = true;
             treeView.Items.Refresh();
             UpdateLayout();
+            isReady = true;
         }
 
         /// <summary>
@@ -125,6 +128,8 @@ namespace GameDatabaseBrowser
         /// </summary>
         private void SelectFromName(string fullName)
         {
+            _currentFilter = "";
+            txtSearch.Text = "";
             RefreshPrototypeTree();
             int[] indexes = GetElementLocationInHierarchy(fullName);
             TreeViewItem item = GetTreeViewItem(indexes);
@@ -133,6 +138,7 @@ namespace GameDatabaseBrowser
 
         private void RefreshPrototypeTree()
         {
+            isReady = false;
             Dispatcher.Invoke(() =>
             {
                 ConstructPrototypeTree();
@@ -148,7 +154,7 @@ namespace GameDatabaseBrowser
             PrototypeNodes[0].Childs.Clear();
             List<PrototypeDetails> prototypeToDisplay = _prototypeDetails;
             if (!string.IsNullOrEmpty(_currentFilter))
-                prototypeToDisplay = _prototypeDetails.Where(k => k.FullName.Contains(_currentFilter)).ToList();
+                prototypeToDisplay = _prototypeDetails.Where(k => k.FullName.ToLowerInvariant().Contains(_currentFilter)).ToList();
 
             foreach (PrototypeDetails prototype in prototypeToDisplay)
                 AddPrototypeInHierarchy(prototype);
@@ -177,8 +183,12 @@ namespace GameDatabaseBrowser
         /// </summary>
         private void OnBackButtonClicked(object sender, RoutedEventArgs e)
         {
+            if (!isReady)
+                return;
+
             if (_fullNameHistory.Count < 2)
                 return;
+
             _fullNameHistory.Pop();
             SelectFromName(_fullNameHistory.Peek());
         }
@@ -188,14 +198,17 @@ namespace GameDatabaseBrowser
         /// </summary>
         private void OnSearchButtonClicked(object sender, RoutedEventArgs e)
         {
+            if (!isReady)
+                return;
+
             ulong.TryParse(txtSearch.Text, out ulong prototypeId);
             if (prototypeId != 0)
             {
-                _currentFilter = GameDatabase.GetPrototypeName((PrototypeId)prototypeId);
+                _currentFilter = GameDatabase.GetPrototypeName((PrototypeId)prototypeId).ToLowerInvariant();
             }
             else
             {
-                _currentFilter = txtSearch.Text;
+                _currentFilter = txtSearch.Text.ToLowerInvariant();
             }
 
             RefreshPrototypeTree();
@@ -207,6 +220,9 @@ namespace GameDatabaseBrowser
         /// </summary>
         private void OnPropertySelected(object sender, MouseButtonEventArgs e)
         {
+            if (!isReady)
+                return;
+
             PropertyNode selected = ((FrameworkElement)e.OriginalSource).DataContext as PropertyNode;
 
             ulong.TryParse(selected.PropertyDetails.Value, out var prototypeId);
@@ -216,8 +232,6 @@ namespace GameDatabaseBrowser
             string name = GameDatabase.GetPrototypeName((PrototypeId)prototypeId);
             if (string.IsNullOrEmpty(name)) return;
 
-            _currentFilter = "";
-            txtSearch.Text = "";
             SelectFromName(name);
         }
 
@@ -284,7 +298,8 @@ namespace GameDatabaseBrowser
             {
                 string prototypeFullName = GameDatabase.GetPrototypeName((PrototypeId)prototypeId);
                 txtDataRef.Text = $"{prototypeFullName} ({prototypeId})";
-                _fullNameHistory.Push(prototypeFullName);
+                if (_fullNameHistory.Count == 0 || _fullNameHistory.Peek() != prototypeFullName)
+                    _fullNameHistory.Push(prototypeFullName);
             }
             else txtDataRef.Text = dataRef;
 
