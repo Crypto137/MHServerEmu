@@ -140,15 +140,58 @@ namespace MHServerEmu.Games.Dialog
 
         private void GetInteractionDataFromMetaStatePrototype(PrototypeId metaStateRef)
         {
-            throw new NotImplementedException();
+            MetaStatePrototype metaStateProto = GameDatabase.GetPrototype<MetaStatePrototype>(metaStateRef);
+            if (metaStateProto == null) return;
+
+            if (metaStateProto is MetaStateTimedBonusPrototype timedBonusProto && timedBonusProto.Entries.IsNullOrEmpty() == false)
+            {
+                foreach (var entryProto in timedBonusProto.Entries)
+                {
+                    if (entryProto == null || entryProto.MissionsToWatch.IsNullOrEmpty()) continue;
+
+                    foreach (var missionRef in entryProto.MissionsToWatch)
+                    {
+                        var missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
+                        if (missionProto == null) continue;
+
+                        if (entryProto.ActionsOnSuccess.IsNullOrEmpty() == false)
+                            RegisterActionInfoFromList(missionProto, entryProto.ActionsOnSuccess, MissionStateFlags.Completed, -1, 0, MissionOptionTypeFlags.None);
+
+                        if (entryProto.ActionsOnFail.IsNullOrEmpty() == false)
+                            RegisterActionInfoFromList(missionProto, entryProto.ActionsOnFail, MissionStateFlags.Failed, -1, 0, MissionOptionTypeFlags.None);
+                    }
+                }
+            }
         }
 
         private void GetInteractionDataFromUIWidgetPrototype(PrototypeId uiWidgetRef)
         {
-            throw new NotImplementedException();
+            MetaGameDataPrototype metaGameDataProto = GameDatabase.GetPrototype<MetaGameDataPrototype>(uiWidgetRef);
+            if (metaGameDataProto == null) return;
+
+            if (metaGameDataProto is UIWidgetEntityIconsPrototype uiWidgetEntityIconsProto && uiWidgetEntityIconsProto.Entities.IsNullOrEmpty() == false)
+            {
+                HashSet<PrototypeId> contextRefs = new ();
+                foreach (var entryP in uiWidgetEntityIconsProto.Entities)
+                {
+                    if (entryP == null) continue;
+                    entryP.Filter?.GetEntityDataRefs(contextRefs);
+                }
+
+                if (contextRefs.Count > 0)
+                {
+                    var option = CreateOption<UIWidgetOption>();
+                    if (option == null)
+                    {
+                        Logger.Warn($"Failed to create UIWidgetOption for prototype! METAGAMEDATA={metaGameDataProto}");
+                        return;
+                    }
+                    option.UIWidgetRef = uiWidgetRef;
+                    option.Proto = uiWidgetEntityIconsProto;                        
+                    BindOptionToMap(option, contextRefs);                    
+                }
+            }
         }
-
-
 
         private void GetInteractionDataFromMissionPrototype(MissionPrototype missionProto)
         {
@@ -281,7 +324,7 @@ namespace MHServerEmu.Games.Dialog
                 if (missionProto.InteractionsWhenComplete.IsNullOrEmpty() == false)
                     RegisterInteractionsFromList(missionProto, missionProto.InteractionsWhenComplete, MissionStateFlags.Completed, InvalidIndex, 0);
 
-                if (missionProto.InteractionsWhenFailed != null)
+                if (missionProto.InteractionsWhenFailed.IsNullOrEmpty() == false)
                     RegisterInteractionsFromList(missionProto, missionProto.InteractionsWhenFailed, MissionStateFlags.Failed, InvalidIndex, 0);
             }
         }
@@ -407,7 +450,7 @@ namespace MHServerEmu.Games.Dialog
         private void RegisterActionInfoFromList(MissionPrototype missionProto, MissionActionPrototype[] actionList, MissionStateFlags state, 
             sbyte objectiveIndex, MissionObjectiveStateFlags objectiveState, MissionOptionTypeFlags optionType)
         {
-            if (actionList == null) return;
+            if (actionList.IsNullOrEmpty()) return;
             foreach (var prototype in actionList)
             {
                 if (prototype == null) continue;
