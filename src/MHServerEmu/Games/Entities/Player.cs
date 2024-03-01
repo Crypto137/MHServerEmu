@@ -18,7 +18,7 @@ using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.Games.Entities
 {
-    // NOTE: These badges and their descriptions are taken from an internal build dated June 2015 (1.35).
+    // NOTE: These badges and their descriptions are taken from an internal build dated June 2015 (most likely version 1.35).
     // They are not fully implemented and they may be outdated for our version 1.52.
     public enum AvailableBadges
     {
