@@ -317,7 +317,7 @@ namespace MHServerEmu.Games.Regions
             if (!(instanceMarkerSetOptions.HasFlag(MarkerSetOptions.SpawnMissionAssociated)
                 && instanceMarkerSetOptions.HasFlag(MarkerSetOptions.NoSpawnMissionAssociated)))
             {
-                if (markerSet.Markers.IsNullOrEmpty() == false)
+                if (markerSet.Markers.HasValue())
                     foreach (var marker in markerSet.Markers)
                         if (marker != null)
                             SpawnMarker(marker, transform, instanceMarkerSetOptions, prefabPath);
@@ -351,7 +351,7 @@ namespace MHServerEmu.Games.Regions
 
         public bool FindTargetPosition(Vector3 markerPos, Vector3 markerRot, RegionConnectionTargetPrototype target)
         {
-            if (CellProto != null && CellProto.InitializeSet.Markers.IsNullOrEmpty() == false)
+            if (CellProto != null && CellProto.InitializeSet.Markers.HasValue())
             {
                 foreach (var marker in CellProto.InitializeSet.Markers)
                 {

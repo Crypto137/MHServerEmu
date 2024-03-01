@@ -116,7 +116,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public void GetContainedEntities(HashSet<PrototypeId> entities)
         {
-            if (List.IsNullOrEmpty() == false)
+            if (List.HasValue())
                 foreach (var objectInstance in List)
                     objectInstance?.GetContainedEntities(entities);
         }

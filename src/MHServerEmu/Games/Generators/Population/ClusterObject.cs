@@ -303,7 +303,7 @@ namespace MHServerEmu.Games.Generators.Population
             if (lineProto == null) return;
             if (GetFormationObjects(out List<ClusterObject> formationObjects))
             {
-                int numRows = lineProto.Rows.IsNullOrEmpty() == false ? lineProto.Rows.Length : 1;
+                int numRows = lineProto.Rows.HasValue() ? lineProto.Rows.Length : 1;
                 float center = 0f;
                 float width = 0f;
                 if (numRows > 1)
@@ -769,7 +769,7 @@ namespace MHServerEmu.Games.Generators.Population
             }*/
 
             if ((EntityProto.ModifierSetEnable 
-                || EntityProto.ModifiersGuaranteed.IsNullOrEmpty() == false) 
+                || EntityProto.ModifiersGuaranteed.HasValue()) 
                 && Flags.HasFlag(ClusterObjectFlag.Hostile))    
             {
                 Flags |= ClusterObjectFlag.HasModifiers;

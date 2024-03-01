@@ -14,7 +14,7 @@ namespace MHServerEmu.Games.Generators.Navi
 
         public void AppendPathCollection(PathCollectionPrototype PathNodeCollection, Vector3 offset) 
         {
-            if (PathNodeCollection.PathNodeSets.IsNullOrEmpty() == false)
+            if (PathNodeCollection.PathNodeSets.HasValue())
             {
                 foreach (var pathNodeSet in PathNodeCollection.PathNodeSets)
                 {

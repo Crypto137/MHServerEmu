@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
+using System.Collections;
 
 namespace MHServerEmu.Common.Extensions
 {
@@ -98,6 +99,11 @@ namespace MHServerEmu.Common.Extensions
         public static bool IsNullOrEmpty<T>(this T[] array)
         {
             return array == null || array.Length == 0;
+        }
+
+        public static bool HasValue<T>(this T[] array)
+        {
+            return array != null && array.Length != 0;
         }
 
         /// <summary>

@@ -216,7 +216,7 @@ namespace MHServerEmu.Games.Generators.Areas
         {
             if (!GetPrototype(out var proto)) return false;
 
-            if (proto.AllowedConnections.IsNullOrEmpty() == false)
+            if (proto.AllowedConnections.HasValue())
             {
                 foreach (var connection in proto.AllowedConnections)
                 {
@@ -248,7 +248,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
             bool failed = false;
 
-            if (!failed && proto.RequiredSuperCells.IsNullOrEmpty() == false)
+            if (!failed && proto.RequiredSuperCells.HasValue())
             {
                 foreach (var requiredCellBase in proto.RequiredSuperCells)
                 {
@@ -260,7 +260,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 }
             }
 
-            if (!failed && proto.NonRequiredSuperCells.IsNullOrEmpty() == false)
+            if (!failed && proto.NonRequiredSuperCells.HasValue())
             {
                 Picker<RequiredCellBasePrototype> cellPicker = new(random);
                 AddCellsToPicker(cellPicker, proto.NonRequiredSuperCells);
@@ -336,7 +336,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 }
             }
 
-            if (!failed && proto.RequiredCells.IsNullOrEmpty() == false)
+            if (!failed && proto.RequiredCells.HasValue())
             {
                 foreach (var requiredCellBase in proto.RequiredCells)
                 {
@@ -364,7 +364,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 }
             }
 
-            if (!failed && proto.NonRequiredNormalCells.IsNullOrEmpty() == false)
+            if (!failed && proto.NonRequiredNormalCells.HasValue())
             {
                 Picker<RequiredCellBasePrototype> cellPicker = new(random);
                 AddCellsToPicker(cellPicker, proto.NonRequiredNormalCells);

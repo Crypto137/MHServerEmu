@@ -54,7 +54,7 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
 
         public void GetContainedEntities(HashSet<PrototypeId> refs)
         {
-            if (Markers.IsNullOrEmpty() == false)
+            if (Markers.HasValue())
             {
                 foreach (var marker in Markers)
                 {

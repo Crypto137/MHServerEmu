@@ -77,7 +77,7 @@ namespace MHServerEmu.Games.Dialog
                     PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
                 {
                     MissionPrototype mission = missionRef.As<MissionPrototype>();
-                    if (mission != null && mission.Keywords.IsNullOrEmpty() == false && mission.Keywords.Contains(missionComplete.MissionKeyword))
+                    if (mission != null && mission.Keywords.HasValue() && mission.Keywords.Contains(missionComplete.MissionKeyword))
                         _missionRefs.Add(missionRef);
                 }
             }

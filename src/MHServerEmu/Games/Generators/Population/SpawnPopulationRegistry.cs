@@ -65,11 +65,11 @@ namespace MHServerEmu.Games.Generators.Population
         {
             if (missionProto == null) return;
 
-            if (missionProto.PopulationSpawns.IsNullOrEmpty() == false)
+            if (missionProto.PopulationSpawns.HasValue())
             {
                 foreach (var entry in missionProto.PopulationSpawns)
                 {
-                    if (entry.RestrictToAreas.IsNullOrEmpty() == false) // check areas
+                    if (entry.RestrictToAreas.HasValue()) // check areas
                     {
                         bool foundArea = false;
                         foreach(var areaRef in entry.RestrictToAreas)

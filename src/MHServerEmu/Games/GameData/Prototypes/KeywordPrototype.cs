@@ -16,7 +16,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             KeywordsMask rusult = new();
 
-            if (keywordsList.IsNullOrEmpty() == false)
+            if (keywordsList.HasValue())
             {
                 foreach (var kerwordRef in keywordsList)
                 {

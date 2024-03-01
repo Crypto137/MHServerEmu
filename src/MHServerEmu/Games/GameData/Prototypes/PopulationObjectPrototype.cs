@@ -32,7 +32,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public virtual void BuildCluster(ClusterGroup group, ClusterObjectFlag flags)
         {
-            if (Riders.IsNullOrEmpty() == false && flags.HasFlag(ClusterObjectFlag.Henchmen) == false)
+            if (Riders.HasValue() && flags.HasFlag(ClusterObjectFlag.Henchmen) == false)
             {
                 foreach(var rider in Riders)
                     if (rider is PopulationRiderEntityPrototype riderEntityProto)
@@ -48,7 +48,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public virtual void GetContainedEntities(HashSet<PrototypeId> entities, bool unwrapEntitySelectors = false)
         {
-            if (Riders.IsNullOrEmpty() == false)
+            if (Riders.HasValue())
             {
                 foreach (var rider in Riders)
                     if (rider is PopulationRiderEntityPrototype riderEntityProto && riderEntityProto.Entity != PrototypeId.Invalid)
@@ -60,7 +60,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             int count = 0;
             var selectorProto = GameDatabase.GetPrototype<EntitySelectorPrototype>(selectorRef);
-            if (selectorProto != null && selectorProto.Entities.IsNullOrEmpty() == false)
+            if (selectorProto != null && selectorProto.Entities.HasValue())
                 foreach (PrototypeId entity in selectorProto.Entities)
                 {
                     entities.Add(entity);
@@ -119,7 +119,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void BuildCluster(ClusterGroup group, ClusterObjectFlag flags)
         {
-            if (Entities.IsNullOrEmpty() == false)
+            if (Entities.HasValue())
                 foreach (var entity in Entities)
                 {
                     ClusterEntity clusterEntity = group.CreateClusterEntity(entity);
@@ -127,7 +127,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     clusterEntity.Flags |= flags;
                 }
 
-            if (EntityEntries.IsNullOrEmpty() == false)
+            if (EntityEntries.HasValue())
                 foreach (var entry in EntityEntries)
                 {
                     if (entry == null) continue;
@@ -150,7 +150,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private void InternalGetContainedEntities(HashSet<PrototypeId> entities, bool unwrapEntitySelectors)
         {
-            if (Entities.IsNullOrEmpty() == false)
+            if (Entities.HasValue())
                 foreach (var entity in Entities)
                 {
                     if (entity != PrototypeId.Invalid)
@@ -158,7 +158,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                             entities.Add(entity);
                 }
 
-            if (EntityEntries.IsNullOrEmpty() == false)
+            if (EntityEntries.HasValue())
                 foreach (var entry in EntityEntries)
                 {
                     if (entry == null) continue;
@@ -248,7 +248,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private void InternalGetContainedEntities(HashSet<PrototypeId> entities, bool unwrapEntitySelectors)
         {
-            if (Choices.IsNullOrEmpty() == false)
+            if (Choices.HasValue())
                 foreach (var choice in Choices)
                     choice?.GetContainedEntities(entities, unwrapEntitySelectors);
         }
@@ -269,7 +269,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 clusterEntity.Flags |= flags | ClusterObjectFlag.Leader;
             }
 
-            if (Henchmen.IsNullOrEmpty() == false)
+            if (Henchmen.HasValue())
             {
                 // Add picker for choice henchmen
                 Picker<PopulationObjectPrototype> picker = new(group.Random);
@@ -293,7 +293,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (unwrapEntitySelectors == false || UnwrapEntitySelector(Leader, entities) == 0)
                     entities.Add(Leader);
 
-            if (Henchmen.IsNullOrEmpty() == false)
+            if (Henchmen.HasValue())
                 foreach (var henchmen in Henchmen)
                     henchmen?.GetContainedEntities(entities, unwrapEntitySelectors);
         }
@@ -404,7 +404,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void BuildCluster(ClusterGroup group, ClusterObjectFlag flags)
         {
-            if (Objects.IsNullOrEmpty() == false)
+            if (Objects.HasValue())
                 foreach (var requiredObject in Objects)
                 {
                     if (requiredObject == null) continue;
@@ -429,7 +429,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void GetContainedEntities(HashSet<PrototypeId> entities, bool unwrapEntitySelectors = false)
         {
-            if (EntitiesAndGroups.IsNullOrEmpty() == false)
+            if (EntitiesAndGroups.HasValue())
                 foreach (var objectProto in EntitiesAndGroups)
                     objectProto?.GetContainedEntities(entities, unwrapEntitySelectors);
         }
@@ -485,7 +485,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public virtual void GetContainedEntities(HashSet<PrototypeId> entities)
         {
-            if (RequiredObjects.IsNullOrEmpty() == false)
+            if (RequiredObjects.HasValue())
                 foreach (var requiredObjectProto in RequiredObjects)
                     requiredObjectProto?.GetContainedEntities(entities);
         }

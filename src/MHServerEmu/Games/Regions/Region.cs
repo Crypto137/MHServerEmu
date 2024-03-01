@@ -127,7 +127,7 @@ namespace MHServerEmu.Games.Regions
             RandomSeed = settings.Seed;
             Bound = settings.Bound;
             AvatarSwapEnabled = RegionPrototype.EnableAvatarSwap;
-            RestrictedRosterEnabled = (RegionPrototype.RestrictedRoster.IsNullOrEmpty() == false);
+            RestrictedRosterEnabled = (RegionPrototype.RestrictedRoster.HasValue());
 
             SetRegionLevel();
 
@@ -158,7 +158,7 @@ namespace MHServerEmu.Games.Regions
 
             CreateParams = new((uint)RegionLevel, (DifficultyTier)settings.DifficultyTierRef); // OLD params
 
-            if (regionProto.DividedStartLocations.IsNullOrEmpty() == false)
+            if (regionProto.DividedStartLocations.HasValue())
                 InitDividedStartLocations(regionProto.DividedStartLocations);
 
             // if (!NaviSystem.Initialize(this))  return false;
@@ -252,7 +252,7 @@ namespace MHServerEmu.Games.Regions
                 Logger.Warn($"Region created with affixes, but no RegionAffixTable. REGION={this} AFFIXES={Settings.Affixes}")
             }
 
-            if (regionProto.AvatarPowers.IsNullOrEmpty() == false)
+            if (regionProto.AvatarPowers.HasValue())
                 foreach (var avatarPower in regionProto.AvatarPowers)
                     SetProperty<bool>(true, new (PropertyEnum.RegionAvatarPower, avatarPower));
 

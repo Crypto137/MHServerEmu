@@ -356,7 +356,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public PrototypeId SelectEntity(GRandom random, Region region)
         {
-            if (Entities.IsNullOrEmpty() == false)
+            if (Entities.HasValue())
             {
                 // SelectUniqueEntities region ???
 

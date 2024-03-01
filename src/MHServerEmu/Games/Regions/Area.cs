@@ -123,7 +123,7 @@ namespace MHServerEmu.Games.Regions
 
             PropTable = new();
 
-            if (AreaPrototype.PropSets.IsNullOrEmpty() == false)
+            if (AreaPrototype.PropSets.HasValue())
             {
                 foreach (var propSet in AreaPrototype.PropSets)
                     PropTable.AppendPropSet(propSet);

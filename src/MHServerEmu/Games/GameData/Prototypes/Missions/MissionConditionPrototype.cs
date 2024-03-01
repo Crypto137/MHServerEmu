@@ -171,7 +171,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            if (Cells.IsNullOrEmpty() == false)
+            if (Cells.HasValue())
             {
                 foreach(var cell in Cells)
                 {
@@ -183,13 +183,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
         {
-            if (Regions.IsNullOrEmpty() == false)
+            if (Regions.HasValue())
                 foreach (var region in Regions) refs.Add(region);
         }
 
         public override void SetInterestLocations(SortedSet<PrototypeId> regions, SortedSet<PrototypeId> areas, SortedSet<PrototypeId> cells)
         {
-            if (Regions.IsNullOrEmpty() == false)
+            if (Regions.HasValue())
                 foreach (var region in Regions) regions.Add(region);
             cells.UnionWith(_cells);
         }
@@ -770,14 +770,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
         {
-            if (SpecificClusters.IsNullOrEmpty() == false)
+            if (SpecificClusters.HasValue())
                 foreach (var clusterRef in SpecificClusters)
                 {
                     var objectProto = GameDatabase.GetPrototype<PopulationObjectPrototype>(clusterRef);
                     objectProto?.GetContainedEntities(refs, true);
                 }
 
-            if (WithinRegions.IsNullOrEmpty() == false)
+            if (WithinRegions.HasValue())
                 foreach (var region in WithinRegions)
                     refs.Add(region);
         }

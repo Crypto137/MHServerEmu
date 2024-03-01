@@ -382,7 +382,7 @@ namespace MHServerEmu.Games.Generators.Areas
             GeneratorPrototype generatorProto = area.AreaPrototype.Generator;
             WideGridAreaGeneratorPrototype gridAreaGeneratorProto = generatorProto as WideGridAreaGeneratorPrototype;
 
-            if (gridAreaGeneratorProto != null && gridAreaGeneratorProto.BorderBehavior != null && gridAreaGeneratorProto.CellSets.IsNullOrEmpty() == false)
+            if (gridAreaGeneratorProto != null && gridAreaGeneratorProto.BorderBehavior != null && gridAreaGeneratorProto.CellSets.HasValue())
             {
                 CellSetRegistry registry = new ();
                 registry.Initialize(true, area.Log);

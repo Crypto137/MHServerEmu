@@ -297,7 +297,7 @@ namespace MHServerEmu.Games.Generators.Population
             var spawnAreaRef = spawnCell.Area.PrototypeDataRef;
 
             // picker add
-            if (spawnCells.IsNullOrEmpty() == false)
+            if (spawnCells.HasValue())
             {
                 foreach (var cellAsset in spawnCells)
                 {
@@ -307,12 +307,12 @@ namespace MHServerEmu.Games.Generators.Population
                     foreach (var testReservation in list)
                     {
                         if (testReservation.State != MarkerState.Free) continue;
-                        if (spawnAreas.IsNullOrEmpty() == false && spawnAreas.Contains(spawnAreaRef) == false) continue;
+                        if (spawnAreas.HasValue() && spawnAreas.Contains(spawnAreaRef) == false) continue;
                         picker.Add(testReservation);
                     }
                 }
             } 
-            else if (spawnAreas.IsNullOrEmpty() == false)
+            else if (spawnAreas.HasValue())
             {
                 foreach (var areaRef in spawnAreas)
                 {

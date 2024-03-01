@@ -408,7 +408,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public bool HasPopulationInRegion(Region region)
         {
-            if (PopulationSpawns.IsNullOrEmpty() == false)
+            if (PopulationSpawns.HasValue())
             {
                 PrototypeId regionRef = region.PrototypeDataRef;
 
@@ -424,12 +424,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public bool PopulatePopulationForZoneLookups(SortedSet<PrototypeId> regions, SortedSet<PrototypeId> areas)
         {
-            if (PopulationSpawns.IsNullOrEmpty() == false)
+            if (PopulationSpawns.HasValue())
             {
                 foreach (var entryProto in PopulationSpawns)
                 {
                     if (entryProto == null) continue;                    
-                    if (entryProto.RestrictToRegions.IsNullOrEmpty() == false)
+                    if (entryProto.RestrictToRegions.HasValue())
                     {
                         foreach (var restrictRef in entryProto.RestrictToRegions)
                         {
@@ -448,7 +448,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         }
                     }
 
-                    if (entryProto.RestrictToAreas.IsNullOrEmpty() == false)
+                    if (entryProto.RestrictToAreas.HasValue())
                     {
                         foreach (var areaRef in entryProto.RestrictToAreas)
                             areas.Add(areaRef);
@@ -461,7 +461,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     foreach (PrototypeId regionRef in regionList)
                     {
                         RegionPrototype regionProto = GameDatabase.GetPrototype<RegionPrototype>(regionRef);
-                        if (regionProto != null && regionProto.AltRegions.IsNullOrEmpty() == false)
+                        if (regionProto != null && regionProto.AltRegions.HasValue())
                         {
                             foreach (var altRegionRef in regionProto.AltRegions)
                                 regions.Add(altRegionRef);

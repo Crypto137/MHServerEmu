@@ -37,7 +37,7 @@ namespace MHServerEmu.Games.Generators.Areas
 
             Vector3 origin = Area.Origin;
 
-            if (cellProto.MarkerSet.Markers.IsNullOrEmpty() == false)
+            if (cellProto.MarkerSet.Markers.HasValue())
             {      
                 foreach (var marker in cellProto.MarkerSet.Markers)
                 {
@@ -117,7 +117,7 @@ namespace MHServerEmu.Games.Generators.Areas
             GeneratorPrototype generatorProto = area.AreaPrototype.Generator;
             var singleCellGeneratorProto = generatorProto as SingleCellAreaGeneratorPrototype;
 
-            if (singleCellGeneratorProto != null && singleCellGeneratorProto.BorderCellSets.IsNullOrEmpty() == false && singleCellGeneratorProto.Cell != 0)
+            if (singleCellGeneratorProto != null && singleCellGeneratorProto.BorderCellSets.HasValue() && singleCellGeneratorProto.Cell != 0)
             {
                 AssetId assetRef = singleCellGeneratorProto.Cell;
                 PrototypeId cellRef = GameDatabase.GetDataRefByAsset(assetRef);

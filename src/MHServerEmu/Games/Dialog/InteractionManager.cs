@@ -143,7 +143,7 @@ namespace MHServerEmu.Games.Dialog
             MetaStatePrototype metaStateProto = GameDatabase.GetPrototype<MetaStatePrototype>(metaStateRef);
             if (metaStateProto == null) return;
 
-            if (metaStateProto is MetaStateTimedBonusPrototype timedBonusProto && timedBonusProto.Entries.IsNullOrEmpty() == false)
+            if (metaStateProto is MetaStateTimedBonusPrototype timedBonusProto && timedBonusProto.Entries.HasValue())
             {
                 foreach (var entryProto in timedBonusProto.Entries)
                 {
@@ -154,10 +154,10 @@ namespace MHServerEmu.Games.Dialog
                         var missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
                         if (missionProto == null) continue;
 
-                        if (entryProto.ActionsOnSuccess.IsNullOrEmpty() == false)
+                        if (entryProto.ActionsOnSuccess.HasValue())
                             RegisterActionInfoFromList(missionProto, entryProto.ActionsOnSuccess, MissionStateFlags.Completed, -1, 0, MissionOptionTypeFlags.None);
 
-                        if (entryProto.ActionsOnFail.IsNullOrEmpty() == false)
+                        if (entryProto.ActionsOnFail.HasValue())
                             RegisterActionInfoFromList(missionProto, entryProto.ActionsOnFail, MissionStateFlags.Failed, -1, 0, MissionOptionTypeFlags.None);
                     }
                 }
@@ -169,7 +169,7 @@ namespace MHServerEmu.Games.Dialog
             MetaGameDataPrototype metaGameDataProto = GameDatabase.GetPrototype<MetaGameDataPrototype>(uiWidgetRef);
             if (metaGameDataProto == null) return;
 
-            if (metaGameDataProto is UIWidgetEntityIconsPrototype uiWidgetEntityIconsProto && uiWidgetEntityIconsProto.Entities.IsNullOrEmpty() == false)
+            if (metaGameDataProto is UIWidgetEntityIconsPrototype uiWidgetEntityIconsProto && uiWidgetEntityIconsProto.Entities.HasValue())
             {
                 HashSet<PrototypeId> contextRefs = new ();
                 foreach (var entryP in uiWidgetEntityIconsProto.Entities)
@@ -202,16 +202,16 @@ namespace MHServerEmu.Games.Dialog
             if (missionProto.PlayerHUDShowObjs && (missionProto.PlayerHUDShowObjsOnMap || missionProto.PlayerHUDShowObjsOnScreenEdge))
                 missionFlag |= InteractionOptimizationFlags.Hint;
 
-            if (missionProto.OnAvailableActions.IsNullOrEmpty() == false)
+            if (missionProto.OnAvailableActions.HasValue())
                 RegisterActionInfoFromList(missionProto, missionProto.OnAvailableActions, MissionStateFlags.Available, InvalidIndex, 0, MissionOptionTypeFlags.None);
 
-            if (missionProto.OnStartActions.IsNullOrEmpty() == false)
+            if (missionProto.OnStartActions.HasValue())
                 RegisterActionInfoFromList(missionProto, missionProto.OnStartActions, MissionStateFlags.Active, InvalidIndex, 0, MissionOptionTypeFlags.None);
 
-            if (missionProto.OnFailActions.IsNullOrEmpty() == false)
+            if (missionProto.OnFailActions.HasValue())
                 RegisterActionInfoFromList(missionProto, missionProto.OnFailActions, MissionStateFlags.Failed, InvalidIndex, 0, MissionOptionTypeFlags.None);
 
-            if (missionProto.OnSuccessActions.IsNullOrEmpty() == false)
+            if (missionProto.OnSuccessActions.HasValue())
                 RegisterActionInfoFromList(missionProto, missionProto.OnSuccessActions, MissionStateFlags.Completed, InvalidIndex, 0, MissionOptionTypeFlags.None);
 
             if (missionProto.PrereqConditions != null)
@@ -236,16 +236,16 @@ namespace MHServerEmu.Games.Dialog
             if (missionProto.FailureConditions != null)
                 RegisterConditionInfoFromList(missionProto, missionProto.FailureConditions, MissionStateFlags.Active, InvalidIndex, 0, MissionOptionTypeFlags.Skip, missionFlag);
 
-            if (missionProto.DialogText.IsNullOrEmpty() == false)
+            if (missionProto.DialogText.HasValue())
                 RegisterDialogTextFromList(missionProto, missionProto.DialogText, MissionStateFlags.Active, InvalidIndex, 0);
 
-            if (missionProto.DialogTextWhenCompleted.IsNullOrEmpty() == false)
+            if (missionProto.DialogTextWhenCompleted.HasValue())
                 RegisterDialogTextFromList(missionProto, missionProto.DialogTextWhenCompleted, MissionStateFlags.Completed, InvalidIndex, 0);
 
-            if (missionProto.DialogTextWhenFailed.IsNullOrEmpty() == false)
+            if (missionProto.DialogTextWhenFailed.HasValue())
                 RegisterDialogTextFromList(missionProto, missionProto.DialogTextWhenFailed, MissionStateFlags.Failed, InvalidIndex, 0);
 
-            if (missionProto.Objectives.IsNullOrEmpty() == false)
+            if (missionProto.Objectives.HasValue())
             {
                 for (sbyte objectiveIndex = 0; objectiveIndex < missionProto.Objectives.Length; ++objectiveIndex)
                 {
@@ -256,7 +256,7 @@ namespace MHServerEmu.Games.Dialog
                     if (missionFlag.HasFlag(InteractionOptimizationFlags.Hint) && (objectivePrototype.PlayerHUDShowObjsOnMap || objectivePrototype.PlayerHUDShowObjsOnScreenEdge))
                         objectiveFlag |= InteractionOptimizationFlags.Hint;
 
-                    if (objectivePrototype.ObjectiveHints.IsNullOrEmpty() == false)
+                    if (objectivePrototype.ObjectiveHints.HasValue())
                     {
                         foreach (var hintProto in objectivePrototype.ObjectiveHints)
                         {
@@ -278,25 +278,25 @@ namespace MHServerEmu.Games.Dialog
                         }
                     }
 
-                    if (objectivePrototype.DialogText.IsNullOrEmpty() == false)
+                    if (objectivePrototype.DialogText.HasValue())
                         RegisterDialogTextFromList(missionProto, objectivePrototype.DialogText, MissionStateFlags.Active, objectiveIndex, MissionObjectiveStateFlags.Active);
 
-                    if (objectivePrototype.DialogTextWhenCompleted.IsNullOrEmpty() == false)
+                    if (objectivePrototype.DialogTextWhenCompleted.HasValue())
                         RegisterDialogTextFromList(missionProto, objectivePrototype.DialogTextWhenCompleted, MissionStateFlags.Active, objectiveIndex, MissionObjectiveStateFlags.Completed);
 
-                    if (objectivePrototype.DialogTextWhenFailed.IsNullOrEmpty() == false)
+                    if (objectivePrototype.DialogTextWhenFailed.HasValue())
                         RegisterDialogTextFromList(missionProto, objectivePrototype.DialogTextWhenFailed, MissionStateFlags.Active, objectiveIndex, MissionObjectiveStateFlags.Failed);
 
-                    if (objectivePrototype.OnAvailableActions.IsNullOrEmpty() == false)
+                    if (objectivePrototype.OnAvailableActions.HasValue())
                         RegisterActionInfoFromList(missionProto, objectivePrototype.OnAvailableActions, MissionStateFlags.Active, objectiveIndex, MissionObjectiveStateFlags.Available, MissionOptionTypeFlags.None);
 
-                    if (objectivePrototype.OnStartActions.IsNullOrEmpty() == false)
+                    if (objectivePrototype.OnStartActions.HasValue())
                         RegisterActionInfoFromList(missionProto, objectivePrototype.OnStartActions, MissionStateFlags.Active, objectiveIndex, MissionObjectiveStateFlags.Active, MissionOptionTypeFlags.None);
 
-                    if (objectivePrototype.OnFailActions.IsNullOrEmpty() == false)
+                    if (objectivePrototype.OnFailActions.HasValue())
                         RegisterActionInfoFromList(missionProto, objectivePrototype.OnFailActions, MissionStateFlags.Active, objectiveIndex, MissionObjectiveStateFlags.Failed, MissionOptionTypeFlags.None);
 
-                    if (objectivePrototype.OnSuccessActions.IsNullOrEmpty() == false)
+                    if (objectivePrototype.OnSuccessActions.HasValue())
                         RegisterActionInfoFromList(missionProto, objectivePrototype.OnSuccessActions, MissionStateFlags.Active, objectiveIndex, MissionObjectiveStateFlags.Completed, MissionOptionTypeFlags.None);
 
                     if (objectivePrototype.ActivateConditions != null)
@@ -308,23 +308,23 @@ namespace MHServerEmu.Games.Dialog
                     if (objectivePrototype.FailureConditions != null)
                         RegisterConditionInfoFromList(missionProto, objectivePrototype.FailureConditions, MissionStateFlags.Active, objectiveIndex, MissionObjectiveStateFlags.Active, MissionOptionTypeFlags.Skip, objectiveFlag);
 
-                    if (objectivePrototype.InteractionsWhenActive.IsNullOrEmpty() == false)
+                    if (objectivePrototype.InteractionsWhenActive.HasValue())
                         RegisterInteractionsFromList(missionProto, objectivePrototype.InteractionsWhenActive, MissionStateFlags.Active, objectiveIndex, MissionObjectiveStateFlags.Active);
 
-                    if (objectivePrototype.InteractionsWhenComplete.IsNullOrEmpty() == false)
+                    if (objectivePrototype.InteractionsWhenComplete.HasValue())
                         RegisterInteractionsFromList(missionProto, objectivePrototype.InteractionsWhenComplete, MissionStateFlags.Active, objectiveIndex, MissionObjectiveStateFlags.Completed);
 
-                    if (objectivePrototype.InteractionsWhenFailed.IsNullOrEmpty() == false)
+                    if (objectivePrototype.InteractionsWhenFailed.HasValue())
                         RegisterInteractionsFromList(missionProto, objectivePrototype.InteractionsWhenFailed, MissionStateFlags.Active, objectiveIndex, MissionObjectiveStateFlags.Failed);
                 }
 
-                if (missionProto.InteractionsWhenActive.IsNullOrEmpty() == false)
+                if (missionProto.InteractionsWhenActive.HasValue())
                     RegisterInteractionsFromList(missionProto, missionProto.InteractionsWhenActive, MissionStateFlags.Active, InvalidIndex, 0);
 
-                if (missionProto.InteractionsWhenComplete.IsNullOrEmpty() == false)
+                if (missionProto.InteractionsWhenComplete.HasValue())
                     RegisterInteractionsFromList(missionProto, missionProto.InteractionsWhenComplete, MissionStateFlags.Completed, InvalidIndex, 0);
 
-                if (missionProto.InteractionsWhenFailed.IsNullOrEmpty() == false)
+                if (missionProto.InteractionsWhenFailed.HasValue())
                     RegisterInteractionsFromList(missionProto, missionProto.InteractionsWhenFailed, MissionStateFlags.Failed, InvalidIndex, 0);
             }
         }
@@ -467,7 +467,7 @@ namespace MHServerEmu.Games.Dialog
                         BindOptionToMap(option, contextRefs);
                     }
                 }
-                else if (prototype is MissionActionTimedActionPrototype timedActionProto && timedActionProto.ActionsToPerform.IsNullOrEmpty() == false)
+                else if (prototype is MissionActionTimedActionPrototype timedActionProto && timedActionProto.ActionsToPerform.HasValue())
                 {
                     RegisterActionInfoFromList(missionProto, timedActionProto.ActionsToPerform, state, objectiveIndex, objectiveState, optionType);
                 }

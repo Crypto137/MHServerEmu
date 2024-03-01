@@ -22,7 +22,7 @@ namespace MHServerEmu.Games.Generators.Areas
         {
             if (!base.InitializeContainer()) return false;
             if (Area.AreaPrototype.Generator is not GridAreaGeneratorPrototype proto) return false;
-            if (proto.Behaviors.IsNullOrEmpty() == false)
+            if (proto.Behaviors.HasValue())
                 RunBehaviors(null, proto.Behaviors, ProcessEnum.Initialize);
 
             return true;
@@ -308,7 +308,7 @@ namespace MHServerEmu.Games.Generators.Areas
             GeneratorPrototype generatorProto = area.AreaPrototype.Generator;
             GridAreaGeneratorPrototype gridAreaGeneratorProto = generatorProto as GridAreaGeneratorPrototype;
 
-            if (gridAreaGeneratorProto != null && gridAreaGeneratorProto.Behaviors.IsNullOrEmpty() == false)
+            if (gridAreaGeneratorProto != null && gridAreaGeneratorProto.Behaviors.HasValue())
                 borderBehaviorProto = gridAreaGeneratorProto.Behaviors.Last() as CellGridBorderBehaviorPrototype;
 
             if (borderBehaviorProto == null || gridAreaGeneratorProto.CellSets.IsNullOrEmpty()) return true;

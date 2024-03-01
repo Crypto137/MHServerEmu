@@ -32,7 +32,7 @@ namespace MHServerEmu.Games.Generators.Regions
                         StartArea = area;
                 }
             }
-            if (staticAreas.IsNullOrEmpty() == false)
+            if (staticAreas.HasValue())
                 DoConnection(random, region, staticAreas, regionGeneratorProto);
 
         }
@@ -44,7 +44,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
             if (staticAreas.Length > 1)
             {
-                if (regionGeneratorProto.Connections.IsNullOrEmpty() == false)
+                if (regionGeneratorProto.Connections.HasValue())
                 {
                     List<AreaConnectionPrototype> workingConnectionList = new (regionGeneratorProto.Connections);
 
