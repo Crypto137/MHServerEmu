@@ -119,8 +119,8 @@ namespace MHServerEmu.PlayerManagement
             // Timestamp sync messages
             if (message.Id == (byte)ClientToGameServerMessage.NetMessageSyncTimeRequest || message.Id == (byte)ClientToGameServerMessage.NetMessagePing)
             {
-                message.GameTimeReceived = Clock.GetGameTime();
-                message.DateTimeReceived = Clock.GetDateTime();
+                message.GameTimeReceived = Clock.GameTime;
+                message.DateTimeReceived = Clock.DateTime;
             }
 
             switch ((ClientToGameServerMessage)message.Id)
@@ -265,8 +265,8 @@ namespace MHServerEmu.PlayerManagement
 
             // Sync time
             client.SendMessage(MuxChannel, new(NetMessageInitialTimeSync.CreateBuilder()
-                .SetGameTimeServerSent(Clock.GetGameTime().Ticks / 10)
-                .SetDateTimeServerSent(Clock.GetDateTime().Ticks / 10)
+                .SetGameTimeServerSent(Clock.GameTime.Ticks / 10)
+                .SetDateTimeServerSent(Clock.DateTime.Ticks / 10)
                 .Build()));
         }
 
@@ -275,17 +275,21 @@ namespace MHServerEmu.PlayerManagement
             //Logger.Debug($"NetMessageSyncTimeRequest:");
             //Logger.Debug(syncTimeRequest.ToString());
 
-            client.SendMessage(MuxChannel, new(NetMessageSyncTimeReply.CreateBuilder()
+            var reply = NetMessageSyncTimeReply.CreateBuilder()
                 .SetGameTimeClientSent(syncTimeRequest.GameTimeClientSent)
                 .SetGameTimeServerReceived(gameTimeReceived.Ticks / 10)
-                .SetGameTimeServerSent(Clock.GetGameTime().Ticks / 10)
+                .SetGameTimeServerSent(Clock.GameTime.Ticks / 10)
                 .SetDateTimeClientSent(syncTimeRequest.DateTimeClientSent)
                 .SetDateTimeServerReceived(dateTimeReceived.Ticks / 10)
-                .SetDateTimeServerSent(Clock.GetDateTime().Ticks / 10)
+                .SetDateTimeServerSent(Clock.DateTime.Ticks / 10)
                 .SetDialation(1.0f)
                 .SetGametimeDialationStarted(0)
                 .SetDatetimeDialationStarted(0)
-                .Build()));
+                .Build();
+
+            Logger.Debug($"NetMessageSyncTimeReply: {reply}");
+
+            client.SendMessage(MuxChannel, new(reply));
         }
 
         private void OnPing(FrontendClient client, NetMessagePing ping, TimeSpan gameTimeReceived)
@@ -298,7 +302,7 @@ namespace MHServerEmu.PlayerManagement
                 .SetRequestSentClientTime(ping.SendClientTime)
                 .SetRequestSentGameTime(ping.SendGameTime)
                 .SetRequestNetReceivedGameTime((ulong)gameTimeReceived.TotalMilliseconds)
-                .SetResponseSendTime((ulong)Clock.GetGameTime().TotalMilliseconds)
+                .SetResponseSendTime((ulong)Clock.GameTime.TotalMilliseconds)
                 .SetServerTickforecast(0)
                 .SetGameservername("BOPR-MHVGIS2")
                 .SetFrontendname("bopr-mhfes2")

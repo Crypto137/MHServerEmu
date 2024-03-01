@@ -7,6 +7,7 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Networking;
@@ -23,7 +24,7 @@ namespace MHServerEmu.Games
 
             // Add server info messages
             messageList.Add(new(NetMessageMarkFirstGameFrame.CreateBuilder()
-                .SetCurrentservergametime((ulong)Clock.GetGameTime().TotalMilliseconds)
+                .SetCurrentservergametime((ulong)Clock.GameTime.TotalMilliseconds)
                 .SetCurrentservergameid(1150669705055451881)
                 .SetGamestarttime(1)
                 .Build()));
@@ -116,7 +117,7 @@ namespace MHServerEmu.Games
                     .SetChatBanVoteLoginCountRequired(ConfigManager.GameOptions.ChatBanVoteLoginCountRequired)
                     .SetIsDifficultySliderEnabled(ConfigManager.GameOptions.IsDifficultySliderEnabled)
                     .SetOrbisTrophiesEnabled(ConfigManager.GameOptions.OrbisTrophiesEnabled)
-                    .SetPlatformType(8))
+                    .SetPlatformType((int)Platforms.PC))
                 .Build()));
 
             // Create player and avatar entities

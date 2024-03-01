@@ -557,7 +557,7 @@ namespace MHServerEmu.Games.Regions
                         // Widget: UI/MetaGame/TimeRemainingStoryMode2.prototype
                         // Context: Missions/Prototypes/PVEEndgame/PatrolMidtown/Events/MidtownEventMegaSentinel.prototype
                         new UIWidgetGenericFraction((PrototypeId)11932510257277768241, (PrototypeId)10490887443555427166, Array.Empty<PrototypeId>(),
-                            1, 1, 0, (long)Clock.GetGameTime().TotalMilliseconds + 251550, false)   // 161351934500 (Currentservergametime) - 161351682950 = 251550
+                            1, 1, 0, (long)Clock.GameTime.TotalMilliseconds + 251550, false)   // 161351934500 (Currentservergametime) - 161351682950 = 251550
                     });
 
                     break;
