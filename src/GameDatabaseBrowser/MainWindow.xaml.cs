@@ -72,7 +72,7 @@ namespace GameDatabaseBrowser
             InitPrototypesList(worker, out int counter);
 
             PrototypeNodes.Add(new() { PrototypeDetails = new("Prototypes", new()) });
-            PropertyNodes.Add(new() { PropertyDetails = new() { Name = "Properties" } });
+            PropertyNodes.Add(new() { PropertyDetails = new() { Name = "Data" } });
             foreach (PrototypeDetails prototype in _prototypeDetails)
                 AddPrototypeInHierarchy(prototype);
 
@@ -203,13 +203,9 @@ namespace GameDatabaseBrowser
 
             ulong.TryParse(txtSearch.Text, out ulong prototypeId);
             if (prototypeId != 0)
-            {
                 _currentFilter = GameDatabase.GetPrototypeName((PrototypeId)prototypeId).ToLowerInvariant();
-            }
             else
-            {
                 _currentFilter = txtSearch.Text.ToLowerInvariant();
-            }
 
             RefreshPrototypeTree();
         }
