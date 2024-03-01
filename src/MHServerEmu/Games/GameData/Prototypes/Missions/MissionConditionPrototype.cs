@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.Missions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -76,9 +77,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public MissionConditionPrototype[] Conditions { get; protected set; }
 
-        internal IEnumerable<MissionConditionPrototype> IteratePrototypes()
-        {
-            throw new NotImplementedException();
+        public IEnumerable<MissionConditionPrototype> IteratePrototypes()
+        {            
+            return new MissionConditionPrototypeIterator(this);
         }
     }
 
