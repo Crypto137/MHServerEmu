@@ -8,18 +8,17 @@ namespace MHServerEmu.Games.Missions
     {
         private readonly MissionConditionPrototype[] _conditions;
         private readonly Type _type;
-        private readonly IEnumerator<MissionConditionPrototype> _enumerator;
+        private int _currentIndex;
         private MissionConditionPrototypeIterator _sublistIterator;
 
         public MissionConditionPrototypeIterator(MissionConditionListPrototype list, Type type = null)
         {
             _conditions = list?.Conditions;
             _type = type;
-            if (_conditions.IsNullOrEmpty() == false)
+            if (_conditions.HasValue())
             {
-                _enumerator = (IEnumerator<MissionConditionPrototype>)_conditions.GetEnumerator();
-                if (End() == false && IsValid() == false)
-                    Advance();
+                _currentIndex = 0;
+                if (IsValid() == false) Advance();
             }
         }
 
@@ -27,21 +26,14 @@ namespace MHServerEmu.Games.Missions
         {
             while (End() == false)
             {
-                var current = Current;
+                yield return Current;
                 MoveNext();
-                yield return current;                
             }
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        private bool End()
-        {
-            return _conditions.IsNullOrEmpty() || (_sublistIterator == null && _enumerator.MoveNext() == false);
-        }
+        public bool End() => _conditions == null || (_sublistIterator == null && _currentIndex >= _conditions.Length);
 
         public MissionConditionPrototype Current => GetMissionConditionPrototype();
 
@@ -49,15 +41,15 @@ namespace MHServerEmu.Games.Missions
         {
             if (_sublistIterator != null)
                 return _sublistIterator.Current;
-            else if (_enumerator != null)
-                return _enumerator.Current;
+            else if (_currentIndex >= 0 && _currentIndex < _conditions.Length)
+                return _conditions[_currentIndex];
             else
                 return null;
         }
 
         public void MoveNext()
         {
-            if (_conditions.IsNullOrEmpty() == false) Advance();
+            if (_conditions.HasValue()) Advance();
         }
 
         private void Advance()
@@ -73,32 +65,26 @@ namespace MHServerEmu.Games.Missions
                     if (condition is MissionConditionListPrototype conditionList)
                     {
                         if (_sublistIterator != null) return;
-                        _sublistIterator = new (conditionList, _type);
+                        _sublistIterator = new(conditionList, _type);
                     }
-                    _enumerator.MoveNext();
+                    ++_currentIndex;
                 }
 
                 if (_sublistIterator != null && _sublistIterator.End())
                     _sublistIterator = null;
             }
-            while (End() == false && IsValid() == false);
+            while (IsValid() == false);
         }
-
 
         private bool IsValid()
         {
             if (End()) return false;
-
             var condition = GetMissionConditionPrototype();
             if (condition == null) return false;
-
-            if (_type != null)
-            {
-                if (condition.GetType() != _type) return false;
-            }
-            else if (condition is MissionConditionListPrototype) return false; 
-
+            if (_type != null && condition.GetType() != _type) return false;
+            else if (condition is MissionConditionListPrototype) return false;
             return true;
         }
     }
+
 }
