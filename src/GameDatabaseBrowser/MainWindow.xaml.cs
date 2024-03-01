@@ -192,7 +192,7 @@ namespace GameDatabaseBrowser
             _fullNameHistory.Pop();
             SelectFromName(_fullNameHistory.Peek());
         }
-
+         
         /// <summary>
         /// Launch the search by PrototypeId or by keyword
         /// </summary>
@@ -305,8 +305,8 @@ namespace GameDatabaseBrowser
 
             string parentDataRef = NodeSelected?.PrototypeDetails?.Properties?.FirstOrDefault(k => k.Name == "ParentDataRef")?.Value;
 
-            if (ulong.TryParse(parentDataRef, out prototypeId))
-                txtParentDataRef.Text = $"Parent : {GameDatabase.GetPrototypeName((PrototypeId)prototypeId)} ({prototypeId})";
+            if (ulong.TryParse(parentDataRef, out ulong parentPrototypeId))
+                txtParentDataRef.Text = $"Parent : {GameDatabase.GetPrototypeName((PrototypeId)parentPrototypeId)} ({parentPrototypeId})";
             else txtParentDataRef.Text = parentDataRef;
 
             Prototype proto = GameDatabase.DataDirectory.GetPrototype<Prototype>((PrototypeId)prototypeId);
