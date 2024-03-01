@@ -36,6 +36,8 @@ This page provides definitions for terms used by the game internally.
 
 - **Curve** - a collection of numeric values.
 
+- **Date Time** - a number of milliseconds or microseconds elapsed since `Jan 01 1970 00:00:00 GMT+0000`. Also referred to as calendar time.
+
 - **District** - a static arrangement of cells.
 
 - **Dynamic Random Area Generator (DRAG)** - a system that handles procedural generation of the game world.
@@ -55,6 +57,8 @@ This page provides definitions for terms used by the game internally.
 - **Game Database** - a proprietary static game data management system developed by Gazillion.
 
 - **Game Instance Server (GIS)** - a server that runs game instances.
+
+- **Game Time** - a number of milliseconds or microseconds elapsed since `Sep 22 2012 09:31:18 GMT+0000`.
 
 - **Grouping Manager** - a service that handles social and matchmaking features.
 
