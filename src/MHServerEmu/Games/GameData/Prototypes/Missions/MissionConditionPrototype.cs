@@ -1,4 +1,6 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+﻿using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.Dialog;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -58,6 +60,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public StoryNotificationPrototype StoryNotification { get; protected set; }
         public bool NoTrackingOptimization { get; protected set; }
         public long MissionConditionGuid { get; protected set; }
+
+        public virtual void BuildEntityFilter(EntityFilterWrapper entityFilter, PrototypeId contextMissionRef) { }
+        public virtual void GetPrototypeContextRefs(HashSet<PrototypeId> refs) { }
+        public virtual void SetInterestLocations(SortedSet<PrototypeId> regions, SortedSet<PrototypeId> areas, SortedSet<PrototypeId> cells) { }
     }
 
     public class MissionPlayerConditionPrototype : MissionConditionPrototype
@@ -69,6 +75,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionConditionListPrototype : MissionConditionPrototype
     {
         public MissionConditionPrototype[] Conditions { get; protected set; }
+
+        internal IEnumerable<MissionConditionPrototype> IteratePrototypes()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class MissionConditionAndPrototype : MissionConditionListPrototype
@@ -103,6 +114,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId RegionPrototype { get; protected set; }
         public PrototypeId AreaPrototype { get; protected set; }
+
+        public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
+        {
+            if (RegionPrototype != PrototypeId.Invalid) refs.Add(RegionPrototype);
+        }
+
+        public override void SetInterestLocations(SortedSet<PrototypeId> regions, SortedSet<PrototypeId> areas, SortedSet<PrototypeId> cells)
+        {
+            if (RegionPrototype != PrototypeId.Invalid) regions.Add(RegionPrototype);
+            if (AreaPrototype != PrototypeId.Invalid) areas.Add(AreaPrototype);
+        }
     }
 
     public class MissionConditionAreaLeavePrototype : MissionPlayerConditionPrototype
@@ -142,6 +164,34 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public AssetId[] Cells { get; protected set; }
         public PrototypeId[] Regions { get; protected set; }
+
+        private SortedSet<PrototypeId> _cells = new();
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+            if (Cells.IsNullOrEmpty() == false)
+            {
+                foreach(var cell in Cells)
+                {
+                    var cellRef = GameDatabase.GetDataRefByAsset(cell);
+                    if (cellRef != PrototypeId.Invalid) _cells.Add(cellRef);
+                }
+            }
+        }
+
+        public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
+        {
+            if (Regions.IsNullOrEmpty() == false)
+                foreach (var region in Regions) refs.Add(region);
+        }
+
+        public override void SetInterestLocations(SortedSet<PrototypeId> regions, SortedSet<PrototypeId> areas, SortedSet<PrototypeId> cells)
+        {
+            if (Regions.IsNullOrEmpty() == false)
+                foreach (var region in Regions) regions.Add(region);
+            cells.UnionWith(_cells);
+        }
     }
 
     public class MissionConditionCellLeavePrototype : MissionPlayerConditionPrototype
@@ -178,6 +228,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionConditionEntityAggroPrototype : MissionPlayerConditionPrototype
     {
         public EntityFilterPrototype EntityFilter { get; protected set; }
+
+        public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
+        {
+            if (EntityFilter != null)
+            {
+                EntityFilter.GetEntityDataRefs(refs);
+                EntityFilter.GetKeywordDataRefs(refs);
+                EntityFilter.GetRegionDataRefs(refs);
+            }
+        }
+
+        public override void BuildEntityFilter(EntityFilterWrapper wrapper, PrototypeId contextMissionRef)
+        {
+            wrapper.FilterContextMissionRef = contextMissionRef;
+            wrapper.AddEntityFilter(EntityFilter);
+        }
     }
 
     public class MissionConditionEntityDamagedPrototype : MissionPlayerConditionPrototype
@@ -185,6 +251,31 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EntityFilterPrototype EntityFilter { get; protected set; }
         public AssetId EncounterResource { get; protected set; }
         public bool LimitToDamageFromPlayerOMOnly { get; protected set; }
+
+        public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
+        {
+            if (EntityFilter != null)
+            {
+                EntityFilter.GetEntityDataRefs(refs);
+                EntityFilter.GetKeywordDataRefs(refs);
+                EntityFilter.GetRegionDataRefs(refs);
+            }
+
+            if (EncounterResource != AssetId.Invalid)
+            {
+                PrototypeId encounterRef = GameDatabase.GetDataRefByAsset(EncounterResource);
+                var encounterProto = GameDatabase.GetPrototype<EncounterResourcePrototype>(encounterRef);
+                encounterProto?.MarkerSet.GetContainedEntities(refs);
+            }
+        }
+
+        public override void BuildEntityFilter(EntityFilterWrapper entityFilter, PrototypeId contextMissionRef)
+        {
+            entityFilter.FilterContextMissionRef = contextMissionRef;
+            entityFilter.AddEntityFilter(EntityFilter);
+            entityFilter.AddEncounterResource(EncounterResource);
+        }
+
     }
 
     public class MissionConditionEntityDeathPrototype : MissionPlayerConditionPrototype
@@ -199,6 +290,47 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int WithinSeconds { get; protected set; }
         public bool MustBeTaggedByPlayer { get; protected set; }
         public HUDEntitySettingsPrototype EntityHUDSettingOverride { get; protected set; }
+
+        public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
+        {
+            if (EntityFilter != null)
+            {
+                EntityFilter.GetEntityDataRefs(refs);
+                EntityFilter.GetKeywordDataRefs(refs);
+                EntityFilter.GetRegionDataRefs(refs);
+            }
+
+            if (EncounterResource != AssetId.Invalid)
+            {
+                PrototypeId encounterRef = GameDatabase.GetDataRefByAsset(EncounterResource);
+                var encounterProto = GameDatabase.GetPrototype<EncounterResourcePrototype>(encounterRef);
+                encounterProto?.MarkerSet.GetContainedEntities(refs);
+            }
+        }
+
+        public override void BuildEntityFilter(EntityFilterWrapper entityFilter, PrototypeId contextMissionRef)
+        {
+            entityFilter.FilterContextMissionRef = contextMissionRef;
+            entityFilter.AddEntityFilter(EntityFilter);
+            entityFilter.AddEncounterResource(EncounterResource);
+        }
+
+        public override void SetInterestLocations(SortedSet<PrototypeId> regions, SortedSet<PrototypeId> areas, SortedSet<PrototypeId> cells)
+        {
+            if (EntityFilter != null)
+            {
+                HashSet<PrototypeId> refs = new ();
+                EntityFilter.GetRegionDataRefs(refs);
+                foreach (var region in refs)
+                    regions.Add(region);
+
+                refs.Clear();
+                EntityFilter.GetAreaDataRefs(refs);
+                foreach (var area in refs)
+                    areas.Add(area);
+            }
+        }
+
     }
 
     public class MissionConditionEntityInteractPrototype : MissionPlayerConditionPrototype
@@ -223,6 +355,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public HUDEntitySettingsPrototype EntityHUDSettingOverride { get; protected set; }
         public bool ShowRewards { get; protected set; }
         public VOCategory VoiceoverCategory { get; protected set; }
+
+        public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
+        {
+            if (EntityFilter != null)
+            {
+                EntityFilter.GetEntityDataRefs(refs);
+                EntityFilter.GetKeywordDataRefs(refs);
+                EntityFilter.GetRegionDataRefs(refs);
+            }
+        }
+
+        public override void BuildEntityFilter(EntityFilterWrapper entityFilter, PrototypeId contextMissionRef)
+        {
+            entityFilter.FilterContextMissionRef = contextMissionRef;
+            entityFilter.AddEntityFilter(EntityFilter);
+        }
     }
 
     public class MissionConditionFactionPrototype : MissionPlayerConditionPrototype
@@ -316,6 +464,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public long Count { get; protected set; }
         public EntityFilterPrototype EntityFilter { get; protected set; }
+
+        public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
+        {
+            if (EntityFilter != null)
+            {
+                EntityFilter.GetEntityDataRefs(refs);
+                EntityFilter.GetKeywordDataRefs(refs);
+                EntityFilter.GetRegionDataRefs(refs);
+            }
+        }
+
+        public override void BuildEntityFilter(EntityFilterWrapper entityFilter, PrototypeId contextMissionRef)
+        {
+            entityFilter.FilterContextMissionRef = contextMissionRef;
+            entityFilter.AddEntityFilter(EntityFilter);
+        }
     }
 
     public class MissionConditionOrPrototype : MissionConditionListPrototype
@@ -326,6 +490,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EntityFilterPrototype EntityFilter { get; protected set; }
         public int Count { get; protected set; }
+
+        public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
+        {
+            if (EntityFilter != null)
+            {
+                EntityFilter.GetEntityDataRefs(refs);
+                EntityFilter.GetKeywordDataRefs(refs);
+                EntityFilter.GetRegionDataRefs(refs);
+            }
+        }
+
+        public override void BuildEntityFilter(EntityFilterWrapper entityFilter, PrototypeId contextMissionRef)
+        {
+            entityFilter.FilterContextMissionRef = contextMissionRef;
+            entityFilter.AddEntityFilter(EntityFilter);
+        }
     }
 
     public class MissionConditionHealthRangePrototype : MissionPlayerConditionPrototype
@@ -333,6 +513,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EntityFilterPrototype EntityFilter { get; protected set; }
         public double HealthMinPct { get; protected set; }
         public double HealthMaxPct { get; protected set; }
+
+        public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
+        {
+            if (EntityFilter != null)
+            {
+                EntityFilter.GetEntityDataRefs(refs);
+                EntityFilter.GetKeywordDataRefs(refs);
+                EntityFilter.GetRegionDataRefs(refs);
+            }
+        }
+
+        public override void BuildEntityFilter(EntityFilterWrapper entityFilter, PrototypeId contextMissionRef)
+        {
+            entityFilter.FilterContextMissionRef = contextMissionRef;
+            entityFilter.AddEntityFilter(EntityFilter);
+        }
     }
 
     public class MissionConditionHotspotContainsPrototype : MissionConditionPrototype
@@ -341,18 +537,66 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int CountMin { get; protected set; }
         public EntityFilterPrototype EntityFilter { get; protected set; }
         public EntityFilterPrototype TargetFilter { get; protected set; }
+
+        public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
+        {
+            if (EntityFilter != null)
+            {
+                EntityFilter.GetEntityDataRefs(refs);
+                EntityFilter.GetKeywordDataRefs(refs);
+                EntityFilter.GetRegionDataRefs(refs);
+            }
+        }
+
+        public override void BuildEntityFilter(EntityFilterWrapper entityFilter, PrototypeId contextMissionRef)
+        {
+            entityFilter.FilterContextMissionRef = contextMissionRef;
+            entityFilter.AddEntityFilter(EntityFilter);
+        }
     }
 
     public class MissionConditionHotspotEnterPrototype : MissionPlayerConditionPrototype
     {
         public EntityFilterPrototype TargetFilter { get; protected set; }
         public EntityFilterPrototype EntityFilter { get; protected set; }
+
+        public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
+        {
+            if (EntityFilter != null)
+            {
+                EntityFilter.GetEntityDataRefs(refs);
+                EntityFilter.GetKeywordDataRefs(refs);
+                EntityFilter.GetRegionDataRefs(refs);
+            }
+        }
+
+        public override void BuildEntityFilter(EntityFilterWrapper entityFilter, PrototypeId contextMissionRef)
+        {
+            entityFilter.FilterContextMissionRef = contextMissionRef;
+            entityFilter.AddEntityFilter(EntityFilter);
+        }
     }
 
     public class MissionConditionHotspotLeavePrototype : MissionPlayerConditionPrototype
     {
         public EntityFilterPrototype TargetFilter { get; protected set; }
         public EntityFilterPrototype EntityFilter { get; protected set; }
+
+        public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
+        {
+            if (EntityFilter != null)
+            {
+                EntityFilter.GetEntityDataRefs(refs);
+                EntityFilter.GetKeywordDataRefs(refs);
+                EntityFilter.GetRegionDataRefs(refs);
+            }
+        }
+
+        public override void BuildEntityFilter(EntityFilterWrapper entityFilter, PrototypeId contextMissionRef)
+        {
+            entityFilter.FilterContextMissionRef = contextMissionRef;
+            entityFilter.AddEntityFilter(EntityFilter);
+        }
     }
 
     public class MissionConditionItemCollectPrototype : MissionPlayerConditionPrototype
@@ -362,6 +606,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool MustBeEquippableByAvatar { get; protected set; }
         public bool DestroyOnPickup { get; protected set; }
         public bool CountItemsOnMissionStart { get; protected set; }
+
+        public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
+        {
+            if (EntityFilter != null)
+            {
+                EntityFilter.GetEntityDataRefs(refs);
+                EntityFilter.GetKeywordDataRefs(refs);
+                EntityFilter.GetRegionDataRefs(refs);
+            }
+        }
+
+        public override void BuildEntityFilter(EntityFilterWrapper entityFilter, PrototypeId contextMissionRef)
+        {
+            entityFilter.FilterContextMissionRef = contextMissionRef;
+            entityFilter.AddEntityFilter(EntityFilter);
+        }
     }
 
     public class MissionConditionItemEquipPrototype : MissionPlayerConditionPrototype
@@ -394,6 +654,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionConditionRegionBeginTravelToPrototype : MissionPlayerConditionPrototype
     {
         public PrototypeId RegionPrototype { get; protected set; }
+
+        public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
+        {
+            if (RegionPrototype != PrototypeId.Invalid) refs.Add(RegionPrototype);
+        }
+
+        public override void SetInterestLocations(SortedSet<PrototypeId> regions, SortedSet<PrototypeId> areas, SortedSet<PrototypeId> cells)
+        {
+            if (RegionPrototype != PrototypeId.Invalid) regions.Add(RegionPrototype);
+        }
     }
 
     public class MissionConditionRegionContainsPrototype : MissionConditionPrototype
@@ -412,6 +682,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool WaitForCinematicFinished { get; protected set; }
         public PrototypeId[] Keywords { get; protected set; }  // VectorPrototypeRefPtr RegionKeywordPrototype
         public bool RegionIncludeChildren { get; protected set; }
+
+        public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
+        {
+            if (RegionPrototype != PrototypeId.Invalid) refs.Add(RegionPrototype);
+        }
+
+        public override void SetInterestLocations(SortedSet<PrototypeId> regions, SortedSet<PrototypeId> areas, SortedSet<PrototypeId> cells)
+        {
+            if (RegionPrototype != PrototypeId.Invalid) regions.Add(RegionPrototype);
+        }
     }
 
     public class MissionConditionRegionHasMatchPrototype : MissionPlayerConditionPrototype
@@ -422,6 +702,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId RegionPrototype { get; protected set; }
         public bool RegionIncludeChildren { get; protected set; }
+
+        public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
+        {
+            if (RegionPrototype != PrototypeId.Invalid) refs.Add(RegionPrototype);
+        }
     }
 
     public class MissionConditionRemoteNotificationPrototype : MissionPlayerConditionPrototype
@@ -445,6 +730,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class MissionConditionThrowablePickUpPrototype : MissionPlayerConditionPrototype
     {
         public EntityFilterPrototype EntityFilter { get; protected set; }
+
+        public override void BuildEntityFilter(EntityFilterWrapper entityFilter, PrototypeId contextMissionRef)
+        {
+            entityFilter.FilterContextMissionRef = contextMissionRef;
+            entityFilter.AddEntityFilter(EntityFilter);
+        }
     }
 
     public class MissionConditionItemBuyPrototype : MissionPlayerConditionPrototype
@@ -475,5 +766,32 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] WithinRegions { get; protected set; }    // VectorPrototypeRefPtr RegionPrototype
         public PrototypeId[] WithinAreas { get; protected set; }      // VectorPrototypeRefPtr AreaPrototype
         public bool PlayerKillerRequired { get; protected set; }
+
+        public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
+        {
+            if (SpecificClusters.IsNullOrEmpty() == false)
+                foreach (var clusterRef in SpecificClusters)
+                {
+                    var objectProto = GameDatabase.GetPrototype<PopulationObjectPrototype>(clusterRef);
+                    objectProto?.GetContainedEntities(refs, true);
+                }
+
+            if (WithinRegions.IsNullOrEmpty() == false)
+                foreach (var region in WithinRegions)
+                    refs.Add(region);
+        }
+
+        public override void BuildEntityFilter(EntityFilterWrapper entityFilter, PrototypeId contextMissionRef)
+        {
+            entityFilter.AddSpawnedByMissionRefs(SpawnedByMission);
+            if (OnlyCountMissionClusters && contextMissionRef != PrototypeId.Invalid)
+                entityFilter.AddSpawnedByMissionRef(contextMissionRef);
+
+            entityFilter.AddSpawnedByClusterRefs(SpecificClusters);
+            entityFilter.AddRegionPtrs(WithinRegions);
+
+            entityFilter.FilterContextMissionRef = contextMissionRef;
+        }
+
     }
 }

@@ -1,9 +1,13 @@
-﻿
+﻿using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
+
 namespace MHServerEmu.Games.Dialog
 {
+    #region Enums
     [Flags]
     public enum InteractionOptimizationFlags
     {
+        None = 0,
         Hint = 1 << 0,
         Flag1 = 1 << 1,
         Appearance = 1 << 2,
@@ -16,10 +20,56 @@ namespace MHServerEmu.Games.Dialog
     [Flags]
     public enum InteractionMethod : ulong
     {
-        None = 0,        
+        None = 0L,
+        Attack = 1L << 0,
+        Converse = 1L << 1,
+        PickUp = 1L << 2,
         Throw = 1L << 3,
         Use = 1L << 4,
-        StoryWarp = 1L << 28,
+        Equip = 1L << 5,
+        Destroy = 1L << 6,
+        Buy = 1L << 7,
+        Sell = 1L << 8,
+        Donate = 1L << 9,
+        DonatePetTech = 1L << 10,
+        Teleport = 1L << 11,
+        MakeLeader = 1L << 12,
+        GroupChangeTypeToRaid = 1L << 13,
+        GroupChangeTypeToParty = 1L << 14,
+        PartyShareLegendaryQuest = 1L << 15,
+        Social = 1L << 16,
+        Resurrect = 1L << 17,
+        Chat = 1L << 18,
+        PartyInvite = 1L << 19,
+        Friend = 1L << 20,
+        Inspect = 1L << 21,
+        Trade = 1L << 22,
+        ViewPSNProfile = 1L << 23,
+        GuildInvite = 1L << 24,
+        GuildPromote = 1L << 25,
+        Heal = 1L << 26,
+        Flag27 = 1L << 27,
+        Flag28 = 1L << 28,
+        Follow = 1L << 29,
+        Duel = 1L << 30,
+        Flag31 = 1L << 31,
+        PartyLeave = 1L << 32,
+        PartyBoot = 1L << 33,
+        Unfriend = 1L << 34,
+        Ignore = 1L << 35,
+        Unignore = 1L << 36,
+        Report = 1L << 37,
+        ReportAsSpam = 1L << 38,
+        GuildDemote = 1L << 39,
+        GuildKick = 1L << 40,
+        GuildLeave = 1L << 41,
+        Mute = 1L << 42,
+        MoveToGeneralInventory = 1L << 43,
+        MoveToStash = 1L << 44,
+        SlotCraftingIngredient = 1L << 45,
+        MoveToTradeInventory = 1L << 46,
+        MoveToTeamUp = 1L << 47,
+        LinkItemInChat = 1L << 48,
     }
 
     [Flags]
@@ -57,5 +107,56 @@ namespace MHServerEmu.Games.Dialog
         Completed = 1 << 3,
         Failed = 1 << 4,
         Skipped = 1 << 5,
+    }
+
+    [Flags]
+    public enum EntityTrackingFlag
+    {
+        None = 0,
+        Appearance = 1 << 0,
+        Hotspot = 1 << 1,
+        HUD = 1 << 2,
+        KismetSequenceTracking = 1 << 3,
+        MissionAction = 1 << 4,
+        MissionCondition = 1 << 5,
+        MissionDialog = 1 << 6,
+        SpawnedByMission = 1 << 7,
+        TransitionRegion = 1 << 8,
+    }
+    #endregion
+
+    public class EntityFilterWrapper
+    {
+        public PrototypeId FilterContextMissionRef { get; internal set; }
+
+        internal void AddEncounterResource(AssetId encounterResource)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void AddEntityFilter(EntityFilterPrototype entityFilter)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void AddRegionPtrs(PrototypeId[] activeInRegions)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void AddSpawnedByClusterRefs(PrototypeId[] specificClusters)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void AddSpawnedByMissionRef(PrototypeId contextMissionRef)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void AddSpawnedByMissionRefs(PrototypeId[] spawnedByMission)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

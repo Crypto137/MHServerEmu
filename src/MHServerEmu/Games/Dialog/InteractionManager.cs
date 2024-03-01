@@ -42,7 +42,7 @@ namespace MHServerEmu.Games.Dialog
                         {
                             if (!contexts.Any())
                             {
-                                Logger.Warn($"Unable to link option to mission. MISSION={GameDatabase.GetFormattedPrototypeName(missionData.MissionRef)} OPTION={completeOption.ToString()}");
+                                Logger.Warn($"Unable to link option to mission. MISSION={GameDatabase.GetFormattedPrototypeName(missionData.MissionRef)} OPTION={completeOption}");
                                 continue;
                             }
                             BindOptionToMap(completeOption, contexts);
@@ -72,7 +72,70 @@ namespace MHServerEmu.Games.Dialog
 
         private void BindOptionToMap(InteractionOption option, HashSet<PrototypeId> contexts)
         {
-            throw new NotImplementedException();
+            if (option == null) return;
+            if (contexts.Count == 0)
+            {
+                Logger.Warn($"Interaction Manager: Empty contexts OPTION={option}");
+                return;
+            }
+
+            int optionCount = 0;
+            foreach (PrototypeId contextRef in contexts)
+            {
+                if (contextRef == PrototypeId.Invalid) continue;
+                if (_interationMap.TryGetValue(contextRef, out InteractionData dataInMap) == false)
+                {
+                    dataInMap = new InteractionData();
+                    _interationMap[contextRef] = dataInMap;
+                }
+
+                dataInMap.AddOption(option);
+                optionCount++;
+            }
+
+            if (option is BaseMissionOption missionOption)
+            {
+                if (missionOption.MissionProto == null) return;
+                PrototypeId missionRef = missionOption.MissionProto.DataRef;
+
+                ExtraMissionData missionData = GetMissionData(missionRef);
+                if (missionData == null) return;
+
+                missionData.Options.Add(missionOption);
+
+                foreach (PrototypeId contextRef in contexts)
+                    missionData.Contexts.Add(contextRef);
+
+                if (missionOption is MissionConditionMissionCompleteOption completeOption)
+                {
+                    SortedSet<PrototypeId> completeMissions = completeOption.GetCompleteMissionRefs();
+                    foreach (PrototypeId completeMissionRef in completeMissions)
+                    {
+                        if (completeMissionRef == PrototypeId.Invalid) continue;
+                        ExtraMissionData completeMissionData = GetMissionData(completeMissionRef);
+                        if (completeMissionData == null) continue;
+
+                        completeMissionData.CompleteOptions.Add(completeOption);
+                    }
+                }
+            }
+
+            if (optionCount == 0)
+            {
+                Logger.Warn($"Interaction Manager: Failed to add option to any  OPTION={option}");
+                return;
+            }
+        }
+
+        private ExtraMissionData GetMissionData(PrototypeId missionRef)
+        {
+            ExtraMissionData missionData = null;
+            if (missionRef != PrototypeId.Invalid && _missionMap.TryGetValue(missionRef, out missionData) == false)
+            {
+                missionData = new (missionRef);
+                _missionMap[missionRef] = missionData;
+            }
+            return missionData;
         }
 
         private void GetInteractionDataFromMetaStatePrototype(PrototypeId metaStateRef)
@@ -92,7 +155,7 @@ namespace MHServerEmu.Games.Dialog
             if (missionProto == null || missionProto.ApprovedForUse() == false) return;
 
             const sbyte InvalidIndex = -1;
-            InteractionOptimizationFlags missionFlag = 0;
+            InteractionOptimizationFlags missionFlag = InteractionOptimizationFlags.None;
             if (missionProto.PlayerHUDShowObjs && (missionProto.PlayerHUDShowObjsOnMap || missionProto.PlayerHUDShowObjsOnScreenEdge))
                 missionFlag |= InteractionOptimizationFlags.Hint;
 
@@ -159,7 +222,7 @@ namespace MHServerEmu.Games.Dialog
                             hintProto.GetPrototypeContextRefs(contextRefs);
                             if (contextRefs.Count > 0)
                             {
-                                MissionHintOption option = CreateOption<MissionHintOption>();
+                                var option = CreateOption<MissionHintOption>();
                                 if (option == null)
                                 {
                                     Logger.Error($"Failed to create MissionObjectiveHintOption! MISSION={missionProto}");
@@ -233,43 +296,167 @@ namespace MHServerEmu.Games.Dialog
         private void RegisterInteractionsFromList(MissionPrototype missionProto, InteractionSpecPrototype[] interactionSpec, 
             MissionStateFlags state, sbyte objectiveIndex, MissionObjectiveStateFlags objectiveState)
         {
-            throw new NotImplementedException();
+            if (interactionSpec.IsNullOrEmpty()) return;
+
+            foreach (var specProto in interactionSpec)
+            {
+                if (specProto == null) continue;
+                HashSet<PrototypeId> contextRefs = new ();
+                specProto.GetPrototypeContextRefs(contextRefs);
+
+                if (contextRefs.Count > 0)
+                {
+                    BaseMissionOption option = null;
+                    if (specProto is EntityBaseSpecPrototype entitySpecProto)
+                    {
+                        if (entitySpecProto is EntityAppearanceSpecPrototype entityAppearanceProto)
+                        {
+                            var appearance = CreateOption<MissionAppearanceOption>();
+                            if (appearance == null) continue;
+                            appearance.Proto = entityAppearanceProto;
+                            option = appearance;
+                        }
+                        else if (entitySpecProto is EntityVisibilitySpecPrototype entityVisibilitySpecProto)
+                        {
+                            var visibility = CreateOption<MissionVisibilityOption>();
+                            if (visibility == null) continue;                           
+                            visibility.Proto = entityVisibilitySpecProto;
+                            option = visibility;                            
+                        }
+                        if (option == null) continue;
+                        option.EntityFilterWrapper.AddEntityFilter(entitySpecProto.EntityFilter);
+                    }
+                    else if (specProto is ConnectionTargetEnableSpecPrototype connectionTargetEnableSpecProto)
+                    {
+                        var connectionTargetEnable = CreateOption<MissionConnectionTargetEnableOption>();
+                        if (connectionTargetEnable == null) continue;                        
+                        connectionTargetEnable.Proto = connectionTargetEnableSpecProto;
+                        option = connectionTargetEnable;                        
+                    }
+
+                    if (option == null) return;                    
+                    option.InitializeForMission(missionProto, state, objectiveIndex, objectiveState, MissionOptionTypeFlags.None);
+                    BindOptionToMap(option, contextRefs);                    
+                }
+            }
         }
 
-        private void RegisterDialogTextFromList(MissionPrototype missionProto, MissionDialogTextPrototype[] dialogText, 
+        private void RegisterDialogTextFromList(MissionPrototype missionProto, MissionDialogTextPrototype[] dialogTexts, 
             MissionStateFlags state, sbyte objectiveIndex, MissionObjectiveStateFlags objectiveState)
         {
-            throw new NotImplementedException();
+            if (dialogTexts.IsNullOrEmpty()) return;
+
+            foreach (var missionDialogTextProto in dialogTexts)
+            {
+                if (missionDialogTextProto == null) continue;
+                HashSet<PrototypeId> contextRefs = new ();
+                missionDialogTextProto.GetPrototypeContextRefs(contextRefs);
+
+                if (contextRefs.Count > 0)
+                {
+                    var option = CreateOption<MissionDialogOption>();
+                    if (option == null) return;                    
+                    option.EntityFilterWrapper.AddEntityFilter(missionDialogTextProto.EntityFilter);
+                    option.InitializeForMission(missionProto, state, objectiveIndex, objectiveState, MissionOptionTypeFlags.None);
+                    option.Proto = missionDialogTextProto;
+                    BindOptionToMap(option, contextRefs);                    
+                }
+            }
         }
 
-        private void RegisterConditionInfoFromList(MissionPrototype missionProto, MissionConditionListPrototype condition, 
+        private void RegisterConditionInfoFromList(MissionPrototype missionProto, MissionConditionListPrototype conditionList, 
             MissionStateFlags state, sbyte objectiveIndex, MissionObjectiveStateFlags objectiveState, 
-            MissionOptionTypeFlags optionType, InteractionOptimizationFlags missionFlag)
+            MissionOptionTypeFlags optionType, InteractionOptimizationFlags optimizationFlag)
         {
-            throw new NotImplementedException();
+            if (conditionList == null) return;
+            foreach (MissionConditionPrototype prototype in conditionList.IteratePrototypes())
+            {
+                if (prototype == null) continue;
+                if (optionType.HasFlag(MissionOptionTypeFlags.SkipComplete) && prototype is MissionConditionMissionCompletePrototype)
+                    continue;
+
+                HashSet<PrototypeId> contextRefs = new ();
+                prototype.GetPrototypeContextRefs(contextRefs);
+                if (contextRefs.Count > 0)
+                {
+                    BaseMissionConditionOption option;
+                    if (prototype is MissionConditionHotspotContainsPrototype || prototype is MissionConditionHotspotEnterPrototype || prototype is MissionConditionHotspotLeavePrototype)
+                        option = CreateOption<MissionConditionHotspotOption>();
+                    else if (prototype is MissionConditionCellEnterPrototype || prototype is MissionConditionAreaEnterPrototype || prototype is MissionConditionRegionEnterPrototype || prototype is MissionConditionRegionBeginTravelToPrototype)
+                        option = CreateOption<MissionConditionRegionOption>();
+                    else if (prototype is MissionConditionEntityInteractPrototype)
+                        option = CreateOption<MissionConditionEntityInteractOption>();
+                    else if (prototype is MissionConditionMissionCompletePrototype)
+                        option = CreateOption<MissionConditionMissionCompleteOption>();
+                    else
+                        option = CreateOption<BaseMissionConditionOption>();
+
+                    if (missionProto is OpenMissionPrototype openMissionProto)
+                        option.EntityFilterWrapper.AddRegionPtrs(openMissionProto.ActiveInRegions);
+
+                    prototype.BuildEntityFilter(option.EntityFilterWrapper, missionProto.DataRef);
+                    prototype.SetInterestLocations(option.InterestRegions, option.InterestAreas, option.InterestCells);
+
+                    option.OptimizationFlags |= optimizationFlag;
+                    option.InitializeForMission(missionProto, state, objectiveIndex, objectiveState, optionType);
+                    BindOptionToMap(option, contextRefs);
+                }
+            }
         }
 
-        private void RegisterActionInfoFromList(MissionPrototype missionProto, MissionActionPrototype[] actions, MissionStateFlags state, 
+        private void RegisterActionInfoFromList(MissionPrototype missionProto, MissionActionPrototype[] actionList, MissionStateFlags state, 
             sbyte objectiveIndex, MissionObjectiveStateFlags objectiveState, MissionOptionTypeFlags optionType)
         {
-            throw new NotImplementedException();
+            if (actionList == null) return;
+            foreach (var prototype in actionList)
+            {
+                if (prototype == null) continue;
+                if (prototype is MissionActionEntityTargetPrototype actionEntityTargetProto)
+                {
+                    HashSet<PrototypeId> contextRefs = new ();
+                    actionEntityTargetProto.GetPrototypeContextRefs(contextRefs);
+                    if (contextRefs.Count > 0)
+                    {
+                        var option = CreateOption<MissionActionEntityTargetOption>();
+                        if (option == null) return;
+                        option.InitializeForMission(missionProto, state, objectiveIndex, objectiveState, optionType);
+                        option.Proto = actionEntityTargetProto;
+                        BindOptionToMap(option, contextRefs);
+                    }
+                }
+                else if (prototype is MissionActionTimedActionPrototype timedActionProto && timedActionProto.ActionsToPerform.IsNullOrEmpty() == false)
+                {
+                    RegisterActionInfoFromList(missionProto, timedActionProto.ActionsToPerform, state, objectiveIndex, objectiveState, optionType);
+                }
+            }
         }
+
     }
 
     public class InteractionData
     {
-        private List<InteractionOption> _options;
-        public int OptionFlags { get; set; }
+        private readonly List<InteractionOption> _options;
+        private InteractionOptimizationFlags _optionFlags;
+
+        public bool HasOptionFlag(InteractionOptimizationFlags optionFlag) => _optionFlags.HasFlag(optionFlag);
+        public bool HasAnyOptionFlags() => _optionFlags != InteractionOptimizationFlags.None;
 
         public void Sort()
         {
             _options.Sort((a, b) => a.CompareTo(b));
         }
 
+        public void AddOption(InteractionOption option)
+        {
+            if (option == null) return;
+            _options.Add(option);
+            _optionFlags |= option.OptimizationFlags;
+        }
+
         public InteractionData()
         {
             _options = new();
-            OptionFlags = 0;
+            _optionFlags = InteractionOptimizationFlags.None;
         }
     }
 

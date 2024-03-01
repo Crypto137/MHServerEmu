@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData.Resources;
 
 namespace MHServerEmu.Games.GameData.Prototypes.Markers
@@ -50,5 +51,23 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
                     throw new NotImplementedException($"Unknown ResourcePrototypeHash {(uint)hash}.");
             }
         }
+
+        public void GetContainedEntities(HashSet<PrototypeId> refs)
+        {
+            if (Markers.IsNullOrEmpty() == false)
+            {
+                foreach (var marker in Markers)
+                {
+                    if ((marker is EntityMarkerPrototype entityMarkerProto) == false) continue;
+                    var guid = entityMarkerProto.EntityGuid;
+                    if (guid == PrototypeGuid.Invalid) continue;
+                    var entityRef = GameDatabase.GetDataRefByPrototypeGuid(guid);
+                    if (entityRef == PrototypeId.Invalid) continue;
+
+                    refs.Add(entityRef);
+                }
+            }
+        }
+
     }
 }

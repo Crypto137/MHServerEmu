@@ -136,6 +136,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId Text { get; protected set; }
         public EntityFilterPrototype EntityFilter { get; protected set; }
         public DialogStyle DialogStyle { get; protected set; }
+
+        public void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
+        {
+            if (EntityFilter != null)
+            {
+                EntityFilter.GetEntityDataRefs(refs);
+                EntityFilter.GetKeywordDataRefs(refs);
+                EntityFilter.GetRegionDataRefs(refs);
+            }
+        }
     }
 
     public class MissionObjectiveHintPrototype : Prototype

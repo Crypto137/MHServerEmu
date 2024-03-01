@@ -438,17 +438,32 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class InteractionSpecPrototype : Prototype
     {
+        public virtual void GetPrototypeContextRefs(HashSet<PrototypeId> refs) { }
     }
 
     public class ConnectionTargetEnableSpecPrototype : InteractionSpecPrototype
     {
         public PrototypeId ConnectionTarget { get; protected set; }
         public bool Enabled { get; protected set; }
+
+        public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
+        {
+            if (ConnectionTarget != PrototypeId.Invalid) refs.Add(ConnectionTarget);
+        }
     }
 
     public class EntityBaseSpecPrototype : InteractionSpecPrototype
     {
         public EntityFilterPrototype EntityFilter { get; protected set; }
+
+        public override void GetPrototypeContextRefs(HashSet<PrototypeId> refs)
+        {
+            if (EntityFilter != null)
+            {
+                EntityFilter.GetEntityDataRefs(refs);
+                EntityFilter.GetKeywordDataRefs(refs);
+            }
+        }
     }
 
     public class EntityVisibilitySpecPrototype : EntityBaseSpecPrototype

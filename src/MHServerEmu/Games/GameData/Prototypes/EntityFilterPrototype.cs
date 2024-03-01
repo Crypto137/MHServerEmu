@@ -1,6 +1,5 @@
 ﻿using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
-using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -44,6 +43,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public virtual void GetAreaDataRefs(HashSet<PrototypeId> refs) { }
         public virtual void GetEntityDataRefs(HashSet<PrototypeId> refs) { }
         public virtual void GetRegionDataRefs(HashSet<PrototypeId> refs) { }
+        public virtual void GetKeywordDataRefs(HashSet<PrototypeId> refs) { }
     }
 
     public class EntityFilterFilterListPrototype : EntityFilterPrototype
@@ -87,6 +87,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class EntityFilterHasKeywordPrototype : EntityFilterPrototype
     {
         public PrototypeId Keyword { get; protected set; }
+
+        public override void GetKeywordDataRefs(HashSet<PrototypeId> refs)
+        {
+            if (Keyword != PrototypeId.Invalid) refs.Add(Keyword);
+        }
     }
 
     public class EntityFilterHasNegStatusEffectPrototype : EntityFilterPrototype
