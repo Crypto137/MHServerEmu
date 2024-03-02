@@ -392,6 +392,7 @@ namespace GameDatabaseBrowser
                 }
                 subContainer = BringIntoView(subContainer, childIndex, true);
             }
+            subContainer.Focus();
             subContainer.IsSelected = true;
         }
 
