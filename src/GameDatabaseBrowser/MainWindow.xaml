@@ -5,6 +5,12 @@
         Title="Game Database Browser"
         Height="720"
         Width="1280">
+    <Window.Resources>
+        <ContextMenu x:Key="PropertyContextMenu">
+            <MenuItem Header="Copy value" Click="OnClickCopyValueMenuItem"/>
+            <MenuItem Header="Copy name" Click="OnClickCopyNameMenuItem"/>
+        </ContextMenu>
+    </Window.Resources>
     <Grid Background="Gainsboro" >
         <Grid.RowDefinitions>
             <RowDefinition Height="40" />
@@ -81,7 +87,7 @@
                 </TreeView.ItemContainerStyle>
                 <TreeView.ItemTemplate>
                     <HierarchicalDataTemplate DataType="{x:Type models:PropertyNode}" ItemsSource="{Binding Childs}">
-                        <TextBlock Text="{Binding PropertyDetails}" />
+                        <TextBlock Text="{Binding PropertyDetails}" ContextMenu="{StaticResource PropertyContextMenu}" />
                     </HierarchicalDataTemplate>
                 </TreeView.ItemTemplate>
             </TreeView>

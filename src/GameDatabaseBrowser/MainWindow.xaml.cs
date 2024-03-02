@@ -45,7 +45,7 @@ namespace GameDatabaseBrowser
         {
             InitializeComponent();
             treeView.SelectedItemChanged += UpdatePropertiesSection;
-            propertytreeView.MouseDoubleClick += OnPropertySelected;
+            propertytreeView.MouseDoubleClick += OnPropertyDoubleClicked;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -213,7 +213,7 @@ namespace GameDatabaseBrowser
         /// When double click on a property
         /// Allow to travel to a prototype when double clicking on a prototypeId
         /// </summary>
-        private void OnPropertySelected(object sender, MouseButtonEventArgs e)
+        private void OnPropertyDoubleClicked(object sender, MouseButtonEventArgs e)
         {
             if (!isReady)
                 return;
@@ -230,6 +230,34 @@ namespace GameDatabaseBrowser
             if (string.IsNullOrEmpty(name)) return;
 
             SelectFromName(name);
+        }
+
+        /// <summary>
+        /// Called when context menu "Copy value" selected
+        /// </summary>
+        private void OnClickCopyValueMenuItem(object sender, RoutedEventArgs e)
+        {
+            PropertyNode selected = ((FrameworkElement)e.OriginalSource).DataContext as PropertyNode;
+            if (selected?.PropertyDetails?.Value == null)
+                return;
+
+            ulong.TryParse(selected.PropertyDetails.Value, out var prototypeId);
+            if (prototypeId == 0)
+                Clipboard.SetText(selected.PropertyDetails.Value);
+            else
+                Clipboard.SetText(prototypeId.ToString());
+        }
+
+        /// <summary>
+        /// Called when context menu "Copy name" selected
+        /// </summary>
+        private void OnClickCopyNameMenuItem(object sender, RoutedEventArgs e)
+        {
+            PropertyNode selected = ((FrameworkElement)e.OriginalSource).DataContext as PropertyNode;
+            if (selected?.PropertyDetails?.Name == null)
+                return;
+
+            Clipboard.SetText(selected.PropertyDetails.Name);
         }
 
         /// <summary>
