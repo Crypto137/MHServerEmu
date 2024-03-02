@@ -275,8 +275,14 @@ namespace GameDatabaseBrowser
                     int index = 0;
                     foreach (var subPropInfo in subPropertyInfo)
                     {
-                        if (subPropInfo is PrototypeId)
+                        if (subPropertyInfo is Array)
+                        {
                             node.Childs.Last().Childs.Add(new() { PropertyDetails = new() { Index = index++, Name = "", Value = subPropInfo.ToString(), TypeName = subPropInfo.GetType().Name } });
+                            if (subPropInfo.GetType().IsPrimitive)
+                                continue;
+
+                            ConstructPropertyNodeHierarchy(node.Childs.Last().Childs.Last(), subPropInfo);
+                        }
                         else
                             ConstructPropertyNodeHierarchy(node.Childs.Last(), subPropInfo);
                     }
