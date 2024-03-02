@@ -125,6 +125,11 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // Properties
             Properties.FlattenCopyFrom(prototype.Properties, true);
+
+            // AvatarLastActiveTime is needed for missions to show up in the tracker
+            Properties[PropertyEnum.AvatarLastActiveCalendarTime] = 1509657924421;  // Nov 02 2017 21:25:24 GMT+0000
+            Properties[PropertyEnum.AvatarLastActiveTime] = 161351646299;
+
             Properties[PropertyEnum.CostumeCurrent] = (PrototypeId)dbAvatar.Costume;
             Properties[PropertyEnum.CharacterLevel] = 60;
             Properties[PropertyEnum.CombatLevel] = 60;
