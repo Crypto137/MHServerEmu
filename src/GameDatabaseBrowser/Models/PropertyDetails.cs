@@ -25,6 +25,7 @@ namespace GameDatabaseBrowser.Models
             string line = Index.HasValue ? $"[{Index.Value}] " : "";
             line += string.IsNullOrWhiteSpace(Name) ? "" : $"{Name} : ";
             string value = string.IsNullOrWhiteSpace(Value) ? "" : $" ({Value})";
+            string typename = string.IsNullOrWhiteSpace(TypeName) ? "" : $" ({TypeName})";
 
             return TypeName switch
             {
@@ -33,7 +34,7 @@ namespace GameDatabaseBrowser.Models
                 "AssetId" => $"{line}{GameDatabase.GetAssetName((AssetId)ulong.Parse(Value))}{value}",
                 "PrototypeId" => $"{line}{GameDatabase.GetPrototypeName((PrototypeId)ulong.Parse(Value))}{value}",
                 "Boolean" or "Int16" or "Int32" or "Int64" or "Single" => $"{line}{Value}",
-                _ => $"{line}{Value} ({TypeName})",
+                _ => $"{line}{Value}{typename}",
             };
         }
     }

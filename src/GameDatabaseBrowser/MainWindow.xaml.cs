@@ -8,12 +8,14 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
-using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using MHServerEmu.Games.Properties;
+using PropertyInfo = System.Reflection.PropertyInfo;
+using PropertyCollection = MHServerEmu.Games.Properties.PropertyCollection;
 
 namespace GameDatabaseBrowser
 {
@@ -293,10 +295,14 @@ namespace GameDatabaseBrowser
 
             foreach (PropertyInfo propInfo in propertyInfo)
             {
-                node.Childs.Add(new() { PropertyDetails = new() { Name = propInfo.Name, Value = propInfo.GetValue(property)?.ToString(), TypeName = propInfo.PropertyType.Name } });
+                if (propInfo.GetValue(property) is PropertyCollection)
+                    node.Childs.Add(new() { PropertyDetails = new() { Name = propInfo.Name, Value = "", TypeName = propInfo.PropertyType.Name } });
+                else
+                    node.Childs.Add(new() { PropertyDetails = new() { Name = propInfo.Name, Value = propInfo.GetValue(property)?.ToString(), TypeName = propInfo.PropertyType.Name } });
+
                 if (typeof(IEnumerable).IsAssignableFrom(propInfo.PropertyType))
                 {
-                    var subPropertyInfo = (IEnumerable)propInfo.GetValue(property);
+                    IEnumerable subPropertyInfo = (IEnumerable)propInfo.GetValue(property);
                     if (subPropertyInfo == null)
                         continue;
 
@@ -310,6 +316,15 @@ namespace GameDatabaseBrowser
                                 continue;
 
                             ConstructPropertyNodeHierarchy(node.Childs.Last().Childs.Last(), subPropInfo);
+                        }
+                        else if (subPropertyInfo is PropertyCollection)
+                        {
+                            KeyValuePair<PropertyId, PropertyValue> kvp = (KeyValuePair<PropertyId, PropertyValue>)subPropInfo;
+                            MHServerEmu.Games.Properties.PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
+                            string val = info.DataType == PropertyDataType.Prototype ? kvp.Value.ToPrototypeId().ToString() : kvp.Value.Print(info.DataType).ToString();
+                            string typeName = info.DataType == PropertyDataType.Prototype ? "PrototypeId" : info.DataType.ToString();
+                            node.Childs.Last().Childs.Add(new() { PropertyDetails = new() { Name = kvp.Key.ToString(), Value = val, TypeName = typeName } });
+                            continue;
                         }
                         else
                             ConstructPropertyNodeHierarchy(node.Childs.Last(), subPropInfo);
