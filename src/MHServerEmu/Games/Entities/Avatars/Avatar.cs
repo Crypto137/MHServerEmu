@@ -184,28 +184,14 @@ namespace MHServerEmu.Games.Entities.Avatars
                     Properties[PropertyEnum.StatIntelligence] = entry.IntelligenceValue;
             }
 
-            // Stolen powers for Rogue
+            // Unlock all stealable powers for Rogue
             if (prototypeId == (PrototypeId)6514650100102861856)
             {
-                // Unlock all stealable powers
                 foreach (PrototypeId stealablePowerInfoId in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(StealablePowerInfoPrototype), PrototypeIterateFlags.NoAbstract))
                 {
                     var stealablePowerInfo = stealablePowerInfoId.As<StealablePowerInfoPrototype>();
                     Properties[PropertyEnum.StolenPowerAvailable, stealablePowerInfo.Power] = true;
                 }
-
-                Properties[PropertyEnum.AvatarMappedPower, (PrototypeId)446172061560673720] = 9871228588527851725;      // StolenPowerLibrarySlot1 == SurturSwordAttack.prototype
-                Properties[PropertyEnum.AvatarMappedPower, (PrototypeId)11516681855932962233] = 13920148954319099911;   // StolenPowerLibrarySlot2 == GambitRaginCajun.prototype
-                Properties[PropertyEnum.AvatarMappedPower, (PrototypeId)6799774498873480634] = 7828920344198978693;     // StolenPowerLibrarySlot3 == MrSinisterAstralProjection.prototype
-                Properties[PropertyEnum.AvatarMappedPower, (PrototypeId)8603761372803110331] = 4073184659240000660;     // StolenPowerLibrarySlot4 == BetaRayBillLightningBarrage.prototype
-                Properties[PropertyEnum.AvatarMappedPower, (PrototypeId)13179903753718011324] = 7633134704884717177;    // StolenPowerLibrarySlot5 == KirigiVanish.prototype
-                Properties[PropertyEnum.AvatarMappedPower, (PrototypeId)3389533365924140477] = 16015269929959562587;    // StolenPowerLibrarySlot6 == QuicksilverSuperSonicCyclone.prototype
-                Properties[PropertyEnum.AvatarMappedPower, (PrototypeId)17187096700310328766] = 15542870177965479867;   // StolenPowerLibrarySlot7 == X23CrimsonCircle.prototype
-                Properties[PropertyEnum.AvatarMappedPower, (PrototypeId)9042139145586349503] = 1329686516307465899;     // StolenPowerLibrarySlot8 == SunspotPunch.prototype
-
-                Properties[PropertyEnum.AvatarMappedPower, (PrototypeId)5142686280903694467] = 8806366964956993441;     // StolenPassivePowerSlot1 == PassiveBlackCat.prototype
-                Properties[PropertyEnum.AvatarMappedPower, (PrototypeId)16049733880597780612] = 14352919595817965615;   // StolenPassivePowerSlot2 == PassiveSpiderman.prototype
-                Properties[PropertyEnum.AvatarMappedPower, (PrototypeId)2248074865399568517] = 18202449423888946833;    // StolenPassivePowerSlot3 == PassiveVenom.prototype
             }
 
             // We need 10 synergies active to remove the in-game popup
