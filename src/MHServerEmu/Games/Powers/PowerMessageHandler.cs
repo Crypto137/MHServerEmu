@@ -75,13 +75,13 @@ namespace MHServerEmu.Games.Powers
             return Array.Empty<QueuedGameMessage>();
         }
 
-        private bool PowerHasKeyword(PrototypeId powerId, HardcodedBlueprintId keyword)
+        private bool PowerHasKeyword(PrototypeId powerId, PrototypeId keyword)
         {
             var power = GameDatabase.GetPrototype<PowerPrototype>(powerId);
             if (power == null) return false;
 
             for (int i = 0; i < power.Keywords.Length; i++)
-                if (power.Keywords[i] == (PrototypeId)keyword) return true;
+                if (power.Keywords[i] == keyword) return true;
 
             return false;
         }
@@ -134,9 +134,9 @@ namespace MHServerEmu.Games.Powers
             }
             else if (powerPrototypePath.Contains("EmmaFrost/"))
             {
-                if (PowerHasKeyword(powerPrototypeId, HardcodedBlueprintId.DiamondFormActivatePower))
+                if (PowerHasKeyword(powerPrototypeId, (PrototypeId)HardcodedBlueprints.DiamondFormActivatePower))
                     _eventManager.AddEvent(client, EventEnum.DiamondFormActivate, 0, tryActivatePower.PowerPrototypeId);
-                else if (PowerHasKeyword(powerPrototypeId, HardcodedBlueprintId.Mental))
+                else if (PowerHasKeyword(powerPrototypeId, (PrototypeId)HardcodedBlueprints.Mental))
                     _eventManager.AddEvent(client, EventEnum.DiamondFormDeactivate, 0, tryActivatePower.PowerPrototypeId);
             }
             else if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.Magik.Ultimate)
