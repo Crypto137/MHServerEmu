@@ -222,6 +222,7 @@ namespace MHServerEmu.Games
                 case ClientToGameServerMessage.NetMessageAbilitySlotToAbilityBar:       // TODO: Move ability bar message handling to avatar entity
                 case ClientToGameServerMessage.NetMessageAbilityUnslotFromAbilityBar:
                 case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:
+                case ClientToGameServerMessage.NetMessageAssignStolenPower:
                     EnqueueResponses(_powerMessageHandler.HandleMessage(client, message)); break;
 
                 case ClientToGameServerMessage.NetMessageTryInventoryMove:

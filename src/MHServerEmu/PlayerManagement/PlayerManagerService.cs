@@ -188,6 +188,7 @@ namespace MHServerEmu.PlayerManagement
                 case ClientToGameServerMessage.NetMessageSelectOmegaBonus:  // This should be within NetMessageOmegaBonusAllocationCommit only in theory
                 case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:
                 case ClientToGameServerMessage.NetMessageRespecOmegaBonus:
+                case ClientToGameServerMessage.NetMessageAssignStolenPower:
                     GetGameByPlayer(client).Handle(client, message);
                     break;
 

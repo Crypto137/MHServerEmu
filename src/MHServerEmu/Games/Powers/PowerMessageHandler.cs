@@ -10,6 +10,7 @@ using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.MetaGame;
 
 namespace MHServerEmu.Games.Powers
 {
@@ -65,6 +66,11 @@ namespace MHServerEmu.Games.Powers
                 case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:
                     if (message.TryDeserialize<NetMessageAbilitySwapInAbilityBar>(out var swapInAbilityBar))
                         return OnAbilitySwapInAbilityBar(client, swapInAbilityBar);
+                    break;
+
+                case ClientToGameServerMessage.NetMessageAssignStolenPower:
+                    if (message.TryDeserialize<NetMessageAssignStolenPower>(out var assignStolenPower))
+                        return OnAssignStolenPower(client, assignStolenPower);
                     break;
 
                 default:
@@ -288,6 +294,13 @@ namespace MHServerEmu.Games.Powers
             abilityKeyMapping.SetAbilityInAbilitySlot(prototypeA, slotB);
 
             return Array.Empty<QueuedGameMessage>();
+        }
+
+        private IEnumerable<QueuedGameMessage> OnAssignStolenPower(FrontendClient client, NetMessageAssignStolenPower assignStolenPower)
+        {
+            PropertyParam param = Property.ToParam(PropertyEnum.AvatarMappedPower, 0, (PrototypeId)assignStolenPower.StealingPowerProtoId);
+            yield return new(client, new(Property.ToNetMessageSetProperty((ulong)HardcodedAvatarPropertyCollectionReplicationId.Rogue,
+                new(PropertyEnum.AvatarMappedPower, param), (PrototypeId)assignStolenPower.StolenPowerProtoId)));
         }
 
         #endregion
