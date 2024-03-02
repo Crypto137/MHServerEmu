@@ -37,12 +37,12 @@ namespace MHServerEmu.Games.Entities
     {
         // Note: in old client builds (July 2014 and earlier) this used to be a protobuf message with 20+ fields.
         // It was probably converted to an archive for optimization reasons.
-        public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
+        public AOINetworkPolicyValues ReplicationPolicy { get; set; }
         public ulong EntityId { get; set; }
         public PrototypeId PrototypeId { get; set; }
         public EntityCreateMessageFlags FieldFlags { get; set; }
         public LocomotionMessageFlags LocoFieldFlags { get; set; }
-        public AoiNetworkPolicyValues InterestPolicies { get; set; }
+        public AOINetworkPolicyValues InterestPolicies { get; set; }
         public uint AvatarWorldInstanceId { get; set; }
         public uint DbId { get; set; }
         public Vector3 Position { get; set; }
@@ -60,15 +60,15 @@ namespace MHServerEmu.Games.Entities
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
 
-            ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
+            ReplicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint32();
             EntityId = stream.ReadRawVarint64();
             PrototypeId = stream.ReadPrototypeEnum<EntityPrototype>();
             FieldFlags = (EntityCreateMessageFlags)stream.ReadRawVarint32();
             LocoFieldFlags = (LocomotionMessageFlags)stream.ReadRawVarint32();
 
             InterestPolicies = FieldFlags.HasFlag(EntityCreateMessageFlags.HasInterestPolicies)
-                ? (AoiNetworkPolicyValues)stream.ReadRawVarint32()
-                : AoiNetworkPolicyValues.AoiChannel0;    // This defaults to 0x1 if no policies are specified
+                ? (AOINetworkPolicyValues)stream.ReadRawVarint32()
+                : AOINetworkPolicyValues.AOIChannelProximity;    // This defaults to 0x1 if no policies are specified
 
             if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasAvatarWorldInstanceId))
                 AvatarWorldInstanceId = stream.ReadRawVarint32();
@@ -118,7 +118,7 @@ namespace MHServerEmu.Games.Entities
 
         public EntityBaseData(ulong entityId, PrototypeId prototypeId, Vector3 position, Vector3 orientation, bool snap = false)
         {
-            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel5;
+            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelDiscovery;
             EntityId = entityId;
             PrototypeId = prototypeId;
             LocomotionState = new(0f);

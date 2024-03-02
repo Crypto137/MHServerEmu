@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+﻿using MHServerEmu.Common.Logging;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -29,6 +30,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class AvatarPrototype : AgentPrototype
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public LocaleStringId BioText { get; protected set; }
         public AbilityAssignmentPrototype[] HiddenPassivePowers { get; protected set; }
         public AssetId PortraitPath { get; protected set; }
@@ -71,6 +74,35 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] LoadingScreensConsole { get; protected set; }
         public ItemAssignmentPrototype StartingCostumePS4 { get; protected set; }
         public ItemAssignmentPrototype StartingCostumeXboxOne { get; protected set; }
+
+        public override bool ApprovedForUse()
+        {
+            if (base.ApprovedForUse() == false) return false;
+
+            // Avatars also need their starting costume to be approved to be considered approved themselves.
+            // This is done in a separate AvatarPrototype.CostumeApprovedForUse() method rather than
+            // CostumePrototype.ApprovedForUse() because the latter calls AvatarPrototype.ApprovedForUse().
+
+            // Add settings for PS4 and Xbox One here if we end up supporting console clients
+            PrototypeId startingCostumeId = GetStartingCostumeForPlatform(Platforms.PC);
+            return CostumeApprovedForUse(startingCostumeId);
+        }
+
+        /// <summary>
+        /// Returns the <see cref="PrototypeId"/> of the starting costume for the specified platform.
+        /// </summary>
+        public PrototypeId GetStartingCostumeForPlatform(Platforms platform)
+        {
+            if (platform == Platforms.PS4 && StartingCostumePS4 != null)
+                return StartingCostumePS4.Item;
+            else if (platform == Platforms.XboxOne && StartingCostumeXboxOne != null)
+                return StartingCostumeXboxOne.Item;
+
+            if (StartingCostume == null)
+                return Logger.WarnReturn(PrototypeId.Invalid, $"GetStartingCostumeForPlatform(): failed to get starting costume for {platform}");
+
+            return StartingCostume.Item;
+        }
 
         /// <summary>
         /// Retrieves <see cref="PowerProgressionEntryPrototype"/> instances for powers that would be unlocked at the specified level or level range.
@@ -118,6 +150,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if the provided costume is approved for use.
+        /// </summary>
+        private bool CostumeApprovedForUse(PrototypeId costumeId)
+        {
+            // See AvatarPrototype.ApprovedForUse() for why this method exists.
+            var costume = GameDatabase.GetPrototype<CostumePrototype>(costumeId);
+            return costume != null && GameDatabase.DesignStateOk(costume.DesignState);
         }
     }
 

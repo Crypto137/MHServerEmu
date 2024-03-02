@@ -65,6 +65,13 @@ namespace MHServerEmu.Games.GameData
         
         public static InteractionManager InteractionManager { get; private set; }
 
+        // Misc
+
+        /// <summary>
+        /// Indicates minimum <see cref="DesignWorkflowState"/> value required for a prototype to be considered approved.
+        /// </summary>
+        public static DesignWorkflowState ApprovalThreshold { get; } = DesignWorkflowState.Live;    // TODO: Make this adjustable
+
         static GameDatabase()
         {
             Logger.Info("Initializing game database...");
@@ -353,6 +360,14 @@ namespace MHServerEmu.Games.GameData
         }
 
         #endregion
+
+        /// <summary>
+        /// Returns <see langword="true"/> if the provided <see cref="DesignWorkflowState"/> value is considered approved with the current <see cref="GameDatabase"/> settings.
+        /// </summary>
+        public static bool DesignStateOk(DesignWorkflowState designState)
+        {
+            return designState >= ApprovalThreshold;
+        }
 
         private static bool VerifyData()
         {

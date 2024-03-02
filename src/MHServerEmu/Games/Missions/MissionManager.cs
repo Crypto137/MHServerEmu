@@ -23,6 +23,8 @@ namespace MHServerEmu.Games.Missions
         private ulong _regionId; 
         private HashSet<ulong> _missionInterestEntities = new();
 
+        public MissionManager() { }
+
         public MissionManager(CodedInputStream stream, BoolDecoder boolDecoder)
         {
             PrototypeId = stream.ReadPrototypeEnum<Prototype>();

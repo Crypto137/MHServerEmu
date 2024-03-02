@@ -10,7 +10,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
 {
     public class LocomotionStateUpdateArchive
     {
-        public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
+        public AOINetworkPolicyValues ReplicationPolicy { get; set; }
         public ulong EntityId { get; set; }
         public LocomotionMessageFlags FieldFlags { get; set; }
         public PrototypeId PrototypeId { get; set; }
@@ -22,7 +22,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
 
-            ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
+            ReplicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint32();
             EntityId = stream.ReadRawVarint64();
             FieldFlags = (LocomotionMessageFlags)stream.ReadRawVarint32();
 

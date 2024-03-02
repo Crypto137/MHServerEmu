@@ -13,12 +13,31 @@ using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social;
+using MHServerEmu.PlayerManagement.Accounts;
 using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.Games.Entities
 {
+    // NOTE: These badges and their descriptions are taken from an internal build dated June 2015 (most likely version 1.35).
+    // They are not fully implemented and they may be outdated for our version 1.52.
+    public enum AvailableBadges
+    {
+        CanGrantBadges = 1,         // User can grant badges to other users
+        SiteCommands,               // User can run the site commands (player/regions lists, change to specific region etc)
+        CanBroadcastChat,           // User can send a chat message to all players
+        AllContentAccess,           // User has access to all content in the game
+        CanLogInAsAnotherAccount,   // User has ability to log in as another account
+        CanDisablePersistence,      // User has ability to play without saving
+        PlaytestCommands,           // User can always use commands that are normally only available during a playtest (e.g. bug)
+        CsrUser,                    // User can perform Customer Service Representative commands
+        DangerousCheatAccess,       // User has access to some especially dangerous cheats
+        NumberOfBadges
+    }
+
     public class Player : Entity, IMissionManagerOwner
     {
+        private SortedSet<AvailableBadges> _badges;
+
         public MissionManager MissionManager { get; set; }
         public ReplicatedPropertyCollection AvatarProperties { get; set; }
         public ulong ShardId { get; set; }
@@ -37,7 +56,6 @@ namespace MHServerEmu.Games.Entities
         public Community Community { get; set; }
         public bool UnkBool { get; set; }
         public PrototypeId[] StashInventories { get; set; }
-        public uint[] AvailableBadges { get; set; }
         public GameplayOptions GameplayOptions { get; set; }
         public AchievementState[] AchievementStates { get; set; }
         public StashTabOption[] StashTabOptions { get; set; }
@@ -45,11 +63,11 @@ namespace MHServerEmu.Games.Entities
         public Player(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
         // note: this is ugly
-        public Player(EntityBaseData baseData, AoiNetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection properties,
+        public Player(EntityBaseData baseData, AOINetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection properties,
             MissionManager missionManager, ReplicatedPropertyCollection avatarProperties,
             ulong shardId, ReplicatedVariable<string> playerName, ReplicatedVariable<string> unkName,
             ulong matchQueueStatus, bool emailVerified, ulong accountCreationTimestamp, ReplicatedVariable<ulong> partyId,
-            Community community, bool unkBool, PrototypeId[] stashInventories, uint[] availableBadges,
+            Community community, bool unkBool, PrototypeId[] stashInventories, SortedSet<AvailableBadges> badges,
             GameplayOptions gameplayOptions, AchievementState[] achievementStates, StashTabOption[] stashTabOptions) : base(baseData)
         {
             ReplicationPolicy = replicationPolicy;
@@ -69,7 +87,7 @@ namespace MHServerEmu.Games.Entities
             Community = community;
             UnkBool = unkBool;
             StashInventories = stashInventories;
-            AvailableBadges = availableBadges;
+            _badges = badges;
             GameplayOptions = gameplayOptions;
             AchievementStates = achievementStates;
             StashTabOptions = stashTabOptions;
@@ -109,8 +127,10 @@ namespace MHServerEmu.Games.Entities
             for (int i = 0; i < StashInventories.Length; i++)
                 StashInventories[i] = stream.ReadPrototypeEnum<Prototype>();
 
-            AvailableBadges = new uint[stream.ReadRawVarint64()];
-            for (int i = 0; i < AvailableBadges.Length; i++) AvailableBadges[i] = stream.ReadRawVarint32();
+            _badges = new();
+            ulong numBadges = stream.ReadRawVarint64();
+            for (ulong i = 0; i < numBadges; i++)
+                _badges.Add((AvailableBadges)stream.ReadRawVarint32());
 
             GameplayOptions = new(stream, boolDecoder);
 
@@ -169,8 +189,9 @@ namespace MHServerEmu.Games.Entities
             stream.WriteRawVarint64((ulong)StashInventories.Length);
             foreach (PrototypeId stashInventory in StashInventories) stream.WritePrototypeEnum<Prototype>(stashInventory);
 
-            stream.WriteRawVarint64((ulong)AvailableBadges.Length);
-            foreach (uint badge in AvailableBadges) stream.WriteRawVarint32(badge);
+            stream.WriteRawVarint64((ulong)_badges.Count);
+            foreach (AvailableBadges badge in _badges)
+                stream.WriteRawVarint32((uint)badge);
 
             GameplayOptions.Encode(stream, boolEncoder);
 
@@ -229,7 +250,29 @@ namespace MHServerEmu.Games.Entities
             Community.CommunityMemberList.Add(new("yn01", 7, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)12534955053251630387, (PrototypeId)14506515434462517197, 60, 2) }, CommunityMemberOnlineStatus.Online, "", new int[] { 0 }));
             Community.CommunityMemberList.Add(new("Gazillion", 8, 0, 0, Array.Empty<AvatarSlotInfo>(), CommunityMemberOnlineStatus.Offline, "", new int[] { 0 }));
             Community.CommunityMemberList.Add(new("FriendlyLawyer", 100, 0, 0, new AvatarSlotInfo[] { new((PrototypeId)12394659164528645362, (PrototypeId)2844257346122946366, 99, 1) }, CommunityMemberOnlineStatus.Online, "", new int[] { 2 }));
+        
+            // Add all badges to admin accounts
+            if (account.UserLevel == AccountUserLevel.Admin)
+            {
+                for (var badge = AvailableBadges.CanGrantBadges; badge < AvailableBadges.NumberOfBadges; badge++)
+                    AddBadge(badge);
+            }
         }
+
+        /// <summary>
+        /// Add the specified badge to this <see cref="Player"/>. Returns <see langword="true"/> if successful.
+        /// </summary>
+        public bool AddBadge(AvailableBadges badge) => _badges.Add(badge);
+
+        /// <summary>
+        /// Removes the specified badge from this <see cref="Player"/>. Returns <see langword="true"/> if successful.
+        /// </summary>
+        public bool RemoveBadge(AvailableBadges badge) => _badges.Remove(badge);
+
+        /// <summary>
+        /// Returns <see langword="true"/> if this <see cref="Player"/> has the specified badge.
+        /// </summary>
+        public bool HasBadge(AvailableBadges badge) => _badges.Contains(badge);
 
         protected override void BuildString(StringBuilder sb)
         {
@@ -253,7 +296,15 @@ namespace MHServerEmu.Games.Entities
             sb.AppendLine($"Community: {Community}");
             sb.AppendLine($"UnkBool: {UnkBool}");
             for (int i = 0; i < StashInventories.Length; i++) sb.AppendLine($"StashInventory{i}: {GameDatabase.GetPrototypeName(StashInventories[i])}");
-            for (int i = 0; i < AvailableBadges.Length; i++) sb.AppendLine($"AvailableBadge{i}: 0x{AvailableBadges[i]:X}");
+
+            if (_badges.Any())
+            {
+                sb.Append("Badges: ");
+                foreach (AvailableBadges badge in _badges)
+                    sb.Append(badge.ToString()).Append(' ');
+                sb.AppendLine();
+            }
+
             sb.AppendLine($"GameplayOptions: {GameplayOptions}");
             for (int i = 0; i < AchievementStates.Length; i++) sb.AppendLine($"AchievementState{i}: {AchievementStates[i]}");
             for (int i = 0; i < StashTabOptions.Length; i++) sb.AppendLine($"StashTabOption{i}: {StashTabOptions[i]}");

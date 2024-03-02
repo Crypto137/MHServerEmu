@@ -16,6 +16,8 @@ This page provides definitions for terms used by the game internally.
 
 - **Avatar** - an agent that can be controlled by players.
 
+- **Badge** - a flag that grants a player elevated privileges of some kind.
+
 - **Behavior** - a system that handles the AI of enemies and NPCs.
 
 - **Billing** - a service that handles interaction with the in-game store.
@@ -36,15 +38,19 @@ This page provides definitions for terms used by the game internally.
 
 - **Curve** - a collection of numeric values.
 
+- **Date Time** - a number of milliseconds or microseconds elapsed since `Jan 01 1970 00:00:00 GMT+0000`. Also referred to as calendar time.
+
 - **District** - a static arrangement of cells.
 
 - **Dynamic Random Area Generator (DRAG)** - a system that handles procedural generation of the game world.
 
 - **Encounter** - a static arrangement of entities to be spawned as part of the overall population.
 
+- **Endurance** - the primary resource used for powers (e.g. spirit).
+
 - **Entity** - a dynamic game object. Each entity contains a collection of properties.
 
-- **Eval** - a system evaluates formulas defined in static game data.
+- **Eval** - a system that evaluates formulas defined in static game data.
 
 - **Field Group** - a collection of field values belonging to a specific blueprint.
 
@@ -53,6 +59,8 @@ This page provides definitions for terms used by the game internally.
 - **Game Database** - a proprietary static game data management system developed by Gazillion.
 
 - **Game Instance Server (GIS)** - a server that runs game instances.
+
+- **Game Time** - a number of milliseconds or microseconds elapsed since `Sep 22 2012 09:31:18 GMT+0000`.
 
 - **Grouping Manager** - a service that handles social and matchmaking features.
 

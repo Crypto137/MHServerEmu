@@ -84,11 +84,15 @@ namespace SetupSorcererSupreme
             if (File.Exists(serverResourcePath) == false)
                 File.Copy(clientResourcePath, serverResourcePath);
 
-            // Create .bat file for launching the client
+            // Create a .bat file for launching the client normally
             using (StreamWriter writer = new(Path.Combine(serverDir, "StartClient.bat")))
                 writer.WriteLine($"@start \"\" \"{executablePath}\" -robocopy -nosteam -siteconfigurl=localhost/SiteConfig.xml");
 
-            return (true, "Setup successful. Run StartClient.bat to launch the game.");
+            // Create a .bat file for launching the client with auto login
+            using (StreamWriter writer = new(Path.Combine(serverDir, "StartClientAutoLogin.bat")))
+                writer.WriteLine($"@start \"\" \"{executablePath}\" -robocopy -nosteam -siteconfigurl=localhost/SiteConfig.xml -emailaddress=test1@test.com -password=123");
+
+            return (true, "Setup successful.\n\nRun StartClient.bat to launch the game normally.\n\nRun StartClientAutoLogin.bat to launch the game and automatically log in with a default account.");
         }
     }
 }

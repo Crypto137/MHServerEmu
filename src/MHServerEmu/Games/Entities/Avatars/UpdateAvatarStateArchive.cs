@@ -10,7 +10,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 {
     public class UpdateAvatarStateArchive
     {
-        public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
+        public AOINetworkPolicyValues ReplicationPolicy { get; set; }
         public int AvatarIndex { get; set; }
         public ulong EntityId { get; set; }
         public bool IsUsingGamepadInput { get; set; }
@@ -25,7 +25,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
             BoolDecoder boolDecoder = new();
 
-            ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
+            ReplicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint32();
             AvatarIndex = stream.ReadRawInt32();
             EntityId = stream.ReadRawVarint64();
             IsUsingGamepadInput = boolDecoder.ReadBool(stream);

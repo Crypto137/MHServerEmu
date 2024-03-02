@@ -1,7 +1,7 @@
 ﻿using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData.Calligraphy;
 
-namespace MHServerEmu.Games.GameData.Localization
+namespace MHServerEmu.Games.GameData.Locales
 {
     public class Locale
     {

@@ -84,14 +84,16 @@ namespace MHServerEmu.Billing
 
         private void OnGetCatalog(FrontendClient client, NetMessageGetCatalog getCatalog)
         {
-            // TODO: cache catalog message and don't resend it if it's not needed
-            Logger.Info($"Received NetMessageGetCatalog");
+            // Bail out if the client already has an up to date catalog
+            if (getCatalog.TimestampSeconds == _catalog.TimestampSeconds && getCatalog.TimestampMicroseconds == _catalog.TimestampMicroseconds)
+                return;
+
+            // Send the current catalog
             client.SendMessage(MuxChannel, new(_catalog.ToNetMessageCatalogItems(false)));
         }
 
         private void OnGetCurrencyBalance(FrontendClient client)
         {
-            Logger.Info($"Received NetMessageGetCurrencyBalance");
             client.SendMessage(MuxChannel, new(NetMessageGetCurrencyBalanceResponse.CreateBuilder()
                 .SetCurrencyBalance(ConfigManager.Billing.CurrencyBalance)
                 .Build()));

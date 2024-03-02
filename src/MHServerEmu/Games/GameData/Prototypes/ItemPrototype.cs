@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+﻿using MHServerEmu.Common.Logging;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -285,6 +286,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class CostumePrototype : ItemPrototype
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public AssetId CostumeUnrealClass { get; protected set; }
         public AssetId FullBodyIconPath { get; protected set; }
         public PrototypeId UsableBy { get; protected set; }
@@ -300,6 +303,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool EquipTriggersVO { get; protected set; }
         public AssetId PortraitIconPathHiRes { get; protected set; }
         public PrototypeId FulfillmentDuplicateItem { get; protected set; }
+
+        public override bool ApprovedForUse()
+        {
+            if (base.ApprovedForUse() == false) return false;
+
+            AvatarPrototype avatar = GameDatabase.GetPrototype<AvatarPrototype>(UsableBy);
+            if (avatar == null) return Logger.WarnReturn(false, $"ApprovedForUse(): avatar == null");
+
+            ItemPrototype itemProto = GameDatabase.GetPrototype<ItemPrototype>(FulfillmentDuplicateItem);
+            if (itemProto == null || itemProto == this) Logger.WarnReturn(false, "ApprovedForUse(): itemProto == null || itemProto == this");
+
+            return avatar.ApprovedForUse() && itemProto.ApprovedForUse();
+        }
     }
 
     public class LegendaryPrototype : ItemPrototype
