@@ -1,6 +1,8 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using Gazillion;
+using MHServerEmu.Common;
+using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.Games.Achievements
 {
@@ -8,16 +10,16 @@ namespace MHServerEmu.Games.Achievements
     {
         public uint Id { get; set; }
         public uint Count { get; set; }
-        public ulong CompletedDate { get; set; }
+        public long CompletedDate { get; set; }     // DateTime in microseconds
 
         public AchievementState(CodedInputStream stream)
         {
             Id = stream.ReadRawVarint32();
             Count = stream.ReadRawVarint32();
-            CompletedDate = stream.ReadRawVarint64();
+            CompletedDate = stream.ReadRawInt64();
         }
 
-        public AchievementState(uint id, uint count, ulong completedDate)
+        public AchievementState(uint id, uint count, long completedDate)
         {
             Id = id;
             Count = count;
@@ -28,7 +30,7 @@ namespace MHServerEmu.Games.Achievements
         {
             stream.WriteRawVarint64(Id);
             stream.WriteRawVarint64(Count);
-            stream.WriteRawVarint64(CompletedDate);
+            stream.WriteRawInt64(CompletedDate);
         }
 
         public NetMessageAchievementStateUpdate.Types.AchievementState ToNetStruct()
@@ -36,7 +38,7 @@ namespace MHServerEmu.Games.Achievements
             return NetMessageAchievementStateUpdate.Types.AchievementState.CreateBuilder()
                 .SetId(Id)
                 .SetCount(Count)
-                .SetCompleteddate(CompletedDate)
+                .SetCompleteddate((ulong)CompletedDate)
                 .Build();
         }
 
@@ -45,7 +47,7 @@ namespace MHServerEmu.Games.Achievements
             StringBuilder sb = new();
             sb.AppendLine($"Id: {Id}");
             sb.AppendLine($"Count: {Count}");
-            sb.AppendLine($"CompletionDate: 0x{CompletedDate:X}");
+            sb.AppendLine($"CompletionDate: {Clock.DateTimeMicrosecondsToDateTime(CompletedDate)}");
             return sb.ToString();
         }
     }

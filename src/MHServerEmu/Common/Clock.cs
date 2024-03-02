@@ -38,6 +38,22 @@ namespace MHServerEmu.Common
         public static TimeSpan GameTime { get => UtcNowPrecise - GameTimeEpoch; }
 
         /// <summary>
+        /// Returns a <see cref="System.DateTime"/> corresponding to the provided millisecond calendar time timestamp.
+        /// </summary>
+        public static DateTime DateTimeMillisecondsToDateTime(long timestamp)
+        {
+            return UnixEpoch.AddMilliseconds(timestamp);
+        }
+
+        /// <summary>
+        /// Returns a <see cref="System.DateTime"/> corresponding to the provided microsecond celandar time timestamp.
+        /// </summary>
+        public static DateTime DateTimeMicrosecondsToDateTime(long timestamp)
+        {
+            return UnixEpoch.AddTicks(timestamp * 10);
+        }
+
+        /// <summary>
         /// Returns a <see cref="System.DateTime"/> corresponding to the provided millisecond game time timestamp.
         /// </summary>
         public static DateTime GameTimeMillisecondsToDateTime(long timestamp)
