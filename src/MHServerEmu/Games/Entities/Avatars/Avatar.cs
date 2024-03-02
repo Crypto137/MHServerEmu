@@ -155,14 +155,29 @@ namespace MHServerEmu.Games.Entities.Avatars
             Properties[PropertyEnum.SecondaryResourceMax] = Properties[PropertyEnum.SecondaryResourceMaxBase];
             Properties[PropertyEnum.SecondaryResource] = Properties[PropertyEnum.SecondaryResourceMax];
 
-            // Stats (TODO: Apply level scaling)
-            var statProgression = GameDatabase.GetPrototype<StatProgressionEntryPrototype>(prototype.StatProgressionTable[0]);
-            Properties[PropertyEnum.StatDurability] = statProgression.DurabilityValue;
-            Properties[PropertyEnum.StatStrength] = statProgression.StrengthValue;
-            Properties[PropertyEnum.StatFightingSkills] = statProgression.FightingSkillsValue;
-            Properties[PropertyEnum.StatSpeed] = statProgression.SpeedValue;
-            Properties[PropertyEnum.StatEnergyProjection] = statProgression.EnergyProjectionValue;
-            Properties[PropertyEnum.StatIntelligence] = statProgression.IntelligenceValue;
+            // Stats
+            foreach (PrototypeId entryId in prototype.StatProgressionTable)
+            {
+                var entry = entryId.As<StatProgressionEntryPrototype>();
+
+                if (entry.DurabilityValue > 0)
+                    Properties[PropertyEnum.StatDurability] = entry.DurabilityValue;
+                
+                if (entry.StrengthValue > 0)
+                    Properties[PropertyEnum.StatStrength] = entry.StrengthValue;
+                
+                if (entry.FightingSkillsValue > 0)
+                    Properties[PropertyEnum.StatFightingSkills] = entry.FightingSkillsValue;
+                
+                if (entry.SpeedValue > 0)
+                    Properties[PropertyEnum.StatSpeed] = entry.SpeedValue;
+                
+                if (entry.EnergyProjectionValue > 0)
+                    Properties[PropertyEnum.StatEnergyProjection] = entry.EnergyProjectionValue;
+                
+                if (entry.IntelligenceValue > 0)
+                    Properties[PropertyEnum.StatIntelligence] = entry.IntelligenceValue;
+            }
 
             // Stolen powers for Rogue
             if (prototypeId == (PrototypeId)6514650100102861856)
