@@ -132,8 +132,7 @@ namespace GameDatabaseBrowser
             txtSearch.Text = "";
             RefreshPrototypeTree();
             int[] indexes = GetElementLocationInHierarchy(fullName);
-            TreeViewItem item = GetTreeViewItem(indexes);
-            item.IsSelected = true;
+            SelectTreeViewItem(indexes);
         }
 
         private void RefreshPrototypeTree()
@@ -192,7 +191,7 @@ namespace GameDatabaseBrowser
             _fullNameHistory.Pop();
             SelectFromName(_fullNameHistory.Peek());
         }
-         
+
         /// <summary>
         /// Launch the search by PrototypeId or by keyword
         /// </summary>
@@ -273,8 +272,14 @@ namespace GameDatabaseBrowser
                     if (subPropertyInfo == null)
                         continue;
 
+                    int index = 0;
                     foreach (var subPropInfo in subPropertyInfo)
-                        ConstructPropertyNodeHierarchy(node.Childs.Last(), subPropInfo);
+                    {
+                        if (subPropInfo is PrototypeId)
+                            node.Childs.Last().Childs.Add(new() { PropertyDetails = new() { Index = index++, Name = "", Value = subPropInfo.ToString(), TypeName = subPropInfo.GetType().Name } });
+                        else
+                            ConstructPropertyNodeHierarchy(node.Childs.Last(), subPropInfo);
+                    }
                 }
             }
         }
@@ -365,27 +370,23 @@ namespace GameDatabaseBrowser
         /// <summary>
         /// Return a treeViewItem based on the array of indexes of its location in the hierarchy
         /// </summary>
-        private TreeViewItem GetTreeViewItem(int[] indexes)
+        private void SelectTreeViewItem(int[] indexes)
         {
             ItemsControl container = treeView;
             TreeViewItem subContainer = (TreeViewItem)container.ItemContainerGenerator.ContainerFromIndex(0);
-            TreeViewItem nextContainer = null;
             foreach (var index in indexes)
             {
+                int childIndex = 0;
                 for (int i = 0; i < subContainer.Items.Count; i++)
                 {
                     if (i == index)
-                        nextContainer = BringIntoView(subContainer, i, true);
+                        childIndex = i;
                     else
-                    {
                         BringIntoView(subContainer, i);
-                    }
                 }
-
-                subContainer = nextContainer;
+                subContainer = BringIntoView(subContainer, childIndex, true);
             }
-
-            return subContainer;
+            subContainer.IsSelected = true;
         }
 
         private T FindVisualChild<T>(Visual visual) where T : Visual
