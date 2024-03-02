@@ -43,7 +43,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeDataRefRecord DataRefRecord { get; set; }
 
         /// <summary>
-        /// Returns <see langword="false"/> if this is a prototype in development.
+        /// Returns <see langword="true"/> if this prototype is approved for use. Approval criteria differ depending on the prototype type.
         /// </summary>
         public virtual bool ApprovedForUse()
         {

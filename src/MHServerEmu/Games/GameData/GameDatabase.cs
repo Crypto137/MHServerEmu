@@ -29,7 +29,6 @@ namespace MHServerEmu.Games.GameData
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private static readonly PrototypeId _globalsProtoRef;
         public static bool IsInitialized { get; }
 
         public static PrototypeClassManager PrototypeClassManager { get; }
@@ -62,6 +61,13 @@ namespace MHServerEmu.Games.GameData
         public static GamepadGlobalsPrototype GamepadGlobalsPrototype { get; private set; }
         public static DifficultyGlobalsPrototype DifficultyGlobalsPrototype { get; private set; }
         public static ConsoleGlobalsPrototype ConsoleGlobalsPrototype { get; private set; }
+
+        // Misc
+
+        /// <summary>
+        /// Indicates minimum <see cref="DesignWorkflowState"/> value required for a prototype to be considered approved.
+        /// </summary>
+        public static DesignWorkflowState ApprovalThreshold { get; } = DesignWorkflowState.Live;    // TODO: Make this adjustable
 
         static GameDatabase()
         {
@@ -144,10 +150,6 @@ namespace MHServerEmu.Games.GameData
                 IsInitialized = false;
                 return;
             }
-
-            // Get Global Prototypes
-            _globalsProtoRef = GetPrototypeRefByName("Globals/Globals.defaults");
-
 
             // Finish game database initialization
             stopwatch.Stop();
@@ -351,6 +353,14 @@ namespace MHServerEmu.Games.GameData
         }
 
         #endregion
+
+        /// <summary>
+        /// Returns <see langword="true"/> if the provided <see cref="DesignWorkflowState"/> value is considered approved with the current <see cref="GameDatabase"/> settings.
+        /// </summary>
+        public static bool DesignStateOk(DesignWorkflowState designState)
+        {
+            return designState >= ApprovalThreshold;
+        }
 
         private static bool VerifyData()
         {
