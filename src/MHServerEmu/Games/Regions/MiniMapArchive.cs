@@ -8,7 +8,7 @@ namespace MHServerEmu.Games.Regions
 {
     public class MiniMapArchive
     {
-        public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
+        public AOINetworkPolicyValues ReplicationPolicy { get; set; }
         public bool IsRevealAll { get; set; }
         public byte[] Map { get; set; }
 
@@ -17,7 +17,7 @@ namespace MHServerEmu.Games.Regions
             CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
             BoolDecoder boolDecoder = new();
 
-            ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
+            ReplicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint32();
             IsRevealAll = boolDecoder.ReadBool(stream);
 
             // Map buffer is only included when the map is not revealed by default
@@ -31,7 +31,7 @@ namespace MHServerEmu.Games.Regions
 
         public MiniMapArchive(bool isRevealAll)
         {
-            ReplicationPolicy = AoiNetworkPolicyValues.DefaultPolicy;
+            ReplicationPolicy = AOINetworkPolicyValues.DefaultPolicy;
             IsRevealAll = isRevealAll;
         }
 

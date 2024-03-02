@@ -34,7 +34,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId ValueDisplayFormat { get; protected set; }          // Localization/Translations/Translation.defaults
 
         [DoNotCopy]
-        public AoiNetworkPolicyValues RepNetwork { get; private set; } = AoiNetworkPolicyValues.AoiChannelNone;
+        public AOINetworkPolicyValues RepNetwork { get; private set; } = AOINetworkPolicyValues.AOIChannelNone;
         [DoNotCopy]
         public bool ShouldClampValue { get => Min != 0f || Max != 0f; }
 
@@ -44,27 +44,27 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             // Reconstruct AOI network policy
             if (ReplicateToProximity)
-                RepNetwork |= AoiNetworkPolicyValues.AoiChannelProximity;
+                RepNetwork |= AOINetworkPolicyValues.AOIChannelProximity;
 
             if (ReplicateToParty)
-                RepNetwork |= AoiNetworkPolicyValues.AoiChannelParty;
+                RepNetwork |= AOINetworkPolicyValues.AOIChannelParty;
 
             if (ReplicateToOwner)
-                RepNetwork |= AoiNetworkPolicyValues.AoiChannelOwner;
+                RepNetwork |= AOINetworkPolicyValues.AOIChannelOwner;
 
             if (ReplicateToTrader)
-                RepNetwork |= AoiNetworkPolicyValues.AoiChannelTrader;
+                RepNetwork |= AOINetworkPolicyValues.AOIChannelTrader;
 
             if (ReplicateToDiscovery)
-                RepNetwork |= AoiNetworkPolicyValues.AoiChannelDiscovery;
+                RepNetwork |= AOINetworkPolicyValues.AOIChannelDiscovery;
 
             // Validation messages based on PropertyInfoPrototype::Validate()
             if (ClientOnly)
             {
-                if (RepNetwork != AoiNetworkPolicyValues.AoiChannelNone)
+                if (RepNetwork != AOINetworkPolicyValues.AOIChannelNone)
                     Logger.Warn("PostProcess(): Client-only properties cannot have any network replication policies");
 
-                RepNetwork = AoiNetworkPolicyValues.AoiChannelClientOnly;
+                RepNetwork = AOINetworkPolicyValues.AOIChannelClientOnly;
             }
 
             if (TruncatePropertyValueToInt)

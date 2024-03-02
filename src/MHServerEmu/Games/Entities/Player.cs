@@ -63,7 +63,7 @@ namespace MHServerEmu.Games.Entities
         public Player(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
         // note: this is ugly
-        public Player(EntityBaseData baseData, AoiNetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection properties,
+        public Player(EntityBaseData baseData, AOINetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection properties,
             MissionManager missionManager, ReplicatedPropertyCollection avatarProperties,
             ulong shardId, ReplicatedVariable<string> playerName, ReplicatedVariable<string> unkName,
             ulong matchQueueStatus, bool emailVerified, ulong accountCreationTimestamp, ReplicatedVariable<ulong> partyId,

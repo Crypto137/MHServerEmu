@@ -23,7 +23,7 @@ namespace MHServerEmu.Games.Entities
         public Transition(EntityBaseData baseData, ulong replicationId, ulong mapRegionId, int mapAreaId, int mapCellId, PrototypeId contextAreaRef, 
             Vector3 mapPosition, Destination destination) : base(baseData)
         {
-            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannelProximity | AoiNetworkPolicyValues.AoiChannelDiscovery;
+            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelDiscovery;
 
             Properties = new(replicationId);
             Properties[PropertyEnum.MapPosition] = mapPosition;

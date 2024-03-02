@@ -8,7 +8,7 @@ namespace MHServerEmu.Games.Powers
 {
     public class AddConditionArchive
     {
-        public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
+        public AOINetworkPolicyValues ReplicationPolicy { get; set; }
         public ulong EntityId { get; set; }
         public Condition Condition { get; set; }
 
@@ -16,7 +16,7 @@ namespace MHServerEmu.Games.Powers
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
 
-            ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
+            ReplicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint32();
             EntityId = stream.ReadRawVarint64();
             Condition = new(stream);
         }
@@ -25,7 +25,7 @@ namespace MHServerEmu.Games.Powers
 
         public AddConditionArchive(ulong entityId, ulong id, ConditionSerializationFlags serializationFlags, PrototypeId prototypeId, int startTime)
         {
-            ReplicationPolicy = AoiNetworkPolicyValues.DefaultPolicy;
+            ReplicationPolicy = AOINetworkPolicyValues.DefaultPolicy;
             EntityId = entityId;
 
             Condition = new()

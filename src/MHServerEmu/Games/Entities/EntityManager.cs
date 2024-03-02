@@ -93,7 +93,7 @@ namespace MHServerEmu.Games.Entities
         public WorldEntity CreateWorldEntityEmpty(ulong regionId, PrototypeId prototypeId, Vector3 position, Vector3 orientation)
         {
             EntityBaseData baseData = new EntityBaseData(GetNextEntityId(), prototypeId, position, orientation);
-            WorldEntity worldEntity = new(baseData, AoiNetworkPolicyValues.AoiChannelProximity, _game.CurrentRepId);
+            WorldEntity worldEntity = new(baseData, AOINetworkPolicyValues.AOIChannelProximity, _game.CurrentRepId);
             worldEntity.RegionId = regionId;
             _entityDict.Add(baseData.EntityId, worldEntity);
             return worldEntity;
@@ -103,11 +103,11 @@ namespace MHServerEmu.Games.Entities
 
             EntityBaseData baseData = new()
             {
-                ReplicationPolicy = AoiNetworkPolicyValues.AoiChannelOwner,
+                ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner,
                 EntityId = GetNextEntityId(),
                 PrototypeId = itemProto,
                 FieldFlags = EntityCreateMessageFlags.HasInterestPolicies | EntityCreateMessageFlags.HasInvLoc,
-                InterestPolicies = AoiNetworkPolicyValues.AoiChannelOwner,
+                InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner,
                 LocoFieldFlags = LocomotionMessageFlags.None,
                 LocomotionState = new(0f),
                 InvLoc = invLoc

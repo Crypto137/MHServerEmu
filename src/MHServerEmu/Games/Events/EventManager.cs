@@ -167,7 +167,7 @@ namespace MHServerEmu.Games.Events
 
                     activatePower = new()
                     {
-                        ReplicationPolicy = AoiNetworkPolicyValues.AoiChannelProximity,
+                        ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
                         Flags = ActivatePowerMessageFlags.HasTriggeringPowerPrototypeId | ActivatePowerMessageFlags.TargetPositionIsUserPosition | ActivatePowerMessageFlags.HasPowerRandomSeed | ActivatePowerMessageFlags.HasFXRandomSeed,
                         IdUserEntity = avatarEntityId,
                         IdTargetEntity = 0,
@@ -216,7 +216,7 @@ namespace MHServerEmu.Games.Events
                     avatarEntityId = (ulong)avatar.ToEntityId();
                     activatePower = new()
                     {
-                        ReplicationPolicy = AoiNetworkPolicyValues.AoiChannelProximity,
+                        ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
                         Flags = ActivatePowerMessageFlags.HasTriggeringPowerPrototypeId | ActivatePowerMessageFlags.TargetPositionIsUserPosition | ActivatePowerMessageFlags.HasPowerRandomSeed | ActivatePowerMessageFlags.HasFXRandomSeed,
                         IdUserEntity = avatarEntityId,
                         IdTargetEntity = avatarEntityId,

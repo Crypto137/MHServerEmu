@@ -30,7 +30,7 @@ namespace MHServerEmu.Games.Entities
 
         private const int LocoFlagsCount = 12;
 
-        public AoiNetworkPolicyValues ReplicationPolicy { get; }
+        public AOINetworkPolicyValues ReplicationPolicy { get; }
         public ulong EntityId { get; set; }
         public LocomotionMessageFlags LocoFieldFlags { get; set; }
         public EnterGameWorldMessageFlags ExtraFieldFlags { get; set; }
@@ -44,7 +44,7 @@ namespace MHServerEmu.Games.Entities
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
 
-            ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
+            ReplicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint32();
             EntityId = stream.ReadRawVarint64();
 
             // This archive contains additional flags combined with LocomotionMessageFlags in a single 32-bit value
@@ -70,7 +70,7 @@ namespace MHServerEmu.Games.Entities
 
         public EnterGameWorldArchive(ulong entityId, Vector3 position, float orientation)
         {
-            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannelProximity;
+            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity;
             EntityId = entityId;
             LocoFieldFlags = LocomotionMessageFlags.NoLocomotionState;
             ExtraFieldFlags = EnterGameWorldMessageFlags.None;
@@ -80,7 +80,7 @@ namespace MHServerEmu.Games.Entities
 
         public EnterGameWorldArchive(ulong entityId, Vector3 position, float orientation, float moveSpeed)
         {
-            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannelProximity;
+            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity;
             EntityId = entityId;
             LocoFieldFlags = LocomotionMessageFlags.UpdatePathNodes | LocomotionMessageFlags.HasMoveSpeed;
             ExtraFieldFlags = EnterGameWorldMessageFlags.HasAvatarWorldInstanceId;
