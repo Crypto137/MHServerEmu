@@ -208,7 +208,7 @@ namespace MHServerEmu.Games.Entities
         public void InitializeFromDBAccount(DBAccount account)
         {
             // Adjust properties
-            foreach (var accountAvatar in account.Avatars)
+            foreach (var accountAvatar in account.Avatars.Values)
             {
                 PropertyParam enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, (PrototypeId)accountAvatar.Prototype);
                 var avatarPrototype = (PrototypeId)accountAvatar.Prototype;
