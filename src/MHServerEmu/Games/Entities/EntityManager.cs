@@ -583,21 +583,16 @@ namespace MHServerEmu.Games.Entities
         private static readonly BlockerEntity[] Blockers = new BlockerEntity[]
         {
             BlockerEntity.GateBlockerRaftLivingLaser,
-            BlockerEntity.DestructibleSubwayGate,
-            BlockerEntity.TeleportBlockerEntity512x16UU,
             BlockerEntity.DestructibleExitDoors,
             BlockerEntity.SurturRaidGateBlockerEntityMONO,
             BlockerEntity.SurturRaidGateBlockerEntityMOM,
             BlockerEntity.SurturRaidGateBlockerEntitySLAG,
-            BlockerEntity.SurturRaidGateBlockerEntitySURT,
-            BlockerEntity.BeastNorway,
+            BlockerEntity.SurturRaidGateBlockerEntitySURT
         };
 
         public enum BlockerEntity : ulong
         {
             GateBlockerRaftLivingLaser = 12353403066566515268,
-            DestructibleSubwayGate = 16568674850038421587,
-            TeleportBlockerEntity512x16UU = 388497672566609073,
             DestructibleExitDoors = 15556708167322245112,
             SurturRaidGateBlockerEntityMONO = 14264436868519894710,
             SurturRaidGateBlockerEntityMOM = 7506253403374886470,

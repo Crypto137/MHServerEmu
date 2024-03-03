@@ -332,6 +332,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         private KeywordsMask _keywordsMask = new();
         private KeywordsMask _regionRestrictionKeywordsMask = new();
 
+        public override bool ApprovedForUse()
+        {
+            return GameDatabase.DesignStateOk(DesignState);
+        }
+
         bool HasKeyword(KeywordPrototype keywordProto)
         {
             return keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);
