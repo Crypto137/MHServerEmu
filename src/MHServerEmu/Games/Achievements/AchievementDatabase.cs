@@ -3,6 +3,7 @@ using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using Gazillion;
 using MHServerEmu.Common.Helpers;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Common;
 
 namespace MHServerEmu.Games.Achievements
 {
@@ -16,7 +17,7 @@ namespace MHServerEmu.Games.Achievements
 
         public byte[] LocalizedAchievementStringBuffer { get; set; }
         public AchievementInfo[] AchievementInfos { get; set; }
-        public ulong AchievementNewThresholdUS { get; set; }
+        public TimeSpan AchievementNewThresholdUS { get; set; }     // Unix timestamp in seconds
 
         private AchievementDatabase() { }
 
@@ -35,7 +36,7 @@ namespace MHServerEmu.Games.Achievements
 
                 LocalizedAchievementStringBuffer = dump.LocalizedAchievementStringBuffer.ToByteArray();
                 AchievementInfos = dump.AchievementInfosList.Select(item => new AchievementInfo(item)).ToArray();
-                AchievementNewThresholdUS = dump.AchievementNewThresholdUS;
+                AchievementNewThresholdUS = Clock.UnixTimeMicrosecondsToTimeSpan((long)dump.AchievementNewThresholdUS * Clock.MicrosecondsPerSecond);
             }
 
             Logger.Info($"Initialized achievement database with {AchievementInfos.Length} achievements");
@@ -53,7 +54,7 @@ namespace MHServerEmu.Games.Achievements
             var dumpBuffer = AchievementDatabaseDump.CreateBuilder()
                 .SetLocalizedAchievementStringBuffer(ByteString.CopyFrom(LocalizedAchievementStringBuffer))
                 .AddRangeAchievementInfos(AchievementInfos.Select(item => item.ToNetStruct()))
-                .SetAchievementNewThresholdUS(AchievementNewThresholdUS)
+                .SetAchievementNewThresholdUS((ulong)AchievementNewThresholdUS.TotalSeconds)
                 .Build().ToByteArray();
 
             using (MemoryStream ms = new())

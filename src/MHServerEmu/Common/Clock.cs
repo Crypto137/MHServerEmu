@@ -9,7 +9,7 @@ namespace MHServerEmu.Common
     {
         // System.DateTime in C# represents time from Jan 01 0001 to Dec 31 9999.
         // The game uses two kinds of time: DateTime (calendar time) and GameTime.
-        // DateTime is Unix time (the number of microsecond elapsed since Jan 01 1970).
+        // DateTime is Unix time (the number of microseconds elapsed since Jan 01 1970).
         // GameTime is the number of microseconds elapsed since Sep 22 2012.
         // We represent DateTime and GameTime as TimeSpan values.
 
@@ -22,21 +22,23 @@ namespace MHServerEmu.Common
         private static readonly DateTime _utcBase;
         private static readonly Stopwatch _utcStopwatch;
 
+        public const long MicrosecondsPerSecond = 1000000;
+
         static Clock()
         {
-            _utcBase = System.DateTime.UtcNow;
+            _utcBase = DateTime.UtcNow;
             _utcStopwatch = Stopwatch.StartNew();
         }
 
         /// <summary>
-        /// Returns a <see cref="System.DateTime"/> representing the current precise date and time, expressed as the Coordinated Universal Time (UTC).
+        /// Returns a <see cref="DateTime"/> representing the current precise date and time, expressed as the Coordinated Universal Time (UTC).
         /// </summary>
         public static DateTime UtcNowPrecise { get => _utcBase.Add(_utcStopwatch.Elapsed); }
 
         /// <summary>
-        /// Returns a <see cref="TimeSpan"/> representing the current calendar time (epoch Jan 01 1970 00:00:00 GMT+0000).
+        /// Returns a <see cref="TimeSpan"/> representing the current calendar Unix time (epoch Jan 01 1970 00:00:00 GMT+0000).
         /// </summary>
-        public static TimeSpan DateTime { get => UtcNowPrecise - UnixEpoch; }
+        public static TimeSpan UnixTime { get => UtcNowPrecise - UnixEpoch; }
 
         /// <summary>
         /// Returns a <see cref="TimeSpan"/> representing the current game time (epoch Sep 22 2012 09:31:18 GMT+0000).
@@ -46,39 +48,39 @@ namespace MHServerEmu.Common
         #region Conversion
 
         /// <summary>
-        /// Returns a <see cref="System.DateTime"/> corresponding to the provided millisecond calendar time timestamp.
+        /// Returns a <see cref="DateTime"/> corresponding to the provided millisecond Unix time timestamp.
         /// </summary>
-        public static DateTime DateTimeMillisecondsToDateTime(long timestamp)
+        public static DateTime UnixTimeMillisecondsToDateTime(long timestamp)
         {
             return UnixEpoch.AddMilliseconds(timestamp);
         }
 
         /// <summary>
-        /// Returns a <see cref="System.DateTime"/> corresponding to the provided microsecond calendar time timestamp.
+        /// Returns a <see cref="DateTime"/> corresponding to the provided microsecond Unix time timestamp.
         /// </summary>
-        public static DateTime DateTimeMicrosecondsToDateTime(long timestamp)
+        public static DateTime UnixTimeMicrosecondsToDateTime(long timestamp)
         {
             return UnixEpoch.AddTicks(timestamp * 10);
         }
 
         /// <summary>
-        /// Returns a <see cref="TimeSpan"/> corresponding to the provided millisecond calendar time timestamp.
+        /// Returns a <see cref="TimeSpan"/> corresponding to the provided millisecond Unix time timestamp.
         /// </summary>
-        public static TimeSpan DateTimeMillisecondsToTimeSpan(long timestamp)
+        public static TimeSpan UnixTimeMillisecondsToTimeSpan(long timestamp)
         {
             return UnixEpoch.AddMilliseconds(timestamp) - UnixEpoch;
         }
 
         /// <summary>
-        /// Returns a <see cref="TimeSpan"/> corresponding to the provided microsecond calendar time timestamp.
+        /// Returns a <see cref="TimeSpan"/> corresponding to the provided microsecond Unix time timestamp.
         /// </summary>
-        public static TimeSpan DateTimeMicrosecondsToTimeSpan(long timestamp)
+        public static TimeSpan UnixTimeMicrosecondsToTimeSpan(long timestamp)
         {
             return UnixEpoch.AddTicks(timestamp * 10) - UnixEpoch;
         }
 
         /// <summary>
-        /// Returns a <see cref="System.DateTime"/> corresponding to the provided millisecond game time timestamp.
+        /// Returns a <see cref="DateTime"/> corresponding to the provided millisecond game time timestamp.
         /// </summary>
         public static DateTime GameTimeMillisecondsToDateTime(long timestamp)
         {
@@ -86,7 +88,7 @@ namespace MHServerEmu.Common
         }
 
         /// <summary>
-        /// Returns a <see cref="System.DateTime"/> corresponding to the provided microsecond game time timestamp.
+        /// Returns a <see cref="DateTime"/> corresponding to the provided microsecond game time timestamp.
         /// </summary>
         public static DateTime GameTimeMicrosecondsToDateTime(long timestamp)
         {
@@ -110,19 +112,35 @@ namespace MHServerEmu.Common
         }
 
         /// <summary>
-        /// Converts the provided <see cref="System.DateTime"/> value to a <see cref="TimeSpan"/> representing calendar time.
+        /// Converts the provided <see cref="DateTime"/> value to a <see cref="TimeSpan"/> representing Unix time.
         /// </summary>
-        public static TimeSpan DateTimeToDateTime(DateTime dateTime)
+        public static TimeSpan DateTimeToUnixTime(DateTime dateTime)
         {
             return dateTime - UnixEpoch;
         }
 
         /// <summary>
-        /// Converts the provided <see cref="System.DateTime"/> value to a <see cref="TimeSpan"/> representing game time.
+        /// Converts the provided <see cref="DateTime"/> value to a <see cref="TimeSpan"/> representing game time.
         /// </summary>
         public static TimeSpan DateTimeToGameTime(DateTime dateTime)
         {
             return dateTime - GameTimeEpoch;
+        }
+
+        /// <summary>
+        /// Converts the provided <see cref="TimeSpan"/> value representing Unix time to <see cref="DateTime"/>.
+        /// </summary>
+        public static DateTime UnixTimeToDateTime(TimeSpan timeSpan)
+        {
+            return UnixEpoch.Add(timeSpan);
+        }
+
+        /// <summary>
+        /// Converts the provided <see cref="TimeSpan"/> value representing game time to <see cref="DateTime"/>.
+        /// </summary>
+        public static DateTime GameTimeToDateTime(TimeSpan timeSpan)
+        {
+            return GameTimeEpoch.Add(timeSpan);
         }
 
         #endregion

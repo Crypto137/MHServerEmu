@@ -282,7 +282,7 @@ namespace MHServerEmu.Common.Commands
             if (info == null)
                 return $"Invalid achievement id {id}.";
 
-            state.SetAchievementProgress(id, new(info.Threshold, Clock.DateTime, true));
+            state.SetAchievementProgress(id, new(info.Threshold, Clock.UnixTime));
 
             client.SendMessage(1, new(state.ToUpdateMessage(true)));
             return string.Empty;

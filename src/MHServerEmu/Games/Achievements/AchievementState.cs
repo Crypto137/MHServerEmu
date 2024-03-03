@@ -1,8 +1,8 @@
-﻿using Gazillion;
+﻿using System.Text;
 using Google.ProtocolBuffers;
+using Gazillion;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Extensions;
-using System.Text;
 
 namespace MHServerEmu.Games.Achievements
 {
@@ -30,7 +30,7 @@ namespace MHServerEmu.Games.Achievements
                 uint count = stream.ReadRawVarint32();
                 long completedDate = stream.ReadRawInt64();
 
-                AchievementProgressMap[id] = new(count, Clock.DateTimeMicrosecondsToTimeSpan(completedDate));
+                AchievementProgressMap[id] = new(count, Clock.UnixTimeMicrosecondsToTimeSpan(completedDate), false);
             }
         }
 
@@ -101,7 +101,7 @@ namespace MHServerEmu.Games.Achievements
             StringBuilder sb = new();
             foreach (var kvp in AchievementProgressMap)
             {
-                sb.Append($"AchievementState[{kvp.Key}]: ");
+                sb.Append($"AchievementProgress[{kvp.Key}]: ");
                 sb.Append(kvp.Value.ToString());
             }
             return sb.ToString();

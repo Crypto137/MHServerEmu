@@ -1,5 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using Gazillion;
+using MHServerEmu.Common;
+using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Achievements
 {
@@ -8,56 +10,52 @@ namespace MHServerEmu.Games.Achievements
         public uint Id { get; set; }
         public bool Enabled { get; set; }
         public uint ParentId { get; set; }
-        public ulong Name { get; set; }
-        public ulong InProgressStr { get; set; }
-        public ulong CompletedStr { get; set; }
-        public ulong RewardStr { get; set; }
-        public ulong IconPathAssetId { get; set; }
+        public LocaleStringId Name { get; set; }
+        public LocaleStringId InProgressStr { get; set; }
+        public LocaleStringId CompletedStr { get; set; }
+        public LocaleStringId RewardStr { get; set; }
+        public AssetId IconPathAssetId { get; set; }
         public uint Score { get; set; }
-        public ulong CategoryStr { get; set; }
-        public ulong SubCategoryStr { get; set; }
+        public LocaleStringId CategoryStr { get; set; }
+        public LocaleStringId SubCategoryStr { get; set; }
         public float DisplayOrder { get; set; }
-        public uint VisibleState { get; set; }
-        public uint EvaluationType { get; set; }
-        public uint EventType { get; set; }
+        public AchievementVisibleState VisibleState { get; set; }
+        public AchievementEvaluationType EvaluationType { get; set; }
+        public ScoringEventType EventType { get; set; }
         public uint Threshold { get; set; }
         public uint DependentAchievementId { get; set; }
-        public uint UIProgressDisplayOption { get; set; }
-        public ulong PublishedDateUS { get; set; }
-
-        public ulong IconPathHiResAssetId { get; set; }
+        public AchievementUIProgressDisplayOption UIProgressDisplayOption { get; set; }
+        public TimeSpan PublishedDateUS { get; set; }
+        public AssetId IconPathHiResAssetId { get; set; }
         public bool OrbisTrophy { get; set; } = false;
         public int OrbisTrophyId { get; set; } = -1;
         public bool OrbisTrophyShared { get; set; } = false;
 
         [JsonConstructor]
-        public AchievementInfo()
-        {
-
-        }
+        public AchievementInfo() { }
 
         public AchievementInfo(AchievementDatabaseDump.Types.AchievementInfo info)
         {
             Id = info.Id;
             Enabled = info.Enabled;
             ParentId = info.ParentId;
-            Name = info.Name;
-            InProgressStr = info.InProgressStr;
-            CompletedStr = info.CompletedStr;
-            RewardStr = info.RewardStr;
-            IconPathAssetId = info.IconPathAssetId;
+            Name = (LocaleStringId)info.Name;
+            InProgressStr = (LocaleStringId)info.InProgressStr;
+            CompletedStr = (LocaleStringId)info.CompletedStr;
+            RewardStr = (LocaleStringId)info.RewardStr;
+            IconPathAssetId = (AssetId)info.IconPathAssetId;
             Score = info.Score;
-            CategoryStr = info.CategoryStr;
-            SubCategoryStr = info.SubCategoryStr;
+            CategoryStr = (LocaleStringId)info.CategoryStr;
+            SubCategoryStr = (LocaleStringId)info.SubCategoryStr;
             DisplayOrder = info.DisplayOrder;
-            VisibleState = info.VisibleState;
-            EvaluationType = info.EvaluationType;
-            EventType = info.Eventtype;
+            VisibleState = (AchievementVisibleState)info.VisibleState;
+            EvaluationType = (AchievementEvaluationType)info.EvaluationType;
+            EventType = (ScoringEventType)info.Eventtype;
             Threshold = info.Threshold;
             DependentAchievementId = info.DependentAchievementId;
-            UIProgressDisplayOption = info.UiProgressDisplayOption;
-            PublishedDateUS = info.PublishedDateUS;
-            IconPathHiResAssetId = info.IconPathHiResAssetId;
+            UIProgressDisplayOption = (AchievementUIProgressDisplayOption)info.UiProgressDisplayOption;
+            PublishedDateUS = Clock.UnixTimeMicrosecondsToTimeSpan((long)info.PublishedDateUS * Clock.MicrosecondsPerSecond);
+            IconPathHiResAssetId = (AssetId)info.IconPathHiResAssetId;
             OrbisTrophy = info.OrbisTrophy;
             OrbisTrophyId = info.OrbisTrophyId;
             OrbisTrophyShared = info.OrbisTrophyShared;
@@ -69,23 +67,23 @@ namespace MHServerEmu.Games.Achievements
                 .SetId(Id)
                 .SetEnabled(Enabled)
                 .SetParentId(ParentId)
-                .SetName(Name)
-                .SetInProgressStr(InProgressStr)
-                .SetCompletedStr(CompletedStr)
-                .SetRewardStr(RewardStr)
-                .SetIconPathAssetId(IconPathAssetId)
+                .SetName((ulong)Name)
+                .SetInProgressStr((ulong)InProgressStr)
+                .SetCompletedStr((ulong)CompletedStr)
+                .SetRewardStr((ulong)RewardStr)
+                .SetIconPathAssetId((ulong)IconPathAssetId)
                 .SetScore(Score)
-                .SetCategoryStr(CategoryStr)
-                .SetSubCategoryStr(SubCategoryStr)
+                .SetCategoryStr((ulong)CategoryStr)
+                .SetSubCategoryStr((ulong)SubCategoryStr)
                 .SetDisplayOrder(DisplayOrder)
-                .SetVisibleState(VisibleState)
-                .SetEvaluationType(EvaluationType)
-                .SetEventtype(EventType)
+                .SetVisibleState((uint)VisibleState)
+                .SetEvaluationType((uint)EvaluationType)
+                .SetEventtype((uint)EventType)
                 .SetThreshold(Threshold)
                 .SetDependentAchievementId(DependentAchievementId)
-                .SetUiProgressDisplayOption(UIProgressDisplayOption)
-                .SetPublishedDateUS(PublishedDateUS)
-                .SetIconPathHiResAssetId(IconPathHiResAssetId);
+                .SetUiProgressDisplayOption((uint)UIProgressDisplayOption)
+                .SetPublishedDateUS((ulong)PublishedDateUS.TotalSeconds)
+                .SetIconPathHiResAssetId((ulong)IconPathHiResAssetId);
 
             if (OrbisTrophy)
                 builder.SetOrbisTrophy(OrbisTrophy).SetOrbisTrophyId(OrbisTrophyId).SetOrbisTrophyShared(OrbisTrophyShared);
