@@ -97,6 +97,7 @@ namespace MHServerEmu.Games.Dialog
         Active = 1 << 3,
         Completed = 1 << 4,
         Failed = 1 << 5,
+        OnStart = 1 << 6
     }
 
     [Flags]

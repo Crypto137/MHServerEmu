@@ -8,13 +8,13 @@ namespace MHServerEmu.Games.Dialog
     public class InteractionManager
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private Dictionary<PrototypeId, InteractionData> _interationMap;
+        private Dictionary<PrototypeId, InteractionData> _interaсtionMap;
         private Dictionary<PrototypeId, ExtraMissionData> _missionMap;
         private List<InteractionOption> _options;
 
         public InteractionManager()
         {
-            _interationMap = new();
+            _interaсtionMap = new();
             _missionMap = new();
             _options = new();
         }
@@ -66,7 +66,7 @@ namespace MHServerEmu.Games.Dialog
                 GetInteractionDataFromMetaStatePrototype(metaStateRef);
             }
 
-            foreach (var kvp in _interationMap)
+            foreach (var kvp in _interaсtionMap)
                 kvp.Value?.Sort();
         }
 
@@ -83,10 +83,10 @@ namespace MHServerEmu.Games.Dialog
             foreach (PrototypeId contextRef in contexts)
             {
                 if (contextRef == PrototypeId.Invalid) continue;
-                if (_interationMap.TryGetValue(contextRef, out InteractionData dataInMap) == false)
+                if (_interaсtionMap.TryGetValue(contextRef, out InteractionData dataInMap) == false)
                 {
                     dataInMap = new InteractionData();
-                    _interationMap[contextRef] = dataInMap;
+                    _interaсtionMap[contextRef] = dataInMap;
                 }
 
                 dataInMap.AddOption(option);
@@ -206,7 +206,7 @@ namespace MHServerEmu.Games.Dialog
                 RegisterActionInfoFromList(missionProto, missionProto.OnAvailableActions, MissionStateFlags.Available, InvalidIndex, 0, MissionOptionTypeFlags.None);
 
             if (missionProto.OnStartActions.HasValue())
-                RegisterActionInfoFromList(missionProto, missionProto.OnStartActions, MissionStateFlags.Active, InvalidIndex, 0, MissionOptionTypeFlags.None);
+                RegisterActionInfoFromList(missionProto, missionProto.OnStartActions, MissionStateFlags.Active | MissionStateFlags.OnStart, InvalidIndex, 0, MissionOptionTypeFlags.None);
 
             if (missionProto.OnFailActions.HasValue())
                 RegisterActionInfoFromList(missionProto, missionProto.OnFailActions, MissionStateFlags.Failed, InvalidIndex, 0, MissionOptionTypeFlags.None);
@@ -291,7 +291,7 @@ namespace MHServerEmu.Games.Dialog
                         RegisterActionInfoFromList(missionProto, objectivePrototype.OnAvailableActions, MissionStateFlags.Active, objectiveIndex, MissionObjectiveStateFlags.Available, MissionOptionTypeFlags.None);
 
                     if (objectivePrototype.OnStartActions.HasValue())
-                        RegisterActionInfoFromList(missionProto, objectivePrototype.OnStartActions, MissionStateFlags.Active, objectiveIndex, MissionObjectiveStateFlags.Active, MissionOptionTypeFlags.None);
+                        RegisterActionInfoFromList(missionProto, objectivePrototype.OnStartActions, MissionStateFlags.Active | MissionStateFlags.OnStart, objectiveIndex, MissionObjectiveStateFlags.Active, MissionOptionTypeFlags.None);
 
                     if (objectivePrototype.OnFailActions.HasValue())
                         RegisterActionInfoFromList(missionProto, objectivePrototype.OnFailActions, MissionStateFlags.Active, objectiveIndex, MissionObjectiveStateFlags.Failed, MissionOptionTypeFlags.None);
@@ -474,13 +474,32 @@ namespace MHServerEmu.Games.Dialog
             }
         }
 
+        // Test function for get StartAction
+        public bool GetStartAction(PrototypeId entityRef, PrototypeId missionRef, out MissionActionEntityPerformPowerPrototype action)
+        {
+            action = null;
+            var missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
+            if (missionProto != null && missionProto.OnStartActions.HasValue())
+            {
+                if (_interaсtionMap.TryGetValue(entityRef, out var data))
+                {
+                    var option = data.StartPowerOption(missionProto);
+                    if (option != null && option.Proto is MissionActionEntityPerformPowerPrototype actionEntityPerformPowerProto)
+                    {
+                        action = actionEntityPerformPowerProto;
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
     }
 
     public class InteractionData
     {
         private readonly List<InteractionOption> _options;
         private InteractionOptimizationFlags _optionFlags;
-
+        public int OptionCount => _options.Count;
         public bool HasOptionFlag(InteractionOptimizationFlags optionFlag) => _optionFlags.HasFlag(optionFlag);
         public bool HasAnyOptionFlags() => _optionFlags != InteractionOptimizationFlags.None;
 
@@ -494,6 +513,17 @@ namespace MHServerEmu.Games.Dialog
             if (option == null) return;
             _options.Add(option);
             _optionFlags |= option.OptimizationFlags;
+        }
+
+        public MissionActionEntityTargetOption StartPowerOption(MissionPrototype missionProto)
+        {            
+            foreach(var option in _options)
+            {
+                if (option is not MissionActionEntityTargetOption targetOption) continue;
+                if (targetOption.MissionProto != missionProto) continue;
+                if (targetOption.MissionState.HasFlag(MissionStateFlags.OnStart)) return targetOption;
+            }
+            return null;
         }
 
         public InteractionData()

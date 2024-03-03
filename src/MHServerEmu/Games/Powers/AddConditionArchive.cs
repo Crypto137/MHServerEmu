@@ -33,8 +33,7 @@ namespace MHServerEmu.Games.Powers
                 Id = id,
                 SerializationFlags = serializationFlags,
                 CreatorPowerPrototypeId = prototypeId,
-                StartTime = startTime,
-                Properties = new(0)
+                StartTime = startTime
             };
         }
 

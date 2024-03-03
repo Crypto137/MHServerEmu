@@ -84,7 +84,11 @@ namespace MHServerEmu.Games.Powers
                 CancelOnFlags = (UInt32Flags)stream.ReadRawVarint32();
         }
 
-        public Condition() { }
+        public Condition() 
+        {
+            StartTime = (long)Clock.GameTime.TotalMilliseconds;
+            Properties = new();
+        }
 
         public void Encode(CodedOutputStream stream)
         {

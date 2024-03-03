@@ -213,6 +213,12 @@ namespace MHServerEmu.Games.Common
             return pos * cosA + Cross(axis, pos) * MathF.Sin(angle) + axis * Dot(axis, pos) * (1.0f - cosA);
         }
 
+        public static float Angle(Vector3 a, Vector3 b)
+        {
+            Vector3 delta = Normalize2D(b - a);
+            return MathF.Atan2(delta.Y, delta.X);
+        }
+
         public static Vector3 Cross(Vector3 v1, Vector3 v2)
         {
             return new Vector3(

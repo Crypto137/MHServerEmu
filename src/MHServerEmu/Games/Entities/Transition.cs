@@ -32,9 +32,9 @@ namespace MHServerEmu.Games.Entities
             Properties[PropertyEnum.MapCellId] = mapCellId;
             Properties[PropertyEnum.ContextAreaRef] = contextAreaRef;
 
-            TrackingContextMap = Array.Empty<EntityTrackingContextMap>();
-            ConditionCollection = Array.Empty<Condition>();
-            PowerCollection = Array.Empty<PowerCollectionRecord>();
+            TrackingContextMap = new();
+            ConditionCollection = new();
+            PowerCollection = new();
             UnkEvent = 0;
 
             TransitionName = "";
@@ -49,8 +49,8 @@ namespace MHServerEmu.Games.Entities
 
         public Transition(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
-        public Transition(EntityBaseData baseData, EntityTrackingContextMap[] trackingContextMap, Condition[] conditionCollection,
-            PowerCollectionRecord[] powerCollection, int unkEvent, 
+        public Transition(EntityBaseData baseData, List<EntityTrackingContextMap> trackingContextMap, List<Condition> conditionCollection,
+            List<PowerCollectionRecord> powerCollection, int unkEvent, 
             string transitionName, Destination[] destinations) : base(baseData)
         {
             TrackingContextMap = trackingContextMap;

@@ -800,7 +800,13 @@ namespace MHServerEmu.Games.Generators.Population
             pos.Z += entity.Bounds.GetBoundHalfHeight();
             var rot = tr.Orientation;
             int health = EntityManager.GetRankHealth(entity);
-            entityManager.CreateWorldEntity(cell, EntityRef, pos, rot, health, false, overrideSnap);
+            var worldEntity = entityManager.CreateWorldEntity(cell, EntityRef, pos, rot, health, false, overrideSnap);            
+            if (Parent.MissionRef != PrototypeId.Invalid)
+            {                
+                worldEntity.Properties[PropertyEnum.MissionPrototype] = Parent.MissionRef;
+                worldEntity.AppendOnStartActions(Parent.MissionRef);
+            }
+            // TODO set Rank
             //Logger.Debug($"{GameDatabase.GetFormattedPrototypeName(EntityRef)} {pos.ToStringFloat()} [{Parent.Objects.Count}] {Parent.ObjectProto.GetFormation()}");
         }
 
