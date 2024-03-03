@@ -276,14 +276,16 @@ namespace MHServerEmu.Common.Commands
             if (uint.TryParse(@params[0], out uint id) == false)
                 return "Failed to parse achievement id.";
 
-            AchievementState state = client.Session.Account.Player.AchievementState;
-            AchievementInfo info = AchievementDatabase.Instance.AchievementInfos.SingleOrDefault(info => info.Id == id);
+            AchievementInfo info = AchievementDatabase.Instance.GetAchievementInfoById(id);
 
             if (info == null)
                 return $"Invalid achievement id {id}.";
 
-            state.SetAchievementProgress(id, new(info.Threshold, Clock.UnixTime));
+            if (info.Enabled == false)
+                return $"Achievement id {id} is disabled.";
 
+            AchievementState state = client.Session.Account.Player.AchievementState;
+            state.SetAchievementProgress(id, new(info.Threshold, Clock.UnixTime));
             client.SendMessage(1, new(state.ToUpdateMessage(true)));
             return string.Empty;
         }
