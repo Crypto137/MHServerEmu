@@ -318,7 +318,9 @@ namespace MHServerEmu.Games.Entities
             }
             entityPosition.Z += entity.Bounds.GetBoundHalfHeight();
             int health = GetRankHealth(entity);
-            CreateWorldEntity(cell, protoRef, entityPosition, entityMarker.Rotation, health, false, overrideSnap);
+            WorldEntity worldEntity = CreateWorldEntity(cell, protoRef, entityPosition, entityMarker.Rotation, health, false, overrideSnap);
+            if (worldEntity.WorldEntityPrototype is AgentPrototype)
+                worldEntity.AppendOnStartActions(cell.GetRegion().PrototypeDataRef);
         }
 
         public static int GetRankHealth(WorldEntityPrototype entity)

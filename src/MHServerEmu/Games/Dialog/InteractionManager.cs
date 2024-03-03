@@ -67,7 +67,11 @@ namespace MHServerEmu.Games.Dialog
             }
 
             foreach (var kvp in _interaсtionMap)
+            {
+               // if (kvp.Key == (PrototypeId)3318119032142371986)
+               //    Logger.Warn($"{GameDatabase.GetFormattedPrototypeName(kvp.Key)}");
                 kvp.Value?.Sort();
+            }
         }
 
         private void BindOptionToMap(InteractionOption option, HashSet<PrototypeId> contexts)
@@ -475,11 +479,11 @@ namespace MHServerEmu.Games.Dialog
         }
 
         // Test function for get StartAction
-        public bool GetStartAction(PrototypeId entityRef, PrototypeId missionRef, out MissionActionEntityPerformPowerPrototype action)
+        public bool GetStartAction(PrototypeId entityRef, PrototypeId targetRef, out MissionActionEntityPerformPowerPrototype action)
         {
             action = null;
-            var missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
-            if (missionProto != null && missionProto.OnStartActions.HasValue())
+            var proto = GameDatabase.GetPrototype<Prototype>(targetRef);
+            if (proto is MissionPrototype missionProto && missionProto.OnStartActions.HasValue())
             {
                 if (_interaсtionMap.TryGetValue(entityRef, out var data))
                 {
@@ -491,33 +495,48 @@ namespace MHServerEmu.Games.Dialog
                     }
                 }
             }
+            else
+            {
+                if (_interaсtionMap.TryGetValue(entityRef, out var entityData))
+                {
+                    if (_interaсtionMap.TryGetValue(targetRef, out var targetData))
+                    {
+                        var option = entityData.StartPowerOptionIntersect(targetData);
+                        if (option != null && option.Proto is MissionActionEntityPerformPowerPrototype actionEntityPerformPowerProto)
+                        {
+                            action = actionEntityPerformPowerProto;
+                            return true;
+                        }
+                    }
+                }
+            }
             return false;
         }
     }
 
     public class InteractionData
     {
-        private readonly List<InteractionOption> _options;
+        public List<InteractionOption> Options { get; }
         private InteractionOptimizationFlags _optionFlags;
-        public int OptionCount => _options.Count;
+        public int OptionCount => Options.Count;
         public bool HasOptionFlag(InteractionOptimizationFlags optionFlag) => _optionFlags.HasFlag(optionFlag);
         public bool HasAnyOptionFlags() => _optionFlags != InteractionOptimizationFlags.None;
 
         public void Sort()
         {
-            _options.Sort((a, b) => a.CompareTo(b));
+            Options.Sort((a, b) => a.CompareTo(b));
         }
 
         public void AddOption(InteractionOption option)
         {
             if (option == null) return;
-            _options.Add(option);
+            Options.Add(option);
             _optionFlags |= option.OptimizationFlags;
         }
 
         public MissionActionEntityTargetOption StartPowerOption(MissionPrototype missionProto)
         {            
-            foreach(var option in _options)
+            foreach(var option in Options)
             {
                 if (option is not MissionActionEntityTargetOption targetOption) continue;
                 if (targetOption.MissionProto != missionProto) continue;
@@ -526,9 +545,20 @@ namespace MHServerEmu.Games.Dialog
             return null;
         }
 
+        public MissionActionEntityTargetOption StartPowerOptionIntersect(InteractionData targetData)
+        {
+            var intersectingOptions = Options.Intersect(targetData.Options);
+            foreach (var option in intersectingOptions)
+            {
+                if (option is not MissionActionEntityTargetOption targetOption) continue;
+                if (targetOption.MissionState.HasFlag(MissionStateFlags.OnStart)) return targetOption;
+            }
+            return null;
+        }
+
         public InteractionData()
         {
-            _options = new();
+            Options = new();
             _optionFlags = InteractionOptimizationFlags.None;
         }
     }

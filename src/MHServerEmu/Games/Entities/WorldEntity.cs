@@ -11,6 +11,7 @@ using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Games.Entities.Locomotion;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -199,9 +200,9 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
-        public void AppendOnStartActions(PrototypeId missionRef)
+        public void AppendOnStartActions(PrototypeId targetRef)
         {
-            if (GameDatabase.InteractionManager.GetStartAction(BaseData.PrototypeId, missionRef, out MissionActionEntityPerformPowerPrototype action))
+            if (GameDatabase.InteractionManager.GetStartAction(BaseData.PrototypeId, targetRef, out MissionActionEntityPerformPowerPrototype action))
             {
                 var startPowerRef = action.PowerPrototype;
                 //Console.WriteLine($"[{BaseData.EntityId}]{GameDatabase.GetPrototypeName(startPowerRef)}");
@@ -228,6 +229,14 @@ namespace MHServerEmu.Games.Entities
                 };
                 PowerCollection.Add(powerCollection);
             }            
+        }
+
+        public string PowerCollectionToString()
+        {
+            StringBuilder sb = new();
+            sb.AppendLine($"Powers:");
+            foreach(var power in PowerCollection) sb.AppendLine($" {GameDatabase.GetFormattedPrototypeName(power.PowerPrototypeId)}");
+            return sb.ToString();
         }
     }
 }

@@ -804,7 +804,8 @@ namespace MHServerEmu.Games.Generators.Population
             if (Parent.MissionRef != PrototypeId.Invalid)
             {                
                 worldEntity.Properties[PropertyEnum.MissionPrototype] = Parent.MissionRef;
-                worldEntity.AppendOnStartActions(Parent.MissionRef);
+                if (worldEntity.WorldEntityPrototype is AgentPrototype)
+                    worldEntity.AppendOnStartActions(Parent.MissionRef);
             }
             // TODO set Rank
             //Logger.Debug($"{GameDatabase.GetFormattedPrototypeName(EntityRef)} {pos.ToStringFloat()} [{Parent.Objects.Count}] {Parent.ObjectProto.GetFormation()}");

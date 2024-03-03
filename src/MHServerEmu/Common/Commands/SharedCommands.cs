@@ -196,6 +196,8 @@ namespace MHServerEmu.Common.Commands
 
             ChatHelper.SendMetagameMessage(client, $"Entity[{entityId}]: {GameDatabase.GetFormattedPrototypeName(entity.BaseData.PrototypeId)}");
             ChatHelper.SendMetagameMessages(client, entity.Properties.ToString().Split("\r\n", StringSplitOptions.RemoveEmptyEntries), false);
+            if (entity is WorldEntity worldEntity)
+                ChatHelper.SendMetagameMessages(client, worldEntity.PowerCollectionToString().Split("\r\n", StringSplitOptions.RemoveEmptyEntries), false);
             return string.Empty;
         }
     }
