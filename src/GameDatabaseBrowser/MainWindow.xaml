@@ -4,7 +4,8 @@
         xmlns:models="clr-namespace:GameDatabaseBrowser.Models" xmlns:src="clr-namespace:GameDatabaseBrowser"
         Title="Game Database Browser"
         Height="720"
-        Width="1280">
+        Width="1280"
+        KeyDown="OnKeyDown">
     <Window.Resources>
         <ContextMenu x:Key="PropertyContextMenu">
             <MenuItem Header="Copy value" Click="OnClickCopyValueMenuItem"/>

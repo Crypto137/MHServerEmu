@@ -25,6 +25,10 @@ namespace GameDatabaseBrowser
         /// Prototype Model hierarchy for treeView
         /// </summary>
         public ObservableCollection<PrototypeNode> PrototypeNodes { get; set; } = new();
+
+        /// <summary>
+        /// Property Model hierarchy for treeView
+        /// </summary>
         public ObservableCollection<PropertyNode> PropertyNodes { get; set; } = new();
 
         /// <summary>
@@ -32,10 +36,19 @@ namespace GameDatabaseBrowser
         /// </summary>
         private List<PrototypeDetails> _prototypeDetails = new();
 
+        /// <summary>
+        /// Max prototype to load on init
+        /// </summary>
         private const int PrototypeMaxNumber = 93114;
 
+        /// <summary>
+        /// Current search text
+        /// </summary>
         private string _currentFilter = "";
 
+        /// <summary>
+        /// Used as a semaphore to avoid action when we refresh the tree
+        /// </summary>
         private bool isReady = false;
 
         /// <summary>
@@ -55,6 +68,9 @@ namespace GameDatabaseBrowser
             propertytreeView.MouseDoubleClick += OnPropertyDoubleClicked;
         }
 
+        /// <summary>
+        /// Called when the main window is loaded
+        /// </summary>
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             BackgroundWorker backgroundWorker = new() { WorkerReportsProgress = true };
@@ -140,6 +156,9 @@ namespace GameDatabaseBrowser
             SelectTreeViewItem(indexes);
         }
 
+        /// <summary>
+        /// Reload the prototype tree
+        /// </summary>
         private void RefreshPrototypeTree()
         {
             isReady = false;
@@ -172,6 +191,9 @@ namespace GameDatabaseBrowser
                 AddPrototypeInHierarchy(prototype, needExpand);
         }
 
+        /// <summary>
+        /// Add a prototype in the tree
+        /// </summary>
         private void AddPrototypeInHierarchy(PrototypeDetails prototype, bool needExpand)
         {
             string[] tokens = prototype.FullName.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
@@ -218,6 +240,15 @@ namespace GameDatabaseBrowser
                 return;
 
             SelectFromName(_fullNameRedoHistory.Pop());
+        }
+
+        /// <summary>
+        /// When a touch is pressed
+        /// </summary>
+        private void OnKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+                OnSearchButtonClicked(sender, e);
         }
 
         /// <summary>
