@@ -80,9 +80,7 @@ namespace GameDatabaseBrowser
 
             PrototypeNodes.Add(new() { PrototypeDetails = new("Prototypes", new()) });
             PropertyNodes.Add(new() { PropertyDetails = new() { Name = "Data" } });
-            foreach (PrototypeDetails prototype in _prototypeDetails)
-                AddPrototypeInHierarchy(prototype);
-
+            RefreshPrototypeTree();
             worker.ReportProgress(100);
         }
 
@@ -160,13 +158,21 @@ namespace GameDatabaseBrowser
             PrototypeNodes[0].Childs.Clear();
             List<PrototypeDetails> prototypeToDisplay = _prototypeDetails;
             if (!string.IsNullOrEmpty(_currentFilter))
-                prototypeToDisplay = _prototypeDetails.Where(k => k.FullName.ToLowerInvariant().Contains(_currentFilter)).ToList();
+            {
+                bool exactSearch = exactMatchToggle.IsChecked ?? false;
+                if (exactSearch)
+                    prototypeToDisplay = _prototypeDetails.Where(k => k.FullName.ToLowerInvariant() == _currentFilter || k.Name.ToLowerInvariant() == _currentFilter).ToList();
+                else
+                    prototypeToDisplay = _prototypeDetails.Where(k => k.FullName.ToLowerInvariant().Contains(_currentFilter)).ToList();
+            }
 
+
+            bool needExpand = expandResultToggle.IsChecked ?? false;
             foreach (PrototypeDetails prototype in prototypeToDisplay)
-                AddPrototypeInHierarchy(prototype);
+                AddPrototypeInHierarchy(prototype, needExpand);
         }
 
-        private void AddPrototypeInHierarchy(PrototypeDetails prototype)
+        private void AddPrototypeInHierarchy(PrototypeDetails prototype, bool needExpand)
         {
             string[] tokens = prototype.FullName.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
             ObservableCollection<PrototypeNode> pointer = PrototypeNodes[0].Childs;
@@ -175,13 +181,13 @@ namespace GameDatabaseBrowser
             for (int i = 0; i < tokens.Length - 1; i++)
             {
                 if (pointer.FirstOrDefault(k => k.PrototypeDetails.Name == tokens[i]) == null)
-                    pointer.Add(new() { PrototypeDetails = new(currentFullName, new()) });
+                    pointer.Add(new() { PrototypeDetails = new(currentFullName, new()), IsExpanded = needExpand });
 
                 pointer = pointer.First(k => k.PrototypeDetails.Name == tokens[i]).Childs;
                 currentFullName += $"/{tokens[i + 1]}";
             }
 
-            pointer.Add(new() { PrototypeDetails = prototype });
+            pointer.Add(new() { PrototypeDetails = prototype, IsExpanded = needExpand });
         }
 
         /// <summary>
@@ -391,7 +397,7 @@ namespace GameDatabaseBrowser
                 string prototypeFullName = GameDatabase.GetPrototypeName((PrototypeId)prototypeId);
                 txtDataRef.Text = $"{prototypeFullName} ({prototypeId})";
                 txtDataRef.DataContext = new PropertyNode() { PropertyDetails = new PropertyDetails() { Name = prototypeFullName, Value = prototypeId.ToString() } };
-                
+
                 if (_fullNameUndoHistory.Count == 0 || _fullNameUndoHistory.Peek() != prototypeFullName)
                     _fullNameUndoHistory.Push(prototypeFullName);
             }
