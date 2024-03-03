@@ -369,13 +369,16 @@ namespace GameDatabaseBrowser
                 else
                     node.Childs.Add(new() { PropertyDetails = new() { Name = propInfo.Name, Value = propInfo.GetValue(property)?.ToString(), TypeName = propInfo.PropertyType.Name } });
 
-                if (typeof(IEnumerable).IsAssignableFrom(propInfo.PropertyType))
+                if (typeof(IEnumerable<object>).IsAssignableFrom(propInfo.PropertyType))
                 {
-                    IEnumerable subPropertyInfo = (IEnumerable)propInfo.GetValue(property);
+                    IEnumerable<object> subPropertyInfo = (IEnumerable<object>)propInfo.GetValue(property);
                     if (subPropertyInfo == null)
                         continue;
 
-                    int index = 0;
+                    if (subPropertyInfo is Array)
+                        node.Childs.Last().PropertyDetails.Value = node.Childs.Last().PropertyDetails.Value.Replace("[]", $"[{Enumerable.Count(subPropertyInfo)}]");
+
+                        int index = 0;
                     foreach (var subPropInfo in subPropertyInfo)
                     {
                         if (subPropertyInfo is Array)

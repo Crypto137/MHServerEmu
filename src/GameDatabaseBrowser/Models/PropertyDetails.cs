@@ -16,26 +16,58 @@ namespace GameDatabaseBrowser.Models
 
         public override string ToString()
         {
-            if(Name == "Data")
+            if (Name == "Data")
                 return Name;
 
             if (Value == "Invalid")
                 return $"{Name} : {Value} ({TypeName})";
 
-            string line = Index.HasValue ? $"[{Index.Value}] " : "";
-            line += string.IsNullOrWhiteSpace(Name) ? "" : $"{Name} : ";
-            string value = string.IsNullOrWhiteSpace(Value) ? "" : $" ({Value})";
-            string typename = string.IsNullOrWhiteSpace(TypeName) ? "" : $" ({TypeName})";
+            string prefix = Index.HasValue ? $"[{Index.Value}] " : "";
+            prefix += string.IsNullOrWhiteSpace(Name) ? "" : $"{Name} : ";
+
+            string value = Value ?? "null";
+
+            string typeName = GetNameFromValue().Contains(TypeName.Replace("[]", "")) ? "" : $" ({TypeName})";
 
             return TypeName switch
             {
-                "AssetTypeId" => $"{line}{GameDatabase.GetAssetTypeName((AssetTypeId)ulong.Parse(Value))}{value}",
-                "CurveId" => $"{line}{GameDatabase.GetCurveName((CurveId)ulong.Parse(Value))}{value}",
-                "AssetId" => $"{line}{GameDatabase.GetAssetName((AssetId)ulong.Parse(Value))}{value}",
-                "PrototypeId" => $"{line}{GameDatabase.GetPrototypeName((PrototypeId)ulong.Parse(Value))}{value}",
-                "Boolean" or "Int16" or "Int32" or "Int64" or "Single" => $"{line}{Value}",
-                _ => $"{line}{Value}{typename}",
+                "AssetTypeId" => $"{prefix}{GetNameFromValue()} ({value})",
+                "CurveId" => $"{prefix}{GetNameFromValue()} ({value})",
+                "AssetId" => $"{prefix}{GetNameFromValue()} ({value})",
+                "PrototypeId" => $"{prefix}{GetNameFromValue()} ({value})",
+                "Boolean" or "Int16" or "Int32" or "Int64" or "Single" => $"{prefix}{value}",
+                _ => $"{prefix}{GetNameFromValue()}{typeName}",
             };
+        }
+
+        private string GetNameFromValue()
+        {
+            string name = Value ?? "null";
+
+            switch (TypeName)
+            {
+                case "AssetTypeId":
+                    name = GameDatabase.GetAssetTypeName((AssetTypeId)ulong.Parse(Value));
+                    break;
+
+                case "CurveId":
+                    name = GameDatabase.GetCurveName((CurveId)ulong.Parse(Value));
+                    break;
+
+                case "AssetId":
+                    name = GameDatabase.GetAssetName((AssetId)ulong.Parse(Value));
+                    break;
+
+                case "PrototypeId":
+                    name = GameDatabase.GetPrototypeName((PrototypeId)ulong.Parse(Value));
+                    break;
+
+                default:
+                    break;
+            }
+
+            return name.Replace("MHServerEmu.Games.GameData.Prototypes.", "")
+                .Replace("MHServerEmu.Games.GameData.", "");
         }
     }
 }
