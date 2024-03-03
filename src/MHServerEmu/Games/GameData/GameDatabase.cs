@@ -4,6 +4,7 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Locales;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData
@@ -81,7 +82,8 @@ namespace MHServerEmu.Games.GameData
             DataDirectory = DataDirectory.Instance;
             DataDirectory.Initialize();
 
-            // initializeLocaleManager - do we even need it?
+            // Initialize LocaleManager
+            LocaleManager.Instance.Initialize();
 
             // Initialize PropertyInfoTable
             PropertyInfoTable = new();

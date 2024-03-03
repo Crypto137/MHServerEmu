@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using Gazillion;
 using MHServerEmu.Common;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Locales;
 
 namespace MHServerEmu.Games.Achievements
 {
@@ -110,15 +111,17 @@ namespace MHServerEmu.Games.Achievements
                 sb.Length -= 2;
                 sb.AppendLine();
             }
-            
-            sb.AppendLine($"{nameof(Name)}: {Name}");
-            sb.AppendLine($"{nameof(InProgressStr)}: {InProgressStr}");
-            sb.AppendLine($"{nameof(CompletedStr)}: {CompletedStr}");
-            sb.AppendLine($"{nameof(RewardStr)}: {RewardStr}");
+
+            Locale locale = LocaleManager.Instance.CurrentLocale;
+
+            sb.AppendLine($"{nameof(Name)}: {locale.GetLocaleString(Name)}");
+            sb.AppendLine($"{nameof(InProgressStr)}: {locale.GetLocaleString(InProgressStr)}");
+            sb.AppendLine($"{nameof(CompletedStr)}: {locale.GetLocaleString(CompletedStr)}");
+            sb.AppendLine($"{nameof(RewardStr)}: {locale.GetLocaleString(RewardStr)}");
             sb.AppendLine($"{nameof(IconPathAssetId)}: {GameDatabase.GetAssetName(IconPathAssetId)}");
             sb.AppendLine($"{nameof(Score)}: {Score}");
-            sb.AppendLine($"{nameof(CategoryStr)}: {CategoryStr}");
-            sb.AppendLine($"{nameof(SubCategoryStr)}: {SubCategoryStr}");
+            sb.AppendLine($"{nameof(CategoryStr)}: {locale.GetLocaleString(CategoryStr)}");
+            sb.AppendLine($"{nameof(SubCategoryStr)}: {locale.GetLocaleString(SubCategoryStr)}");
             sb.AppendLine($"{nameof(DisplayOrder)}: {DisplayOrder}");
             sb.AppendLine($"{nameof(VisibleState)}: {VisibleState}");
             sb.AppendLine($"{nameof(EvaluationType)}: {EvaluationType}");

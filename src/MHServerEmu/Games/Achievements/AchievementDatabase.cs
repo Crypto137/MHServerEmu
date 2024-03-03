@@ -5,6 +5,7 @@ using Gazillion;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Helpers;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Games.Locales;
 
 namespace MHServerEmu.Games.Achievements
 {
@@ -120,7 +121,10 @@ namespace MHServerEmu.Games.Achievements
 
         private void ImportAchievementStringsToCurrentLocale()
         {
-            // TODO
+            Locale currentLocale = LocaleManager.Instance.CurrentLocale;
+
+            using (MemoryStream ms = new(_localizedAchievementStringBuffer))
+                currentLocale.ImportStringStream("achievements", ms);
         }
 
         private void RebuildCachedData()
