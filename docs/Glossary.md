@@ -80,11 +80,15 @@ This page provides definitions for terms used by the game internally.
 
 - **Item** - a world entity that represents an item.
 
+- **Keyword** - a tag that can be applied to a power, such as physical, melee, area, etc.
+
 - **Kismet** - a visual scripting system that is part of Unreal Engine 3.
 
 - **Live Tuning** - a system that overrides some of the static data contained in the game database without changing it.
 
 - **Locomotion** - a system that handles the movement of world entities in the game world.
+
+- **Mapped Power** - an override of an existing power in the power library with another power. Used for talents that change powers and Rogue's stolen powers.
 
 - **Marker** - a definition for spawning objects that includes position and rotation.
 
