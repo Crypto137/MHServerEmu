@@ -20,8 +20,9 @@
             <ColumnDefinition Width="40*"/>
             <ColumnDefinition Width="60*"/>
         </Grid.ColumnDefinitions>
-        <Button x:Name="btnBack" Content="Back" Click="OnBackButtonClicked" HorizontalAlignment="Left" Margin="30,5" Width="80"/>
+        <Button x:Name="btnBack" Content="Back" Click="OnBackButtonClicked" HorizontalAlignment="Left" Margin="30,5" Width="80" ToolTip="Back to the previous prototype selected"/>
         <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Height="35">
+            <Button Width="20" Height="20" Background="Green" Foreground="White"  Content="✕" Click="OnResetButtonClicked" ToolTip="Reset the search filters"/>
             <TextBox x:Name="txtSearch"  Width="700"  VerticalAlignment="Center" Margin="5,0,5,0"/>
             <Button x:Name="btnSearch" Content="Search" Click="OnSearchButtonClicked" Width="100" VerticalAlignment="Center" Margin="5,0,5,0"/>
         </StackPanel>

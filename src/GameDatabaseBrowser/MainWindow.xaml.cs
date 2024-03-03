@@ -212,6 +212,18 @@ namespace GameDatabaseBrowser
         }
 
         /// <summary>
+        /// Reset the current search
+        /// </summary>
+        private void OnResetButtonClicked(object sender, RoutedEventArgs e)
+        {
+            if (!isReady)
+                return;
+
+            _currentFilter = txtSearch.Text = "";
+            RefreshPrototypeTree();
+        }
+
+        /// <summary>
         /// When double click on a property
         /// Allow to travel to a prototype when double clicking on a prototypeId
         /// </summary>
