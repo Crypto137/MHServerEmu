@@ -167,7 +167,7 @@ namespace GameDatabaseBrowser
             }
 
 
-            bool needExpand = expandResultToggle.IsChecked ?? false;
+            bool needExpand = (expandResultToggle.IsChecked ?? false) || prototypeToDisplay.Count < 21;
             foreach (PrototypeDetails prototype in prototypeToDisplay)
                 AddPrototypeInHierarchy(prototype, needExpand);
         }
