@@ -299,7 +299,7 @@ namespace GameDatabaseBrowser
                     node.Childs.Add(new() { PropertyDetails = new() { Name = propInfo.Name, Value = "", TypeName = propInfo.PropertyType.Name } });
                 else
                     node.Childs.Add(new() { PropertyDetails = new() { Name = propInfo.Name, Value = propInfo.GetValue(property)?.ToString(), TypeName = propInfo.PropertyType.Name } });
-
+                
                 if (typeof(IEnumerable).IsAssignableFrom(propInfo.PropertyType))
                 {
                     IEnumerable subPropertyInfo = (IEnumerable)propInfo.GetValue(property);
@@ -328,6 +328,14 @@ namespace GameDatabaseBrowser
                         }
                         else
                             ConstructPropertyNodeHierarchy(node.Childs.Last(), subPropInfo);
+                    }
+                }
+                else if (typeof(Prototype).IsAssignableFrom(propInfo.PropertyType))
+                {
+                    var itemProperties = propInfo.PropertyType.GetProperties();
+                    foreach (var subProperty in itemProperties)
+                    {
+                        ConstructPropertyNodeHierarchy(node.Childs.Last(), subProperty);
                     }
                 }
             }
