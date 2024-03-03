@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Text;
+using System.Text.Json.Serialization;
 using Gazillion;
 using MHServerEmu.Common;
 using MHServerEmu.Games.GameData;
@@ -92,6 +93,42 @@ namespace MHServerEmu.Games.Achievements
                 builder.SetOrbisTrophy(OrbisTrophy).SetOrbisTrophyId(OrbisTrophyId).SetOrbisTrophyShared(OrbisTrophyShared);
 
             return builder.Build();
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new();
+            sb.AppendLine($"{nameof(Id)}: {Id}");
+            sb.AppendLine($"{nameof(Enabled)}: {Enabled}");
+            sb.AppendLine($"{nameof(ParentId)}: {ParentId}");
+
+            if (Children.Any())
+            {
+                sb.Append("Children: ");
+                foreach (AchievementInfo child in Children)
+                    sb.Append($"{child.Id}, ");
+                sb.Length -= 2;
+                sb.AppendLine();
+            }
+            
+            sb.AppendLine($"{nameof(Name)}: {Name}");
+            sb.AppendLine($"{nameof(InProgressStr)}: {InProgressStr}");
+            sb.AppendLine($"{nameof(CompletedStr)}: {CompletedStr}");
+            sb.AppendLine($"{nameof(RewardStr)}: {RewardStr}");
+            sb.AppendLine($"{nameof(IconPathAssetId)}: {GameDatabase.GetAssetName(IconPathAssetId)}");
+            sb.AppendLine($"{nameof(Score)}: {Score}");
+            sb.AppendLine($"{nameof(CategoryStr)}: {CategoryStr}");
+            sb.AppendLine($"{nameof(SubCategoryStr)}: {SubCategoryStr}");
+            sb.AppendLine($"{nameof(DisplayOrder)}: {DisplayOrder}");
+            sb.AppendLine($"{nameof(VisibleState)}: {VisibleState}");
+            sb.AppendLine($"{nameof(EvaluationType)}: {EvaluationType}");
+            sb.AppendLine($"{nameof(EventType)}: {EventType}");
+            sb.AppendLine($"{nameof(Threshold)}: {Threshold}");
+            sb.AppendLine($"{nameof(DependentAchievementId)}: {DependentAchievementId}");
+            sb.AppendLine($"{nameof(UIProgressDisplayOption)}: {UIProgressDisplayOption}");
+            sb.AppendLine($"{nameof(PublishedDateUS)}: {Clock.UnixTimeToDateTime(PublishedDateUS)}");
+            sb.AppendLine($"{nameof(IconPathHiResAssetId)}: {GameDatabase.GetAssetName(IconPathHiResAssetId)}");
+            return sb.ToString();
         }
     }
 }

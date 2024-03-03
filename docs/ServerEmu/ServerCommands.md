@@ -56,3 +56,5 @@ These commands can be invoked only from in-game.
 | !player costume [costumeId] | Changes player costume.                                      | All        |
 | !player AOIVolume [value]   | Changes area of interest volume size (entity draw distance). | All        |
 | !omega points               | Adds 7500 omega points.                                      | All        |
+| !achievement unlock [id]    | Unlocks the specified achievement.                           | All        |
+| !achievement info [id]      | Shows details about the specified achievement.               | All        |
