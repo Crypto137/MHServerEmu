@@ -7,6 +7,12 @@ namespace MHServerEmu.Common
     /// </summary>
     public static class Clock
     {
+        // System.DateTime in C# represents time from Jan 01 0001 to Dec 31 9999.
+        // The game uses two kinds of time: DateTime (calendar time) and GameTime.
+        // DateTime is Unix time (the number of microsecond elapsed since Jan 01 1970).
+        // GameTime is the number of microseconds elapsed since Sep 22 2012.
+        // We represent DateTime and GameTime as TimeSpan values.
+
         private const long GameTimeEpochTimestamp = 1348306278045983;    // Sep 22 2012 09:31:18 GMT+0000, calculated from packet dumps
 
         private static readonly DateTime UnixEpoch = new(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
@@ -37,6 +43,8 @@ namespace MHServerEmu.Common
         /// </summary>
         public static TimeSpan GameTime { get => UtcNowPrecise - GameTimeEpoch; }
 
+        #region Conversion
+
         /// <summary>
         /// Returns a <see cref="System.DateTime"/> corresponding to the provided millisecond calendar time timestamp.
         /// </summary>
@@ -46,11 +54,27 @@ namespace MHServerEmu.Common
         }
 
         /// <summary>
-        /// Returns a <see cref="System.DateTime"/> corresponding to the provided microsecond celandar time timestamp.
+        /// Returns a <see cref="System.DateTime"/> corresponding to the provided microsecond calendar time timestamp.
         /// </summary>
         public static DateTime DateTimeMicrosecondsToDateTime(long timestamp)
         {
             return UnixEpoch.AddTicks(timestamp * 10);
+        }
+
+        /// <summary>
+        /// Returns a <see cref="TimeSpan"/> corresponding to the provided millisecond calendar time timestamp.
+        /// </summary>
+        public static TimeSpan DateTimeMillisecondsToTimeSpan(long timestamp)
+        {
+            return UnixEpoch.AddMilliseconds(timestamp) - UnixEpoch;
+        }
+
+        /// <summary>
+        /// Returns a <see cref="TimeSpan"/> corresponding to the provided microsecond calendar time timestamp.
+        /// </summary>
+        public static TimeSpan DateTimeMicrosecondsToTimeSpan(long timestamp)
+        {
+            return UnixEpoch.AddTicks(timestamp * 10) - UnixEpoch;
         }
 
         /// <summary>
@@ -68,5 +92,39 @@ namespace MHServerEmu.Common
         {
             return GameTimeEpoch.AddTicks(timestamp * 10);
         }
+
+        /// <summary>
+        /// Returns a <see cref="TimeSpan"/> corresponding to the provided millisecond game time timestamp.
+        /// </summary>
+        public static TimeSpan GameTimeMillisecondsToTimeSpan(long timestamp)
+        {
+            return GameTimeEpoch.AddMilliseconds(timestamp) - GameTimeEpoch;
+        }
+
+        /// <summary>
+        /// Returns a <see cref="TimeSpan"/> corresponding to the provided microsecond game time timestamp.
+        /// </summary>
+        public static TimeSpan GameTimeMicrosecondsToTimeSpan(long timestamp)
+        {
+            return GameTimeEpoch.AddTicks(timestamp * 10) - GameTimeEpoch;
+        }
+
+        /// <summary>
+        /// Converts the provided <see cref="System.DateTime"/> value to a <see cref="TimeSpan"/> representing calendar time.
+        /// </summary>
+        public static TimeSpan DateTimeToDateTime(DateTime dateTime)
+        {
+            return dateTime - UnixEpoch;
+        }
+
+        /// <summary>
+        /// Converts the provided <see cref="System.DateTime"/> value to a <see cref="TimeSpan"/> representing game time.
+        /// </summary>
+        public static TimeSpan DateTimeToGameTime(DateTime dateTime)
+        {
+            return dateTime - GameTimeEpoch;
+        }
+
+        #endregion
     }
 }

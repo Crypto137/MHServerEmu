@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Entities.Avatars;
+﻿using MHServerEmu.Games.Achievements;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
 
@@ -29,7 +30,10 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
         public long RawWaypoint { get => (long)Waypoint; private set => Waypoint = (PrototypeId)value; }
         
         public int AOIVolume { get; set; }
-        
+
+        // TODO: Move this to Player entity
+        public AchievementState AchievementState { get; set; } = new();
+
         public DBPlayer(ulong accountId)
         {
             AccountId = accountId;

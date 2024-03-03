@@ -1,7 +1,9 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
+using MHServerEmu.Common;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
@@ -36,6 +38,8 @@ namespace MHServerEmu.Games.Entities
 
     public class Player : Entity, IMissionManagerOwner
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         private SortedSet<AvailableBadges> _badges;
 
         public MissionManager MissionManager { get; set; }
@@ -57,7 +61,7 @@ namespace MHServerEmu.Games.Entities
         public bool UnkBool { get; set; }
         public PrototypeId[] StashInventories { get; set; }
         public GameplayOptions GameplayOptions { get; set; }
-        public AchievementState[] AchievementStates { get; set; }
+        public AchievementState AchievementState { get; set; }
         public StashTabOption[] StashTabOptions { get; set; }
 
         public Player(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
@@ -68,7 +72,7 @@ namespace MHServerEmu.Games.Entities
             ulong shardId, ReplicatedVariable<string> playerName, ReplicatedVariable<string> unkName,
             ulong matchQueueStatus, bool emailVerified, ulong accountCreationTimestamp, ReplicatedVariable<ulong> partyId,
             Community community, bool unkBool, PrototypeId[] stashInventories, SortedSet<AvailableBadges> badges,
-            GameplayOptions gameplayOptions, AchievementState[] achievementStates, StashTabOption[] stashTabOptions) : base(baseData)
+            GameplayOptions gameplayOptions, AchievementState achievementState, StashTabOption[] stashTabOptions) : base(baseData)
         {
             ReplicationPolicy = replicationPolicy;
             Properties = properties;
@@ -89,7 +93,7 @@ namespace MHServerEmu.Games.Entities
             StashInventories = stashInventories;
             _badges = badges;
             GameplayOptions = gameplayOptions;
-            AchievementStates = achievementStates;
+            AchievementState = achievementState;
             StashTabOptions = stashTabOptions;
         }
 
@@ -134,9 +138,7 @@ namespace MHServerEmu.Games.Entities
 
             GameplayOptions = new(stream, boolDecoder);
 
-            AchievementStates = new AchievementState[stream.ReadRawVarint64()];
-            for (int i = 0; i < AchievementStates.Length; i++)
-                AchievementStates[i] = new(stream);
+            AchievementState = new(stream);
 
             StashTabOptions = new StashTabOption[stream.ReadRawVarint64()];
             for (int i = 0; i < StashTabOptions.Length; i++)
@@ -195,8 +197,7 @@ namespace MHServerEmu.Games.Entities
 
             GameplayOptions.Encode(stream, boolEncoder);
 
-            stream.WriteRawVarint64((ulong)AchievementStates.Length);
-            foreach (AchievementState state in AchievementStates) state.Encode(stream);
+            AchievementState.Encode(stream);
 
             stream.WriteRawVarint64((ulong)StashTabOptions.Length);
             foreach (StashTabOption option in StashTabOptions) option.Encode(stream);
@@ -257,6 +258,8 @@ namespace MHServerEmu.Games.Entities
                 for (var badge = AvailableBadges.CanGrantBadges; badge < AvailableBadges.NumberOfBadges; badge++)
                     AddBadge(badge);
             }
+
+            AchievementState = account.Player.AchievementState;
         }
 
         /// <summary>
@@ -306,7 +309,8 @@ namespace MHServerEmu.Games.Entities
             }
 
             sb.AppendLine($"GameplayOptions: {GameplayOptions}");
-            for (int i = 0; i < AchievementStates.Length; i++) sb.AppendLine($"AchievementState{i}: {AchievementStates[i]}");
+            sb.AppendLine($"AchievementState: {AchievementState}");
+
             for (int i = 0; i < StashTabOptions.Length; i++) sb.AppendLine($"StashTabOption{i}: {StashTabOptions[i]}");
         }
     }
