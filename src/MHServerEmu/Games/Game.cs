@@ -18,6 +18,7 @@ using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Grouping;
 using MHServerEmu.Networking;
+using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.Games
 {
@@ -193,6 +194,11 @@ namespace MHServerEmu.Games
                         OnCellLoaded(client, cellLoaded);
                     break;
 
+                case ClientToGameServerMessage.NetMessageAdminCommand:
+                    if (message.TryDeserialize<NetMessageAdminCommand>(out var adminCommand))
+                        OnAdminCommand(client, adminCommand);
+                    break;
+
                 case ClientToGameServerMessage.NetMessageChangeCameraSettings:
                     if (message.TryDeserialize<NetMessageChangeCameraSettings>(out var cameraSettings))
                         OnChangeCameraSettings(client, cameraSettings);
@@ -216,6 +222,7 @@ namespace MHServerEmu.Games
                 case ClientToGameServerMessage.NetMessageAbilitySlotToAbilityBar:       // TODO: Move ability bar message handling to avatar entity
                 case ClientToGameServerMessage.NetMessageAbilityUnslotFromAbilityBar:
                 case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:
+                case ClientToGameServerMessage.NetMessageAssignStolenPower:
                     EnqueueResponses(_powerMessageHandler.HandleMessage(client, message)); break;
 
                 case ClientToGameServerMessage.NetMessageTryInventoryMove:
@@ -313,6 +320,22 @@ namespace MHServerEmu.Games
                     client.AOI.ForceCellLoad();
                 }
             }
+        }
+
+        private void OnAdminCommand(FrontendClient client, NetMessageAdminCommand command)
+        {
+            if (client.Session.Account.UserLevel < AccountUserLevel.Admin)
+            {
+                // Naughty hacker here, TODO: handle this properly
+                EnqueueResponse(client, new(NetMessageAdminCommandResponse.CreateBuilder()
+                    .SetResponse($"{client.Session.Account.PlayerName} is not in the sudoers file. This incident will be reported.").Build()));
+                return;
+            }
+
+            // Basic handling
+            string output = $"Unhandled admin command: {command.Command.Split(' ')[0]}";
+            Logger.Warn(output);
+            EnqueueResponse(client, new(NetMessageAdminCommandResponse.CreateBuilder().SetResponse(output).Build()));
         }
 
         private void OnPerformPreInteractPower(FrontendClient client, NetMessagePerformPreInteractPower performPreInteractPower)

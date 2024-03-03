@@ -65,7 +65,7 @@ namespace MHServerEmu.Games.Entities
         public EntityBaseData BaseData { get; set; }
         public ulong RegionId { get; set; } = 0;
 
-        public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
+        public AOINetworkPolicyValues ReplicationPolicy { get; set; }
         public ReplicatedPropertyCollection Properties { get; set; }
 
         public DateTime DeadTime { get; private set; }
@@ -141,7 +141,7 @@ namespace MHServerEmu.Games.Entities
         // Base data is required for all entities, so there's no parameterless constructor
         public Entity(EntityBaseData baseData) { BaseData = baseData; }
 
-        public Entity(EntityBaseData baseData, AoiNetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection propertyCollection)
+        public Entity(EntityBaseData baseData, AOINetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection propertyCollection)
         {
             BaseData = baseData;
             ReplicationPolicy = replicationPolicy;
@@ -150,7 +150,7 @@ namespace MHServerEmu.Games.Entities
 
         protected virtual void Decode(CodedInputStream stream)
         {
-            ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
+            ReplicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint32();
             Properties = new(stream);
         }
 

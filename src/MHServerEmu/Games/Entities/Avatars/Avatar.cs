@@ -8,7 +8,9 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Social;
+using MHServerEmu.Games.Network;
 using MHServerEmu.PlayerManagement.Accounts.DBModels;
+using MHServerEmu.Games.GameData.Calligraphy;
 
 namespace MHServerEmu.Games.Entities.Avatars
 {
@@ -20,6 +22,30 @@ namespace MHServerEmu.Games.Entities.Avatars
         public bool HasGuildInfo { get; set; }
         public GuildMemberReplicationRuntimeInfo GuildInfo { get; set; }
         public AbilityKeyMapping[] AbilityKeyMappings { get; set; }
+
+        public Avatar(ulong entityId, ulong replicationId) : base(new())
+        {
+            // Entity
+            BaseData.ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
+            BaseData.LocomotionState = new(0f);
+            BaseData.EntityId = entityId;
+            BaseData.InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
+            BaseData.FieldFlags = EntityCreateMessageFlags.HasInterestPolicies | EntityCreateMessageFlags.HasInvLoc | EntityCreateMessageFlags.HasAvatarWorldInstanceId;
+            
+            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
+            Properties = new(replicationId);
+
+            // WorldEntity
+            TrackingContextMap = Array.Empty<EntityTrackingContextMap>();
+            ConditionCollection = Array.Empty<Condition>();
+            PowerCollection = Array.Empty<PowerCollectionRecord>();
+            UnkEvent = 134463198;
+
+            // Avatar
+            PlayerName = new(++replicationId, string.Empty);
+            OwnerPlayerDbId = 0x20000000000D3D03;
+            GuildName = string.Empty;
+        }
 
         public Avatar(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
@@ -86,32 +112,105 @@ namespace MHServerEmu.Games.Entities.Avatars
         /// <summary>
         /// Initializes this <see cref="Avatar"/> from data contained in the provided <see cref="DBAccount"/>.
         /// </summary>
-        public void InitializeFromDBAccount(DBAccount account)
+        public void InitializeFromDBAccount(PrototypeId prototypeId, DBAccount account)
         {
+            DBAvatar dbAvatar = account.GetAvatar(prototypeId);
+            AvatarPrototype prototype = GameDatabase.GetPrototype<AvatarPrototype>(prototypeId);
+
+            // Base Data
+            BaseData.PrototypeId = prototypeId;
+
+            // Archive Data
             PlayerName.Value = account.PlayerName;
 
-            Properties[PropertyEnum.CostumeCurrent] = (PrototypeId)account.CurrentAvatar.Costume;
+            // Properties
+            Properties.FlattenCopyFrom(prototype.Properties, true);
+
+            // AvatarLastActiveTime is needed for missions to show up in the tracker
+            Properties[PropertyEnum.AvatarLastActiveCalendarTime] = 1509657924421;  // Nov 02 2017 21:25:24 GMT+0000
+            Properties[PropertyEnum.AvatarLastActiveTime] = 161351646299;
+
+            Properties[PropertyEnum.CostumeCurrent] = (PrototypeId)dbAvatar.Costume;
             Properties[PropertyEnum.CharacterLevel] = 60;
             Properties[PropertyEnum.CombatLevel] = 60;
-            Properties[PropertyEnum.AvatarPrestigeLevel] = 0;
-            Properties[PropertyEnum.AvatarVanityTitle] = PrototypeId.Invalid;
             Properties[PropertyEnum.AvatarPowerUltimatePoints] = 19;
+
+            // Health
+            Properties[PropertyEnum.HealthMaxOther] = (int)(float)Properties[PropertyEnum.HealthBase];
+            Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
+
+            // Resources
+            // Ger primary resources defaults from PrimaryResourceBehaviors
+            foreach (PrototypeId manaBehaviorId in prototype.PrimaryResourceBehaviors)
+            {
+                var behaviorPrototype = GameDatabase.GetPrototype<PrimaryResourceManaBehaviorPrototype>(manaBehaviorId);
+                Curve manaCurve = GameDatabase.GetCurve(behaviorPrototype.BaseEndurancePerLevel);
+                Properties[PropertyEnum.EnduranceBase, (int)behaviorPrototype.ManaType] = manaCurve.GetAt(60);
+            }
+;           
+            // Set primary resources
+            Properties[PropertyEnum.EnduranceMaxOther] = Properties[PropertyEnum.EnduranceBase];
+            Properties[PropertyEnum.EnduranceMax] = Properties[PropertyEnum.EnduranceMaxOther];
             Properties[PropertyEnum.Endurance] = Properties[PropertyEnum.EnduranceMax];
+            Properties[PropertyEnum.EnduranceMaxOther, (int)ManaType.Type2] = Properties[PropertyEnum.EnduranceBase, (int)ManaType.Type2];
+            Properties[PropertyEnum.EnduranceMax, (int)ManaType.Type2] = Properties[PropertyEnum.EnduranceMaxOther, (int)ManaType.Type2];
             Properties[PropertyEnum.Endurance, (int)ManaType.Type2] = Properties[PropertyEnum.EnduranceMax, (int)ManaType.Type2];
+
+            // Secondary resource base is already present in the prototype's property collection as a curve property
+            Properties[PropertyEnum.SecondaryResourceMax] = Properties[PropertyEnum.SecondaryResourceMaxBase];
             Properties[PropertyEnum.SecondaryResource] = Properties[PropertyEnum.SecondaryResourceMax];
 
-            // We need 10 synergies active to remove the in-game popup
-            Properties.RemovePropertyRange(PropertyEnum.AvatarSynergySelected);
-            for (int i = 0; i < 10; i++)
-                Properties[PropertyEnum.AvatarSynergySelected, (PrototypeId)account.Avatars[i].Prototype] = true;
-
-            if (account.CurrentAvatar.AbilityKeyMapping == null)
+            // Stats
+            foreach (PrototypeId entryId in prototype.StatProgressionTable)
             {
-                account.CurrentAvatar.AbilityKeyMapping = new(0);
-                account.CurrentAvatar.AbilityKeyMapping.SlotDefaultAbilities(this);
+                var entry = entryId.As<StatProgressionEntryPrototype>();
+
+                if (entry.DurabilityValue > 0)
+                    Properties[PropertyEnum.StatDurability] = entry.DurabilityValue;
+                
+                if (entry.StrengthValue > 0)
+                    Properties[PropertyEnum.StatStrength] = entry.StrengthValue;
+                
+                if (entry.FightingSkillsValue > 0)
+                    Properties[PropertyEnum.StatFightingSkills] = entry.FightingSkillsValue;
+                
+                if (entry.SpeedValue > 0)
+                    Properties[PropertyEnum.StatSpeed] = entry.SpeedValue;
+                
+                if (entry.EnergyProjectionValue > 0)
+                    Properties[PropertyEnum.StatEnergyProjection] = entry.EnergyProjectionValue;
+                
+                if (entry.IntelligenceValue > 0)
+                    Properties[PropertyEnum.StatIntelligence] = entry.IntelligenceValue;
             }
 
-            AbilityKeyMappings = new AbilityKeyMapping[] { account.CurrentAvatar.AbilityKeyMapping };
+            // Unlock all stealable powers for Rogue
+            if (prototypeId == (PrototypeId)6514650100102861856)
+            {
+                foreach (PrototypeId stealablePowerInfoId in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(StealablePowerInfoPrototype), PrototypeIterateFlags.NoAbstract))
+                {
+                    var stealablePowerInfo = stealablePowerInfoId.As<StealablePowerInfoPrototype>();
+                    Properties[PropertyEnum.StolenPowerAvailable, stealablePowerInfo.Power] = true;
+                }
+            }
+
+            // We need 10 synergies active to remove the in-game popup
+            int synergyCount = 0;
+            foreach (PrototypeId avatarId in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(AvatarPrototype),
+                PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+            {
+                Properties[PropertyEnum.AvatarSynergySelected, avatarId] = true;
+                if (++synergyCount >= 10) break;
+            }
+
+            // Initialize AbilityKeyMapping if needed
+            if (dbAvatar.AbilityKeyMapping == null)
+            {
+                dbAvatar.AbilityKeyMapping = new(0);
+                dbAvatar.AbilityKeyMapping.SlotDefaultAbilities(this);
+            }
+
+            AbilityKeyMappings = new AbilityKeyMapping[] { dbAvatar.AbilityKeyMapping };
         }
 
         protected override void BuildString(StringBuilder sb)

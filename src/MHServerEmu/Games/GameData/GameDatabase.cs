@@ -4,6 +4,7 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Locales;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData
@@ -29,7 +30,6 @@ namespace MHServerEmu.Games.GameData
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private static readonly PrototypeId _globalsProtoRef;
         public static bool IsInitialized { get; }
 
         public static PrototypeClassManager PrototypeClassManager { get; }
@@ -63,6 +63,13 @@ namespace MHServerEmu.Games.GameData
         public static DifficultyGlobalsPrototype DifficultyGlobalsPrototype { get; private set; }
         public static ConsoleGlobalsPrototype ConsoleGlobalsPrototype { get; private set; }
 
+        // Misc
+
+        /// <summary>
+        /// Indicates minimum <see cref="DesignWorkflowState"/> value required for a prototype to be considered approved.
+        /// </summary>
+        public static DesignWorkflowState ApprovalThreshold { get; } = DesignWorkflowState.Live;    // TODO: Make this adjustable
+
         static GameDatabase()
         {
             Logger.Info("Initializing game database...");
@@ -75,7 +82,8 @@ namespace MHServerEmu.Games.GameData
             DataDirectory = DataDirectory.Instance;
             DataDirectory.Initialize();
 
-            // initializeLocaleManager - do we even need it?
+            // Initialize LocaleManager
+            LocaleManager.Instance.Initialize();
 
             // Initialize PropertyInfoTable
             PropertyInfoTable = new();
@@ -144,10 +152,6 @@ namespace MHServerEmu.Games.GameData
                 IsInitialized = false;
                 return;
             }
-
-            // Get Global Prototypes
-            _globalsProtoRef = GetPrototypeRefByName("Globals/Globals.defaults");
-
 
             // Finish game database initialization
             stopwatch.Stop();
@@ -351,6 +355,14 @@ namespace MHServerEmu.Games.GameData
         }
 
         #endregion
+
+        /// <summary>
+        /// Returns <see langword="true"/> if the provided <see cref="DesignWorkflowState"/> value is considered approved with the current <see cref="GameDatabase"/> settings.
+        /// </summary>
+        public static bool DesignStateOk(DesignWorkflowState designState)
+        {
+            return designState >= ApprovalThreshold;
+        }
 
         private static bool VerifyData()
         {

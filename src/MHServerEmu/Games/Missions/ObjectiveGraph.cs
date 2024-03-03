@@ -8,6 +8,12 @@ namespace MHServerEmu.Games.Missions
         public ObjectiveGraphNode[] Nodes { get; set; }
         public ObjectiveGraphConnection[] Connections { get; set; }
 
+        public ObjectiveGraph()
+        {
+            Nodes = Array.Empty<ObjectiveGraphNode>();
+            Connections = Array.Empty<ObjectiveGraphConnection>();
+        }
+
         public ObjectiveGraph(CodedInputStream stream)
         {
             Nodes = new ObjectiveGraphNode[stream.ReadRawVarint64()];

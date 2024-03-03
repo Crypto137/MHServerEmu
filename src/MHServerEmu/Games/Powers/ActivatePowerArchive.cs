@@ -25,7 +25,7 @@ namespace MHServerEmu.Games.Powers
 
     public class ActivatePowerArchive
     {
-        public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
+        public AOINetworkPolicyValues ReplicationPolicy { get; set; }
         public ActivatePowerMessageFlags Flags { get; set; }
         public ulong IdUserEntity { get; set; }
         public ulong IdTargetEntity { get; set; }
@@ -42,7 +42,7 @@ namespace MHServerEmu.Games.Powers
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
 
-            ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
+            ReplicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint32();
             Flags = (ActivatePowerMessageFlags)stream.ReadRawVarint32();
             IdUserEntity = stream.ReadRawVarint64();
 
@@ -76,7 +76,7 @@ namespace MHServerEmu.Games.Powers
 
         public ActivatePowerArchive(NetMessageTryActivatePower tryActivatePower, Vector3 userPosition)
         {
-            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0;
+            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity;
             Flags = ActivatePowerMessageFlags.None;
 
             IdUserEntity = tryActivatePower.IdUserEntity;

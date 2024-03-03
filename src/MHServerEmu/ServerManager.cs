@@ -153,15 +153,6 @@ namespace MHServerEmu
             return $"Server Status\nUptime: {DateTime.Now - StartupTime:hh\\:mm\\:ss}\nSessions: {PlayerManagerService.SessionCount}";
         }
 
-        public long GetDateTimeMicroseconds()
-        {
-            return DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond / 1000;
-        }
-
-        public long GetGameTimeMicroseconds()
-        {
-            return (DateTime.Now - StartupTime).Ticks / TimeSpan.TicksPerMillisecond / 1000;
-        }
 
         #endregion
     }

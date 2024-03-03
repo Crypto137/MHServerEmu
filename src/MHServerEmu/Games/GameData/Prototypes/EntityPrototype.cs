@@ -249,10 +249,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId MarvelModelRenderClass { get; protected set; }
         public DesignWorkflowState DesignStatePS4 { get; protected set; }
         public DesignWorkflowState DesignStateXboxOne { get; protected set; }
+
         [DoNotCopy]
         public AlliancePrototype AlliancePrototype { get => Alliance.As<AlliancePrototype>(); }
         [DoNotCopy]
         public RankPrototype RankPrototype { get => Rank.As<RankPrototype>(); }
+
+        public override bool ApprovedForUse()
+        {
+            // Add settings for using DesignStatePS4 or DesignStateXboxOne here if we end up supporting console clients
+            return GameDatabase.DesignStateOk(DesignState);
+        }
     }
 
     public class StateChangePrototype : Prototype

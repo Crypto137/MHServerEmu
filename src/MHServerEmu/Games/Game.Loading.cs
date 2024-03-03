@@ -1,4 +1,5 @@
 ﻿using Gazillion;
+using MHServerEmu.Common;
 using MHServerEmu.Common.Config;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
@@ -6,6 +7,7 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Networking;
@@ -22,7 +24,7 @@ namespace MHServerEmu.Games
 
             // Add server info messages
             messageList.Add(new(NetMessageMarkFirstGameFrame.CreateBuilder()
-                .SetCurrentservergametime(161351682950)
+                .SetCurrentservergametime((ulong)Clock.GameTime.TotalMilliseconds)
                 .SetCurrentservergameid(1150669705055451881)
                 .SetGamestarttime(1)
                 .Build()));
@@ -104,7 +106,7 @@ namespace MHServerEmu.Games
                     .SetLeaderboardsEnabled(ConfigManager.GameOptions.LeaderboardsEnabled)
                     .SetNewPlayerExperienceEnabled(ConfigManager.GameOptions.NewPlayerExperienceEnabled)
                     .SetServerTimeOffsetUTC(-7)
-                    .SetUseServerTimeOffset(false)
+                    .SetUseServerTimeOffset(true)  // Although originally this was set to false, it needs to be true because auto offset doesn't work past 2019
                     .SetMissionTrackerV2Enabled(ConfigManager.GameOptions.MissionTrackerV2Enabled)
                     .SetGiftingAccountAgeInDaysRequired(ConfigManager.GameOptions.GiftingAccountAgeInDaysRequired)
                     .SetGiftingAvatarLevelRequired(ConfigManager.GameOptions.GiftingAvatarLevelRequired)
@@ -115,7 +117,7 @@ namespace MHServerEmu.Games
                     .SetChatBanVoteLoginCountRequired(ConfigManager.GameOptions.ChatBanVoteLoginCountRequired)
                     .SetIsDifficultySliderEnabled(ConfigManager.GameOptions.IsDifficultySliderEnabled)
                     .SetOrbisTrophiesEnabled(ConfigManager.GameOptions.OrbisTrophiesEnabled)
-                    .SetPlatformType(8))
+                    .SetPlatformType((int)Platforms.PC))
                 .Build()));
 
             // Create player and avatar entities
@@ -127,38 +129,31 @@ namespace MHServerEmu.Games
             messageList.Add(new(player.ToNetMessageEntityCreate()));
 
             // Avatars
-            uint replacementInventorySlot = 100;   // 100 here because no hero occupies slot 100, this to check that we have successfully swapped heroes
+            PrototypeId currentAvatarId = (PrototypeId)account.CurrentAvatar.Prototype;
+            ulong avatarEntityId = player.BaseData.EntityId + 1;
+            ulong avatarRepId = player.PartyId.ReplicationId + 1;
 
-            Avatar[] avatars = EntityManager.GetDefaultAvatarEntities();
-
-            foreach (Avatar avatar in avatars)
+            List<Avatar> avatarList = new();
+            uint librarySlot = 0; 
+            foreach (PrototypeId avatarId in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(AvatarPrototype),
+                PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
             {
-                // Modify base data
-                HardcodedAvatarEntityId playerAvatarEntityId = account.Player.Avatar.ToEntityId();
+                if (avatarId == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
 
-                if (playerAvatarEntityId != HardcodedAvatarEntityId.BlackCat)
-                {
-                    if (avatar.BaseData.EntityId == (ulong)playerAvatarEntityId)
-                    {
-                        replacementInventorySlot = avatar.BaseData.InvLoc.Slot;
-                        avatar.BaseData.InvLoc.InventoryPrototypeId = GameDatabase.GetPrototypeRefByName("Entity/Inventory/PlayerInventories/PlayerAvatarInPlay.prototype");
-                        avatar.BaseData.InvLoc.Slot = 0;                           // set selected avatar entity inventory slot to 0
-                    }
-                    else if (avatar.BaseData.EntityId == (ulong)HardcodedAvatarEntityId.BlackCat)
-                    {
-                        avatar.BaseData.InvLoc.InventoryPrototypeId = GameDatabase.GetPrototypeRefByName("Entity/Inventory/PlayerInventories/PlayerAvatarLibrary.prototype");
-                        avatar.BaseData.InvLoc.Slot = replacementInventorySlot;    // set Black Cat slot to the one previously occupied by the hero who replaces her
+                Avatar avatar = new(avatarEntityId, avatarRepId);
+                avatarEntityId++;
+                avatarRepId += 2;
 
-                        // Black Cat goes last in the hardcoded messages, so this should always be assigned last
-                        if (replacementInventorySlot == 100) Logger.Warn("replacementInventorySlot is 100! Check the hardcoded avatar entity data");
-                    }
-                }
+                avatar.InitializeFromDBAccount(avatarId, account);
 
-                if (avatar.BaseData.EntityId == (ulong)playerAvatarEntityId)
-                    avatar.InitializeFromDBAccount(account);
+                avatar.BaseData.InvLoc = (avatarId == currentAvatarId)
+                    ? new(player.BaseData.EntityId, (PrototypeId)9555311166682372646, 0)                // Entity/Inventory/PlayerInventories/PlayerAvatarInPlay.prototype
+                    : new(player.BaseData.EntityId, (PrototypeId)5235960671767829134, librarySlot++);   // Entity/Inventory/PlayerInventories/PlayerAvatarLibrary.prototype
 
-                messageList.Add(new(avatar.ToNetMessageEntityCreate()));
+                avatarList.Add(avatar);
             }
+
+            messageList.AddRange(avatarList.Select(avatar => new GameMessage(avatar.ToNetMessageEntityCreate())));
 
             return messageList.ToArray();
         }
@@ -171,6 +166,5 @@ namespace MHServerEmu.Games
                 new(NetMessageRegionChange.CreateBuilder().SetRegionId(0).SetServerGameId(0).SetClearingAllInterest(true).Build())
             };
         }
-
     }
 }

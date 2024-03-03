@@ -24,8 +24,6 @@ namespace MHServerEmu.Games.Entities
         // Hardcoded messages we use for loading
         private static readonly NetMessageEntityCreate PlayerMessage = PacketHelper.LoadMessagesFromPacketFile("NetMessageEntityCreatePlayer.bin")[0]
             .Deserialize<NetMessageEntityCreate>();
-        private static readonly NetMessageEntityCreate[] AvatarMessages = PacketHelper.LoadMessagesFromPacketFile("NetMessageEntityCreateAvatars.bin")
-            .Select(message => message.Deserialize<NetMessageEntityCreate>()).ToArray();
 
         private readonly Game _game;
         private readonly Dictionary<ulong, Entity> _entityDict = new();
@@ -38,10 +36,9 @@ namespace MHServerEmu.Games.Entities
         {
             _game = game;
 
-            // minihack: force default player and avatar entity message initialization on construction
+            // minihack: force default player entity message initialization on construction
             // so that there isn't a lag when a player logs in for the first time after the server starts
             bool playerMessageIsEmpty = PlayerMessage == null;
-            bool avatarMessagesIsEmpty = AvatarMessages == null;
         }
 
         public WorldEntity CreateWorldEntity(Cell cell, PrototypeId prototypeId, Vector3 position, Vector3 orientation,
@@ -93,7 +90,7 @@ namespace MHServerEmu.Games.Entities
         public WorldEntity CreateWorldEntityEmpty(ulong regionId, PrototypeId prototypeId, Vector3 position, Vector3 orientation)
         {
             EntityBaseData baseData = new EntityBaseData(GetNextEntityId(), prototypeId, position, orientation);
-            WorldEntity worldEntity = new(baseData, AoiNetworkPolicyValues.AoiChannel0, _game.CurrentRepId);
+            WorldEntity worldEntity = new(baseData, AOINetworkPolicyValues.AOIChannelProximity, _game.CurrentRepId);
             worldEntity.RegionId = regionId;
             _entityDict.Add(baseData.EntityId, worldEntity);
             return worldEntity;
@@ -103,11 +100,11 @@ namespace MHServerEmu.Games.Entities
 
             EntityBaseData baseData = new()
             {
-                ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel2,
+                ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner,
                 EntityId = GetNextEntityId(),
                 PrototypeId = itemProto,
                 FieldFlags = EntityCreateMessageFlags.HasInterestPolicies | EntityCreateMessageFlags.HasInvLoc,
-                InterestPolicies = AoiNetworkPolicyValues.AoiChannel2,
+                InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner,
                 LocoFieldFlags = LocomotionMessageFlags.None,
                 LocomotionState = new(0f),
                 InvLoc = invLoc
@@ -259,19 +256,6 @@ namespace MHServerEmu.Games.Entities
         {
             EntityBaseData baseData = new(PlayerMessage.BaseData);
             return new(baseData, PlayerMessage.ArchiveData);
-        }
-
-        public Avatar[] GetDefaultAvatarEntities()
-        {
-            Avatar[] avatars = new Avatar[AvatarMessages.Length];
-
-            for (int i = 0; i < avatars.Length; i++)
-            {
-                EntityBaseData baseData = new(AvatarMessages[i].BaseData);
-                avatars[i] = new(baseData, AvatarMessages[i].ArchiveData);
-            }
-
-            return avatars;
         }
 
         public IEnumerable<Entity> GetEntities()

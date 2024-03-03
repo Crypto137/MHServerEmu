@@ -39,14 +39,26 @@ namespace MHServerEmu.Games.Missions
         }
 
         public Mission(ulong state, ulong timeExpireCurrentState, PrototypeId prototypeId,
-            Objective[] objectives, ulong[] participants, bool suspended)
+            int random, Objective[] objectives, ulong[] participants, bool suspended)
         {
             State = state;
             TimeExpireCurrentState = timeExpireCurrentState;
             PrototypeId = prototypeId;
+            Random = random;
             Objectives = objectives;
             Participants = participants;
             Suspended = suspended;
+        }
+
+        public Mission(PrototypeId prototypeId, int random)
+        {
+            State = 0x6;
+            TimeExpireCurrentState = 0x0;
+            PrototypeId = prototypeId;
+            Random = random;
+            Objectives = new Objective[] { new(0x0, 0x2, 0x0, Array.Empty<InteractionTag>(), 0x0, 0x0, 0x0, 0x0) };
+            Participants = Array.Empty<ulong>();
+            Suspended = false;
         }
 
         public Mission(MissionManager missionManager, PrototypeId missionRef)

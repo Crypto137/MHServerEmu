@@ -10,6 +10,7 @@ using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.MetaGame;
 
 namespace MHServerEmu.Games.Powers
 {
@@ -67,6 +68,11 @@ namespace MHServerEmu.Games.Powers
                         return OnAbilitySwapInAbilityBar(client, swapInAbilityBar);
                     break;
 
+                case ClientToGameServerMessage.NetMessageAssignStolenPower:
+                    if (message.TryDeserialize<NetMessageAssignStolenPower>(out var assignStolenPower))
+                        return OnAssignStolenPower(client, assignStolenPower);
+                    break;
+
                 default:
                     Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
                     break;
@@ -75,13 +81,13 @@ namespace MHServerEmu.Games.Powers
             return Array.Empty<QueuedGameMessage>();
         }
 
-        private bool PowerHasKeyword(PrototypeId powerId, HardcodedBlueprintId keyword)
+        private bool PowerHasKeyword(PrototypeId powerId, PrototypeId keyword)
         {
             var power = GameDatabase.GetPrototype<PowerPrototype>(powerId);
             if (power == null) return false;
 
             for (int i = 0; i < power.Keywords.Length; i++)
-                if (power.Keywords[i] == (PrototypeId)keyword) return true;
+                if (power.Keywords[i] == keyword) return true;
 
             return false;
         }
@@ -134,9 +140,9 @@ namespace MHServerEmu.Games.Powers
             }
             else if (powerPrototypePath.Contains("EmmaFrost/"))
             {
-                if (PowerHasKeyword(powerPrototypeId, HardcodedBlueprintId.DiamondFormActivatePower))
+                if (PowerHasKeyword(powerPrototypeId, (PrototypeId)HardcodedBlueprints.DiamondFormActivatePower))
                     _eventManager.AddEvent(client, EventEnum.DiamondFormActivate, 0, tryActivatePower.PowerPrototypeId);
-                else if (PowerHasKeyword(powerPrototypeId, HardcodedBlueprintId.Mental))
+                else if (PowerHasKeyword(powerPrototypeId, (PrototypeId)HardcodedBlueprints.Mental))
                     _eventManager.AddEvent(client, EventEnum.DiamondFormDeactivate, 0, tryActivatePower.PowerPrototypeId);
             }
             else if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.Magik.Ultimate)
@@ -288,6 +294,13 @@ namespace MHServerEmu.Games.Powers
             abilityKeyMapping.SetAbilityInAbilitySlot(prototypeA, slotB);
 
             return Array.Empty<QueuedGameMessage>();
+        }
+
+        private IEnumerable<QueuedGameMessage> OnAssignStolenPower(FrontendClient client, NetMessageAssignStolenPower assignStolenPower)
+        {
+            PropertyParam param = Property.ToParam(PropertyEnum.AvatarMappedPower, 0, (PrototypeId)assignStolenPower.StealingPowerProtoId);
+            yield return new(client, new(Property.ToNetMessageSetProperty((ulong)HardcodedAvatarPropertyCollectionReplicationId.Rogue,
+                new(PropertyEnum.AvatarMappedPower, param), (PrototypeId)assignStolenPower.StolenPowerProtoId)));
         }
 
         #endregion

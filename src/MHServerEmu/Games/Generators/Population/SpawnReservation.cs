@@ -49,7 +49,7 @@ namespace MHServerEmu.Games.Generators.Population
         public override string ToString()
         {            
             StringBuilder sb = new();
-            if (MissionRef != null)
+            if (MissionRef != PrototypeId.Invalid)
                 sb.AppendLine($"MissionRef: {GameDatabase.GetFormattedPrototypeName(MissionRef)}");
             sb.AppendLine($"Position: {MarkerPos.ToString()}");
             sb.AppendLine($"CellId: {Cell.Id}");

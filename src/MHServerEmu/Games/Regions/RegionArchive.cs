@@ -10,7 +10,7 @@ namespace MHServerEmu.Games.Powers
 {
     public class RegionArchive
     {
-        public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
+        public AOINetworkPolicyValues ReplicationPolicy { get; set; }
         public ReplicatedPropertyCollection Properties { get; set; }
         public MissionManager MissionManager { get; set; }
         public UIDataProvider UIDataProvider { get; set; }
@@ -21,14 +21,21 @@ namespace MHServerEmu.Games.Powers
             CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
             BoolDecoder boolDecoder = new();
 
-            ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
+            ReplicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint32();
             Properties = new(stream);
             MissionManager = new(stream, boolDecoder);
             UIDataProvider = new(stream, boolDecoder);
             ObjectiveGraph = new(stream);
         }
 
-        public RegionArchive() { }
+        public RegionArchive(ulong replicationId)
+        {
+            ReplicationPolicy = AOINetworkPolicyValues.DefaultPolicy;
+            Properties = new(replicationId);
+            MissionManager = new();
+            UIDataProvider = new(Array.Empty<UISyncData>());
+            ObjectiveGraph = new();
+        }
 
         public ByteString Serialize()
         {

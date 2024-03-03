@@ -1,19 +1,18 @@
 ﻿using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 
-namespace MHServerEmu.Games.GameData.Localization
+namespace MHServerEmu.Games.Locales
 {
     public class StringFile
     {
-        public CalligraphyHeader Header { get; }
         public Dictionary<LocaleStringId, StringMapEntry> StringMap { get; } = new();
 
-        public StringFile(byte[] data)
+        public StringFile(Stream stream)
         {
-            using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = new(reader);
+                CalligraphyHeader header = new(reader);
 
                 ushort entryCount = reader.ReadUInt16();
                 for (int i = 0; i < entryCount; i++)
@@ -27,15 +26,12 @@ namespace MHServerEmu.Games.GameData.Localization
 
     public class StringMapEntry
     {
-        public LocaleStringId LocaleStringId { get; set; }
         public StringVariation[] Variants { get; set; }
         public ushort FlagsProduced { get; set; }
         public string String { get; set; }
 
         public StringMapEntry(BinaryReader reader)
         {
-            LocaleStringId = (LocaleStringId)reader.ReadUInt64();
-
             ushort variantNum = reader.ReadUInt16();
             Variants = variantNum > 0
                 ? new StringVariation[variantNum - 1]

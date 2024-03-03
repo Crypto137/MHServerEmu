@@ -32,7 +32,7 @@ namespace MHServerEmu.Games.Entities
 
         public WorldEntity(EntityBaseData baseData) : base(baseData) { SpatialPartitionLocation = new(this); }
 
-        public WorldEntity(EntityBaseData baseData, AoiNetworkPolicyValues replicationPolicy, ulong replicationId) : base(baseData)
+        public WorldEntity(EntityBaseData baseData, AOINetworkPolicyValues replicationPolicy, ulong replicationId) : base(baseData)
         {
             ReplicationPolicy = replicationPolicy;
             Properties = new(replicationId);
@@ -46,7 +46,7 @@ namespace MHServerEmu.Games.Entities
         public WorldEntity(EntityBaseData baseData, ulong replicationId, Vector3 mapPosition, int health, int mapAreaId,
             int healthMaxOther, ulong mapRegionId, int mapCellId, PrototypeId contextAreaRef) : base(baseData)
         {
-            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel5;
+            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelDiscovery;
 
             Properties = new(replicationId);
             Properties[PropertyEnum.MapPosition] = mapPosition;
@@ -77,7 +77,7 @@ namespace MHServerEmu.Games.Entities
                 ConditionCollection[i] = new(stream);
 
             // Gazillion::PowerCollection::SerializeRecordCount
-            if (ReplicationPolicy.HasFlag(AoiNetworkPolicyValues.AoiChannel0))
+            if (ReplicationPolicy.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
             {
                 PowerCollection = new PowerCollectionRecord[stream.ReadRawVarint32()];
                 if (PowerCollection.Length > 0)
@@ -106,7 +106,7 @@ namespace MHServerEmu.Games.Entities
             stream.WriteRawVarint64((ulong)ConditionCollection.Length);
             foreach (Condition condition in ConditionCollection) condition.Encode(stream);
 
-            if (ReplicationPolicy.HasFlag(AoiNetworkPolicyValues.AoiChannel0))
+            if (ReplicationPolicy.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
             {
                 stream.WriteRawVarint32((uint)PowerCollection.Length);
                 for (int i = 0; i < PowerCollection.Length; i++) PowerCollection[i].Encode(stream);

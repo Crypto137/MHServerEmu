@@ -12,6 +12,11 @@ namespace MHServerEmu.Games.UI
     {
         public UISyncData[] UISyncData { get; set; }
 
+        public UIDataProvider(UISyncData[] uiSyncData)
+        {
+            UISyncData = uiSyncData;
+        }
+
         public UIDataProvider(CodedInputStream stream, BoolDecoder boolDecoder)
         {
             UISyncData = new UISyncData[stream.ReadRawVarint32()];

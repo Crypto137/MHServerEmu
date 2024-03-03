@@ -16,7 +16,7 @@ namespace MHServerEmu.Games.MetaGame
 
         public MetaGame(EntityBaseData baseData) : base(baseData) { }
 
-        public MetaGame(EntityBaseData baseData, AoiNetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection properties,
+        public MetaGame(EntityBaseData baseData, AOINetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection properties,
             ReplicatedVariable<string> name) : base(baseData)
         {
             ReplicationPolicy = replicationPolicy;

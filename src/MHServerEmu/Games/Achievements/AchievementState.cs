@@ -1,51 +1,109 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using Gazillion;
+using MHServerEmu.Common;
+using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.Games.Achievements
 {
+    /// <summary>
+    /// Manages the state of all achievements for a given player.
+    /// </summary>
     public class AchievementState
     {
-        public uint Id { get; set; }
-        public uint Count { get; set; }
-        public ulong CompletedDate { get; set; }
+        public Dictionary<uint, AchievementProgress> AchievementProgressMap { get; } = new();
 
+        /// <summary>
+        /// Constructs an empty <see cref="AchievementState"/> instance.
+        /// </summary>
+        public AchievementState() { }
+
+        /// <summary>
+        /// Constructs an <see cref="AchievementState"/> from the provided <see cref="CodedInputStream"/>.
+        /// </summary>
         public AchievementState(CodedInputStream stream)
         {
-            Id = stream.ReadRawVarint32();
-            Count = stream.ReadRawVarint32();
-            CompletedDate = stream.ReadRawVarint64();
+            ulong numProgress = stream.ReadRawVarint64();
+            for (ulong i = 0; i < numProgress; i++)
+            {
+                uint id = stream.ReadRawVarint32();
+                uint count = stream.ReadRawVarint32();
+                long completedDate = stream.ReadRawInt64();
+
+                AchievementProgressMap[id] = new(count, Clock.UnixTimeMicrosecondsToTimeSpan(completedDate), false);
+            }
         }
 
-        public AchievementState(uint id, uint count, ulong completedDate)
-        {
-            Id = id;
-            Count = count;
-            CompletedDate = completedDate;
-        }
-
+        /// <summary>
+        /// Encodes this <see cref="AchievementState"/> instance to the provided <see cref="CodedOutputStream"/>.
+        /// </summary>
         public void Encode(CodedOutputStream stream)
         {
-            stream.WriteRawVarint64(Id);
-            stream.WriteRawVarint64(Count);
-            stream.WriteRawVarint64(CompletedDate);
+            stream.WriteRawVarint64((ulong)AchievementProgressMap.Count);
+            foreach (var kvp in AchievementProgressMap)
+            {
+                stream.WriteRawVarint32(kvp.Key);
+                stream.WriteRawVarint32(kvp.Value.Count);
+                stream.WriteRawInt64(kvp.Value.CompletedDate.Ticks / 10);
+            }
         }
 
-        public NetMessageAchievementStateUpdate.Types.AchievementState ToNetStruct()
+        /// <summary>
+        /// Returns the <see cref="AchievementProgress"/> value for the specified id.
+        /// </summary>
+        public AchievementProgress GetAchievementProgress(uint id)
         {
-            return NetMessageAchievementStateUpdate.Types.AchievementState.CreateBuilder()
-                .SetId(Id)
-                .SetCount(Count)
-                .SetCompleteddate(CompletedDate)
-                .Build();
+            if (AchievementProgressMap.TryGetValue(id, out AchievementProgress progress) == false)
+                return new();
+
+            return progress;
+        }
+
+        /// <summary>
+        /// Sets the <see cref="AchievementProgress"/> value for the specified id.
+        /// </summary>
+        public void SetAchievementProgress(uint id, AchievementProgress progress)
+        {
+            AchievementProgressMap[id] = progress;
+        }
+
+        /// <summary>
+        /// Generates a <see cref="NetMessageAchievementStateUpdate"/> from this <see cref="AchievementState"/> instance.
+        /// </summary>
+        public NetMessageAchievementStateUpdate ToUpdateMessage(bool showPopups = true)
+        {
+            var builder = NetMessageAchievementStateUpdate.CreateBuilder();
+
+            List<uint> sentIds = new();
+
+            foreach (var kvp in AchievementProgressMap)
+            {
+                if (kvp.Value.ModifiedSinceCheckpoint == false) continue;   // Skip achievements that haven't been modified
+
+                builder.AddAchievementStates(NetMessageAchievementStateUpdate.Types.AchievementState.CreateBuilder()
+                    .SetId(kvp.Key)
+                    .SetCount(kvp.Value.Count)
+                    .SetCompleteddate((ulong)kvp.Value.CompletedDate.Ticks / 10));
+
+                sentIds.Add(kvp.Key);
+            }
+
+            // Remove modified from all states we are going to send
+            foreach (uint id in sentIds)
+                AchievementProgressMap[id] = AchievementProgressMap[id].AsNotModified();
+
+            builder.SetShowpopups(showPopups);
+            return builder.Build();
         }
 
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($"Id: {Id}");
-            sb.AppendLine($"Count: {Count}");
-            sb.AppendLine($"CompletionDate: 0x{CompletedDate:X}");
+            foreach (var kvp in AchievementProgressMap)
+            {
+                sb.Append($"AchievementProgress[{kvp.Key}]: ");
+                sb.Append(kvp.Value.ToString());
+            }
             return sb.ToString();
         }
     }

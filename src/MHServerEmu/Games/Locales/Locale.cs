@@ -1,25 +1,27 @@
 ﻿using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 
-namespace MHServerEmu.Games.GameData.Localization
+namespace MHServerEmu.Games.Locales
 {
     public class Locale
     {
-        public CalligraphyHeader Header { get; }
+        private readonly Dictionary<LocaleStringId, StringMapEntry> _stringMap = new();
+
         public string Name { get; }
         public string LanguageDisplayName { get; }
         public string RegionDisplayName { get; }
         public string Directory { get; }
         public LocaleFlag[] Flags { get; }
 
-        public Dictionary<LocaleStringId, StringMapEntry> StringMap { get; } = new();
+        public Locale() { }
 
-        public Locale(byte[] data)
+        public Locale(Stream stream)
         {
-            using (MemoryStream stream = new(data))
             using (BinaryReader reader = new(stream))
             {
-                Header = new(reader);
+                CalligraphyHeader header = new(reader);
+
                 Name = reader.ReadFixedString16();
                 LanguageDisplayName = reader.ReadFixedString16();
                 RegionDisplayName = reader.ReadFixedString16();
@@ -31,10 +33,31 @@ namespace MHServerEmu.Games.GameData.Localization
             }
         }
 
-        public void AddStringFile(StringFile stringFile)
+        public bool ImportStringStream(string streamName, Stream stream)
         {
+            StringFile stringFile = new(stream);
+
             foreach (var kvp in stringFile.StringMap)
-                StringMap.Add(kvp.Key, kvp.Value);
+                _stringMap.Add(kvp.Key, kvp.Value);
+
+            return true;
+        }
+
+        public string GetLocaleString(LocaleStringId stringId)
+        {
+            if (_stringMap.TryGetValue(stringId, out StringMapEntry entry) == false)
+                return string.Empty;
+
+            return entry.String;
+        }
+
+        private bool LoadStringFile(string filePath)
+        {
+            if (File.Exists(filePath) == false)
+                return false;
+
+            using (FileStream fs = File.OpenRead(filePath))
+                return ImportStringStream(filePath, fs);
         }
     }
 

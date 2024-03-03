@@ -50,7 +50,7 @@ namespace MHServerEmu.Games.Powers
     {
         private static readonly Random Random = new();  // For testing, remove this later
 
-        public AoiNetworkPolicyValues ReplicationPolicy { get; set; }
+        public AOINetworkPolicyValues ReplicationPolicy { get; set; }
         public PowerResultMessageFlags Flags { get; set; }
         public PrototypeId PowerPrototypeId { get; set; }
         public ulong TargetEntityId { get; set; }
@@ -69,7 +69,7 @@ namespace MHServerEmu.Games.Powers
         {
             CodedInputStream stream = CodedInputStream.CreateInstance(data.ToByteArray());
 
-            ReplicationPolicy = (AoiNetworkPolicyValues)stream.ReadRawVarint32();
+            ReplicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint32();
             Flags = (PowerResultMessageFlags)stream.ReadRawVarint32();
             PowerPrototypeId = stream.ReadPrototypeEnum<PowerPrototype>();
             TargetEntityId = stream.ReadRawVarint64();
@@ -112,7 +112,7 @@ namespace MHServerEmu.Games.Powers
         public PowerResultArchive(NetMessageTryActivatePower tryActivatePower)
         {
             // Damage test
-            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0;
+            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity;
             Flags = PowerResultMessageFlags.None;
             PowerPrototypeId = (PrototypeId)tryActivatePower.PowerPrototypeId;
             TargetEntityId = tryActivatePower.IdTargetEntity;
@@ -149,7 +149,7 @@ namespace MHServerEmu.Games.Powers
         public PowerResultArchive(NetMessageContinuousPowerUpdateToServer continuousPowerUpdate)
         {
             // damage test
-            ReplicationPolicy = AoiNetworkPolicyValues.AoiChannel0;
+            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity;
             Flags = PowerResultMessageFlags.None;
             PowerPrototypeId = (PrototypeId)continuousPowerUpdate.PowerPrototypeId;
             TargetEntityId = continuousPowerUpdate.IdTargetEntity;

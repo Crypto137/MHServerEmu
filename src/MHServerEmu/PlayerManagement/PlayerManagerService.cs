@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Auth;
+using MHServerEmu.Common;
 using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Frontend;
@@ -115,6 +116,13 @@ namespace MHServerEmu.PlayerManagement
 
         public void Handle(FrontendClient client, ushort muxId, GameMessage message)
         {
+            // Timestamp sync messages
+            if (message.Id == (byte)ClientToGameServerMessage.NetMessageSyncTimeRequest || message.Id == (byte)ClientToGameServerMessage.NetMessagePing)
+            {
+                message.GameTimeReceived = Clock.GameTime;
+                message.DateTimeReceived = Clock.UnixTime;
+            }
+
             switch ((ClientToGameServerMessage)message.Id)
             {
                 // Self-handled messages
@@ -136,12 +144,12 @@ namespace MHServerEmu.PlayerManagement
 
                 case ClientToGameServerMessage.NetMessageSyncTimeRequest:
                     if (message.TryDeserialize<NetMessageSyncTimeRequest>(out var syncTimeRequest))
-                        OnSyncTimeRequest(client, syncTimeRequest);
+                        OnSyncTimeRequest(client, syncTimeRequest, message.GameTimeReceived, message.DateTimeReceived);
                     break;
 
                 case ClientToGameServerMessage.NetMessagePing:
                     if (message.TryDeserialize<NetMessagePing>(out var ping))
-                        OnPing(client, ping);
+                        OnPing(client, ping, message.GameTimeReceived);
                     break;
 
                 case ClientToGameServerMessage.NetMessageFPS:
@@ -158,6 +166,7 @@ namespace MHServerEmu.PlayerManagement
                 // Game
                 case ClientToGameServerMessage.NetMessageUpdateAvatarState:
                 case ClientToGameServerMessage.NetMessageCellLoaded:
+                case ClientToGameServerMessage.NetMessageAdminCommand:
                 case ClientToGameServerMessage.NetMessageChangeCameraSettings:
                 case ClientToGameServerMessage.NetMessagePerformPreInteractPower:
                 case ClientToGameServerMessage.NetMessageTryActivatePower:
@@ -179,6 +188,7 @@ namespace MHServerEmu.PlayerManagement
                 case ClientToGameServerMessage.NetMessageSelectOmegaBonus:  // This should be within NetMessageOmegaBonusAllocationCommit only in theory
                 case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:
                 case ClientToGameServerMessage.NetMessageRespecOmegaBonus:
+                case ClientToGameServerMessage.NetMessageAssignStolenPower:
                     GetGameByPlayer(client).Handle(client, message);
                     break;
 
@@ -257,45 +267,55 @@ namespace MHServerEmu.PlayerManagement
 
             // Sync time
             client.SendMessage(MuxChannel, new(NetMessageInitialTimeSync.CreateBuilder()
-                .SetGameTimeServerSent(161351679299542)     // dumped - Gazillion time?
-                .SetDateTimeServerSent(1509657957345525)    // dumped - unix time stamp in microseconds
+                .SetGameTimeServerSent(Clock.GameTime.Ticks / 10)
+                .SetDateTimeServerSent(Clock.UnixTime.Ticks / 10)
                 .Build()));
         }
 
-        private void OnSyncTimeRequest(FrontendClient client, NetMessageSyncTimeRequest syncTimeRequest)
+        private void OnSyncTimeRequest(FrontendClient client, NetMessageSyncTimeRequest request, TimeSpan gameTimeReceived, TimeSpan dateTimeReceived)
         {
-            // NOTE: this is old experimental code
-            /*
-            Logger.Info($"Received NetMessageSyncTimeRequest:");
-            Logger.Trace(syncTimeRequest.ToString());
+            //Logger.Debug($"NetMessageSyncTimeRequest:\n{request}");
 
-            Logger.Info("Sending NetMessageSyncTimeReply");
-            client.SendMessage(1, new(NetMessageSyncTimeReply.CreateBuilder()
-                .SetGameTimeClientSent(syncTimeRequest.GameTimeClientSent)
-                .SetGameTimeServerReceived(_serverManager.GetGameTime())
-                .SetGameTimeServerSent(_serverManager.GetGameTime())
-
-                .SetDateTimeClientSent(syncTimeRequest.DateTimeClientSent)
-                .SetDateTimeServerReceived(_serverManager.GetDateTime())
-                .SetDateTimeServerSent(_serverManager.GetDateTime())
-
+            var reply = NetMessageSyncTimeReply.CreateBuilder()
+                .SetGameTimeClientSent(request.GameTimeClientSent)
+                .SetGameTimeServerReceived(gameTimeReceived.Ticks / 10)
+                .SetGameTimeServerSent(Clock.GameTime.Ticks / 10)
+                .SetDateTimeClientSent(request.DateTimeClientSent)
+                .SetDateTimeServerReceived(dateTimeReceived.Ticks / 10)
+                .SetDateTimeServerSent(Clock.UnixTime.Ticks / 10)
                 .SetDialation(1.0f)
                 .SetGametimeDialationStarted(0)
                 .SetDatetimeDialationStarted(0)
-                .Build()));
-            */
+                .Build();
+
+            //Logger.Debug($"NetMessageSyncTimeReply:\n{reply}");
+
+            client.SendMessage(MuxChannel, new(reply));
         }
 
-        private void OnPing(FrontendClient client, NetMessagePing ping)
+        private void OnPing(FrontendClient client, NetMessagePing ping, TimeSpan gameTimeReceived)
         {
-            //Logger.Info($"Received ping:");
-            //Logger.Trace(ping.ToString());
+            //Logger.Debug($"NetMessagePing:\n{ping}");
+
+            var response = NetMessagePingResponse.CreateBuilder()
+                .SetDisplayOutput(ping.DisplayOutput)
+                .SetRequestSentClientTime(ping.SendClientTime)
+                .SetRequestSentGameTime(ping.SendGameTime)
+                .SetRequestNetReceivedGameTime((ulong)gameTimeReceived.TotalMilliseconds)
+                .SetResponseSendTime((ulong)Clock.GameTime.TotalMilliseconds)
+                .SetServerTickforecast(0)   // server tick time ms
+                .SetGameservername("BOPR-MHVGIS2")
+                .SetFrontendname("bopr-mhfes2")
+                .Build();
+
+            //Logger.Debug($"NetMessagePingResponse:\n{response}");
+
+            client.SendMessage(MuxChannel, new(response));
         }
 
         private void OnFps(FrontendClient client, NetMessageFPS fps)
         {
-            //Logger.Info("Received FPS:");
-            //Logger.Trace(fps.ToString());
+            //Logger.Debug($"NetMessageFPS:\n{fps}");
         }
 
         private void OnGracefulDisconnect(FrontendClient client)

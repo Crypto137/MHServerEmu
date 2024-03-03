@@ -16,6 +16,8 @@ This page provides definitions for terms used by the game internally.
 
 - **Avatar** - an agent that can be controlled by players.
 
+- **Badge** - a flag that grants a player elevated privileges of some kind.
+
 - **Behavior** - a system that handles the AI of enemies and NPCs.
 
 - **Billing** - a service that handles interaction with the in-game store.
@@ -36,15 +38,19 @@ This page provides definitions for terms used by the game internally.
 
 - **Curve** - a collection of numeric values.
 
+- **Date Time** - a number of milliseconds or microseconds elapsed since `Jan 01 1970 00:00:00 GMT+0000`. Also referred to as calendar time.
+
 - **District** - a static arrangement of cells.
 
 - **Dynamic Random Area Generator (DRAG)** - a system that handles procedural generation of the game world.
 
 - **Encounter** - a static arrangement of entities to be spawned as part of the overall population.
 
+- **Endurance** - the primary resource used for powers (e.g. spirit).
+
 - **Entity** - a dynamic game object. Each entity contains a collection of properties.
 
-- **Eval** - a system evaluates formulas defined in static game data.
+- **Eval** - a system that evaluates formulas defined in static game data.
 
 - **Field Group** - a collection of field values belonging to a specific blueprint.
 
@@ -53,6 +59,8 @@ This page provides definitions for terms used by the game internally.
 - **Game Database** - a proprietary static game data management system developed by Gazillion.
 
 - **Game Instance Server (GIS)** - a server that runs game instances.
+
+- **Game Time** - a number of milliseconds or microseconds elapsed since `Sep 22 2012 09:31:18 GMT+0000`.
 
 - **Grouping Manager** - a service that handles social and matchmaking features.
 
@@ -72,11 +80,15 @@ This page provides definitions for terms used by the game internally.
 
 - **Item** - a world entity that represents an item.
 
+- **Keyword** - a tag that can be applied to a power, such as physical, melee, area, etc.
+
 - **Kismet** - a visual scripting system that is part of Unreal Engine 3.
 
 - **Live Tuning** - a system that overrides some of the static data contained in the game database without changing it.
 
 - **Locomotion** - a system that handles the movement of world entities in the game world.
+
+- **Mapped Power** - an override of an existing power in the power library with another power. Used for talents that change powers and Rogue's stolen powers.
 
 - **Marker** - a definition for spawning objects that includes position and rotation.
 

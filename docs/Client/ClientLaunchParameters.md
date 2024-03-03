@@ -52,8 +52,8 @@ These require further checking for compatibility with various versions of the cl
 | -startingcell=         |                                                                                              |              |
 | -envoverride=          |                                                                                              |              |
 | -collectionname=       |                                                                                              |              |
-| -emailaddress=         |                                                                                              |              |
-| -password=             |                                                                                              |              |
+| -emailaddress=         | Automatically logs in on client startup using the specified email address.                   |              |
+| -password=             | Specifies the password for logging in automatically with -emailaddress.                      |              |
 | -twofactorauthcode=    |                                                                                              |              |
 | -twofactorauthname=    |                                                                                              |              |
 | -twofactortrustmachine |                                                                                              |              |
@@ -69,7 +69,7 @@ These require further checking for compatibility with various versions of the cl
 | -solidstate            | Launches the game in Gazillion launcher mode (mutually exclusive with -robocopy and -steam). |              |
 | -steam                 | Launches the game in Steam mode (mutually exclusive with -robocopy and -solidstate).         |              |
 | -skipmotioncomics      |                                                                                              |              |
-| -nocatalog             | Prevents store catalog from loading.                                                         |              |
+| -nocatalog             | Prevents the store catalog from loading.                                                     |              |
 | -norostercatalog       |                                                                                              |              |
 | -displaynametoggle     |                                                                                              |              |
 | -xpnumberstoggle       |                                                                                              |              |
