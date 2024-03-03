@@ -92,7 +92,9 @@ namespace GameDatabaseBrowser
             bool isInitialized = GameDatabase.IsInitialized;
             DataDirectory dataDirectory = DataDirectory.Instance;
 
-            InitPrototypesList(worker, out int counter);
+            int counter = 0;
+            InitPrototypesList(worker, ref counter);
+            GeneratePrototypeReferencesCache(worker, ref counter);
 
             PrototypeNodes.Add(new() { PrototypeDetails = new("Prototypes", new()) });
             PropertyNodes.Add(new() { PropertyDetails = new() { Name = "Data" } });
@@ -103,9 +105,9 @@ namespace GameDatabaseBrowser
         /// <summary>
         /// Create a list with all the prototypes and their properties
         /// </summary>
-        private void InitPrototypesList(BackgroundWorker worker, out int counter)
+        private void InitPrototypesList(BackgroundWorker worker, ref int counter)
         {
-            counter = 0;
+            
             foreach (PrototypeId prototypeId in GameDatabase.DataDirectory.IterateAllPrototypes())
             {
                 string fullName = GameDatabase.GetPrototypeName(prototypeId);
@@ -114,7 +116,7 @@ namespace GameDatabaseBrowser
 
                 List<PropertyDetails> properties = propertyInfo.Select(k => new PropertyDetails() { Name = k.Name, Value = k.GetValue(proto)?.ToString(), TypeName = k.PropertyType.Name }).ToList();
                 _prototypeDetails.Add(new(fullName, properties));
-                worker.ReportProgress((int)(++counter * 100 / ((float)PrototypeMaxNumber)));
+                worker.ReportProgress((int)(++counter * 100 / ((float)PrototypeMaxNumber * 2)));
             }
 
             _prototypeDetails = _prototypeDetails.OrderBy(k => k.FullName).ToList();
@@ -178,11 +180,25 @@ namespace GameDatabaseBrowser
             List<PrototypeDetails> prototypeToDisplay = _prototypeDetails;
             if (!string.IsNullOrEmpty(_currentFilter))
             {
-                bool exactSearch = exactMatchToggle.IsChecked ?? false;
-                if (exactSearch)
-                    prototypeToDisplay = _prototypeDetails.Where(k => k.FullName.ToLowerInvariant() == _currentFilter || k.Name.ToLowerInvariant() == _currentFilter).ToList();
+                if (referencesToggle.IsChecked == true)
+                {
+                    prototypeToDisplay = new List<PrototypeDetails>();
+                    PrototypeId key = GameDatabase.GetPrototypeRefByName(_currentFilter);
+                    if (key != 0 && _cacheDictionary.ContainsKey(key))
+                    {
+                        List<PrototypeId> prototypeIds = _cacheDictionary[key];
+                        foreach (PrototypeId prototypeId in prototypeIds)
+                            prototypeToDisplay.Add(_prototypeDetails.Where(k => k.FullName == GameDatabase.GetPrototypeName(prototypeId)).First());
+                    }
+                }
                 else
-                    prototypeToDisplay = _prototypeDetails.Where(k => k.FullName.ToLowerInvariant().Contains(_currentFilter)).ToList();
+                {
+                    bool exactSearch = exactMatchToggle.IsChecked ?? false;
+                    if (exactSearch)
+                        prototypeToDisplay = _prototypeDetails.Where(k => k.FullName.ToLowerInvariant() == _currentFilter || k.Name.ToLowerInvariant() == _currentFilter).ToList();
+                    else
+                        prototypeToDisplay = _prototypeDetails.Where(k => k.FullName.ToLowerInvariant().Contains(_currentFilter)).ToList();
+                }
             }
 
 
@@ -331,6 +347,84 @@ namespace GameDatabaseBrowser
             Clipboard.SetText(selected.PropertyDetails.Name);
         }
 
+        private Dictionary<PrototypeId, List<PrototypeId>> _cacheDictionary = new();
+
+        /// <summary>
+        /// Generate a dictionary to quicly retrieve the prototypes that reference an prototypeId in their properties
+        /// </summary>
+        private void GeneratePrototypeReferencesCache(BackgroundWorker worker, ref int counter)
+        {
+            foreach (PrototypeDetails prototypeDetails in _prototypeDetails)
+            {
+                string dataRef = prototypeDetails?.Properties?.FirstOrDefault(k => k.Name == "DataRef")?.Value;
+                if (ulong.TryParse(dataRef, out ulong prototypeId))
+                {
+                    Prototype proto = GameDatabase.DataDirectory.GetPrototype<Prototype>((PrototypeId)prototypeId);
+                    GeneratePrototypeReferencesCache(proto, (PrototypeId)prototypeId);
+                }
+
+                worker.ReportProgress((int)(++counter * 100 / ((float)PrototypeMaxNumber * 2)));
+            }
+        }
+
+        /// <summary>
+        /// Add an entry to the prototype references cache dictionary
+        /// </summary>
+        private void AddCacheEntry(PrototypeId key, PrototypeId value)
+        {
+            if (!_cacheDictionary.ContainsKey(key))
+                _cacheDictionary[key] = new List<PrototypeId> { value };
+            else
+                _cacheDictionary[key].Add(value);
+        }
+
+        /// <summary>
+        /// Browse all properties of the prototypes to construct the prototype references cache dictionary
+        /// </summary>
+        private void GeneratePrototypeReferencesCache(object property, PrototypeId parent)
+        {
+            if (property == null)
+                return;
+
+            PropertyInfo[] propertyInfo = property.GetType().GetProperties().Where(k => k.Name != "DataRef" && k.Name != "ParentDataRef" && k.Name != "DataRefRecord").OrderBy(k => k.Name).ToArray();
+
+            foreach (PropertyInfo propInfo in propertyInfo)
+            {
+                if (propInfo.GetValue(property) is PrototypeId)
+                    AddCacheEntry((PrototypeId)propInfo.GetValue(property), parent);
+
+                if (typeof(IEnumerable<object>).IsAssignableFrom(propInfo.PropertyType))
+                {
+                    IEnumerable<object> subPropertyInfo = (IEnumerable<object>)propInfo.GetValue(property);
+                    if (subPropertyInfo == null)
+                        continue;
+
+                    foreach (var subPropInfo in subPropertyInfo)
+                    {
+                        if (subPropertyInfo is Array)
+                        {
+                            GeneratePrototypeReferencesCache(subPropInfo, parent);
+                        }
+                        else if (subPropertyInfo is PropertyCollection)
+                        {
+                            KeyValuePair<PropertyId, PropertyValue> kvp = (KeyValuePair<PropertyId, PropertyValue>)subPropInfo;
+                            MHServerEmu.Games.Properties.PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
+                            if (info.DataType == PropertyDataType.Prototype)
+                                AddCacheEntry(kvp.Value.ToPrototypeId(), parent);
+                            continue;
+                        }
+                        else
+                            GeneratePrototypeReferencesCache(subPropInfo, parent);
+                    }
+                }
+                else if (typeof(Prototype).IsAssignableFrom(propInfo.PropertyType))
+                {
+                    if ((Prototype)propInfo.GetValue(property) != null)
+                        GeneratePrototypeReferencesCache(propInfo, parent);
+                }
+            }
+        }
+
         /// <summary>
         /// Return an array of index that indicate the path to access the treeViewItem selected
         /// </summary>
@@ -378,7 +472,7 @@ namespace GameDatabaseBrowser
                     if (subPropertyInfo is Array)
                         node.Childs.Last().PropertyDetails.Value = node.Childs.Last().PropertyDetails.Value.Replace("[]", $"[{Enumerable.Count(subPropertyInfo)}]");
 
-                        int index = 0;
+                    int index = 0;
                     foreach (var subPropInfo in subPropertyInfo)
                     {
                         if (subPropertyInfo is Array)
