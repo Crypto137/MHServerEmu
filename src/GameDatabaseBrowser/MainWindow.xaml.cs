@@ -54,12 +54,12 @@ namespace GameDatabaseBrowser
         /// <summary>
         /// Stack for history of prototypes' fullname selected used for Back action
         /// </summary>
-        private Stack<string> _fullNameUndoHistory = new();
+        private Stack<string> _fullNameBackHistory = new();
 
         /// <summary>
-        /// Stack for history of prototypes' fullname selected used for Next action
+        /// Stack for history of prototypes' fullname selected used for Forward action
         /// </summary>
-        private Stack<string> _fullNameRedoHistory = new();
+        private Stack<string> _fullNameForwardHistory = new();
 
         public MainWindow()
         {
@@ -215,31 +215,31 @@ namespace GameDatabaseBrowser
         /// <summary>
         /// Return to the previous state
         /// </summary>
-        private void OnUndoButtonClicked(object sender, RoutedEventArgs e)
+        private void OnBackButtonClicked(object sender, RoutedEventArgs e)
         {
             if (!isReady)
                 return;
 
-            if (_fullNameUndoHistory.Count < 2)
+            if (_fullNameBackHistory.Count < 2)
                 return;
 
-            string fullname = _fullNameUndoHistory.Pop();
-            _fullNameRedoHistory.Push(fullname);
-            SelectFromName(_fullNameUndoHistory.Peek());
+            string fullname = _fullNameBackHistory.Pop();
+            _fullNameForwardHistory.Push(fullname);
+            SelectFromName(_fullNameBackHistory.Peek());
         }
 
         /// <summary>
         /// Return to the next state (basically it cancels a back action)
         /// </summary>
-        private void OnRedoButtonClicked(object sender, RoutedEventArgs e)
+        private void OnForwardButtonClicked(object sender, RoutedEventArgs e)
         {
             if (!isReady)
                 return;
 
-            if (_fullNameRedoHistory.Count < 1)
+            if (_fullNameForwardHistory.Count < 1)
                 return;
 
-            SelectFromName(_fullNameRedoHistory.Pop());
+            SelectFromName(_fullNameForwardHistory.Pop());
         }
 
         /// <summary>
@@ -429,8 +429,8 @@ namespace GameDatabaseBrowser
                 txtDataRef.Text = $"{prototypeFullName} ({prototypeId})";
                 txtDataRef.DataContext = new PropertyNode() { PropertyDetails = new PropertyDetails() { Name = prototypeFullName, Value = prototypeId.ToString() } };
 
-                if (_fullNameUndoHistory.Count == 0 || _fullNameUndoHistory.Peek() != prototypeFullName)
-                    _fullNameUndoHistory.Push(prototypeFullName);
+                if (_fullNameBackHistory.Count == 0 || _fullNameBackHistory.Peek() != prototypeFullName)
+                    _fullNameBackHistory.Push(prototypeFullName);
             }
             else
             {

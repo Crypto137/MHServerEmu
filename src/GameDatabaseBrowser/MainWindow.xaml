@@ -22,8 +22,8 @@
             <ColumnDefinition Width="40*"/>
             <ColumnDefinition Width="60*"/>
         </Grid.ColumnDefinitions>
-        <Button x:Name="btnUndo" Content="&lt;&lt; Undo" Click="OnUndoButtonClicked" HorizontalAlignment="Left" Margin="30,5" Width="80" ToolTip="Back to the previous prototype selected"/>
-        <Button x:Name="btnRedo" Grid.Row="1" Content="Redo >>" Click="OnRedoButtonClicked" HorizontalAlignment="Left" Margin="30,5" Width="80" ToolTip="Back to the last undo state"/>
+        <Button x:Name="btnBack" Content="&lt;&lt; Back" Click="OnBackButtonClicked" HorizontalAlignment="Left" Margin="30,5" Width="80" ToolTip="Back to the previous prototype selected"/>
+        <Button x:Name="btnForward" Grid.Row="1" Content="Forward >>" Click="OnForwardButtonClicked" HorizontalAlignment="Left" Margin="30,5" Width="80" ToolTip="Return to the last state before Back action"/>
         <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Height="35">
             <Button Width="20" Height="20" Background="Green" Foreground="White"  Content="✕" Click="OnResetButtonClicked" ToolTip="Reset the search filters"/>
             <TextBox x:Name="txtSearch"  Width="700"  VerticalAlignment="Center" Margin="5,0,5,0"/>
@@ -32,7 +32,7 @@
         <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="5" >
             <CheckBox Grid.Row="1" Grid.ColumnSpan="2" x:Name="exactMatchToggle" Content="Exact match" Margin="20,0,20,0" ToolTip="Ignore results that only contain the search" />
             <CheckBox Grid.Row="1" Grid.ColumnSpan="2" x:Name="expandResultToggle" Content="Expand results" Margin="20,0,20,0" ToolTip="Expand all the results" />
-            <CheckBox Grid.Row="1" Grid.ColumnSpan="2" x:Name="referencesToggle" Content="Search PrototypeId Referencies" Margin="20,0,20,0" ToolTip="Get all the results that reference the prototype" />
+            <CheckBox Grid.Row="1" Grid.ColumnSpan="2" x:Name="referencesToggle" Content="Search PrototypeId References" Margin="20,0,20,0" ToolTip="Get all the results that reference the prototype" />
         </StackPanel>
         <TreeView Name="treeView" Grid.Row="2" Grid.Column="0" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" Margin="5">
             <TreeView.ItemsPanel>
