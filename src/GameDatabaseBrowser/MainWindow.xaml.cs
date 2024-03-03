@@ -39,9 +39,14 @@ namespace GameDatabaseBrowser
         private bool isReady = false;
 
         /// <summary>
-        /// Stack for history of prototypes' fullname selected
+        /// Stack for history of prototypes' fullname selected used for Back action
         /// </summary>
-        private Stack<string> _fullNameHistory = new();
+        private Stack<string> _fullNameUndoHistory = new();
+
+        /// <summary>
+        /// Stack for history of prototypes' fullname selected used for Next action
+        /// </summary>
+        private Stack<string> _fullNameRedoHistory = new();
 
         public MainWindow()
         {
@@ -182,16 +187,31 @@ namespace GameDatabaseBrowser
         /// <summary>
         /// Return to the previous state
         /// </summary>
-        private void OnBackButtonClicked(object sender, RoutedEventArgs e)
+        private void OnUndoButtonClicked(object sender, RoutedEventArgs e)
         {
             if (!isReady)
                 return;
 
-            if (_fullNameHistory.Count < 2)
+            if (_fullNameUndoHistory.Count < 2)
                 return;
 
-            _fullNameHistory.Pop();
-            SelectFromName(_fullNameHistory.Peek());
+            string fullname = _fullNameUndoHistory.Pop();
+            _fullNameRedoHistory.Push(fullname);
+            SelectFromName(_fullNameUndoHistory.Peek());
+        }
+
+        /// <summary>
+        /// Return to the next state (basically it cancels a back action)
+        /// </summary>
+        private void OnRedoButtonClicked(object sender, RoutedEventArgs e)
+        {
+            if (!isReady)
+                return;
+
+            if (_fullNameRedoHistory.Count < 1)
+                return;
+
+            SelectFromName(_fullNameRedoHistory.Pop());
         }
 
         /// <summary>
@@ -372,8 +392,8 @@ namespace GameDatabaseBrowser
                 txtDataRef.Text = $"{prototypeFullName} ({prototypeId})";
                 txtDataRef.DataContext = new PropertyNode() { PropertyDetails = new PropertyDetails() { Name = prototypeFullName, Value = prototypeId.ToString() } };
                 
-                if (_fullNameHistory.Count == 0 || _fullNameHistory.Peek() != prototypeFullName)
-                    _fullNameHistory.Push(prototypeFullName);
+                if (_fullNameUndoHistory.Count == 0 || _fullNameUndoHistory.Peek() != prototypeFullName)
+                    _fullNameUndoHistory.Push(prototypeFullName);
             }
             else
             {
