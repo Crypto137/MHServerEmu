@@ -22,9 +22,9 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
         public bool IsPasswordExpired { get; set; }
 
         public DBPlayer Player { get; set; }
-        public DBAvatar[] Avatars { get; set; }
+        public Dictionary<PrototypeId, DBAvatar> Avatars { get; private set; } = new();
 
-        public DBAvatar CurrentAvatar { get => GetAvatar(Player.Avatar); }
+        public DBAvatar CurrentAvatar { get => GetAvatar((PrototypeId)Player.Avatar); }
 
         public DBAccount(string email, string playerName, string password, AccountUserLevel userLevel = AccountUserLevel.User)
         {
@@ -59,9 +59,18 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
 
         public DBAccount() { }
 
-        public DBAvatar GetAvatar(AvatarPrototypeId prototype)
+        /// <summary>
+        /// Retrieves the <see cref="DBAvatar"/> for the specified <see cref="PrototypeId"/>.
+        /// </summary>
+        public DBAvatar GetAvatar(PrototypeId prototypeId)
         {
-            return Avatars.FirstOrDefault(avatar => avatar.Prototype == prototype);
+            if (Avatars.TryGetValue(prototypeId, out DBAvatar avatar) == false)
+            {
+                avatar = new(Id, (AvatarPrototypeId)prototypeId);
+                Avatars.Add(prototypeId, avatar);
+            }
+
+            return avatar;
         }
 
         public override string ToString()
@@ -78,7 +87,8 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
         private void InitializeData()
         {
             Player = new(Id);
-            Avatars = Enum.GetValues(typeof(AvatarPrototypeId)).Cast<AvatarPrototypeId>().Select(prototype => new DBAvatar(Id, prototype)).ToArray();
+            foreach (AvatarPrototypeId avatarPrototypeId in Enum.GetValues<AvatarPrototypeId>())
+                GetAvatar((PrototypeId)avatarPrototypeId);
         }
     }
 }

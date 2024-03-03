@@ -1,10 +1,13 @@
 ﻿using MHServerEmu.Common.Config;
+using MHServerEmu.Common.Extensions;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Grouping;
 using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.Common.Commands
@@ -256,6 +259,60 @@ namespace MHServerEmu.Common.Commands
             if (ConfigManager.GameOptions.InfinitySystemEnabled) return "Set InfinitySystemEnabled to false in Config.ini to enable the Omega system.";
             client.SendMessage(1, new(Property.ToNetMessageSetProperty(9078332, new(PropertyEnum.OmegaPoints), 7500)));
             return "Setting Omega points to 7500.";
+        }
+    }
+
+    [CommandGroup("achievement", "Manages achievements.", AccountUserLevel.User)]
+    public class AchievementCommand : CommandGroup
+    {
+        [Command("unlock", "Unlocks an achievement.\nUsage: achievement unlock [id]", AccountUserLevel.User)]
+        public string Unlock(string[] @params, FrontendClient client)
+        {
+            if (client == null)
+                return "You can only invoke this command from the game.";
+
+            if (@params.IsNullOrEmpty())
+                return "Invalid arguments. Type 'help achievement unlock' to get help.";
+
+            if (uint.TryParse(@params[0], out uint id) == false)
+                return "Failed to parse achievement id.";
+
+            AchievementInfo info = AchievementDatabase.Instance.GetAchievementInfoById(id);
+
+            if (info == null)
+                return $"Invalid achievement id {id}.";
+
+            if (info.Enabled == false)
+                return $"Achievement id {id} is disabled.";
+
+            AchievementState state = client.Session.Account.Player.AchievementState;
+            state.SetAchievementProgress(id, new(info.Threshold, Clock.UnixTime));
+            client.SendMessage(1, new(state.ToUpdateMessage(true)));
+            return string.Empty;
+        }
+
+        [Command("info", "Outputs info for the specified achievement.\nUsage: achievement info [id]", AccountUserLevel.User)]
+        public string Info(string[] @params, FrontendClient client)
+        {
+            if (@params.IsNullOrEmpty())
+                return "Invalid arguments. Type 'help achievement unlock' to get help.";
+
+            if (uint.TryParse(@params[0], out uint id) == false)
+                return "Failed to parse achievement id.";
+
+            AchievementInfo info = AchievementDatabase.Instance.GetAchievementInfoById(id);
+
+            if (info == null)
+                return $"Invalid achievement id {id}.";
+
+            // Output as a single string with line breaks if the command was invoked from the console
+            if (client == null)
+                return info.ToString();
+
+            // Output as a list of chat messages if the command was invoked from the in-game chat.
+            ChatHelper.SendMetagameMessage(client, "Achievement Info:");
+            ChatHelper.SendMetagameMessages(client, info.ToString().Split('\n', StringSplitOptions.RemoveEmptyEntries), false);
+            return string.Empty;
         }
     }
 }

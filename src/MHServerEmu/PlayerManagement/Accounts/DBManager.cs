@@ -2,6 +2,7 @@
 using Dapper;
 using MHServerEmu.Common.Helpers;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.PlayerManagement.Accounts
@@ -92,7 +93,7 @@ namespace MHServerEmu.PlayerManagement.Accounts
                             VALUES (@AccountId, @RawRegion, @RawAvatar, @RawWaypoint, @AOIVolume)", account.Player, transaction);
 
                         connection.Execute(@"INSERT INTO Avatar (AccountId, RawPrototype, RawCostume, RawAbilityKeyMapping)
-                            VALUES (@AccountId, @RawPrototype, @RawCostume, @RawAbilityKeyMapping)", account.Avatars, transaction);
+                            VALUES (@AccountId, @RawPrototype, @RawCostume, @RawAbilityKeyMapping)", account.Avatars.Values, transaction);
 
                         transaction.Commit();
                         return true;
@@ -143,7 +144,7 @@ namespace MHServerEmu.PlayerManagement.Accounts
                     try
                     {
                         connection.Execute(@"UPDATE Player SET RawRegion=@RawRegion, RawAvatar=@RawAvatar, RawWaypoint=@RawWaypoint, AOIVolume=@AOIVolume WHERE AccountId=@AccountId", account.Player, transaction);
-                        connection.Execute(@"UPDATE Avatar SET RawCostume=@RawCostume, RawAbilityKeyMapping=@RawAbilityKeyMapping WHERE AccountId=@AccountId AND RawPrototype=@RawPrototype", account.Avatars, transaction);
+                        connection.Execute(@"UPDATE Avatar SET RawCostume=@RawCostume, RawAbilityKeyMapping=@RawAbilityKeyMapping WHERE AccountId=@AccountId AND RawPrototype=@RawPrototype", account.Avatars.Values, transaction);
 
                         transaction.Commit();
                         return true;
@@ -188,7 +189,8 @@ namespace MHServerEmu.PlayerManagement.Accounts
             account.Player = players.First();
 
             var avatars = connection.Query<DBAvatar>("SELECT * FROM Avatar WHERE AccountId = @AccountId", @params);
-            account.Avatars = avatars.ToArray();
+            foreach (DBAvatar avatar in avatars)
+                account.Avatars.Add((PrototypeId)avatar.Prototype, avatar);
         }
     }
 }

@@ -120,7 +120,7 @@ namespace MHServerEmu.PlayerManagement
             if (message.Id == (byte)ClientToGameServerMessage.NetMessageSyncTimeRequest || message.Id == (byte)ClientToGameServerMessage.NetMessagePing)
             {
                 message.GameTimeReceived = Clock.GameTime;
-                message.DateTimeReceived = Clock.DateTime;
+                message.DateTimeReceived = Clock.UnixTime;
             }
 
             switch ((ClientToGameServerMessage)message.Id)
@@ -188,6 +188,7 @@ namespace MHServerEmu.PlayerManagement
                 case ClientToGameServerMessage.NetMessageSelectOmegaBonus:  // This should be within NetMessageOmegaBonusAllocationCommit only in theory
                 case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:
                 case ClientToGameServerMessage.NetMessageRespecOmegaBonus:
+                case ClientToGameServerMessage.NetMessageAssignStolenPower:
                     GetGameByPlayer(client).Handle(client, message);
                     break;
 
@@ -267,7 +268,7 @@ namespace MHServerEmu.PlayerManagement
             // Sync time
             client.SendMessage(MuxChannel, new(NetMessageInitialTimeSync.CreateBuilder()
                 .SetGameTimeServerSent(Clock.GameTime.Ticks / 10)
-                .SetDateTimeServerSent(Clock.DateTime.Ticks / 10)
+                .SetDateTimeServerSent(Clock.UnixTime.Ticks / 10)
                 .Build()));
         }
 
@@ -281,7 +282,7 @@ namespace MHServerEmu.PlayerManagement
                 .SetGameTimeServerSent(Clock.GameTime.Ticks / 10)
                 .SetDateTimeClientSent(request.DateTimeClientSent)
                 .SetDateTimeServerReceived(dateTimeReceived.Ticks / 10)
-                .SetDateTimeServerSent(Clock.DateTime.Ticks / 10)
+                .SetDateTimeServerSent(Clock.UnixTime.Ticks / 10)
                 .SetDialation(1.0f)
                 .SetGametimeDialationStarted(0)
                 .SetDatetimeDialationStarted(0)
