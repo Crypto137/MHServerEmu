@@ -401,11 +401,8 @@ namespace GameDatabaseBrowser
                 }
                 else if (typeof(Prototype).IsAssignableFrom(propInfo.PropertyType))
                 {
-                    var itemProperties = propInfo.PropertyType.GetProperties();
-                    foreach (var subProperty in itemProperties)
-                    {
-                        ConstructPropertyNodeHierarchy(node.Childs.Last(), subProperty);
-                    }
+                    if ((Prototype)propInfo.GetValue(property) != null)
+                        ConstructPropertyNodeHierarchy(node.Childs.Last(), propInfo);
                 }
             }
         }
