@@ -64,8 +64,10 @@
                 <RowDefinition Height="20" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <TextBox x:Name="txtDataRef" Grid.Row="0" Margin="1" VerticalAlignment="Center" IsReadOnly="True"/>
-            <TextBox x:Name="txtParentDataRef" Grid.Row="1" Margin="1" VerticalAlignment="Center" IsReadOnly="True"/>
+            <TextBlock x:Name="txtDataRef" Grid.Row="0" VerticalAlignment="Center" ContextMenu="{StaticResource PropertyContextMenu}" />
+            <ContentControl MouseDoubleClick="OnPropertyDoubleClicked" Grid.Row="1">
+                <TextBlock x:Name="txtParentDataRef" VerticalAlignment="Center" ContextMenu="{StaticResource PropertyContextMenu}" />
+            </ContentControl>
             <Separator Grid.Row="2" Height="5" Background="Black"/>
             <TreeView Name="propertytreeView" Grid.Row="3" Grid.Column="0" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" Margin="5">
                 <TreeView.ItemContainerStyle>

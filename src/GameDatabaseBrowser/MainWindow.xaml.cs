@@ -311,7 +311,7 @@ namespace GameDatabaseBrowser
                     node.Childs.Add(new() { PropertyDetails = new() { Name = propInfo.Name, Value = "", TypeName = propInfo.PropertyType.Name } });
                 else
                     node.Childs.Add(new() { PropertyDetails = new() { Name = propInfo.Name, Value = propInfo.GetValue(property)?.ToString(), TypeName = propInfo.PropertyType.Name } });
-                
+
                 if (typeof(IEnumerable).IsAssignableFrom(propInfo.PropertyType))
                 {
                     IEnumerable subPropertyInfo = (IEnumerable)propInfo.GetValue(property);
@@ -370,16 +370,30 @@ namespace GameDatabaseBrowser
             {
                 string prototypeFullName = GameDatabase.GetPrototypeName((PrototypeId)prototypeId);
                 txtDataRef.Text = $"{prototypeFullName} ({prototypeId})";
+                txtDataRef.DataContext = new PropertyNode() { PropertyDetails = new PropertyDetails() { Name = prototypeFullName, Value = prototypeId.ToString() } };
+                
                 if (_fullNameHistory.Count == 0 || _fullNameHistory.Peek() != prototypeFullName)
                     _fullNameHistory.Push(prototypeFullName);
             }
-            else txtDataRef.Text = dataRef;
+            else
+            {
+                txtDataRef.Text = dataRef;
+                txtDataRef.DataContext = new PropertyNode() { PropertyDetails = new PropertyDetails() { Name = dataRef, Value = dataRef } };
+            }
 
             string parentDataRef = NodeSelected?.PrototypeDetails?.Properties?.FirstOrDefault(k => k.Name == "ParentDataRef")?.Value;
 
             if (ulong.TryParse(parentDataRef, out ulong parentPrototypeId))
-                txtParentDataRef.Text = $"Parent : {GameDatabase.GetPrototypeName((PrototypeId)parentPrototypeId)} ({parentPrototypeId})";
-            else txtParentDataRef.Text = parentDataRef;
+            {
+                string prototypeFullName = GameDatabase.GetPrototypeName((PrototypeId)parentPrototypeId);
+                txtParentDataRef.Text = $"Parent : {prototypeFullName} ({parentPrototypeId})";
+                txtParentDataRef.DataContext = new PropertyNode() { PropertyDetails = new PropertyDetails() { Name = prototypeFullName, Value = parentPrototypeId.ToString() } };
+            }
+            else
+            {
+                txtParentDataRef.Text = $"Parent : {parentDataRef}";
+                txtParentDataRef.DataContext = new PropertyNode() { PropertyDetails = new PropertyDetails() { Name = parentDataRef, Value = parentDataRef } };
+            }
 
             Prototype proto = GameDatabase.DataDirectory.GetPrototype<Prototype>((PrototypeId)prototypeId);
             PropertyNodes[0].Childs.Clear();
