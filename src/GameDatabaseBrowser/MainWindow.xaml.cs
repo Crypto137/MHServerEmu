@@ -61,6 +61,11 @@ namespace GameDatabaseBrowser
         /// </summary>
         private Stack<string> _fullNameForwardHistory = new();
 
+        /// <summary>
+        /// Dictionary that contains all the prototype references. Used as cache to speed up the search
+        /// </summary>
+        private Dictionary<PrototypeId, List<PrototypeId>> _cacheDictionary = new();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -107,7 +112,7 @@ namespace GameDatabaseBrowser
         /// </summary>
         private void InitPrototypesList(BackgroundWorker worker, ref int counter)
         {
-            
+
             foreach (PrototypeId prototypeId in GameDatabase.DataDirectory.IterateAllPrototypes())
             {
                 string fullName = GameDatabase.GetPrototypeName(prototypeId);
@@ -347,8 +352,6 @@ namespace GameDatabaseBrowser
             Clipboard.SetText(selected.PropertyDetails.Name);
         }
 
-        private Dictionary<PrototypeId, List<PrototypeId>> _cacheDictionary = new();
-
         /// <summary>
         /// Generate a dictionary to quicly retrieve the prototypes that reference an prototypeId in their properties
         /// </summary>
@@ -458,14 +461,16 @@ namespace GameDatabaseBrowser
 
             foreach (PropertyInfo propInfo in propertyInfo)
             {
-                if (propInfo.GetValue(property) is PropertyCollection)
+                var propValue = propInfo.GetValue(property);
+
+                if (propValue is PropertyCollection)
                     node.Childs.Add(new() { PropertyDetails = new() { Name = propInfo.Name, Value = "", TypeName = propInfo.PropertyType.Name } });
                 else
-                    node.Childs.Add(new() { PropertyDetails = new() { Name = propInfo.Name, Value = propInfo.GetValue(property)?.ToString(), TypeName = propInfo.PropertyType.Name } });
+                    node.Childs.Add(new() { PropertyDetails = new() { Name = propInfo.Name, Value = propValue?.ToString(), TypeName = propInfo.PropertyType.Name } });
 
                 if (typeof(IEnumerable<object>).IsAssignableFrom(propInfo.PropertyType))
                 {
-                    IEnumerable<object> subPropertyInfo = (IEnumerable<object>)propInfo.GetValue(property);
+                    IEnumerable<object> subPropertyInfo = (IEnumerable<object>)propValue;
                     if (subPropertyInfo == null)
                         continue;
 
@@ -496,10 +501,9 @@ namespace GameDatabaseBrowser
                             ConstructPropertyNodeHierarchy(node.Childs.Last(), subPropInfo);
                     }
                 }
-                else if (typeof(Prototype).IsAssignableFrom(propInfo.PropertyType))
+                else if (propInfo.PropertyType == typeof(Prototype) || typeof(Prototype).IsAssignableFrom(propInfo.PropertyType))
                 {
-                    if ((Prototype)propInfo.GetValue(property) != null)
-                        ConstructPropertyNodeHierarchy(node.Childs.Last(), propInfo);
+                    ConstructPropertyNodeHierarchy(node.Childs.Last(), propValue);
                 }
             }
         }
