@@ -155,11 +155,11 @@ namespace GameDatabaseBrowser
         /// <summary>
         /// Select an element from fullName
         /// </summary>
-        private void SelectFromName(string fullName)
+        private void SelectFromName(string fullName, bool ignoreSearch = false)
         {
             _currentFilter = "";
             txtSearch.Text = "";
-            RefreshPrototypeTree();
+            RefreshPrototypeTree(ignoreSearch);
             int[] indexes = GetElementLocationInHierarchy(fullName);
             SelectTreeViewItem(indexes);
         }
@@ -167,12 +167,12 @@ namespace GameDatabaseBrowser
         /// <summary>
         /// Reload the prototype tree
         /// </summary>
-        private void RefreshPrototypeTree()
+        private void RefreshPrototypeTree(bool ignoreSearch = false)
         {
             isReady = false;
             Dispatcher.Invoke(() =>
             {
-                ConstructPrototypeTree();
+                ConstructPrototypeTree(ignoreSearch);
                 OnPrototypeTreeLoaded(null, null);
             });
         }
@@ -180,11 +180,11 @@ namespace GameDatabaseBrowser
         /// <summary>
         /// Construct the prototype hierarchy
         /// </summary>
-        private void ConstructPrototypeTree()
+        private void ConstructPrototypeTree(bool ignoreSearch = false)
         {
             PrototypeNodes[0].Childs.Clear();
             List<PrototypeDetails> prototypeToDisplay = _prototypeDetails;
-            if (!string.IsNullOrEmpty(_currentFilter))
+            if (!ignoreSearch && !string.IsNullOrEmpty(_currentFilter))
             {
                 if (referencesToggle.IsChecked == true)
                 {
@@ -247,7 +247,7 @@ namespace GameDatabaseBrowser
 
             string fullname = _fullNameBackHistory.Pop();
             _fullNameForwardHistory.Push(fullname);
-            SelectFromName(_fullNameBackHistory.Peek());
+            SelectFromName(_fullNameBackHistory.Peek(), true);
         }
 
         /// <summary>
@@ -261,7 +261,7 @@ namespace GameDatabaseBrowser
             if (_fullNameForwardHistory.Count < 1)
                 return;
 
-            SelectFromName(_fullNameForwardHistory.Pop());
+            SelectFromName(_fullNameForwardHistory.Pop(), true);
         }
 
         /// <summary>
@@ -299,7 +299,7 @@ namespace GameDatabaseBrowser
                 return;
 
             _currentFilter = txtSearch.Text = "";
-            RefreshPrototypeTree();
+            RefreshPrototypeTree(true);
         }
 
         /// <summary>
@@ -322,7 +322,7 @@ namespace GameDatabaseBrowser
             string name = GameDatabase.GetPrototypeName((PrototypeId)prototypeId);
             if (string.IsNullOrEmpty(name)) return;
 
-            SelectFromName(name);
+            SelectFromName(name, true);
         }
 
         /// <summary>
