@@ -35,31 +35,10 @@ namespace MHServerEmu.Games.Entities
 
         public WorldEntity(EntityBaseData baseData) : base(baseData) { SpatialPartitionLocation = new(this); }
 
-        public WorldEntity(EntityBaseData baseData, AOINetworkPolicyValues replicationPolicy, ulong replicationId) : base(baseData)
+        public WorldEntity(EntityBaseData baseData, AOINetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection properties) : base(baseData)
         {
             ReplicationPolicy = replicationPolicy;
-            Properties = new(replicationId);
-            TrackingContextMap = new();
-            ConditionCollection = new();
-            PowerCollection = new();
-            UnkEvent = 0;
-            SpatialPartitionLocation = new(this);
-        }
-
-        public WorldEntity(EntityBaseData baseData, ulong replicationId, Vector3 mapPosition, int health, int mapAreaId,
-            int healthMaxOther, ulong mapRegionId, int mapCellId, PrototypeId contextAreaRef) : base(baseData)
-        {
-            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelDiscovery;
-
-            Properties = new(replicationId);
-            Properties[PropertyEnum.MapPosition] = mapPosition;
-            Properties[PropertyEnum.Health] = health;
-            Properties[PropertyEnum.MapAreaId] = mapAreaId;
-            Properties[PropertyEnum.HealthMaxOther] = healthMaxOther;
-            Properties[PropertyEnum.MapRegionId] = mapRegionId;
-            Properties[PropertyEnum.MapCellId] = mapCellId;
-            Properties[PropertyEnum.ContextAreaRef] = contextAreaRef;
-
+            Properties = properties;
             TrackingContextMap = new();
             ConditionCollection = new();
             PowerCollection = new();
@@ -152,11 +131,12 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
-        public void EnterWorld(Cell cell, Vector3 position, Vector3 orientation)
+        public virtual void EnterWorld(Cell cell, Vector3 position, Vector3 orientation)
         {
             var proto = WorldEntityPrototype;
             Game = cell.Game; // TODO: Init Game to constructor
-            TrackAfterDiscovery = proto.ObjectiveInfo.TrackAfterDiscovery;
+            if (proto.ObjectiveInfo != null)
+                TrackAfterDiscovery = proto.ObjectiveInfo.TrackAfterDiscovery;
             if (proto is HotspotPrototype) _flags |= EntityFlags.IsHotspot;
 
             Location.Region = cell.GetRegion();
@@ -164,7 +144,8 @@ namespace MHServerEmu.Games.Entities
             Location.SetPosition(position);
             Location.SetOrientation(orientation);
             // TODO ChangeRegionPosition
-            Bounds.InitializeFromPrototype(proto.Bounds);
+            if (proto.Bounds != null)
+                Bounds.InitializeFromPrototype(proto.Bounds);
             Bounds.Center = position;
             UpdateRegionBounds(); // Add to Quadtree
         }

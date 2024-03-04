@@ -550,6 +550,54 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public FormationFacing SpawnFacing { get; protected set; }
         public SpawnFailBehavior SpawnFailBehavior { get; protected set; }
         public int DefeatTimeoutMS { get; protected set; }
+
+        [DoNotCopy]
+        public AlliancePrototype EntityAlliance { get; private set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+            EntityAlliance = CheckForSingleEntityAlliance();
+        }
+
+        private AlliancePrototype CheckForSingleEntityAlliance()
+        {
+            AlliancePrototype resultProto = null;
+
+            if (SpawnSequence.HasValue())
+            {
+                HashSet<PrototypeId> entities = new ();
+
+                foreach (var sequenceProto in SpawnSequence)
+                {
+                    if (sequenceProto == null) continue;
+                    PopulationObjectPrototype popObject = sequenceProto.GetPopObject();
+                    popObject?.GetContainedEntities(entities);
+                }
+
+                foreach (var entityRef in entities)
+                {
+                    if (entityRef == PrototypeId.Invalid) continue;                    
+                    var proto = GameDatabase.GetPrototype<Prototype>(entityRef);
+                    if (proto is AgentPrototype agentProto && agentProto.Alliance != PrototypeId.Invalid)
+                    {
+                        var allianceProto = agentProto.Alliance.As<AlliancePrototype>();
+                        if (resultProto == null || resultProto == allianceProto)
+                            resultProto = allianceProto;
+                        else
+                            return null;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                   
+                }
+            }
+
+            return resultProto;
+        }
+
     }
 
     public class KismetSequenceEntityPrototype : WorldEntityPrototype

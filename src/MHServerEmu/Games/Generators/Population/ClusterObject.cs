@@ -752,7 +752,8 @@ namespace MHServerEmu.Games.Generators.Population
             }
             else
             {
-                Logger.Warn($"Zounds! Entity {EntityProto} has no Bounds!");
+                // Logger.Warn($"Zounds! Entity {EntityProto} has no Bounds!");
+                // Spawner have not Bounds
             }
 
             if (AlliancePrototype.IsHostileToPlayerAlliance(EntityProto.AlliancePrototype))
@@ -796,8 +797,9 @@ namespace MHServerEmu.Games.Generators.Population
                 if (pos.Z > projectHeight && Segment.EpsilonTest(pos.Z, projectHeight, 500)) // Fix for Door Lower Asgard
                     pos.Z = projectHeight;
                 overrideSnap = false; // Fix for District
-            }    
-            pos.Z += entity.Bounds.GetBoundHalfHeight();
+            }
+            if (entity.Bounds != null) 
+                pos.Z += entity.Bounds.GetBoundHalfHeight();
             var rot = tr.Orientation;
             int health = EntityManager.GetRankHealth(entity);
             var worldEntity = entityManager.CreateWorldEntity(cell, EntityRef, pos, rot, health, false, overrideSnap);            
@@ -815,7 +817,7 @@ namespace MHServerEmu.Games.Generators.Population
         {
             if (Flags.HasFlag(ClusterObjectFlag.SkipFormation)) return false;
 
-            bool blocksSpawns = EntityProto != null && EntityProto.Bounds.BlocksSpawns;
+            bool blocksSpawns = EntityProto != null && EntityProto.Bounds != null && EntityProto.Bounds.BlocksSpawns;
             bool blocking = Bounds.CollisionType == BoundsCollisionType.Blocking;
 
             return blocksSpawns || blocking;
