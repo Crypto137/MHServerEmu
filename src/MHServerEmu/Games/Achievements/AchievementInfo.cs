@@ -33,7 +33,9 @@ namespace MHServerEmu.Games.Achievements
         public int OrbisTrophyId { get; set; } = -1;
         public bool OrbisTrophyShared { get; set; } = false;
 
+        [JsonIgnore]
         public AchievementInfo Parent { get; set; }
+        [JsonIgnore]
         public List<AchievementInfo> Children { get; } = new();
 
         [JsonConstructor]

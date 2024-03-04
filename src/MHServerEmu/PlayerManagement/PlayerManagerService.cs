@@ -42,7 +42,7 @@ namespace MHServerEmu.PlayerManagement
             client.SendMessage(MuxChannel, new(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build()));
 
             // Send achievement database
-            client.SendMessage(MuxChannel, new(AchievementDatabase.Instance.ToNetMessageAchievementDatabaseDump()));
+            client.SendMessage(MuxChannel, new(AchievementDatabase.Instance.GetDump()));
             // NetMessageQueryIsRegionAvailable regionPrototype: 9833127629697912670 should go in the same packet as AchievementDatabaseDump
         }
 
