@@ -16,6 +16,7 @@ using System.Windows.Threading;
 using MHServerEmu.Games.Properties;
 using PropertyInfo = System.Reflection.PropertyInfo;
 using PropertyCollection = MHServerEmu.Games.Properties.PropertyCollection;
+using MHServerEmu.Games.Common;
 
 namespace GameDatabaseBrowser
 {
@@ -398,6 +399,9 @@ namespace GameDatabaseBrowser
                 if (propValue is PrototypeId)
                     AddCacheEntry((PrototypeId)propInfo.GetValue(property), parent);
 
+                if (IsTypeBrowsable(propInfo.PropertyType) == false)
+                    continue;
+
                 if (typeof(IEnumerable).IsAssignableFrom(propInfo.PropertyType))
                 {
                     IEnumerable subPropertyInfo = (IEnumerable)propValue;
@@ -408,6 +412,9 @@ namespace GameDatabaseBrowser
                     {
                         if (subPropertyInfo is Array)
                         {
+                            if (IsTypeBrowsable(subPropInfo.GetType()) == false)
+                                continue;
+
                             GeneratePrototypeReferencesCache(subPropInfo, parent);
                         }
                         else if (subPropertyInfo is PropertyCollection)
@@ -424,7 +431,6 @@ namespace GameDatabaseBrowser
                 }
                 else if (propInfo.PropertyType == typeof(Prototype) || typeof(Prototype).IsAssignableFrom(propInfo.PropertyType))
                 {
-                    if ((Prototype)propInfo.GetValue(property) != null)
                         GeneratePrototypeReferencesCache(propValue, parent);
                 }
             }
@@ -459,6 +465,7 @@ namespace GameDatabaseBrowser
         {
             if (property == null)
                 return;
+
             PropertyInfo[] propertyInfo = property.GetType().GetProperties().Where(k => k.Name != "DataRef" && k.Name != "ParentDataRef" && k.Name != "DataRefRecord").OrderBy(k => k.Name).ToArray();
 
             foreach (PropertyInfo propInfo in propertyInfo)
@@ -469,6 +476,9 @@ namespace GameDatabaseBrowser
                     node.Childs.Add(new() { PropertyDetails = new() { Name = propInfo.Name, Value = "", TypeName = propInfo.PropertyType.Name } });
                 else
                     node.Childs.Add(new() { PropertyDetails = new() { Name = propInfo.Name, Value = propValue?.ToString(), TypeName = propInfo.PropertyType.Name } });
+
+                if (IsTypeBrowsable(propInfo.PropertyType) == false)
+                    continue;
 
                 if (typeof(IEnumerable).IsAssignableFrom(propInfo.PropertyType))
                 {
@@ -485,7 +495,8 @@ namespace GameDatabaseBrowser
                         if (subPropertyInfo is Array)
                         {
                             node.Childs.Last().Childs.Add(new() { PropertyDetails = new() { Index = index++, Name = "", Value = subPropInfo.ToString(), TypeName = subPropInfo.GetType().Name } });
-                            if (subPropInfo.GetType().IsPrimitive)
+                            
+                            if (IsTypeBrowsable(subPropInfo.GetType()) == false)
                                 continue;
 
                             ConstructPropertyNodeHierarchy(node.Childs.Last().Childs.Last(), subPropInfo);
@@ -508,6 +519,11 @@ namespace GameDatabaseBrowser
                     ConstructPropertyNodeHierarchy(node.Childs.Last(), propValue);
                 }
             }
+        }
+
+        private bool IsTypeBrowsable(Type type)
+        {
+            return !type.IsPrimitive && type != typeof(Vector3) && type != typeof(string);
         }
 
         /// <summary>
