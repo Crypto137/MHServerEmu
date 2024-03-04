@@ -393,12 +393,14 @@ namespace GameDatabaseBrowser
 
             foreach (PropertyInfo propInfo in propertyInfo)
             {
-                if (propInfo.GetValue(property) is PrototypeId)
+                var propValue = propInfo.GetValue(property);
+
+                if (propValue is PrototypeId)
                     AddCacheEntry((PrototypeId)propInfo.GetValue(property), parent);
 
-                if (typeof(IEnumerable<object>).IsAssignableFrom(propInfo.PropertyType))
+                if (typeof(IEnumerable).IsAssignableFrom(propInfo.PropertyType))
                 {
-                    IEnumerable<object> subPropertyInfo = (IEnumerable<object>)propInfo.GetValue(property);
+                    IEnumerable subPropertyInfo = (IEnumerable)propValue;
                     if (subPropertyInfo == null)
                         continue;
 
@@ -420,10 +422,10 @@ namespace GameDatabaseBrowser
                             GeneratePrototypeReferencesCache(subPropInfo, parent);
                     }
                 }
-                else if (typeof(Prototype).IsAssignableFrom(propInfo.PropertyType))
+                else if (propInfo.PropertyType == typeof(Prototype) || typeof(Prototype).IsAssignableFrom(propInfo.PropertyType))
                 {
                     if ((Prototype)propInfo.GetValue(property) != null)
-                        GeneratePrototypeReferencesCache(propInfo, parent);
+                        GeneratePrototypeReferencesCache(propValue, parent);
                 }
             }
         }
