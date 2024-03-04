@@ -28,11 +28,11 @@
     <Reference Include="Dapper">
       <HintPath>..\..\dep\Dapper\Dapper.dll</HintPath>
     </Reference>
+    <Reference Include="Free.Ports.zLib">
+      <HintPath>..\..\dep\Free.Ports.zLib\Free.Ports.zLib.dll</HintPath>
+    </Reference>
     <Reference Include="Google.ProtocolBuffers">
       <HintPath>..\..\dep\protobuf-csharp\Google.ProtocolBuffers.dll</HintPath>
-    </Reference>
-    <Reference Include="ICSharpCode.SharpZipLib">
-      <HintPath>..\..\dep\SharpZipLib\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
     <Reference Include="INIFileParser">
       <HintPath>..\..\dep\ini-parser\INIFileParser.dll</HintPath>

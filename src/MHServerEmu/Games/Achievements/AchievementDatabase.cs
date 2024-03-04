@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
+using Free.Ports.zLib;
 using Google.ProtocolBuffers;
-using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using Gazillion;
 using MHServerEmu.Common;
 using MHServerEmu.Common.Helpers;
@@ -42,9 +42,9 @@ namespace MHServerEmu.Games.Achievements
             // Decompress the dump
             using (MemoryStream input = new(compressedDump))
             using (MemoryStream output = new())
-            using (InflaterInputStream iis = new(input))
+            using (ZLibStreamReader reader = new(input))
             {
-                iis.CopyTo(output);
+                reader.CopyTo(output);
                 var dump = AchievementDatabaseDump.ParseFrom(output.ToArray());
                 
                 foreach (var achievementInfoProtobuf in dump.AchievementInfosList)
@@ -134,19 +134,21 @@ namespace MHServerEmu.Games.Achievements
 
         private void CompressAndCacheDump()
         {
-            // This produces different output from our existing dumped database. Why?
             var dumpBuffer = AchievementDatabaseDump.CreateBuilder()
                 .SetLocalizedAchievementStringBuffer(ByteString.CopyFrom(_localizedAchievementStringBuffer))
                 .AddRangeAchievementInfos(_achievementInfoMap.Values.Select(info => info.ToNetStruct()))
                 .SetAchievementNewThresholdUS((ulong)AchievementNewThresholdUS.TotalSeconds)
                 .Build().ToByteArray();
 
+            // We need to compress specifically with a port of zlib rather than various alternatives like SharpZipLib
+            // to produce the same result. zlib.compress() in Python also produces the result we need.
+
             using (MemoryStream ms = new())
-            using (DeflaterOutputStream dos = new(ms))
+            using (ZStreamWriter writer = new(ms))
             {
-                dos.Write(dumpBuffer);
-                dos.Flush();
-                _cachedDump = NetMessageAchievementDatabaseDump.CreateBuilder().SetCompressedAchievementDatabaseDump(ByteString.CopyFrom(ms.ToArray())).Build();
+                writer.Write(dumpBuffer);
+                writer.Close();
+                //_cachedDump = NetMessageAchievementDatabaseDump.CreateBuilder().SetCompressedAchievementDatabaseDump(ByteString.CopyFrom(ms.ToArray())).Build();
             }
         }
     }
