@@ -287,7 +287,8 @@ namespace MHServerEmu.Games.Entities
                 if (entityPosition.Z > projectHeight)
                     entityPosition.Z = projectHeight;
             }
-            entityPosition.Z += entity.Bounds.GetBoundHalfHeight();
+            if (entity.Bounds != null)
+                entityPosition.Z += entity.Bounds.GetBoundHalfHeight();
             int health = GetRankHealth(entity);
             WorldEntity worldEntity = CreateWorldEntity(cell, protoRef, entityPosition, entityMarker.Rotation, health, false, overrideSnap);
             if (worldEntity.WorldEntityPrototype is AgentPrototype)
