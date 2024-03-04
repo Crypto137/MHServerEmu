@@ -210,6 +210,13 @@ namespace MHServerEmu.PlayerManagement
                     ServerManager.Instance.BillingService.Handle(client, message);
                     break;
 
+                // Leaderboards
+                case ClientToGameServerMessage.NetMessageLeaderboardRequest:
+                case ClientToGameServerMessage.NetMessageLeaderboardArchivedInstanceListRequest:
+                case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:
+                    ServerManager.Instance.LeaderboardService.Handle(client, message);
+                    break;
+
                 default:
                     Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
                     break;
