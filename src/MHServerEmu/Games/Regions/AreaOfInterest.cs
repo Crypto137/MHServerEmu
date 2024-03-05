@@ -228,8 +228,7 @@ namespace MHServerEmu.Games.Regions
             List<WorldEntity> newEntities = new();
 
             // Update Entity
-            EntityRegionSPContext context = new() { Flags = EntityRegionSPContextFlags.ActivePartition | EntityRegionSPContextFlags.StaticPartition};
-            foreach (var worldEntity in region.IterateEntitiesInVolume(_entitiesVolume, context))
+            foreach (var worldEntity in region.IterateEntitiesInVolume(_entitiesVolume, new()))
             {
                 if (_loadedCells.TryGetValue(worldEntity.Location.Cell.Id, out var status))
                     if (status.Loaded == false) continue;

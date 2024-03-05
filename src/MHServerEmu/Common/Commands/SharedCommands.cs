@@ -135,10 +135,9 @@ namespace MHServerEmu.Common.Commands
                 radius = 100;   // Default to 100 if no radius is specified
 
             Sphere near = new(client.LastPosition, radius);
-            EntityRegionSPContext context = new() { Flags = EntityRegionSPContextFlags.ActivePartition | EntityRegionSPContextFlags.StaticPartition };
 
             List<string> entities = new();
-            foreach (var worldEntity in client.AOI.Region.IterateEntitiesInVolume(near, context))
+            foreach (var worldEntity in client.AOI.Region.IterateEntitiesInVolume(near, new()))
             {
                 string name = GameDatabase.GetFormattedPrototypeName(worldEntity.BaseData.PrototypeId);
                 ulong entityId = worldEntity.BaseData.EntityId;
