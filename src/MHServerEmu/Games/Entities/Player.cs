@@ -20,6 +20,14 @@ using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.Games.Entities
 {
+    // Avatar index for console versions that have local coop, mostly meaningless on PC.
+    public enum PlayerAvatarIndex       
+    {
+        Primary,
+        Secondary,
+        Count
+    }
+
     // NOTE: These badges and their descriptions are taken from an internal build dated June 2015 (most likely version 1.35).
     // They are not fully implemented and they may be outdated for our version 1.52.
     public enum AvailableBadges
@@ -40,15 +48,14 @@ namespace MHServerEmu.Games.Entities
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private ReplicatedVariable<string> _playerName;
+        private ulong[] _consoleAccountIds = new ulong[(int)PlayerAvatarIndex.Count];
+        private ReplicatedVariable<string> _secondaryPlayerName;
         private SortedSet<AvailableBadges> _badges;
 
         public MissionManager MissionManager { get; set; }
         public ReplicatedPropertyCollection AvatarProperties { get; set; }
         public ulong ShardId { get; set; }
-        public ReplicatedVariable<string> Name { get; set; }
-        public ulong ConsoleAccountId1 { get; set; }
-        public ulong ConsoleAccountId2 { get; set; }
-        public ReplicatedVariable<string> UnkName { get; set; }
         public ulong MatchQueueStatus { get; set; }
         public bool EmailVerified { get; set; }
         public ulong AccountCreationTimestamp { get; set; }
@@ -69,7 +76,7 @@ namespace MHServerEmu.Games.Entities
         // note: this is ugly
         public Player(EntityBaseData baseData, AOINetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection properties,
             MissionManager missionManager, ReplicatedPropertyCollection avatarProperties,
-            ulong shardId, ReplicatedVariable<string> playerName, ReplicatedVariable<string> unkName,
+            ulong shardId, ReplicatedVariable<string> playerName, ReplicatedVariable<string> secondaryPlayerName,
             ulong matchQueueStatus, bool emailVerified, ulong accountCreationTimestamp, ReplicatedVariable<ulong> partyId,
             Community community, bool unkBool, PrototypeId[] stashInventories, SortedSet<AvailableBadges> badges,
             GameplayOptions gameplayOptions, AchievementState achievementState, StashTabOption[] stashTabOptions) : base(baseData)
@@ -80,10 +87,8 @@ namespace MHServerEmu.Games.Entities
             MissionManager = missionManager;
             AvatarProperties = avatarProperties;
             ShardId = shardId;
-            Name = playerName;
-            ConsoleAccountId1 = 0;
-            ConsoleAccountId2 = 0;
-            UnkName = unkName;
+            _playerName = playerName;
+            _secondaryPlayerName = secondaryPlayerName;
             MatchQueueStatus = matchQueueStatus;
             EmailVerified = emailVerified;
             AccountCreationTimestamp = accountCreationTimestamp;
@@ -107,10 +112,12 @@ namespace MHServerEmu.Games.Entities
             AvatarProperties = new(stream);
 
             ShardId = stream.ReadRawVarint64();
-            Name = new(stream);
-            ConsoleAccountId1 = stream.ReadRawVarint64();
-            ConsoleAccountId2 = stream.ReadRawVarint64();
-            UnkName = new(stream);
+
+            _playerName = new(stream);
+            _consoleAccountIds[0] = stream.ReadRawVarint64();
+            _consoleAccountIds[1] = stream.ReadRawVarint64();
+            _secondaryPlayerName = new(stream);
+
             MatchQueueStatus = stream.ReadRawVarint64();
             EmailVerified = boolDecoder.ReadBool(stream);
             AccountCreationTimestamp = stream.ReadRawVarint64();
@@ -168,10 +175,10 @@ namespace MHServerEmu.Games.Entities
             AvatarProperties.Encode(stream);
 
             stream.WriteRawVarint64(ShardId);
-            Name.Encode(stream);
-            stream.WriteRawVarint64(ConsoleAccountId1);
-            stream.WriteRawVarint64(ConsoleAccountId2);
-            UnkName.Encode(stream);
+            _playerName.Encode(stream);
+            stream.WriteRawVarint64(_consoleAccountIds[0]);
+            stream.WriteRawVarint64(_consoleAccountIds[1]);
+            _secondaryPlayerName.Encode(stream);
             stream.WriteRawVarint64(MatchQueueStatus);
             boolEncoder.WriteBuffer(stream);   // EmailVerified
             stream.WriteRawVarint64(AccountCreationTimestamp);
@@ -230,7 +237,7 @@ namespace MHServerEmu.Games.Entities
                     Properties[PropertyEnum.AvatarUnlock, avatarPrototype] = (int)AvatarUnlockType.Type3;
             }
 
-            Name.Value = account.PlayerName;    // Used for highlighting your name in leaderboards
+            _playerName.Value = account.PlayerName;    // Used for highlighting your name in leaderboards
 
             // Hardcoded community tab easter eggs
             CommunityMember friend = Community.CommunityMemberList[0];
@@ -265,6 +272,31 @@ namespace MHServerEmu.Games.Entities
         }
 
         /// <summary>
+        /// Returns the name of the player for the specified <see cref="PlayerAvatarIndex"/>.
+        /// </summary>
+        public string GetName(PlayerAvatarIndex avatarIndex = PlayerAvatarIndex.Primary)
+        {
+            if ((avatarIndex >= PlayerAvatarIndex.Primary && avatarIndex < PlayerAvatarIndex.Count) == false)
+                Logger.Warn("GetName(): avatarIndex out of range");
+
+            if (avatarIndex == PlayerAvatarIndex.Secondary)
+                return _secondaryPlayerName.Value;
+
+            return _playerName.Value;
+        }
+
+        /// <summary>
+        /// Returns the console account id for the specified <see cref="PlayerAvatarIndex"/>.
+        /// </summary>
+        public ulong GetConsoleAccountId(PlayerAvatarIndex avatarIndex)
+        {
+            if ((avatarIndex >= PlayerAvatarIndex.Primary && avatarIndex < PlayerAvatarIndex.Count) == false)
+                return 0;
+
+            return _consoleAccountIds[(int)avatarIndex];
+        }
+
+        /// <summary>
         /// Add the specified badge to this <see cref="Player"/>. Returns <see langword="true"/> if successful.
         /// </summary>
         public bool AddBadge(AvailableBadges badge) => _badges.Add(badge);
@@ -286,10 +318,10 @@ namespace MHServerEmu.Games.Entities
             sb.AppendLine($"MissionManager: {MissionManager}");
             sb.AppendLine($"AvatarProperties: {AvatarProperties}");
             sb.AppendLine($"ShardId: {ShardId}");
-            sb.AppendLine($"Name: {Name}");
-            sb.AppendLine($"ConsoleAccountId1: 0x{ConsoleAccountId1:X}");
-            sb.AppendLine($"ConsoleAccountId2: 0x{ConsoleAccountId2:X}");
-            sb.AppendLine($"UnkName: {UnkName}");
+            sb.AppendLine($"{nameof(_playerName)}: {_playerName}");
+            sb.AppendLine($"{nameof(_consoleAccountIds)}[0]: {_consoleAccountIds[0]}");
+            sb.AppendLine($"{nameof(_consoleAccountIds)}[1]: {_consoleAccountIds[1]}");
+            sb.AppendLine($"{nameof(_secondaryPlayerName)}: {_secondaryPlayerName}");
             sb.AppendLine($"MatchQueueStatus: 0x{MatchQueueStatus:X}");
             sb.AppendLine($"EmailVerified: {EmailVerified}");
             sb.AppendLine($"AccountCreationTimestamp: 0x{AccountCreationTimestamp:X}");
