@@ -44,6 +44,8 @@ namespace MHServerEmu.Leaderboards
 
         private void HandleInitializeRequest(FrontendClient client, NetMessageLeaderboardInitializeRequest initializeRequest)
         {
+            Logger.Trace("Received NetMessageLeaderboardInitializeRequest");
+
             var response = NetMessageLeaderboardInitializeRequestResponse.CreateBuilder();
 
             foreach (PrototypeGuid guid in initializeRequest.LeaderboardIdsList)
@@ -59,6 +61,8 @@ namespace MHServerEmu.Leaderboards
                 Logger.Warn("HandleRequest(): HasDataQuery == false");
                 return;
             }
+
+            Logger.Trace($"Received NetMessageLeaderboardRequest for {GameDatabase.GetPrototypeNameByGuid((PrototypeGuid)request.DataQuery.LeaderboardId)}");
 
             Leaderboard leaderboard = _leaderboardManager.GetLeaderboard((PrototypeGuid)request.DataQuery.LeaderboardId, request.DataQuery.InstanceId);;
             
