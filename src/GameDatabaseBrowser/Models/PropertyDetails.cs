@@ -33,8 +33,9 @@ namespace GameDatabaseBrowser.Models
             {
                 "AssetTypeId" => $"{prefix}{GetNameFromValue()} ({value})",
                 "CurveId" => $"{prefix}{GetNameFromValue()} ({value})",
-                "AssetId" => $"{prefix}{GetNameFromValue()} ({value})",
                 "PrototypeId" => $"{prefix}{GetNameFromValue()} ({value})",
+                "AssetId" => $"{prefix}{GetNameFromValue()}" + DisplayPrototypeIdEquivalence(),
+                "PrototypeGuid" => $"{prefix}{GetNameFromValue()}" + DisplayPrototypeIdEquivalence(),
                 "Boolean" or "Int16" or "Int32" or "Int64" or "Single" => $"{prefix}{value}",
                 _ => $"{prefix}{GetNameFromValue()}{typeName}",
             };
@@ -68,6 +69,37 @@ namespace GameDatabaseBrowser.Models
 
             return name.Replace("MHServerEmu.Games.GameData.Prototypes.", "")
                 .Replace("MHServerEmu.Games.GameData.", "");
+        }
+
+        private string DisplayPrototypeIdEquivalence()
+        {
+            PrototypeId prototypeId = GetPrototypeIdEquivalence();
+
+            switch (TypeName)
+            {
+                case "AssetId":
+                case "PrototypeGuid":
+                    return $" => {prototypeId} : {GameDatabase.GetPrototypeName(prototypeId)}";
+
+                default:
+                    break;
+            }
+
+            return "";
+        }
+
+        public PrototypeId GetPrototypeIdEquivalence()
+        {
+            if (Value == "Invalid")
+                return 0;
+
+            return TypeName switch
+            {
+                "AssetId" => GameDatabase.GetDataRefByAsset((AssetId)ulong.Parse(Value)),
+                "PrototypeGuid" => GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)ulong.Parse(Value)),
+                "PrototypeId" => (PrototypeId)ulong.Parse(Value),
+                _ => 0,
+            };
         }
     }
 }

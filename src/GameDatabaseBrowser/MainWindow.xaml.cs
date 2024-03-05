@@ -157,6 +157,9 @@ namespace GameDatabaseBrowser
         /// </summary>
         private void SelectFromName(string fullName)
         {
+            if (string.IsNullOrEmpty(fullName))
+                return;
+
             RefreshPrototypeTree();
             int[] indexes = GetElementLocationInHierarchy(fullName);
             SelectTreeViewItem(indexes);
@@ -313,28 +316,61 @@ namespace GameDatabaseBrowser
             if (selected?.PropertyDetails?.Value == null)
                 return;
 
-            ulong.TryParse(selected.PropertyDetails.Value, out var prototypeId);
+            PrototypeId prototypeId = selected.PropertyDetails.GetPrototypeIdEquivalence();
             if (prototypeId == 0)
                 return;
-
-            string name = GameDatabase.GetPrototypeName((PrototypeId)prototypeId);
-            if (string.IsNullOrEmpty(name)) return;
-
-            SelectFromName(name);
+            
+            SelectFromName(GameDatabase.GetPrototypeName(prototypeId));
         }
 
         /// <summary>
-        /// Called when context menu "Copy value" selected
+        /// Called when context menu "Copy raw value" selected
         /// </summary>
-        private void OnClickCopyValueMenuItem(object sender, RoutedEventArgs e)
+        private void OnClickCopyRawValueMenuItem(object sender, RoutedEventArgs e)
         {
-            PropertyNode selected = ((FrameworkElement)e.OriginalSource).DataContext as PropertyNode;
-            if (selected?.PropertyDetails?.Value == null)
+            object selected = ((FrameworkElement)e.OriginalSource).DataContext;
+
+            string value = null;
+
+            if (selected is PropertyNode propertyNode)
+                value = propertyNode?.PropertyDetails?.Value;
+            else if (selected is PrototypeNode prototypeNode)
+            {
+                if (prototypeNode?.PrototypeDetails?.FullName != null)
+                    value = prototypeNode.PrototypeDetails.PrototypeId.ToString();
+            }
+
+            if (string.IsNullOrEmpty(value))
                 return;
 
-            ulong.TryParse(selected.PropertyDetails.Value, out var prototypeId);
+            if (ulong.TryParse(value, out var prototypeId))
+                Clipboard.SetText(prototypeId.ToString());
+            else
+                Clipboard.SetText(value);
+        }
+
+        /// <summary>
+        /// Called when context menu "Copy value to PrototypeId" selected
+        /// </summary>
+        private void OnClickCopyValueToPrototypeIdMenuItem(object sender, RoutedEventArgs e)
+        {
+            object selected = ((FrameworkElement)e.OriginalSource).DataContext;
+
+            string value = "";
+            PrototypeId prototypeId = 0;
+            if (selected is PropertyNode propertyNode)
+            {
+                value = propertyNode?.PropertyDetails?.Value;
+                if (string.IsNullOrEmpty(value))
+                    return;
+
+                prototypeId = propertyNode.PropertyDetails.GetPrototypeIdEquivalence();
+            }
+            else if (selected is PrototypeNode prototypeNode)
+                prototypeId = prototypeNode.PrototypeDetails.PrototypeId;
+
             if (prototypeId == 0)
-                Clipboard.SetText(selected.PropertyDetails.Value);
+                Clipboard.SetText(value);
             else
                 Clipboard.SetText(prototypeId.ToString());
         }
@@ -344,11 +380,18 @@ namespace GameDatabaseBrowser
         /// </summary>
         private void OnClickCopyNameMenuItem(object sender, RoutedEventArgs e)
         {
-            PropertyNode selected = ((FrameworkElement)e.OriginalSource).DataContext as PropertyNode;
-            if (selected?.PropertyDetails?.Name == null)
+            object selected = ((FrameworkElement)e.OriginalSource).DataContext;
+
+            string name = "";
+            if (selected is PropertyNode propertyNode)
+                name = propertyNode.PropertyDetails.Name;
+            else if (selected is PrototypeNode prototypeNode)
+                name = prototypeNode.PrototypeDetails.Name;
+
+            if (string.IsNullOrEmpty(name))
                 return;
 
-            Clipboard.SetText(selected.PropertyDetails.Name);
+            Clipboard.SetText(name);
         }
 
         /// <summary>
@@ -393,9 +436,7 @@ namespace GameDatabaseBrowser
             foreach (PropertyInfo propInfo in propertyInfo)
             {
                 var propValue = propInfo.GetValue(property);
-
-                if (propValue is PrototypeId)
-                    AddCacheEntry((PrototypeId)propInfo.GetValue(property), parent);
+                RegisterPrototypeIdIfNeeded(propValue, parent);
 
                 if (IsTypeBrowsable(propInfo.PropertyType) == false)
                     continue;
@@ -421,6 +462,8 @@ namespace GameDatabaseBrowser
                             MHServerEmu.Games.Properties.PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
                             if (info.DataType == PropertyDataType.Prototype)
                                 AddCacheEntry(kvp.Value.ToPrototypeId(), parent);
+                            else if (info.DataType == PropertyDataType.Asset)
+                                AddCacheEntry(GameDatabase.GetDataRefByAsset(kvp.Value.ToAssetId()), parent);
                             continue;
                         }
                         else
@@ -432,6 +475,16 @@ namespace GameDatabaseBrowser
                     GeneratePrototypeReferencesCache(propValue, parent);
                 }
             }
+        }
+
+        private void RegisterPrototypeIdIfNeeded(object propValue, PrototypeId parent)
+        {
+            if (propValue is PrototypeId prototypeId)
+                AddCacheEntry(prototypeId, parent);
+            else if (propValue is PrototypeGuid prototypeGuid)
+                AddCacheEntry(GameDatabase.GetDataRefByPrototypeGuid(prototypeGuid), parent);
+            else if (propValue is AssetId assetId)
+                AddCacheEntry(GameDatabase.GetDataRefByAsset(assetId), parent);
         }
 
         /// <summary>

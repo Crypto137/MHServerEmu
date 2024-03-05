@@ -8,7 +8,8 @@
         KeyDown="OnKeyDown">
     <Window.Resources>
         <ContextMenu x:Key="PropertyContextMenu">
-            <MenuItem Header="Copy value" Click="OnClickCopyValueMenuItem"/>
+            <MenuItem Header="Copy raw value" Click="OnClickCopyRawValueMenuItem"/>
+            <MenuItem Header="Copy value to PrototypeId" Click="OnClickCopyValueToPrototypeIdMenuItem"/>
             <MenuItem Header="Copy name" Click="OnClickCopyNameMenuItem"/>
         </ContextMenu>
     </Window.Resources>
@@ -55,7 +56,7 @@
             </TreeView.ItemContainerStyle>
             <TreeView.ItemTemplate>
                 <HierarchicalDataTemplate DataType="{x:Type models:PrototypeNode}" ItemsSource="{Binding Childs}">
-                    <TextBlock Text="{Binding PrototypeDetails.Name}" />
+                    <TextBlock Text="{Binding PrototypeDetails.Name}" ContextMenu="{StaticResource PropertyContextMenu}" />
                 </HierarchicalDataTemplate>
             </TreeView.ItemTemplate>
         </TreeView>
