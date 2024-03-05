@@ -155,11 +155,9 @@ namespace GameDatabaseBrowser
         /// <summary>
         /// Select an element from fullName
         /// </summary>
-        private void SelectFromName(string fullName, bool ignoreSearch = false)
+        private void SelectFromName(string fullName)
         {
-            _currentFilter = "";
-            txtSearch.Text = "";
-            RefreshPrototypeTree(ignoreSearch);
+            RefreshPrototypeTree();
             int[] indexes = GetElementLocationInHierarchy(fullName);
             SelectTreeViewItem(indexes);
         }
@@ -167,12 +165,12 @@ namespace GameDatabaseBrowser
         /// <summary>
         /// Reload the prototype tree
         /// </summary>
-        private void RefreshPrototypeTree(bool ignoreSearch = false)
+        private void RefreshPrototypeTree(bool considerSearch = false)
         {
             isReady = false;
             Dispatcher.Invoke(() =>
             {
-                ConstructPrototypeTree(ignoreSearch);
+                ConstructPrototypeTree(considerSearch);
                 OnPrototypeTreeLoaded(null, null);
             });
         }
@@ -180,11 +178,11 @@ namespace GameDatabaseBrowser
         /// <summary>
         /// Construct the prototype hierarchy
         /// </summary>
-        private void ConstructPrototypeTree(bool ignoreSearch = false)
+        private void ConstructPrototypeTree(bool considerSearch = false)
         {
             PrototypeNodes[0].Childs.Clear();
             List<PrototypeDetails> prototypeToDisplay = _prototypeDetails;
-            if (!ignoreSearch && !string.IsNullOrEmpty(_currentFilter))
+            if (considerSearch && !string.IsNullOrEmpty(_currentFilter))
             {
                 if (referencesToggle.IsChecked == true)
                 {
@@ -247,7 +245,7 @@ namespace GameDatabaseBrowser
 
             string fullname = _fullNameBackHistory.Pop();
             _fullNameForwardHistory.Push(fullname);
-            SelectFromName(_fullNameBackHistory.Peek(), true);
+            SelectFromName(_fullNameBackHistory.Peek());
         }
 
         /// <summary>
@@ -261,7 +259,7 @@ namespace GameDatabaseBrowser
             if (_fullNameForwardHistory.Count < 1)
                 return;
 
-            SelectFromName(_fullNameForwardHistory.Pop(), true);
+            SelectFromName(_fullNameForwardHistory.Pop());
         }
 
         /// <summary>
@@ -287,7 +285,7 @@ namespace GameDatabaseBrowser
             else
                 _currentFilter = txtSearch.Text.ToLowerInvariant();
 
-            RefreshPrototypeTree();
+            RefreshPrototypeTree(true);
         }
 
         /// <summary>
@@ -299,7 +297,7 @@ namespace GameDatabaseBrowser
                 return;
 
             _currentFilter = txtSearch.Text = "";
-            RefreshPrototypeTree(true);
+            RefreshPrototypeTree();
         }
 
         /// <summary>
@@ -322,7 +320,7 @@ namespace GameDatabaseBrowser
             string name = GameDatabase.GetPrototypeName((PrototypeId)prototypeId);
             if (string.IsNullOrEmpty(name)) return;
 
-            SelectFromName(name, true);
+            SelectFromName(name);
         }
 
         /// <summary>
@@ -431,7 +429,7 @@ namespace GameDatabaseBrowser
                 }
                 else if (propInfo.PropertyType == typeof(Prototype) || typeof(Prototype).IsAssignableFrom(propInfo.PropertyType))
                 {
-                        GeneratePrototypeReferencesCache(propValue, parent);
+                    GeneratePrototypeReferencesCache(propValue, parent);
                 }
             }
         }
@@ -461,7 +459,7 @@ namespace GameDatabaseBrowser
         /// <summary>
         /// Recursively construction of the property tree
         /// </summary>
-        private void ConstructPropertyNodeHierarchy(PropertyNode node, object property)
+        private void ConstructPropertyNodeHierarchy(PropertyNode node, object property, bool needExpand)
         {
             if (property == null)
                 return;
@@ -473,9 +471,9 @@ namespace GameDatabaseBrowser
                 var propValue = propInfo.GetValue(property);
 
                 if (propValue is PropertyCollection)
-                    node.Childs.Add(new() { PropertyDetails = new() { Name = propInfo.Name, Value = "", TypeName = propInfo.PropertyType.Name } });
+                    node.Childs.Add(new() { PropertyDetails = new() { Name = propInfo.Name, Value = "", TypeName = propInfo.PropertyType.Name }, IsExpanded = needExpand });
                 else
-                    node.Childs.Add(new() { PropertyDetails = new() { Name = propInfo.Name, Value = propValue?.ToString(), TypeName = propInfo.PropertyType.Name } });
+                    node.Childs.Add(new() { PropertyDetails = new() { Name = propInfo.Name, Value = propValue?.ToString(), TypeName = propInfo.PropertyType.Name }, IsExpanded = needExpand });
 
                 if (IsTypeBrowsable(propInfo.PropertyType) == false)
                     continue;
@@ -494,12 +492,12 @@ namespace GameDatabaseBrowser
                     {
                         if (subPropertyInfo is Array)
                         {
-                            node.Childs.Last().Childs.Add(new() { PropertyDetails = new() { Index = index++, Name = "", Value = subPropInfo.ToString(), TypeName = subPropInfo.GetType().Name } });
-                            
+                            node.Childs.Last().Childs.Add(new() { PropertyDetails = new() { Index = index++, Name = "", Value = subPropInfo.ToString(), TypeName = subPropInfo.GetType().Name }, IsExpanded = needExpand });
+
                             if (IsTypeBrowsable(subPropInfo.GetType()) == false)
                                 continue;
 
-                            ConstructPropertyNodeHierarchy(node.Childs.Last().Childs.Last(), subPropInfo);
+                            ConstructPropertyNodeHierarchy(node.Childs.Last().Childs.Last(), subPropInfo, needExpand);
                         }
                         else if (subPropertyInfo is PropertyCollection)
                         {
@@ -507,16 +505,16 @@ namespace GameDatabaseBrowser
                             MHServerEmu.Games.Properties.PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
                             string val = info.DataType == PropertyDataType.Prototype ? kvp.Value.ToPrototypeId().ToString() : kvp.Value.Print(info.DataType).ToString();
                             string typeName = info.DataType == PropertyDataType.Prototype ? "PrototypeId" : info.DataType.ToString();
-                            node.Childs.Last().Childs.Add(new() { PropertyDetails = new() { Name = kvp.Key.ToString(), Value = val, TypeName = typeName } });
+                            node.Childs.Last().Childs.Add(new() { PropertyDetails = new() { Name = kvp.Key.ToString(), Value = val, TypeName = typeName }, IsExpanded = needExpand });
                             continue;
                         }
                         else
-                            ConstructPropertyNodeHierarchy(node.Childs.Last(), subPropInfo);
+                            ConstructPropertyNodeHierarchy(node.Childs.Last(), subPropInfo, needExpand);
                     }
                 }
                 else if (propInfo.PropertyType == typeof(Prototype) || typeof(Prototype).IsAssignableFrom(propInfo.PropertyType))
                 {
-                    ConstructPropertyNodeHierarchy(node.Childs.Last(), propValue);
+                    ConstructPropertyNodeHierarchy(node.Childs.Last(), propValue, needExpand);
                 }
             }
         }
@@ -570,7 +568,9 @@ namespace GameDatabaseBrowser
 
             Prototype proto = GameDatabase.DataDirectory.GetPrototype<Prototype>((PrototypeId)prototypeId);
             PropertyNodes[0].Childs.Clear();
-            ConstructPropertyNodeHierarchy(PropertyNodes[0], proto);
+
+            bool needExpand = expandResultToggle.IsChecked ?? false;
+            ConstructPropertyNodeHierarchy(PropertyNodes[0], proto, needExpand);
             PropertyNodes[0].IsExpanded = true;
 
             if (propertytreeView.Items.Count == 0)
