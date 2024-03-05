@@ -1,7 +1,7 @@
 ﻿using Gazillion;
-using MHServerEmu.Common;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Networking;
 
 namespace MHServerEmu.Leaderboards
@@ -15,6 +15,8 @@ namespace MHServerEmu.Leaderboards
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly LeaderboardManager _leaderboardManager = new();
+
         public void Handle(FrontendClient client, GameMessage message)
         {
             switch ((ClientToGameServerMessage)message.Id)
@@ -22,6 +24,11 @@ namespace MHServerEmu.Leaderboards
                 case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:
                     if (message.TryDeserialize<NetMessageLeaderboardInitializeRequest>(out var initializeRequest))
                         HandleInitializeRequest(client, initializeRequest);
+                    break;
+
+                case ClientToGameServerMessage.NetMessageLeaderboardRequest:
+                    if (message.TryDeserialize<NetMessageLeaderboardRequest>(out var request))
+                        HandleRequest(client, request);
                     break;
 
                 default:
@@ -39,25 +46,25 @@ namespace MHServerEmu.Leaderboards
         {
             var response = NetMessageLeaderboardInitializeRequestResponse.CreateBuilder();
 
-            ulong instanceId = 1;
-
-            foreach (ulong guid in initializeRequest.LeaderboardIdsList)
-            {
-                var initData = LeaderboardInitData.CreateBuilder();
-                
-                initData.SetLeaderboardId(guid);
-
-                initData.SetCurrentInstanceData(LeaderboardInstanceData.CreateBuilder()
-                    .SetInstanceId(instanceId++)
-                    .SetActivationTimestamp((Clock.UnixTime - TimeSpan.FromDays(1)).Ticks / 10)
-                    .SetExpirationTimestamp((Clock.UnixTime + TimeSpan.FromDays(1)).Ticks / 10)
-                    .SetState(LeaderboardState.eLBS_Active)
-                    .SetVisible(true));
-
-                response.AddLeaderboardInitDataList(initData);
-            }
+            foreach (PrototypeGuid guid in initializeRequest.LeaderboardIdsList)
+                response.AddLeaderboardInitDataList(_leaderboardManager.GetLeaderboardInitData(guid));
 
             client.SendMessage(MuxChannel, new(response.Build()));
+        }
+
+        private void HandleRequest(FrontendClient client, NetMessageLeaderboardRequest request)
+        {
+            if (request.HasDataQuery == false)
+            {
+                Logger.Warn("HandleRequest(): HasDataQuery == false");
+                return;
+            }
+
+            Leaderboard leaderboard = _leaderboardManager.GetLeaderboard((PrototypeGuid)request.DataQuery.LeaderboardId, request.DataQuery.InstanceId);;
+            
+            client.SendMessage(MuxChannel, new(NetMessageLeaderboardReportClient.CreateBuilder()
+                .SetReport(leaderboard.GetReport(request))
+                .Build()));
         }
     }
 }
