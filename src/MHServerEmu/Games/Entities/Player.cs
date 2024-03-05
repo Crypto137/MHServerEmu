@@ -57,8 +57,13 @@ namespace MHServerEmu.Games.Entities
         public ReplicatedPropertyCollection AvatarProperties { get; set; }
         public ulong ShardId { get; set; }
         public ulong MatchQueueStatus { get; set; }
+
+        // NOTE: EmailVerified and AccountCreationTimestamp are set in NetMessageGiftingRestrictionsUpdate that
+        // should be sent in the packet right after logging in. NetMessageGetCurrencyBalanceResponse should be
+        // sent along with it.
         public bool EmailVerified { get; set; }
-        public ulong AccountCreationTimestamp { get; set; }
+        public TimeSpan AccountCreationTimestamp { get; set; }  // UnixTime
+
         public ReplicatedVariable<ulong> PartyId { get; set; }
         public string UnknownString { get; set; }
         public bool HasGuildInfo { get; set; }
@@ -77,7 +82,7 @@ namespace MHServerEmu.Games.Entities
         public Player(EntityBaseData baseData, AOINetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection properties,
             MissionManager missionManager, ReplicatedPropertyCollection avatarProperties,
             ulong shardId, ReplicatedVariable<string> playerName, ReplicatedVariable<string> secondaryPlayerName,
-            ulong matchQueueStatus, bool emailVerified, ulong accountCreationTimestamp, ReplicatedVariable<ulong> partyId,
+            ulong matchQueueStatus, bool emailVerified, TimeSpan accountCreationTimestamp, ReplicatedVariable<ulong> partyId,
             Community community, bool unkBool, PrototypeId[] stashInventories, SortedSet<AvailableBadges> badges,
             GameplayOptions gameplayOptions, AchievementState achievementState, StashTabOption[] stashTabOptions) : base(baseData)
         {
@@ -119,8 +124,9 @@ namespace MHServerEmu.Games.Entities
             _secondaryPlayerName = new(stream);
 
             MatchQueueStatus = stream.ReadRawVarint64();
+
             EmailVerified = boolDecoder.ReadBool(stream);
-            AccountCreationTimestamp = stream.ReadRawVarint64();
+            AccountCreationTimestamp = Clock.UnixTimeMicrosecondsToTimeSpan(stream.ReadRawInt64());
 
             PartyId = new(stream);
 
@@ -181,7 +187,7 @@ namespace MHServerEmu.Games.Entities
             _secondaryPlayerName.Encode(stream);
             stream.WriteRawVarint64(MatchQueueStatus);
             boolEncoder.WriteBuffer(stream);   // EmailVerified
-            stream.WriteRawVarint64(AccountCreationTimestamp);
+            stream.WriteRawInt64(AccountCreationTimestamp.Ticks / 10);
 
             PartyId.Encode(stream);
 
@@ -237,7 +243,15 @@ namespace MHServerEmu.Games.Entities
                     Properties[PropertyEnum.AvatarUnlock, avatarPrototype] = (int)AvatarUnlockType.Type3;
             }
 
+            // TODO: Set this after creating all avatar entities via a NetMessageSetProperty in the same packet
+            Properties[PropertyEnum.PlayerMaxAvatarLevel] = 60;
+
             _playerName.Value = account.PlayerName;    // Used for highlighting your name in leaderboards
+
+            // Todo: send this separately in NetMessageGiftingRestrictionsUpdate on login
+            Properties[PropertyEnum.LoginCount] = 1075;
+            EmailVerified = true;
+            AccountCreationTimestamp = Clock.DateTimeToUnixTime(new(2023, 07, 16, 1, 48, 0));   // First GitHub commit date
 
             // Hardcoded community tab easter eggs
             CommunityMember friend = Community.CommunityMemberList[0];
@@ -315,24 +329,26 @@ namespace MHServerEmu.Games.Entities
         {
             base.BuildString(sb);
 
-            sb.AppendLine($"MissionManager: {MissionManager}");
-            sb.AppendLine($"AvatarProperties: {AvatarProperties}");
-            sb.AppendLine($"ShardId: {ShardId}");
+            sb.AppendLine($"{nameof(MissionManager)}: {MissionManager}");
+            sb.AppendLine($"{nameof(AvatarProperties)}: {AvatarProperties}");
+            sb.AppendLine($"{nameof(ShardId)}: {ShardId}");
             sb.AppendLine($"{nameof(_playerName)}: {_playerName}");
             sb.AppendLine($"{nameof(_consoleAccountIds)}[0]: {_consoleAccountIds[0]}");
             sb.AppendLine($"{nameof(_consoleAccountIds)}[1]: {_consoleAccountIds[1]}");
             sb.AppendLine($"{nameof(_secondaryPlayerName)}: {_secondaryPlayerName}");
-            sb.AppendLine($"MatchQueueStatus: 0x{MatchQueueStatus:X}");
-            sb.AppendLine($"EmailVerified: {EmailVerified}");
-            sb.AppendLine($"AccountCreationTimestamp: 0x{AccountCreationTimestamp:X}");
-            sb.AppendLine($"PartyId: {PartyId}");
-            sb.AppendLine($"HasGuildInfo: {HasGuildInfo}");
-            sb.AppendLine($"GuildInfo: {GuildInfo}");
-            sb.AppendLine($"UnknownString: {UnknownString}");
-            sb.AppendLine($"HasCommunity: {HasCommunity}");
-            sb.AppendLine($"Community: {Community}");
-            sb.AppendLine($"UnkBool: {UnkBool}");
-            for (int i = 0; i < StashInventories.Length; i++) sb.AppendLine($"StashInventory{i}: {GameDatabase.GetPrototypeName(StashInventories[i])}");
+            sb.AppendLine($"{nameof(MatchQueueStatus)}: 0x{MatchQueueStatus:X}");
+            sb.AppendLine($"{nameof(EmailVerified)}: {EmailVerified}");
+            sb.AppendLine($"{nameof(AccountCreationTimestamp)}: {AccountCreationTimestamp}");
+            sb.AppendLine($"{nameof(PartyId)}: {PartyId}");
+            sb.AppendLine($"{nameof(HasGuildInfo)}: {HasGuildInfo}");
+            sb.AppendLine($"{nameof(GuildInfo)}: {GuildInfo}");
+            sb.AppendLine($"{nameof(UnknownString)}: {UnknownString}");
+            sb.AppendLine($"{nameof(HasCommunity)}: {HasCommunity}");
+            sb.AppendLine($"{nameof(Community)}: {Community}");
+            sb.AppendLine($"{nameof(UnkBool)}: {UnkBool}");
+
+            for (int i = 0; i < StashInventories.Length; i++)
+                sb.AppendLine($"StashInventory{i}: {GameDatabase.GetPrototypeName(StashInventories[i])}");
 
             if (_badges.Any())
             {
@@ -342,10 +358,11 @@ namespace MHServerEmu.Games.Entities
                 sb.AppendLine();
             }
 
-            sb.AppendLine($"GameplayOptions: {GameplayOptions}");
-            sb.AppendLine($"AchievementState: {AchievementState}");
+            sb.AppendLine($"{nameof(GameplayOptions)}: {GameplayOptions}");
+            sb.AppendLine($"{nameof(AchievementState)}: {AchievementState}");
 
-            for (int i = 0; i < StashTabOptions.Length; i++) sb.AppendLine($"StashTabOption{i}: {StashTabOptions[i]}");
+            for (int i = 0; i < StashTabOptions.Length; i++)
+                sb.AppendLine($"StashTabOption{i}: {StashTabOptions[i]}");
         }
     }
 }
