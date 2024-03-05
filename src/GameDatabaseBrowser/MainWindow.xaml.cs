@@ -388,7 +388,7 @@ namespace GameDatabaseBrowser
             if (property == null)
                 return;
 
-            PropertyInfo[] propertyInfo = property.GetType().GetProperties().Where(k => k.Name != "DataRef" && k.Name != "ParentDataRef" && k.Name != "DataRefRecord").OrderBy(k => k.Name).ToArray();
+            PropertyInfo[] propertyInfo = property.GetType().GetProperties().Where(k => k.Name != "DataRef" && k.Name != "DataRefRecord").OrderBy(k => k.Name).ToArray();
 
             foreach (PropertyInfo propInfo in propertyInfo)
             {
@@ -464,7 +464,7 @@ namespace GameDatabaseBrowser
             if (property == null)
                 return;
 
-            PropertyInfo[] propertyInfo = property.GetType().GetProperties().Where(k => k.Name != "DataRef" && k.Name != "ParentDataRef" && k.Name != "DataRefRecord").OrderBy(k => k.Name).ToArray();
+            PropertyInfo[] propertyInfo = property.GetType().GetProperties().Where(k => k.Name != "DataRef" && k.Name != "DataRefRecord").OrderBy(k => k.Name).ToArray();
 
             foreach (PropertyInfo propInfo in propertyInfo)
             {
