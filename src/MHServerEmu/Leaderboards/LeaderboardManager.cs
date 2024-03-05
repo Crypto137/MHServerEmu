@@ -21,7 +21,7 @@ namespace MHServerEmu.Leaderboards
         {
             // Multiple instances of the same leaderboard are currently not supported.
             if (instanceId != 0)
-                return Logger.WarnReturn<Leaderboard>(null, $"Unexpected leaderboard instanceId {instanceId}");
+                return Logger.WarnReturn<Leaderboard>(null, $"GetLeaderboard(): Unexpected leaderboard instanceId {instanceId}");
 
             // Create a new leaderboard if not found
             if (_leaderboardDict.TryGetValue((guid, instanceId), out var leaderboard) == false)

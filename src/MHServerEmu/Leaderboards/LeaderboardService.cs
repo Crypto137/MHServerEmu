@@ -67,7 +67,7 @@ namespace MHServerEmu.Leaderboards
             Leaderboard leaderboard = _leaderboardManager.GetLeaderboard((PrototypeGuid)request.DataQuery.LeaderboardId, request.DataQuery.InstanceId);;
             
             client.SendMessage(MuxChannel, new(NetMessageLeaderboardReportClient.CreateBuilder()
-                .SetReport(leaderboard.GetReport(request))
+                .SetReport(leaderboard.GetReport(request, client.Session.Account.PlayerName))
                 .Build()));
         }
     }

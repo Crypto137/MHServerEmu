@@ -9,7 +9,7 @@ namespace MHServerEmu.Leaderboards
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private const ulong UpdateTimeIntervalMS = 60 * 1000;   // Every minute
+        private const ulong UpdateTimeIntervalMS = 30 * 1000;   // 30 seconds
 
         private readonly List<LeaderboardEntry> _entryList = new();
 
@@ -38,9 +38,8 @@ namespace MHServerEmu.Leaderboards
                 // Default dummy leaderboard data
                 _entryList = new()
                 {
-                    LeaderboardEntry.CreateBuilder().SetName("DavidBrevik").SetGameId(1).SetScore(9001).Build(),
-                    LeaderboardEntry.CreateBuilder().SetName("Doomsaw").SetGameId(2).SetScore(9001).Build(),
-                    LeaderboardEntry.CreateBuilder().SetName("MHServerEmu User").SetGameId(3).SetScore(9000).Build(),
+                    LeaderboardEntry.CreateBuilder().SetName("DavidBrevik").SetGameId(2).SetScore(9000).Build(),
+                    LeaderboardEntry.CreateBuilder().SetName("Doomsaw").SetGameId(3).SetScore(9000).Build(),
                     LeaderboardEntry.CreateBuilder().SetName("RogueServerEnjoyer").SetGameId(4).SetScore(7777).Build(),
                     LeaderboardEntry.CreateBuilder().SetName("WhiteQueenXOXO").SetGameId(5).SetScore(6666).Build()
                 };
@@ -76,7 +75,7 @@ namespace MHServerEmu.Leaderboards
         /// <summary>
         /// Generates a <see cref="LeaderboardReport"/> for this <see cref="Leaderboard"/>.
         /// </summary>
-        public LeaderboardReport GetReport(NetMessageLeaderboardRequest request)
+        public LeaderboardReport GetReport(NetMessageLeaderboardRequest request, string requesterName)
         {
             var report = LeaderboardReport.CreateBuilder()
                 .SetLeaderboardId((ulong)LeaderboardId)
@@ -128,9 +127,15 @@ namespace MHServerEmu.Leaderboards
                     .SetExpirationTimestampUtc((long)ActivationTimestampUtc.TotalSeconds)
                     .SetVisible(Visible);
 
-                report.SetTableData(LeaderboardTableData.CreateBuilder()
-                    .SetInfo(metadata)
-                    .AddRangeEntries(_entryList));
+                var tableData = LeaderboardTableData.CreateBuilder()
+                    .SetInfo(metadata);
+
+                // Add requesting player as the number 1 (as long as it's not the Civil War leaderboard)
+                if (LeaderboardId != (PrototypeGuid)17890326285325567482)
+                    tableData.AddEntries(LeaderboardEntry.CreateBuilder().SetName(requesterName).SetGameId(1).SetScore(9001).Build());
+
+                tableData.AddRangeEntries(_entryList);
+                report.SetTableData(tableData);
             }
 
             return report.Build();

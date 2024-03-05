@@ -230,6 +230,8 @@ namespace MHServerEmu.Games.Entities
                     Properties[PropertyEnum.AvatarUnlock, avatarPrototype] = (int)AvatarUnlockType.Type3;
             }
 
+            Name.Value = account.PlayerName;    // Used for highlighting your name in leaderboards
+
             // Hardcoded community tab easter eggs
             CommunityMember friend = Community.CommunityMemberList[0];
             friend.MemberName = "DavidBrevik";
