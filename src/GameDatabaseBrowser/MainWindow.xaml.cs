@@ -386,7 +386,7 @@ namespace GameDatabaseBrowser
             if (selected is PropertyNode propertyNode)
                 name = propertyNode.PropertyDetails.Name;
             else if (selected is PrototypeNode prototypeNode)
-                name = prototypeNode.PrototypeDetails.Name;
+                name = prototypeNode.PrototypeDetails.FullName;
 
             if (string.IsNullOrEmpty(name))
                 return;
