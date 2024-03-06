@@ -73,12 +73,6 @@ namespace MHServerEmu.Games.Entities
         public TimeSpan AccountCreationTimestamp { get; set; }  // UnixTime
 
         public ReplicatedVariable<ulong> PartyId { get; set; }
-
-        public ulong GuildId { get; private set; }
-        public string GuildName { get; private set; }
-        public GuildMembership GuildMembership { get; private set; }
-
-        public bool HasCommunity { get; set; }
         public Community Community { get; set; }
         public bool UnkBool { get; set; }
         public PrototypeId[] StashInventories { get; set; }
@@ -148,8 +142,8 @@ namespace MHServerEmu.Games.Entities
             if (emptyString != string.Empty)
                 Logger.Warn($"Decode(): emptyString is not empty!");
 
-            HasCommunity = boolDecoder.ReadBool(stream);
-            if (HasCommunity) Community = new(stream);
+            bool hasCommunity = boolDecoder.ReadBool(stream);
+            if (hasCommunity) Community = new(stream);
 
             UnkBool = boolDecoder.ReadBool(stream);
 
@@ -182,7 +176,7 @@ namespace MHServerEmu.Games.Entities
 
             boolEncoder.EncodeBool(EmailVerified);
             boolEncoder.EncodeBool(_guildId != GuildMember.InvalidGuildId);
-            boolEncoder.EncodeBool(HasCommunity);
+            boolEncoder.EncodeBool(true);   // hasCommunity TODO: Check archive's replication policy and send community only to owners
             boolEncoder.EncodeBool(UnkBool);
 
             GameplayOptions.EncodeBools(boolEncoder);
@@ -205,8 +199,8 @@ namespace MHServerEmu.Games.Entities
             GuildMember.SerializeReplicationRuntimeInfo(stream, boolEncoder, ref _guildId, ref _guildName, ref _guildMembership);
             stream.WriteRawString(string.Empty);    // Mysterious always empty throwaway string
 
-            boolEncoder.WriteBuffer(stream);   // HasCommunity
-            if (HasCommunity) Community.Encode(stream);
+            boolEncoder.WriteBuffer(stream);   // hasCommunity
+            Community.Encode(stream);
 
             boolEncoder.WriteBuffer(stream);   // UnkBool
 
@@ -357,7 +351,6 @@ namespace MHServerEmu.Games.Entities
                 sb.AppendLine($"{nameof(_guildMembership)}: {_guildMembership}");
             }
 
-            sb.AppendLine($"{nameof(HasCommunity)}: {HasCommunity}");
             sb.AppendLine($"{nameof(Community)}: {Community}");
             sb.AppendLine($"{nameof(UnkBool)}: {UnkBool}");
 
