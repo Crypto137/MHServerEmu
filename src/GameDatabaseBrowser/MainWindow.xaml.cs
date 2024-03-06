@@ -4,6 +4,7 @@ using GameDatabaseBrowser.Search;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.Properties;
 using System;
 using System.Collections;
@@ -619,7 +620,9 @@ namespace GameDatabaseBrowser
                     {
                         if (subPropertyInfo is Array)
                         {
-                            node.Childs.Last().Childs.Add(new() { PropertyDetails = new() { Index = index++, Name = "", Value = subPropInfo.ToString(), TypeName = subPropInfo.GetType().Name }, IsExpanded = needExpand });
+                            string itemName = subPropInfo.ToString();
+                            if (subPropInfo is EntityMarkerPrototype marker) itemName = GameDatabase.GetFormattedPrototypeName(GameDatabase.GetDataRefByPrototypeGuid(marker.EntityGuid));
+                            node.Childs.Last().Childs.Add(new() { PropertyDetails = new() { Index = index++, Name = "", Value = itemName, TypeName = subPropInfo.GetType().Name }, IsExpanded = needExpand });
 
                             if (IsTypeBrowsable(subPropInfo.GetType()) == false)
                                 continue;
