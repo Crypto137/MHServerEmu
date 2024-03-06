@@ -4,7 +4,7 @@
         xmlns:wpfcontrols="http://wpfcontrols.com/"
         xmlns:models="clr-namespace:GameDatabaseBrowser.Models" xmlns:src="clr-namespace:GameDatabaseBrowser"
         Title="Game Database Browser"
-        Icon="Resources/Marvel_Logo.png"
+        Icon="Resources/Marvel_Logo.ico"
         Height="720"
         Width="1280"
         KeyDown="OnKeyDown">
