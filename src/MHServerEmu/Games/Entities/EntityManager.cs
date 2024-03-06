@@ -462,6 +462,21 @@ namespace MHServerEmu.Games.Entities
 
         }
 
+        public static readonly InvSpawner[] InvSpawners = new InvSpawner[]
+        {
+            InvSpawner.OperationsBountyChestSpawnerA100,
+            InvSpawner.OperationsBountyChestSpawnerB225,
+            InvSpawner.OperationsBountyChestSpawnerC350,
+        };
+
+        public enum InvSpawner : ulong
+        {
+            OperationsBountyChestSpawnerA100 = 18164666176037329599,
+            OperationsBountyChestSpawnerB225 = 11588501183449012936,
+            OperationsBountyChestSpawnerC350 = 16538587082423278280, 
+        }
+
+
         private static readonly InvTarget[] LockedTargets = new InvTarget[]
         {
             InvTarget.ResearchCorridorEntryTarget,
@@ -561,7 +576,10 @@ namespace MHServerEmu.Games.Entities
             BlockerEntity.SurturRaidGateBlockerEntityMONO,
             BlockerEntity.SurturRaidGateBlockerEntityMOM,
             BlockerEntity.SurturRaidGateBlockerEntitySLAG,
-            BlockerEntity.SurturRaidGateBlockerEntitySURT
+            BlockerEntity.SurturRaidGateBlockerEntitySURT,
+            BlockerEntity.OperationsBountyChestA,
+            BlockerEntity.OperationsBountyChestB,
+            BlockerEntity.OperationsBountyChestC,
         };
 
         public enum BlockerEntity : ulong
@@ -572,7 +590,10 @@ namespace MHServerEmu.Games.Entities
             SurturRaidGateBlockerEntityMOM = 7506253403374886470,
             SurturRaidGateBlockerEntitySLAG = 2107982419118661284,
             SurturRaidGateBlockerEntitySURT = 7080009510741745355,
-            BeastNorway = 1946034969610490335, // remove second 
+            // Off BounntyChest
+            OperationsBountyChestA = 8947265512402064759,
+            OperationsBountyChestB = 16557893689139991928,
+            OperationsBountyChestC = 2614246491109856633,
         }
 
         public enum InvTarget : ulong
