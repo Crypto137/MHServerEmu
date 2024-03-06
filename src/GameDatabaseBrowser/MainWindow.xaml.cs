@@ -106,7 +106,15 @@ namespace GameDatabaseBrowser
             BackgroundWorker worker = sender as BackgroundWorker;
             worker.ReportProgress(0);
 
-            PakFileSystem.Instance.Initialize();
+            if (!PakFileSystem.Instance.Initialize())
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    NoSipMessage.Visibility = Visibility.Visible;
+                });
+                return;
+            }
+
             bool isInitialized = GameDatabase.IsInitialized;
             DataDirectory dataDirectory = DataDirectory.Instance;
 
@@ -165,6 +173,9 @@ namespace GameDatabaseBrowser
         /// </summary>
         private void OnPrototypeTreeLoaded(object sender, RunWorkerCompletedEventArgs e)
         {
+            if (NoSipMessage.Visibility == Visibility.Visible)
+                return;
+
             Dispatcher.Invoke(() =>
             {
                 progressBar.Visibility = Visibility.Collapsed;
@@ -688,7 +699,7 @@ namespace GameDatabaseBrowser
             {
                 string prototypeFullName = GameDatabase.GetPrototypeName((PrototypeId)parentPrototypeId);
                 txtParentDataRef.Text = $"Parent : {prototypeFullName} ({parentPrototypeId})";
-                txtParentDataRef.DataContext = new PropertyNode() { PropertyDetails = new PropertyDetails() { Name = prototypeFullName, Value = parentPrototypeId.ToString(), TypeName = "PrototypeId"} };
+                txtParentDataRef.DataContext = new PropertyNode() { PropertyDetails = new PropertyDetails() { Name = prototypeFullName, Value = parentPrototypeId.ToString(), TypeName = "PrototypeId" } };
             }
             else
             {
