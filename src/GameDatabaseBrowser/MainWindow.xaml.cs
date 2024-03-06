@@ -17,6 +17,7 @@ using MHServerEmu.Games.Properties;
 using PropertyInfo = System.Reflection.PropertyInfo;
 using PropertyCollection = MHServerEmu.Games.Properties.PropertyCollection;
 using MHServerEmu.Games.Common;
+using GameDatabaseBrowser.Providers;
 
 namespace GameDatabaseBrowser
 {
@@ -143,6 +144,9 @@ namespace GameDatabaseBrowser
         /// </summary>
         private void OnPrototypeTreeLoaded(object sender, RunWorkerCompletedEventArgs e)
         {
+            classAutoCompletionText.Provider = new PrototypeClassProvider();
+            blueprintAutoCompletionText.Provider = new PrototypeBlueprintProvider();
+
             progressBar.Value = 0;
             progressBar.Visibility = Visibility.Collapsed;
             if (treeView.Items.Count == 0)
@@ -405,14 +409,14 @@ namespace GameDatabaseBrowser
                 case 0: // Search by text
                     SearchByTextField.Visibility = Visibility.Visible;
                     SearchByTextToggles.Visibility = Visibility.Visible;
-                    SearchByBluePrintField.Visibility = Visibility.Collapsed;
+                    SearchByBlueprintField.Visibility = Visibility.Collapsed;
                     SearchByClassField.Visibility = Visibility.Collapsed;
                     SearchByClassAndBlueprintToggles.Visibility = Visibility.Collapsed;
                     break;
                 case 1: // Search by class
                     SearchByTextField.Visibility = Visibility.Collapsed;
                     SearchByTextToggles.Visibility = Visibility.Collapsed;
-                    SearchByBluePrintField.Visibility = Visibility.Collapsed;
+                    SearchByBlueprintField.Visibility = Visibility.Collapsed;
                     SearchByClassField.Visibility = Visibility.Visible;
                     SearchByClassAndBlueprintToggles.Visibility = Visibility.Visible;
                     break;
@@ -420,7 +424,7 @@ namespace GameDatabaseBrowser
                     SearchByTextField.Visibility = Visibility.Collapsed;
                     SearchByTextToggles.Visibility = Visibility.Collapsed;
                     SearchByClassField.Visibility = Visibility.Collapsed;
-                    SearchByBluePrintField.Visibility = Visibility.Visible;
+                    SearchByBlueprintField.Visibility = Visibility.Visible;
                     SearchByClassAndBlueprintToggles.Visibility = Visibility.Visible;
                     break;
             }
