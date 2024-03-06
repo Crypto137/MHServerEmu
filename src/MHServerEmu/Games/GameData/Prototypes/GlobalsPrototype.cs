@@ -47,8 +47,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         StoryMissions = 5,
     }
 
+    // Regions/QueueStatus.type, equivalent to Gazillion::RegionRequestQueueUpdateVar from the protocol.
+    // This is used in MatchQueueStringEntryPrototype for assigning locale strings to queue statuses.
+    // Use the protocol enum if you need to do something with MatchQueueStatus.
     [AssetEnum((int)Invalid)]
-    public enum MatchQueueStatus    // Regions/QueueStatus.type, equivalent to Gazillion::RegionRequestQueueUpdateVar from the protocol
+    public enum RegionRequestQueueUpdateVarAssetEnum    
     {
         Invalid = 1,
         SelectQueueMethod = 2,
@@ -847,7 +850,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class MatchQueueStringEntryPrototype : Prototype
     {
-        public MatchQueueStatus StatusKey { get; protected set; }  // Regions/QueueStatus.type, also appears in the protocol
+        public RegionRequestQueueUpdateVarAssetEnum StatusKey { get; protected set; }  // Regions/QueueStatus.type
         public LocaleStringId StringLog { get; protected set; }
         public LocaleStringId StringStatus { get; protected set; }
     }

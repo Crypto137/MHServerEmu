@@ -13,6 +13,8 @@ namespace MHServerEmu.PlayerManagement
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly IdGenerator _idGenerator = new(IdType.Session, 0);
+
         private readonly object _sessionLock = new();
         private readonly Dictionary<ulong, ClientSession> _sessionDict = new();
         private readonly Dictionary<ulong, FrontendClient> _clientDict = new();
@@ -52,7 +54,7 @@ namespace MHServerEmu.PlayerManagement
             {
                 lock (_sessionLock)
                 {
-                    session = new(IdGenerator.Generate(IdType.Session), account, loginDataPB.ClientDownloader, loginDataPB.Locale);
+                    session = new(_idGenerator.Generate(), account, loginDataPB.ClientDownloader, loginDataPB.Locale);
                     _sessionDict.Add(session.Id, session);
                 }
             }

@@ -65,6 +65,8 @@ namespace MHServerEmu.Games.Entities
         public EntityBaseData BaseData { get; set; }
         public ulong RegionId { get; set; } = 0;
 
+        public ulong DatabaseUniqueId { get => BaseData.DbId; }
+
         public AOINetworkPolicyValues ReplicationPolicy { get; set; }
         public ReplicatedPropertyCollection Properties { get; set; }
 

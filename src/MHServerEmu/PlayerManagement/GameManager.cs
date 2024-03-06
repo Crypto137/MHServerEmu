@@ -8,6 +8,7 @@ namespace MHServerEmu.PlayerManagement
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly IdGenerator _idGenerator = new(IdType.Game, 0);
         private readonly Dictionary<ulong, Game> _gameDict = new();
 
         public GameManager()
@@ -17,7 +18,7 @@ namespace MHServerEmu.PlayerManagement
 
         public void CreateGame()
         {
-            ulong id = IdGenerator.Generate(IdType.Game);
+            ulong id = _idGenerator.Generate();
             _gameDict.Add(id, new(id));
         }
 
