@@ -756,6 +756,38 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
+        public static bool IsBoundsBlockedByEntity(Bounds bounds, WorldEntity entity, BlockingCheckFlags blockFlags)
+        {
+            if (entity != null)
+            {
+                if (entity.NoCollide) return false;
+
+                bool selfBlocking = false;
+                bool otherBlocking = false;
+
+                if (blockFlags != 0)
+                {
+                    var entityProto = entity.WorldEntityPrototype;
+                    if (entityProto == null) return false;
+
+                    var boundsProto = entityProto.Bounds;
+                    if (boundsProto == null) return false;
+
+                    selfBlocking |= blockFlags.HasFlag(BlockingCheckFlags.CheckAll);
+                    otherBlocking |= blockFlags.HasFlag(BlockingCheckFlags.CheckSpawns) && boundsProto.BlocksSpawns;
+                    otherBlocking |= blockFlags.HasFlag(BlockingCheckFlags.CheckGroundMovementPowers) && (boundsProto.BlocksMovementPowers == BoundsMovementPowerBlockType.Ground || boundsProto.BlocksMovementPowers == BoundsMovementPowerBlockType.All);
+                    otherBlocking |= blockFlags.HasFlag(BlockingCheckFlags.CheckAllMovementPowers) && boundsProto.BlocksMovementPowers == BoundsMovementPowerBlockType.All;
+                    otherBlocking |= blockFlags.HasFlag(BlockingCheckFlags.CheckLanding) && boundsProto.BlocksLanding;
+
+                    if (otherBlocking == false) return false;
+                }
+
+                Bounds entityBounds = entity.Bounds;
+                if (bounds.CanBeBlockedBy(entityBounds, selfBlocking, otherBlocking) && bounds.Intersects(entityBounds)) return true;
+            }
+
+            return false;
+        }
 
     }
 
