@@ -70,6 +70,7 @@ namespace GameDatabaseBrowser
         public MainWindow()
         {
             InitializeComponent();
+            SearchTypeComboBox.SelectedIndex = 0;
             treeView.SelectedItemChanged += UpdatePropertiesSection;
             propertytreeView.MouseDoubleClick += OnPropertyDoubleClicked;
         }
@@ -392,6 +393,37 @@ namespace GameDatabaseBrowser
                 return;
 
             Clipboard.SetText(name);
+        }
+
+        /// <summary>
+        /// Called when search type changes
+        /// </summary>
+        private void OnSearchTypeSelected(object sender, SelectionChangedEventArgs e)
+        {
+            switch (SearchTypeComboBox.SelectedIndex)
+            {
+                case 0: // Search by text
+                    SearchByTextField.Visibility = Visibility.Visible;
+                    SearchByTextToggles.Visibility = Visibility.Visible;
+                    SearchByBluePrintField.Visibility = Visibility.Collapsed;
+                    SearchByClassField.Visibility = Visibility.Collapsed;
+                    SearchByClassAndBlueprintToggles.Visibility = Visibility.Collapsed;
+                    break;
+                case 1: // Search by class
+                    SearchByTextField.Visibility = Visibility.Collapsed;
+                    SearchByTextToggles.Visibility = Visibility.Collapsed;
+                    SearchByBluePrintField.Visibility = Visibility.Collapsed;
+                    SearchByClassField.Visibility = Visibility.Visible;
+                    SearchByClassAndBlueprintToggles.Visibility = Visibility.Visible;
+                    break;
+                case 2: // Search by blueprint
+                    SearchByTextField.Visibility = Visibility.Collapsed;
+                    SearchByTextToggles.Visibility = Visibility.Collapsed;
+                    SearchByClassField.Visibility = Visibility.Collapsed;
+                    SearchByBluePrintField.Visibility = Visibility.Visible;
+                    SearchByClassAndBlueprintToggles.Visibility = Visibility.Visible;
+                    break;
+            }
         }
 
         /// <summary>
