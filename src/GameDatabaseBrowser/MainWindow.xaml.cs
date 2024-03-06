@@ -1,6 +1,10 @@
 ﻿using GameDatabaseBrowser.Models;
+using GameDatabaseBrowser.Providers;
+using GameDatabaseBrowser.Search;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,17 +12,16 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
-using MHServerEmu.Games.Properties;
-using PropertyInfo = System.Reflection.PropertyInfo;
 using PropertyCollection = MHServerEmu.Games.Properties.PropertyCollection;
-using MHServerEmu.Games.Common;
-using GameDatabaseBrowser.Providers;
-using GameDatabaseBrowser.Helpers;
+using PropertyInfo = System.Reflection.PropertyInfo;
 
 namespace GameDatabaseBrowser
 {
@@ -86,6 +89,14 @@ namespace GameDatabaseBrowser
             backgroundWorker.RunWorkerAsync();
         }
 
+        private void CleanPrototypeTree()
+        {
+            Dispatcher.Invoke(() =>
+            {
+                PrototypeNodes[0].Childs.Clear();
+            });
+        }
+
         /// <summary>
         /// Init the prototype treeView
         /// </summary>
@@ -104,8 +115,19 @@ namespace GameDatabaseBrowser
 
             PrototypeNodes.Add(new() { PrototypeDetails = new("Prototypes", new()) });
             PropertyNodes.Add(new() { PropertyDetails = new() { Name = "Data" } });
-            RefreshPrototypeTree();
+
+            RefreshPrototypeTree(GetSearchDetails());
             worker.ReportProgress(100);
+        }
+
+        private SearchDetails GetSearchDetails()
+        {
+            SearchDetails searchDetails = null;
+            Dispatcher.Invoke(() =>
+            {
+                searchDetails = new SearchDetails(this);
+            });
+            return searchDetails;
         }
 
         /// <summary>
@@ -142,17 +164,20 @@ namespace GameDatabaseBrowser
         /// </summary>
         private void OnPrototypeTreeLoaded(object sender, RunWorkerCompletedEventArgs e)
         {
-            classAutoCompletionText.Provider = new PrototypeClassProvider();
-            blueprintAutoCompletionText.Provider = new PrototypeBlueprintProvider();
+            Dispatcher.Invoke(() =>
+            {
+                progressBar.Visibility = Visibility.Collapsed;
 
-            progressBar.Value = 0;
-            progressBar.Visibility = Visibility.Collapsed;
-            if (treeView.Items.Count == 0)
-                treeView.Items.Add(PrototypeNodes);
-            PrototypeNodes[0].IsExpanded = true;
-            treeView.Items.Refresh();
-            UpdateLayout();
-            isReady = true;
+                if (treeView.Items.Count == 0)
+                    treeView.Items.Add(PrototypeNodes);
+                PrototypeNodes[0].IsExpanded = true;
+                treeView.Items.Refresh();
+
+                classAutoCompletionText.Provider = new PrototypeClassProvider();
+                blueprintAutoCompletionText.Provider = new PrototypeBlueprintProvider();
+                UpdateLayout();
+                isReady = true;
+            });
         }
 
         /// <summary>
@@ -163,7 +188,7 @@ namespace GameDatabaseBrowser
             if (string.IsNullOrEmpty(fullName))
                 return;
 
-            RefreshPrototypeTree();
+            RefreshPrototypeTree(GetSearchDetails());
             int[] indexes = GetElementLocationInHierarchy(fullName);
             SelectTreeViewItem(indexes);
         }
@@ -171,31 +196,28 @@ namespace GameDatabaseBrowser
         /// <summary>
         /// Reload the prototype tree
         /// </summary>
-        private void RefreshPrototypeTree(bool considerSearch = false)
+        private void RefreshPrototypeTree(SearchDetails searchDetails, bool considerSearch = false)
         {
             isReady = false;
-            Dispatcher.Invoke(() =>
-            {
-                ConstructPrototypeTree(considerSearch);
-                OnPrototypeTreeLoaded(null, null);
-            });
+            ConstructPrototypeTree(searchDetails, considerSearch);
+            OnPrototypeTreeLoaded(null, null);
         }
 
         /// <summary>
         /// Construct the prototype hierarchy
         /// </summary>
-        private void ConstructPrototypeTree(bool considerSearch = false)
+        private void ConstructPrototypeTree(SearchDetails searchDetails, bool considerSearch = false)
         {
             if (_searchHelper == null)
                 _searchHelper = new(this);
 
-            PrototypeNodes[0].Childs.Clear();
-            List<PrototypeDetails> prototypeToDisplay = considerSearch ? _searchHelper.GetPrototypeToDisplay() : PrototypeDetails;
+            CleanPrototypeTree();
+            List<PrototypeDetails> prototypeToDisplay = considerSearch ? _searchHelper.GetPrototypeToDisplay(searchDetails) : PrototypeDetails;
 
             if (prototypeToDisplay == null)
                 return;
 
-            bool needExpand = (expandResultToggle.IsChecked ?? false) || prototypeToDisplay.Count < 21;
+            bool needExpand = searchDetails.NeedExpand || prototypeToDisplay.Count < 21;
             foreach (PrototypeDetails prototype in prototypeToDisplay)
                 AddPrototypeInHierarchy(prototype, needExpand);
         }
@@ -205,26 +227,28 @@ namespace GameDatabaseBrowser
         /// </summary>
         private void AddPrototypeInHierarchy(PrototypeDetails prototype, bool needExpand)
         {
-            string[] tokens = prototype.FullName.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-            ObservableCollection<PrototypeNode> pointer = PrototypeNodes[0].Childs;
-
-            string currentFullName = tokens.First();
-            for (int i = 0; i < tokens.Length - 1; i++)
+            Dispatcher.Invoke(() =>
             {
-                if (pointer.FirstOrDefault(k => k.PrototypeDetails.Name == tokens[i]) == null)
-                    pointer.Add(new() { PrototypeDetails = new(currentFullName, new()), IsExpanded = needExpand });
+                string[] tokens = prototype.FullName.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+                ObservableCollection<PrototypeNode> pointer = PrototypeNodes[0].Childs;
+                string currentFullName = tokens.First();
+                for (int i = 0; i < tokens.Length - 1; i++)
+                {
+                    if (pointer.FirstOrDefault(k => k.PrototypeDetails.Name == tokens[i]) == null)
+                        pointer.Add(new() { PrototypeDetails = new(currentFullName, new()), IsExpanded = needExpand });
 
-                pointer = pointer.First(k => k.PrototypeDetails.Name == tokens[i]).Childs;
-                currentFullName += $"/{tokens[i + 1]}";
-            }
+                    pointer = pointer.First(k => k.PrototypeDetails.Name == tokens[i]).Childs;
+                    currentFullName += $"/{tokens[i + 1]}";
+                }
 
-            pointer.Add(new() { PrototypeDetails = prototype, IsExpanded = needExpand });
+                pointer.Add(new() { PrototypeDetails = prototype, IsExpanded = needExpand });
+            });
         }
 
         /// <summary>
         /// Return to the previous state
         /// </summary>
-        private void OnBackButtonClicked(object sender, RoutedEventArgs e)
+        private async void OnBackButtonClicked(object sender, RoutedEventArgs e)
         {
             if (!isReady)
                 return;
@@ -234,13 +258,23 @@ namespace GameDatabaseBrowser
 
             string fullname = _fullNameBackHistory.Pop();
             _fullNameForwardHistory.Push(fullname);
-            SelectFromName(_fullNameBackHistory.Peek());
+
+            try
+            {
+                progressBar.Visibility = Visibility.Visible;
+                progressBar.IsIndeterminate = true;
+                await Task.Run(() => SelectFromName(_fullNameBackHistory.Peek()));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         /// <summary>
         /// Return to the next state (basically it cancels a back action)
         /// </summary>
-        private void OnForwardButtonClicked(object sender, RoutedEventArgs e)
+        private async void OnForwardButtonClicked(object sender, RoutedEventArgs e)
         {
             if (!isReady)
                 return;
@@ -248,7 +282,16 @@ namespace GameDatabaseBrowser
             if (_fullNameForwardHistory.Count < 1)
                 return;
 
-            SelectFromName(_fullNameForwardHistory.Pop());
+            try
+            {
+                progressBar.Visibility = Visibility.Visible;
+                progressBar.IsIndeterminate = true;
+                await Task.Run(() => SelectFromName(_fullNameForwardHistory.Pop()));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         /// <summary>
@@ -263,12 +306,21 @@ namespace GameDatabaseBrowser
         /// <summary>
         /// Launch the search by PrototypeId or by keyword
         /// </summary>
-        private void OnSearchButtonClicked(object sender, RoutedEventArgs e)
+        private async void OnSearchButtonClicked(object sender, RoutedEventArgs e)
         {
             if (!isReady)
                 return;
 
-            RefreshPrototypeTree(true);
+            try
+            {
+                progressBar.Visibility = Visibility.Visible;
+                progressBar.IsIndeterminate = true;
+                await Task.Run(() => RefreshPrototypeTree(GetSearchDetails(), true));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         /// <summary>
@@ -282,14 +334,14 @@ namespace GameDatabaseBrowser
             txtSearch.Text = "";
             classAutoCompletionText.Text = "";
             blueprintAutoCompletionText.Text = "";
-            RefreshPrototypeTree();
+            RefreshPrototypeTree(GetSearchDetails());
         }
 
         /// <summary>
         /// When double click on a property
         /// Allow to travel to a prototype when double clicking on a prototypeId
         /// </summary>
-        private void OnPropertyDoubleClicked(object sender, MouseButtonEventArgs e)
+        private async void OnPropertyDoubleClicked(object sender, MouseButtonEventArgs e)
         {
             if (!isReady)
                 return;
@@ -302,7 +354,16 @@ namespace GameDatabaseBrowser
             if (prototypeId == 0)
                 return;
 
-            SelectFromName(GameDatabase.GetPrototypeName(prototypeId));
+            try
+            {
+                progressBar.Visibility = Visibility.Visible;
+                progressBar.IsIndeterminate = true;
+                await Task.Run(() => SelectFromName(GameDatabase.GetPrototypeName(prototypeId)));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         /// <summary>
@@ -658,34 +719,40 @@ namespace GameDatabaseBrowser
         /// </summary>
         private TreeViewItem BringIntoView(ItemsControl container, int i, bool needToExpand = false)
         {
-            ExpandOrCollapseTreeViewItem(container, true);
+            TreeViewItem childTreeView = null;
 
-            container.ApplyTemplate();
-            ItemsPresenter itemsPresenter = (ItemsPresenter)container.Template.FindName("ItemsHost", container);
-            if (itemsPresenter != null)
+            Dispatcher.Invoke(() =>
             {
-                itemsPresenter.ApplyTemplate();
-            }
-            else
-            {
-                itemsPresenter = FindVisualChild<ItemsPresenter>(container);
-                if (itemsPresenter == null)
+                ExpandOrCollapseTreeViewItem(container, true);
+
+                container.ApplyTemplate();
+                ItemsPresenter itemsPresenter = (ItemsPresenter)container.Template.FindName("ItemsHost", container);
+                if (itemsPresenter != null)
                 {
-                    container.UpdateLayout();
-
-                    itemsPresenter = FindVisualChild<ItemsPresenter>(container);
+                    itemsPresenter.ApplyTemplate();
                 }
-            }
+                else
+                {
+                    itemsPresenter = FindVisualChild<ItemsPresenter>(container);
+                    if (itemsPresenter == null)
+                    {
+                        container.UpdateLayout();
 
-            Panel itemsHostPanel = (Panel)VisualTreeHelper.GetChild(itemsPresenter, 0);
+                        itemsPresenter = FindVisualChild<ItemsPresenter>(container);
+                    }
+                }
 
-            UIElementCollection children = itemsHostPanel.Children;
+                Panel itemsHostPanel = (Panel)VisualTreeHelper.GetChild(itemsPresenter, 0);
 
-            MyVirtualizingStackPanel virtualizingPanel = itemsHostPanel as MyVirtualizingStackPanel;
-            virtualizingPanel.BringIntoView(i);
+                UIElementCollection children = itemsHostPanel.Children;
 
-            TreeViewItem childTreeView = (TreeViewItem)container.ItemContainerGenerator.ContainerFromIndex(i);
-            ExpandOrCollapseTreeViewItem(childTreeView, needToExpand);
+                MyVirtualizingStackPanel virtualizingPanel = itemsHostPanel as MyVirtualizingStackPanel;
+                virtualizingPanel.BringIntoView(i);
+
+                childTreeView = (TreeViewItem)container.ItemContainerGenerator.ContainerFromIndex(i);
+                ExpandOrCollapseTreeViewItem(childTreeView, needToExpand);
+            });
+
             return childTreeView;
         }
 
@@ -694,22 +761,25 @@ namespace GameDatabaseBrowser
         /// </summary>
         private void SelectTreeViewItem(int[] indexes)
         {
-            ItemsControl container = treeView;
-            TreeViewItem subContainer = (TreeViewItem)container.ItemContainerGenerator.ContainerFromIndex(0);
-            foreach (var index in indexes)
+            Dispatcher.Invoke(() =>
             {
-                int childIndex = 0;
-                for (int i = 0; i < subContainer.Items.Count; i++)
+                ItemsControl container = treeView;
+                TreeViewItem subContainer = (TreeViewItem)container.ItemContainerGenerator.ContainerFromIndex(0);
+                foreach (var index in indexes)
                 {
-                    if (i == index)
-                        childIndex = i;
-                    else
-                        BringIntoView(subContainer, i);
+                    int childIndex = 0;
+                    for (int i = 0; i < subContainer.Items.Count; i++)
+                    {
+                        if (i == index)
+                            childIndex = i;
+                        else
+                            BringIntoView(subContainer, i);
+                    }
+                    subContainer = BringIntoView(subContainer, childIndex, true);
                 }
-                subContainer = BringIntoView(subContainer, childIndex, true);
-            }
-            subContainer.Focus();
-            subContainer.IsSelected = true;
+                subContainer.Focus();
+                subContainer.IsSelected = true;
+            });
         }
 
         private T FindVisualChild<T>(Visual visual) where T : Visual
