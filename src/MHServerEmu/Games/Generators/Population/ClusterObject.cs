@@ -9,7 +9,6 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
-using System.Diagnostics;
 
 namespace MHServerEmu.Games.Generators.Population
 {
@@ -22,7 +21,7 @@ namespace MHServerEmu.Games.Generators.Population
         Henchmen            = 1 << 1,
         HasModifiers        = 1 << 2,
         Hostile             = 1 << 3,
-        ProjectToFloor   = 1 << 4,
+        ProjectToFloor      = 1 << 4,
         SkipFormation       = 1 << 5,
     }
 
@@ -53,6 +52,7 @@ namespace MHServerEmu.Games.Generators.Population
     public class ClusterObject
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
+        public bool DebugLog = false;
         public GRandom Random { get; private set; }
         public Region Region { get; private set; }
         public ClusterGroup Parent { get; private set; }
@@ -66,6 +66,7 @@ namespace MHServerEmu.Games.Generators.Population
 
         public ClusterObject(Region region, GRandom random, ClusterGroup parent) 
         {
+            DebugLog = false;
             Random = random;
             Region = region;
             Parent = parent;
@@ -749,7 +750,7 @@ namespace MHServerEmu.Games.Generators.Population
                     Vector3 testPosition = new (position.X + distance * rotCos, position.Y + distance * rotSin, position.Z);
                     if (Region.GetCellAtPosition(testPosition) == null) continue;
                     SetParentRelativePosition(testPosition);
-                    Logger.Debug($"testPostions = {testPosition.ToStringFloat()}");
+                    if (DebugLog) Logger.Debug($"testPostions = {testPosition.ToStringFloat()}");
                     // TODO Face Orientation
                     SetParentRelativeOrientation(orientation);
                    // Logger.Debug($"AbsolutePostions = {GetAbsolutePosition().ToStringFloat()}");
@@ -846,13 +847,18 @@ namespace MHServerEmu.Games.Generators.Population
 
         public override bool TestLayout()
         {
-            return true;  // TODO ProjectToFloor bug
-            Vector3 regionPos = ProjectToFloor(Region);
-            if (Vector3.IsFinite(regionPos) == false) return false;
-            // if (PathFlags != 0 && Region.NaviMesh.Contains(regionPos, Radius, DefaultContainsPathFlagsCheck(PathFlags)) == false) return false;
-            var bounds = Bounds;
-            bounds.Center = regionPos + new Vector3 (0.0f, 0.0f, Bounds.HalfHeight);
 
+            Vector3 regionPos = ProjectToFloor(Region);
+         
+            if (Vector3.IsFinite(regionPos) == false) 
+                return false;
+
+            // if (PathFlags != 0 && Region.NaviMesh.Contains(regionPos, Radius, DefaultContainsPathFlagsCheck(PathFlags)) == false) return false;
+            Bounds bounds = new(Bounds)
+            {
+                Center = regionPos + new Vector3(0.0f, 0.0f, Bounds.HalfHeight)
+            };
+            
             if (SpawnFlags.HasFlag(SpawnFlags.Spawned) == false)
             {
                 Sphere sphere = new (bounds.Center, bounds.Radius);
@@ -870,14 +876,15 @@ namespace MHServerEmu.Games.Generators.Population
                 return regionPos;
             
             Vector3 position = RegionLocation.ProjectToFloor(region, regionPos);
-            Logger.Debug($"ProjectPostions = {position.ToStringFloat()}");
+            if (DebugLog) Logger.Debug($"ProjectPostions [{GameDatabase.GetFormattedPrototypeName(EntityRef)}] {regionPos.ToStringFloat()} {position.ToStringFloat()}");
             // Debug.Assert(Vector3.DistanceSquared2D(regionPos, position) < Segment.Epsilon);
-            if (Segment.EpsilonTest(regionPos.Z, position.Z, 500) == false) return new(float.NaN, 0f, 0f); // Navi test
+            if (Segment.EpsilonTest(regionPos.Z, position.Z, 500) == false) 
+                return new(float.NaN, 0f, 0f); // Navi test
             Vector3 offset = position - regionPos;
             Vector3 relativePosition = GetParentRelativePosition();
             SetParentRelativePosition(relativePosition + offset);
 
-            Flags |= ClusterObjectFlag.ProjectToFloor; 
+            Flags |= ClusterObjectFlag.ProjectToFloor;
 
             return position;
         }
@@ -914,7 +921,7 @@ namespace MHServerEmu.Games.Generators.Population
                     worldEntity.AppendOnStartActions(Parent.MissionRef);
             }
             // TODO set Rank
-            Logger.Debug($"{GameDatabase.GetFormattedPrototypeName(EntityRef)} {pos.ToStringFloat()} [{Parent.Objects.Count}] {GameDatabase.GetFormattedPrototypeName(Parent.ObjectProto.GetFormation().DataRef)}");
+            if (DebugLog) Logger.Debug($"Spawn {GameDatabase.GetFormattedPrototypeName(EntityRef)} {pos.ToStringFloat()} [{Parent.Objects.Count}] {GameDatabase.GetFormattedPrototypeName(Parent.ObjectProto.GetFormation().DataRef)}");
         }
 
         public override bool IsFormationObject()

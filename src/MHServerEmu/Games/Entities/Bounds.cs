@@ -108,6 +108,17 @@ namespace MHServerEmu.Games.Entities
             Flags = BoundsFlags.None;
         }
 
+        public Bounds(Bounds bounds)
+        {
+            Geometry = bounds.Geometry;
+            Center = new(bounds.Center);
+            _orientation = new(bounds._orientation);
+            _orientation_offset = new(bounds._orientation_offset);
+            CollisionType = bounds.CollisionType;
+            _params = bounds._params;
+            Flags = bounds.Flags;
+        }
+
         public void InitializeFromPrototype(BoundsPrototype boundsProto)
         {
             if (boundsProto == null)

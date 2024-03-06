@@ -39,8 +39,8 @@ namespace MHServerEmu.Games.Generators
         {
             _bounds = new(bound);
             _minRadius = minRadius;
-            _staticSpatialPartition = new(bound, minRadius);
-            _activeSpatialPartition = new(bound, minRadius);
+            _staticSpatialPartition = new(bound, minRadius, EntityRegionSPContextFlags.StaticPartition);
+            _activeSpatialPartition = new(bound, minRadius, EntityRegionSPContextFlags.ActivePartition);
             _players = new();
             _avatars = new();
             AvatarIteratorCount = 0;
@@ -109,7 +109,7 @@ namespace MHServerEmu.Games.Generators
                 var spatialPartition = _players.GetValueOrDefault(restrictedToPlayerGuid);
                 if (spatialPartition == null)
                 {
-                    spatialPartition = new(_bounds, _minRadius);
+                    spatialPartition = new(_bounds, _minRadius, EntityRegionSPContextFlags.PlayersPartition);
                     _players[restrictedToPlayerGuid] = spatialPartition;
                 }
                 result = spatialPartition.Insert(element);
@@ -142,7 +142,11 @@ namespace MHServerEmu.Games.Generators
                 if (Iterator.Tree == null)
                     Iterator.Initialize(partition);
                 else if (Iterator.End())
-                    Iterator = new (partition, Iterator.Volume);
+                {
+                    var volume = Iterator.Volume;
+                    Iterator.Clear();
+                    Iterator = new(partition, volume);
+                }
                 else
                     _partitions.Add(partition);
             }
@@ -222,10 +226,15 @@ namespace MHServerEmu.Games.Generators
     // Quadtree<WorldEntity,EntityRegionSpatialPartitionElementOps<WorldEntity>,24>
     public class WorldEntityRegionSpatialPartition : Quadtree<WorldEntity>
     {
-        public WorldEntityRegionSpatialPartition(Aabb bound, float minRadius) : base(bound, minRadius) { }
+        public WorldEntityRegionSpatialPartition(Aabb bound, float minRadius, EntityRegionSPContextFlags flag) : base(bound, minRadius) 
+        {
+            Flag = flag;
+        }
 
         public override QuadtreeLocation<WorldEntity> GetLocation(WorldEntity element) => element.SpatialPartitionLocation;
         public override Aabb GetElementBounds(WorldEntity element) => element.RegionBounds;
+
+        public EntityRegionSPContextFlags Flag { get; private set; }
 
     }
 }
