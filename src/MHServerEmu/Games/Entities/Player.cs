@@ -16,6 +16,7 @@ using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Regions.MatchQueues;
 using MHServerEmu.Games.Social;
+using MHServerEmu.Games.Social.Guilds;
 using MHServerEmu.PlayerManagement.Accounts;
 using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
@@ -67,8 +68,7 @@ namespace MHServerEmu.Games.Entities
 
         public ReplicatedVariable<ulong> PartyId { get; set; }
         public string UnknownString { get; set; }
-        public bool HasGuildInfo { get; set; }
-        public GuildMemberReplicationRuntimeInfo GuildInfo { get; set; }
+        public GuildMember GuildInfo { get; set; }
         public bool HasCommunity { get; set; }
         public Community Community { get; set; }
         public bool UnkBool { get; set; }
@@ -132,8 +132,7 @@ namespace MHServerEmu.Games.Entities
 
             PartyId = new(stream);
 
-            HasGuildInfo = boolDecoder.ReadBool(stream);
-            if (HasGuildInfo) GuildInfo = new(stream);      // GuildMember::SerializeReplicationRuntimeInfo
+            GuildInfo = new(stream, boolDecoder);      // GuildMember::SerializeReplicationRuntimeInfo
 
             UnknownString = stream.ReadRawString();
 
@@ -170,7 +169,7 @@ namespace MHServerEmu.Games.Entities
             MissionManager.EncodeBools(boolEncoder);
 
             boolEncoder.EncodeBool(EmailVerified);
-            boolEncoder.EncodeBool(HasGuildInfo);
+            boolEncoder.EncodeBool(GuildInfo.GuildId != GuildMember.InvalidGuildId);
             boolEncoder.EncodeBool(HasCommunity);
             boolEncoder.EncodeBool(UnkBool);
 
@@ -193,8 +192,7 @@ namespace MHServerEmu.Games.Entities
 
             PartyId.Encode(stream);
 
-            boolEncoder.WriteBuffer(stream);   // HasGuildInfo
-            if (HasGuildInfo) GuildInfo.Encode(stream);
+            GuildInfo.SerializeReplicationRuntimeInfo(stream, boolEncoder);
 
             stream.WriteRawString(UnknownString);
 
@@ -342,7 +340,6 @@ namespace MHServerEmu.Games.Entities
             sb.AppendLine($"{nameof(EmailVerified)}: {EmailVerified}");
             sb.AppendLine($"{nameof(AccountCreationTimestamp)}: {AccountCreationTimestamp}");
             sb.AppendLine($"{nameof(PartyId)}: {PartyId}");
-            sb.AppendLine($"{nameof(HasGuildInfo)}: {HasGuildInfo}");
             sb.AppendLine($"{nameof(GuildInfo)}: {GuildInfo}");
             sb.AppendLine($"{nameof(UnknownString)}: {UnknownString}");
             sb.AppendLine($"{nameof(HasCommunity)}: {HasCommunity}");

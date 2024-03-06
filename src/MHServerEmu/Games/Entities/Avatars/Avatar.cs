@@ -3,14 +3,14 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.Common;
-using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
-using MHServerEmu.Games.Social;
-using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Social.Guilds;
 using MHServerEmu.PlayerManagement.Accounts.DBModels;
-using MHServerEmu.Games.GameData.Calligraphy;
 
 namespace MHServerEmu.Games.Entities.Avatars
 {
@@ -19,8 +19,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public ReplicatedVariable<string> PlayerName { get; set; }
         public ulong OwnerPlayerDbId { get; set; }
         public string GuildName { get; set; }
-        public bool HasGuildInfo { get; set; }
-        public GuildMemberReplicationRuntimeInfo GuildInfo { get; set; }
+        public GuildMember GuildInfo { get; set; }
         public AbilityKeyMapping[] AbilityKeyMappings { get; set; }
 
         public Avatar(ulong entityId, ulong replicationId) : base(new())
@@ -43,14 +42,15 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // Avatar
             PlayerName = new(++replicationId, string.Empty);
-            OwnerPlayerDbId = 0x20000000000D3D03;
+            OwnerPlayerDbId = 0x20000000000D3D03;   // D3D03 == 867587 from Player's EntityBaseData
             GuildName = string.Empty;
+            GuildInfo = new();
         }
 
         public Avatar(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
         public Avatar(EntityBaseData baseData, EntityTrackingContextMap[] trackingContextMap, Condition[] conditionCollection, PowerCollectionRecord[] powerCollection, int unkEvent,
-            ReplicatedVariable<string> playerName, ulong ownerPlayerDbId, string guildName, bool hasGuildInfo, GuildMemberReplicationRuntimeInfo guildInfo, AbilityKeyMapping[] abilityKeyMappings)
+            ReplicatedVariable<string> playerName, ulong ownerPlayerDbId, string guildName, GuildMember guildInfo, AbilityKeyMapping[] abilityKeyMappings)
             : base(baseData)
         {
             TrackingContextMap = trackingContextMap;
@@ -60,7 +60,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             PlayerName = playerName;
             OwnerPlayerDbId = ownerPlayerDbId;
             GuildName = guildName;
-            HasGuildInfo = hasGuildInfo;
             GuildInfo = guildInfo;
             AbilityKeyMappings = abilityKeyMappings;
         }
@@ -75,10 +74,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             OwnerPlayerDbId = stream.ReadRawVarint64();
 
             GuildName = stream.ReadRawString();
-
-            //Gazillion::GuildMember::SerializeReplicationRuntimeInfo
-            HasGuildInfo = boolDecoder.ReadBool(stream);
-            if (HasGuildInfo) GuildInfo = new(stream);
+            GuildInfo = new(stream, boolDecoder);
 
             AbilityKeyMappings = new AbilityKeyMapping[stream.ReadRawVarint64()];
             for (int i = 0; i < AbilityKeyMappings.Length; i++)
@@ -92,8 +88,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Prepare bool encoder
             BoolEncoder boolEncoder = new();
 
-            boolEncoder.EncodeBool(HasGuildInfo);
-            foreach (AbilityKeyMapping keyMap in AbilityKeyMappings) keyMap.EncodeBools(boolEncoder);
+            boolEncoder.EncodeBool(GuildInfo.GuildId != GuildMember.InvalidGuildId);
+            foreach (AbilityKeyMapping keyMap in AbilityKeyMappings)
+                keyMap.EncodeBools(boolEncoder);
 
             boolEncoder.Cook();
 
@@ -101,12 +98,11 @@ namespace MHServerEmu.Games.Entities.Avatars
             PlayerName.Encode(stream);
             stream.WriteRawVarint64(OwnerPlayerDbId);
             stream.WriteRawString(GuildName);
-
-            boolEncoder.WriteBuffer(stream);   // HasGuildInfo  
-            if (HasGuildInfo) GuildInfo.Encode(stream);
-
+            GuildInfo.SerializeReplicationRuntimeInfo(stream, boolEncoder);
             stream.WriteRawVarint64((ulong)AbilityKeyMappings.Length);
-            foreach (AbilityKeyMapping keyMap in AbilityKeyMappings) keyMap.Encode(stream, boolEncoder);
+
+            foreach (AbilityKeyMapping keyMap in AbilityKeyMappings)
+                keyMap.Encode(stream, boolEncoder);
         }
 
         /// <summary>
@@ -220,9 +216,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             sb.AppendLine($"PlayerName: {PlayerName}");
             sb.AppendLine($"OwnerPlayerDbId: 0x{OwnerPlayerDbId:X}");
             sb.AppendLine($"GuildName: {GuildName}");
-            sb.AppendLine($"HasGuildInfo: {HasGuildInfo}");
             sb.AppendLine($"GuildInfo: {GuildInfo}");
-            for (int i = 0; i < AbilityKeyMappings.Length; i++) sb.AppendLine($"AbilityKeyMapping{i}: {AbilityKeyMappings[i]}");
+            for (int i = 0; i < AbilityKeyMappings.Length; i++)
+                sb.AppendLine($"AbilityKeyMapping{i}: {AbilityKeyMappings[i]}");
         }
     }
 }
