@@ -9,6 +9,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
+using System.Diagnostics;
 
 namespace MHServerEmu.Games.Generators.Population
 {
@@ -21,7 +22,7 @@ namespace MHServerEmu.Games.Generators.Population
         Henchmen            = 1 << 1,
         HasModifiers        = 1 << 2,
         Hostile             = 1 << 3,
-        HasProjectToFloor   = 1 << 4,
+        ProjectToFloor   = 1 << 4,
         SkipFormation       = 1 << 5,
     }
 
@@ -45,6 +46,7 @@ namespace MHServerEmu.Games.Generators.Population
         flag4 = 1 << 2,
         flag8 = 1 << 3,
         IgnoreBlackout = 1 << 4,
+        Spawned = 1 << 5,
     }
     #endregion
 
@@ -115,7 +117,7 @@ namespace MHServerEmu.Games.Generators.Population
         public virtual void Spawn() { }
         public virtual void UpgradeToRank(RankPrototype upgradeRank, int num) { }
         public virtual void AssignAffixes(RankPrototype rankProto, List<PrototypeId> affixes){ }
-
+        public virtual bool TestLayout() => false;
     }
 
     public class ClusterGroup : ClusterObject
@@ -701,6 +703,68 @@ namespace MHServerEmu.Games.Generators.Population
         {
             foreach (var obj in Objects) obj.Spawn();            
         }
+
+        public bool PickPositionInSector(Vector3 position, Vector3 orientation, int minDistance, int maxDistance)
+        {
+            if (minDistance < 0.0f || maxDistance <= 0.0f || minDistance > maxDistance || Radius == 0)
+            {
+                SetParentRelativePosition(position);
+                SetParentRelativeOrientation(orientation);
+                return false;
+            }
+
+            const int MaxSectors = 5; // DistanceMax 250 / 50 (Average Cluster) = 5 sectors
+            float clusterSize = Radius * 2.0f;
+            float clusterPI = MathHelper.PI2 / clusterSize;
+            float minClusterDistance = minDistance + Radius;
+            float maxClusterDistance = minDistance + clusterSize;
+
+            if (maxDistance - minDistance > clusterSize)
+                maxDistance = (int)maxClusterDistance;
+
+            var sectorPicker = new Picker<int>(Random);
+            float distance = minClusterDistance;
+            for (int sector = 0; sector < MaxSectors; sector++)
+            {
+                int numClusters = (int)Math.Floor(clusterPI * distance);
+                sectorPicker.Add(sector, numClusters);
+
+                distance += clusterSize;
+                maxClusterDistance += clusterSize;
+                if (maxClusterDistance > maxDistance) break;
+            }
+
+            while (sectorPicker.Empty() == false)
+            {
+                if (sectorPicker.PickRemove(out int sector) == false) return false;
+                distance = minClusterDistance + sector * clusterSize;
+                int numClusters = (int)MathF.Floor(clusterPI * distance);
+                int startCluster = Random.Next(numClusters);
+                float clusterAngle = MathHelper.PI2 / numClusters;
+
+                for (int cluster = 0; cluster < numClusters; cluster++)
+                {
+                    int div = (startCluster + cluster) % numClusters;
+                    (float rotSin, float rotCos) = MathF.SinCos(clusterAngle * div);
+                    Vector3 testPosition = new (position.X + distance * rotCos, distance * rotSin, position.Z);
+                    if (Region.GetCellAtPosition(testPosition) == null) continue;
+                    SetParentRelativePosition(testPosition);
+                   // Logger.Debug($"testPostions = {testPosition.ToStringFloat()}");
+                    // TODO Face Orientation
+                    SetParentRelativeOrientation(orientation);
+                   // Logger.Debug($"AbsolutePostions = {GetAbsolutePosition().ToStringFloat()}");
+                   // if (TestLayout()) return true; // TODO fix bug
+                }
+            }
+            return false;
+        }
+
+        public override bool TestLayout()
+        {
+            foreach (var obj in Objects)
+                if (obj?.TestLayout() == false) return false;
+            return true;
+        }
     }
 
     public class ClusterEntity : ClusterObject
@@ -713,6 +777,7 @@ namespace MHServerEmu.Games.Generators.Population
         public Bounds Bounds { get; set; }
         public RankPrototype RankProto { get; set; }
         public HashSet<PrototypeId> Modifiers { get; set; }
+        public SpawnFlags SpawnFlags => Parent != null ? Parent.SpawnFlags : SpawnFlags.None;
 
         public ClusterEntity(Region region, GRandom random, PrototypeId selectorRef, ClusterGroup parent) 
             : base(region, random, parent)
@@ -779,6 +844,44 @@ namespace MHServerEmu.Games.Generators.Population
             return true;
         }
 
+        public override bool TestLayout()
+        {
+            Vector3 regionPos = ProjectToFloor(Region);
+            if (Vector3.IsFinite(regionPos) == false) return false;
+            // if (PathFlags != 0 && Region.NaviMesh.Contains(regionPos, Radius, DefaultContainsPathFlagsCheck(PathFlags)) == false) return false;
+            var bounds = Bounds;
+            bounds.Center = regionPos + new Vector3 (0.0f, 0.0f, Bounds.HalfHeight);
+
+            if (SpawnFlags.HasFlag(SpawnFlags.Spawned) == false)
+            {
+                Sphere sphere = new (bounds.Center, bounds.Radius);
+                foreach (var entity in Region.IterateEntitiesInVolume(sphere, new ()))
+                    if (Region.IsBoundsBlockedByEntity(bounds, entity, BlockingCheckFlags.CheckSpawns))
+                        return false;
+            }
+            return true;
+        }
+
+        public Vector3 ProjectToFloor(Region region)
+        {
+            Vector3 regionPos = GetAbsolutePosition();
+            if (Flags.HasFlag(ClusterObjectFlag.ProjectToFloor))
+                return regionPos;
+            
+            Vector3 position = RegionLocation.ProjectToFloor(region, regionPos);
+            Logger.Debug($"ProjectPostions = {position.ToStringFloat()}");
+            // Debug.Assert(Vector3.DistanceSquared2D(regionPos, position) < Segment.Epsilon);
+            if (Segment.EpsilonTest(regionPos.Z, position.Z, 500) == false) return new(float.NaN, 0f, 0f); // Navi test
+            Vector3 offset = position - regionPos;
+            Vector3 relativePosition = GetParentRelativePosition();
+            SetParentRelativePosition(relativePosition + offset);
+
+            Flags |= ClusterObjectFlag.ProjectToFloor; 
+
+            return position;
+        }
+
+
         public override void Spawn()
         {
             EntityManager entityManager = Region.Game.EntityManager;
@@ -825,7 +928,7 @@ namespace MHServerEmu.Games.Generators.Population
 
         public override void SetLocationDirty()
         {
-            Flags &= ~ClusterObjectFlag.HasProjectToFloor;
+            Flags &= ~ClusterObjectFlag.ProjectToFloor;
         }
 
         public override void UpgradeToRank(RankPrototype upgradeRank, int num)
