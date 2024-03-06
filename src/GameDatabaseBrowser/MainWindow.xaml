@@ -58,8 +58,8 @@
             </Grid>
 
             <!-- Search by text field -->
-            <StackPanel x:Name="SearchByTextField" Visibility="Visible" Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Height="35">
-                <TextBox x:Name="txtSearch"  Width="600"  VerticalAlignment="Center" FontSize="15"/>
+            <StackPanel x:Name="SearchByTextField" Visibility="Visible" Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Height="35" Background="White">
+                <wpfcontrols:AutoCompleteTextBox x:Name="txtSearch" Watermark="Enter a text" Width="500" FontSize="15" VerticalContentAlignment="Center"/>
             </StackPanel>
 
             <!-- Search by text toggles -->
