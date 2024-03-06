@@ -11,6 +11,8 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
     /// </summary>
     public class DBAccount
     {
+        public static readonly IdGenerator IdGenerator = new(IdType.Player, 0);
+
         public ulong Id { get; set; }
         public string Email { get; set; }
         public string PlayerName { get; set; }
@@ -28,7 +30,7 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
 
         public DBAccount(string email, string playerName, string password, AccountUserLevel userLevel = AccountUserLevel.User)
         {
-            Id = IdGenerator.Generate(IdType.Account);
+            Id = IdGenerator.Generate();
             Email = email;
             PlayerName = playerName;
             PasswordHash = Cryptography.HashPassword(password, out byte[] salt);

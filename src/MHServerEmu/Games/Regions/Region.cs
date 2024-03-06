@@ -39,6 +39,8 @@ namespace MHServerEmu.Games.Regions
     public class Region : IMissionManagerOwner
     {
         // Old
+        private static readonly IdGenerator IdGenerator = new(IdType.Region, 0);
+
         public RegionPrototypeId PrototypeId { get; private set; }   
         public byte[] ArchiveData { get; set; }
         public CreateRegionParams CreateParams { get; private set; }
@@ -89,7 +91,7 @@ namespace MHServerEmu.Games.Regions
 
         public Region(RegionPrototypeId prototype, int randomSeed, byte[] archiveData, CreateRegionParams createParams) // Old
         {
-            Id = IdGenerator.Generate(IdType.Region);
+            Id = IdGenerator.Generate();
 
             PrototypeId = prototype;
             RandomSeed = randomSeed;
