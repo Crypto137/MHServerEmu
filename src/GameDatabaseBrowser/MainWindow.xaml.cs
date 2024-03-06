@@ -685,12 +685,12 @@ namespace GameDatabaseBrowser
             {
                 string prototypeFullName = GameDatabase.GetPrototypeName((PrototypeId)parentPrototypeId);
                 txtParentDataRef.Text = $"Parent : {prototypeFullName} ({parentPrototypeId})";
-                txtParentDataRef.DataContext = new PropertyNode() { PropertyDetails = new PropertyDetails() { Name = prototypeFullName, Value = parentPrototypeId.ToString() } };
+                txtParentDataRef.DataContext = new PropertyNode() { PropertyDetails = new PropertyDetails() { Name = prototypeFullName, Value = parentPrototypeId.ToString(), TypeName = "PrototypeId"} };
             }
             else
             {
                 txtParentDataRef.Text = $"Parent : {parentDataRef}";
-                txtParentDataRef.DataContext = new PropertyNode() { PropertyDetails = new PropertyDetails() { Name = parentDataRef, Value = parentDataRef } };
+                txtParentDataRef.DataContext = new PropertyNode() { PropertyDetails = new PropertyDetails() { Name = parentDataRef, Value = parentDataRef, TypeName = "PrototypeId" } };
             }
 
             Prototype proto = GameDatabase.DataDirectory.GetPrototype<Prototype>((PrototypeId)prototypeId);
