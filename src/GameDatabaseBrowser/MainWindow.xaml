@@ -80,8 +80,8 @@
 
             <!-- Search by class/blueprint toggle -->
             <StackPanel x:Name="SearchByClassAndBlueprintToggles" Visibility="Collapsed" Grid.Column="2" Grid.RowSpan="2" Orientation="Vertical" VerticalAlignment="Center">
-                <CheckBox Grid.Row="0" x:Name="abstractClassToggle" Content="Abstract" Margin="5" ToolTip="Include abstract classes" />
-                <CheckBox Grid.Row="1" x:Name="notApprovedClassToggle" Content="Not approved" Margin="5" ToolTip="Include not approved classes" />
+                <CheckBox Grid.Row="0" x:Name="abstractClassToggle" Content="Abstract" Margin="5" ToolTip="Include abstract classes" IsChecked="True"/>
+                <CheckBox Grid.Row="1" x:Name="notApprovedClassToggle" Content="Not approved" Margin="5" ToolTip="Include not approved classes" IsChecked="True"/>
             </StackPanel>
 
         </Grid>
