@@ -4,7 +4,7 @@ using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
-namespace MHServerEmu.Games.Social
+namespace MHServerEmu.Games.Social.Communities
 {
     public enum CommunityMemberOnlineStatus
     {
@@ -23,7 +23,7 @@ namespace MHServerEmu.Games.Social
         public CommunityMemberOnlineStatus OnlineStatus { get; set; }
         public string MemberName { get; set; }
         public string UnkName { get; set; }
-        public ulong ConsoleAccountId1 { get; set; }   
+        public ulong ConsoleAccountId1 { get; set; }
         public ulong ConsoleAccountId2 { get; set; }
         public int[] ArchiveCircleIds { get; set; }
 
@@ -33,7 +33,7 @@ namespace MHServerEmu.Games.Social
             DbId = stream.ReadRawVarint64();
             RegionRef = stream.ReadPrototypeEnum<Prototype>();
             DifficultyRef = stream.ReadPrototypeEnum<Prototype>();
-            Slots = new AvatarSlotInfo[stream.ReadRawByte()];  
+            Slots = new AvatarSlotInfo[stream.ReadRawByte()];
             for (int i = 0; i < Slots.Length; i++)
                 Slots[i] = new(stream);
             OnlineStatus = (CommunityMemberOnlineStatus)stream.ReadRawInt32();
@@ -46,7 +46,7 @@ namespace MHServerEmu.Games.Social
                 ArchiveCircleIds[i] = stream.ReadRawInt32();
         }
 
-        public CommunityMember(string name, ulong dbId, PrototypeId regionRef, PrototypeId difficultyRef, 
+        public CommunityMember(string name, ulong dbId, PrototypeId regionRef, PrototypeId difficultyRef,
             AvatarSlotInfo[] slots, CommunityMemberOnlineStatus onlineStatus, string unkName, int[] archiveCircleIds)
         {
             Name = name;

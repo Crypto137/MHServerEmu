@@ -16,7 +16,7 @@ using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Regions.MatchQueues;
-using MHServerEmu.Games.Social;
+using MHServerEmu.Games.Social.Communities;
 using MHServerEmu.Games.Social.Guilds;
 using MHServerEmu.PlayerManagement.Accounts;
 using MHServerEmu.PlayerManagement.Accounts.DBModels;
@@ -143,7 +143,7 @@ namespace MHServerEmu.Games.Entities
                 Logger.Warn($"Decode(): emptyString is not empty!");
 
             bool hasCommunity = boolDecoder.ReadBool(stream);
-            if (hasCommunity) Community = new(stream);
+            if (hasCommunity) Community = new(this, stream);
 
             UnkBool = boolDecoder.ReadBool(stream);
 

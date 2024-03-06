@@ -4,7 +4,7 @@ using MHServerEmu.Common.Extensions;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
-namespace MHServerEmu.Games.Social
+namespace MHServerEmu.Games.Social.Communities
 {
     public class AvatarSlotInfo
     {
