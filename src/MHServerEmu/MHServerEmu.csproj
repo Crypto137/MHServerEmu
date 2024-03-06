@@ -28,11 +28,11 @@
     <Reference Include="Dapper">
       <HintPath>..\..\dep\Dapper\Dapper.dll</HintPath>
     </Reference>
+    <Reference Include="Free.Ports.zLib">
+      <HintPath>..\..\dep\Free.Ports.zLib\Free.Ports.zLib.dll</HintPath>
+    </Reference>
     <Reference Include="Google.ProtocolBuffers">
       <HintPath>..\..\dep\protobuf-csharp\Google.ProtocolBuffers.dll</HintPath>
-    </Reference>
-    <Reference Include="ICSharpCode.SharpZipLib">
-      <HintPath>..\..\dep\SharpZipLib\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
     <Reference Include="INIFileParser">
       <HintPath>..\..\dep\ini-parser\INIFileParser.dll</HintPath>
@@ -42,9 +42,6 @@
     </Reference>
     <Reference Include="System.Data.SQLite">
       <HintPath>..\..\dep\System.Data.SQLite\System.Data.SQLite.dll</HintPath>
-    </Reference>
-    <Reference Include="System.IO.Hashing">
-      <HintPath>..\..\dep\System.IO.Hashing\System.IO.Hashing.dll</HintPath>
     </Reference>
   </ItemGroup>
 
@@ -64,7 +61,13 @@
     <None Update="Data\Billing\CatalogPatch.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\Game\CompressedAchievementDatabaseDump.bin">
+    <None Update="Data\Game\Achievements\AchievementInfoMap.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\Achievements\AchievementNewThresholdUS.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\Achievements\eng.achievements.string">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Data\Game\IMPORTANT.txt">

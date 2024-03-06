@@ -17,6 +17,8 @@ namespace MHServerEmu.Games.Regions
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly IdGenerator _idGenerator = new(IdType.Region, 0);
+
         private readonly EntityManager _entityManager;
         private static readonly Dictionary<RegionPrototypeId, Region> _regionDict = new();
 
@@ -118,7 +120,7 @@ namespace MHServerEmu.Games.Regions
             {
                 Seed = Game.Random.Next(),
                 DifficultyTierRef = (PrototypeId)DifficultyTier.Normal,
-                InstanceAddress = IdGenerator.Generate(IdType.Region),
+                InstanceAddress = _idGenerator.Generate(),
                 Level = 10,
                 Bound = Aabb.Zero,
                 GenerateAreas = true,

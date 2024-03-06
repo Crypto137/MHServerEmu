@@ -274,21 +274,13 @@ namespace MHServerEmu.Networking
 
                             case NetMessageSetProperty setProperty:
                                 PropertyId propertyId = new(setProperty.PropertyId.ReverseBits());
-                                PropertyParam[] @params = propertyId.GetParams();
+                                PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyId.Enum);
+                                PropertyValue propertyValue = PropertyCollection.ConvertBitsToValue(setProperty.ValueBits, propertyInfo.DataType);
+                                writer.WriteLine($"({setProperty.ReplicationId}) {propertyId}: {propertyValue.Print(propertyInfo.DataType)}");
+                                break;
 
-                                StringBuilder sb = new();
-                                sb.AppendLine($"ReplicationId: {setProperty.ReplicationId}");
-                                sb.Append($"PropertyId: {propertyId.Enum}");
-
-                                if (propertyId.HasParams)
-                                {
-                                    for (int i = 0; i < @params.Length; i++)
-                                        sb.Append($" {@params[i]}");
-                                }
-                                sb.AppendLine();
-
-                                sb.AppendLine($"Value: 0x{setProperty.ValueBits:X}");
-                                writer.Write(sb.ToString());
+                            case NetMessageRemoveProperty removeProperty:
+                                writer.WriteLine($"({removeProperty.ReplicationId}) {new PropertyId(removeProperty.PropertyId.ReverseBits())}");
                                 break;
 
                             case NetMessageUpdateMiniMap updateMiniMap:

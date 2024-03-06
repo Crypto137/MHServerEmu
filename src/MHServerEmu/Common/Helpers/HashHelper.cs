@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Free.Ports.zLib;
 
 namespace MHServerEmu.Common.Helpers
 {
@@ -12,14 +13,8 @@ namespace MHServerEmu.Common.Helpers
         /// </summary>
         public static uint Adler32(string str)
         {
-            const int mod = 65521;
-            uint a = 1, b = 0;
-            foreach (char c in str)
-            {
-                a = (a + c) % mod;
-                b = (b + a) % mod;
-            }
-            return (b << 16) | a;
+            byte[] bytes = Encoding.UTF8.GetBytes(str);
+            return zlib.adler32(1, bytes, (uint)bytes.Length);
         }
 
         /// <summary>
@@ -27,14 +22,17 @@ namespace MHServerEmu.Common.Helpers
         /// </summary>
         public static uint Crc32(byte[] bytes)
         {
-            byte[] hash = System.IO.Hashing.Crc32.Hash(bytes);
-            return BitConverter.ToUInt32(hash);
+            return zlib.crc32(0, bytes, bytes.Length);
         }
 
         /// <summary>
         /// Hashes a <see cref="string"/> using the CRC32 algorithm.
         /// </summary>
-        public static uint Crc32(string str) => Crc32(Encoding.UTF8.GetBytes(str));
+        public static uint Crc32(string str)
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(str);
+            return zlib.crc32(0, bytes, bytes.Length);
+        }
 
         /// <summary>
         /// Hashes a <see cref="string"/> using the djb2 algorithm.
