@@ -67,7 +67,6 @@ namespace MHServerEmu.Games.Entities
         public TimeSpan AccountCreationTimestamp { get; set; }  // UnixTime
 
         public ReplicatedVariable<ulong> PartyId { get; set; }
-        public string UnknownString { get; set; }
         public GuildMember GuildInfo { get; set; }
         public bool HasCommunity { get; set; }
         public Community Community { get; set; }
@@ -134,7 +133,10 @@ namespace MHServerEmu.Games.Entities
 
             GuildInfo = new(stream, boolDecoder);      // GuildMember::SerializeReplicationRuntimeInfo
 
-            UnknownString = stream.ReadRawString();
+            // There is a string here that is always empty and is immediately discarded after reading, purpose unknown
+            string emptyString = stream.ReadRawString();
+            if (emptyString != string.Empty)
+                Logger.Warn($"Decode(): emptyString is not empty!");
 
             HasCommunity = boolDecoder.ReadBool(stream);
             if (HasCommunity) Community = new(stream);
@@ -189,12 +191,9 @@ namespace MHServerEmu.Games.Entities
             MatchQueueStatus.Encode(stream);
             boolEncoder.WriteBuffer(stream);   // EmailVerified
             stream.WriteRawInt64(AccountCreationTimestamp.Ticks / 10);
-
             PartyId.Encode(stream);
-
             GuildInfo.SerializeReplicationRuntimeInfo(stream, boolEncoder);
-
-            stream.WriteRawString(UnknownString);
+            stream.WriteRawString(string.Empty);    // Mysterious always empty throwaway string
 
             boolEncoder.WriteBuffer(stream);   // HasCommunity
             if (HasCommunity) Community.Encode(stream);
@@ -341,7 +340,6 @@ namespace MHServerEmu.Games.Entities
             sb.AppendLine($"{nameof(AccountCreationTimestamp)}: {AccountCreationTimestamp}");
             sb.AppendLine($"{nameof(PartyId)}: {PartyId}");
             sb.AppendLine($"{nameof(GuildInfo)}: {GuildInfo}");
-            sb.AppendLine($"{nameof(UnknownString)}: {UnknownString}");
             sb.AppendLine($"{nameof(HasCommunity)}: {HasCommunity}");
             sb.AppendLine($"{nameof(Community)}: {Community}");
             sb.AppendLine($"{nameof(UnkBool)}: {UnkBool}");
