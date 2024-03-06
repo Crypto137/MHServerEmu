@@ -44,11 +44,6 @@ namespace GameDatabaseBrowser
         private const int PrototypeMaxNumber = 93114;
 
         /// <summary>
-        /// Current search text
-        /// </summary>
-        private string _currentFilter = "";
-
-        /// <summary>
         /// Used as a semaphore to avoid action when we refresh the tree
         /// </summary>
         private bool isReady = false;
@@ -189,34 +184,127 @@ namespace GameDatabaseBrowser
         private void ConstructPrototypeTree(bool considerSearch = false)
         {
             PrototypeNodes[0].Childs.Clear();
-            List<PrototypeDetails> prototypeToDisplay = _prototypeDetails;
-            if (considerSearch && !string.IsNullOrEmpty(_currentFilter))
-            {
-                if (referencesToggle.IsChecked == true)
-                {
-                    prototypeToDisplay = new List<PrototypeDetails>();
-                    PrototypeId key = GameDatabase.GetPrototypeRefByName(_currentFilter);
-                    if (key != 0 && _cacheDictionary.ContainsKey(key))
-                    {
-                        List<PrototypeId> prototypeIds = _cacheDictionary[key];
-                        foreach (PrototypeId prototypeId in prototypeIds)
-                            prototypeToDisplay.Add(_prototypeDetails.Where(k => k.FullName == GameDatabase.GetPrototypeName(prototypeId)).First());
-                    }
-                }
-                else
-                {
-                    bool exactSearch = exactMatchToggle.IsChecked ?? false;
-                    if (exactSearch)
-                        prototypeToDisplay = _prototypeDetails.Where(k => k.FullName.ToLowerInvariant() == _currentFilter || k.Name.ToLowerInvariant() == _currentFilter).ToList();
-                    else
-                        prototypeToDisplay = _prototypeDetails.Where(k => k.FullName.ToLowerInvariant().Contains(_currentFilter)).ToList();
-                }
-            }
+            List<PrototypeDetails> prototypeToDisplay = considerSearch ? GetPrototypeToDisplay() : _prototypeDetails;
 
+            if (prototypeToDisplay == null)
+                return;
 
             bool needExpand = (expandResultToggle.IsChecked ?? false) || prototypeToDisplay.Count < 21;
             foreach (PrototypeDetails prototype in prototypeToDisplay)
                 AddPrototypeInHierarchy(prototype, needExpand);
+        }
+
+        /// <summary>
+        /// Filter the prototype to display as result
+        /// </summary>
+        private List<PrototypeDetails> GetPrototypeToDisplay()
+        {
+            switch (SearchTypeComboBox.SelectedIndex)
+            {
+                case 0: // Search by text
+                    return GetPrototypeToDisplayFromTextSearch();
+
+                case 1: // Search by class
+                    return GetPrototypeToDisplayFromClassSearch();
+
+                case 2: // Search by blueprint
+                    return GetPrototypeToDisplayFromBlueprintSearch();
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Filter the prototype to display as result considering prototype blueprint search
+        /// </summary>
+        private List<PrototypeDetails> GetPrototypeToDisplayFromBlueprintSearch()
+        {
+            List<PrototypeDetails> prototypeToDisplay = new();
+            if (string.IsNullOrWhiteSpace(blueprintAutoCompletionText.Text))
+                return prototypeToDisplay;
+            
+            BlueprintId blueprintId = GameDatabase.BlueprintRefManager.GetDataRefByName(blueprintAutoCompletionText.Text);
+
+            if (blueprintId == BlueprintId.Invalid)
+                return prototypeToDisplay;
+
+            foreach (PrototypeId prototypeId in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(blueprintId, GetPrototypeIterateFlags()))
+                prototypeToDisplay.Add(_prototypeDetails.Where(k => k.FullName == GameDatabase.GetPrototypeName(prototypeId)).First());
+
+            return prototypeToDisplay;
+        }
+
+        /// <summary>
+        /// Filter the prototype to display as result considering prototype class search
+        /// </summary>
+        private List<PrototypeDetails> GetPrototypeToDisplayFromClassSearch()
+        {
+            List<PrototypeDetails> prototypeToDisplay = new();
+            if (string.IsNullOrWhiteSpace(classAutoCompletionText.Text))
+                return prototypeToDisplay;
+
+            Type classType = AppDomain.CurrentDomain.GetAssemblies().Where(k => k.FullName.Contains("MHServerEmu"))
+                .SelectMany(asm => asm.GetTypes()).FirstOrDefault(type => type.Name == classAutoCompletionText.Text);
+
+            if(classType == null)
+                return prototypeToDisplay;
+
+            foreach (PrototypeId prototypeId in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(classType, GetPrototypeIterateFlags()))
+                prototypeToDisplay.Add(_prototypeDetails.Where(k => k.FullName == GameDatabase.GetPrototypeName(prototypeId)).First());
+
+            return prototypeToDisplay;
+        }
+
+        /// <summary>
+        /// Prepare for prototype iteration
+        /// </summary>
+        public PrototypeIterateFlags GetPrototypeIterateFlags()
+        {
+            PrototypeIterateFlags flags = PrototypeIterateFlags.None;
+            if (abstractClassToggle.IsChecked != true)
+                flags |= PrototypeIterateFlags.NoAbstract;
+
+            if (notApprovedClassToggle.IsChecked != true)
+                flags |= PrototypeIterateFlags.ApprovedOnly;
+
+            return flags;
+        }
+
+        /// <summary>
+        /// Filter the prototype to display as result considering text search
+        /// </summary>
+        private List<PrototypeDetails> GetPrototypeToDisplayFromTextSearch()
+        {
+            string currentFilter = "";
+            if (ulong.TryParse(txtSearch.Text, out ulong prototypeId))
+                currentFilter = GameDatabase.GetPrototypeName((PrototypeId)prototypeId).ToLowerInvariant();
+            else
+                currentFilter = txtSearch.Text.ToLowerInvariant();
+
+            if (string.IsNullOrEmpty(currentFilter))
+                return _prototypeDetails;
+
+            if (referencesToggle.IsChecked == true)
+            {
+                List<PrototypeDetails> prototypeToDisplay = new();
+                PrototypeId key = GameDatabase.GetPrototypeRefByName(currentFilter);
+                if (key != 0 && _cacheDictionary.ContainsKey(key))
+                {
+                    List<PrototypeId> cachePrototypeIds = _cacheDictionary[key];
+                    foreach (PrototypeId cachePrototypeId in cachePrototypeIds)
+                        prototypeToDisplay.Add(_prototypeDetails.Where(k => k.FullName == GameDatabase.GetPrototypeName(cachePrototypeId)).First());
+                }
+
+                return prototypeToDisplay;
+            }
+            else
+            {
+                bool exactSearch = exactMatchToggle.IsChecked ?? false;
+                if (exactSearch)
+                    return _prototypeDetails.Where(k => k.FullName.ToLowerInvariant() == currentFilter || k.Name.ToLowerInvariant() == currentFilter).ToList();
+                else
+                    return _prototypeDetails.Where(k => k.FullName.ToLowerInvariant().Contains(currentFilter)).ToList();
+            }
         }
 
         /// <summary>
@@ -287,12 +375,6 @@ namespace GameDatabaseBrowser
             if (!isReady)
                 return;
 
-            ulong.TryParse(txtSearch.Text, out ulong prototypeId);
-            if (prototypeId != 0)
-                _currentFilter = GameDatabase.GetPrototypeName((PrototypeId)prototypeId).ToLowerInvariant();
-            else
-                _currentFilter = txtSearch.Text.ToLowerInvariant();
-
             RefreshPrototypeTree(true);
         }
 
@@ -304,7 +386,9 @@ namespace GameDatabaseBrowser
             if (!isReady)
                 return;
 
-            _currentFilter = txtSearch.Text = "";
+            txtSearch.Text = "";
+            classAutoCompletionText.Text = "";
+            blueprintAutoCompletionText.Text = "";
             RefreshPrototypeTree();
         }
 
@@ -324,7 +408,7 @@ namespace GameDatabaseBrowser
             PrototypeId prototypeId = selected.PropertyDetails.GetPrototypeIdEquivalence();
             if (prototypeId == 0)
                 return;
-            
+
             SelectFromName(GameDatabase.GetPrototypeName(prototypeId));
         }
 
