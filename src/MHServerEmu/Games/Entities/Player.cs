@@ -14,6 +14,7 @@ using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.Regions.MatchQueues;
 using MHServerEmu.Games.Social;
 using MHServerEmu.PlayerManagement.Accounts;
 using MHServerEmu.PlayerManagement.Accounts.DBModels;
@@ -56,7 +57,7 @@ namespace MHServerEmu.Games.Entities
         public MissionManager MissionManager { get; set; }
         public ReplicatedPropertyCollection AvatarProperties { get; set; }
         public ulong ShardId { get; set; }
-        public ulong MatchQueueStatus { get; set; }
+        public MatchQueueStatus MatchQueueStatus { get; set; }
 
         // NOTE: EmailVerified and AccountCreationTimestamp are set in NetMessageGiftingRestrictionsUpdate that
         // should be sent in the packet right after logging in. NetMessageGetCurrencyBalanceResponse should be
@@ -82,7 +83,7 @@ namespace MHServerEmu.Games.Entities
         public Player(EntityBaseData baseData, AOINetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection properties,
             MissionManager missionManager, ReplicatedPropertyCollection avatarProperties,
             ulong shardId, ReplicatedVariable<string> playerName, ReplicatedVariable<string> secondaryPlayerName,
-            ulong matchQueueStatus, bool emailVerified, TimeSpan accountCreationTimestamp, ReplicatedVariable<ulong> partyId,
+            MatchQueueStatus matchQueueStatus, bool emailVerified, TimeSpan accountCreationTimestamp, ReplicatedVariable<ulong> partyId,
             Community community, bool unkBool, PrototypeId[] stashInventories, SortedSet<AvailableBadges> badges,
             GameplayOptions gameplayOptions, AchievementState achievementState, StashTabOption[] stashTabOptions) : base(baseData)
         {
@@ -123,7 +124,8 @@ namespace MHServerEmu.Games.Entities
             _consoleAccountIds[1] = stream.ReadRawVarint64();
             _secondaryPlayerName = new(stream);
 
-            MatchQueueStatus = stream.ReadRawVarint64();
+            MatchQueueStatus = new(stream);
+            MatchQueueStatus.SetOwner(this);
 
             EmailVerified = boolDecoder.ReadBool(stream);
             AccountCreationTimestamp = Clock.UnixTimeMicrosecondsToTimeSpan(stream.ReadRawInt64());
@@ -185,7 +187,7 @@ namespace MHServerEmu.Games.Entities
             stream.WriteRawVarint64(_consoleAccountIds[0]);
             stream.WriteRawVarint64(_consoleAccountIds[1]);
             _secondaryPlayerName.Encode(stream);
-            stream.WriteRawVarint64(MatchQueueStatus);
+            MatchQueueStatus.Encode(stream);
             boolEncoder.WriteBuffer(stream);   // EmailVerified
             stream.WriteRawInt64(AccountCreationTimestamp.Ticks / 10);
 
@@ -336,7 +338,7 @@ namespace MHServerEmu.Games.Entities
             sb.AppendLine($"{nameof(_consoleAccountIds)}[0]: {_consoleAccountIds[0]}");
             sb.AppendLine($"{nameof(_consoleAccountIds)}[1]: {_consoleAccountIds[1]}");
             sb.AppendLine($"{nameof(_secondaryPlayerName)}: {_secondaryPlayerName}");
-            sb.AppendLine($"{nameof(MatchQueueStatus)}: 0x{MatchQueueStatus:X}");
+            sb.AppendLine($"{nameof(MatchQueueStatus)}: {MatchQueueStatus}");
             sb.AppendLine($"{nameof(EmailVerified)}: {EmailVerified}");
             sb.AppendLine($"{nameof(AccountCreationTimestamp)}: {AccountCreationTimestamp}");
             sb.AppendLine($"{nameof(PartyId)}: {PartyId}");
