@@ -775,7 +775,7 @@ namespace MHServerEmu.Games.Regions
                     var boundsProto = entityProto.Bounds;
                     if (boundsProto == null) return false;
 
-                    selfBlocking |= blockFlags.HasFlag(BlockingCheckFlags.CheckAll);
+                    selfBlocking |= blockFlags.HasFlag(BlockingCheckFlags.CheckSelf);
                     otherBlocking |= blockFlags.HasFlag(BlockingCheckFlags.CheckSpawns) && boundsProto.BlocksSpawns;
                     otherBlocking |= blockFlags.HasFlag(BlockingCheckFlags.CheckGroundMovementPowers) && (boundsProto.BlocksMovementPowers == BoundsMovementPowerBlockType.Ground || boundsProto.BlocksMovementPowers == BoundsMovementPowerBlockType.All);
                     otherBlocking |= blockFlags.HasFlag(BlockingCheckFlags.CheckAllMovementPowers) && boundsProto.BlocksMovementPowers == BoundsMovementPowerBlockType.All;

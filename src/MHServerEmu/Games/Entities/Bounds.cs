@@ -31,7 +31,7 @@ namespace MHServerEmu.Games.Entities
         CheckGroundMovementPowers = 2,
         CheckAllMovementPowers = 4,
         CheckLanding = 8,
-        CheckAll = 16, // ??
+        CheckSelf = 16, // ??
     }
 
     [StructLayout(LayoutKind.Explicit)]

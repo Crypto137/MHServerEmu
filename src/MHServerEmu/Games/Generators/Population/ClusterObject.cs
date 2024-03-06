@@ -711,7 +711,9 @@ namespace MHServerEmu.Games.Generators.Population
             {
                 SetParentRelativePosition(position);
                 SetParentRelativeOrientation(orientation);
-                return false;
+                if (TestLayout()) return false;
+                minDistance = (int) Radius;
+                maxDistance = (int) Radius * 4;
             }
 
             const int MaxSectors = 5; // DistanceMax 250 / 50 (Average Cluster) = 5 sectors
