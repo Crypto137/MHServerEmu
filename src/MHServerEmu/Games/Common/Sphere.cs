@@ -181,13 +181,7 @@
             float length = Vector3.Length(direction);
             Vector3 directionNorm = Vector3.Normalize(direction);
 
-            return IntersectsSegment(segment.Start,
-                                     directionNorm,
-                                     length,
-                                     Center,
-                                     Radius,
-                                     out time,
-                                     out intersectionPoint);
+            return IntersectsSegment(segment.Start, directionNorm, length, Center, Radius, out time, out intersectionPoint);
         }
 
         public static bool IntersectsSegment(Vector3 start, Vector3 directionNorm, float length, Vector3 center, float radius, out float time, out Vector3 intersectionPoint)

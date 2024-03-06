@@ -33,7 +33,7 @@ namespace MHServerEmu.Games.Entities
             base.EnterWorld(cell, position, orientation);
             _flags |= EntityFlags.NoCollide;
             var spawnerProto = SpawnerPrototype;
-            Logger.Debug($"{GameDatabase.GetFormattedPrototypeName(BaseData.PrototypeId)} [{spawnerProto.StartEnabled}] [{spawnerProto.SpawnDistanceMin}] {position.ToStringFloat()}");
+            Logger.Debug($"{GameDatabase.GetFormattedPrototypeName(BaseData.PrototypeId)} [{spawnerProto.StartEnabled}] Distance[{spawnerProto.SpawnDistanceMin}] Sequence[{spawnerProto.SpawnSequence.Length}] {position.ToStringFloat()}");
             // if (spawnerProto.StartEnabled)
             Spawn();
         }
@@ -47,8 +47,12 @@ namespace MHServerEmu.Games.Entities
             */
             if (spawnerProto.SpawnSequence.HasValue())
             {
-                var entry = spawnerProto.SpawnSequence.First();
-                SpawnEntry(entry);
+                int i = 0;
+                foreach (var entry in spawnerProto.SpawnSequence)
+                {
+                    Logger.Debug($"SpawnEntry[{i++}] {entry.GetType().Name} Unique[{entry.Unique}] Count[{entry.Count}]");
+                    SpawnEntry(entry);
+                }
             }
         }
 
@@ -58,6 +62,7 @@ namespace MHServerEmu.Games.Entities
             // entry.Count;
             for (int i = 0; i < entry.Count; i++) {
                 var popObject = entry.GetPopObject();
+                Logger.Debug($"SpawnObject[{i}] {popObject.GetType().Name}");
                 SpawnObject(popObject);
             }
         }

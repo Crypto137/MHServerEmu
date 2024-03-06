@@ -746,14 +746,14 @@ namespace MHServerEmu.Games.Generators.Population
                 {
                     int div = (startCluster + cluster) % numClusters;
                     (float rotSin, float rotCos) = MathF.SinCos(clusterAngle * div);
-                    Vector3 testPosition = new (position.X + distance * rotCos, distance * rotSin, position.Z);
+                    Vector3 testPosition = new (position.X + distance * rotCos, position.Y + distance * rotSin, position.Z);
                     if (Region.GetCellAtPosition(testPosition) == null) continue;
                     SetParentRelativePosition(testPosition);
-                   // Logger.Debug($"testPostions = {testPosition.ToStringFloat()}");
+                    Logger.Debug($"testPostions = {testPosition.ToStringFloat()}");
                     // TODO Face Orientation
                     SetParentRelativeOrientation(orientation);
                    // Logger.Debug($"AbsolutePostions = {GetAbsolutePosition().ToStringFloat()}");
-                   // if (TestLayout()) return true; // TODO fix bug
+                    if (TestLayout()) return true;
                 }
             }
             return false;
@@ -846,6 +846,7 @@ namespace MHServerEmu.Games.Generators.Population
 
         public override bool TestLayout()
         {
+            return true;  // TODO ProjectToFloor bug
             Vector3 regionPos = ProjectToFloor(Region);
             if (Vector3.IsFinite(regionPos) == false) return false;
             // if (PathFlags != 0 && Region.NaviMesh.Contains(regionPos, Radius, DefaultContainsPathFlagsCheck(PathFlags)) == false) return false;
@@ -913,7 +914,7 @@ namespace MHServerEmu.Games.Generators.Population
                     worldEntity.AppendOnStartActions(Parent.MissionRef);
             }
             // TODO set Rank
-            //Logger.Debug($"{GameDatabase.GetFormattedPrototypeName(EntityRef)} {pos.ToStringFloat()} [{Parent.Objects.Count}] {Parent.ObjectProto.GetFormation()}");
+            Logger.Debug($"{GameDatabase.GetFormattedPrototypeName(EntityRef)} {pos.ToStringFloat()} [{Parent.Objects.Count}] {GameDatabase.GetFormattedPrototypeName(Parent.ObjectProto.GetFormation().DataRef)}");
         }
 
         public override bool IsFormationObject()
