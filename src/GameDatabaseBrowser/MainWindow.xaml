@@ -53,6 +53,7 @@
                         <ComboBoxItem Content="Search by blueprint"/>
                     </ComboBox>
                     <Button Grid.Row="0" x:Name="btnSearch" Content="Search" Click="OnSearchButtonClicked" Width="100"/>
+                    <CheckBox Grid.Row="1" x:Name="expandResultToggle" Content="Expand results" Margin="5" ToolTip="Expand all the results" />
                 </StackPanel>
             </Grid>
 
@@ -64,8 +65,7 @@
             <!-- Search by text toggles -->
             <StackPanel x:Name="SearchByTextToggles" Visibility="Visible" Grid.Column="2" Grid.RowSpan="2" Orientation="Vertical" VerticalAlignment="Center">
                 <CheckBox Grid.Row="0" x:Name="exactMatchToggle" Content="Exact match" Margin="5" ToolTip="Ignore results that only contain the search" />
-                <CheckBox Grid.Row="1" x:Name="expandResultToggle" Content="Expand results" Margin="5" ToolTip="Expand all the results" />
-                <CheckBox Grid.Row="2" x:Name="referencesToggle" Content="Search References" Margin="5" ToolTip="Get all the results that reference the prototype" />
+                <CheckBox Grid.Row="1" x:Name="referencesToggle" Content="Search References" Margin="5" ToolTip="Get all the results that reference the prototype" />
             </StackPanel>
 
             <!-- Search by class field -->
