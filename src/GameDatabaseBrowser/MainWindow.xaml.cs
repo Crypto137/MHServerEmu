@@ -18,6 +18,7 @@ using PropertyInfo = System.Reflection.PropertyInfo;
 using PropertyCollection = MHServerEmu.Games.Properties.PropertyCollection;
 using MHServerEmu.Games.Common;
 using GameDatabaseBrowser.Providers;
+using GameDatabaseBrowser.Helpers;
 
 namespace GameDatabaseBrowser
 {
@@ -36,7 +37,7 @@ namespace GameDatabaseBrowser
         /// <summary>
         /// All prototypes loaded
         /// </summary>
-        private List<PrototypeDetails> _prototypeDetails = new();
+        public List<PrototypeDetails> PrototypeDetails = new();
 
         /// <summary>
         /// Max prototype to load on init
@@ -61,7 +62,9 @@ namespace GameDatabaseBrowser
         /// <summary>
         /// Dictionary that contains all the prototype references. Used as cache to speed up the search
         /// </summary>
-        private Dictionary<PrototypeId, List<PrototypeId>> _cacheDictionary = new();
+        public Dictionary<PrototypeId, List<PrototypeId>> CacheDictionary = new();
+
+        private SearchHelper _searchHelper;
 
         public MainWindow()
         {
@@ -118,11 +121,11 @@ namespace GameDatabaseBrowser
                 PropertyInfo[] propertyInfo = proto.GetType().GetProperties();
 
                 List<PropertyDetails> properties = propertyInfo.Select(k => new PropertyDetails() { Name = k.Name, Value = k.GetValue(proto)?.ToString(), TypeName = k.PropertyType.Name }).ToList();
-                _prototypeDetails.Add(new(fullName, properties));
+                PrototypeDetails.Add(new(fullName, properties));
                 worker.ReportProgress((int)(++counter * 100 / ((float)PrototypeMaxNumber * 2)));
             }
 
-            _prototypeDetails = _prototypeDetails.OrderBy(k => k.FullName).ToList();
+            PrototypeDetails = PrototypeDetails.OrderBy(k => k.FullName).ToList();
         }
 
         /// <summary>
@@ -183,8 +186,11 @@ namespace GameDatabaseBrowser
         /// </summary>
         private void ConstructPrototypeTree(bool considerSearch = false)
         {
+            if (_searchHelper == null)
+                _searchHelper = new(this);
+
             PrototypeNodes[0].Childs.Clear();
-            List<PrototypeDetails> prototypeToDisplay = considerSearch ? GetPrototypeToDisplay() : _prototypeDetails;
+            List<PrototypeDetails> prototypeToDisplay = considerSearch ? _searchHelper.GetPrototypeToDisplay() : PrototypeDetails;
 
             if (prototypeToDisplay == null)
                 return;
@@ -192,119 +198,6 @@ namespace GameDatabaseBrowser
             bool needExpand = (expandResultToggle.IsChecked ?? false) || prototypeToDisplay.Count < 21;
             foreach (PrototypeDetails prototype in prototypeToDisplay)
                 AddPrototypeInHierarchy(prototype, needExpand);
-        }
-
-        /// <summary>
-        /// Filter the prototype to display as result
-        /// </summary>
-        private List<PrototypeDetails> GetPrototypeToDisplay()
-        {
-            switch (SearchTypeComboBox.SelectedIndex)
-            {
-                case 0: // Search by text
-                    return GetPrototypeToDisplayFromTextSearch();
-
-                case 1: // Search by class
-                    return GetPrototypeToDisplayFromClassSearch();
-
-                case 2: // Search by blueprint
-                    return GetPrototypeToDisplayFromBlueprintSearch();
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Filter the prototype to display as result considering prototype blueprint search
-        /// </summary>
-        private List<PrototypeDetails> GetPrototypeToDisplayFromBlueprintSearch()
-        {
-            List<PrototypeDetails> prototypeToDisplay = new();
-            if (string.IsNullOrWhiteSpace(blueprintAutoCompletionText.Text))
-                return prototypeToDisplay;
-            
-            BlueprintId blueprintId = GameDatabase.BlueprintRefManager.GetDataRefByName(blueprintAutoCompletionText.Text);
-
-            if (blueprintId == BlueprintId.Invalid)
-                return prototypeToDisplay;
-
-            foreach (PrototypeId prototypeId in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(blueprintId, GetPrototypeIterateFlags()))
-                prototypeToDisplay.Add(_prototypeDetails.Where(k => k.FullName == GameDatabase.GetPrototypeName(prototypeId)).First());
-
-            return prototypeToDisplay;
-        }
-
-        /// <summary>
-        /// Filter the prototype to display as result considering prototype class search
-        /// </summary>
-        private List<PrototypeDetails> GetPrototypeToDisplayFromClassSearch()
-        {
-            List<PrototypeDetails> prototypeToDisplay = new();
-            if (string.IsNullOrWhiteSpace(classAutoCompletionText.Text))
-                return prototypeToDisplay;
-
-            Type classType = AppDomain.CurrentDomain.GetAssemblies().Where(k => k.FullName.Contains("MHServerEmu"))
-                .SelectMany(asm => asm.GetTypes()).FirstOrDefault(type => type.Name == classAutoCompletionText.Text);
-
-            if(classType == null)
-                return prototypeToDisplay;
-
-            foreach (PrototypeId prototypeId in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(classType, GetPrototypeIterateFlags()))
-                prototypeToDisplay.Add(_prototypeDetails.Where(k => k.FullName == GameDatabase.GetPrototypeName(prototypeId)).First());
-
-            return prototypeToDisplay;
-        }
-
-        /// <summary>
-        /// Prepare for prototype iteration
-        /// </summary>
-        public PrototypeIterateFlags GetPrototypeIterateFlags()
-        {
-            PrototypeIterateFlags flags = PrototypeIterateFlags.None;
-            if (abstractClassToggle.IsChecked != true)
-                flags |= PrototypeIterateFlags.NoAbstract;
-
-            if (notApprovedClassToggle.IsChecked != true)
-                flags |= PrototypeIterateFlags.ApprovedOnly;
-
-            return flags;
-        }
-
-        /// <summary>
-        /// Filter the prototype to display as result considering text search
-        /// </summary>
-        private List<PrototypeDetails> GetPrototypeToDisplayFromTextSearch()
-        {
-            string currentFilter = "";
-            if (ulong.TryParse(txtSearch.Text, out ulong prototypeId))
-                currentFilter = GameDatabase.GetPrototypeName((PrototypeId)prototypeId).ToLowerInvariant();
-            else
-                currentFilter = txtSearch.Text.ToLowerInvariant();
-
-            if (string.IsNullOrEmpty(currentFilter))
-                return _prototypeDetails;
-
-            if (referencesToggle.IsChecked == true)
-            {
-                List<PrototypeDetails> prototypeToDisplay = new();
-                PrototypeId key = GameDatabase.GetPrototypeRefByName(currentFilter);
-                if (key != 0 && _cacheDictionary.ContainsKey(key))
-                {
-                    List<PrototypeId> cachePrototypeIds = _cacheDictionary[key];
-                    foreach (PrototypeId cachePrototypeId in cachePrototypeIds)
-                        prototypeToDisplay.Add(_prototypeDetails.Where(k => k.FullName == GameDatabase.GetPrototypeName(cachePrototypeId)).First());
-                }
-
-                return prototypeToDisplay;
-            }
-            else
-            {
-                bool exactSearch = exactMatchToggle.IsChecked ?? false;
-                if (exactSearch)
-                    return _prototypeDetails.Where(k => k.FullName.ToLowerInvariant() == currentFilter || k.Name.ToLowerInvariant() == currentFilter).ToList();
-                else
-                    return _prototypeDetails.Where(k => k.FullName.ToLowerInvariant().Contains(currentFilter)).ToList();
-            }
         }
 
         /// <summary>
@@ -519,7 +412,7 @@ namespace GameDatabaseBrowser
         /// </summary>
         private void GeneratePrototypeReferencesCache(BackgroundWorker worker, ref int counter)
         {
-            foreach (PrototypeDetails prototypeDetails in _prototypeDetails)
+            foreach (PrototypeDetails prototypeDetails in PrototypeDetails)
             {
                 string dataRef = prototypeDetails?.Properties?.FirstOrDefault(k => k.Name == "DataRef")?.Value;
                 if (ulong.TryParse(dataRef, out ulong prototypeId))
@@ -537,10 +430,10 @@ namespace GameDatabaseBrowser
         /// </summary>
         private void AddCacheEntry(PrototypeId key, PrototypeId value)
         {
-            if (!_cacheDictionary.ContainsKey(key))
-                _cacheDictionary[key] = new List<PrototypeId> { value };
+            if (!CacheDictionary.ContainsKey(key))
+                CacheDictionary[key] = new List<PrototypeId> { value };
             else
-                _cacheDictionary[key].Add(value);
+                CacheDictionary[key].Add(value);
         }
 
         /// <summary>
