@@ -1,8 +1,8 @@
 ﻿using Google.ProtocolBuffers;
+using MHServerEmu.Common;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
-using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Network;
@@ -15,6 +15,8 @@ namespace MHServerEmu.Games.Entities
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
         public bool DebugLog;
+
+        private GRandom _random;
         public SpawnerPrototype SpawnerPrototype => EntityPrototype as SpawnerPrototype;
         public Spawner(EntityBaseData baseData) : base(baseData)
         {
@@ -35,8 +37,9 @@ namespace MHServerEmu.Games.Entities
             _flags |= EntityFlags.NoCollide;
             var spawnerProto = SpawnerPrototype;
             DebugLog = false;
-            if (DebugLog) Logger.Debug($"{GameDatabase.GetFormattedPrototypeName(BaseData.PrototypeId)} [{spawnerProto.StartEnabled}] Distance[{spawnerProto.SpawnDistanceMin}] Sequence[{spawnerProto.SpawnSequence.Length}] {position.ToStringFloat()}");
+            if (true) Logger.Debug($"[{BaseData.EntityId}] {PrototypeName} [{spawnerProto.StartEnabled}] Distance[{spawnerProto.SpawnDistanceMin}-{spawnerProto.SpawnDistanceMax}] Sequence[{spawnerProto.SpawnSequence.Length}] {position.ToStringFloat()}");
             if (EntityManager.InvSpawners.Contains((EntityManager.InvSpawner)BaseData.PrototypeId)) return;
+            _random = Game.Random; //new(cell.Seed);
             // if (spawnerProto.StartEnabled)
             Spawn();
         }
@@ -63,8 +66,8 @@ namespace MHServerEmu.Games.Entities
         {
             // entry.Unique;
             // entry.Count;
-            for (int i = 0; i < entry.Count; i++) {
-                var popObject = entry.GetPopObject();
+            var popObject = entry.GetPopObject();
+            for (int i = 0; i < entry.Count; i++) { 
                 if (DebugLog) Logger.Debug($"SpawnObject[{i}] {popObject.GetType().Name}");
                 SpawnObject(popObject);
             }
@@ -73,7 +76,7 @@ namespace MHServerEmu.Games.Entities
         private void SpawnObject(PopulationObjectPrototype popObject)
         {
             var region = Location.Region;
-            var random = Game.Random;
+            var random = _random;
             var spawnerProto = SpawnerPrototype;
             ClusterGroup clusterGroup = new(region, random, popObject, null, Properties, SpawnFlags.None);
             clusterGroup.Initialize();

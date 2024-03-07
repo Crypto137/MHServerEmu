@@ -222,10 +222,10 @@ namespace MHServerEmu.Games.Regions
 
         private bool PostGenerate()
         {
-            /*    if (AreaPrototype.FullyGenerateCells) // only TheRaft
-                    foreach (var cell in CellList)
-                        cell.PostGenerate(); // can be here?
-            */
+            // if (AreaPrototype.FullyGenerateCells) // only TheRaft
+            foreach (var cell in CellIterator())
+                cell.PostGenerate(); // can be here?
+            
             return true;
         }
 

@@ -311,41 +311,6 @@ namespace MHServerEmu.Games.Entities
             Boss = 9550003146522364442,
         } 
 
-        public void AddTeleports(Cell cell, Area entryArea, ConnectionNodeList targets)
-        {
-            PrototypeId area = (PrototypeId)entryArea.PrototypeId;
-
-            foreach (var marker in cell.CellProto.InitializeSet.Markers)
-            {
-                if (marker is EntityMarkerPrototype portal)
-                {
-                    PrototypeId protoId = GameDatabase.GetDataRefByPrototypeGuid(portal.EntityGuid);
-                    Prototype entity = GameDatabase.GetPrototype<Prototype>(protoId);
-                    bool snap = portal.OverrideSnapToFloor;
-                    if (entity is TransitionPrototype transition)
-                    {
-                        Vector3 position = cell.CalcMarkerPosition(portal.Position);
-                        position.Z += transition.Bounds.GetBoundHalfHeight();
-
-                        //Logger.Debug($"[{transition.Type}] {portal.LastKnownEntityName} [{protoId}]");
-                        PrototypeId targetRef = PrototypeId.Invalid;
-                        if (transition.Waypoint != 0)
-                        {
-                            var waypointProto = GameDatabase.GetPrototype<WaypointPrototype>(transition.Waypoint);
-                            targetRef = waypointProto.Destination;
-                        }
-                        else
-                        {
-                            TargetObject node = RegionTransition.GetTargetNode(targets, area, cell.PrototypeId, portal.EntityGuid);
-                            if (node != null) targetRef = node.TargetId;                            
-                        }
-                        SpawnTargetTeleport(cell, transition, position, portal.Rotation, false, targetRef, snap);
-                    }
-
-                }
-            }
-        }
-
         #endregion
 
         #region Hardcode

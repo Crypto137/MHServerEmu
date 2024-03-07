@@ -129,7 +129,7 @@ namespace MHServerEmu.Games.Regions
                 Affixes = new List<PrototypeId>(),
                 RegionDataRef = (PrototypeId)prototype
             };
-            // settings.Seed = 1776322703;
+            // settings.Seed = 1210027349;
             // GRandom random = new(settings.Seed);//Game.Random.Next()
             int tries = 10;
             Region region = null;

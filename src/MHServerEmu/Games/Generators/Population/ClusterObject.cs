@@ -924,7 +924,7 @@ namespace MHServerEmu.Games.Generators.Population
                     worldEntity.AppendOnStartActions(Parent.MissionRef);
             }
             // TODO set Rank
-            if (DebugLog) Logger.Debug($"Spawn {GameDatabase.GetFormattedPrototypeName(EntityRef)} {pos.ToStringFloat()} [{Parent.Objects.Count}] {GameDatabase.GetFormattedPrototypeName(Parent.ObjectProto.GetFormation().DataRef)}");
+            if (DebugLog) Logger.Debug($"Spawn [{worldEntity.BaseData.EntityId}] {worldEntity.PrototypeName} {pos.ToStringFloat()} [{Parent.Objects.Count}] {GameDatabase.GetFormattedPrototypeName(Parent.ObjectProto.GetFormation().DataRef)}");
         }
 
         public override bool IsFormationObject()
