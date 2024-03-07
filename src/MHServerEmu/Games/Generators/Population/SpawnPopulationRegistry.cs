@@ -69,6 +69,7 @@ namespace MHServerEmu.Games.Generators.Population
             {
                 foreach (var entry in missionProto.PopulationSpawns)
                 {
+                    // Logger.Debug($"Mission {GameDatabase.GetFormattedPrototypeName(missionProto.DataRef)} = {missionProto.DataRef}");
                     if (entry.RestrictToAreas.HasValue()) // check areas
                     {
                         bool foundArea = false;
@@ -86,10 +87,14 @@ namespace MHServerEmu.Games.Generators.Population
                         //for (var i = 0; i < entry.Count; i++)
                         AddPopulationMarker(entry.Population.UsePopulationMarker, entry.Population, (int)entry.Count, entry.RestrictToAreas, entry.RestrictToCells, missionProto.DataRef);
                     }
-                    else if (entry.RestrictToRegions.HasValue() && Region.Areas.Count == 1) // No areas but have Region
+                    else if (entry.RestrictToRegions.HasValue()) // No areas but have Region
                     {
-                        PrototypeId[] startArea = new PrototypeId[1] { Region.StartArea.PrototypeDataRef };
-                        AddPopulationMarker(entry.Population.UsePopulationMarker, entry.Population, (int)entry.Count, startArea, entry.RestrictToCells, missionProto.DataRef);
+                        PrototypeId[] regionAreas = new PrototypeId[Region.Areas.Count];
+                        int i = 0;
+                        foreach (var area in Region.IterateAreas())
+                            regionAreas[i++] = area.PrototypeDataRef;
+
+                        AddPopulationMarker(entry.Population.UsePopulationMarker, entry.Population, (int)entry.Count, regionAreas, entry.RestrictToCells, missionProto.DataRef);
                     }
                 }   
             }
