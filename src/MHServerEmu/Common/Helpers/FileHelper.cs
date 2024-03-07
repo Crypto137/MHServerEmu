@@ -12,11 +12,24 @@ namespace MHServerEmu.Common.Helpers
         public static readonly string DataDirectory = Path.Combine(ServerRoot, "Data");
 
         /// <summary>
-        /// Deserializes an object from a JSON file located at the specified path.
+        /// Deserializes a <typeparamref name="T"/> from a JSON file located at the specified path.
         /// </summary>
-        public static T DeserializeJson<T>(string path)
+        public static T DeserializeJson<T>(string path, JsonSerializerOptions options = null)
         {
-            return JsonSerializer.Deserialize<T>(File.ReadAllText(path));
+            return JsonSerializer.Deserialize<T>(File.ReadAllText(path), options);
+        }
+
+        /// <summary>
+        /// Serializes a <typeparamref name="T"/> to JSON and saves it to the specified path.
+        /// </summary>
+        public static void SerializeJson<T>(string path, T @object, JsonSerializerOptions options = null)
+        {
+            string dirName = Path.GetDirectoryName(path);
+            if (Directory.Exists(dirName) == false)
+                Directory.CreateDirectory(dirName);
+
+            string json = JsonSerializer.Serialize(@object, options);
+            File.WriteAllText(path, json);
         }
     }
 }
