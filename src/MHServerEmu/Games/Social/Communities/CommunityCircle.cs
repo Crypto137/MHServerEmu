@@ -60,6 +60,28 @@ namespace MHServerEmu.Games.Social.Communities
             Type = type;
         }
 
+        /// <summary>
+        /// Adds the provided <see cref="CommunityMember"/> to this <see cref="CommunityCircle"/>. Returns <see langword="true"/> if successful.
+        /// </summary>
+        public bool AddMember(CommunityMember member)
+        {
+            if (member.IsInCircle(this) == false)
+                return member.AddRemoveFromCircle(true, this);
+
+            return false;
+        }
+
+        /// <summary>
+        /// Removes the provided <see cref="CommunityMember"/> from this <see cref="CommunityCircle"/>. Returns <see langword="true"/> if successful.
+        /// </summary>
+        public bool RemoveMember(CommunityMember member)
+        {
+            if (member.IsInCircle(this))
+                return member.AddRemoveFromCircle(false, this);
+
+            return false;
+        }
+
         public bool ShouldArchiveTo(/* archive */)
         {
             // TODO: Archive::IsReplication(), Archive::IsPersistent(), CommunityCircle::IsPersistent(), Archive::IsMigration(), CommunityCircle:IsMigrated()

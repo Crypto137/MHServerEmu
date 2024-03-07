@@ -327,7 +327,6 @@ namespace MHServerEmu.Games.Entities
             }
 
             AchievementState = account.Player.AchievementState;
-            AchievementState.SetAchievementProgress(2, new(1, Clock.UnixTime));
         }
 
         /// <summary>

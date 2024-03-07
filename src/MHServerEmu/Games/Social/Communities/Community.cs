@@ -66,9 +66,7 @@ namespace MHServerEmu.Games.Social.Communities
                 if (member == null)
                 {
                     member = CreateMember(playerDbId, playerName);
-
-                    // If still not found bail out
-                    if (member == null) return false;
+                    if (member == null) return false;   // Bail out if member creation failed
                 }
 
                 // Deserialize data into our member
@@ -107,30 +105,49 @@ namespace MHServerEmu.Games.Social.Communities
         }
 
         /// <summary>
-        /// Adds a new <see cref="CommunityMember"/>. Returns <see langword="false"/> if a member with the specified dbId already exists.
+        /// Adds a new <see cref="CommunityMember"/> to the specified circle. Returns <see langword="true"/> if successful.
         /// </summary>
         public bool AddMember(ulong playerDbId, string playerName, CircleId circleId)
         {
+            // Get an existing member to add to the circle
             CommunityMember member = GetMember(playerDbId);
 
-            if (member != null) return false;
+            // If not found create a new member
+            if (member == null)
+            {
+                member = CreateMember(playerDbId, playerName);
+                if (member == null)     // Bail out if member creation failed
+                    return Logger.WarnReturn(false, $"AddMember(): Failed to get or create a member for dbId {playerDbId}");
+            }
 
-            member = CreateMember(playerDbId, playerName);
-            member.AddRemoveFromCircle(true, CircleManager.GetCircle(circleId));
-            return true;
+            // Get the circle
+            CommunityCircle circle = GetCircle(circleId);
+            if (circle == null)
+                return Logger.WarnReturn(false, $"AddMember(): Failed to get circle for circleId {circleId}");
+
+            return circle.AddMember(member);
         }
 
         /// <summary>
-        /// Removes the <see cref="CommunityMember"/> with the specified dbId. Returns <see langword="false"/> if no such member exists.
+        /// Removes the specified <see cref="CommunityMember"/> from the specified circle. Returns <see langword="true"/> if successful.
         /// </summary>
         public bool RemoveMember(ulong playerDbId, CircleId circleId)
         {
             CommunityMember member = GetMember(playerDbId);
+            if (member == null)
+                return Logger.WarnReturn(false, $"RemoveMember(): Failed to get member for dbId {playerDbId}");
 
-            if (member == null) return false;
+            CommunityCircle circle = GetCircle(circleId);
+            if (circle == null)
+                return Logger.WarnReturn(false, $"RemoveMember(): Failed to get circle for cicleId {circleId}");
 
-            DestroyMember(member);
-            return true;
+            bool wasRemoved = circle.RemoveMember(member);
+            
+            // Remove the member from this community once it's no longer part of any circles
+            if (member.NumCircles == 0)
+                DestroyMember(member);
+
+            return wasRemoved;
         }
 
         /// <summary>

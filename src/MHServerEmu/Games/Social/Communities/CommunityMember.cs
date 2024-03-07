@@ -59,7 +59,16 @@ namespace MHServerEmu.Games.Social.Communities
         public PrototypeId DifficultyRef { get; private set; }
         public CommunityMemberOnlineStatus IsOnline { get; private set; }
 
-        public int NumCircles { get => _systemCircles.Count; }
+        public int NumCircles
+        {
+            get
+            {
+                int num = 0;
+                for (int i = 0; i < _systemCircles.Count; i++)
+                    if (_systemCircles[i]) num++;
+                return num;
+            }
+        }
 
         public CommunityMember(Community community, ulong playerDbId, string playerName)
         {
