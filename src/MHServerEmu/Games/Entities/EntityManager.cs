@@ -425,6 +425,7 @@ namespace MHServerEmu.Games.Entities
                         {
                             // Logger.Debug($"[{teleport.Location.GetPosition().ToStringFloat()}][InvT]{GameDatabase.GetFormattedPrototypeName(teleport.Destinations[0].Target)} = {teleport.Destinations[0].Target},");
                             if (LockedTargets.Contains((InvTarget)teleport.Destinations[0].Target) == false) continue;
+                            if ((InvTarget)teleport.Destinations[0].Target == InvTarget.NPEAvengersTowerHubEntry && region.PrototypeId == RegionPrototypeId.NPERaftRegion) continue;
                             PrototypeId visibleParent = GetVisibleParentRef(teleportProto.ParentDataRef);
                             entity.BaseData.PrototypeId = visibleParent;
                             continue;
@@ -459,6 +460,7 @@ namespace MHServerEmu.Games.Entities
 
         private static readonly InvTarget[] LockedTargets = new InvTarget[]
         {
+            InvTarget.NPETrainingRoomEntry,
             InvTarget.ResearchCorridorEntryTarget,
             InvTarget.CH0202HoodContainerInteriorTarget,
             InvTarget.CH0205TaskmasterTapeInteriorTarget,
@@ -578,6 +580,8 @@ namespace MHServerEmu.Games.Entities
 
         public enum InvTarget : ulong
         {
+            // NPERaftRegion
+            NPETrainingRoomEntry = 7210609263143097312,
             // NPEAvengersTowerHUBRegion
             BazaarFromAvengersTowerHubTarget = 15895543318574475572,
             XManhattanEntryTarget1to60 = 2635481312889807924,

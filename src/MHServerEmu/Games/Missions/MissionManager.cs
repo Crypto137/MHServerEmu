@@ -163,11 +163,24 @@ namespace MHServerEmu.Games.Missions
                 if (missionProto == null) continue;
                 if (missionProto.HasPopulationInRegion(region) == false) continue;
                 // TODO check mission
+                if (InvalidMissions.Contains((InvalidMission)missionRef)) continue;
                 // IsMissionValidAndApprovedForUse
                 region.SpawnPopulation.MissionRegisty(missionProto);
             }
 
             return true;
+        }
+
+        public static readonly InvalidMission[] InvalidMissions = new InvalidMission[]
+{
+            InvalidMission.CH00TrainingPathingController,
+            InvalidMission.CH00NPETrainingRoom,
+};
+
+        public enum InvalidMission : ulong
+        {
+            CH00TrainingPathingController = 3126128604301631533,
+            CH00NPETrainingRoom = 17508547083537161214,
         }
     }
 }
