@@ -230,7 +230,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 {
                     // TODO check obj as PopulationGroupPrototype
                     PopulationEntityPrototype choiceEntity = obj as PopulationEntityPrototype;
-                    if (choiceEntity != null) continue;
+                    if (choiceEntity == null) continue;
                     ClusterEntity clusterEntity = group.CreateClusterEntity(choiceEntity.Entity);
                     if (clusterEntity == null) continue;
                     clusterEntity.Flags |= flags;
