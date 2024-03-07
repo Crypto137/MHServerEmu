@@ -82,6 +82,29 @@ namespace MHServerEmu.Games.Social.Communities
             return false;
         }
 
+        /// <summary>
+        /// Returns <see langword="true"/> if this <see cref="CommunityCircle"/> is full.
+        /// </summary>
+        public bool IsFull()
+        {
+            CommunityCirclePrototype prototype = GetPrototype();
+            if (prototype.MaxMembers == 0) return false;
+            return Community.NumMembersInCircle(Id) >= prototype.MaxMembers;
+        }
+        
+        /// <summary>
+        /// Returns <see cref="true"/> if this <see cref="CommunityCircle"/> contains the <see cref="CommunityMember"/> with the specified dbGuid.
+        /// </summary>
+        public bool ContainsPlayerDbGuid(ulong playerDbGuid)
+        {
+            if (playerDbGuid == 0) return false;
+
+            foreach (CommunityMember member in Community.IterateMembers(this))
+                if (member.DbId == playerDbGuid) return true;
+
+            return false;
+        }
+
         public bool ShouldArchiveTo(/* archive */)
         {
             // TODO: Archive::IsReplication(), Archive::IsPersistent(), CommunityCircle::IsPersistent(), Archive::IsMigration(), CommunityCircle:IsMigrated()
@@ -90,7 +113,7 @@ namespace MHServerEmu.Games.Social.Communities
 
         public void OnMemberReceivedBroadcast(CommunityMember member, CommunityMemberUpdateOptionBits updateOptionBits)
         {
-            // todo: send client updates when members change here
+            // update circle here
         }
 
         public override string ToString() => Name;

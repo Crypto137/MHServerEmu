@@ -16,15 +16,14 @@ namespace MHServerEmu.Games.Social.Communities
 
         private readonly Dictionary<ulong, CommunityMember> _communityMemberDict = new();   // key is DbId
 
+        private int _numCircleIteratorsInScope = 0;
+        private int _numMemberIteratorsInScope = 0;
+
         public Player Owner { get; }
 
         public CommunityCircleManager CircleManager { get; }
         public int NumCircles { get => CircleManager.NumCircles; }
-
         public int NumMembers { get => _communityMemberDict.Count; }
-
-        public int NumCircleIteratorsInScope { get; private set; } = 0;
-        public int NumMemberIteratorsInScope { get; private set; } = 0;
 
         public Community(Player owner)
         {
@@ -73,7 +72,7 @@ namespace MHServerEmu.Games.Social.Communities
                 member.Decode(stream);
 
                 // Get rid of members that don't have any circles for some reason
-                if (member.NumCircles == 0)
+                if (member.NumCircles() == 0)
                     DestroyMember(member);
             }
 
@@ -102,6 +101,20 @@ namespace MHServerEmu.Games.Social.Communities
                 return null;
 
             return member;
+        }
+
+        /// <summary>
+        /// Returns the <see cref="CommunityMember"/> with the specified name. Returns <see langword="null"/> if not found.
+        /// </summary>
+        public CommunityMember GetMemberByName(string playerName)
+        {
+            foreach (CommunityMember member in IterateMembers())
+            {
+                if (member.GetName() == playerName)
+                    return member;
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -144,10 +157,28 @@ namespace MHServerEmu.Games.Social.Communities
             bool wasRemoved = circle.RemoveMember(member);
             
             // Remove the member from this community once it's no longer part of any circles
-            if (member.NumCircles == 0)
+            if (member.NumCircles() == 0)
                 DestroyMember(member);
 
             return wasRemoved;
+        }
+
+        /// <summary>
+        /// Returns the number <see cref="CommunityMember"/> instances belonging to the specified <see cref="CircleId"/>.
+        /// </summary>
+        public int NumMembersInCircle(CircleId circleId)
+        {
+            CommunityCircle circle = GetCircle(circleId);
+            if (circle == null)
+                return Logger.WarnReturn(0, $"NumMembersInCircle(): circle == null");
+
+            int numMembers = 0;
+            foreach (CommunityMember member in IterateMembers())
+            {
+                if (member.IsInCircle(circle))
+                    numMembers++;
+            }
+            return numMembers;
         }
 
         /// <summary>
@@ -200,34 +231,33 @@ namespace MHServerEmu.Games.Social.Communities
         // These methods are replacements for CommunityCircleIterator and CommunityMemberIterator classes
 
         /// <summary>
-        /// Iterates all <see cref="CommunityCircle"/> instance in the provided <see cref="Community"/>.
+        /// Iterates all <see cref="CommunityCircle"/> instances in this <see cref="Community"/>.
         /// </summary>
-        public static IEnumerable<CommunityCircle> IterateCircles(Community community)
+        public IEnumerable<CommunityCircle> IterateCircles()
         {
-            community.NumCircleIteratorsInScope++;
+            _numCircleIteratorsInScope++;
 
             try
             {
-                foreach (CommunityCircle circle in community.CircleManager)
+                foreach (CommunityCircle circle in CircleManager)
                     yield return circle;
             }
             finally
             {
-                community.NumCircleIteratorsInScope--;
+                _numCircleIteratorsInScope--;
             }
         }
 
         /// <summary>
         /// Iterates all <see cref="CommunityCircle"/> instances that the provided <see cref="CommunityMember"/> belongs to.
         /// </summary>
-        public static IEnumerable<CommunityCircle> IterateCircles(CommunityMember member)
+        public IEnumerable<CommunityCircle> IterateCircles(CommunityMember member)
         {
-            Community community = member.Community;
-            community.NumCircleIteratorsInScope++;
+            _numCircleIteratorsInScope++;
 
             try
             {
-                foreach (CommunityCircle circle in community.CircleManager)
+                foreach (CommunityCircle circle in CircleManager)
                 {
                     if (member.IsInCircle(circle))
                         yield return circle;
@@ -235,7 +265,46 @@ namespace MHServerEmu.Games.Social.Communities
             }
             finally
             {
-                community.NumCircleIteratorsInScope--;
+                _numCircleIteratorsInScope--;
+            }
+        }
+
+        /// <summary>
+        /// Iterates all <see cref="CommunityMember"/> instances in this <see cref="Community"/>
+        /// </summary>
+        public IEnumerable<CommunityMember> IterateMembers()
+        {
+            _numMemberIteratorsInScope++;
+
+            try
+            {
+                foreach (CommunityMember member in _communityMemberDict.Values)
+                    yield return member;
+            }
+            finally
+            {
+                _numMemberIteratorsInScope--;
+            }
+        }
+
+        /// <summary>
+        /// Iterates all <see cref="CommunityMember"/> instances in this <see cref="Community"/>.
+        /// </summary>
+        public IEnumerable<CommunityMember> IterateMembers(CommunityCircle circle)
+        {
+            _numMemberIteratorsInScope++;
+
+            try
+            {
+                foreach (CommunityMember member in _communityMemberDict.Values)
+                {
+                    if (member.IsInCircle(circle))
+                        yield return member;
+                }
+            }
+            finally
+            {
+                _numMemberIteratorsInScope--;
             }
         }
 
@@ -246,14 +315,15 @@ namespace MHServerEmu.Games.Social.Communities
         /// </summary>
         private CommunityMember CreateMember(ulong playerDbId, string playerName)
         {
-            // TODO: Verify m_numMemberIteratorsInScope == 0 Trying to create a new member while iterating the community %s
+            if (_numMemberIteratorsInScope > 0)
+                return Logger.WarnReturn<CommunityMember>(null, $"CreateMember(): Trying to create a new member while iterating the community {this}");
 
             if (playerDbId == 0)
-                return Logger.WarnReturn<CommunityMember>(null, $"Invalid player id when creating community member. member={playerName}, community={this}");
+                return Logger.WarnReturn<CommunityMember>(null, $"CreateMember(): Invalid player id when creating community member {playerName}");
 
             CommunityMember existingMember = GetMember(playerDbId);
             if (existingMember != null)
-                return Logger.WarnReturn<CommunityMember>(null, $"Member already exists {existingMember}");
+                return Logger.WarnReturn<CommunityMember>(null, $"CreateMember(): Member already exists {existingMember}");
 
             CommunityMember newMember = new(this, playerDbId, playerName);
             _communityMemberDict.Add(playerDbId, newMember);
@@ -263,10 +333,12 @@ namespace MHServerEmu.Games.Social.Communities
         /// <summary>
         /// Removes the provided <see cref="CommunityMember"/> instance from this <see cref="Community"/>.
         /// </summary>
-        private void DestroyMember(CommunityMember member)
+        private bool DestroyMember(CommunityMember member)
         {
-            // TODO: Verify m_numMemberIteratorsInScope == 0 Trying to destroy a member while iterating the community %s
-            _communityMemberDict.Remove(member.DbId);
+            if (_numMemberIteratorsInScope > 0)
+                return Logger.WarnReturn(false, $"CreateMember(): Trying to destroy a member while iterating the community");
+
+            return _communityMemberDict.Remove(member.DbId);
         }
     }
 }

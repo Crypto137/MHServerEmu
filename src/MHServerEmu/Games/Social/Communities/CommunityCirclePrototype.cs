@@ -10,6 +10,9 @@
         Flag2   = 1 << 2
     }
 
+    /// <summary>
+    /// A fake "prototype" that contains data for system <see cref="CommunityCircle"/> instances.
+    /// </summary>
     public class CommunityCirclePrototype
     {
         public readonly CircleId Id;

@@ -59,17 +59,6 @@ namespace MHServerEmu.Games.Social.Communities
         public PrototypeId DifficultyRef { get; private set; }
         public CommunityMemberOnlineStatus IsOnline { get; private set; }
 
-        public int NumCircles
-        {
-            get
-            {
-                int num = 0;
-                for (int i = 0; i < _systemCircles.Count; i++)
-                    if (_systemCircles[i]) num++;
-                return num;
-            }
-        }
-
         public CommunityMember(Community community, ulong playerDbId, string playerName)
         {
             Community = community;
@@ -221,6 +210,18 @@ namespace MHServerEmu.Games.Social.Communities
         }
 
         /// <summary>
+        /// Returns the number of <see cref="CommunityCircle"/> instances this <see cref="CommunityMember"/> is in.
+        /// </summary>
+        /// <returns></returns>
+        public int NumCircles()
+        {
+            int numCircles = 0;
+            for (int i = 0; i < _systemCircles.Count; i++)
+                if (_systemCircles[i]) numCircles++;
+            return numCircles;
+        }
+
+        /// <summary>
         /// Sets the bit value for the provided <see cref="CommunityCircle"/>.
         /// </summary>
         public bool AddRemoveFromCircle(bool add, CommunityCircle circle)
@@ -368,7 +369,12 @@ namespace MHServerEmu.Games.Social.Communities
                 }
             }
 
-            // iterate and update circles here
+            // Notify circles of member changes
+            if (updateOptionBits != CommunityMemberUpdateOptionBits.None)
+            {
+                foreach (CommunityCircle circle in Community.IterateCircles(this))
+                    circle.OnMemberReceivedBroadcast(this, updateOptionBits);
+            }
 
             return updateOptionBits;
         }
@@ -389,7 +395,11 @@ namespace MHServerEmu.Games.Social.Communities
             sb.AppendLine($"{nameof(_secondaryPlayerName)}: {_secondaryPlayerName}");
             sb.AppendLine($"{nameof(_consoleAccountIds)}[0]: {_consoleAccountIds[0]}");
             sb.AppendLine($"{nameof(_consoleAccountIds)}[1]: {_consoleAccountIds[1]}");
-            sb.AppendLine($"{nameof(_systemCircles)}: {_systemCircles}");
+
+            sb.Append($"{nameof(_systemCircles)}: ");
+            for (int i = 0; i < _systemCircles.Count; i++)
+                if (_systemCircles[i]) sb.Append((CircleId)i).Append(' ');
+            sb.AppendLine();
 
             return sb.ToString();
         }
