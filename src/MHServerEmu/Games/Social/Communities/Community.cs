@@ -1,23 +1,20 @@
 ﻿using System.Text;
+using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Social.Communities
 {
     /// <summary>
-    /// Contains all players displayed in the social tab.
+    /// Contains all players displayed in the social tab sorted by circles..
     /// </summary>
     public class Community
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Dictionary<ulong, CommunityMember> _communityMemberDict = new();   // key is DbId
-
-        private int _numCircleIteratorsInScope = 0;
-        private int _numMemberIteratorsInScope = 0;
 
         public Player Owner { get; }
 
@@ -26,51 +23,23 @@ namespace MHServerEmu.Games.Social.Communities
 
         public int NumMembers { get => _communityMemberDict.Count; }
 
-        public Community(Player owner, CodedInputStream stream)
-        {
-            Owner = owner;
-
-            CircleManager = new(this);
-            CircleManager.Initialize();
-
-        }
-
-        public CommunityMember GetMember(ulong dbId)
-        {
-            if (_communityMemberDict.TryGetValue(dbId, out CommunityMember member) == false)
-                return null;
-
-            return member;
-        }
-
-        public bool AddMember(string playerName, int circleId, ulong playerDbId)
-        {
-            CommunityMember member = GetMember(playerDbId);
-
-            if (member != null) return false;
-
-            member = CreateMember(playerDbId, playerName);
-            member.ArchiveCircleIds = new int[] { circleId };
-            return true;
-        }
-
-        public bool RemoveMember(string playerName, SystemCircle circleId)
-        {
-            return true;
-        }
-
         public Community(Player owner)
         {
             Owner = owner;
-            
             CircleManager = new(this);
         }
 
+        /// <summary>
+        /// Initializes this <see cref="Community"/> instance.
+        /// </summary>
         public bool Initialize()
         {
             return CircleManager.Initialize();
         }
 
+        /// <summary>
+        /// Clears this <see cref="Community"/> instance.
+        /// </summary>
         public void Shutdown()
         {
             CircleManager.Shutdown();
@@ -89,7 +58,7 @@ namespace MHServerEmu.Games.Social.Communities
 
                 // Get an existing member to deserialize into
                 CommunityMember member = GetMember(playerDbId);
-                
+
                 // If not found create a new member
                 if (member == null)
                 {
@@ -121,7 +90,61 @@ namespace MHServerEmu.Games.Social.Communities
                 stream.WriteRawVarint64(member.DbId);
                 member.Encode(stream);
             }
-                
+        }
+
+        /// <summary>
+        /// Returns the <see cref="CommunityMember"/> with the specified dbId. Returns <see langword="null"/> if not found.
+        /// </summary>
+        public CommunityMember GetMember(ulong dbId)
+        {
+            if (_communityMemberDict.TryGetValue(dbId, out CommunityMember member) == false)
+                return null;
+
+            return member;
+        }
+
+        /// <summary>
+        /// Adds a new <see cref="CommunityMember"/>. Returns <see langword="false"/> if a member with the specified dbId already exists.
+        /// </summary>
+        public bool AddMember(ulong playerDbId, string playerName, int circleId)
+        {
+            CommunityMember member = GetMember(playerDbId);
+
+            if (member != null) return false;
+
+            member = CreateMember(playerDbId, playerName);
+            member.ArchiveCircleIds = new int[] { circleId };
+            return true;
+        }
+
+        /// <summary>
+        /// Removes the <see cref="CommunityMember"/> with the specified dbId. Returns <see langword="false"/> if no such member exists.
+        /// </summary>
+        public bool RemoveMember(ulong playerDbId, SystemCircle circleId)
+        {
+            CommunityMember member = GetMember(playerDbId);
+
+            if (member == null) return false;
+
+            DestroyMember(member);
+            return true;
+        }
+
+        /// <summary>
+        /// Receives a <see cref="CommunityMemberBroadcast"/> and routes it to the relevant <see cref="CommunityMember"/>.
+        /// </summary>
+        public bool ReceiveMemberBroadcast(CommunityMemberBroadcast broadcast)
+        {
+            ulong playerDbId = broadcast.MemberPlayerDbId;
+            if (playerDbId == 0)
+                return Logger.WarnReturn(false, $"ReceiveMemberBroadcast(): Invalid playerDbId");
+
+            CommunityMember member = GetMember(playerDbId);
+            if (member == null)
+                return Logger.WarnReturn(false, $"ReceiveMemberBroadcast(): PlayerDbId {playerDbId} not found");
+
+            member.ReceiveBroadcast(broadcast);
+            return true;
         }
 
         public override string ToString()
