@@ -1,7 +1,7 @@
-﻿using Google.ProtocolBuffers;
+﻿using System.Text;
+using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
-using System.Text;
 
 namespace MHServerEmu.Games.Social.Communities
 {
@@ -59,6 +59,9 @@ namespace MHServerEmu.Games.Social.Communities
             }
         }
 
+        /// <summary>
+        /// Creates default system <see cref="CommunityCircle"/> instances in this <see cref="CommunityCircleManager"/>.
+        /// </summary>
         public bool Initialize()
         {
             for (SystemCircle circleId = SystemCircle.__Friends; circleId < SystemCircle.NumCircles; circleId++)
@@ -67,6 +70,9 @@ namespace MHServerEmu.Games.Social.Communities
             return true;
         }
 
+        /// <summary>
+        /// Destroys all <see cref="CommunityCircle"/> instances in this <see cref="CommunityCircleManager"/>.
+        /// </summary>
         public void Shutdown()
         {
             while (_circleDict.Any())
@@ -76,6 +82,9 @@ namespace MHServerEmu.Games.Social.Communities
             }
         }
 
+        /// <summary>
+        /// Returns the <see cref="CommunityCircle"/> with the specified id.
+        /// </summary>
         public CommunityCircle GetCircle(SystemCircle id)
         {
             if (_circleDict.TryGetValue(id, out CommunityCircle circle) == false)
@@ -94,6 +103,9 @@ namespace MHServerEmu.Games.Social.Communities
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Create a <see cref="CommunityCircle"/> for the specified id.
+        /// </summary>
         private CommunityCircle CreateCircle(SystemCircle circleId)
         {
             // Verify "Trying to create a new circle while iterating them in the community %s"
@@ -109,6 +121,9 @@ namespace MHServerEmu.Games.Social.Communities
             return circle;
         }
 
+        /// <summary>
+        /// Destroys the specified <see cref="CommunityCircle"/>.
+        /// </summary>
         private void DestroyCircle(CommunityCircle circle)
         {
             // Verify "Trying to destroy circle while iterating them in the community %s"

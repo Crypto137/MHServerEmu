@@ -67,6 +67,11 @@ namespace MHServerEmu.Games.Social.Communities
             return true;
         }
 
+        public void OnMemberReceivedBroadcast(CommunityMember member, CommunityMemberUpdateOptionBits updateOptionBits)
+        {
+            // todo: send client updates when members change here
+        }
+
         public override string ToString() => Name;
 
         /// <summary>
