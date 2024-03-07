@@ -74,6 +74,8 @@ namespace MHServerEmu.Games.Entities
             WorldEntity worldEntity;
             if (proto is SpawnerPrototype)
                 worldEntity = new Spawner(baseData, AOINetworkPolicyValues.AOIChannelProximity, properties);
+            else if (proto is TransitionPrototype transitionProto)
+                worldEntity = new Transition(baseData, properties, Destination.FindDestination(cell, transitionProto));
             else
                 worldEntity = new(baseData, AOINetworkPolicyValues.AOIChannelDiscovery, properties);
             worldEntity.RegionId = regionId;
@@ -135,29 +137,7 @@ namespace MHServerEmu.Games.Entities
             Destination destination = null;
 
             if (targetRef != PrototypeId.Invalid)
-            {
-                var regionConnectionTarget = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetRef);
-
-                var cellAssetId = regionConnectionTarget.Cell;
-                var cellPrototypeId = cellAssetId != AssetId.Invalid ? GameDatabase.GetDataRefByAsset(cellAssetId) : PrototypeId.Invalid;
-
-                var targetRegionRef = regionConnectionTarget.Region;
-
-
-                var targetRegion = GameDatabase.GetPrototype<RegionPrototype>(targetRegionRef);
-                if (RegionPrototype.Equivalent(targetRegion, region.RegionPrototype)) targetRegionRef = (PrototypeId)region.PrototypeId;
-
-                destination = new()
-                {
-                    Type = transitionProto.Type,
-                    Region = targetRegionRef,
-                    Area = regionConnectionTarget.Area,
-                    Cell = cellPrototypeId,
-                    Entity = regionConnectionTarget.Entity,
-                    NameId = regionConnectionTarget.Name,
-                    Target = targetRef
-                };
-            }
+                destination = Destination.DestinationFromTarget(targetRef, region, transitionProto);
 
             ReplicatedPropertyCollection properties = new(_game.CurrentRepId);
             properties[PropertyEnum.MapPosition] = position;

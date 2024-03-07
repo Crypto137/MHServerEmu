@@ -6,6 +6,7 @@ using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
@@ -224,6 +225,44 @@ namespace MHServerEmu.Games.Entities
             sb.AppendLine($"UnkId2: {UnkId2}");
 
             return sb.ToString();
+        }
+
+        public static Destination FindDestination(Cell cell, TransitionPrototype transitionProto)
+        {
+            PrototypeId area = cell.Area.PrototypeDataRef;
+            Region region = cell.GetRegion();
+            PrototypeGuid entityGuid = GameDatabase.GetPrototypeGuid(transitionProto.DataRef);
+            ConnectionNodeList targets = region.Targets;
+            TargetObject node = RegionTransition.GetTargetNode(targets, area, cell.PrototypeId, entityGuid);
+            if (node != null)
+                return DestinationFromTarget(node.TargetId, region, transitionProto);
+            return null;
+        }
+
+        public static Destination DestinationFromTarget(PrototypeId targetRef, Region region, TransitionPrototype transitionProto)
+        {
+            var regionConnectionTarget = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetRef);
+
+            var cellAssetId = regionConnectionTarget.Cell;
+            var cellPrototypeId = cellAssetId != AssetId.Invalid ? GameDatabase.GetDataRefByAsset(cellAssetId) : PrototypeId.Invalid;
+
+            var targetRegionRef = regionConnectionTarget.Region;
+
+
+            var targetRegion = GameDatabase.GetPrototype<RegionPrototype>(targetRegionRef);
+            if (RegionPrototype.Equivalent(targetRegion, region.RegionPrototype)) targetRegionRef = (PrototypeId)region.PrototypeId;
+
+            Destination destination = new()
+            {
+                Type = transitionProto.Type,
+                Region = targetRegionRef,
+                Area = regionConnectionTarget.Area,
+                Cell = cellPrototypeId,
+                Entity = regionConnectionTarget.Entity,
+                NameId = regionConnectionTarget.Name,
+                Target = targetRef
+            };
+            return destination;
         }
     }
 }
