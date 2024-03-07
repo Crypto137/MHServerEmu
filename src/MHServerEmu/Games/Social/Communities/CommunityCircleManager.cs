@@ -1,23 +1,29 @@
-﻿using System.Text;
+﻿using System.Collections;
+using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
 
 namespace MHServerEmu.Games.Social.Communities
 {
+    // If you are working on this: keep in mind that circles is a half-baked and severely overengineered feature. Tread carefully.
+
     /// <summary>
     /// Manages <see cref="CommunityCircle"/> instances.
     /// </summary>
-    public class CommunityCircleManager
+    public class CommunityCircleManager : IEnumerable<CommunityCircle>
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Dictionary<SystemCircle, CommunityCircle> _circleDict = new();
-        private readonly SortedSet<SystemCircle> _archiveCircles = new();     // A collection of circle ids that need to be written to archives
+        private readonly Dictionary<CircleId, CommunityCircle> _circleDict = new();
+        private readonly List<CircleId> _archiveCircles = new();     // A collection of circle ids that need to be written to archives
 
         public Community Community { get; }
         public int NumCircles { get => _circleDict.Count; }
 
+        /// <summary>
+        /// Constructs a new <see cref="CommunityCircleManager"/>.
+        /// </summary>
         public CommunityCircleManager(Community community)
         {
             Community = community;
@@ -30,7 +36,7 @@ namespace MHServerEmu.Games.Social.Communities
             {
                 string circleName = stream.ReadRawString();
 
-                if (Enum.TryParse(circleName, out SystemCircle circleId) == false)
+                if (Enum.TryParse(circleName, out CircleId circleId) == false)
                     return Logger.ErrorReturn(false, $"Decode(): Unable to find system circle enum value for name {circleName}");
 
                 CommunityCircle circle = GetCircle(circleId);
@@ -52,7 +58,7 @@ namespace MHServerEmu.Games.Social.Communities
 
             // Write all circle names
             stream.WriteRawInt32(_archiveCircles.Count);
-            foreach (SystemCircle circleId in _archiveCircles)
+            foreach (CircleId circleId in _archiveCircles)
             {
                 string circleName = GetCircle(circleId).Name;
                 stream.WriteRawString(circleName);
@@ -64,7 +70,7 @@ namespace MHServerEmu.Games.Social.Communities
         /// </summary>
         public bool Initialize()
         {
-            for (SystemCircle circleId = SystemCircle.__Friends; circleId < SystemCircle.NumCircles; circleId++)
+            for (CircleId circleId = CircleId.__Friends; circleId < CircleId.NumCircles; circleId++)
                 CreateCircle(circleId);
 
             return true;
@@ -85,12 +91,40 @@ namespace MHServerEmu.Games.Social.Communities
         /// <summary>
         /// Returns the <see cref="CommunityCircle"/> with the specified id.
         /// </summary>
-        public CommunityCircle GetCircle(SystemCircle id)
+        public CommunityCircle GetCircle(CircleId id)
         {
             if (_circleDict.TryGetValue(id, out CommunityCircle circle) == false)
                 return null;
 
             return circle;
+        }
+
+        /// <summary>
+        /// Returns the <see cref="CommunityCircle"/> with the specified archive circle id.
+        /// </summary>
+        public CommunityCircle GetCircleByArchiveCircleId(int archiveCircleId)
+        {
+            if ((archiveCircleId >= 0 && archiveCircleId < _archiveCircles.Count) == false)
+                return Logger.WarnReturn<CommunityCircle>(null, $"GetCircleByArchiveCircleId(): Invalid circle id {archiveCircleId}");
+
+            CircleId circleId = _archiveCircles[archiveCircleId];
+            return GetCircle(circleId);
+        }
+
+        /// <summary>
+        /// Returns the archive circle id for the provided <see cref="CommunityCircle"/>.
+        /// </summary>
+        public int GetArchiveCircleId(CommunityCircle circle)
+        {
+            for (int i = 0; i < _archiveCircles.Count; i++)
+            {
+                CircleId circleId = _archiveCircles[i];
+                if (circle.Id == circleId)
+                    return i;
+            }
+
+            Logger.Warn($"GetArchiveCircleId(): circleId not found");
+            return -1;
         }
 
         public override string ToString()
@@ -106,7 +140,7 @@ namespace MHServerEmu.Games.Social.Communities
         /// <summary>
         /// Create a <see cref="CommunityCircle"/> for the specified id.
         /// </summary>
-        private CommunityCircle CreateCircle(SystemCircle circleId)
+        private CommunityCircle CreateCircle(CircleId circleId)
         {
             // Verify "Trying to create a new circle while iterating them in the community %s"
             // We probably don't need this because it seems user circles were never implemented,
@@ -137,16 +171,27 @@ namespace MHServerEmu.Games.Social.Communities
         /// <summary>
         /// Generates the collection of circle ids that need to be serialized.
         /// </summary>
-        private void CreateArchiveCircleIds(/* Archive archive */)
+        private void CreateArchiveCircleIds(/* archive */)
         {
             foreach(CommunityCircle circle in _circleDict.Values)
             {
-                if (circle.ShouldArchiveTo(/* Archive archive */))
+                if (circle.ShouldArchiveTo(/* archive */))
                 {
-                    if (_archiveCircles.Add(circle.Id) == false)
+                    if (_archiveCircles.Contains(circle.Id))
+                    {
                         Logger.Warn($"CreateArchiveCircleIds(): Trying to add archive circle twice");
+                        continue;
+                    }
+
+                    _archiveCircles.Add(circle.Id);                        
                 }
             }
+
+            _archiveCircles.Sort();
         }
+
+        // IEnumerable implementation - use the Community iterate methods instead of this!
+        public IEnumerator<CommunityCircle> GetEnumerator() => _circleDict.Values.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

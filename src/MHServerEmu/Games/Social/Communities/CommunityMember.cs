@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections;
+using System.Text;
 using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Common.Extensions;
@@ -46,6 +47,8 @@ namespace MHServerEmu.Games.Social.Communities
         private AvatarSlotInfo[] _slots = new AvatarSlotInfo[0];
         private string _playerName = string.Empty;
         private string _secondaryPlayerName = string.Empty;
+        private BitArray _systemCircles = new((int)CircleId.NumCircles);
+
         private ulong[] _consoleAccountIds = new ulong[(int)PlayerAvatarIndex.Count];
 
         public Community Community { get; }
@@ -55,9 +58,8 @@ namespace MHServerEmu.Games.Social.Communities
         public PrototypeId RegionRef { get; private set; }
         public PrototypeId DifficultyRef { get; private set; }
         public CommunityMemberOnlineStatus IsOnline { get; private set; }
-        public int[] ArchiveCircleIds { get; set; }
 
-        public int NumCircles { get => ArchiveCircleIds.Length; }
+        public int NumCircles { get => _systemCircles.Count; }
 
         public CommunityMember(Community community, ulong playerDbId, string playerName)
         {
@@ -66,7 +68,7 @@ namespace MHServerEmu.Games.Social.Communities
             _playerName = playerName;
         }
 
-        public void Decode(CodedInputStream stream)
+        public bool Decode(CodedInputStream stream)
         {
             RegionRef = stream.ReadPrototypeEnum<Prototype>();
             DifficultyRef = stream.ReadPrototypeEnum<Prototype>();
@@ -90,12 +92,22 @@ namespace MHServerEmu.Games.Social.Communities
             _consoleAccountIds[0] = stream.ReadRawVarint64();
             _consoleAccountIds[1] = stream.ReadRawVarint64();
 
-            ArchiveCircleIds = new int[stream.ReadRawInt32()];
-            for (int i = 0; i < ArchiveCircleIds.Length; i++)
-                ArchiveCircleIds[i] = stream.ReadRawInt32();
+            int numCircles = stream.ReadRawInt32();
+            for (int i = 0; i < numCircles; i++)
+            {
+                int archiveCircleId = stream.ReadRawInt32();
+                CommunityCircle circle = Community.CircleManager.GetCircleByArchiveCircleId(archiveCircleId);
+                if (circle == null)
+                    return Logger.ErrorReturn(false, $"Decode(): Circle not found when reading member. archiveCircleId=0x{archiveCircleId:X}, member={this}, community={Community}");
+
+                SetBitForCircle(_systemCircles, circle, true);
+
+            }
+
+            return true;
         }
 
-        public void Encode(CodedOutputStream stream)
+        public bool Encode(CodedOutputStream stream)
         {
             stream.WritePrototypeEnum<Prototype>(RegionRef);
             stream.WritePrototypeEnum<Prototype>(DifficultyRef);
@@ -115,9 +127,27 @@ namespace MHServerEmu.Games.Social.Communities
             stream.WriteRawVarint64(_consoleAccountIds[0]);
             stream.WriteRawVarint64(_consoleAccountIds[1]);
 
-            stream.WriteRawInt32(ArchiveCircleIds.Length);
-            foreach (int circleId in ArchiveCircleIds)
-                stream.WriteRawInt32(circleId);
+            // The whole circle system is such a mess lol
+            int numCircles = 0;
+            foreach (CommunityCircle circle in Community.IterateCircles(this))
+            {
+                if (circle.ShouldArchiveTo(/* archive */))
+                    numCircles++;
+            }
+            stream.WriteRawInt32(numCircles);
+
+            foreach (CommunityCircle circle in Community.IterateCircles(this))
+            {
+                if (circle.ShouldArchiveTo(/* archive */) == false) continue;
+
+                int archiveCircleId = Community.CircleManager.GetArchiveCircleId(circle);
+                if (archiveCircleId == 1)
+                    return Logger.ErrorReturn(false, $"Encode(): Invalid archive circle id returned for circle in archive. circle={circle}");
+
+                stream.WriteRawInt32(archiveCircleId);
+            }
+
+            return true;
         }
 
         public string GetName(PlayerAvatarIndex avatarIndex = PlayerAvatarIndex.Primary)
@@ -169,6 +199,34 @@ namespace MHServerEmu.Games.Social.Communities
             return true;
         }
 
+        /// <summary>
+        /// Checks if this <see cref="CommunityMember"/> is in the provided <see cref="CommunityCircle"/>.
+        /// </summary>
+        public bool IsInCircle(CommunityCircle circle)
+        {
+            int circleId = (int)circle.Id;
+            if ((circleId >= 0 && circleId < _systemCircles.Length) == false)
+                return Logger.WarnReturn(false, $"IsInCircle(): Invalid circle id for bitset. circle={circle}");
+
+            return _systemCircles[circleId];
+        }
+
+        /// <summary>
+        /// Sets the bit value for the provided <see cref="CommunityCircle"/>.
+        /// </summary>
+        public bool AddRemoveFromCircle(bool add, CommunityCircle circle)
+        {
+            // This method is pretty much just a wrapper around SetBitForCircle since user circles never got implemented.
+            if (circle.Type != CircleType.System)
+                return Logger.WarnReturn(false, $"AddRemoveFromCircle(): Only system circles are supported. add={add}, circle={circle}, member={this}");
+
+            return SetBitForCircle(_systemCircles, circle, add);
+        }
+
+        /// <summary>
+        /// Updates state with new data from a <see cref="CommunityMemberBroadcast"/> instance.
+        /// Returns <see cref="CommunityMemberUpdateOptionBits"/> that specifies the fields the were updated.
+        /// </summary>
         public CommunityMemberUpdateOptionBits ReceiveBroadcast(CommunityMemberBroadcast broadcast)
         {
             CommunityMemberUpdateOptionBits updateOptionBits = CommunityMemberUpdateOptionBits.None;
@@ -319,13 +377,10 @@ namespace MHServerEmu.Games.Social.Communities
                 sb.AppendLine($"Slot{i}: {_slots[i]}");
 
             sb.AppendLine($"{nameof(IsOnline)}: {IsOnline}");
-
             sb.AppendLine($"{nameof(_secondaryPlayerName)}: {_secondaryPlayerName}");
             sb.AppendLine($"{nameof(_consoleAccountIds)}[0]: {_consoleAccountIds[0]}");
             sb.AppendLine($"{nameof(_consoleAccountIds)}[1]: {_consoleAccountIds[1]}");
-
-            for (int i = 0; i < ArchiveCircleIds.Length; i++)
-                sb.AppendLine($"ArchiveCircleId{i}: {ArchiveCircleIds[i]}");
+            sb.AppendLine($"{nameof(_systemCircles)}: {_systemCircles}");
 
             return sb.ToString();
         }
@@ -348,6 +403,19 @@ namespace MHServerEmu.Games.Social.Communities
             PrototypeId oldRef = DifficultyRef;
             DifficultyRef = difficultyRef;
             return oldRef;
+        }
+
+        /// <summary>
+        /// Sets the bit value for the provided <see cref="CommunityCircle"/>.
+        /// </summary>
+        private bool SetBitForCircle(BitArray bitSet, CommunityCircle circle, bool value)
+        {
+            int circleId = (int)circle.Id;
+            if ((circleId >= 0 && circleId < bitSet.Length) == false)
+                return Logger.WarnReturn(false, $"SetBitForCircle(): Invalid circle id for bitset. value={value}, circle={circle}, member={this}");
+
+            bitSet[circleId] = value;
+            return true;
         }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace MHServerEmu.Games.Social.Communities
 {
-    // Seems like user type never ended up being implemented
+    // User circles never ended up being implemented
     public enum CircleType
     {
         None,
@@ -10,8 +10,7 @@ namespace MHServerEmu.Games.Social.Communities
         User
     }
 
-    // We currenly use SystemCircle as circleId since there are no user circles anyway
-    public enum SystemCircle
+    public enum CircleId    // also known as SystemCircle from symbolic lookup
     {
         // The names below are written to serialization archives, do not change
         __None,
@@ -32,17 +31,17 @@ namespace MHServerEmu.Games.Social.Communities
 
         private static readonly CommunityCirclePrototype[] Prototypes = new CommunityCirclePrototype[]
         {
-            new(SystemCircle.__None,    false,  false,  false,  false,  false,  false,  false,  false, 0,   false,  CommunityCirclePrototypeFlags.None),
-            new(SystemCircle.__Friends, true,   true,   false,  false,  false,  false,  false,  false, 96,  true,   CommunityCirclePrototypeFlags.Flag1),
-            new(SystemCircle.__Ignore,  true,   true,   false,  true,   true,   false,  false,  false, 128, false,  CommunityCirclePrototypeFlags.None),
-            new(SystemCircle.__Nearby,  false,  false,  false,  false,  true,   false,  false,  false, 0,   false,  CommunityCirclePrototypeFlags.Flag0),
-            new(SystemCircle.__Party,   false,  true,   false,  false,  false,  false,  true,   false, 0,   false,  CommunityCirclePrototypeFlags.Flag1),
-            new(SystemCircle.__Guild,   false,  false,  false,  false,  false,  false,  true,   false, 0,   false,  CommunityCirclePrototypeFlags.Flag2),
+            new(CircleId.__None,    false,  false,  false,  false,  false,  false,  false,  false, 0,   false,  CommunityCirclePrototypeFlags.None),
+            new(CircleId.__Friends, true,   true,   false,  false,  false,  false,  false,  false, 96,  true,   CommunityCirclePrototypeFlags.Flag1),
+            new(CircleId.__Ignore,  true,   true,   false,  true,   true,   false,  false,  false, 128, false,  CommunityCirclePrototypeFlags.None),
+            new(CircleId.__Nearby,  false,  false,  false,  false,  true,   false,  false,  false, 0,   false,  CommunityCirclePrototypeFlags.Flag0),
+            new(CircleId.__Party,   false,  true,   false,  false,  false,  false,  true,   false, 0,   false,  CommunityCirclePrototypeFlags.Flag1),
+            new(CircleId.__Guild,   false,  false,  false,  false,  false,  false,  true,   false, 0,   false,  CommunityCirclePrototypeFlags.Flag2),
         };
 
         public Community Community { get; }
         public string Name { get; }
-        public SystemCircle Id { get; }
+        public CircleId Id { get; }
         public CircleType Type { get; }
 
         public bool IsPersistent { get => GetPrototype().IsPersistent; }
@@ -53,7 +52,7 @@ namespace MHServerEmu.Games.Social.Communities
         /// <summary>
         /// Constructs a new <see cref="CommunityCircle"/> instance.
         /// </summary>
-        public CommunityCircle(Community community, string name, SystemCircle id, CircleType type)
+        public CommunityCircle(Community community, string name, CircleId id, CircleType type)
         {
             Community = community;
             Name = name;
@@ -61,7 +60,7 @@ namespace MHServerEmu.Games.Social.Communities
             Type = type;
         }
 
-        public bool ShouldArchiveTo(/* Archive archive */)
+        public bool ShouldArchiveTo(/* archive */)
         {
             // TODO: Archive::IsReplication(), Archive::IsPersistent(), CommunityCircle::IsPersistent(), Archive::IsMigration(), CommunityCircle:IsMigrated()
             return true;

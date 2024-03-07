@@ -23,6 +23,9 @@ namespace MHServerEmu.Games.Social.Communities
 
         public int NumMembers { get => _communityMemberDict.Count; }
 
+        public int NumCircleIteratorsInScope { get; private set; } = 0;
+        public int NumMemberIteratorsInScope { get; private set; } = 0;
+
         public Community(Player owner)
         {
             Owner = owner;
@@ -106,21 +109,21 @@ namespace MHServerEmu.Games.Social.Communities
         /// <summary>
         /// Adds a new <see cref="CommunityMember"/>. Returns <see langword="false"/> if a member with the specified dbId already exists.
         /// </summary>
-        public bool AddMember(ulong playerDbId, string playerName, int circleId)
+        public bool AddMember(ulong playerDbId, string playerName, CircleId circleId)
         {
             CommunityMember member = GetMember(playerDbId);
 
             if (member != null) return false;
 
             member = CreateMember(playerDbId, playerName);
-            member.ArchiveCircleIds = new int[] { circleId };
+            member.AddRemoveFromCircle(true, CircleManager.GetCircle(circleId));
             return true;
         }
 
         /// <summary>
         /// Removes the <see cref="CommunityMember"/> with the specified dbId. Returns <see langword="false"/> if no such member exists.
         /// </summary>
-        public bool RemoveMember(ulong playerDbId, SystemCircle circleId)
+        public bool RemoveMember(ulong playerDbId, CircleId circleId)
         {
             CommunityMember member = GetMember(playerDbId);
 
@@ -162,12 +165,12 @@ namespace MHServerEmu.Games.Social.Communities
         /// <summary>
         /// Returns the <see cref="CommunityCircle"/> of this <see cref="Community/> with the specified id.
         /// </summary>
-        public CommunityCircle GetCircle(SystemCircle circleId) => CircleManager.GetCircle(circleId);
+        public CommunityCircle GetCircle(CircleId circleId) => CircleManager.GetCircle(circleId);
 
         /// <summary>
-        /// Returns the name of the specified <see cref="SystemCircle"/>.
+        /// Returns the name of the specified <see cref="CircleId"/>.
         /// </summary>
-        public static string GetLocalizedSystemCircleName(SystemCircle id)
+        public static string GetLocalizedSystemCircleName(CircleId id)
         {
             // NOTE: This is overriden in CCommunity to return the actually localized string.
             // Base implementation just returns the string representation of the value.
@@ -175,7 +178,51 @@ namespace MHServerEmu.Games.Social.Communities
             return id.ToString();
         }
 
-        // TODO: Iterators
+        #region Iterators
+
+        // These methods are replacements for CommunityCircleIterator and CommunityMemberIterator classes
+
+        /// <summary>
+        /// Iterates all <see cref="CommunityCircle"/> instance in the provided <see cref="Community"/>.
+        /// </summary>
+        public static IEnumerable<CommunityCircle> IterateCircles(Community community)
+        {
+            community.NumCircleIteratorsInScope++;
+
+            try
+            {
+                foreach (CommunityCircle circle in community.CircleManager)
+                    yield return circle;
+            }
+            finally
+            {
+                community.NumCircleIteratorsInScope--;
+            }
+        }
+
+        /// <summary>
+        /// Iterates all <see cref="CommunityCircle"/> instances that the provided <see cref="CommunityMember"/> belongs to.
+        /// </summary>
+        public static IEnumerable<CommunityCircle> IterateCircles(CommunityMember member)
+        {
+            Community community = member.Community;
+            community.NumCircleIteratorsInScope++;
+
+            try
+            {
+                foreach (CommunityCircle circle in community.CircleManager)
+                {
+                    if (member.IsInCircle(circle))
+                        yield return circle;
+                }
+            }
+            finally
+            {
+                community.NumCircleIteratorsInScope--;
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// Creates a new <see cref="CommunityMember"/> instance for the specified DbId for this <see cref="Community"/>.
