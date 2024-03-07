@@ -722,7 +722,7 @@ namespace MHServerEmu.Games.Generators.Population
             float minClusterDistance = minDistance + Radius;
             float maxClusterDistance = minDistance + clusterSize;
 
-            if (maxDistance - minDistance > clusterSize)
+            if (maxDistance - minDistance < clusterSize)
                 maxDistance = (int)maxClusterDistance;
 
             var sectorPicker = new Picker<int>(Random);
@@ -736,7 +736,7 @@ namespace MHServerEmu.Games.Generators.Population
                 maxClusterDistance += clusterSize;
                 if (maxClusterDistance > maxDistance) break;
             }
-
+            float shiftAngle = Random.NextFloat() * 2;
             while (sectorPicker.Empty() == false)
             {
                 if (sectorPicker.PickRemove(out int sector) == false) return false;
@@ -744,11 +744,12 @@ namespace MHServerEmu.Games.Generators.Population
                 int numClusters = (int)MathF.Floor(clusterPI * distance);
                 int startCluster = Random.Next(numClusters);
                 float clusterAngle = MathHelper.PI2 / numClusters;
-
+                
                 for (int cluster = 0; cluster < numClusters; cluster++)
                 {
-                    int div = (startCluster + cluster) % numClusters;
-                    (float rotSin, float rotCos) = MathF.SinCos(clusterAngle * div);
+                    int div = startCluster + cluster;
+                    float angle = clusterAngle * div + shiftAngle;                    
+                    (float rotSin, float rotCos) = MathF.SinCos(MathHelper.WrapAngleRadians(angle));
                     Vector3 testPosition = new (position.X + distance * rotCos, position.Y + distance * rotSin, position.Z);
                     if (Region.GetCellAtPosition(testPosition) == null) continue;
                     SetParentRelativePosition(testPosition);
