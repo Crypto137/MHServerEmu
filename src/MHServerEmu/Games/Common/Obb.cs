@@ -1,4 +1,6 @@
 ﻿
+using System.Text;
+
 namespace MHServerEmu.Games.Common
 {
     public class Obb
@@ -66,6 +68,15 @@ namespace MHServerEmu.Games.Common
                 TransformPoint(triangle.Points[2])
                 );
             return aabb.Intersects(otherTriangle);
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new();
+            //sb.AppendLine($"Center: {Center.ToStringFloat()}");
+            sb.AppendLine($" Box: {Extents.ToStringFloat()}");
+            //sb.AppendLine($"Orientation: {Orientation.ToStringFloat()}");
+            return sb.ToString();
         }
     }
 }

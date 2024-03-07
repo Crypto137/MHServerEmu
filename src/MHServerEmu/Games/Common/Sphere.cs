@@ -1,4 +1,6 @@
-﻿namespace MHServerEmu.Games.Common
+﻿using System.Text;
+
+namespace MHServerEmu.Games.Common
 {
     public class Sphere : IBounds
     {
@@ -246,5 +248,13 @@
 
         public float RadiusSquared => Radius * Radius;
         public static Sphere Zero => new(Vector3.Zero, 0.0f);
+
+        public override string ToString()
+        {
+            StringBuilder sb = new();
+            sb.AppendLine($" Radius: {Radius}");
+            //sb.AppendLine($"A: {Center.ToStringFloat()}");
+            return sb.ToString();
+        }
     }
 }

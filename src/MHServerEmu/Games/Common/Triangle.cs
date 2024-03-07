@@ -1,4 +1,6 @@
-﻿namespace MHServerEmu.Games.Common
+﻿using System.Text;
+
+namespace MHServerEmu.Games.Common
 {
     public class Triangle
     {
@@ -195,6 +197,13 @@
             }
             return true;
         }
-
+        public override string ToString()
+        {
+            StringBuilder sb = new();
+            sb.AppendLine($" P0: {Points[0].ToStringFloat()}");
+            sb.AppendLine($" P1: {Points[1].ToStringFloat()}");
+            sb.AppendLine($" P2: {Points[1].ToStringFloat()}");
+            return sb.ToString();
+        }
     }
 }

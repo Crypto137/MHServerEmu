@@ -509,6 +509,7 @@ namespace MHServerEmu.Games.Regions
 
         public DateTime CreatedTime { get; set; }
         public DateTime VisitedTime { get; private set; }
+        public string PrototypeName => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef);
 
         public override string ToString()
         {

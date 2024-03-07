@@ -3,7 +3,6 @@ using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Generators;
 using MHServerEmu.Grouping;
 using MHServerEmu.PlayerManagement.Accounts;
 
@@ -126,6 +125,39 @@ namespace MHServerEmu.Common.Commands
             return $"Current area: {client.AOI.Region.GetCellAtPosition(client.LastPosition).Area.PrototypeName}";
         }
 
+        [Command("region", "Shows current region.", AccountUserLevel.User)]
+        public string Region(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+            return $"Current region: {client.AOI.Region.PrototypeName}";
+        }
+
+        [Command("isblocked", "Usage: debug isblocked [EntityId1] [EntityId2]", AccountUserLevel.User)]
+
+        public string isblocked(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+            if (@params == null || @params.Length == 0) return "Invalid arguments. Type 'help debug isblocked' to get help.";
+
+            if (ulong.TryParse(@params[0], out ulong entityId1) == false)
+                return $"Failed to parse EntityId1 {@params[0]}";
+
+            if (ulong.TryParse(@params[1], out ulong entityId2) == false)
+                return $"Failed to parse EntityId2 {@params[1]}";
+
+            var manager = client.CurrentGame.EntityManager;
+
+            var entity = manager.GetEntityById(entityId1);
+            if (entity is not WorldEntity entity1) return $"No entity found for {entityId1}";
+
+            entity = manager.GetEntityById(entityId2);
+            if (entity is not WorldEntity entity2) return $"No entity found for {entityId2}";
+
+            Bounds bounds = entity1.Bounds;
+            bool isBlocked = Games.Regions.Region.IsBoundsBlockedByEntity(bounds, entity2, BlockingCheckFlags.CheckSpawns);
+            return $"Entities\n [{entity1.PrototypeName}]\n [{entity2.PrototypeName}]\nIsBlocked: {isBlocked}";
+        }
+
         [Command("near", "Usage: debug near [radius]. Default radius 100.", AccountUserLevel.User)]
         public string Near(string[] @params, FrontendClient client)
         {
@@ -139,7 +171,7 @@ namespace MHServerEmu.Common.Commands
             List<string> entities = new();
             foreach (var worldEntity in client.AOI.Region.IterateEntitiesInVolume(near, new()))
             {
-                string name = GameDatabase.GetFormattedPrototypeName(worldEntity.BaseData.PrototypeId);
+                string name = worldEntity.PrototypeName;
                 ulong entityId = worldEntity.BaseData.EntityId;
                 string status = string.Empty;
                 if (client.AOI.EntityLoaded(entityId) == false) status += "[H]";
@@ -194,9 +226,11 @@ namespace MHServerEmu.Common.Commands
             if (entity == null) return "No entity found.";
 
             ChatHelper.SendMetagameMessage(client, $"Entity[{entityId}]: {GameDatabase.GetFormattedPrototypeName(entity.BaseData.PrototypeId)}");
-            ChatHelper.SendMetagameMessages(client, entity.Properties.ToString().Split("\r\n", StringSplitOptions.RemoveEmptyEntries), false);
-            if (entity is WorldEntity worldEntity)
+            ChatHelper.SendMetagameMessages(client, entity.Properties.ToString().Split("\r\n", StringSplitOptions.RemoveEmptyEntries), false);            
+            if (entity is WorldEntity worldEntity) {
+                ChatHelper.SendMetagameMessages(client, worldEntity.Bounds.ToString().Split("\r\n", StringSplitOptions.RemoveEmptyEntries), false);
                 ChatHelper.SendMetagameMessages(client, worldEntity.PowerCollectionToString().Split("\r\n", StringSplitOptions.RemoveEmptyEntries), false);
+            }
             return string.Empty;
         }
     }

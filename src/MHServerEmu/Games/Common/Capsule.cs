@@ -1,4 +1,6 @@
-﻿namespace MHServerEmu.Games.Common
+﻿using System.Text;
+
+namespace MHServerEmu.Games.Common
 {
     public class Capsule
     {
@@ -103,6 +105,13 @@
         public bool Intersects(Triangle triangle)
         {
             return triangle.TriangleIntersectsCircle2D(A, Radius);
+        }
+        public override string ToString()
+        {
+            StringBuilder sb = new();
+            sb.AppendLine($" Radius: {Radius}");
+            sb.AppendLine($" Height: {Vector3.Length(B-A)}");
+            return sb.ToString();
         }
     }
 }

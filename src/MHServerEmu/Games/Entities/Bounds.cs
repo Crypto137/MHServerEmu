@@ -3,6 +3,7 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData.Prototypes;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -592,6 +593,24 @@ namespace MHServerEmu.Games.Entities
 
             return Vector3.Zero;  
         }
-
+        public override string ToString()
+        {
+            StringBuilder sb = new();
+            sb.AppendLine($"Bounds: [{Geometry}]");
+            switch (Geometry)
+            {
+                case GeometryType.OBB: sb.Append(ToObb().ToString()); break;
+                case GeometryType.AABB: sb.Append(ToAabb().BoxToString()); break;
+                case GeometryType.Capsule: sb.Append(ToCapsule().ToString()); break;
+                case GeometryType.Sphere: sb.Append(ToSphere().ToString()); break;
+                case GeometryType.Triangle: sb.Append(ToTriangle2D().ToString()); break;
+                case GeometryType.Wedge:
+                    Triangle[] triangles = GetWedgeTriangles();
+                    sb.Append(triangles[0].ToString());
+                    sb.AppendLine(triangles[1].ToString());
+                    break;
+            }
+            return sb.ToString();
+        }
     }
 }
