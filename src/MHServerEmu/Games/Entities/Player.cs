@@ -8,6 +8,7 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -63,6 +64,8 @@ namespace MHServerEmu.Games.Entities
 
         private SortedSet<AvailableBadges> _badges;
 
+        private Dictionary<PrototypeId, StashTabOptions> _stashTabOptionsDict;
+
         public MissionManager MissionManager { get; set; }
         public ReplicatedPropertyCollection AvatarProperties { get; set; }
         public ulong ShardId { get; set; }
@@ -79,7 +82,6 @@ namespace MHServerEmu.Games.Entities
 
         public GameplayOptions GameplayOptions { get; set; }
         public AchievementState AchievementState { get; set; }
-        public StashTabOption[] StashTabOptions { get; set; }
 
         public Player(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
@@ -89,7 +91,7 @@ namespace MHServerEmu.Games.Entities
             ulong shardId, ReplicatedVariable<string> playerName, ReplicatedVariable<string> secondaryPlayerName,
             MatchQueueStatus matchQueueStatus, bool emailVerified, TimeSpan accountCreationTimestamp, ReplicatedVariable<ulong> partyId,
             Community community, List<PrototypeId> unlockedInventoryList, SortedSet<AvailableBadges> badges,
-            GameplayOptions gameplayOptions, AchievementState achievementState, StashTabOption[] stashTabOptions) : base(baseData)
+            GameplayOptions gameplayOptions, AchievementState achievementState, Dictionary<PrototypeId, StashTabOptions> stashTabOptionsDict) : base(baseData)
         {
             ReplicationPolicy = replicationPolicy;
             Properties = properties;
@@ -108,7 +110,7 @@ namespace MHServerEmu.Games.Entities
             _badges = badges;
             GameplayOptions = gameplayOptions;
             AchievementState = achievementState;
-            StashTabOptions = stashTabOptions;
+            _stashTabOptionsDict = stashTabOptionsDict;
         }
 
         protected override void Decode(CodedInputStream stream)
@@ -164,9 +166,7 @@ namespace MHServerEmu.Games.Entities
 
             AchievementState = new(stream);
 
-            StashTabOptions = new StashTabOption[stream.ReadRawVarint64()];
-            for (int i = 0; i < StashTabOptions.Length; i++)
-                StashTabOptions[i] = new(stream);
+            _stashTabOptionsDict = new();
         }
 
         public override void Encode(CodedOutputStream stream)
@@ -220,8 +220,12 @@ namespace MHServerEmu.Games.Entities
 
             AchievementState.Encode(stream);
 
-            stream.WriteRawVarint64((ulong)StashTabOptions.Length);
-            foreach (StashTabOption option in StashTabOptions) option.Encode(stream);
+            stream.WriteRawVarint64((ulong)_stashTabOptionsDict.Count);
+            foreach (var kvp in _stashTabOptionsDict)
+            {
+                stream.WritePrototypeEnum<Prototype>(kvp.Key);
+                kvp.Value.Encode(stream);
+            }
         }
 
         /// <summary>
@@ -324,10 +328,19 @@ namespace MHServerEmu.Games.Entities
                 .Build());
             #endregion
 
-            // Unlock all stash tabs
+            // Initialize stash tabs
+            // TODO: GetStashInventoryProtoRefs();
             _unlockedInventoryList.Clear();
+            _stashTabOptionsDict.Clear();
+            StashTabInsert((PrototypeId)5005110710305499393, 0);    // Insert the default stash tab
+
+            // Unlock all locked stash tabs
             foreach (EntityInventoryAssignmentPrototype stashAssignment in prototype.StashInventories)
-                UnlockInventory(stashAssignment.Inventory);
+            {
+                var inventoryPrototype = GameDatabase.GetPrototype<InventoryPrototype>(stashAssignment.Inventory);
+                if (inventoryPrototype.LockedByDefault)
+                    UnlockInventory(inventoryPrototype.DataRef);
+            }
 
             // Add all badges to admin accounts
             if (account.UserLevel == AccountUserLevel.Admin)
@@ -388,8 +401,9 @@ namespace MHServerEmu.Games.Entities
             _unlockedInventoryList.Add(invProtoRef);
 
             // Entity::addInventory()
-            // Inventory::IsPlayerStashInventory()
-            // Player::StashTabInsert()
+
+            if (Inventory.IsPlayerStashInventory(invProtoRef))
+                StashTabInsert(invProtoRef, 0);
 
             return true;
         }
@@ -408,6 +422,136 @@ namespace MHServerEmu.Games.Entities
         /// Returns <see langword="true"/> if this <see cref="Player"/> has the specified badge.
         /// </summary>
         public bool HasBadge(AvailableBadges badge) => _badges.Contains(badge);
+
+        /// <summary>
+        /// Updates <see cref="StashTabOptions"/> with the data from a <see cref="NetMessageStashTabOptions"/>.
+        /// </summary>
+        public bool UpdateStashTabOptions(NetMessageStashTabOptions optionsMessage)
+        {
+            PrototypeId inventoryRef = (PrototypeId)optionsMessage.InventoryRefId;
+
+            if (Inventory.IsPlayerStashInventory(inventoryRef) == false)
+                return Logger.WarnReturn(false, $"UpdateStashTabOptions(): {inventoryRef} is not a player stash ref");
+
+            // Entity::GetInventoryByRef() != nullptr
+
+            if (_stashTabOptionsDict.TryGetValue(inventoryRef, out StashTabOptions options) == false)
+            {
+                options = new();
+                _stashTabOptionsDict.Add(inventoryRef, options);
+            }
+
+            // Stash tab names can be up to 30 characters long
+            if (optionsMessage.HasDisplayName)
+                options.DisplayName = optionsMessage.DisplayName.Substring(0, 30);
+
+            if (optionsMessage.HasIconPathAssetId)
+                options.IconPathAssetId = (AssetId)optionsMessage.IconPathAssetId;
+
+            if (optionsMessage.HasColor)
+                options.Color = (StashTabColor)optionsMessage.Color;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Inserts the stash tab with the specified <see cref="PrototypeId"/> into the specified position.
+        /// </summary>
+        public bool StashTabInsert(PrototypeId insertedStashRef, int newSortOrder)
+        {
+            if (newSortOrder < 0)
+                return Logger.WarnReturn(false, $"StashTabInsert(): Invalid newSortOrder {newSortOrder}");
+
+            if (insertedStashRef == PrototypeId.Invalid)
+                return Logger.WarnReturn(false, $"StashTabInsert(): Invalid insertedStashRef {insertedStashRef}");
+
+            if (Inventory.IsPlayerStashInventory(insertedStashRef) == false)
+                return Logger.WarnReturn(false, $"StashTabInsert(): insertedStashRef {insertedStashRef} is not a player stash ref");
+
+            // Entity::GetInventoryByRef(insertedStashRef) != nullptr
+
+            // Get options for the tab we need to insert
+            if (_stashTabOptionsDict.TryGetValue(insertedStashRef, out StashTabOptions options))
+            {
+                // Only new tabs are allowed to be in the same location
+                if (options.SortOrder == newSortOrder)
+                    return Logger.WarnReturn(false, "StashTabInsert(): Inserting an existing tab at the same location");
+            }
+            else
+            {
+                // Create options of the tab if there are none yet
+                options = new();
+                _stashTabOptionsDict.Add(insertedStashRef, options);
+            }
+
+            // No need to sort if only have a single tab
+            if (_stashTabOptionsDict.Count == 1)
+                return true;
+
+            // Assign the new sort order to the tab
+            int oldSortOrder = options.SortOrder;
+            options.SortOrder = newSortOrder;
+
+            // Rearrange other tabs
+            int sortIncrement, sortStart, sortFinish;
+
+            if (oldSortOrder < newSortOrder)
+            {
+                // If the sort order is increasing we need to shift back everything in between
+                sortIncrement = -1;
+                sortStart = oldSortOrder;
+                sortFinish = newSortOrder;
+            }
+            else
+            {
+                // If the sort order is decreasing we need to shift forward everything in between
+                sortIncrement = 1;
+                sortStart = newSortOrder;
+                sortFinish = oldSortOrder;
+            }
+
+            // Fall back in case our sort order overflows for some reason
+            SortedList<int, PrototypeId> sortedTabs = new();
+            bool orderOverflow = false;
+
+            // Update sort order for all tabs
+            foreach (var kvp in _stashTabOptionsDict)
+            {
+                PrototypeId sortRef = kvp.Key;
+                StashTabOptions sortOptions = kvp.Value;
+
+                if (sortRef != insertedStashRef)
+                {
+                    // Move the tab if:
+                    // 1. We are adding a new tab and everything needs to be shifted
+                    // 2. We are within our sort range
+                    bool isNew = oldSortOrder == newSortOrder && sortOptions.SortOrder >= newSortOrder;
+                    bool isWithinSortRange = sortOptions.SortOrder >= sortStart && sortOptions.SortOrder <= sortFinish;
+
+                    if (isNew || isWithinSortRange)
+                        sortOptions.SortOrder += sortIncrement;
+                }
+
+                // Make sure our sort order does not exceed the amount of stored stash tab options
+                sortedTabs[sortOptions.SortOrder] = sortRef;
+                if (sortOptions.SortOrder >= _stashTabOptionsDict.Count)
+                    orderOverflow = true;
+            }
+
+            // Reorder if our sort order overflows
+            if (orderOverflow)
+            {
+                Logger.Warn($"StashTabInsert(): Sort order overflow, reordering");
+                int fixedOrder = 0;
+                foreach (var kvp in sortedTabs)
+                {
+                    _stashTabOptionsDict[kvp.Value].SortOrder = fixedOrder;
+                    fixedOrder++;
+                }
+            }
+
+            return true;
+        }
 
         protected override void BuildString(StringBuilder sb)
         {
@@ -448,8 +592,8 @@ namespace MHServerEmu.Games.Entities
             sb.AppendLine($"{nameof(GameplayOptions)}: {GameplayOptions}");
             sb.AppendLine($"{nameof(AchievementState)}: {AchievementState}");
 
-            for (int i = 0; i < StashTabOptions.Length; i++)
-                sb.AppendLine($"StashTabOption{i}: {StashTabOptions[i]}");
+            foreach (var kvp in _stashTabOptionsDict)
+                sb.Append($"StashTabOptions[{GameDatabase.GetFormattedPrototypeName(kvp.Key)}]: {kvp.Value}");
         }
     }
 }
