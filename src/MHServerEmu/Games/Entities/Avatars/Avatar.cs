@@ -79,8 +79,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             OwnerPlayerDbId = stream.ReadRawVarint64();
 
             // Similar throwaway string to Player entity
-            string emptyString = stream.ReadRawString();
-            if (emptyString != string.Empty)
+            if (stream.ReadRawString() != string.Empty)
                 Logger.Warn($"Decode(): emptyString is not empty!");
 
             GuildMember.SerializeReplicationRuntimeInfo(stream, boolDecoder, ref _guildId, ref _guildName, ref _guildMembership);

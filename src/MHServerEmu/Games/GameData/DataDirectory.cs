@@ -296,10 +296,26 @@ namespace MHServerEmu.Games.GameData
         /// </summary>
         public PrototypeId GetPrototypeDataRefByGuid(PrototypeGuid guid)
         {
-            if (_prototypeGuidToDataRefDict.TryGetValue(guid, out var id) == false)
+            if (guid == PrototypeGuid.Invalid)
                 return PrototypeId.Invalid;
 
-            return id;
+            // Guid found
+            if (_prototypeGuidToDataRefDict.TryGetValue(guid, out PrototypeId id))
+                return id;
+
+            // Guid not found, we need a replacement
+            ulong oldGuid = (ulong)guid;
+            ulong newGuid = 0;
+
+            // Loop until we get all potential replacements (if a replacement was replaced)
+            while (GetGuidReplacement(oldGuid, ref newGuid))
+                oldGuid = newGuid;
+
+            if (_prototypeGuidToDataRefDict.TryGetValue((PrototypeGuid)newGuid, out id))
+                return id;
+
+            // Replacement didn't work either
+            return PrototypeId.Invalid;
         }
 
         /// <summary>
@@ -311,6 +327,17 @@ namespace MHServerEmu.Games.GameData
                 return PrototypeGuid.Invalid;
 
             return record.PrototypeGuid;
+        }
+
+        /// <summary>
+        /// Retrieves a potential replacement for a GUID. Returns <see langword="true"/> if replacement found.
+        /// </summary>
+        public bool GetGuidReplacement(ulong guid, ref ulong newGuid)
+        {
+            var record = ReplacementDirectory.GetReplacementRecord(guid);
+            if (record == null) return false;
+            newGuid = record.NewGuid;
+            return true;
         }
 
         /// <summary>
