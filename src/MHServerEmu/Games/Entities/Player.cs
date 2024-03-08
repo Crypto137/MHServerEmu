@@ -167,6 +167,12 @@ namespace MHServerEmu.Games.Entities
             AchievementState = new(stream);
 
             _stashTabOptionsDict = new();
+            ulong numStashTabOptions = stream.ReadRawVarint64();
+            for (ulong i = 0; i < numStashTabOptions; i++)
+            {
+                PrototypeId stashTabRef = stream.ReadPrototypeEnum<Prototype>();
+                _stashTabOptionsDict.Add(stashTabRef, new(stream));
+            }
         }
 
         public override void Encode(CodedOutputStream stream)
@@ -329,18 +335,13 @@ namespace MHServerEmu.Games.Entities
             #endregion
 
             // Initialize stash tabs
-            // TODO: GetStashInventoryProtoRefs();
             _unlockedInventoryList.Clear();
             _stashTabOptionsDict.Clear();
-            StashTabInsert((PrototypeId)5005110710305499393, 0);    // Insert the default stash tab
+            OnEnterGameInitStashTabOptions();
 
-            // Unlock all locked stash tabs
-            foreach (EntityInventoryAssignmentPrototype stashAssignment in prototype.StashInventories)
-            {
-                var inventoryPrototype = GameDatabase.GetPrototype<InventoryPrototype>(stashAssignment.Inventory);
-                if (inventoryPrototype.LockedByDefault)
-                    UnlockInventory(inventoryPrototype.DataRef);
-            }
+            // Unlock all locked tabs
+            foreach (PrototypeId stashRef in GetStashInventoryProtoRefs(true, false))
+                UnlockInventory(stashRef);
 
             // Add all badges to admin accounts
             if (account.UserLevel == AccountUserLevel.Admin)
@@ -409,19 +410,31 @@ namespace MHServerEmu.Games.Entities
         }
 
         /// <summary>
-        /// Add the specified badge to this <see cref="Player"/>. Returns <see langword="true"/> if successful.
+        /// Returns <see cref="PrototypeId"/> values of all locked and/or unlocked stash tabs for this <see cref="Player"/>.
         /// </summary>
-        public bool AddBadge(AvailableBadges badge) => _badges.Add(badge);
+        public IEnumerable<PrototypeId> GetStashInventoryProtoRefs(bool getLocked, bool getUnlocked)
+        {
+            var playerProto = GameDatabase.GetPrototype<PlayerPrototype>(BaseData.PrototypeId);
+            if (playerProto == null) yield break;
+            if (playerProto.StashInventories == null) yield break;
 
-        /// <summary>
-        /// Removes the specified badge from this <see cref="Player"/>. Returns <see langword="true"/> if successful.
-        /// </summary>
-        public bool RemoveBadge(AvailableBadges badge) => _badges.Remove(badge);
+            foreach (EntityInventoryAssignmentPrototype invAssignmentProto in playerProto.StashInventories)
+            {
+                if (invAssignmentProto.Inventory == PrototypeId.Invalid) continue;
 
-        /// <summary>
-        /// Returns <see langword="true"/> if this <see cref="Player"/> has the specified badge.
-        /// </summary>
-        public bool HasBadge(AvailableBadges badge) => _badges.Contains(badge);
+                // TODO: isLocked = Entity::GetInventory() == null
+                // For now use prototype data + unlock list for this
+                var inventoryProto = GameDatabase.GetPrototype<InventoryPrototype>(invAssignmentProto.Inventory);
+                bool isLocked = true;
+                isLocked &= inventoryProto.LockedByDefault;
+                isLocked &= _unlockedInventoryList.Contains(inventoryProto.DataRef) == false;
+                // Although the unified stash from the console version is unlocked by default, we consider it always locked on PC
+                isLocked |= inventoryProto.ConvenienceLabel == ConvenienceLabel.UnifiedStash;
+
+                if (isLocked && getLocked || isLocked == false && getUnlocked)
+                    yield return invAssignmentProto.Inventory;
+            }
+        }
 
         /// <summary>
         /// Updates <see cref="StashTabOptions"/> with the data from a <see cref="NetMessageStashTabOptions"/>.
@@ -553,6 +566,21 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        /// <summary>
+        /// Add the specified badge to this <see cref="Player"/>. Returns <see langword="true"/> if successful.
+        /// </summary>
+        public bool AddBadge(AvailableBadges badge) => _badges.Add(badge);
+
+        /// <summary>
+        /// Removes the specified badge from this <see cref="Player"/>. Returns <see langword="true"/> if successful.
+        /// </summary>
+        public bool RemoveBadge(AvailableBadges badge) => _badges.Remove(badge);
+
+        /// <summary>
+        /// Returns <see langword="true"/> if this <see cref="Player"/> has the specified badge.
+        /// </summary>
+        public bool HasBadge(AvailableBadges badge) => _badges.Contains(badge);
+
         protected override void BuildString(StringBuilder sb)
         {
             base.BuildString(sb);
@@ -594,6 +622,18 @@ namespace MHServerEmu.Games.Entities
 
             foreach (var kvp in _stashTabOptionsDict)
                 sb.Append($"StashTabOptions[{GameDatabase.GetFormattedPrototypeName(kvp.Key)}]: {kvp.Value}");
+        }
+
+        /// <summary>
+        /// Initializes <see cref="StashTabOptions"/> for any stash tabs that are unlocked but don't have any options yet.
+        /// </summary>
+        private void OnEnterGameInitStashTabOptions()
+        {
+            foreach (PrototypeId stashRef in GetStashInventoryProtoRefs(false, true))
+            {
+                if (_stashTabOptionsDict.ContainsKey(stashRef) == false)
+                    StashTabInsert(stashRef, 0);
+            }
         }
     }
 }
