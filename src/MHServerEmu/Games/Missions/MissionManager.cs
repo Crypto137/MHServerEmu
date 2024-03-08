@@ -172,15 +172,43 @@ namespace MHServerEmu.Games.Missions
         }
 
         public static readonly InvalidMission[] InvalidMissions = new InvalidMission[]
-{
+        {
             InvalidMission.CH00TrainingPathingController,
             InvalidMission.CH00NPETrainingRoom,
-};
+            InvalidMission.CivilWarDailyCapOM01DefeatSpiderman,
+            InvalidMission.CivilWarDailyCapOM02DestroyCrates,
+            InvalidMission.CivilWarDailyCapOM04SaveDumDum,
+            InvalidMission.CivilWarDailyCapOM05HydraZoo,
+            InvalidMission.CivilWarDailyCapOM06TeamUpDefeatSHIELD,
+            InvalidMission.CivilWarDailyCapOM07InteractDefeatTurrets,
+            InvalidMission.CivilWarDailyIronmanOM01DefeatSpiderman,
+            InvalidMission.CivilWarDailyIronmanOM02DefeatThor,
+            InvalidMission.CivilWarDailyIronmanOM03SaveJocasta,
+            InvalidMission.CivilWarDailyIronmanOM04DestroyCrates,
+            InvalidMission.CivilWarDailyIronmanOM05HydraZoo,
+            InvalidMission.CivilWarDailyIronmanOM06TeamUpDefeatAIM,
+            InvalidMission.CivilWarDailyIronmanOM07InteractDefeatHand,
+        };
 
         public enum InvalidMission : ulong
         {
             CH00TrainingPathingController = 3126128604301631533,
             CH00NPETrainingRoom = 17508547083537161214,
+
+            CivilWarDailyCapOM01DefeatSpiderman = 422011357013684087,
+            CivilWarDailyCapOM02DestroyCrates = 16726105122650140376,
+            CivilWarDailyCapOM04SaveDumDum = 1605098401643834761,
+            CivilWarDailyCapOM05HydraZoo = 16108444317179587775,
+            CivilWarDailyCapOM06TeamUpDefeatSHIELD = 16147585525915463870,
+            CivilWarDailyCapOM07InteractDefeatTurrets = 11425191689973609005,
+
+            CivilWarDailyIronmanOM01DefeatSpiderman = 10006467310735077687,
+            CivilWarDailyIronmanOM02DefeatThor = 10800373542996422450,
+            CivilWarDailyIronmanOM03SaveJocasta = 1692932771743412129,
+            CivilWarDailyIronmanOM04DestroyCrates = 2469191070689800346,
+            CivilWarDailyIronmanOM05HydraZoo = 14812369129072701055,
+            CivilWarDailyIronmanOM06TeamUpDefeatAIM = 6784016171053232444,
+            CivilWarDailyIronmanOM07InteractDefeatHand = 8062690480896488047,
         }
     }
 }
