@@ -74,7 +74,6 @@ namespace MHServerEmu.Games.Entities
 
         public ReplicatedVariable<ulong> PartyId { get; set; }
         public Community Community { get; set; }
-        public bool UnkBool { get; set; }
         public PrototypeId[] StashInventories { get; set; }
         public GameplayOptions GameplayOptions { get; set; }
         public AchievementState AchievementState { get; set; }
@@ -87,7 +86,7 @@ namespace MHServerEmu.Games.Entities
             MissionManager missionManager, ReplicatedPropertyCollection avatarProperties,
             ulong shardId, ReplicatedVariable<string> playerName, ReplicatedVariable<string> secondaryPlayerName,
             MatchQueueStatus matchQueueStatus, bool emailVerified, TimeSpan accountCreationTimestamp, ReplicatedVariable<ulong> partyId,
-            Community community, bool unkBool, PrototypeId[] stashInventories, SortedSet<AvailableBadges> badges,
+            Community community, PrototypeId[] stashInventories, SortedSet<AvailableBadges> badges,
             GameplayOptions gameplayOptions, AchievementState achievementState, StashTabOption[] stashTabOptions) : base(baseData)
         {
             ReplicationPolicy = replicationPolicy;
@@ -103,7 +102,6 @@ namespace MHServerEmu.Games.Entities
             AccountCreationTimestamp = accountCreationTimestamp;
             PartyId = partyId;
             Community = community;
-            UnkBool = unkBool;
             StashInventories = stashInventories;
             _badges = badges;
             GameplayOptions = gameplayOptions;
@@ -138,8 +136,7 @@ namespace MHServerEmu.Games.Entities
             GuildMember.SerializeReplicationRuntimeInfo(stream, boolDecoder, ref _guildId, ref _guildName, ref _guildMembership);
 
             // There is a string here that is always empty and is immediately discarded after reading, purpose unknown
-            string emptyString = stream.ReadRawString();
-            if (emptyString != string.Empty)
+            if (stream.ReadRawString() != string.Empty)
                 Logger.Warn($"Decode(): emptyString is not empty!");
 
             Community = new(this);
@@ -147,7 +144,9 @@ namespace MHServerEmu.Games.Entities
             bool hasCommunityData = boolDecoder.ReadBool(stream);
             if (hasCommunityData) Community.Decode(stream);
 
-            UnkBool = boolDecoder.ReadBool(stream);
+            // Unknown bool, always false
+            if (boolDecoder.ReadBool(stream))
+                Logger.Warn($"Decode(): unkBool is true!");
 
             StashInventories = new PrototypeId[stream.ReadRawVarint64()];
             for (int i = 0; i < StashInventories.Length; i++)
@@ -179,7 +178,7 @@ namespace MHServerEmu.Games.Entities
             boolEncoder.EncodeBool(EmailVerified);
             boolEncoder.EncodeBool(_guildId != GuildMember.InvalidGuildId);
             boolEncoder.EncodeBool(true);   // hasCommunity TODO: Check archive's replication policy and send community only to owners
-            boolEncoder.EncodeBool(UnkBool);
+            boolEncoder.EncodeBool(false);  // Unknown unused bool, always false
 
             GameplayOptions.EncodeBools(boolEncoder);
 
@@ -393,7 +392,6 @@ namespace MHServerEmu.Games.Entities
             }
 
             sb.AppendLine($"{nameof(Community)}: {Community}");
-            sb.AppendLine($"{nameof(UnkBool)}: {UnkBool}");
 
             for (int i = 0; i < StashInventories.Length; i++)
                 sb.AppendLine($"StashInventory{i}: {GameDatabase.GetPrototypeName(StashInventories[i])}");
