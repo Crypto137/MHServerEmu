@@ -6,8 +6,6 @@ using MHServerEmu.Common.Logging;
 
 namespace MHServerEmu.Games.Social.Communities
 {
-    // If you are working on this: keep in mind that circles is a half-baked and severely overengineered feature. Tread carefully.
-
     /// <summary>
     /// Manages <see cref="CommunityCircle"/> instances.
     /// </summary>

@@ -10,7 +10,7 @@ namespace MHServerEmu.Games.Social.Communities
         User
     }
 
-    public enum CircleId    // also known as SystemCircle from symbolic lookup
+    public enum CircleId    // Also known as SystemCircle from symbolic lookup
     {
         // The names below are written to serialization archives, do not change
         __None,
@@ -93,7 +93,7 @@ namespace MHServerEmu.Games.Social.Communities
         }
         
         /// <summary>
-        /// Returns <see cref="true"/> if this <see cref="CommunityCircle"/> contains the <see cref="CommunityMember"/> with the specified dbGuid.
+        /// Returns <see cref="true"/> if this <see cref="CommunityCircle"/> contains the <see cref="CommunityMember"/> with the specified DbId.
         /// </summary>
         public bool ContainsPlayerDbGuid(ulong playerDbGuid)
         {
@@ -119,7 +119,7 @@ namespace MHServerEmu.Games.Social.Communities
         public override string ToString() => Name;
 
         /// <summary>
-        /// Returns the <see cref="CommunityCirclePrototype"/> instance for this <see cref="CommunityCircle"/>/
+        /// Returns the <see cref="CommunityCirclePrototype"/> instance for this <see cref="CommunityCircle"/>.
         /// </summary>
         private CommunityCirclePrototype GetPrototype()
         {

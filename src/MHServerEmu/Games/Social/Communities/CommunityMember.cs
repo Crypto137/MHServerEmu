@@ -44,12 +44,12 @@ namespace MHServerEmu.Games.Social.Communities
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private long _lastLogoutTimeAsFileTimeUtc = 0;
-        private AvatarSlotInfo[] _slots = new AvatarSlotInfo[0];
+        private AvatarSlotInfo[] _slots = Array.Empty<AvatarSlotInfo>();
         private string _playerName = string.Empty;
         private string _secondaryPlayerName = string.Empty;
-        private BitArray _systemCircles = new((int)CircleId.NumCircles);
+        private readonly BitArray _systemCircles = new((int)CircleId.NumCircles);
 
-        private ulong[] _consoleAccountIds = new ulong[(int)PlayerAvatarIndex.Count];
+        private readonly ulong[] _consoleAccountIds = new ulong[(int)PlayerAvatarIndex.Count];
 
         public Community Community { get; }
 
@@ -99,7 +99,6 @@ namespace MHServerEmu.Games.Social.Communities
                     return Logger.ErrorReturn(false, $"Decode(): Circle not found when reading member. archiveCircleId=0x{archiveCircleId:X}, member={this}, community={Community}");
 
                 SetBitForCircle(_systemCircles, circle, true);
-
             }
 
             return true;
@@ -234,8 +233,8 @@ namespace MHServerEmu.Games.Social.Communities
         }
 
         /// <summary>
-        /// Updates state with new data from a <see cref="CommunityMemberBroadcast"/> instance.
-        /// Returns <see cref="CommunityMemberUpdateOptionBits"/> that specifies the fields the were updated.
+        /// Updates the state of this <see cref="CommunityMember"/> with new data from a <see cref="CommunityMemberBroadcast"/> instance.
+        /// Returns <see cref="CommunityMemberUpdateOptionBits"/> that specifies the fields that were updated.
         /// </summary>
         public CommunityMemberUpdateOptionBits ReceiveBroadcast(CommunityMemberBroadcast broadcast)
         {
@@ -243,20 +242,27 @@ namespace MHServerEmu.Games.Social.Communities
 
             if (broadcast.HasCurrentRegionRefId)
             {
+                // CommunityMember::updateRegionRef()
                 PrototypeId newRegionRef = (PrototypeId)broadcast.CurrentRegionRefId;
-                PrototypeId oldRegionRef = UpdateRegionRef(newRegionRef);
 
-                if (newRegionRef != oldRegionRef)
+                if (RegionRef != newRegionRef)
+                {
+                    RegionRef = newRegionRef;
                     updateOptionBits |= CommunityMemberUpdateOptionBits.RegionRef;
+                }
+                    
             }
 
             if (broadcast.HasCurrentDifficultyRefId)
             {
+                // CommunityMember::updateDifficultyRef()
                 PrototypeId newDifficultyRef = (PrototypeId)broadcast.CurrentDifficultyRefId;
-                PrototypeId oldAvatarRef = UpdateDifficultyRef(newDifficultyRef);
 
-                if (newDifficultyRef != oldAvatarRef)
+                if (DifficultyRef != newDifficultyRef)
+                {
+                    DifficultyRef = newDifficultyRef;
                     updateOptionBits |= CommunityMemberUpdateOptionBits.DifficultyRef;
+                }  
             }
 
             if (broadcast.HasIsOnline)
@@ -402,26 +408,6 @@ namespace MHServerEmu.Games.Social.Communities
             sb.AppendLine();
 
             return sb.ToString();
-        }
-
-        /// <summary>
-        /// Updates the current region ref and returns the old one.
-        /// </summary>
-        private PrototypeId UpdateRegionRef(PrototypeId regionRef)
-        {
-            PrototypeId oldRef = RegionRef;
-            RegionRef = regionRef;
-            return oldRef;
-        }
-
-        /// <summary>
-        /// Updates the current difficulty ref and returns the old one.
-        /// </summary>
-        private PrototypeId UpdateDifficultyRef(PrototypeId difficultyRef)
-        {
-            PrototypeId oldRef = DifficultyRef;
-            DifficultyRef = difficultyRef;
-            return oldRef;
         }
 
         /// <summary>

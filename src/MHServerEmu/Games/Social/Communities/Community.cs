@@ -8,7 +8,7 @@ using MHServerEmu.Games.Entities;
 namespace MHServerEmu.Games.Social.Communities
 {
     /// <summary>
-    /// Contains all players displayed in the social tab sorted by circles..
+    /// Contains a collection of entries displayed in a <see cref="Player"/>'s social tab divided by circles (tabs).
     /// </summary>
     public class Community
     {
@@ -25,6 +25,9 @@ namespace MHServerEmu.Games.Social.Communities
         public int NumCircles { get => CircleManager.NumCircles; }
         public int NumMembers { get => _communityMemberDict.Count; }
 
+        /// <summary>
+        /// Constructs a new <see cref="CommunityCircle"/> for the provided owner <see cref="Player"/>/
+        /// </summary>
         public Community(Player owner)
         {
             Owner = owner;
@@ -93,7 +96,7 @@ namespace MHServerEmu.Games.Social.Communities
         }
 
         /// <summary>
-        /// Returns the <see cref="CommunityMember"/> with the specified dbId. Returns <see langword="null"/> if not found.
+        /// Returns the <see cref="CommunityMember"/> with the specified DbId. Returns <see langword="null"/> if not found.
         /// </summary>
         public CommunityMember GetMember(ulong dbId)
         {
@@ -164,7 +167,7 @@ namespace MHServerEmu.Games.Social.Communities
         }
 
         /// <summary>
-        /// Returns the number <see cref="CommunityMember"/> instances belonging to the specified <see cref="CircleId"/>.
+        /// Returns the number of <see cref="CommunityMember"/> instances belonging to the specified <see cref="CircleId"/>.
         /// </summary>
         public int NumMembersInCircle(CircleId circleId)
         {
@@ -182,7 +185,7 @@ namespace MHServerEmu.Games.Social.Communities
         }
 
         /// <summary>
-        /// Receives a <see cref="CommunityMemberBroadcast"/> and routes it to the relevant <see cref="CommunityMember"/>.
+        /// Routes the provided <see cref="CommunityMemberBroadcast"/> to the relevant <see cref="CommunityMember"/>.
         /// </summary>
         public bool ReceiveMemberBroadcast(CommunityMemberBroadcast broadcast)
         {
@@ -211,7 +214,7 @@ namespace MHServerEmu.Games.Social.Communities
         }
 
         /// <summary>
-        /// Returns the <see cref="CommunityCircle"/> of this <see cref="Community/> with the specified id.
+        /// Returns the <see cref="CommunityCircle"/> of this <see cref="Community"/> with the specified id.
         /// </summary>
         public CommunityCircle GetCircle(CircleId circleId) => CircleManager.GetCircle(circleId);
 
@@ -270,7 +273,7 @@ namespace MHServerEmu.Games.Social.Communities
         }
 
         /// <summary>
-        /// Iterates all <see cref="CommunityMember"/> instances in this <see cref="Community"/>
+        /// Iterates all <see cref="CommunityMember"/> instances in this <see cref="Community"/>.
         /// </summary>
         public IEnumerable<CommunityMember> IterateMembers()
         {
@@ -288,7 +291,7 @@ namespace MHServerEmu.Games.Social.Communities
         }
 
         /// <summary>
-        /// Iterates all <see cref="CommunityMember"/> instances in this <see cref="Community"/>.
+        /// Iterates all <see cref="CommunityMember"/> instances belonging to the provided <see cref="CommunityCircle"/>.
         /// </summary>
         public IEnumerable<CommunityMember> IterateMembers(CommunityCircle circle)
         {
@@ -311,12 +314,12 @@ namespace MHServerEmu.Games.Social.Communities
         #endregion
 
         /// <summary>
-        /// Creates a new <see cref="CommunityMember"/> instance for the specified DbId for this <see cref="Community"/>.
+        /// Creates a new <see cref="CommunityMember"/> instance in this <see cref="Community"/> for the specified DbId.
         /// </summary>
         private CommunityMember CreateMember(ulong playerDbId, string playerName)
         {
             if (_numMemberIteratorsInScope > 0)
-                return Logger.WarnReturn<CommunityMember>(null, $"CreateMember(): Trying to create a new member while iterating the community {this}");
+                return Logger.WarnReturn<CommunityMember>(null, $"CreateMember(): Trying to create a new member while iterating the community");
 
             if (playerDbId == 0)
                 return Logger.WarnReturn<CommunityMember>(null, $"CreateMember(): Invalid player id when creating community member {playerName}");
@@ -336,7 +339,7 @@ namespace MHServerEmu.Games.Social.Communities
         private bool DestroyMember(CommunityMember member)
         {
             if (_numMemberIteratorsInScope > 0)
-                return Logger.WarnReturn(false, $"CreateMember(): Trying to destroy a member while iterating the community");
+                return Logger.WarnReturn(false, $"DestroyMember(): Trying to destroy a member while iterating the community");
 
             return _communityMemberDict.Remove(member.DbId);
         }
