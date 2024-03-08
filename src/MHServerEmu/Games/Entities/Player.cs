@@ -59,6 +59,8 @@ namespace MHServerEmu.Games.Entities
         private string _guildName;
         private GuildMembership _guildMembership;
 
+        private List<PrototypeId> _unlockedInventoryList;
+
         private SortedSet<AvailableBadges> _badges;
 
         public MissionManager MissionManager { get; set; }
@@ -74,7 +76,7 @@ namespace MHServerEmu.Games.Entities
 
         public ReplicatedVariable<ulong> PartyId { get; set; }
         public Community Community { get; set; }
-        public PrototypeId[] StashInventories { get; set; }
+
         public GameplayOptions GameplayOptions { get; set; }
         public AchievementState AchievementState { get; set; }
         public StashTabOption[] StashTabOptions { get; set; }
@@ -86,7 +88,7 @@ namespace MHServerEmu.Games.Entities
             MissionManager missionManager, ReplicatedPropertyCollection avatarProperties,
             ulong shardId, ReplicatedVariable<string> playerName, ReplicatedVariable<string> secondaryPlayerName,
             MatchQueueStatus matchQueueStatus, bool emailVerified, TimeSpan accountCreationTimestamp, ReplicatedVariable<ulong> partyId,
-            Community community, PrototypeId[] stashInventories, SortedSet<AvailableBadges> badges,
+            Community community, List<PrototypeId> unlockedInventoryList, SortedSet<AvailableBadges> badges,
             GameplayOptions gameplayOptions, AchievementState achievementState, StashTabOption[] stashTabOptions) : base(baseData)
         {
             ReplicationPolicy = replicationPolicy;
@@ -102,7 +104,7 @@ namespace MHServerEmu.Games.Entities
             AccountCreationTimestamp = accountCreationTimestamp;
             PartyId = partyId;
             Community = community;
-            StashInventories = stashInventories;
+            _unlockedInventoryList = unlockedInventoryList;
             _badges = badges;
             GameplayOptions = gameplayOptions;
             AchievementState = achievementState;
@@ -148,9 +150,10 @@ namespace MHServerEmu.Games.Entities
             if (boolDecoder.ReadBool(stream))
                 Logger.Warn($"Decode(): unkBool is true!");
 
-            StashInventories = new PrototypeId[stream.ReadRawVarint64()];
-            for (int i = 0; i < StashInventories.Length; i++)
-                StashInventories[i] = stream.ReadPrototypeEnum<Prototype>();
+            _unlockedInventoryList = new();
+            ulong numUnlockedInventories = stream.ReadRawVarint64();
+            for (ulong i = 0; i < numUnlockedInventories; i++)
+                _unlockedInventoryList.Add(stream.ReadPrototypeEnum<Prototype>());
 
             _badges = new();
             ulong numBadges = stream.ReadRawVarint64();
@@ -205,8 +208,9 @@ namespace MHServerEmu.Games.Entities
 
             boolEncoder.WriteBuffer(stream);   // UnkBool
 
-            stream.WriteRawVarint64((ulong)StashInventories.Length);
-            foreach (PrototypeId stashInventory in StashInventories) stream.WritePrototypeEnum<Prototype>(stashInventory);
+            stream.WriteRawVarint64((ulong)_unlockedInventoryList.Count);
+            foreach (PrototypeId unlockedInventory in _unlockedInventoryList)
+                stream.WritePrototypeEnum<Prototype>(unlockedInventory);
 
             stream.WriteRawVarint64((ulong)_badges.Count);
             foreach (AvailableBadges badge in _badges)
@@ -225,6 +229,8 @@ namespace MHServerEmu.Games.Entities
         /// </summary>
         public void InitializeFromDBAccount(DBAccount account)
         {
+            var prototype = GameDatabase.GetPrototype<PlayerPrototype>(BaseData.PrototypeId);
+
             // Adjust properties
             foreach (var accountAvatar in account.Avatars.Values)
             {
@@ -318,6 +324,11 @@ namespace MHServerEmu.Games.Entities
                 .Build());
             #endregion
 
+            // Unlock all stash tabs
+            _unlockedInventoryList.Clear();
+            foreach (EntityInventoryAssignmentPrototype stashAssignment in prototype.StashInventories)
+                UnlockInventory(stashAssignment.Inventory);
+
             // Add all badges to admin accounts
             if (account.UserLevel == AccountUserLevel.Admin)
             {
@@ -351,6 +362,36 @@ namespace MHServerEmu.Games.Entities
                 return 0;
 
             return _consoleAccountIds[(int)avatarIndex];
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if the inventory with the specified <see cref="PrototypeId"/> is unlocked for this <see cref="Player"/>.
+        /// </summary>
+        public bool IsInventoryUnlocked(PrototypeId invProtoRef)
+        {
+            if (invProtoRef == PrototypeId.Invalid)
+                return Logger.WarnReturn(false, $"IsInventoryUnlocked(): invProtoRef == PrototypeId.Invalid");
+
+            return _unlockedInventoryList.Contains(invProtoRef);
+        }
+
+        /// <summary>
+        /// Unlocks the inventory with the specified <see cref="PrototypeId"/> for this <see cref="Player"/>.
+        /// </summary>
+        public bool UnlockInventory(PrototypeId invProtoRef)
+        {
+            // Entity::GetInventoryByRef()
+
+            if (_unlockedInventoryList.Contains(invProtoRef))
+                return Logger.WarnReturn(false, $"UnlockInventory(): {GameDatabase.GetFormattedPrototypeName(invProtoRef)} is already unlocked");
+
+            _unlockedInventoryList.Add(invProtoRef);
+
+            // Entity::addInventory()
+            // Inventory::IsPlayerStashInventory()
+            // Player::StashTabInsert()
+
+            return true;
         }
 
         /// <summary>
@@ -393,8 +434,8 @@ namespace MHServerEmu.Games.Entities
 
             sb.AppendLine($"{nameof(Community)}: {Community}");
 
-            for (int i = 0; i < StashInventories.Length; i++)
-                sb.AppendLine($"StashInventory{i}: {GameDatabase.GetPrototypeName(StashInventories[i])}");
+            for (int i = 0; i < _unlockedInventoryList.Count; i++)
+                sb.AppendLine($"_unlockedInventoryList[{i}]: {GameDatabase.GetPrototypeName(_unlockedInventoryList[i])}");
 
             if (_badges.Any())
             {
