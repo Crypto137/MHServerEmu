@@ -139,7 +139,12 @@ namespace MHServerEmu.Auth
                     // Send a TOS popup when the client uses tos@test.com as email
                     if (loginDataPB.EmailAddress.ToLower() == "tos@test.com")
                     {
-                        SendTosPopup(response);
+                        var tosTicket = AuthTicket.CreateBuilder()
+                            .SetSessionId(0)
+                            .SetTosurl("http://localhost/tos")  // The client adds &locale=en_us to this url (or another locale code)
+                            .Build();
+
+                        await SendMessageAsync(response, tosTicket, (int)AuthStatusCode.NeedToAcceptLegal);
                         return;
                     }
 
@@ -157,8 +162,7 @@ namespace MHServerEmu.Auth
                     // Send an AuthTicket if we were able to create a session
                     Logger.Info($"Sending AuthTicket for sessionId {session.Id} to the game client on {endPointName}");
 
-                    // Create a new AuthTicket, write it to a buffer, and send the response
-                    byte[] buffer = new GameMessage(AuthTicket.CreateBuilder()
+                    var ticket = AuthTicket.CreateBuilder()
                         .SetSessionKey(ByteString.CopyFrom(session.Key))
                         .SetSessionToken(ByteString.CopyFrom(session.Token))
                         .SetSessionId(session.Id)
@@ -168,18 +172,15 @@ namespace MHServerEmu.Auth
                         .SetHasnews(ConfigManager.PlayerManager.ShowNewsOnLogin)
                         .SetNewsurl(ConfigManager.PlayerManager.NewsUrl)
                         .SetSuccess(true)
-                        .Build()).Serialize();
+                        .Build();
 
-                    response.KeepAlive = false;
-                    response.ContentType = "application/octet-stream";
-                    response.ContentLength64 = buffer.Length;
-                    await response.OutputStream.WriteAsync(buffer);
-
+                    await SendMessageAsync(response, ticket);
                     break;
 
                 case FrontendProtocolMessage.PrecacheHeaders:
                     // The client sends this message on startup
                     Logger.Trace($"Received PrecacheHeaders message");
+                    await SendMessageAsync(response, PrecacheHeadersMessageResponse.DefaultInstance);
                     break;
 
                 default:
@@ -188,17 +189,15 @@ namespace MHServerEmu.Auth
             }
         }
 
-        private async void SendTosPopup(HttpListenerResponse response)
+        private async Task SendMessageAsync(HttpListenerResponse response, IMessage message, int statusCode = 200)
         {
-            byte[] buffer = new GameMessage(AuthTicket.CreateBuilder()
-                .SetSessionId(0)
-                .SetTosurl("http://localhost/tos")  // The client adds &locale=en_us to this url (or another locale code)
-                .Build()).Serialize();
+            byte[] buffer = new GameMessage(message).Serialize();
 
-            response.StatusCode = (int)AuthStatusCode.NeedToAcceptLegal;
+            response.StatusCode = statusCode;
             response.KeepAlive = false;
             response.ContentType = "application/octet-stream";
             response.ContentLength64 = buffer.Length;
+
             await response.OutputStream.WriteAsync(buffer);
         }
 
