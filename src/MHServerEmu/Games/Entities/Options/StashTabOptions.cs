@@ -44,12 +44,7 @@ namespace MHServerEmu.Games.Entities.Options
 
         public override string ToString()
         {
-            StringBuilder sb = new();
-            sb.AppendLine($"{nameof(DisplayName)}: {DisplayName}");
-            sb.AppendLine($"{nameof(IconPathAssetId)}: {GameDatabase.GetAssetName(IconPathAssetId)}");
-            sb.AppendLine($"{nameof(SortOrder)}: {SortOrder}");
-            sb.AppendLine($"{nameof(Color)}: {Color}");
-            return sb.ToString();
+            return $"[{SortOrder}] displayName={DisplayName} iconPathAssetId={GameDatabase.GetAssetName(IconPathAssetId)} color={Color}";
         }
     }
 }

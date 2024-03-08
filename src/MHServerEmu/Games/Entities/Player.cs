@@ -621,7 +621,7 @@ namespace MHServerEmu.Games.Entities
             sb.AppendLine($"{nameof(AchievementState)}: {AchievementState}");
 
             foreach (var kvp in _stashTabOptionsDict)
-                sb.Append($"StashTabOptions[{GameDatabase.GetFormattedPrototypeName(kvp.Key)}]: {kvp.Value}");
+                sb.AppendLine($"StashTabOptions[{GameDatabase.GetFormattedPrototypeName(kvp.Key)}]: {kvp.Value}");
         }
 
         /// <summary>
