@@ -267,7 +267,26 @@ namespace MHServerEmu.Games.Entities
             // TODO: Set this after creating all avatar entities via a NetMessageSetProperty in the same packet
             Properties[PropertyEnum.PlayerMaxAvatarLevel] = 60;
 
-            _playerName.Value = account.PlayerName;    // Used for highlighting your name in leaderboards
+            // Complete all missions
+            MissionManager = new();
+            MissionManager.Owner = this;
+            MissionManager.PrototypeId = (PrototypeId)account.CurrentAvatar.Prototype;
+            foreach (PrototypeId missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(MissionPrototype),
+                PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+            {
+                var missionPrototype = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
+                if (MissionManager.ShouldCreateMission(missionPrototype))
+                {
+                    Mission mission = MissionManager.CreateMission(missionRef);
+                    mission.State = MissionState.Completed;
+                    mission.Objectives = Array.Empty<Objective>();
+                    mission.Participants = new ulong[] { BaseData.EntityId };
+                    MissionManager.InsertMission(mission);
+                }
+            }
+
+            // Set name
+            _playerName.Value = account.PlayerName;    // NOTE: This is used for highlighting your name in leaderboards
 
             // Todo: send this separately in NetMessageGiftingRestrictionsUpdate on login
             Properties[PropertyEnum.LoginCount] = 1075;

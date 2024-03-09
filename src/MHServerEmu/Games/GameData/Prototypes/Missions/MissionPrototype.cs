@@ -302,6 +302,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         private KeywordsMask _keywordsMask = new();
         private KeywordsMask _regionRestrictionKeywordsMask = new();
 
+        public override bool ApprovedForUse()
+        {
+            // TODO: console support
+            return GameDatabase.DesignStateOk(DesignState);
+        }
+
+        public bool IsLiveTuningEnabled()
+        {
+            // Not yet implemented
+            return true;
+        }
+
         bool HasKeyword(KeywordPrototype keywordProto)
         {
             return keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);
@@ -442,7 +454,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return regions.Count > 0;
         }
-
     }
 
     public class OpenMissionPrototype : MissionPrototype
