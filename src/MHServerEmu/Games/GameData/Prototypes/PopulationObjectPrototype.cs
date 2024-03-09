@@ -222,13 +222,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (marker is not EntityMarkerPrototype markerP) continue;
                 if (markerP.EntityGuid == PrototypeGuid.Invalid)
                 {
-                    Logger.Warn($"Marker at in Cell:\n  {ToString()}\nand position:\n  {markerP.Position.ToStringFloat()}\nhas invalid GUID");
+                    Logger.Warn($"Marker at in Cell:\n  {ToString()}\nand position:\n  {markerP.Position}\nhas invalid GUID");
                     continue;
                 }
                 PrototypeId markerRef = GameDatabase.GetDataRefByPrototypeGuid(markerP.EntityGuid);
                 if (markerRef == PrototypeId.Invalid)
                 {
-                    Logger.Warn($"Marker at in Cell:\n  {ToString()}\nand position:\n  {markerP.Position.ToStringFloat()}\nhas invalid Ref, GUID was valid, so likely prototype ref was deleted from calligraphy:\n  {markerP.LastKnownEntityName}");
+                    Logger.Warn($"Marker at in Cell:\n  {ToString()}\nand position:\n  {markerP.Position}\nhas invalid Ref, GUID was valid, so likely prototype ref was deleted from calligraphy:\n  {markerP.LastKnownEntityName}");
                     continue;
                 }
                 

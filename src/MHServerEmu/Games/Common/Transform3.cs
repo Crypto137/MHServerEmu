@@ -8,21 +8,9 @@ namespace MHServerEmu.Games.Common
         public Vector3 Col2 { get; set; }
         public Vector3 Col3 { get; set; }
 
-        public Vector3 Translation { 
-            get {
-                return Col3;
-            } 
-            set { 
-                Col3 = value;
-            } 
-        }
+        public Vector3 Translation { get => Col3; set => Col3 = value; }
 
-        public Vector3 Orientation { get => new(GetYawFromTransform3(this), 0.0f, 0.0f); }
-
-        public static float GetYawFromTransform3(Transform3 transform)
-        {
-            return MathF.Atan2(transform.Col0.Y, transform.Col0.X);
-        }
+        public Orientation Orientation => Orientation.FromTransform3(this);
 
         public Transform3(Transform3 transform)
         {
@@ -51,7 +39,7 @@ namespace MHServerEmu.Games.Common
         }
 
 
-        public static Transform3 BuildTransform(Vector3 translation, Vector3 rotation)
+        public static Transform3 BuildTransform(Vector3 translation, Orientation rotation)
         {
             Transform3 transform = RotationZYX(new Vector3(-rotation.Roll, -rotation.Pitch, rotation.Yaw));
             transform.Translation = translation;

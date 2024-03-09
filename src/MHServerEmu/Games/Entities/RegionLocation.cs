@@ -41,12 +41,12 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        private Vector3 _orientation;
-        public Vector3 GetOrientation() => IsValid() ? _orientation : new();
+        private Orientation _orientation;
+        public Orientation GetOrientation() => IsValid() ? _orientation : new();
 
-        public void SetOrientation(Vector3 orientation)
+        public void SetOrientation(Orientation orientation)
         {
-            if (Vector3.IsFinite(orientation)) _orientation = orientation;
+            if (Orientation.IsFinite(orientation)) _orientation = orientation;
         }
 
         public static float ProjectToFloor(CellPrototype cell, Vector3 position)

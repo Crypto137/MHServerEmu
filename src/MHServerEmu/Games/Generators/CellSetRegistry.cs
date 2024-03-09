@@ -22,7 +22,7 @@ namespace MHServerEmu.Games.Generators
     public class AreaTransition
     {
         public Vector3 Position;
-        public Vector3 Rotation;
+        public Orientation Rotation;
         public AreaTransitionPrototype Prototype;
     }
 

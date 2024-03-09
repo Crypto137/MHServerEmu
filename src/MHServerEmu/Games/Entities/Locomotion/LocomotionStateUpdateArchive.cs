@@ -15,7 +15,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
         public LocomotionMessageFlags FieldFlags { get; set; }
         public PrototypeId PrototypeId { get; set; }
         public Vector3 Position { get; set; }
-        public Vector3 Orientation { get; set; }
+        public Orientation Orientation { get; set; }
         public LocomotionState LocomotionState { get; set; }
 
         public LocomotionStateUpdateArchive(ByteString data)
@@ -29,10 +29,10 @@ namespace MHServerEmu.Games.Entities.Locomotion
             if (FieldFlags.HasFlag(LocomotionMessageFlags.HasEntityPrototypeId))
                 PrototypeId = stream.ReadPrototypeEnum<EntityPrototype>();
             
-            Position = new(stream, 3);
+            Position = new(stream);
 
             Orientation = FieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation)
-                ? new(stream, 6)
+                ? new(stream)
                 : new(stream.ReadRawZigZagFloat(6), 0f, 0f);
 
             LocomotionState = new(stream, FieldFlags);
@@ -53,12 +53,12 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 if (FieldFlags.HasFlag(LocomotionMessageFlags.HasEntityPrototypeId))
                     cos.WritePrototypeEnum<EntityPrototype>(PrototypeId);
 
-                Position.Encode(cos, 3);
+                Position.Encode(cos);
 
                 if (FieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation))
-                    Orientation.Encode(cos, 6);
+                    Orientation.Encode(cos);
                 else
-                    cos.WriteRawZigZagFloat(Orientation.X, 6);
+                    cos.WriteRawZigZagFloat(Orientation.Yaw, 6);
 
                 LocomotionState.Encode(cos, FieldFlags);
 

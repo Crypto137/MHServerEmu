@@ -421,7 +421,7 @@ namespace MHServerEmu.Games.Regions
                 return null;
             }
             Areas[area.Id] = area;
-            if (settings.RegionSettings.GenerateLog) Logger.Debug($"Adding area {area.PrototypeName}, id={area.Id}, areapos = {area.Origin.ToStringFloat()}, seed = {RandomSeed}");
+            if (settings.RegionSettings.GenerateLog) Logger.Debug($"Adding area {area.PrototypeName}, id={area.Id}, areapos = {area.Origin}, seed = {RandomSeed}");
             return area;
         }
 
@@ -628,7 +628,7 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        public bool FindTargetPosition(Vector3 markerPos, Vector3 markerRot, RegionConnectionTargetPrototype target)
+        public bool FindTargetPosition(Vector3 markerPos, Orientation markerRot, RegionConnectionTargetPrototype target)
         {
             Area targetArea;
 
@@ -706,14 +706,14 @@ namespace MHServerEmu.Games.Regions
                 if (client.EntityToTeleport != null) // TODO change teleport without reload Region
                 {
                     Vector3 position = new(client.EntityToTeleport.Location.GetPosition());
-                    Vector3 orientation = new(client.EntityToTeleport.Location.GetOrientation());
+                    Orientation orientation = new(client.EntityToTeleport.Location.GetOrientation());
                     if (client.EntityToTeleport.EntityPrototype is TransitionPrototype teleportEntity
                         && teleportEntity.SpawnOffset > 0) teleportEntity.CalcSpawnOffset(orientation, position);
                     client.StartPositon = position;
                     client.StartOrientation = orientation;
                     client.EntityToTeleport = null;
                 }
-                else if (RegionTransition.FindStartPosition(this, targetRef, out Vector3 position, out Vector3 orientation))
+                else if (RegionTransition.FindStartPosition(this, targetRef, out Vector3 position, out Orientation orientation))
                 {
                     client.StartPositon = position;
                     client.StartOrientation = orientation;
@@ -721,7 +721,7 @@ namespace MHServerEmu.Games.Regions
                 else
                 {
                     client.StartPositon = StartArea.Origin;
-                    client.StartOrientation = Vector3.Zero;
+                    client.StartOrientation = Orientation.Zero;
                 }
 
                 client.AOI.Reset(this);

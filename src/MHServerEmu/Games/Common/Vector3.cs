@@ -8,19 +8,10 @@ namespace MHServerEmu.Games.Common
 {
     public class Vector3
     {
-        // precision values: 3 for position, 6 for orientation
 
-        private float _x;
-        public float X { get => _x; set => _x = value; }
-        public float Yaw { get => _x; set => _x = value; } // for orientation
-
-        private float _y;
-        public float Y { get => _y; set => _y = value; }
-        public float Pitch { get => _y; set => _y = value; } // for orientation
-
-        private float _z;
-        public float Z { get => _z; set => _z = value; }
-        public float Roll { get => _z; set => _z = value; } // for orientation
+        public float X { get; set; }
+        public float Y { get; set; }
+        public float Z { get; set; }
 
         public float this[int index]
         {
@@ -43,9 +34,9 @@ namespace MHServerEmu.Games.Common
 
         public Vector3()
         {
-            _x = 0.0f;
-            _y = 0.0f;
-            _z = 0.0f;
+            X = 0.0f;
+            Y = 0.0f;
+            Z = 0.0f;
         }
 
         public Vector3(Vector3 vector)
@@ -64,9 +55,9 @@ namespace MHServerEmu.Games.Common
 
         public Vector3(float x, float y, float z)
         {
-            _x = x;
-            _y = y;
-            _z = z;
+            X = x;
+            Y = y;
+            Z = z;
         }
 
         public Vector3(CodedInputStream stream, int precision = 3)
@@ -85,9 +76,9 @@ namespace MHServerEmu.Games.Common
 
         public Vector3(float v)
         {
-            _x = v;
-            _y = v;
-            _z = v;
+            X = v;
+            Y = v;
+            Z = v;
         }
 
         public void Encode(CodedOutputStream stream, int precision = 3)
@@ -139,8 +130,8 @@ namespace MHServerEmu.Games.Common
         }
 
         public override int GetHashCode() => X.GetHashCode() ^ Y.GetHashCode() ^ Z.GetHashCode();
-        public override string ToString() => $"x:{X} y:{Y} z:{Z}";
-        public string ToStringFloat() => $"({X:0.00}, {Y:0.00}, {Z:0.00})";
+        public string ToStringNames() => $"x:{X} y:{Y} z:{Z}";
+        public override string ToString() => $"({X:0.00}, {Y:0.00}, {Z:0.00})";
         public static float Dot(Vector3 v1, Vector3 v2) => v1.X * v2.X + v1.Y * v2.Y + v1.Z * v2.Z;
         public static float SegmentPointDistanceSq(Vector3 a, Vector3 b, Vector3 c)
         {
@@ -198,14 +189,6 @@ namespace MHServerEmu.Games.Common
             );
         }
 
-        /// <summary>
-        /// Return a Vector3 where x is Yaw, y is Pitch and z is Roll
-        /// </summary>
-        public static Vector3 FromDeltaVector2D(Vector3 delta)
-        {
-            return new(MathF.Atan2(delta.Y, delta.X), 0.0f, 0.0f);
-        }
-
         public static Vector3 AxisAngleRotate(Vector3 pos, Vector3 axis, float angle)
         {
             if (Segment.EpsilonTest(LengthSquared(axis), 1.0f) == false) return pos;
@@ -226,9 +209,9 @@ namespace MHServerEmu.Games.Common
 
         public void RoundToNearestInteger()
         {
-            _x = MathF.Round(_x);
-            _y = MathF.Round(_y);
-            _z = MathF.Round(_z);
+            X = MathF.Round(X);
+            Y = MathF.Round(Y);
+            Z = MathF.Round(Z);
         }
 
 

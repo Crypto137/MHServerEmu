@@ -401,7 +401,7 @@ namespace MHServerEmu.Games
                     var teleportEntity = target.TransitionPrototype;
                     if (teleportEntity == null) return;
                     Vector3 targetPos = new(target.Location.GetPosition());
-                    Vector3 targetRot = target.Location.GetOrientation();
+                    Orientation targetRot = target.Location.GetOrientation();
 
                     teleportEntity.CalcSpawnOffset(targetRot, targetPos);
 

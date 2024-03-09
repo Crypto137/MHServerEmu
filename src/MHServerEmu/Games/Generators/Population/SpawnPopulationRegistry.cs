@@ -32,7 +32,7 @@ namespace MHServerEmu.Games.Generators.Population
             {               
                 reservation.Object = Object;
                 reservation.MissionRef = MissionRef;
-                //Logger.Warn($"{GameDatabase.GetFormattedPrototypeName(MissionRef)} {pos.ToStringFloat()}");
+                //Logger.Warn($"{GameDatabase.GetFormattedPrototypeName(MissionRef)} {pos}");
                 ClusterGroup clusterGroup = new(region, Random, Object, null, Properties, SpawnFlags);
                 clusterGroup.Initialize();
                 // set group position
