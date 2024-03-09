@@ -6,11 +6,14 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Common.Logging;
 
 namespace MHServerEmu.Games.Missions
 {
     public class MissionManager
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public PrototypeId PrototypeId { get; set; }
         public Dictionary<PrototypeId, Mission> Missions { get; set; } = new();
         public SortedDictionary<PrototypeGuid, LegendaryMissionBlacklist> LegendaryMissionBlacklists { get; set; } = new();
@@ -167,6 +170,56 @@ namespace MHServerEmu.Games.Missions
                 // IsMissionValidAndApprovedForUse
                 region.SpawnPopulation.MissionRegisty(missionProto);
             }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if the provided <see cref="MissionPrototype"/> is valid for this <see cref="MissionManager"/> instance.
+        /// </summary>
+        public bool ShouldCreateMission(MissionPrototype missionPrototype)
+        {
+            if (missionPrototype == null)
+                return Logger.WarnReturn(false, "ShouldCreateMission(): missionPrototype == false");
+
+            if (missionPrototype is OpenMissionPrototype)
+            {
+                if (IsRegionMissionManager() == false)
+                    return false;
+            }
+            else
+            {
+                if (IsPlayerMissionManager() == false)
+                    return false;
+            }
+
+            return IsMissionValidAndApprovedForUse(missionPrototype);
+        }
+
+        /// <summary>
+        /// Validates the provided <see cref="MissionPrototype"/>.
+        /// </summary>
+        private bool IsMissionValidAndApprovedForUse(MissionPrototype missionPrototype)
+        {
+            if (missionPrototype == null)
+                return false;
+
+            if (missionPrototype.ApprovedForUse() == false)
+                return false;
+
+            if (missionPrototype is OpenMissionPrototype
+             || missionPrototype is LegendaryMissionPrototype
+             || missionPrototype is DailyMissionPrototype
+             || missionPrototype is AdvancedMissionPrototype)
+            {
+                if (missionPrototype.IsLiveTuningEnabled() == false)
+                    return false;
+            }
+
+            // TODO: Game::OmegaMissionsEnabled() && missionPrototype is DailyMissionPrototype
+            bool omegaMissionsEnabled = true;
+            if (omegaMissionsEnabled == false && missionPrototype is DailyMissionPrototype)
+                return false;
 
             return true;
         }

@@ -334,7 +334,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override bool ApprovedForUse()
         {
+            // TODO: console support
             return GameDatabase.DesignStateOk(DesignState);
+        }
+
+        public bool IsLiveTuningEnabled()
+        {
+            // Not yet implemented
+            return true;
         }
 
         bool HasKeyword(KeywordPrototype keywordProto)
@@ -477,7 +484,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return regions.Count > 0;
         }
-
     }
 
     public class OpenMissionPrototype : MissionPrototype

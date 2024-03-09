@@ -20,10 +20,6 @@ namespace MHServerEmu.Games.Entities
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        // Hardcoded messages we use for loading
-        private static readonly NetMessageEntityCreate PlayerMessage = PacketHelper.LoadMessagesFromPacketFile("NetMessageEntityCreatePlayer.bin")[0]
-            .Deserialize<NetMessageEntityCreate>();
-
         private readonly Game _game;
         private readonly Dictionary<ulong, Entity> _entityDict = new();
 
@@ -34,10 +30,6 @@ namespace MHServerEmu.Games.Entities
         public EntityManager(Game game)
         {
             _game = game;
-
-            // minihack: force default player entity message initialization on construction
-            // so that there isn't a lag when a player logs in for the first time after the server starts
-            bool playerMessageIsEmpty = PlayerMessage == null;
         }
 
         public WorldEntity CreateWorldEntity(Cell cell, PrototypeId prototypeId, Vector3 position, Orientation orientation,
@@ -217,12 +209,6 @@ namespace MHServerEmu.Games.Entities
 
             replicationId = 0;
             return false;
-        }
-
-        public Player GetDefaultPlayerEntity()
-        {
-            EntityBaseData baseData = new(PlayerMessage.BaseData);
-            return new(baseData, PlayerMessage.ArchiveData);
         }
 
         public IEnumerable<Entity> GetEntities()
