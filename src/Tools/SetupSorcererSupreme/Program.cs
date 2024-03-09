@@ -59,7 +59,8 @@ namespace SetupSorcererSupreme
                 return (false, "Game data files are missing. Please reinstall the game.");
 
             // Find server directory
-            string serverDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string assemblyDir = Assembly.GetExecutingAssembly().Location;
+            string serverDir = assemblyDir;
             
             if (File.Exists(Path.Combine(serverDir, "MHServerEmu.exe")) == false)
             {
@@ -85,11 +86,11 @@ namespace SetupSorcererSupreme
                 File.Copy(clientResourcePath, serverResourcePath);
 
             // Create a .bat file for launching the client normally
-            using (StreamWriter writer = new(Path.Combine(serverDir, "StartClient.bat")))
+            using (StreamWriter writer = new(Path.Combine(assemblyDir, "StartClient.bat")))
                 writer.WriteLine($"@start \"\" \"{executablePath}\" -robocopy -nosteam -siteconfigurl=localhost/SiteConfig.xml");
 
             // Create a .bat file for launching the client with auto login
-            using (StreamWriter writer = new(Path.Combine(serverDir, "StartClientAutoLogin.bat")))
+            using (StreamWriter writer = new(Path.Combine(assemblyDir, "StartClientAutoLogin.bat")))
                 writer.WriteLine($"@start \"\" \"{executablePath}\" -robocopy -nosteam -siteconfigurl=localhost/SiteConfig.xml -emailaddress=test1@test.com -password=123");
 
             return (true, "Setup successful.\n\nRun StartClient.bat to launch the game normally.\n\nRun StartClientAutoLogin.bat to launch the game and automatically log in with a default account.");
