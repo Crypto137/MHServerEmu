@@ -1,19 +1,9 @@
 ﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.Missions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
-
-    [AssetEnum((int)Invalid)]
-    public enum MissionState
-    {
-        Invalid,
-        Inactive,
-        Available,
-        Active,
-        Completed,
-        Failed,
-    }
 
     [AssetEnum((int)Invalid)]
     public enum ScoreTableValueType

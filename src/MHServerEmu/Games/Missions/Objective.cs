@@ -4,11 +4,21 @@ using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.Games.Missions
 {
+    public enum MissionObjectiveState
+    {
+        Invalid = 0,
+        Available = 1,
+        Active = 2,
+        Completed = 3,
+        Failed = 4,
+        Skipped = 5
+    }
+
     public class Objective
     {
         public ulong ObjectivesIndex { get; set; }
         public ulong ObjectiveIndex { get; set; }                   // NetMessageMissionObjectiveUpdate
-        public int ObjectiveState { get; set; }
+        public MissionObjectiveState ObjectiveState { get; set; }
         public ulong ObjectiveStateExpireTime { get; set; }
         public InteractionTag[] InteractedEntities { get; set; }
         public ulong CurrentCount { get; set; }
@@ -20,7 +30,7 @@ namespace MHServerEmu.Games.Missions
         {
             ObjectivesIndex = stream.ReadRawByte();
             ObjectiveIndex = stream.ReadRawByte();
-            ObjectiveState = stream.ReadRawInt32();
+            ObjectiveState = (MissionObjectiveState)stream.ReadRawInt32();
             ObjectiveStateExpireTime = stream.ReadRawVarint64();
 
             InteractedEntities = new InteractionTag[stream.ReadRawVarint64()];
@@ -33,7 +43,7 @@ namespace MHServerEmu.Games.Missions
             FailRequiredCount = stream.ReadRawVarint64();
         }
 
-        public Objective(ulong objectiveIndex, int objectiveState, ulong objectiveStateExpireTime,
+        public Objective(ulong objectiveIndex, MissionObjectiveState objectiveState, ulong objectiveStateExpireTime,
             InteractionTag[] interactedEntities, ulong currentCount, ulong requiredCount, ulong failCurrentCount, 
             ulong failRequiredCount)
         {
@@ -52,7 +62,7 @@ namespace MHServerEmu.Games.Missions
         {
             stream.WriteRawByte((byte)ObjectivesIndex);
             stream.WriteRawByte((byte)ObjectiveIndex);
-            stream.WriteRawInt32(ObjectiveState);
+            stream.WriteRawInt32((int)ObjectiveState);
             stream.WriteRawVarint64(ObjectiveStateExpireTime);
             stream.WriteRawVarint64((ulong)InteractedEntities.Length);
             foreach (InteractionTag tag in InteractedEntities) tag.Encode(stream);
@@ -67,7 +77,7 @@ namespace MHServerEmu.Games.Missions
             StringBuilder sb = new();
             sb.AppendLine($"ObjectivesIndex: 0x{ObjectivesIndex:X}");
             sb.AppendLine($"ObjectiveIndex: 0x{ObjectiveIndex:X}");
-            sb.AppendLine($"ObjectiveState: 0x{ObjectiveState:X}");
+            sb.AppendLine($"ObjectiveState: {ObjectiveState}");
             sb.AppendLine($"ObjectiveStateExpireTime: 0x{ObjectiveStateExpireTime:X}");
             for (int i = 0; i < InteractedEntities.Length; i++) sb.AppendLine($"InteractedEntity{i}: {InteractedEntities[i]}");
             sb.AppendLine($"CurrentCount: 0x{CurrentCount:X}");

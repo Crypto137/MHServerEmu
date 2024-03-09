@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.Missions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
