@@ -67,7 +67,7 @@ namespace MHServerEmu.Games
             List<GameMessage> messageList = new();
 
             Common.Vector3 entrancePosition = new(client.StartPositon);
-            Common.Vector3 entranceOrientation = new(client.StartOrientation);
+            Common.Orientation entranceOrientation = new(client.StartOrientation);
             entrancePosition.Z += 42; // TODO project to floor
 
             EnterGameWorldArchive avatarEnterGameWorldArchive = new((ulong)account.Player.Avatar.ToEntityId(), entrancePosition, entranceOrientation.Yaw, 350f);

@@ -94,7 +94,7 @@ namespace MHServerEmu.Games.Regions
                 CameraSettingPrototype cameraSetting = cameraSettingCollectionPrototype.CameraSettings.First();
 
                 var normalizedDirection = Vector3.Normalize2D(new(cameraSetting.DirectionX, cameraSetting.DirectionY, cameraSetting.DirectionZ));
-                float angle = MathHelper.WrapAngleRadians(Vector3.FromDeltaVector2D(normalizedDirection).Yaw + MathF.PI - (MathF.PI / 4f));
+                float angle = Orientation.WrapAngleRadians(Orientation.FromDeltaVector2D(normalizedDirection).Yaw + MathHelper.Pi - MathHelper.PiOver4);
                 _cameraView = Transform3.RotationZ(angle) * _cameraView;
             }
         }

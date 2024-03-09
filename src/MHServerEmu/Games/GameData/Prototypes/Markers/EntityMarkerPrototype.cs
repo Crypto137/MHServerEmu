@@ -37,8 +37,7 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
             FilterGuid = (PrototypeGuid)reader.ReadUInt64();
             LastKnownFilterName = reader.ReadFixedString32();
 
-            Position = reader.ReadVector3();
-            Rotation = reader.ReadVector3();
+            ReadMarker(reader);
         }
 
         public T GetMarkedPrototype<T>() where T : Prototype

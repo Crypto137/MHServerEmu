@@ -59,5 +59,10 @@ namespace MHServerEmu.Common.Extensions
         {
             return new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
         }
+
+        public static Orientation ReadOrientation(this BinaryReader reader)
+        {
+            return new Orientation(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
+        }
     }
 }

@@ -57,7 +57,7 @@ namespace MHServerEmu.Games.Generators.Population
         public ClusterObjectFlag Flags { get; set; }
         public Transform3 Transform { get; private set; }
         public Vector3 Position { get; private set; }
-        public Vector3 Orientation { get; private set; }
+        public Orientation Orientation { get; private set; }
         public float Radius { get; set ; }
         public float Height { get; set; }
         public PathFlags PathFlags { get; set; }
@@ -73,7 +73,7 @@ namespace MHServerEmu.Games.Generators.Population
             Flags = ClusterObjectFlag.None;
             Transform = Transform3.Identity();
             Position = Vector3.Zero;
-            Orientation = Vector3.Zero;
+            Orientation = Orientation.Zero;
         }
 
         public Vector3 GetParentRelativePosition() => Position;
@@ -86,7 +86,7 @@ namespace MHServerEmu.Games.Generators.Population
             SetLocationDirty();
         }
 
-        public void SetParentRelativeOrientation(Vector3 orientation)
+        public void SetParentRelativeOrientation(Orientation orientation)
         {
             Orientation = orientation;
             Transform = Transform3.BuildTransform(Position, Orientation);
@@ -98,7 +98,7 @@ namespace MHServerEmu.Games.Generators.Population
             return GetAbsoluteTransform().Translation;
         }
 
-        public Vector3 GetAbsoluteOrientation()
+        public Orientation GetAbsoluteOrientation()
         {
             return GetAbsoluteTransform().Orientation;
         }
@@ -237,7 +237,7 @@ namespace MHServerEmu.Games.Generators.Population
                     Vector3 pos = new (formationSlotProto.X, formationSlotProto.Y, 0f);
                     obj.SetParentRelativePosition(pos);
 
-                    Vector3 orientation = Vector3.Zero;
+                    Orientation orientation = Orientation.Zero;
                     if (fixedProto.Facing == FormationFacing.None)
                         orientation.Yaw = MathHelper.ToRadians(formationSlotProto.Yaw);
                     else
@@ -392,7 +392,7 @@ namespace MHServerEmu.Games.Generators.Population
                     if (box == 0)
                     {
                         obj.SetParentRelativePosition(Vector3.Zero);
-                        obj.SetParentRelativeOrientation(Vector3.Zero);
+                        obj.SetParentRelativeOrientation(Orientation.Zero);
                         if (++formationIndex == formationObjects.Count) return;
                     }
                     else
@@ -428,14 +428,14 @@ namespace MHServerEmu.Games.Generators.Population
             }
         }
 
-        private static Vector3 DoFacing(FormationFacing facing, Vector3 pos)
+        private static Orientation DoFacing(FormationFacing facing, Vector3 pos)
         {
             return facing switch
             {
-                FormationFacing.FaceParentInverse => Vector3.FromDeltaVector2D(Vector3.Back),
-                FormationFacing.FaceOrigin => Vector3.FromDeltaVector2D(-pos),
-                FormationFacing.FaceOriginInverse => Vector3.FromDeltaVector2D(pos),
-                _ => Vector3.Zero
+                FormationFacing.FaceParentInverse => Orientation.FromDeltaVector2D(Vector3.Back),
+                FormationFacing.FaceOrigin => Orientation.FromDeltaVector2D(-pos),
+                FormationFacing.FaceOriginInverse => Orientation.FromDeltaVector2D(pos),
+                _ => Orientation.Zero
             };
         }
 
@@ -801,7 +801,7 @@ namespace MHServerEmu.Games.Generators.Population
             var rot = tr.Orientation;
             int health = EntityManager.GetRankHealth(entity);
             entityManager.CreateWorldEntity(cell, EntityRef, pos, rot, health, false, overrideSnap);
-            //Logger.Debug($"{GameDatabase.GetFormattedPrototypeName(EntityRef)} {pos.ToStringFloat()} [{Parent.Objects.Count}] {Parent.ObjectProto.GetFormation()}");
+            //Logger.Debug($"{GameDatabase.GetFormattedPrototypeName(EntityRef)} {pos} [{Parent.Objects.Count}] {Parent.ObjectProto.GetFormation()}");
         }
 
         public override bool IsFormationObject()

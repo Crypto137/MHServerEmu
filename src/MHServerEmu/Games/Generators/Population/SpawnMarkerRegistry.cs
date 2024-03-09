@@ -119,14 +119,14 @@ namespace MHServerEmu.Games.Generators.Population
                                 $"MARKER={GameDatabase.GetFormattedPrototypeName(markerRef)}, REGIONPOS={regionPos}, CELLPOS={marker.Position}");
                             continue;
                         }
-                        //Logger.Debug($"Marker [{GameDatabase.GetFormattedPrototypeName(markerRef)}] {regionPos.ToStringFloat()}");
+                        //Logger.Debug($"Marker [{GameDatabase.GetFormattedPrototypeName(markerRef)}] {regionPos}");
                         AddSpawnTypeLocation(markerRef, marker.Position, marker.Rotation, cell, ++id);
                     }
                 }
             }
         }
 
-        private void AddSpawnTypeLocation(PrototypeId markerRef, Vector3 position, Vector3 rotation, Cell cell, int id)
+        private void AddSpawnTypeLocation(PrototypeId markerRef, Vector3 position, Orientation rotation, Cell cell, int id)
         {
             if (markerRef == 0) return;
             SpawnMarkerPrototype spawnMarkerProto = GameDatabase.GetPrototype<SpawnMarkerPrototype>(markerRef);

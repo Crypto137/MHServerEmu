@@ -75,7 +75,7 @@ namespace MHServerEmu.Common.Commands
         public string Position(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";            
-            return $"Current position: {client.LastPosition}";
+            return $"Current position: {client.LastPosition.ToStringNames()}";
         }
     }
 

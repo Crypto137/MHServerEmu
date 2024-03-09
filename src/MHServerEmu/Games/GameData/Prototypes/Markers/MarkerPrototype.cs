@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData.Resources;
 
 namespace MHServerEmu.Games.GameData.Prototypes.Markers
@@ -9,7 +10,13 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
     public class MarkerPrototype : Prototype
     {
         public Vector3 Position { get; protected set; }
-        public Vector3 Rotation { get; protected set; }
+        public Orientation Rotation { get; protected set; }
+
+        public void ReadMarker(BinaryReader reader)
+        {
+            Position = reader.ReadVector3();
+            Rotation = reader.ReadOrientation();
+        }
     }
 
     public class MarkerFilterPrototype : Prototype

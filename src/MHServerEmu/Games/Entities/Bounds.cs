@@ -79,20 +79,20 @@ namespace MHServerEmu.Games.Entities
         public GeometryType Geometry { get; private set; }
         public BoundsCollisionType CollisionType { get; set; }
         public Vector3 Center { get; set; }
-        public Vector3 Orientation { get => _orientation; set => SetOrientation(value); }
+        public Orientation Orientation { get => _orientation; set => SetOrientation(value); }
         public float Radius { get => GetRadius(); set => SetRadius(value); }
         public float HalfHeight { get => GetHalfHeight(); }
         public BoundsFlags Flags { get; private set; }
 
         private BoundData _params = new();
-        private Vector3 _orientation;
-        private Vector3 _orientation_offset;
+        private Orientation _orientation;
+        private Orientation _orientation_offset;
 
         public Bounds()
         {
             Center = Vector3.Zero;
-            _orientation = Vector3.Zero;
-            _orientation_offset = Vector3.Zero;
+            _orientation = Orientation.Zero;
+            _orientation_offset = Orientation.Zero;
             CollisionType = BoundsCollisionType.None;
             Flags = BoundsFlags.None;
         }
@@ -242,7 +242,7 @@ namespace MHServerEmu.Games.Entities
 
         private void UpdateAABBGeometry()
         {
-            Matrix3 mat = Matrix3.AbsPerElem(Matrix3.GetMatrix3(_orientation));
+            Matrix3 mat = Matrix3.AbsPerElem(_orientation.GetMatrix3());
             Vector3 oriented = mat * new Vector3(_params.AABBHalfWidth, _params.AABBHalfHeight, _params.AABBHalfLength);
             _params.AABBOrientedWidth = oriented[0];
             _params.AABBOrientedHeight = oriented[1];
@@ -348,7 +348,7 @@ namespace MHServerEmu.Games.Entities
             };
         }
 
-        private void SetOrientation(Vector3 orientation)
+        private void SetOrientation(Orientation orientation)
         {
             _orientation = orientation + _orientation_offset;
             if (Geometry == GeometryType.AABB) UpdateAABBGeometry();
@@ -359,7 +359,7 @@ namespace MHServerEmu.Games.Entities
             switch (Geometry)
             {
                 case GeometryType.OBB:
-                    Matrix3 mat = Matrix3.AbsPerElem(Matrix3.GetMatrix3(_orientation));
+                    Matrix3 mat = Matrix3.AbsPerElem(_orientation.GetMatrix3());
                     Vector3 oobVector = mat * new Vector3(_params.OBBHalfWidth, _params.OBBHalfLength, _params.OBBHalfHeight);
                     return new(Center - oobVector, Center + oobVector);
 
