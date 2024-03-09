@@ -162,7 +162,8 @@ namespace MHServerEmu.Games.Entities
             for (ulong i = 0; i < numBadges; i++)
                 _badges.Add((AvailableBadges)stream.ReadRawVarint32());
 
-            GameplayOptions = new(stream, boolDecoder);
+            GameplayOptions = new(this);
+            GameplayOptions.Decode(stream, boolDecoder);
 
             AchievementState = new(stream);
 
@@ -350,6 +351,7 @@ namespace MHServerEmu.Games.Entities
                     AddBadge(badge);
             }
 
+            GameplayOptions.ResetToDefaults();
             AchievementState = account.Player.AchievementState;
         }
 

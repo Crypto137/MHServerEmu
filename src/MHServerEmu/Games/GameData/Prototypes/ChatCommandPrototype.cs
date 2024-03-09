@@ -52,6 +52,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     [AssetEnum]
     public enum LanguageType
     {
+        All = 0,
         Chinese = 1,
         English = 2,
         French = 3,
@@ -109,5 +110,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId ChatPanelTabName { get; protected set; }
         public bool AllowChatPanelTab { get; protected set; }
         public LanguageType Language { get; protected set; }
+
+        public override bool ApprovedForUse()
+        {
+            return GameDatabase.DesignStateOk(DesignState);
+        }
     }
 }

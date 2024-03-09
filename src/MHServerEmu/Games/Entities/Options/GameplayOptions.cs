@@ -3,6 +3,7 @@ using Google.ProtocolBuffers;
 using Gazillion;
 using MHServerEmu.Common.Encoders;
 using MHServerEmu.Common.Extensions;
+using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
@@ -12,11 +13,11 @@ namespace MHServerEmu.Games.Entities.Options
     public enum GameplayOptionSetting
     {
         AutoPartyEnabled,
-        Option1,
+        PreferLowPopulationRegions,     // Name from the protocol for version 1.26, may be inaccurate
         DisableHeroSynergyBonusXP,
-        Option3,
+        Setting3,
         EnableVaporizeCredits,
-        Option5,
+        Setting5,
         ShowPlayerFloatingDamageNumbers,
         ShowEnemyFloatingDamageNumbers,
         ShowExperienceFloatingNumbers,
@@ -29,93 +30,379 @@ namespace MHServerEmu.Games.Entities.Options
         SpeakerLevel,
         GammaLevel,
         ShowPlayerHealingNumbers,
-        ShowPlayerIndicator
+        ShowPlayerIndicator,
+        NumSettings
     }
 
     public class GameplayOptions
     {
-        public ChatChannelFilter[] ChatChannelFilters { get; set; } // ChatChannelFilterMap
-        public PrototypeId[] ChatTabChannels { get; set; }                // ChatTabState
-        public long[] OptionSettings { get; set; }
-        public ArmorRarityVaporizeThreshold[] ArmorRarityVaporizeThresholds { get; set; }
+        private const int NumChatTabs = 4;
 
-        public GameplayOptions(CodedInputStream stream, BoolDecoder boolDecoder)
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private static readonly long[] GamePlayOptionDefaults = new long[]
         {
-            ChatChannelFilters = new ChatChannelFilter[stream.ReadRawVarint64()];
-            for (int i = 0; i < ChatChannelFilters.Length; i++)
-                ChatChannelFilters[i] = new(stream, boolDecoder);
+            0,      // AutoPartyEnabled
+            0,      // PreferLowPopulationRegions
+            0,      // DisableHeroSynergyBonusXP
+            0,      // Setting3
+            0,      // EnableVaporizeCredits
+            0,      // Setting5
+            1,      // ShowPlayerFloatingDamageNumbers
+            0,      // ShowEnemyFloatingDamageNumbers
+            1,      // ShowExperienceFloatingNumbers
+            1,      // ShowBossIndicator
+            1,      // ShowPartyMemberArrows
+            100,    // MusicLevel
+            100,    // SfxLevel
+            0,      // ShowMovieSubtitles
+            100,    // MicLevel
+            100,    // SpeakerLevel
+            80,     // GammaLevel
+            0,      // ShowPlayerHealingNumbers
+            1       // ShowPlayerIndicator
+        };
 
-            ChatTabChannels = new PrototypeId[stream.ReadRawVarint64()];
-            for (int i = 0; i < ChatTabChannels.Length; i++)
-                ChatTabChannels[i] = stream.ReadPrototypeEnum<Prototype>();
+        private Player _owner;
 
-            OptionSettings = new long[stream.ReadRawVarint64()];
-            for (int i = 0; i < OptionSettings.Length; i++)
-                OptionSettings[i] = (long)stream.ReadRawVarint64();
+        private readonly long[] _optionSettings = new long[(int)GameplayOptionSetting.NumSettings];
+        private readonly SortedDictionary<PrototypeId, bool> _chatChannelFilterDict = new();
+        private readonly PrototypeId[] _chatTabChannels = new PrototypeId[NumChatTabs];
+        private readonly SortedDictionary<EquipmentInvUISlot, PrototypeId> _armorRarityVaporizeThresholdDict = new();
 
-            ArmorRarityVaporizeThresholds = new ArmorRarityVaporizeThreshold[stream.ReadRawVarint64()];
-            for (int i = 0; i < ArmorRarityVaporizeThresholds.Length; i++)
-                ArmorRarityVaporizeThresholds[i] = new(stream);
-        }
-
-        public GameplayOptions(ChatChannelFilter[] chatChannelFilters, PrototypeId[] chatTabChannels, long[] optionSettings, ArmorRarityVaporizeThreshold[] armorRarityVaporizeThresholds)
+        public GameplayOptions(Player owner = null)
         {
-            ChatChannelFilters = chatChannelFilters;
-            ChatTabChannels = chatTabChannels;
-            OptionSettings = optionSettings;
-            ArmorRarityVaporizeThresholds = armorRarityVaporizeThresholds;
+            _owner = owner;
+            ResetToDefaults();
         }
 
         public GameplayOptions(NetStructGameplayOptions netStruct)
         {
-            ChatChannelFilters = netStruct.ChatChannelFiltersMapList.Select(filter => new ChatChannelFilter(filter)).ToArray();
-            ChatTabChannels = netStruct.ChatTabChannelsArrayList.Select(channel => (PrototypeId)channel.ChannelProtoId).ToArray();
-            OptionSettings = netStruct.OptionSettingsList.Select(setting => (long)setting).ToArray();
+            // Settings
+            int numSettings = netStruct.OptionSettingsCount;
+            if (numSettings > (int)GameplayOptionSetting.NumSettings)
+            {
+                Logger.Warn($"GameplayOptions(): numSettings > GameplayOptionSetting.NumSettings");
+                numSettings = (int)GameplayOptionSetting.NumSettings;
+            }
 
-            ArmorRarityVaporizeThresholds = new ArmorRarityVaporizeThreshold[netStruct.ArmorRarityVaporizeThresholdProtoIdCount];
-            for (int i = 0; i < ArmorRarityVaporizeThresholds.Length; i++)
-                ArmorRarityVaporizeThresholds[i] = new((EquipmentInvUISlot)(i + 1), (PrototypeId)netStruct.ArmorRarityVaporizeThresholdProtoIdList[i]);
+            for (int i = 0; i < numSettings; i++)
+                _optionSettings[i] = (long)netStruct.OptionSettingsList[i];
+
+            // Chat channel filters
+            foreach (var filter in netStruct.ChatChannelFiltersMapList)
+                _chatChannelFilterDict.Add((PrototypeId)filter.ChannelProtoId, filter.IsSubscribed);
+
+            // Chat tab channels
+            int numChannels = netStruct.ChatTabChannelsArrayCount;
+            if (numChannels > NumChatTabs)
+            {
+                Logger.Warn($"GameplayOptions(): numTabs > NumChatTabs");
+                numChannels = NumChatTabs;
+            }
+
+            for (int i = 0; i < numChannels; i++)
+                _chatTabChannels[i] = (PrototypeId)netStruct.ChatTabChannelsArrayList[i].ChannelProtoId;
+
+            // Vaporize thresholds
+            for (var slot = EquipmentInvUISlot.Gear01; slot <= EquipmentInvUISlot.Gear05; slot++)
+            {
+                int index = (int)slot - 1;
+                if (index >= netStruct.ArmorRarityVaporizeThresholdProtoIdCount)
+                {
+                    Logger.Warn($"GameplayOptions(): index >= netStruct.ArmorRarityVaporizeThresholdProtoIdCount");
+                    continue;
+                }
+
+                _armorRarityVaporizeThresholdDict[slot] = (PrototypeId)netStruct.ArmorRarityVaporizeThresholdProtoIdList[(int)slot - 1]; ;
+            }
+        }
+
+        public bool Decode(CodedInputStream stream, BoolDecoder boolDecoder)
+        {
+            // NOTE: Archives use a different encoding order from protobufs (filters - tabs - options - thresholds)
+
+            // Chat channel filters
+            _chatChannelFilterDict.Clear();
+            ulong numChatChannelFilters = stream.ReadRawVarint64();
+            for (ulong i = 0; i < numChatChannelFilters; i++)
+            {
+                PrototypeId channelProtoId = stream.ReadPrototypeEnum<Prototype>();
+                bool isSubscribed = boolDecoder.ReadBool(stream);
+                _chatChannelFilterDict.Add(channelProtoId, isSubscribed);
+            }
+
+            // Chat tab channels
+            Array.Clear(_chatTabChannels);
+            ulong numChatTabChannels = stream.ReadRawVarint64();
+            if (numChatTabChannels > NumChatTabs)
+                return Logger.ErrorReturn(false, $"numChatTabChannels {numChatTabChannels} > NumChatTabs {NumChatTabs}");
+
+            for (int i = 0; i < _chatTabChannels.Length; i++)
+                _chatTabChannels[i] = stream.ReadPrototypeEnum<Prototype>();
+
+            // Settings
+            Array.Clear(_optionSettings);
+            ulong numSettings = stream.ReadRawVarint64();
+            for (ulong i = 0; i < numSettings; i++)
+                _optionSettings[i] = (long)stream.ReadRawVarint64();
+
+            // Vaporize thresholds
+            _armorRarityVaporizeThresholdDict.Clear();
+            ulong numVaporizeThresholds = stream.ReadRawVarint64();
+            for (ulong i = 0; i < numVaporizeThresholds; i++)
+            {
+                var slot = (EquipmentInvUISlot)stream.ReadRawVarint64();
+                var rarityPrototypeRef = stream.ReadPrototypeEnum<Prototype>();
+                _armorRarityVaporizeThresholdDict[slot] = rarityPrototypeRef;
+            }
+
+            return true;
         }
 
         public void EncodeBools(BoolEncoder boolEncoder)
         {
-            foreach (ChatChannelFilter filter in ChatChannelFilters)
-                boolEncoder.EncodeBool(filter.IsSubscribed);
+            foreach (bool isEnabled in _chatChannelFilterDict.Values)
+                boolEncoder.EncodeBool(isEnabled);
         }
 
         public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
-            stream.WriteRawVarint64((ulong)ChatChannelFilters.Length);
-            foreach (ChatChannelFilter filter in ChatChannelFilters) filter.Encode(stream, boolEncoder);
+            // Chat channel filters
+            stream.WriteRawVarint64((ulong)_chatChannelFilterDict.Count);
+            foreach (var kvp in _chatChannelFilterDict)
+            {
+                stream.WritePrototypeEnum<Prototype>(kvp.Key);
+                boolEncoder.WriteBuffer(stream);    // isEnabled
+            }
 
-            stream.WriteRawVarint64((ulong)ChatTabChannels.Length);
-            foreach (PrototypeId channel in ChatTabChannels) stream.WritePrototypeEnum<Prototype>(channel);
+            // Chat tab channels
+            stream.WriteRawVarint64((ulong)_chatTabChannels.Length);
+            foreach (PrototypeId channel in _chatTabChannels)
+                stream.WritePrototypeEnum<Prototype>(channel);
 
-            stream.WriteRawVarint64((ulong)OptionSettings.Length);
-            foreach (long setting in OptionSettings) stream.WriteRawVarint64((ulong)setting);
+            // Settings
+            stream.WriteRawVarint64((ulong)_optionSettings.Length);
+            foreach (long setting in _optionSettings)
+                stream.WriteRawInt64(setting);
 
-            stream.WriteRawVarint64((ulong)ArmorRarityVaporizeThresholds.Length);
-            foreach (ArmorRarityVaporizeThreshold threshold in ArmorRarityVaporizeThresholds) threshold.Encode(stream);
+            // Vaporize thresholds
+            stream.WriteRawVarint64((ulong)_armorRarityVaporizeThresholdDict.Count);
+            foreach (var kvp in _armorRarityVaporizeThresholdDict)
+            {
+                stream.WriteRawVarint64((ulong)kvp.Key);
+                stream.WritePrototypeEnum<Prototype>(kvp.Value);
+            }
         }
 
-        public NetStructGameplayOptions ToNetStruct()
+        /// <summary>
+        /// Sets the owner <see cref="Player"/> of this <see cref="GameplayOptions"/> instance.
+        /// </summary>
+        public void SetOwner(Player player)
         {
-            return NetStructGameplayOptions.CreateBuilder()
-                .AddRangeOptionSettings(OptionSettings.Select(setting => (ulong)setting))
-                .AddRangeChatChannelFiltersMap(ChatChannelFilters.Select(filter => filter.ToNetStruct()))
-                .AddRangeChatTabChannelsArray(ChatTabChannels.Select(channel => NetStructChatTabState.CreateBuilder().SetChannelProtoId((ulong)channel).Build()))
-                .AddRangeArmorRarityVaporizeThresholdProtoId(ArmorRarityVaporizeThresholds.Select(threshold => (ulong)threshold.RarityPrototypeId))
-                .Build();
+            _owner = player;
+        }
+
+        public long GetOptionSetting(GameplayOptionSetting settingEnum)
+        {
+            return _optionSettings[(int)settingEnum];
+        }
+
+        public long GetOptionSettingDefault(GameplayOptionSetting settingEnum)
+        {
+            return GamePlayOptionDefaults[(int)settingEnum];
+        }
+
+        public void SetOptionSetting(GameplayOptionSetting setting, long value, bool doUpdate)
+        {
+            _optionSettings[(int)setting] = value;
+            if (doUpdate) DoUpdate();
+        }
+
+        public void SetOptionSetting(GameplayOptionSetting setting, bool value, bool doUpdate)
+        {
+            SetOptionSetting(setting, Convert.ToInt64(value), doUpdate);
+        }
+
+        public bool IsChannelFiltered(PrototypeId channelProtoRef)
+        {
+            if (_chatChannelFilterDict.TryGetValue(channelProtoRef, out bool value) == false)
+                return GetChannelDefaultSubscription(channelProtoRef);
+
+            return value;
+        }
+
+        public bool SetChatChannelFilter(PrototypeId channelProtoRef, bool value, bool doUpdate)
+        {
+            bool oldValue = IsChannelFiltered(channelProtoRef);
+            _chatChannelFilterDict[channelProtoRef] = value;
+            if (value == oldValue) return false;
+            if (doUpdate) DoUpdate();
+            return true;
+        }
+
+        public PrototypeId GetChatTabChannel(int tabIndex)
+        {
+            if ((tabIndex >= 0 && tabIndex < NumChatTabs) == false)
+                return Logger.WarnReturn(PrototypeId.Invalid, $"GetChatTabChannel(): Invalid tabIndex {tabIndex}");
+
+            return _chatTabChannels[tabIndex];
+        }
+
+        public bool SetChatTabChannel(int tabIndex, PrototypeId channelProtoRef, bool doUpdate)
+        {
+            if ((tabIndex >= 0 && tabIndex < NumChatTabs) == false)
+                return Logger.WarnReturn(false, $"SetChatTabChannel(): Invalid tabIndex {tabIndex}");
+
+            if (_chatTabChannels[tabIndex] == channelProtoRef) return false;
+            _chatTabChannels[tabIndex] = channelProtoRef;
+            if (doUpdate) DoUpdate();
+            return true;
+        }
+
+        public bool IsSubscribedToChannel(PrototypeId channelProtoRef)
+        {
+            return IsChannelFiltered(channelProtoRef) || IsChatTabCreatedForChannel(channelProtoRef);
+        }
+
+        public PrototypeId GetArmorRarityVaporizeThreshold(EquipmentInvUISlot slot)
+        {
+            if (IsGearSlotVaporizing(slot) == false)
+                return PrototypeId.Invalid;
+
+            if (_armorRarityVaporizeThresholdDict.TryGetValue(slot, out PrototypeId rarityRef) == false)
+                return PrototypeId.Invalid;
+
+            return rarityRef;
+        }
+
+        public bool SetArmorRarityVaporizeThreshold(PrototypeId rarityRef, EquipmentInvUISlot slot)
+        {
+            if (IsGearSlotVaporizing(slot) == false)
+                return Logger.WarnReturn(false, $"SetArmorRarityVaporizeThreshold(): {slot} is not a valid vaporize slot");
+
+            PrototypeId oldRarityRef = _armorRarityVaporizeThresholdDict[slot];
+            if (rarityRef == oldRarityRef) return false;
+
+            _armorRarityVaporizeThresholdDict[slot] = rarityRef;
+            DoUpdate();
+            return true;
+        }
+
+        public void ResetToDefaults()
+        {
+            // Option settings
+            Array.Clear(_optionSettings);
+            for (int i = 0; i < (int)GameplayOptionSetting.NumSettings; i++)
+                _optionSettings[i] = GamePlayOptionDefaults[i];
+
+            // Chat channel filters
+            _chatChannelFilterDict.Clear();
+            foreach(PrototypeId channelProtoRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(ChatChannelPrototype),
+                PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+            {
+                var chatChannelPrototype = channelProtoRef.As<ChatChannelPrototype>();
+                if (chatChannelPrototype.AllowPlayerFilter)
+                    _chatChannelFilterDict[channelProtoRef] = GetChannelDefaultSubscription(channelProtoRef);
+            }
+
+            // Chat tabs
+            Array.Clear(_chatTabChannels);
+
+            // Vaporize thresholds
+            for (var slot = EquipmentInvUISlot.Gear01; slot <= EquipmentInvUISlot.Gear05; slot++)
+            {
+                if (IsGearSlotVaporizing(slot) == false) continue;
+                _armorRarityVaporizeThresholdDict[slot] = PrototypeId.Invalid;
+            }
+        }
+
+        public NetStructGameplayOptions ToProtobuf()
+        {
+            var builder = NetStructGameplayOptions.CreateBuilder();
+
+            builder.AddRangeOptionSettings(_optionSettings.Select(setting => (ulong)setting));
+
+            builder.AddRangeChatChannelFiltersMap(_chatChannelFilterDict.Select(kvp => NetStructChatChannelFilterState.CreateBuilder()
+                .SetChannelProtoId((ulong)kvp.Key)
+                .SetIsSubscribed(kvp.Value)
+                .Build()));
+
+            builder.AddRangeChatTabChannelsArray(_chatTabChannels.Select(channel => NetStructChatTabState.CreateBuilder()
+                .SetChannelProtoId((ulong)channel)
+                .Build()));
+
+            builder.AddRangeArmorRarityVaporizeThresholdProtoId(_armorRarityVaporizeThresholdDict.Select(kvp => (ulong)kvp.Value));
+
+            return builder.Build();
         }
 
         public override string ToString()
         {
             StringBuilder sb = new();
-            for (int i = 0; i < ChatChannelFilters.Length; i++) sb.AppendLine($"ChatChannelFilter{i}: {ChatChannelFilters[i]}");
-            for (int i = 0; i < ChatTabChannels.Length; i++) sb.AppendLine($"ChatTabChannel{i}: {GameDatabase.GetPrototypeName(ChatTabChannels[i])}");
-            for (int i = 0; i < OptionSettings.Length; i++) sb.AppendLine($"OptionSetting{i} ({(GameplayOptionSetting)i}): {OptionSettings[i]}");
-            for (int i = 0; i < ArmorRarityVaporizeThresholds.Length; i++) sb.AppendLine($"ArmorRarityVaporizeThreshold{i}: {ArmorRarityVaporizeThresholds[i]}");
+
+            for (int i = 0; i < _optionSettings.Length; i++)
+                sb.AppendLine($"{nameof(_optionSettings)}[{(GameplayOptionSetting)i}]: {_optionSettings[i]}");
+
+            foreach (var kvp in _chatChannelFilterDict)
+                sb.AppendLine($"{nameof(_chatChannelFilterDict)}[{GameDatabase.GetFormattedPrototypeName(kvp.Key)}]: {kvp.Value}");
+
+            for (int i = 0; i < _chatTabChannels.Length; i++)
+                sb.AppendLine($"{nameof(_chatTabChannels)}[{i}]: {GameDatabase.GetFormattedPrototypeName(_chatTabChannels[i])}");
+
+            foreach (var kvp in _armorRarityVaporizeThresholdDict)
+                sb.AppendLine($"{nameof(_armorRarityVaporizeThresholdDict)}[{kvp.Key}]: {GameDatabase.GetFormattedPrototypeName(kvp.Value)}");
+
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Returns the default subscription value for the specified chat channel <see cref="PrototypeId"/>.
+        /// </summary>
+        private bool GetChannelDefaultSubscription(PrototypeId chatChannelRef)
+        {
+            var chatChannelPrototype = GameDatabase.GetPrototype<ChatChannelPrototype>(chatChannelRef);
+            if (chatChannelPrototype == null)
+                return Logger.WarnReturn(false, $"GetChannelDefaultSubscription(): chatChannelRef {chatChannelRef} is invalid");
+
+            // TODO: LocaleManager::GetCurrentLocale();
+            // Assume the locale is English for now
+            switch (chatChannelPrototype.Language)
+            {
+                case LanguageType.All:
+                case LanguageType.English:
+                    return chatChannelPrototype.SubscribeByDefault;
+
+                default:
+                    return false;
+            }
+        }
+
+        private bool IsChatTabCreatedForChannel(PrototypeId chatChannelRef)
+        {
+            return _chatTabChannels.Contains(chatChannelRef);
+        }
+
+        private bool IsGearSlotVaporizing(EquipmentInvUISlot slot)
+        {
+            return slot >= EquipmentInvUISlot.Gear01 && slot <= EquipmentInvUISlot.Gear05;
+        }
+
+        private PrototypeId GetDefaultArmorRarityVaporizeThreshold()
+        {
+            return PrototypeId.Invalid;
+        }
+
+        /// <summary>
+        /// Sends updated <see cref="GameplayOptions"/> to the owner <see cref="Player"/>.
+        /// </summary>
+        private bool DoUpdate()
+        {
+            if (_owner == null) return false;
+            // This is where the client calls CPlayer::SendGameplayOptionsToServer().
+            // The server has nothing to do here since there are no messages that
+            // include NetStructGameplayOptions in the GameServerToClient protocol.
+            return true;
         }
     }
 }
