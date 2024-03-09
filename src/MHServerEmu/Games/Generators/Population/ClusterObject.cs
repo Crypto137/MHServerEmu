@@ -705,7 +705,7 @@ namespace MHServerEmu.Games.Generators.Population
             foreach (var obj in Objects) obj.Spawn();            
         }
 
-        public bool PickPositionInSector(Vector3 position, Vector3 orientation, int minDistance, int maxDistance)
+        public bool PickPositionInSector(Vector3 position, Orientation orientation, int minDistance, int maxDistance)
         {
             if (minDistance < 0.0f || maxDistance <= 0.0f || minDistance > maxDistance || Radius == 0)
             {
@@ -718,7 +718,7 @@ namespace MHServerEmu.Games.Generators.Population
 
             const int MaxSectors = 5; // DistanceMax 250 / 50 (Average Cluster) = 5 sectors
             float clusterSize = Radius * 2.0f;
-            float clusterPI = MathHelper.PI2 / clusterSize;
+            float clusterPI = MathHelper.TwoPi / clusterSize;
             float minClusterDistance = minDistance + Radius;
             float maxClusterDistance = minDistance + clusterSize;
 
@@ -743,17 +743,17 @@ namespace MHServerEmu.Games.Generators.Population
                 distance = minClusterDistance + sector * clusterSize;
                 int numClusters = (int)MathF.Floor(clusterPI * distance);
                 int startCluster = Random.Next(numClusters);
-                float clusterAngle = MathHelper.PI2 / numClusters;
+                float clusterAngle = MathHelper.TwoPi / numClusters;
                 
                 for (int cluster = 0; cluster < numClusters; cluster++)
                 {
                     int div = startCluster + cluster;
                     float angle = clusterAngle * div + shiftAngle;                    
-                    (float rotSin, float rotCos) = MathF.SinCos(MathHelper.WrapAngleRadians(angle));
+                    (float rotSin, float rotCos) = MathF.SinCos(Orientation.WrapAngleRadians(angle));
                     Vector3 testPosition = new (position.X + distance * rotCos, position.Y + distance * rotSin, position.Z);
                     if (Region.GetCellAtPosition(testPosition) == null) continue;
                     SetParentRelativePosition(testPosition);
-                    if (DebugLog) Logger.Debug($"testPostions = {testPosition.ToStringFloat()}");
+                    if (DebugLog) Logger.Debug($"testPostions = {testPosition}");
                     // TODO Face Orientation
                     SetParentRelativeOrientation(orientation);
                    // Logger.Debug($"AbsolutePostions = {GetAbsolutePosition().ToStringFloat()}");
@@ -879,7 +879,7 @@ namespace MHServerEmu.Games.Generators.Population
                 return regionPos;
             
             Vector3 position = RegionLocation.ProjectToFloor(region, regionPos);
-            if (DebugLog) Logger.Debug($"ProjectPostions [{GameDatabase.GetFormattedPrototypeName(EntityRef)}] {regionPos.ToStringFloat()} {position.ToStringFloat()}");
+            if (DebugLog) Logger.Debug($"ProjectPostions [{GameDatabase.GetFormattedPrototypeName(EntityRef)}] {regionPos} {position}");
             // Debug.Assert(Vector3.DistanceSquared2D(regionPos, position) < Segment.Epsilon);
             if (Segment.EpsilonTest(regionPos.Z, position.Z, 500) == false) 
                 return new(float.NaN, 0f, 0f); // Navi test
@@ -924,7 +924,7 @@ namespace MHServerEmu.Games.Generators.Population
                     worldEntity.AppendOnStartActions(Parent.MissionRef);
             }
             // TODO set Rank
-            if (DebugLog) Logger.Debug($"Spawn [{worldEntity.BaseData.EntityId}] {worldEntity.PrototypeName} {pos.ToStringFloat()} [{Parent.Objects.Count}] {GameDatabase.GetFormattedPrototypeName(Parent.ObjectProto.GetFormation().DataRef)}");
+            if (DebugLog) Logger.Debug($"Spawn [{worldEntity.BaseData.EntityId}] {worldEntity.PrototypeName} {pos} [{Parent.Objects.Count}] {GameDatabase.GetFormattedPrototypeName(Parent.ObjectProto.GetFormation().DataRef)}");
         }
 
         public override bool IsFormationObject()

@@ -31,13 +31,13 @@ namespace MHServerEmu.Games.Entities
         {           
         }
 
-        public override void EnterWorld(Cell cell, Vector3 position, Vector3 orientation)
+        public override void EnterWorld(Cell cell, Vector3 position, Orientation orientation)
         {
             base.EnterWorld(cell, position, orientation);
             _flags |= EntityFlags.NoCollide;
             var spawnerProto = SpawnerPrototype;
             DebugLog = false;
-            if (true) Logger.Debug($"[{BaseData.EntityId}] {PrototypeName} [{spawnerProto.StartEnabled}] Distance[{spawnerProto.SpawnDistanceMin}-{spawnerProto.SpawnDistanceMax}] Sequence[{spawnerProto.SpawnSequence.Length}] {position.ToStringFloat()}");
+            if (true) Logger.Debug($"[{BaseData.EntityId}] {PrototypeName} [{spawnerProto.StartEnabled}] Distance[{spawnerProto.SpawnDistanceMin}-{spawnerProto.SpawnDistanceMax}] Sequence[{spawnerProto.SpawnSequence.Length}] {position}");
             if (EntityManager.InvSpawners.Contains((EntityManager.InvSpawner)BaseData.PrototypeId)) return;
             _random = Game.Random; //new(cell.Seed);
             // if (spawnerProto.StartEnabled)

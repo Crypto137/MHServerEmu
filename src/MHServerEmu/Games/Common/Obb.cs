@@ -7,13 +7,13 @@ namespace MHServerEmu.Games.Common
     {
         public Vector3 Center { get; private set; }
         public Vector3 Extents { get; private set; }
-        public Vector3 Orientation { get; private set; }
+        public Orientation Orientation { get; private set; }
 
         public Matrix3 InverseRotationMatrix { get; private set; }
 
-        public Matrix3 RotationMatrix => Matrix3.GetMatrix3(Orientation);
+        public Matrix3 RotationMatrix => Orientation.GetMatrix3();
 
-        public Obb(Vector3 center, Vector3 extents, Vector3 orientation)
+        public Obb(Vector3 center, Vector3 extents, Orientation orientation)
         {
             Center = center;
             Extents = extents;
@@ -74,7 +74,7 @@ namespace MHServerEmu.Games.Common
         {
             StringBuilder sb = new();
             //sb.AppendLine($"Center: {Center.ToStringFloat()}");
-            sb.AppendLine($" Box: {Extents.ToStringFloat()}");
+            sb.AppendLine($" Box: {Extents}");
             //sb.AppendLine($"Orientation: {Orientation.ToStringFloat()}");
             return sb.ToString();
         }

@@ -200,9 +200,9 @@ namespace MHServerEmu.Games.Common
         public override string ToString()
         {
             StringBuilder sb = new();
-            sb.AppendLine($" P0: {Points[0].ToStringFloat()}");
-            sb.AppendLine($" P1: {Points[1].ToStringFloat()}");
-            sb.AppendLine($" P2: {Points[1].ToStringFloat()}");
+            sb.AppendLine($" P0: {Points[0]}");
+            sb.AppendLine($" P1: {Points[1]}");
+            sb.AppendLine($" P2: {Points[2]}");
             return sb.ToString();
         }
     }

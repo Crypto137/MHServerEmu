@@ -275,7 +275,7 @@
 
         public string BoxToString()
         {
-            return $" Box: {(Max-Min).ToStringFloat()}";
+            return $" Box: {(Max-Min)}";
         }
     }
     public enum ContainmentType
