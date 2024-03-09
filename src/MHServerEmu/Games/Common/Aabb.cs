@@ -82,9 +82,7 @@
 
             return new Aabb(newMin, newMax);
         }
-
-        public override string ToString() => $"Min:{Min} Max:{Max}";
-        public string ToStringFloat() => $"[{Min.ToStringFloat()}, {Max.ToStringFloat()}]";
+        public override string ToString() => $"[{Min}, {Max}]";
         public Aabb Translate(Vector3 newPosition) => new(Min + newPosition, Max + newPosition);
 
         public Aabb Expand(float expandSize)

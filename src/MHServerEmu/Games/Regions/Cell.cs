@@ -16,7 +16,7 @@ namespace MHServerEmu.Games.Regions
     public class CellSettings
     {
         public Vector3 PositionInArea = new();
-        public Vector3 OrientationInArea = new();
+        public Orientation OrientationInArea = new();
         public PrototypeId CellRef;
         public int Seed;
         public LocaleStringId OverrideLocationName;
@@ -51,7 +51,7 @@ namespace MHServerEmu.Games.Regions
         public CellRegionSpatialPartitionLocation SpatialPartitionLocation { get; }
         public Vector3 AreaOffset { get; private set; }
         public Vector3 AreaPosition { get; private set; }
-        public Vector3 AreaOrientation { get; private set; }
+        public Orientation AreaOrientation { get; private set; }
         public Transform3 AreaTransform { get; private set; }
         public Transform3 RegionTransform { get; private set; }
 
@@ -62,7 +62,7 @@ namespace MHServerEmu.Games.Regions
         {
             RegionBounds = Aabb.Zero;
             AreaPosition = Vector3.Zero;
-            AreaOrientation = Vector3.Zero;
+            AreaOrientation = Orientation.Zero;
             Area = area;
             Id = id;
             PlayableNavArea = -1.0f;
@@ -99,7 +99,7 @@ namespace MHServerEmu.Games.Regions
             return true;
         }
 
-        public void SetAreaPosition(Vector3 positionInArea, Vector3 orientationInArea)
+        public void SetAreaPosition(Vector3 positionInArea, Orientation orientationInArea)
         {
             if (CellProto == null) return;
 
@@ -270,7 +270,7 @@ namespace MHServerEmu.Games.Regions
 
         public override string ToString()
         {
-            return $"{GameDatabase.GetPrototypeName(PrototypeId)}, cellid={Id}, cellpos={RegionBounds.Center.ToStringFloat()}, game={Game}";
+            return $"{GameDatabase.GetPrototypeName(PrototypeId)}, cellid={Id}, cellpos={RegionBounds.Center}, game={Game}";
         }
 
         public string PrototypeName => $"{GameDatabase.GetFormattedPrototypeName(PrototypeId)}";
@@ -389,7 +389,7 @@ namespace MHServerEmu.Games.Regions
             return new(builder.Build());
         }
 
-        public bool FindTargetPosition(Vector3 markerPos, Vector3 markerRot, RegionConnectionTargetPrototype target)
+        public bool FindTargetPosition(Vector3 markerPos, Orientation markerRot, RegionConnectionTargetPrototype target)
         {
             if (CellProto != null && CellProto.InitializeSet.Markers.HasValue())
             {

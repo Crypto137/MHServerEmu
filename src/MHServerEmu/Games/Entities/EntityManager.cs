@@ -40,7 +40,7 @@ namespace MHServerEmu.Games.Entities
             bool playerMessageIsEmpty = PlayerMessage == null;
         }
 
-        public WorldEntity CreateWorldEntity(Cell cell, PrototypeId prototypeId, Vector3 position, Vector3 orientation,
+        public WorldEntity CreateWorldEntity(Cell cell, PrototypeId prototypeId, Vector3 position, Orientation orientation,
             int health, bool requiresEnterGameWorld, bool OverrideSnapToFloor = false)
         {
             if (cell == null) return default;
@@ -84,7 +84,7 @@ namespace MHServerEmu.Games.Entities
             return worldEntity;
         }
 
-        public WorldEntity CreateWorldEntityEmpty(ulong regionId, PrototypeId prototypeId, Vector3 position, Vector3 orientation)
+        public WorldEntity CreateWorldEntityEmpty(ulong regionId, PrototypeId prototypeId, Vector3 position, Orientation orientation)
         {
             EntityBaseData baseData = new EntityBaseData(GetNextEntityId(), prototypeId, position, orientation);
             WorldEntity worldEntity = new(baseData, AOINetworkPolicyValues.AOIChannelProximity, new(_game.CurrentRepId));
@@ -120,7 +120,7 @@ namespace MHServerEmu.Games.Entities
             return item;
         }
 
-        public Transition SpawnTargetTeleport(Cell cell, TransitionPrototype transitionProto, Vector3 position, Vector3 orientation,
+        public Transition SpawnTargetTeleport(Cell cell, TransitionPrototype transitionProto, Vector3 position, Orientation orientation,
             bool requiresEnterGameWorld, PrototypeId targetRef, bool OverrideSnapToFloor)
         {
             if (cell == null) return default;
@@ -388,7 +388,7 @@ namespace MHServerEmu.Games.Entities
                         var teleportProto = teleport.TransitionPrototype;
                         if (teleportProto.VisibleByDefault == false) // To fix
                         {
-                            // Logger.Debug($"[{teleport.Location.GetPosition().ToStringFloat()}][InvT]{GameDatabase.GetFormattedPrototypeName(teleport.Destinations[0].Target)} = {teleport.Destinations[0].Target},");
+                            // Logger.Debug($"[{teleport.Location.GetPosition()}][InvT]{GameDatabase.GetFormattedPrototypeName(teleport.Destinations[0].Target)} = {teleport.Destinations[0].Target},");
                             if (LockedTargets.Contains((InvTarget)teleport.Destinations[0].Target) == false) continue;
                             if ((InvTarget)teleport.Destinations[0].Target == InvTarget.NPEAvengersTowerHubEntry && region.PrototypeId == RegionPrototypeId.NPERaftRegion) continue;
                             PrototypeId visibleParent = GetVisibleParentRef(teleportProto.ParentDataRef);

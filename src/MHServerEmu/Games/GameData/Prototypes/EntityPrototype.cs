@@ -419,11 +419,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId ShowConfirmationDialogTemplate { get; protected set; }
         public PrototypeId ShowConfirmationDialogEnemy { get; protected set; }
 
-        public void CalcSpawnOffset(Vector3 targetRot, Vector3 targetPos)
+        public void CalcSpawnOffset(Orientation targetRot, Vector3 targetPos)
         {
             float offset = SpawnOffset;
-            targetPos.X += offset * MathF.Cos(targetRot.X);
-            targetPos.Y += offset * MathF.Sin(targetRot.X);
+            targetPos.X += offset * MathF.Cos(targetRot.Yaw);
+            targetPos.Y += offset * MathF.Sin(targetRot.Yaw);
         }
     }
 

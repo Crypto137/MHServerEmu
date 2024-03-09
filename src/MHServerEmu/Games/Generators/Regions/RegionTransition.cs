@@ -22,10 +22,10 @@ namespace MHServerEmu.Games.Generators.Regions
         public static readonly Logger Logger = LogManager.CreateLogger();
         public RegionTransition() { }
 
-        public static bool FindStartPosition(Region region, PrototypeId targetRef, out Vector3 targetPos, out Vector3 targetRot)
+        public static bool FindStartPosition(Region region, PrototypeId targetRef, out Vector3 targetPos, out Orientation targetRot)
         {
             targetPos = region.StartArea.RegionBounds.Center; // default
-            targetRot = Vector3.Zero;
+            targetRot = Orientation.Zero;
             RegionConnectionTargetPrototype targetDest = null;
             Prototype targetProto = GameDatabase.GetPrototype<Prototype>(targetRef);           
 

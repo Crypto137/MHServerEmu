@@ -36,7 +36,7 @@ namespace MHServerEmu.Frontend
 
         public AreaOfInterest AOI { get; private set; }
         public Vector3 StartPositon { get; internal set; }
-        public Vector3 StartOrientation { get; internal set; }
+        public Orientation StartOrientation { get; internal set; }
         public WorldEntity EntityToTeleport { get; internal set; }
 
         public FrontendClient(TcpClientConnection connection)

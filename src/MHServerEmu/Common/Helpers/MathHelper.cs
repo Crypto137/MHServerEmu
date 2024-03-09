@@ -16,21 +16,15 @@
             return bit;
         }
 
-        public const float PI2 = 2 * MathF.PI;
+        public const float Pi = 3.1415927f;
+        public const float TwoPi = 6.2831855f;
+        public const float PiOver2 = 1.5707964f;
+        public const float PiOver4 = 0.78539819f;
 
-        /// <summary>
-        /// Angle is simplified into [0;2π] interval
-        /// </summary>
-        public static float WrapAngleRadians(float angleInRadian)
-        {
-            int wrap = (int)(angleInRadian / PI2);
-            if (wrap > 0) return angleInRadian - wrap * PI2;
-            if (angleInRadian < 0.0f) return angleInRadian - (wrap - 1) * PI2;
-            return angleInRadian;
-        }
+        public const float PiOverHalfCircleDegrees = 0.017453292f;
+        public const float HalfCircleDegreesOverPi = 57.295776f;
 
-        public static float ToRadians(float v) => v * 0.017453292f;
-
+        public static float ToRadians(float v) => v * PiOverHalfCircleDegrees;
         public static float SquareRoot(float f) => f > 0.0f ? MathF.Sqrt(f) : 0.0f;
     }
 }

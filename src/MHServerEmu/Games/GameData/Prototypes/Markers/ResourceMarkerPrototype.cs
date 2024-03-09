@@ -10,8 +10,7 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
         {
             Resource = reader.ReadFixedString32();
 
-            Position = reader.ReadVector3();
-            Rotation = reader.ReadVector3();
+            ReadMarker(reader);
         }
     }
 }

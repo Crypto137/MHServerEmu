@@ -20,11 +20,6 @@
             Col2 = col2;
         }
 
-        public static Matrix3 GetMatrix3(Vector3 orientation)
-        {
-            return RotationZYX(new(-orientation.Roll, -orientation.Pitch, orientation.Yaw));
-        }
-
         public static Matrix3 RotationZYX(Vector3 radiansXYZ)
         {
             float sX = MathF.Sin(radiansXYZ.X);

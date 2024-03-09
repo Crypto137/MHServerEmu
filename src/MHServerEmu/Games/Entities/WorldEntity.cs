@@ -133,7 +133,7 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
-        public virtual void EnterWorld(Cell cell, Vector3 position, Vector3 orientation)
+        public void EnterWorld(Cell cell, Vector3 position, Orientation orientation)
         {
             var proto = WorldEntityPrototype;
             Game = cell.Game; // TODO: Init Game to constructor
