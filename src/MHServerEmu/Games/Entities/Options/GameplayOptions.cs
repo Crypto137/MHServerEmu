@@ -34,6 +34,9 @@ namespace MHServerEmu.Games.Entities.Options
         NumSettings
     }
 
+    /// <summary>
+    /// Manages various gameplay options for a specific owner <see cref="Player"/>.
+    /// </summary>
     public class GameplayOptions
     {
         private const int NumChatTabs = 4;
@@ -70,12 +73,18 @@ namespace MHServerEmu.Games.Entities.Options
         private readonly PrototypeId[] _chatTabChannels = new PrototypeId[NumChatTabs];
         private readonly SortedDictionary<EquipmentInvUISlot, PrototypeId> _armorRarityVaporizeThresholdDict = new();
 
+        /// <summary>
+        /// Constructs a new <see cref="GameplayOptions"/> instance for the provided owner <see cref="Player"/>.
+        /// </summary>
         public GameplayOptions(Player owner = null)
         {
             _owner = owner;
             ResetToDefaults();
         }
 
+        /// <summary>
+        /// Constructs a new <see cref="GameplayOptions"/> instance from the provided <see cref="NetStructGameplayOptions"/>.
+        /// </summary>
         public GameplayOptions(NetStructGameplayOptions netStruct)
         {
             // Settings
@@ -203,27 +212,42 @@ namespace MHServerEmu.Games.Entities.Options
             _owner = player;
         }
 
+        /// <summary>
+        /// Returns the current value of the specified <see cref="GameplayOptionSetting"/>.
+        /// </summary>
         public long GetOptionSetting(GameplayOptionSetting settingEnum)
         {
             return _optionSettings[(int)settingEnum];
         }
 
+        /// <summary>
+        /// Returns the default value of the specified <see cref="GameplayOptionSetting"/>.
+        /// </summary>
         public long GetOptionSettingDefault(GameplayOptionSetting settingEnum)
         {
             return GamePlayOptionDefaults[(int)settingEnum];
         }
 
+        /// <summary>
+        /// Sets the value of the specified <see cref="GameplayOptionSetting"/>.
+        /// </summary>
         public void SetOptionSetting(GameplayOptionSetting setting, long value, bool doUpdate)
         {
             _optionSettings[(int)setting] = value;
             if (doUpdate) DoUpdate();
         }
 
+        /// <summary>
+        /// Sets the value of the specified <see cref="GameplayOptionSetting"/>.
+        /// </summary>
         public void SetOptionSetting(GameplayOptionSetting setting, bool value, bool doUpdate)
         {
             SetOptionSetting(setting, Convert.ToInt64(value), doUpdate);
         }
 
+        /// <summary>
+        /// Returns <see langword="true"/> if the chat channel with the specified <see cref="PrototypeId"/> is included in the main chat tab.
+        /// </summary>
         public bool IsChannelFiltered(PrototypeId channelProtoRef)
         {
             if (_chatChannelFilterDict.TryGetValue(channelProtoRef, out bool value) == false)
@@ -232,6 +256,9 @@ namespace MHServerEmu.Games.Entities.Options
             return value;
         }
 
+        /// <summary>
+        /// Includes or removes the chat channel with the specified <see cref="PrototypeId"/> from the main chat tab.
+        /// </summary>
         public bool SetChatChannelFilter(PrototypeId channelProtoRef, bool value, bool doUpdate)
         {
             bool oldValue = IsChannelFiltered(channelProtoRef);
@@ -241,6 +268,9 @@ namespace MHServerEmu.Games.Entities.Options
             return true;
         }
 
+        /// <summary>
+        /// Returns the <see cref="PrototypeId"/> of the chat channel in the specified tab.
+        /// </summary>
         public PrototypeId GetChatTabChannel(int tabIndex)
         {
             if ((tabIndex >= 0 && tabIndex < NumChatTabs) == false)
@@ -249,6 +279,9 @@ namespace MHServerEmu.Games.Entities.Options
             return _chatTabChannels[tabIndex];
         }
 
+        /// <summary>
+        /// Sets the chat channel in the specified tab to the one corresponding to the provided <see cref="PrototypeId"/>.
+        /// </summary>
         public bool SetChatTabChannel(int tabIndex, PrototypeId channelProtoRef, bool doUpdate)
         {
             if ((tabIndex >= 0 && tabIndex < NumChatTabs) == false)
@@ -260,11 +293,17 @@ namespace MHServerEmu.Games.Entities.Options
             return true;
         }
 
+        /// <summary>
+        /// Returns <see langword="true"/> if the chat channel with the specified <see cref="PrototypeId"/> is enabled.
+        /// </summary>
         public bool IsSubscribedToChannel(PrototypeId channelProtoRef)
         {
             return IsChannelFiltered(channelProtoRef) || IsChatTabCreatedForChannel(channelProtoRef);
         }
 
+        /// <summary>
+        /// Returns the <see cref="PrototypeId"/> of the vaporize rarity threshold for the specified <see cref="EquipmentInvUISlot"/>.
+        /// </summary>
         public PrototypeId GetArmorRarityVaporizeThreshold(EquipmentInvUISlot slot)
         {
             if (IsGearSlotVaporizing(slot) == false)
@@ -276,6 +315,9 @@ namespace MHServerEmu.Games.Entities.Options
             return rarityRef;
         }
 
+        /// <summary>
+        /// Sets the <see cref="PrototypeId"/> of the vaporize rarity threshold for the specified <see cref="EquipmentInvUISlot"/>.
+        /// </summary>
         public bool SetArmorRarityVaporizeThreshold(PrototypeId rarityRef, EquipmentInvUISlot slot)
         {
             if (IsGearSlotVaporizing(slot) == false)
@@ -289,6 +331,9 @@ namespace MHServerEmu.Games.Entities.Options
             return true;
         }
 
+        /// <summary>
+        /// Resets all options in this <see cref="GameplayOptions"/> instance to their default values.
+        /// </summary>
         public void ResetToDefaults()
         {
             // Option settings
@@ -317,6 +362,9 @@ namespace MHServerEmu.Games.Entities.Options
             }
         }
 
+        /// <summary>
+        /// Converts this <see cref="GameplayOptions"/> instance to <see cref="NetStructGameplayOptions"/>.
+        /// </summary>
         public NetStructGameplayOptions ToProtobuf()
         {
             var builder = NetStructGameplayOptions.CreateBuilder();
@@ -378,19 +426,20 @@ namespace MHServerEmu.Games.Entities.Options
             }
         }
 
+        /// <summary>
+        /// Returns <see langword="true"/> is the chat channel with the specified <see cref="PrototypeId"/> has a chat tab dedicated to it.
+        /// </summary>
         private bool IsChatTabCreatedForChannel(PrototypeId chatChannelRef)
         {
             return _chatTabChannels.Contains(chatChannelRef);
         }
 
+        /// <summary>
+        /// Returns <see langword="true"/> if the specified <see cref="EquipmentInvUISlot"/> can be vaporized.
+        /// </summary>
         private bool IsGearSlotVaporizing(EquipmentInvUISlot slot)
         {
             return slot >= EquipmentInvUISlot.Gear01 && slot <= EquipmentInvUISlot.Gear05;
-        }
-
-        private PrototypeId GetDefaultArmorRarityVaporizeThreshold()
-        {
-            return PrototypeId.Invalid;
         }
 
         /// <summary>
