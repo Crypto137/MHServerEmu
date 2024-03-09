@@ -8,6 +8,7 @@ using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Networking;
@@ -120,11 +121,8 @@ namespace MHServerEmu.Games
                     .SetPlatformType((int)Platforms.PC))
                 .Build()));
 
-            // Create player and avatar entities
-            // For now we're using dumped data as base and changing it where necessary
-
-            // Player entity
-            Player player = EntityManager.GetDefaultPlayerEntity();
+            // Create and initialize player entity
+            Player player = new(new EntityBaseData());
             player.InitializeFromDBAccount(account);
             messageList.Add(new(player.ToNetMessageEntityCreate()));
 

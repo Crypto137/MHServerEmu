@@ -83,35 +83,46 @@ namespace MHServerEmu.Games.Entities
         public GameplayOptions GameplayOptions { get; set; }
         public AchievementState AchievementState { get; set; }
 
-        public Player(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
-
-        // note: this is ugly
-        public Player(EntityBaseData baseData, AOINetworkPolicyValues replicationPolicy, ReplicatedPropertyCollection properties,
-            MissionManager missionManager, ReplicatedPropertyCollection avatarProperties,
-            ulong shardId, ReplicatedVariable<string> playerName, ReplicatedVariable<string> secondaryPlayerName,
-            MatchQueueStatus matchQueueStatus, bool emailVerified, TimeSpan accountCreationTimestamp, ReplicatedVariable<ulong> partyId,
-            Community community, List<PrototypeId> unlockedInventoryList, SortedSet<AvailableBadges> badges,
-            GameplayOptions gameplayOptions, AchievementState achievementState, Dictionary<PrototypeId, StashTabOptions> stashTabOptionsDict) : base(baseData)
+        public Player(EntityBaseData baseData) : base(baseData)
         {
-            ReplicationPolicy = replicationPolicy;
-            Properties = properties;
+            // Base Data
+            BaseData.ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
+            BaseData.EntityId = 14646212;
+            BaseData.PrototypeId = (PrototypeId)18307315963852687724;
+            BaseData.FieldFlags = EntityCreateMessageFlags.HasInterestPolicies | EntityCreateMessageFlags.HasDbId;
+            BaseData.InterestPolicies = AOINetworkPolicyValues.AOIChannelOwner;
+            BaseData.DbId = 867587;
+            BaseData.LocomotionState = new(0f);
 
-            MissionManager = missionManager;
-            AvatarProperties = avatarProperties;
-            ShardId = shardId;
-            _playerName = playerName;
-            _secondaryPlayerName = secondaryPlayerName;
-            MatchQueueStatus = matchQueueStatus;
-            EmailVerified = emailVerified;
-            AccountCreationTimestamp = accountCreationTimestamp;
-            PartyId = partyId;
-            Community = community;
-            _unlockedInventoryList = unlockedInventoryList;
-            _badges = badges;
-            GameplayOptions = gameplayOptions;
-            AchievementState = achievementState;
-            _stashTabOptionsDict = stashTabOptionsDict;
+            // Archive Data
+            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelOwner;
+
+            Properties = new(9078332);
+
+            MissionManager = new();
+            MissionManager.Owner = this;
+            
+            AvatarProperties = new(9078333);
+            ShardId = 3;
+            _playerName = new(9078334, string.Empty);
+            _secondaryPlayerName = new(0, string.Empty);
+            
+            MatchQueueStatus = new();
+            MatchQueueStatus.SetOwner(this);
+            
+            PartyId = new(9078335, 0);
+            
+            Community = new(this);
+            Community.Initialize();
+
+            _unlockedInventoryList = new();
+            _badges = new();
+            GameplayOptions = new(this);
+            AchievementState = new();
+            _stashTabOptionsDict = new();
         }
+
+        public Player(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
         protected override void Decode(CodedInputStream stream)
         {
@@ -240,12 +251,9 @@ namespace MHServerEmu.Games.Entities
         /// </summary>
         public void InitializeFromDBAccount(DBAccount account)
         {
-            var prototype = GameDatabase.GetPrototype<PlayerPrototype>(BaseData.PrototypeId);
-
             // Adjust properties
             foreach (var accountAvatar in account.Avatars.Values)
             {
-                PropertyParam enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, (PrototypeId)accountAvatar.Prototype);
                 var avatarPrototype = (PrototypeId)accountAvatar.Prototype;
 
                 // Set library costumes according to account data
@@ -254,22 +262,43 @@ namespace MHServerEmu.Games.Entities
                 // Set avatar levels to 60
                 // Note: setting this to above level 60 sets the prestige level as well
                 Properties[PropertyEnum.AvatarLibraryLevel, 0, avatarPrototype] = 60;
+            }
 
-                // Clean up team ups
-                Properties[PropertyEnum.AvatarLibraryTeamUp, 0, avatarPrototype] = PrototypeId.Invalid;
+            foreach (PrototypeId avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(AvatarPrototype),
+                PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
+            {
+                if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
+                Properties[PropertyEnum.AvatarUnlock, avatarRef] = (int)AvatarUnlockType.Type2;
+            }
 
-                // Unlock start avatars
-                var avatarUnlock = (AvatarUnlockType)(int)Properties[PropertyEnum.AvatarUnlock, enumValue];
-                if (avatarUnlock == AvatarUnlockType.Starter)
-                    Properties[PropertyEnum.AvatarUnlock, avatarPrototype] = (int)AvatarUnlockType.Type3;
+            foreach (PrototypeId waypointRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(WaypointPrototype),
+                PrototypeIterateFlags.NoAbstract))
+            {
+                Properties[PropertyEnum.Waypoint, waypointRef] = true;
+            }
+
+            foreach (PrototypeId vendorRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(VendorTypePrototype),
+                PrototypeIterateFlags.NoAbstract))
+            {
+                Properties[PropertyEnum.VendorLevel, vendorRef] = 1;
+            }
+
+            foreach (PrototypeId uiSystemLockRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(UISystemLockPrototype),
+                PrototypeIterateFlags.NoAbstract))
+            {
+                Properties[PropertyEnum.UISystemLock, uiSystemLockRef] = true;
+            }
+
+            foreach (PrototypeId tutorialRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(HUDTutorialPrototype),
+                PrototypeIterateFlags.NoAbstract))
+            {
+                Properties[PropertyEnum.TutorialHasSeenTip, tutorialRef] = true;
             }
 
             // TODO: Set this after creating all avatar entities via a NetMessageSetProperty in the same packet
             Properties[PropertyEnum.PlayerMaxAvatarLevel] = 60;
 
             // Complete all missions
-            MissionManager = new();
-            MissionManager.Owner = this;
             MissionManager.PrototypeId = (PrototypeId)account.CurrentAvatar.Prototype;
             foreach (PrototypeId missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(MissionPrototype),
                 PrototypeIterateFlags.NoAbstract | PrototypeIterateFlags.ApprovedOnly))
@@ -292,10 +321,6 @@ namespace MHServerEmu.Games.Entities
             Properties[PropertyEnum.LoginCount] = 1075;
             EmailVerified = true;
             AccountCreationTimestamp = Clock.DateTimeToUnixTime(new(2023, 07, 16, 1, 48, 0));   // First GitHub commit date
-
-            // Clear community
-            Community.Shutdown();
-            Community.Initialize();
 
             #region Hardcoded social tab easter eggs
             Community.AddMember(1, "DavidBrevik", CircleId.__Friends);
@@ -354,12 +379,8 @@ namespace MHServerEmu.Games.Entities
                 .Build());
             #endregion
 
-            // Initialize stash tabs
-            _unlockedInventoryList.Clear();
-            _stashTabOptionsDict.Clear();
+            // Initialize and unlock stash tabs
             OnEnterGameInitStashTabOptions();
-
-            // Unlock all locked tabs
             foreach (PrototypeId stashRef in GetStashInventoryProtoRefs(true, false))
                 UnlockInventory(stashRef);
 
