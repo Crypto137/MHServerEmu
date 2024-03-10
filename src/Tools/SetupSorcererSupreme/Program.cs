@@ -59,7 +59,7 @@ namespace SetupSorcererSupreme
                 return (false, "Game data files are missing. Please reinstall the game.");
 
             // Find server directory
-            string assemblyDir = Assembly.GetExecutingAssembly().Location;
+            string assemblyDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string serverDir = assemblyDir;
             
             if (File.Exists(Path.Combine(serverDir, "MHServerEmu.exe")) == false)
