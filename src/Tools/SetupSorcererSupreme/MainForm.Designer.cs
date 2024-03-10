@@ -113,7 +113,9 @@
             Controls.Add(panel1);
             Controls.Add(bodyLabel);
             Controls.Add(nextButton);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
             Icon = (Icon)resources.GetObject("$this.Icon");
+            MaximizeBox = false;
             Name = "MainForm";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "MHServerEmu Setup Sorcerer Supreme";
