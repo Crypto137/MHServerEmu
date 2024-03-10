@@ -2,9 +2,7 @@
 
 Below are some of the more advanced setup topics you might be interested in. For first-time setup instructions please see [Initial Setup](./InitialSetup.md).
 
-## Enabling Accounts
-
-By default the `BypassAuth` option in `Config.ini` is enabled. This makes the server accept any login information and always use a stub account, which is not ideal for anything beyond basic single player testing. To be able to save data and have multiple clients able to connect you need to disable `BypassAuth` and set up accounts.
+## Managing Accounts
 
 You can create and manage accounts by using ! commands in the server console or the in-game chat window. Here are some commands to get you started:
 
@@ -36,11 +34,11 @@ Please keep in mind that MHServerEmu is experimental software still heavily in d
 
 The client uses an embedded web browser for some of its UI panels. MHServerEmu provides some options that allow you to make use of this feature.
 
-1. Copy the [mhgame_store_home](./../../assets/store/mhgame_store_home/) folder provided in this repository to `Apache24\htdocs`.
+1. Copy the [store](https://github.com/Crypto137/MHServerEmuWebAssets/tree/master/store) folder provided in the [MHServerEmuWebAssets](https://github.com/Crypto137/MHServerEmuWebAssets) repository to `Apache24\htdocs`.
 
 2. Set `OverrideStoreUrls` in `Config.ini` to `true`.
 
-3. Set `StoreHomePageUrl` in `Config.ini` to `http://localhost/mhgame_store_home`.
+3. Set `StoreHomePageUrl` in `Config.ini` to `http://localhost/store`.
 
 Restart the server, and you should be able to see an example store home page when you open the in-game store. You can set other pages by editing various URL options in `Config.ini` (e.g. `NewsUrl` to change the content of the news window). For more information on the embedded browser see [Embedded Browser](./../Web/EmbeddedBrowser.md).
 
