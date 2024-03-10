@@ -149,7 +149,7 @@ namespace MHServerEmu.Common.Commands
                 teleportPoint += client.LastPosition;
 
             client.CurrentGame.EventManager.AddEvent(client, Games.Events.EventEnum.ToTeleport, 0, teleportPoint);
-            return $"Teleporting to {teleportPoint}";
+            return $"Teleporting to {teleportPoint.ToStringNames()}";
         }
     }
 
