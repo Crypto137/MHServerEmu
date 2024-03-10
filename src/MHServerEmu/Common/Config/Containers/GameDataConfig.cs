@@ -3,7 +3,6 @@
     public class GameDataConfig : ConfigContainer
     {
         public bool LoadAllPrototypes { get; private set; }
-        public bool LoadMissionPrototypes { get; private set; }
 
         public GameDataConfig(IniFile configFile) : base(configFile) { }
     }
