@@ -64,6 +64,7 @@ namespace MHServerEmu.Games.Entities
         public static Vector3 ProjectToFloor(Region region, Vector3 regionPos)
         {
             Cell cell = region.GetCellAtPosition(regionPos);
+            if (cell == null) return regionPos;
             Vector3 postion = new(regionPos);
             postion.Z = cell.RegionBounds.Center.Z + ProjectToFloor(cell.CellProto, postion);
             return postion;

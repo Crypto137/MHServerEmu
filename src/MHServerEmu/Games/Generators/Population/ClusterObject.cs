@@ -903,6 +903,7 @@ namespace MHServerEmu.Games.Generators.Population
             Cell cell = Region.GetCellAtPosition(pos);
             var entity = GameDatabase.GetPrototype<WorldEntityPrototype>(EntityRef);
 
+            float oldZ = pos.Z;
             SnapToFloor ??= entity.SnapToFloorOnSpawn;
             bool overrideSnap = SnapToFloor != entity.SnapToFloorOnSpawn;
             if (SnapToFloor == false) 
@@ -916,7 +917,8 @@ namespace MHServerEmu.Games.Generators.Population
                 pos.Z += entity.Bounds.GetBoundHalfHeight();
             var rot = tr.Orientation;
             int health = EntityManager.GetRankHealth(entity);
-            var worldEntity = entityManager.CreateWorldEntity(cell, EntityRef, pos, rot, health, false, overrideSnap);            
+            var worldEntity = entityManager.CreateWorldEntity(cell, EntityRef, pos, rot, health, false, overrideSnap);      
+            if (worldEntity == null) return;
             if (Parent.MissionRef != PrototypeId.Invalid)
             {                
                 worldEntity.Properties[PropertyEnum.MissionPrototype] = Parent.MissionRef;
@@ -924,7 +926,7 @@ namespace MHServerEmu.Games.Generators.Population
                     worldEntity.AppendOnStartActions(Parent.MissionRef);
             }
             // TODO set Rank
-            if (DebugLog) Logger.Debug($"Spawn [{worldEntity.BaseData.EntityId}] {worldEntity.PrototypeName} {pos} [{Parent.Objects.Count}] {GameDatabase.GetFormattedPrototypeName(Parent.ObjectProto.GetFormation().DataRef)}");
+            if (DebugLog) Logger.Debug($"Spawn [{worldEntity.BaseData.EntityId}] {worldEntity.PrototypeName} {pos} [{oldZ}=>{pos.Z}] [{Parent.Objects.Count}] {GameDatabase.GetFormattedPrototypeName(Parent.ObjectProto.GetFormation().DataRef)}");
         }
 
         public override bool IsFormationObject()

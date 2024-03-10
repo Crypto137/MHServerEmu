@@ -5,6 +5,7 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
+    using static MHServerEmu.Games.Missions.MissionManager;
     using KeywordsMask = BitList;
 
     #region Enums
@@ -334,13 +335,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override bool ApprovedForUse()
         {
-            // TODO: console support
+            // TODO: console support            
+            if (DisabledMissions.Contains((MissionPrototypeId)DataRef)) return false;
+            if (EventMissions.Contains((MissionPrototypeId)DataRef)) return true;            
             return GameDatabase.DesignStateOk(DesignState);
         }
 
         public bool IsLiveTuningEnabled()
         {
             // Not yet implemented
+            // TODO check mission
             return true;
         }
 

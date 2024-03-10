@@ -1,8 +1,10 @@
 ﻿using MHServerEmu.Common;
 using MHServerEmu.Common.Extensions;
 using MHServerEmu.Common.Logging;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.MetaGame;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
@@ -17,8 +19,8 @@ namespace MHServerEmu.Games.Generators.Population
         public PropertyCollection Properties;
         public SpawnFlags SpawnFlags;
         public PopulationObjectPrototype Object;
-        public PrototypeId[] SpawnAreas;
-        public AssetId[] SpawnCells;
+        public List<PrototypeId> SpawnAreas;
+        public List<PrototypeId> SpawnCells;
         public int Count;       
 
         public void Spawn(Cell cell)
@@ -32,7 +34,8 @@ namespace MHServerEmu.Games.Generators.Population
             {               
                 reservation.Object = Object;
                 reservation.MissionRef = MissionRef;
-                //Logger.Warn($"{GameDatabase.GetFormattedPrototypeName(MissionRef)} {pos}");
+                
+                //Logger.Warn($"{GameDatabase.GetFormattedPrototypeName(MissionRef)} {GameDatabase.GetFormattedPrototypeName(MarkerRef)} {pos}");
                 ClusterGroup clusterGroup = new(region, Random, Object, null, Properties, SpawnFlags);
                 clusterGroup.Initialize();
                 // set group position
@@ -69,7 +72,8 @@ namespace MHServerEmu.Games.Generators.Population
             {
                 foreach (var entry in missionProto.PopulationSpawns)
                 {
-                    // Logger.Debug($"Mission {GameDatabase.GetFormattedPrototypeName(missionProto.DataRef)} = {missionProto.DataRef}");
+                    //if (missionProto.DesignState == DesignWorkflowState.NotInGame) 
+                    //    Logger.Debug($"Mission [{missionProto.DesignState}] {GameDatabase.GetFormattedPrototypeName(missionProto.DataRef)} = {missionProto.DataRef} {GameDatabase.GetFormattedPrototypeName(entry.Population.UsePopulationMarker)}");
                     if (entry.RestrictToAreas.HasValue()) // check areas
                     {
                         bool foundArea = false;
@@ -83,31 +87,46 @@ namespace MHServerEmu.Games.Generators.Population
                         }
                         if (foundArea == false) continue;
 
+                        List<PrototypeId> regionAreas = new();
+                        foreach (var areaRef in entry.RestrictToAreas)
+                            regionAreas.Add(areaRef);
                         // entry.Count; TODO count population
                         //for (var i = 0; i < entry.Count; i++)
-                        AddPopulationMarker(entry.Population.UsePopulationMarker, entry.Population, (int)entry.Count, entry.RestrictToAreas, entry.RestrictToCells, missionProto.DataRef);
+                        AddPopulationMarker(entry.Population.UsePopulationMarker, entry.Population, (int)entry.Count, regionAreas, AssetsToList(entry.RestrictToCells), missionProto.DataRef);
                     }
                     else if (entry.RestrictToRegions.HasValue()) // No areas but have Region
                     {
-                        PrototypeId[] regionAreas = new PrototypeId[Region.Areas.Count];
-                        int i = 0;
+                        List<PrototypeId> regionAreas = new ();
                         foreach (var area in Region.IterateAreas())
-                            regionAreas[i++] = area.PrototypeDataRef;
+                            regionAreas.Add(area.PrototypeDataRef);
 
-                        AddPopulationMarker(entry.Population.UsePopulationMarker, entry.Population, (int)entry.Count, regionAreas, entry.RestrictToCells, missionProto.DataRef);
+                        AddPopulationMarker(entry.Population.UsePopulationMarker, entry.Population, (int)entry.Count, regionAreas, AssetsToList(entry.RestrictToCells), missionProto.DataRef);
                     }
                 }   
             }
 
         }
 
-        public void AddPopulationMarker(PrototypeId populationMarkerRef, PopulationObjectPrototype population, int count, PrototypeId[] restrictToAreas, AssetId[] restrictToCells, PrototypeId missionRef)
+        public static List<PrototypeId> AssetsToList(AssetId[] assets)
+        {
+            if (assets.IsNullOrEmpty()) return new();
+            List<PrototypeId> list = new();
+            foreach (var asset in assets)
+                list.Add(GameDatabase.GetDataRefByAsset(asset));
+            return list;
+        }
+
+        public void AddPopulationMarker(PrototypeId populationMarkerRef, PopulationObjectPrototype population, int count, List<PrototypeId> restrictToAreas, List<PrototypeId> restrictToCellsRef, PrototypeId missionRef)
         {
             //check marker exist population.UseMarkerOrientation;
             //Logger.Warn($"SpawnMarker[{count}] {GameDatabase.GetFormattedPrototypeName(populationMarkerRef)}");
             GRandom random = Game.Random;
-            var properties = new PropertyCollection();
-            properties[PropertyEnum.MissionPrototype] = missionRef;
+            PropertyCollection properties = null;
+            if (missionRef != PrototypeId.Invalid)
+            {
+                properties = new PropertyCollection();
+                properties[PropertyEnum.MissionPrototype] = missionRef;
+            }
             PopulationMarker populationMarker = new()
             {
                 MarkerRef = populationMarkerRef,
@@ -117,11 +136,44 @@ namespace MHServerEmu.Games.Generators.Population
                 SpawnFlags = SpawnFlags.None,
                 Object = population,
                 SpawnAreas = restrictToAreas,
-                SpawnCells = restrictToCells,
+                SpawnCells = restrictToCellsRef,
                 Count = count
             };
             
             PopulationMarkers.Add(populationMarker);
+        }
+
+        public void MetaStateRegisty(PrototypeId prototypeId)
+        {
+            var popProto = GameDatabase.GetPrototype<MetaStatePopulationMaintainPrototype>(prototypeId);
+            if (popProto != null && popProto.PopulationObjects.HasValue())
+            {
+                List<PrototypeId> regionAreas = new();
+                List<PrototypeId> regionCell;
+                if (popProto.RestrictToAreas.IsNullOrEmpty())
+                {
+                    foreach (var area in Region.IterateAreas())
+                        regionAreas.Add(area.PrototypeDataRef);
+                    regionCell = new();
+                    foreach (var cell in Region.Cells)
+                        if (cell.Area.IsDynamicArea() == false)
+                            regionCell.Add(cell.PrototypeId);
+                }
+                else
+                {
+                    foreach (var areaRef in popProto.RestrictToAreas)
+                        regionAreas.Add(areaRef);
+                    regionCell = AssetsToList(popProto.RestrictToCells);
+                }                    
+
+                foreach (var popObject in popProto.PopulationObjects)
+                {
+                    int count = popObject.Count;
+                    count = 1; // Fix 
+                    var objectProto = popObject.GetPopObject();
+                    AddPopulationMarker(objectProto.UsePopulationMarker, objectProto, count, regionAreas, regionCell, PrototypeId.Invalid);
+                }
+            }
         }
     }
 }

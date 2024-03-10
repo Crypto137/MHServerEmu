@@ -399,13 +399,25 @@ namespace MHServerEmu.Games.Entities
             InvSpawner.OperationsBountyChestSpawnerA100,
             InvSpawner.OperationsBountyChestSpawnerB225,
             InvSpawner.OperationsBountyChestSpawnerC350,
+            InvSpawner.DrDoomPhase2StarryExpanseSpawner,
+            InvSpawner.DrDoomPhase3StarryExpanseSpawner,
+            InvSpawner.DrDoomPhase2SpawnerEGc,
+            InvSpawner.DrDoomPhase2SpawnerEGr,
+            InvSpawner.DrDoomPhase3SpawnerEGc,
+            InvSpawner.DrDoomPhase3SpawnerEGr,
         };
 
         public enum InvSpawner : ulong
         {
             OperationsBountyChestSpawnerA100 = 18164666176037329599,
             OperationsBountyChestSpawnerB225 = 11588501183449012936,
-            OperationsBountyChestSpawnerC350 = 16538587082423278280, 
+            OperationsBountyChestSpawnerC350 = 16538587082423278280,
+            DrDoomPhase2SpawnerEGc = 4693116097212523005,
+            DrDoomPhase2SpawnerEGr = 3339796473761636876,
+            DrDoomPhase3SpawnerEGc = 16067664414561149438,
+            DrDoomPhase3SpawnerEGr = 12791301204692902413,
+            DrDoomPhase2StarryExpanseSpawner = 8902365322555041383,
+            DrDoomPhase3StarryExpanseSpawner = 8461250813795575400,
         }
 
 
