@@ -41,7 +41,7 @@
             // nextButton
             // 
             nextButton.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point);
-            nextButton.Location = new Point(379, 280);
+            nextButton.Location = new Point(492, 280);
             nextButton.Name = "nextButton";
             nextButton.Size = new Size(90, 29);
             nextButton.TabIndex = 0;
@@ -53,9 +53,9 @@
             // 
             headerLabel.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point);
             headerLabel.Location = new Point(12, 6);
-            headerLabel.MaximumSize = new Size(460, 50);
+            headerLabel.MaximumSize = new Size(573, 50);
             headerLabel.Name = "headerLabel";
-            headerLabel.Size = new Size(460, 50);
+            headerLabel.Size = new Size(573, 50);
             headerLabel.TabIndex = 1;
             headerLabel.Text = "Header Label";
             headerLabel.TextAlign = ContentAlignment.MiddleLeft;
@@ -65,7 +65,7 @@
             bodyLabel.AutoSize = true;
             bodyLabel.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point);
             bodyLabel.Location = new Point(12, 76);
-            bodyLabel.MaximumSize = new Size(460, 0);
+            bodyLabel.MaximumSize = new Size(573, 0);
             bodyLabel.Name = "bodyLabel";
             bodyLabel.Size = new Size(86, 21);
             bodyLabel.TabIndex = 2;
@@ -77,7 +77,7 @@
             panel1.Controls.Add(headerLabel);
             panel1.Location = new Point(0, 0);
             panel1.Name = "panel1";
-            panel1.Size = new Size(480, 64);
+            panel1.Size = new Size(593, 64);
             panel1.TabIndex = 3;
             // 
             // folderBrowseTextBox
@@ -85,7 +85,7 @@
             folderBrowseTextBox.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point);
             folderBrowseTextBox.Location = new Point(12, 141);
             folderBrowseTextBox.Name = "folderBrowseTextBox";
-            folderBrowseTextBox.Size = new Size(361, 29);
+            folderBrowseTextBox.Size = new Size(474, 29);
             folderBrowseTextBox.TabIndex = 4;
             folderBrowseTextBox.Text = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Marvel Heroes";
             folderBrowseTextBox.Visible = false;
@@ -93,7 +93,7 @@
             // folderBrowseButton
             // 
             folderBrowseButton.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point);
-            folderBrowseButton.Location = new Point(379, 141);
+            folderBrowseButton.Location = new Point(492, 141);
             folderBrowseButton.Name = "folderBrowseButton";
             folderBrowseButton.Size = new Size(90, 29);
             folderBrowseButton.TabIndex = 5;
@@ -107,7 +107,7 @@
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ControlLight;
-            ClientSize = new Size(481, 321);
+            ClientSize = new Size(594, 321);
             Controls.Add(folderBrowseButton);
             Controls.Add(folderBrowseTextBox);
             Controls.Add(panel1);
