@@ -37,7 +37,7 @@ namespace MHServerEmu.Games.Entities
             _flags |= EntityFlags.NoCollide;
             var spawnerProto = SpawnerPrototype;
             DebugLog = false;
-            if (true) Logger.Debug($"[{BaseData.EntityId}] {PrototypeName} [{spawnerProto.StartEnabled}] Distance[{spawnerProto.SpawnDistanceMin}-{spawnerProto.SpawnDistanceMax}] Sequence[{spawnerProto.SpawnSequence.Length}] {position}");
+            if (DebugLog) Logger.Debug($"[{BaseData.EntityId}] {PrototypeName} [{spawnerProto.StartEnabled}] Distance[{spawnerProto.SpawnDistanceMin}-{spawnerProto.SpawnDistanceMax}] Sequence[{spawnerProto.SpawnSequence.Length}] {position}");
             if (EntityManager.InvSpawners.Contains((EntityManager.InvSpawner)BaseData.PrototypeId)) return;
             _random = Game.Random; //new(cell.Seed);
             // if (spawnerProto.StartEnabled)
