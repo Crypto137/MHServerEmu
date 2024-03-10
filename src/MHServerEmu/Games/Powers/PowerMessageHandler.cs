@@ -11,6 +11,9 @@ using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.MetaGame;
+using MHServerEmu.Games.Entities.Locomotion;
+using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Common;
 
 namespace MHServerEmu.Games.Powers
 {
@@ -185,6 +188,7 @@ namespace MHServerEmu.Games.Powers
                 WorldEntity entity = (WorldEntity)client.CurrentGame.EntityManager.GetEntityById(entityId);
                 if (entity != null)
                 {
+                    var proto = entity.WorldEntityPrototype;
                     var repId = entity.Properties.ReplicationId;
                     int health = entity.Properties[PropertyEnum.Health];
                     int newHealth = health - damage;
@@ -196,6 +200,28 @@ namespace MHServerEmu.Games.Powers
                         messageList.Add(new(client,
                          new(Property.ToNetMessageSetProperty(repId, new(PropertyEnum.IsDead), true))
                          ));
+                    } else if (proto is AgentPrototype agent && agent.Locomotion.Immobile == false)
+                    {
+                        LocomotionStateUpdateArchive locomotion = new()
+                        {
+                            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
+                            EntityId = entityId,
+                            FieldFlags = LocomotionMessageFlags.NoLocomotionState,
+                            Position = new(entity.Location.GetPosition()),
+                            Orientation = new(),
+                            LocomotionState = new(0)
+                        };
+                        locomotion.Orientation.Yaw = Vector3.Angle(locomotion.Position, client.LastPosition);
+                        messageList.Add(new(client, new(NetMessageLocomotionStateUpdate.CreateBuilder()
+                            .SetArchiveData(locomotion.Serialize())
+                            .Build())));
+                    }
+                    if (entity.ConditionCollection.Count > 0 && health == entity.Properties[PropertyEnum.HealthMaxOther])
+                    {
+                        messageList.Add(new(client, new(NetMessageDeleteCondition.CreateBuilder()
+                            .SetIdEntity(entityId)
+                            .SetKey(1)
+                            .Build())));
                     }
                     entity.Properties[PropertyEnum.Health] = newHealth;
                     messageList.Add(new(client,

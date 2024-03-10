@@ -129,7 +129,7 @@ namespace MHServerEmu.Games.Regions
             RandomSeed = settings.Seed;
             Bound = settings.Bound;
             AvatarSwapEnabled = RegionPrototype.EnableAvatarSwap;
-            RestrictedRosterEnabled = (RegionPrototype.RestrictedRoster.IsNullOrEmpty() == false);
+            RestrictedRosterEnabled = (RegionPrototype.RestrictedRoster.HasValue());
 
             SetRegionLevel();
 
@@ -160,7 +160,7 @@ namespace MHServerEmu.Games.Regions
 
             CreateParams = new((uint)RegionLevel, (DifficultyTier)settings.DifficultyTierRef); // OLD params
 
-            if (regionProto.DividedStartLocations.IsNullOrEmpty() == false)
+            if (regionProto.DividedStartLocations.HasValue())
                 InitDividedStartLocations(regionProto.DividedStartLocations);
 
             // if (!NaviSystem.Initialize(this))  return false;
@@ -254,7 +254,7 @@ namespace MHServerEmu.Games.Regions
                 Logger.Warn($"Region created with affixes, but no RegionAffixTable. REGION={this} AFFIXES={Settings.Affixes}")
             }
 
-            if (regionProto.AvatarPowers.IsNullOrEmpty() == false)
+            if (regionProto.AvatarPowers.HasValue())
                 foreach (var avatarPower in regionProto.AvatarPowers)
                     SetProperty<bool>(true, new (PropertyEnum.RegionAvatarPower, avatarPower));
 
@@ -509,6 +509,7 @@ namespace MHServerEmu.Games.Regions
 
         public DateTime CreatedTime { get; set; }
         public DateTime VisitedTime { get; private set; }
+        public string PrototypeName => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef);
 
         public override string ToString()
         {
@@ -758,6 +759,38 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
+        public static bool IsBoundsBlockedByEntity(Bounds bounds, WorldEntity entity, BlockingCheckFlags blockFlags)
+        {
+            if (entity != null)
+            {
+                if (entity.NoCollide) return false;
+
+                bool selfBlocking = false;
+                bool otherBlocking = false;
+
+                if (blockFlags != 0)
+                {
+                    var entityProto = entity.WorldEntityPrototype;
+                    if (entityProto == null) return false;
+
+                    var boundsProto = entityProto.Bounds;
+                    if (boundsProto == null) return false;
+
+                    selfBlocking |= blockFlags.HasFlag(BlockingCheckFlags.CheckSelf);
+                    otherBlocking |= blockFlags.HasFlag(BlockingCheckFlags.CheckSpawns) && boundsProto.BlocksSpawns;
+                    otherBlocking |= blockFlags.HasFlag(BlockingCheckFlags.CheckGroundMovementPowers) && (boundsProto.BlocksMovementPowers == BoundsMovementPowerBlockType.Ground || boundsProto.BlocksMovementPowers == BoundsMovementPowerBlockType.All);
+                    otherBlocking |= blockFlags.HasFlag(BlockingCheckFlags.CheckAllMovementPowers) && boundsProto.BlocksMovementPowers == BoundsMovementPowerBlockType.All;
+                    otherBlocking |= blockFlags.HasFlag(BlockingCheckFlags.CheckLanding) && boundsProto.BlocksLanding;
+
+                    if (otherBlocking == false) return false;
+                }
+
+                Bounds entityBounds = entity.Bounds;
+                if (bounds.CanBeBlockedBy(entityBounds, selfBlocking, otherBlocking) && bounds.Intersects(entityBounds)) return true;
+            }
+
+            return false;
+        }
 
     }
 

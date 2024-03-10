@@ -10,6 +10,7 @@
         public float Height { get => Max.Z - Min.Z; }
         
         public Vector3 Center { get => Min + ((Max - Min) / 2.0f); }
+
         public Aabb(Vector3 min, Vector3 max)
         {
             Min = min;
@@ -31,23 +32,14 @@
             Max = new (center.X + halfWidth, center.Y + halfLength, center.Z + halfHeight);
         }
 
-        public static Aabb InvertedLimit
-        {
-            get => new(
+        public static Aabb InvertedLimit => new(
                 new Vector3(float.MaxValue, float.MaxValue, float.MaxValue),
                 new Vector3(float.MinValue, float.MinValue, float.MinValue)
             );
-        }
 
-        public static Aabb Zero
-        {
-            get => new(
-                Vector3.Zero,
-                Vector3.Zero
-            );
-        }
-
-        public float Volume { get => Width * Length * Height; }
+        public static Aabb Zero => new( Vector3.Zero, Vector3.Zero );
+        public float Volume => Width * Length * Height;
+        public Vector3 Extents => (Max - Min) * 0.5f;
 
         public void Set(Aabb aabb)
         {
@@ -181,6 +173,26 @@
             return true;
         }
 
+        public bool Intersects(Capsule capsule)
+        {
+            return capsule.Intersects(this);
+        }
+
+        public bool Intersects(Triangle triangle)
+        {
+            return triangle.Intersects(this);
+        }
+
+        public bool Intersects(Sphere sphere)
+        {
+            return sphere.Intersects(this);
+        }
+
+        public bool Intersects(Obb obb)
+        {
+            return obb.Intersects(this);
+        }
+
         public bool Intersects(Aabb2 bounds)
         {
             if (Max.X < bounds.Min.X || Min.X > bounds.Max.X ||
@@ -203,6 +215,68 @@
 
         public float Radius2D() => Math.Max(Width, Length);
 
+        public Vector3[] GetCorners()
+        {
+            Vector3[] corners = new Vector3[8];
+
+            corners[0] = Min;
+            corners[1] = new (Min.X, Max.Y, Min.Z);
+            corners[2] = new (Min.X, Max.Y, Max.Z);
+            corners[3] = new (Min.X, Min.Y, Max.Z);
+            corners[4] = new (Max.X, Min.Y, Min.Z);
+            corners[5] = new (Max.X, Max.Y, Min.Z);
+            corners[6] = Max;
+            corners[7] = new (Max.X, Min.Y, Max.Z);
+
+            return corners;
+        }
+
+        public bool IntersectRay(Vector3 point, Vector3 velocity, ref float time, out Vector3 intersectPoint)
+        {
+            float tMin = 0.0f;
+            float tMax = float.MaxValue;
+
+            for (int i = 0; i < 3; ++i)
+            {
+                if (Math.Abs(velocity[i]) < Segment.Epsilon)
+                {
+                    if (point[i] < Min[i] || point[i] > Max[i])
+                    {
+                        time = 0.0f;
+                        intersectPoint = Vector3.Zero;
+                        return false;
+                    }
+                }
+                else
+                {
+                    float dv = 1.0f / velocity[i];
+                    float t1 = (Min[i] - point[i]) * dv;
+                    float t2 = (Max[i] - point[i]) * dv;
+
+                    if (t1 > t2) (t2, t1) = (t1, t2);
+
+                    tMin = Math.Max(tMin, t1);
+                    tMax = Math.Min(tMax, t2);
+
+                    if (tMin > tMax)
+                    {
+                        time = 0.0f;
+                        intersectPoint = Vector3.Zero;
+                        return false;
+                    }
+                }
+            }
+
+            intersectPoint = point + velocity * tMin;
+            time = tMin;
+
+            return true;
+        }
+
+        public string BoxToString()
+        {
+            return $" Box: {(Max-Min)}";
+        }
     }
     public enum ContainmentType
     {

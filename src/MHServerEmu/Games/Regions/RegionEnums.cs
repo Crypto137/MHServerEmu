@@ -166,7 +166,9 @@ namespace MHServerEmu.Games.Regions
         TRGameCenterRegion = 16693804270797857925,              // Game Center
 
         // Special
-        CosmicDoopSectorSpaceRegion = 8744981792306700722       // Cosmic Doop Sector Space
+        CosmicDoopSectorSpaceRegion = 8744981792306700722,      // Cosmic Doop Sector Space
+
+        LimboRegionL60 = 4742357611317369027,
     }
 
     public enum AreaPrototypeId : ulong

@@ -133,18 +133,6 @@ namespace MHServerEmu.Games.Common
         public string ToStringNames() => $"x:{X} y:{Y} z:{Z}";
         public override string ToString() => $"({X:0.00}, {Y:0.00}, {Z:0.00})";
         public static float Dot(Vector3 v1, Vector3 v2) => v1.X * v2.X + v1.Y * v2.Y + v1.Z * v2.Z;
-        public static float SegmentPointDistanceSq(Vector3 a, Vector3 b, Vector3 c)
-        {
-            Vector3 ba = b - a;
-            Vector3 ca = c - a;
-            Vector3 cb = c - b;
-            float dotcb = Dot(ca, ba);
-            if (dotcb <= 0.0f) return Dot(ca, ca);
-            float dotba = Dot(ba, ba);
-            if (dotcb >= dotba) return Dot(cb, cb);
-            float dotca = Dot(ca, ca);
-            return (dotca - dotcb * (dotcb / dotba));
-        }
 
         public static float DistanceSquared2D(Vector3 a, Vector3 b) => LengthSqr(new (b.X - a.X, b.Y - a.Y, 0.0f));
         public static float DistanceSquared(Vector3 a, Vector3 b) => LengthSqr(b - a);
@@ -194,6 +182,12 @@ namespace MHServerEmu.Games.Common
             if (Segment.EpsilonTest(LengthSquared(axis), 1.0f) == false) return pos;
             float cosA = MathF.Cos(angle);
             return pos * cosA + Cross(axis, pos) * MathF.Sin(angle) + axis * Dot(axis, pos) * (1.0f - cosA);
+        }
+
+        public static float Angle(Vector3 a, Vector3 b)
+        {
+            Vector3 delta = Normalize2D(b - a);
+            return MathF.Atan2(delta.Y, delta.X);
         }
 
         public static Vector3 Cross(Vector3 v1, Vector3 v2)

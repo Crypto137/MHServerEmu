@@ -3,6 +3,7 @@ using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData.Prototypes;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -21,6 +22,17 @@ namespace MHServerEmu.Games.Entities
     {
         None = 0,
         ComplexPickingOnly = 1,
+    }
+
+    [Flags]
+    public enum BlockingCheckFlags
+    {
+        None = 0,
+        CheckSpawns = 1,
+        CheckGroundMovementPowers = 2,
+        CheckAllMovementPowers = 4,
+        CheckLanding = 8,
+        CheckSelf = 16, // ??
     }
 
     [StructLayout(LayoutKind.Explicit)]
@@ -95,6 +107,17 @@ namespace MHServerEmu.Games.Entities
             _orientation_offset = Orientation.Zero;
             CollisionType = BoundsCollisionType.None;
             Flags = BoundsFlags.None;
+        }
+
+        public Bounds(Bounds bounds)
+        {
+            Geometry = bounds.Geometry;
+            Center = new(bounds.Center);
+            _orientation = new(bounds._orientation);
+            _orientation_offset = new(bounds._orientation_offset);
+            CollisionType = bounds.CollisionType;
+            _params = bounds._params;
+            Flags = bounds.Flags;
         }
 
         public void InitializeFromPrototype(BoundsPrototype boundsProto)
@@ -280,7 +303,7 @@ namespace MHServerEmu.Games.Entities
                 case GeometryType.Sphere:
                     return _params.SphereRadius;
                 case GeometryType.Triangle:
-                    Vector3[] triangle = ToTriangle2D();
+                    Triangle triangle = ToTriangle2D();
                     float max = MathF.Max(
                         MathF.Max(Vector3.Length(triangle[0] - Center), Vector3.Length(triangle[1] - Center)),
                         Vector3.Length(triangle[2] - Center));
@@ -316,22 +339,15 @@ namespace MHServerEmu.Games.Entities
             };
         }
 
-        private Vector3[] ToTriangle2D()
+        private Triangle ToTriangle2D()
         {
-            if (Geometry != GeometryType.Triangle) 
-                return new Vector3[]
-                {
-                    Vector3.Zero,
-                    Vector3.Zero,
-                    Vector3.Zero
-                };
+            if (Geometry != GeometryType.Triangle) return Triangle.Zero;
             Transform3 transform = Transform3.BuildTransform(Center, _orientation);
-            return new Vector3[]
-            { 
+            return new Triangle (
                 new(transform * new Point3(_params.TriangleLength * -0.66666669f, 0.0f, 0.0f)),
                 new(transform * new Point3(_params.TriangleLength * 0.33333334f, _params.TriangleBase * -0.5f, 0.0f)),
                 new(transform * new Point3(_params.TriangleLength * 0.33333334f, _params.TriangleBase * 0.5f, 0.0f))
-            };           
+                );           
         }
 
         private float GetHalfHeight()
@@ -404,6 +420,197 @@ namespace MHServerEmu.Games.Entities
                 default:
                     return Aabb.Zero;
             }            
+        }
+
+        public bool CanBeBlockedBy(Bounds entityBounds, bool selfBlocking, bool otherBlocking)
+        {
+            return (CollisionType == BoundsCollisionType.Blocking || selfBlocking)
+                && (entityBounds.CollisionType == BoundsCollisionType.Blocking || otherBlocking);
+        }
+
+        public bool Intersects(Bounds other)
+        {
+            switch (other.Geometry)
+            {
+                case GeometryType.OBB:
+                    return Intersects(other.ToObb());
+                case GeometryType.AABB:
+                    return Intersects(other.ToAabb());
+                case GeometryType.Capsule:
+                    return Intersects(other.ToCapsule());
+                case GeometryType.Sphere:
+                    return Intersects(other.ToSphere());
+                case GeometryType.Triangle:
+                    return Intersects(other.ToTriangle2D());
+                case GeometryType.Wedge:
+                    Triangle[] triangles = other.GetWedgeTriangles();
+                    return Intersects(triangles[0]) || Intersects(triangles[1]);
+                default:
+                    Logger.Warn($"Unknown bounds geometry. Geometry={Geometry}, other.Geometry={other.Geometry}");
+                    return false;
+            }
+        }
+
+        // Fast way to make copies of Intersects than a confusing interface or slow dynamic
+        public bool Intersects(Obb bounds)
+        {
+            switch (Geometry)
+            {
+                case GeometryType.OBB: return ToObb().Intersects(bounds);
+                case GeometryType.AABB: return ToAabb().Intersects(bounds);
+                case GeometryType.Capsule: return ToCapsule().Intersects(bounds);
+                case GeometryType.Sphere: return ToSphere().Intersects(bounds);
+                case GeometryType.Triangle: return ToTriangle2D().Intersects(bounds);
+                case GeometryType.Wedge:
+                    Triangle[] triangles = GetWedgeTriangles();
+                    return triangles[0].Intersects(bounds) || triangles[1].Intersects(bounds);
+                default:
+                    Logger.Warn($"Unknown bounds geometry. Geometry={Geometry}");
+                    return false;
+            }
+        }
+
+        public bool Intersects(Aabb bounds)
+        {
+            switch (Geometry)
+            {
+                case GeometryType.OBB: return ToObb().Intersects(bounds);
+                case GeometryType.AABB: return ToAabb().Intersects(bounds);
+                case GeometryType.Capsule: return ToCapsule().Intersects(bounds);
+                case GeometryType.Sphere: return ToSphere().Intersects(bounds);
+                case GeometryType.Triangle: return ToTriangle2D().Intersects(bounds);
+                case GeometryType.Wedge:
+                    Triangle[] triangles = GetWedgeTriangles();
+                    return triangles[0].Intersects(bounds) || triangles[1].Intersects(bounds);
+                default:
+                    Logger.Warn($"Unknown bounds geometry. Geometry={Geometry}");
+                    return false;
+            }
+        }
+
+        public bool Intersects(Capsule bounds)
+        {
+            switch (Geometry)
+            {
+                case GeometryType.OBB: return ToObb().Intersects(bounds);
+                case GeometryType.AABB: return ToAabb().Intersects(bounds);
+                case GeometryType.Capsule: return ToCapsule().Intersects(bounds);
+                case GeometryType.Sphere: return ToSphere().Intersects(bounds);
+                case GeometryType.Triangle: return ToTriangle2D().Intersects(bounds);
+                case GeometryType.Wedge:
+                    Triangle[] triangles = GetWedgeTriangles();
+                    return triangles[0].Intersects(bounds) || triangles[1].Intersects(bounds);
+                default:
+                    Logger.Warn($"Unknown bounds geometry. Geometry={Geometry}");
+                    return false;
+            }
+        }
+
+        public bool Intersects(Sphere bounds)
+        {
+            switch (Geometry)
+            {
+                case GeometryType.OBB: return ToObb().Intersects(bounds);
+                case GeometryType.AABB: return ToAabb().Intersects(bounds);
+                case GeometryType.Capsule: return ToCapsule().Intersects(bounds);
+                case GeometryType.Sphere: return ToSphere().Intersects(bounds);
+                case GeometryType.Triangle: return ToTriangle2D().Intersects(bounds);
+                case GeometryType.Wedge:
+                    Triangle[] triangles = GetWedgeTriangles();
+                    return triangles[0].Intersects(bounds) || triangles[1].Intersects(bounds);
+                default:
+                    Logger.Warn($"Unknown bounds geometry. Geometry={Geometry}");
+                    return false;
+            }
+        }
+
+        public bool Intersects(Triangle bounds)
+        {
+            switch (Geometry)
+            {
+                case GeometryType.OBB: return ToObb().Intersects(bounds);
+                case GeometryType.AABB: return ToAabb().Intersects(bounds);
+                case GeometryType.Capsule: return ToCapsule().Intersects(bounds);
+                case GeometryType.Sphere: return ToSphere().Intersects(bounds);
+                case GeometryType.Triangle: return ToTriangle2D().Intersects(bounds);
+                case GeometryType.Wedge:
+                    Triangle[] triangles = GetWedgeTriangles();
+                    return triangles[0].Intersects(bounds) || triangles[1].Intersects(bounds);
+                default:
+                    Logger.Warn($"Unknown bounds geometry. Geometry={Geometry}");
+                    return false;
+            }
+        }
+
+        private Triangle[] GetWedgeTriangles()
+        {
+            if (Geometry != GeometryType.Wedge)
+                return new Triangle[]
+                {
+                    Triangle.Zero,
+                    Triangle.Zero
+                };
+
+            Vector3[] wedgeVertices = GetWedgeVertices();
+            return new Triangle[]
+            {
+                new Triangle(wedgeVertices[0], wedgeVertices[1], wedgeVertices[2]),
+                new Triangle(wedgeVertices[2], wedgeVertices[3], wedgeVertices[0])
+            };
+        }
+
+        private Sphere ToSphere()
+        {
+            if (Geometry == GeometryType.Sphere)
+                return new Sphere(Center, _params.SphereRadius);
+            else
+                return Sphere.Zero;
+        }
+
+        private Capsule ToCapsule()
+        {
+            if (Geometry == GeometryType.Capsule)
+                return new Capsule(
+                    new Vector3(Center.X, Center.Y, Center.Z - _params.CapsuleHalfHeight),
+                    new Vector3(Center.X, Center.Y, Center.Z + _params.CapsuleHalfHeight),
+                    _params.CapsuleRadius
+                );
+            else
+                return Capsule.Zero;
+        }
+
+        private Obb ToObb()
+        {
+            return new(Center, GetBoxExtents(), Orientation);
+        }
+
+        private Vector3 GetBoxExtents()
+        {
+            if (Geometry == GeometryType.OBB)
+                return new Vector3(_params.OBBHalfWidth, _params.OBBHalfLength, _params.OBBHalfHeight);
+            if (Geometry == GeometryType.AABB)
+                return new Vector3(_params.AABBOrientedWidth, _params.AABBOrientedLength, _params.AABBOrientedHeight);
+
+            return Vector3.Zero;  
+        }
+        public override string ToString()
+        {
+            StringBuilder sb = new();
+            sb.AppendLine($"Bounds: [{Geometry}]");
+            switch (Geometry)
+            {
+                case GeometryType.OBB: sb.Append(ToObb().ToString()); break;
+                case GeometryType.AABB: sb.Append(ToAabb().BoxToString()); break;
+                case GeometryType.Capsule: sb.Append(ToCapsule().ToString()); break;
+                case GeometryType.Sphere: sb.Append(ToSphere().ToString()); break;
+                case GeometryType.Triangle: sb.Append(ToTriangle2D().ToString()); break;
+                case GeometryType.Wedge:
+                    Triangle[] triangles = GetWedgeTriangles();
+                    sb.Append(triangles[0].ToString());
+                    sb.AppendLine(triangles[1].ToString());
+                    break;
+            }
+            return sb.ToString();
         }
     }
 }

@@ -2,6 +2,7 @@
 using MHServerEmu.Common.Config;
 using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.Achievements;
+using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Locales;
@@ -62,6 +63,8 @@ namespace MHServerEmu.Games.GameData
         public static GamepadGlobalsPrototype GamepadGlobalsPrototype { get; private set; }
         public static DifficultyGlobalsPrototype DifficultyGlobalsPrototype { get; private set; }
         public static ConsoleGlobalsPrototype ConsoleGlobalsPrototype { get; private set; }
+        
+        public static InteractionManager InteractionManager { get; private set; }
 
         // Misc
 
@@ -122,22 +125,13 @@ namespace MHServerEmu.Games.GameData
                 loadAllWatch.Stop();
                 Logger.Info($"Loaded all prototypes in {loadAllWatch.ElapsedMilliseconds} ms");
             }
-            else if (ConfigManager.GameData.LoadMissionPrototypes)
-            {
-                var loadMissionsWatch = Stopwatch.StartNew();
 
-                int missionCount = 0;
-                foreach (PrototypeId prototypeId in DataDirectory.IteratePrototypesInHierarchy(typeof(MissionPrototype)))
-                {
-                    DataDirectory.GetPrototype<MissionPrototype>(prototypeId);
-                    missionCount++;
-                }
-
-                loadMissionsWatch.Stop();
-                Logger.Info($"Loaded {missionCount} mission prototypes in {loadMissionsWatch.ElapsedMilliseconds} ms");
-            }
-
-            // InteractionManager::Initialize 
+            // Initialize InteractionManager
+            var loadInteraction = Stopwatch.StartNew();
+            InteractionManager = new();
+            InteractionManager.Initialize();
+            loadInteraction.Stop();
+            Logger.Info($"Initialize InteractionManager in {loadInteraction.ElapsedMilliseconds} ms");
 
             // processInventoryMap
 

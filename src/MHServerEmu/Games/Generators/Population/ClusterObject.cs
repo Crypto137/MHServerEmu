@@ -21,7 +21,7 @@ namespace MHServerEmu.Games.Generators.Population
         Henchmen            = 1 << 1,
         HasModifiers        = 1 << 2,
         Hostile             = 1 << 3,
-        HasProjectToFloor   = 1 << 4,
+        ProjectToFloor      = 1 << 4,
         SkipFormation       = 1 << 5,
     }
 
@@ -45,12 +45,14 @@ namespace MHServerEmu.Games.Generators.Population
         flag4 = 1 << 2,
         flag8 = 1 << 3,
         IgnoreBlackout = 1 << 4,
+        Spawned = 1 << 5,
     }
     #endregion
 
     public class ClusterObject
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
+        public bool DebugLog = false;
         public GRandom Random { get; private set; }
         public Region Region { get; private set; }
         public ClusterGroup Parent { get; private set; }
@@ -64,6 +66,7 @@ namespace MHServerEmu.Games.Generators.Population
 
         public ClusterObject(Region region, GRandom random, ClusterGroup parent) 
         {
+            DebugLog = false;
             Random = random;
             Region = region;
             Parent = parent;
@@ -115,7 +118,7 @@ namespace MHServerEmu.Games.Generators.Population
         public virtual void Spawn() { }
         public virtual void UpgradeToRank(RankPrototype upgradeRank, int num) { }
         public virtual void AssignAffixes(RankPrototype rankProto, List<PrototypeId> affixes){ }
-
+        public virtual bool TestLayout() => false;
     }
 
     public class ClusterGroup : ClusterObject
@@ -303,7 +306,7 @@ namespace MHServerEmu.Games.Generators.Population
             if (lineProto == null) return;
             if (GetFormationObjects(out List<ClusterObject> formationObjects))
             {
-                int numRows = lineProto.Rows.IsNullOrEmpty() == false ? lineProto.Rows.Length : 1;
+                int numRows = lineProto.Rows.HasValue() ? lineProto.Rows.Length : 1;
                 float center = 0f;
                 float width = 0f;
                 if (numRows > 1)
@@ -701,6 +704,71 @@ namespace MHServerEmu.Games.Generators.Population
         {
             foreach (var obj in Objects) obj.Spawn();            
         }
+
+        public bool PickPositionInSector(Vector3 position, Orientation orientation, int minDistance, int maxDistance)
+        {
+            if (minDistance < 0.0f || maxDistance <= 0.0f || minDistance > maxDistance || Radius == 0)
+            {
+                SetParentRelativePosition(position);
+                SetParentRelativeOrientation(orientation);
+                if (TestLayout()) return false;
+                minDistance = (int) Radius;
+                maxDistance = (int) Radius * 4;
+            }
+
+            const int MaxSectors = 5; // DistanceMax 250 / 50 (Average Cluster) = 5 sectors
+            float clusterSize = Radius * 2.0f;
+            float clusterPI = MathHelper.TwoPi / clusterSize;
+            float minClusterDistance = minDistance + Radius;
+            float maxClusterDistance = minDistance + clusterSize;
+
+            if (maxDistance - minDistance < clusterSize)
+                maxDistance = (int)maxClusterDistance;
+
+            var sectorPicker = new Picker<int>(Random);
+            float distance = minClusterDistance;
+            for (int sector = 0; sector < MaxSectors; sector++)
+            {
+                int numClusters = (int)Math.Floor(clusterPI * distance);
+                sectorPicker.Add(sector, numClusters);
+
+                distance += clusterSize;
+                maxClusterDistance += clusterSize;
+                if (maxClusterDistance > maxDistance) break;
+            }
+            float shiftAngle = Random.NextFloat() * 2;
+            while (sectorPicker.Empty() == false)
+            {
+                if (sectorPicker.PickRemove(out int sector) == false) return false;
+                distance = minClusterDistance + sector * clusterSize;
+                int numClusters = (int)MathF.Floor(clusterPI * distance);
+                int startCluster = Random.Next(numClusters);
+                float clusterAngle = MathHelper.TwoPi / numClusters;
+                
+                for (int cluster = 0; cluster < numClusters; cluster++)
+                {
+                    int div = startCluster + cluster;
+                    float angle = clusterAngle * div + shiftAngle;                    
+                    (float rotSin, float rotCos) = MathF.SinCos(Orientation.WrapAngleRadians(angle));
+                    Vector3 testPosition = new (position.X + distance * rotCos, position.Y + distance * rotSin, position.Z);
+                    if (Region.GetCellAtPosition(testPosition) == null) continue;
+                    SetParentRelativePosition(testPosition);
+                    if (DebugLog) Logger.Debug($"testPostions = {testPosition}");
+                    // TODO Face Orientation
+                    SetParentRelativeOrientation(orientation);
+                   // Logger.Debug($"AbsolutePostions = {GetAbsolutePosition().ToStringFloat()}");
+                    if (TestLayout()) return true;
+                }
+            }
+            return false;
+        }
+
+        public override bool TestLayout()
+        {
+            foreach (var obj in Objects)
+                if (obj?.TestLayout() == false) return false;
+            return true;
+        }
     }
 
     public class ClusterEntity : ClusterObject
@@ -713,6 +781,7 @@ namespace MHServerEmu.Games.Generators.Population
         public Bounds Bounds { get; set; }
         public RankPrototype RankProto { get; set; }
         public HashSet<PrototypeId> Modifiers { get; set; }
+        public SpawnFlags SpawnFlags => Parent != null ? Parent.SpawnFlags : SpawnFlags.None;
 
         public ClusterEntity(Region region, GRandom random, PrototypeId selectorRef, ClusterGroup parent) 
             : base(region, random, parent)
@@ -752,7 +821,8 @@ namespace MHServerEmu.Games.Generators.Population
             }
             else
             {
-                Logger.Warn($"Zounds! Entity {EntityProto} has no Bounds!");
+                // Logger.Warn($"Zounds! Entity {EntityProto} has no Bounds!");
+                // Spawner have not Bounds
             }
 
             if (AlliancePrototype.IsHostileToPlayerAlliance(EntityProto.AlliancePrototype))
@@ -769,7 +839,7 @@ namespace MHServerEmu.Games.Generators.Population
             }*/
 
             if ((EntityProto.ModifierSetEnable 
-                || EntityProto.ModifiersGuaranteed.IsNullOrEmpty() == false) 
+                || EntityProto.ModifiersGuaranteed.HasValue()) 
                 && Flags.HasFlag(ClusterObjectFlag.Hostile))    
             {
                 Flags |= ClusterObjectFlag.HasModifiers;
@@ -777,6 +847,51 @@ namespace MHServerEmu.Games.Generators.Population
 
             return true;
         }
+
+        public override bool TestLayout()
+        {
+
+            Vector3 regionPos = ProjectToFloor(Region);
+         
+            if (Vector3.IsFinite(regionPos) == false) 
+                return false;
+
+            // if (PathFlags != 0 && Region.NaviMesh.Contains(regionPos, Radius, DefaultContainsPathFlagsCheck(PathFlags)) == false) return false;
+            Bounds bounds = new(Bounds)
+            {
+                Center = regionPos + new Vector3(0.0f, 0.0f, Bounds.HalfHeight)
+            };
+            
+            if (SpawnFlags.HasFlag(SpawnFlags.Spawned) == false)
+            {
+                Sphere sphere = new (bounds.Center, bounds.Radius);
+                foreach (var entity in Region.IterateEntitiesInVolume(sphere, new ()))
+                    if (Region.IsBoundsBlockedByEntity(bounds, entity, BlockingCheckFlags.CheckSpawns))
+                        return false;
+            }
+            return true;
+        }
+
+        public Vector3 ProjectToFloor(Region region)
+        {
+            Vector3 regionPos = GetAbsolutePosition();
+            if (Flags.HasFlag(ClusterObjectFlag.ProjectToFloor))
+                return regionPos;
+            
+            Vector3 position = RegionLocation.ProjectToFloor(region, regionPos);
+            if (DebugLog) Logger.Debug($"ProjectPostions [{GameDatabase.GetFormattedPrototypeName(EntityRef)}] {regionPos} {position}");
+            // Debug.Assert(Vector3.DistanceSquared2D(regionPos, position) < Segment.Epsilon);
+            if (Segment.EpsilonTest(regionPos.Z, position.Z, 500) == false) 
+                return new(float.NaN, 0f, 0f); // Navi test
+            Vector3 offset = position - regionPos;
+            Vector3 relativePosition = GetParentRelativePosition();
+            SetParentRelativePosition(relativePosition + offset);
+
+            Flags |= ClusterObjectFlag.ProjectToFloor;
+
+            return position;
+        }
+
 
         public override void Spawn()
         {
@@ -788,6 +903,7 @@ namespace MHServerEmu.Games.Generators.Population
             Cell cell = Region.GetCellAtPosition(pos);
             var entity = GameDatabase.GetPrototype<WorldEntityPrototype>(EntityRef);
 
+            float oldZ = pos.Z;
             SnapToFloor ??= entity.SnapToFloorOnSpawn;
             bool overrideSnap = SnapToFloor != entity.SnapToFloorOnSpawn;
             if (SnapToFloor == false) 
@@ -796,19 +912,28 @@ namespace MHServerEmu.Games.Generators.Population
                 if (pos.Z > projectHeight && Segment.EpsilonTest(pos.Z, projectHeight, 500)) // Fix for Door Lower Asgard
                     pos.Z = projectHeight;
                 overrideSnap = false; // Fix for District
-            }    
-            pos.Z += entity.Bounds.GetBoundHalfHeight();
+            }
+            if (entity.Bounds != null) 
+                pos.Z += entity.Bounds.GetBoundHalfHeight();
             var rot = tr.Orientation;
             int health = EntityManager.GetRankHealth(entity);
-            entityManager.CreateWorldEntity(cell, EntityRef, pos, rot, health, false, overrideSnap);
-            //Logger.Debug($"{GameDatabase.GetFormattedPrototypeName(EntityRef)} {pos} [{Parent.Objects.Count}] {Parent.ObjectProto.GetFormation()}");
+            var worldEntity = entityManager.CreateWorldEntity(cell, EntityRef, pos, rot, health, false, overrideSnap);      
+            if (worldEntity == null) return;
+            if (Parent.MissionRef != PrototypeId.Invalid)
+            {                
+                worldEntity.Properties[PropertyEnum.MissionPrototype] = Parent.MissionRef;
+                if (worldEntity.WorldEntityPrototype is AgentPrototype)
+                    worldEntity.AppendOnStartActions(Parent.MissionRef);
+            }
+            // TODO set Rank
+            if (DebugLog) Logger.Debug($"Spawn [{worldEntity.BaseData.EntityId}] {worldEntity.PrototypeName} {pos} [{oldZ}=>{pos.Z}] [{Parent.Objects.Count}] {GameDatabase.GetFormattedPrototypeName(Parent.ObjectProto.GetFormation().DataRef)}");
         }
 
         public override bool IsFormationObject()
         {
             if (Flags.HasFlag(ClusterObjectFlag.SkipFormation)) return false;
 
-            bool blocksSpawns = EntityProto != null && EntityProto.Bounds.BlocksSpawns;
+            bool blocksSpawns = EntityProto != null && EntityProto.Bounds != null && EntityProto.Bounds.BlocksSpawns;
             bool blocking = Bounds.CollisionType == BoundsCollisionType.Blocking;
 
             return blocksSpawns || blocking;
@@ -816,7 +941,7 @@ namespace MHServerEmu.Games.Generators.Population
 
         public override void SetLocationDirty()
         {
-            Flags &= ~ClusterObjectFlag.HasProjectToFloor;
+            Flags &= ~ClusterObjectFlag.ProjectToFloor;
         }
 
         public override void UpgradeToRank(RankPrototype upgradeRank, int num)

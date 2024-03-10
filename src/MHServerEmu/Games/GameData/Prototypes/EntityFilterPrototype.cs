@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+﻿using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Missions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -29,11 +30,34 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class EntityFilterPrototype : Prototype
     {
+        public virtual void GetAreaDataRefs(HashSet<PrototypeId> refs) { }
+        public virtual void GetEntityDataRefs(HashSet<PrototypeId> refs) { }
+        public virtual void GetRegionDataRefs(HashSet<PrototypeId> refs) { }
+        public virtual void GetKeywordDataRefs(HashSet<PrototypeId> refs) { }
     }
 
     public class EntityFilterFilterListPrototype : EntityFilterPrototype
     {
         public EntityFilterPrototype[] Filters { get; protected set; }
+
+        public override void GetAreaDataRefs(HashSet<PrototypeId> refs)
+        {
+            if (Filters.IsNullOrEmpty()) return;
+            foreach (var prototype in Filters)
+                prototype?.GetAreaDataRefs(refs);
+        }
+        public override void GetEntityDataRefs(HashSet<PrototypeId> refs)
+        {
+            if (Filters.IsNullOrEmpty()) return;
+            foreach (var prototype in Filters)
+                prototype?.GetEntityDataRefs(refs);
+        }
+        public override void GetRegionDataRefs(HashSet<PrototypeId> refs)
+        {
+            if (Filters.IsNullOrEmpty()) return;
+            foreach (var prototype in Filters)
+                prototype?.GetRegionDataRefs(refs);
+        }
     }
 
     public class EntityFilterAndPrototype : EntityFilterFilterListPrototype
@@ -53,6 +77,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class EntityFilterHasKeywordPrototype : EntityFilterPrototype
     {
         public PrototypeId Keyword { get; protected set; }
+
+        public override void GetKeywordDataRefs(HashSet<PrototypeId> refs)
+        {
+            if (Keyword != PrototypeId.Invalid) refs.Add(Keyword);
+        }
     }
 
     public class EntityFilterHasNegStatusEffectPrototype : EntityFilterPrototype
@@ -63,11 +92,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId EntityPrototype { get; protected set; }
         public bool IncludeChildPrototypes { get; protected set; }
+
+        public override void GetEntityDataRefs(HashSet<PrototypeId> refs)
+        {
+            if (EntityPrototype != PrototypeId.Invalid && GameDatabase.DataDirectory.PrototypeIsADefaultPrototype(EntityPrototype) == false)
+                refs.Add(EntityPrototype);
+        }
     }
 
     public class EntityFilterInAreaPrototype : EntityFilterPrototype
     {
         public PrototypeId InArea { get; protected set; }
+
+        public override void GetAreaDataRefs(HashSet<PrototypeId> refs)
+        {
+            if (InArea != PrototypeId.Invalid) refs.Add(InArea);
+        }
     }
 
     public class EntityFilterInCellPrototype : EntityFilterPrototype
@@ -83,6 +123,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class EntityFilterInRegionPrototype : EntityFilterPrototype
     {
         public PrototypeId InRegion { get; protected set; }
+
+        public override void GetRegionDataRefs(HashSet<PrototypeId> refs)
+        {
+            if (InRegion != PrototypeId.Invalid) refs.Add(InRegion);
+        }
     }
 
     public class EntityFilterMissionStatePrototype : EntityFilterPrototype

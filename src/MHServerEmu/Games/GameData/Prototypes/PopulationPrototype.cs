@@ -1,4 +1,6 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+﻿using MHServerEmu.Common.Extensions;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using System.Collections.Generic;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -91,11 +93,33 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public short Weight { get; protected set; }
         public PrototypeId Object { get; protected set; }
+
+        public void GetContainedEntities(HashSet<PrototypeId> entities)
+        {
+            if (Object != PrototypeId.Invalid)
+            {
+                var proto = GameDatabase.GetPrototype<Prototype>(Object);
+                if (proto is PopulationObjectPrototype populationObject)
+                    populationObject.GetContainedEntities(entities);
+                else if (proto is PopulationObjectListPrototype populationObjectList)
+                    populationObjectList.GetContainedEntities(entities);
+                else
+                    Console.WriteLine("Unsupported population prototype");
+            }
+        }
+
     }
 
     public class PopulationObjectListPrototype : Prototype
     {
         public PopulationObjectInstancePrototype[] List { get; protected set; }
+
+        public void GetContainedEntities(HashSet<PrototypeId> entities)
+        {
+            if (List.HasValue())
+                foreach (var objectInstance in List)
+                    objectInstance?.GetContainedEntities(entities);
+        }
     }
 
     public class PopulationThemePrototype : Prototype
@@ -103,6 +127,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PopulationObjectListPrototype Enemies { get; protected set; }
         public int EnemyPicks { get; protected set; }
         public PopulationObjectListPrototype Encounters { get; protected set; }
+
+        public void GetContainedEntities(HashSet<PrototypeId> entities)
+        {
+            Enemies?.GetContainedEntities(entities);
+            Encounters?.GetContainedEntities(entities);
+        }
     }
 
     public class PopulationThemeSetPrototype : Prototype

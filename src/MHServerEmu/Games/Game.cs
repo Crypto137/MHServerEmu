@@ -373,7 +373,7 @@ namespace MHServerEmu.Games
                         teleport.TeleportToLastTown(client);
                         return;
                     }
-                    if (teleport.Destinations.Length == 0 || teleport.Destinations[0].Type == RegionTransitionType.Waypoint) return;
+                    if (teleport.Destinations.Count == 0 || teleport.Destinations[0].Type == RegionTransitionType.Waypoint) return;
                     Logger.Trace($"Destination entity {teleport.Destinations[0].Entity}");
 
                     if (teleport.Destinations[0].Type == RegionTransitionType.TowerUp ||

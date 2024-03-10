@@ -20,7 +20,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int GetPropDensity(PrototypeId marker)
         {
             if (marker == 0) return 0;
-            if (MarkerDensityOverrides.IsNullOrEmpty() == false)
+            if (MarkerDensityOverrides.HasValue())
             {
                 foreach (var densityEntry in MarkerDensityOverrides)
                     if (densityEntry != null && densityEntry.Marker == marker)

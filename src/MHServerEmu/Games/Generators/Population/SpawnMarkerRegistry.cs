@@ -288,7 +288,7 @@ namespace MHServerEmu.Games.Generators.Population
             return false;
         }
 
-        public SpawnReservation ReserveFreeReservation(PrototypeId markerRef, GRandom random, Cell spawnCell, PrototypeId[] spawnAreas, AssetId[] spawnCells)
+        public SpawnReservation ReserveFreeReservation(PrototypeId markerRef, GRandom random, Cell spawnCell, List<PrototypeId> spawnAreas, List<PrototypeId> spawnCells)
         {
             Picker<SpawnReservation> picker = new(random);
 
@@ -297,22 +297,22 @@ namespace MHServerEmu.Games.Generators.Population
             var spawnAreaRef = spawnCell.Area.PrototypeDataRef;
 
             // picker add
-            if (spawnCells.IsNullOrEmpty() == false)
+            if (spawnCells.Any())
             {
-                foreach (var cellAsset in spawnCells)
+                foreach (var cellref in spawnCells)
                 {
-                    if (spawnCellRef != GameDatabase.GetDataRefByAsset(cellAsset)) continue;
+                    if (spawnCellRef != cellref) continue;
                     if (_cellLookup.TryGetValue(spawnCellId, out var spawnMap) == false || spawnMap == null) continue;
                     if (spawnMap.TryGetValue(markerRef, out var list) == false || list == null) continue;
                     foreach (var testReservation in list)
                     {
                         if (testReservation.State != MarkerState.Free) continue;
-                        if (spawnAreas.IsNullOrEmpty() == false && spawnAreas.Contains(spawnAreaRef) == false) continue;
+                        if (spawnAreas?.Contains(spawnAreaRef) == false) continue;
                         picker.Add(testReservation);
                     }
                 }
             } 
-            else if (spawnAreas.IsNullOrEmpty() == false)
+            else if (spawnAreas.Any())
             {
                 foreach (var areaRef in spawnAreas)
                 {

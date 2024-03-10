@@ -22,7 +22,7 @@ namespace MHServerEmu.Games.Generators.Regions
             Childrens = new();
             Reference = new();
 
-            if (IsList() && Prototype is RequiredCellBaseListPrototype baseList && baseList.RequiredCells.IsNullOrEmpty() == false)
+            if (IsList() && Prototype is RequiredCellBaseListPrototype baseList && baseList.RequiredCells.HasValue())
                 AddChildrenFromList(baseList.RequiredCells);           
         }
 
@@ -101,7 +101,7 @@ namespace MHServerEmu.Games.Generators.Regions
             _root = null;
 
             RequiredPOIGroupPrototype poiPicker = GameDatabase.GetPrototype<RequiredPOIGroupPrototype>(groupProto);
-            if (poiPicker != null && poiPicker.RequiredCells.IsNullOrEmpty() == false)
+            if (poiPicker != null && poiPicker.RequiredCells.HasValue())
             {
                 _root = new (null, null);
                 _root.AddChildrenFromList(poiPicker.RequiredCells);
@@ -113,7 +113,7 @@ namespace MHServerEmu.Games.Generators.Regions
             if (area == null) return 0;
 
             RequiredPOIGroupPrototype proto = GameDatabase.GetPrototype<RequiredPOIGroupPrototype>(_poiGroupProto);
-            if (proto != null && proto.Areas.IsNullOrEmpty() == false)
+            if (proto != null && proto.Areas.HasValue())
             {
                 foreach (var entry in proto.Areas)
                     if (entry != null && entry.Area == area.PrototypeDataRef) return entry.Picks;
@@ -159,7 +159,7 @@ namespace MHServerEmu.Games.Generators.Regions
         {
             _poiGroups = new();
 
-            if (regionGenerator != null && regionGenerator.POIGroups.IsNullOrEmpty() == false)
+            if (regionGenerator != null && regionGenerator.POIGroups.HasValue())
                 foreach (var group in regionGenerator.POIGroups) RegisterPOIGroup(group);
         }
 

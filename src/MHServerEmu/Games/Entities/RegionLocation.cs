@@ -61,6 +61,15 @@ namespace MHServerEmu.Games.Entities
             return cell.HeightMap.HeightMapData[y * mapX + x];
         }
 
+        public static Vector3 ProjectToFloor(Region region, Vector3 regionPos)
+        {
+            Cell cell = region.GetCellAtPosition(regionPos);
+            if (cell == null) return regionPos;
+            Vector3 postion = new(regionPos);
+            postion.Z = cell.RegionBounds.Center.Z + ProjectToFloor(cell.CellProto, postion);
+            return postion;
+        }
+
         public override string ToString()
         {
             return string.Format("rloc.pos={0}, rloc.rot={1}, rloc.region={2}, rloc.area={3}, rloc.cell={4}, rloc.entity={5}",

@@ -160,7 +160,10 @@ namespace MHServerEmu.Games.Generators
 
         public bool Insert(T element)
         {
-            if (element == null || _outstandingIteratorCount > 0) return false;
+            if (element == null || _outstandingIteratorCount > 0) {
+                Console.WriteLine($"Trying to insert element into quadtree with IteratorCount = [{_outstandingIteratorCount}]");
+                return false;
+            }
 
             if (Root == null) AllocateNode(new(_bounds.Center, _bounds.Radius2D() * _loose), null);
             if (Root == null) return false;

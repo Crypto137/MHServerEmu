@@ -149,7 +149,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 CellPrototype cellProto = GameDatabase.GetPrototype<CellPrototype>(cellRef);
                 if (cellProto == null) continue;
 
-                if (cellProto.MarkerSet.Markers.IsNullOrEmpty() == false)
+                if (cellProto.MarkerSet.Markers.HasValue())
                 {
                     foreach (var marker in cellProto.MarkerSet.Markers)
                     {

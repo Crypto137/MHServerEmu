@@ -21,7 +21,7 @@ namespace MHServerEmu.Games.Generators.Regions
             GeneratorPrototype = generatorPrototype;
             AreaMap = new();
 
-            if (GeneratorPrototype.POIGroups.IsNullOrEmpty() == false)
+            if (GeneratorPrototype.POIGroups.HasValue())
                 POIPickerCollection = new(generatorPrototype);
         }
 

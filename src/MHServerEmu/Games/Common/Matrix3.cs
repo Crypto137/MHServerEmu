@@ -46,6 +46,20 @@
             );
         }
 
+        public static Matrix3 Inverse(Matrix3 mat)
+        {
+            float detinv;
+            var tmp0 = Vector3.Cross(mat.Col1, mat.Col2);
+            var tmp1 = Vector3.Cross(mat.Col2, mat.Col0);
+            var tmp2 = Vector3.Cross(mat.Col0, mat.Col1);
+            detinv = 1.0f / Vector3.Dot(mat.Col2, tmp2);
+            return new (
+                new Vector3(tmp0.X * detinv, tmp1.X * detinv, tmp2.X * detinv),
+                new Vector3(tmp0.Y * detinv, tmp1.Y * detinv, tmp2.Y * detinv),
+                new Vector3(tmp0.Z * detinv, tmp1.Z * detinv, tmp2.Z * detinv)
+            );
+        }
+
         public static Vector3 operator *(Matrix3 m, Vector3 v) 
         {
             return new Vector3(

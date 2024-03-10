@@ -42,7 +42,7 @@ namespace MHServerEmu.Games.Generators.Areas
         {
             if (Area.AreaPrototype.Generator is not TowerAreaGeneratorPrototype proto) return Aabb.InvertedLimit;
 
-            if (proto.Entries.IsNullOrEmpty() == false)
+            if (proto.Entries.HasValue())
             {
                 int totalCells = 0;
                 foreach (var entry in proto.Entries)
