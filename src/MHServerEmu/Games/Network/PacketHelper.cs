@@ -1,7 +1,9 @@
 ﻿using Google.ProtocolBuffers;
 using Gazillion;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
@@ -12,10 +14,8 @@ using MHServerEmu.Games.MetaGame;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.Core.Extensions;
-using System.Text;
 
-namespace MHServerEmu.Core.Network
+namespace MHServerEmu.Games.Network
 {
     public static class PacketHelper
     {
