@@ -1,4 +1,4 @@
-﻿namespace MHServerEmu.Core.Network
+﻿namespace Gazillion
 {
     public enum AuthMessage : byte
     {

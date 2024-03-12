@@ -5,7 +5,7 @@ VisualStudioVersion = 17.4.33122.133
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MHServerEmu", "src\MHServerEmu\MHServerEmu.csproj", "{F7898A66-82D6-45C2-A20A-E4C390567C39}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LibGazillion", "src\LibGazillion\LibGazillion.csproj", "{7D085437-F307-49D6-AF7A-C3B3DF4E4189}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gazillion", "src\Gazillion\Gazillion.csproj", "{7D085437-F307-49D6-AF7A-C3B3DF4E4189}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
