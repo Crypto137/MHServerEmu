@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -62,7 +63,7 @@ namespace MHServerEmu.Games.Entities
 
             ReplicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint32();
             EntityId = stream.ReadRawVarint64();
-            PrototypeId = stream.ReadPrototypeEnum<EntityPrototype>();
+            PrototypeId = stream.ReadPrototypeRef<EntityPrototype>();
             FieldFlags = (EntityCreateMessageFlags)stream.ReadRawVarint32();
             LocoFieldFlags = (LocomotionMessageFlags)stream.ReadRawVarint32();
 
@@ -98,7 +99,7 @@ namespace MHServerEmu.Games.Entities
                 SourcePosition = new(stream);
 
             if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasActivePowerPrototypeId))
-                ActivePowerPrototypeId = stream.ReadPrototypeEnum<PowerPrototype>();
+                ActivePowerPrototypeId = stream.ReadPrototypeRef<PowerPrototype>();
 
             if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLoc))
                 InvLoc = new(stream);
@@ -140,7 +141,7 @@ namespace MHServerEmu.Games.Entities
         {
             stream.WriteRawVarint32((uint)ReplicationPolicy);
             stream.WriteRawVarint64(EntityId);
-            stream.WritePrototypeEnum<EntityPrototype>(PrototypeId);
+            stream.WritePrototypeRef<EntityPrototype>(PrototypeId);
             stream.WriteRawVarint32((uint)FieldFlags);
             stream.WriteRawVarint32((uint)LocoFieldFlags);
 
@@ -177,7 +178,7 @@ namespace MHServerEmu.Games.Entities
                 SourcePosition.Encode(stream);
 
             if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasActivePowerPrototypeId))
-                stream.WritePrototypeEnum<PowerPrototype>(ActivePowerPrototypeId);
+                stream.WritePrototypeRef<PowerPrototype>(ActivePowerPrototypeId);
 
             if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLoc))
                 InvLoc.Encode(stream);

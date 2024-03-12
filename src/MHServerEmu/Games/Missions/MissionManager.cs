@@ -1,12 +1,13 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Serialization;
 
 namespace MHServerEmu.Games.Missions
 {
@@ -30,7 +31,7 @@ namespace MHServerEmu.Games.Missions
 
         public MissionManager(CodedInputStream stream, BoolDecoder boolDecoder)
         {
-            PrototypeId = stream.ReadPrototypeEnum<Prototype>();
+            PrototypeId = stream.ReadPrototypeRef<Prototype>();
 
             Missions.Clear();
             int mlength = (int)stream.ReadRawVarint64();
@@ -64,7 +65,7 @@ namespace MHServerEmu.Games.Missions
 
         public void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
-            stream.WritePrototypeEnum<Prototype>(PrototypeId);
+            stream.WritePrototypeRef<Prototype>(PrototypeId);
 
             stream.WriteRawVarint64((ulong)Missions.Count);
             foreach (var pair in Missions)

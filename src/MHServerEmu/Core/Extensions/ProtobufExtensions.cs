@@ -1,7 +1,5 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Core.Extensions
 {
@@ -59,14 +57,6 @@ namespace MHServerEmu.Core.Extensions
             return Encoding.UTF8.GetString(stream.ReadRawBytes(length));
         }
 
-        /// <summary>
-        /// Reads a prototype enum value for the specified class from the stream and converts it to a data ref.
-        /// </summary>
-        public static PrototypeId ReadPrototypeEnum<T>(this CodedInputStream stream) where T: Prototype
-        {
-            return GameDatabase.DataDirectory.GetPrototypeFromEnumValue<T>((int)stream.ReadRawVarint64());
-        }
-
         #endregion
 
         #region CodedOutputStream
@@ -102,14 +92,6 @@ namespace MHServerEmu.Core.Extensions
             byte[] rawBytes = Encoding.UTF8.GetBytes(value);
             stream.WriteRawVarint64((ulong)rawBytes.Length);
             stream.WriteRawBytes(rawBytes);
-        }
-
-        /// <summary>
-        /// Converts a prototype data ref to an enum value for the specified class and writes it to the stream.
-        /// </summary>
-        public static void WritePrototypeEnum<T>(this CodedOutputStream stream, PrototypeId prototypeId) where T: Prototype
-        {
-            stream.WriteRawVarint64((ulong)GameDatabase.DataDirectory.GetPrototypeEnumValue<T>(prototypeId));
         }
 
         #endregion

@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
@@ -30,7 +31,7 @@ namespace MHServerEmu.Games.Powers
 
         public PowerCollectionRecord(CodedInputStream stream, PowerCollectionRecord previousRecord)
         {
-            PowerPrototypeId = stream.ReadPrototypeEnum<PowerPrototype>();
+            PowerPrototypeId = stream.ReadPrototypeRef<PowerPrototype>();
             Flags = (PowerCollectionRecordFlags)stream.ReadRawVarint32();
 
             IndexProps = new();
@@ -64,7 +65,7 @@ namespace MHServerEmu.Games.Powers
 
         public void Encode(CodedOutputStream stream)
         {
-            stream.WritePrototypeEnum<PowerPrototype>(PowerPrototypeId);
+            stream.WritePrototypeRef<PowerPrototype>(PowerPrototypeId);
             stream.WriteRawVarint32((uint)Flags);
 
             if (Flags.HasFlag(PowerCollectionRecordFlags.PowerRankIsZero) == false)

@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
@@ -22,12 +23,12 @@ namespace MHServerEmu.Games.UI
 
         public virtual void Encode(CodedOutputStream stream, BoolEncoder boolEncoder)
         {
-            stream.WritePrototypeEnum<Prototype>(WidgetR);
-            stream.WritePrototypeEnum<Prototype>(ContextR);
+            stream.WritePrototypeRef<Prototype>(WidgetR);
+            stream.WritePrototypeRef<Prototype>(ContextR);
 
             stream.WriteRawInt32(Areas.Length);
             for (int i = 0; i < Areas.Length; i++)
-                stream.WritePrototypeEnum<Prototype>(Areas[i]);
+                stream.WritePrototypeRef<Prototype>(Areas[i]);
         }
 
         public virtual void EncodeBools(BoolEncoder boolEncoder) { }

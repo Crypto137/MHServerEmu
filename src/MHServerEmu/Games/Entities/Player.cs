@@ -166,7 +166,7 @@ namespace MHServerEmu.Games.Entities
             _unlockedInventoryList = new();
             ulong numUnlockedInventories = stream.ReadRawVarint64();
             for (ulong i = 0; i < numUnlockedInventories; i++)
-                _unlockedInventoryList.Add(stream.ReadPrototypeEnum<Prototype>());
+                _unlockedInventoryList.Add(stream.ReadPrototypeRef<Prototype>());
 
             _badges = new();
             ulong numBadges = stream.ReadRawVarint64();
@@ -182,7 +182,7 @@ namespace MHServerEmu.Games.Entities
             ulong numStashTabOptions = stream.ReadRawVarint64();
             for (ulong i = 0; i < numStashTabOptions; i++)
             {
-                PrototypeId stashTabRef = stream.ReadPrototypeEnum<Prototype>();
+                PrototypeId stashTabRef = stream.ReadPrototypeRef<Prototype>();
                 _stashTabOptionsDict.Add(stashTabRef, new(stream));
             }
         }
@@ -228,7 +228,7 @@ namespace MHServerEmu.Games.Entities
 
             stream.WriteRawVarint64((ulong)_unlockedInventoryList.Count);
             foreach (PrototypeId unlockedInventory in _unlockedInventoryList)
-                stream.WritePrototypeEnum<Prototype>(unlockedInventory);
+                stream.WritePrototypeRef<Prototype>(unlockedInventory);
 
             stream.WriteRawVarint64((ulong)_badges.Count);
             foreach (AvailableBadges badge in _badges)
@@ -241,7 +241,7 @@ namespace MHServerEmu.Games.Entities
             stream.WriteRawVarint64((ulong)_stashTabOptionsDict.Count);
             foreach (var kvp in _stashTabOptionsDict)
             {
-                stream.WritePrototypeEnum<Prototype>(kvp.Key);
+                stream.WritePrototypeRef<Prototype>(kvp.Key);
                 kvp.Value.Encode(stream);
             }
         }

@@ -4,6 +4,7 @@ using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -68,15 +69,15 @@ namespace MHServerEmu.Games.Social.Communities
 
         public bool Decode(CodedInputStream stream)
         {
-            RegionRef = stream.ReadPrototypeEnum<Prototype>();
-            DifficultyRef = stream.ReadPrototypeEnum<Prototype>();
+            RegionRef = stream.ReadPrototypeRef<Prototype>();
+            DifficultyRef = stream.ReadPrototypeRef<Prototype>();
 
             byte numSlots = stream.ReadRawByte();
             Array.Resize(ref _slots, numSlots);
             for (byte i = 0; i < numSlots; i++)
             {
-                PrototypeId avatarRef = stream.ReadPrototypeEnum<Prototype>();
-                PrototypeId costumeRef = stream.ReadPrototypeEnum<Prototype>();
+                PrototypeId avatarRef = stream.ReadPrototypeRef<Prototype>();
+                PrototypeId costumeRef = stream.ReadPrototypeRef<Prototype>();
                 int avatarLevel = stream.ReadRawInt32();
                 int prestigeLevel = stream.ReadRawInt32();
 
@@ -106,14 +107,14 @@ namespace MHServerEmu.Games.Social.Communities
 
         public bool Encode(CodedOutputStream stream)
         {
-            stream.WritePrototypeEnum<Prototype>(RegionRef);
-            stream.WritePrototypeEnum<Prototype>(DifficultyRef);
+            stream.WritePrototypeRef<Prototype>(RegionRef);
+            stream.WritePrototypeRef<Prototype>(DifficultyRef);
 
             stream.WriteRawByte((byte)_slots.Length);
             foreach (AvatarSlotInfo slot in _slots)
             {
-                stream.WritePrototypeEnum<Prototype>(slot.AvatarRef);
-                stream.WritePrototypeEnum<Prototype>(slot.CostumeRef);
+                stream.WritePrototypeRef<Prototype>(slot.AvatarRef);
+                stream.WritePrototypeRef<Prototype>(slot.CostumeRef);
                 stream.WriteRawInt32(slot.Level);
                 stream.WriteRawInt32(slot.PrestigeLevel);
             }

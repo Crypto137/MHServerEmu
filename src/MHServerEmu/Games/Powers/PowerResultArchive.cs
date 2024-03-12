@@ -1,8 +1,8 @@
 ﻿using System.Text;
 using Gazillion;
 using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
@@ -71,7 +71,7 @@ namespace MHServerEmu.Games.Powers
 
             ReplicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint32();
             Flags = (PowerResultMessageFlags)stream.ReadRawVarint32();
-            PowerPrototypeId = stream.ReadPrototypeEnum<PowerPrototype>();
+            PowerPrototypeId = stream.ReadPrototypeRef<PowerPrototype>();
             TargetEntityId = stream.ReadRawVarint64();
 
             if (Flags.HasFlag(PowerResultMessageFlags.IsSelfTarget))
@@ -178,7 +178,7 @@ namespace MHServerEmu.Games.Powers
 
                 cos.WriteRawVarint32((uint)ReplicationPolicy);
                 cos.WriteRawVarint32((uint)Flags);
-                cos.WritePrototypeEnum<PowerPrototype>(PowerPrototypeId);
+                cos.WritePrototypeRef<PowerPrototype>(PowerPrototypeId);
                 cos.WriteRawVarint64(TargetEntityId);
 
                 if (Flags.HasFlag(PowerResultMessageFlags.IsSelfTarget) == false && Flags.HasFlag(PowerResultMessageFlags.NoPowerOwnerEntityId) == false)

@@ -3,6 +3,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
@@ -55,13 +56,13 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             PowerSpecIndex = stream.ReadRawInt32();
             ShouldPersist = boolDecoder.ReadBool(stream);
-            AssociatedTransformMode = stream.ReadPrototypeEnum<Prototype>();
-            _primaryAction = stream.ReadPrototypeEnum<Prototype>();
-            _secondaryAction = stream.ReadPrototypeEnum<Prototype>();
+            AssociatedTransformMode = stream.ReadPrototypeRef<Prototype>();
+            _primaryAction = stream.ReadPrototypeRef<Prototype>();
+            _secondaryAction = stream.ReadPrototypeRef<Prototype>();
 
             int numPowerSlots = (int)stream.ReadRawVarint64();
             for (int i = 0; i < numPowerSlots; i++)
-                _actionKeys[i] = stream.ReadPrototypeEnum<Prototype>();
+                _actionKeys[i] = stream.ReadPrototypeRef<Prototype>();
         }
 
         public void EncodeBools(BoolEncoder boolEncoder)
@@ -73,13 +74,13 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             stream.WriteRawInt32(PowerSpecIndex);
             boolEncoder.WriteBuffer(stream);   // ShouldPersist
-            stream.WritePrototypeEnum<Prototype>(AssociatedTransformMode);
-            stream.WritePrototypeEnum<Prototype>(_primaryAction);
-            stream.WritePrototypeEnum<Prototype>(_secondaryAction);
+            stream.WritePrototypeRef<Prototype>(AssociatedTransformMode);
+            stream.WritePrototypeRef<Prototype>(_primaryAction);
+            stream.WritePrototypeRef<Prototype>(_secondaryAction);
 
             stream.WriteRawVarint64((ulong)_actionKeys.Length);
             foreach (PrototypeId powerSlot in _actionKeys)
-                stream.WritePrototypeEnum<Prototype>(powerSlot);
+                stream.WritePrototypeRef<Prototype>(powerSlot);
         }
 
         public override string ToString()

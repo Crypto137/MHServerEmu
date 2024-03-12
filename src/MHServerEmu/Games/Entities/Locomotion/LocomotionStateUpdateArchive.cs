@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
@@ -27,7 +28,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             FieldFlags = (LocomotionMessageFlags)stream.ReadRawVarint32();
 
             if (FieldFlags.HasFlag(LocomotionMessageFlags.HasEntityPrototypeId))
-                PrototypeId = stream.ReadPrototypeEnum<EntityPrototype>();
+                PrototypeId = stream.ReadPrototypeRef<EntityPrototype>();
             
             Position = new(stream);
 
@@ -51,7 +52,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 cos.WriteRawVarint32((uint)FieldFlags);
 
                 if (FieldFlags.HasFlag(LocomotionMessageFlags.HasEntityPrototypeId))
-                    cos.WritePrototypeEnum<EntityPrototype>(PrototypeId);
+                    cos.WritePrototypeRef<EntityPrototype>(PrototypeId);
 
                 Position.Encode(cos);
 

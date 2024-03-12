@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using System.Collections;
 
 namespace MHServerEmu.Core.Extensions
 {

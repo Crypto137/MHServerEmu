@@ -3,10 +3,11 @@ using Google.ProtocolBuffers;
 using Gazillion;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
-using MHServerEmu.Core.Serialization;
 
 namespace MHServerEmu.Games.Entities.Options
 {
@@ -136,7 +137,7 @@ namespace MHServerEmu.Games.Entities.Options
             ulong numChatChannelFilters = stream.ReadRawVarint64();
             for (ulong i = 0; i < numChatChannelFilters; i++)
             {
-                PrototypeId channelProtoId = stream.ReadPrototypeEnum<Prototype>();
+                PrototypeId channelProtoId = stream.ReadPrototypeRef<Prototype>();
                 bool isSubscribed = boolDecoder.ReadBool(stream);
                 _chatChannelFilterDict.Add(channelProtoId, isSubscribed);
             }
@@ -148,7 +149,7 @@ namespace MHServerEmu.Games.Entities.Options
                 return Logger.ErrorReturn(false, $"numChatTabChannels {numChatTabChannels} > NumChatTabs {NumChatTabs}");
 
             for (int i = 0; i < _chatTabChannels.Length; i++)
-                _chatTabChannels[i] = stream.ReadPrototypeEnum<Prototype>();
+                _chatTabChannels[i] = stream.ReadPrototypeRef<Prototype>();
 
             // Settings
             Array.Clear(_optionSettings);
@@ -162,7 +163,7 @@ namespace MHServerEmu.Games.Entities.Options
             for (ulong i = 0; i < numVaporizeThresholds; i++)
             {
                 var slot = (EquipmentInvUISlot)stream.ReadRawVarint64();
-                var rarityPrototypeRef = stream.ReadPrototypeEnum<Prototype>();
+                var rarityPrototypeRef = stream.ReadPrototypeRef<Prototype>();
                 _armorRarityVaporizeThresholdDict[slot] = rarityPrototypeRef;
             }
 
@@ -181,14 +182,14 @@ namespace MHServerEmu.Games.Entities.Options
             stream.WriteRawVarint64((ulong)_chatChannelFilterDict.Count);
             foreach (var kvp in _chatChannelFilterDict)
             {
-                stream.WritePrototypeEnum<Prototype>(kvp.Key);
+                stream.WritePrototypeRef<Prototype>(kvp.Key);
                 boolEncoder.WriteBuffer(stream);    // isEnabled
             }
 
             // Chat tab channels
             stream.WriteRawVarint64((ulong)_chatTabChannels.Length);
             foreach (PrototypeId channel in _chatTabChannels)
-                stream.WritePrototypeEnum<Prototype>(channel);
+                stream.WritePrototypeRef<Prototype>(channel);
 
             // Settings
             stream.WriteRawVarint64((ulong)_optionSettings.Length);
@@ -200,7 +201,7 @@ namespace MHServerEmu.Games.Entities.Options
             foreach (var kvp in _armorRarityVaporizeThresholdDict)
             {
                 stream.WriteRawVarint64((ulong)kvp.Key);
-                stream.WritePrototypeEnum<Prototype>(kvp.Value);
+                stream.WritePrototypeRef<Prototype>(kvp.Value);
             }
         }
 
