@@ -2,7 +2,7 @@
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 
-namespace MHServerEmu.Networking
+namespace MHServerEmu.Core.Network
 {
     public enum MuxCommand
     {

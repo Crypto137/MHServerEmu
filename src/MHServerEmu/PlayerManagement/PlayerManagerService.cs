@@ -4,10 +4,10 @@ using MHServerEmu.Auth;
 using MHServerEmu.Core;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
 using MHServerEmu.Games.Achievements;
-using MHServerEmu.Networking;
 using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.PlayerManagement

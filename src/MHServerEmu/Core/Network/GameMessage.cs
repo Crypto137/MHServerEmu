@@ -1,7 +1,7 @@
 ﻿using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 
-namespace MHServerEmu.Networking
+namespace MHServerEmu.Core.Network
 {
     /// <summary>
     /// Contains a serialized <see cref="IMessage"/>.
@@ -78,7 +78,7 @@ namespace MHServerEmu.Networking
         /// <summary>
         /// Deserializes the payload as <typeparamref name="T"/>.
         /// </summary>
-        public T Deserialize<T>() where T: IMessage
+        public T Deserialize<T>() where T : IMessage
         {
             try
             {
@@ -95,7 +95,7 @@ namespace MHServerEmu.Networking
         /// <summary>
         /// Deserializes the payload as <typeparamref name="T"/>. The return value indicates whether the operation succeeded.
         /// </summary>
-        public bool TryDeserialize<T>(out T message) where T: IMessage
+        public bool TryDeserialize<T>(out T message) where T : IMessage
         {
             message = Deserialize<T>();
             return message != null;

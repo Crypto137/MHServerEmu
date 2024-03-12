@@ -1,8 +1,8 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Commands;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Frontend;
-using MHServerEmu.Networking;
 using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.Grouping

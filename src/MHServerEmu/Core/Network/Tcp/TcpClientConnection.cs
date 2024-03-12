@@ -3,7 +3,7 @@ using System.Net.Sockets;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 
-namespace MHServerEmu.Networking.Tcp
+namespace MHServerEmu.Core.Network.Tcp
 {
     /// <summary>
     /// A wrapper around <see cref="System.Net.Sockets.Socket"/> that represents a TCP server's connection to a client.

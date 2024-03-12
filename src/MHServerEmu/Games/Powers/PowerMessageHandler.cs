@@ -5,7 +5,6 @@ using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Calligraphy;
-using MHServerEmu.Networking;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Entities;
@@ -14,6 +13,7 @@ using MHServerEmu.Games.MetaGame;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Core.Network;
 
 namespace MHServerEmu.Games.Powers
 {

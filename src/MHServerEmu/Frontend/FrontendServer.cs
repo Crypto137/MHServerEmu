@@ -1,8 +1,8 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Networking;
-using MHServerEmu.Networking.Tcp;
+using MHServerEmu.Core.Network;
+using MHServerEmu.Core.Network.Tcp;
 
 namespace MHServerEmu.Frontend
 {

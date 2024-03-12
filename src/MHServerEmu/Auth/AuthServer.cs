@@ -7,7 +7,7 @@ using MHServerEmu.Auth.WebApi;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Networking;
+using MHServerEmu.Core.Network;
 using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Auth

@@ -2,7 +2,7 @@
 using Google.ProtocolBuffers;
 using Gazillion;
 
-namespace MHServerEmu.Networking
+namespace MHServerEmu.Core.Network
 {
     /// <summary>
     /// A helper class for protobuf message serialization and deserialization.
@@ -25,18 +25,18 @@ namespace MHServerEmu.Networking
         static ProtocolDispatchTable()
         {
             // Preprocess all messages on startup to speed up (de)serialization
-            ParseMessageEnum(typeof(AuthMessage),                       "AuthMessages.proto");
-            ParseMessageEnum(typeof(BillingCommonMessage),              "BillingCommon.proto");
-            ParseMessageEnum(typeof(ChatCommonMessage),                 "ChatCommon.proto");
-            ParseMessageEnum(typeof(ClientToGameServerMessage),         "ClientToGameServer.proto");
-            ParseMessageEnum(typeof(ClientToGroupingManagerMessage),    "ClientToGroupingManager.proto");
-            ParseMessageEnum(typeof(CommonMessage),                     "CommonMessages.proto");
-            ParseMessageEnum(typeof(FrontendProtocolMessage),           "FrontendProtocol.proto");
-            ParseMessageEnum(typeof(GameServerToClientMessage),         "GameServerToClient.proto");
-            ParseMessageEnum(typeof(GroupingManagerMessage),            "GroupingManager.proto");
-            ParseMessageEnum(typeof(GuildMessage),                      "Guild.proto");
-            ParseMessageEnum(typeof(MatchCommonMessage),                "MatchCommon.proto");
-            ParseMessageEnum(typeof(PubSubProtocolMessage),             "PubSubProtocol.proto");
+            ParseMessageEnum(typeof(AuthMessage), "AuthMessages.proto");
+            ParseMessageEnum(typeof(BillingCommonMessage), "BillingCommon.proto");
+            ParseMessageEnum(typeof(ChatCommonMessage), "ChatCommon.proto");
+            ParseMessageEnum(typeof(ClientToGameServerMessage), "ClientToGameServer.proto");
+            ParseMessageEnum(typeof(ClientToGroupingManagerMessage), "ClientToGroupingManager.proto");
+            ParseMessageEnum(typeof(CommonMessage), "CommonMessages.proto");
+            ParseMessageEnum(typeof(FrontendProtocolMessage), "FrontendProtocol.proto");
+            ParseMessageEnum(typeof(GameServerToClientMessage), "GameServerToClient.proto");
+            ParseMessageEnum(typeof(GroupingManagerMessage), "GroupingManager.proto");
+            ParseMessageEnum(typeof(GuildMessage), "Guild.proto");
+            ParseMessageEnum(typeof(MatchCommonMessage), "MatchCommon.proto");
+            ParseMessageEnum(typeof(PubSubProtocolMessage), "PubSubProtocol.proto");
 
             IsInitialized = true;
         }

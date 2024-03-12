@@ -2,7 +2,7 @@
 using System.Net.Sockets;
 using MHServerEmu.Core.Logging;
 
-namespace MHServerEmu.Networking.Tcp
+namespace MHServerEmu.Core.Network.Tcp
 {
     /// <summary>
     /// An abstract TCP server implementation.

@@ -1,8 +1,8 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Games.Entities;
-using MHServerEmu.Networking;
 
 namespace MHServerEmu.Core.Helpers
 {

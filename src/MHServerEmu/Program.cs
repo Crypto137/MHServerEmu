@@ -4,9 +4,9 @@ using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Logging.Targets;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
-using MHServerEmu.Networking;
 using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu

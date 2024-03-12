@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
@@ -9,7 +10,6 @@ using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Generators.Regions;
-using MHServerEmu.Networking;
 
 namespace MHServerEmu.Games.Regions
 {

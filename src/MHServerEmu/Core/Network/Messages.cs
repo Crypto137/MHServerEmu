@@ -1,4 +1,4 @@
-﻿namespace MHServerEmu.Networking
+﻿namespace MHServerEmu.Core.Network
 {
     public enum AuthMessage : byte
     {

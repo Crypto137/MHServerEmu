@@ -1,9 +1,9 @@
 ﻿using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Networking.Tcp;
+using MHServerEmu.Core.Network.Tcp;
 
-namespace MHServerEmu.Networking
+namespace MHServerEmu.Core.Network
 {
     public class PacketOut : IPacket
     {

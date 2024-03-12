@@ -3,12 +3,12 @@ using MHServerEmu.Billing.Catalogs;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
-using MHServerEmu.Networking;
 using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.Billing

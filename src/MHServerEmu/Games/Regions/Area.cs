@@ -10,7 +10,7 @@ using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.Generators.Areas;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Generators.Regions;
-using MHServerEmu.Networking;
+using MHServerEmu.Core.Network;
 
 namespace MHServerEmu.Games.Regions
 {

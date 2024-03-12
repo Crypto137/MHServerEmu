@@ -15,7 +15,7 @@ using MHServerEmu.Games.Regions;
 using MHServerEmu.Core.Extensions;
 using System.Text;
 
-namespace MHServerEmu.Networking
+namespace MHServerEmu.Core.Network
 {
     public static class PacketHelper
     {
@@ -135,7 +135,7 @@ namespace MHServerEmu.Networking
                 {
                     writer.Write($"[{packetCount++}] ");
 
-                    string messageName = (packet.MuxId == 1) 
+                    string messageName = packet.MuxId == 1
                         ? ((GameServerToClientMessage)message.Id).ToString()
                         : ((GroupingManagerMessage)message.Id).ToString();
                     //Logger.Trace($"Deserializing {messageName}...");
@@ -143,7 +143,7 @@ namespace MHServerEmu.Networking
 
                     try
                     {
-                        IMessage protobufMessage = (packet.MuxId == 1)
+                        IMessage protobufMessage = packet.MuxId == 1
                                 ? message.Deserialize(typeof(GameServerToClientMessage))
                                 : message.Deserialize(typeof(GroupingManagerMessage));
 
@@ -214,7 +214,7 @@ namespace MHServerEmu.Networking
                                     case "MedalPrototype":
                                     case "RelicPrototype":
                                     case "TeamUpGearPrototype":
-                                    case "VanityTitleItemPrototype":                                    
+                                    case "VanityTitleItemPrototype":
                                         writer.WriteLine($"ArchiveData: {new Item(baseData, entityCreate.ArchiveData)}");
                                         break;
 
@@ -243,7 +243,7 @@ namespace MHServerEmu.Networking
                                         writer.WriteLine($"ArchiveData: unsupported entity ({blueprint.RuntimeBindingClassType.Name})");
                                         break;
                                 }
-                                
+
                                 break;
 
                             case NetMessageRegionChange regionChange:

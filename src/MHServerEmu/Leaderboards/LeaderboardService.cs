@@ -1,8 +1,8 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Networking;
 
 namespace MHServerEmu.Leaderboards
 {

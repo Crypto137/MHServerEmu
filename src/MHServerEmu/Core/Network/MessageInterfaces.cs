@@ -1,6 +1,6 @@
 ﻿using MHServerEmu.Frontend;
 
-namespace MHServerEmu.Networking
+namespace MHServerEmu.Core.Network
 {
     /// <summary>
     /// An interface for classes that handle raw GameMessages coming in from the frontend.

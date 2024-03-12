@@ -12,8 +12,8 @@ using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Missions;
-using MHServerEmu.Networking;
 using MHServerEmu.Frontend;
+using MHServerEmu.Core.Network;
 
 namespace MHServerEmu.Games.Regions
 {

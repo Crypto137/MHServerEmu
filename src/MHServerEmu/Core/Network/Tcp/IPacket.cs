@@ -1,4 +1,4 @@
-﻿namespace MHServerEmu.Networking.Tcp
+﻿namespace MHServerEmu.Core.Network.Tcp
 {
     /// <summary>
     /// Exposes a packet's data.

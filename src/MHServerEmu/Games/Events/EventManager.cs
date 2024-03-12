@@ -10,8 +10,8 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
-using MHServerEmu.Networking;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Core.Network;
 
 namespace MHServerEmu.Games.Events
 {

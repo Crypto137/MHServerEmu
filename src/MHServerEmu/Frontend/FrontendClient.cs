@@ -1,13 +1,13 @@
 ﻿using Google.ProtocolBuffers;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
+using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Games;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.Networking;
-using MHServerEmu.Networking.Tcp;
 using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Frontend
