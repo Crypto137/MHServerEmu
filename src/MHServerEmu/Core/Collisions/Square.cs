@@ -1,4 +1,6 @@
-﻿namespace MHServerEmu.Games.Common
+﻿using MHServerEmu.Core.VectorMath;
+
+namespace MHServerEmu.Core.Collisions
 {
     public class Square
     {

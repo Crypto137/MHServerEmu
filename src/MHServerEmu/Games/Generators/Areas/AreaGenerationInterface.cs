@@ -1,5 +1,6 @@
-﻿using MHServerEmu.Core.System.Random;
-using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.System.Random;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators.Regions;

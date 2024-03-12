@@ -2,7 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core;
 using MHServerEmu.Core.Extensions;
-using MHServerEmu.Games.Common;
+using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.Entities.Locomotion
 {

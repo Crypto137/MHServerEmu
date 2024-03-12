@@ -2,7 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 
-namespace MHServerEmu.Games.Common
+namespace MHServerEmu.Core.VectorMath
 {
     public class Vector2
     {
@@ -47,7 +47,7 @@ namespace MHServerEmu.Games.Common
         public static Vector2 operator -(Vector2 a, Vector2 b) => new(a.X - b.X, a.Y - b.Y);
         public static bool operator ==(Vector2 a, Vector2 b) => ReferenceEquals(null, a) ? ReferenceEquals(null, b) : a.Equals(b);
         public static bool operator !=(Vector2 a, Vector2 b) => !(a == b);
-        public static bool operator >(Vector2 a, Vector2 b) => ReferenceEquals(null, a) ? ReferenceEquals(null, b) : (a.X > b.X && a.Y > b.Y);
+        public static bool operator >(Vector2 a, Vector2 b) => ReferenceEquals(null, a) ? ReferenceEquals(null, b) : a.X > b.X && a.Y > b.Y;
         public static bool operator <(Vector2 a, Vector2 b) => !(a > b);
 
         public override bool Equals(object obj)
@@ -55,7 +55,7 @@ namespace MHServerEmu.Games.Common
             if (ReferenceEquals(this, obj)) return true;
 
             Vector2 point = obj as Vector2;
-            if (point != null) return (X == point.X && Y == point.Y);
+            if (point != null) return X == point.X && Y == point.Y;
 
             return false;
         }

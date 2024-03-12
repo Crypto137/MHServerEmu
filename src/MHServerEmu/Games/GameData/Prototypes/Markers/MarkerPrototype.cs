@@ -1,5 +1,5 @@
 ﻿using MHServerEmu.Core.Extensions;
-using MHServerEmu.Games.Common;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData.Resources;
 
 namespace MHServerEmu.Games.GameData.Prototypes.Markers

@@ -12,6 +12,8 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities.Locomotion;
+using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.Entities
 {

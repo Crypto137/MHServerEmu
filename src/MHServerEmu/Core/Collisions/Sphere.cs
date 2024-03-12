@@ -1,6 +1,7 @@
 ﻿using System.Text;
+using MHServerEmu.Core.VectorMath;
 
-namespace MHServerEmu.Games.Common
+namespace MHServerEmu.Core.Collisions
 {
     public class Sphere : IBounds
     {
@@ -15,11 +16,12 @@ namespace MHServerEmu.Games.Common
 
         public Aabb ToAabb()
         {
-            return new (new (Center.X - Radius, Center.Y - Radius, Center.Z - Radius),
-                        new (Center.X + Radius, Center.Y + Radius, Center.Z + Radius));
+            return new(new(Center.X - Radius, Center.Y - Radius, Center.Z - Radius),
+                        new(Center.X + Radius, Center.Y + Radius, Center.Z + Radius));
         }
 
-        public bool Intersects(Vector3 v) { 
+        public bool Intersects(Vector3 v)
+        {
             return Vector3.LengthSqr(Center - v) <= RadiusSquared;
         }
 
@@ -45,7 +47,7 @@ namespace MHServerEmu.Games.Common
                 maxSq = min * min;
             }
             else
-            {                
+            {
                 maxSq = MathF.Max(max * max, min * min);
             }
 
@@ -121,7 +123,7 @@ namespace MHServerEmu.Games.Common
         public bool Sweep(Aabb aabb, Vector3 velocity, ref float time)
         {
             float diameter = Radius * 2.0f;
-            Aabb expandedAabb = new (aabb.Center, aabb.Width + diameter, aabb.Length + diameter, aabb.Height + diameter);
+            Aabb expandedAabb = new(aabb.Center, aabb.Width + diameter, aabb.Length + diameter, aabb.Height + diameter);
             if (expandedAabb.IntersectRay(Center, velocity, ref time, out Vector3 point) == false) return false;
 
             int u = 0, v = 0;
@@ -135,7 +137,7 @@ namespace MHServerEmu.Games.Common
 
             int m = u + v;
 
-            Segment seg = new (Center, Center + velocity);
+            Segment seg = new(Center, Center + velocity);
 
             if (m == 7)
             {
@@ -152,7 +154,7 @@ namespace MHServerEmu.Games.Common
                 return true;
             }
 
-            if ((m & (m - 1)) == 0) return true;
+            if ((m & m - 1) == 0) return true;
             return Capsule.IntersectsSegment(seg, SweepGetCorner(aabb, u ^ 7), SweepGetCorner(aabb, v), Radius, ref time);
         }
 
@@ -167,8 +169,8 @@ namespace MHServerEmu.Games.Common
         {
             Vector3 obbVelocity = obb.TransformVector(velocity);
             Vector3 center = obb.TransformPoint(Center);
-            Sphere sphere = new (center, Radius);
-            Aabb aabb = new (obb.Center - obb.Extents, obb.Center + obb.Extents);
+            Sphere sphere = new(center, Radius);
+            Aabb aabb = new(obb.Center - obb.Extents, obb.Center + obb.Extents);
             return sphere.Sweep(aabb, obbVelocity, ref time);
         }
 
@@ -235,7 +237,7 @@ namespace MHServerEmu.Games.Common
             if (discreminant > 0.0f)
             {
                 float discreminantSqrt = MathF.Sqrt(discreminant);
-                rayDistance = (-dotscdn - discreminantSqrt);
+                rayDistance = -dotscdn - discreminantSqrt;
 
                 if (rayDistance < 0.0f) rayDistance = 0.0f;
                 return true;

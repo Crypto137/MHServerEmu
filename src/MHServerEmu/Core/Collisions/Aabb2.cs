@@ -1,13 +1,14 @@
-﻿
-namespace MHServerEmu.Games.Common
+﻿using MHServerEmu.Core.VectorMath;
+
+namespace MHServerEmu.Core.Collisions
 {
     public class Aabb2 : IBounds
     {
         public Vector2 Min { get; set; }
         public Vector2 Max { get; set; }
 
-        public Aabb2() 
-        { 
+        public Aabb2()
+        {
             Min = new Vector2();
             Max = new Vector2();
         }
@@ -94,7 +95,7 @@ namespace MHServerEmu.Games.Common
         public bool Intersects(Aabb bounds)
         {
             if (Max.X < bounds.Min.X || Min.X > bounds.Max.X ||
-                Max.Y < bounds.Min.Y || Min.Y > bounds.Max.Y )
+                Max.Y < bounds.Min.Y || Min.Y > bounds.Max.Y)
                 return false;
             return true;
         }

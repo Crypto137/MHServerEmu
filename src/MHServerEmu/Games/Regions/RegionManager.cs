@@ -1,7 +1,7 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System;
-using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Missions;

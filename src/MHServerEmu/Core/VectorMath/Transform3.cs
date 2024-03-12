@@ -1,5 +1,6 @@
-﻿
-namespace MHServerEmu.Games.Common
+﻿using MHServerEmu.Core.Collisions;
+
+namespace MHServerEmu.Core.VectorMath
 {
     public class Transform3
     {
@@ -30,7 +31,7 @@ namespace MHServerEmu.Games.Common
 
         public static Transform3 Identity()
         {
-            return new (
+            return new(
                 Vector3.XAxis,
                 Vector3.YAxis,
                 Vector3.ZAxis,
@@ -55,13 +56,13 @@ namespace MHServerEmu.Games.Common
             cY = MathF.Cos(radiansXYZ.Y);
             sZ = MathF.Sin(radiansXYZ.Z);
             cZ = MathF.Cos(radiansXYZ.Z);
-            tmp0 = (cZ * sY);
-            tmp1 = (sZ * sY);
+            tmp0 = cZ * sY;
+            tmp1 = sZ * sY;
 
-            return new (
-                new Vector3((cZ * cY), (sZ * cY), -sY),
-                new Vector3(((tmp0 * sX) - (sZ * cX)), ((tmp1 * sX) + (cZ * cX)), (cY * sX)),
-                new Vector3(((tmp0 * cX) + (sZ * sX)), ((tmp1 * cX) - (cZ * sX)), (cY * cX)),
+            return new(
+                new Vector3(cZ * cY, sZ * cY, -sY),
+                new Vector3(tmp0 * sX - sZ * cX, tmp1 * sX + cZ * cX, cY * sX),
+                new Vector3(tmp0 * cX + sZ * sX, tmp1 * cX - cZ * sX, cY * cX),
                 new Vector3(0.0f)
             );
         }
@@ -71,7 +72,7 @@ namespace MHServerEmu.Games.Common
             float s, c;
             s = MathF.Sin(radians);
             c = MathF.Cos(radians);
-            return new (
+            return new(
                 new Vector3(c, s, 0.0f),
                 new Vector3(-s, c, 0.0f),
                 Vector3.ZAxis,
@@ -92,9 +93,9 @@ namespace MHServerEmu.Games.Common
         public static Vector3 operator *(Transform3 t, Vector3 v)
         {
             return new Vector3(
-                (t.Col0.X * v.X) + (t.Col1.X * v.Y) + (t.Col2.X * v.Z),
-                (t.Col0.Y * v.X) + (t.Col1.Y * v.Y) + (t.Col2.Y * v.Z),
-                (t.Col0.Z * v.X) + (t.Col1.Z * v.Y) + (t.Col2.Z * v.Z)
+                t.Col0.X * v.X + t.Col1.X * v.Y + t.Col2.X * v.Z,
+                t.Col0.Y * v.X + t.Col1.Y * v.Y + t.Col2.Y * v.Z,
+                t.Col0.Z * v.X + t.Col1.Z * v.Y + t.Col2.Z * v.Z
             );
         }
 
@@ -110,17 +111,17 @@ namespace MHServerEmu.Games.Common
         public static Point2 operator *(Transform3 t, Point2 p)
         {
             return new Point2(
-                (t.Col0.X * p.X) + (t.Col1.X * p.Y) + t.Col3.X,
-                (t.Col0.Y * p.X) + (t.Col1.Y * p.Y) + t.Col3.Y
+                t.Col0.X * p.X + t.Col1.X * p.Y + t.Col3.X,
+                t.Col0.Y * p.X + t.Col1.Y * p.Y + t.Col3.Y
             );
         }
 
         public static Point3 operator *(Transform3 t, Point3 p)
         {
             return new Point3(
-                (t.Col0.X * p.X) + (t.Col1.X * p.Y) + (t.Col2.X * p.Z) + t.Col3.X,
-                (t.Col0.Y * p.X) + (t.Col1.Y * p.Y) + (t.Col2.Y * p.Z) + t.Col3.Y,
-                (t.Col0.Z * p.X) + (t.Col1.Z * p.Y) + (t.Col2.Z * p.Z) + t.Col3.Z
+                t.Col0.X * p.X + t.Col1.X * p.Y + t.Col2.X * p.Z + t.Col3.X,
+                t.Col0.Y * p.X + t.Col1.Y * p.Y + t.Col2.Y * p.Z + t.Col3.Y,
+                t.Col0.Z * p.X + t.Col1.Z * p.Y + t.Col2.Z * p.Z + t.Col3.Z
             );
         }
     }

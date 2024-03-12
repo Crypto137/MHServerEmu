@@ -1,5 +1,4 @@
-﻿
-namespace MHServerEmu.Games.Common
+﻿namespace MHServerEmu.Core.Collisions
 {
     public interface IBounds
     {

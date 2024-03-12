@@ -1,6 +1,6 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Frontend;
-using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Grouping;

@@ -1,5 +1,6 @@
-﻿using MHServerEmu.Core.Extensions;
-using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Generators.Navi

@@ -1,6 +1,7 @@
 ﻿using System.Text;
+using MHServerEmu.Core.VectorMath;
 
-namespace MHServerEmu.Games.Common
+namespace MHServerEmu.Core.Collisions
 {
     public class Capsule
     {
@@ -110,7 +111,7 @@ namespace MHServerEmu.Games.Common
         {
             StringBuilder sb = new();
             sb.AppendLine($" Radius: {Radius}");
-            sb.AppendLine($" Height: {Vector3.Length(B-A)}");
+            sb.AppendLine($" Height: {Vector3.Length(B - A)}");
             return sb.ToString();
         }
     }

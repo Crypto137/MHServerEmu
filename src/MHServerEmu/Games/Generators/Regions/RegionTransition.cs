@@ -1,6 +1,6 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Games.Common;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;

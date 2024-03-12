@@ -12,8 +12,8 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.MetaGame;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Network;
-using MHServerEmu.Games.Common;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.Powers
 {

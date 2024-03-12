@@ -1,11 +1,12 @@
 ﻿using System.Text;
+using MHServerEmu.Core.VectorMath;
 
-namespace MHServerEmu.Games.Common
+namespace MHServerEmu.Core.Collisions
 {
     public class Triangle
     {
-        public Vector3[] Points { get; set; } = new Vector3[3];   
-        
+        public Vector3[] Points { get; set; } = new Vector3[3];
+
         public Triangle(Vector3 p0, Vector3 p1, Vector3 p2)
         {
             Points[0] = p0;
@@ -13,7 +14,7 @@ namespace MHServerEmu.Games.Common
             Points[2] = p2;
         }
 
-        public static Triangle Zero => new (Vector3.Zero,  Vector3.Zero,  Vector3.Zero);
+        public static Triangle Zero => new(Vector3.Zero, Vector3.Zero, Vector3.Zero);
 
         public Vector3 this[int index]
         {
@@ -71,19 +72,19 @@ namespace MHServerEmu.Games.Common
             p0 = d0.Z * v0.Y - d0.Y * v0.Z;
             p2 = d0.Z * v2.Y - d0.Y * v2.Z;
             r = az * ey + ay * ez;
-            (min, max) = (p0 < p2) ? (p0, p2) : (p2, p0);
+            (min, max) = p0 < p2 ? (p0, p2) : (p2, p0);
             if (min > r || max < -r) return false;
 
             p0 = -d0.Z * v0.X + d0.X * v0.Z;
             p2 = -d0.Z * v2.X + d0.X * v2.Z;
             r = az * ex + ax * ez;
-            (min, max) = (p0 < p2) ? (p0, p2) : (p2, p0);
+            (min, max) = p0 < p2 ? (p0, p2) : (p2, p0);
             if (min > r || max < -r) return false;
 
             p1 = d0.Y * v1.X - d0.X * v1.Y;
             p2 = d0.Y * v2.X - d0.X * v2.Y;
             r = ay * ex + ax * ey;
-            (min, max) = (p2 < p1) ? (p2, p1) : (p1, p2);
+            (min, max) = p2 < p1 ? (p2, p1) : (p1, p2);
             if (min > r || max < -r) return false;
 
             ax = Math.Abs(d1.X);
@@ -93,41 +94,41 @@ namespace MHServerEmu.Games.Common
             p0 = d1.Z * v0.Y - d1.Y * v0.Z;
             p2 = d1.Z * v2.Y - d1.Y * v2.Z;
             r = az * ey + ay * ez;
-            (min, max) = (p0 < p2) ? (p0, p2) : (p2, p0);
+            (min, max) = p0 < p2 ? (p0, p2) : (p2, p0);
             if (min > r || max < -r) return false;
 
             p0 = -d1.Z * v0.X + d1.X * v0.Z;
             p2 = -d1.Z * v2.X + d1.X * v2.Z;
             r = az * ex + ax * ez;
-            (min, max) = (p0 < p2) ? (p0, p2) : (p2, p0);
+            (min, max) = p0 < p2 ? (p0, p2) : (p2, p0);
             if (min > r || max < -r) return false;
 
             p0 = d1.Y * v0.X - d1.X * v0.Y;
             p1 = d1.Y * v1.X - d1.X * v1.Y;
             r = ay * ex + ax * ey;
-            (min, max) = (p0 < p1) ? (p0, p1) : (p1, p0);
+            (min, max) = p0 < p1 ? (p0, p1) : (p1, p0);
             if (min > r || max < -r) return false;
 
-            ax = Math.Abs(d2.X);             
+            ax = Math.Abs(d2.X);
             ay = Math.Abs(d2.Y);
             az = Math.Abs(d2.Z);
 
             p0 = d2.Z * v0.Y - d2.Y * v0.Z;
             p1 = d2.Z * v1.Y - d2.Y * v1.Z;
             r = az * ey + ay * ez;
-            (min, max) = (p0 < p1) ? (p0, p1) : (p1, p0);
+            (min, max) = p0 < p1 ? (p0, p1) : (p1, p0);
             if (min > r || max < -r) return false;
 
             p0 = -d2.Z * v0.X + d2.X * v0.Z;
             p1 = -d2.Z * v1.X + d2.X * v1.Z;
             r = az * ex + ax * ez;
-            (min, max) = (p0 < p1) ? (p0, p1) : (p1, p0);
+            (min, max) = p0 < p1 ? (p0, p1) : (p1, p0);
             if (min > r || max < -r) return false;
 
             p1 = d2.Y * v1.X - d2.X * v1.Y;
             p2 = d2.Y * v2.X - d2.X * v2.Y;
             r = ay * ex + ax * ey;
-            (min, max) = (p2 < p1) ? (p2, p1) : (p1, p2);
+            (min, max) = p2 < p1 ? (p2, p1) : (p1, p2);
             if (min > r || max < -r) return false;
 
 
@@ -162,10 +163,10 @@ namespace MHServerEmu.Games.Common
         {
             if (TriangleContainsPoint2D(center)) return true;
 
-            Vector3 p0 = new (Points[0].X, Points[0].Y, 0.0f);
-            Vector3 p2 = new (Points[1].X, Points[1].Y, 0.0f);
-            Vector3 p3 = new (Points[2].X, Points[2].Y, 0.0f);
-            Vector3 center2D = new (center.X, center.Y, 0.0f);
+            Vector3 p0 = new(Points[0].X, Points[0].Y, 0.0f);
+            Vector3 p2 = new(Points[1].X, Points[1].Y, 0.0f);
+            Vector3 p3 = new(Points[2].X, Points[2].Y, 0.0f);
+            Vector3 center2D = new(center.X, center.Y, 0.0f);
 
             float radiusSq = radius * radius;
             if (Segment.SegmentPointDistanceSq(p0, p2, center2D) < radiusSq) return true;
@@ -177,7 +178,7 @@ namespace MHServerEmu.Games.Common
 
         public bool TriangleContainsPoint2D(Vector3 p)
         {
-            Vector3 p0 = Points[0]; 
+            Vector3 p0 = Points[0];
             Vector3 p1 = Points[1];
             Vector3 p2 = Points[2];
             Vector3 p10 = p1 - p0;

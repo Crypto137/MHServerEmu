@@ -1,10 +1,11 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
+using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.System.Random;
 
-namespace MHServerEmu.Games.Common
+namespace MHServerEmu.Core.VectorMath
 {
     public class Vector3
     {
@@ -108,12 +109,12 @@ namespace MHServerEmu.Games.Common
 
         public static Vector3 operator +(Vector3 a, Vector3 b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
         public static Vector3 operator -(Vector3 a, Vector3 b) => new(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
-        public static Vector3 operator -(Vector3 a) => new(-a.X , -a.Y , -a.Z);
+        public static Vector3 operator -(Vector3 a) => new(-a.X, -a.Y, -a.Z);
         public static Vector3 operator *(Vector3 v, float f) => new(v.X * f, v.Y * f, v.Z * f);
         public static Vector3 operator /(Vector3 v, float f) => new(v.X / f, v.Y / f, v.Z / f);
         public static bool operator ==(Vector3 a, Vector3 b) => ReferenceEquals(null, a) ? ReferenceEquals(null, b) : a.Equals(b);
         public static bool operator !=(Vector3 a, Vector3 b) => !(a == b);
-        public static bool operator >(Vector3 a, Vector3 b) => ReferenceEquals(null, a) ? ReferenceEquals(null, b) : (a.X > b.X && a.Y > b.Y && a.Z > b.Z);
+        public static bool operator >(Vector3 a, Vector3 b) => ReferenceEquals(null, a) ? ReferenceEquals(null, b) : a.X > b.X && a.Y > b.Y && a.Z > b.Z;
         public static bool operator <(Vector3 a, Vector3 b) => !(a > b);
         public static float Length(Vector3 v) => MathF.Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z);
         public static bool EpsilonSphereTest(Vector3 v1, Vector3 v2, float epsilon) => LengthSqr(v1 - v2) < epsilon;
@@ -124,7 +125,7 @@ namespace MHServerEmu.Games.Common
             if (ReferenceEquals(this, obj)) return true;
 
             Vector3 point = obj as Vector3;
-            if (point != null) return (X == point.X && Y == point.Y && Z == point.Z);
+            if (point != null) return X == point.X && Y == point.Y && Z == point.Z;
 
             return false;
         }
@@ -134,7 +135,7 @@ namespace MHServerEmu.Games.Common
         public override string ToString() => $"({X:0.00}, {Y:0.00}, {Z:0.00})";
         public static float Dot(Vector3 v1, Vector3 v2) => v1.X * v2.X + v1.Y * v2.Y + v1.Z * v2.Z;
 
-        public static float DistanceSquared2D(Vector3 a, Vector3 b) => LengthSqr(new (b.X - a.X, b.Y - a.Y, 0.0f));
+        public static float DistanceSquared2D(Vector3 a, Vector3 b) => LengthSqr(new(b.X - a.X, b.Y - a.Y, 0.0f));
         public static float DistanceSquared(Vector3 a, Vector3 b) => LengthSqr(b - a);
 
         public static Vector3 Normalize2D(Vector3 v)
@@ -143,7 +144,7 @@ namespace MHServerEmu.Games.Common
             return IsNearZero(vector2D) ? XAxis : Normalize(vector2D);
         }
 
-        public static Vector3 Normalize(Vector3 v) =>  v / Length(v);
+        public static Vector3 Normalize(Vector3 v) => v / Length(v);
 
         public static bool IsFinite(Vector3 v)
         {
@@ -155,8 +156,8 @@ namespace MHServerEmu.Games.Common
             float r = 2.0f * MathF.PI * random.NextFloat();
             float x = MathF.Cos(r);
             float y = MathF.Sin(r);
-            return new (x, y, 0.0f);
-        }       
+            return new(x, y, 0.0f);
+        }
 
         public static float Distance2D(Vector3 v1, Vector3 v2) => Distance(Flatten(v1, 2), Flatten(v2, 2));
         private static float Distance(Vector3 v1, Vector3 v2) => MathHelper.SquareRoot(DistanceSquared(v1, v2));
@@ -193,9 +194,9 @@ namespace MHServerEmu.Games.Common
         public static Vector3 Cross(Vector3 v1, Vector3 v2)
         {
             return new Vector3(
-                (v1.Y * v2.Z) - (v1.Z * v2.Y),
-                (v1.Z * v2.X) - (v1.X * v2.Z),
-                (v1.X * v2.Y) - (v1.Y * v2.X)
+                v1.Y * v2.Z - v1.Z * v2.Y,
+                v1.Z * v2.X - v1.X * v2.Z,
+                v1.X * v2.Y - v1.Y * v2.X
             );
         }
 

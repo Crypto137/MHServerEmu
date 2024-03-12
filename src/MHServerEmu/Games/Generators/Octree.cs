@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Regions;
 using System.Collections;

@@ -1,7 +1,7 @@
-﻿
-using System.Text;
+﻿using System.Text;
+using MHServerEmu.Core.VectorMath;
 
-namespace MHServerEmu.Games.Common
+namespace MHServerEmu.Core.Collisions
 {
     public class Obb
     {
@@ -54,17 +54,17 @@ namespace MHServerEmu.Games.Common
 
         public bool Intersects(Sphere sphere)
         {
-            Aabb aabb = new (Center - Extents, Center + Extents);
+            Aabb aabb = new(Center - Extents, Center + Extents);
             Vector3 center = TransformPoint(sphere.Center);
             return aabb.Intersects(new Sphere(center, sphere.Radius));
         }
 
         public bool Intersects(Triangle triangle)
         {
-            Aabb aabb = new (Center - Extents, Center + Extents);
+            Aabb aabb = new(Center - Extents, Center + Extents);
             var otherTriangle = new Triangle(
-                TransformPoint(triangle.Points[0]), 
-                TransformPoint(triangle.Points[1]), 
+                TransformPoint(triangle.Points[0]),
+                TransformPoint(triangle.Points[1]),
                 TransformPoint(triangle.Points[2])
                 );
             return aabb.Intersects(otherTriangle);

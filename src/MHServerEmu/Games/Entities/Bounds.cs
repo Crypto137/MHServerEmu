@@ -1,6 +1,7 @@
-﻿using MHServerEmu.Core.Helpers;
+﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Games.Common;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData.Prototypes;
 using System.Runtime.InteropServices;
 using System.Text;

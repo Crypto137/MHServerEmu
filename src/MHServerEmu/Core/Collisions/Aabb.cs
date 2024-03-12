@@ -1,4 +1,6 @@
-﻿namespace MHServerEmu.Games.Common
+﻿using MHServerEmu.Core.VectorMath;
+
+namespace MHServerEmu.Core.Collisions
 {
     public class Aabb : IBounds
     {
@@ -8,8 +10,8 @@
         public float Width { get => Max.X - Min.X; }
         public float Length { get => Max.Y - Min.Y; }
         public float Height { get => Max.Z - Min.Z; }
-        
-        public Vector3 Center { get => Min + ((Max - Min) / 2.0f); }
+
+        public Vector3 Center { get => Min + (Max - Min) / 2.0f; }
 
         public Aabb(Vector3 min, Vector3 max)
         {
@@ -28,8 +30,8 @@
             float halfLength = length / 2.0f;
             float halfHeight = height / 2.0f;
 
-            Min = new (center.X - halfWidth, center.Y - halfLength, center.Z - halfHeight);
-            Max = new (center.X + halfWidth, center.Y + halfLength, center.Z + halfHeight);
+            Min = new(center.X - halfWidth, center.Y - halfLength, center.Z - halfHeight);
+            Max = new(center.X + halfWidth, center.Y + halfLength, center.Z + halfHeight);
         }
 
         public static Aabb InvertedLimit => new(
@@ -37,7 +39,7 @@
                 new Vector3(float.MinValue, float.MinValue, float.MinValue)
             );
 
-        public static Aabb Zero => new( Vector3.Zero, Vector3.Zero );
+        public static Aabb Zero => new(Vector3.Zero, Vector3.Zero);
         public float Volume => Width * Length * Height;
         public Vector3 Extents => (Max - Min) * 0.5f;
 
@@ -147,18 +149,18 @@
         public float DistanceToPoint2D(Vector3 point)
         {
             float distance = DistanceToPointSq2D(point);
-            return (distance > 0.000001f) ? MathF.Sqrt(distance) : 0.0f;
+            return distance > 0.000001f ? MathF.Sqrt(distance) : 0.0f;
         }
 
         public void RoundToNearestInteger()
         {
-            Min.Set( MathF.Round(Min.X), MathF.Round(Min.Y), MathF.Round(Min.Z) );
-            Max.Set( MathF.Round(Max.X), MathF.Round(Max.Y), MathF.Round(Max.Z) );
+            Min.Set(MathF.Round(Min.X), MathF.Round(Min.Y), MathF.Round(Min.Z));
+            Max.Set(MathF.Round(Max.X), MathF.Round(Max.Y), MathF.Round(Max.Z));
         }
 
         public bool IntersectsXY(Vector3 point)
         {
-            if (Max.X < point.X || Min.X > point.X || 
+            if (Max.X < point.X || Min.X > point.X ||
                 Max.Y < point.Y || Min.Y > point.Y)
                 return false;
             return true;
@@ -208,7 +210,7 @@
 
         public bool FullyContains(Aabb bounds)
         {
-            return  bounds.Min.X >= Min.X && bounds.Max.X <= Max.X &&
+            return bounds.Min.X >= Min.X && bounds.Max.X <= Max.X &&
                     bounds.Min.Y >= Min.Y && bounds.Max.Y <= Max.Y &&
                     bounds.Min.Z >= Min.Z && bounds.Max.Z <= Max.Z;
         }
@@ -220,13 +222,13 @@
             Vector3[] corners = new Vector3[8];
 
             corners[0] = Min;
-            corners[1] = new (Min.X, Max.Y, Min.Z);
-            corners[2] = new (Min.X, Max.Y, Max.Z);
-            corners[3] = new (Min.X, Min.Y, Max.Z);
-            corners[4] = new (Max.X, Min.Y, Min.Z);
-            corners[5] = new (Max.X, Max.Y, Min.Z);
+            corners[1] = new(Min.X, Max.Y, Min.Z);
+            corners[2] = new(Min.X, Max.Y, Max.Z);
+            corners[3] = new(Min.X, Min.Y, Max.Z);
+            corners[4] = new(Max.X, Min.Y, Min.Z);
+            corners[5] = new(Max.X, Max.Y, Min.Z);
             corners[6] = Max;
-            corners[7] = new (Max.X, Min.Y, Max.Z);
+            corners[7] = new(Max.X, Min.Y, Max.Z);
 
             return corners;
         }
@@ -275,14 +277,14 @@
 
         public string BoxToString()
         {
-            return $" Box: {(Max-Min)}";
+            return $" Box: {Max - Min}";
         }
     }
     public enum ContainmentType
     {
-        Contains,    
-        Disjoint,   
-        Intersects  
+        Contains,
+        Disjoint,
+        Intersects
     }
 
 }

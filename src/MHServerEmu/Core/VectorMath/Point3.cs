@@ -1,5 +1,4 @@
-﻿
-namespace MHServerEmu.Games.Common
+﻿namespace MHServerEmu.Core.VectorMath
 {
     public class Point3
     {

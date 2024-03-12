@@ -1,4 +1,6 @@
-﻿namespace MHServerEmu.Games.Common
+﻿using MHServerEmu.Core.VectorMath;
+
+namespace MHServerEmu.Core.Collisions
 {
     public class Plane
     {
@@ -9,7 +11,7 @@
             Intersect
         }
 
-        public Vector3 Normal { get; set; }        
+        public Vector3 Normal { get; set; }
         public float D { get; set; }
 
 
@@ -23,7 +25,7 @@
         {
             IntersectionType[] intersection = new IntersectionType[8];
             Vector3[] corners = bound.GetCorners();
-            
+
             intersection[0] = Intersects(corners[0]);
             for (int i = 1; i < 8; i++)
             {

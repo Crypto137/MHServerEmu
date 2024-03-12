@@ -1,7 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Frontend;
-using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
@@ -12,6 +11,7 @@ using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.Events
 {

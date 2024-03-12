@@ -2,7 +2,7 @@
 using System.Text;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
-using MHServerEmu.Games.Common;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
 

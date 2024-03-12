@@ -1,4 +1,6 @@
-﻿namespace MHServerEmu.Games.Common
+﻿using MHServerEmu.Core.VectorMath;
+
+namespace MHServerEmu.Core.Collisions
 {
     public class Segment
     {
@@ -52,7 +54,7 @@
             float dotba = Vector3.Dot(ba, ba);
             if (dotcb >= dotba) return Vector3.Dot(cb, cb);
             float dotca = Vector3.Dot(ca, ca);
-            return (dotca - dotcb * (dotcb / dotba));
+            return dotca - dotcb * (dotcb / dotba);
         }
 
         public static float Cross2D(Vector3 v0, Vector3 v1)

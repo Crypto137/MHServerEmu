@@ -3,7 +3,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 
-namespace MHServerEmu.Games.Common
+namespace MHServerEmu.Core.VectorMath
 {
     public class Orientation
     {
@@ -111,11 +111,11 @@ namespace MHServerEmu.Games.Common
         }
 
         public float GetYawNormalized()
-		{ 
-            float yaw = WrapAngleRadians(Yaw); 
-			if (yaw > MathHelper.Pi) yaw -= MathHelper.TwoPi;
-			return yaw;
-		}
+        {
+            float yaw = WrapAngleRadians(Yaw);
+            if (yaw > MathHelper.Pi) yaw -= MathHelper.TwoPi;
+            return yaw;
+        }
 
         /// <summary>
         /// Angle is simplified into [0;2π] interval

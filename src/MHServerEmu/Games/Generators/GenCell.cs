@@ -1,8 +1,8 @@
 ﻿using MHServerEmu.Core.Logging;
-using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.Generators
 {

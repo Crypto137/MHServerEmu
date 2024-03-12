@@ -1,7 +1,7 @@
-﻿using MHServerEmu.Games.Common;
-using MHServerEmu.Games.Entities.Avatars;
+﻿using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities;
 using System.Collections;
+using MHServerEmu.Core.Collisions;
 
 namespace MHServerEmu.Games.Generators
 {

@@ -1,5 +1,5 @@
 ﻿using System.Text;
-using MHServerEmu.Games.Common;
+using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Core.Extensions
 {
