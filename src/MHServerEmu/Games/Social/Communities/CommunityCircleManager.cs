@@ -1,8 +1,8 @@
 ﻿using System.Collections;
 using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Games.Social.Communities
 {

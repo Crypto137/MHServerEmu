@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common.Encoders;
-using MHServerEmu.Common.Extensions;
+using MHServerEmu.Core.Encoders;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Network;

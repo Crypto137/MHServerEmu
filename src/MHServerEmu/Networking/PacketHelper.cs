@@ -1,7 +1,7 @@
 ﻿using Google.ProtocolBuffers;
 using Gazillion;
-using MHServerEmu.Common.Helpers;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
@@ -12,7 +12,7 @@ using MHServerEmu.Games.MetaGame;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.Common.Extensions;
+using MHServerEmu.Core.Extensions;
 using System.Text;
 
 namespace MHServerEmu.Networking

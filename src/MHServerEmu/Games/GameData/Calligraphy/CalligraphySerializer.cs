@@ -1,5 +1,5 @@
 ﻿using System.Reflection;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;

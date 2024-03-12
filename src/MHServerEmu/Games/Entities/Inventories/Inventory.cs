@@ -1,4 +1,4 @@
-﻿using MHServerEmu.Common.Logging;
+﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 

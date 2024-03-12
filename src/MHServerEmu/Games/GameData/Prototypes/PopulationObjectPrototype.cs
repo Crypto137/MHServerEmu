@@ -1,6 +1,6 @@
-﻿using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Helpers;
-using MHServerEmu.Common.Logging;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.Generators;

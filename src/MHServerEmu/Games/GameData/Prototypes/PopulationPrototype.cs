@@ -1,4 +1,4 @@
-﻿using MHServerEmu.Common.Extensions;
+﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using System.Collections.Generic;
 

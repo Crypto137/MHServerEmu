@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common;
-using MHServerEmu.Common.Extensions;
+using MHServerEmu.Core;
+using MHServerEmu.Core.Extensions;
 
 namespace MHServerEmu.Games.Missions
 {

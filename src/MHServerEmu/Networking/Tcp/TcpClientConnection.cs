@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Net.Sockets;
-using MHServerEmu.Common.Config;
-using MHServerEmu.Common.Extensions;
+using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Extensions;
 
 namespace MHServerEmu.Networking.Tcp
 {

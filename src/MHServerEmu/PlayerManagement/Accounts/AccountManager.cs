@@ -1,9 +1,9 @@
 ﻿using System.Text.RegularExpressions;
 using Gazillion;
 using MHServerEmu.Auth;
-using MHServerEmu.Common;
-using MHServerEmu.Common.Config;
-using MHServerEmu.Common.Extensions;
+using MHServerEmu.Core;
+using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.PlayerManagement.Accounts

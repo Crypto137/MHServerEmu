@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
-using MHServerEmu.Common.Config;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.GameData.Calligraphy;

@@ -1,6 +1,6 @@
 ﻿using Gazillion;
-using MHServerEmu.Common.Commands;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Commands;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Frontend;
 using MHServerEmu.Networking;
 using MHServerEmu.PlayerManagement.Accounts;

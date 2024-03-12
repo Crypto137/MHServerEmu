@@ -1,5 +1,5 @@
 ﻿using Google.ProtocolBuffers;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Networking
 {

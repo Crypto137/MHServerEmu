@@ -1,6 +1,6 @@
 ﻿using Gazillion;
-using MHServerEmu.Common.Config;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Networking;
 using MHServerEmu.Networking.Tcp;
 

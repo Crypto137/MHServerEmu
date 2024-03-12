@@ -1,5 +1,5 @@
-﻿using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Helpers;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.GameData.Resources;

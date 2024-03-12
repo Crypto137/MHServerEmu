@@ -1,5 +1,5 @@
 ﻿using Gazillion;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;

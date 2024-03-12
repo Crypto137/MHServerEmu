@@ -1,9 +1,9 @@
 ﻿using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Common;
-using MHServerEmu.Common;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Common.Extensions;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Generators.Regions

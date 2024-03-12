@@ -1,4 +1,4 @@
-﻿using MHServerEmu.Common;
+﻿using MHServerEmu.Core;
 
 namespace MHServerEmu.Games.Generators
 {

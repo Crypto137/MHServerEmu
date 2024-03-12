@@ -1,5 +1,5 @@
 ﻿using Google.ProtocolBuffers;
-using MHServerEmu.Common.Encoders;
+using MHServerEmu.Core.Encoders;
 using MHServerEmu.Games.Entities.Avatars;
 
 namespace MHServerEmu.PlayerManagement.Accounts.DBModels

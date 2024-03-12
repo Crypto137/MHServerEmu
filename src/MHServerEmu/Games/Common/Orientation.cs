@@ -1,7 +1,7 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Helpers;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 
 namespace MHServerEmu.Games.Common
 {

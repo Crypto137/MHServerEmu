@@ -1,8 +1,8 @@
 ﻿using Gazillion;
 using MHServerEmu.Auth;
-using MHServerEmu.Common.Config;
-using MHServerEmu.Common;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Config;
+using MHServerEmu.Core;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.PlayerManagement.Accounts;
 using MHServerEmu.PlayerManagement.Accounts.DBModels;
 using MHServerEmu.Frontend;

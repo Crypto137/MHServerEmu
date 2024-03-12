@@ -1,9 +1,9 @@
 ﻿using System.Globalization;
-using MHServerEmu.Common.Commands;
-using MHServerEmu.Common.Config;
-using MHServerEmu.Common.Helpers;
-using MHServerEmu.Common.Logging;
-using MHServerEmu.Common.Logging.Targets;
+using MHServerEmu.Core.Commands;
+using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Logging.Targets;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Networking;

@@ -1,5 +1,5 @@
 ﻿using System.Text;
-using MHServerEmu.Common;
+using MHServerEmu.Core;
 using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.PlayerManagement

@@ -1,8 +1,8 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using Gazillion;
-using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Encoders;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Encoders;
 
 namespace MHServerEmu.Games.Social.Guilds
 {

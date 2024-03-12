@@ -1,8 +1,8 @@
 ﻿using Gazillion;
 using MHServerEmu.Billing.Catalogs;
-using MHServerEmu.Common.Config;
-using MHServerEmu.Common.Helpers;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;

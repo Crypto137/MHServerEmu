@@ -1,5 +1,5 @@
-﻿using MHServerEmu.Common;
-using MHServerEmu.Common.Logging;
+﻿using MHServerEmu.Core;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games;
 
 namespace MHServerEmu.PlayerManagement

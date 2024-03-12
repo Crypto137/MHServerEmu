@@ -1,6 +1,6 @@
 ﻿using Gazillion;
-using MHServerEmu.Common;
-using MHServerEmu.Common.Config;
+using MHServerEmu.Core;
+using MHServerEmu.Core.Config;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;

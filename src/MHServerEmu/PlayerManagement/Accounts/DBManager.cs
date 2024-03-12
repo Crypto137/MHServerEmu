@@ -1,7 +1,7 @@
 ﻿using System.Data.SQLite;
 using Dapper;
-using MHServerEmu.Common.Helpers;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.PlayerManagement.Accounts.DBModels;
 

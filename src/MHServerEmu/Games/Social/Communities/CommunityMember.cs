@@ -2,8 +2,8 @@
 using System.Text;
 using Gazillion;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;

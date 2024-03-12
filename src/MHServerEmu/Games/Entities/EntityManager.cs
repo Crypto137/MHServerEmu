@@ -1,5 +1,5 @@
 ﻿using Gazillion;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;

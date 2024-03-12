@@ -4,9 +4,9 @@ using System.Web;
 using Google.ProtocolBuffers;
 using Gazillion;
 using MHServerEmu.Auth.WebApi;
-using MHServerEmu.Common.Config;
-using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Networking;
 using MHServerEmu.PlayerManagement;
 

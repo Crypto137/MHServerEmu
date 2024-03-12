@@ -3,10 +3,10 @@ using System.Text.Json;
 using Free.Ports.zLib;
 using Google.ProtocolBuffers;
 using Gazillion;
-using MHServerEmu.Common;
-using MHServerEmu.Common.Helpers;
-using MHServerEmu.Common.Logging;
-using MHServerEmu.Common.Serialization;
+using MHServerEmu.Core;
+using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Locales;
 
 namespace MHServerEmu.Games.Achievements

@@ -1,9 +1,9 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Auth;
-using MHServerEmu.Common;
-using MHServerEmu.Common.Config;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core;
+using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
 using MHServerEmu.Games.Achievements;

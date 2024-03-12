@@ -1,6 +1,6 @@
 ﻿using System.Net;
 using System.Net.Sockets;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Networking.Tcp
 {

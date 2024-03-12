@@ -1,5 +1,5 @@
 ﻿using Gazillion;
-using MHServerEmu.Common.Extensions;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;

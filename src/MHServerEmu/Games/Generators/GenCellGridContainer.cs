@@ -1,4 +1,4 @@
-﻿using MHServerEmu.Common;
+﻿using MHServerEmu.Core;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;

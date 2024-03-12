@@ -1,6 +1,6 @@
-﻿using MHServerEmu.Common;
-using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Logging;
+﻿using MHServerEmu.Core;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;

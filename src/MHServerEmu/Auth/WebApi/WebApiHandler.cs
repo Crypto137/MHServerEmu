@@ -1,8 +1,8 @@
 ﻿using System.Collections.Specialized;
 using System.Text;
-using MHServerEmu.Common.Config;
-using MHServerEmu.Common.Helpers;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.Auth.WebApi

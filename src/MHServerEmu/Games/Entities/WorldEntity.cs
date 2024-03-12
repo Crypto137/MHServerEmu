@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common.Extensions;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.GameData;
@@ -10,7 +10,7 @@ using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Dialog;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities.Locomotion;
 
 namespace MHServerEmu.Games.Entities

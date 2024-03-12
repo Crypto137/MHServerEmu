@@ -1,8 +1,8 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common;
-using MHServerEmu.Common.Encoders;
-using MHServerEmu.Common.Extensions;
+using MHServerEmu.Core;
+using MHServerEmu.Core.Encoders;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;

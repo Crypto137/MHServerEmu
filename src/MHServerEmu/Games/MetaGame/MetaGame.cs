@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common;
+using MHServerEmu.Core;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Network;

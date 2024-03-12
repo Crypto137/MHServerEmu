@@ -1,7 +1,7 @@
-﻿using MHServerEmu.Common;
-using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Helpers;
-using MHServerEmu.Common.Logging;
+﻿using MHServerEmu.Core;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Locomotion;

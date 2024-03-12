@@ -1,7 +1,7 @@
 ﻿using Gazillion;
-using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Helpers;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;

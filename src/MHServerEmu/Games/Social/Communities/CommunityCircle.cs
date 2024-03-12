@@ -1,4 +1,4 @@
-﻿using MHServerEmu.Common.Logging;
+﻿using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Games.Social.Communities
 {

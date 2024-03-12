@@ -1,6 +1,6 @@
 ﻿using Google.ProtocolBuffers;
-using MHServerEmu.Common.Helpers;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;

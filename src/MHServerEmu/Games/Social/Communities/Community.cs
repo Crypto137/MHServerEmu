@@ -1,8 +1,8 @@
 ﻿using System.Text;
 using Gazillion;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
 
 namespace MHServerEmu.Games.Social.Communities

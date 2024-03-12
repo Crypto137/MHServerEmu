@@ -1,12 +1,12 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common.Encoders;
-using MHServerEmu.Common.Extensions;
+using MHServerEmu.Core.Encoders;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Games.Missions
 {
