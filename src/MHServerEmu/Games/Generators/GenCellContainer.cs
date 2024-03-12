@@ -1,10 +1,10 @@
-﻿using MHServerEmu.Core;
+﻿using System.Collections;
+using System.Text;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
-using System.Collections;
-using System.Text;
 
 namespace MHServerEmu.Games.Generators
 {

@@ -1,12 +1,12 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using Gazillion;
-using MHServerEmu.Core.Encoders;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Core.Serialization;
 
 namespace MHServerEmu.Games.Entities.Options
 {

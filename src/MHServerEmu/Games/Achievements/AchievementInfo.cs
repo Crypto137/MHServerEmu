@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using System.Text.Json.Serialization;
 using Gazillion;
-using MHServerEmu.Core;
+using MHServerEmu.Core.System;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Locales;
 

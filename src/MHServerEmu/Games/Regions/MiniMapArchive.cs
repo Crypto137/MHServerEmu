@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Core.Encoders;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Regions

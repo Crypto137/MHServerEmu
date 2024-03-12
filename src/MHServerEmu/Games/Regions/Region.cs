@@ -1,6 +1,5 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
-using MHServerEmu.Core;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Common;
@@ -14,6 +13,7 @@ using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Frontend;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.System;
 
 namespace MHServerEmu.Games.Regions
 {

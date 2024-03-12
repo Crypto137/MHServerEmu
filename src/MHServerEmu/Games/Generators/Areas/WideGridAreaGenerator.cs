@@ -1,4 +1,6 @@
-﻿using MHServerEmu.Core;
+﻿using System.Reflection;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData;
@@ -6,8 +8,6 @@ using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Regions;
 using static MHServerEmu.Games.Generators.Areas.CellGridGenerator;
 using static MHServerEmu.Games.Regions.Cell;
-using MHServerEmu.Core.Extensions;
-using System.Reflection;
 
 namespace MHServerEmu.Games.Generators.Areas
 {

@@ -1,5 +1,5 @@
-﻿using MHServerEmu.Core;
-using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData;

@@ -1,9 +1,9 @@
 ﻿using System.Text.RegularExpressions;
 using Gazillion;
 using MHServerEmu.Auth;
-using MHServerEmu.Core;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.PlayerManagement.Accounts
@@ -42,7 +42,7 @@ namespace MHServerEmu.PlayerManagement.Accounts
                 return AuthStatusCode.IncorrectUsernameOrPassword403;
 
             // Check the account we queried
-            if (Cryptography.VerifyPassword(loginDataPB.Password, accountToCheck.PasswordHash, accountToCheck.Salt) == false)
+            if (CryptographyHelper.VerifyPassword(loginDataPB.Password, accountToCheck.PasswordHash, accountToCheck.Salt) == false)
                 return AuthStatusCode.IncorrectUsernameOrPassword403;
 
             if (accountToCheck.IsBanned) return AuthStatusCode.AccountBanned;
@@ -148,7 +148,7 @@ namespace MHServerEmu.PlayerManagement.Accounts
             }
 
             // Update password
-            account.PasswordHash = Cryptography.HashPassword(newPassword, out byte[] salt);
+            account.PasswordHash = CryptographyHelper.HashPassword(newPassword, out byte[] salt);
             account.Salt = salt;
             account.IsPasswordExpired = false;
             DBManager.UpdateAccount(account);

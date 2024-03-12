@@ -1,8 +1,8 @@
 ﻿using System.Security.Cryptography;
 
-namespace MHServerEmu.Core
+namespace MHServerEmu.Core.Helpers
 {
-    public static class Cryptography
+    public static class CryptographyHelper
     {
         private const int PasswordKeySize = 64;
         private const int PasswordIterationCount = 210000;  // Appropriate iteration count for PBKDF2-HMAC-SHA512 according to 2023 OWASP recommendations

@@ -1,8 +1,8 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
-using MHServerEmu.Core;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.System.Random;
 
 namespace MHServerEmu.Games.Common
 {

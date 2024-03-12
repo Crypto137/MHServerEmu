@@ -1,7 +1,7 @@
 ﻿using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 
-namespace MHServerEmu.Core.Encoders
+namespace MHServerEmu.Core.Serialization
 {
     // HOW TO USE THIS
     // 1. Encode all bools beforehand using EncodeBool().

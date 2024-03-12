@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace MHServerEmu.Core
+namespace MHServerEmu.Core.System
 {
     /// <summary>
     /// Provides Gazillion time functionality.

@@ -1,4 +1,4 @@
-﻿namespace MHServerEmu.Core
+﻿namespace MHServerEmu.Core.System
 {
     public enum IdType
     {
@@ -32,7 +32,7 @@
         public IdGenerator(IdType type, ushort machineId = 0)
         {
             if (type >= IdType.Limit) throw new OverflowException("Type exceeds 4 bits.");
-            if (machineId >= (1 << 12)) throw new OverflowException("MachineId exceeds 12 bits.");
+            if (machineId >= 1 << 12) throw new OverflowException("MachineId exceeds 12 bits.");
 
             _type = type;
             _machineId = machineId;
@@ -70,8 +70,8 @@
             public ParsedId(ulong id)
             {
                 Type = (IdType)(id >> 60);
-                MachineId = (ushort)((id >> 48) & 0xFFF);
-                Timestamp = Clock.UnixTimeToDateTime(TimeSpan.FromSeconds((id >> 16) & 0xFFFFFFFF));
+                MachineId = (ushort)(id >> 48 & 0xFFF);
+                Timestamp = Clock.UnixTimeToDateTime(TimeSpan.FromSeconds(id >> 16 & 0xFFFFFFFF));
                 MachineSequenceNumber = (ushort)(id & 0xFFFF);
             }
 

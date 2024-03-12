@@ -2,9 +2,9 @@
 using System.Diagnostics;
 using System.Globalization;
 using Gazillion;
-using MHServerEmu.Core;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.System.Random;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;

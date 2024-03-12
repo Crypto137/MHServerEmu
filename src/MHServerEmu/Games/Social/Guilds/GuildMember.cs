@@ -2,7 +2,7 @@
 using Google.ProtocolBuffers;
 using Gazillion;
 using MHServerEmu.Core.Extensions;
-using MHServerEmu.Core.Encoders;
+using MHServerEmu.Core.Serialization;
 
 namespace MHServerEmu.Games.Social.Guilds
 {

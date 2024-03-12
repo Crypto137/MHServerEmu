@@ -1,6 +1,6 @@
 ﻿using Google.ProtocolBuffers;
 
-namespace MHServerEmu.Core.Encoders
+namespace MHServerEmu.Core.Serialization
 {
     public class BoolDecoder
     {
