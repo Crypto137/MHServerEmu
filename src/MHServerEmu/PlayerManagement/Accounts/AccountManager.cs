@@ -4,6 +4,9 @@ using MHServerEmu.Auth;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
+using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Regions;
 using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.PlayerManagement.Accounts
@@ -17,18 +20,33 @@ namespace MHServerEmu.PlayerManagement.Accounts
 
     public static class AccountManager
     {
-        public static readonly DBAccount DefaultAccount = new(
-            ConfigManager.DefaultPlayerData.PlayerName, 
-            ConfigManager.DefaultPlayerData.StartingRegionEnum, 
-            ConfigManager.DefaultPlayerData.StartingWaypointId, 
-            ConfigManager.DefaultPlayerData.StartingAvatarEnum,
-            ConfigManager.DefaultPlayerData.AOIVolume
-            );
-
         public static bool IsInitialized { get; }
+
+        public static DBAccount DefaultAccount { get; }
 
         static AccountManager()
         {
+            // Initialize default account from config
+            // Region
+            if (Enum.TryParse(ConfigManager.DefaultPlayerData.StartingRegion, out RegionPrototypeId startingRegion) == false)
+                startingRegion = RegionPrototypeId.NPEAvengersTowerHUBRegion;
+
+            // Waypoint
+            PrototypeId startingWaypoint = GameDatabase.GetPrototypeRefByName(ConfigManager.DefaultPlayerData.StartingWaypoint);
+            if (startingWaypoint == PrototypeId.Invalid)
+                startingWaypoint = (PrototypeId)10137590415717831231;  // Waypoints/HUBS/NPEAvengersTowerHub.prototype
+
+            // Avatar
+            if (Enum.TryParse(ConfigManager.DefaultPlayerData.StartingAvatar, out AvatarPrototypeId startingAvatar) == false)
+                startingAvatar = AvatarPrototypeId.BlackCat;
+
+            DefaultAccount = new(ConfigManager.DefaultPlayerData.PlayerName,
+                startingRegion,
+                startingWaypoint,
+                startingAvatar,
+                ConfigManager.DefaultPlayerData.AOIVolume
+            );
+
             IsInitialized = DBManager.IsInitialized;
         }
 
