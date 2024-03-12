@@ -1,12 +1,11 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Core;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 
-namespace MHServerEmu.Games.MetaGame
+namespace MHServerEmu.Games.MetaGames
 {
     public class MetaGame : Entity
     {

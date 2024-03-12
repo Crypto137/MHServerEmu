@@ -3,7 +3,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 
-namespace MHServerEmu.Games.MetaGame
+namespace MHServerEmu.Games.MetaGames
 {
     public class PvP : MetaGame
     {
