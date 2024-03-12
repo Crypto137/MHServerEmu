@@ -27,9 +27,9 @@ namespace MHServerEmu.Games.Events
             _game = game;
         }
 
-        public List<QueuedGameMessage> Update()
+        public List<(FrontendClient, GameMessage)> Update()
         {
-            List<QueuedGameMessage> messageList = new();
+            List<(FrontendClient, GameMessage)> messageList = new();
 
             lock (_eventLock)
             {
@@ -69,9 +69,9 @@ namespace MHServerEmu.Games.Events
             }
         }
 
-        private List<QueuedGameMessage> HandleEvent(GameEvent queuedEvent)
+        private List<(FrontendClient, GameMessage)> HandleEvent(GameEvent queuedEvent)
         {
-            List<QueuedGameMessage> messageList = new();
+            List<(FrontendClient, GameMessage)> messageList = new();
             FrontendClient client = queuedEvent.Client;
             EventEnum eventId = queuedEvent.Event;
             PrototypeId powerId;
@@ -104,7 +104,7 @@ namespace MHServerEmu.Games.Events
  
                        if (bowlingBall != null)
                         { // TODO: test if ball already in Inventary
-                            messageList.Add(new(client, new(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(bowlingBall.BaseData.EntityId).Build())));
+                            messageList.Add((client, new(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(bowlingBall.BaseData.EntityId).Build())));
                             client.CurrentGame.EntityManager.DestroyEntity(bowlingBall.BaseData.EntityId);
                         }
 
@@ -125,15 +125,15 @@ namespace MHServerEmu.Games.Events
                         bowlingBall.Properties[PropertyEnum.ItemBindsToCharacterOnEquip] = true;    // DefaultSettings.BindsToAccountOnPickup
                         bowlingBall.Properties[PropertyEnum.ItemBindsToAccountOnPickup] = true;     // DefaultSettings.BindsToCharacterOnEquip 
 
-                        messageList.Add(new(client, new(bowlingBall.ToNetMessageEntityCreate())));
+                        messageList.Add((client, new(bowlingBall.ToNetMessageEntityCreate())));
 
                         //  if (assign) // TODO: check power assigned by player
-                        messageList.Add(new(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
+                        messageList.Add((client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
                             .SetEntityId(avatarEntityId)
                             .SetPowerProtoId((ulong)itemPower)
                             .Build())));
 
-                        messageList.Add(new(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                        messageList.Add((client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
                             .SetEntityId(avatarEntityId)
                             .SetPowerProtoId((ulong)itemPower)
                             .SetPowerRank(0)
@@ -155,7 +155,7 @@ namespace MHServerEmu.Games.Events
                     if (preIteractPower == PrototypeId.Invalid) break;
                     Logger.Trace($"OnPreInteractPower {GameDatabase.GetPrototypeName(preIteractPower)}");
 
-                    messageList.Add(new(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                    messageList.Add((client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
                         .SetPowerProtoId((ulong)preIteractPower)
                         .SetPowerRank(0)
@@ -177,7 +177,7 @@ namespace MHServerEmu.Games.Events
                         FXRandomSeed = 2222
                     };
 
-                    messageList.Add(new(client, new(NetMessageActivatePower.CreateBuilder()
+                    messageList.Add((client, new(NetMessageActivatePower.CreateBuilder()
                          .SetArchiveData(activatePower.Serialize())
                          .Build())));
 
@@ -193,12 +193,12 @@ namespace MHServerEmu.Games.Events
                     if (preIteractPower == 0) break;
                     Logger.Trace($"OnPreInteractPowerEnd");
 
-                    messageList.Add(new(client, new(NetMessageOnPreInteractPowerEnd.CreateBuilder()
+                    messageList.Add((client, new(NetMessageOnPreInteractPowerEnd.CreateBuilder()
                         .SetIdTargetEntity(interactObject.BaseData.EntityId)
                         .SetAvatarIndex(0)
                         .Build())));
 
-                    messageList.Add(new(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
+                    messageList.Add((client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
                               .SetEntityId(avatarEntityId)
                               .SetPowerProtoId((ulong)preIteractPower)
                               .Build())));
@@ -226,7 +226,7 @@ namespace MHServerEmu.Games.Events
                         FXRandomSeed = 1111
 
                     };
-                    messageList.Add(new(client,new(NetMessageActivatePower.CreateBuilder()
+                    messageList.Add((client,new(NetMessageActivatePower.CreateBuilder()
                          .SetArchiveData(activatePower.Serialize())
                          .Build())));
                     break;
@@ -239,7 +239,7 @@ namespace MHServerEmu.Games.Events
                     uint cellid = 1;
                     uint areaid = 1;
 
-                    messageList.Add(new(client, new(NetMessageEntityPosition.CreateBuilder()
+                    messageList.Add((client, new(NetMessageEntityPosition.CreateBuilder()
                         .SetIdEntity((ulong)client.Session.Account.Player.Avatar.ToEntityId())
                         .SetFlags(64)
                         .SetPosition(targetPos.ToNetStructPoint3())
@@ -267,11 +267,11 @@ namespace MHServerEmu.Games.Events
                             // Player.Avatar.EvalOnCreate.AssignProp.ProcProp.Param1 
                             conditionArchive = new(avatarEntityId, 666, conditionSerializationFlags, powerId, 0);   // TODO: generate and save Condition.Id                        
 
-                            messageList.Add(new(client, new(NetMessageAddCondition.CreateBuilder()
+                            messageList.Add((client, new(NetMessageAddCondition.CreateBuilder()
                                 .SetArchiveData(conditionArchive.Serialize())
                                 .Build())));
 
-                            messageList.Add(new(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                            messageList.Add((client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
                                 .SetEntityId(avatarEntityId)
                                 .SetPowerProtoId((ulong)PowerPrototypes.GhostRider.RideBikeHotspotsEnd)
                                 .SetPowerRank(0)
@@ -293,7 +293,7 @@ namespace MHServerEmu.Games.Events
                         case (PrototypeId)PowerPrototypes.Travel.ThingFlight:
                             Logger.Trace($"EventStart Ride");
                             conditionArchive = new(avatarEntityId, 667, conditionSerializationFlags, powerId, 0);
-                            messageList.Add(new(client, new(NetMessageAddCondition.CreateBuilder()
+                            messageList.Add((client, new(NetMessageAddCondition.CreateBuilder()
                                 .SetArchiveData(conditionArchive.Serialize())
                                 .Build())));
                             break;
@@ -309,12 +309,12 @@ namespace MHServerEmu.Games.Events
                         case (PrototypeId)PowerPrototypes.Travel.GhostRiderRide:
                             Logger.Trace($"EventEnd GhostRiderRide");
 
-                            messageList.Add(new(client, new(NetMessageDeleteCondition.CreateBuilder()
+                            messageList.Add((client, new(NetMessageDeleteCondition.CreateBuilder()
                                 .SetIdEntity(avatarEntityId)
                                 .SetKey(666)
                                 .Build())));
 
-                            messageList.Add(new(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
+                            messageList.Add((client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
                                 .SetEntityId(avatarEntityId)
                                 .SetPowerProtoId((ulong)PowerPrototypes.GhostRider.RideBikeHotspotsEnd)
                                 .Build())));
@@ -330,7 +330,7 @@ namespace MHServerEmu.Games.Events
                         case (PrototypeId)PowerPrototypes.Travel.AntmanFlight:
                         case (PrototypeId)PowerPrototypes.Travel.ThingFlight:
                             Logger.Trace($"EventEnd Ride");
-                            messageList.Add(new(client, new(NetMessageDeleteCondition.CreateBuilder()
+                            messageList.Add((client, new(NetMessageDeleteCondition.CreateBuilder()
                                 .SetIdEntity(avatarEntityId)
                                 .SetKey(667)
                                 .Build())));
@@ -350,7 +350,7 @@ namespace MHServerEmu.Games.Events
                     // TODO: avatarRepId = Player.EntityManager.GetEntity(avatarEntityId).RepId
                     ulong avatarRepId = (ulong)client.Session.Account.Player.Avatar.ToPropertyCollectionReplicationId();
 
-                    messageList.Add(new(client, new(
+                    messageList.Add((client, new(
                         Property.ToNetMessageSetProperty(avatarRepId, new(PropertyEnum.ThrowableOriginatorEntity), idTarget)
                         )));
                     Logger.Warn($"{GameDatabase.GetPrototypeName(client.ThrowingObject.BaseData.PrototypeId)}");
@@ -362,13 +362,13 @@ namespace MHServerEmu.Games.Events
                     //if (throwPrototype.Header.ReferenceType != (PrototypeId)HardcodedBlueprintId.ThrowableProp)
                     //    if (throwPrototype.Header.ReferenceType != (PrototypeId)HardcodedBlueprintId.ThrowableSmartProp)
                     //        throwPrototype = throwPrototype.Header.ReferenceType.GetPrototype();
-                    messageList.Add(new(client, new(
+                    messageList.Add((client, new(
                         Property.ToNetMessageSetProperty(avatarRepId, new(PropertyEnum.ThrowableOriginatorAssetRef), throwPrototype.UnrealClass)
                         )));
 
                     // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
                     client.ThrowingCancelPower = throwPrototype.Properties[PropertyEnum.ThrowableRestorePower];
-                    messageList.Add(new(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                    messageList.Add((client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
                         .SetPowerProtoId((ulong)client.ThrowingCancelPower)
                         .SetPowerRank(0)
@@ -380,7 +380,7 @@ namespace MHServerEmu.Games.Events
 
                     // ThrowObject.Prototype.ThrowablePowerProp.Value
                     client.ThrowingPower = throwPrototype.Properties[PropertyEnum.ThrowablePower];
-                    messageList.Add(new(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                    messageList.Add((client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
                         .SetPowerProtoId((ulong)client.ThrowingPower)
                         .SetPowerRank(0)
@@ -390,7 +390,7 @@ namespace MHServerEmu.Games.Events
                         .SetItemVariation(1)
                         .Build())));
 
-                    messageList.Add(new(client, new(NetMessageEntityDestroy.CreateBuilder()
+                    messageList.Add((client, new(NetMessageEntityDestroy.CreateBuilder()
                         .SetIdEntity(idTarget)
                         .Build())));
 
@@ -403,21 +403,21 @@ namespace MHServerEmu.Games.Events
                     avatarRepId = (ulong)client.Session.Account.Player.Avatar.ToPropertyCollectionReplicationId();
                     // TODO: avatarRepId = Player.EntityManager.GetEntity(AvatarEntityId).RepId
 
-                    messageList.Add(new(client, new(
+                    messageList.Add((client, new(
                         Property.ToNetMessageRemoveProperty(avatarRepId, new(PropertyEnum.ThrowableOriginatorEntity))
                         )));
-                    messageList.Add(new(client, new(
+                    messageList.Add((client, new(
                         Property.ToNetMessageRemoveProperty(avatarRepId, new(PropertyEnum.ThrowableOriginatorAssetRef))
                         )));
 
                     // ThrowObject.Prototype.ThrowablePowerProp.Value
-                    messageList.Add(new(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
+                    messageList.Add((client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
                         .SetPowerProtoId((ulong)client.ThrowingPower)
                         .Build())));
 
                     // ThrowObject.Prototype.ThrowableRestorePowerProp.Value
-                    messageList.Add(new(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
+                    messageList.Add((client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
                         .SetEntityId(avatarEntityId)
                         .SetPowerProtoId((ulong)client.ThrowingCancelPower)
                         .Build())));
@@ -427,7 +427,7 @@ namespace MHServerEmu.Games.Events
                     if (GameDatabase.GetPrototypeName(powerId).Contains("CancelPower")) 
                     {
                         if (client.ThrowingObject != null)
-                            messageList.Add(new(client, new(client.ThrowingObject.ToNetMessageEntityCreate())));
+                            messageList.Add((client, new(client.ThrowingObject.ToNetMessageEntityCreate())));
                         Logger.Trace("Event ThrownCancelPower");
                     } 
                     else
@@ -456,7 +456,7 @@ namespace MHServerEmu.Games.Events
                     var asset = GameDatabase.GetPrototype<CostumePrototype>(emmaCostume).CostumeUnrealClass;
                     conditionArchive.Condition.AssetDataRef = asset;  // MarvelPlayer_EmmaFrost_Modern
 
-                    messageList.Add(new(client, new(NetMessageAddCondition.CreateBuilder()
+                    messageList.Add((client, new(NetMessageAddCondition.CreateBuilder()
                          .SetArchiveData(conditionArchive.Serialize())
                          .Build())));
 
@@ -464,7 +464,7 @@ namespace MHServerEmu.Games.Events
 
                 case EventEnum.DiamondFormDeactivate:
                     // TODO: get DiamondFormCondition Condition Key
-                    messageList.Add(new(client, new(NetMessageDeleteCondition.CreateBuilder()
+                    messageList.Add((client, new(NetMessageDeleteCondition.CreateBuilder()
                       .SetKey(111)
                       .SetIdEntity((ulong)client.Session.Account.Player.Avatar.ToEntityId())
                       .Build())));
@@ -484,7 +484,7 @@ namespace MHServerEmu.Games.Events
                     conditionArchive = new(avatarEntityId, 777, conditionSerializationFlags, (PrototypeId)PowerPrototypes.Magik.Ultimate, 0);
                     conditionArchive.Condition.Duration = 20000;
 
-                    messageList.Add(new(client, new(NetMessageAddCondition.CreateBuilder()
+                    messageList.Add((client, new(NetMessageAddCondition.CreateBuilder()
                         .SetArchiveData(conditionArchive.Serialize())
                         .Build())));
 
@@ -496,9 +496,9 @@ namespace MHServerEmu.Games.Events
                     // we need to store this state in the avatar entity instead
                     client.MagikUltimateEntityId = arenaEntity.BaseData.EntityId;
 
-                    messageList.Add(new(client, new(arenaEntity.ToNetMessageEntityCreate())));
+                    messageList.Add((client, new(arenaEntity.ToNetMessageEntityCreate())));
 
-                    messageList.Add(new(client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
+                    messageList.Add((client, new(NetMessagePowerCollectionAssignPower.CreateBuilder()
                         .SetEntityId(arenaEntity.BaseData.EntityId)
                         .SetPowerProtoId((ulong)PowerPrototypes.Magik.UltimateHotspotEffect)
                         .SetPowerRank(0)
@@ -508,7 +508,7 @@ namespace MHServerEmu.Games.Events
                         .SetItemVariation(1)
                         .Build())));
 
-                    messageList.Add(new(client, new(
+                    messageList.Add((client, new(
                         Property.ToNetMessageSetProperty(arenaEntity.Properties.ReplicationId, new(PropertyEnum.AttachedToEntityId), avatarEntityId)
                         )));
 
@@ -517,21 +517,21 @@ namespace MHServerEmu.Games.Events
                 case EventEnum.EndMagikUltimate:
                     Logger.Trace($"EventEnd Magik Ultimate");
 
-                    messageList.Add(new(client, new(NetMessageDeleteCondition.CreateBuilder()
+                    messageList.Add((client, new(NetMessageDeleteCondition.CreateBuilder()
                         .SetIdEntity(avatarEntityId)
                         .SetKey(777)
                         .Build())));
 
                     ulong arenaEntityId = client.MagikUltimateEntityId;
 
-                    messageList.Add(new(client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
+                    messageList.Add((client, new(NetMessagePowerCollectionUnassignPower.CreateBuilder()
                         .SetEntityId(arenaEntityId)
                         .SetPowerProtoId((ulong)PowerPrototypes.Magik.UltimateHotspotEffect)
                         .Build())));
 
                     _game.EntityManager.DestroyEntity(arenaEntityId);
 
-                    messageList.Add(new(client, new(NetMessageEntityDestroy.CreateBuilder()
+                    messageList.Add((client, new(NetMessageEntityDestroy.CreateBuilder()
                         .SetIdEntity(arenaEntityId)
                         .Build())));
 
@@ -542,7 +542,7 @@ namespace MHServerEmu.Games.Events
                     Region region = (Region)queuedEvent.Data;
                     var messages = region.GetLoadingMessages(client.GameId, client.Session.Account.Player.Waypoint, client);
                     foreach (var message in messages)
-                        messageList.Add(new(client, message));
+                        messageList.Add((client, message));
 
                     break;
             }

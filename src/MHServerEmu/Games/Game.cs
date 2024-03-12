@@ -32,7 +32,7 @@ namespace MHServerEmu.Games
         public const long TickTime = 1000 / TickRate;   // ms per tick
 
         private readonly object _gameLock = new();
-        private readonly Queue<QueuedGameMessage> _messageQueue = new();
+        private readonly Queue<(FrontendClient, GameMessage)> _messageQueue = new();
         private readonly Dictionary<FrontendClient, List<GameMessage>> _responseListDict = new();
         private readonly Stopwatch _tickWatch = new();
 
@@ -173,16 +173,16 @@ namespace MHServerEmu.Games
             _responseListDict[client].AddRange(messages);                
         }
 
-        private void EnqueueResponses(IEnumerable<QueuedGameMessage> queuedMessages)
+        private void EnqueueResponses(IEnumerable<(FrontendClient, GameMessage)> queuedMessages)
         {
-            foreach (QueuedGameMessage message in queuedMessages)
-                EnqueueResponse(message.Client, message.Message);
+            foreach (var message in queuedMessages)
+                EnqueueResponse(message.Item1, message.Item2);
         }
 
-        private void HandleQueuedMessage(QueuedGameMessage queuedMessage)
+        private void HandleQueuedMessage((FrontendClient, GameMessage) queuedMessage)
         {
-            FrontendClient client = queuedMessage.Client;
-            GameMessage message = queuedMessage.Message;
+            FrontendClient client = queuedMessage.Item1;
+            GameMessage message = queuedMessage.Item2;
 
             switch ((ClientToGameServerMessage)message.Id)
             {
