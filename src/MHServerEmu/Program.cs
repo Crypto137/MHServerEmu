@@ -1,12 +1,18 @@
 ﻿using System.Globalization;
+using MHServerEmu.Auth;
+using MHServerEmu.Billing;
 using MHServerEmu.Core.Commands;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Logging.Targets;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Frontend;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
+using MHServerEmu.Grouping;
+using MHServerEmu.Leaderboards;
+using MHServerEmu.PlayerManagement;
 using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu
@@ -54,8 +60,18 @@ namespace MHServerEmu
                 return;
             }
 
-            ServerManager.Instance.Initialize();
-            ServerManager.Instance.StartServers();
+            // Create and register game services
+            ServerManager serverManager = ServerManager.Instance;
+            serverManager.Initialize();
+
+            serverManager.RegisterGameService(new FrontendServer(), ServerType.FrontendServer);
+            serverManager.RegisterGameService(new AuthServer(), ServerType.AuthServer);
+            serverManager.RegisterGameService(new PlayerManagerService(), ServerType.PlayerManager);
+            serverManager.RegisterGameService(new GroupingManagerService(), ServerType.GroupingManager);
+            serverManager.RegisterGameService(new BillingService(), ServerType.Billing);
+            serverManager.RegisterGameService(new LeaderboardService(), ServerType.Leaderboard);
+
+            serverManager.RunServices();
 
             // Begin processing console input
             Logger.Info("Type '!commands' for a list of available commands");
@@ -67,11 +83,12 @@ namespace MHServerEmu
         }
 
         /// <summary>
-        /// Shuts down all servers and exits the application.
+        /// Shuts down all services and exits the application.
         /// </summary>
         public static void Shutdown()
         {
-            ServerManager.Instance.Shutdown();
+            ServerManager.Instance.ShutdownServices();
+            Console.ReadLine();
             Environment.Exit(0);
         }
         
@@ -108,7 +125,7 @@ namespace MHServerEmu
             if (e.IsTerminating)
             {
                 Logger.FatalException(ex, "MHServerEmu terminating because of unhandled exception.");
-                ServerManager.Instance.Shutdown();
+                ServerManager.Instance.ShutdownServices();
             }
             else
             {

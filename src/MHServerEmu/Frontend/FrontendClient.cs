@@ -1,5 +1,4 @@
 ﻿using Google.ProtocolBuffers;
-using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Tcp;
@@ -22,7 +21,17 @@ namespace MHServerEmu.Frontend
         public bool FinishedPlayerManagerHandshake { get; set; } = false;
         public bool FinishedGroupingManagerHandshake { get; set; } = false;
         public ulong GameId { get; set; }
-        public Game CurrentGame { get => ServerManager.Instance.PlayerManagerService.GetGameByPlayer(this); }
+
+        // todo: improve this
+        public Game CurrentGame
+        {
+            get
+            {
+                var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+                return playerManager?.GetGameByPlayer(this);
+            }
+        }
+
         public Region Region { get => CurrentGame.RegionManager.GetRegion(Session.Account.Player.Region); }
 
         // Temporarily store state here instead of Game
@@ -71,7 +80,7 @@ namespace MHServerEmu.Frontend
                     break;
 
                 case MuxCommand.Data:
-                    ServerManager.Instance.Handle(this, packet.MuxId, packet.Messages);
+                    RouteMessages(packet.MuxId, packet.Messages);
                     break;
             }
         }
@@ -101,6 +110,28 @@ namespace MHServerEmu.Frontend
             PacketOut packet = new(muxId, MuxCommand.Data);
             packet.AddMessages(messages);
             Connection.Send(packet);
+        }
+
+        private void RouteMessages(ushort muxId, IEnumerable<GameMessage> messages)
+        {
+            ServerType destination;
+
+            switch (muxId)
+            {
+                case 1:
+                    destination = FinishedPlayerManagerHandshake ? ServerType.PlayerManager : ServerType.FrontendServer;
+                    ServerManager.Instance.RouteMessages(this, messages, destination);
+                    break;
+
+                case 2:
+                    destination = FinishedGroupingManagerHandshake ? ServerType.GroupingManager : ServerType.FrontendServer;
+                    ServerManager.Instance.RouteMessages(this, messages, destination);
+                    break;
+
+                default:
+                    Logger.Warn($"{messages.Count()} unhandled messages on muxId {muxId}");
+                    break;
+            }
         }
     }
 }

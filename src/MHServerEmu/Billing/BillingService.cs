@@ -4,6 +4,7 @@ using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
@@ -13,7 +14,7 @@ using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.Billing
 {
-    public class BillingService : IMessageHandler
+    public class BillingService : IGameService
     {
         private const ushort MuxChannel = 1;
 
@@ -53,8 +54,16 @@ namespace MHServerEmu.Billing
             Logger.Info($"Initialized store catalog with {_catalog.Entries.Length} entries");
         }
 
-        public void Handle(FrontendClient client, GameMessage message)
+        #region IGameService Implementation
+
+        public void Run() { }
+
+        public void Shutdown() { }
+
+        public void Handle(ITcpClient tcpClient, GameMessage message)
         {
+            var client = (FrontendClient)tcpClient;
+
             switch ((ClientToGameServerMessage)message.Id)
             {
                 case ClientToGameServerMessage.NetMessageGetCatalog:
@@ -72,15 +81,23 @@ namespace MHServerEmu.Billing
                     break;
 
                 default:
-                    Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
+                    Logger.Warn($"Handle(): Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
                     break;
             }
         }
 
-        public void Handle(FrontendClient client, IEnumerable<GameMessage> messages)
+        public void Handle(ITcpClient client, IEnumerable<GameMessage> messages)
         {
-            foreach (GameMessage message in messages) Handle(client, message);
+            foreach (GameMessage message in messages)
+                Handle(client, message);
         }
+
+        public string GetStatus()
+        {
+            return $"Running";
+        }
+
+        #endregion
 
         private void OnGetCatalog(FrontendClient client, NetMessageGetCatalog getCatalog)
         {

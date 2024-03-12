@@ -1,161 +1,185 @@
 ﻿using System.Globalization;
-using MHServerEmu.Auth;
-using MHServerEmu.Billing;
+using System.Text;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Frontend;
-using MHServerEmu.Grouping;
-using MHServerEmu.Leaderboards;
-using MHServerEmu.PlayerManagement;
+using MHServerEmu.Core.Network.Tcp;
 
 namespace MHServerEmu.Core.Network
 {
-    public class ServerManager : IGameService
+    public enum ServerType
+    {
+        FrontendServer,
+        AuthServer,
+        PlayerManager,
+        GroupingManager,
+        GameInstanceServer,
+        Billing,
+        Leaderboard,
+        NumServerTypes
+    }
+
+    /// <summary>
+    /// Manages <see cref="IGameService"/> instances and routes <see cref="GameMessage"/> instances between them.
+    /// </summary>
+    public class ServerManager
     {
         public const string GameVersion = "1.52.0.1700";
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly IGameService[] _services = new IGameService[(int)ServerType.NumServerTypes];
+        private readonly Thread[] _serviceThreads = new Thread[(int)ServerType.NumServerTypes];
+
         public static ServerManager Instance { get; } = new();
 
         public DateTime StartupTime { get; private set; }
 
-        // Backend
-        public GroupingManagerService GroupingManagerService { get; private set; }
-        public PlayerManagerService PlayerManagerService { get; private set; }
-        public BillingService BillingService { get; private set; }
-        public LeaderboardService LeaderboardService { get; private set; }
-
-        // Frontend
-        public FrontendServer FrontendServer { get; private set; }
-        public AuthServer AuthServer { get; private set; }
-
-        public Thread FrontendServerThread { get; private set; }
-        public Thread AuthServerThread { get; private set; }
-
         private ServerManager() { }
 
+        /// <summary>
+        /// Initializes the <see cref="ServerManager"/> instance.
+        /// </summary>
         public void Initialize()
         {
-            // Initialize backend services
-            GroupingManagerService = new();
-            PlayerManagerService = new();
-            BillingService = new();
-            LeaderboardService = new();
-
             StartupTime = DateTime.Now;
         }
 
-        #region Server Control
-
-        public void StartServers()
+        /// <summary>
+        /// Registers an <see cref="IGameService"/> for the specified <see cref="ServerType"/>. Returns <see langword="true"/> if successful.
+        /// </summary>
+        public bool RegisterGameService(IGameService gameService, ServerType serverType)
         {
-            StartFrontendServer();
-            StartAuthServer();
-        }
+            int index = (int)serverType;
 
-        public void Shutdown()
-        {
-            if (AuthServer != null)
-            {
-                Logger.Info("Shutting down AuthServer...");
-                AuthServer.Shutdown();
-            }
+            if (index < 0 || index >= _services.Length)
+                return Logger.WarnReturn(false, $"RegisterGameService(): Invalid server type {serverType}");
 
-            if (FrontendServer != null)
-            {
-                Logger.Info("Shutting down FrontendServer...");
-                FrontendServer.Shutdown();
-            }
-        }
+            if (_services[index] != null)
+                return Logger.WarnReturn(false, $"RegisterGameService(): Service type {serverType} is already registered");
 
-        private bool StartFrontendServer()
-        {
-            if (FrontendServer != null) return false;
+            if (gameService == null)
+                return Logger.WarnReturn(false, $"RegisterGameService(): gameService == null");
 
-            FrontendServer = new FrontendServer();
-            FrontendServerThread = new(FrontendServer.Run) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
-            FrontendServerThread.Start();
-
+            _services[index] = gameService;
+            Logger.Info($"Registered game service for server type {serverType}");
             return true;
         }
 
-        private bool StartAuthServer()
+        /// <summary>
+        /// Unregisters the current <see cref="IGameService"/> for the specified <see cref="ServerType"/>. Returns <see langword="true"/> if successful.
+        /// </summary>
+        public bool UnregisterGameService(ServerType serverType)
         {
-            if (AuthServer != null) return false;
+            int index = (int)serverType;
 
-            AuthServer = new();
-            AuthServerThread = new(AuthServer.Run) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
-            AuthServerThread.Start();
+            if (index < 0 || index >= _services.Length)
+                return Logger.WarnReturn(false, $"UnregisterGameService(): Invalid server type {serverType}");
 
+            if (_services[index] == null)
+                return Logger.WarnReturn(false, $"UnregisterGameService(): No registered service for server type {serverType}");
+
+            _services[index] = null;
+            Logger.Info($"Unregistered server type {serverType}");
             return true;
         }
 
-        #endregion
-
-        #region Message Handling
-
-        public void Handle(FrontendClient client, ushort muxId, GameMessage message)
+        /// <summary>
+        /// Returns the registered <see cref="IGameService"/> for the specified <see cref="ServerType"/>. Returns <see langword="null"/> if not registered.
+        /// </summary>
+        public IGameService GetGameService(ServerType serverType)
         {
-            switch (muxId)
+            int index = (int)serverType;
+
+            if (index < 0 || index >= _services.Length)
+                return Logger.WarnReturn<IGameService>(null, $"GetGameService(): Invalid server type {serverType}");
+
+            return _services[index];
+        }
+
+        /// <summary>
+        /// Routes the provided <see cref="GameMessage"/> instance to the <see cref="IGameService"/> registered as the specified <see cref="ServerType"/>.
+        /// </summary>
+        public bool RouteMessage(ITcpClient client, GameMessage message, ServerType serverType)
+        {
+            int index = (int)serverType;
+
+            if (index < 0 || index >= _services.Length)
+                return Logger.WarnReturn(false, $"RouteMessage(): Invalid server type {serverType}");
+
+            if (_services[index] == null)
+                return Logger.WarnReturn(false, $"RouteMessage(): No service is registered for server type {serverType}");
+
+            _services[index].Handle(client, message);
+            return true;
+        }
+
+        /// <summary>
+        /// Routes the provided <see cref="IEnumerable{T}"/> of <see cref="GameMessage"/> instances to the <see cref="IGameService"/> registered as the specified <see cref="ServerType"/>.
+        /// </summary>
+        public bool RouteMessages(ITcpClient client, IEnumerable<GameMessage> messages, ServerType serverType)
+        {
+            int index = (int)serverType;
+
+            if (index < 0 || index >= _services.Length)
+                return Logger.WarnReturn(false, $"RouteMessages(): Invalid server type {serverType}");
+
+            if (_services[index] == null)
+                return Logger.WarnReturn(false, $"RouteMessages(): No service is registered for server type {serverType}");
+
+            _services[index].Handle(client, messages);
+            return true;
+        }
+
+        /// <summary>
+        /// Runs all registered <see cref="IGameService"/> instances.
+        /// </summary>
+        public void RunServices()
+        {
+            for (int i = 0; i < _services.Length; i++)
             {
-                case 1:
-                    if (client.FinishedPlayerManagerHandshake)
-                        PlayerManagerService.Handle(client, muxId, message);
-                    else
-                        FrontendServer.Handle(client, muxId, message);
+                if (_services[i] == null) continue;
 
-                    break;
+                if (_serviceThreads[i] != null)
+                    Logger.Warn($"Run(): {(ServerType)i} service is already running");
 
-                case 2:
-                    if (client.FinishedGroupingManagerHandshake)
-                        GroupingManagerService.Handle(client, muxId, message);
-                    else
-                        FrontendServer.Handle(client, muxId, message);
-
-                    break;
-
-                default:
-                    Logger.Warn($"Unhandled message on muxId {muxId}");
-                    break;
+                _serviceThreads[i] = new(_services[i].Run) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
+                _serviceThreads[i].Start();
             }
         }
 
-        public void Handle(FrontendClient client, ushort muxId, IEnumerable<GameMessage> messages)
+        /// <summary>
+        /// Shuts down all registered <see cref="IGameService"/> instances.
+        /// </summary>
+        public void ShutdownServices()
         {
-            switch (muxId)
+            for (int i = 0; i < _services.Length; i++)
             {
-                case 1:
-                    if (client.FinishedPlayerManagerHandshake)
-                        PlayerManagerService.Handle(client, muxId, messages);
-                    else
-                        FrontendServer.Handle(client, muxId, messages);
-
-                    break;
-
-                case 2:
-                    if (client.FinishedGroupingManagerHandshake)
-                        GroupingManagerService.Handle(client, muxId, messages);
-                    else
-                        FrontendServer.Handle(client, muxId, messages);
-
-                    break;
-
-                default:
-                    Logger.Warn($"{messages.Count()} unhandled messages on muxId {muxId}");
-                    break;
+                if (_services[i] == null) continue;
+                Logger.Info($"Shutting down {(ServerType)i}...");
+                _services[i].Shutdown();
+                _serviceThreads[i] = null;
             }
+            Logger.Info("Shutdown finished");
         }
-
-        #endregion
-
-        #region Misc
 
         public string GetServerStatus()
         {
-            return $"Server Status\nUptime: {DateTime.Now - StartupTime:hh\\:mm\\:ss}\nSessions: {PlayerManagerService.SessionCount}";
+            StringBuilder sb = new();
+
+            sb.AppendLine("Server Status");
+            sb.AppendLine($"Uptime: {DateTime.Now - StartupTime:hh\\:mm\\:ss}");
+
+            for (int i = 0; i < _services.Length; i++)
+            {
+                if (_services[i] == null) continue;
+                sb.Append($"[{(ServerType)i}] ");
+
+                if (_serviceThreads[i] != null)
+                    sb.AppendLine($"{_services[i].GetStatus()}");
+                else
+                    sb.AppendLine("Not running");
+            }
+
+            return sb.ToString();
         }
-
-
-        #endregion
     }
 }

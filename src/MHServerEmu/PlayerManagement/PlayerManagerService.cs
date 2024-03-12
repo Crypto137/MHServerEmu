@@ -4,6 +4,7 @@ using MHServerEmu.Auth;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Core.System;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
@@ -23,13 +24,141 @@ namespace MHServerEmu.PlayerManagement
         private readonly object _playerLock = new();
         private readonly List<FrontendClient> _playerList = new();
 
-        public int SessionCount { get => _sessionManager.SessionCount; }
-
         public PlayerManagerService()
         {
             _sessionManager = new();
             _gameManager = new();
         }
+
+        #region IGameService Implementation
+
+        public void Run() { }
+
+        public void Shutdown() { }
+
+        public void Handle(ITcpClient tcpClient, GameMessage message)
+        {
+            var client = (FrontendClient)tcpClient;
+
+            // Timestamp sync messages
+            if (message.Id == (byte)ClientToGameServerMessage.NetMessageSyncTimeRequest || message.Id == (byte)ClientToGameServerMessage.NetMessagePing)
+            {
+                message.GameTimeReceived = Clock.GameTime;
+                message.DateTimeReceived = Clock.UnixTime;
+            }
+
+            switch ((ClientToGameServerMessage)message.Id)
+            {
+                // Self-handled messages
+
+                case ClientToGameServerMessage.NetMessageReadyForGameJoin:
+                    // NetMessageReadyForGameJoin contains a bug where wipesDataIfMismatchedInDb is marked as required but the client
+                    // doesn't include it. To avoid an exception we build a partial message from the data we receive.
+                    try
+                    {
+                        var readyForGameJoin = NetMessageReadyForGameJoin.CreateBuilder().MergeFrom(message.Payload).BuildPartial();
+                        OnReadyForGameJoin(client, readyForGameJoin);
+                    }
+                    catch
+                    {
+                        Logger.Error("Failed to deserialize NetMessageReadyForGameJoin");
+                    }
+
+                    break;
+
+                case ClientToGameServerMessage.NetMessageSyncTimeRequest:
+                    if (message.TryDeserialize<NetMessageSyncTimeRequest>(out var syncTimeRequest))
+                        OnSyncTimeRequest(client, syncTimeRequest, message.GameTimeReceived, message.DateTimeReceived);
+                    break;
+
+                case ClientToGameServerMessage.NetMessagePing:
+                    if (message.TryDeserialize<NetMessagePing>(out var ping))
+                        OnPing(client, ping, message.GameTimeReceived);
+                    break;
+
+                case ClientToGameServerMessage.NetMessageFPS:
+                    if (message.TryDeserialize<NetMessageFPS>(out var fps))
+                        OnFps(client, fps);
+                    break;
+
+                case ClientToGameServerMessage.NetMessageGracefulDisconnect:
+                    OnGracefulDisconnect(client);
+                    break;
+
+                // Routed messages
+
+                // Game
+                case ClientToGameServerMessage.NetMessageUpdateAvatarState:
+                case ClientToGameServerMessage.NetMessageCellLoaded:
+                case ClientToGameServerMessage.NetMessageAdminCommand:
+                case ClientToGameServerMessage.NetMessageChangeCameraSettings:
+                case ClientToGameServerMessage.NetMessagePerformPreInteractPower:
+                case ClientToGameServerMessage.NetMessageTryActivatePower:
+                case ClientToGameServerMessage.NetMessagePowerRelease:
+                case ClientToGameServerMessage.NetMessageTryCancelPower:
+                case ClientToGameServerMessage.NetMessageTryCancelActivePower:
+                case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer:
+                case ClientToGameServerMessage.NetMessageTryInventoryMove:
+                case ClientToGameServerMessage.NetMessageThrowInteraction:
+                case ClientToGameServerMessage.NetMessageUseInteractableObject:
+                case ClientToGameServerMessage.NetMessageUseWaypoint:
+                case ClientToGameServerMessage.NetMessageSwitchAvatar:
+                case ClientToGameServerMessage.NetMessageAbilitySlotToAbilityBar:
+                case ClientToGameServerMessage.NetMessageAbilityUnslotFromAbilityBar:
+                case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:
+                case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:
+                case ClientToGameServerMessage.NetMessageRequestInterestInInventory:
+                case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:
+                case ClientToGameServerMessage.NetMessageSelectOmegaBonus:  // This should be within NetMessageOmegaBonusAllocationCommit only in theory
+                case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:
+                case ClientToGameServerMessage.NetMessageRespecOmegaBonus:
+                case ClientToGameServerMessage.NetMessageAssignStolenPower:
+                    GetGameByPlayer(client).Handle(client, message);
+                    break;
+
+                // Grouping Manager
+                case ClientToGameServerMessage.NetMessageChat:
+                case ClientToGameServerMessage.NetMessageTell:
+                case ClientToGameServerMessage.NetMessageReportPlayer:
+                case ClientToGameServerMessage.NetMessageChatBanVote:
+                    ServerManager.Instance.RouteMessage(tcpClient, message, ServerType.GroupingManager);
+                    break;
+
+                // Billing
+                case ClientToGameServerMessage.NetMessageGetCatalog:
+                case ClientToGameServerMessage.NetMessageGetCurrencyBalance:
+                case ClientToGameServerMessage.NetMessageBuyItemFromCatalog:
+                case ClientToGameServerMessage.NetMessageBuyGiftForOtherPlayer:
+                case ClientToGameServerMessage.NetMessagePurchaseUnlock:
+                case ClientToGameServerMessage.NetMessageGetGiftHistory:
+                    ServerManager.Instance.RouteMessage(tcpClient, message, ServerType.Billing);
+                    break;
+
+                // Leaderboards
+                case ClientToGameServerMessage.NetMessageLeaderboardRequest:
+                case ClientToGameServerMessage.NetMessageLeaderboardArchivedInstanceListRequest:
+                case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:
+                    ServerManager.Instance.RouteMessage(tcpClient, message, ServerType.Leaderboard);
+                    break;
+
+                default:
+                    Logger.Warn($"Handle(): Unhandled message [{message.Id}] {(ClientToGameServerMessage)message.Id}");
+                    break;
+            }
+        }
+
+        public void Handle(ITcpClient client, IEnumerable<GameMessage> messages)
+        {
+            foreach (GameMessage message in messages)
+                Handle(client, message);
+        }
+
+        public string GetStatus()
+        {
+            return $"Sessions: {_sessionManager.SessionCount}";
+        }
+
+        #endregion
 
         #region Client Management
 
@@ -113,120 +242,6 @@ namespace MHServerEmu.PlayerManagement
         #endregion
 
         #region Message Handling
-
-        public void Handle(FrontendClient client, ushort muxId, GameMessage message)
-        {
-            // Timestamp sync messages
-            if (message.Id == (byte)ClientToGameServerMessage.NetMessageSyncTimeRequest || message.Id == (byte)ClientToGameServerMessage.NetMessagePing)
-            {
-                message.GameTimeReceived = Clock.GameTime;
-                message.DateTimeReceived = Clock.UnixTime;
-            }
-
-            switch ((ClientToGameServerMessage)message.Id)
-            {
-                // Self-handled messages
-
-                case ClientToGameServerMessage.NetMessageReadyForGameJoin:
-                    // NetMessageReadyForGameJoin contains a bug where wipesDataIfMismatchedInDb is marked as required but the client
-                    // doesn't include it. To avoid an exception we build a partial message from the data we receive.
-                    try
-                    {
-                        var readyForGameJoin = NetMessageReadyForGameJoin.CreateBuilder().MergeFrom(message.Payload).BuildPartial();
-                        OnReadyForGameJoin(client, readyForGameJoin);
-                    }
-                    catch
-                    {
-                        Logger.Error("Failed to deserialize NetMessageReadyForGameJoin");
-                    }
-
-                    break;
-
-                case ClientToGameServerMessage.NetMessageSyncTimeRequest:
-                    if (message.TryDeserialize<NetMessageSyncTimeRequest>(out var syncTimeRequest))
-                        OnSyncTimeRequest(client, syncTimeRequest, message.GameTimeReceived, message.DateTimeReceived);
-                    break;
-
-                case ClientToGameServerMessage.NetMessagePing:
-                    if (message.TryDeserialize<NetMessagePing>(out var ping))
-                        OnPing(client, ping, message.GameTimeReceived);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageFPS:
-                    if (message.TryDeserialize<NetMessageFPS>(out var fps))
-                        OnFps(client, fps);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageGracefulDisconnect:
-                    OnGracefulDisconnect(client);
-                    break;
-
-                // Routed messages
-
-                // Game
-                case ClientToGameServerMessage.NetMessageUpdateAvatarState:
-                case ClientToGameServerMessage.NetMessageCellLoaded:
-                case ClientToGameServerMessage.NetMessageAdminCommand:
-                case ClientToGameServerMessage.NetMessageChangeCameraSettings:
-                case ClientToGameServerMessage.NetMessagePerformPreInteractPower:
-                case ClientToGameServerMessage.NetMessageTryActivatePower:
-                case ClientToGameServerMessage.NetMessagePowerRelease:
-                case ClientToGameServerMessage.NetMessageTryCancelPower:
-                case ClientToGameServerMessage.NetMessageTryCancelActivePower:
-                case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer:
-                case ClientToGameServerMessage.NetMessageTryInventoryMove:
-                case ClientToGameServerMessage.NetMessageThrowInteraction:
-                case ClientToGameServerMessage.NetMessageUseInteractableObject:
-                case ClientToGameServerMessage.NetMessageUseWaypoint:
-                case ClientToGameServerMessage.NetMessageSwitchAvatar:
-                case ClientToGameServerMessage.NetMessageAbilitySlotToAbilityBar:
-                case ClientToGameServerMessage.NetMessageAbilityUnslotFromAbilityBar:
-                case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:
-                case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:
-                case ClientToGameServerMessage.NetMessageRequestInterestInInventory:
-                case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:
-                case ClientToGameServerMessage.NetMessageSelectOmegaBonus:  // This should be within NetMessageOmegaBonusAllocationCommit only in theory
-                case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:
-                case ClientToGameServerMessage.NetMessageRespecOmegaBonus:
-                case ClientToGameServerMessage.NetMessageAssignStolenPower:
-                    GetGameByPlayer(client).Handle(client, message);
-                    break;
-
-                // Grouping Manager
-                case ClientToGameServerMessage.NetMessageChat:
-                case ClientToGameServerMessage.NetMessageTell:
-                case ClientToGameServerMessage.NetMessageReportPlayer:
-                case ClientToGameServerMessage.NetMessageChatBanVote:
-                    ServerManager.Instance.GroupingManagerService.Handle(client, message);
-                    break;
-
-                // Billing
-                case ClientToGameServerMessage.NetMessageGetCatalog:
-                case ClientToGameServerMessage.NetMessageGetCurrencyBalance:
-                case ClientToGameServerMessage.NetMessageBuyItemFromCatalog:
-                case ClientToGameServerMessage.NetMessageBuyGiftForOtherPlayer:
-                case ClientToGameServerMessage.NetMessagePurchaseUnlock:
-                case ClientToGameServerMessage.NetMessageGetGiftHistory:
-                    ServerManager.Instance.BillingService.Handle(client, message);
-                    break;
-
-                // Leaderboards
-                case ClientToGameServerMessage.NetMessageLeaderboardRequest:
-                case ClientToGameServerMessage.NetMessageLeaderboardArchivedInstanceListRequest:
-                case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:
-                    ServerManager.Instance.LeaderboardService.Handle(client, message);
-                    break;
-
-                default:
-                    Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
-                    break;
-            }
-        }
-
-        public void Handle(FrontendClient client, ushort muxId, IEnumerable<GameMessage> messages)
-        {
-            foreach (GameMessage message in messages) Handle(client, muxId, message);
-        }
 
         public AuthStatusCode OnLoginDataPB(LoginDataPB loginDataPB, out ClientSession session)
         {

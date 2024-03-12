@@ -22,7 +22,7 @@ using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.Games
 {
-    public partial class Game : IMessageHandler
+    public partial class Game
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -266,7 +266,7 @@ namespace MHServerEmu.Games
                     break;
 
                 default:
-                    Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
+                    Logger.Warn($"HandleQueuedMessage(): Unhandled message [{message.Id}] {(ClientToGameServerMessage)message.Id}");
                     break;
             }
         }

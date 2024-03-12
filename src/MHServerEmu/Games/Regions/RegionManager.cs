@@ -9,6 +9,7 @@ using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.UI;
 using MHServerEmu.Games.UI.Widgets;
+using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -215,9 +216,15 @@ namespace MHServerEmu.Games.Regions
             Logger.Debug($"CleanUp");
 
             // Get PlayerRegions
-            var players = ServerManager.Instance.PlayerManagerService.IteratePlayers();
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            if (playerManager == null)
+            {
+                Logger.Error($"CleanUpRegions(): Failed to connect to the player manager");
+                return;
+            }
+
             HashSet<RegionPrototypeId> playerRegions = new();
-            foreach (var player in players)
+            foreach (var player in playerManager.IteratePlayers())
             {
                 var regionRef = player.Session.Account.Player.Region; // TODO use RegionID
                 playerRegions.Add(regionRef); 

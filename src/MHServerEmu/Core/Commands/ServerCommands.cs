@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Frontend;
+using MHServerEmu.Grouping;
 using MHServerEmu.PlayerManagement;
 using MHServerEmu.PlayerManagement.Accounts;
 
@@ -35,8 +36,12 @@ namespace MHServerEmu.Core.Commands
             if (ulong.TryParse(@params[0], out ulong sessionId) == false)
                 return $"Failed to parse sessionId {@params[0]}";
 
-            if (ServerManager.Instance.PlayerManagerService.TryGetSession(sessionId, out ClientSession session) == false)
-                return $"SessionId {sessionId} not found";
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            if (playerManager == null)
+                return "Failed to connect to the player manager.";
+
+            if (playerManager.TryGetSession(sessionId, out ClientSession session) == false)
+                return $"SessionId {sessionId} not found.";
 
             return session.ToString();
         }
@@ -46,7 +51,11 @@ namespace MHServerEmu.Core.Commands
         {
             if (@params == null || @params.Length == 0) return "Invalid arguments. Type 'help client kick' to get help.";
 
-            if (ServerManager.Instance.GroupingManagerService.TryGetPlayerByName(@params[0], out FrontendClient target) == false)
+            var groupingManager = ServerManager.Instance.GetGameService(ServerType.GroupingManager) as GroupingManagerService;
+            if (groupingManager == null)
+                return "Failed to connect to the grouping manager.";
+
+            if (groupingManager.TryGetPlayerByName(@params[0], out FrontendClient target) == false)
                 return $"Player {@params[0]} not found.";
 
             target.Connection.Disconnect();
@@ -61,7 +70,11 @@ namespace MHServerEmu.Core.Commands
             if (ulong.TryParse(@params[0], out ulong sessionId) == false)
                 return $"Failed to parse sessionId {@params[0]}";
 
-            if (ServerManager.Instance.PlayerManagerService.TryGetClient(sessionId, out FrontendClient target) == false)
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            if (playerManager == null)
+                return "Failed to connect to the player manager.";
+
+            if (playerManager.TryGetClient(sessionId, out FrontendClient target) == false)
                 return $"Client for sessionId {sessionId} not found";
 
             switch (@params[1].ToLower())
