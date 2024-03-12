@@ -3,6 +3,7 @@ using System.Text;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.Auth.WebApi

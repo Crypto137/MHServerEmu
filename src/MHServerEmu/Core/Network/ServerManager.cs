@@ -2,13 +2,12 @@
 using MHServerEmu.Auth;
 using MHServerEmu.Billing;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Network;
 using MHServerEmu.Frontend;
 using MHServerEmu.Grouping;
 using MHServerEmu.Leaderboards;
 using MHServerEmu.PlayerManagement;
 
-namespace MHServerEmu
+namespace MHServerEmu.Core.Network
 {
     public class ServerManager : IGameService
     {
