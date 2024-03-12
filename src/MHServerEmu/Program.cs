@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using MHServerEmu.Auth;
 using MHServerEmu.Billing;
-using MHServerEmu.Core.Commands;
+using MHServerEmu.Commands;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;

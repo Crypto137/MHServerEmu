@@ -7,7 +7,7 @@ using MHServerEmu.Grouping;
 using MHServerEmu.PlayerManagement;
 using MHServerEmu.PlayerManagement.Accounts;
 
-namespace MHServerEmu.Core.Commands
+namespace MHServerEmu.Commands
 {
     [CommandGroup("server", "Allows you to interact with the server.", AccountUserLevel.User)]
     public class ServerCommands : CommandGroup

@@ -1,6 +1,6 @@
 ﻿using MHServerEmu.PlayerManagement.Accounts;
 
-namespace MHServerEmu.Core.Commands
+namespace MHServerEmu.Commands
 {
     [AttributeUsage(AttributeTargets.Class)]
     public class CommandGroupAttribute : Attribute

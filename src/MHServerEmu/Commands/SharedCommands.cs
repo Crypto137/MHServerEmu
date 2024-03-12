@@ -6,7 +6,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Grouping;
 using MHServerEmu.PlayerManagement.Accounts;
 
-namespace MHServerEmu.Core.Commands
+namespace MHServerEmu.Commands
 {
     [CommandGroup("lookup", "Searches for data id by name.\nUsage: lookup [costume|region|blueprint|assettype] [pattern]", AccountUserLevel.User)]
     public class LookupCommands : CommandGroup
@@ -226,8 +226,9 @@ namespace MHServerEmu.Core.Commands
             if (entity == null) return "No entity found.";
 
             ChatHelper.SendMetagameMessage(client, $"Entity[{entityId}]: {GameDatabase.GetFormattedPrototypeName(entity.BaseData.PrototypeId)}");
-            ChatHelper.SendMetagameMessages(client, entity.Properties.ToString().Split("\r\n", StringSplitOptions.RemoveEmptyEntries), false);            
-            if (entity is WorldEntity worldEntity) {
+            ChatHelper.SendMetagameMessages(client, entity.Properties.ToString().Split("\r\n", StringSplitOptions.RemoveEmptyEntries), false);
+            if (entity is WorldEntity worldEntity)
+            {
                 ChatHelper.SendMetagameMessages(client, worldEntity.Bounds.ToString().Split("\r\n", StringSplitOptions.RemoveEmptyEntries), false);
                 ChatHelper.SendMetagameMessages(client, worldEntity.PowerCollectionToString().Split("\r\n", StringSplitOptions.RemoveEmptyEntries), false);
             }

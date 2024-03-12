@@ -5,7 +5,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Frontend;
 using MHServerEmu.Grouping;
 
-namespace MHServerEmu.Core.Commands
+namespace MHServerEmu.Commands
 {
     public static class CommandManager
     {
@@ -145,7 +145,7 @@ namespace MHServerEmu.Core.Commands
             parameters = string.Empty;
 
             if (input == string.Empty || input[0] != CommandPrefix) return false;                   // Filter empty strings and input that doesn't have the prefix
-            
+
             input = input.Substring(1);                                                             // Remove the prefix
             command = input.Split(' ')[0].ToLower();                                                // Get the command
             if (input.Contains(' ')) parameters = input.Substring(input.IndexOf(' ') + 1).Trim();   // Get parameters after the first space (if there's any)

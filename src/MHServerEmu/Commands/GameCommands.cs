@@ -11,7 +11,7 @@ using MHServerEmu.Games.Regions;
 using MHServerEmu.Grouping;
 using MHServerEmu.PlayerManagement.Accounts;
 
-namespace MHServerEmu.Core.Commands
+namespace MHServerEmu.Commands
 {
     [CommandGroup("tower", "Changes region to Avengers Tower (original).", AccountUserLevel.User)]
     public class TowerCommand : CommandGroup
@@ -75,7 +75,7 @@ namespace MHServerEmu.Core.Commands
         [DefaultCommand(AccountUserLevel.User)]
         public string Position(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";            
+            if (client == null) return "You can only invoke this command from the game.";
             return $"Current position: {client.LastPosition.ToStringNames()}";
         }
     }
@@ -107,9 +107,9 @@ namespace MHServerEmu.Core.Commands
                     client.CurrentGame.EventManager.AddEvent(client, Games.Events.EventEnum.EmoteDance, 0, avatar);
                     return $"{avatar} begins to dance";
                 default:
-                    return $"{avatar} doesn't want to dance";                   
+                    return $"{avatar} doesn't want to dance";
             }
-            
+
         }
     }
 
@@ -121,7 +121,7 @@ namespace MHServerEmu.Core.Commands
         {
             if (client == null) return "You can only invoke this command from the game.";
             if (@params == null || @params.Length == 0) return "Invalid arguments. Type 'help teleport' to get help.";
-            
+
             float x = 0f, y = 0f, z = 0f;
             foreach (string param in @params)
             {
@@ -141,7 +141,7 @@ namespace MHServerEmu.Core.Commands
 
                     default:
                         return $"Invalid parameter: {param}";
-                }                    
+                }
             }
 
             Vector3 teleportPoint = new(x, y, z);
@@ -182,7 +182,7 @@ namespace MHServerEmu.Core.Commands
             if (@params.Length == 0) return $"Current AOI volume = {client.Session.Account.Player.AOIVolume}";
             //if (ConfigManager.PlayerManager.BypassAuth) return "Disable BypassAuth to use this command";
 
-            if (int.TryParse( @params[0], out int volume) && volume >= 1600 && volume <= 5000)
+            if (int.TryParse(@params[0], out int volume) && volume >= 1600 && volume <= 5000)
             {
                 client.Session.Account.Player.AOIVolume = volume;
                 client.AOI.SetAOIVolume(volume);

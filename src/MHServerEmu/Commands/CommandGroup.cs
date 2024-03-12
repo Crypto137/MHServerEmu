@@ -2,7 +2,7 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Frontend;
 
-namespace MHServerEmu.Core.Commands
+namespace MHServerEmu.Commands
 {
     public class CommandGroup
     {
