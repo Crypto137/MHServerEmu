@@ -1,13 +1,13 @@
 ﻿using Gazillion;
 using MHServerEmu.Auth;
 using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.System;
+using MHServerEmu.Frontend;
+using MHServerEmu.Games;
 using MHServerEmu.PlayerManagement.Accounts;
 using MHServerEmu.PlayerManagement.Accounts.DBModels;
-using MHServerEmu.Frontend;
-using MHServerEmu.Core.Network;
-using MHServerEmu.Core.Helpers;
-using MHServerEmu.Core.System;
 
 namespace MHServerEmu.PlayerManagement
 {
@@ -28,9 +28,9 @@ namespace MHServerEmu.PlayerManagement
             session = null;
 
             // Check client version
-            if (loginDataPB.Version != ServerManager.GameVersion)
+            if (loginDataPB.Version != Game.Version)
             {
-                Logger.Warn($"Client version mismatch ({loginDataPB.Version} instead of {ServerManager.GameVersion})");
+                Logger.Warn($"TryCreateSessionFromLoginDataPB(): Client version mismatch ({loginDataPB.Version} instead of {Game.Version})");
 
                 // Fail auth if version mismatch is not allowed
                 if (ConfigManager.PlayerManager.AllowClientVersionMismatch == false)
@@ -69,7 +69,7 @@ namespace MHServerEmu.PlayerManagement
             // Check if the session exists
             if (_sessionDict.TryGetValue(credentials.Sessionid, out ClientSession session) == false)
             {
-                Logger.Warn($"SessionId {credentials.Sessionid} not found");
+                Logger.Warn($"VerifyClientCredentials(): SessionId {credentials.Sessionid} not found");
                 return false;
             }
 
@@ -77,7 +77,7 @@ namespace MHServerEmu.PlayerManagement
             if (CryptographyHelper.TryDecryptToken(credentials.EncryptedToken.ToByteArray(), session.Key,
                 credentials.Iv.ToByteArray(), out byte[] decryptedToken) == false)
             {
-                Logger.Warn($"Failed to decrypt token for sessionId {session.Id}");
+                Logger.Warn($"VerifyClientCredentials(): Failed to decrypt token for sessionId {session.Id}");
                 lock (_sessionLock) _sessionDict.Remove(session.Id);    // invalidate session after a failed login attempt
                 return false;
             }
@@ -85,7 +85,7 @@ namespace MHServerEmu.PlayerManagement
             // Verify the token
             if (CryptographyHelper.VerifyToken(decryptedToken, session.Token) == false)
             {
-                Logger.Warn($"Failed to verify token for sessionId {session.Id}");
+                Logger.Warn($"VerifyClientCredentials(): Failed to verify token for sessionId {session.Id}");
                 lock (_sessionLock) _sessionDict.Remove(session.Id);    // invalidate session after a failed login attempt
                 return false;
             }

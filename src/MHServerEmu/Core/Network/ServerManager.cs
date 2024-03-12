@@ -22,8 +22,6 @@ namespace MHServerEmu.Core.Network
     /// </summary>
     public class ServerManager
     {
-        public const string GameVersion = "1.52.0.1700";
-
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly IGameService[] _services = new IGameService[(int)ServerType.NumServerTypes];
@@ -139,7 +137,7 @@ namespace MHServerEmu.Core.Network
                 if (_services[i] == null) continue;
 
                 if (_serviceThreads[i] != null)
-                    Logger.Warn($"Run(): {(ServerType)i} service is already running");
+                    Logger.Warn($"RunServices(): {(ServerType)i} service is already running");
 
                 _serviceThreads[i] = new(_services[i].Run) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
                 _serviceThreads[i].Start();
@@ -161,6 +159,9 @@ namespace MHServerEmu.Core.Network
             Logger.Info("Shutdown finished");
         }
 
+        /// <summary>
+        /// Returns a <see cref="string"/> representing the current status of all running <see cref="IGameService"/> instances.
+        /// </summary>
         public string GetServerStatus()
         {
             StringBuilder sb = new();

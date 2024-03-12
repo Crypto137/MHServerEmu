@@ -30,7 +30,7 @@ namespace MHServerEmu.Games
                 .SetGamestarttime(1)
                 .Build()));
 
-            messageList.Add(new(NetMessageServerVersion.CreateBuilder().SetVersion(ServerManager.GameVersion).Build()));
+            messageList.Add(new(NetMessageServerVersion.CreateBuilder().SetVersion(Version).Build()));
             messageList.Add(new(LiveTuningManager.LiveTuningData.ToNetMessageLiveTuningUpdate()));
             messageList.Add(new(NetMessageReadyForTimeSync.DefaultInstance));
 

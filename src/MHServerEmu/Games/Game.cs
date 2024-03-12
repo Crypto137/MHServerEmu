@@ -24,6 +24,8 @@ namespace MHServerEmu.Games
 {
     public partial class Game
     {
+        public const string Version = "1.52.0.1700";
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public const int TickRate = 20;                 // Ticks per second based on client behavior
