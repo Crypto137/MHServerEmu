@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Network;
@@ -9,6 +10,7 @@ namespace MHServerEmu.Games.MetaGames
 {
     public class MetaGame : Entity
     {
+        public static readonly Logger Logger = LogManager.CreateLogger();
         public ReplicatedVariable<string> Name { get; set; }
 
         public MetaGame(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
@@ -22,6 +24,12 @@ namespace MHServerEmu.Games.MetaGames
             Properties = properties;
 
             Name = name;
+        }
+
+        public override void Destroy()
+        {
+            // TODO clear Teams;
+            base.Destroy();
         }
 
         protected override void Decode(CodedInputStream stream)

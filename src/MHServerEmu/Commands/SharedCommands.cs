@@ -198,7 +198,7 @@ namespace MHServerEmu.Commands
             foreach (var worldEntity in playerConnection.AOI.Region.IterateEntitiesInVolume(near, new()))
             {
                 string name = worldEntity.PrototypeName;
-                ulong entityId = worldEntity.BaseData.EntityId;
+                ulong entityId = worldEntity.Id;
                 string status = string.Empty;
                 if (playerConnection.AOI.EntityLoaded(entityId) == false) status += "[H]";
                 if (worldEntity is Transition) status += "[T]";

@@ -109,11 +109,11 @@ namespace MHServerEmu.Games.Events
                 var itemRarities = (PrototypeId)9254498193264414304; // R4Epic
 
                 Item bowlingBall = (Item)playerConnection.Game.EntityManager.GetEntityByPrototypeId(bowlingBallItem);
-
+ 
                 if (bowlingBall != null)
                 { // TODO: test if ball already in Inventary
-                    playerConnection.SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(bowlingBall.BaseData.EntityId).Build());
-                    playerConnection.Game.EntityManager.DestroyEntity(bowlingBall.BaseData.EntityId);
+                    playerConnection.SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(bowlingBall.Id).Build());
+                    playerConnection.Game.EntityManager.DestroyEntity(bowlingBall);
                 }
 
                 AffixSpec[] affixSpec = { new AffixSpec((PrototypeId)4906559676663600947, 0, 1) }; // BindingInformation                        
@@ -136,7 +136,7 @@ namespace MHServerEmu.Games.Events
                 playerConnection.SendMessage(bowlingBall.ToNetMessageEntityCreate());
 
                 //  if (assign) // TODO: check power assigned by player
-                ulong avatarEntityId = playerConnection.Player.CurrentAvatar.BaseData.EntityId;
+                ulong avatarEntityId = playerConnection.Player.CurrentAvatar.Id;
                 playerConnection.SendMessage(NetMessagePowerCollectionUnassignPower.CreateBuilder()
                     .SetEntityId(avatarEntityId)
                     .SetPowerProtoId((ulong)itemPower)
@@ -156,7 +156,7 @@ namespace MHServerEmu.Games.Events
 
         private void OnPreInteractPower(PlayerConnection playerConnection, Entity interactObject)
         {
-            ulong avatarEntityId = playerConnection.Player.CurrentAvatar.BaseData.EntityId;
+            ulong avatarEntityId = playerConnection.Player.CurrentAvatar.Id;
             PrototypeId proto = interactObject.BaseData.PrototypeId;
             var world = GameDatabase.GetPrototype<WorldEntityPrototype>(proto);
             if (world == null) return;
@@ -193,7 +193,7 @@ namespace MHServerEmu.Games.Events
 
         private void OnPreInteractPowerEnd(PlayerConnection playerConnection, Entity interactObject)
         {
-            ulong avatarEntityId = playerConnection.Player.CurrentAvatar.BaseData.EntityId;
+            ulong avatarEntityId = playerConnection.Player.CurrentAvatar.Id;
             PrototypeId proto = interactObject.BaseData.PrototypeId;
             var world = GameDatabase.GetPrototype<WorldEntityPrototype>(proto);
             if (world == null) return;
@@ -202,7 +202,7 @@ namespace MHServerEmu.Games.Events
             Logger.Trace($"OnPreInteractPowerEnd");
 
             playerConnection.SendMessage(NetMessageOnPreInteractPowerEnd.CreateBuilder()
-                .SetIdTargetEntity(interactObject.BaseData.EntityId)
+                .SetIdTargetEntity(interactObject.Id)
                 .SetAvatarIndex(0)
                 .Build());
 
@@ -221,7 +221,7 @@ namespace MHServerEmu.Games.Events
 
         private void OnEmoteDance(PlayerConnection playerConnection, AvatarPrototypeId avatar)
         {
-            ulong avatarEntityId = playerConnection.Player.CurrentAvatar.BaseData.EntityId;
+            ulong avatarEntityId = playerConnection.Player.CurrentAvatar.Id;
             ActivatePowerArchive activatePower = new()
             {
                 ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
@@ -247,7 +247,7 @@ namespace MHServerEmu.Games.Events
             uint areaid = 1;
 
             playerConnection.SendMessage(NetMessageEntityPosition.CreateBuilder()
-                .SetIdEntity(playerConnection.Player.CurrentAvatar.BaseData.EntityId)
+                .SetIdEntity(playerConnection.Player.CurrentAvatar.Id)
                 .SetFlags(64)
                 .SetPosition(targetPos.ToNetStructPoint3())
                 .SetOrientation(targetRot.ToNetStructPoint3())
@@ -265,7 +265,7 @@ namespace MHServerEmu.Games.Events
             var conditionSerializationFlags = ConditionSerializationFlags.NoCreatorId | ConditionSerializationFlags.NoUltimateCreatorId
                 | ConditionSerializationFlags.NoConditionPrototypeId | ConditionSerializationFlags.HasIndex | ConditionSerializationFlags.HasAssetDataRef;
 
-            ulong avatarEntityId = playerConnection.Player.CurrentAvatar.BaseData.EntityId;
+            ulong avatarEntityId = playerConnection.Player.CurrentAvatar.Id;
 
             switch (powerId)
             {
@@ -309,7 +309,7 @@ namespace MHServerEmu.Games.Events
 
         private void OnEndTravel(PlayerConnection playerConnection, PrototypeId powerId)
         {
-            ulong avatarEntityId = playerConnection.Player.CurrentAvatar.BaseData.EntityId;
+            ulong avatarEntityId = playerConnection.Player.CurrentAvatar.Id;
 
             switch (powerId)
             {
@@ -348,7 +348,7 @@ namespace MHServerEmu.Games.Events
 
         private void OnStartThrowing(PlayerConnection playerConnection, ulong idTarget)
         {
-            ulong avatarEntityId = playerConnection.Player.CurrentAvatar.BaseData.EntityId;
+            ulong avatarEntityId = playerConnection.Player.CurrentAvatar.Id;
 
             playerConnection.ThrowingObject = _game.EntityManager.GetEntityById(idTarget);
             if (playerConnection.ThrowingObject == null) return;
@@ -402,7 +402,7 @@ namespace MHServerEmu.Games.Events
         private void OnEndThrowing(PlayerConnection playerConnection, PrototypeId powerId)
         {
             ulong avatarRepId = playerConnection.Player.CurrentAvatar.Properties.ReplicationId;
-            ulong avatarEntityId = playerConnection.Player.CurrentAvatar.BaseData.EntityId;
+            ulong avatarEntityId = playerConnection.Player.CurrentAvatar.Id;
             // TODO: avatarRepId = Player.EntityManager.GetEntity(AvatarEntityId).RepId
 
             playerConnection.SendMessage(Property.ToNetMessageRemoveProperty(avatarRepId, new(PropertyEnum.ThrowableOriginatorEntity)));
@@ -443,7 +443,7 @@ namespace MHServerEmu.Games.Events
                 | ConditionSerializationFlags.HasIndex | ConditionSerializationFlags.HasAssetDataRef | ConditionSerializationFlags.AssetDataRefIsNotFromOwner;
 
             var diamondFormCondition = (PrototypeId)PowerPrototypes.EmmaFrost.DiamondFormCondition;
-            AddConditionArchive conditionArchive = new(playerConnection.Player.CurrentAvatar.BaseData.EntityId, 111, conditionSerializationFlags, diamondFormCondition, 0);
+            AddConditionArchive conditionArchive = new(playerConnection.Player.CurrentAvatar.Id, 111, conditionSerializationFlags, diamondFormCondition, 0);
 
             Logger.Trace($"Event Start EmmaDiamondForm");
 
@@ -466,7 +466,7 @@ namespace MHServerEmu.Games.Events
             // TODO: get DiamondFormCondition Condition Key
             playerConnection.SendMessage(NetMessageDeleteCondition.CreateBuilder()
               .SetKey(111)
-              .SetIdEntity(playerConnection.Player.CurrentAvatar.BaseData.EntityId)
+              .SetIdEntity(playerConnection.Player.CurrentAvatar.Id)
               .Build());
 
             Logger.Trace($"EventEnd EmmaDiamondForm");
@@ -474,7 +474,7 @@ namespace MHServerEmu.Games.Events
 
         private void OnStartMagikUltimate(PlayerConnection playerConnection, NetStructPoint3 position)
         {
-            ulong avatarEntityId = playerConnection.Player.CurrentAvatar.BaseData.EntityId;
+            ulong avatarEntityId = playerConnection.Player.CurrentAvatar.Id;
 
             var conditionSerializationFlags = ConditionSerializationFlags.NoCreatorId | ConditionSerializationFlags.NoUltimateCreatorId | ConditionSerializationFlags.NoConditionPrototypeId
                 | ConditionSerializationFlags.HasIndex | ConditionSerializationFlags.HasAssetDataRef | ConditionSerializationFlags.HasDuration;
@@ -494,12 +494,12 @@ namespace MHServerEmu.Games.Events
                 new(position.X, position.Y, position.Z), new());
 
             // we need to store this state in the avatar entity instead
-            playerConnection.MagikUltimateEntityId = arenaEntity.BaseData.EntityId;
+            playerConnection.MagikUltimateEntityId = arenaEntity.Id;
 
             playerConnection.SendMessage(arenaEntity.ToNetMessageEntityCreate());
 
             playerConnection.SendMessage(NetMessagePowerCollectionAssignPower.CreateBuilder()
-                .SetEntityId(arenaEntity.BaseData.EntityId)
+                .SetEntityId(arenaEntity.Id)
                 .SetPowerProtoId((ulong)PowerPrototypes.Magik.UltimateHotspotEffect)
                 .SetPowerRank(0)
                 .SetCharacterLevel(60)
@@ -514,7 +514,7 @@ namespace MHServerEmu.Games.Events
         private void OnEndMagikUltimate(PlayerConnection playerConnection)
         {
             Logger.Trace($"EventEnd Magik Ultimate");
-            ulong avatarEntityId = playerConnection.Player.CurrentAvatar.BaseData.EntityId;
+            ulong avatarEntityId = playerConnection.Player.CurrentAvatar.Id;
             ulong arenaEntityId = playerConnection.MagikUltimateEntityId;
 
             playerConnection.SendMessage(NetMessageDeleteCondition.CreateBuilder()
@@ -527,7 +527,8 @@ namespace MHServerEmu.Games.Events
                 .SetPowerProtoId((ulong)PowerPrototypes.Magik.UltimateHotspotEffect)
                 .Build());
 
-            _game.EntityManager.DestroyEntity(arenaEntityId);
+                    var entity = _game.EntityManager.GetEntityById(arenaEntityId);
+                    entity?.Destroy();
 
             playerConnection.SendMessage(NetMessageEntityDestroy.CreateBuilder()
                 .SetIdEntity(arenaEntityId)

@@ -237,14 +237,14 @@ namespace MHServerEmu.Games.Network
                     if (status.Loaded == false) continue;
 
                 bool interest = GetEntityInterest(worldEntity);
-                if (_loadedEntities.TryGetValue(worldEntity.BaseData.EntityId, out var entityStatus))
+                if (_loadedEntities.TryGetValue(worldEntity.Id, out var entityStatus))
                 {
                     entityStatus.Frame = _currentFrame;
                     entityStatus.InterestToPlayer = interest;
                 }
                 else
                 {
-                    _loadedEntities.Add(worldEntity.BaseData.EntityId, new(_currentFrame, true, interest));
+                    _loadedEntities.Add(worldEntity.Id, new(_currentFrame, true, interest));
                     if (worldEntity.IsAlive())
                         newEntities.Add(worldEntity);
                     // Logger.Debug($"{GameDatabase.GetFormattedPrototypeName(worldEntity.BaseData.PrototypeId)} = {worldEntity.BaseData.PrototypeId},");

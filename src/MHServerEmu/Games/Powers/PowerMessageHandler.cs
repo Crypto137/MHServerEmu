@@ -138,8 +138,8 @@ namespace MHServerEmu.Games.Powers
                 Item bowlingBall = (Item)playerConnection.Game.EntityManager.GetEntityByPrototypeId((PrototypeId)7835010736274089329); // BowlingBallItem
                 if (bowlingBall != null)
                 {
-                    playerConnection.SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(bowlingBall.BaseData.EntityId).Build());
-                    playerConnection.Game.EntityManager.DestroyEntity(bowlingBall.BaseData.EntityId);
+                    playerConnection.SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(bowlingBall.Id).Build());
+                    playerConnection.Game.EntityManager.DestroyEntity(bowlingBall);
                 }
             }
 
@@ -209,7 +209,7 @@ namespace MHServerEmu.Games.Powers
                     {
                         playerConnection.SendMessage(NetMessageEntityKill.CreateBuilder()
                             .SetIdEntity(entityId)
-                            .SetIdKillerEntity(playerConnection.Player.CurrentAvatar.BaseData.EntityId)
+                            .SetIdKillerEntity(playerConnection.Player.CurrentAvatar.Id)
                             .SetKillFlags(0).Build());
 
                         playerConnection.SendMessage(
