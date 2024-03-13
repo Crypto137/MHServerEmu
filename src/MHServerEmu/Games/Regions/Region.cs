@@ -728,9 +728,9 @@ namespace MHServerEmu.Games.Regions
                     client.StartOrientation = Orientation.Zero;
                 }
 
-                client.AOI.Reset(this);
-                client.AOI.Update(client.StartPositon, true);
-                messageList.AddRange(client.AOI.Messages);
+                connection.AOI.Reset(this);
+                connection.AOI.Update(client.StartPositon, true);
+                messageList.AddRange(connection.AOI.Messages);
             }
 
 

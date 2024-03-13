@@ -206,8 +206,12 @@ namespace MHServerEmu.Commands
 
             if (int.TryParse(@params[0], out int volume) && volume >= 1600 && volume <= 5000)
             {
-                client.Session.Account.Player.AOIVolume = volume;
-                client.AOI.SetAOIVolume(volume);
+                var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+                var game = playerManager.GetGameByPlayer(client);
+                var connection = game.NetworkManager.GetPlayerConnection(client);
+                connection.Account.Player.AOIVolume = volume;
+                connection.AOI.SetAOIVolume(volume);
+
                 return $"Changes player AOI volume size to {volume}.";
             }
             else

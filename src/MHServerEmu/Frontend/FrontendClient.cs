@@ -43,7 +43,6 @@ namespace MHServerEmu.Frontend
         public PrototypeId ThrowingCancelPower { get; set; }
         public Entity ThrowingObject { get; set; }
 
-        public AreaOfInterest AOI { get; private set; }
         public Vector3 StartPositon { get; internal set; }
         public Orientation StartOrientation { get; internal set; }
         public WorldEntity EntityToTeleport { get; internal set; }
@@ -51,7 +50,6 @@ namespace MHServerEmu.Frontend
         public FrontendClient(TcpClientConnection connection)
         {
             Connection = connection;
-            AOI = new(this);
         }
 
         public void Parse(byte[] data)

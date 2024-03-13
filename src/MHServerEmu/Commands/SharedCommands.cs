@@ -1,9 +1,11 @@
 ﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Grouping;
+using MHServerEmu.PlayerManagement;
 using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.Commands
@@ -108,28 +110,48 @@ namespace MHServerEmu.Commands
         public string Cell(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
-            return $"Current cell: {client.AOI.Region.GetCellAtPosition(client.LastPosition).PrototypeName}";
+
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            var game = playerManager.GetGameByPlayer(client);
+            var connection = game.NetworkManager.GetPlayerConnection(client);
+
+            return $"Current cell: {connection.AOI.Region.GetCellAtPosition(client.LastPosition).PrototypeName}";
         }
 
         [Command("seed", "Shows current seed.", AccountUserLevel.User)]
         public string Seed(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
-            return $"Current seed: {client.AOI.Region.RandomSeed}";
+
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            var game = playerManager.GetGameByPlayer(client);
+            var connection = game.NetworkManager.GetPlayerConnection(client);
+
+            return $"Current seed: {connection.AOI.Region.RandomSeed}";
         }
 
         [Command("area", "Shows current area.", AccountUserLevel.User)]
         public string Area(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
-            return $"Current area: {client.AOI.Region.GetCellAtPosition(client.LastPosition).Area.PrototypeName}";
+
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            var game = playerManager.GetGameByPlayer(client);
+            var connection = game.NetworkManager.GetPlayerConnection(client);
+
+            return $"Current area: {connection.AOI.Region.GetCellAtPosition(client.LastPosition).Area.PrototypeName}";
         }
 
         [Command("region", "Shows current region.", AccountUserLevel.User)]
         public string Region(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
-            return $"Current region: {client.AOI.Region.PrototypeName}";
+
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            var game = playerManager.GetGameByPlayer(client);
+            var connection = game.NetworkManager.GetPlayerConnection(client);
+
+            return $"Current region: {connection.AOI.Region.PrototypeName}";
         }
 
         [Command("isblocked", "Usage: debug isblocked [EntityId1] [EntityId2]", AccountUserLevel.User)]
@@ -163,24 +185,28 @@ namespace MHServerEmu.Commands
         {
             if (client == null) return "You can only invoke this command from the game.";
 
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            var game = playerManager.GetGameByPlayer(client);
+            var connection = game.NetworkManager.GetPlayerConnection(client);
+
             if ((@params?.Length > 0 && int.TryParse(@params[0], out int radius)) == false)
                 radius = 100;   // Default to 100 if no radius is specified
 
             Sphere near = new(client.LastPosition, radius);
 
             List<string> entities = new();
-            foreach (var worldEntity in client.AOI.Region.IterateEntitiesInVolume(near, new()))
+            foreach (var worldEntity in connection.AOI.Region.IterateEntitiesInVolume(near, new()))
             {
                 string name = worldEntity.PrototypeName;
                 ulong entityId = worldEntity.BaseData.EntityId;
                 string status = string.Empty;
-                if (client.AOI.EntityLoaded(entityId) == false) status += "[H]";
+                if (connection.AOI.EntityLoaded(entityId) == false) status += "[H]";
                 if (worldEntity is Transition) status += "[T]";
                 if (worldEntity.WorldEntityPrototype.VisibleByDefault == false) status += "[Inv]";
                 entities.Add($"[E][{entityId}] {name} {status}");
             }
 
-            foreach (var reservation in client.AOI.Region.SpawnMarkerRegistry.IterateReservationsInVolume(near))
+            foreach (var reservation in connection.AOI.Region.SpawnMarkerRegistry.IterateReservationsInVolume(near))
             {
                 string name = GameDatabase.GetFormattedPrototypeName(reservation.MarkerRef);
                 int markerId = reservation.GetPid();
@@ -205,7 +231,11 @@ namespace MHServerEmu.Commands
             if (int.TryParse(@params[0], out int markerId) == false)
                 return $"Failed to parse MarkerId {@params[0]}";
 
-            var reservation = client.AOI.Region.SpawnMarkerRegistry.GetReservationByPid(markerId);
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            var game = playerManager.GetGameByPlayer(client);
+            var connection = game.NetworkManager.GetPlayerConnection(client);
+
+            var reservation = connection.AOI.Region.SpawnMarkerRegistry.GetReservationByPid(markerId);
             if (reservation == null) return "No marker found.";
 
             ChatHelper.SendMetagameMessage(client, $"Marker[{markerId}]: {GameDatabase.GetFormattedPrototypeName(reservation.MarkerRef)}");

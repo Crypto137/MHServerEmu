@@ -15,6 +15,7 @@ using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Grouping;
 using MHServerEmu.PlayerManagement.Accounts;
+using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.Games.Network
 {
@@ -35,6 +36,9 @@ namespace MHServerEmu.Games.Network
 
         public Game Game { get; }
         public FrontendClient FrontendClient { get; }   // todo: move everything game-related from FrontendClient to here and remove this getter
+        public DBAccount Account { get; }
+
+        public AreaOfInterest AOI { get; }
 
         /// <summary>
         /// Constructs a new <see cref="PlayerConnection"/>.
@@ -43,6 +47,9 @@ namespace MHServerEmu.Games.Network
         {
             Game = game;
             FrontendClient = frontendClient;
+            Account = FrontendClient.Session.Account;
+
+            AOI = new(this);
             _powerMessageHandler = new(Game);
         }
 
@@ -184,7 +191,7 @@ namespace MHServerEmu.Games.Network
 
         private void OnChangeCameraSettings(NetMessageChangeCameraSettings cameraSettings)
         {
-            FrontendClient.AOI.InitPlayerView((PrototypeId)cameraSettings.CameraSettings);
+            AOI.InitPlayerView((PrototypeId)cameraSettings.CameraSettings);
         }
 
         private void OnUpdateAvatarState(NetMessageUpdateAvatarState updateAvatarState)
@@ -192,14 +199,14 @@ namespace MHServerEmu.Games.Network
             UpdateAvatarStateArchive avatarState = new(updateAvatarState.ArchiveData);
             //Vector3 oldPosition = client.LastPosition;
             FrontendClient.LastPosition = avatarState.Position;
-            FrontendClient.AOI.Region.Visited();
+            AOI.Region.Visited();
             // AOI
-            if (FrontendClient.IsLoading == false && FrontendClient.AOI.ShouldUpdate(avatarState.Position))
+            if (FrontendClient.IsLoading == false && AOI.ShouldUpdate(avatarState.Position))
             {
-                if (FrontendClient.AOI.Update(avatarState.Position))
+                if (AOI.Update(avatarState.Position))
                 {
                     //Logger.Trace($"AOI[{client.AOI.Messages.Count}][{client.AOI.LoadedEntitiesCount}]");
-                    foreach (IMessage message in FrontendClient.AOI.Messages)
+                    foreach (IMessage message in AOI.Messages)
                         SendMessage(message);
                 }
             }
@@ -212,19 +219,19 @@ namespace MHServerEmu.Games.Network
 
         private void OnCellLoaded(NetMessageCellLoaded cellLoaded)
         {
-            FrontendClient.AOI.OnCellLoaded(cellLoaded.CellId);
-            Logger.Info($"Received CellLoaded message cell[{cellLoaded.CellId}] loaded [{FrontendClient.AOI.LoadedCellCount}/{FrontendClient.AOI.CellsInRegion}]");
+            AOI.OnCellLoaded(cellLoaded.CellId);
+            Logger.Info($"Received CellLoaded message cell[{cellLoaded.CellId}] loaded [{AOI.LoadedCellCount}/{AOI.CellsInRegion}]");
 
             if (FrontendClient.IsLoading)
             {
                 Game.EventManager.KillEvent(this, EventEnum.FinishCellLoading);
-                if (FrontendClient.AOI.LoadedCellCount == FrontendClient.AOI.CellsInRegion)
+                if (AOI.LoadedCellCount == AOI.CellsInRegion)
                     Game.FinishLoading(this);
                 else
                 {
                     // set timer 5 seconds for wait client answer
-                    Game.EventManager.AddEvent(this, EventEnum.FinishCellLoading, 5000, FrontendClient.AOI.CellsInRegion);
-                    FrontendClient.AOI.ForceCellLoad();
+                    Game.EventManager.AddEvent(this, EventEnum.FinishCellLoading, 5000, AOI.CellsInRegion);
+                    AOI.ForceCellLoad();
                 }
             }
         }
@@ -299,7 +306,7 @@ namespace MHServerEmu.Games.Network
 
                     if (Game.EntityManager.GetTransitionInRegion(teleport.Destinations[0], teleport.RegionId) is not Transition target) return;
 
-                    if (FrontendClient.AOI.CheckTargeCell(target))
+                    if (AOI.CheckTargeCell(target))
                     {
                         teleport.TeleportClient(this);
                         return;

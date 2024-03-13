@@ -236,7 +236,7 @@ namespace MHServerEmu.Games
 
             // Run region generation as a task
             Task.Run(() => GetRegionAsync(connection, account.Player.Region));
-            client.AOI.LoadedCellCount = 0;
+            connection.AOI.LoadedCellCount = 0;
             client.IsLoading = true;
             return messageList;
         }
@@ -247,9 +247,9 @@ namespace MHServerEmu.Games
             EventManager.AddEvent(connection, EventEnum.GetRegion, 0, region);
         }
 
-        private List<IMessage> GetFinishLoadingMessages(PlayerConnection playerConnection)
+        private List<IMessage> GetFinishLoadingMessages(PlayerConnection connection)
         {
-            FrontendClient client = playerConnection.FrontendClient;
+            FrontendClient client = connection.FrontendClient;
 
             DBAccount account = client.Session.Account;
             List<IMessage> messageList = new();
@@ -263,8 +263,8 @@ namespace MHServerEmu.Games
                 .SetArchiveData(avatarEnterGameWorldArchive.Serialize())
                 .Build());
 
-            client.AOI.Update(entrancePosition);
-            messageList.AddRange(client.AOI.Messages);
+            connection.AOI.Update(entrancePosition);
+            messageList.AddRange(connection.AOI.Messages);
 
             // Load power collection
             messageList.AddRange(PowerLoader.LoadAvatarPowerCollection(account.Player.Avatar.ToEntityId()));

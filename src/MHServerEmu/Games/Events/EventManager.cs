@@ -202,7 +202,7 @@ namespace MHServerEmu.Games.Events
 
                 case EventEnum.FinishCellLoading:
                     Logger.Warn($"Forсed loading");
-                    client.AOI.LoadedCellCount = (int)queuedEvent.Data;
+                    connection.AOI.LoadedCellCount = (int)queuedEvent.Data;
                     connection.Game.FinishLoading(connection);
                     break;
 
@@ -478,7 +478,7 @@ namespace MHServerEmu.Games.Events
                         .Build());
 
                     WorldEntity arenaEntity = _game.EntityManager.CreateWorldEntityEmpty(
-                        client.AOI.Region.Id,
+                        connection.AOI.Region.Id,
                         (PrototypeId)PowerPrototypes.Magik.UltimateArea,
                         new(position.X, position.Y, position.Z), new());
 

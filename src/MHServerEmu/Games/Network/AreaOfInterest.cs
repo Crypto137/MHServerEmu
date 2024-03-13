@@ -5,12 +5,12 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 
-namespace MHServerEmu.Games.Regions
+namespace MHServerEmu.Games.Network
 {
     public class AreaOfInterest
     {
@@ -27,9 +27,11 @@ namespace MHServerEmu.Games.Regions
                 InterestToPlayer = interestToPlayer;
             }
         }
+
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private FrontendClient _client;
-        private Game _game { get => _client.CurrentGame; }
+
+        private PlayerConnection _playerConnection;
+        private Game _game;
         private Dictionary<ulong, LoadStatus> _loadedEntities;
         private Dictionary<uint, LoadStatus> _loadedCells;
         private Dictionary<uint, LoadStatus> _loadedAreas;
@@ -56,9 +58,10 @@ namespace MHServerEmu.Games.Regions
         private Aabb2 _invisibileVolume;
         private PrototypeId _lastCameraSetting;
 
-        public AreaOfInterest(FrontendClient client)
+        public AreaOfInterest(PlayerConnection connection)
         {
-            _client = client;
+            _playerConnection = connection;
+            _game = connection.Game;
             Messages = new();
             _loadedEntities = new();
             _loadedCells = new();
@@ -100,21 +103,21 @@ namespace MHServerEmu.Games.Regions
         }
 
         public void Reset(Region region)
-        {   
+        {
             Messages.Clear();
             _loadedAreas.Clear();
             _loadedCells.Clear();
             _loadedEntities.Clear();
-            
+
             _currentFrame = 0;
             CellsInRegion = 0;
             Region = region;
             _lastCameraSetting = 0;
 
             int volume = 0;
-            if (_client.Session != null)
-                volume = _client.Session.Account.Player.AOIVolume;
-            SetAOIVolume(volume >= 1600 && volume <= 5000 ? volume : 3200); 
+            if (_playerConnection.Account != null)
+                volume = _playerConnection.Account.Player.AOIVolume;
+            SetAOIVolume(volume >= 1600 && volume <= 5000 ? volume : 3200);
         }
 
         public static bool GetEntityInterest(WorldEntity worldEntity)
@@ -129,7 +132,7 @@ namespace MHServerEmu.Games.Regions
         {
             Region region = Region;
 
-            foreach(var area in region.IterateAreas())
+            foreach (var area in region.IterateAreas())
             {
                 if (_loadedAreas.ContainsKey(area.Id))
                 {
@@ -173,14 +176,14 @@ namespace MHServerEmu.Games.Regions
                     .SetAreaId(areaId)
                     .SetCellId(cell.Id)
                     .Build());
-            }   
+            }
             _loadedCells.Remove(cell.Id);
             LoadedCellCount--;
         }
 
         private bool UpdateCells()
         {
-            Region region = Region;            
+            Region region = Region;
 
             RegionManager manager = _game.RegionManager;
             Stack<Cell> invisibleCells = new();
@@ -192,7 +195,7 @@ namespace MHServerEmu.Games.Regions
                 Cell cell = manager.GetCell(cellStatus.Key);
                 if (cell == null) continue;
                 if (cell.RegionBounds.Intersects(_invisibileVolume) == false)
-                   invisibleCells.Push(cell);
+                    invisibleCells.Push(cell);
             }
 
             // Remove invisible cells
@@ -209,7 +212,7 @@ namespace MHServerEmu.Games.Regions
             {
                 if (_loadedAreas.ContainsKey(cell.Area.Id) == false) continue;
                 if (_loadedCells.ContainsKey(cell.Id)) continue;
-                
+
                 if (cell.RegionBounds.Intersects(_visibileVolume))
                 {
                     AddCell(cell);
@@ -232,7 +235,7 @@ namespace MHServerEmu.Games.Regions
             {
                 if (_loadedCells.TryGetValue(worldEntity.Location.Cell.Id, out var status))
                     if (status.Loaded == false) continue;
-                
+
                 bool interest = GetEntityInterest(worldEntity);
                 if (_loadedEntities.TryGetValue(worldEntity.BaseData.EntityId, out var entityStatus))
                 {
@@ -240,9 +243,9 @@ namespace MHServerEmu.Games.Regions
                     entityStatus.InterestToPlayer = interest;
                 }
                 else
-                {                    
-                    _loadedEntities.Add(worldEntity.BaseData.EntityId, new(_currentFrame, true, interest));                   
-                    if (worldEntity.IsAlive()) 
+                {
+                    _loadedEntities.Add(worldEntity.BaseData.EntityId, new(_currentFrame, true, interest));
+                    if (worldEntity.IsAlive())
                         newEntities.Add(worldEntity);
                     // Logger.Debug($"{GameDatabase.GetFormattedPrototypeName(worldEntity.BaseData.PrototypeId)} = {worldEntity.BaseData.PrototypeId},");
                 }
@@ -262,7 +265,7 @@ namespace MHServerEmu.Games.Regions
                     toDelete.Add(entity.Key);
                 }
             }
-            foreach (var deleteId in toDelete) 
+            foreach (var deleteId in toDelete)
                 _loadedEntities.Remove(deleteId); // TODO RemoveEntity           
         }
 
@@ -294,7 +297,7 @@ namespace MHServerEmu.Games.Regions
         {
             _AOIVolume = volume;
             _viewOffset = _AOIVolume / 8; // 3200 / 8 = 400
-            InitPlayerView(_lastCameraSetting);            
+            InitPlayerView(_lastCameraSetting);
         }
 
         public bool Update(Vector3 newPosition, bool isStart = false)
