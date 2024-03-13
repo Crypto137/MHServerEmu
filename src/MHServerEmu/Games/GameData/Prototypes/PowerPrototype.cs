@@ -377,6 +377,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool IsTravelPower { get; protected set; }
         public PrototypeId GamepadSettings { get; protected set; }
         public EvalPrototype BreaksStealthOverrideEval { get; protected set; }
+
+        public override bool ApprovedForUse()
+        {
+            return GameDatabase.DesignStateOk(DesignState);
+        }
     }
 
     public class MovementPowerPrototype : PowerPrototype

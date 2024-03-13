@@ -1,7 +1,8 @@
-﻿using MHServerEmu.Common;
-using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Logging;
-using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.System.Random;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -18,11 +19,11 @@ namespace MHServerEmu.Games.Generators.Regions
             GRandom random = new(randomSeed); 
             RegionSettings setting = region.Settings;
             
-            if (regionGeneratorProto.AreaSequence.IsNullOrEmpty() == false)
+            if (regionGeneratorProto.AreaSequence.HasValue())
             {
                 sequenceStack.Initialize(log, region, this, regionGeneratorProto.AreaSequence);
             } 
-            else if (regionGeneratorProto.EndlessThemes.IsNullOrEmpty() == false) 
+            else if (regionGeneratorProto.EndlessThemes.HasValue()) 
             {
                 // TODO for DangerRoom 
                 int endlessLevelsTotal = 0;// TODO region.PropertyCollection.GetProperty(PropertyEnum.EndlessLevelsTotal);
@@ -37,7 +38,7 @@ namespace MHServerEmu.Games.Generators.Regions
 
                 if (endlessState.RegionPOIPicker != 0)
                 {
-                    if (GeneratorPrototype.POIGroups.IsNullOrEmpty() == false) POIPickerCollection = new(regionGeneratorProto);
+                    if (GeneratorPrototype.POIGroups.HasValue()) POIPickerCollection = new(regionGeneratorProto);
                     POIPickerCollection.RegisterPOIGroup(endlessState.RegionPOIPicker);
                 }
 
@@ -48,11 +49,11 @@ namespace MHServerEmu.Games.Generators.Regions
             RegionProgressionGraph graph = region.ProgressionGraph;
             bool success = sequenceStack.ProcessSequence(random, null, graph, new());
             bool subSuccess = true;
-            if (regionGeneratorProto.SubAreaSequences.IsNullOrEmpty() == false)
+            if (regionGeneratorProto.SubAreaSequences.HasValue())
             {
                 foreach (SubGenerationPrototype subArea in regionGeneratorProto.SubAreaSequences)
                 {   
-                    if (subArea != null && subArea.AreaSequence.IsNullOrEmpty() == false)
+                    if (subArea != null && subArea.AreaSequence.HasValue())
                     {
                         GenAtPositionFunctor functor = new(log, this, region, random, subArea.AreaSequence, subArea.MinRootSeparation, subArea.Tries);
                         PositionFunctor.IterateGridPositionsInConcentricSquares(functor, subArea.MinRootSeparation);
@@ -280,7 +281,7 @@ namespace MHServerEmu.Games.Generators.Regions
                                 graph.AddLink(entry.Previous.Area, entry.Area);
                         }
 
-                        if (entry.SequenceInfo.ConnectedTo.IsNullOrEmpty() == false)
+                        if (entry.SequenceInfo.ConnectedTo.HasValue())
                         {
                             int picks = entry.SequenceInfo.ConnectedToPicks != 0 ? entry.SequenceInfo.ConnectedToPicks : 1;
 

@@ -1,13 +1,14 @@
-﻿using MHServerEmu.Common;
-using MHServerEmu.Games.Common;
+﻿using System.Reflection;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Regions;
 using static MHServerEmu.Games.Generators.Areas.CellGridGenerator;
 using static MHServerEmu.Games.Regions.Cell;
-using MHServerEmu.Common.Extensions;
-using System.Reflection;
+using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.Generators.Areas
 {
@@ -382,7 +383,7 @@ namespace MHServerEmu.Games.Generators.Areas
             GeneratorPrototype generatorProto = area.AreaPrototype.Generator;
             WideGridAreaGeneratorPrototype gridAreaGeneratorProto = generatorProto as WideGridAreaGeneratorPrototype;
 
-            if (gridAreaGeneratorProto != null && gridAreaGeneratorProto.BorderBehavior != null && gridAreaGeneratorProto.CellSets.IsNullOrEmpty() == false)
+            if (gridAreaGeneratorProto != null && gridAreaGeneratorProto.BorderBehavior != null && gridAreaGeneratorProto.CellSets.HasValue())
             {
                 CellSetRegistry registry = new ();
                 registry.Initialize(true, area.Log);

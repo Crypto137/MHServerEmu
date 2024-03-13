@@ -1,11 +1,12 @@
-﻿using MHServerEmu.Games.GameData.Prototypes.Markers;
-using MHServerEmu.Games.GameData.Prototypes;
+﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.System.Random;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.Common;
-using MHServerEmu.Games.Common;
-using MHServerEmu.Common.Extensions;
 
 namespace MHServerEmu.Games.Generators.Areas
 {
@@ -149,7 +150,7 @@ namespace MHServerEmu.Games.Generators.Areas
                 CellPrototype cellProto = GameDatabase.GetPrototype<CellPrototype>(cellRef);
                 if (cellProto == null) continue;
 
-                if (cellProto.MarkerSet.Markers.IsNullOrEmpty() == false)
+                if (cellProto.MarkerSet.Markers.HasValue())
                 {
                     foreach (var marker in cellProto.MarkerSet.Markers)
                     {

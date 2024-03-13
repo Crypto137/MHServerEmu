@@ -1,8 +1,8 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
 using Gazillion;
-using MHServerEmu.Common;
-using MHServerEmu.Common.Extensions;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.System;
 
 namespace MHServerEmu.Games.Achievements
 {

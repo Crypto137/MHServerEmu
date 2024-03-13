@@ -1,11 +1,13 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
@@ -17,41 +19,30 @@ namespace MHServerEmu.Games.Entities
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
         public string TransitionName { get; set; }
-        public Destination[] Destinations { get; set; }
+        public List<Destination> Destinations { get; set; }
 
         public TransitionPrototype TransitionPrototype { get { return EntityPrototype as TransitionPrototype; } }
-        public Transition(EntityBaseData baseData, ulong replicationId, ulong mapRegionId, int mapAreaId, int mapCellId, PrototypeId contextAreaRef, 
-            Vector3 mapPosition, Destination destination) : base(baseData)
+
+        public Transition(EntityBaseData baseData, ReplicatedPropertyCollection properties, Destination destination) : base(baseData)
         {
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelDiscovery;
-
-            Properties = new(replicationId);
-            Properties[PropertyEnum.MapPosition] = mapPosition;
-            Properties[PropertyEnum.MapAreaId] = mapAreaId;
-            Properties[PropertyEnum.MapRegionId] = mapRegionId;
-            Properties[PropertyEnum.MapCellId] = mapCellId;
-            Properties[PropertyEnum.ContextAreaRef] = contextAreaRef;
-
-            TrackingContextMap = Array.Empty<EntityTrackingContextMap>();
-            ConditionCollection = Array.Empty<Condition>();
-            PowerCollection = Array.Empty<PowerCollectionRecord>();
+            Properties = properties;
+            TrackingContextMap = new();
+            ConditionCollection = new();
+            PowerCollection = new();
             UnkEvent = 0;
 
             TransitionName = "";
-            if (destination == null) 
-                Destinations = Array.Empty<Destination>();
-            else
-            {
-                Destinations = new Destination[1];
-                Destinations[0] = destination;
-            }
+            Destinations = new();
+            if (destination != null)
+                Destinations.Add(destination);
         }
 
         public Transition(EntityBaseData baseData, ByteString archiveData) : base(baseData, archiveData) { }
 
-        public Transition(EntityBaseData baseData, EntityTrackingContextMap[] trackingContextMap, Condition[] conditionCollection,
-            PowerCollectionRecord[] powerCollection, int unkEvent, 
-            string transitionName, Destination[] destinations) : base(baseData)
+        public Transition(EntityBaseData baseData, List<EntityTrackingContextMap> trackingContextMap, List<Condition> conditionCollection,
+            List<PowerCollectionRecord> powerCollection, int unkEvent, 
+            string transitionName, List<Destination> destinations) : base(baseData)
         {
             TrackingContextMap = trackingContextMap;
             ConditionCollection = conditionCollection;
@@ -67,9 +58,9 @@ namespace MHServerEmu.Games.Entities
 
             TransitionName = stream.ReadRawString();
 
-            Destinations = new Destination[stream.ReadRawVarint64()];
-            for (int i = 0; i < Destinations.Length; i++)
-                Destinations[i] = new(stream);
+            int destinationsCount = (int)stream.ReadRawVarint64();
+            for (int i = 0; i < destinationsCount; i++)
+                Destinations.Add(new(stream));
         }
 
         public override void Encode(CodedOutputStream stream)
@@ -77,7 +68,7 @@ namespace MHServerEmu.Games.Entities
             base.Encode(stream);
 
             stream.WriteRawString(TransitionName);
-            stream.WriteRawVarint64((ulong)Destinations.Length);
+            stream.WriteRawVarint64((ulong)Destinations.Count);
             foreach (Destination destination in Destinations) destination.Encode(stream);
         }
 
@@ -86,17 +77,16 @@ namespace MHServerEmu.Games.Entities
             base.BuildString(sb);
 
             sb.AppendLine($"TransitionName: {TransitionName}");
-            for (int i = 0; i < Destinations.Length; i++) sb.AppendLine($"Destination{i}: {Destinations[i]}");
+            for (int i = 0; i < Destinations.Count; i++) sb.AppendLine($"Destination{i}: {Destinations[i]}");
         }
 
         public void ConfigureTowerGen(Transition transition)
         {
             Destination destination;
-            if (Destinations.IsNullOrEmpty())
+            if (Destinations.Count == 0)
             {
-                Destinations = new Destination[1];
-                destination = new Destination();
-                Destinations[0] = destination;
+                destination = new();
+                Destinations.Add(destination);
             }
             else
             {
@@ -107,23 +97,23 @@ namespace MHServerEmu.Games.Entities
             destination.Type = TransitionPrototype.Type;
         }
 
-        public void TeleportClient(FrontendClient client)
+        public void TeleportClient(PlayerConnection connection)
         {
             Logger.Trace($"Destination region {GameDatabase.GetFormattedPrototypeName(Destinations[0].Region)} [{GameDatabase.GetFormattedPrototypeName(Destinations[0].Entity)}]");
-            client.CurrentGame.MovePlayerToRegion(client, (RegionPrototypeId)Destinations[0].Region, Destinations[0].Target);
+            connection.Game.MovePlayerToRegion(connection, (RegionPrototypeId)Destinations[0].Region, Destinations[0].Target);
         }
 
-        public void TeleportToEntity(FrontendClient client, ulong entityId)
+        public void TeleportToEntity(PlayerConnection connection, ulong entityId)
         {
             Logger.Trace($"Destination EntityId [{entityId}] [{GameDatabase.GetFormattedPrototypeName(Destinations[0].Entity)}]");
-            client.CurrentGame.MovePlayerToEntity(client, Destinations[0].EntityId);
+            connection.Game.MovePlayerToEntity(connection, Destinations[0].EntityId);
         }
 
-        public void TeleportToLastTown(FrontendClient client)
+        public void TeleportToLastTown(PlayerConnection connection)
         {
             // TODO back to last saved hub
             Logger.Trace($"Destination LastTown");
-            client.CurrentGame.MovePlayerToRegion(client, RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)10137590415717831231);
+            connection.Game.MovePlayerToRegion(connection, RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)10137590415717831231);
         }
     }
 
@@ -152,11 +142,11 @@ namespace MHServerEmu.Games.Entities
         {
             Type = (RegionTransitionType)stream.ReadRawInt32();
 
-            Region = stream.ReadPrototypeEnum<Prototype>();
-            Area = stream.ReadPrototypeEnum<Prototype>();
-            Cell = stream.ReadPrototypeEnum<Prototype>();
-            Entity = stream.ReadPrototypeEnum<Prototype>();
-            Target = stream.ReadPrototypeEnum<Prototype>();
+            Region = stream.ReadPrototypeRef<Prototype>();
+            Area = stream.ReadPrototypeRef<Prototype>();
+            Cell = stream.ReadPrototypeRef<Prototype>();
+            Entity = stream.ReadPrototypeRef<Prototype>();
+            Target = stream.ReadPrototypeRef<Prototype>();
 
             Unk2 = stream.ReadRawInt32();
 
@@ -197,11 +187,11 @@ namespace MHServerEmu.Games.Entities
         {
             stream.WriteRawInt32((int)Type);
 
-            stream.WritePrototypeEnum<Prototype>(Region);
-            stream.WritePrototypeEnum<Prototype>(Area);
-            stream.WritePrototypeEnum<Prototype>(Cell);
-            stream.WritePrototypeEnum<Prototype>(Entity);
-            stream.WritePrototypeEnum<Prototype>(Target);
+            stream.WritePrototypeRef<Prototype>(Region);
+            stream.WritePrototypeRef<Prototype>(Area);
+            stream.WritePrototypeRef<Prototype>(Cell);
+            stream.WritePrototypeRef<Prototype>(Entity);
+            stream.WritePrototypeRef<Prototype>(Target);
 
             stream.WriteRawInt32(Unk2);
 
@@ -236,6 +226,44 @@ namespace MHServerEmu.Games.Entities
             sb.AppendLine($"UnkId2: {UnkId2}");
 
             return sb.ToString();
+        }
+
+        public static Destination FindDestination(Cell cell, TransitionPrototype transitionProto)
+        {
+            PrototypeId area = cell.Area.PrototypeDataRef;
+            Region region = cell.GetRegion();
+            PrototypeGuid entityGuid = GameDatabase.GetPrototypeGuid(transitionProto.DataRef);
+            ConnectionNodeList targets = region.Targets;
+            TargetObject node = RegionTransition.GetTargetNode(targets, area, cell.PrototypeId, entityGuid);
+            if (node != null)
+                return DestinationFromTarget(node.TargetId, region, transitionProto);
+            return null;
+        }
+
+        public static Destination DestinationFromTarget(PrototypeId targetRef, Region region, TransitionPrototype transitionProto)
+        {
+            var regionConnectionTarget = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetRef);
+
+            var cellAssetId = regionConnectionTarget.Cell;
+            var cellPrototypeId = cellAssetId != AssetId.Invalid ? GameDatabase.GetDataRefByAsset(cellAssetId) : PrototypeId.Invalid;
+
+            var targetRegionRef = regionConnectionTarget.Region;
+
+
+            var targetRegion = GameDatabase.GetPrototype<RegionPrototype>(targetRegionRef);
+            if (RegionPrototype.Equivalent(targetRegion, region.RegionPrototype)) targetRegionRef = (PrototypeId)region.PrototypeId;
+
+            Destination destination = new()
+            {
+                Type = transitionProto.Type,
+                Region = targetRegionRef,
+                Area = regionConnectionTarget.Area,
+                Cell = cellPrototypeId,
+                Entity = regionConnectionTarget.Entity,
+                NameId = regionConnectionTarget.Name,
+                Target = targetRef
+            };
+            return destination;
         }
     }
 }

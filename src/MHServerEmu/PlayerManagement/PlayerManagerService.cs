@@ -1,13 +1,14 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Auth;
-using MHServerEmu.Common;
-using MHServerEmu.Common.Config;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
+using MHServerEmu.Core.Network.Tcp;
+using MHServerEmu.Core.System;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
 using MHServerEmu.Games.Achievements;
-using MHServerEmu.Networking;
 using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.PlayerManagement
@@ -23,99 +24,22 @@ namespace MHServerEmu.PlayerManagement
         private readonly object _playerLock = new();
         private readonly List<FrontendClient> _playerList = new();
 
-        public int SessionCount { get => _sessionManager.SessionCount; }
-
         public PlayerManagerService()
         {
             _sessionManager = new();
             _gameManager = new();
         }
 
-        #region Client Management
+        #region IGameService Implementation
 
-        public void AcceptClientHandshake(FrontendClient client)
+        public void Run() { }
+
+        public void Shutdown() { }
+
+        public void Handle(ITcpClient tcpClient, GameMessage message)
         {
-            client.FinishedPlayerManagerHandshake = true;
+            var client = (FrontendClient)tcpClient;
 
-            // Queue loading
-            client.IsLoading = true;
-            client.SendMessage(MuxChannel, new(NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build()));
-
-            // Send achievement database
-            client.SendMessage(MuxChannel, new(AchievementDatabase.Instance.GetDump()));
-            // NetMessageQueryIsRegionAvailable regionPrototype: 9833127629697912670 should go in the same packet as AchievementDatabaseDump
-        }
-
-        public bool AddPlayer(FrontendClient client)
-        {
-            lock (_playerLock)
-            {
-                // TODO: make this check better
-                foreach (FrontendClient player in _playerList)
-                {
-                    if (player.Session.Account.Id == client.Session.Account.Id)
-                    {
-                        Logger.Warn("Failed to add player: already added");
-                        return false;
-                    }
-                }
-
-                _playerList.Add(client);
-                _gameManager.GetAvailableGame().AddPlayer(client);
-                return true;
-            }
-        }
-
-        public void RemovePlayer(FrontendClient client)
-        {
-            lock (_playerLock)
-            {
-                if (_playerList.Contains(client) == false)
-                {
-                    Logger.Warn("Failed to remove player: not found");
-                    return;
-                }
-
-                _playerList.Remove(client);
-                _sessionManager.RemoveSession(client.Session.Id);
-            }
-
-            if (ConfigManager.PlayerManager.BypassAuth == false) DBManager.UpdateAccountData(client.Session.Account);
-        }
-
-        /// <summary>
-        /// Iterates connected clients.
-        /// </summary>
-        /// <remarks>WARNING: IF YOU ITERATE PLAYERS, MAKE SURE TO GO ALL THE WAY THROUGH OR THE CLIENT LIST IS GOING TO STAY LOCKED AND NO ONE WILL BE ABLE TO CONNECT.</remarks>
-        /// <remarks>TODO: remove this.</remarks>
-        public IEnumerable<FrontendClient> IteratePlayers()
-        {
-            lock (_playerLock)
-            {
-                foreach (FrontendClient client in _playerList)
-                    yield return client;
-            }
-        }
-
-        public void BroadcastMessage(GameMessage message)
-        {
-            lock (_playerLock)
-            {
-                foreach (FrontendClient player in _playerList)
-                    player.SendMessage(MuxChannel, message);
-            }
-        }
-
-        public bool TryGetSession(ulong sessionId, out ClientSession session) => _sessionManager.TryGetSession(sessionId, out session);
-        public bool TryGetClient(ulong sessionId, out FrontendClient client) => _sessionManager.TryGetClient(sessionId, out client);
-        public Game GetGameByPlayer(FrontendClient client) => _gameManager.GetGameById(client.GameId);
-
-        #endregion
-
-        #region Message Handling
-
-        public void Handle(FrontendClient client, ushort muxId, GameMessage message)
-        {
             // Timestamp sync messages
             if (message.Id == (byte)ClientToGameServerMessage.NetMessageSyncTimeRequest || message.Id == (byte)ClientToGameServerMessage.NetMessagePing)
             {
@@ -197,7 +121,7 @@ namespace MHServerEmu.PlayerManagement
                 case ClientToGameServerMessage.NetMessageTell:
                 case ClientToGameServerMessage.NetMessageReportPlayer:
                 case ClientToGameServerMessage.NetMessageChatBanVote:
-                    ServerManager.Instance.GroupingManagerService.Handle(client, message);
+                    ServerManager.Instance.RouteMessage(tcpClient, message, ServerType.GroupingManager);
                     break;
 
                 // Billing
@@ -207,26 +131,119 @@ namespace MHServerEmu.PlayerManagement
                 case ClientToGameServerMessage.NetMessageBuyGiftForOtherPlayer:
                 case ClientToGameServerMessage.NetMessagePurchaseUnlock:
                 case ClientToGameServerMessage.NetMessageGetGiftHistory:
-                    ServerManager.Instance.BillingService.Handle(client, message);
+                    ServerManager.Instance.RouteMessage(tcpClient, message, ServerType.Billing);
                     break;
 
                 // Leaderboards
                 case ClientToGameServerMessage.NetMessageLeaderboardRequest:
                 case ClientToGameServerMessage.NetMessageLeaderboardArchivedInstanceListRequest:
                 case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:
-                    ServerManager.Instance.LeaderboardService.Handle(client, message);
+                    ServerManager.Instance.RouteMessage(tcpClient, message, ServerType.Leaderboard);
                     break;
 
                 default:
-                    Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
+                    Logger.Warn($"Handle(): Unhandled message [{message.Id}] {(ClientToGameServerMessage)message.Id}");
                     break;
             }
         }
 
-        public void Handle(FrontendClient client, ushort muxId, IEnumerable<GameMessage> messages)
+        public void Handle(ITcpClient client, IEnumerable<GameMessage> messages)
         {
-            foreach (GameMessage message in messages) Handle(client, muxId, message);
+            foreach (GameMessage message in messages)
+                Handle(client, message);
         }
+
+        public string GetStatus()
+        {
+            return $"Sessions: {_sessionManager.SessionCount}";
+        }
+
+        #endregion
+
+        #region Client Management
+
+        public void AcceptClientHandshake(FrontendClient client)
+        {
+            client.FinishedPlayerManagerHandshake = true;
+
+            // Queue loading
+            client.SendMessage(MuxChannel, NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build());
+
+            // Send achievement database
+            client.SendMessage(MuxChannel, AchievementDatabase.Instance.GetDump());
+            // NetMessageQueryIsRegionAvailable regionPrototype: 9833127629697912670 should go in the same packet as AchievementDatabaseDump
+        }
+
+        public bool AddPlayer(FrontendClient client)
+        {
+            lock (_playerLock)
+            {
+                // TODO: make this check better
+                foreach (FrontendClient player in _playerList)
+                {
+                    if (player.Session.Account.Id == client.Session.Account.Id)
+                    {
+                        Logger.Warn("Failed to add player: already added");
+                        return false;
+                    }
+                }
+
+                _playerList.Add(client);
+                _gameManager.GetAvailableGame().AddPlayer(client);
+                return true;
+            }
+        }
+
+        public void RemovePlayer(FrontendClient client)
+        {
+            lock (_playerLock)
+            {
+                if (_playerList.Contains(client) == false)
+                {
+                    Logger.Warn("Failed to remove player: not found");
+                    return;
+                }
+
+                Game game = GetGameByPlayer(client);
+                game.RemovePlayer(client);
+
+                _playerList.Remove(client);
+                _sessionManager.RemoveSession(client.Session.Id);
+            }
+
+            if (ConfigManager.PlayerManager.BypassAuth == false) DBManager.UpdateAccountData(client.Session.Account);
+        }
+
+        /// <summary>
+        /// Iterates connected clients.
+        /// </summary>
+        /// <remarks>WARNING: IF YOU ITERATE PLAYERS, MAKE SURE TO GO ALL THE WAY THROUGH OR THE CLIENT LIST IS GOING TO STAY LOCKED AND NO ONE WILL BE ABLE TO CONNECT.</remarks>
+        /// <remarks>TODO: remove this.</remarks>
+        public IEnumerable<FrontendClient> IteratePlayers()
+        {
+            lock (_playerLock)
+            {
+                foreach (FrontendClient client in _playerList)
+                    yield return client;
+            }
+        }
+
+        public void BroadcastMessage(GameMessage message)
+        {
+            lock (_playerLock)
+            {
+                foreach (FrontendClient player in _playerList)
+                    player.SendMessage(MuxChannel, message);
+            }
+        }
+
+        public bool TryGetSession(ulong sessionId, out ClientSession session) => _sessionManager.TryGetSession(sessionId, out session);
+        public bool TryGetClient(ulong sessionId, out FrontendClient client) => _sessionManager.TryGetClient(sessionId, out client);
+        public Game GetGameByPlayer(FrontendClient client) => _gameManager.GetGameById(client.GameId);
+
+        #endregion
+
+        #region Message Handling
 
         public AuthStatusCode OnLoginDataPB(LoginDataPB loginDataPB, out ClientSession session)
         {
@@ -248,18 +265,18 @@ namespace MHServerEmu.PlayerManagement
             if (ConfigManager.PlayerManager.SimulateQueue)
             {
                 Logger.Info("Responding with LoginQueueStatus message");
-                client.SendMessage(MuxChannel, new(LoginQueueStatus.CreateBuilder()
+                client.SendMessage(MuxChannel, LoginQueueStatus.CreateBuilder()
                     .SetPlaceInLine(ConfigManager.PlayerManager.QueuePlaceInLine)
                     .SetNumberOfPlayersInLine(ConfigManager.PlayerManager.QueueNumberOfPlayersInLine)
-                    .Build()));
+                    .Build());
             }
             else
             {
                 Logger.Info("Responding with SessionEncryptionChanged message");
-                client.SendMessage(MuxChannel, new(SessionEncryptionChanged.CreateBuilder()
+                client.SendMessage(MuxChannel, SessionEncryptionChanged.CreateBuilder()
                     .SetRandomNumberIndex(0)
                     .SetEncryptedRandomNumber(ByteString.Empty)
-                    .Build()));
+                    .Build());
             }
         }
 
@@ -270,13 +287,13 @@ namespace MHServerEmu.PlayerManagement
 
             // Log the player in
             Logger.Info($"Logging in player {client.Session.Account}");
-            client.SendMessage(MuxChannel, new(NetMessageReadyAndLoggedIn.DefaultInstance)); // add report defect (bug) config here
+            client.SendMessage(MuxChannel, NetMessageReadyAndLoggedIn.DefaultInstance); // add report defect (bug) config here
 
             // Sync time
-            client.SendMessage(MuxChannel, new(NetMessageInitialTimeSync.CreateBuilder()
+            client.SendMessage(MuxChannel, NetMessageInitialTimeSync.CreateBuilder()
                 .SetGameTimeServerSent(Clock.GameTime.Ticks / 10)
                 .SetDateTimeServerSent(Clock.UnixTime.Ticks / 10)
-                .Build()));
+                .Build());
         }
 
         private void OnSyncTimeRequest(FrontendClient client, NetMessageSyncTimeRequest request, TimeSpan gameTimeReceived, TimeSpan dateTimeReceived)
@@ -297,7 +314,7 @@ namespace MHServerEmu.PlayerManagement
 
             //Logger.Debug($"NetMessageSyncTimeReply:\n{reply}");
 
-            client.SendMessage(MuxChannel, new(reply));
+            client.SendMessage(MuxChannel, reply);
         }
 
         private void OnPing(FrontendClient client, NetMessagePing ping, TimeSpan gameTimeReceived)
@@ -317,7 +334,7 @@ namespace MHServerEmu.PlayerManagement
 
             //Logger.Debug($"NetMessagePingResponse:\n{response}");
 
-            client.SendMessage(MuxChannel, new(response));
+            client.SendMessage(MuxChannel, response);
         }
 
         private void OnFps(FrontendClient client, NetMessageFPS fps)
@@ -327,7 +344,7 @@ namespace MHServerEmu.PlayerManagement
 
         private void OnGracefulDisconnect(FrontendClient client)
         {
-            client.SendMessage(MuxChannel, new(NetMessageGracefulDisconnectAck.DefaultInstance));
+            client.SendMessage(MuxChannel, NetMessageGracefulDisconnectAck.DefaultInstance);
         }
 
         #endregion

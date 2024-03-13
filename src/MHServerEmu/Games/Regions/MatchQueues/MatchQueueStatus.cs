@@ -1,8 +1,9 @@
 ﻿using System.Text;
 using Gazillion;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -33,8 +34,8 @@ namespace MHServerEmu.Games.Regions.MatchQueues
 
             for (ulong i = 0; i < numRegionStatuses; i++)
             {
-                PrototypeId regionRef = stream.ReadPrototypeEnum<Prototype>();
-                PrototypeId difficultyTierRef = stream.ReadPrototypeEnum<Prototype>();
+                PrototypeId regionRef = stream.ReadPrototypeRef<Prototype>();
+                PrototypeId difficultyTierRef = stream.ReadPrototypeRef<Prototype>();
                 ulong regionRequestGroupId = stream.ReadRawVarint64();
                 uint playersInQueue = stream.ReadRawVarint32();
 
@@ -56,8 +57,8 @@ namespace MHServerEmu.Games.Regions.MatchQueues
             stream.WriteRawVarint64((ulong)_regionStatusDict.Count);
             foreach (var kvp in _regionStatusDict)
             {
-                stream.WritePrototypeEnum<Prototype>(kvp.Key.Item1);
-                stream.WritePrototypeEnum<Prototype>(kvp.Key.Item2);
+                stream.WritePrototypeRef<Prototype>(kvp.Key.Item1);
+                stream.WritePrototypeRef<Prototype>(kvp.Key.Item2);
                 stream.WriteRawVarint64(kvp.Value.RegionRequestGroupId);
                 stream.WriteRawVarint32((uint)kvp.Value.PlayerInfoDict.Count);
 

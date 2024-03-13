@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Gazillion;
 using MHServerEmu.Auth;
-using MHServerEmu.Common.Commands;
+using MHServerEmu.Commands;
 using MHServerEmu.Frontend;
 
 namespace MHServerEmu.PlayerManagement.Accounts

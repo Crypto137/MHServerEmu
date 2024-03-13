@@ -1,13 +1,8 @@
 ﻿using Google.ProtocolBuffers;
-using MHServerEmu.Common.Helpers;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
+using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Games;
-using MHServerEmu.Games.Common;
-using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Regions;
-using MHServerEmu.Networking;
-using MHServerEmu.Networking.Tcp;
 using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Frontend
@@ -22,27 +17,20 @@ namespace MHServerEmu.Frontend
         public bool FinishedPlayerManagerHandshake { get; set; } = false;
         public bool FinishedGroupingManagerHandshake { get; set; } = false;
         public ulong GameId { get; set; }
-        public Game CurrentGame { get => ServerManager.Instance.PlayerManagerService.GetGameByPlayer(this); }
-        public Region Region { get => CurrentGame.RegionManager.GetRegion(Session.Account.Player.Region); }
 
-        // Temporarily store state here instead of Game
-        public bool IsLoading { get; set; } = false;        
-        public Vector3 LastPosition { get; set; }
-        public ulong MagikUltimateEntityId { get; set; }
-        public bool IsThrowing { get; set; } = false;
-        public PrototypeId ThrowingPower { get; set; }
-        public PrototypeId ThrowingCancelPower { get; set; }
-        public Entity ThrowingObject { get; set; }
-
-        public AreaOfInterest AOI { get; private set; }
-        public Vector3 StartPositon { get; internal set; }
-        public Vector3 StartOrientation { get; internal set; }
-        public WorldEntity EntityToTeleport { get; internal set; }
+        // todo: improve this
+        public Game CurrentGame
+        {
+            get
+            {
+                var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+                return playerManager?.GetGameByPlayer(this);
+            }
+        }
 
         public FrontendClient(TcpClientConnection connection)
         {
             Connection = connection;
-            AOI = new(this);
         }
 
         public void Parse(byte[] data)
@@ -71,7 +59,7 @@ namespace MHServerEmu.Frontend
                     break;
 
                 case MuxCommand.Data:
-                    ServerManager.Instance.Handle(this, packet.MuxId, packet.Messages);
+                    RouteMessages(packet.MuxId, packet.Messages);
                     break;
             }
         }
@@ -96,11 +84,43 @@ namespace MHServerEmu.Frontend
             Connection.Send(packet);
         }
 
+        public void SendMessage(ushort muxId, IMessage message)
+        {
+            SendMessage(muxId, new GameMessage(message));
+        }
+
         public void SendMessages(ushort muxId, IEnumerable<GameMessage> messages)
         {
             PacketOut packet = new(muxId, MuxCommand.Data);
             packet.AddMessages(messages);
             Connection.Send(packet);
+        }
+
+        public void SendMessages(ushort muxId, IEnumerable<IMessage> messages)
+        {
+            SendMessages(muxId, messages.Select(message => new GameMessage(message)));
+        }
+
+        private void RouteMessages(ushort muxId, IEnumerable<GameMessage> messages)
+        {
+            ServerType destination;
+
+            switch (muxId)
+            {
+                case 1:
+                    destination = FinishedPlayerManagerHandshake ? ServerType.PlayerManager : ServerType.FrontendServer;
+                    ServerManager.Instance.RouteMessages(this, messages, destination);
+                    break;
+
+                case 2:
+                    destination = FinishedGroupingManagerHandshake ? ServerType.GroupingManager : ServerType.FrontendServer;
+                    ServerManager.Instance.RouteMessages(this, messages, destination);
+                    break;
+
+                default:
+                    Logger.Warn($"{messages.Count()} unhandled messages on muxId {muxId}");
+                    break;
+            }
         }
     }
 }

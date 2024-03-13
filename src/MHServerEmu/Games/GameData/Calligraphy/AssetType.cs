@@ -1,5 +1,5 @@
-﻿using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Logging;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Games.GameData.Calligraphy
 {

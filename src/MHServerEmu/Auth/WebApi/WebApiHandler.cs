@@ -1,7 +1,9 @@
 ﻿using System.Collections.Specialized;
 using System.Text;
-using MHServerEmu.Common.Helpers;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.PlayerManagement.Accounts;
 
 namespace MHServerEmu.Auth.WebApi
@@ -46,7 +48,7 @@ namespace MHServerEmu.Auth.WebApi
                 return GenerateResponse("Error", "Input is not valid.");
 
             bool success = AccountManager.CreateAccount(queryString["email"].ToLower(), queryString["playerName"], queryString["password"], out string message);
-            Logger.Trace(message);
+            if (ConfigManager.PlayerManager.HideSensitiveInformation == false) Logger.Trace(message);
             return GenerateResponse(success ? "Success" : "Error", message);
         }
 

@@ -1,5 +1,5 @@
-﻿using MHServerEmu.Common.Logging;
-using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -41,12 +41,12 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        private Vector3 _orientation;
-        public Vector3 GetOrientation() => IsValid() ? _orientation : new();
+        private Orientation _orientation;
+        public Orientation GetOrientation() => IsValid() ? _orientation : new();
 
-        public void SetOrientation(Vector3 orientation)
+        public void SetOrientation(Orientation orientation)
         {
-            if (Vector3.IsFinite(orientation)) _orientation = orientation;
+            if (Orientation.IsFinite(orientation)) _orientation = orientation;
         }
 
         public static float ProjectToFloor(CellPrototype cell, Vector3 position)
@@ -59,6 +59,15 @@ namespace MHServerEmu.Games.Entities
             int x = Math.Clamp((int)(cellPos.X * mapX), 0, mapX - 1);
             int y = Math.Clamp((int)(cellPos.Y * mapY), 0, mapY - 1);
             return cell.HeightMap.HeightMapData[y * mapX + x];
+        }
+
+        public static Vector3 ProjectToFloor(Region region, Vector3 regionPos)
+        {
+            Cell cell = region.GetCellAtPosition(regionPos);
+            if (cell == null) return regionPos;
+            Vector3 postion = new(regionPos);
+            postion.Z = cell.RegionBounds.Center.Z + ProjectToFloor(cell.CellProto, postion);
+            return postion;
         }
 
         public override string ToString()

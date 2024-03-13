@@ -4,15 +4,19 @@ using System.Web;
 using Google.ProtocolBuffers;
 using Gazillion;
 using MHServerEmu.Auth.WebApi;
-using MHServerEmu.Common.Config;
-using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Logging;
-using MHServerEmu.Networking;
+using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
+using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Auth
 {
-    public class AuthServer
+    /// <summary>
+    /// Handles HTTP auth requests from clients.
+    /// </summary>
+    public class AuthServer : IGameService
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -22,11 +26,19 @@ namespace MHServerEmu.Auth
 
         private HttpListener _listener;
 
+        /// <summary>
+        /// Constructs a new <see cref="AuthServer"/> instance.
+        /// </summary>
         public AuthServer()
         {
             _url = $"http://{ConfigManager.Auth.Address}:{ConfigManager.Auth.Port}/";
         }
 
+        #region IGameService Implementation
+
+        /// <summary>
+        /// Runs this <see cref="AuthServer"/> instance.
+        /// </summary>
         public async void Run()
         {
             // Create an http server and start listening for incoming connections
@@ -54,7 +66,7 @@ namespace MHServerEmu.Auth
         }
 
         /// <summary>
-        /// Stops listening and shuts down the auth server.
+        /// Stops listening and shuts down this <see cref="AuthServer"/> instance.
         /// </summary>
         public void Shutdown()
         {
@@ -69,11 +81,29 @@ namespace MHServerEmu.Auth
             _listener = null;
         }
 
+        public void Handle(ITcpClient client, GameMessage message)
+        {
+            Logger.Warn($"Handle(): AuthServer should not be handling messages from TCP clients!");
+        }
+
+        public void Handle(ITcpClient client, IEnumerable<GameMessage> messages)
+        {
+            Logger.Warn($"Handle(): AuthServer should not be handling messages from TCP clients!");
+        }
+
+        public string GetStatus()
+        {
+            if (_listener == null || _listener.IsListening == false)
+                return "Not listening";
+            
+            return "Listening for requests";
+        }
+
+        #endregion
+
         /// <summary>
-        /// Handles HTTP request.
+        /// Handles an <see cref="HttpListenerRequest"/>.
         /// </summary>
-        /// <param name="request">HTTP listener request.</param>
-        /// <param name="response">HTTP listener response.</param>
         private void HandleRequest(HttpListenerRequest request, HttpListenerResponse response)
         {
             bool requestIsFromGameClient = (request.UserAgent == "Secret Identity Studios Http Client");
@@ -97,7 +127,7 @@ namespace MHServerEmu.Auth
                     // Client auth messages
                     if (requestIsFromGameClient && request.Url.LocalPath == "/Login/IndexPB")
                     {
-                        HandleMessage(request, response);
+                        HandleMessagesAsync(request, response);
                         return;
                     }
                     
@@ -113,15 +143,13 @@ namespace MHServerEmu.Auth
 
             // Display a warning for unhandled requests
             string source = requestIsFromGameClient ? "a game client" : $"an unknown UserAgent ({request.UserAgent})";
-            Logger.Warn($"Received unhandled {request.HttpMethod} to {request.Url.LocalPath} from {source} on {request.RemoteEndPoint}");
+            Logger.Warn($"HandleRequest(): Unhandled {request.HttpMethod} to {request.Url.LocalPath} from {source} on {request.RemoteEndPoint}");
         }
 
         /// <summary>
-        /// Handles protobuf message received over HTTP.
+        /// Receives and handles <see cref="IMessage"/> instances received over HTTP.
         /// </summary>
-        /// <param name="request">HTTP listener request.</param>
-        /// <param name="response">HTTP listener response.</param>
-        private async void HandleMessage(HttpListenerRequest request, HttpListenerResponse response)
+        private async void HandleMessagesAsync(HttpListenerRequest request, HttpListenerResponse response)
         {
             // Mask end point name if needed
             string endPointName = ConfigManager.PlayerManager.HideSensitiveInformation
@@ -139,12 +167,24 @@ namespace MHServerEmu.Auth
                     // Send a TOS popup when the client uses tos@test.com as email
                     if (loginDataPB.EmailAddress.ToLower() == "tos@test.com")
                     {
-                        SendTosPopup(response);
+                        var tosTicket = AuthTicket.CreateBuilder()
+                            .SetSessionId(0)
+                            .SetTosurl("http://localhost/tos")  // The client adds &locale=en_us to this url (or another locale code)
+                            .Build();
+
+                        await SendMessageAsync(response, tosTicket, (int)AuthStatusCode.NeedToAcceptLegal);
                         return;
                     }
 
                     // Try to create a new session from the data we received
-                    AuthStatusCode statusCode = ServerManager.Instance.PlayerManagerService.OnLoginDataPB(loginDataPB, out ClientSession session);
+                    var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+                    if (playerManager == null)
+                    {
+                        Logger.Error($"HandleMessagesAsync(): Failed to connect to the player manager");
+                        return;
+                    }
+
+                    AuthStatusCode statusCode = playerManager.OnLoginDataPB(loginDataPB, out ClientSession session);
 
                     // Respond with an error if session creation didn't succeed
                     if (statusCode != AuthStatusCode.Success)
@@ -157,8 +197,7 @@ namespace MHServerEmu.Auth
                     // Send an AuthTicket if we were able to create a session
                     Logger.Info($"Sending AuthTicket for sessionId {session.Id} to the game client on {endPointName}");
 
-                    // Create a new AuthTicket, write it to a buffer, and send the response
-                    byte[] buffer = new GameMessage(AuthTicket.CreateBuilder()
+                    var ticket = AuthTicket.CreateBuilder()
                         .SetSessionKey(ByteString.CopyFrom(session.Key))
                         .SetSessionToken(ByteString.CopyFrom(session.Token))
                         .SetSessionId(session.Id)
@@ -168,37 +207,32 @@ namespace MHServerEmu.Auth
                         .SetHasnews(ConfigManager.PlayerManager.ShowNewsOnLogin)
                         .SetNewsurl(ConfigManager.PlayerManager.NewsUrl)
                         .SetSuccess(true)
-                        .Build()).Serialize();
+                        .Build();
 
-                    response.KeepAlive = false;
-                    response.ContentType = "application/octet-stream";
-                    response.ContentLength64 = buffer.Length;
-                    await response.OutputStream.WriteAsync(buffer);
-
+                    await SendMessageAsync(response, ticket);
                     break;
 
                 case FrontendProtocolMessage.PrecacheHeaders:
                     // The client sends this message on startup
                     Logger.Trace($"Received PrecacheHeaders message");
+                    await SendMessageAsync(response, PrecacheHeadersMessageResponse.DefaultInstance);
                     break;
 
                 default:
-                    Logger.Warn($"Received unknown messageId {message.Id}");
+                    Logger.Warn($"HandleMessagesAsync(): Unhandled messageId {message.Id}");
                     break;
             }
         }
 
-        private async void SendTosPopup(HttpListenerResponse response)
+        private async Task SendMessageAsync(HttpListenerResponse response, IMessage message, int statusCode = 200)
         {
-            byte[] buffer = new GameMessage(AuthTicket.CreateBuilder()
-                .SetSessionId(0)
-                .SetTosurl("http://localhost/tos")  // The client adds &locale=en_us to this url (or another locale code)
-                .Build()).Serialize();
+            byte[] buffer = new GameMessage(message).Serialize();
 
-            response.StatusCode = (int)AuthStatusCode.NeedToAcceptLegal;
+            response.StatusCode = statusCode;
             response.KeepAlive = false;
             response.ContentType = "application/octet-stream";
             response.ContentLength64 = buffer.Length;
+
             await response.OutputStream.WriteAsync(buffer);
         }
 
@@ -220,7 +254,7 @@ namespace MHServerEmu.Auth
             switch (request.Url.LocalPath)
             {
                 default:
-                    Logger.Warn($"Received unknown web API request:\nRequest: {request.Url.LocalPath}\nRemoteEndPoint: {endPointName}\nUserAgent: {request.UserAgent}");
+                    Logger.Warn($"HandleWebApiRequest(): Unhandled web API request\nRequest: {request.Url.LocalPath}\nRemoteEndPoint: {endPointName}\nUserAgent: {request.UserAgent}");
                     return;
 
                 case "/AccountManagement/Create":

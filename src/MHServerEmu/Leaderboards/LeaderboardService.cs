@@ -1,15 +1,16 @@
 ﻿using Gazillion;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
+using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Networking;
 
 namespace MHServerEmu.Leaderboards
 {
     /// <summary>
     /// Handles leaderboard messages.
     /// </summary>
-    public class LeaderboardService : IMessageHandler
+    public class LeaderboardService : IGameService
     {
         private const ushort MuxChannel = 1;
 
@@ -17,32 +18,48 @@ namespace MHServerEmu.Leaderboards
 
         private readonly LeaderboardManager _leaderboardManager = new();
 
-        public void Handle(FrontendClient client, GameMessage message)
+        #region IGameService Implementation
+
+        public void Run() { }
+
+        public void Shutdown() { }
+
+        public void Handle(ITcpClient tcpClient, GameMessage message)
         {
+            var client = (FrontendClient)tcpClient;
+
             switch ((ClientToGameServerMessage)message.Id)
             {
                 case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:
                     if (message.TryDeserialize<NetMessageLeaderboardInitializeRequest>(out var initializeRequest))
-                        HandleInitializeRequest(client, initializeRequest);
+                        OnInitializeRequest(client, initializeRequest);
                     break;
 
                 case ClientToGameServerMessage.NetMessageLeaderboardRequest:
                     if (message.TryDeserialize<NetMessageLeaderboardRequest>(out var request))
-                        HandleRequest(client, request);
+                        OnRequest(client, request);
                     break;
 
                 default:
-                    Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
+                    Logger.Warn($"Handle(): Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
                     break;
             }
         }
 
-        public void Handle(FrontendClient client, IEnumerable<GameMessage> messages)
+        public void Handle(ITcpClient client, IEnumerable<GameMessage> messages)
         {
-            foreach (GameMessage message in messages) Handle(client, message);
+            foreach (GameMessage message in messages)
+                Handle(client, message);
         }
 
-        private void HandleInitializeRequest(FrontendClient client, NetMessageLeaderboardInitializeRequest initializeRequest)
+        public string GetStatus()
+        {
+            return "Running";
+        }
+
+        #endregion
+
+        private void OnInitializeRequest(FrontendClient client, NetMessageLeaderboardInitializeRequest initializeRequest)
         {
             Logger.Trace("Received NetMessageLeaderboardInitializeRequest");
 
@@ -51,14 +68,14 @@ namespace MHServerEmu.Leaderboards
             foreach (PrototypeGuid guid in initializeRequest.LeaderboardIdsList)
                 response.AddLeaderboardInitDataList(_leaderboardManager.GetLeaderboardInitData(guid));
 
-            client.SendMessage(MuxChannel, new(response.Build()));
+            client.SendMessage(MuxChannel, response.Build());
         }
 
-        private void HandleRequest(FrontendClient client, NetMessageLeaderboardRequest request)
+        private void OnRequest(FrontendClient client, NetMessageLeaderboardRequest request)
         {
             if (request.HasDataQuery == false)
             {
-                Logger.Warn("HandleRequest(): HasDataQuery == false");
+                Logger.Warn("OnRequest(): HasDataQuery == false");
                 return;
             }
 
@@ -66,9 +83,9 @@ namespace MHServerEmu.Leaderboards
 
             Leaderboard leaderboard = _leaderboardManager.GetLeaderboard((PrototypeGuid)request.DataQuery.LeaderboardId, request.DataQuery.InstanceId);;
             
-            client.SendMessage(MuxChannel, new(NetMessageLeaderboardReportClient.CreateBuilder()
+            client.SendMessage(MuxChannel, NetMessageLeaderboardReportClient.CreateBuilder()
                 .SetReport(leaderboard.GetReport(request, client.Session.Account.PlayerName))
-                .Build()));
+                .Build());
         }
     }
 }

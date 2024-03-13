@@ -1,6 +1,6 @@
-﻿using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Helpers;
-using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.GameData.Resources;
 
@@ -23,7 +23,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PostProcess();
             //if (GameDatabase.DataDirectory.PrototypeIsAbstract(GetDataRef())){ return;}
 
-            if (PropGroups.IsNullOrEmpty() == false)
+            if (PropGroups.HasValue())
             {
                 foreach (ProceduralPropGroupPrototype propGroup in PropGroups)
                 {

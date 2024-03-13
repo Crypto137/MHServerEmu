@@ -1,12 +1,11 @@
 ﻿using Gazillion;
-using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Logging;
-using MHServerEmu.Games.Entities;
+using Google.ProtocolBuffers;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
-using MHServerEmu.Networking;
 
 namespace MHServerEmu.Games.Powers
 {
@@ -14,9 +13,9 @@ namespace MHServerEmu.Games.Powers
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public static GameMessage[] LoadAvatarPowerCollection(HardcodedAvatarEntityId avatar)
+        public static List<IMessage> LoadAvatarPowerCollection(HardcodedAvatarEntityId avatar)
         {
-            List<GameMessage> messageList = new();
+            List<IMessage> messageList = new();
 
             ulong replicationId = (ulong)avatar.ToPropertyCollectionReplicationId();
             var avatarPrototype = GameDatabase.GetPrototype<AvatarPrototype>(avatar.ToAvatarPrototypeId());
@@ -81,25 +80,25 @@ namespace MHServerEmu.Games.Powers
                     .SetItemVariation(1)
                     .Build());
             }
-            messageList.Add(new(NetMessageAssignPowerCollection.CreateBuilder().AddRangePower(powerList).Build()));
+            messageList.Add(NetMessageAssignPowerCollection.CreateBuilder().AddRangePower(powerList).Build());
 
             // Set PowerRankCurrentBest for all powers in the collection to make them usable
             foreach (PrototypeId protoId in powersToUnlockList)
             {
                 PropertyParam enumValue = Property.ToParam(PropertyEnum.PowerRankBase, 0, protoId);
                 PropertyId propertyId = new(PropertyEnum.PowerRankCurrentBest, enumValue);
-                messageList.Add(new(NetMessageSetProperty.CreateBuilder()
+                messageList.Add(NetMessageSetProperty.CreateBuilder()
                     .SetReplicationId(replicationId)
                     .SetPropertyId(propertyId.Raw.ReverseBits())
                     .SetValueBits(2)
-                    .Build()));
+                    .Build());
             }
 
             // PowerRankBase needs to be set for the powers window to show powers without changing spec tabs
             // NOTE: PowerRankBase is also supposed to have a power prototype param
-            messageList.Add(new(Property.ToNetMessageSetProperty(replicationId, new(PropertyEnum.PowerRankBase), 1)));
+            messageList.Add(Property.ToNetMessageSetProperty(replicationId, new(PropertyEnum.PowerRankBase), 1));
 
-            return messageList.ToArray();
+            return messageList;
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using System.Text;
-using MHServerEmu.Common;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.PlayerManagement
@@ -30,8 +30,8 @@ namespace MHServerEmu.PlayerManagement
             Downloader = Enum.Parse<ClientDownloader>(downloader);
             Locale = locale;
 
-            Key = Cryptography.GenerateAesKey();
-            Token = Cryptography.GenerateToken();
+            Key = CryptographyHelper.GenerateAesKey();
+            Token = CryptographyHelper.GenerateToken();
             CreationTime = DateTime.Now;
         }
 

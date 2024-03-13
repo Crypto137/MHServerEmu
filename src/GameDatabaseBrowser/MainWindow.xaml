@@ -116,6 +116,10 @@
                     </HierarchicalDataTemplate>
                 </TreeView.ItemTemplate>
             </TreeView>
+            <StackPanel Orientation="Vertical" Width="400">
+                <TextBlock x:Name="NoSipMessage" Text="The sip file cannot be found. Add it in bin folder and restart the app" 
+                           FontSize="20" TextWrapping="Wrap" HorizontalAlignment="Center" Visibility="Collapsed" Margin="30"></TextBlock>
+            </StackPanel>
             <ProgressBar x:Name="progressBar" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Stretch" Height="20" Margin="20"/>
 
             <Grid Grid.Row="2" Grid.Column="1" Margin="5">

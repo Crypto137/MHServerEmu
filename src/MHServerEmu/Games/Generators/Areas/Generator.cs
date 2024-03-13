@@ -1,11 +1,12 @@
-﻿using MHServerEmu.Games.Common;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Generators.Regions;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.Common;
-using MHServerEmu.Common.Logging;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
+using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.Generators.Areas
 {

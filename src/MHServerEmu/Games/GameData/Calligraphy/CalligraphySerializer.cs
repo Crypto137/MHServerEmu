@@ -1,5 +1,5 @@
 ﻿using System.Reflection;
-using MHServerEmu.Common.Logging;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -623,8 +623,10 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                         CopyPrototypePropertyCollection(destPrototype, sourcePrototype, fieldInfo);
                         break;
 
-                    case PrototypeFieldType.Invalid: return false;
-                    default: return Logger.WarnReturn(false, $"CopyPrototypeFields(): Trying to copy unhandled prototype field type {fieldInfo.PropertyType.Name}");
+                    case PrototypeFieldType.Invalid: continue;
+                    default:
+                        Logger.Warn($"CopyPrototypeFields(): Trying to copy unhandled prototype field type {fieldInfo.PropertyType.Name}");
+                        continue;
                 }
             }
 

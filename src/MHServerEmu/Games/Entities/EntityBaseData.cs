@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Google.ProtocolBuffers;
-using MHServerEmu.Common.Extensions;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.GameData;
@@ -46,7 +47,7 @@ namespace MHServerEmu.Games.Entities
         public uint AvatarWorldInstanceId { get; set; }
         public uint DbId { get; set; }
         public Vector3 Position { get; set; }
-        public Vector3 Orientation { get; set; }
+        public Orientation Orientation { get; set; }
         public LocomotionState LocomotionState { get; set; }
         public float BoundsScaleOverride { get; }
         public ulong SourceEntityId { get; }
@@ -62,7 +63,7 @@ namespace MHServerEmu.Games.Entities
 
             ReplicationPolicy = (AOINetworkPolicyValues)stream.ReadRawVarint32();
             EntityId = stream.ReadRawVarint64();
-            PrototypeId = stream.ReadPrototypeEnum<EntityPrototype>();
+            PrototypeId = stream.ReadPrototypeRef<EntityPrototype>();
             FieldFlags = (EntityCreateMessageFlags)stream.ReadRawVarint32();
             LocoFieldFlags = (LocomotionMessageFlags)stream.ReadRawVarint32();
 
@@ -78,10 +79,10 @@ namespace MHServerEmu.Games.Entities
 
             if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasPositionAndOrientation))
             {
-                Position = new(stream, 3);
+                Position = new(stream);
 
                 Orientation = LocoFieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation)
-                    ? new(stream, 6)
+                    ? new(stream)
                     : new(stream.ReadRawZigZagFloat(6), 0f, 0f);
             }
 
@@ -95,10 +96,10 @@ namespace MHServerEmu.Games.Entities
                 SourceEntityId = stream.ReadRawVarint64();
 
             if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasSourcePosition))
-                SourcePosition = new(stream, 3);
+                SourcePosition = new(stream);
 
             if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasActivePowerPrototypeId))
-                ActivePowerPrototypeId = stream.ReadPrototypeEnum<PowerPrototype>();
+                ActivePowerPrototypeId = stream.ReadPrototypeRef<PowerPrototype>();
 
             if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLoc))
                 InvLoc = new(stream);
@@ -116,7 +117,7 @@ namespace MHServerEmu.Games.Entities
 
         public EntityBaseData() { }
 
-        public EntityBaseData(ulong entityId, PrototypeId prototypeId, Vector3 position, Vector3 orientation, bool snap = false)
+        public EntityBaseData(ulong entityId, PrototypeId prototypeId, Vector3 position, Orientation orientation, bool snap = false)
         {
             ReplicationPolicy = AOINetworkPolicyValues.AOIChannelDiscovery;
             EntityId = entityId;
@@ -140,7 +141,7 @@ namespace MHServerEmu.Games.Entities
         {
             stream.WriteRawVarint32((uint)ReplicationPolicy);
             stream.WriteRawVarint64(EntityId);
-            stream.WritePrototypeEnum<EntityPrototype>(PrototypeId);
+            stream.WritePrototypeRef<EntityPrototype>(PrototypeId);
             stream.WriteRawVarint32((uint)FieldFlags);
             stream.WriteRawVarint32((uint)LocoFieldFlags);
 
@@ -156,12 +157,12 @@ namespace MHServerEmu.Games.Entities
             // Location
             if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasPositionAndOrientation))
             {
-                Position.Encode(stream, 3);
+                Position.Encode(stream);
 
                 if (LocoFieldFlags.HasFlag(LocomotionMessageFlags.HasFullOrientation))
-                    Orientation.Encode(stream, 6);
+                    Orientation.Encode(stream);
                 else
-                    stream.WriteRawZigZagFloat(Orientation.X, 6);
+                    stream.WriteRawZigZagFloat(Orientation.Yaw, 6);
             }
 
             if (LocoFieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false)
@@ -174,10 +175,10 @@ namespace MHServerEmu.Games.Entities
                 stream.WriteRawVarint64(SourceEntityId);
 
             if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasSourcePosition))
-                SourcePosition.Encode(stream, 3);
+                SourcePosition.Encode(stream);
 
             if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasActivePowerPrototypeId))
-                stream.WritePrototypeEnum<PowerPrototype>(ActivePowerPrototypeId);
+                stream.WritePrototypeRef<PowerPrototype>(ActivePowerPrototypeId);
 
             if (FieldFlags.HasFlag(EntityCreateMessageFlags.HasInvLoc))
                 InvLoc.Encode(stream);

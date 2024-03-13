@@ -1,84 +1,83 @@
 ﻿using Gazillion;
-using MHServerEmu.Common.Logging;
-using MHServerEmu.Frontend;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Calligraphy;
-using MHServerEmu.Networking;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Games.MetaGame;
+using MHServerEmu.Games.Entities.Locomotion;
+using MHServerEmu.Games.Network;
+using MHServerEmu.Core.Network;
+using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Games.Powers
 {
     public class PowerMessageHandler
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private readonly EventManager _eventManager;
+        private readonly Game _game;
 
-        public PowerMessageHandler(EventManager eventManager)
+        public PowerMessageHandler(Game game)
         {
-            _eventManager = eventManager;
+            _game = game;
         }
 
-        public IEnumerable<QueuedGameMessage> HandleMessage(FrontendClient client, GameMessage message)
+        public void ReceiveMessage(PlayerConnection playerConnection, GameMessage message)
         {
             switch ((ClientToGameServerMessage)message.Id)
             {
                 case ClientToGameServerMessage.NetMessageTryActivatePower:
                     if (message.TryDeserialize<NetMessageTryActivatePower>(out var tryActivatePower))
-                        return OnTryActivatePower(client, tryActivatePower);
+                        OnTryActivatePower(playerConnection, tryActivatePower);
                     break;
 
                 case ClientToGameServerMessage.NetMessagePowerRelease:
                     if (message.TryDeserialize<NetMessagePowerRelease>(out var powerRelease))
-                        return OnPowerRelease(client, powerRelease);
+                        OnPowerRelease(playerConnection, powerRelease);
                     break;
 
                 case ClientToGameServerMessage.NetMessageTryCancelPower:
                     if (message.TryDeserialize<NetMessageTryCancelPower>(out var tryCancelPower))
-                        return OnTryCancelPower(client, tryCancelPower);
+                        OnTryCancelPower(playerConnection, tryCancelPower);
                     break;
 
                 case ClientToGameServerMessage.NetMessageTryCancelActivePower:
                     if (message.TryDeserialize<NetMessageTryCancelActivePower>(out var tryCancelActivePower))
-                        return OnTryCancelActivePower(client, tryCancelActivePower);
+                        OnTryCancelActivePower(playerConnection, tryCancelActivePower);
                     break;
 
                 case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer:
                     if (message.TryDeserialize<NetMessageContinuousPowerUpdateToServer>(out var continuousPowerUpdate))
-                        return OnContinuousPowerUpdate(client, continuousPowerUpdate);
+                        OnContinuousPowerUpdate(playerConnection, continuousPowerUpdate);
                     break;
 
                 case ClientToGameServerMessage.NetMessageAbilitySlotToAbilityBar:
                     if (message.TryDeserialize<NetMessageAbilitySlotToAbilityBar>(out var slotToAbilityBar))
-                        return OnAbilitySlotToAbilityBar(client, slotToAbilityBar);
+                        OnAbilitySlotToAbilityBar(playerConnection, slotToAbilityBar);
                     break;
 
                 case ClientToGameServerMessage.NetMessageAbilityUnslotFromAbilityBar:
                     if (message.TryDeserialize<NetMessageAbilityUnslotFromAbilityBar>(out var unslotFromAbilityBar))
-                        return OnAbilityUnslotFromAbilityBar(client, unslotFromAbilityBar);
+                        OnAbilityUnslotFromAbilityBar(playerConnection, unslotFromAbilityBar);
                     break;
 
                 case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:
                     if (message.TryDeserialize<NetMessageAbilitySwapInAbilityBar>(out var swapInAbilityBar))
-                        return OnAbilitySwapInAbilityBar(client, swapInAbilityBar);
+                        OnAbilitySwapInAbilityBar(playerConnection, swapInAbilityBar);
                     break;
 
                 case ClientToGameServerMessage.NetMessageAssignStolenPower:
                     if (message.TryDeserialize<NetMessageAssignStolenPower>(out var assignStolenPower))
-                        return OnAssignStolenPower(client, assignStolenPower);
+                        OnAssignStolenPower(playerConnection, assignStolenPower);
                     break;
 
                 default:
                     Logger.Warn($"Received unhandled message {(ClientToGameServerMessage)message.Id} (id {message.Id})");
                     break;
             }
-
-            return Array.Empty<QueuedGameMessage>();
         }
 
         private bool PowerHasKeyword(PrototypeId powerId, PrototypeId keyword)
@@ -92,7 +91,7 @@ namespace MHServerEmu.Games.Powers
             return false;
         }
 
-        private void HandleTravelPower(FrontendClient client, PrototypeId powerId)
+        private void HandleTravelPower(PlayerConnection playerConnection, PrototypeId powerId)
         {
             uint delta = 65; // TODO: Sync server-client
             switch (powerId)
@@ -104,20 +103,20 @@ namespace MHServerEmu.Games.Powers
                 case (PrototypeId)PowerPrototypes.Travel.CyclopsRide:
                 case (PrototypeId)PowerPrototypes.Travel.BlackWidowRide:
                 case (PrototypeId)PowerPrototypes.Travel.BladeRide:
-                    _eventManager.AddEvent(client, EventEnum.StartTravel, 100 - delta, powerId);
+                    _game.EventManager.AddEvent(playerConnection, EventEnum.StartTravel, 100 - delta, powerId);
                     break;
                 case (PrototypeId)PowerPrototypes.Travel.AntmanFlight:
-                    _eventManager.AddEvent(client, EventEnum.StartTravel, 210 - delta, powerId);
+                    _game.EventManager.AddEvent(playerConnection, EventEnum.StartTravel, 210 - delta, powerId);
                     break;
                 case (PrototypeId)PowerPrototypes.Travel.ThingFlight:
-                    _eventManager.AddEvent(client, EventEnum.StartTravel, 235 - delta, powerId);
+                    _game.EventManager.AddEvent(playerConnection, EventEnum.StartTravel, 235 - delta, powerId);
                     break;
             }
         }
 
         #region Message Handling
 
-        private IEnumerable<QueuedGameMessage> OnTryActivatePower(FrontendClient client, NetMessageTryActivatePower tryActivatePower)
+        private void OnTryActivatePower(PlayerConnection playerConnection, NetMessageTryActivatePower tryActivatePower)
         {
             /* ActivatePower using TryActivatePower data
             ActivatePowerArchive activatePowerArchive = new(tryActivatePowerMessage, client.LastPosition);
@@ -126,7 +125,6 @@ namespace MHServerEmu.Games.Powers
                 .Build()));
             */
 
-            List<QueuedGameMessage> messageList = new();
             var powerPrototypeId = (PrototypeId)tryActivatePower.PowerPrototypeId;
             string powerPrototypePath = GameDatabase.GetPrototypeName(powerPrototypeId);
             Logger.Trace($"Received TryActivatePower for {powerPrototypePath}");
@@ -135,28 +133,28 @@ namespace MHServerEmu.Games.Powers
             {
                 Logger.Trace($"AddEvent EndThrowing for {tryActivatePower.PowerPrototypeId}");
                 var power = GameDatabase.GetPrototype<PowerPrototype>(powerPrototypeId);
-                _eventManager.AddEvent(client, EventEnum.EndThrowing, power.AnimationTimeMS, tryActivatePower.PowerPrototypeId);
-                return messageList;
+                _game.EventManager.AddEvent(playerConnection, EventEnum.EndThrowing, power.AnimationTimeMS, tryActivatePower.PowerPrototypeId);
+                return;
             }
             else if (powerPrototypePath.Contains("EmmaFrost/"))
             {
                 if (PowerHasKeyword(powerPrototypeId, (PrototypeId)HardcodedBlueprints.DiamondFormActivatePower))
-                    _eventManager.AddEvent(client, EventEnum.DiamondFormActivate, 0, tryActivatePower.PowerPrototypeId);
+                    _game.EventManager.AddEvent(playerConnection, EventEnum.DiamondFormActivate, 0, tryActivatePower.PowerPrototypeId);
                 else if (PowerHasKeyword(powerPrototypeId, (PrototypeId)HardcodedBlueprints.Mental))
-                    _eventManager.AddEvent(client, EventEnum.DiamondFormDeactivate, 0, tryActivatePower.PowerPrototypeId);
+                    _game.EventManager.AddEvent(playerConnection, EventEnum.DiamondFormDeactivate, 0, tryActivatePower.PowerPrototypeId);
             }
             else if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.Magik.Ultimate)
             {
-                _eventManager.AddEvent(client, EventEnum.StartMagikUltimate, 0, tryActivatePower.TargetPosition);
-                _eventManager.AddEvent(client, EventEnum.EndMagikUltimate, 20000, 0u);
+                _game.EventManager.AddEvent(playerConnection, EventEnum.StartMagikUltimate, 0, tryActivatePower.TargetPosition);
+                _game.EventManager.AddEvent(playerConnection, EventEnum.EndMagikUltimate, 20000, 0u);
             }
             else if (tryActivatePower.PowerPrototypeId == (ulong)PowerPrototypes.Items.BowlingBallItemPower)
             {
-                Item bowlingBall = (Item)client.CurrentGame.EntityManager.GetEntityByPrototypeId((PrototypeId)7835010736274089329); // BowlingBallItem
+                Item bowlingBall = (Item)playerConnection.Game.EntityManager.GetEntityByPrototypeId((PrototypeId)7835010736274089329); // BowlingBallItem
                 if (bowlingBall != null)
                 {
-                    messageList.Add(new(client, new(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(bowlingBall.BaseData.EntityId).Build())));
-                    client.CurrentGame.EntityManager.DestroyEntity(bowlingBall.BaseData.EntityId);
+                    playerConnection.SendMessage(NetMessageEntityDestroy.CreateBuilder().SetIdEntity(bowlingBall.BaseData.EntityId).Build());
+                    playerConnection.Game.EntityManager.DestroyEntity(bowlingBall.BaseData.EntityId);
                 }
             }
 
@@ -168,23 +166,22 @@ namespace MHServerEmu.Games.Powers
             PowerResultArchive archive = new(tryActivatePower);
             if (archive.TargetEntityId > 0)
             {                
-                messageList.Add(new(client, new(NetMessagePowerResult.CreateBuilder()
+                playerConnection.SendMessage(NetMessagePowerResult.CreateBuilder()
                     .SetArchiveData(archive.Serialize())
-                    .Build())));
-                messageList.AddRange(TestHit(client, archive.TargetEntityId, (int)archive.DamagePhysical));
-            }
+                    .Build());
 
-            return messageList;
+                TestHit(playerConnection, archive.TargetEntityId, (int)archive.DamagePhysical);
+            }
         }
 
-        private List<QueuedGameMessage> TestHit(FrontendClient client, ulong entityId, int damage)
+        private void TestHit(PlayerConnection playerConnection, ulong entityId, int damage)
         {
-            List<QueuedGameMessage> messageList = new();
             if (damage > 0)
             {
-                WorldEntity entity = (WorldEntity)client.CurrentGame.EntityManager.GetEntityById(entityId);
+                WorldEntity entity = (WorldEntity)playerConnection.Game.EntityManager.GetEntityById(entityId);
                 if (entity != null)
                 {
+                    var proto = entity.WorldEntityPrototype;
                     var repId = entity.Properties.ReplicationId;
                     int health = entity.Properties[PropertyEnum.Health];
                     int newHealth = health - damage;
@@ -193,96 +190,107 @@ namespace MHServerEmu.Games.Powers
                         entity.ToDead();
                         newHealth = 0;
                         entity.Properties[PropertyEnum.IsDead] = true;
-                        messageList.Add(new(client,
-                         new(Property.ToNetMessageSetProperty(repId, new(PropertyEnum.IsDead), true))
-                         ));
+                        playerConnection.SendMessage(
+                         Property.ToNetMessageSetProperty(repId, new(PropertyEnum.IsDead), true)
+                         );
+                    } else if (proto is AgentPrototype agent && agent.Locomotion.Immobile == false)
+                    {
+                        LocomotionStateUpdateArchive locomotion = new()
+                        {
+                            ReplicationPolicy = AOINetworkPolicyValues.AOIChannelProximity,
+                            EntityId = entityId,
+                            FieldFlags = LocomotionMessageFlags.NoLocomotionState,
+                            Position = new(entity.Location.GetPosition()),
+                            Orientation = new(),
+                            LocomotionState = new(0)
+                        };
+                        locomotion.Orientation.Yaw = Vector3.Angle(locomotion.Position, playerConnection.LastPosition);
+                        playerConnection.SendMessage(NetMessageLocomotionStateUpdate.CreateBuilder()
+                            .SetArchiveData(locomotion.Serialize())
+                            .Build());
+                    }
+                    if (entity.ConditionCollection.Count > 0 && health == entity.Properties[PropertyEnum.HealthMaxOther])
+                    {
+                        playerConnection.SendMessage(NetMessageDeleteCondition.CreateBuilder()
+                            .SetIdEntity(entityId)
+                            .SetKey(1)
+                            .Build());
                     }
                     entity.Properties[PropertyEnum.Health] = newHealth;
-                    messageList.Add(new(client,
-                        new(Property.ToNetMessageSetProperty(repId, new(PropertyEnum.Health), newHealth))
-                        ));
+                    playerConnection.SendMessage(
+                        Property.ToNetMessageSetProperty(repId, new(PropertyEnum.Health), newHealth)
+                        );
                     if (newHealth == 0)
                     {
-                        messageList.Add(new(client,
-                        new(NetMessageEntityKill.CreateBuilder()
-                        .SetIdEntity(entityId)
-                        .SetIdKillerEntity((ulong)client.Session.Account.Player.Avatar.ToEntityId())
-                        .SetKillFlags(0).Build())));
-                        messageList.Add(new(client,
-                        new(Property.ToNetMessageSetProperty(repId, new(PropertyEnum.NoEntityCollide), true))
-                        ));
+                        playerConnection.SendMessage(NetMessageEntityKill.CreateBuilder()
+                            .SetIdEntity(entityId)
+                            .SetIdKillerEntity((ulong)playerConnection.Account.Player.Avatar.ToEntityId())
+                            .SetKillFlags(0).Build());
+
+                        playerConnection.SendMessage(
+                            Property.ToNetMessageSetProperty(repId, new(PropertyEnum.NoEntityCollide), true)
+                        );
                     }
                 }
             }
-            return messageList;
         }
 
-        private IEnumerable<QueuedGameMessage> OnPowerRelease(FrontendClient client, NetMessagePowerRelease powerRelease)
+        private void OnPowerRelease(PlayerConnection playerConnection, NetMessagePowerRelease powerRelease)
         {
             Logger.Trace($"Received PowerRelease for {GameDatabase.GetPrototypeName((PrototypeId)powerRelease.PowerPrototypeId)}");
-            return Array.Empty<QueuedGameMessage>();
         }
 
-        private IEnumerable<QueuedGameMessage> OnTryCancelPower(FrontendClient client, NetMessageTryCancelPower tryCancelPower)
+        private void OnTryCancelPower(PlayerConnection playerConnection, NetMessageTryCancelPower tryCancelPower)
         {
             string powerPrototypePath = GameDatabase.GetPrototypeName((PrototypeId)tryCancelPower.PowerPrototypeId);
             Logger.Trace($"Received TryCancelPower for {powerPrototypePath}");
 
             if (powerPrototypePath.Contains("TravelPower/"))
-                _eventManager.AddEvent(client, EventEnum.EndTravel, 0, tryCancelPower.PowerPrototypeId);
-
-            return Array.Empty<QueuedGameMessage>();
+                _game.EventManager.AddEvent(playerConnection, EventEnum.EndTravel, 0, tryCancelPower.PowerPrototypeId);
         }
 
-        private IEnumerable<QueuedGameMessage> OnTryCancelActivePower(FrontendClient client, NetMessageTryCancelActivePower tryCancelActivePower)
+        private void OnTryCancelActivePower(PlayerConnection playerConnection, NetMessageTryCancelActivePower tryCancelActivePower)
         {
             Logger.Trace("Received TryCancelActivePower");
-            return Array.Empty<QueuedGameMessage>();
         }
 
-        private IEnumerable<QueuedGameMessage> OnContinuousPowerUpdate(FrontendClient client, NetMessageContinuousPowerUpdateToServer continuousPowerUpdate)
+        private void OnContinuousPowerUpdate(PlayerConnection playerConnection, NetMessageContinuousPowerUpdateToServer continuousPowerUpdate)
         {
             var powerPrototypeId = (PrototypeId)continuousPowerUpdate.PowerPrototypeId;
             string powerPrototypePath = GameDatabase.GetPrototypeName(powerPrototypeId);
             Logger.Trace($"Received ContinuousPowerUpdate for {powerPrototypePath}");
 
             if (powerPrototypePath.Contains("TravelPower/"))
-                HandleTravelPower(client, powerPrototypeId);
+                HandleTravelPower(playerConnection, powerPrototypeId);
             // Logger.Trace(continuousPowerUpdate.ToString());
-
-            return Array.Empty<QueuedGameMessage>();
         }
 
         // Ability bar management (TODO: Move this to avatar entity)
 
-        private IEnumerable<QueuedGameMessage> OnAbilitySlotToAbilityBar(FrontendClient client, NetMessageAbilitySlotToAbilityBar slotToAbilityBar)
+        private void OnAbilitySlotToAbilityBar(PlayerConnection playerConnection, NetMessageAbilitySlotToAbilityBar slotToAbilityBar)
         {
-            var abilityKeyMapping = client.Session.Account.CurrentAvatar.AbilityKeyMapping;
+            var abilityKeyMapping = playerConnection.Account.CurrentAvatar.AbilityKeyMapping;
             PrototypeId prototypeRefId = (PrototypeId)slotToAbilityBar.PrototypeRefId;
             AbilitySlot slotNumber = (AbilitySlot)slotToAbilityBar.SlotNumber;
             Logger.Trace($"NetMessageAbilitySlotToAbilityBar: {GameDatabase.GetFormattedPrototypeName(prototypeRefId)} to {slotNumber}");
 
             // Set
             abilityKeyMapping.SetAbilityInAbilitySlot(prototypeRefId, slotNumber);
-            
-            return Array.Empty<QueuedGameMessage>();
         }
 
-        private IEnumerable<QueuedGameMessage> OnAbilityUnslotFromAbilityBar(FrontendClient client, NetMessageAbilityUnslotFromAbilityBar unslotFromAbilityBar)
+        private void OnAbilityUnslotFromAbilityBar(PlayerConnection playerConnection, NetMessageAbilityUnslotFromAbilityBar unslotFromAbilityBar)
         {
-            var abilityKeyMapping = client.Session.Account.CurrentAvatar.AbilityKeyMapping;
+            var abilityKeyMapping = playerConnection.Account.CurrentAvatar.AbilityKeyMapping;
             AbilitySlot slotNumber = (AbilitySlot)unslotFromAbilityBar.SlotNumber;
             Logger.Trace($"NetMessageAbilityUnslotFromAbilityBar: from {slotNumber}");
 
             // Remove by assigning invalid id
             abilityKeyMapping.SetAbilityInAbilitySlot(PrototypeId.Invalid, slotNumber);
-
-            return Array.Empty<QueuedGameMessage>();
         }
 
-        private IEnumerable<QueuedGameMessage> OnAbilitySwapInAbilityBar(FrontendClient client, NetMessageAbilitySwapInAbilityBar swapInAbilityBar)
+        private void OnAbilitySwapInAbilityBar(PlayerConnection playerConnection, NetMessageAbilitySwapInAbilityBar swapInAbilityBar)
         {
-            var abilityKeyMapping = client.Session.Account.CurrentAvatar.AbilityKeyMapping;
+            var abilityKeyMapping = playerConnection.Account.CurrentAvatar.AbilityKeyMapping;
             AbilitySlot slotA = (AbilitySlot)swapInAbilityBar.SlotNumberA;
             AbilitySlot slotB = (AbilitySlot)swapInAbilityBar.SlotNumberB;
             Logger.Trace($"NetMessageAbilitySwapInAbilityBar: {slotA} and {slotB}");
@@ -292,15 +300,13 @@ namespace MHServerEmu.Games.Powers
             PrototypeId prototypeB = abilityKeyMapping.GetAbilityInAbilitySlot(slotB);
             abilityKeyMapping.SetAbilityInAbilitySlot(prototypeB, slotA);
             abilityKeyMapping.SetAbilityInAbilitySlot(prototypeA, slotB);
-
-            return Array.Empty<QueuedGameMessage>();
         }
 
-        private IEnumerable<QueuedGameMessage> OnAssignStolenPower(FrontendClient client, NetMessageAssignStolenPower assignStolenPower)
+        private void OnAssignStolenPower(PlayerConnection playerConnection, NetMessageAssignStolenPower assignStolenPower)
         {
             PropertyParam param = Property.ToParam(PropertyEnum.AvatarMappedPower, 0, (PrototypeId)assignStolenPower.StealingPowerProtoId);
-            yield return new(client, new(Property.ToNetMessageSetProperty((ulong)HardcodedAvatarPropertyCollectionReplicationId.Rogue,
-                new(PropertyEnum.AvatarMappedPower, param), (PrototypeId)assignStolenPower.StolenPowerProtoId)));
+            playerConnection.SendMessage(Property.ToNetMessageSetProperty((ulong)HardcodedAvatarPropertyCollectionReplicationId.Rogue,
+                new(PropertyEnum.AvatarMappedPower, param), (PrototypeId)assignStolenPower.StolenPowerProtoId));
         }
 
         #endregion

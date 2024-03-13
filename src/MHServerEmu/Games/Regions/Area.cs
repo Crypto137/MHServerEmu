@@ -1,16 +1,17 @@
 ﻿using Gazillion;
-using MHServerEmu.Common;
-using MHServerEmu.Common.Extensions;
-using MHServerEmu.Common.Logging;
-using MHServerEmu.Games.Common;
+using Google.ProtocolBuffers;
+using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.System.Random;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Generators;
 using MHServerEmu.Games.Generators.Areas;
 using MHServerEmu.Games.Generators.Population;
 using MHServerEmu.Games.Generators.Regions;
-using MHServerEmu.Networking;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -123,7 +124,7 @@ namespace MHServerEmu.Games.Regions
 
             PropTable = new();
 
-            if (AreaPrototype.PropSets.IsNullOrEmpty() == false)
+            if (AreaPrototype.PropSets.HasValue())
             {
                 foreach (var propSet in AreaPrototype.PropSets)
                     PropTable.AppendPropSet(propSet);
@@ -222,10 +223,10 @@ namespace MHServerEmu.Games.Regions
 
         private bool PostGenerate()
         {
-            /*    if (AreaPrototype.FullyGenerateCells) // only TheRaft
-                    foreach (var cell in CellList)
-                        cell.PostGenerate(); // can be here?
-            */
+            // if (AreaPrototype.FullyGenerateCells) // only TheRaft
+            foreach (var cell in CellIterator())
+                cell.PostGenerate(); // can be here?
+            
             return true;
         }
 
@@ -391,7 +392,7 @@ namespace MHServerEmu.Games.Regions
 
         public static void CreateConnection(Area areaA, Area areaB, Vector3 position, ConnectPosition connectPosition)
         {
-            if (areaA.LogDebug) Logger.Debug($"connect {position.ToStringFloat()} {areaA.Id} <> {areaB.Id}");
+            if (areaA.LogDebug) Logger.Debug($"connect {position} {areaA.Id} <> {areaB.Id}");
             areaA.AddConnection(position, areaB, connectPosition);
             areaB.AddConnection(position, areaA, connectPosition);
         }
@@ -417,7 +418,7 @@ namespace MHServerEmu.Games.Regions
 
         public override string ToString()
         {
-            return $"{PrototypeName}, areaid={Id}, aabb={RegionBounds.ToStringFloat()}, game={Game}";
+            return $"{PrototypeName}, areaid={Id}, aabb={RegionBounds}, game={Game}";
         }
 
         public string PrototypeName => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef);
@@ -481,17 +482,17 @@ namespace MHServerEmu.Games.Regions
             return positionInArea + Origin;
         }
 
-        public GameMessage MessageAddArea(bool isStartArea)
+        public IMessage MessageAddArea(bool isStartArea)
         {
-            return new((byte)GameServerToClientMessage.NetMessageAddArea, NetMessageAddArea.CreateBuilder()
+            return NetMessageAddArea.CreateBuilder()
                 .SetAreaId(Id)
                 .SetAreaPrototypeId((ulong)PrototypeId)
                 .SetAreaOrigin(Origin.ToNetStructPoint3())
                 .SetIsStartArea(isStartArea)
-                .Build().ToByteArray());
+                .Build();
         }
 
-        public bool FindTargetPosition(Vector3 markerPos, Vector3 markerRot, RegionConnectionTargetPrototype target)
+        public bool FindTargetPosition(Vector3 markerPos, Orientation markerRot, RegionConnectionTargetPrototype target)
         {
             var cellRef = GameDatabase.GetDataRefByAsset(target.Cell);
 

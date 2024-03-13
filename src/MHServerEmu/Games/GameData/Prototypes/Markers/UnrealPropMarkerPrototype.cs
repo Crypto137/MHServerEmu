@@ -1,4 +1,4 @@
-﻿using MHServerEmu.Common.Extensions;
+﻿using MHServerEmu.Core.Extensions;
 
 namespace MHServerEmu.Games.GameData.Prototypes.Markers
 {
@@ -14,8 +14,7 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
             UnrealQualifiedName = reader.ReadFixedString32();
             UnrealArchetypeName = reader.ReadFixedString32();
 
-            Position = reader.ReadVector3();
-            Rotation = reader.ReadVector3();
+            ReadMarker(reader);
         }
     }
 }

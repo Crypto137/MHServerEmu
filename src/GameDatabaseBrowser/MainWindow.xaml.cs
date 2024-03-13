@@ -1,8 +1,10 @@
 ﻿using GameDatabaseBrowser.Models;
 using GameDatabaseBrowser.Providers;
 using GameDatabaseBrowser.Search;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
 using MHServerEmu.Games.Properties;
@@ -106,7 +108,15 @@ namespace GameDatabaseBrowser
             BackgroundWorker worker = sender as BackgroundWorker;
             worker.ReportProgress(0);
 
-            PakFileSystem.Instance.Initialize();
+            if (!PakFileSystem.Instance.Initialize())
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    NoSipMessage.Visibility = Visibility.Visible;
+                });
+                return;
+            }
+
             bool isInitialized = GameDatabase.IsInitialized;
             DataDirectory dataDirectory = DataDirectory.Instance;
 
@@ -165,6 +175,9 @@ namespace GameDatabaseBrowser
         /// </summary>
         private void OnPrototypeTreeLoaded(object sender, RunWorkerCompletedEventArgs e)
         {
+            if (NoSipMessage.Visibility == Visibility.Visible)
+                return;
+
             Dispatcher.Invoke(() =>
             {
                 progressBar.Visibility = Visibility.Collapsed;
@@ -510,6 +523,9 @@ namespace GameDatabaseBrowser
 
             foreach (PropertyInfo propInfo in propertyInfo)
             {
+                if (Attribute.IsDefined(propInfo, typeof(DoNotCopyAttribute)))
+                    continue;
+
                 var propValue = propInfo.GetValue(property);
                 RegisterPrototypeIdIfNeeded(propValue, parent);
 
@@ -596,11 +612,14 @@ namespace GameDatabaseBrowser
 
             foreach (PropertyInfo propInfo in propertyInfo)
             {
+                if (Attribute.IsDefined(propInfo, typeof(DoNotCopyAttribute)))
+                    continue;
+
                 var propValue = propInfo.GetValue(property);
 
                 if (propValue is PropertyCollection)
                     node.Childs.Add(new() { PropertyDetails = new() { Name = propInfo.Name, Value = "", TypeName = propInfo.PropertyType.Name }, IsExpanded = needExpand });
-                else
+                else if(propInfo.Name != "ParentDataRef")
                     node.Childs.Add(new() { PropertyDetails = new() { Name = propInfo.Name, Value = propValue?.ToString(), TypeName = propInfo.PropertyType.Name }, IsExpanded = needExpand });
 
                 if (IsTypeBrowsable(propInfo.PropertyType) == false)
@@ -688,7 +707,7 @@ namespace GameDatabaseBrowser
             {
                 string prototypeFullName = GameDatabase.GetPrototypeName((PrototypeId)parentPrototypeId);
                 txtParentDataRef.Text = $"Parent : {prototypeFullName} ({parentPrototypeId})";
-                txtParentDataRef.DataContext = new PropertyNode() { PropertyDetails = new PropertyDetails() { Name = prototypeFullName, Value = parentPrototypeId.ToString(), TypeName = "PrototypeId"} };
+                txtParentDataRef.DataContext = new PropertyNode() { PropertyDetails = new PropertyDetails() { Name = prototypeFullName, Value = parentPrototypeId.ToString(), TypeName = "PrototypeId" } };
             }
             else
             {

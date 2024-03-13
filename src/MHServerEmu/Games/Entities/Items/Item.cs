@@ -20,9 +20,9 @@ namespace MHServerEmu.Games.Entities.Items
             Properties[PropertyEnum.ItemRarity] = itemRarity;
             Properties[PropertyEnum.ItemVariation] = itemVariation;
             
-            TrackingContextMap = Array.Empty<EntityTrackingContextMap>();
-            ConditionCollection = Array.Empty<Condition>();
-            PowerCollection = Array.Empty<PowerCollectionRecord>();
+            TrackingContextMap = new();
+            ConditionCollection = new();    
+            PowerCollection = new();
             UnkEvent = 0;
             ItemSpec = itemSpec;
         }
