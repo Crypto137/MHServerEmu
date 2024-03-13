@@ -308,10 +308,10 @@ namespace MHServerEmu.Games.Network
 
             if (Game.EntityManager.TryGetEntityById(performPreInteractPower.IdTarget, out Entity interactObject))
             {
-                if (Game.EventManager.HasEvent(this, EventEnum.OnPreInteractPowerEnd) == false)
+                if (Game.EventManager.HasEvent(this, EventEnum.PreInteractPowerEnd) == false)
                 {
-                    Game.EventManager.AddEvent(this, EventEnum.OnPreInteractPower, 0, interactObject);
-                    Game.EventManager.AddEvent(this, EventEnum.OnPreInteractPowerEnd, 1000, interactObject); // ChargingTimeMS    
+                    Game.EventManager.AddEvent(this, EventEnum.PreInteractPower, 0, interactObject);
+                    Game.EventManager.AddEvent(this, EventEnum.PreInteractPowerEnd, 1000, interactObject); // ChargingTimeMS    
                 }
             }
         }

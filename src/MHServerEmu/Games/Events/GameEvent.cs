@@ -15,8 +15,8 @@ namespace MHServerEmu.Games.Events
         ToTeleport,
         EmoteDance,
         FinishCellLoading,
-        OnPreInteractPower,
-        OnPreInteractPowerEnd,
+        PreInteractPower,
+        PreInteractPowerEnd,
         UseInteractableObject,
         GetRegion
     }
