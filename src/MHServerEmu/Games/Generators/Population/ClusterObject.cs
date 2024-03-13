@@ -774,7 +774,7 @@ namespace MHServerEmu.Games.Generators.Population
 
     public class ClusterEntity : ClusterObject
     {        
-        public PrototypeId EntitySelectorRef { get; private set; }
+        public EntitySelectorPrototype EntitySelectorProto { get; private set; }
         public PrototypeId EntityRef { get; private set; }
         public WorldEntityPrototype EntityProto { get; private set; }
         public bool? SnapToFloor { get; set; }
@@ -795,7 +795,7 @@ namespace MHServerEmu.Games.Generators.Population
             Prototype entity = GameDatabase.GetPrototype<Prototype>(selectorRef);
             if (entity is EntitySelectorPrototype entitySelector)
             {
-                EntitySelectorRef = selectorRef;
+                EntitySelectorProto = entitySelector;
                 PrototypeId entityRef = entitySelector.SelectEntity(random, region);
                 if (entityRef != PrototypeId.Invalid)
                     EntityRef = entityRef;
@@ -920,11 +920,17 @@ namespace MHServerEmu.Games.Generators.Population
             int health = EntityManager.GetRankHealth(entity);
             var worldEntity = entityManager.CreateWorldEntity(cell, EntityRef, pos, rot, health, false, overrideSnap);      
             if (worldEntity == null) return;
+            bool startAction = false;
             if (Parent.MissionRef != PrototypeId.Invalid)
             {                
                 worldEntity.Properties[PropertyEnum.MissionPrototype] = Parent.MissionRef;
                 if (worldEntity.WorldEntityPrototype is AgentPrototype)
-                    worldEntity.AppendOnStartActions(Parent.MissionRef);
+                    startAction = worldEntity.AppendOnStartActions(Parent.MissionRef);
+            } 
+            if (startAction == false && EntitySelectorProto != null && EntitySelectorProto.EntitySelectorActions.HasValue())
+            {
+                if (worldEntity.WorldEntityPrototype is AgentPrototype)
+                    worldEntity.AppendSelectorActions(EntitySelectorProto.EntitySelectorActions);
             }
             // TODO set Rank
             if (DebugLog) Logger.Debug($"Spawn [{worldEntity.BaseData.EntityId}] {worldEntity.PrototypeName} {pos} [{oldZ}=>{pos.Z}] [{Parent.Objects.Count}] {GameDatabase.GetFormattedPrototypeName(Parent.ObjectProto.GetFormation().DataRef)}");
