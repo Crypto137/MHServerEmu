@@ -26,8 +26,8 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
         public ulong Costume { get; set; } = 0;
         public long RawCostume { get => (long)Costume; private set => Costume = (ulong)value; }
 
-        public AbilityKeyMapping AbilityKeyMapping { get; set; }
-        public byte[] RawAbilityKeyMapping { get => EncodeAbilityKeyMapping(AbilityKeyMapping); set => AbilityKeyMapping = DecodeAbilityKeyMapping(value); }
+        public AbilityKeyMapping AbilityKeyMapping { get => DecodeAbilityKeyMapping(RawAbilityKeyMapping); set => RawAbilityKeyMapping = EncodeAbilityKeyMapping(value); }
+        public byte[] RawAbilityKeyMapping { get; set; }
 
         public DBAvatar(ulong accountId, AvatarPrototypeId prototype)
         {

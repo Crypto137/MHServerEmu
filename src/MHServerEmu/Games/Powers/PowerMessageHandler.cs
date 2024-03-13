@@ -54,21 +54,6 @@ namespace MHServerEmu.Games.Powers
                         OnContinuousPowerUpdate(playerConnection, continuousPowerUpdate);
                     break;
 
-                case ClientToGameServerMessage.NetMessageAbilitySlotToAbilityBar:
-                    if (message.TryDeserialize<NetMessageAbilitySlotToAbilityBar>(out var slotToAbilityBar))
-                        OnAbilitySlotToAbilityBar(playerConnection, slotToAbilityBar);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageAbilityUnslotFromAbilityBar:
-                    if (message.TryDeserialize<NetMessageAbilityUnslotFromAbilityBar>(out var unslotFromAbilityBar))
-                        OnAbilityUnslotFromAbilityBar(playerConnection, unslotFromAbilityBar);
-                    break;
-
-                case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:
-                    if (message.TryDeserialize<NetMessageAbilitySwapInAbilityBar>(out var swapInAbilityBar))
-                        OnAbilitySwapInAbilityBar(playerConnection, swapInAbilityBar);
-                    break;
-
                 case ClientToGameServerMessage.NetMessageAssignStolenPower:
                     if (message.TryDeserialize<NetMessageAssignStolenPower>(out var assignStolenPower))
                         OnAssignStolenPower(playerConnection, assignStolenPower);
@@ -224,7 +209,7 @@ namespace MHServerEmu.Games.Powers
                     {
                         playerConnection.SendMessage(NetMessageEntityKill.CreateBuilder()
                             .SetIdEntity(entityId)
-                            .SetIdKillerEntity((ulong)playerConnection.Account.Player.Avatar.ToEntityId())
+                            .SetIdKillerEntity(playerConnection.Player.CurrentAvatar.BaseData.EntityId)
                             .SetKillFlags(0).Build());
 
                         playerConnection.SendMessage(
@@ -263,43 +248,6 @@ namespace MHServerEmu.Games.Powers
             if (powerPrototypePath.Contains("TravelPower/"))
                 HandleTravelPower(playerConnection, powerPrototypeId);
             // Logger.Trace(continuousPowerUpdate.ToString());
-        }
-
-        // Ability bar management (TODO: Move this to avatar entity)
-
-        private void OnAbilitySlotToAbilityBar(PlayerConnection playerConnection, NetMessageAbilitySlotToAbilityBar slotToAbilityBar)
-        {
-            var abilityKeyMapping = playerConnection.Account.CurrentAvatar.AbilityKeyMapping;
-            PrototypeId prototypeRefId = (PrototypeId)slotToAbilityBar.PrototypeRefId;
-            AbilitySlot slotNumber = (AbilitySlot)slotToAbilityBar.SlotNumber;
-            Logger.Trace($"NetMessageAbilitySlotToAbilityBar: {GameDatabase.GetFormattedPrototypeName(prototypeRefId)} to {slotNumber}");
-
-            // Set
-            abilityKeyMapping.SetAbilityInAbilitySlot(prototypeRefId, slotNumber);
-        }
-
-        private void OnAbilityUnslotFromAbilityBar(PlayerConnection playerConnection, NetMessageAbilityUnslotFromAbilityBar unslotFromAbilityBar)
-        {
-            var abilityKeyMapping = playerConnection.Account.CurrentAvatar.AbilityKeyMapping;
-            AbilitySlot slotNumber = (AbilitySlot)unslotFromAbilityBar.SlotNumber;
-            Logger.Trace($"NetMessageAbilityUnslotFromAbilityBar: from {slotNumber}");
-
-            // Remove by assigning invalid id
-            abilityKeyMapping.SetAbilityInAbilitySlot(PrototypeId.Invalid, slotNumber);
-        }
-
-        private void OnAbilitySwapInAbilityBar(PlayerConnection playerConnection, NetMessageAbilitySwapInAbilityBar swapInAbilityBar)
-        {
-            var abilityKeyMapping = playerConnection.Account.CurrentAvatar.AbilityKeyMapping;
-            AbilitySlot slotA = (AbilitySlot)swapInAbilityBar.SlotNumberA;
-            AbilitySlot slotB = (AbilitySlot)swapInAbilityBar.SlotNumberB;
-            Logger.Trace($"NetMessageAbilitySwapInAbilityBar: {slotA} and {slotB}");
-
-            // Swap
-            PrototypeId prototypeA = abilityKeyMapping.GetAbilityInAbilitySlot(slotA);
-            PrototypeId prototypeB = abilityKeyMapping.GetAbilityInAbilitySlot(slotB);
-            abilityKeyMapping.SetAbilityInAbilitySlot(prototypeB, slotA);
-            abilityKeyMapping.SetAbilityInAbilitySlot(prototypeA, slotB);
         }
 
         private void OnAssignStolenPower(PlayerConnection playerConnection, NetMessageAssignStolenPower assignStolenPower)

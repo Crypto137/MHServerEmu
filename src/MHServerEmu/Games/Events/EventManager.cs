@@ -76,7 +76,7 @@ namespace MHServerEmu.Games.Events
                 return;
 
             AddConditionArchive conditionArchive;
-            ulong avatarEntityId = (ulong)playerConnection.Account.Player.Avatar.ToEntityId();
+            ulong avatarEntityId = (ulong)playerConnection.Player.CurrentAvatar.BaseData.EntityId;
 
             switch (eventId)
             {
@@ -235,7 +235,7 @@ namespace MHServerEmu.Games.Events
                     uint areaid = 1;
 
                     playerConnection.SendMessage(NetMessageEntityPosition.CreateBuilder()
-                        .SetIdEntity((ulong)playerConnection.Account.Player.Avatar.ToEntityId())
+                        .SetIdEntity((ulong)playerConnection.Player.CurrentAvatar.BaseData.EntityId)
                         .SetFlags(64)
                         .SetPosition(targetPos.ToNetStructPoint3())
                         .SetOrientation(targetRot.ToNetStructPoint3())
@@ -343,7 +343,7 @@ namespace MHServerEmu.Games.Events
                     if (playerConnection.ThrowingObject == null) break;
 
                     // TODO: avatarRepId = Player.EntityManager.GetEntity(avatarEntityId).RepId
-                    ulong avatarRepId = (ulong)playerConnection.Account.Player.Avatar.ToPropertyCollectionReplicationId();
+                    ulong avatarRepId = playerConnection.Player.CurrentAvatar.Properties.ReplicationId;
 
                     playerConnection.SendMessage(Property.ToNetMessageSetProperty(avatarRepId, new(PropertyEnum.ThrowableOriginatorEntity), idTarget));
                     Logger.Warn($"{GameDatabase.GetPrototypeName(playerConnection.ThrowingObject.BaseData.PrototypeId)}");
@@ -391,7 +391,7 @@ namespace MHServerEmu.Games.Events
 
                 case EventEnum.EndThrowing:
                     powerId = (PrototypeId)queuedEvent.Data;
-                    avatarRepId = (ulong)playerConnection.Account.Player.Avatar.ToPropertyCollectionReplicationId();
+                    avatarRepId = (ulong)playerConnection.Player.CurrentAvatar.Properties.ReplicationId;
                     // TODO: avatarRepId = Player.EntityManager.GetEntity(AvatarEntityId).RepId
 
                     playerConnection.SendMessage(Property.ToNetMessageRemoveProperty(avatarRepId, new(PropertyEnum.ThrowableOriginatorEntity)));
@@ -431,11 +431,11 @@ namespace MHServerEmu.Games.Events
                         | ConditionSerializationFlags.HasIndex | ConditionSerializationFlags.HasAssetDataRef | ConditionSerializationFlags.AssetDataRefIsNotFromOwner;
 
                     var diamondFormCondition = (PrototypeId)PowerPrototypes.EmmaFrost.DiamondFormCondition;
-                    conditionArchive = new((ulong)playerConnection.Account.Player.Avatar.ToEntityId(), 111, conditionSerializationFlags, diamondFormCondition, 0);
+                    conditionArchive = new(playerConnection.Player.CurrentAvatar.BaseData.EntityId, 111, conditionSerializationFlags, diamondFormCondition, 0);
 
                     Logger.Trace($"Event Start EmmaDiamondForm");
 
-                    var emmaCostume = (PrototypeId)playerConnection.Account.CurrentAvatar.Costume;
+                    PrototypeId emmaCostume = playerConnection.Player.CurrentAvatar.Properties[PropertyEnum.CostumeCurrent];
 
                     // Invalid prototype id is the same as the default costume
                     if (emmaCostume == PrototypeId.Invalid)
@@ -454,7 +454,7 @@ namespace MHServerEmu.Games.Events
                     // TODO: get DiamondFormCondition Condition Key
                     playerConnection.SendMessage(NetMessageDeleteCondition.CreateBuilder()
                       .SetKey(111)
-                      .SetIdEntity((ulong)playerConnection.Account.Player.Avatar.ToEntityId())
+                      .SetIdEntity(playerConnection.Player.CurrentAvatar.BaseData.EntityId)
                       .Build());
 
                     Logger.Trace($"EventEnd EmmaDiamondForm");

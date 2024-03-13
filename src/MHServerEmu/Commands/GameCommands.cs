@@ -5,13 +5,16 @@ using MHServerEmu.Core.System;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Achievements;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Grouping;
 using MHServerEmu.PlayerManagement;
 using MHServerEmu.PlayerManagement.Accounts;
+using MHServerEmu.PlayerManagement.Accounts.DBModels;
 
 namespace MHServerEmu.Commands
 {
@@ -111,7 +114,7 @@ namespace MHServerEmu.Commands
             var game = playerManager.GetGameByPlayer(client);
             var playerConnection = game.NetworkManager.GetPlayerConnection(client);
 
-            AvatarPrototypeId avatar = client.Session.Account.Player.Avatar;
+            var avatar = (AvatarPrototypeId)playerConnection.Player.CurrentAvatar.BaseData.PrototypeId;
             switch (avatar)
             {
                 case AvatarPrototypeId.BlackPanther:
@@ -193,8 +196,12 @@ namespace MHServerEmu.Commands
 
             if (Enum.TryParse(typeof(AvatarPrototypeId), @params[0], true, out object avatar))
             {
-                client.Session.Account.Player.Avatar = (AvatarPrototypeId)avatar;
-                return $"Changing avatar to {client.Session.Account.Player.Avatar}. Relog for changes to take effect.";
+                var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+                var game = playerManager.GetGameByPlayer(client);
+                var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+
+                playerConnection.Player.SetAvatar((PrototypeId)avatar);
+                return $"Changing avatar to {avatar}. Relog for changes to take effect.";
             }
             else
             {
@@ -257,16 +264,26 @@ namespace MHServerEmu.Commands
 
                 if (prototypeId == 0 || prototypePath.Contains("Entity/Items/Costumes/Prototypes/"))
                 {
-                    // Get replication id for the client avatar
-                    ulong replicationId = (ulong)client.Session.Account.Player.Avatar.ToPropertyCollectionReplicationId();
+                    var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+                    var game = playerManager.GetGameByPlayer(client);
+                    var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+                    var player = playerConnection.Player;
+                    var avatar = player.CurrentAvatar;
 
-                    // Update account data if needed
-                    if (ConfigManager.PlayerManager.BypassAuth == false) client.Session.Account.CurrentAvatar.Costume = (ulong)prototypeId;
+                    // Update player and avatar properties
+                    avatar.Properties[PropertyEnum.CostumeCurrent] = prototypeId;
+                    player.Properties[PropertyEnum.AvatarLibraryCostume, avatar.BaseData.PrototypeId] = prototypeId;
 
-                    // Send NetMessageSetProperty message with a CostumeCurrent property for the purchased costume
-                    client.SendMessage(1, 
-                        Property.ToNetMessageSetProperty(replicationId, new(PropertyEnum.CostumeCurrent), prototypeId)
-                        );
+                    // Send client property updates (TODO: Remove this when we have those generated automatically)
+                    // Avatar entity
+                    client.SendMessage(1, Property.ToNetMessageSetProperty(
+                        avatar.Properties.ReplicationId, new(PropertyEnum.CostumeCurrent), prototypeId));
+
+                    // Player entity
+                    PropertyParam enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, avatar.BaseData.PrototypeId);
+                    client.SendMessage(1, Property.ToNetMessageSetProperty(
+                        player.Properties.ReplicationId, new(PropertyEnum.AvatarLibraryCostume, 0, enumValue), prototypeId));
+
                     return $"Changing costume to {GameDatabase.GetPrototypeName(prototypeId)}";
                 }
                 else
@@ -317,7 +334,11 @@ namespace MHServerEmu.Commands
             if (info.Enabled == false)
                 return $"Achievement id {id} is disabled.";
 
-            AchievementState state = client.Session.Account.Player.AchievementState;
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            var game = playerManager.GetGameByPlayer(client);
+            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+
+            AchievementState state = playerConnection.Player.AchievementState;
             state.SetAchievementProgress(id, new(info.Threshold, Clock.UnixTime));
             client.SendMessage(1, state.ToUpdateMessage(true));
             return string.Empty;

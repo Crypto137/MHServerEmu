@@ -5,6 +5,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Powers
@@ -13,12 +14,13 @@ namespace MHServerEmu.Games.Powers
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public static List<IMessage> LoadAvatarPowerCollection(HardcodedAvatarEntityId avatar)
+        public static List<IMessage> LoadAvatarPowerCollection(PlayerConnection playerConnection)
         {
             List<IMessage> messageList = new();
 
-            ulong replicationId = (ulong)avatar.ToPropertyCollectionReplicationId();
-            var avatarPrototype = GameDatabase.GetPrototype<AvatarPrototype>(avatar.ToAvatarPrototypeId());
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
+            ulong replicationId = avatar.Properties.ReplicationId;
+            var avatarPrototype = GameDatabase.GetPrototype<AvatarPrototype>(avatar.BaseData.PrototypeId);
 
             // Gather all the powers we need to unlock
             List<PrototypeId> powersToUnlockList = new();
@@ -49,7 +51,7 @@ namespace MHServerEmu.Games.Powers
             }
 
             // Stolen powers for Rogue
-            if (avatar == HardcodedAvatarEntityId.Rogue)
+            if (avatarPrototype.DataRef == (PrototypeId)AvatarPrototypeId.Rogue)
             {
                 foreach (PrototypeId stealablePowerInfoId in GameDatabase.DataDirectory.IteratePrototypesInHierarchy(typeof(StealablePowerInfoPrototype), PrototypeIterateFlags.NoAbstract))
                 {
@@ -70,7 +72,7 @@ namespace MHServerEmu.Games.Powers
             foreach (PrototypeId powerProtoId in powersToUnlockList)
             {
                 powerList.Add(NetMessagePowerCollectionAssignPower.CreateBuilder()
-                    .SetEntityId((ulong)avatar)
+                    .SetEntityId(avatar.BaseData.EntityId)
                     .SetPowerProtoId((ulong)powerProtoId)
                     //.SetPowerRank(powerProtoId == (ulong)PowerPrototypes.Angela.AngelaFlight ? 1 : 0)
                     .SetPowerRank(0)

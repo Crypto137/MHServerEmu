@@ -83,6 +83,9 @@ namespace MHServerEmu.Games.Entities
         public GameplayOptions GameplayOptions { get; set; }
         public AchievementState AchievementState { get; set; }
 
+        public Avatar CurrentAvatar { get; private set; }
+        public List<Avatar> AvatarList { get; } = new();    // temp until we implement inventories
+
         public Player(EntityBaseData baseData) : base(baseData)
         {
             // Base Data
@@ -392,7 +395,18 @@ namespace MHServerEmu.Games.Entities
             }
 
             GameplayOptions.ResetToDefaults();
-            AchievementState = account.Player.AchievementState;
+            AchievementState = new();
+        }
+
+        public void SaveToDBAccount(DBAccount account)
+        {
+            account.Player.Avatar = CurrentAvatar.BaseData.PrototypeId;
+            foreach (Avatar avatar in AvatarList)
+            {
+                DBAvatar dbAvatar = account.GetAvatar(avatar.BaseData.PrototypeId);
+                dbAvatar.Costume = avatar.Properties[PropertyEnum.CostumeCurrent];
+                dbAvatar.AbilityKeyMapping = avatar.AbilityKeyMappings[0];
+            }
         }
 
         /// <summary>
@@ -622,6 +636,30 @@ namespace MHServerEmu.Games.Entities
         /// Returns <see langword="true"/> if this <see cref="Player"/> has the specified badge.
         /// </summary>
         public bool HasBadge(AvailableBadges badge) => _badges.Contains(badge);
+
+
+        #region Hacky Avatar Management
+
+        public void SetAvatar(PrototypeId prototypeId)
+        {
+            uint librarySlot = 0;
+
+            foreach (Avatar avatar in AvatarList)
+            {
+                if (avatar.BaseData.PrototypeId == prototypeId)
+                {
+                    CurrentAvatar = avatar;
+                    avatar.BaseData.InvLoc.InventoryPrototypeId = (PrototypeId)9555311166682372646;
+                    avatar.BaseData.InvLoc.Slot = 0;
+                    continue;
+                }
+
+                avatar.BaseData.InvLoc.InventoryPrototypeId = (PrototypeId)5235960671767829134;
+                avatar.BaseData.InvLoc.Slot = librarySlot++;
+            }
+        }
+
+        #endregion
 
         protected override void BuildString(StringBuilder sb)
         {

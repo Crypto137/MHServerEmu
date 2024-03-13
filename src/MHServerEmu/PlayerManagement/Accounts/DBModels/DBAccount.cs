@@ -56,7 +56,7 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
 
             Player.Region = region;
             Player.Waypoint = waypoint;
-            Player.Avatar = avatar;
+            Player.Avatar = (PrototypeId)avatar;
             Player.AOIVolume = volume;
         }
 

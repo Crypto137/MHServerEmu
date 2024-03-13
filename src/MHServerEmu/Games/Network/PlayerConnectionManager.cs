@@ -44,12 +44,16 @@ namespace MHServerEmu.Games.Network
         /// <summary>
         /// Removes the <see cref="PlayerConnection"/> bound to the provided <see cref="FrontendClient"/>.
         /// </summary>
-        public void RemovePlayer(FrontendClient frontendClient)
+        public bool RemovePlayer(FrontendClient frontendClient)
         {
             lock (_connectionLock)
             {
-                if (_connectionDict.Remove(frontendClient) == false)
-                    Logger.Warn($"RemovePlayer(): Not found");
+                if (_connectionDict.TryGetValue(frontendClient, out PlayerConnection playerConnection) == false)
+                    Logger.WarnReturn(false, $"RemovePlayer(): Not found");
+
+                // Update DBAccount
+                playerConnection.Player.SaveToDBAccount(playerConnection.Account);
+                return true;
             }
         }
 

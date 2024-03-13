@@ -6,11 +6,10 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Frontend;
-using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
-using MHServerEmu.PlayerManagement.Accounts.DBModels;
+using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Billing
 {
@@ -122,7 +121,11 @@ namespace MHServerEmu.Billing
             Logger.Trace(buyItemFromCatalog.ToString());
 
             // HACK: change costume when a player "buys" a costume
-            DBAvatar currentAvatar = client.Session.Account.CurrentAvatar;
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            var game = playerManager.GetGameByPlayer(client);
+            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+            var player = playerConnection.Player;
+            var avatar = player.CurrentAvatar;
 
             CatalogEntry entry = _catalog.GetEntry(buyItemFromCatalog.SkuId);
             if (entry == null || entry.GuidItems.Length == 0)
@@ -132,28 +135,28 @@ namespace MHServerEmu.Billing
             }
 
             var costumePrototype = entry.GuidItems[0].ItemPrototypeRuntimeIdForClient.As<CostumePrototype>();
-            if (costumePrototype == null || costumePrototype.UsableBy != (PrototypeId)currentAvatar.Prototype)
+            if (costumePrototype == null || costumePrototype.UsableBy != avatar.BaseData.PrototypeId)
             {
                 SendBuyItemResponse(client, false, BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN, buyItemFromCatalog.SkuId);
                 return;
             }
 
-            // Get replication id for the client avatar
-            ulong replicationId = (ulong)currentAvatar.Prototype.ToPropertyCollectionReplicationId();
+            // Update player and avatar properties
+            avatar.Properties[PropertyEnum.CostumeCurrent] = costumePrototype.DataRef;
+            player.Properties[PropertyEnum.AvatarLibraryCostume, avatar.BaseData.PrototypeId] = costumePrototype.DataRef;
 
-            currentAvatar.Costume = (ulong)costumePrototype.DataRef;
+            // Send client property updates (TODO: Remove this when we have those generated automatically)
+            // Avatar entity
+            client.SendMessage(MuxChannel, Property.ToNetMessageSetProperty(
+                avatar.Properties.ReplicationId, new(PropertyEnum.CostumeCurrent), entry.GuidItems[0].ItemPrototypeRuntimeIdForClient));
 
-            // Send NetMessageSetProperty message with a CostumeCurrent property for the purchased costume
-            client.SendMessage(MuxChannel, 
-                Property.ToNetMessageSetProperty(replicationId, new(PropertyEnum.CostumeCurrent), entry.GuidItems[0].ItemPrototypeRuntimeIdForClient)
-                );
+            // Player entity
+            PropertyParam enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, avatar.BaseData.PrototypeId);
 
-            // Update library
-            PropertyParam enumValue = Property.ToParam(PropertyEnum.AvatarLibraryCostume, 1, (PrototypeId)currentAvatar.Prototype);
+            client.SendMessage(MuxChannel, Property.ToNetMessageSetProperty(
+                player.Properties.ReplicationId, new(PropertyEnum.AvatarLibraryCostume, 0, enumValue), costumePrototype.DataRef));
 
-            client.SendMessage(MuxChannel,
-                Property.ToNetMessageSetProperty(9078332, new(PropertyEnum.AvatarLibraryCostume, 0, enumValue), costumePrototype.DataRef));
-
+            // Send buy response
             SendBuyItemResponse(client, true, BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS, buyItemFromCatalog.SkuId);
         }
 

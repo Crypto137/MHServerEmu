@@ -24,21 +24,18 @@ namespace MHServerEmu.PlayerManagement.Accounts.DBModels
         public RegionPrototypeId Region { get; set; }
         public long RawRegion { get => (long)Region; private set => Region = (RegionPrototypeId)value; }
 
-        public AvatarPrototypeId Avatar { get; set; }
-        public long RawAvatar { get => (long)Avatar; private set => Avatar = (AvatarPrototypeId)value; }
+        public PrototypeId Avatar { get; set; }
+        public long RawAvatar { get => (long)Avatar; private set => Avatar = (PrototypeId)value; }
         public PrototypeId Waypoint { get; set; }
         public long RawWaypoint { get => (long)Waypoint; private set => Waypoint = (PrototypeId)value; }
         
         public int AOIVolume { get; set; }
 
-        // TODO: Move this to Player entity
-        public AchievementState AchievementState { get; set; } = new();
-
         public DBPlayer(ulong accountId)
         {
             AccountId = accountId;
             Region = RegionPrototypeId.NPEAvengersTowerHUBRegion;
-            Avatar = AvatarPrototypeId.CaptainAmerica;
+            Avatar = (PrototypeId)AvatarPrototypeId.CaptainAmerica;
             Waypoint = (PrototypeId)10137590415717831231; // Waypoints/HUBS/NPEAvengersTowerHub
             AOIVolume = 3200;
         }
