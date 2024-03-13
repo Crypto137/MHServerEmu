@@ -114,7 +114,7 @@ namespace MHServerEmu.Games.Generators.Population
             return list;
         }
 
-        public void AddPopulationMarker(PrototypeId populationMarkerRef, PopulationObjectPrototype population, int count, List<PrototypeId> restrictToAreas, List<PrototypeId> restrictToCellsRef, PrototypeId missionRef)
+        public PopulationMarker AddPopulationMarker(PrototypeId populationMarkerRef, PopulationObjectPrototype population, int count, List<PrototypeId> restrictToAreas, List<PrototypeId> restrictToCellsRef, PrototypeId missionRef)
         {
             //check marker exist population.UseMarkerOrientation;
             //Logger.Warn($"SpawnMarker[{count}] {GameDatabase.GetFormattedPrototypeName(populationMarkerRef)}");
@@ -139,6 +139,7 @@ namespace MHServerEmu.Games.Generators.Population
             };
             
             PopulationMarkers.Add(populationMarker);
+            return populationMarker;
         }
 
         public void MetaStateRegisty(PrototypeId prototypeId)
@@ -162,14 +163,22 @@ namespace MHServerEmu.Games.Generators.Population
                     foreach (var areaRef in popProto.RestrictToAreas)
                         regionAreas.Add(areaRef);
                     regionCell = AssetsToList(popProto.RestrictToCells);
-                }                    
+                }
+
+                Picker<PopulationRequiredObjectPrototype> popPicker = new(Game.Random);
 
                 foreach (var popObject in popProto.PopulationObjects)
+                    popPicker.Add(popObject);
+
+                if (popPicker.Empty() == false)
                 {
-                    int count = popObject.Count;
-                    count = 1; // Fix 
-                    var objectProto = popObject.GetPopObject();
-                    AddPopulationMarker(objectProto.UsePopulationMarker, objectProto, count, regionAreas, regionCell, PrototypeId.Invalid);
+                    while (popPicker.PickRemove(out var popObject))
+                    {
+                        int count = popObject.Count;
+                        count = 1; // Fix 
+                        var objectProto = popObject.GetPopObject();
+                        AddPopulationMarker(objectProto.UsePopulationMarker, objectProto, count, regionAreas, regionCell, PrototypeId.Invalid);
+                    }
                 }
             }
         }
