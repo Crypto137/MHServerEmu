@@ -31,14 +31,29 @@ namespace MHServerEmu.Games.Network
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly FrontendClient _frontendClient;
         private readonly List<IMessage> _pendingMessageList = new();
         private readonly PowerMessageHandler _powerMessageHandler;
 
         public Game Game { get; }
-        public FrontendClient FrontendClient { get; }   // todo: move everything game-related from FrontendClient to here and remove this getter
         public DBAccount Account { get; }
 
+        // Player State
+        public Region Region { get => Game.RegionManager.GetRegion(Account.Player.Region); }
+
+        public bool IsLoading { get; set; } = true;     // This is true by default because the player manager queues the first loading screen
+        public Vector3 LastPosition { get; set; }
+        public ulong MagikUltimateEntityId { get; set; }
+        public bool IsThrowing { get; set; } = false;
+        public PrototypeId ThrowingPower { get; set; }
+        public PrototypeId ThrowingCancelPower { get; set; }
+        public Entity ThrowingObject { get; set; }
+
         public AreaOfInterest AOI { get; }
+        public Vector3 StartPositon { get; internal set; }
+        public Orientation StartOrientation { get; internal set; }
+        public WorldEntity EntityToTeleport { get; internal set; }
+
 
         /// <summary>
         /// Constructs a new <see cref="PlayerConnection"/>.
@@ -46,8 +61,8 @@ namespace MHServerEmu.Games.Network
         public PlayerConnection(Game game, FrontendClient frontendClient)
         {
             Game = game;
-            FrontendClient = frontendClient;
-            Account = FrontendClient.Session.Account;
+            _frontendClient = frontendClient;
+            Account = _frontendClient.Session.Account;
 
             AOI = new(this);
             _powerMessageHandler = new(Game);
@@ -79,7 +94,7 @@ namespace MHServerEmu.Games.Network
         public void FlushMessages()
         {
             if (_pendingMessageList.Any() == false) return;
-            FrontendClient.SendMessages(MuxChannel, _pendingMessageList);
+            _frontendClient.SendMessages(MuxChannel, _pendingMessageList);
             _pendingMessageList.Clear();
         }
 
@@ -198,10 +213,10 @@ namespace MHServerEmu.Games.Network
         {
             UpdateAvatarStateArchive avatarState = new(updateAvatarState.ArchiveData);
             //Vector3 oldPosition = client.LastPosition;
-            FrontendClient.LastPosition = avatarState.Position;
+            LastPosition = avatarState.Position;
             AOI.Region.Visited();
             // AOI
-            if (FrontendClient.IsLoading == false && AOI.ShouldUpdate(avatarState.Position))
+            if (IsLoading == false && AOI.ShouldUpdate(avatarState.Position))
             {
                 if (AOI.Update(avatarState.Position))
                 {
@@ -222,7 +237,7 @@ namespace MHServerEmu.Games.Network
             AOI.OnCellLoaded(cellLoaded.CellId);
             Logger.Info($"Received CellLoaded message cell[{cellLoaded.CellId}] loaded [{AOI.LoadedCellCount}/{AOI.CellsInRegion}]");
 
-            if (FrontendClient.IsLoading)
+            if (IsLoading)
             {
                 Game.EventManager.KillEvent(this, EventEnum.FinishCellLoading);
                 if (AOI.LoadedCellCount == AOI.CellsInRegion)
@@ -238,11 +253,11 @@ namespace MHServerEmu.Games.Network
 
         private void OnAdminCommand(NetMessageAdminCommand command)
         {
-            if (FrontendClient.Session.Account.UserLevel < AccountUserLevel.Admin)
+            if (_frontendClient.Session.Account.UserLevel < AccountUserLevel.Admin)
             {
                 // Naughty hacker here, TODO: handle this properly
                 SendMessage(NetMessageAdminCommandResponse.CreateBuilder()
-                    .SetResponse($"{FrontendClient.Session.Account.PlayerName} is not in the sudoers file. This incident will be reported.").Build());
+                    .SetResponse($"{_frontendClient.Session.Account.PlayerName} is not in the sudoers file. This incident will be reported.").Build());
                 return;
             }
 
@@ -297,7 +312,7 @@ namespace MHServerEmu.Games.Network
                         return;
                     }
 
-                    var currentRegion = (PrototypeId)FrontendClient.Session.Account.Player.Region;
+                    var currentRegion = (PrototypeId)_frontendClient.Session.Account.Player.Region;
                     if (currentRegion != teleport.Destinations[0].Region)
                     {
                         teleport.TeleportClient(this);
@@ -326,16 +341,16 @@ namespace MHServerEmu.Games.Network
                     Logger.Trace($"Teleporting to areaid {areaid} cellid {cellid}");
 
                     SendMessage(NetMessageEntityPosition.CreateBuilder()
-                        .SetIdEntity((ulong)FrontendClient.Session.Account.Player.Avatar.ToEntityId())
+                        .SetIdEntity((ulong)_frontendClient.Session.Account.Player.Avatar.ToEntityId())
                         .SetFlags(64)
                         .SetPosition(targetPos.ToNetStructPoint3())
                         .SetOrientation(targetRot.ToNetStructPoint3())
                         .SetCellId(cellid)
                         .SetAreaId(areaid)
-                        .SetEntityPrototypeId((ulong)FrontendClient.Session.Account.Player.Avatar)
+                        .SetEntityPrototypeId((ulong)_frontendClient.Session.Account.Player.Avatar)
                         .Build());
 
-                    FrontendClient.LastPosition = targetPos;
+                    LastPosition = targetPos;
                 }
                 else
                     Game.EventManager.AddEvent(this, EventEnum.UseInteractableObject, 0, interactableObject);
@@ -381,9 +396,9 @@ namespace MHServerEmu.Games.Network
 
             // A hack for changing avatar in-game
             //client.Session.Account.CurrentAvatar.Costume = 0;  // reset costume on avatar switch
-            FrontendClient.Session.Account.Player.Avatar = (AvatarPrototypeId)switchAvatar.AvatarPrototypeId;
-            ChatHelper.SendMetagameMessage(FrontendClient, $"Changing avatar to {FrontendClient.Session.Account.Player.Avatar}.");
-            Game.MovePlayerToRegion(this, FrontendClient.Session.Account.Player.Region, FrontendClient.Session.Account.Player.Waypoint);
+            _frontendClient.Session.Account.Player.Avatar = (AvatarPrototypeId)switchAvatar.AvatarPrototypeId;
+            ChatHelper.SendMetagameMessage(_frontendClient, $"Changing avatar to {_frontendClient.Session.Account.Player.Avatar}.");
+            Game.MovePlayerToRegion(this, _frontendClient.Session.Account.Player.Region, _frontendClient.Session.Account.Player.Waypoint);
         }
 
         private void OnSetPlayerGameplayOptions(NetMessageSetPlayerGameplayOptions setPlayerGameplayOptions)

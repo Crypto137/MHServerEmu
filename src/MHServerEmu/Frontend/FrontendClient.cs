@@ -2,11 +2,7 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Tcp;
-using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games;
-using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Regions;
 using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Frontend
@@ -31,21 +27,6 @@ namespace MHServerEmu.Frontend
                 return playerManager?.GetGameByPlayer(this);
             }
         }
-
-        public Region Region { get => CurrentGame.RegionManager.GetRegion(Session.Account.Player.Region); }
-
-        // Temporarily store state here instead of Game
-        public bool IsLoading { get; set; } = false;        
-        public Vector3 LastPosition { get; set; }
-        public ulong MagikUltimateEntityId { get; set; }
-        public bool IsThrowing { get; set; } = false;
-        public PrototypeId ThrowingPower { get; set; }
-        public PrototypeId ThrowingCancelPower { get; set; }
-        public Entity ThrowingObject { get; set; }
-
-        public Vector3 StartPositon { get; internal set; }
-        public Orientation StartOrientation { get; internal set; }
-        public WorldEntity EntityToTeleport { get; internal set; }
 
         public FrontendClient(TcpClientConnection connection)
         {

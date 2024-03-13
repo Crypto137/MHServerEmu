@@ -113,9 +113,9 @@ namespace MHServerEmu.Commands
 
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
             var game = playerManager.GetGameByPlayer(client);
-            var connection = game.NetworkManager.GetPlayerConnection(client);
+            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
 
-            return $"Current cell: {connection.AOI.Region.GetCellAtPosition(client.LastPosition).PrototypeName}";
+            return $"Current cell: {playerConnection.AOI.Region.GetCellAtPosition(playerConnection.LastPosition).PrototypeName}";
         }
 
         [Command("seed", "Shows current seed.", AccountUserLevel.User)]
@@ -125,9 +125,9 @@ namespace MHServerEmu.Commands
 
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
             var game = playerManager.GetGameByPlayer(client);
-            var connection = game.NetworkManager.GetPlayerConnection(client);
+            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
 
-            return $"Current seed: {connection.AOI.Region.RandomSeed}";
+            return $"Current seed: {playerConnection.AOI.Region.RandomSeed}";
         }
 
         [Command("area", "Shows current area.", AccountUserLevel.User)]
@@ -137,9 +137,9 @@ namespace MHServerEmu.Commands
 
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
             var game = playerManager.GetGameByPlayer(client);
-            var connection = game.NetworkManager.GetPlayerConnection(client);
+            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
 
-            return $"Current area: {connection.AOI.Region.GetCellAtPosition(client.LastPosition).Area.PrototypeName}";
+            return $"Current area: {playerConnection.AOI.Region.GetCellAtPosition(playerConnection.LastPosition).Area.PrototypeName}";
         }
 
         [Command("region", "Shows current region.", AccountUserLevel.User)]
@@ -187,26 +187,26 @@ namespace MHServerEmu.Commands
 
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
             var game = playerManager.GetGameByPlayer(client);
-            var connection = game.NetworkManager.GetPlayerConnection(client);
+            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
 
             if ((@params?.Length > 0 && int.TryParse(@params[0], out int radius)) == false)
                 radius = 100;   // Default to 100 if no radius is specified
 
-            Sphere near = new(client.LastPosition, radius);
+            Sphere near = new(playerConnection.LastPosition, radius);
 
             List<string> entities = new();
-            foreach (var worldEntity in connection.AOI.Region.IterateEntitiesInVolume(near, new()))
+            foreach (var worldEntity in playerConnection.AOI.Region.IterateEntitiesInVolume(near, new()))
             {
                 string name = worldEntity.PrototypeName;
                 ulong entityId = worldEntity.BaseData.EntityId;
                 string status = string.Empty;
-                if (connection.AOI.EntityLoaded(entityId) == false) status += "[H]";
+                if (playerConnection.AOI.EntityLoaded(entityId) == false) status += "[H]";
                 if (worldEntity is Transition) status += "[T]";
                 if (worldEntity.WorldEntityPrototype.VisibleByDefault == false) status += "[Inv]";
                 entities.Add($"[E][{entityId}] {name} {status}");
             }
 
-            foreach (var reservation in connection.AOI.Region.SpawnMarkerRegistry.IterateReservationsInVolume(near))
+            foreach (var reservation in playerConnection.AOI.Region.SpawnMarkerRegistry.IterateReservationsInVolume(near))
             {
                 string name = GameDatabase.GetFormattedPrototypeName(reservation.MarkerRef);
                 int markerId = reservation.GetPid();

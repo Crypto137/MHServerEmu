@@ -675,9 +675,8 @@ namespace MHServerEmu.Games.Regions
             return found;
         }
 
-        public List<IMessage> GetLoadingMessages(ulong serverGameId, PrototypeId targetRef, PlayerConnection connection)
+        public List<IMessage> GetLoadingMessages(ulong serverGameId, PrototypeId targetRef, PlayerConnection playerConnection)
         {
-            FrontendClient client = connection.FrontendClient;
             List<IMessage> messageList = new();
 
             var regionChangeBuilder = NetMessageRegionChange.CreateBuilder()
@@ -707,30 +706,30 @@ namespace MHServerEmu.Games.Regions
             // Get starArea to load by Waypoint
             if (StartArea != null)
             {
-                if (client.EntityToTeleport != null) // TODO change teleport without reload Region
+                if (playerConnection.EntityToTeleport != null) // TODO change teleport without reload Region
                 {
-                    Vector3 position = new(client.EntityToTeleport.Location.GetPosition());
-                    Orientation orientation = new(client.EntityToTeleport.Location.GetOrientation());
-                    if (client.EntityToTeleport.EntityPrototype is TransitionPrototype teleportEntity
+                    Vector3 position = new(playerConnection.EntityToTeleport.Location.GetPosition());
+                    Orientation orientation = new(playerConnection.EntityToTeleport.Location.GetOrientation());
+                    if (playerConnection.EntityToTeleport.EntityPrototype is TransitionPrototype teleportEntity
                         && teleportEntity.SpawnOffset > 0) teleportEntity.CalcSpawnOffset(orientation, position);
-                    client.StartPositon = position;
-                    client.StartOrientation = orientation;
-                    client.EntityToTeleport = null;
+                    playerConnection.StartPositon = position;
+                    playerConnection.StartOrientation = orientation;
+                    playerConnection.EntityToTeleport = null;
                 }
                 else if (RegionTransition.FindStartPosition(this, targetRef, out Vector3 position, out Orientation orientation))
                 {
-                    client.StartPositon = position;
-                    client.StartOrientation = orientation;
+                    playerConnection.StartPositon = position;
+                    playerConnection.StartOrientation = orientation;
                 }
                 else
                 {
-                    client.StartPositon = StartArea.Origin;
-                    client.StartOrientation = Orientation.Zero;
+                    playerConnection.StartPositon = StartArea.Origin;
+                    playerConnection.StartOrientation = Orientation.Zero;
                 }
 
-                connection.AOI.Reset(this);
-                connection.AOI.Update(client.StartPositon, true);
-                messageList.AddRange(connection.AOI.Messages);
+                playerConnection.AOI.Reset(this);
+                playerConnection.AOI.Update(playerConnection.StartPositon, true);
+                messageList.AddRange(playerConnection.AOI.Messages);
             }
 
 

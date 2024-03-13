@@ -167,7 +167,6 @@ namespace MHServerEmu.PlayerManagement
             client.FinishedPlayerManagerHandshake = true;
 
             // Queue loading
-            client.IsLoading = true;
             client.SendMessage(MuxChannel, NetMessageQueueLoadingScreen.CreateBuilder().SetRegionPrototypeId(0).Build());
 
             // Send achievement database

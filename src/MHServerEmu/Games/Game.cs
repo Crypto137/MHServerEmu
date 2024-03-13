@@ -142,18 +142,18 @@ namespace MHServerEmu.Games
             }
         }
 
-        public void MovePlayerToRegion(PlayerConnection connection, RegionPrototypeId region, PrototypeId waypointDataRef)
+        public void MovePlayerToRegion(PlayerConnection playerConnetion, RegionPrototypeId region, PrototypeId waypointDataRef)
         {
             lock (_gameLock)
             {
                 foreach (IMessage message in GetExitGameMessages())
-                    SendMessage(connection, message);
+                    SendMessage(playerConnetion, message);
 
-                connection.FrontendClient.Session.Account.Player.Region = region;
-                connection.FrontendClient.Session.Account.Player.Waypoint = waypointDataRef;
+                playerConnetion.Account.Player.Region = region;
+                playerConnetion.Account.Player.Waypoint = waypointDataRef;
 
-                foreach (IMessage message in GetBeginLoadingMessages(connection))
-                    SendMessage(connection, message);
+                foreach (IMessage message in GetBeginLoadingMessages(playerConnetion))
+                    SendMessage(playerConnetion, message);
             }
         }
 
@@ -169,8 +169,8 @@ namespace MHServerEmu.Games
                 foreach (IMessage message in GetExitGameMessages())
                     SendMessage(connection, message);
 
-                connection.FrontendClient.Session.Account.Player.Region = worldEntity.Region.PrototypeId;
-                connection.FrontendClient.EntityToTeleport = worldEntity;
+                connection.Account.Player.Region = worldEntity.Region.PrototypeId;
+                connection.EntityToTeleport = worldEntity;
 
                 foreach (IMessage message in GetBeginLoadingMessages(connection))
                     SendMessage(connection, message);
@@ -182,7 +182,7 @@ namespace MHServerEmu.Games
             foreach (IMessage message in GetFinishLoadingMessages(playerConnection))
                 SendMessage(playerConnection, message);
 
-            playerConnection.FrontendClient.IsLoading = false;
+            playerConnection.IsLoading = false;
         }
 
         /// <summary>
@@ -201,11 +201,9 @@ namespace MHServerEmu.Games
             NetworkManager.BroadcastMessage(message);
         }
 
-        private List<IMessage> GetBeginLoadingMessages(PlayerConnection connection)
+        private List<IMessage> GetBeginLoadingMessages(PlayerConnection playerConnection)
         {
-            FrontendClient client = connection.FrontendClient;
-
-            DBAccount account = client.Session.Account;
+            DBAccount account = playerConnection.Account;
             List<IMessage> messageList = new();
 
             // Add server info messages
@@ -235,9 +233,9 @@ namespace MHServerEmu.Games
                 .Build());
 
             // Run region generation as a task
-            Task.Run(() => GetRegionAsync(connection, account.Player.Region));
-            connection.AOI.LoadedCellCount = 0;
-            client.IsLoading = true;
+            Task.Run(() => GetRegionAsync(playerConnection, account.Player.Region));
+            playerConnection.AOI.LoadedCellCount = 0;
+            playerConnection.IsLoading = true;
             return messageList;
         }
 
@@ -247,15 +245,13 @@ namespace MHServerEmu.Games
             EventManager.AddEvent(connection, EventEnum.GetRegion, 0, region);
         }
 
-        private List<IMessage> GetFinishLoadingMessages(PlayerConnection connection)
+        private List<IMessage> GetFinishLoadingMessages(PlayerConnection playerConnection)
         {
-            FrontendClient client = connection.FrontendClient;
-
-            DBAccount account = client.Session.Account;
+            DBAccount account = playerConnection.Account;
             List<IMessage> messageList = new();
 
-            Vector3 entrancePosition = new(client.StartPositon);
-            Orientation entranceOrientation = new(client.StartOrientation);
+            Vector3 entrancePosition = new(playerConnection.StartPositon);
+            Orientation entranceOrientation = new(playerConnection.StartOrientation);
             entrancePosition.Z += 42; // TODO project to floor
 
             EnterGameWorldArchive avatarEnterGameWorldArchive = new((ulong)account.Player.Avatar.ToEntityId(), entrancePosition, entranceOrientation.Yaw, 350f);
@@ -263,8 +259,8 @@ namespace MHServerEmu.Games
                 .SetArchiveData(avatarEnterGameWorldArchive.Serialize())
                 .Build());
 
-            connection.AOI.Update(entrancePosition);
-            messageList.AddRange(connection.AOI.Messages);
+            playerConnection.AOI.Update(entrancePosition);
+            messageList.AddRange(playerConnection.AOI.Messages);
 
             // Load power collection
             messageList.AddRange(PowerLoader.LoadAvatarPowerCollection(account.Player.Avatar.ToEntityId()));

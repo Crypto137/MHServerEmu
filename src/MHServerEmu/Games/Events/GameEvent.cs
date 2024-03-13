@@ -26,17 +26,17 @@ namespace MHServerEmu.Games.Events
         private readonly DateTime _creationTime;
         private readonly TimeSpan _lifetime;
 
-        public PlayerConnection Connection { get; }
+        public PlayerConnection PlayerConnection { get; }
         public EventEnum Event { get; }
         public bool IsRunning { get; set; }
         public object Data { get; set; }
 
-        public GameEvent(PlayerConnection connection, EventEnum gameEvent, long lifetimeMs, object data)
+        public GameEvent(PlayerConnection playerConnection, EventEnum gameEvent, long lifetimeMs, object data)
         {
             _creationTime = DateTime.Now;
             _lifetime = TimeSpan.FromMilliseconds(lifetimeMs);
 
-            Connection = connection;
+            PlayerConnection = playerConnection;
             Event = gameEvent;
             Data = data;
             IsRunning = true;

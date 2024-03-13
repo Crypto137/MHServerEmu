@@ -25,8 +25,8 @@ namespace MHServerEmu.Commands
 
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
             var game = playerManager.GetGameByPlayer(client);
-            var connection = game.NetworkManager.GetPlayerConnection(client);
-            game.MovePlayerToRegion(connection, RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)15322252936284737788);
+            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+            game.MovePlayerToRegion(playerConnection, RegionPrototypeId.AvengersTowerHUBRegion, (PrototypeId)15322252936284737788);
 
             return "Changing region to Avengers Tower (original)";
         }
@@ -42,8 +42,8 @@ namespace MHServerEmu.Commands
 
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
             var game = playerManager.GetGameByPlayer(client);
-            var connection = game.NetworkManager.GetPlayerConnection(client);
-            game.MovePlayerToRegion(connection, RegionPrototypeId.CosmicDoopSectorSpaceRegion, (PrototypeId)15872240608618488803);
+            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+            game.MovePlayerToRegion(playerConnection, RegionPrototypeId.CosmicDoopSectorSpaceRegion, (PrototypeId)15872240608618488803);
 
             return "Travel to Cosmic Doop Sector";
         }
@@ -59,8 +59,8 @@ namespace MHServerEmu.Commands
 
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
             var game = playerManager.GetGameByPlayer(client);
-            var connection = game.NetworkManager.GetPlayerConnection(client);
-            game.MovePlayerToRegion(connection, (RegionPrototypeId)17913362697985334451, (PrototypeId)12083387244127461092);
+            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+            game.MovePlayerToRegion(playerConnection, (RegionPrototypeId)17913362697985334451, (PrototypeId)12083387244127461092);
 
             return "Travel to Bovineheim";
         }
@@ -76,8 +76,8 @@ namespace MHServerEmu.Commands
 
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
             var game = playerManager.GetGameByPlayer(client);
-            var connection = game.NetworkManager.GetPlayerConnection(client);
-            game.MovePlayerToRegion(connection, (RegionPrototypeId)12735255224807267622, (PrototypeId)2342633323497265984);
+            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+            game.MovePlayerToRegion(playerConnection, (RegionPrototypeId)12735255224807267622, (PrototypeId)2342633323497265984);
 
             return "Travel to Classified Bovine Sector.";
         }
@@ -90,7 +90,12 @@ namespace MHServerEmu.Commands
         public string Position(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
-            return $"Current position: {client.LastPosition.ToStringNames()}";
+
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            var game = playerManager.GetGameByPlayer(client);
+            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+
+            return $"Current position: {playerConnection.LastPosition.ToStringNames()}";
         }
     }
 
@@ -104,7 +109,7 @@ namespace MHServerEmu.Commands
 
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
             var game = playerManager.GetGameByPlayer(client);
-            var connection = game.NetworkManager.GetPlayerConnection(client);
+            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
 
             AvatarPrototypeId avatar = client.Session.Account.Player.Avatar;
             switch (avatar)
@@ -122,7 +127,7 @@ namespace MHServerEmu.Commands
                 case AvatarPrototypeId.Storm:
                 case AvatarPrototypeId.Thing:
                 case AvatarPrototypeId.Thor:
-                    game.EventManager.AddEvent(connection, Games.Events.EventEnum.EmoteDance, 0, avatar);
+                    game.EventManager.AddEvent(playerConnection, Games.Events.EventEnum.EmoteDance, 0, avatar);
                     return $"{avatar} begins to dance";
                 default:
                     return $"{avatar} doesn't want to dance";
@@ -139,6 +144,10 @@ namespace MHServerEmu.Commands
         {
             if (client == null) return "You can only invoke this command from the game.";
             if (@params == null || @params.Length == 0) return "Invalid arguments. Type 'help teleport' to get help.";
+
+            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            var game = playerManager.GetGameByPlayer(client);
+            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
 
             float x = 0f, y = 0f, z = 0f;
             foreach (string param in @params)
@@ -165,13 +174,9 @@ namespace MHServerEmu.Commands
             Vector3 teleportPoint = new(x, y, z);
 
             if (@params.Length < 3)
-                teleportPoint += client.LastPosition;
+                teleportPoint += playerConnection.LastPosition;
 
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-            var game = playerManager.GetGameByPlayer(client);
-            var connection = game.NetworkManager.GetPlayerConnection(client);
-
-            game.EventManager.AddEvent(connection, Games.Events.EventEnum.ToTeleport, 0, teleportPoint);
+            game.EventManager.AddEvent(playerConnection, Games.Events.EventEnum.ToTeleport, 0, teleportPoint);
             return $"Teleporting to {teleportPoint.ToStringNames()}";
         }
     }
@@ -208,9 +213,9 @@ namespace MHServerEmu.Commands
             {
                 var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
                 var game = playerManager.GetGameByPlayer(client);
-                var connection = game.NetworkManager.GetPlayerConnection(client);
-                connection.Account.Player.AOIVolume = volume;
-                connection.AOI.SetAOIVolume(volume);
+                var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+                playerConnection.Account.Player.AOIVolume = volume;
+                playerConnection.AOI.SetAOIVolume(volume);
 
                 return $"Changes player AOI volume size to {volume}.";
             }
