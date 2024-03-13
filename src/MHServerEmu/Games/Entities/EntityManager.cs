@@ -44,6 +44,7 @@ namespace MHServerEmu.Games.Entities
             PrototypeId contextAreaRef = (PrototypeId)cell.Area.PrototypeId;
 
             ReplicatedPropertyCollection properties = new(_game.CurrentRepId);
+            properties[PropertyEnum.VariationSeed] = _game.Random.Next(1, 10000);
             properties[PropertyEnum.MapPosition] = position;
             properties[PropertyEnum.MapAreaId] = mapAreaId;
             properties[PropertyEnum.MapRegionId] = regionId;
