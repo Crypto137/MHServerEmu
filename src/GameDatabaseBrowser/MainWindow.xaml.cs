@@ -1,6 +1,7 @@
 ﻿using GameDatabaseBrowser.Models;
 using GameDatabaseBrowser.Providers;
 using GameDatabaseBrowser.Search;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
